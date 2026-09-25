@@ -32,6 +32,7 @@ export const Route = createFileRoute("/api/rita/metrics")({
             speech_end_to_first_audio_ms: bounded(body?.speechEndToFirstAudioMs),
             interrupted: body?.interrupted === true,
             fallback_used: body?.fallbackUsed === true,
+            reconnect_count: Math.min(50, Math.max(0, Math.round(Number(body?.reconnectCount) || 0))),
             error_stage: String(body?.errorStage ?? "").slice(0, 60) || null,
           });
           if (error) throw error;

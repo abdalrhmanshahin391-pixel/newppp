@@ -181,6 +181,7 @@ function RitaLivePage() {
   const speechAbort = useRef<AbortController | null>(null);
   const fillerTimer = useRef<number | null>(null);
   const fillerPlaying = useRef(false);
+  const reconnectCount = useRef(0);
   const lastFiller = useRef<Record<string, number>>({ ar: -1, en: -1, de: -1 });
   const turnAbort = useRef<AbortController | null>(null);
   const outputFrame = useRef<number | null>(null);
