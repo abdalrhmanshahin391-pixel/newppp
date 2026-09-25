@@ -32,6 +32,12 @@ export type RitaTurnTimeline = {
   fallbackUsed: boolean;
   reconnectCount: number;
   errorStage?: string;
+  serverTimings?: Record<string, number>;
+  sessionId?: string | null;
+  pipelineMode?: "legacy" | "economic_v2";
+  language?: string;
+  browser?: string;
+  networkType?: string;
 };
 
 export function createRitaTurnTimeline(speechStart = performance.now()): RitaTurnTimeline {

@@ -750,6 +750,7 @@ function RitaLivePage() {
       const spoken = text.trim();
       if (!spoken || (addUser && mutedRef.current)) return;
       voiceTurnStartedAt.current = performance.now();
+      stopSpeaking("new_request");
       if (!turnTimeline.current || turnTimeline.current.endReason) {
         turnTimeline.current = createRitaTurnTimeline(performance.now());
         segmentTimelines.current.clear();
@@ -759,9 +760,6 @@ function RitaLivePage() {
       timeline.fallbackUsed = fallbackUsed;
       if (timeline.marks.transcriptFinal === undefined) markRitaTurn(timeline, "transcriptFinal");
       const epoch = lessonEpoch.current;
-      stopSpeaking("new_request");
-      // stopSpeaking finalizes only an older turn; keep this newly-created turn active.
-      if (turnTimeline.current !== timeline) turnTimeline.current = timeline;
       setNeedsTapToPlay(false);
       turnAbort.current?.abort();
       const controller = new AbortController();
