@@ -183,6 +183,22 @@ function RitaLivePage() {
   const [pushToTalking, setPushToTalking] = useState(false);
   const [premiumVoice, setPremiumVoice] = useState(true);
   const [hasReplay, setHasReplay] = useState(false);
+  // "" = follow the admin default; otherwise this device's choice.
+  const [voiceEngine, setVoiceEngine] = useState<"" | "openai" | "fish">("");
+  const voiceEngineRef = useRef<"" | "openai" | "fish">("");
+  useEffect(() => {
+    const saved = window.localStorage.getItem("rita-voice-engine");
+    if (saved === "openai" || saved === "fish") {
+      setVoiceEngine(saved);
+      voiceEngineRef.current = saved;
+    }
+  }, []);
+  const cycleVoiceEngine = () => {
+    const next = voiceEngine === "fish" ? "openai" : "fish";
+    setVoiceEngine(next);
+    voiceEngineRef.current = next;
+    window.localStorage.setItem("rita-voice-engine", next);
+  };
   const [needsTapToPlay, setNeedsTapToPlay] = useState(false);
   const [inputLevel, setInputLevel] = useState(0);
   const [outputLevel, setOutputLevel] = useState(0);
@@ -858,7 +874,9 @@ function RitaLivePage() {
           const responsePromise = fetch("/api/rita/speech", {
             method: "POST",
             headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-            body: JSON.stringify(segment),
+            body: JSON.stringify(
+              voiceEngineRef.current ? { ...segment, engine: voiceEngineRef.current } : segment,
+            ),
             signal: voiceController.signal,
           });
           if (!metricRef.current.ttsStart) metricRef.current.ttsStart = performance.now();
@@ -1800,6 +1818,14 @@ function RitaLivePage() {
                   >
                     <BookOpen size={14} /> Words{" "}
                     {learningItems.length ? `(${learningItems.length})` : ""}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cycleVoiceEngine}
+                    aria-label="Switch Rita's voice engine"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#e2ddd4] px-3 py-1.5 text-xs font-bold text-[#413b39] transition hover:bg-[#f6f3ee]"
+                  >
+                    Voice: {voiceEngine === "fish" ? "Fish (free)" : voiceEngine === "openai" ? "OpenAI" : "Default"}
                   </button>
                   {hasReplay && (
                     <button
