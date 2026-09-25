@@ -5,10 +5,19 @@ import {
   requireRitaUser,
   resolveRitaOpenAiKey,
 } from "@/lib/rita-voice.server";
+import { createRitaSessionTicket } from "@/lib/rita-session-ticket.server";
 
-// Silent warm-up: fills the settings/key/allowance caches and opens the TLS
-// connection to OpenAI so the first real turn skips the cold start. No AI cost.
+// Silent warm-up: fills the settings/key/allowance caches, opens the TLS
+// connection to OpenAI, and issues a short session ticket. No AI cost.
 const lastWarm = new Map<string, number>();
+
+async function issueTicket(userId: string) {
+  try {
+    return await createRitaSessionTicket(userId);
+  } catch {
+    return null;
+  }
+}
 
 export const Route = createFileRoute("/api/rita/warm")({
   server: {
@@ -16,9 +25,10 @@ export const Route = createFileRoute("/api/rita/warm")({
       POST: async ({ request }) => {
         const auth = await requireRitaUser(request);
         if (!auth) return new Response(null, { status: 401 });
+        const headers = { "Cache-Control": "no-store" };
         const now = Date.now();
         if (now - (lastWarm.get(auth.userId) ?? 0) < 10_000)
-          return new Response(null, { status: 204 });
+          return Response.json(await issueTicket(auth.userId), { headers });
         lastWarm.set(auth.userId, now);
         try {
           const [settings, key] = await Promise.all([getRitaSettings(), resolveRitaOpenAiKey()]);
@@ -34,7 +44,7 @@ export const Route = createFileRoute("/api/rita/warm")({
         } catch {
           // Warm-up is best effort.
         }
-        return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
+        return Response.json(await issueTicket(auth.userId), { headers });
       },
     },
   },

@@ -20,6 +20,22 @@ export type RitaSpeechSegment = {
   emotion: string;
 };
 
+let sessionTicket: { ticket: string; expiresAt: number } | null = null;
+/** Stores the short signed ticket issued by /api/rita/warm. */
+export function setRitaSessionTicket(value: unknown) {
+  const v = value as { ticket?: unknown; expiresAt?: unknown } | null;
+  if (v && typeof v.ticket === "string" && typeof v.expiresAt === "number")
+    sessionTicket = { ticket: v.ticket, expiresAt: v.expiresAt };
+}
+export function clearRitaSessionTicket() {
+  sessionTicket = null;
+}
+function ticketHeader(): Record<string, string> {
+  return sessionTicket && sessionTicket.expiresAt - Date.now() > 30_000
+    ? { "x-rita-ticket": sessionTicket.ticket }
+    : {};
+}
+
 export async function streamRitaEconomicReply(args: {
   token: string;
   signal: AbortSignal;
@@ -30,7 +46,11 @@ export async function streamRitaEconomicReply(args: {
 }) {
   const response = await fetch("/api/rita/respond", {
     method: "POST",
-    headers: { Authorization: `Bearer ${args.token}`, "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${args.token}`,
+      "Content-Type": "application/json",
+      ...ticketHeader(),
+    },
     body: JSON.stringify(args.body),
     signal: args.signal,
   });

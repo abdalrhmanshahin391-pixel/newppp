@@ -1088,11 +1088,17 @@ function RitaLivePage() {
   processTurnRef.current = processTurn;
 
   const warmTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const warmNow = useRef<(() => void) | null>(null);
+  const lastSpeechWarm = useRef(0);
   const endSession = useCallback(() => {
     lessonEpoch.current += 1;
     finalizeTurnTimeline("aborted", "session_ended");
     if (warmTimer.current) clearInterval(warmTimer.current);
     warmTimer.current = null;
+    warmNow.current = null;
+    void loadEconomicResponse()
+      .then((m) => m.clearRitaSessionTicket())
+      .catch(() => undefined);
     turnAbort.current?.abort();
     turnAbort.current = null;
     economic.current?.stop();
@@ -1351,7 +1357,10 @@ function RitaLivePage() {
           .then((t) =>
             fetch("/api/rita/warm", { method: "POST", headers: { Authorization: `Bearer ${t}` } }),
           )
+          .then((r) => (r.ok ? r.json() : null))
+          .then(async (value) => (await loadEconomicResponse()).setRitaSessionTicket(value))
           .catch(() => undefined);
+      warmNow.current = warm;
       warm();
       if (warmTimer.current) clearInterval(warmTimer.current);
       warmTimer.current = setInterval(warm, 45_000);
@@ -1428,6 +1437,11 @@ function RitaLivePage() {
           onSpeechStart: () => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
             pendingSpeechStart.current = performance.now();
+            // Re-warm the lines while the learner is still speaking (throttled server-side).
+            if (performance.now() - lastSpeechWarm.current > 20_000) {
+              lastSpeechWarm.current = performance.now();
+              warmNow.current?.();
+            }
             // Raw sound alone never interrupts Rita; wait for confirmed speech (onBargeIn).
             if (!processingRef.current && !speechAbort.current) {
               setMood("listening");
