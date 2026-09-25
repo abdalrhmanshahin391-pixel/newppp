@@ -52,7 +52,7 @@ export type RitaAuth = { userId: string };
 const DEFAULT_SETTINGS: RitaSettings = {
   enabled: true,
   voice: "marin",
-  responseWords: 55,
+  responseWords: 40,
   dailyGuardMinutes: 120,
   defaultMonthlyMinutes: 1200,
   monthlyBudgetCents: 10_000,
@@ -86,7 +86,30 @@ export async function requireRitaUser(request: Request): Promise<RitaAuth | null
   return error || !userId ? null : { userId };
 }
 
-export async function resolveRitaOpenAiKey(): Promise<string | null> {
+// Short-lived per-worker cache. Every voice segment previously re-read settings
+// and keys from the database before OpenAI could start, adding 200–500 ms.
+const RITA_CACHE_TTL_MS = 60_000;
+const ritaCache = new Map<string, { at: number; value: Promise<unknown> }>();
+function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
+  const hit = ritaCache.get(key);
+  if (hit && Date.now() - hit.at < RITA_CACHE_TTL_MS) return hit.value as Promise<T>;
+  const value = load().catch((error) => {
+    ritaCache.delete(key);
+    throw error;
+  });
+  ritaCache.set(key, { at: Date.now(), value });
+  return value;
+}
+/** Call after an admin saves Rita keys or settings. */
+export function clearRitaServerCache() {
+  ritaCache.clear();
+}
+
+export function resolveRitaOpenAiKey(): Promise<string | null> {
+  return cached("openai-key", loadRitaOpenAiKey);
+}
+
+async function loadRitaOpenAiKey(): Promise<string | null> {
   const environmentKey = (process.env["OPENAI_API_KEY"] ?? "").trim();
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -107,7 +130,11 @@ export async function resolveRitaOpenAiKey(): Promise<string | null> {
   return environmentKey.length > 20 ? environmentKey : null;
 }
 
-export async function resolveRitaDeepgramKey(): Promise<string | null> {
+export function resolveRitaDeepgramKey(): Promise<string | null> {
+  return cached("deepgram-key", loadRitaDeepgramKey);
+}
+
+async function loadRitaDeepgramKey(): Promise<string | null> {
   const environmentKey = (process.env["DEEPGRAM_API_KEY"] ?? "").trim();
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -127,7 +154,11 @@ export async function resolveRitaDeepgramKey(): Promise<string | null> {
   return environmentKey.length > 20 ? environmentKey : null;
 }
 
-export async function getRitaSettings(): Promise<RitaSettings> {
+export function getRitaSettings(): Promise<RitaSettings> {
+  return cached("settings", loadRitaSettings);
+}
+
+async function loadRitaSettings(): Promise<RitaSettings> {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await (supabaseAdmin.from as any)("rita_voice_settings")
