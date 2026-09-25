@@ -16,6 +16,8 @@ export type RitaEconomicCallbacks = {
   onFinal: (turn: RitaEconomicTranscript) => void;
   onFallback?: (turn: { audio: Blob; durationMs: number; reason: string }) => void;
   onError: (message: string) => void;
+  /** Fired each time the Deepgram stream is reopened after a drop or idle pause. */
+  onReconnect?: (reason: "dropped" | "idle") => void;
 };
 
 export type RitaEconomicController = {
@@ -109,7 +111,12 @@ type DeepgramConnection = {
   socket: WebSocket;
   finalParts: string[];
   intentionallyClosing: boolean;
+  /** Audio captured while the socket is still connecting (reconnect / idle reopen). */
+  pending: ArrayBuffer[];
 };
+
+export const RITA_RECONNECT_DELAYS_MS = [250, 750, 1_500] as const;
+export const RITA_IDLE_CLOSE_MS = 120_000;
 
 function scriptRatio(text: string, pattern: RegExp) {
   const letters = Array.from(text).filter((character) => /\p{L}/u.test(character));
@@ -183,6 +190,8 @@ export async function startRitaEconomicListening(args: {
   accent: string;
   browserLocale: string;
   keyterms?: string[];
+  /** Mints a fresh short-lived Deepgram token for each reconnect. */
+  refreshToken?: () => Promise<string>;
   callbacks: RitaEconomicCallbacks;
 }): Promise<RitaEconomicController> {
   const { callbacks } = args;
@@ -242,10 +251,23 @@ export async function startRitaEconomicListening(args: {
   let semanticTimer = 0;
   const candidates = new Map<string, ProbeCandidate>();
   const connections: DeepgramConnection[] = [];
+  let lastActivityAt = performance.now();
+  let idleClosed = false;
+  let reconnectAttempt = 0;
+  let reconnectTimer = 0;
+  let currentToken = args.token;
 
   const sendAudio = (buffer: ArrayBuffer) => {
+    lastActivityAt = performance.now();
+    if (idleClosed) void reopenAfterIdle();
     for (const connection of connections) {
+      if (connection.intentionallyClosing) continue;
       if (connection.socket.readyState === WebSocket.OPEN) connection.socket.send(buffer.slice(0));
+      else if (connection.socket.readyState === WebSocket.CONNECTING) {
+        connection.pending.push(buffer.slice(0));
+        // Keep at most ~3 s of audio while reconnecting.
+        if (connection.pending.length > 150) connection.pending.shift();
+      }
     }
   };
 
@@ -339,89 +361,153 @@ export async function startRitaEconomicListening(args: {
     }
   }, 8_000);
 
-  if (transcriptionMode === "openai") callbacks.onReady("OpenAI transcription");
-  for (const language of transcriptionMode === "deepgram" ? languages : []) {
-    const socket = new WebSocket(listenUrl(language, args.keyterms ?? ["RitaJet"]), [
-      "bearer",
-      args.token,
-    ]);
-    socket.binaryType = "arraybuffer";
-    const connection: DeepgramConnection = {
-      language,
-      socket,
-      finalParts: [],
-      intentionallyClosing: false,
-    };
-    connections.push(connection);
-    socket.onopen = () => {
-      const ready = connections.filter((item) => item.socket.readyState === WebSocket.OPEN).length;
-      if (ready === languages.length)
-        callbacks.onReady(languages.length > 1 ? "auto: ar-JO + multilingual probe" : language);
-    };
-    socket.onerror = () => {
-      if (!stopped && !connection.intentionallyClosing)
-        callbacks.onError(`deepgram_stream: ${language} connection failed.`);
-    };
-    socket.onclose = (event) => {
-      if (!stopped && !connection.intentionallyClosing && event.code !== 1000) {
-        callbacks.onError(`deepgram_stream: ${language} connection closed (${event.code}).`);
-        window.setTimeout(() => {
-          const usable = connections.some(
-            (item) => !item.intentionallyClosing && item.socket.readyState === WebSocket.OPEN,
-          );
-          if (!usable) recoverTurn("Deepgram connection ended before the transcript was final.");
-        }, 120);
+  const openConnection = (language: string, reopening = false) => {
+  const socket = new WebSocket(listenUrl(language, args.keyterms ?? ["RitaJet"]), [
+    "bearer",
+    args.token,
+  ]);
+  socket.binaryType = "arraybuffer";
+  const connection: DeepgramConnection = {
+    language,
+    socket,
+    finalParts: [],
+    intentionallyClosing: false,
+    pending: [],
+  };
+  const replaced = connections.findIndex((item) => item.language === language);
+  if (replaced >= 0) connections.splice(replaced, 1, connection);
+  else connections.push(connection);
+  socket.onopen = () => {
+    reconnectAttempt = 0;
+    for (const buffer of connection.pending) socket.send(buffer);
+    connection.pending = [];
+    if (reopening) return;
+    const ready = connections.filter((item) => item.socket.readyState === WebSocket.OPEN).length;
+    if (ready === languages.length)
+      callbacks.onReady(languages.length > 1 ? "auto: ar-JO + multilingual probe" : language);
+  };
+  socket.onerror = () => {
+    // onclose follows every error; reconnection is handled there.
+  };
+  socket.onclose = (event) => {
+    if (!stopped && !connection.intentionallyClosing && event.code !== 1000) {
+      // Rescue only the sentence in flight, then reconnect in the background.
+      window.setTimeout(() => {
+        const usable = connections.some(
+          (item) => !item.intentionallyClosing && item.socket.readyState === WebSocket.OPEN,
+        );
+        if (!usable) recoverTurn("Deepgram connection ended before the transcript was final.");
+      }, 120);
+      if (!selectedLanguage || selectedLanguage === language) scheduleReconnect(language);
+    }
+  };
+  socket.onmessage = (event) => {
+    if (typeof event.data !== "string") return;
+    if (selectedLanguage && selectedLanguage !== language) return;
+    let message: DeepgramResult;
+    try {
+      message = JSON.parse(event.data) as DeepgramResult;
+    } catch {
+      return;
+    }
+    if (message.type === "SpeechStarted") {
+      if (!speaking) {
+        speaking = true;
+        turnStartedAt = performance.now();
+        callbacks.onSpeechStart();
       }
+      return;
+    }
+    if (message.type !== "Results") return;
+    if (semanticTimer) {
+      window.clearTimeout(semanticTimer);
+      semanticTimer = 0;
+    }
+    const alternative = message.channel?.alternatives?.[0];
+    const text = String(alternative?.transcript ?? "").trim();
+    if (!text) return;
+    if (message.is_final) connection.finalParts.push(text);
+    else if (selectedLanguage || !candidates.size)
+      callbacks.onInterim([...connection.finalParts, text].join(" ").trim());
+    if (!message.speech_final) return;
+    const complete = connection.finalParts.join(" ").replace(/\s+/g, " ").trim();
+    connection.finalParts = [];
+    if (!complete) return;
+    const candidate: ProbeCandidate = {
+      text: complete,
+      confidence: Number(alternative?.confidence ?? 0),
+      language: alternative?.languages?.[0] || language,
+      durationMs: turnStartedAt ? Math.round(performance.now() - turnStartedAt) : 0,
+      connection,
     };
-    socket.onmessage = (event) => {
-      if (typeof event.data !== "string") return;
-      if (selectedLanguage && selectedLanguage !== language) return;
-      let message: DeepgramResult;
+    if (performance.now() < suppressFinalUntil) return;
+    if (selectedLanguage) {
+      scheduleCandidate(candidate);
+      return;
+    }
+    candidates.set(language, candidate);
+    if (candidates.size === languages.length) selectProbe();
+    else if (!finalTimer) finalTimer = window.setTimeout(selectProbe, 350);
+  };
+  };
+
+  const scheduleReconnect = (language: string) => {
+    if (stopped || reconnectTimer) return;
+    const delay = RITA_RECONNECT_DELAYS_MS[reconnectAttempt];
+    if (delay === undefined) {
+      callbacks.onError(`deepgram_stream: ${language} connection could not be restored.`);
+      return;
+    }
+    reconnectAttempt += 1;
+    reconnectTimer = window.setTimeout(async () => {
+      reconnectTimer = 0;
+      if (stopped) return;
       try {
-        message = JSON.parse(event.data) as DeepgramResult;
+        if (args.refreshToken) currentToken = await args.refreshToken();
       } catch {
+        scheduleReconnect(language);
         return;
       }
-      if (message.type === "SpeechStarted") {
-        if (!speaking) {
-          speaking = true;
-          turnStartedAt = performance.now();
-          callbacks.onSpeechStart();
-        }
-        return;
-      }
-      if (message.type !== "Results") return;
-      if (semanticTimer) {
-        window.clearTimeout(semanticTimer);
-        semanticTimer = 0;
-      }
-      const alternative = message.channel?.alternatives?.[0];
-      const text = String(alternative?.transcript ?? "").trim();
-      if (!text) return;
-      if (message.is_final) connection.finalParts.push(text);
-      else if (selectedLanguage || !candidates.size)
-        callbacks.onInterim([...connection.finalParts, text].join(" ").trim());
-      if (!message.speech_final) return;
-      const complete = connection.finalParts.join(" ").replace(/\s+/g, " ").trim();
-      connection.finalParts = [];
-      if (!complete) return;
-      const candidate: ProbeCandidate = {
-        text: complete,
-        confidence: Number(alternative?.confidence ?? 0),
-        language: alternative?.languages?.[0] || language,
-        durationMs: turnStartedAt ? Math.round(performance.now() - turnStartedAt) : 0,
-        connection,
-      };
-      if (performance.now() < suppressFinalUntil) return;
-      if (selectedLanguage) {
-        scheduleCandidate(candidate);
-        return;
-      }
-      candidates.set(language, candidate);
-      if (candidates.size === languages.length) selectProbe();
-      else if (!finalTimer) finalTimer = window.setTimeout(selectProbe, 350);
-    };
-  }
+      if (stopped) return;
+      callbacks.onReconnect?.("dropped");
+      openConnection(language, true);
+    }, delay);
+  };
+
+  const reopenAfterIdle = async () => {
+    if (!idleClosed || stopped) return;
+    idleClosed = false;
+    const language = selectedLanguage || languages[0];
+    try {
+      if (args.refreshToken) currentToken = await args.refreshToken();
+    } catch {
+      // The previous token may still be valid; try it.
+    }
+    if (stopped) return;
+    callbacks.onReconnect?.("idle");
+    openConnection(language, true);
+  };
+
+  const idleWatch = window.setInterval(() => {
+    if (stopped || idleClosed || speaking || !selectedLanguage) return;
+    if (performance.now() - lastActivityAt < RITA_IDLE_CLOSE_MS) return;
+    const live = connections.find(
+      (item) => item.language === selectedLanguage && !item.intentionallyClosing,
+    );
+    if (!live) return;
+    idleClosed = true;
+    live.intentionallyClosing = true;
+    try {
+      if (live.socket.readyState === WebSocket.OPEN)
+        live.socket.send(JSON.stringify({ type: "CloseStream" }));
+      live.socket.close(1000, "idle");
+    } catch {
+      // Already closed.
+    }
+  }, 10_000);
+
+  if (transcriptionMode === "openai") callbacks.onReady("OpenAI transcription");
+  for (const language of transcriptionMode === "deepgram" ? languages : []) openConnection(language);
 
   capture.port.onmessage = (event: MessageEvent<Float32Array>) => {
     if (stopped) return;
@@ -508,6 +594,8 @@ export async function startRitaEconomicListening(args: {
       if (stopped) return;
       stopped = true;
       window.clearInterval(keepAlive);
+      window.clearInterval(idleWatch);
+      if (reconnectTimer) window.clearTimeout(reconnectTimer);
       if (finalTimer) window.clearTimeout(finalTimer);
       if (semanticTimer) window.clearTimeout(semanticTimer);
       capture.port.onmessage = null;
