@@ -29,7 +29,7 @@ import {
   postRitaTurnTimeline,
   type RitaTurnEndReason,
   type RitaTurnTimeline,
-} from "@/lib/rita-turn-telemetry.client";
+} from "@/lib/rita-turn-telemetry";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { isGermanItem, learningKey, type LearningItem, type SaveTarget } from "@/lib/rita-learning";
