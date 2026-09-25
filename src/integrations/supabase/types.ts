@@ -2979,9 +2979,11 @@ export type Database = {
           transcript_char_count: number
           transcript_final_ms: number | null
           transcript_to_first_token_ms: number | null
+          transcription_end_reason: string | null
           turn_id: string | null
           updated_at: string
           user_id: string
+          voice_engine: string | null
         }
         Insert: {
           browser?: string | null
@@ -3031,9 +3033,11 @@ export type Database = {
           transcript_char_count?: number
           transcript_final_ms?: number | null
           transcript_to_first_token_ms?: number | null
+          transcription_end_reason?: string | null
           turn_id?: string | null
           updated_at?: string
           user_id: string
+          voice_engine?: string | null
         }
         Update: {
           browser?: string | null
@@ -3083,9 +3087,11 @@ export type Database = {
           transcript_char_count?: number
           transcript_final_ms?: number | null
           transcript_to_first_token_ms?: number | null
+          transcription_end_reason?: string | null
           turn_id?: string | null
           updated_at?: string
           user_id?: string
+          voice_engine?: string | null
         }
         Relationships: [
           {
@@ -3119,6 +3125,7 @@ export type Database = {
           turn_id: string
           updated_at: string
           user_id: string
+          voice_engine: string | null
         }
         Insert: {
           char_count?: number
@@ -3141,6 +3148,7 @@ export type Database = {
           turn_id: string
           updated_at?: string
           user_id: string
+          voice_engine?: string | null
         }
         Update: {
           char_count?: number
@@ -3163,6 +3171,7 @@ export type Database = {
           turn_id?: string
           updated_at?: string
           user_id?: string
+          voice_engine?: string | null
         }
         Relationships: []
       }
