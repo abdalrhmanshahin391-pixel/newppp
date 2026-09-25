@@ -664,7 +664,8 @@ export async function startRitaEconomicListening(args: {
     },
     setOutputSpeaking(value, spokenText) {
       outputSpeaking = value;
-      if (typeof spokenText === "string" && spokenText.trim()) outputText = spokenText;
+      if (typeof spokenText === "string" && spokenText.trim())
+        outputText = `${outputText} ${spokenText}`.trim();
       outputGuardUntil = performance.now() + RITA_OUTPUT_ECHO_GUARD_MS;
       if (!value) outputText = "";
     },
