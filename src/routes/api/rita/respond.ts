@@ -194,7 +194,11 @@ export const Route = createFileRoute("/api/rita/respond")({
         const inputAudioMs = Math.min(45_000, Math.max(0, Number(body?.inputAudioMs ?? 0)));
         const sessionId = String(body?.sessionId ?? "");
         const pipelineMode = body?.pipelineMode === "legacy" ? "legacy" : "economic_v2";
-        const transcriptionSource = body?.transcriptionSource === "openai" ? "openai" : "deepgram";
+        const transcriptionSource = body?.transcriptionSource === "openai"
+          ? "openai"
+          : body?.transcriptionSource === "gemini"
+            ? "gemini"
+            : "deepgram";
         const prompt = systemPrompt({
           personality,
           accent,
@@ -334,7 +338,7 @@ export const Route = createFileRoute("/api/rita/respond")({
                  controller.enqueue(encoder.encode(sse("reply.delta", { text: finalOpening })));
                }
               reply = reply.trim();
-              if (!reply) throw new Error("GPT returned an empty reply");
+              if (!reply) throw new Error("Groq returned an empty reply");
               await emitSpeechSegments(chunker.flush());
               reply = cleanRitaSpokenText(reply);
               const outputAudioMs = estimateSpeechDurationMs(reply);
@@ -387,7 +391,11 @@ export const Route = createFileRoute("/api/rita/respond")({
                        ? "openai+groq"
                        : "deepgram+groq",
                   transcription_model:
-                    transcriptionSource === "openai" ? "gpt-4o-mini-transcribe" : "deepgram-nova-3",
+                    transcriptionSource === "openai"
+                      ? "gpt-4o-mini-transcribe"
+                      : transcriptionSource === "gemini"
+                        ? "google/gemini-3.5-transcribe"
+                        : "deepgram-nova-3",
                    response_model: responseModel,
                   speech_model: RITA_MODELS.speech,
                   language: transcriptLanguage || null,
@@ -407,9 +415,9 @@ export const Route = createFileRoute("/api/rita/respond")({
                 controller.enqueue(
                   encoder.encode(
                     sse("turn.error", {
-                      code: "gpt_stream_failed",
-                      stage: "gpt_response",
-                      error: error instanceof Error ? error.message : "GPT stream failed.",
+                       code: "groq_stream_failed",
+                       stage: "groq_response",
+                       error: error instanceof Error ? error.message : "Groq stream failed.",
                       traceId,
                     }),
                   ),

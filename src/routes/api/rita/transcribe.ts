@@ -15,6 +15,9 @@ export const Route = createFileRoute("/api/rita/transcribe")({
     handlers: {
       POST: async ({ request }) => {
         const traceId = crypto.randomUUID();
+        const contentLength = Number(request.headers.get("content-length") ?? 0);
+        if (Number.isFinite(contentLength) && contentLength > 14_000_000)
+          return fail("audio_too_large", "That recording is too long to double-check.", 413, traceId);
         const auth = await requireRitaUser(request);
         if (!auth) return fail("unauthorized", "Please sign in again.", 401, traceId);
         const settings = await getRitaSettings();
@@ -64,7 +67,12 @@ export const Route = createFileRoute("/api/rita/transcribe")({
           if (!line.startsWith("data:")) continue;
           const raw = line.slice(5).trim();
           if (!raw || raw === "[DONE]") continue;
-          const event = JSON.parse(raw) as { type?: string; delta?: string; text?: string };
+          let event: { type?: string; delta?: string; text?: string };
+          try {
+            event = JSON.parse(raw) as { type?: string; delta?: string; text?: string };
+          } catch {
+            continue;
+          }
           if (event.type === "transcript.text.done") text = String(event.text ?? text);
           else if (event.type === "transcript.text.delta") text += String(event.delta ?? "");
         }

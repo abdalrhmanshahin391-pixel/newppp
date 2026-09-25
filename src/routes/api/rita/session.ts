@@ -11,6 +11,7 @@ import {
   resolveRitaOpenAiKey,
 } from "@/lib/rita-voice.server";
 import { resolveRitaGroqConfig } from "@/lib/rita-groq.server";
+import { resolveFishKey } from "@/lib/rita-fish.server";
 
 export const Route = createFileRoute("/api/rita/session")({
   server: {
@@ -19,18 +20,20 @@ export const Route = createFileRoute("/api/rita/session")({
         const auth = await requireRitaUser(request);
         if (!auth) return new Response("Unauthorized", { status: 401 });
         const settingsPromise = getRitaSettings();
-        const [settings, allowance, pilotMode, openAiKey, deepgramKey, groq] = await Promise.all([
+        const [settings, allowance, pilotMode, openAiKey, deepgramKey, groq, fishKey] = await Promise.all([
           settingsPromise,
           settingsPromise.then((value) => getRitaAllowance(auth.userId, value)),
           getRitaPilotMode(auth.userId),
           resolveRitaOpenAiKey(),
           resolveRitaDeepgramKey(),
           resolveRitaGroqConfig(),
+          resolveFishKey(),
         ]);
+        const voiceReady = settings.voiceEngine === "fish" ? Boolean(fishKey) : Boolean(openAiKey);
         return Response.json(
           {
-            configured: Boolean(openAiKey && groq && (pilotMode === "legacy" || deepgramKey)),
-            providers: { openai: Boolean(openAiKey), deepgram: Boolean(deepgramKey), groq: Boolean(groq) },
+            configured: Boolean(voiceReady && groq && (pilotMode === "legacy" || deepgramKey)),
+            providers: { openai: Boolean(openAiKey), fish: Boolean(fishKey), deepgram: Boolean(deepgramKey), groq: Boolean(groq) },
             enabled: settings.enabled,
             pilotMode,
             voice: settings.voice,
@@ -66,14 +69,16 @@ export const Route = createFileRoute("/api/rita/session")({
         }
 
         const settingsPromise = getRitaSettings();
-        const [settings, allowance, pilotMode, openAiKey, deepgramKey, groq] = await Promise.all([
+        const [settings, allowance, pilotMode, openAiKey, deepgramKey, groq, fishKey] = await Promise.all([
           settingsPromise,
           settingsPromise.then((value) => getRitaAllowance(auth.userId, value)),
           getRitaPilotMode(auth.userId),
           resolveRitaOpenAiKey(),
           resolveRitaDeepgramKey(),
           resolveRitaGroqConfig(),
+          resolveFishKey(),
         ]);
+        const voiceReady = settings.voiceEngine === "fish" ? Boolean(fishKey) : Boolean(openAiKey);
 
         if (!allowance.allowed) {
           const message =
@@ -106,14 +111,14 @@ export const Route = createFileRoute("/api/rita/session")({
         } catch (error) {
           console.warn("Rita session logging is not ready", error);
         }
-        if (!openAiKey || !groq || (pilotMode === "economic_v2" && !deepgramKey))
+        if (!voiceReady || !groq || (pilotMode === "economic_v2" && !deepgramKey))
           return Response.json(
             {
               ok: false,
               code: "rita_pipeline_not_configured",
-              stage: !openAiKey ? "openai_auth" : !groq ? "groq_auth" : "deepgram_auth",
-              message: !openAiKey
-                ? "Add an OpenAI key in Admin → AI keys."
+               stage: !voiceReady ? "speech_auth" : !groq ? "groq_auth" : "deepgram_auth",
+               message: !voiceReady
+                 ? `Add a ${settings.voiceEngine === "fish" ? "Fish Audio" : "OpenAI"} key in Admin → AI keys.`
                  : !groq
                    ? "Add a Groq key in Admin → AI keys."
                    : !deepgramKey
@@ -136,7 +141,7 @@ export const Route = createFileRoute("/api/rita/session")({
             ok: true,
             sessionId,
             configured: true,
-            providers: { openai: true, deepgram: Boolean(deepgramKey), groq: true },
+            providers: { openai: Boolean(openAiKey), fish: Boolean(fishKey), deepgram: Boolean(deepgramKey), groq: true },
             pilotMode,
             voice: settings.voice,
             secondPassStt: settings.secondPassStt,

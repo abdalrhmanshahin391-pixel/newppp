@@ -16,3 +16,6 @@
    **"do u want to apply it like lovable"**
 4. **Execution**: Only execute the changes after the user explicitly replies to apply it.
 
+## RitaVoice architecture
+- RitaVoice uses Deepgram for live recognition, Groq only for response generation, and the selected Fish/OpenAI engine only for speech; second-listen transcription is conditional on low confidence or mixed scripts.
+

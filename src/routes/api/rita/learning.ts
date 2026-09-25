@@ -107,9 +107,18 @@ export const Route = createFileRoute("/api/rita/learning")({
           const data = input.data;
 
           if (data.action === "undo") {
+            const { data: subject, error: subjectError } = await table("flash_subjects")
+              .select("id")
+              .eq("user_id", auth.userId)
+              .eq("name", "Rita Words")
+              .is("parent_id", null)
+              .maybeSingle();
+            if (subjectError) throw subjectError;
+            if (!subject) return Response.json({ removed: 0 });
             const { data: removed, error } = await table("flash_cards")
               .delete()
               .eq("user_id", auth.userId)
+              .eq("subject_id", subject.id)
               .in("id", data.cardIds)
               .select("id");
             if (error) throw error;

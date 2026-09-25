@@ -91,15 +91,6 @@ export const Route = createFileRoute("/api/rita/speech")({
           );
 
         const [settings, key] = await configPromise;
-        if (!key)
-          return speechError(
-            "not_configured",
-            "Rita’s voice is not configured.",
-            503,
-            traceId,
-            false,
-          );
-
         const requestedEngine =
           body?.engine === "fish" || body?.engine === "openai" ? body.engine : settings.voiceEngine;
         if (requestedEngine === "fish" && settings.fishVoiceId) {
@@ -131,6 +122,17 @@ export const Route = createFileRoute("/api/rita/speech")({
             }
           }
         }
+
+        if (!key)
+          return speechError(
+            "not_configured",
+            requestedEngine === "fish"
+              ? "Fish voice is unavailable and no backup voice is configured."
+              : "Rita’s voice is not configured.",
+            503,
+            traceId,
+            false,
+          );
 
         try {
           const voice = ALLOWED_VOICES.has(settings.voice) ? settings.voice : "marin";
