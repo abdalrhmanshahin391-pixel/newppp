@@ -11,7 +11,11 @@ import {
   requireRitaUser,
   resolveRitaOpenAiKey,
 } from "@/lib/rita-voice.server";
-import { RitaClauseChunker, cleanRitaSpokenText } from "@/lib/rita-clause-chunker";
+import {
+  RitaClauseChunker,
+  RitaReplySanitizer,
+  cleanRitaSpokenText,
+} from "@/lib/rita-clause-chunker";
 import { createRitaSpeechTicket } from "@/lib/rita-speech-ticket.server";
 import { verifyRitaSessionTicket } from "@/lib/rita-session-ticket.server";
 
@@ -72,7 +76,7 @@ const RITA_STATIC_PROMPT = `You are Rita, a natural one-to-one language tutor in
 
 Core behaviour:
 - Answer the learner's actual question or respond to what they actually said first, in the very first sentence. Start with substance immediately.
-- Never open with filler or acknowledgements such as "Hmm", "Mmm", "Okay so", "Great question", "I understand", "فهمت عليك", "ممم", "طيب", "Also gut", or similar. The first words must carry meaning.
+- Never use filler or acknowledgement openings such as "Hmm", "Mmm", "Okay so", "Great question", "I understand", "فهمت عليك", "ممم", "طيب", "خليني أشوف", "Also gut", or similar. Begin directly with the answer; these openings are forbidden in every language.
 - Make the first sentence short (roughly four to eight words) so speech can start quickly, then continue naturally.
 - Keep ordinary replies brief and conversational, like a real tutor talking, not a written article. Give more detail only when the learner asks for it or the topic genuinely requires it.
 - Correct only language mistakes that are useful for the learner, briefly and naturally, usually by modelling the correct form once rather than lecturing.
@@ -202,7 +206,7 @@ export const Route = createFileRoute("/api/rita/respond")({
             model: RITA_MODELS.response,
             stream: true,
             stream_options: { include_usage: true },
-            max_tokens: 240,
+            max_tokens: 320,
             prompt_cache_key: `rita-v1-${personality}`,
             messages: [
               { role: "system", content: RITA_STATIC_PROMPT },
@@ -252,6 +256,7 @@ export const Route = createFileRoute("/api/rita/respond")({
             let segmentIndex = 0;
             let firstTokenMs = 0;
             const chunker = new RitaClauseChunker();
+            const sanitizer = new RitaReplySanitizer();
             const reader = upstream.body!.getReader();
             controller.enqueue(encoder.encode(sse("turn.started", {
               turnId,
@@ -300,8 +305,9 @@ export const Route = createFileRoute("/api/rita/respond")({
                   } catch {
                     continue;
                   }
-                  const delta = String(chunk?.choices?.[0]?.delta?.content ?? "");
-                  if (delta) {
+                   const rawDelta = String(chunk?.choices?.[0]?.delta?.content ?? "");
+                   const delta = rawDelta ? sanitizer.push(rawDelta) : "";
+                   if (delta) {
                     if (!firstTokenMs) firstTokenMs = Math.round(performance.now() - startedAt);
                     reply += delta;
                     // Voice first: the segment request starts before the text renders.
@@ -315,6 +321,13 @@ export const Route = createFileRoute("/api/rita/respond")({
                   }
                 }
               }
+               const finalOpening = sanitizer.flush();
+               if (finalOpening) {
+                 if (!firstTokenMs) firstTokenMs = Math.round(performance.now() - startedAt);
+                 reply += finalOpening;
+                 await emitSpeechSegments(chunker.push(finalOpening));
+                 controller.enqueue(encoder.encode(sse("reply.delta", { text: finalOpening })));
+               }
               reply = reply.trim();
               if (!reply) throw new Error("GPT returned an empty reply");
               await emitSpeechSegments(chunker.flush());
@@ -326,8 +339,31 @@ export const Route = createFileRoute("/api/rita/respond")({
                 inputTokens,
                 outputTokens,
               });
-              let usageSaved = false;
-              try {
+               controller.enqueue(
+                 encoder.encode(
+                   sse("reply.done", {
+                     turnId,
+                     traceId,
+                     reply,
+                     detectedLanguage: transcriptLanguage || "unknown",
+                     detectedDialect: accent || "standard",
+                     emotion: "warm",
+                     totalMs: Math.round(performance.now() - startedAt),
+                     serverTimings: {
+                       auth: authMs,
+                       config: configMs,
+                       allowance: allowanceMs,
+                       firstToken: firstTokenMs,
+                       cachedTokens,
+                       inputTokens,
+                       replyDone: Math.round(performance.now() - startedAt),
+                     },
+                     segmentsPlanned: segmentIndex,
+                   }),
+                 ),
+               );
+               void (async () => {
+                 try {
                 const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
                 const validSessionId = /^[0-9a-f-]{36}$/i.test(sessionId) ? sessionId : null;
                 const { error } = await (supabaseAdmin.from as any)("rita_voice_usage").insert({
@@ -353,37 +389,12 @@ export const Route = createFileRoute("/api/rita/respond")({
                   premium_voice: true,
                   status: "completed",
                 });
-                if (error) throw error;
-                usageSaved = true;
+                 if (error) throw error;
                 clearRitaAllowanceCache(auth.userId);
-              } catch (error) {
-                console.error("Rita Economic usage write failed", traceId, error);
-              }
-              if (!usageSaved)
-                throw new Error("Rita could not securely authorize speech for this reply");
-              controller.enqueue(
-                encoder.encode(
-                  sse("reply.done", {
-                    turnId,
-                    traceId,
-                    reply,
-                    detectedLanguage: transcriptLanguage || "unknown",
-                    detectedDialect: accent || "standard",
-                    emotion: "warm",
-                    totalMs: Math.round(performance.now() - startedAt),
-                    serverTimings: {
-                      auth: authMs,
-                      config: configMs,
-                      allowance: allowanceMs,
-                      firstToken: firstTokenMs,
-                      cachedTokens,
-                      inputTokens,
-                      replyDone: Math.round(performance.now() - startedAt),
-                    },
-                    segmentsPlanned: segmentIndex,
-                  }),
-                ),
-              );
+                 } catch (error) {
+                   console.error("Rita Economic usage write failed", traceId, error);
+                 }
+               })();
             } catch (error) {
               if (!cancelled)
                 controller.enqueue(

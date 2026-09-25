@@ -3,6 +3,8 @@ import { test } from "node:test";
 
 import { explicitRitaAccent, stableRitaDialect } from "../src/lib/rita-voice-style.ts";
 import { playRitaSpeechResponse } from "../src/lib/rita-speech-stream.client.ts";
+import { RitaReplySanitizer, stripRitaOpeningFiller } from "../src/lib/rita-clause-chunker.ts";
+import { isLikelyRitaEcho, isRitaStopCommand } from "../src/lib/rita-economic.client.ts";
 
 test("an explicit Jordanian request wins over an Iraqi dialect guess", () => {
   const requested = explicitRitaAccent("ممكن تحكي معي باللهجة الأردنية؟");
@@ -59,4 +61,23 @@ test("buffered speech reads one stream without calling Body.blob", async () => {
   assert.equal(played, true);
   assert.match(source, /^blob:/);
   URL.revokeObjectURL(source);
+});
+
+test("spoken filler is removed only from the opening", () => {
+  assert.equal(stripRitaOpeningFiller("ممم، الجواب هو أربعة."), "الجواب هو أربعة.");
+  assert.equal(stripRitaOpeningFiller("Okay so, the answer is four."), "the answer is four.");
+  assert.equal(stripRitaOpeningFiller("Das Wort verstehe ich."), "Das Wort verstehe ich.");
+});
+
+test("stream sanitizer keeps text and speech on the same clean reply", () => {
+  const sanitizer = new RitaReplySanitizer();
+  const output = [sanitizer.push("فهمت "), sanitizer.push("عليك… الجواب هو أربعة."), sanitizer.flush()].join("");
+  assert.equal(output, "الجواب هو أربعة.");
+});
+
+test("Rita echo is ignored while explicit stop commands remain valid", () => {
+  assert.equal(isLikelyRitaEcho("الجواب هو أربعة", "الجواب هو أربعة، لأن اثنين زائد اثنين"), true);
+  assert.equal(isLikelyRitaEcho("عندي سؤال جديد", "الجواب هو أربعة، لأن اثنين زائد اثنين"), false);
+  assert.equal(isRitaStopCommand("وقف"), true);
+  assert.equal(isRitaStopCommand("لا"), true);
 });

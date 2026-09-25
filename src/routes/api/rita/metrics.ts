@@ -17,6 +17,8 @@ function count(value: unknown, max = 1_000_000) {
   return Number.isFinite(number) ? Math.min(max, Math.max(0, Math.round(number))) : 0;
 }
 
+const TERMINAL_STATUSES = new Set(["completed", "failed", "aborted", "partial"]);
+
 export const Route = createFileRoute("/api/rita/metrics")({
   server: {
     handlers: {
@@ -89,8 +91,21 @@ export const Route = createFileRoute("/api/rita/metrics")({
               updated_at: new Date().toISOString(),
             };
             const conflict = turnId ? "user_id,turn_id" : "user_id,client_turn_id";
-            const { error } = await (supabaseAdmin.from as any)("rita_turn_metrics").upsert(row, { onConflict: conflict });
-          if (error) throw error;
+            const identityColumn = turnId ? "turn_id" : "client_turn_id";
+            const identityValue = turnId ?? clientTurnId;
+            let preserveTerminal = false;
+            if (identityValue && !TERMINAL_STATUSES.has(row.status)) {
+              const existing = await (supabaseAdmin.from as any)("rita_turn_metrics")
+                .select("status")
+                .eq("user_id", auth.userId)
+                .eq(identityColumn, identityValue)
+                .maybeSingle();
+              preserveTerminal = TERMINAL_STATUSES.has(String(existing.data?.status ?? ""));
+            }
+            if (!preserveTerminal) {
+              const { error } = await (supabaseAdmin.from as any)("rita_turn_metrics").upsert(row, { onConflict: conflict });
+              if (error) throw error;
+            }
             const segment = body?.segment as Record<string, unknown> | undefined;
             if (turnId && segment && Number.isInteger(Number(segment.index))) {
               const segmentRow = {
