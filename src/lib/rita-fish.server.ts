@@ -47,9 +47,18 @@ export async function listFishArabicVoices(): Promise<{ voices: FishVoice[]; con
     if (!response.ok) throw new Error(`Fish Audio voice list failed (${response.status})`);
     return ((await response.json()) as { items?: any[] }).items ?? [];
   };
-  // 1) Official Arabic catalogue (same "Default Voices" list as fish.audio), 2) Saudi/Gulf search terms.
+  // 1) The official Arabic "Default Voices" from fish.audio are authored by "Fish Official" and
+  //    never rank high in the popular list (which is dominated by meme clones), so fetch each
+  //    official name directly and keep only the "Fish Official" entry. 2) Saudi/Gulf search terms.
+  const OFFICIAL_ARABIC_NAMES = [
+    "فاطمة", "فهد", "ليان", "نورة", "عمر", "يوسف", "فريدة", "سلمى", "أمين", "كريم",
+  ];
   const lists = await Promise.all([
-    fetchList("https://api.fish.audio/model?page_size=100&sort_by=task_count&language=ar"),
+    ...OFFICIAL_ARABIC_NAMES.map((term) =>
+      fetchList(
+        `https://api.fish.audio/model?page_size=10&sort_by=task_count&title=${encodeURIComponent(term)}`,
+      ),
+    ),
     ...["سعودي", "saudi", "خليجي"].map((term) =>
       fetchList(
         `https://api.fish.audio/model?page_size=20&sort_by=task_count&title=${encodeURIComponent(term)}`,
