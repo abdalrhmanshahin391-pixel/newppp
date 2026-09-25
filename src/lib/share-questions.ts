@@ -210,7 +210,7 @@ export async function publishQuestionSet(input: {
     .insert({
       owner_id: uid,
       title: input.title.trim(),
-      description: input.description.trim() || null,
+      description: input.description?.trim() || null,
       source_type: input.source_type,
       subject: input.subject || null,
       cover: input.cover,
