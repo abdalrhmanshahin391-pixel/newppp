@@ -33,6 +33,12 @@ export function RitaFishVoicePanel() {
     }
   }
 
+  // Load the official Arabic voices automatically when the panel opens.
+  useEffect(() => {
+    void loadVoices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function persist(patch: Partial<NonNullable<typeof settings>>) {
     if (!settings) return;
     const next = { ...settings, ...patch };
@@ -75,7 +81,7 @@ export function RitaFishVoicePanel() {
       </div>
       <div className="mt-4 flex items-center gap-3">
         <button onClick={loadVoices} disabled={loading} className="rounded-xl border-2 border-border px-3 py-2 text-xs font-black">
-          {loading ? "Loading…" : "Show Arabic / Saudi voices"}
+          {loading ? "Loading…" : "Refresh voices"}
         </button>
         <span className="text-xs text-muted-foreground">
           Chosen: {settings.fishVoiceId ?? "none (Fish will fall back to OpenAI)"}
@@ -89,7 +95,13 @@ export function RitaFishVoicePanel() {
           {voices.map((v) => (
             <li key={v.id} className="flex items-center justify-between gap-2 rounded-xl border border-border p-2 text-sm">
               <div className="min-w-0">
-                <div className="truncate font-bold">{v.title} {v.official && <span className="text-xs text-primary">(official)</span>}</div>
+                <div className="flex flex-wrap items-center gap-1 truncate font-bold">
+                  {v.title}
+                  {v.official && <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-black text-primary">Fish Official</span>}
+                  {/فاطمة|fatima|فهد|fahad/i.test(v.title) && (
+                    <span className="rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-black text-emerald-600">مقترح</span>
+                  )}
+                </div>
                 <div className="text-xs text-muted-foreground">by {v.author || "community"} · {v.uses.toLocaleString()} uses</div>
               </div>
               <div className="flex shrink-0 gap-2">
