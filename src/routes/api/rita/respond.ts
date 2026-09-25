@@ -84,7 +84,7 @@ export const Route = createFileRoute("/api/rita/respond")({
       POST: async ({ request }) => {
         const startedAt = performance.now();
         const traceId = crypto.randomUUID();
-        const turnId = crypto.randomUUID();
+        let turnId = crypto.randomUUID();
         // Sign-in check, request body, settings and key all start together.
         const settingsPromise = getRitaSettings();
         const keyPromise = resolveRitaOpenAiKey();
@@ -93,6 +93,8 @@ export const Route = createFileRoute("/api/rita/respond")({
           request.json().catch(() => null) as Promise<Record<string, unknown> | null>,
         ]);
         if (!auth) return apiError("unauthorized", "Please sign in again.", 401, traceId);
+        const requestedTurnId = String(body?.clientTurnId ?? "");
+        if (/^[0-9a-f-]{36}$/i.test(requestedTurnId)) turnId = requestedTurnId;
         const transcript = String(body?.transcript ?? "")
           .trim()
           .slice(0, 2_000);
@@ -103,11 +105,14 @@ export const Route = createFileRoute("/api/rita/respond")({
             422,
             traceId,
           );
+        const authMs = Math.round(performance.now() - startedAt);
         const settings = await settingsPromise;
+        const configMs = Math.round(performance.now() - startedAt);
         const [allowance, key] = await Promise.all([
           getRitaAllowance(auth.userId, settings),
           keyPromise,
         ]);
+        const allowanceMs = Math.round(performance.now() - startedAt);
         if (!allowance.allowed)
           return apiError(
             "allowance_reached",
@@ -176,9 +181,14 @@ export const Route = createFileRoute("/api/rita/respond")({
             let inputTokens = 0;
             let outputTokens = 0;
             let segmentIndex = 0;
+            let firstTokenMs = 0;
             const chunker = new RitaClauseChunker();
             const reader = upstream.body!.getReader();
-            controller.enqueue(encoder.encode(sse("turn.started", { turnId, traceId })));
+            controller.enqueue(encoder.encode(sse("turn.started", {
+              turnId,
+              traceId,
+              timings: { auth: authMs, config: configMs, allowance: allowanceMs },
+            })));
             const emitSpeechSegments = async (segments: string[]) => {
               for (const text of segments) {
                 if (!text || segmentIndex >= 3) continue;
@@ -223,6 +233,7 @@ export const Route = createFileRoute("/api/rita/respond")({
                   }
                   const delta = String(chunk?.choices?.[0]?.delta?.content ?? "");
                   if (delta) {
+                    if (!firstTokenMs) firstTokenMs = Math.round(performance.now() - startedAt);
                     reply += delta;
                     // Voice first: the segment request starts before the text renders.
                     await emitSpeechSegments(chunker.push(delta));
@@ -289,6 +300,14 @@ export const Route = createFileRoute("/api/rita/respond")({
                     detectedDialect: accent || "standard",
                     emotion: "warm",
                     totalMs: Math.round(performance.now() - startedAt),
+                    serverTimings: {
+                      auth: authMs,
+                      config: configMs,
+                      allowance: allowanceMs,
+                      firstToken: firstTokenMs,
+                      replyDone: Math.round(performance.now() - startedAt),
+                    },
+                    segmentsPlanned: segmentIndex,
                   }),
                 ),
               );
