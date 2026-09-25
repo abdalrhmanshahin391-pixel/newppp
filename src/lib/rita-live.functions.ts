@@ -99,9 +99,6 @@ const SettingsSchema = z.object({
   pipelineMode: z.enum(["legacy", "economic_v2"]),
   rolloutPercent: z.number().int().min(0).max(100),
   adminOnlyPreview: z.boolean(),
-  ttsProvider: z.enum(["openai", "cartesia"]).optional(),
-  cartesiaVoiceId: z.string().uuid().optional(),
-  cartesiaModel: z.enum(["sonic-3", "sonic-3.5", "sonic-2", "sonic-turbo"]).optional(),
 });
 
 export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
@@ -114,7 +111,7 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
       await Promise.all([
         (supabase.from as any)("rita_voice_settings")
           .select(
-            "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,tts_provider,cartesia_voice_id,cartesia_model",
+            "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview",
           )
           .eq("id", true)
           .maybeSingle(),
@@ -168,11 +165,6 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
         pipelineMode: settings?.pipeline_mode === "legacy" ? "legacy" : "economic_v2",
         rolloutPercent: Math.min(100, Math.max(0, Number(settings?.rollout_percent ?? 100))),
         adminOnlyPreview: settings?.admin_only_preview === true,
-        ttsProvider: (settings?.tts_provider === "cartesia" ? "cartesia" : "openai") as
-          | "openai"
-          | "cartesia",
-        cartesiaVoiceId: String(settings?.cartesia_voice_id || "64a941ac-07ac-462c-a81c-008e353dd83e"),
-        cartesiaModel: String(settings?.cartesia_model || "sonic-3"),
       },
       metrics: {
         sessions: (sessions ?? []).length,
@@ -208,9 +200,6 @@ export const saveRitaVoiceSettings = createServerFn({ method: "POST" })
       pipeline_mode: data.pipelineMode,
       rollout_percent: data.rolloutPercent,
       admin_only_preview: data.adminOnlyPreview,
-      ...(data.ttsProvider ? { tts_provider: data.ttsProvider } : {}),
-      ...(data.cartesiaVoiceId ? { cartesia_voice_id: data.cartesiaVoiceId } : {}),
-      ...(data.cartesiaModel ? { cartesia_model: data.cartesiaModel } : {}),
       updated_at: new Date().toISOString(),
       updated_by: userId,
     });

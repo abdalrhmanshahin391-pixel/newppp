@@ -1,11 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  RITA_MODELS,
-  getRitaSettings,
-  resolveRitaCartesiaKey,
-  resolveRitaOpenAiKey,
-} from "@/lib/rita-voice.server";
-import { cartesiaSpeech } from "@/lib/rita-cartesia.server";
+import { RITA_MODELS, getRitaSettings, resolveRitaOpenAiKey } from "@/lib/rita-voice.server";
 import { ritaVoiceInstructions } from "@/lib/rita-voice-style";
 import { readRitaSpeechTicketUser, verifyRitaSpeechTicket } from "@/lib/rita-speech-ticket.server";
 
@@ -95,41 +89,6 @@ export const Route = createFileRoute("/api/rita/speech")({
           );
 
         const [settings, key] = await configPromise;
-
-        if (settings.ttsProvider === "cartesia") {
-          try {
-            const cartesiaKey = await resolveRitaCartesiaKey();
-            if (cartesiaKey) {
-              const startedAt = performance.now();
-              const upstream = await cartesiaSpeech({
-                key: cartesiaKey,
-                text,
-                voiceId: settings.cartesiaVoiceId,
-                model: settings.cartesiaModel,
-                language: String(body?.language ?? ""),
-                signal: request.signal,
-              });
-              if (upstream.ok && upstream.body) {
-                return new Response(upstream.body, {
-                  headers: {
-                    "Content-Type": "audio/pcm;rate=24000",
-                    "Cache-Control": "private, no-store",
-                    "X-Rita-Voice": "cartesia",
-                    "X-Rita-Trace": traceId,
-                    "X-Rita-Segment": String(index),
-                    "Server-Timing": `speech;dur=${(performance.now() - startedAt).toFixed(1)}`,
-                  },
-                });
-              }
-              const detail = await upstream.text().catch(() => "");
-              console.error("Rita Cartesia failed, using OpenAI", traceId, upstream.status, detail.slice(0, 240));
-            }
-          } catch (error) {
-            if (request.signal.aborted) return new Response(null, { status: 499 });
-            console.error("Rita Cartesia request failed, using OpenAI", traceId, error);
-          }
-        }
-
         if (!key)
           return speechError(
             "not_configured",
