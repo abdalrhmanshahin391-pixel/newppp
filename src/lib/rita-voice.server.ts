@@ -47,6 +47,8 @@ export type RitaSettings = {
   adminOnlyPreview: boolean;
   voiceEngine: "openai" | "fish";
   fishVoiceId: string | null;
+  groqModel: string;
+  secondPassStt: boolean;
 };
 
 export type RitaAuth = { userId: string };
@@ -63,6 +65,8 @@ const DEFAULT_SETTINGS: RitaSettings = {
   adminOnlyPreview: false,
   voiceEngine: "openai",
   fishVoiceId: null,
+  groqModel: "mistral-saba-24b",
+  secondPassStt: true,
 };
 
 function apiUrl() {
@@ -167,7 +171,7 @@ async function loadRitaSettings(): Promise<RitaSettings> {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await (supabaseAdmin.from as any)("rita_voice_settings")
       .select(
-        "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,voice_engine,fish_voice_id",
+        "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,voice_engine,fish_voice_id,groq_model,second_pass_stt",
       )
       .eq("id", true)
       .maybeSingle();
@@ -186,6 +190,8 @@ async function loadRitaSettings(): Promise<RitaSettings> {
       adminOnlyPreview: data.admin_only_preview === true,
       voiceEngine: data.voice_engine === "fish" ? "fish" : "openai",
       fishVoiceId: data.fish_voice_id ? String(data.fish_voice_id) : null,
+      groqModel: String(data.groq_model || DEFAULT_SETTINGS.groqModel),
+      secondPassStt: data.second_pass_stt !== false,
     };
   } catch {
     // Allows the application to run before the migration reaches production.

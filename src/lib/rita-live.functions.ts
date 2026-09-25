@@ -101,6 +101,8 @@ const SettingsSchema = z.object({
   adminOnlyPreview: z.boolean(),
   voiceEngine: z.enum(["openai", "fish"]).default("openai"),
   fishVoiceId: z.string().regex(/^[a-zA-Z0-9]{8,64}$/).nullable().default(null),
+  groqModel: z.string().trim().min(2).max(120).default("mistral-saba-24b"),
+  secondPassStt: z.boolean().default(true),
 });
 
 export const listRitaFishVoices = createServerFn({ method: "GET" })
@@ -121,7 +123,7 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
       await Promise.all([
         (supabase.from as any)("rita_voice_settings")
           .select(
-            "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,voice_engine,fish_voice_id",
+            "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,voice_engine,fish_voice_id,groq_model,second_pass_stt",
           )
           .eq("id", true)
           .maybeSingle(),
@@ -177,6 +179,8 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
         adminOnlyPreview: settings?.admin_only_preview === true,
         voiceEngine: (settings?.voice_engine === "fish" ? "fish" : "openai") as "openai" | "fish",
         fishVoiceId: (settings?.fish_voice_id as string | null) ?? null,
+        groqModel: String(settings?.groq_model || "mistral-saba-24b"),
+        secondPassStt: settings?.second_pass_stt !== false,
       },
       metrics: {
         sessions: (sessions ?? []).length,
@@ -218,6 +222,8 @@ export const saveRitaVoiceSettings = createServerFn({ method: "POST" })
       admin_only_preview: data.adminOnlyPreview,
       voice_engine: data.voiceEngine,
       fish_voice_id: data.fishVoiceId,
+      groq_model: data.groqModel,
+      second_pass_stt: data.secondPassStt,
       updated_at: new Date().toISOString(),
       updated_by: userId,
     });
