@@ -134,10 +134,10 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
           .select("id,user_id,ended_at")
           .gte("started_at", start),
         (supabase.from as any)("rita_turn_metrics")
-          .select("speech_end_to_first_audio_ms,speech_end_ms,transcript_final_ms,first_token_ms,first_audio_ms,playback_end_ms,status")
+          .select("speech_end_to_first_audio_ms,speech_end_ms,transcript_final_ms,first_token_ms,first_audio_ms,playback_end_ms,status,fallback_used,reconnect_count")
           .gte("created_at", start),
         (supabase.from as any)("rita_turn_metrics")
-          .select("turn_id,diagnostic_code,status,end_reason,last_stage,speech_end_ms,transcript_final_ms,first_token_ms,text_complete_ms,first_audio_ms,playback_end_ms,segments_planned,segments_completed,played_audio_ms,fallback_used,created_at")
+          .select("turn_id,diagnostic_code,status,end_reason,last_stage,transcription_end_reason,voice_engine,speech_end_ms,transcript_final_ms,first_token_ms,text_complete_ms,first_audio_ms,playback_end_ms,segments_planned,segments_completed,played_audio_ms,fallback_used,reconnect_count,created_at")
           .order("created_at", { ascending: false })
           .limit(20),
       ]);
@@ -191,6 +191,10 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
         responseP50: stagePercentile("transcript_final_ms", "first_token_ms", 0.5),
         audioP50: stagePercentile("first_token_ms", "first_audio_ms", 0.5),
         incompleteTurns: timingRows.filter((row) => row.status && row.status !== "completed").length,
+        fallbackRate: timingRows.length
+          ? Math.round((timingRows.filter((row) => row.fallback_used === true).length / timingRows.length) * 100)
+          : 0,
+        reconnectTurns: timingRows.filter((row) => Number(row.reconnect_count) > 0).length,
       },
       recentTurns: recentTurns ?? [],
     };

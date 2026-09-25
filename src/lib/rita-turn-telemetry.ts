@@ -31,6 +31,8 @@ export type RitaTurnTimeline = {
   fillerUsed: boolean;
   fallbackUsed: boolean;
   reconnectCount: number;
+  transcriptionEndReason?: string;
+  voiceEngine?: string;
   errorStage?: string;
   serverTimings?: Record<string, number>;
   sessionId?: string | null;

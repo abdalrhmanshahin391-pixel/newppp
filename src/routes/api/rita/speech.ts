@@ -73,7 +73,7 @@ export const Route = createFileRoute("/api/rita/speech")({
         if (
           !Number.isInteger(index) ||
           index < 0 ||
-          index > 2 ||
+          index > 7 ||
           !(await verifyRitaSpeechTicket({
             ticket,
             userId: auth.userId,

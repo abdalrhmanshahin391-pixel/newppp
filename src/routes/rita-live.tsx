@@ -879,6 +879,12 @@ function RitaLivePage() {
             ),
             signal: voiceController.signal,
           });
+          responsePromise
+            .then((response) => {
+              segmentTimeline.voiceEngine = response.headers.get("X-Rita-Voice") || "unknown";
+              timeline.voiceEngine = String(segmentTimeline.voiceEngine);
+            })
+            .catch(() => undefined);
           if (!metricRef.current.ttsStart) metricRef.current.ttsStart = performance.now();
           speechChain = speechChain.then(async () => {
             const response = await responsePromise;
@@ -918,6 +924,7 @@ function RitaLivePage() {
           });
         };
         const { streamRitaEconomicReply } = await loadEconomicResponse();
+        markRitaTurn(timeline, "requestSent");
         const result = await streamRitaEconomicReply({
           token,
           signal: controller.signal,
@@ -1114,6 +1121,7 @@ function RitaLivePage() {
     lastSpoken.current = "";
     sessionSummary.current = "";
     completedTurns.current = 0;
+    reconnectCount.current = 0;
     stopSpeaking();
     const closingId = sessionId.current;
     sessionId.current = null;
@@ -1389,7 +1397,10 @@ function RitaLivePage() {
       const controller = await startRitaEconomicListening({
         token: listeningToken,
         transcriptionMode: selectedMode === "legacy" ? "openai" : "deepgram",
-        accent: accentPreference,
+        accent:
+          accentPreference ||
+          languageState.current.activeDialect ||
+          languageState.current.activeLanguage,
         browserLocale: navigator.language || "",
         keyterms: ["RitaJet", ...learningRef.current.slice(-20).map((item) => item.term)],
         refreshToken: async () => {
@@ -1406,6 +1417,26 @@ function RitaLivePage() {
           onReconnect: () => {
             if (epoch !== lessonEpoch.current) return;
             reconnectCount.current += 1;
+            if (turnTimeline.current) turnTimeline.current.reconnectCount = reconnectCount.current;
+          },
+          onConnectionState: (connectionState) => {
+            if (epoch !== lessonEpoch.current || mutedRef.current) return;
+            if (connectionState === "reconnecting") {
+              setStatus("Connection paused for a moment — restoring listening…");
+              return;
+            }
+            if (connectionState === "listening" && !processingRef.current && !speechAbort.current) {
+              setError(null);
+              setMood("listening");
+              setStatus("Rita is listening");
+            }
+          },
+          onTurnSignal: (event, reason) => {
+            const timeline = turnTimeline.current;
+            if (timeline && event === "speech_end" && reason) {
+              timeline.lastStage = reason;
+              timeline.transcriptionEndReason = reason;
+            }
           },
           onReady: (connectedLanguage) => {
             if (epoch !== lessonEpoch.current) return;
@@ -1428,6 +1459,7 @@ function RitaLivePage() {
           onBargeIn: () => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
             stopSpeaking("user_barge_in");
+            reconnectCount.current = 0;
             turnTimeline.current = createRitaTurnTimeline(pendingSpeechStart.current || performance.now());
             segmentTimelines.current.clear();
             metricRef.current = {
@@ -1519,8 +1551,8 @@ function RitaLivePage() {
           onError: (message) => {
             if (epoch !== lessonEpoch.current) return;
             setMood("listening");
-            setStatus("Deepgram interrupted — Rita will recover the current sentence");
-            setError(message);
+            setStatus("The connection paused — press and hold to repeat that sentence");
+            setError(message.includes("lost") ? "Rita missed that sentence — please say it again." : null);
           },
         },
       });

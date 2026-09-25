@@ -58,6 +58,8 @@ export const Route = createFileRoute("/api/rita/metrics")({
               50,
               Math.max(0, Math.round(Number(body?.reconnectCount) || 0)),
             ),
+            transcription_end_reason: String(body?.transcriptionEndReason ?? "").slice(0, 40) || null,
+            voice_engine: String(body?.voiceEngine ?? "").slice(0, 30) || null,
             error_stage: String(body?.errorStage ?? "").slice(0, 60) || null,
               status: ["started", "streaming", "completed", "failed", "aborted", "partial"].includes(String(body?.status)) ? String(body?.status) : "started",
               end_reason: String(body?.endReason ?? "").slice(0, 60) || null,
@@ -126,6 +128,7 @@ export const Route = createFileRoute("/api/rita/metrics")({
                 http_status: count(segment.httpStatus, 599) || null,
                 status: String(segment.status ?? "planned").slice(0, 40),
                 error_code: String(segment.errorCode ?? "").slice(0, 80) || null,
+                voice_engine: String(segment.voiceEngine ?? "").slice(0, 30) || null,
                 updated_at: new Date().toISOString(),
               };
               const { error: segmentError } = await (supabaseAdmin.from as any)("rita_turn_segments").upsert(segmentRow, { onConflict: "user_id,turn_id,segment_index" });
