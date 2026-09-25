@@ -157,6 +157,8 @@ function AiKeysPage() {
     responseP50: 0,
     audioP50: 0,
     incompleteTurns: 0,
+    fallbackRate: 0,
+    reconnectTurns: 0,
   });
   const [ritaRecentTurns, setRitaRecentTurns] = useState<any[]>([]);
 
@@ -579,7 +581,7 @@ function AiKeysPage() {
             </label>
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-7">
+          <div className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-7">
             {[
               ["Sessions", ritaMetrics.sessions],
               ["Live now", ritaMetrics.activeSessions],
@@ -591,6 +593,8 @@ function AiKeysPage() {
               ["STT p50", ritaMetrics.transcriptP50 ? `${ritaMetrics.transcriptP50}ms` : "—"],
               ["GPT p50", ritaMetrics.responseP50 ? `${ritaMetrics.responseP50}ms` : "—"],
               ["Audio p50", ritaMetrics.audioP50 ? `${ritaMetrics.audioP50}ms` : "—"],
+              ["Fallback", `${ritaMetrics.fallbackRate}%`],
+              ["Reconnect turns", ritaMetrics.reconnectTurns],
               ["Incomplete", ritaMetrics.incompleteTurns],
             ].map(([label, value]) => (
               <div
@@ -608,19 +612,32 @@ function AiKeysPage() {
           <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10 bg-black/20">
             <table className="w-full min-w-[820px] text-left text-xs">
               <thead className="border-b border-white/10 text-white/45">
-                <tr>{["Turn", "Result", "Speech→text", "Text→token", "Token→audio", "Playback", "Segments", "When"].map((label) => <th key={label} className="px-3 py-2 font-bold">{label}</th>)}</tr>
+                <tr>{["Turn", "Result", "Slowest stage", "Speech→text", "Text→token", "Token→audio", "Voice", "Reconnects", "When"].map((label) => <th key={label} className="px-3 py-2 font-bold">{label}</th>)}</tr>
               </thead>
               <tbody>
                 {ritaRecentTurns.map((turn) => {
-                  const delta = (from: string, to: string) => turn[from] != null && turn[to] != null ? `${turn[to] - turn[from]}ms` : "—";
+                  const deltaValue = (from: string, to: string) => turn[from] != null && turn[to] != null ? turn[to] - turn[from] : null;
+                  const delta = (from: string, to: string) => {
+                    const value = deltaValue(from, to);
+                    return value === null ? "—" : `${value}ms`;
+                  };
+                  const stages = [
+                    ["Speech→text", deltaValue("speech_end_ms", "transcript_final_ms")],
+                    ["Text→token", deltaValue("transcript_final_ms", "first_token_ms")],
+                    ["Token→audio", deltaValue("first_token_ms", "first_audio_ms")],
+                  ] as const;
+                  const slowest = [...stages].filter((item) => item[1] !== null).sort((a, b) => Number(b[1]) - Number(a[1]))[0];
+                  const total = deltaValue("speech_end_ms", "first_audio_ms");
+                  const latencyClass = total === null ? "text-white/50" : total < 2000 ? "text-emerald-300" : total <= 4000 ? "text-amber-300" : "text-red-300";
                   return <tr key={turn.turn_id || turn.created_at} className="border-b border-white/5 text-white/75">
                     <td className="px-3 py-2 font-mono">{turn.diagnostic_code || String(turn.turn_id || "").slice(0, 8)}</td>
                     <td className="px-3 py-2"><span className={turn.status === "completed" ? "text-emerald-300" : "text-amber-300"}>{turn.status || "legacy"}</span><div className="text-white/35">{turn.end_reason || turn.last_stage || ""}</div></td>
+                    <td className={`px-3 py-2 font-bold ${latencyClass}`}>{slowest ? `${slowest[0]} ${slowest[1]}ms` : "—"}<div className="text-[10px] font-normal text-white/35">{turn.transcription_end_reason || ""}</div></td>
                     <td className="px-3 py-2">{delta("speech_end_ms", "transcript_final_ms")}</td>
                     <td className="px-3 py-2">{delta("transcript_final_ms", "first_token_ms")}</td>
                     <td className="px-3 py-2">{delta("first_token_ms", "first_audio_ms")}</td>
-                    <td className="px-3 py-2">{turn.played_audio_ms ? `${turn.played_audio_ms}ms` : "—"}</td>
-                    <td className="px-3 py-2">{turn.segments_completed || 0}/{turn.segments_planned || 0}</td>
+                    <td className="px-3 py-2">{turn.voice_engine || "—"}{turn.fallback_used ? <div className="text-amber-300">STT fallback</div> : null}</td>
+                    <td className="px-3 py-2">{turn.reconnect_count || 0}</td>
                     <td className="px-3 py-2 text-white/45">{new Date(turn.created_at).toLocaleString()}</td>
                   </tr>;
                 })}
