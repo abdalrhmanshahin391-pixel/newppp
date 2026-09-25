@@ -404,6 +404,7 @@ export async function startRitaEconomicListening(args: {
     speaking = false;
     bargedIn = false;
     voicedMs = 0;
+    heardWords = false;
     quietMs = 0;
     hotFrames = 0;
     turnAudio = [];
