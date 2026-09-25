@@ -18,6 +18,8 @@ export type RitaEconomicCallbacks = {
   onError: (message: string) => void;
   /** Fired each time the Deepgram stream is reopened after a drop or idle pause. */
   onReconnect?: (reason: "dropped" | "idle") => void;
+  /** Confirmed real speech (≥2 transcribed words or ≥400 ms of voice). Only this may interrupt Rita. */
+  onBargeIn?: () => void;
 };
 
 export type RitaEconomicController = {
@@ -253,13 +255,27 @@ export async function startRitaEconomicListening(args: {
   const connections: DeepgramConnection[] = [];
   let lastActivityAt = performance.now();
   let idleClosed = false;
-  let reconnectAttempt = 0;
-  let reconnectTimer = 0;
   let currentToken = args.token;
+  const reconnectTimers = new Map<string, number>();
+  const reconnectAttempts = new Map<string, number>();
+  let bargedIn = false;
+  let voicedMs = 0;
+  const confirmBargeIn = () => {
+    if (bargedIn || stopped) return;
+    bargedIn = true;
+    callbacks.onBargeIn?.();
+  };
+  // Keep a fresh token ready so an idle reopen never waits on the network.
+  const tokenRefresh = window.setInterval(() => {
+    if (stopped || !args.refreshToken) return;
+    void args.refreshToken().then((token) => {
+      currentToken = token;
+    }).catch(() => undefined);
+  }, 240_000);
 
   const sendAudio = (buffer: ArrayBuffer) => {
     lastActivityAt = performance.now();
-    if (idleClosed) void reopenAfterIdle();
+    if (idleClosed) reopenAfterIdle();
     for (const connection of connections) {
       if (connection.intentionallyClosing) continue;
       if (connection.socket.readyState === WebSocket.OPEN) connection.socket.send(buffer.slice(0));
@@ -293,6 +309,23 @@ export async function startRitaEconomicListening(args: {
 
   const recoverTurn = (reason: string) => {
     if (!speaking || !turnAudio.length) return;
+    // Deepgram already has final words for this turn: use them instead of a slow re-transcription.
+    const live = connections.find(
+      (item) => !item.intentionallyClosing && item.finalParts.length &&
+        (!selectedLanguage || item.language === selectedLanguage),
+    );
+    if (live) {
+      const text = live.finalParts.join(" ").replace(/\s+/g, " ").trim();
+      live.finalParts = [];
+      emitCandidate({
+        text,
+        confidence: 0.8,
+        language: live.language,
+        durationMs: turnStartedAt ? Math.round(performance.now() - turnStartedAt) : 0,
+        connection: live,
+      });
+      return;
+    }
     const audio = pcm16Wav(turnAudio);
     const durationMs = Math.round(
       (turnAudio.reduce((sum, part) => sum + part.byteLength, 0) / 32_000) * 1000,
@@ -329,6 +362,8 @@ export async function startRitaEconomicListening(args: {
     finalTimer = 0;
     closeUnselected(candidate.connection);
     speaking = false;
+    bargedIn = false;
+    voicedMs = 0;
     quietMs = 0;
     hotFrames = 0;
     turnAudio = [];
@@ -378,7 +413,7 @@ export async function startRitaEconomicListening(args: {
     if (replaced >= 0) connections.splice(replaced, 1, connection);
     else connections.push(connection);
     socket.onopen = () => {
-      reconnectAttempt = 0;
+      reconnectAttempts.set(language, 0);
       for (const buffer of connection.pending) socket.send(buffer);
       connection.pending = [];
       if (reopening) return;
@@ -418,6 +453,26 @@ export async function startRitaEconomicListening(args: {
         }
         return;
       }
+      if (message.type === "UtteranceEnd") {
+        // Deepgram's backup end-of-turn signal when speech_final never arrives.
+        const complete = connection.finalParts.join(" ").replace(/\s+/g, " ").trim();
+        connection.finalParts = [];
+        if (!complete || performance.now() < suppressFinalUntil) return;
+        const candidate: ProbeCandidate = {
+          text: complete,
+          confidence: 0.8,
+          language,
+          durationMs: turnStartedAt ? Math.round(performance.now() - turnStartedAt) : 0,
+          connection,
+        };
+        if (selectedLanguage) emitCandidate(candidate);
+        else {
+          candidates.set(language, candidate);
+          if (candidates.size === languages.length) selectProbe();
+          else if (!finalTimer) finalTimer = window.setTimeout(selectProbe, 350);
+        }
+        return;
+      }
       if (message.type !== "Results") return;
       if (semanticTimer) {
         window.clearTimeout(semanticTimer);
@@ -426,6 +481,8 @@ export async function startRitaEconomicListening(args: {
       const alternative = message.channel?.alternatives?.[0];
       const text = String(alternative?.transcript ?? "").trim();
       if (!text) return;
+      if ([...connection.finalParts, text].join(" ").split(/\s+/).filter(Boolean).length >= 2)
+        confirmBargeIn();
       if (message.is_final) connection.finalParts.push(text);
       else if (selectedLanguage || !candidates.size)
         callbacks.onInterim([...connection.finalParts, text].join(" ").trim());
@@ -452,15 +509,16 @@ export async function startRitaEconomicListening(args: {
   };
 
   const scheduleReconnect = (language: string) => {
-    if (stopped || reconnectTimer) return;
-    const delay = RITA_RECONNECT_DELAYS_MS[reconnectAttempt];
+    if (stopped || reconnectTimers.get(language)) return;
+    const attempt = reconnectAttempts.get(language) ?? 0;
+    const delay = RITA_RECONNECT_DELAYS_MS[attempt];
     if (delay === undefined) {
       callbacks.onError(`deepgram_stream: ${language} connection could not be restored.`);
       return;
     }
-    reconnectAttempt += 1;
-    reconnectTimer = window.setTimeout(async () => {
-      reconnectTimer = 0;
+    reconnectAttempts.set(language, attempt + 1);
+    const timer = window.setTimeout(async () => {
+      reconnectTimers.delete(language);
       if (stopped) return;
       try {
         if (args.refreshToken) currentToken = await args.refreshToken();
@@ -472,20 +530,16 @@ export async function startRitaEconomicListening(args: {
       callbacks.onReconnect?.("dropped");
       openConnection(language, true);
     }, delay);
+    reconnectTimers.set(language, timer);
   };
 
-  const reopenAfterIdle = async () => {
+  const reopenAfterIdle = () => {
     if (!idleClosed || stopped) return;
     idleClosed = false;
-    const language = selectedLanguage || languages[0];
-    try {
-      if (args.refreshToken) currentToken = await args.refreshToken();
-    } catch {
-      // The previous token may still be valid; try it.
-    }
-    if (stopped) return;
+    // Open synchronously with the pre-refreshed token; audio buffers in `pending`
+    // while CONNECTING, so the first words are never lost.
     callbacks.onReconnect?.("idle");
-    openConnection(language, true);
+    openConnection(selectedLanguage || languages[0], true);
   };
 
   const idleWatch = window.setInterval(() => {
@@ -531,11 +585,15 @@ export async function startRitaEconomicListening(args: {
         turnAudio = [];
         quietMs = 0;
         suppressFinalUntil = 0;
+        bargedIn = false;
+        voicedMs = 0;
         callbacks.onSpeechStart();
       }
     } else if (!pushToTalk) {
       const threshold = Math.max(0.008, noiseFloor * (outputSpeaking ? 3 : 1.55));
       quietMs = rms < threshold ? quietMs + frameMs : 0;
+      if (rms >= threshold) voicedMs += frameMs;
+      if (voicedMs >= 400) confirmBargeIn();
     }
     const pcm = encoder.encode(frame);
     if (!pcm.byteLength) return;
@@ -552,7 +610,7 @@ export async function startRitaEconomicListening(args: {
     if (startedThisFrame) flushPreRoll();
     turnAudio.push(new Uint8Array(buffer.slice(0)));
     sendAudio(buffer);
-    if (!pushToTalk && quietMs >= (transcriptionMode === "openai" ? 450 : 1_500) && !semanticTimer)
+    if (!pushToTalk && quietMs >= (transcriptionMode === "openai" ? 450 : 2_500) && !semanticTimer)
       recoverTurn(
         transcriptionMode === "openai"
           ? "Legacy transcription turn completed."
@@ -596,7 +654,8 @@ export async function startRitaEconomicListening(args: {
       stopped = true;
       window.clearInterval(keepAlive);
       window.clearInterval(idleWatch);
-      if (reconnectTimer) window.clearTimeout(reconnectTimer);
+      window.clearInterval(tokenRefresh);
+      for (const timer of reconnectTimers.values()) window.clearTimeout(timer);
       if (finalTimer) window.clearTimeout(finalTimer);
       if (semanticTimer) window.clearTimeout(semanticTimer);
       capture.port.onmessage = null;
