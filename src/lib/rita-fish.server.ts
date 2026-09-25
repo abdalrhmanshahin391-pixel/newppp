@@ -79,18 +79,26 @@ export async function listFishArabicVoices(): Promise<{ voices: FishVoice[]; con
   ]);
   const seen = new Set<string>();
   const items = lists.flat().filter((item) => item?._id && !seen.has(item._id) && seen.add(item._id));
+  const isOfficial = (item: any) =>
+    item?.author?.nickname === "Fish Audio" ||
+    item?.author?.nickname === "Fish Official" ||
+    item?.tags?.includes?.("official") === true;
   const voices: FishVoice[] = items
     .filter((item) => item?._id && item?.state !== "failed")
+    // Fuzzy name searches return unrelated global voices; keep only official or Arabic ones.
+    .filter(
+      (item) =>
+        isOfficial(item) ||
+        item?.languages?.includes?.("ar") === true ||
+        /[؀-ۿ]/.test(String(item?.title ?? "")),
+    )
     .map((item) => ({
       id: String(item._id),
       title: String(item.title ?? "Voice"),
       author: String(item.author?.nickname ?? ""),
       uses: Number(item.task_count ?? 0),
       sampleUrl: item.samples?.[0]?.audio ? String(item.samples[0].audio) : null,
-      official:
-        item.author?.nickname === "Fish Audio" ||
-        item.author?.nickname === "Fish Official" ||
-        item.tags?.includes?.("official") === true,
+      official: isOfficial(item),
     }))
     // Official voices first (by popularity), then Saudi/Gulf community voices, then the rest.
     .sort((a, b) => {
