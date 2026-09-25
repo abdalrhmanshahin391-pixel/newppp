@@ -295,6 +295,7 @@ function RitaLivePage() {
               speechEndToFirstAudioMs: duration(metric.speechEnd, firstAudio),
               interrupted: metric.interrupted,
               fallbackUsed: metric.fallbackUsed,
+              reconnectCount: reconnectCount.current,
             }),
             keepalive: true,
           }),
