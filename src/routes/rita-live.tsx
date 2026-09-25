@@ -807,7 +807,6 @@ function RitaLivePage() {
       // Freeze guard: if Rita has not started answering within 8s, cancel quietly and listen again.
       const watchdog = window.setTimeout(() => {
         if (controller.signal.aborted || timeline.marks.firstToken !== undefined) return;
-        timeline.transcriptionEndReason = timeline.transcriptionEndReason || "watchdog_llm";
         timeline.lastStage = "watchdog_llm";
         controller.abort();
         stopSpeaking("watchdog");
