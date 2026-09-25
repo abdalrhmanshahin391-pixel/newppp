@@ -1096,7 +1096,9 @@ function RitaLivePage() {
     if (warmTimer.current) clearInterval(warmTimer.current);
     warmTimer.current = null;
     warmNow.current = null;
-    clearRitaSessionTicket();
+    void loadEconomicResponse()
+      .then((m) => m.clearRitaSessionTicket())
+      .catch(() => undefined);
     turnAbort.current?.abort();
     turnAbort.current = null;
     economic.current?.stop();
@@ -1356,7 +1358,7 @@ function RitaLivePage() {
             fetch("/api/rita/warm", { method: "POST", headers: { Authorization: `Bearer ${t}` } }),
           )
           .then((r) => (r.ok ? r.json() : null))
-          .then(setRitaSessionTicket)
+          .then(async (value) => (await loadEconomicResponse()).setRitaSessionTicket(value))
           .catch(() => undefined);
       warmNow.current = warm;
       warm();
