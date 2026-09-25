@@ -13,6 +13,16 @@ import {
 } from "@/lib/rita-voice.server";
 import { RitaClauseChunker, cleanRitaSpokenText } from "@/lib/rita-clause-chunker";
 import { createRitaSpeechTicket } from "@/lib/rita-speech-ticket.server";
+import { verifyRitaSessionTicket } from "@/lib/rita-session-ticket.server";
+
+async function authorize(request: Request) {
+  const ticket = request.headers.get("x-rita-ticket") ?? "";
+  if (ticket) {
+    const userId = await verifyRitaSessionTicket(ticket);
+    if (userId) return { userId };
+  }
+  return requireRitaUser(request);
+}
 
 type HistoryItem = { role: "user" | "assistant"; content: string };
 
@@ -134,7 +144,7 @@ export const Route = createFileRoute("/api/rita/respond")({
         const settingsPromise = getRitaSettings();
         const keyPromise = resolveRitaOpenAiKey();
         const [auth, body] = await Promise.all([
-          requireRitaUser(request),
+          authorize(request),
           request.json().catch(() => null) as Promise<Record<string, unknown> | null>,
         ]);
         if (!auth) return apiError("unauthorized", "Please sign in again.", 401, traceId);
@@ -193,7 +203,9 @@ export const Route = createFileRoute("/api/rita/respond")({
             stream: true,
             stream_options: { include_usage: true },
             max_tokens: 240,
+            prompt_cache_key: `rita-v1-${personality}`,
             messages: [
+              { role: "system", content: RITA_STATIC_PROMPT },
               { role: "system", content: prompt },
               ...(sessionSummary
                 ? [{ role: "system" as const, content: `Earlier lesson memory: ${sessionSummary}` }]
@@ -236,6 +248,7 @@ export const Route = createFileRoute("/api/rita/respond")({
             let reply = "";
             let inputTokens = 0;
             let outputTokens = 0;
+            let cachedTokens = 0;
             let segmentIndex = 0;
             let firstTokenMs = 0;
             const chunker = new RitaClauseChunker();
@@ -298,6 +311,7 @@ export const Route = createFileRoute("/api/rita/respond")({
                   if (chunk?.usage) {
                     inputTokens = Number(chunk.usage.prompt_tokens ?? 0);
                     outputTokens = Number(chunk.usage.completion_tokens ?? 0);
+                    cachedTokens = Number(chunk.usage.prompt_tokens_details?.cached_tokens ?? 0);
                   }
                 }
               }
@@ -362,6 +376,8 @@ export const Route = createFileRoute("/api/rita/respond")({
                       config: configMs,
                       allowance: allowanceMs,
                       firstToken: firstTokenMs,
+                      cachedTokens,
+                      inputTokens,
                       replyDone: Math.round(performance.now() - startedAt),
                     },
                     segmentsPlanned: segmentIndex,
