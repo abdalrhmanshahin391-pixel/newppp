@@ -117,7 +117,8 @@ export const Route = createFileRoute("/api/rita/speech")({
               ),
               response_format: responseFormat,
               stream_format: "audio",
-              speed: 1,
+              // 1.18 keeps speech natural but removes the slow, dragging feel.
+              speed: 1.18,
             }),
             signal: request.signal,
           });

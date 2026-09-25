@@ -332,7 +332,8 @@ export function estimateWavDurationMs(file: File) {
 
 export function estimateSpeechDurationMs(text: string) {
   const words = text.trim().split(/\s+/).filter(Boolean).length;
-  return Math.min(60_000, Math.max(900, Math.round((words / 145) * 60_000)));
+  // Speech now runs at speed 1.18, so ~170 words/min instead of 145.
+  return Math.min(60_000, Math.max(900, Math.round((words / 170) * 60_000)));
 }
 
 export function estimateTurnCostMicros(args: {
