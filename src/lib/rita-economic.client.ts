@@ -292,6 +292,7 @@ export async function startRitaEconomicListening(args: {
     bargedIn = false;
     voicedMs = 0;
     heardWords = false;
+    turnStartedAt = 0;
     callbacks.onInterim("");
   };
 
