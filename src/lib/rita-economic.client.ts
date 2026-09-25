@@ -255,8 +255,6 @@ export async function startRitaEconomicListening(args: {
   const connections: DeepgramConnection[] = [];
   let lastActivityAt = performance.now();
   let idleClosed = false;
-  let reconnectAttempt = 0;
-  let reconnectTimer = 0;
   let currentToken = args.token;
   const reconnectTimers = new Map<string, number>();
   const reconnectAttempts = new Map<string, number>();
