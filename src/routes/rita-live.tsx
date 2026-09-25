@@ -127,7 +127,21 @@ function matchingDestination(spoken: string, target: SaveTarget, data: Destinati
 
 export const Route = createFileRoute("/rita-live")({
   head: () => ({
-    meta: [{ title: "Talk with Rita — RitaJet" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Talk with Rita — RitaJet" },
+      {
+        name: "description",
+        content: "Practise Arabic, English, or German in a live voice lesson with Rita.",
+      },
+      { property: "og:title", content: "Talk with Rita — RitaJet" },
+      {
+        property: "og:description",
+        content: "Practise Arabic, English, or German in a live voice lesson with Rita.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: RitaLivePage,
 });
