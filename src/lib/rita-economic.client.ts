@@ -270,7 +270,6 @@ export async function startRitaEconomicListening(args: {
   let heardWords = false;
   let outputText = "";
   let outputGuardUntil = 0;
-  let sentAudioOnConnection = false;
   let receivedResultOnConnection = false;
 
   const setConnectionState = (next: "connecting" | "listening" | "reconnecting") => {
@@ -392,6 +391,7 @@ export async function startRitaEconomicListening(args: {
     appendPreRollToTurn();
     callbacks.onSpeechStart();
     callbacks.onTurnSignal?.("vad_start", source);
+    callbacks.onDiagnostic?.("first_audio_sent", "continuous_stream");
     return true;
   };
 
@@ -444,7 +444,6 @@ export async function startRitaEconomicListening(args: {
         return;
       }
       reconnectAttempt = 0;
-      sentAudioOnConnection = false;
       receivedResultOnConnection = false;
       const buffered = pendingAudio;
       pendingAudio = [];
@@ -469,8 +468,8 @@ export async function startRitaEconomicListening(args: {
         return;
       }
       if (message.type === "SpeechStarted") {
-        callbacks.onDiagnostic?.("deepgram_speech");
         startTurn("deepgram");
+        callbacks.onDiagnostic?.("deepgram_speech");
         return;
       }
       if (message.type === "UtteranceEnd") {
@@ -569,10 +568,6 @@ export async function startRitaEconomicListening(args: {
     }
     if (transcriptionMode === "deepgram") {
       sendAudio(buffer);
-      if (!sentAudioOnConnection && connection?.socket.readyState === WebSocket.OPEN) {
-        sentAudioOnConnection = true;
-        callbacks.onDiagnostic?.("first_audio_sent");
-      }
     }
     if (state !== "speaking" && state !== "finalizing") {
       rememberPreRoll(buffer);

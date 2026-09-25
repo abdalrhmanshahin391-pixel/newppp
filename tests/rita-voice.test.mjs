@@ -9,6 +9,7 @@ import {
   isRitaStopCommand,
   selectRitaDeepgramLanguage,
 } from "../src/lib/rita-economic.client.ts";
+import { createRitaTurnTimeline, markRitaTurn } from "../src/lib/rita-turn-telemetry.ts";
 
 test("an explicit Jordanian request wins over an Iraqi dialect guess", () => {
   const requested = explicitRitaAccent("ممكن تحكي معي باللهجة الأردنية؟");
@@ -91,4 +92,13 @@ test("Rita opens one stable Deepgram language instead of an Arabic/multi probe",
   assert.equal(selectRitaDeepgramLanguage("", "ar-JO"), "ar-JO");
   assert.equal(selectRitaDeepgramLanguage("", "en-US"), "ar-JO");
   assert.equal(selectRitaDeepgramLanguage("de", "ar-JO"), "de");
+});
+
+test("quiet-speech pickup timing starts at the first signal rather than the transcript", () => {
+  const timeline = createRitaTurnTimeline(1_000, "signalStart");
+  markRitaTurn(timeline, "speechStart", 1_075);
+  markRitaTurn(timeline, "transcriptFinal", 2_200);
+  assert.equal(timeline.marks.signalStart, 0);
+  assert.equal(timeline.marks.speechStart, 75);
+  assert.equal(timeline.marks.transcriptFinal, 1_200);
 });
