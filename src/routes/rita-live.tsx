@@ -726,8 +726,9 @@ function RitaLivePage() {
       if (!spoken.trim() || !reply.trim()) return;
       const epoch = lessonEpoch.current;
       void (existingToken ? Promise.resolve(existingToken) : getToken())
-        .then((token) =>
-          fetch("/api/rita/extract", {
+        .then(async (token) => ({
+          token,
+          response: await fetch("/api/rita/extract", {
             method: "POST",
             headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -739,18 +740,19 @@ function RitaLivePage() {
                   : "none",
             }),
           }),
-        )
-        .then((response) =>
-          response.ok
-            ? readRitaPayload<{
+        }))
+        .then(async ({ token, response }) => ({
+          token,
+          result: response.ok
+            ? await readRitaPayload<{
                 learningItems?: LearningItem[];
                 saveRequest?: SaveTarget | "none";
                 destinationName?: string;
                 rememberDestination?: boolean;
               }>(response)
             : null,
-        )
-        .then((result) => {
+        }))
+        .then(({ token, result }) => {
           if (!result || epoch !== lessonEpoch.current) return;
           const ids = addLearning(Array.isArray(result.learningItems) ? result.learningItems : []);
           if (ids.length)
@@ -1231,6 +1233,7 @@ function RitaLivePage() {
               pilotMode?: "legacy" | "economic_v2";
               allowance?: { premiumVoice?: boolean };
               voice?: string;
+               secondPassStt?: boolean;
             }>(response)
           : null,
       )
@@ -1418,6 +1421,7 @@ function RitaLivePage() {
           .catch(() => undefined);
       warm();
       setPremiumVoice(result.allowance?.premiumVoice !== false);
+       setSecondPassStt(result.secondPassStt !== false);
       let listeningToken = "";
       if (selectedMode === "economic_v2") {
         setStatus("Connecting Deepgram Nova-3…");
