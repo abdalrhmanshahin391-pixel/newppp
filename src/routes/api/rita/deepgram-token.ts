@@ -53,7 +53,12 @@ export const Route = createFileRoute("/api/rita/deepgram-token")({
             err_msg?: string;
           } | null;
           if (!upstream.ok || !payload?.access_token) {
-            console.error("Deepgram token grant failed", traceId, upstream.status, payload?.err_msg);
+            console.error(
+              "Deepgram token grant failed",
+              traceId,
+              upstream.status,
+              payload?.err_msg,
+            );
             return fail(
               "deepgram_auth_failed",
               "Deepgram rejected Rita's key or project permissions.",
@@ -68,12 +73,7 @@ export const Route = createFileRoute("/api/rita/deepgram-token")({
         } catch (error) {
           if (request.signal.aborted) return new Response(null, { status: 499 });
           console.error("Deepgram token request failed", traceId, error);
-          return fail(
-            "deepgram_unreachable",
-            "Rita could not connect to Deepgram.",
-            502,
-            traceId,
-          );
+          return fail("deepgram_unreachable", "Rita could not connect to Deepgram.", 502, traceId);
         }
       },
     },

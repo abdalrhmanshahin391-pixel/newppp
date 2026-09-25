@@ -1205,7 +1205,9 @@ function RitaLivePage() {
               [0, 1, 2].map(async (index) => {
                 const url = `/api/rita/filler?language=${preloadLanguage}&index=${index}&voice=${preloadVoice}`;
                 if (await cache.match(url)) return;
-                const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                const response = await fetch(url, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
                 if (response.ok) await cache.put(url, response);
               }),
             ),

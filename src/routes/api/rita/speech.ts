@@ -1,14 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  RITA_MODELS,
-  getRitaSettings,
-  resolveRitaOpenAiKey,
-} from "@/lib/rita-voice.server";
+import { RITA_MODELS, getRitaSettings, resolveRitaOpenAiKey } from "@/lib/rita-voice.server";
 import { ritaVoiceInstructions } from "@/lib/rita-voice-style";
-import {
-  readRitaSpeechTicketUser,
-  verifyRitaSpeechTicket,
-} from "@/lib/rita-speech-ticket.server";
+import { readRitaSpeechTicketUser, verifyRitaSpeechTicket } from "@/lib/rita-speech-ticket.server";
 
 const ALLOWED_VOICES = new Set([
   "alloy",
