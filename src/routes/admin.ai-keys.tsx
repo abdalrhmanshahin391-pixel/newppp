@@ -43,7 +43,7 @@ export const Route = createFileRoute("/admin/ai-keys")({
 const FALLBACK_MODELS = [{ id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash-Lite" }];
 
 const SINGLE_PROVIDERS: {
-  id: "openai" | "anthropic" | "deepgram";
+  id: "openai" | "anthropic" | "deepgram" | "cartesia";
   name: string;
   tier: string;
   model: string;
@@ -76,6 +76,19 @@ const SINGLE_PROVIDERS: {
       "Create a Deepgram project and add pay-as-you-go credit.",
       "Create an API key with Member permission so Rita can mint short-lived browser tokens.",
       "Paste it here. Students receive only 30-second temporary tokens, never this key.",
+    ],
+  },
+  {
+    id: "cartesia",
+    name: "Cartesia — Rita voice (Layan)",
+    tier: "Pay per character · Arabic Saudi voice",
+    model: "Sonic 3 · Layan – Clarity Provider",
+    color: "from-lime-400 to-emerald-500",
+    url: "https://play.cartesia.ai/keys",
+    steps: [
+      "Open play.cartesia.ai → API keys.",
+      "Create a key (starts with sk_car_) and paste it here.",
+      "Choose ‘Cartesia — Layan’ as the voice engine in Rita settings.",
     ],
   },
   {
@@ -112,21 +125,23 @@ function AiKeysPage() {
 
   // single-provider status
   const [singleStatus, setSingleStatus] = useState<
-    Record<"openai" | "anthropic" | "deepgram", string | null>
+    Record<"openai" | "anthropic" | "deepgram" | "cartesia", string | null>
   >({
     openai: null,
     anthropic: null,
     deepgram: null,
+    cartesia: null,
   });
 
   // drafts
   const [geminiDraft, setGeminiDraft] = useState<string[]>(["", "", "", "", ""]);
   const [singleDraft, setSingleDraft] = useState<
-    Record<"openai" | "anthropic" | "deepgram", string>
+    Record<"openai" | "anthropic" | "deepgram" | "cartesia", string>
   >({
     openai: "",
     anthropic: "",
     deepgram: "",
+    cartesia: "",
   });
   const [busy, setBusy] = useState<string | null>(null);
   const [showRitaKey, setShowRitaKey] = useState(false);
@@ -140,6 +155,9 @@ function AiKeysPage() {
     pipelineMode: "economic_v2" as "legacy" | "economic_v2",
     rolloutPercent: 100,
     adminOnlyPreview: false,
+    ttsProvider: "openai" as "openai" | "cartesia",
+    cartesiaVoiceId: "64a941ac-07ac-462c-a81c-008e353dd83e",
+    cartesiaModel: "sonic-3",
   });
   const [ritaMetrics, setRitaMetrics] = useState({
     sessions: 0,
@@ -166,10 +184,11 @@ function AiKeysPage() {
     try {
       const r: any = await list();
       const slots: (string | null)[] = [null, null, null, null, null];
-      const single: Record<"openai" | "anthropic" | "deepgram", string | null> = {
+      const single: Record<"openai" | "anthropic" | "deepgram" | "cartesia", string | null> = {
         openai: null,
         anthropic: null,
         deepgram: null,
+        cartesia: null,
       };
       for (const k of r.keys ?? []) {
         if (k.provider === "gemini") {
@@ -181,6 +200,8 @@ function AiKeysPage() {
           single.anthropic = k.updated_at;
         } else if (k.provider === "deepgram") {
           single.deepgram = k.updated_at;
+        } else if (k.provider === "cartesia") {
+          single.cartesia = k.updated_at;
         }
       }
       setGeminiSlots(slots);
@@ -251,7 +272,7 @@ function AiKeysPage() {
     }
   }
 
-  async function saveSingle(p: "openai" | "anthropic" | "deepgram") {
+  async function saveSingle(p: "openai" | "anthropic" | "deepgram" | "cartesia") {
     if (!singleDraft[p].trim()) return;
     setBusy(p);
     try {
@@ -266,7 +287,7 @@ function AiKeysPage() {
     }
   }
 
-  async function deleteSingle(p: "openai" | "anthropic" | "deepgram") {
+  async function deleteSingle(p: "openai" | "anthropic" | "deepgram" | "cartesia") {
     if (!confirm(`Remove the ${p} key?`)) return;
     setBusy(p);
     try {
@@ -624,6 +645,22 @@ function AiKeysPage() {
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <label className="text-xs font-bold text-white/60">
+              Voice engine
+              <select
+                value={ritaSettings.ttsProvider}
+                onChange={(event) =>
+                  setRitaSettings((current) => ({
+                    ...current,
+                    ttsProvider: event.target.value as "openai" | "cartesia",
+                  }))
+                }
+                className="mt-2 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2.5 text-sm text-white"
+              >
+                <option value="openai">OpenAI (cheap)</option>
+                <option value="cartesia">Cartesia — Layan (Sonic 3)</option>
+              </select>
+            </label>
             <label className="text-xs font-bold text-white/60">
               Rita voice
               <select

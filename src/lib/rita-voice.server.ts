@@ -45,6 +45,9 @@ export type RitaSettings = {
   pipelineMode: RitaPilotMode;
   rolloutPercent: number;
   adminOnlyPreview: boolean;
+  ttsProvider: "openai" | "cartesia";
+  cartesiaVoiceId: string;
+  cartesiaModel: string;
 };
 
 export type RitaAuth = { userId: string };
@@ -59,6 +62,9 @@ const DEFAULT_SETTINGS: RitaSettings = {
   pipelineMode: "economic_v2",
   rolloutPercent: 100,
   adminOnlyPreview: false,
+  ttsProvider: "openai",
+  cartesiaVoiceId: "64a941ac-07ac-462c-a81c-008e353dd83e",
+  cartesiaModel: "sonic-3",
 };
 
 function apiUrl() {
@@ -154,6 +160,13 @@ async function loadRitaDeepgramKey(): Promise<string | null> {
   return environmentKey.length > 20 ? environmentKey : null;
 }
 
+export function resolveRitaCartesiaKey(): Promise<string | null> {
+  return cached("cartesia-key", async () => {
+    const { loadRitaCartesiaKey } = await import("@/lib/rita-cartesia.server");
+    return loadRitaCartesiaKey();
+  });
+}
+
 export function getRitaSettings(): Promise<RitaSettings> {
   return cached("settings", loadRitaSettings);
 }
@@ -163,7 +176,7 @@ async function loadRitaSettings(): Promise<RitaSettings> {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await (supabaseAdmin.from as any)("rita_voice_settings")
       .select(
-        "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview",
+        "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,tts_provider,cartesia_voice_id,cartesia_model",
       )
       .eq("id", true)
       .maybeSingle();
@@ -180,6 +193,9 @@ async function loadRitaSettings(): Promise<RitaSettings> {
       pipelineMode: data.pipeline_mode === "legacy" ? "legacy" : "economic_v2",
       rolloutPercent: Math.min(100, Math.max(0, Number(data.rollout_percent ?? 100))),
       adminOnlyPreview: data.admin_only_preview === true,
+      ttsProvider: data.tts_provider === "cartesia" ? "cartesia" : "openai",
+      cartesiaVoiceId: String(data.cartesia_voice_id || DEFAULT_SETTINGS.cartesiaVoiceId),
+      cartesiaModel: String(data.cartesia_model || DEFAULT_SETTINGS.cartesiaModel),
     };
   } catch {
     // Allows the application to run before the migration reaches production.
