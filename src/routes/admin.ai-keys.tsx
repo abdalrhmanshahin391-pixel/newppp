@@ -25,6 +25,7 @@ import {
   getRitaVoiceAdmin,
   saveRitaVoiceSettings,
   testRitaLiveKey,
+  testRitaGroqKey,
 } from "@/lib/rita-live.functions";
 import {
   saveAiKey,
@@ -44,7 +45,7 @@ export const Route = createFileRoute("/admin/ai-keys")({
 const FALLBACK_MODELS = [{ id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash-Lite" }];
 
 const SINGLE_PROVIDERS: {
-  id: "openai" | "anthropic" | "deepgram";
+  id: "openai" | "anthropic" | "deepgram" | "groq";
   name: string;
   tier: string;
   model: string;
@@ -52,6 +53,19 @@ const SINGLE_PROVIDERS: {
   url: string;
   steps: string[];
 }[] = [
+  {
+    id: "groq",
+    name: "Groq — Rita’s replies",
+    tier: "Fast text generation",
+    model: "Mistral Saba 24B",
+    color: "from-orange-400 to-rose-500",
+    url: "https://console.groq.com/keys",
+    steps: [
+      "Create a Groq API key in Groq Console.",
+      "Paste it here; the key remains protected on the server.",
+      "Save it, then use the Rita test button above to verify the selected model.",
+    ],
+  },
   {
     id: "openai",
     name: "OpenAI — Rita Live",
@@ -103,6 +117,7 @@ function AiKeysPage() {
   const del = useServerFn(deleteAiKey);
   const setModel = useServerFn(savePreferredGeminiModel);
   const testOpenAi = useServerFn(testRitaLiveKey);
+  const testGroq = useServerFn(testRitaGroqKey);
   const getRitaAdmin = useServerFn(getRitaVoiceAdmin);
   const updateRitaAdmin = useServerFn(saveRitaVoiceSettings);
 
@@ -113,21 +128,23 @@ function AiKeysPage() {
 
   // single-provider status
   const [singleStatus, setSingleStatus] = useState<
-    Record<"openai" | "anthropic" | "deepgram", string | null>
+    Record<"openai" | "anthropic" | "deepgram" | "groq", string | null>
   >({
     openai: null,
     anthropic: null,
     deepgram: null,
+    groq: null,
   });
 
   // drafts
   const [geminiDraft, setGeminiDraft] = useState<string[]>(["", "", "", "", ""]);
   const [singleDraft, setSingleDraft] = useState<
-    Record<"openai" | "anthropic" | "deepgram", string>
+    Record<"openai" | "anthropic" | "deepgram" | "groq", string>
   >({
     openai: "",
     anthropic: "",
     deepgram: "",
+    groq: "",
   });
   const [busy, setBusy] = useState<string | null>(null);
   const [showRitaKey, setShowRitaKey] = useState(false);
@@ -143,6 +160,8 @@ function AiKeysPage() {
     adminOnlyPreview: false,
     voiceEngine: "openai" as "openai" | "fish",
     fishVoiceId: null as string | null,
+    groqModel: "mistral-saba-24b",
+    secondPassStt: true,
   });
   const [ritaMetrics, setRitaMetrics] = useState({
     sessions: 0,
@@ -171,10 +190,11 @@ function AiKeysPage() {
     try {
       const r: any = await list();
       const slots: (string | null)[] = [null, null, null, null, null];
-      const single: Record<"openai" | "anthropic" | "deepgram", string | null> = {
+      const single: Record<"openai" | "anthropic" | "deepgram" | "groq", string | null> = {
         openai: null,
         anthropic: null,
         deepgram: null,
+        groq: null,
       };
       for (const k of r.keys ?? []) {
         if (k.provider === "gemini") {
@@ -186,6 +206,8 @@ function AiKeysPage() {
           single.anthropic = k.updated_at;
         } else if (k.provider === "deepgram") {
           single.deepgram = k.updated_at;
+        } else if (k.provider === "groq") {
+          single.groq = k.updated_at;
         }
       }
       setGeminiSlots(slots);
@@ -256,14 +278,19 @@ function AiKeysPage() {
     }
   }
 
-  async function saveSingle(p: "openai" | "anthropic" | "deepgram") {
+  async function saveSingle(p: "openai" | "anthropic" | "deepgram" | "groq") {
     if (!singleDraft[p].trim()) return;
     setBusy(p);
     try {
       await save({ data: { provider: p, apiKey: singleDraft[p].trim(), slot: 1 } });
       toast.success(`${p} key saved`);
       setSingleDraft((d) => ({ ...d, [p]: "" }));
-      refresh();
+      await refresh();
+      if (p === "groq") {
+        const result = await testGroq();
+        if (!result.ok) throw new Error(result.message);
+        toast.success(result.message);
+      }
     } catch (e: any) {
       toast.error(e?.message || "Save failed");
     } finally {
@@ -271,7 +298,7 @@ function AiKeysPage() {
     }
   }
 
-  async function deleteSingle(p: "openai" | "anthropic" | "deepgram") {
+  async function deleteSingle(p: "openai" | "anthropic" | "deepgram" | "groq") {
     if (!confirm(`Remove the ${p} key?`)) return;
     setBusy(p);
     try {
@@ -376,7 +403,7 @@ function AiKeysPage() {
             🔴 RITA PIPELINE SWITCH — APPLIES TO USERS
           </p>
           <h2 className="mt-2 text-2xl font-black text-white">
-            Deepgram Nova-3 → GPT-4o mini → OpenAI Mini TTS
+             Deepgram Nova-3 → Groq → OpenAI/Fish voice
           </h2>
           <p className="mt-2 text-sm text-red-100/85">
             اختر النظام بوضوح. لن يغيّر الموقع النظام تلقائيًا عند حدوث خطأ.
@@ -401,7 +428,7 @@ function AiKeysPage() {
             >
               <span className="block text-lg font-black">Rita Economic v2</span>
               <span className="mt-1 block text-xs font-bold opacity-75">
-                Deepgram Nova-3 → streaming GPT → streamed PCM voice
+                 Deepgram Nova-3 → streaming Groq → streamed PCM voice
               </span>
             </button>
             <label className="text-xs font-black">
@@ -685,6 +712,24 @@ function AiKeysPage() {
                 />
               </label>
             ))}
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="text-xs font-bold text-white/60">
+              Groq model
+              <input
+                value={ritaSettings.groqModel}
+                onChange={(event) => setRitaSettings((current) => ({ ...current, groqModel: event.target.value }))}
+                className="mt-2 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2.5 text-sm text-white"
+              />
+            </label>
+            <label className="flex items-center gap-2 self-end rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-xs font-bold text-white/70">
+              <input
+                type="checkbox"
+                checked={ritaSettings.secondPassStt}
+                onChange={(event) => setRitaSettings((current) => ({ ...current, secondPassStt: event.target.checked }))}
+              />
+              Double-check unclear or mixed-language speech
+            </label>
           </div>
           <button
             type="button"

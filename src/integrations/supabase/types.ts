@@ -2962,6 +2962,10 @@ export type Database = {
           reconnect_count: number
           reply_char_count: number
           request_sent_ms: number | null
+          response_model: string | null
+          response_provider: string | null
+          second_pass_ms: number | null
+          second_pass_used: boolean
           segments_completed: number
           segments_planned: number
           segments_played: number
@@ -3022,6 +3026,10 @@ export type Database = {
           reconnect_count?: number
           reply_char_count?: number
           request_sent_ms?: number | null
+          response_model?: string | null
+          response_provider?: string | null
+          second_pass_ms?: number | null
+          second_pass_used?: boolean
           segments_completed?: number
           segments_planned?: number
           segments_played?: number
@@ -3082,6 +3090,10 @@ export type Database = {
           reconnect_count?: number
           reply_char_count?: number
           request_sent_ms?: number | null
+          response_model?: string | null
+          response_provider?: string | null
+          second_pass_ms?: number | null
+          second_pass_used?: boolean
           segments_completed?: number
           segments_planned?: number
           segments_played?: number
@@ -3197,18 +3209,21 @@ export type Database = {
         Row: {
           active_dialect: string
           active_language: string
+          auto_save_words: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
           active_dialect?: string
           active_language?: string
+          auto_save_words?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
           active_dialect?: string
           active_language?: string
+          auto_save_words?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -3262,11 +3277,13 @@ export type Database = {
           default_monthly_minutes: number
           enabled: boolean
           fish_voice_id: string | null
+          groq_model: string
           id: boolean
           monthly_budget_cents: number
           pipeline_mode: string
           response_words: number
           rollout_percent: number
+          second_pass_stt: boolean
           tts_provider: string
           updated_at: string
           updated_by: string | null
@@ -3281,11 +3298,13 @@ export type Database = {
           default_monthly_minutes?: number
           enabled?: boolean
           fish_voice_id?: string | null
+          groq_model?: string
           id?: boolean
           monthly_budget_cents?: number
           pipeline_mode?: string
           response_words?: number
           rollout_percent?: number
+          second_pass_stt?: boolean
           tts_provider?: string
           updated_at?: string
           updated_by?: string | null
@@ -3300,11 +3319,13 @@ export type Database = {
           default_monthly_minutes?: number
           enabled?: boolean
           fish_voice_id?: string | null
+          groq_model?: string
           id?: boolean
           monthly_budget_cents?: number
           pipeline_mode?: string
           response_words?: number
           rollout_percent?: number
+          second_pass_stt?: boolean
           tts_provider?: string
           updated_at?: string
           updated_by?: string | null

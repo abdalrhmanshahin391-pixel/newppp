@@ -9,8 +9,8 @@ import {
   getRitaSettings,
   normalizePersonality,
   requireRitaUser,
-  resolveRitaOpenAiKey,
 } from "@/lib/rita-voice.server";
+import { resolveRitaGroqConfig } from "@/lib/rita-groq.server";
 import {
   RitaClauseChunker,
   RitaReplySanitizer,
@@ -78,7 +78,7 @@ Core behaviour:
 - Answer the learner's actual question or respond to what they actually said first, in the very first sentence. Start with substance immediately.
 - Never use filler or acknowledgement openings such as "Hmm", "Mmm", "Okay so", "Great question", "I understand", "فهمت عليك", "ممم", "طيب", "خليني أشوف", "Also gut", or similar. Begin directly with the answer; these openings are forbidden in every language.
 - Make the first sentence short (roughly four to eight words) so speech can start quickly, then continue naturally.
-- Keep casual chat and role play conversational. When the learner asks you to explain, teach, compare or asks why/how (grammar, tenses, rules, usage), give a full, rich spoken lesson: the simple idea, how it is formed, three natural examples each with a short translation, one common mistake, then one short practice question for the learner. Never answer a teaching request with a single line.
+- Keep casual chat and role play concise. For ordinary teaching, explain one idea clearly with two short natural examples and one useful note. Give a long detailed lesson only when the learner explicitly asks for detail, depth, or a full explanation.
 - Correct only language mistakes that are useful for the learner, briefly and naturally, usually by modelling the correct form once rather than lecturing.
 - Do not repeat praise, do not use scripted openings, and do not end every reply with a compulsory follow-up question. Ask a question only when it genuinely moves the lesson forward.
 - If the learner's words look cut off, garbled or unclear (speech recognition errors happen), make your best reasonable interpretation, or ask one short clarifying question.
@@ -119,21 +119,19 @@ Personality styles (the active one is named in the session section):
 - playful: lightly witty and encouraging; never mock the learner.
 - strict: structured and focused; never shame the learner.`;
 
-const EXPLAIN_RE = /(اشرح|اشرحل|شرح|ليش|ليه|لماذا|كيف|شو الفرق|ما الفرق|الفرق بين|قاعد|قواعد|زمن|الماضي|المضارع|المستقبل|علمني|فهمني|explain|why|how do|how does|difference|grammar|rule|tense|teach me|erkl|warum|wie |unterschied|grammatik|regel)/i;
-function isExplainRequest(text: string) {
-  return EXPLAIN_RE.test(text);
-}
+const DETAILED_RE = /(بالتفصيل|بشكل مفصل|شرح كامل|كل التفاصيل|تعمق|بالتفصيل الممل|in detail|detailed|full explanation|deep dive|ausführlich|im detail)/i;
+function wantsDetailedReply(text: string) { return DETAILED_RE.test(text); }
 
 function systemPrompt(args: {
   personality: string;
   accent: string;
   transcriptLanguage: string;
   words: number;
-  explain: boolean;
+   detailed: boolean;
 }) {
   return `Session section. Active personality: ${args.personality}.
 ${accentInstruction(args.accent, args.transcriptLanguage)}
-${args.explain ? `This is a teaching request: give a complete structured spoken explanation of about ${Math.max(180, args.words * 3)} to ${Math.max(240, args.words * 4)} words.` : `Keep ordinary replies under ${Math.max(70, args.words)} spoken words.`}`;
+${args.detailed ? `The learner explicitly requested detail. Give a clear spoken explanation of about ${Math.max(110, args.words * 2)} to ${Math.max(150, args.words * 3)} words.` : `Keep this reply concise and useful: usually ${Math.max(25, Math.round(args.words * .65))} to ${Math.max(45, args.words)} spoken words. For a translation or word meaning, use the answer plus one example. Never pad the answer.`}`;
 }
 
 function apiError(code: string, error: string, status: number, traceId: string) {
@@ -152,7 +150,7 @@ export const Route = createFileRoute("/api/rita/respond")({
         let turnId: string = crypto.randomUUID();
         // Sign-in check, request body, settings and key all start together.
         const settingsPromise = getRitaSettings();
-        const keyPromise = resolveRitaOpenAiKey();
+        const groqPromise = resolveRitaGroqConfig();
         const [auth, body] = await Promise.all([
           authorize(request),
           request.json().catch(() => null) as Promise<Record<string, unknown> | null>,
@@ -171,10 +169,10 @@ export const Route = createFileRoute("/api/rita/respond")({
             traceId,
           );
         const authMs = Math.round(performance.now() - startedAt);
-        const [settings, key] = await Promise.all([settingsPromise, keyPromise]);
+        const [settings, groq] = await Promise.all([settingsPromise, groqPromise]);
         const configMs = Math.round(performance.now() - startedAt);
-        if (!key)
-          return apiError("openai_not_configured", "Rita needs an OpenAI key.", 503, traceId);
+        if (!groq?.key)
+          return apiError("groq_not_configured", "Rita needs a Groq key.", 503, traceId);
         // Allowance runs in parallel with GPT; nothing is sent to the user until it passes.
         let allowanceMs = 0;
         const allowancePromise = getRitaAllowanceCached(auth.userId, settings)
@@ -202,19 +200,19 @@ export const Route = createFileRoute("/api/rita/respond")({
           accent,
           transcriptLanguage,
           words: settings.responseWords,
-          explain: isExplainRequest(transcript),
+           detailed: wantsDetailedReply(transcript),
         });
         const upstreamAbort = new AbortController();
         request.signal.addEventListener("abort", () => upstreamAbort.abort(), { once: true });
-        const upstreamPromise = fetch("https://api.openai.com/v1/chat/completions", {
+        const responseModel = settings.groqModel || groq.model;
+        const upstreamPromise = fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
-          headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+           headers: { Authorization: `Bearer ${groq.key}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: RITA_MODELS.response,
+             model: responseModel,
             stream: true,
             stream_options: { include_usage: true },
-            max_tokens: isExplainRequest(transcript) ? 900 : 320,
-            prompt_cache_key: `rita-v1-${personality}`,
+             max_tokens: wantsDetailedReply(transcript) ? 420 : 180,
             messages: [
               { role: "system", content: RITA_STATIC_PROMPT },
               { role: "system", content: prompt },
@@ -241,11 +239,11 @@ export const Route = createFileRoute("/api/rita/respond")({
         const upstream = await upstreamPromise;
         if (!upstream.ok || !upstream.body) {
           const detail = await upstream.text().catch(() => "");
-          console.error("Rita Economic GPT failed", traceId, upstream.status, detail.slice(0, 240));
+          console.error("Rita Groq response failed", traceId, upstream.status, detail.slice(0, 240));
           return apiError(
-            "gpt_unavailable",
-            "GPT-4o mini could not answer this turn.",
-            502,
+            "groq_unavailable",
+            detail.slice(0, 180) || "Groq could not answer this turn.",
+            upstream.status === 429 || upstream.status >= 500 ? upstream.status : 502,
             traceId,
           );
         }
@@ -366,6 +364,8 @@ export const Route = createFileRoute("/api/rita/respond")({
                        replyDone: Math.round(performance.now() - startedAt),
                      },
                      segmentsPlanned: segmentIndex,
+                      responseProvider: "groq",
+                      responseModel,
                    }),
                  ),
                );
@@ -384,11 +384,11 @@ export const Route = createFileRoute("/api/rita/respond")({
                   estimated_cost_micros: estimatedCostMicros,
                   provider:
                     pipelineMode === "legacy" || transcriptionSource === "openai"
-                      ? "openai"
-                      : "deepgram+openai",
+                       ? "openai+groq"
+                       : "deepgram+groq",
                   transcription_model:
                     transcriptionSource === "openai" ? "gpt-4o-mini-transcribe" : "deepgram-nova-3",
-                  response_model: RITA_MODELS.response,
+                   response_model: responseModel,
                   speech_model: RITA_MODELS.speech,
                   language: transcriptLanguage || null,
                   dialect: accent || null,

@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { RitaStage, type RitaMood } from "@/components/rita-live/RitaStage";
+import { MixedDirectionText } from "@/components/rita-live/MixedDirectionText";
 import type { RitaEconomicController } from "@/lib/rita-economic.client";
 import type { RitaSpeechSegment } from "@/lib/rita-economic-response.client";
 import type { RitaPcmPlayerController } from "@/lib/rita-pcm-player.client";
@@ -40,7 +41,7 @@ import {
   ritaApiError,
   type RitaErrorPayload,
 } from "@/lib/rita-response";
-import { hasRitaLanguageLearningIntent } from "@/lib/rita-learning-intent";
+import { hasRitaLanguageLearningIntent, replyContainsLearningPair } from "@/lib/rita-learning-intent";
 import {
   advanceRitaLanguageState,
   inferRitaTranscriptLanguage,
@@ -172,6 +173,9 @@ function RitaLivePage() {
   const [rememberChoice, setRememberChoice] = useState(false);
   const [saving, setSaving] = useState(false);
   const [learningNotice, setLearningNotice] = useState("");
+  const [autoSaveWords, setAutoSaveWords] = useState(true);
+  const [undoCardIds, setUndoCardIds] = useState<string[]>([]);
+  const [secondPassStt, setSecondPassStt] = useState(true);
   const [draft, setDraft] = useState("");
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [connectedMode, setConnectedMode] = useState<"legacy" | "economic_v2" | null>(null);
@@ -722,8 +726,9 @@ function RitaLivePage() {
       if (!spoken.trim() || !reply.trim()) return;
       const epoch = lessonEpoch.current;
       void (existingToken ? Promise.resolve(existingToken) : getToken())
-        .then((token) =>
-          fetch("/api/rita/extract", {
+        .then(async (token) => ({
+          token,
+          response: await fetch("/api/rita/extract", {
             method: "POST",
             headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -735,18 +740,19 @@ function RitaLivePage() {
                   : "none",
             }),
           }),
-        )
-        .then((response) =>
-          response.ok
-            ? readRitaPayload<{
+        }))
+        .then(async ({ token, response }) => ({
+          token,
+          result: response.ok
+            ? await readRitaPayload<{
                 learningItems?: LearningItem[];
                 saveRequest?: SaveTarget | "none";
                 destinationName?: string;
                 rememberDestination?: boolean;
               }>(response)
             : null,
-        )
-        .then((result) => {
+        }))
+        .then(({ token, result }) => {
           if (!result || epoch !== lessonEpoch.current) return;
           const ids = addLearning(Array.isArray(result.learningItems) ? result.learningItems : []);
           if (ids.length)
@@ -755,6 +761,21 @@ function RitaLivePage() {
                 message.id === replyId ? { ...message, learningIds: ids } : message,
               ),
             );
+          if (ids.length && autoSaveWords) {
+            const items = learningRef.current.filter((item) => ids.includes(item.id));
+            void fetch("/api/rita/learning", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "auto_save", items }),
+            })
+              .then((response) => response.ok ? response.json() as Promise<{ saved?: number; cardIds?: string[] }> : null)
+              .then((saved) => {
+                if (!saved?.saved || epoch !== lessonEpoch.current) return;
+                setUndoCardIds(saved.cardIds ?? []);
+                setLearningNotice(`${saved.saved} ${saved.saved === 1 ? "word was" : "words were"} saved automatically.`);
+              })
+              .catch(() => undefined);
+          }
           void handleSaveIntent({
             saveRequest:
               result.saveRequest === "flashcards" || result.saveRequest === "german_lab"
@@ -766,7 +787,7 @@ function RitaLivePage() {
         })
         .catch(() => undefined); // Learning extraction never delays spoken audio.
     },
-    [addLearning, getToken, handleSaveIntent],
+    [addLearning, autoSaveWords, getToken, handleSaveIntent],
   );
 
   const processTurn = useCallback(
@@ -1005,6 +1026,8 @@ function RitaLivePage() {
         timeline.replyCharCount = result.reply.length;
         timeline.segmentsPlanned = result.segmentsPlanned ?? timeline.segmentsPlanned;
         timeline.serverTimings = result.serverTimings ?? timeline.serverTimings;
+        timeline.responseProvider = result.responseProvider;
+        timeline.responseModel = result.responseModel;
         window.clearTimeout(watchdog);
         markRitaTurn(timeline, "textComplete");
         requestAnimationFrame(() => markRitaTurn(timeline, "textRendered"));
@@ -1042,7 +1065,7 @@ function RitaLivePage() {
           processingRef.current = false;
         }
         if (activeRef.current) {
-          const shouldExtract = hasRitaLanguageLearningIntent(spoken);
+           const shouldExtract = hasRitaLanguageLearningIntent(spoken) || replyContainsLearningPair(result.reply);
           if (shouldExtract) {
             window.setTimeout(() => {
               if (epoch === lessonEpoch.current)
@@ -1210,6 +1233,7 @@ function RitaLivePage() {
               pilotMode?: "legacy" | "economic_v2";
               allowance?: { premiumVoice?: boolean };
               voice?: string;
+               secondPassStt?: boolean;
             }>(response)
           : null,
       )
@@ -1218,6 +1242,7 @@ function RitaLivePage() {
         setConfigured(Boolean(result?.configured));
         setAvailableMode(result?.pilotMode === "legacy" ? "legacy" : "economic_v2");
         setPremiumVoice(result?.allowance?.premiumVoice !== false);
+        setSecondPassStt(result?.secondPassStt !== false);
         setStatus(
           result?.configured
             ? result?.pilotMode === "legacy"
@@ -1247,7 +1272,7 @@ function RitaLivePage() {
         fetch("/api/rita/preferences", { headers: { Authorization: `Bearer ${token}` } }),
       )
       .then((response) =>
-        response.ok ? (response.json() as Promise<{ language?: string; dialect?: string }>) : null,
+          response.ok ? (response.json() as Promise<{ language?: string; dialect?: string; autoSaveWords?: boolean }>) : null,
       )
       .then((preference) => {
         if (cancelled || !preference) return;
@@ -1256,6 +1281,7 @@ function RitaLivePage() {
           dialect: preference.dialect || "",
         });
         if (preference.dialect && preference.dialect !== "standard") setDialect(preference.dialect);
+        setAutoSaveWords(preference.autoSaveWords !== false);
       })
       .catch(() => undefined);
     return () => {
@@ -1362,6 +1388,7 @@ function RitaLivePage() {
           pilotMode?: "legacy" | "economic_v2";
           allowance?: { premiumVoice?: boolean };
           voice?: string;
+           secondPassStt?: boolean;
         } & RitaErrorPayload
       >(response);
       if (epoch !== lessonEpoch.current) {
@@ -1394,6 +1421,7 @@ function RitaLivePage() {
           .catch(() => undefined);
       warm();
       setPremiumVoice(result.allowance?.premiumVoice !== false);
+       setSecondPassStt(result.secondPassStt !== false);
       let listeningToken = "";
       if (selectedMode === "economic_v2") {
         setStatus("Connecting Deepgram Nova-3…");
@@ -1419,7 +1447,8 @@ function RitaLivePage() {
           languageState.current.activeDialect ||
           languageState.current.activeLanguage,
         browserLocale: navigator.language || "",
-        keyterms: ["RitaJet", ...learningRef.current.slice(-20).map((item) => item.term)],
+         keyterms: learningRef.current.slice(-20).map((item) => item.term),
+         secondPassStt,
         refreshToken: async () => {
           const fresh = await getToken();
           const response = await fetch("/api/rita/deepgram-token", {
@@ -1552,7 +1581,12 @@ function RitaLivePage() {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
             metricRef.current.fallbackUsed = true;
             if (turnTimeline.current) turnTimeline.current.fallbackUsed = true;
-            setStatus("Recovering this sentence with OpenAI transcription…");
+             if (reason.startsWith("second_pass:")) {
+               if (turnTimeline.current) turnTimeline.current.secondPassUsed = true;
+               setStatus("Double-checking what you said…");
+             } else {
+               setStatus("Recovering this sentence…");
+             }
             const form = new FormData();
             form.append("audio", audio, "rita-turn.wav");
             void fetch("/api/rita/transcribe", {
@@ -1761,7 +1795,7 @@ function RitaLivePage() {
                     <p
                       className={`font-[family:var(--font-grotesk)] text-xl leading-9 tracking-[-.015em] md:text-[22px] md:leading-10 ${message.role === "rita" ? "text-[#28252d]" : "text-right text-[#3478f6]"}`}
                     >
-                      {message.text}
+                       <MixedDirectionText text={message.text} />
                     </p>
                     {message.correction && (
                       <p className="mt-3 font-[family:var(--font-grotesk)] text-sm leading-6 text-[#7257a8]">
@@ -1940,9 +1974,26 @@ function RitaLivePage() {
             </div>
             {(learningNotice || active) && (
               <div className="mx-auto mt-2 flex max-w-2xl items-center justify-between gap-3 text-xs">
-                <span role="status" className="text-[#6f6480]">
+                 <span role="status" className="text-[#6f6480]">
                   {learningNotice || status}
                 </span>
+                 {!!undoCardIds.length && (
+                   <button
+                     type="button"
+                     className="font-bold text-[#6a47c1] hover:underline"
+                     onClick={() => {
+                       const ids = [...undoCardIds];
+                       setUndoCardIds([]);
+                       void getToken().then((token) => fetch("/api/rita/learning", {
+                         method: "POST",
+                         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                         body: JSON.stringify({ action: "undo", cardIds: ids }),
+                       })).then(() => setLearningNotice("Automatic save undone.")).catch(() => setLearningNotice("Could not undo that save."));
+                     }}
+                   >
+                     Undo
+                   </button>
+                 )}
                 {active && (
                   <button
                     type="button"

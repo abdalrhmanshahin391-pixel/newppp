@@ -10,6 +10,7 @@ import {
   resolveRitaDeepgramKey,
   resolveRitaOpenAiKey,
 } from "@/lib/rita-voice.server";
+import { resolveRitaGroqConfig } from "@/lib/rita-groq.server";
 
 export const Route = createFileRoute("/api/rita/session")({
   server: {
@@ -18,20 +19,22 @@ export const Route = createFileRoute("/api/rita/session")({
         const auth = await requireRitaUser(request);
         if (!auth) return new Response("Unauthorized", { status: 401 });
         const settingsPromise = getRitaSettings();
-        const [settings, allowance, pilotMode, openAiKey, deepgramKey] = await Promise.all([
+        const [settings, allowance, pilotMode, openAiKey, deepgramKey, groq] = await Promise.all([
           settingsPromise,
           settingsPromise.then((value) => getRitaAllowance(auth.userId, value)),
           getRitaPilotMode(auth.userId),
           resolveRitaOpenAiKey(),
           resolveRitaDeepgramKey(),
+          resolveRitaGroqConfig(),
         ]);
         return Response.json(
           {
-            configured: Boolean(openAiKey && (pilotMode === "legacy" || deepgramKey)),
-            providers: { openai: Boolean(openAiKey), deepgram: Boolean(deepgramKey) },
+            configured: Boolean(openAiKey && groq && (pilotMode === "legacy" || deepgramKey)),
+            providers: { openai: Boolean(openAiKey), deepgram: Boolean(deepgramKey), groq: Boolean(groq) },
             enabled: settings.enabled,
             pilotMode,
             voice: settings.voice,
+            secondPassStt: settings.secondPassStt,
             allowance,
           },
           { headers: { "Cache-Control": "no-store" } },
@@ -63,12 +66,13 @@ export const Route = createFileRoute("/api/rita/session")({
         }
 
         const settingsPromise = getRitaSettings();
-        const [settings, allowance, pilotMode, openAiKey, deepgramKey] = await Promise.all([
+        const [settings, allowance, pilotMode, openAiKey, deepgramKey, groq] = await Promise.all([
           settingsPromise,
           settingsPromise.then((value) => getRitaAllowance(auth.userId, value)),
           getRitaPilotMode(auth.userId),
           resolveRitaOpenAiKey(),
           resolveRitaDeepgramKey(),
+          resolveRitaGroqConfig(),
         ]);
 
         if (!allowance.allowed) {
@@ -102,15 +106,17 @@ export const Route = createFileRoute("/api/rita/session")({
         } catch (error) {
           console.warn("Rita session logging is not ready", error);
         }
-        if (!openAiKey || (pilotMode === "economic_v2" && !deepgramKey))
+        if (!openAiKey || !groq || (pilotMode === "economic_v2" && !deepgramKey))
           return Response.json(
             {
               ok: false,
               code: "rita_pipeline_not_configured",
-              stage: !openAiKey ? "openai_auth" : "deepgram_auth",
+              stage: !openAiKey ? "openai_auth" : !groq ? "groq_auth" : "deepgram_auth",
               message: !openAiKey
                 ? "Add an OpenAI key in Admin → AI keys."
-                : !deepgramKey
+                 : !groq
+                   ? "Add a Groq key in Admin → AI keys."
+                   : !deepgramKey
                   ? "Add a Deepgram key in Admin → AI keys for Economic v2."
                   : "Add an OpenAI key in Admin → AI keys.",
             },
@@ -130,9 +136,10 @@ export const Route = createFileRoute("/api/rita/session")({
             ok: true,
             sessionId,
             configured: true,
-            providers: { openai: true, deepgram: Boolean(deepgramKey) },
+            providers: { openai: true, deepgram: Boolean(deepgramKey), groq: true },
             pilotMode,
             voice: settings.voice,
+            secondPassStt: settings.secondPassStt,
             allowance,
           },
           { headers: { "Cache-Control": "no-store" } },

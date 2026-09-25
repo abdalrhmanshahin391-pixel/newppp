@@ -36,6 +36,14 @@ const createSchema = z.discriminatedUnion("action", [
     subjectId: uuid,
   }),
 ]);
+const automaticSchema = z.object({
+  action: z.literal("auto_save"),
+  items: z.array(itemSchema).min(1).max(25),
+});
+const undoSchema = z.object({
+  action: z.literal("undo"),
+  cardIds: z.array(uuid).min(1).max(25),
+});
 
 function failure(message: string, status: number) {
   return Response.json({ error: message }, { status, headers: { "Cache-Control": "no-store" } });
@@ -85,13 +93,88 @@ export const Route = createFileRoute("/api/rita/learning")({
         const auth = await requireRitaUser(request);
         if (!auth) return failure("Please sign in first.", 401);
         const raw = await request.json().catch(() => null);
-        const input =
-          raw?.action === "save" ? saveSchema.safeParse(raw) : createSchema.safeParse(raw);
+        const input = raw?.action === "save"
+          ? saveSchema.safeParse(raw)
+          : raw?.action === "auto_save"
+            ? automaticSchema.safeParse(raw)
+            : raw?.action === "undo"
+              ? undoSchema.safeParse(raw)
+              : createSchema.safeParse(raw);
         if (!input.success) return failure("Invalid learning request.", 400);
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const table = (name: string) => (supabaseAdmin.from as any)(name);
           const data = input.data;
+
+          if (data.action === "undo") {
+            const { data: removed, error } = await table("flash_cards")
+              .delete()
+              .eq("user_id", auth.userId)
+              .in("id", data.cardIds)
+              .select("id");
+            if (error) throw error;
+            return Response.json({ removed: removed?.length ?? 0 });
+          }
+
+          if (data.action === "auto_save") {
+            const { data: preference, error: preferenceError } = await table("rita_user_preferences")
+              .select("auto_save_words")
+              .eq("user_id", auth.userId)
+              .maybeSingle();
+            if (preferenceError) throw preferenceError;
+            if (preference?.auto_save_words === false)
+              return Response.json({ saved: 0, skipped: data.items.length, cardIds: [] });
+            let { data: subject, error: subjectError } = await table("flash_subjects")
+              .select("id")
+              .eq("user_id", auth.userId)
+              .eq("name", "Rita Words")
+              .is("parent_id", null)
+              .maybeSingle();
+            if (subjectError) throw subjectError;
+            if (!subject) {
+              const created = await table("flash_subjects")
+                .insert({
+                  user_id: auth.userId,
+                  parent_id: null,
+                  name: "Rita Words",
+                  color: "lilac",
+                  emoji: null,
+                })
+                .select("id")
+                .single();
+              if (created.error) throw created.error;
+              subject = created.data;
+            }
+            const unique = Array.from(
+              new Map(data.items.map((item) => [learningKey(item), item])).values(),
+            ) as LearningItem[];
+            const cards = unique.map(flashcardFaces);
+            const { data: existing, error: readError } = await table("flash_cards")
+              .select("front")
+              .eq("subject_id", subject.id)
+              .eq("user_id", auth.userId)
+              .in("front", cards.map((card) => card.front));
+            if (readError) throw readError;
+            const already = new Set(
+              (existing ?? []).map((row: { front: string }) => row.front.trim().toLocaleLowerCase()),
+            );
+            const rows = cards
+              .filter((card) => !already.has(card.front.trim().toLocaleLowerCase()))
+              .map((card, index) => ({
+                user_id: auth.userId,
+                subject_id: subject.id,
+                ...card,
+                sort: index,
+              }));
+            if (!rows.length) return Response.json({ saved: 0, skipped: unique.length, cardIds: [] });
+            const { data: saved, error } = await table("flash_cards").insert(rows).select("id");
+            if (error) throw error;
+            return Response.json({
+              saved: saved?.length ?? 0,
+              skipped: unique.length - rows.length,
+              cardIds: (saved ?? []).map((card: { id: string }) => card.id),
+            });
+          }
 
           if (data.action === "create_flash_subject") {
             if (data.parentId) {

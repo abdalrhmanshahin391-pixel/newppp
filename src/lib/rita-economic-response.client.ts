@@ -8,6 +8,8 @@ export type RitaEconomicReply = {
   totalMs: number;
   serverTimings?: Record<string, number>;
   segmentsPlanned?: number;
+  responseProvider?: string;
+  responseModel?: string;
 };
 
 export type RitaSpeechSegment = {
@@ -61,7 +63,7 @@ export async function streamRitaEconomicReply(args: {
       traceId?: string;
     } | null;
     throw new Error(
-      `${detail?.stage || "gpt_response"}: ${detail?.error || "GPT-4o mini did not start."}${detail?.traceId ? ` [${detail.traceId}]` : ""}`,
+      `${detail?.stage || "response"}: ${detail?.error || "Rita did not start answering."}${detail?.traceId ? ` [${detail.traceId}]` : ""}`,
     );
   }
   const reader = response.body.getReader();
@@ -105,6 +107,6 @@ export async function streamRitaEconomicReply(args: {
   } finally {
     reader.releaseLock();
   }
-  if (!done) throw new Error("gpt_response: The streamed reply ended before completion.");
+  if (!done) throw new Error("response: The streamed reply ended before completion.");
   return done;
 }

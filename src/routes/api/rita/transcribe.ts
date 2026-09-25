@@ -3,7 +3,6 @@ import {
   getRitaAllowance,
   getRitaSettings,
   requireRitaUser,
-  resolveRitaOpenAiKey,
 } from "@/lib/rita-voice.server";
 import { inferRitaTranscriptLanguage } from "@/lib/rita-language-state";
 
@@ -18,9 +17,10 @@ export const Route = createFileRoute("/api/rita/transcribe")({
         const traceId = crypto.randomUUID();
         const auth = await requireRitaUser(request);
         if (!auth) return fail("unauthorized", "Please sign in again.", 401, traceId);
-        const [settings, key] = await Promise.all([getRitaSettings(), resolveRitaOpenAiKey()]);
+        const settings = await getRitaSettings();
+        const key = (process.env["LOVABLE_API_KEY"] ?? "").trim();
         if (!key)
-          return fail("not_configured", "OpenAI transcription is not configured.", 503, traceId);
+          return fail("not_configured", "Second-listen transcription is not configured.", 503, traceId);
         const allowance = await getRitaAllowance(auth.userId, settings);
         if (!allowance.allowed)
           return fail("usage_limited", "Rita's voice allowance is currently paused.", 429, traceId);
@@ -31,15 +31,12 @@ export const Route = createFileRoute("/api/rita/transcribe")({
           return fail("invalid_audio", "The recovery recording is invalid.", 400, traceId);
 
         const upstreamBody = new FormData();
-        upstreamBody.append("model", "gpt-4o-mini-transcribe");
-        upstreamBody.append("file", audio, audio.name || "rita-turn.wav");
+        upstreamBody.append("model", "google/gemini-3.5-transcribe");
+        upstreamBody.append("file", new File([audio], audio.name || "rita-turn.wav", { type: audio.type.startsWith("audio/") ? audio.type : "audio/wav" }));
         upstreamBody.append("response_format", "json");
-        upstreamBody.append(
-          "prompt",
-          "Transcribe exactly. The speaker may use Jordanian Arabic, English, German, or mix a foreign word inside one sentence. Do not translate.",
-        );
+        upstreamBody.append("stream", "true");
         const startedAt = performance.now();
-        const upstream = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+        const upstream = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
           method: "POST",
           headers: { Authorization: `Bearer ${key}` },
           body: upstreamBody,
@@ -61,8 +58,17 @@ export const Route = createFileRoute("/api/rita/transcribe")({
             traceId,
           );
         }
-        const result = (await upstream.json().catch(() => null)) as { text?: string } | null;
-        const text = String(result?.text ?? "").trim();
+        const streamText = await upstream.text();
+        let text = "";
+        for (const line of streamText.split("\n")) {
+          if (!line.startsWith("data:")) continue;
+          const raw = line.slice(5).trim();
+          if (!raw || raw === "[DONE]") continue;
+          const event = JSON.parse(raw) as { type?: string; delta?: string; text?: string };
+          if (event.type === "transcript.text.done") text = String(event.text ?? text);
+          else if (event.type === "transcript.text.delta") text += String(event.delta ?? "");
+        }
+        text = text.trim();
         if (!text)
           return fail("empty_transcript", "Rita could not hear a clear sentence.", 422, traceId);
         return Response.json(

@@ -5,6 +5,11 @@ export type RitaEconomicTranscript = {
   durationMs: number;
 };
 
+export function needsRitaSecondPass(text: string, confidence: number) {
+  const mixedScripts = /[\u0600-\u06ff]/u.test(text) && /[A-Za-zÄÖÜäöüß]/u.test(text);
+  return confidence < 0.7 || mixedScripts;
+}
+
 export type RitaEconomicCallbacks = {
   onReady: (language: string) => void;
   onVolume: (level: number) => void;
@@ -209,6 +214,7 @@ export async function startRitaEconomicListening(args: {
   accent: string;
   browserLocale: string;
   keyterms?: string[];
+  secondPassStt?: boolean;
   /** Mints a fresh short-lived Deepgram token for reconnects. */
   refreshToken?: () => Promise<string>;
   callbacks: RitaEconomicCallbacks;
@@ -315,11 +321,23 @@ export async function startRitaEconomicListening(args: {
   const emitFinal = (text: string, confidence: number, resultLanguage = language, reason = "deepgram_final") => {
     const clean = text.replace(/\s+/g, " ").trim();
     if (!clean || stopped || fallbackStarted || performance.now() < suppressFinalUntil) return;
+    const audioParts = turnAudio.slice();
+    const durationMs = turnStartedAt ? Math.round(performance.now() - turnStartedAt) : 0;
+    if (args.secondPassStt !== false && transcriptionMode === "deepgram" && needsRitaSecondPass(clean, confidence) && audioParts.length) {
+      fallbackStarted = true;
+      state = "finalizing";
+      callbacks.onInterim("");
+      callbacks.onSpeechEnd?.();
+      callbacks.onTurnSignal?.("speech_end", "second_pass_stt");
+      const audio = pcm16Wav(audioParts);
+      resetTurn();
+      callbacks.onFallback?.({ audio, durationMs, reason: `second_pass:${confidence.toFixed(2)}` });
+      return;
+    }
     state = "finalizing";
     callbacks.onInterim("");
     callbacks.onSpeechEnd?.();
     callbacks.onTurnSignal?.("speech_end", reason);
-    const durationMs = turnStartedAt ? Math.round(performance.now() - turnStartedAt) : 0;
     resetTurn();
     callbacks.onFinal({ text: clean, confidence, language: resultLanguage, durationMs });
   };
@@ -435,7 +453,7 @@ export async function startRitaEconomicListening(args: {
     const generation = ++connectionGeneration;
     if (reopening) callbacks.onReconnect?.("dropped");
     else setConnectionState("connecting");
-    const socket = new WebSocket(listenUrl(language, args.keyterms ?? ["RitaJet"]), [
+    const socket = new WebSocket(listenUrl(language, args.keyterms ?? []), [
       "bearer",
       currentToken,
     ]);
