@@ -42,20 +42,23 @@ export async function listFishArabicVoices(): Promise<{ voices: FishVoice[]; con
   if (!key) return { voices: [], configured: false };
   if (voiceCache && Date.now() - voiceCache.at < 600_000)
     return { voices: voiceCache.value, configured: true };
-  // Generic "popular Arabic" is dominated by celebrity/meme clones, so search Saudi/Gulf terms.
-  const lists = await Promise.all(
-    ["سعودي", "saudi", "خليجي"].map(async (term) => {
-      const response = await fetch(
+  const fetchList = async (url: string) => {
+    const response = await fetch(url, { headers: { Authorization: `Bearer ${key}` } });
+    if (!response.ok) throw new Error(`Fish Audio voice list failed (${response.status})`);
+    return ((await response.json()) as { items?: any[] }).items ?? [];
+  };
+  // 1) Official Arabic catalogue (same "Default Voices" list as fish.audio), 2) Saudi/Gulf search terms.
+  const lists = await Promise.all([
+    fetchList("https://api.fish.audio/model?page_size=100&sort_by=task_count&language=ar"),
+    ...["سعودي", "saudi", "خليجي"].map((term) =>
+      fetchList(
         `https://api.fish.audio/model?page_size=20&sort_by=task_count&title=${encodeURIComponent(term)}`,
-        { headers: { Authorization: `Bearer ${key}` } },
-      );
-      if (!response.ok) throw new Error(`Fish Audio voice list failed (${response.status})`);
-      return ((await response.json()) as { items?: any[] }).items ?? [];
-    }),
-  );
+      ),
+    ),
+  ]);
   const seen = new Set<string>();
-  const json = { items: lists.flat().filter((item) => item?._id && !seen.has(item._id) && seen.add(item._id)) };
-  const voices: FishVoice[] = (json.items ?? [])
+  const items = lists.flat().filter((item) => item?._id && !seen.has(item._id) && seen.add(item._id));
+  const voices: FishVoice[] = items
     .filter((item) => item?._id && item?.state !== "failed")
     .map((item) => ({
       id: String(item._id),
@@ -63,12 +66,16 @@ export async function listFishArabicVoices(): Promise<{ voices: FishVoice[]; con
       author: String(item.author?.nickname ?? ""),
       uses: Number(item.task_count ?? 0),
       sampleUrl: item.samples?.[0]?.audio ? String(item.samples[0].audio) : null,
-      official: item.author?.nickname === "Fish Audio" || item.tags?.includes?.("official") === true,
+      official:
+        item.author?.nickname === "Fish Audio" ||
+        item.author?.nickname === "Fish Official" ||
+        item.tags?.includes?.("official") === true,
     }))
-    // Saudi/Gulf titled voices first, then popularity.
+    // Official voices first (by popularity), then Saudi/Gulf community voices, then the rest.
     .sort((a, b) => {
-      const saudi = (v: FishVoice) => /saudi|سعود|خليج|gulf|najd|نجد/i.test(v.title) ? 1 : 0;
-      return saudi(b) - saudi(a) || b.uses - a.uses;
+      const rank = (v: FishVoice) =>
+        v.official ? 2 : /saudi|سعود|خليج|gulf|najd|نجد/i.test(v.title) ? 1 : 0;
+      return rank(b) - rank(a) || b.uses - a.uses;
     });
   voiceCache = { at: Date.now(), value: voices };
   return { voices, configured: true };
