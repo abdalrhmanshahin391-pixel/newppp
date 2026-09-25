@@ -809,7 +809,7 @@ function RitaLivePage() {
         if (controller.signal.aborted || timeline.marks.firstToken !== undefined) return;
         timeline.lastStage = "watchdog_llm";
         controller.abort();
-        stopSpeaking("watchdog");
+        stopSpeaking();
         if (turnAbort.current === controller) turnAbort.current = null;
         setProcessing(false);
         processingRef.current = false;
