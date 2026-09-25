@@ -31,6 +31,8 @@ export type RitaTurnTimeline = {
   fillerUsed: boolean;
   fallbackUsed: boolean;
   reconnectCount: number;
+  deepgramEvent?: string;
+  deepgramDetail?: string;
   transcriptionEndReason?: string;
   voiceEngine?: string;
   errorStage?: string;
@@ -42,15 +44,18 @@ export type RitaTurnTimeline = {
   networkType?: string;
 };
 
-export function createRitaTurnTimeline(speechStart = performance.now()): RitaTurnTimeline {
+export function createRitaTurnTimeline(
+  origin = performance.now(),
+  originMark: "speechStart" | "signalStart" = "speechStart",
+): RitaTurnTimeline {
   const clientTurnId = crypto.randomUUID();
   return {
     clientTurnId,
     turnId: "",
     traceId: "",
     diagnosticCode: clientTurnId.slice(0, 8).toUpperCase(),
-    originMs: speechStart,
-    marks: { speechStart: 0 },
+    originMs: origin,
+    marks: { [originMark]: 0 },
     status: "started",
     lastStage: "speech_started",
     transcriptCharCount: 0,

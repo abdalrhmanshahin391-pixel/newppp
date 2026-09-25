@@ -612,7 +612,7 @@ function AiKeysPage() {
           <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10 bg-black/20">
             <table className="w-full min-w-[820px] text-left text-xs">
               <thead className="border-b border-white/10 text-white/45">
-                <tr>{["Turn", "Result", "Slowest stage", "Speech→text", "Text→token", "Token→audio", "Voice", "Reconnects", "When"].map((label) => <th key={label} className="px-3 py-2 font-bold">{label}</th>)}</tr>
+                <tr>{["Turn", "Result", "Slowest stage", "Pickup", "Speech→text", "Text→token", "Token→audio", "Voice", "Reconnects", "When"].map((label) => <th key={label} className="px-3 py-2 font-bold">{label}</th>)}</tr>
               </thead>
               <tbody>
                 {ritaRecentTurns.map((turn) => {
@@ -622,6 +622,7 @@ function AiKeysPage() {
                     return value === null ? "—" : `${value}ms`;
                   };
                   const stages = [
+                    ["Pickup", deltaValue("signal_start_ms", "speech_start_ms")],
                     ["Speech→text", deltaValue("speech_end_ms", "transcript_final_ms")],
                     ["Text→token", deltaValue("transcript_final_ms", "first_token_ms")],
                     ["Token→audio", deltaValue("first_token_ms", "first_audio_ms")],
@@ -633,6 +634,7 @@ function AiKeysPage() {
                     <td className="px-3 py-2 font-mono">{turn.diagnostic_code || String(turn.turn_id || "").slice(0, 8)}</td>
                     <td className="px-3 py-2"><span className={turn.status === "completed" ? "text-emerald-300" : "text-amber-300"}>{turn.status || "legacy"}</span><div className="text-white/35">{turn.end_reason || turn.last_stage || ""}</div></td>
                     <td className={`px-3 py-2 font-bold ${latencyClass}`}>{slowest ? `${slowest[0]} ${slowest[1]}ms` : "—"}<div className="text-[10px] font-normal text-white/35">{turn.transcription_end_reason || ""}</div></td>
+                    <td className="px-3 py-2">{delta("signal_start_ms", "speech_start_ms")}<div className="text-[10px] text-white/35">{turn.deepgram_event || ""}</div></td>
                     <td className="px-3 py-2">{delta("speech_end_ms", "transcript_final_ms")}</td>
                     <td className="px-3 py-2">{delta("transcript_final_ms", "first_token_ms")}</td>
                     <td className="px-3 py-2">{delta("first_token_ms", "first_audio_ms")}</td>

@@ -18,8 +18,9 @@ export type RitaEconomicCallbacks = {
   onReconnect?: (reason: "dropped" | "idle") => void;
   /** Confirmed real speech (≥2 transcribed words or ≥400 ms of voice). Only this may interrupt Rita. */
   onBargeIn?: () => void;
-  onTurnSignal?: (event: "vad_start" | "speech_confirmed" | "speech_end", reason?: string) => void;
+  onTurnSignal?: (event: "signal_start" | "vad_start" | "speech_confirmed" | "speech_end", reason?: string) => void;
   onConnectionState?: (state: "connecting" | "listening" | "reconnecting") => void;
+  onDiagnostic?: (event: "socket_open" | "first_audio_sent" | "deepgram_speech" | "deepgram_result" | "socket_close", detail?: string) => void;
 };
 
 export type RitaEconomicController = {
@@ -247,8 +248,10 @@ export async function startRitaEconomicListening(args: {
   let outputSpeaking = false;
   let pushToTalk = false;
   let hotFrames = 0;
+  let onsetMs = 0;
   let quietMs = 0;
   let noiseFloor = 0.006;
+  let smoothedRms = 0;
   let turnStartedAt = 0;
   let turnAudio: Uint8Array[] = [];
   let finalParts: string[] = [];
@@ -267,6 +270,7 @@ export async function startRitaEconomicListening(args: {
   let heardWords = false;
   let outputText = "";
   let outputGuardUntil = 0;
+  let receivedResultOnConnection = false;
 
   const setConnectionState = (next: "connecting" | "listening" | "reconnecting") => {
     if (state !== "speaking" && state !== "finalizing" && state !== "stopped") state = next;
@@ -286,6 +290,7 @@ export async function startRitaEconomicListening(args: {
       : "reconnecting";
     pushToTalk = false;
     hotFrames = 0;
+    onsetMs = 0;
     quietMs = 0;
     turnAudio = [];
     finalParts = [];
@@ -342,7 +347,7 @@ export async function startRitaEconomicListening(args: {
   const rememberPreRoll = (buffer: ArrayBuffer) => {
     preRoll.push(buffer);
     preRollBytes += buffer.byteLength;
-    while (preRollBytes > 9_600 && preRoll.length > 1) {
+    while (preRollBytes > 16_000 && preRoll.length > 1) {
       preRollBytes -= preRoll[0].byteLength;
       preRoll.shift();
     }
@@ -362,13 +367,32 @@ export async function startRitaEconomicListening(args: {
     queuePending(buffer);
   };
 
-  const flushPreRoll = () => {
+  const appendPreRollToTurn = () => {
     for (const buffer of preRoll) {
-      sendAudio(buffer);
       turnAudio.push(new Uint8Array(buffer.slice(0)));
     }
     preRoll = [];
     preRollBytes = 0;
+  };
+
+  const startTurn = (source: "local_vad" | "deepgram") => {
+    if (state === "speaking" || state === "finalizing" || state === "stopped") return false;
+    state = "speaking";
+    turnStartedAt = performance.now();
+    turnAudio = [];
+    finalParts = [];
+    quietMs = 0;
+    onsetMs = 0;
+    suppressFinalUntil = 0;
+    fallbackStarted = false;
+    bargedIn = false;
+    voicedMs = 0;
+    heardWords = false;
+    appendPreRollToTurn();
+    callbacks.onSpeechStart();
+    callbacks.onTurnSignal?.("vad_start", source);
+    callbacks.onDiagnostic?.("first_audio_sent", "continuous_stream");
+    return true;
   };
 
   const scheduleReconnect = () => {
@@ -420,16 +444,19 @@ export async function startRitaEconomicListening(args: {
         return;
       }
       reconnectAttempt = 0;
+      receivedResultOnConnection = false;
       const buffered = pendingAudio;
       pendingAudio = [];
       for (const buffer of buffered) socket.send(buffer);
       setConnectionState("listening");
+      callbacks.onDiagnostic?.("socket_open", language);
       if (!reopening) callbacks.onReady(language);
     };
     socket.onerror = () => undefined;
     socket.onclose = (event) => {
       if (stopped || next.intentionallyClosing || connection?.generation !== generation) return;
       console.warn("Rita Deepgram socket closed", { code: event.code, reason: event.reason || "none", language });
+      callbacks.onDiagnostic?.("socket_close", `${event.code}:${event.reason || "none"}`);
       scheduleReconnect();
     };
     socket.onmessage = (event) => {
@@ -441,12 +468,8 @@ export async function startRitaEconomicListening(args: {
         return;
       }
       if (message.type === "SpeechStarted") {
-        if (state === "listening" || state === "reconnecting" || state === "connecting") {
-          state = "speaking";
-          turnStartedAt ||= performance.now();
-          callbacks.onSpeechStart();
-          callbacks.onTurnSignal?.("vad_start", "deepgram");
-        }
+        startTurn("deepgram");
+        callbacks.onDiagnostic?.("deepgram_speech");
         return;
       }
       if (message.type === "UtteranceEnd") {
@@ -456,6 +479,10 @@ export async function startRitaEconomicListening(args: {
         return;
       }
       if (message.type !== "Results") return;
+      if (!receivedResultOnConnection) {
+        receivedResultOnConnection = true;
+        callbacks.onDiagnostic?.("deepgram_result");
+      }
       const alternative = message.channel?.alternatives?.[0];
       const text = String(alternative?.transcript ?? "").trim();
       if (!text) return;
@@ -493,48 +520,43 @@ export async function startRitaEconomicListening(args: {
       live.socket.send(JSON.stringify({ type: "KeepAlive" }));
   }, 4_500);
 
-  const tokenRefresh = window.setInterval(() => {
-    if (stopped || !args.refreshToken || transcriptionMode !== "deepgram") return;
-    void args.refreshToken().then((token) => {
-      currentToken = token;
-    }).catch(() => undefined);
-  }, 20_000);
-
   capture.port.onmessage = (event: MessageEvent<Float32Array>) => {
     if (stopped) return;
     const frame = event.data;
     let power = 0;
     for (let index = 0; index < frame.length; index += 1) power += frame[index] * frame[index];
     const rms = Math.sqrt(power / Math.max(1, frame.length));
-    const normalized = Math.min(1, Math.max(0, (rms - noiseFloor) * 18));
+    smoothedRms = smoothedRms ? smoothedRms * 0.82 + rms * 0.18 : rms;
+    const normalized = Math.min(1, Math.max(0, (smoothedRms - noiseFloor) * 22));
     callbacks.onVolume(normalized);
     const activeTurn = state === "speaking" || state === "finalizing";
     let startedThisFrame = false;
     const frameMs = (frame.length / context.sampleRate) * 1000;
     if (!activeTurn) {
-      noiseFloor = Math.min(0.018, noiseFloor * 0.98 + rms * 0.02);
-      const threshold = Math.max(0.01, noiseFloor * (outputSpeaking ? 3.2 : 1.9));
-      hotFrames = rms > threshold || pushToTalk ? hotFrames + 1 : 0;
-      if (hotFrames >= (pushToTalk ? 1 : outputSpeaking ? 10 : 5)) {
-        state = "speaking";
+      const threshold = Math.max(outputSpeaking ? 0.009 : 0.0065, noiseFloor * (outputSpeaking ? 2.1 : 1.55));
+      const aboveThreshold = smoothedRms > threshold || pushToTalk;
+      if (!aboveThreshold && smoothedRms < noiseFloor * 1.25) {
+        noiseFloor = Math.min(0.014, noiseFloor * 0.995 + smoothedRms * 0.005);
+      }
+      if (aboveThreshold) {
+        if (!onsetMs) callbacks.onTurnSignal?.("signal_start", "local_vad");
+        onsetMs += frameMs;
+        hotFrames += 1;
+      } else {
+        onsetMs = Math.max(0, onsetMs - frameMs * 1.5);
+        hotFrames = 0;
+      }
+      const confirmationMs = pushToTalk ? 0 : outputSpeaking ? 90 : 45;
+      if (onsetMs >= confirmationMs) {
         startedThisFrame = true;
-        turnStartedAt = performance.now();
-        turnAudio = [];
-        finalParts = [];
-        quietMs = 0;
-        suppressFinalUntil = 0;
-        fallbackStarted = false;
-        bargedIn = false;
-        voicedMs = 0;
-        heardWords = false;
-        callbacks.onSpeechStart();
-        callbacks.onTurnSignal?.("vad_start", "local_vad");
+        startTurn("local_vad");
       }
     } else if (!pushToTalk) {
-      const threshold = Math.max(0.008, noiseFloor * (outputSpeaking ? 3 : 1.55));
-      quietMs = rms < threshold ? quietMs + frameMs : 0;
-      if (rms >= threshold) voicedMs += frameMs;
-      if (!outputSpeaking && voicedMs >= 400) confirmBargeIn();
+      const threshold = Math.max(outputSpeaking ? 0.008 : 0.006, noiseFloor * (outputSpeaking ? 1.9 : 1.35));
+      if (smoothedRms < threshold) quietMs += frameMs;
+      else quietMs = Math.max(0, quietMs - frameMs * 2);
+      if (smoothedRms >= threshold) voicedMs += frameMs;
+      if (!outputSpeaking && voicedMs >= 220) confirmBargeIn();
     }
     const pcm = encoder.encode(frame);
     if (!pcm.byteLength) return;
@@ -544,14 +566,16 @@ export async function startRitaEconomicListening(args: {
       preRollBytes = 0;
       return;
     }
+    if (transcriptionMode === "deepgram") {
+      sendAudio(buffer);
+    }
     if (state !== "speaking" && state !== "finalizing") {
       rememberPreRoll(buffer);
       return;
     }
-    if (startedThisFrame) flushPreRoll();
+    if (startedThisFrame && !turnAudio.length) appendPreRollToTurn();
     turnAudio.push(new Uint8Array(buffer.slice(0)));
-    if (transcriptionMode === "deepgram") sendAudio(buffer);
-    const fallbackSilenceMs = transcriptionMode === "openai" ? 450 : 1_800;
+    const fallbackSilenceMs = transcriptionMode === "openai" ? 450 : 1_150;
     if (!pushToTalk && quietMs >= fallbackSilenceMs) {
       state = "finalizing";
       recoverTurn(
@@ -599,7 +623,6 @@ export async function startRitaEconomicListening(args: {
       stopped = true;
       state = "stopped";
       window.clearInterval(keepAlive);
-      window.clearInterval(tokenRefresh);
       if (reconnectTimer) window.clearTimeout(reconnectTimer);
       capture.port.onmessage = null;
       const live = connection;

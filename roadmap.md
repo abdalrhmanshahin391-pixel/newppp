@@ -13,3 +13,5 @@
 - [x] Rebuild RitaVoice around one Deepgram connection and one explicit listening state machine
 - [x] Simplify Rita reconnect/error states and make per-turn latency diagnostics accurate
 - [x] Verify Arabic, mixed-language, interruption, reconnect, and Fish/OpenAI playback flows in automated preview checks
+- [x] Make quiet speech reach Deepgram continuously with adaptive pickup and stage diagnostics
+- [ ] Verify ten natural quiet-volume iPad turns before publishing

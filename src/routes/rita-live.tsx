@@ -216,6 +216,7 @@ function RitaLivePage() {
   const speechAbort = useRef<AbortController | null>(null);
   const reconnectCount = useRef(0);
   const pendingSpeechStart = useRef(0);
+  const pendingSignalStart = useRef(0);
   const turnAbort = useRef<AbortController | null>(null);
   const outputFrame = useRef<number | null>(null);
   const messageEnd = useRef<HTMLDivElement | null>(null);
@@ -786,10 +787,12 @@ function RitaLivePage() {
     }) => {
       const spoken = text.trim();
       if (!spoken || (addUser && mutedRef.current)) return;
-      voiceTurnStartedAt.current = performance.now();
+      voiceTurnStartedAt.current = pendingSignalStart.current || pendingSpeechStart.current || performance.now();
       if (!turnTimeline.current || turnTimeline.current.endReason) {
         stopSpeaking("new_request");
-        turnTimeline.current = createRitaTurnTimeline(performance.now());
+        const origin = pendingSignalStart.current || pendingSpeechStart.current || performance.now();
+        turnTimeline.current = createRitaTurnTimeline(origin, pendingSignalStart.current ? "signalStart" : "speechStart");
+        if (pendingSpeechStart.current) markRitaTurn(turnTimeline.current, "speechStart", pendingSpeechStart.current);
         segmentTimelines.current.clear();
       }
       const timeline = turnTimeline.current;
@@ -1432,6 +1435,9 @@ function RitaLivePage() {
             }
           },
           onTurnSignal: (event, reason) => {
+            if (event === "signal_start") {
+              pendingSignalStart.current = performance.now();
+            }
             const timeline = turnTimeline.current;
             if (timeline && event === "speech_end" && reason) {
               timeline.lastStage = reason;
@@ -1450,6 +1456,12 @@ function RitaLivePage() {
           onSpeechStart: () => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
             pendingSpeechStart.current = performance.now();
+            if (!turnTimeline.current || turnTimeline.current.endReason) {
+              const origin = pendingSignalStart.current || pendingSpeechStart.current;
+              turnTimeline.current = createRitaTurnTimeline(origin, pendingSignalStart.current ? "signalStart" : "speechStart");
+              if (pendingSignalStart.current) markRitaTurn(turnTimeline.current, "speechStart", pendingSpeechStart.current);
+              segmentTimelines.current.clear();
+            }
             // Raw sound alone never interrupts Rita; wait for confirmed speech (onBargeIn).
             if (!processingRef.current && !speechAbort.current) {
               setMood("listening");
@@ -1458,10 +1470,14 @@ function RitaLivePage() {
           },
           onBargeIn: () => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
-            stopSpeaking("user_barge_in");
+            if (speechAbort.current) stopSpeaking("user_barge_in");
             reconnectCount.current = 0;
-            turnTimeline.current = createRitaTurnTimeline(pendingSpeechStart.current || performance.now());
-            segmentTimelines.current.clear();
+            const origin = pendingSignalStart.current || pendingSpeechStart.current || performance.now();
+            if (!turnTimeline.current || turnTimeline.current.endReason) {
+              turnTimeline.current = createRitaTurnTimeline(origin, pendingSignalStart.current ? "signalStart" : "speechStart");
+              if (pendingSpeechStart.current) markRitaTurn(turnTimeline.current, "speechStart", pendingSpeechStart.current);
+              segmentTimelines.current.clear();
+            }
             metricRef.current = {
               speechStart: pendingSpeechStart.current || performance.now(),
               speechEnd: 0,
@@ -1476,6 +1492,16 @@ function RitaLivePage() {
             turnAbort.current?.abort();
             setMood("listening");
             setStatus("Deepgram is listening…");
+          },
+          onDiagnostic: (event, detail) => {
+            if (epoch !== lessonEpoch.current) return;
+            const timeline = turnTimeline.current;
+            if (!timeline) return;
+            timeline.deepgramEvent = event;
+            if (detail) timeline.deepgramDetail = detail;
+            if (event === "first_audio_sent") markRitaTurn(timeline, "firstAudioSent");
+            if (event === "deepgram_speech") markRitaTurn(timeline, "deepgramSpeech");
+            if (event === "deepgram_result") markRitaTurn(timeline, "deepgramResult");
           },
           onInterim: (value) => {
             if (epoch !== lessonEpoch.current) return;
@@ -1498,6 +1524,8 @@ function RitaLivePage() {
             metricRef.current.transcriptFinal = performance.now();
             if (turnTimeline.current) markRitaTurn(turnTimeline.current, "transcriptFinal");
             lastSpoken.current = turn.text;
+            pendingSignalStart.current = 0;
+            pendingSpeechStart.current = 0;
             void processTurnRef.current({
               text: turn.text,
               transcriptLanguage: turn.language,
@@ -1531,6 +1559,8 @@ function RitaLivePage() {
                 if (epoch !== lessonEpoch.current) return;
                 metricRef.current.transcriptFinal = performance.now();
                 lastSpoken.current = fallback.text;
+                pendingSignalStart.current = 0;
+                pendingSpeechStart.current = 0;
                 await processTurnRef.current({
                   text: fallback.text,
                   transcriptLanguage: fallback.language || "unknown",
@@ -1546,6 +1576,8 @@ function RitaLivePage() {
                 console.warn("Rita fallback transcription failed", reason, cause);
                 setError("Rita missed that sentence — please say it again.");
                 finalizeTurnTimeline("failed", "transcription_error", "transcription");
+                pendingSignalStart.current = 0;
+                pendingSpeechStart.current = 0;
               });
           },
           onError: (message) => {

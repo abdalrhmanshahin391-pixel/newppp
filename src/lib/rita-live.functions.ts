@@ -134,10 +134,10 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
           .select("id,user_id,ended_at")
           .gte("started_at", start),
         (supabase.from as any)("rita_turn_metrics")
-          .select("speech_end_to_first_audio_ms,speech_end_ms,transcript_final_ms,first_token_ms,first_audio_ms,playback_end_ms,status,fallback_used,reconnect_count")
+          .select("speech_end_to_first_audio_ms,speech_end_ms,transcript_final_ms,first_token_ms,first_audio_ms,playback_end_ms,status,fallback_used,reconnect_count,signal_start_ms,speech_start_ms,first_audio_sent_ms,deepgram_speech_ms,deepgram_result_ms")
           .gte("created_at", start),
         (supabase.from as any)("rita_turn_metrics")
-          .select("turn_id,diagnostic_code,status,end_reason,last_stage,transcription_end_reason,voice_engine,speech_end_ms,transcript_final_ms,first_token_ms,text_complete_ms,first_audio_ms,playback_end_ms,segments_planned,segments_completed,played_audio_ms,fallback_used,reconnect_count,created_at")
+          .select("turn_id,diagnostic_code,status,end_reason,last_stage,transcription_end_reason,voice_engine,deepgram_event,deepgram_detail,signal_start_ms,speech_start_ms,first_audio_sent_ms,deepgram_speech_ms,deepgram_result_ms,speech_end_ms,transcript_final_ms,first_token_ms,text_complete_ms,first_audio_ms,playback_end_ms,segments_planned,segments_completed,played_audio_ms,fallback_used,reconnect_count,created_at")
           .order("created_at", { ascending: false })
           .limit(20),
       ]);
