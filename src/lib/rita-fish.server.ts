@@ -47,14 +47,26 @@ export async function listFishArabicVoices(): Promise<{ voices: FishVoice[]; con
     if (!response.ok) throw new Error(`Fish Audio voice list failed (${response.status})`);
     return ((await response.json()) as { items?: any[] }).items ?? [];
   };
-  // 1) The official Arabic "Default Voices" from fish.audio are authored by "Fish Official" and
-  //    never rank high in the popular list (which is dominated by meme clones), so fetch each
-  //    official name directly and keep only the "Fish Official" entry. 2) Saudi/Gulf search terms.
-  const OFFICIAL_ARABIC_NAMES = [
-    "فاطمة", "فهد", "ليان", "نورة", "عمر", "يوسف", "فريدة", "سلمى", "أمين", "كريم",
+  // 1) Verified official Arabic "Default Voices" (author "Fish Official") — pinned by ID because
+  //    Fish search is fuzzy and rarely surfaces them. Fetched fresh by ID for live metadata.
+  //    2) Dynamic name searches for the remaining official voices. 3) Saudi/Gulf community voices.
+  const OFFICIAL_VOICE_IDS = [
+    "0b14f34a13a94ed88fe6113193749bb0", // فاطمة — Fish Official (الأكثر استخداماً)
+    "eec5913dac6b4bdc9920f136e4e5ed78", // فهد Fahad — Fish Official
+    "5814f46c02f5486d9c72b31bd82217ba", // ليان Layan — Fish Official
   ];
+  const OFFICIAL_NAME_SEARCHES = ["نورة", "Noura", "Omar", "Youssef", "Farida", "Salma", "Amine", "Karim"];
+  const fetchById = async (id: string) => {
+    const response = await fetch(`https://api.fish.audio/model/${id}`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    if (!response.ok) return [];
+    const item = (await response.json()) as any;
+    return item?._id ? [item] : [];
+  };
   const lists = await Promise.all([
-    ...OFFICIAL_ARABIC_NAMES.map((term) =>
+    ...OFFICIAL_VOICE_IDS.map(fetchById),
+    ...OFFICIAL_NAME_SEARCHES.map((term) =>
       fetchList(
         `https://api.fish.audio/model?page_size=10&sort_by=task_count&title=${encodeURIComponent(term)}`,
       ),
