@@ -1081,12 +1081,9 @@ function RitaLivePage() {
   );
   processTurnRef.current = processTurn;
 
-  const warmTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const endSession = useCallback(() => {
     lessonEpoch.current += 1;
     finalizeTurnTimeline("aborted", "session_ended");
-    if (warmTimer.current) clearInterval(warmTimer.current);
-    warmTimer.current = null;
     void loadEconomicResponse()
       .then((m) => m.clearRitaSessionTicket())
       .catch(() => undefined);
@@ -1353,8 +1350,6 @@ function RitaLivePage() {
           .then(async (value) => (await loadEconomicResponse()).setRitaSessionTicket(value))
           .catch(() => undefined);
       warm();
-      if (warmTimer.current) clearInterval(warmTimer.current);
-      warmTimer.current = setInterval(warm, 45_000);
       setPremiumVoice(result.allowance?.premiumVoice !== false);
       let listeningToken = "";
       if (selectedMode === "economic_v2") {
