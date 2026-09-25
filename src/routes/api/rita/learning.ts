@@ -117,6 +117,13 @@ export const Route = createFileRoute("/api/rita/learning")({
           }
 
           if (data.action === "auto_save") {
+            const { data: preference, error: preferenceError } = await table("rita_user_preferences")
+              .select("auto_save_words")
+              .eq("user_id", auth.userId)
+              .maybeSingle();
+            if (preferenceError) throw preferenceError;
+            if (preference?.auto_save_words === false)
+              return Response.json({ saved: 0, skipped: data.items.length, cardIds: [] });
             let { data: subject, error: subjectError } = await table("flash_subjects")
               .select("id")
               .eq("user_id", auth.userId)

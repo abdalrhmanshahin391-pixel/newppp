@@ -41,7 +41,7 @@ import {
   ritaApiError,
   type RitaErrorPayload,
 } from "@/lib/rita-response";
-import { hasRitaLanguageLearningIntent } from "@/lib/rita-learning-intent";
+import { hasRitaLanguageLearningIntent, replyContainsLearningPair } from "@/lib/rita-learning-intent";
 import {
   advanceRitaLanguageState,
   inferRitaTranscriptLanguage,
@@ -173,6 +173,9 @@ function RitaLivePage() {
   const [rememberChoice, setRememberChoice] = useState(false);
   const [saving, setSaving] = useState(false);
   const [learningNotice, setLearningNotice] = useState("");
+  const [autoSaveWords, setAutoSaveWords] = useState(true);
+  const [undoCardIds, setUndoCardIds] = useState<string[]>([]);
+  const [secondPassStt, setSecondPassStt] = useState(true);
   const [draft, setDraft] = useState("");
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [connectedMode, setConnectedMode] = useState<"legacy" | "economic_v2" | null>(null);
@@ -756,6 +759,21 @@ function RitaLivePage() {
                 message.id === replyId ? { ...message, learningIds: ids } : message,
               ),
             );
+          if (ids.length && autoSaveWords) {
+            const items = learningRef.current.filter((item) => ids.includes(item.id));
+            void fetch("/api/rita/learning", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "auto_save", items }),
+            })
+              .then((response) => response.ok ? response.json() as Promise<{ saved?: number; cardIds?: string[] }> : null)
+              .then((saved) => {
+                if (!saved?.saved || epoch !== lessonEpoch.current) return;
+                setUndoCardIds(saved.cardIds ?? []);
+                setLearningNotice(`${saved.saved} ${saved.saved === 1 ? "word was" : "words were"} saved automatically.`);
+              })
+              .catch(() => undefined);
+          }
           void handleSaveIntent({
             saveRequest:
               result.saveRequest === "flashcards" || result.saveRequest === "german_lab"
@@ -767,7 +785,7 @@ function RitaLivePage() {
         })
         .catch(() => undefined); // Learning extraction never delays spoken audio.
     },
-    [addLearning, getToken, handleSaveIntent],
+    [addLearning, autoSaveWords, getToken, handleSaveIntent],
   );
 
   const processTurn = useCallback(
@@ -1045,7 +1063,7 @@ function RitaLivePage() {
           processingRef.current = false;
         }
         if (activeRef.current) {
-          const shouldExtract = hasRitaLanguageLearningIntent(spoken);
+           const shouldExtract = hasRitaLanguageLearningIntent(spoken) || replyContainsLearningPair(result.reply);
           if (shouldExtract) {
             window.setTimeout(() => {
               if (epoch === lessonEpoch.current)
@@ -1221,6 +1239,7 @@ function RitaLivePage() {
         setConfigured(Boolean(result?.configured));
         setAvailableMode(result?.pilotMode === "legacy" ? "legacy" : "economic_v2");
         setPremiumVoice(result?.allowance?.premiumVoice !== false);
+        setSecondPassStt(result?.secondPassStt !== false);
         setStatus(
           result?.configured
             ? result?.pilotMode === "legacy"
@@ -1250,7 +1269,7 @@ function RitaLivePage() {
         fetch("/api/rita/preferences", { headers: { Authorization: `Bearer ${token}` } }),
       )
       .then((response) =>
-        response.ok ? (response.json() as Promise<{ language?: string; dialect?: string }>) : null,
+          response.ok ? (response.json() as Promise<{ language?: string; dialect?: string; autoSaveWords?: boolean }>) : null,
       )
       .then((preference) => {
         if (cancelled || !preference) return;
@@ -1259,6 +1278,7 @@ function RitaLivePage() {
           dialect: preference.dialect || "",
         });
         if (preference.dialect && preference.dialect !== "standard") setDialect(preference.dialect);
+        setAutoSaveWords(preference.autoSaveWords !== false);
       })
       .catch(() => undefined);
     return () => {
@@ -1365,6 +1385,7 @@ function RitaLivePage() {
           pilotMode?: "legacy" | "economic_v2";
           allowance?: { premiumVoice?: boolean };
           voice?: string;
+           secondPassStt?: boolean;
         } & RitaErrorPayload
       >(response);
       if (epoch !== lessonEpoch.current) {
@@ -1423,6 +1444,7 @@ function RitaLivePage() {
           languageState.current.activeLanguage,
         browserLocale: navigator.language || "",
          keyterms: learningRef.current.slice(-20).map((item) => item.term),
+         secondPassStt,
         refreshToken: async () => {
           const fresh = await getToken();
           const response = await fetch("/api/rita/deepgram-token", {
@@ -1948,9 +1970,26 @@ function RitaLivePage() {
             </div>
             {(learningNotice || active) && (
               <div className="mx-auto mt-2 flex max-w-2xl items-center justify-between gap-3 text-xs">
-                <span role="status" className="text-[#6f6480]">
+                 <span role="status" className="text-[#6f6480]">
                   {learningNotice || status}
                 </span>
+                 {!!undoCardIds.length && (
+                   <button
+                     type="button"
+                     className="font-bold text-[#6a47c1] hover:underline"
+                     onClick={() => {
+                       const ids = [...undoCardIds];
+                       setUndoCardIds([]);
+                       void getToken().then((token) => fetch("/api/rita/learning", {
+                         method: "POST",
+                         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                         body: JSON.stringify({ action: "undo", cardIds: ids }),
+                       })).then(() => setLearningNotice("Automatic save undone.")).catch(() => setLearningNotice("Could not undo that save."));
+                     }}
+                   >
+                     Undo
+                   </button>
+                 )}
                 {active && (
                   <button
                     type="button"

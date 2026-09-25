@@ -214,6 +214,7 @@ export async function startRitaEconomicListening(args: {
   accent: string;
   browserLocale: string;
   keyterms?: string[];
+  secondPassStt?: boolean;
   /** Mints a fresh short-lived Deepgram token for reconnects. */
   refreshToken?: () => Promise<string>;
   callbacks: RitaEconomicCallbacks;
@@ -322,7 +323,7 @@ export async function startRitaEconomicListening(args: {
     if (!clean || stopped || fallbackStarted || performance.now() < suppressFinalUntil) return;
     const audioParts = turnAudio.slice();
     const durationMs = turnStartedAt ? Math.round(performance.now() - turnStartedAt) : 0;
-    if (transcriptionMode === "deepgram" && needsRitaSecondPass(clean, confidence) && audioParts.length) {
+    if (args.secondPassStt !== false && transcriptionMode === "deepgram" && needsRitaSecondPass(clean, confidence) && audioParts.length) {
       fallbackStarted = true;
       state = "finalizing";
       callbacks.onInterim("");
