@@ -150,11 +150,13 @@ export async function createRitaPcmPlayer(callbacks: {
       if (event.data?.type === "drained") callbacks.onEnded();
       if (event.data?.type === "segment_started")
         callbacks.onSegmentStarted?.(Number(event.data.segmentIndex));
-      if (event.data?.type === "segment_ended")
+      if (event.data?.type === "segment_ended") {
+        activeSegment = null;
         callbacks.onSegmentEnded?.(
           Number(event.data.segmentIndex),
           Math.round((Number(event.data.samples) / 24_000) * 1000),
         );
+      }
   };
 
   let activeSegment: number | null = null;

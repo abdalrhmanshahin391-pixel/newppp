@@ -337,8 +337,13 @@ function RitaLivePage() {
   );
 
   const finalizeTurnTimeline = useCallback(
-    (status: RitaTurnTimeline["status"], reason: RitaTurnEndReason, errorStage?: string) => {
-      const timeline = turnTimeline.current;
+    (
+      status: RitaTurnTimeline["status"],
+      reason: RitaTurnEndReason,
+      errorStage?: string,
+      target?: RitaTurnTimeline,
+    ) => {
+      const timeline = target ?? turnTimeline.current;
       if (!timeline || timeline.endReason) return;
       timeline.status = status;
       timeline.endReason = reason;
@@ -1038,7 +1043,7 @@ function RitaLivePage() {
             if (!voiceController.signal.aborted) {
               pcmPlayer.current?.finish();
               timeline.status = timeline.segmentsPlayed > 0 ? "partial" : "failed";
-              finalizeTurnTimeline(timeline.status, "tts_error", "tts");
+              finalizeTurnTimeline(timeline.status, "tts_error", "tts", timeline);
               throw new Error(
                 cause instanceof Error
                   ? `tts_openai: ${cause.message}`
@@ -1056,10 +1061,10 @@ function RitaLivePage() {
       } catch (cause) {
         if (epoch !== lessonEpoch.current) return;
         if ((cause as Error)?.name === "AbortError") {
-          finalizeTurnTimeline("aborted", "new_request");
+          finalizeTurnTimeline("aborted", "new_request", undefined, timeline);
           return;
         }
-        finalizeTurnTimeline("failed", "response_error", "response");
+        finalizeTurnTimeline("failed", "response_error", "response", timeline);
         setMood(activeRef.current ? "listening" : "ready");
         setStatus(activeRef.current ? "Rita is listening" : "Ready to start");
         voiceTurnStartedAt.current = null;
