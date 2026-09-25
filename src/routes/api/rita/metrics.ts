@@ -30,6 +30,11 @@ export const Route = createFileRoute("/api/rita/metrics")({
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
             const marks = (body?.marks && typeof body.marks === "object" ? body.marks : {}) as Record<string, unknown>;
+            const elapsed = (from: unknown, to: unknown) => {
+              const start = Number(from);
+              const end = Number(to);
+              return Number.isFinite(start) && Number.isFinite(end) && end >= start ? bounded(end - start) : null;
+            };
             const row = {
             user_id: auth.userId,
               session_id: sessionId,
@@ -41,10 +46,10 @@ export const Route = createFileRoute("/api/rita/metrics")({
             language: String(body?.language ?? "").slice(0, 20) || null,
             browser: String(body?.browser ?? "").slice(0, 120) || null,
             network_type: String(body?.networkType ?? "").slice(0, 30) || null,
-            speech_end_to_transcript_ms: bounded(body?.speechEndToTranscriptMs),
-            transcript_to_first_token_ms: bounded(body?.transcriptToFirstTokenMs),
-            first_token_to_tts_ms: bounded(body?.firstTokenToTtsMs),
-            speech_end_to_first_audio_ms: bounded(body?.speechEndToFirstAudioMs),
+            speech_end_to_transcript_ms: bounded(body?.speechEndToTranscriptMs) ?? elapsed(marks.speechEnd, marks.transcriptFinal),
+            transcript_to_first_token_ms: bounded(body?.transcriptToFirstTokenMs) ?? elapsed(marks.transcriptFinal, marks.firstToken),
+            first_token_to_tts_ms: bounded(body?.firstTokenToTtsMs) ?? elapsed(marks.firstToken, marks.firstAudio),
+            speech_end_to_first_audio_ms: bounded(body?.speechEndToFirstAudioMs) ?? elapsed(marks.speechEnd, marks.firstAudio),
             interrupted: body?.interrupted === true,
             fallback_used: body?.fallbackUsed === true,
             reconnect_count: Math.min(

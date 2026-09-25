@@ -307,6 +307,7 @@ function AiKeysPage() {
       toast.success("Rita voice settings saved");
       const result = await getRitaAdmin();
       if (result?.metrics) setRitaMetrics(result.metrics);
+      if (result?.recentTurns) setRitaRecentTurns(result.recentTurns);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Could not save Rita settings");
     } finally {

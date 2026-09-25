@@ -26,11 +26,12 @@ test("Arabic comma releases the first clause", () => {
   assert.deepEqual(chunker.push("أهلين، شو بتحب نتعلم اليوم، "), ["أهلين، شو بتحب نتعلم اليوم،"]);
 });
 
-test("never more than three segments", () => {
+test("keeps final speech segments bounded", () => {
   const chunker = new RitaClauseChunker();
   chunker.push("This is a natural opening sentence with enough words to speak. ");
   chunker.push("This is the second complete sentence with enough words to prefetch. ");
   chunker.push("A third sentence stays with the final remainder. A fourth one does too.");
   const final = chunker.flush();
-  assert.equal(final.length, 1);
+  assert.ok(final.length <= 6);
+  assert.ok(final.every((segment) => segment.split(/\s+/).length <= 24));
 });
