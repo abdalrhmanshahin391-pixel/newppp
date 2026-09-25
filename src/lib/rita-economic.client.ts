@@ -101,9 +101,9 @@ export function selectRitaDeepgramLanguage(accent: string, browserLocale: string
   if (requested.toLowerCase().includes("gulf")) return "ar-AE";
   if (/^ar/i.test(browserLocale)) return "ar-JO";
   if (/^de/i.test(browserLocale)) return "de";
-  if (/^en/i.test(browserLocale)) return "en-US";
-  // Rita's automatic voice lessons default to conversational Arabic. A stable
-  // preference can select English or German before the next session starts.
+  // Rita's automatic voice lessons default to conversational Arabic. The
+  // saved lesson preference is passed as `accent`; browser English alone must
+  // not force an Arabic learner onto an English-only recognizer.
   return "ar-JO";
 }
 
@@ -289,7 +289,6 @@ export async function startRitaEconomicListening(args: {
     quietMs = 0;
     turnAudio = [];
     finalParts = [];
-    fallbackStarted = false;
     bargedIn = false;
     voicedMs = 0;
     heardWords = false;
@@ -331,7 +330,12 @@ export async function startRitaEconomicListening(args: {
     callbacks.onSpeechEnd?.();
     callbacks.onTurnSignal?.("speech_end", "fallback_stt");
     callbacks.onFallback?.({ audio, durationMs, reason });
-    resetTurn();
+    state = connection?.socket.readyState === WebSocket.OPEN ? "listening" : "reconnecting";
+    pushToTalk = false;
+    hotFrames = 0;
+    quietMs = 0;
+    turnAudio = [];
+    finalParts = [];
   };
 
   const rememberPreRoll = (buffer: ArrayBuffer) => {

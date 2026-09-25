@@ -4,7 +4,11 @@ import { test } from "node:test";
 import { explicitRitaAccent, stableRitaDialect } from "../src/lib/rita-voice-style.ts";
 import { playRitaSpeechResponse } from "../src/lib/rita-speech-stream.client.ts";
 import { RitaReplySanitizer, stripRitaOpeningFiller } from "../src/lib/rita-clause-chunker.ts";
-import { isLikelyRitaEcho, isRitaStopCommand } from "../src/lib/rita-economic.client.ts";
+import {
+  isLikelyRitaEcho,
+  isRitaStopCommand,
+  selectRitaDeepgramLanguage,
+} from "../src/lib/rita-economic.client.ts";
 
 test("an explicit Jordanian request wins over an Iraqi dialect guess", () => {
   const requested = explicitRitaAccent("ممكن تحكي معي باللهجة الأردنية؟");
@@ -80,4 +84,11 @@ test("Rita echo is ignored while explicit stop commands remain valid", () => {
   assert.equal(isLikelyRitaEcho("عندي سؤال جديد", "الجواب هو أربعة، لأن اثنين زائد اثنين"), false);
   assert.equal(isRitaStopCommand("وقف"), true);
   assert.equal(isRitaStopCommand("لا"), true);
+});
+
+test("Rita opens one stable Deepgram language instead of an Arabic/multi probe", () => {
+  assert.equal(selectRitaDeepgramLanguage("ar-SA", "en-US"), "ar-SA");
+  assert.equal(selectRitaDeepgramLanguage("", "ar-JO"), "ar-JO");
+  assert.equal(selectRitaDeepgramLanguage("", "en-US"), "ar-JO");
+  assert.equal(selectRitaDeepgramLanguage("de", "ar-JO"), "de");
 });
