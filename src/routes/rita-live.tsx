@@ -215,7 +215,6 @@ function RitaLivePage() {
   const lastSpeechBlob = useRef<Blob | null>(null);
   const speechAbort = useRef<AbortController | null>(null);
   const reconnectCount = useRef(0);
-  const sessionReconnectCount = useRef(0);
   const pendingSpeechStart = useRef(0);
   const turnAbort = useRef<AbortController | null>(null);
   const outputFrame = useRef<number | null>(null);
@@ -883,6 +882,7 @@ function RitaLivePage() {
           responsePromise
             .then((response) => {
               segmentTimeline.voiceEngine = response.headers.get("X-Rita-Voice") || "unknown";
+              timeline.voiceEngine = String(segmentTimeline.voiceEngine);
             })
             .catch(() => undefined);
           if (!metricRef.current.ttsStart) metricRef.current.ttsStart = performance.now();
@@ -1122,7 +1122,6 @@ function RitaLivePage() {
     sessionSummary.current = "";
     completedTurns.current = 0;
     reconnectCount.current = 0;
-    sessionReconnectCount.current = 0;
     stopSpeaking();
     const closingId = sessionId.current;
     sessionId.current = null;
@@ -1418,7 +1417,6 @@ function RitaLivePage() {
           onReconnect: () => {
             if (epoch !== lessonEpoch.current) return;
             reconnectCount.current += 1;
-            sessionReconnectCount.current += 1;
             if (turnTimeline.current) turnTimeline.current.reconnectCount = reconnectCount.current;
           },
           onConnectionState: (connectionState) => {
