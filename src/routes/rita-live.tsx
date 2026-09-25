@@ -1193,6 +1193,25 @@ function RitaLivePage() {
       sessionId.current = String(result.sessionId);
       setPremiumVoice(result.allowance?.premiumVoice !== false);
       setRitaVoice(result.voice === "cedar" ? "cedar" : "marin");
+      {
+        // Warm the three filler phrases for this lesson's language in the background.
+        const preloadVoice = result.voice === "cedar" ? "cedar" : "marin";
+        const hint = `${accentPreference || ""} ${navigator.language || ""}`.toLowerCase();
+        const preloadLanguage = /(^|\s)ar/.test(hint) ? "ar" : /(^|\s)de/.test(hint) ? "de" : "en";
+        void caches
+          .open("rita-fillers-v1")
+          .then((cache) =>
+            Promise.all(
+              [0, 1, 2].map(async (index) => {
+                const url = `/api/rita/filler?language=${preloadLanguage}&index=${index}&voice=${preloadVoice}`;
+                if (await cache.match(url)) return;
+                const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+                if (response.ok) await cache.put(url, response);
+              }),
+            ),
+          )
+          .catch(() => undefined);
+      }
       let listeningToken = "";
       if (selectedMode === "economic_v2") {
         setStatus("Connecting Deepgram Nova-3…");
