@@ -181,6 +181,7 @@ function RitaLivePage() {
   const speechAbort = useRef<AbortController | null>(null);
   const fillerTimer = useRef<number | null>(null);
   const fillerPlaying = useRef(false);
+  const reconnectCount = useRef(0);
   const lastFiller = useRef<Record<string, number>>({ ar: -1, en: -1, de: -1 });
   const turnAbort = useRef<AbortController | null>(null);
   const outputFrame = useRef<number | null>(null);
@@ -294,6 +295,7 @@ function RitaLivePage() {
               speechEndToFirstAudioMs: duration(metric.speechEnd, firstAudio),
               interrupted: metric.interrupted,
               fallbackUsed: metric.fallbackUsed,
+              reconnectCount: reconnectCount.current,
             }),
             keepalive: true,
           }),
@@ -1193,6 +1195,27 @@ function RitaLivePage() {
       sessionId.current = String(result.sessionId);
       setPremiumVoice(result.allowance?.premiumVoice !== false);
       setRitaVoice(result.voice === "cedar" ? "cedar" : "marin");
+      {
+        // Warm the three filler phrases for this lesson's language in the background.
+        const preloadVoice = result.voice === "cedar" ? "cedar" : "marin";
+        const hint = `${accentPreference || ""} ${navigator.language || ""}`.toLowerCase();
+        const preloadLanguage = /(^|\s)ar/.test(hint) ? "ar" : /(^|\s)de/.test(hint) ? "de" : "en";
+        void caches
+          .open("rita-fillers-v1")
+          .then((cache) =>
+            Promise.all(
+              [0, 1, 2].map(async (index) => {
+                const url = `/api/rita/filler?language=${preloadLanguage}&index=${index}&voice=${preloadVoice}`;
+                if (await cache.match(url)) return;
+                const response = await fetch(url, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                if (response.ok) await cache.put(url, response);
+              }),
+            ),
+          )
+          .catch(() => undefined);
+      }
       let listeningToken = "";
       if (selectedMode === "economic_v2") {
         setStatus("Connecting Deepgram Nova-3…");
@@ -1216,7 +1239,21 @@ function RitaLivePage() {
         accent: accentPreference,
         browserLocale: navigator.language || "",
         keyterms: ["RitaJet", ...learningRef.current.slice(-20).map((item) => item.term)],
+        refreshToken: async () => {
+          const fresh = await getToken();
+          const response = await fetch("/api/rita/deepgram-token", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${fresh}` },
+          });
+          const payload = (await response.json().catch(() => null)) as { token?: string } | null;
+          if (!response.ok || !payload?.token) throw new Error("Deepgram token refresh failed");
+          return payload.token;
+        },
         callbacks: {
+          onReconnect: () => {
+            if (epoch !== lessonEpoch.current) return;
+            reconnectCount.current += 1;
+          },
           onReady: (connectedLanguage) => {
             if (epoch !== lessonEpoch.current) return;
             setStatus(

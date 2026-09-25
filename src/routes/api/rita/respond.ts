@@ -85,9 +85,14 @@ export const Route = createFileRoute("/api/rita/respond")({
         const startedAt = performance.now();
         const traceId = crypto.randomUUID();
         const turnId = crypto.randomUUID();
-        const auth = await requireRitaUser(request);
+        // Sign-in check, request body, settings and key all start together.
+        const settingsPromise = getRitaSettings();
+        const keyPromise = resolveRitaOpenAiKey();
+        const [auth, body] = await Promise.all([
+          requireRitaUser(request),
+          request.json().catch(() => null) as Promise<Record<string, unknown> | null>,
+        ]);
         if (!auth) return apiError("unauthorized", "Please sign in again.", 401, traceId);
-        const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
         const transcript = String(body?.transcript ?? "")
           .trim()
           .slice(0, 2_000);
@@ -98,8 +103,11 @@ export const Route = createFileRoute("/api/rita/respond")({
             422,
             traceId,
           );
-        const settings = await getRitaSettings();
-        const allowance = await getRitaAllowance(auth.userId, settings);
+        const settings = await settingsPromise;
+        const [allowance, key] = await Promise.all([
+          getRitaAllowance(auth.userId, settings),
+          keyPromise,
+        ]);
         if (!allowance.allowed)
           return apiError(
             "allowance_reached",
@@ -107,7 +115,6 @@ export const Route = createFileRoute("/api/rita/respond")({
             429,
             traceId,
           );
-        const key = await resolveRitaOpenAiKey();
         if (!key)
           return apiError("openai_not_configured", "Rita needs an OpenAI key.", 503, traceId);
         const history = safeHistory(body?.history);
@@ -217,8 +224,9 @@ export const Route = createFileRoute("/api/rita/respond")({
                   const delta = String(chunk?.choices?.[0]?.delta?.content ?? "");
                   if (delta) {
                     reply += delta;
-                    controller.enqueue(encoder.encode(sse("reply.delta", { text: delta })));
+                    // Voice first: the segment request starts before the text renders.
                     await emitSpeechSegments(chunker.push(delta));
+                    controller.enqueue(encoder.encode(sse("reply.delta", { text: delta })));
                   }
                   if (chunk?.usage) {
                     inputTokens = Number(chunk.usage.prompt_tokens ?? 0);

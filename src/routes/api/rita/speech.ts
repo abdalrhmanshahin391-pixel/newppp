@@ -1,12 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  RITA_MODELS,
-  getRitaSettings,
-  requireRitaUser,
-  resolveRitaOpenAiKey,
-} from "@/lib/rita-voice.server";
+import { RITA_MODELS, getRitaSettings, resolveRitaOpenAiKey } from "@/lib/rita-voice.server";
 import { ritaVoiceInstructions } from "@/lib/rita-voice-style";
-import { verifyRitaSpeechTicket } from "@/lib/rita-speech-ticket.server";
+import { readRitaSpeechTicketUser, verifyRitaSpeechTicket } from "@/lib/rita-speech-ticket.server";
 
 const ALLOWED_VOICES = new Set([
   "alloy",
@@ -42,8 +37,8 @@ export const Route = createFileRoute("/api/rita/speech")({
     handlers: {
       POST: async ({ request }) => {
         const traceId = crypto.randomUUID();
-        const auth = await requireRitaUser(request);
-        if (!auth) return speechError("unauthorized", "Please sign in again.", 401, traceId, false);
+        // Settings and key load while the request is validated.
+        const configPromise = Promise.all([getRitaSettings(), resolveRitaOpenAiKey()]);
         const body = (await request.json().catch(() => null)) as {
           text?: string;
           turnId?: string;
@@ -59,6 +54,12 @@ export const Route = createFileRoute("/api/rita/speech")({
         const turnId = String(body?.turnId ?? "");
         const index = Number(body?.index ?? -1);
         const ticket = String(body?.ticket ?? "");
+        // The signed, 90-second ticket from /api/rita/respond is bound to this user,
+        // turn, segment and exact text, so it replaces a second sign-in round trip.
+        const ticketUser = readRitaSpeechTicketUser(ticket);
+        if (!ticketUser)
+          return speechError("unauthorized", "Please sign in again.", 401, traceId, false);
+        const auth = { userId: ticketUser };
         if (!text || !/^[0-9a-f-]{36}$/i.test(turnId))
           return speechError(
             "invalid_request",
@@ -87,7 +88,7 @@ export const Route = createFileRoute("/api/rita/speech")({
             false,
           );
 
-        const [settings, key] = await Promise.all([getRitaSettings(), resolveRitaOpenAiKey()]);
+        const [settings, key] = await configPromise;
         if (!key)
           return speechError(
             "not_configured",

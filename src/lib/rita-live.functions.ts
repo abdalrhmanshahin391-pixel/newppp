@@ -18,6 +18,8 @@ export const testRitaLiveKey = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase } = await requireAdmin(context);
+    const { clearRitaServerCache } = await import("@/lib/rita-voice.server");
+    clearRitaServerCache();
 
     let key = "";
     let source: "admin" | "environment" = "admin";
@@ -187,5 +189,7 @@ export const saveRitaVoiceSettings = createServerFn({ method: "POST" })
       updated_by: userId,
     });
     if (error) throw error;
+    const { clearRitaServerCache } = await import("@/lib/rita-voice.server");
+    clearRitaServerCache();
     return { ok: true };
   });
