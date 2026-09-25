@@ -5,6 +5,7 @@ import {
   requireRitaUser,
   resolveRitaOpenAiKey,
 } from "@/lib/rita-voice.server";
+import { resolveRitaGroqConfig } from "@/lib/rita-groq.server";
 import { createRitaSessionTicket } from "@/lib/rita-session-ticket.server";
 
 // Silent warm-up: fills the settings/key/allowance caches, opens the TLS
@@ -31,13 +32,19 @@ export const Route = createFileRoute("/api/rita/warm")({
           return Response.json(await issueTicket(auth.userId), { headers });
         lastWarm.set(auth.userId, now);
         try {
-          const [settings, key] = await Promise.all([getRitaSettings(), resolveRitaOpenAiKey()]);
+          const [settings, key, groq] = await Promise.all([getRitaSettings(), resolveRitaOpenAiKey(), resolveRitaGroqConfig()]);
           await Promise.all([
             getRitaAllowanceCached(auth.userId, settings).catch(() => null),
             key
               ? fetch("https://api.openai.com/v1/models", {
                   method: "HEAD",
                   headers: { Authorization: `Bearer ${key}` },
+                }).catch(() => null)
+              : null,
+            groq
+              ? fetch("https://api.groq.com/openai/v1/models", {
+                  method: "GET",
+                  headers: { Authorization: `Bearer ${groq.key}` },
                 }).catch(() => null)
               : null,
           ]);

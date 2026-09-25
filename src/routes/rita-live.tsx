@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { RitaStage, type RitaMood } from "@/components/rita-live/RitaStage";
+import { MixedDirectionText } from "@/components/rita-live/MixedDirectionText";
 import type { RitaEconomicController } from "@/lib/rita-economic.client";
 import type { RitaSpeechSegment } from "@/lib/rita-economic-response.client";
 import type { RitaPcmPlayerController } from "@/lib/rita-pcm-player.client";
@@ -1005,6 +1006,8 @@ function RitaLivePage() {
         timeline.replyCharCount = result.reply.length;
         timeline.segmentsPlanned = result.segmentsPlanned ?? timeline.segmentsPlanned;
         timeline.serverTimings = result.serverTimings ?? timeline.serverTimings;
+        timeline.responseProvider = result.responseProvider;
+        timeline.responseModel = result.responseModel;
         window.clearTimeout(watchdog);
         markRitaTurn(timeline, "textComplete");
         requestAnimationFrame(() => markRitaTurn(timeline, "textRendered"));
@@ -1419,7 +1422,7 @@ function RitaLivePage() {
           languageState.current.activeDialect ||
           languageState.current.activeLanguage,
         browserLocale: navigator.language || "",
-        keyterms: ["RitaJet", ...learningRef.current.slice(-20).map((item) => item.term)],
+         keyterms: learningRef.current.slice(-20).map((item) => item.term),
         refreshToken: async () => {
           const fresh = await getToken();
           const response = await fetch("/api/rita/deepgram-token", {
@@ -1552,7 +1555,12 @@ function RitaLivePage() {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
             metricRef.current.fallbackUsed = true;
             if (turnTimeline.current) turnTimeline.current.fallbackUsed = true;
-            setStatus("Recovering this sentence with OpenAI transcription…");
+             if (reason.startsWith("second_pass:")) {
+               if (turnTimeline.current) turnTimeline.current.secondPassUsed = true;
+               setStatus("Double-checking what you said…");
+             } else {
+               setStatus("Recovering this sentence…");
+             }
             const form = new FormData();
             form.append("audio", audio, "rita-turn.wav");
             void fetch("/api/rita/transcribe", {
@@ -1761,7 +1769,7 @@ function RitaLivePage() {
                     <p
                       className={`font-[family:var(--font-grotesk)] text-xl leading-9 tracking-[-.015em] md:text-[22px] md:leading-10 ${message.role === "rita" ? "text-[#28252d]" : "text-right text-[#3478f6]"}`}
                     >
-                      {message.text}
+                       <MixedDirectionText text={message.text} />
                     </p>
                     {message.correction && (
                       <p className="mt-3 font-[family:var(--font-grotesk)] text-sm leading-6 text-[#7257a8]">

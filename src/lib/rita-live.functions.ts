@@ -75,6 +75,27 @@ export const testRitaLiveKey = createServerFn({ method: "POST" })
     }
   });
 
+export const testRitaGroqKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context);
+    const { resolveRitaGroqConfig } = await import("@/lib/rita-groq.server");
+    const config = await resolveRitaGroqConfig();
+    if (!config) return { ok: false, message: "No Groq key is saved yet." };
+    const response = await fetch("https://api.groq.com/openai/v1/models", {
+      headers: { Authorization: `Bearer ${config.key}` },
+    });
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      return { ok: false, message: detail.slice(0, 180) || `Groq returned ${response.status}.` };
+    }
+    const result = (await response.json()) as { data?: { id?: string }[] };
+    const available = result.data?.some((model) => model.id === config.model);
+    return available
+      ? { ok: true, message: `Working — ${config.model} is available.` }
+      : { ok: false, message: `${config.model} is not available on this Groq account.` };
+  });
+
 const SettingsSchema = z.object({
   enabled: z.boolean(),
   voice: z.enum([

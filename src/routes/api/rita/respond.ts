@@ -9,7 +9,6 @@ import {
   getRitaSettings,
   normalizePersonality,
   requireRitaUser,
-  resolveRitaOpenAiKey,
 } from "@/lib/rita-voice.server";
 import { resolveRitaGroqConfig } from "@/lib/rita-groq.server";
 import {
