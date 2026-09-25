@@ -2942,6 +2942,7 @@ export type Database = {
           language: string | null
           network_type: string | null
           pipeline_mode: string
+          reconnect_count: number
           session_id: string | null
           speech_end_to_first_audio_ms: number | null
           speech_end_to_transcript_ms: number | null
@@ -2960,6 +2961,7 @@ export type Database = {
           language?: string | null
           network_type?: string | null
           pipeline_mode: string
+          reconnect_count?: number
           session_id?: string | null
           speech_end_to_first_audio_ms?: number | null
           speech_end_to_transcript_ms?: number | null
@@ -2978,6 +2980,7 @@ export type Database = {
           language?: string | null
           network_type?: string | null
           pipeline_mode?: string
+          reconnect_count?: number
           session_id?: string | null
           speech_end_to_first_audio_ms?: number | null
           speech_end_to_transcript_ms?: number | null
