@@ -92,3 +92,17 @@ export async function verifyRitaSpeechTicket(args: {
     new TextEncoder().encode(encoded),
   );
 }
+
+/** Reads the (unverified) user id so the ticket alone can authorize a segment. Always verify afterwards. */
+export function readRitaSpeechTicketUser(ticket: string): string | null {
+  const [encoded] = ticket.split(".");
+  if (!encoded) return null;
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(fromBase64Url(encoded))) as {
+      userId?: unknown;
+    };
+    return typeof payload.userId === "string" && payload.userId ? payload.userId : null;
+  } catch {
+    return null;
+  }
+}
