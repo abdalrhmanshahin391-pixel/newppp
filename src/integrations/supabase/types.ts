@@ -3234,6 +3234,7 @@ export type Database = {
           daily_guard_minutes: number
           default_monthly_minutes: number
           enabled: boolean
+          fish_voice_id: string | null
           id: boolean
           monthly_budget_cents: number
           pipeline_mode: string
@@ -3243,6 +3244,7 @@ export type Database = {
           updated_at: string
           updated_by: string | null
           voice: string
+          voice_engine: string
         }
         Insert: {
           admin_only_preview?: boolean
@@ -3251,6 +3253,7 @@ export type Database = {
           daily_guard_minutes?: number
           default_monthly_minutes?: number
           enabled?: boolean
+          fish_voice_id?: string | null
           id?: boolean
           monthly_budget_cents?: number
           pipeline_mode?: string
@@ -3260,6 +3263,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           voice?: string
+          voice_engine?: string
         }
         Update: {
           admin_only_preview?: boolean
@@ -3268,6 +3272,7 @@ export type Database = {
           daily_guard_minutes?: number
           default_monthly_minutes?: number
           enabled?: boolean
+          fish_voice_id?: string | null
           id?: boolean
           monthly_budget_cents?: number
           pipeline_mode?: string
@@ -3277,6 +3282,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           voice?: string
+          voice_engine?: string
         }
         Relationships: []
       }
