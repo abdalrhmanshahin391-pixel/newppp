@@ -1,5 +1,3 @@
-import { ritaEndOfTurnDelay } from "@/lib/rita-turn-boundary";
-
 export type RitaEconomicTranscript = {
   text: string;
   confidence: number;
@@ -21,6 +19,7 @@ export type RitaEconomicCallbacks = {
   /** Confirmed real speech (≥2 transcribed words or ≥400 ms of voice). Only this may interrupt Rita. */
   onBargeIn?: () => void;
   onTurnSignal?: (event: "vad_start" | "speech_confirmed" | "speech_end", reason?: string) => void;
+  onConnectionState?: (state: "connecting" | "listening" | "reconnecting") => void;
 };
 
 export type RitaEconomicController = {
@@ -93,33 +92,32 @@ class Linear16Encoder {
   }
 }
 
-function deepgramLanguages(accent: string, browserLocale: string) {
+export function selectRitaDeepgramLanguage(accent: string, browserLocale: string) {
   const requested = accent.trim();
-  if (/^ar(?:-[A-Z]{2})?$/i.test(requested)) return [requested];
-  if (/^de/i.test(requested)) return ["de"];
-  if (/^en-(?:US|GB|AU|IN|NZ)$/i.test(requested)) return [requested];
-  if (requested.toLowerCase().includes("gulf")) return ["ar-AE"];
-  if (/^ar/i.test(browserLocale)) return ["ar-JO"];
-  if (/^de/i.test(browserLocale)) return ["de"];
-  // Deepgram's multilingual Nova-3 endpoint currently does not include Arabic.
-  // Probe Arabic and multilingual only for the first utterance, then keep the
-  // better socket for the rest of the lesson.
-  return ["ar-JO", "multi"];
+  if (/^ar(?:-[A-Z]{2})?$/i.test(requested)) return requested;
+  if (/^de/i.test(requested)) return "de";
+  if (/^en-(?:US|GB|AU|IN|NZ)$/i.test(requested)) return requested;
+  if (/^en/i.test(requested)) return "en-US";
+  if (requested.toLowerCase().includes("gulf")) return "ar-AE";
+  if (/^ar/i.test(browserLocale)) return "ar-JO";
+  if (/^de/i.test(browserLocale)) return "de";
+  if (/^en/i.test(browserLocale)) return "en-US";
+  // Rita's automatic voice lessons default to conversational Arabic. A stable
+  // preference can select English or German before the next session starts.
+  return "ar-JO";
 }
-
-type ProbeCandidate = RitaEconomicTranscript & { connection: DeepgramConnection };
 
 type DeepgramConnection = {
   language: string;
   socket: WebSocket;
   finalParts: string[];
   intentionallyClosing: boolean;
+  generation: number;
   /** Audio captured while the socket is still connecting (reconnect / idle reopen). */
   pending: ArrayBuffer[];
 };
 
 export const RITA_RECONNECT_DELAYS_MS = [250, 750, 1_500] as const;
-export const RITA_IDLE_CLOSE_MS = 120_000;
 export const RITA_OUTPUT_ECHO_GUARD_MS = 320;
 
 function normalizedWords(value: string) {
@@ -143,22 +141,6 @@ export function isRitaStopCommand(transcript: string) {
   return /^(?:لا|وقف|توقف|اسكتي|بس|stop|pause|stopp)$/iu.test(transcript.trim());
 }
 
-function scriptRatio(text: string, pattern: RegExp) {
-  const letters = Array.from(text).filter((character) => /\p{L}/u.test(character));
-  if (!letters.length) return 0;
-  return letters.filter((character) => pattern.test(character)).length / letters.length;
-}
-
-function candidateScore(candidate: ProbeCandidate) {
-  const arabic = scriptRatio(candidate.text, /\p{Script=Arabic}/u);
-  const latin = scriptRatio(candidate.text, /\p{Script=Latin}/u);
-  let score = candidate.confidence;
-  if (candidate.language.startsWith("ar")) score += arabic * 0.55 - latin * 0.18;
-  else score += latin * 0.3 - arabic * 0.5;
-  score += Math.min(0.08, candidate.text.length / 500);
-  return score;
-}
-
 function listenUrl(language: string, keyterms: string[]) {
   const url = new URL("wss://api.deepgram.com/v1/listen");
   url.searchParams.set("model", "nova-3");
@@ -170,8 +152,8 @@ function listenUrl(language: string, keyterms: string[]) {
   url.searchParams.set("punctuate", "true");
   url.searchParams.set("smart_format", "true");
   url.searchParams.set("vad_events", "true");
-  url.searchParams.set("endpointing", "250");
-  url.searchParams.set("utterance_end_ms", "700");
+  url.searchParams.set("endpointing", language.startsWith("ar") ? "350" : "300");
+  url.searchParams.set("utterance_end_ms", "800");
   for (const term of keyterms.slice(0, 25)) {
     const clean = term.trim().slice(0, 80);
     if (clean) url.searchParams.append("keyterm", clean);

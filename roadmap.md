@@ -9,3 +9,7 @@
 - [x] Recover the three saved homepage pictures and replace stale fallbacks
 - [x] Verify restored homepage images on fresh visits and reloads (all images loaded; no browser errors)
 - [ ] Authenticated homepage verification — blocked: no matching managed account/session; public artwork verified without login
+
+- [ ] Rebuild RitaVoice around one Deepgram connection and one explicit listening state machine
+- [ ] Simplify Rita reconnect/error states and make per-turn latency diagnostics accurate
+- [ ] Verify Arabic, mixed-language, interruption, reconnect, and Fish/OpenAI playback flows in preview
