@@ -106,22 +106,21 @@ export const Route = createFileRoute("/api/rita/respond")({
             traceId,
           );
         const authMs = Math.round(performance.now() - startedAt);
-        const settings = await settingsPromise;
+        const [settings, key] = await Promise.all([settingsPromise, keyPromise]);
         const configMs = Math.round(performance.now() - startedAt);
-        const [allowance, key] = await Promise.all([
-          getRitaAllowance(auth.userId, settings),
-          keyPromise,
-        ]);
-        const allowanceMs = Math.round(performance.now() - startedAt);
-        if (!allowance.allowed)
-          return apiError(
-            "allowance_reached",
-            "Rita Economic v2 usage limit was reached.",
-            429,
-            traceId,
-          );
         if (!key)
           return apiError("openai_not_configured", "Rita needs an OpenAI key.", 503, traceId);
+        // Allowance runs in parallel with GPT; nothing is sent to the user until it passes.
+        let allowanceMs = 0;
+        const allowancePromise = getRitaAllowance(auth.userId, settings)
+          .then((value) => {
+            allowanceMs = Math.round(performance.now() - startedAt);
+            return Boolean(value.allowed);
+          })
+          .catch(() => {
+            allowanceMs = Math.round(performance.now() - startedAt);
+            return false;
+          });
         const history = safeHistory(body?.history);
         const sessionSummary = String(body?.sessionSummary ?? "")
           .trim()
