@@ -2935,12 +2935,17 @@ export type Database = {
           browser: string | null
           client_turn_id: string | null
           created_at: string
+          deepgram_detail: string | null
+          deepgram_event: string | null
+          deepgram_result_ms: number | null
+          deepgram_speech_ms: number | null
           diagnostic_code: string | null
           end_reason: string | null
           error_stage: string | null
           fallback_used: boolean
           filler_used: boolean
           first_audio_ms: number | null
+          first_audio_sent_ms: number | null
           first_interim_ms: number | null
           first_token_ms: number | null
           first_token_to_tts_ms: number | null
@@ -2968,6 +2973,7 @@ export type Database = {
           server_first_token_ms: number | null
           server_reply_done_ms: number | null
           session_id: string | null
+          signal_start_ms: number | null
           speech_end_ms: number | null
           speech_end_to_first_audio_ms: number | null
           speech_end_to_transcript_ms: number | null
@@ -2989,12 +2995,17 @@ export type Database = {
           browser?: string | null
           client_turn_id?: string | null
           created_at?: string
+          deepgram_detail?: string | null
+          deepgram_event?: string | null
+          deepgram_result_ms?: number | null
+          deepgram_speech_ms?: number | null
           diagnostic_code?: string | null
           end_reason?: string | null
           error_stage?: string | null
           fallback_used?: boolean
           filler_used?: boolean
           first_audio_ms?: number | null
+          first_audio_sent_ms?: number | null
           first_interim_ms?: number | null
           first_token_ms?: number | null
           first_token_to_tts_ms?: number | null
@@ -3022,6 +3033,7 @@ export type Database = {
           server_first_token_ms?: number | null
           server_reply_done_ms?: number | null
           session_id?: string | null
+          signal_start_ms?: number | null
           speech_end_ms?: number | null
           speech_end_to_first_audio_ms?: number | null
           speech_end_to_transcript_ms?: number | null
@@ -3043,12 +3055,17 @@ export type Database = {
           browser?: string | null
           client_turn_id?: string | null
           created_at?: string
+          deepgram_detail?: string | null
+          deepgram_event?: string | null
+          deepgram_result_ms?: number | null
+          deepgram_speech_ms?: number | null
           diagnostic_code?: string | null
           end_reason?: string | null
           error_stage?: string | null
           fallback_used?: boolean
           filler_used?: boolean
           first_audio_ms?: number | null
+          first_audio_sent_ms?: number | null
           first_interim_ms?: number | null
           first_token_ms?: number | null
           first_token_to_tts_ms?: number | null
@@ -3076,6 +3093,7 @@ export type Database = {
           server_first_token_ms?: number | null
           server_reply_done_ms?: number | null
           session_id?: string | null
+          signal_start_ms?: number | null
           speech_end_ms?: number | null
           speech_end_to_first_audio_ms?: number | null
           speech_end_to_transcript_ms?: number | null
