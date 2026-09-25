@@ -1511,9 +1511,8 @@ function RitaLivePage() {
                 if (epoch !== lessonEpoch.current) return;
                 setMood("listening");
                 setStatus("Rita is listening — please try that sentence again");
-                setError(
-                  `${reason} ${cause instanceof Error ? cause.message : "Fallback transcription failed."}`,
-                );
+                console.warn("Rita fallback transcription failed", reason, cause);
+                setError("Rita missed that sentence — please say it again.");
                 finalizeTurnTimeline("failed", "transcription_error", "transcription");
               });
           },
