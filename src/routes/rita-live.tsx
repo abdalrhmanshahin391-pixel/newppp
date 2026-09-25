@@ -1237,7 +1237,21 @@ function RitaLivePage() {
         accent: accentPreference,
         browserLocale: navigator.language || "",
         keyterms: ["RitaJet", ...learningRef.current.slice(-20).map((item) => item.term)],
+        refreshToken: async () => {
+          const fresh = await getToken();
+          const response = await fetch("/api/rita/deepgram-token", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${fresh}` },
+          });
+          const payload = (await response.json().catch(() => null)) as { token?: string } | null;
+          if (!response.ok || !payload?.token) throw new Error("Deepgram token refresh failed");
+          return payload.token;
+        },
         callbacks: {
+          onReconnect: () => {
+            if (epoch !== lessonEpoch.current) return;
+            reconnectCount.current += 1;
+          },
           onReady: (connectedLanguage) => {
             if (epoch !== lessonEpoch.current) return;
             setStatus(
