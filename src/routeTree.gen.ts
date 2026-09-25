@@ -111,6 +111,7 @@ import { Route as ApiRitaSummarizeRouteImport } from './routes/api/rita/summariz
 import { Route as ApiRitaTranscribeRouteImport } from './routes/api/rita/transcribe'
 import { Route as ApiRitaTurnRouteImport } from './routes/api/rita/turn'
 import { Route as ApiRitaUsageRouteImport } from './routes/api/rita/usage'
+import { Route as ApiRitaWarmRouteImport } from './routes/api/rita/warm'
 import { Route as CoursesCourseIdIndexRouteImport } from './routes/courses.$courseId.index'
 import { Route as CoursesCourseIdAddQuestionsRouteImport } from './routes/courses.$courseId.add-questions'
 import { Route as CoursesCourseIdRunRouteImport } from './routes/courses.$courseId.run'
@@ -649,6 +650,11 @@ const ApiRitaUsageRoute = ApiRitaUsageRouteImport.update({
   path: '/api/rita/usage',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRitaWarmRoute = ApiRitaWarmRouteImport.update({
+  id: '/api/rita/warm',
+  path: '/api/rita/warm',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoursesCourseIdIndexRoute = CoursesCourseIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -875,6 +881,7 @@ export interface FileRoutesByFullPath {
   '/api/rita/transcribe': typeof ApiRitaTranscribeRoute
   '/api/rita/turn': typeof ApiRitaTurnRoute
   '/api/rita/usage': typeof ApiRitaUsageRoute
+  '/api/rita/warm': typeof ApiRitaWarmRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -999,6 +1006,7 @@ export interface FileRoutesByTo {
   '/api/rita/transcribe': typeof ApiRitaTranscribeRoute
   '/api/rita/turn': typeof ApiRitaTurnRoute
   '/api/rita/usage': typeof ApiRitaUsageRoute
+  '/api/rita/warm': typeof ApiRitaWarmRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -1127,6 +1135,7 @@ export interface FileRoutesById {
   '/api/rita/transcribe': typeof ApiRitaTranscribeRoute
   '/api/rita/turn': typeof ApiRitaTurnRoute
   '/api/rita/usage': typeof ApiRitaUsageRoute
+  '/api/rita/warm': typeof ApiRitaWarmRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -1257,6 +1266,7 @@ export interface FileRouteTypes {
     | '/api/rita/transcribe'
     | '/api/rita/turn'
     | '/api/rita/usage'
+    | '/api/rita/warm'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1381,6 +1391,7 @@ export interface FileRouteTypes {
     | '/api/rita/transcribe'
     | '/api/rita/turn'
     | '/api/rita/usage'
+    | '/api/rita/warm'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1508,6 +1519,7 @@ export interface FileRouteTypes {
     | '/api/rita/transcribe'
     | '/api/rita/turn'
     | '/api/rita/usage'
+    | '/api/rita/warm'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1622,6 +1634,7 @@ export interface RootRouteChildren {
   ApiRitaTranscribeRoute: typeof ApiRitaTranscribeRoute
   ApiRitaTurnRoute: typeof ApiRitaTurnRoute
   ApiRitaUsageRoute: typeof ApiRitaUsageRoute
+  ApiRitaWarmRoute: typeof ApiRitaWarmRoute
   ShareQuestionsSetIdRoute: typeof ShareQuestionsSetIdRoute
   ShareQuestionsNewRoute: typeof ShareQuestionsNewRoute
   AdminSpacesIndexRoute: typeof AdminSpacesIndexRoute
@@ -2347,6 +2360,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRitaUsageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/rita/warm': {
+      id: '/api/rita/warm'
+      path: '/api/rita/warm'
+      fullPath: '/api/rita/warm'
+      preLoaderRoute: typeof ApiRitaWarmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/courses/$courseId/': {
       id: '/courses/$courseId/'
       path: '/'
@@ -2737,6 +2757,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRitaTranscribeRoute: ApiRitaTranscribeRoute,
   ApiRitaTurnRoute: ApiRitaTurnRoute,
   ApiRitaUsageRoute: ApiRitaUsageRoute,
+  ApiRitaWarmRoute: ApiRitaWarmRoute,
   ShareQuestionsSetIdRoute: ShareQuestionsSetIdRoute,
   ShareQuestionsNewRoute: ShareQuestionsNewRoute,
   AdminSpacesIndexRoute: AdminSpacesIndexRoute,
