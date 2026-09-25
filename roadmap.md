@@ -15,3 +15,6 @@
 - [x] Verify Arabic, mixed-language, interruption, reconnect, and Fish/OpenAI playback flows in automated preview checks
 - [x] Make quiet speech reach Deepgram continuously with adaptive pickup and stage diagnostics
 - [ ] Verify ten natural quiet-volume iPad turns before publishing
+- [x] Add Groq-only streamed replies, concise-by-default teaching, mixed-script display, and conditional second-listen transcription
+- [x] Add automatic Rita word cards with a user preference and restricted Undo
+- [ ] Add and verify the user’s Groq key, then run live Arabic/German voice tests

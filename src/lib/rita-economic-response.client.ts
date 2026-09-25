@@ -99,7 +99,7 @@ export async function streamRitaEconomicReply(args: {
         else if (eventName === "reply.done") done = payload as unknown as RitaEconomicReply;
         else if (eventName === "turn.error")
           throw new Error(
-            `${String(payload.stage || "gpt_response")}: ${String(payload.error || "GPT stream failed.")}${payload.traceId ? ` [${String(payload.traceId)}]` : ""}`,
+            `${String(payload.stage || "groq_response")}: ${String(payload.error || "Groq stream failed.")}${payload.traceId ? ` [${String(payload.traceId)}]` : ""}`,
           );
         eventName = "message";
       }

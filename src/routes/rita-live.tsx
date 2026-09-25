@@ -591,6 +591,27 @@ function RitaLivePage() {
     setSelectedIds(selectedIdsRef.current);
   };
 
+  const changeAutoSaveWords = useCallback(async (enabled: boolean) => {
+    const previous = autoSaveWords;
+    setAutoSaveWords(enabled);
+    try {
+      const token = await getToken();
+      const response = await fetch("/api/rita/preferences", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language: languageState.current.activeLanguage,
+          dialect: languageState.current.activeDialect,
+          autoSaveWords: enabled,
+        }),
+      });
+      if (!response.ok) throw new Error("Preference could not be saved.");
+    } catch {
+      setAutoSaveWords(previous);
+      setLearningNotice("Could not change automatic saving.");
+    }
+  }, [autoSaveWords, getToken]);
+
   const add = useCallback(
     (role: Message["role"], text: string, correction?: string, learningIds?: string[]) => {
       const clean = text.trim();
@@ -973,7 +994,11 @@ function RitaLivePage() {
             sessionId: sessionId.current,
             pipelineMode: connectedModeRef.current,
             transcriptionSource:
-              connectedModeRef.current === "legacy" || fallbackUsed ? "openai" : "deepgram",
+              connectedModeRef.current === "legacy"
+                ? "openai"
+                : fallbackUsed
+                  ? "gemini"
+                  : "deepgram",
             personality: current.persona,
             accent: stableAccent,
             history: recent,
@@ -1250,7 +1275,7 @@ function RitaLivePage() {
               : "Rita Economic v2 is ready"
             : result?.pilotMode === "legacy"
               ? "Rita needs an OpenAI key"
-              : "Rita needs both OpenAI and Deepgram keys",
+             : "Rita needs Groq, Deepgram, and the selected voice key",
         );
       })
       .catch(() => {
@@ -1408,7 +1433,7 @@ function RitaLivePage() {
         throw new Error(
           selectedMode === "legacy"
             ? "legacy_config: Add an OpenAI key first."
-            : "economic_v2_config: Add both OpenAI and Deepgram keys first.",
+             : "economic_v2_config: Add Groq, Deepgram, and the selected voice key first.",
         );
       sessionId.current = String(result.sessionId);
       const warm = () =>
@@ -2081,9 +2106,20 @@ function RitaLivePage() {
                 </p>
               ) : panel === "words" ? (
                 <div className="space-y-3">
-                  <p className="text-sm text-[#716879]">
-                    Check the items you want, and correct anything before saving.
-                  </p>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm text-[#716879]">
+                      Check the items you want, and correct anything before saving.
+                    </p>
+                    <label className="flex shrink-0 items-center gap-2 text-xs font-semibold text-[#5d5268]">
+                      <input
+                        type="checkbox"
+                        checked={autoSaveWords}
+                        onChange={(event) => void changeAutoSaveWords(event.target.checked)}
+                        className="h-4 w-4 accent-[#7246e9]"
+                      />
+                      Auto-save
+                    </label>
+                  </div>
                   {learningItems.map((item) => (
                     <div
                       key={item.id}
