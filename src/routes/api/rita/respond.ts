@@ -84,7 +84,7 @@ export const Route = createFileRoute("/api/rita/respond")({
       POST: async ({ request }) => {
         const startedAt = performance.now();
         const traceId = crypto.randomUUID();
-        let turnId = crypto.randomUUID();
+        let turnId: string = crypto.randomUUID();
         // Sign-in check, request body, settings and key all start together.
         const settingsPromise = getRitaSettings();
         const keyPromise = resolveRitaOpenAiKey();

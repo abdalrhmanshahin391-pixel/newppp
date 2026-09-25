@@ -750,8 +750,8 @@ function RitaLivePage() {
       const spoken = text.trim();
       if (!spoken || (addUser && mutedRef.current)) return;
       voiceTurnStartedAt.current = performance.now();
-      stopSpeaking("new_request");
       if (!turnTimeline.current || turnTimeline.current.endReason) {
+        stopSpeaking("new_request");
         turnTimeline.current = createRitaTurnTimeline(performance.now());
         segmentTimelines.current.clear();
       }
@@ -1084,6 +1084,7 @@ function RitaLivePage() {
 
   const endSession = useCallback(() => {
     lessonEpoch.current += 1;
+    finalizeTurnTimeline("aborted", "session_ended");
     turnAbort.current?.abort();
     turnAbort.current = null;
     economic.current?.stop();
@@ -1146,7 +1147,7 @@ function RitaLivePage() {
     lastSpeechBlob.current = null;
     setHasReplay(false);
     setNeedsTapToPlay(false);
-  }, [getToken, stopSpeaking]);
+  }, [finalizeTurnTimeline, getToken, stopSpeaking]);
 
   useEffect(() => () => endSession(), [endSession]);
 
