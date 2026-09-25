@@ -9,6 +9,18 @@ import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 import { loadEnv } from "vite";
 import path from "node:path";
 
+// Public connection values for the new RitaJet backend (publishable, safe for the browser).
+// The imported repo's .gitignore excludes .env, so published builds would otherwise lose them.
+const PUBLIC_BACKEND = {
+  SUPABASE_URL: "https://aeawoexywnyankbeqkmz.supabase.co",
+  SUPABASE_PUBLISHABLE_KEY: "sb_publishable_HPfzBNn4ii7aDgi0HjwziQ_SZBfhXWO",
+  SUPABASE_PROJECT_ID: "aeawoexywnyankbeqkmz",
+};
+for (const [k, v] of Object.entries(PUBLIC_BACKEND)) {
+  process.env[k] ||= v;
+  process.env[`VITE_${k}`] ||= v;
+}
+
 // Load non-VITE_ env vars into process.env for server routes (never into the client bundle).
 Object.assign(process.env, loadEnv(process.env["NODE_ENV"] ?? "development", process.cwd(), ""));
 
