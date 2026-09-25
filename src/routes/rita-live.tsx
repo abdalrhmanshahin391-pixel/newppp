@@ -1435,7 +1435,10 @@ function RitaLivePage() {
           },
           onTurnSignal: (event, reason) => {
             const timeline = turnTimeline.current;
-            if (timeline && event === "speech_end" && reason) timeline.lastStage = reason;
+            if (timeline && event === "speech_end" && reason) {
+              timeline.lastStage = reason;
+              timeline.transcriptionEndReason = reason;
+            }
           },
           onReady: (connectedLanguage) => {
             if (epoch !== lessonEpoch.current) return;
