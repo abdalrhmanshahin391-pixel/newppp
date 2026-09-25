@@ -3229,6 +3229,8 @@ export type Database = {
       rita_voice_settings: {
         Row: {
           admin_only_preview: boolean
+          cartesia_model: string
+          cartesia_voice_id: string
           daily_guard_minutes: number
           default_monthly_minutes: number
           enabled: boolean
@@ -3237,12 +3239,15 @@ export type Database = {
           pipeline_mode: string
           response_words: number
           rollout_percent: number
+          tts_provider: string
           updated_at: string
           updated_by: string | null
           voice: string
         }
         Insert: {
           admin_only_preview?: boolean
+          cartesia_model?: string
+          cartesia_voice_id?: string
           daily_guard_minutes?: number
           default_monthly_minutes?: number
           enabled?: boolean
@@ -3251,12 +3256,15 @@ export type Database = {
           pipeline_mode?: string
           response_words?: number
           rollout_percent?: number
+          tts_provider?: string
           updated_at?: string
           updated_by?: string | null
           voice?: string
         }
         Update: {
           admin_only_preview?: boolean
+          cartesia_model?: string
+          cartesia_voice_id?: string
           daily_guard_minutes?: number
           default_monthly_minutes?: number
           enabled?: boolean
@@ -3265,6 +3273,7 @@ export type Database = {
           pipeline_mode?: string
           response_words?: number
           rollout_percent?: number
+          tts_provider?: string
           updated_at?: string
           updated_by?: string | null
           voice?: string
