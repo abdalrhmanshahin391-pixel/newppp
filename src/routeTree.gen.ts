@@ -99,7 +99,6 @@ import { Route as ApiPublicRitaWorkerRouteImport } from './routes/api/public/rit
 import { Route as ApiRitaDeepgramTokenRouteImport } from './routes/api/rita/deepgram-token'
 import { Route as ApiRitaDemoRouteImport } from './routes/api/rita/demo'
 import { Route as ApiRitaExtractRouteImport } from './routes/api/rita/extract'
-import { Route as ApiRitaFillerRouteImport } from './routes/api/rita/filler'
 import { Route as ApiRitaLearningRouteImport } from './routes/api/rita/learning'
 import { Route as ApiRitaLiveRouteImport } from './routes/api/rita/live'
 import { Route as ApiRitaMetricsRouteImport } from './routes/api/rita/metrics'
@@ -590,11 +589,6 @@ const ApiRitaExtractRoute = ApiRitaExtractRouteImport.update({
   path: '/api/rita/extract',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiRitaFillerRoute = ApiRitaFillerRouteImport.update({
-  id: '/api/rita/filler',
-  path: '/api/rita/filler',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiRitaLearningRoute = ApiRitaLearningRouteImport.update({
   id: '/api/rita/learning',
   path: '/api/rita/learning',
@@ -869,7 +863,6 @@ export interface FileRoutesByFullPath {
   '/api/rita/deepgram-token': typeof ApiRitaDeepgramTokenRoute
   '/api/rita/demo': typeof ApiRitaDemoRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
-  '/api/rita/filler': typeof ApiRitaFillerRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/api/rita/live': typeof ApiRitaLiveRoute
   '/api/rita/metrics': typeof ApiRitaMetricsRoute
@@ -994,7 +987,6 @@ export interface FileRoutesByTo {
   '/api/rita/deepgram-token': typeof ApiRitaDeepgramTokenRoute
   '/api/rita/demo': typeof ApiRitaDemoRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
-  '/api/rita/filler': typeof ApiRitaFillerRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/api/rita/live': typeof ApiRitaLiveRoute
   '/api/rita/metrics': typeof ApiRitaMetricsRoute
@@ -1123,7 +1115,6 @@ export interface FileRoutesById {
   '/api/rita/deepgram-token': typeof ApiRitaDeepgramTokenRoute
   '/api/rita/demo': typeof ApiRitaDemoRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
-  '/api/rita/filler': typeof ApiRitaFillerRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/api/rita/live': typeof ApiRitaLiveRoute
   '/api/rita/metrics': typeof ApiRitaMetricsRoute
@@ -1254,7 +1245,6 @@ export interface FileRouteTypes {
     | '/api/rita/deepgram-token'
     | '/api/rita/demo'
     | '/api/rita/extract'
-    | '/api/rita/filler'
     | '/api/rita/learning'
     | '/api/rita/live'
     | '/api/rita/metrics'
@@ -1379,7 +1369,6 @@ export interface FileRouteTypes {
     | '/api/rita/deepgram-token'
     | '/api/rita/demo'
     | '/api/rita/extract'
-    | '/api/rita/filler'
     | '/api/rita/learning'
     | '/api/rita/live'
     | '/api/rita/metrics'
@@ -1507,7 +1496,6 @@ export interface FileRouteTypes {
     | '/api/rita/deepgram-token'
     | '/api/rita/demo'
     | '/api/rita/extract'
-    | '/api/rita/filler'
     | '/api/rita/learning'
     | '/api/rita/live'
     | '/api/rita/metrics'
@@ -1622,7 +1610,6 @@ export interface RootRouteChildren {
   ApiRitaDeepgramTokenRoute: typeof ApiRitaDeepgramTokenRoute
   ApiRitaDemoRoute: typeof ApiRitaDemoRoute
   ApiRitaExtractRoute: typeof ApiRitaExtractRoute
-  ApiRitaFillerRoute: typeof ApiRitaFillerRoute
   ApiRitaLearningRoute: typeof ApiRitaLearningRoute
   ApiRitaLiveRoute: typeof ApiRitaLiveRoute
   ApiRitaMetricsRoute: typeof ApiRitaMetricsRoute
@@ -2276,13 +2263,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRitaExtractRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/rita/filler': {
-      id: '/api/rita/filler'
-      path: '/api/rita/filler'
-      fullPath: '/api/rita/filler'
-      preLoaderRoute: typeof ApiRitaFillerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/rita/learning': {
       id: '/api/rita/learning'
       path: '/api/rita/learning'
@@ -2745,7 +2725,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRitaDeepgramTokenRoute: ApiRitaDeepgramTokenRoute,
   ApiRitaDemoRoute: ApiRitaDemoRoute,
   ApiRitaExtractRoute: ApiRitaExtractRoute,
-  ApiRitaFillerRoute: ApiRitaFillerRoute,
   ApiRitaLearningRoute: ApiRitaLearningRoute,
   ApiRitaLiveRoute: ApiRitaLiveRoute,
   ApiRitaMetricsRoute: ApiRitaMetricsRoute,
