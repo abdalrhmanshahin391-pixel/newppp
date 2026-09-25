@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { AiEnginePanel } from "@/components/admin/AiEnginePanel";
+import { RitaFishVoicePanel } from "@/components/admin/RitaFishVoicePanel";
 import {
   getRitaVoiceAdmin,
   saveRitaVoiceSettings,
@@ -140,6 +141,8 @@ function AiKeysPage() {
     pipelineMode: "economic_v2" as "legacy" | "economic_v2",
     rolloutPercent: 100,
     adminOnlyPreview: false,
+    voiceEngine: "openai" as "openai" | "fish",
+    fishVoiceId: null as string | null,
   });
   const [ritaMetrics, setRitaMetrics] = useState({
     sessions: 0,
@@ -438,6 +441,8 @@ function AiKeysPage() {
             تقديري؛ فواتير OpenAI هي المرجع النهائي، وقد لا تصل بيانات الرد إذا انقطع الاتصال.
           </p>
         </section>
+
+        <RitaFishVoicePanel />
 
         <section className="mb-5 overflow-hidden rounded-3xl border-2 border-emerald-400/70 bg-gradient-to-br from-emerald-400/[0.16] via-teal-400/[0.08] to-black p-6 shadow-[0_0_55px_-25px_rgba(52,211,153,.8)] md:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">

@@ -45,6 +45,8 @@ export type RitaSettings = {
   pipelineMode: RitaPilotMode;
   rolloutPercent: number;
   adminOnlyPreview: boolean;
+  voiceEngine: "openai" | "fish";
+  fishVoiceId: string | null;
 };
 
 export type RitaAuth = { userId: string };
@@ -59,6 +61,8 @@ const DEFAULT_SETTINGS: RitaSettings = {
   pipelineMode: "economic_v2",
   rolloutPercent: 100,
   adminOnlyPreview: false,
+  voiceEngine: "openai",
+  fishVoiceId: null,
 };
 
 function apiUrl() {
@@ -163,7 +167,7 @@ async function loadRitaSettings(): Promise<RitaSettings> {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await (supabaseAdmin.from as any)("rita_voice_settings")
       .select(
-        "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview",
+        "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,voice_engine,fish_voice_id",
       )
       .eq("id", true)
       .maybeSingle();
@@ -180,6 +184,8 @@ async function loadRitaSettings(): Promise<RitaSettings> {
       pipelineMode: data.pipeline_mode === "legacy" ? "legacy" : "economic_v2",
       rolloutPercent: Math.min(100, Math.max(0, Number(data.rollout_percent ?? 100))),
       adminOnlyPreview: data.admin_only_preview === true,
+      voiceEngine: data.voice_engine === "fish" ? "fish" : "openai",
+      fishVoiceId: data.fish_voice_id ? String(data.fish_voice_id) : null,
     };
   } catch {
     // Allows the application to run before the migration reaches production.

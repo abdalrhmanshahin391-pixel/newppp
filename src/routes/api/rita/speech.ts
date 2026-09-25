@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { RITA_MODELS, getRitaSettings, resolveRitaOpenAiKey } from "@/lib/rita-voice.server";
+import { fishSpeech, resolveFishKey } from "@/lib/rita-fish.server";
 import { ritaVoiceInstructions } from "@/lib/rita-voice-style";
 import { readRitaSpeechTicketUser, verifyRitaSpeechTicket } from "@/lib/rita-speech-ticket.server";
 
@@ -47,6 +48,7 @@ export const Route = createFileRoute("/api/rita/speech")({
           emotion?: string;
           index?: number;
           ticket?: string;
+          engine?: string;
         } | null;
         const text = String(body?.text ?? "")
           .trim()
@@ -98,6 +100,38 @@ export const Route = createFileRoute("/api/rita/speech")({
             false,
           );
 
+        const requestedEngine =
+          body?.engine === "fish" || body?.engine === "openai" ? body.engine : settings.voiceEngine;
+        if (requestedEngine === "fish" && settings.fishVoiceId) {
+          const fishKey = await resolveFishKey();
+          if (fishKey) {
+            const fishStartedAt = performance.now();
+            try {
+              const stream = await fishSpeech({
+                key: fishKey,
+                voiceId: settings.fishVoiceId,
+                text,
+                signal: request.signal,
+                firstAudioTimeoutMs: 2_500,
+              });
+              return new Response(stream, {
+                headers: {
+                  "Content-Type": "audio/pcm;rate=24000",
+                  "Cache-Control": "private, no-store",
+                  "X-Rita-Voice": "fish",
+                  "X-Rita-Trace": traceId,
+                  "X-Rita-Segment": String(index),
+                  "Server-Timing": `speech;dur=${(performance.now() - fishStartedAt).toFixed(1)}`,
+                },
+              });
+            } catch (error) {
+              if (request.signal.aborted) return new Response(null, { status: 499 });
+              // Fall back to OpenAI for this sentence only.
+              console.warn("Rita Fish voice fell back to OpenAI", traceId, String(error).slice(0, 200));
+            }
+          }
+        }
+
         try {
           const voice = ALLOWED_VOICES.has(settings.voice) ? settings.voice : "marin";
           const speechStartedAt = performance.now();
@@ -138,7 +172,7 @@ export const Route = createFileRoute("/api/rita/speech")({
             headers: {
               "Content-Type": contentType,
               "Cache-Control": "private, no-store",
-              "X-Rita-Voice": "premium",
+              "X-Rita-Voice": requestedEngine === "fish" ? "openai-fallback" : "openai",
               "X-Rita-Trace": traceId,
               "X-Rita-Segment": String(index),
               "Server-Timing": `speech;dur=${speechDurationMs.toFixed(1)}`,

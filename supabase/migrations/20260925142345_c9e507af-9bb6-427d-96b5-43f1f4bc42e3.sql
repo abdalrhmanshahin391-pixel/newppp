@@ -1,0 +1,1 @@
+ALTER TABLE public.rita_voice_settings ADD COLUMN IF NOT EXISTS voice_engine text NOT NULL DEFAULT 'openai' CHECK (voice_engine IN ('openai','fish')), ADD COLUMN IF NOT EXISTS fish_voice_id text;

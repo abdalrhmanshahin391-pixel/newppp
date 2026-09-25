@@ -283,6 +283,8 @@ export async function startRitaEconomicListening(args: {
   const reconnectAttempts = new Map<string, number>();
   let bargedIn = false;
   let voicedMs = 0;
+  // True once Deepgram returned any words for the current turn.
+  let heardWords = false;
   let outputText = "";
   let outputGuardUntil = 0;
   const confirmBargeIn = () => {
@@ -340,6 +342,17 @@ export async function startRitaEconomicListening(args: {
       (item) => !item.intentionallyClosing && item.finalParts.length &&
         (!selectedLanguage || item.language === selectedLanguage),
     );
+    if (!live && !heardWords && voicedMs < 600) {
+      // Nothing real was lost (noise, echo or an idle close): reset silently.
+      speaking = false;
+      pushToTalk = false;
+      hotFrames = 0;
+      quietMs = 0;
+      turnAudio = [];
+      callbacks.onInterim("");
+      callbacks.onTurnSignal?.("speech_end", "silent_reconnect");
+      return;
+    }
     if (live) {
       const text = live.finalParts.join(" ").replace(/\s+/g, " ").trim();
       live.finalParts = [];
@@ -391,6 +404,7 @@ export async function startRitaEconomicListening(args: {
     speaking = false;
     bargedIn = false;
     voicedMs = 0;
+    heardWords = false;
     quietMs = 0;
     hotFrames = 0;
     turnAudio = [];
@@ -520,6 +534,7 @@ export async function startRitaEconomicListening(args: {
        } else if (normalizedWords(confirmedText).length >= 2) confirmBargeIn();
       if (message.is_final) connection.finalParts.push(text);
       else if (selectedLanguage || !candidates.size)
+        if (text.trim()) heardWords = true;
         callbacks.onInterim([...connection.finalParts, text].join(" ").trim());
       if (!message.speech_final) return;
       const complete = connection.finalParts.join(" ").replace(/\s+/g, " ").trim();
@@ -622,6 +637,7 @@ export async function startRitaEconomicListening(args: {
         suppressFinalUntil = 0;
         bargedIn = false;
         voicedMs = 0;
+        heardWords = false;
         callbacks.onSpeechStart();
         callbacks.onTurnSignal?.("vad_start", "local_vad");
       }
