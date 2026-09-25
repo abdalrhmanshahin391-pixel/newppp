@@ -1464,6 +1464,11 @@ function RitaLivePage() {
           onSpeechEnd: () => {
             if (!metricRef.current.speechEnd) metricRef.current.speechEnd = performance.now();
             if (turnTimeline.current) markRitaTurn(turnTimeline.current, "speechEnd");
+            // Instant visual cue so the user knows Rita heard them.
+            if (!mutedRef.current && epoch === lessonEpoch.current) {
+              setMood("thinking");
+              setStatus("Rita is thinking…");
+            }
           },
           onFinal: (turn) => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
