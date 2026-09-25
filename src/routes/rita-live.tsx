@@ -1087,9 +1087,12 @@ function RitaLivePage() {
   );
   processTurnRef.current = processTurn;
 
+  const warmTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const endSession = useCallback(() => {
     lessonEpoch.current += 1;
     finalizeTurnTimeline("aborted", "session_ended");
+    if (warmTimer.current) clearInterval(warmTimer.current);
+    warmTimer.current = null;
     turnAbort.current?.abort();
     turnAbort.current = null;
     economic.current?.stop();
@@ -1343,6 +1346,15 @@ function RitaLivePage() {
             : "economic_v2_config: Add both OpenAI and Deepgram keys first.",
         );
       sessionId.current = String(result.sessionId);
+      const warm = () =>
+        void getToken()
+          .then((t) =>
+            fetch("/api/rita/warm", { method: "POST", headers: { Authorization: `Bearer ${t}` } }),
+          )
+          .catch(() => undefined);
+      warm();
+      if (warmTimer.current) clearInterval(warmTimer.current);
+      warmTimer.current = setInterval(warm, 45_000);
       setPremiumVoice(result.allowance?.premiumVoice !== false);
       setRitaVoice(result.voice === "cedar" ? "cedar" : "marin");
       {
@@ -1452,6 +1464,11 @@ function RitaLivePage() {
           onSpeechEnd: () => {
             if (!metricRef.current.speechEnd) metricRef.current.speechEnd = performance.now();
             if (turnTimeline.current) markRitaTurn(turnTimeline.current, "speechEnd");
+            // Instant visual cue so the user knows Rita heard them.
+            if (!mutedRef.current && epoch === lessonEpoch.current) {
+              setMood("thinking");
+              setStatus("Rita is thinking…");
+            }
           },
           onFinal: (turn) => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;

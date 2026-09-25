@@ -4,7 +4,8 @@ import {
   RITA_MODELS,
   estimateSpeechDurationMs,
   estimateTurnCostMicros,
-  getRitaAllowance,
+  getRitaAllowanceCached,
+  clearRitaAllowanceCache,
   getRitaSettings,
   normalizePersonality,
   requireRitaUser,
@@ -106,22 +107,21 @@ export const Route = createFileRoute("/api/rita/respond")({
             traceId,
           );
         const authMs = Math.round(performance.now() - startedAt);
-        const settings = await settingsPromise;
+        const [settings, key] = await Promise.all([settingsPromise, keyPromise]);
         const configMs = Math.round(performance.now() - startedAt);
-        const [allowance, key] = await Promise.all([
-          getRitaAllowance(auth.userId, settings),
-          keyPromise,
-        ]);
-        const allowanceMs = Math.round(performance.now() - startedAt);
-        if (!allowance.allowed)
-          return apiError(
-            "allowance_reached",
-            "Rita Economic v2 usage limit was reached.",
-            429,
-            traceId,
-          );
         if (!key)
           return apiError("openai_not_configured", "Rita needs an OpenAI key.", 503, traceId);
+        // Allowance runs in parallel with GPT; nothing is sent to the user until it passes.
+        let allowanceMs = 0;
+        const allowancePromise = getRitaAllowanceCached(auth.userId, settings)
+          .then((value) => {
+            allowanceMs = Math.round(performance.now() - startedAt);
+            return Boolean(value.allowed);
+          })
+          .catch(() => {
+            allowanceMs = Math.round(performance.now() - startedAt);
+            return false;
+          });
         const history = safeHistory(body?.history);
         const sessionSummary = String(body?.sessionSummary ?? "")
           .trim()
@@ -141,7 +141,7 @@ export const Route = createFileRoute("/api/rita/respond")({
         });
         const upstreamAbort = new AbortController();
         request.signal.addEventListener("abort", () => upstreamAbort.abort(), { once: true });
-        const upstream = await fetch("https://api.openai.com/v1/chat/completions", {
+        const upstreamPromise = fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -160,6 +160,18 @@ export const Route = createFileRoute("/api/rita/respond")({
           }),
           signal: upstreamAbort.signal,
         });
+        const allowed = await allowancePromise;
+        if (!allowed) {
+          upstreamAbort.abort();
+          upstreamPromise.catch(() => undefined);
+          return apiError(
+            "allowance_reached",
+            "Rita Economic v2 usage limit was reached.",
+            429,
+            traceId,
+          );
+        }
+        const upstream = await upstreamPromise;
         if (!upstream.ok || !upstream.body) {
           const detail = await upstream.text().catch(() => "");
           console.error("Rita Economic GPT failed", traceId, upstream.status, detail.slice(0, 240));
@@ -285,6 +297,7 @@ export const Route = createFileRoute("/api/rita/respond")({
                 });
                 if (error) throw error;
                 usageSaved = true;
+                clearRitaAllowanceCache(auth.userId);
               } catch (error) {
                 console.error("Rita Economic usage write failed", traceId, error);
               }
