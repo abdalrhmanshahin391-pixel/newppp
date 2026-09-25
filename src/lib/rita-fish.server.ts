@@ -42,33 +42,69 @@ export async function listFishArabicVoices(): Promise<{ voices: FishVoice[]; con
   if (!key) return { voices: [], configured: false };
   if (voiceCache && Date.now() - voiceCache.at < 600_000)
     return { voices: voiceCache.value, configured: true };
-  // Generic "popular Arabic" is dominated by celebrity/meme clones, so search Saudi/Gulf terms.
-  const lists = await Promise.all(
-    ["سعودي", "saudi", "خليجي"].map(async (term) => {
-      const response = await fetch(
+  const fetchList = async (url: string) => {
+    const response = await fetch(url, { headers: { Authorization: `Bearer ${key}` } });
+    if (!response.ok) throw new Error(`Fish Audio voice list failed (${response.status})`);
+    return ((await response.json()) as { items?: any[] }).items ?? [];
+  };
+  // 1) Verified official Arabic "Default Voices" (author "Fish Official") — pinned by ID because
+  //    Fish search is fuzzy and rarely surfaces them. Fetched fresh by ID for live metadata.
+  //    2) Dynamic name searches for the remaining official voices. 3) Saudi/Gulf community voices.
+  const OFFICIAL_VOICE_IDS = [
+    "0b14f34a13a94ed88fe6113193749bb0", // فاطمة — Fish Official (الأكثر استخداماً)
+    "eec5913dac6b4bdc9920f136e4e5ed78", // فهد Fahad — Fish Official
+    "5814f46c02f5486d9c72b31bd82217ba", // ليان Layan — Fish Official
+  ];
+  const OFFICIAL_NAME_SEARCHES = ["نورة", "Noura", "Omar", "Youssef", "Farida", "Salma", "Amine", "Karim"];
+  const fetchById = async (id: string) => {
+    const response = await fetch(`https://api.fish.audio/model/${id}`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    if (!response.ok) return [];
+    const item = (await response.json()) as any;
+    return item?._id ? [item] : [];
+  };
+  const lists = await Promise.all([
+    ...OFFICIAL_VOICE_IDS.map(fetchById),
+    ...OFFICIAL_NAME_SEARCHES.map((term) =>
+      fetchList(
+        `https://api.fish.audio/model?page_size=10&sort_by=task_count&title=${encodeURIComponent(term)}`,
+      ),
+    ),
+    ...["سعودي", "saudi", "خليجي"].map((term) =>
+      fetchList(
         `https://api.fish.audio/model?page_size=20&sort_by=task_count&title=${encodeURIComponent(term)}`,
-        { headers: { Authorization: `Bearer ${key}` } },
-      );
-      if (!response.ok) throw new Error(`Fish Audio voice list failed (${response.status})`);
-      return ((await response.json()) as { items?: any[] }).items ?? [];
-    }),
-  );
+      ),
+    ),
+  ]);
   const seen = new Set<string>();
-  const json = { items: lists.flat().filter((item) => item?._id && !seen.has(item._id) && seen.add(item._id)) };
-  const voices: FishVoice[] = (json.items ?? [])
+  const items = lists.flat().filter((item) => item?._id && !seen.has(item._id) && seen.add(item._id));
+  const isOfficial = (item: any) =>
+    item?.author?.nickname === "Fish Audio" ||
+    item?.author?.nickname === "Fish Official" ||
+    item?.tags?.includes?.("official") === true;
+  const voices: FishVoice[] = items
     .filter((item) => item?._id && item?.state !== "failed")
+    // Fuzzy name searches return unrelated global voices; keep only official or Arabic ones.
+    .filter(
+      (item) =>
+        isOfficial(item) ||
+        item?.languages?.includes?.("ar") === true ||
+        /[؀-ۿ]/.test(String(item?.title ?? "")),
+    )
     .map((item) => ({
       id: String(item._id),
       title: String(item.title ?? "Voice"),
       author: String(item.author?.nickname ?? ""),
       uses: Number(item.task_count ?? 0),
       sampleUrl: item.samples?.[0]?.audio ? String(item.samples[0].audio) : null,
-      official: item.author?.nickname === "Fish Audio" || item.tags?.includes?.("official") === true,
+      official: isOfficial(item),
     }))
-    // Saudi/Gulf titled voices first, then popularity.
+    // Official voices first (by popularity), then Saudi/Gulf community voices, then the rest.
     .sort((a, b) => {
-      const saudi = (v: FishVoice) => /saudi|سعود|خليج|gulf|najd|نجد/i.test(v.title) ? 1 : 0;
-      return saudi(b) - saudi(a) || b.uses - a.uses;
+      const rank = (v: FishVoice) =>
+        v.official ? 2 : /saudi|سعود|خليج|gulf|najd|نجد/i.test(v.title) ? 1 : 0;
+      return rank(b) - rank(a) || b.uses - a.uses;
     });
   voiceCache = { at: Date.now(), value: voices };
   return { voices, configured: true };
