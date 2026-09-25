@@ -150,7 +150,12 @@ function AiKeysPage() {
     turns: 0,
     latencyP50: 0,
     latencyP95: 0,
+    transcriptP50: 0,
+    responseP50: 0,
+    audioP50: 0,
+    incompleteTurns: 0,
   });
+  const [ritaRecentTurns, setRitaRecentTurns] = useState<any[]>([]);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
@@ -196,6 +201,7 @@ function AiKeysPage() {
       .then((result) => {
         if (result?.settings) setRitaSettings(result.settings);
         if (result?.metrics) setRitaMetrics(result.metrics);
+        if (result?.recentTurns) setRitaRecentTurns(result.recentTurns);
       })
       .catch(() => undefined);
   }, [getRitaAdmin, isAdmin]);
@@ -301,6 +307,7 @@ function AiKeysPage() {
       toast.success("Rita voice settings saved");
       const result = await getRitaAdmin();
       if (result?.metrics) setRitaMetrics(result.metrics);
+      if (result?.recentTurns) setRitaRecentTurns(result.recentTurns);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Could not save Rita settings");
     } finally {
@@ -576,6 +583,10 @@ function AiKeysPage() {
               ["Est. cost", `$${ritaMetrics.estimatedCost.toFixed(2)}`],
               ["Latency p50", ritaMetrics.latencyP50 ? `${ritaMetrics.latencyP50}ms` : "—"],
               ["Latency p95", ritaMetrics.latencyP95 ? `${ritaMetrics.latencyP95}ms` : "—"],
+              ["STT p50", ritaMetrics.transcriptP50 ? `${ritaMetrics.transcriptP50}ms` : "—"],
+              ["GPT p50", ritaMetrics.responseP50 ? `${ritaMetrics.responseP50}ms` : "—"],
+              ["Audio p50", ritaMetrics.audioP50 ? `${ritaMetrics.audioP50}ms` : "—"],
+              ["Incomplete", ritaMetrics.incompleteTurns],
             ].map(([label, value]) => (
               <div
                 key={String(label)}
@@ -587,6 +598,29 @@ function AiKeysPage() {
                 <p className="mt-1 text-lg font-black text-white">{value}</p>
               </div>
             ))}
+          </div>
+
+          <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10 bg-black/20">
+            <table className="w-full min-w-[820px] text-left text-xs">
+              <thead className="border-b border-white/10 text-white/45">
+                <tr>{["Turn", "Result", "Speech→text", "Text→token", "Token→audio", "Playback", "Segments", "When"].map((label) => <th key={label} className="px-3 py-2 font-bold">{label}</th>)}</tr>
+              </thead>
+              <tbody>
+                {ritaRecentTurns.map((turn) => {
+                  const delta = (from: string, to: string) => turn[from] != null && turn[to] != null ? `${turn[to] - turn[from]}ms` : "—";
+                  return <tr key={turn.turn_id || turn.created_at} className="border-b border-white/5 text-white/75">
+                    <td className="px-3 py-2 font-mono">{turn.diagnostic_code || String(turn.turn_id || "").slice(0, 8)}</td>
+                    <td className="px-3 py-2"><span className={turn.status === "completed" ? "text-emerald-300" : "text-amber-300"}>{turn.status || "legacy"}</span><div className="text-white/35">{turn.end_reason || turn.last_stage || ""}</div></td>
+                    <td className="px-3 py-2">{delta("speech_end_ms", "transcript_final_ms")}</td>
+                    <td className="px-3 py-2">{delta("transcript_final_ms", "first_token_ms")}</td>
+                    <td className="px-3 py-2">{delta("first_token_ms", "first_audio_ms")}</td>
+                    <td className="px-3 py-2">{turn.played_audio_ms ? `${turn.played_audio_ms}ms` : "—"}</td>
+                    <td className="px-3 py-2">{turn.segments_completed || 0}/{turn.segments_planned || 0}</td>
+                    <td className="px-3 py-2 text-white/45">{new Date(turn.created_at).toLocaleString()}</td>
+                  </tr>;
+                })}
+              </tbody>
+            </table>
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">

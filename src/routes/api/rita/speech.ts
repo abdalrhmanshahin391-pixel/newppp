@@ -139,6 +139,7 @@ export const Route = createFileRoute("/api/rita/speech")({
               "Cache-Control": "private, no-store",
               "X-Rita-Voice": "premium",
               "X-Rita-Trace": traceId,
+              "X-Rita-Segment": String(index),
               "Server-Timing": `speech;dur=${speechDurationMs.toFixed(1)}`,
             },
           });

@@ -29,7 +29,7 @@ export class RitaClauseChunker {
   private take(final: boolean) {
     const output: string[] = [];
     let clean = cleanRitaSpokenText(this.raw);
-    while (clean && this.emitted < 2) {
+    while (clean && this.emitted < 7) {
       // The first clause is released early (≥4 words at any clause mark, hard
       // cap 10 words) so the voice starts almost as soon as the text appears.
       // Later clauses stay longer so speech never sounds chopped.
@@ -60,9 +60,12 @@ export class RitaClauseChunker {
       clean = cleanRitaSpokenText(this.raw);
     }
     if (final && clean) {
-      output.push(clean);
+      const words = clean.split(/\s+/);
+      while (words.length && this.emitted < 8) {
+        output.push(words.splice(0, 24).join(" "));
+        this.emitted += 1;
+      }
       this.raw = "";
-      this.emitted += 1;
     }
     return output;
   }

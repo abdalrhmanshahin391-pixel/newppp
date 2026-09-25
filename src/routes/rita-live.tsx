@@ -23,6 +23,13 @@ import { RitaStage, type RitaMood } from "@/components/rita-live/RitaStage";
 import type { RitaEconomicController } from "@/lib/rita-economic.client";
 import type { RitaSpeechSegment } from "@/lib/rita-economic-response.client";
 import type { RitaPcmPlayerController } from "@/lib/rita-pcm-player.client";
+import {
+  createRitaTurnTimeline,
+  markRitaTurn,
+  postRitaTurnTimeline,
+  type RitaTurnEndReason,
+  type RitaTurnTimeline,
+} from "@/lib/rita-turn-telemetry.client";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { isGermanItem, learningKey, type LearningItem, type SaveTarget } from "@/lib/rita-learning";
@@ -216,6 +223,8 @@ function RitaLivePage() {
     submitted: false,
     interrupted: false,
   });
+  const turnTimeline = useRef<RitaTurnTimeline | null>(null);
+  const segmentTimelines = useRef<Map<number, Record<string, unknown>>>(new Map());
   const languageState = useRef<RitaLanguageState>(
     initialRitaLanguageState({ language: "automatic", dialect: "" }),
   );
@@ -304,6 +313,46 @@ function RitaLivePage() {
         .catch(() => undefined);
     },
     [getToken],
+  );
+
+  const persistTurnTimeline = useCallback(
+    (segment?: Record<string, unknown>) => {
+      const timeline = turnTimeline.current;
+      if (!timeline) return;
+      const connection = navigator as Navigator & { connection?: { effectiveType?: string } };
+      void getToken()
+        .then((token) =>
+          postRitaTurnTimeline(token, {
+            ...timeline,
+            sessionId: sessionId.current,
+            pipelineMode: connectedModeRef.current,
+            language: languageState.current.activeLanguage,
+            browser: navigator.userAgent.slice(0, 120),
+            networkType: connection.connection?.effectiveType || "unknown",
+          } as RitaTurnTimeline, segment),
+        )
+        .catch(() => undefined);
+    },
+    [getToken],
+  );
+
+  const finalizeTurnTimeline = useCallback(
+    (
+      status: RitaTurnTimeline["status"],
+      reason: RitaTurnEndReason,
+      errorStage?: string,
+      target?: RitaTurnTimeline,
+    ) => {
+      const timeline = target ?? turnTimeline.current;
+      if (!timeline || timeline.endReason) return;
+      timeline.status = status;
+      timeline.endReason = reason;
+      timeline.errorStage = errorStage;
+      timeline.reconnectCount = reconnectCount.current;
+      timeline.lastStage = reason;
+      persistTurnTimeline();
+    },
+    [persistTurnTimeline],
   );
 
   const loadDestinations = useCallback(async () => {
@@ -557,7 +606,7 @@ function RitaLivePage() {
     tick();
   }, [stopOutputMeter]);
 
-  const stopSpeaking = useCallback(() => {
+  const stopSpeaking = useCallback((reason?: RitaTurnEndReason) => {
     if (fillerTimer.current) window.clearTimeout(fillerTimer.current);
     fillerTimer.current = null;
     fillerPlaying.current = false;
@@ -567,7 +616,8 @@ function RitaLivePage() {
     stopOutputMeter();
     pcmPlayer.current?.interrupt();
     economic.current?.setOutputSpeaking(false);
-  }, [stopOutputMeter]);
+    if (reason) finalizeTurnTimeline("aborted", reason);
+  }, [finalizeTurnTimeline, stopOutputMeter]);
 
   const replaySpeech = useCallback(async () => {
     const blob = lastSpeechBlob.current;
@@ -705,8 +755,16 @@ function RitaLivePage() {
       const spoken = text.trim();
       if (!spoken || (addUser && mutedRef.current)) return;
       voiceTurnStartedAt.current = performance.now();
+      if (!turnTimeline.current || turnTimeline.current.endReason) {
+        stopSpeaking("new_request");
+        turnTimeline.current = createRitaTurnTimeline(performance.now());
+        segmentTimelines.current.clear();
+      }
+      const timeline = turnTimeline.current;
+      timeline.transcriptCharCount = spoken.length;
+      timeline.fallbackUsed = fallbackUsed;
+      if (timeline.marks.transcriptFinal === undefined) markRitaTurn(timeline, "transcriptFinal");
       const epoch = lessonEpoch.current;
-      stopSpeaking();
       setNeedsTapToPlay(false);
       turnAbort.current?.abort();
       const controller = new AbortController();
@@ -810,6 +868,15 @@ function RitaLivePage() {
           }
           // Start the next HTTP request immediately. Playback remains ordered, so the
           // following clause is already arriving while Rita speaks the current one.
+          timeline.segmentsPlanned = Math.max(timeline.segmentsPlanned, segment.index + 1);
+          timeline.segmentsRequested += 1;
+          const segmentTimeline: Record<string, unknown> = {
+            index: segment.index,
+            charCount: segment.text.length,
+            requestMs: Math.round(performance.now() - timeline.originMs),
+            status: "requested",
+          };
+          segmentTimelines.current.set(segment.index, segmentTimeline);
           const responsePromise = fetch("/api/rita/speech", {
             method: "POST",
             headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -819,16 +886,38 @@ function RitaLivePage() {
           if (!metricRef.current.ttsStart) metricRef.current.ttsStart = performance.now();
           speechChain = speechChain.then(async () => {
             const response = await responsePromise;
+            segmentTimeline.headersMs = Math.round(performance.now() - timeline.originMs);
+            segmentTimeline.httpStatus = response.status;
+            segmentTimeline.providerMs = parseServerTiming(response.headers.get("Server-Timing")).speech;
             setLastVoiceTimings((currentTimings) => ({
               ...currentTimings,
               ...parseServerTiming(response.headers.get("Server-Timing")),
             }));
             if (!response.ok) {
+              segmentTimeline.status = "failed";
+              segmentTimeline.errorCode = `http_${response.status}`;
+              persistTurnTimeline(segmentTimeline);
               const detail = await readRitaPayload<RitaErrorPayload>(response);
               throw ritaApiError(detail, "Rita’s voice request failed.");
             }
             if (!pcmPlayer.current || voiceController.signal.aborted) return;
-            const blob = await pcmPlayer.current.enqueueResponse(response, voiceController.signal);
+            const blob = await pcmPlayer.current.enqueueResponse(
+              response,
+              voiceController.signal,
+              segment.index,
+              (event) => {
+                segmentTimeline.receivedBytes = event.bytes;
+                if (event.type === "first_byte") segmentTimeline.firstByteMs = Math.round(performance.now() - timeline.originMs);
+                if (event.type === "queued" && segmentTimeline.queuedMs === undefined) segmentTimeline.queuedMs = Math.round(performance.now() - timeline.originMs);
+                if (event.type === "received") {
+                  segmentTimeline.receivedMs = Math.round(performance.now() - timeline.originMs);
+                  segmentTimeline.status = "received";
+                  timeline.segmentsReceived += 1;
+                  timeline.receivedAudioMs += Math.round(event.bytes / 48);
+                  persistTurnTimeline(segmentTimeline);
+                }
+              },
+            );
             speechBlobs.push(blob);
           });
         };
@@ -837,6 +926,7 @@ function RitaLivePage() {
           token,
           signal: controller.signal,
           body: {
+            clientTurnId: timeline.clientTurnId,
             transcript: spoken,
             transcriptLanguage: stableLanguage,
             inputAudioMs: durationMs,
@@ -852,6 +942,8 @@ function RitaLivePage() {
           onDelta(delta) {
             if (epoch !== lessonEpoch.current || controller.signal.aborted) return;
             if (!metricRef.current.firstToken) metricRef.current.firstToken = performance.now();
+            markRitaTurn(timeline, "firstToken");
+            timeline.status = "streaming";
             streamedReply += delta;
             setCaption(streamedReply);
             if (!replyAdded) {
@@ -868,8 +960,12 @@ function RitaLivePage() {
               );
             }
           },
-          onStarted(turnId) {
+          onStarted(turnId, traceId, serverTimings) {
             metricRef.current.turnId = turnId;
+            timeline.turnId = turnId;
+            timeline.traceId = traceId;
+            timeline.serverTimings = serverTimings;
+            persistTurnTimeline();
           },
           onSpeechSegment: queueSpeech,
         });
@@ -887,6 +983,11 @@ function RitaLivePage() {
           );
         }
         setCaption(result.reply);
+        timeline.replyCharCount = result.reply.length;
+        timeline.segmentsPlanned = result.segmentsPlanned ?? timeline.segmentsPlanned;
+        timeline.serverTimings = result.serverTimings ?? timeline.serverTimings;
+        markRitaTurn(timeline, "textComplete");
+        requestAnimationFrame(() => markRitaTurn(timeline, "textRendered"));
         completedTurns.current += 1;
         if (completedTurns.current % 6 === 0) {
           const summaryTurns = [
@@ -940,6 +1041,9 @@ function RitaLivePage() {
             }
           } catch (cause) {
             if (!voiceController.signal.aborted) {
+              pcmPlayer.current?.finish();
+              timeline.status = timeline.segmentsPlayed > 0 ? "partial" : "failed";
+              finalizeTurnTimeline(timeline.status, "tts_error", "tts", timeline);
               throw new Error(
                 cause instanceof Error
                   ? `tts_openai: ${cause.message}`
@@ -956,7 +1060,11 @@ function RitaLivePage() {
         }
       } catch (cause) {
         if (epoch !== lessonEpoch.current) return;
-        if ((cause as Error)?.name === "AbortError") return;
+        if ((cause as Error)?.name === "AbortError") {
+          finalizeTurnTimeline("aborted", "new_request", undefined, timeline);
+          return;
+        }
+        finalizeTurnTimeline("failed", "response_error", "response", timeline);
         setMood(activeRef.current ? "listening" : "ready");
         setStatus(activeRef.current ? "Rita is listening" : "Ready to start");
         voiceTurnStartedAt.current = null;
@@ -975,12 +1083,13 @@ function RitaLivePage() {
         }
       }
     },
-    [add, extractLearningInBackground, getToken, ritaVoice, stopSpeaking],
+    [add, extractLearningInBackground, finalizeTurnTimeline, getToken, persistTurnTimeline, ritaVoice, stopSpeaking],
   );
   processTurnRef.current = processTurn;
 
   const endSession = useCallback(() => {
     lessonEpoch.current += 1;
+    finalizeTurnTimeline("aborted", "session_ended");
     turnAbort.current?.abort();
     turnAbort.current = null;
     economic.current?.stop();
@@ -1043,7 +1152,7 @@ function RitaLivePage() {
     lastSpeechBlob.current = null;
     setHasReplay(false);
     setNeedsTapToPlay(false);
-  }, [getToken, stopSpeaking]);
+  }, [finalizeTurnTimeline, getToken, stopSpeaking]);
 
   useEffect(() => () => endSession(), [endSession]);
 
@@ -1128,6 +1237,10 @@ function RitaLivePage() {
         onStarted: () => {
           const firstAudioAt = performance.now();
           if (!fillerPlaying.current) submitTurnMetric(firstAudioAt);
+          if (!fillerPlaying.current && turnTimeline.current) {
+            markRitaTurn(turnTimeline.current, "firstAudio");
+            persistTurnTimeline();
+          }
           if (voiceTurnStartedAt.current !== null) {
             setLastVoiceLatencyMs(Math.round(performance.now() - voiceTurnStartedAt.current));
             voiceTurnStartedAt.current = null;
@@ -1140,6 +1253,10 @@ function RitaLivePage() {
           startOutputMeter();
         },
         onEnded: () => {
+          if (!fillerPlaying.current && turnTimeline.current) {
+            markRitaTurn(turnTimeline.current, "playbackEnd");
+            finalizeTurnTimeline("completed", "completed");
+          }
           stopOutputMeter();
           economic.current?.setOutputSpeaking(false);
           setMood(activeRef.current ? "listening" : "ready");
@@ -1150,6 +1267,36 @@ function RitaLivePage() {
                 : "Rita Economic v2 is listening"
               : "Lesson paused",
           );
+        },
+        onSegmentStarted: (segmentIndex) => {
+          const timeline = turnTimeline.current;
+          const segment = segmentTimelines.current.get(segmentIndex);
+          if (!timeline || !segment) return;
+          segment.playbackStartMs = Math.round(performance.now() - timeline.originMs);
+          segment.status = "playing";
+          timeline.segmentsPlayed += 1;
+          persistTurnTimeline(segment);
+        },
+        onSegmentEnded: (segmentIndex, playedAudioMs) => {
+          const timeline = turnTimeline.current;
+          const segment = segmentTimelines.current.get(segmentIndex);
+          if (!timeline || !segment) return;
+          segment.playbackEndMs = Math.round(performance.now() - timeline.originMs);
+          segment.playedAudioMs = playedAudioMs;
+          segment.status = "completed";
+          timeline.segmentsCompleted += 1;
+          timeline.playedAudioMs += playedAudioMs;
+          persistTurnTimeline(segment);
+        },
+        onInterrupted: (segmentIndex) => {
+          const timeline = turnTimeline.current;
+          if (!timeline || segmentIndex === null || fillerPlaying.current) return;
+          const segment = segmentTimelines.current.get(segmentIndex);
+          if (segment) {
+            segment.status = "interrupted";
+            segment.playbackEndMs = Math.round(performance.now() - timeline.originMs);
+            persistTurnTimeline(segment);
+          }
         },
       });
       const token = await getToken();
@@ -1277,7 +1424,9 @@ function RitaLivePage() {
           },
           onBargeIn: () => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
-            stopSpeaking();
+            stopSpeaking("user_barge_in");
+            turnTimeline.current = createRitaTurnTimeline(pendingSpeechStart.current || performance.now());
+            segmentTimelines.current.clear();
             metricRef.current = {
               speechStart: pendingSpeechStart.current || performance.now(),
               speechEnd: 0,
@@ -1295,14 +1444,19 @@ function RitaLivePage() {
           },
           onInterim: (value) => {
             if (epoch !== lessonEpoch.current) return;
-            if (value) setStatus(`Hearing: ${value.slice(0, 90)}`);
+            if (value) {
+              if (turnTimeline.current) markRitaTurn(turnTimeline.current, "firstInterim");
+              setStatus(`Hearing: ${value.slice(0, 90)}`);
+            }
           },
           onSpeechEnd: () => {
             if (!metricRef.current.speechEnd) metricRef.current.speechEnd = performance.now();
+            if (turnTimeline.current) markRitaTurn(turnTimeline.current, "speechEnd");
           },
           onFinal: (turn) => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
             metricRef.current.transcriptFinal = performance.now();
+            if (turnTimeline.current) markRitaTurn(turnTimeline.current, "transcriptFinal");
             lastSpoken.current = turn.text;
             void processTurnRef.current({
               text: turn.text,
@@ -1315,6 +1469,7 @@ function RitaLivePage() {
           onFallback: ({ audio, durationMs, reason }) => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
             metricRef.current.fallbackUsed = true;
+            if (turnTimeline.current) turnTimeline.current.fallbackUsed = true;
             setStatus("Recovering this sentence with OpenAI transcription…");
             const form = new FormData();
             form.append("audio", audio, "rita-turn.wav");
@@ -1351,6 +1506,7 @@ function RitaLivePage() {
                 setError(
                   `${reason} ${cause instanceof Error ? cause.message : "Fallback transcription failed."}`,
                 );
+                finalizeTurnTimeline("failed", "transcription_error", "transcription");
               });
           },
           onError: (message) => {

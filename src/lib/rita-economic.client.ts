@@ -20,6 +20,7 @@ export type RitaEconomicCallbacks = {
   onReconnect?: (reason: "dropped" | "idle") => void;
   /** Confirmed real speech (≥2 transcribed words or ≥400 ms of voice). Only this may interrupt Rita. */
   onBargeIn?: () => void;
+  onTurnSignal?: (event: "vad_start" | "speech_confirmed" | "speech_end", reason?: string) => void;
 };
 
 export type RitaEconomicController = {
@@ -263,6 +264,7 @@ export async function startRitaEconomicListening(args: {
   const confirmBargeIn = () => {
     if (bargedIn || stopped) return;
     bargedIn = true;
+    callbacks.onTurnSignal?.("speech_confirmed");
     callbacks.onBargeIn?.();
   };
   // Keep a fresh token ready so an idle reopen never waits on the network.
@@ -338,6 +340,7 @@ export async function startRitaEconomicListening(args: {
     suppressFinalUntil = performance.now() + 1_000;
     callbacks.onInterim("");
     callbacks.onSpeechEnd?.();
+    callbacks.onTurnSignal?.("speech_end", "fallback");
     callbacks.onFallback?.({ audio, durationMs, reason });
   };
 
@@ -369,6 +372,7 @@ export async function startRitaEconomicListening(args: {
     turnAudio = [];
     callbacks.onInterim("");
     callbacks.onSpeechEnd?.();
+    callbacks.onTurnSignal?.("speech_end", "transcript_final");
     callbacks.onFinal(candidate);
   };
 
@@ -450,6 +454,7 @@ export async function startRitaEconomicListening(args: {
           speaking = true;
           turnStartedAt = performance.now();
           callbacks.onSpeechStart();
+          callbacks.onTurnSignal?.("vad_start", "deepgram");
         }
         return;
       }
@@ -588,6 +593,7 @@ export async function startRitaEconomicListening(args: {
         bargedIn = false;
         voicedMs = 0;
         callbacks.onSpeechStart();
+        callbacks.onTurnSignal?.("vad_start", "local_vad");
       }
     } else if (!pushToTalk) {
       const threshold = Math.max(0.008, noiseFloor * (outputSpeaking ? 3 : 1.55));

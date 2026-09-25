@@ -2933,59 +2933,158 @@ export type Database = {
       rita_turn_metrics: {
         Row: {
           browser: string | null
+          client_turn_id: string | null
           created_at: string
+          diagnostic_code: string | null
+          end_reason: string | null
           error_stage: string | null
           fallback_used: boolean
+          filler_used: boolean
+          first_audio_ms: number | null
+          first_interim_ms: number | null
+          first_token_ms: number | null
           first_token_to_tts_ms: number | null
           id: string
           interrupted: boolean
           language: string | null
+          last_stage: string | null
           network_type: string | null
           pipeline_mode: string
+          planned_audio_ms: number
+          playback_end_ms: number | null
+          played_audio_ms: number
+          received_audio_ms: number
           reconnect_count: number
+          reply_char_count: number
+          request_sent_ms: number | null
+          segments_completed: number
+          segments_planned: number
+          segments_played: number
+          segments_received: number
+          segments_requested: number
+          server_allowance_ms: number | null
+          server_auth_ms: number | null
+          server_config_ms: number | null
+          server_first_token_ms: number | null
+          server_reply_done_ms: number | null
           session_id: string | null
+          speech_end_ms: number | null
           speech_end_to_first_audio_ms: number | null
           speech_end_to_transcript_ms: number | null
+          speech_start_ms: number | null
+          status: string
+          text_complete_ms: number | null
+          text_rendered_ms: number | null
+          trace_id: string | null
+          transcript_char_count: number
+          transcript_final_ms: number | null
           transcript_to_first_token_ms: number | null
           turn_id: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
           browser?: string | null
+          client_turn_id?: string | null
           created_at?: string
+          diagnostic_code?: string | null
+          end_reason?: string | null
           error_stage?: string | null
           fallback_used?: boolean
+          filler_used?: boolean
+          first_audio_ms?: number | null
+          first_interim_ms?: number | null
+          first_token_ms?: number | null
           first_token_to_tts_ms?: number | null
           id?: string
           interrupted?: boolean
           language?: string | null
+          last_stage?: string | null
           network_type?: string | null
           pipeline_mode: string
+          planned_audio_ms?: number
+          playback_end_ms?: number | null
+          played_audio_ms?: number
+          received_audio_ms?: number
           reconnect_count?: number
+          reply_char_count?: number
+          request_sent_ms?: number | null
+          segments_completed?: number
+          segments_planned?: number
+          segments_played?: number
+          segments_received?: number
+          segments_requested?: number
+          server_allowance_ms?: number | null
+          server_auth_ms?: number | null
+          server_config_ms?: number | null
+          server_first_token_ms?: number | null
+          server_reply_done_ms?: number | null
           session_id?: string | null
+          speech_end_ms?: number | null
           speech_end_to_first_audio_ms?: number | null
           speech_end_to_transcript_ms?: number | null
+          speech_start_ms?: number | null
+          status?: string
+          text_complete_ms?: number | null
+          text_rendered_ms?: number | null
+          trace_id?: string | null
+          transcript_char_count?: number
+          transcript_final_ms?: number | null
           transcript_to_first_token_ms?: number | null
           turn_id?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
           browser?: string | null
+          client_turn_id?: string | null
           created_at?: string
+          diagnostic_code?: string | null
+          end_reason?: string | null
           error_stage?: string | null
           fallback_used?: boolean
+          filler_used?: boolean
+          first_audio_ms?: number | null
+          first_interim_ms?: number | null
+          first_token_ms?: number | null
           first_token_to_tts_ms?: number | null
           id?: string
           interrupted?: boolean
           language?: string | null
+          last_stage?: string | null
           network_type?: string | null
           pipeline_mode?: string
+          planned_audio_ms?: number
+          playback_end_ms?: number | null
+          played_audio_ms?: number
+          received_audio_ms?: number
           reconnect_count?: number
+          reply_char_count?: number
+          request_sent_ms?: number | null
+          segments_completed?: number
+          segments_planned?: number
+          segments_played?: number
+          segments_received?: number
+          segments_requested?: number
+          server_allowance_ms?: number | null
+          server_auth_ms?: number | null
+          server_config_ms?: number | null
+          server_first_token_ms?: number | null
+          server_reply_done_ms?: number | null
           session_id?: string | null
+          speech_end_ms?: number | null
           speech_end_to_first_audio_ms?: number | null
           speech_end_to_transcript_ms?: number | null
+          speech_start_ms?: number | null
+          status?: string
+          text_complete_ms?: number | null
+          text_rendered_ms?: number | null
+          trace_id?: string | null
+          transcript_char_count?: number
+          transcript_final_ms?: number | null
           transcript_to_first_token_ms?: number | null
           turn_id?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -2997,6 +3096,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rita_turn_segments: {
+        Row: {
+          char_count: number
+          created_at: string
+          error_code: string | null
+          first_byte_ms: number | null
+          headers_ms: number | null
+          http_status: number | null
+          id: string
+          playback_end_ms: number | null
+          playback_start_ms: number | null
+          played_audio_ms: number
+          provider_ms: number | null
+          queued_ms: number | null
+          received_bytes: number
+          received_ms: number | null
+          request_ms: number | null
+          segment_index: number
+          status: string
+          turn_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          char_count?: number
+          created_at?: string
+          error_code?: string | null
+          first_byte_ms?: number | null
+          headers_ms?: number | null
+          http_status?: number | null
+          id?: string
+          playback_end_ms?: number | null
+          playback_start_ms?: number | null
+          played_audio_ms?: number
+          provider_ms?: number | null
+          queued_ms?: number | null
+          received_bytes?: number
+          received_ms?: number | null
+          request_ms?: number | null
+          segment_index: number
+          status?: string
+          turn_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          char_count?: number
+          created_at?: string
+          error_code?: string | null
+          first_byte_ms?: number | null
+          headers_ms?: number | null
+          http_status?: number | null
+          id?: string
+          playback_end_ms?: number | null
+          playback_start_ms?: number | null
+          played_audio_ms?: number
+          provider_ms?: number | null
+          queued_ms?: number | null
+          received_bytes?: number
+          received_ms?: number | null
+          request_ms?: number | null
+          segment_index?: number
+          status?: string
+          turn_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       rita_user_preferences: {
         Row: {
