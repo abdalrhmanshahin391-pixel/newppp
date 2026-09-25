@@ -1,0 +1,1 @@
+UPDATE public.plans SET published = true WHERE slug IN ('toolkit','boost');

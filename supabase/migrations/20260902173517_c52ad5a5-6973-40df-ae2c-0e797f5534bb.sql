@@ -1,0 +1,10 @@
+REVOKE EXECUTE ON FUNCTION public.admin_list_spaces() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.admin_space_detail(uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.admin_space_deck_cards(uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.admin_deck_ratings(uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.admin_space_action(uuid, text, text, uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.rate_deck(uuid, smallint, text, uuid) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.claim_toolkit(text) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.toolkit_offer() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.mark_announcement_seen(uuid, boolean) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.recount_deck_rating() FROM anon, authenticated;

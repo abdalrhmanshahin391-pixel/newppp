@@ -10,33 +10,1625 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as CoursesRouteImport } from './routes/courses'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as GermanRouteImport } from './routes/german'
+import { Route as LockedRouteImport } from './routes/locked'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as MyPlanRouteImport } from './routes/my-plan'
+import { Route as NotesRouteImport } from './routes/notes'
+import { Route as OffersRouteImport } from './routes/offers'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as QuestionBankRouteImport } from './routes/question-bank'
+import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RitaLiveRouteImport } from './routes/rita-live'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as StudyRouteImport } from './routes/study'
+import { Route as SupportRouteImport } from './routes/support'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ToolkitRouteImport } from './routes/toolkit'
+import { Route as TourRouteImport } from './routes/tour'
+import { Route as TutorialRouteImport } from './routes/tutorial'
+import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAiRouteImport } from './routes/admin.ai'
+import { Route as AdminAiKeysRouteImport } from './routes/admin.ai-keys'
+import { Route as AdminContentProtectionRouteImport } from './routes/admin.content-protection'
+import { Route as AdminDevicesRouteImport } from './routes/admin.devices'
+import { Route as AdminGermanRouteImport } from './routes/admin.german'
+import { Route as AdminGroupsRouteImport } from './routes/admin.groups'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
+import { Route as AdminOffersRouteImport } from './routes/admin.offers'
+import { Route as AdminPaddleSyncRouteImport } from './routes/admin.paddle-sync'
+import { Route as AdminPeopleRouteImport } from './routes/admin.people'
+import { Route as AdminPlansRouteImport } from './routes/admin.plans'
+import { Route as AdminPromoCodesRouteImport } from './routes/admin.promo-codes'
+import { Route as AdminRitaxAnnouncementsRouteImport } from './routes/admin.ritax-announcements'
+import { Route as AdminRolesRouteImport } from './routes/admin.roles'
+import { Route as AdminSupportRouteImport } from './routes/admin.support'
+import { Route as AdminToolkitRouteImport } from './routes/admin.toolkit'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as CheckoutIndexRouteImport } from './routes/checkout.index'
+import { Route as CheckoutSuccessRouteImport } from './routes/checkout.success'
+import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
+import { Route as GermanIndexRouteImport } from './routes/german.index'
+import { Route as GermanAddRouteImport } from './routes/german.add'
+import { Route as GermanArticlesRouteImport } from './routes/german.articles'
+import { Route as GermanBuildRouteImport } from './routes/german.build'
+import { Route as GermanSpeakRouteImport } from './routes/german.speak'
+import { Route as JoinCodeRouteImport } from './routes/join.$code'
+import { Route as LearnIndexRouteImport } from './routes/learn.index'
+import { Route as LearnGermanRouteImport } from './routes/learn.german'
+import { Route as LearnStudyRoomRouteImport } from './routes/learn.study-room'
+import { Route as LearnStudySpaceRouteImport } from './routes/learn.study-space'
+import { Route as ShareIndexRouteImport } from './routes/share.index'
+import { Route as ShareDeckIdRouteImport } from './routes/share.$deckId'
+import { Route as ShareNewRouteImport } from './routes/share.new'
+import { Route as SpacesIndexRouteImport } from './routes/spaces.index'
+import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
+import { Route as StudyIndexRouteImport } from './routes/study.index'
+import { Route as StudyExamsRouteImport } from './routes/study.exams'
+import { Route as StudyMatchRouteImport } from './routes/study.match'
+import { Route as StudyPdfRouteImport } from './routes/study.pdf'
+import { Route as StudyProgressRouteImport } from './routes/study.progress'
+import { Route as StudySessionRouteImport } from './routes/study.session'
+import { Route as StudySummariesRouteImport } from './routes/study.summaries'
+import { Route as StudyTodoRouteImport } from './routes/study.todo'
+import { Route as SummariesIndexRouteImport } from './routes/summaries.index'
+import { Route as SummariesSummaryIdRouteImport } from './routes/summaries.$summaryId'
+import { Route as SummariesNewRouteImport } from './routes/summaries.new'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as AdminGermanIndexRouteImport } from './routes/admin.german.index'
+import { Route as AdminGermanCourseIdRouteImport } from './routes/admin.german.$courseId'
+import { Route as AdminSpacesIndexRouteImport } from './routes/admin.spaces.index'
+import { Route as AdminSpacesSpaceIdRouteImport } from './routes/admin.spaces.$spaceId'
+import { Route as ApiGermanScoreRouteImport } from './routes/api/german/score'
+import { Route as ApiGermanTtsRouteImport } from './routes/api/german/tts'
+import { Route as ApiPublicArchiveSolverRouteImport } from './routes/api/public/archive-solver'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push-dispatch'
+import { Route as ApiPublicRitaWorkerRouteImport } from './routes/api/public/rita-worker'
+import { Route as ApiRitaDeepgramTokenRouteImport } from './routes/api/rita/deepgram-token'
+import { Route as ApiRitaDemoRouteImport } from './routes/api/rita/demo'
+import { Route as ApiRitaExtractRouteImport } from './routes/api/rita/extract'
+import { Route as ApiRitaFillerRouteImport } from './routes/api/rita/filler'
+import { Route as ApiRitaLearningRouteImport } from './routes/api/rita/learning'
+import { Route as ApiRitaLiveRouteImport } from './routes/api/rita/live'
+import { Route as ApiRitaMetricsRouteImport } from './routes/api/rita/metrics'
+import { Route as ApiRitaPreferencesRouteImport } from './routes/api/rita/preferences'
+import { Route as ApiRitaRespondRouteImport } from './routes/api/rita/respond'
+import { Route as ApiRitaSessionRouteImport } from './routes/api/rita/session'
+import { Route as ApiRitaSpeechRouteImport } from './routes/api/rita/speech'
+import { Route as ApiRitaSummarizeRouteImport } from './routes/api/rita/summarize'
+import { Route as ApiRitaTranscribeRouteImport } from './routes/api/rita/transcribe'
+import { Route as ApiRitaTurnRouteImport } from './routes/api/rita/turn'
+import { Route as ApiRitaUsageRouteImport } from './routes/api/rita/usage'
+import { Route as CoursesCourseIdIndexRouteImport } from './routes/courses.$courseId.index'
+import { Route as CoursesCourseIdAddQuestionsRouteImport } from './routes/courses.$courseId.add-questions'
+import { Route as CoursesCourseIdRunRouteImport } from './routes/courses.$courseId.run'
+import { Route as GermanCourseIdIndexRouteImport } from './routes/german.$courseId.index'
+import { Route as GermanCourseIdExamRouteImport } from './routes/german.$courseId.exam'
+import { Route as GermanCourseIdMatchRouteImport } from './routes/german.$courseId.match'
+import { Route as GermanCourseIdReviewRouteImport } from './routes/german.$courseId.review'
+import { Route as GermanCourseIdRunRouteImport } from './routes/german.$courseId.run'
+import { Route as GermanCourseIdTapRouteImport } from './routes/german.$courseId.tap'
+import { Route as ShareQuestionsIndexRouteImport } from './routes/share.questions.index'
+import { Route as ShareQuestionsSetIdRouteImport } from './routes/share.questions.$setId'
+import { Route as ShareQuestionsNewRouteImport } from './routes/share.questions.new'
+import { Route as StudyAllInOneIndexRouteImport } from './routes/study.all-in-one.index'
+import { Route as StudyAllInOneLectureIdRouteImport } from './routes/study.all-in-one.$lectureId'
+import { Route as StudyLecturesIndexRouteImport } from './routes/study.lectures.index'
+import { Route as StudyLecturesNewRouteImport } from './routes/study.lectures.new'
+import { Route as StudyLecturesRunRouteImport } from './routes/study.lectures.run'
+import { Route as StudySubjectSubjectIdRouteImport } from './routes/study.subject.$subjectId'
+import { Route as AdminGermanCourseIdManageRouteImport } from './routes/admin.german.$courseId.manage'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as GermanCourseIdReviewIndexRouteImport } from './routes/german.$courseId.review.index'
+import { Route as GermanCourseIdReviewRunRouteImport } from './routes/german.$courseId.review.run'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesRoute = CoursesRouteImport.update({
+  id: '/courses',
+  path: '/courses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GermanRoute = GermanRouteImport.update({
+  id: '/german',
+  path: '/german',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LockedRoute = LockedRouteImport.update({
+  id: '/locked',
+  path: '/locked',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyPlanRoute = MyPlanRouteImport.update({
+  id: '/my-plan',
+  path: '/my-plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotesRoute = NotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OffersRoute = OffersRouteImport.update({
+  id: '/offers',
+  path: '/offers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuestionBankRoute = QuestionBankRouteImport.update({
+  id: '/question-bank',
+  path: '/question-bank',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundPolicyRoute = RefundPolicyRouteImport.update({
+  id: '/refund-policy',
+  path: '/refund-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RitaLiveRoute = RitaLiveRouteImport.update({
+  id: '/rita-live',
+  path: '/rita-live',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudyRoute = StudyRouteImport.update({
+  id: '/study',
+  path: '/study',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolkitRoute = ToolkitRouteImport.update({
+  id: '/toolkit',
+  path: '/toolkit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TourRoute = TourRouteImport.update({
+  id: '/tour',
+  path: '/tour',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TutorialRoute = TutorialRouteImport.update({
+  id: '/tutorial',
+  path: '/tutorial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAiRoute = AdminAiRouteImport.update({
+  id: '/admin/ai',
+  path: '/admin/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAiKeysRoute = AdminAiKeysRouteImport.update({
+  id: '/admin/ai-keys',
+  path: '/admin/ai-keys',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminContentProtectionRoute = AdminContentProtectionRouteImport.update({
+  id: '/admin/content-protection',
+  path: '/admin/content-protection',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDevicesRoute = AdminDevicesRouteImport.update({
+  id: '/admin/devices',
+  path: '/admin/devices',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminGermanRoute = AdminGermanRouteImport.update({
+  id: '/admin/german',
+  path: '/admin/german',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminGroupsRoute = AdminGroupsRouteImport.update({
+  id: '/admin/groups',
+  path: '/admin/groups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/admin/notifications',
+  path: '/admin/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminOffersRoute = AdminOffersRouteImport.update({
+  id: '/admin/offers',
+  path: '/admin/offers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPaddleSyncRoute = AdminPaddleSyncRouteImport.update({
+  id: '/admin/paddle-sync',
+  path: '/admin/paddle-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPeopleRoute = AdminPeopleRouteImport.update({
+  id: '/admin/people',
+  path: '/admin/people',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPlansRoute = AdminPlansRouteImport.update({
+  id: '/admin/plans',
+  path: '/admin/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPromoCodesRoute = AdminPromoCodesRouteImport.update({
+  id: '/admin/promo-codes',
+  path: '/admin/promo-codes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRitaxAnnouncementsRoute = AdminRitaxAnnouncementsRouteImport.update({
+  id: '/admin/ritax-announcements',
+  path: '/admin/ritax-announcements',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRolesRoute = AdminRolesRouteImport.update({
+  id: '/admin/roles',
+  path: '/admin/roles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/admin/support',
+  path: '/admin/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminToolkitRoute = AdminToolkitRouteImport.update({
+  id: '/admin/toolkit',
+  path: '/admin/toolkit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutIndexRoute = CheckoutIndexRouteImport.update({
+  id: '/checkout/',
+  path: '/checkout/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
+  id: '/checkout/success',
+  path: '/checkout/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
+  id: '/$courseId',
+  path: '/$courseId',
+  getParentRoute: () => CoursesRoute,
+} as any)
+const GermanIndexRoute = GermanIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GermanRoute,
+} as any)
+const GermanAddRoute = GermanAddRouteImport.update({
+  id: '/add',
+  path: '/add',
+  getParentRoute: () => GermanRoute,
+} as any)
+const GermanArticlesRoute = GermanArticlesRouteImport.update({
+  id: '/articles',
+  path: '/articles',
+  getParentRoute: () => GermanRoute,
+} as any)
+const GermanBuildRoute = GermanBuildRouteImport.update({
+  id: '/build',
+  path: '/build',
+  getParentRoute: () => GermanRoute,
+} as any)
+const GermanSpeakRoute = GermanSpeakRouteImport.update({
+  id: '/speak',
+  path: '/speak',
+  getParentRoute: () => GermanRoute,
+} as any)
+const JoinCodeRoute = JoinCodeRouteImport.update({
+  id: '/join/$code',
+  path: '/join/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LearnIndexRoute = LearnIndexRouteImport.update({
+  id: '/learn/',
+  path: '/learn/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LearnGermanRoute = LearnGermanRouteImport.update({
+  id: '/learn/german',
+  path: '/learn/german',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LearnStudyRoomRoute = LearnStudyRoomRouteImport.update({
+  id: '/learn/study-room',
+  path: '/learn/study-room',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LearnStudySpaceRoute = LearnStudySpaceRouteImport.update({
+  id: '/learn/study-space',
+  path: '/learn/study-space',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShareIndexRoute = ShareIndexRouteImport.update({
+  id: '/share/',
+  path: '/share/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShareDeckIdRoute = ShareDeckIdRouteImport.update({
+  id: '/share/$deckId',
+  path: '/share/$deckId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShareNewRoute = ShareNewRouteImport.update({
+  id: '/share/new',
+  path: '/share/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpacesIndexRoute = SpacesIndexRouteImport.update({
+  id: '/spaces/',
+  path: '/spaces/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpacesSpaceIdRoute = SpacesSpaceIdRouteImport.update({
+  id: '/spaces/$spaceId',
+  path: '/spaces/$spaceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudyIndexRoute = StudyIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudyRoute,
+} as any)
+const StudyExamsRoute = StudyExamsRouteImport.update({
+  id: '/exams',
+  path: '/exams',
+  getParentRoute: () => StudyRoute,
+} as any)
+const StudyMatchRoute = StudyMatchRouteImport.update({
+  id: '/match',
+  path: '/match',
+  getParentRoute: () => StudyRoute,
+} as any)
+const StudyPdfRoute = StudyPdfRouteImport.update({
+  id: '/pdf',
+  path: '/pdf',
+  getParentRoute: () => StudyRoute,
+} as any)
+const StudyProgressRoute = StudyProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
+  getParentRoute: () => StudyRoute,
+} as any)
+const StudySessionRoute = StudySessionRouteImport.update({
+  id: '/session',
+  path: '/session',
+  getParentRoute: () => StudyRoute,
+} as any)
+const StudySummariesRoute = StudySummariesRouteImport.update({
+  id: '/summaries',
+  path: '/summaries',
+  getParentRoute: () => StudyRoute,
+} as any)
+const StudyTodoRoute = StudyTodoRouteImport.update({
+  id: '/todo',
+  path: '/todo',
+  getParentRoute: () => StudyRoute,
+} as any)
+const SummariesIndexRoute = SummariesIndexRouteImport.update({
+  id: '/summaries/',
+  path: '/summaries/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SummariesSummaryIdRoute = SummariesSummaryIdRouteImport.update({
+  id: '/summaries/$summaryId',
+  path: '/summaries/$summaryId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SummariesNewRoute = SummariesNewRouteImport.update({
+  id: '/summaries/new',
+  path: '/summaries/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AdminGermanIndexRoute = AdminGermanIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminGermanRoute,
+} as any)
+const AdminGermanCourseIdRoute = AdminGermanCourseIdRouteImport.update({
+  id: '/$courseId',
+  path: '/$courseId',
+  getParentRoute: () => AdminGermanRoute,
+} as any)
+const AdminSpacesIndexRoute = AdminSpacesIndexRouteImport.update({
+  id: '/admin/spaces/',
+  path: '/admin/spaces/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSpacesSpaceIdRoute = AdminSpacesSpaceIdRouteImport.update({
+  id: '/admin/spaces/$spaceId',
+  path: '/admin/spaces/$spaceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGermanScoreRoute = ApiGermanScoreRouteImport.update({
+  id: '/api/german/score',
+  path: '/api/german/score',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGermanTtsRoute = ApiGermanTtsRouteImport.update({
+  id: '/api/german/tts',
+  path: '/api/german/tts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicArchiveSolverRoute = ApiPublicArchiveSolverRouteImport.update({
+  id: '/api/public/archive-solver',
+  path: '/api/public/archive-solver',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPushDispatchRoute = ApiPublicPushDispatchRouteImport.update({
+  id: '/api/public/push-dispatch',
+  path: '/api/public/push-dispatch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicRitaWorkerRoute = ApiPublicRitaWorkerRouteImport.update({
+  id: '/api/public/rita-worker',
+  path: '/api/public/rita-worker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaDeepgramTokenRoute = ApiRitaDeepgramTokenRouteImport.update({
+  id: '/api/rita/deepgram-token',
+  path: '/api/rita/deepgram-token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaDemoRoute = ApiRitaDemoRouteImport.update({
+  id: '/api/rita/demo',
+  path: '/api/rita/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaExtractRoute = ApiRitaExtractRouteImport.update({
+  id: '/api/rita/extract',
+  path: '/api/rita/extract',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaFillerRoute = ApiRitaFillerRouteImport.update({
+  id: '/api/rita/filler',
+  path: '/api/rita/filler',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaLearningRoute = ApiRitaLearningRouteImport.update({
+  id: '/api/rita/learning',
+  path: '/api/rita/learning',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaLiveRoute = ApiRitaLiveRouteImport.update({
+  id: '/api/rita/live',
+  path: '/api/rita/live',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaMetricsRoute = ApiRitaMetricsRouteImport.update({
+  id: '/api/rita/metrics',
+  path: '/api/rita/metrics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaPreferencesRoute = ApiRitaPreferencesRouteImport.update({
+  id: '/api/rita/preferences',
+  path: '/api/rita/preferences',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaRespondRoute = ApiRitaRespondRouteImport.update({
+  id: '/api/rita/respond',
+  path: '/api/rita/respond',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaSessionRoute = ApiRitaSessionRouteImport.update({
+  id: '/api/rita/session',
+  path: '/api/rita/session',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaSpeechRoute = ApiRitaSpeechRouteImport.update({
+  id: '/api/rita/speech',
+  path: '/api/rita/speech',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaSummarizeRoute = ApiRitaSummarizeRouteImport.update({
+  id: '/api/rita/summarize',
+  path: '/api/rita/summarize',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaTranscribeRoute = ApiRitaTranscribeRouteImport.update({
+  id: '/api/rita/transcribe',
+  path: '/api/rita/transcribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaTurnRoute = ApiRitaTurnRouteImport.update({
+  id: '/api/rita/turn',
+  path: '/api/rita/turn',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaUsageRoute = ApiRitaUsageRouteImport.update({
+  id: '/api/rita/usage',
+  path: '/api/rita/usage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesCourseIdIndexRoute = CoursesCourseIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CoursesCourseIdRoute,
+} as any)
+const CoursesCourseIdAddQuestionsRoute =
+  CoursesCourseIdAddQuestionsRouteImport.update({
+    id: '/add-questions',
+    path: '/add-questions',
+    getParentRoute: () => CoursesCourseIdRoute,
+  } as any)
+const CoursesCourseIdRunRoute = CoursesCourseIdRunRouteImport.update({
+  id: '/run',
+  path: '/run',
+  getParentRoute: () => CoursesCourseIdRoute,
+} as any)
+const GermanCourseIdIndexRoute = GermanCourseIdIndexRouteImport.update({
+  id: '/$courseId/',
+  path: '/$courseId/',
+  getParentRoute: () => GermanRoute,
+} as any)
+const GermanCourseIdExamRoute = GermanCourseIdExamRouteImport.update({
+  id: '/$courseId/exam',
+  path: '/$courseId/exam',
+  getParentRoute: () => GermanRoute,
+} as any)
+const GermanCourseIdMatchRoute = GermanCourseIdMatchRouteImport.update({
+  id: '/$courseId/match',
+  path: '/$courseId/match',
+  getParentRoute: () => GermanRoute,
+} as any)
+const GermanCourseIdReviewRoute = GermanCourseIdReviewRouteImport.update({
+  id: '/$courseId/review',
+  path: '/$courseId/review',
+  getParentRoute: () => GermanRoute,
+} as any)
+const GermanCourseIdRunRoute = GermanCourseIdRunRouteImport.update({
+  id: '/$courseId/run',
+  path: '/$courseId/run',
+  getParentRoute: () => GermanRoute,
+} as any)
+const GermanCourseIdTapRoute = GermanCourseIdTapRouteImport.update({
+  id: '/$courseId/tap',
+  path: '/$courseId/tap',
+  getParentRoute: () => GermanRoute,
+} as any)
+const ShareQuestionsIndexRoute = ShareQuestionsIndexRouteImport.update({
+  id: '/share/questions/',
+  path: '/share/questions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShareQuestionsSetIdRoute = ShareQuestionsSetIdRouteImport.update({
+  id: '/share/questions/$setId',
+  path: '/share/questions/$setId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShareQuestionsNewRoute = ShareQuestionsNewRouteImport.update({
+  id: '/share/questions/new',
+  path: '/share/questions/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudyAllInOneIndexRoute = StudyAllInOneIndexRouteImport.update({
+  id: '/all-in-one/',
+  path: '/all-in-one/',
+  getParentRoute: () => StudyRoute,
+} as any)
+const StudyAllInOneLectureIdRoute = StudyAllInOneLectureIdRouteImport.update({
+  id: '/all-in-one/$lectureId',
+  path: '/all-in-one/$lectureId',
+  getParentRoute: () => StudyRoute,
+} as any)
+const StudyLecturesIndexRoute = StudyLecturesIndexRouteImport.update({
+  id: '/lectures/',
+  path: '/lectures/',
+  getParentRoute: () => StudyRoute,
+} as any)
+const StudyLecturesNewRoute = StudyLecturesNewRouteImport.update({
+  id: '/lectures/new',
+  path: '/lectures/new',
+  getParentRoute: () => StudyRoute,
+} as any)
+const StudyLecturesRunRoute = StudyLecturesRunRouteImport.update({
+  id: '/lectures/run',
+  path: '/lectures/run',
+  getParentRoute: () => StudyRoute,
+} as any)
+const StudySubjectSubjectIdRoute = StudySubjectSubjectIdRouteImport.update({
+  id: '/subject/$subjectId',
+  path: '/subject/$subjectId',
+  getParentRoute: () => StudyRoute,
+} as any)
+const AdminGermanCourseIdManageRoute =
+  AdminGermanCourseIdManageRouteImport.update({
+    id: '/manage',
+    path: '/manage',
+    getParentRoute: () => AdminGermanCourseIdRoute,
+  } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const GermanCourseIdReviewIndexRoute =
+  GermanCourseIdReviewIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => GermanCourseIdReviewRoute,
+  } as any)
+const GermanCourseIdReviewRunRoute = GermanCourseIdReviewRunRouteImport.update({
+  id: '/run',
+  path: '/run',
+  getParentRoute: () => GermanCourseIdReviewRoute,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/courses': typeof CoursesRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/german': typeof GermanRouteWithChildren
+  '/locked': typeof LockedRoute
+  '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
+  '/my-plan': typeof MyPlanRoute
+  '/notes': typeof NotesRoute
+  '/offers': typeof OffersRoute
+  '/pricing': typeof PricingRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/profile': typeof ProfileRoute
+  '/question-bank': typeof QuestionBankRoute
+  '/refund-policy': typeof RefundPolicyRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/rita-live': typeof RitaLiveRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/study': typeof StudyRouteWithChildren
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
+  '/toolkit': typeof ToolkitRoute
+  '/tour': typeof TourRoute
+  '/tutorial': typeof TutorialRoute
+  '/welcome': typeof WelcomeRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/admin/ai': typeof AdminAiRoute
+  '/admin/ai-keys': typeof AdminAiKeysRoute
+  '/admin/content-protection': typeof AdminContentProtectionRoute
+  '/admin/devices': typeof AdminDevicesRoute
+  '/admin/german': typeof AdminGermanRouteWithChildren
+  '/admin/groups': typeof AdminGroupsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/offers': typeof AdminOffersRoute
+  '/admin/paddle-sync': typeof AdminPaddleSyncRoute
+  '/admin/people': typeof AdminPeopleRoute
+  '/admin/plans': typeof AdminPlansRoute
+  '/admin/promo-codes': typeof AdminPromoCodesRoute
+  '/admin/ritax-announcements': typeof AdminRitaxAnnouncementsRoute
+  '/admin/roles': typeof AdminRolesRoute
+  '/admin/support': typeof AdminSupportRoute
+  '/admin/toolkit': typeof AdminToolkitRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
+  '/courses/$courseId': typeof CoursesCourseIdRouteWithChildren
+  '/german/add': typeof GermanAddRoute
+  '/german/articles': typeof GermanArticlesRoute
+  '/german/build': typeof GermanBuildRoute
+  '/german/speak': typeof GermanSpeakRoute
+  '/join/$code': typeof JoinCodeRoute
+  '/learn/german': typeof LearnGermanRoute
+  '/learn/study-room': typeof LearnStudyRoomRoute
+  '/learn/study-space': typeof LearnStudySpaceRoute
+  '/share/$deckId': typeof ShareDeckIdRoute
+  '/share/new': typeof ShareNewRoute
+  '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/study/exams': typeof StudyExamsRoute
+  '/study/match': typeof StudyMatchRoute
+  '/study/pdf': typeof StudyPdfRoute
+  '/study/progress': typeof StudyProgressRoute
+  '/study/session': typeof StudySessionRoute
+  '/study/summaries': typeof StudySummariesRoute
+  '/study/todo': typeof StudyTodoRoute
+  '/summaries/$summaryId': typeof SummariesSummaryIdRoute
+  '/summaries/new': typeof SummariesNewRoute
+  '/admin/': typeof AdminIndexRoute
+  '/checkout/': typeof CheckoutIndexRoute
+  '/german/': typeof GermanIndexRoute
+  '/learn/': typeof LearnIndexRoute
+  '/share/': typeof ShareIndexRoute
+  '/spaces/': typeof SpacesIndexRoute
+  '/study/': typeof StudyIndexRoute
+  '/summaries/': typeof SummariesIndexRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin/german/$courseId': typeof AdminGermanCourseIdRouteWithChildren
+  '/admin/spaces/$spaceId': typeof AdminSpacesSpaceIdRoute
+  '/api/german/score': typeof ApiGermanScoreRoute
+  '/api/german/tts': typeof ApiGermanTtsRoute
+  '/api/public/archive-solver': typeof ApiPublicArchiveSolverRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
+  '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
+  '/api/rita/deepgram-token': typeof ApiRitaDeepgramTokenRoute
+  '/api/rita/demo': typeof ApiRitaDemoRoute
+  '/api/rita/extract': typeof ApiRitaExtractRoute
+  '/api/rita/filler': typeof ApiRitaFillerRoute
+  '/api/rita/learning': typeof ApiRitaLearningRoute
+  '/api/rita/live': typeof ApiRitaLiveRoute
+  '/api/rita/metrics': typeof ApiRitaMetricsRoute
+  '/api/rita/preferences': typeof ApiRitaPreferencesRoute
+  '/api/rita/respond': typeof ApiRitaRespondRoute
+  '/api/rita/session': typeof ApiRitaSessionRoute
+  '/api/rita/speech': typeof ApiRitaSpeechRoute
+  '/api/rita/summarize': typeof ApiRitaSummarizeRoute
+  '/api/rita/transcribe': typeof ApiRitaTranscribeRoute
+  '/api/rita/turn': typeof ApiRitaTurnRoute
+  '/api/rita/usage': typeof ApiRitaUsageRoute
+  '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
+  '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
+  '/german/$courseId/exam': typeof GermanCourseIdExamRoute
+  '/german/$courseId/match': typeof GermanCourseIdMatchRoute
+  '/german/$courseId/review': typeof GermanCourseIdReviewRouteWithChildren
+  '/german/$courseId/run': typeof GermanCourseIdRunRoute
+  '/german/$courseId/tap': typeof GermanCourseIdTapRoute
+  '/share/questions/$setId': typeof ShareQuestionsSetIdRoute
+  '/share/questions/new': typeof ShareQuestionsNewRoute
+  '/study/all-in-one/$lectureId': typeof StudyAllInOneLectureIdRoute
+  '/study/lectures/new': typeof StudyLecturesNewRoute
+  '/study/lectures/run': typeof StudyLecturesRunRoute
+  '/study/subject/$subjectId': typeof StudySubjectSubjectIdRoute
+  '/admin/german/': typeof AdminGermanIndexRoute
+  '/admin/spaces/': typeof AdminSpacesIndexRoute
+  '/courses/$courseId/': typeof CoursesCourseIdIndexRoute
+  '/german/$courseId/': typeof GermanCourseIdIndexRoute
+  '/share/questions/': typeof ShareQuestionsIndexRoute
+  '/study/all-in-one/': typeof StudyAllInOneIndexRoute
+  '/study/lectures/': typeof StudyLecturesIndexRoute
+  '/admin/german/$courseId/manage': typeof AdminGermanCourseIdManageRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/german/$courseId/review/run': typeof GermanCourseIdReviewRunRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/german/$courseId/review/': typeof GermanCourseIdReviewIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/courses': typeof CoursesRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/locked': typeof LockedRoute
+  '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
+  '/my-plan': typeof MyPlanRoute
+  '/notes': typeof NotesRoute
+  '/offers': typeof OffersRoute
+  '/pricing': typeof PricingRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/profile': typeof ProfileRoute
+  '/question-bank': typeof QuestionBankRoute
+  '/refund-policy': typeof RefundPolicyRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/rita-live': typeof RitaLiveRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
+  '/toolkit': typeof ToolkitRoute
+  '/tour': typeof TourRoute
+  '/tutorial': typeof TutorialRoute
+  '/welcome': typeof WelcomeRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/admin/ai': typeof AdminAiRoute
+  '/admin/ai-keys': typeof AdminAiKeysRoute
+  '/admin/content-protection': typeof AdminContentProtectionRoute
+  '/admin/devices': typeof AdminDevicesRoute
+  '/admin/groups': typeof AdminGroupsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/offers': typeof AdminOffersRoute
+  '/admin/paddle-sync': typeof AdminPaddleSyncRoute
+  '/admin/people': typeof AdminPeopleRoute
+  '/admin/plans': typeof AdminPlansRoute
+  '/admin/promo-codes': typeof AdminPromoCodesRoute
+  '/admin/ritax-announcements': typeof AdminRitaxAnnouncementsRoute
+  '/admin/roles': typeof AdminRolesRoute
+  '/admin/support': typeof AdminSupportRoute
+  '/admin/toolkit': typeof AdminToolkitRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
+  '/german/add': typeof GermanAddRoute
+  '/german/articles': typeof GermanArticlesRoute
+  '/german/build': typeof GermanBuildRoute
+  '/german/speak': typeof GermanSpeakRoute
+  '/join/$code': typeof JoinCodeRoute
+  '/learn/german': typeof LearnGermanRoute
+  '/learn/study-room': typeof LearnStudyRoomRoute
+  '/learn/study-space': typeof LearnStudySpaceRoute
+  '/share/$deckId': typeof ShareDeckIdRoute
+  '/share/new': typeof ShareNewRoute
+  '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/study/exams': typeof StudyExamsRoute
+  '/study/match': typeof StudyMatchRoute
+  '/study/pdf': typeof StudyPdfRoute
+  '/study/progress': typeof StudyProgressRoute
+  '/study/session': typeof StudySessionRoute
+  '/study/summaries': typeof StudySummariesRoute
+  '/study/todo': typeof StudyTodoRoute
+  '/summaries/$summaryId': typeof SummariesSummaryIdRoute
+  '/summaries/new': typeof SummariesNewRoute
+  '/admin': typeof AdminIndexRoute
+  '/checkout': typeof CheckoutIndexRoute
+  '/german': typeof GermanIndexRoute
+  '/learn': typeof LearnIndexRoute
+  '/share': typeof ShareIndexRoute
+  '/spaces': typeof SpacesIndexRoute
+  '/study': typeof StudyIndexRoute
+  '/summaries': typeof SummariesIndexRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin/german/$courseId': typeof AdminGermanCourseIdRouteWithChildren
+  '/admin/spaces/$spaceId': typeof AdminSpacesSpaceIdRoute
+  '/api/german/score': typeof ApiGermanScoreRoute
+  '/api/german/tts': typeof ApiGermanTtsRoute
+  '/api/public/archive-solver': typeof ApiPublicArchiveSolverRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
+  '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
+  '/api/rita/deepgram-token': typeof ApiRitaDeepgramTokenRoute
+  '/api/rita/demo': typeof ApiRitaDemoRoute
+  '/api/rita/extract': typeof ApiRitaExtractRoute
+  '/api/rita/filler': typeof ApiRitaFillerRoute
+  '/api/rita/learning': typeof ApiRitaLearningRoute
+  '/api/rita/live': typeof ApiRitaLiveRoute
+  '/api/rita/metrics': typeof ApiRitaMetricsRoute
+  '/api/rita/preferences': typeof ApiRitaPreferencesRoute
+  '/api/rita/respond': typeof ApiRitaRespondRoute
+  '/api/rita/session': typeof ApiRitaSessionRoute
+  '/api/rita/speech': typeof ApiRitaSpeechRoute
+  '/api/rita/summarize': typeof ApiRitaSummarizeRoute
+  '/api/rita/transcribe': typeof ApiRitaTranscribeRoute
+  '/api/rita/turn': typeof ApiRitaTurnRoute
+  '/api/rita/usage': typeof ApiRitaUsageRoute
+  '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
+  '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
+  '/german/$courseId/exam': typeof GermanCourseIdExamRoute
+  '/german/$courseId/match': typeof GermanCourseIdMatchRoute
+  '/german/$courseId/run': typeof GermanCourseIdRunRoute
+  '/german/$courseId/tap': typeof GermanCourseIdTapRoute
+  '/share/questions/$setId': typeof ShareQuestionsSetIdRoute
+  '/share/questions/new': typeof ShareQuestionsNewRoute
+  '/study/all-in-one/$lectureId': typeof StudyAllInOneLectureIdRoute
+  '/study/lectures/new': typeof StudyLecturesNewRoute
+  '/study/lectures/run': typeof StudyLecturesRunRoute
+  '/study/subject/$subjectId': typeof StudySubjectSubjectIdRoute
+  '/admin/german': typeof AdminGermanIndexRoute
+  '/admin/spaces': typeof AdminSpacesIndexRoute
+  '/courses/$courseId': typeof CoursesCourseIdIndexRoute
+  '/german/$courseId': typeof GermanCourseIdIndexRoute
+  '/share/questions': typeof ShareQuestionsIndexRoute
+  '/study/all-in-one': typeof StudyAllInOneIndexRoute
+  '/study/lectures': typeof StudyLecturesIndexRoute
+  '/admin/german/$courseId/manage': typeof AdminGermanCourseIdManageRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/german/$courseId/review/run': typeof GermanCourseIdReviewRunRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/german/$courseId/review': typeof GermanCourseIdReviewIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/courses': typeof CoursesRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/german': typeof GermanRouteWithChildren
+  '/locked': typeof LockedRoute
+  '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
+  '/my-plan': typeof MyPlanRoute
+  '/notes': typeof NotesRoute
+  '/offers': typeof OffersRoute
+  '/pricing': typeof PricingRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
+  '/profile': typeof ProfileRoute
+  '/question-bank': typeof QuestionBankRoute
+  '/refund-policy': typeof RefundPolicyRoute
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/rita-live': typeof RitaLiveRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/study': typeof StudyRouteWithChildren
+  '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
+  '/toolkit': typeof ToolkitRoute
+  '/tour': typeof TourRoute
+  '/tutorial': typeof TutorialRoute
+  '/welcome': typeof WelcomeRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/admin/ai': typeof AdminAiRoute
+  '/admin/ai-keys': typeof AdminAiKeysRoute
+  '/admin/content-protection': typeof AdminContentProtectionRoute
+  '/admin/devices': typeof AdminDevicesRoute
+  '/admin/german': typeof AdminGermanRouteWithChildren
+  '/admin/groups': typeof AdminGroupsRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/offers': typeof AdminOffersRoute
+  '/admin/paddle-sync': typeof AdminPaddleSyncRoute
+  '/admin/people': typeof AdminPeopleRoute
+  '/admin/plans': typeof AdminPlansRoute
+  '/admin/promo-codes': typeof AdminPromoCodesRoute
+  '/admin/ritax-announcements': typeof AdminRitaxAnnouncementsRoute
+  '/admin/roles': typeof AdminRolesRoute
+  '/admin/support': typeof AdminSupportRoute
+  '/admin/toolkit': typeof AdminToolkitRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
+  '/courses/$courseId': typeof CoursesCourseIdRouteWithChildren
+  '/german/add': typeof GermanAddRoute
+  '/german/articles': typeof GermanArticlesRoute
+  '/german/build': typeof GermanBuildRoute
+  '/german/speak': typeof GermanSpeakRoute
+  '/join/$code': typeof JoinCodeRoute
+  '/learn/german': typeof LearnGermanRoute
+  '/learn/study-room': typeof LearnStudyRoomRoute
+  '/learn/study-space': typeof LearnStudySpaceRoute
+  '/share/$deckId': typeof ShareDeckIdRoute
+  '/share/new': typeof ShareNewRoute
+  '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/study/exams': typeof StudyExamsRoute
+  '/study/match': typeof StudyMatchRoute
+  '/study/pdf': typeof StudyPdfRoute
+  '/study/progress': typeof StudyProgressRoute
+  '/study/session': typeof StudySessionRoute
+  '/study/summaries': typeof StudySummariesRoute
+  '/study/todo': typeof StudyTodoRoute
+  '/summaries/$summaryId': typeof SummariesSummaryIdRoute
+  '/summaries/new': typeof SummariesNewRoute
+  '/admin/': typeof AdminIndexRoute
+  '/checkout/': typeof CheckoutIndexRoute
+  '/german/': typeof GermanIndexRoute
+  '/learn/': typeof LearnIndexRoute
+  '/share/': typeof ShareIndexRoute
+  '/spaces/': typeof SpacesIndexRoute
+  '/study/': typeof StudyIndexRoute
+  '/summaries/': typeof SummariesIndexRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
+  '/admin/german/$courseId': typeof AdminGermanCourseIdRouteWithChildren
+  '/admin/spaces/$spaceId': typeof AdminSpacesSpaceIdRoute
+  '/api/german/score': typeof ApiGermanScoreRoute
+  '/api/german/tts': typeof ApiGermanTtsRoute
+  '/api/public/archive-solver': typeof ApiPublicArchiveSolverRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
+  '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
+  '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
+  '/api/rita/deepgram-token': typeof ApiRitaDeepgramTokenRoute
+  '/api/rita/demo': typeof ApiRitaDemoRoute
+  '/api/rita/extract': typeof ApiRitaExtractRoute
+  '/api/rita/filler': typeof ApiRitaFillerRoute
+  '/api/rita/learning': typeof ApiRitaLearningRoute
+  '/api/rita/live': typeof ApiRitaLiveRoute
+  '/api/rita/metrics': typeof ApiRitaMetricsRoute
+  '/api/rita/preferences': typeof ApiRitaPreferencesRoute
+  '/api/rita/respond': typeof ApiRitaRespondRoute
+  '/api/rita/session': typeof ApiRitaSessionRoute
+  '/api/rita/speech': typeof ApiRitaSpeechRoute
+  '/api/rita/summarize': typeof ApiRitaSummarizeRoute
+  '/api/rita/transcribe': typeof ApiRitaTranscribeRoute
+  '/api/rita/turn': typeof ApiRitaTurnRoute
+  '/api/rita/usage': typeof ApiRitaUsageRoute
+  '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
+  '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
+  '/german/$courseId/exam': typeof GermanCourseIdExamRoute
+  '/german/$courseId/match': typeof GermanCourseIdMatchRoute
+  '/german/$courseId/review': typeof GermanCourseIdReviewRouteWithChildren
+  '/german/$courseId/run': typeof GermanCourseIdRunRoute
+  '/german/$courseId/tap': typeof GermanCourseIdTapRoute
+  '/share/questions/$setId': typeof ShareQuestionsSetIdRoute
+  '/share/questions/new': typeof ShareQuestionsNewRoute
+  '/study/all-in-one/$lectureId': typeof StudyAllInOneLectureIdRoute
+  '/study/lectures/new': typeof StudyLecturesNewRoute
+  '/study/lectures/run': typeof StudyLecturesRunRoute
+  '/study/subject/$subjectId': typeof StudySubjectSubjectIdRoute
+  '/admin/german/': typeof AdminGermanIndexRoute
+  '/admin/spaces/': typeof AdminSpacesIndexRoute
+  '/courses/$courseId/': typeof CoursesCourseIdIndexRoute
+  '/german/$courseId/': typeof GermanCourseIdIndexRoute
+  '/share/questions/': typeof ShareQuestionsIndexRoute
+  '/study/all-in-one/': typeof StudyAllInOneIndexRoute
+  '/study/lectures/': typeof StudyLecturesIndexRoute
+  '/admin/german/$courseId/manage': typeof AdminGermanCourseIdManageRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/german/$courseId/review/run': typeof GermanCourseIdReviewRunRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/german/$courseId/review/': typeof GermanCourseIdReviewIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/courses'
+    | '/forgot-password'
+    | '/german'
+    | '/locked'
+    | '/login'
+    | '/mcp'
+    | '/my-plan'
+    | '/notes'
+    | '/offers'
+    | '/pricing'
+    | '/privacy-policy'
+    | '/profile'
+    | '/question-bank'
+    | '/refund-policy'
+    | '/register'
+    | '/reset-password'
+    | '/rita-live'
+    | '/sitemap.xml'
+    | '/study'
+    | '/support'
+    | '/terms'
+    | '/toolkit'
+    | '/tour'
+    | '/tutorial'
+    | '/welcome'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
+    | '/admin/ai'
+    | '/admin/ai-keys'
+    | '/admin/content-protection'
+    | '/admin/devices'
+    | '/admin/german'
+    | '/admin/groups'
+    | '/admin/notifications'
+    | '/admin/offers'
+    | '/admin/paddle-sync'
+    | '/admin/people'
+    | '/admin/plans'
+    | '/admin/promo-codes'
+    | '/admin/ritax-announcements'
+    | '/admin/roles'
+    | '/admin/support'
+    | '/admin/toolkit'
+    | '/admin/users'
+    | '/checkout/success'
+    | '/courses/$courseId'
+    | '/german/add'
+    | '/german/articles'
+    | '/german/build'
+    | '/german/speak'
+    | '/join/$code'
+    | '/learn/german'
+    | '/learn/study-room'
+    | '/learn/study-space'
+    | '/share/$deckId'
+    | '/share/new'
+    | '/spaces/$spaceId'
+    | '/study/exams'
+    | '/study/match'
+    | '/study/pdf'
+    | '/study/progress'
+    | '/study/session'
+    | '/study/summaries'
+    | '/study/todo'
+    | '/summaries/$summaryId'
+    | '/summaries/new'
+    | '/admin/'
+    | '/checkout/'
+    | '/german/'
+    | '/learn/'
+    | '/share/'
+    | '/spaces/'
+    | '/study/'
+    | '/summaries/'
+    | '/.mcp/invoke-tool/$tool'
+    | '/admin/german/$courseId'
+    | '/admin/spaces/$spaceId'
+    | '/api/german/score'
+    | '/api/german/tts'
+    | '/api/public/archive-solver'
+    | '/api/public/health'
+    | '/api/public/push-dispatch'
+    | '/api/public/rita-worker'
+    | '/api/rita/deepgram-token'
+    | '/api/rita/demo'
+    | '/api/rita/extract'
+    | '/api/rita/filler'
+    | '/api/rita/learning'
+    | '/api/rita/live'
+    | '/api/rita/metrics'
+    | '/api/rita/preferences'
+    | '/api/rita/respond'
+    | '/api/rita/session'
+    | '/api/rita/speech'
+    | '/api/rita/summarize'
+    | '/api/rita/transcribe'
+    | '/api/rita/turn'
+    | '/api/rita/usage'
+    | '/courses/$courseId/add-questions'
+    | '/courses/$courseId/run'
+    | '/german/$courseId/exam'
+    | '/german/$courseId/match'
+    | '/german/$courseId/review'
+    | '/german/$courseId/run'
+    | '/german/$courseId/tap'
+    | '/share/questions/$setId'
+    | '/share/questions/new'
+    | '/study/all-in-one/$lectureId'
+    | '/study/lectures/new'
+    | '/study/lectures/run'
+    | '/study/subject/$subjectId'
+    | '/admin/german/'
+    | '/admin/spaces/'
+    | '/courses/$courseId/'
+    | '/german/$courseId/'
+    | '/share/questions/'
+    | '/study/all-in-one/'
+    | '/study/lectures/'
+    | '/admin/german/$courseId/manage'
+    | '/api/public/payments/webhook'
+    | '/german/$courseId/review/run'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
+    | '/german/$courseId/review/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/about'
+    | '/courses'
+    | '/forgot-password'
+    | '/locked'
+    | '/login'
+    | '/mcp'
+    | '/my-plan'
+    | '/notes'
+    | '/offers'
+    | '/pricing'
+    | '/privacy-policy'
+    | '/profile'
+    | '/question-bank'
+    | '/refund-policy'
+    | '/register'
+    | '/reset-password'
+    | '/rita-live'
+    | '/sitemap.xml'
+    | '/support'
+    | '/terms'
+    | '/toolkit'
+    | '/tour'
+    | '/tutorial'
+    | '/welcome'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
+    | '/admin/ai'
+    | '/admin/ai-keys'
+    | '/admin/content-protection'
+    | '/admin/devices'
+    | '/admin/groups'
+    | '/admin/notifications'
+    | '/admin/offers'
+    | '/admin/paddle-sync'
+    | '/admin/people'
+    | '/admin/plans'
+    | '/admin/promo-codes'
+    | '/admin/ritax-announcements'
+    | '/admin/roles'
+    | '/admin/support'
+    | '/admin/toolkit'
+    | '/admin/users'
+    | '/checkout/success'
+    | '/german/add'
+    | '/german/articles'
+    | '/german/build'
+    | '/german/speak'
+    | '/join/$code'
+    | '/learn/german'
+    | '/learn/study-room'
+    | '/learn/study-space'
+    | '/share/$deckId'
+    | '/share/new'
+    | '/spaces/$spaceId'
+    | '/study/exams'
+    | '/study/match'
+    | '/study/pdf'
+    | '/study/progress'
+    | '/study/session'
+    | '/study/summaries'
+    | '/study/todo'
+    | '/summaries/$summaryId'
+    | '/summaries/new'
+    | '/admin'
+    | '/checkout'
+    | '/german'
+    | '/learn'
+    | '/share'
+    | '/spaces'
+    | '/study'
+    | '/summaries'
+    | '/.mcp/invoke-tool/$tool'
+    | '/admin/german/$courseId'
+    | '/admin/spaces/$spaceId'
+    | '/api/german/score'
+    | '/api/german/tts'
+    | '/api/public/archive-solver'
+    | '/api/public/health'
+    | '/api/public/push-dispatch'
+    | '/api/public/rita-worker'
+    | '/api/rita/deepgram-token'
+    | '/api/rita/demo'
+    | '/api/rita/extract'
+    | '/api/rita/filler'
+    | '/api/rita/learning'
+    | '/api/rita/live'
+    | '/api/rita/metrics'
+    | '/api/rita/preferences'
+    | '/api/rita/respond'
+    | '/api/rita/session'
+    | '/api/rita/speech'
+    | '/api/rita/summarize'
+    | '/api/rita/transcribe'
+    | '/api/rita/turn'
+    | '/api/rita/usage'
+    | '/courses/$courseId/add-questions'
+    | '/courses/$courseId/run'
+    | '/german/$courseId/exam'
+    | '/german/$courseId/match'
+    | '/german/$courseId/run'
+    | '/german/$courseId/tap'
+    | '/share/questions/$setId'
+    | '/share/questions/new'
+    | '/study/all-in-one/$lectureId'
+    | '/study/lectures/new'
+    | '/study/lectures/run'
+    | '/study/subject/$subjectId'
+    | '/admin/german'
+    | '/admin/spaces'
+    | '/courses/$courseId'
+    | '/german/$courseId'
+    | '/share/questions'
+    | '/study/all-in-one'
+    | '/study/lectures'
+    | '/admin/german/$courseId/manage'
+    | '/api/public/payments/webhook'
+    | '/german/$courseId/review/run'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
+    | '/german/$courseId/review'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/courses'
+    | '/forgot-password'
+    | '/german'
+    | '/locked'
+    | '/login'
+    | '/mcp'
+    | '/my-plan'
+    | '/notes'
+    | '/offers'
+    | '/pricing'
+    | '/privacy-policy'
+    | '/profile'
+    | '/question-bank'
+    | '/refund-policy'
+    | '/register'
+    | '/reset-password'
+    | '/rita-live'
+    | '/sitemap.xml'
+    | '/study'
+    | '/support'
+    | '/terms'
+    | '/toolkit'
+    | '/tour'
+    | '/tutorial'
+    | '/welcome'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
+    | '/admin/ai'
+    | '/admin/ai-keys'
+    | '/admin/content-protection'
+    | '/admin/devices'
+    | '/admin/german'
+    | '/admin/groups'
+    | '/admin/notifications'
+    | '/admin/offers'
+    | '/admin/paddle-sync'
+    | '/admin/people'
+    | '/admin/plans'
+    | '/admin/promo-codes'
+    | '/admin/ritax-announcements'
+    | '/admin/roles'
+    | '/admin/support'
+    | '/admin/toolkit'
+    | '/admin/users'
+    | '/checkout/success'
+    | '/courses/$courseId'
+    | '/german/add'
+    | '/german/articles'
+    | '/german/build'
+    | '/german/speak'
+    | '/join/$code'
+    | '/learn/german'
+    | '/learn/study-room'
+    | '/learn/study-space'
+    | '/share/$deckId'
+    | '/share/new'
+    | '/spaces/$spaceId'
+    | '/study/exams'
+    | '/study/match'
+    | '/study/pdf'
+    | '/study/progress'
+    | '/study/session'
+    | '/study/summaries'
+    | '/study/todo'
+    | '/summaries/$summaryId'
+    | '/summaries/new'
+    | '/admin/'
+    | '/checkout/'
+    | '/german/'
+    | '/learn/'
+    | '/share/'
+    | '/spaces/'
+    | '/study/'
+    | '/summaries/'
+    | '/.mcp/invoke-tool/$tool'
+    | '/admin/german/$courseId'
+    | '/admin/spaces/$spaceId'
+    | '/api/german/score'
+    | '/api/german/tts'
+    | '/api/public/archive-solver'
+    | '/api/public/health'
+    | '/api/public/push-dispatch'
+    | '/api/public/rita-worker'
+    | '/api/rita/deepgram-token'
+    | '/api/rita/demo'
+    | '/api/rita/extract'
+    | '/api/rita/filler'
+    | '/api/rita/learning'
+    | '/api/rita/live'
+    | '/api/rita/metrics'
+    | '/api/rita/preferences'
+    | '/api/rita/respond'
+    | '/api/rita/session'
+    | '/api/rita/speech'
+    | '/api/rita/summarize'
+    | '/api/rita/transcribe'
+    | '/api/rita/turn'
+    | '/api/rita/usage'
+    | '/courses/$courseId/add-questions'
+    | '/courses/$courseId/run'
+    | '/german/$courseId/exam'
+    | '/german/$courseId/match'
+    | '/german/$courseId/review'
+    | '/german/$courseId/run'
+    | '/german/$courseId/tap'
+    | '/share/questions/$setId'
+    | '/share/questions/new'
+    | '/study/all-in-one/$lectureId'
+    | '/study/lectures/new'
+    | '/study/lectures/run'
+    | '/study/subject/$subjectId'
+    | '/admin/german/'
+    | '/admin/spaces/'
+    | '/courses/$courseId/'
+    | '/german/$courseId/'
+    | '/share/questions/'
+    | '/study/all-in-one/'
+    | '/study/lectures/'
+    | '/admin/german/$courseId/manage'
+    | '/api/public/payments/webhook'
+    | '/german/$courseId/review/run'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
+    | '/german/$courseId/review/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  CoursesRoute: typeof CoursesRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  GermanRoute: typeof GermanRouteWithChildren
+  LockedRoute: typeof LockedRoute
+  LoginRoute: typeof LoginRoute
+  McpRoute: typeof McpRoute
+  MyPlanRoute: typeof MyPlanRoute
+  NotesRoute: typeof NotesRoute
+  OffersRoute: typeof OffersRoute
+  PricingRoute: typeof PricingRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  ProfileRoute: typeof ProfileRoute
+  QuestionBankRoute: typeof QuestionBankRoute
+  RefundPolicyRoute: typeof RefundPolicyRoute
+  RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  RitaLiveRoute: typeof RitaLiveRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StudyRoute: typeof StudyRouteWithChildren
+  SupportRoute: typeof SupportRoute
+  TermsRoute: typeof TermsRoute
+  ToolkitRoute: typeof ToolkitRoute
+  TourRoute: typeof TourRoute
+  TutorialRoute: typeof TutorialRoute
+  WelcomeRoute: typeof WelcomeRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  AdminAiRoute: typeof AdminAiRoute
+  AdminAiKeysRoute: typeof AdminAiKeysRoute
+  AdminContentProtectionRoute: typeof AdminContentProtectionRoute
+  AdminDevicesRoute: typeof AdminDevicesRoute
+  AdminGermanRoute: typeof AdminGermanRouteWithChildren
+  AdminGroupsRoute: typeof AdminGroupsRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminOffersRoute: typeof AdminOffersRoute
+  AdminPaddleSyncRoute: typeof AdminPaddleSyncRoute
+  AdminPeopleRoute: typeof AdminPeopleRoute
+  AdminPlansRoute: typeof AdminPlansRoute
+  AdminPromoCodesRoute: typeof AdminPromoCodesRoute
+  AdminRitaxAnnouncementsRoute: typeof AdminRitaxAnnouncementsRoute
+  AdminRolesRoute: typeof AdminRolesRoute
+  AdminSupportRoute: typeof AdminSupportRoute
+  AdminToolkitRoute: typeof AdminToolkitRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  CheckoutSuccessRoute: typeof CheckoutSuccessRoute
+  JoinCodeRoute: typeof JoinCodeRoute
+  LearnGermanRoute: typeof LearnGermanRoute
+  LearnStudyRoomRoute: typeof LearnStudyRoomRoute
+  LearnStudySpaceRoute: typeof LearnStudySpaceRoute
+  ShareDeckIdRoute: typeof ShareDeckIdRoute
+  ShareNewRoute: typeof ShareNewRoute
+  SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
+  SummariesSummaryIdRoute: typeof SummariesSummaryIdRoute
+  SummariesNewRoute: typeof SummariesNewRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  CheckoutIndexRoute: typeof CheckoutIndexRoute
+  LearnIndexRoute: typeof LearnIndexRoute
+  ShareIndexRoute: typeof ShareIndexRoute
+  SpacesIndexRoute: typeof SpacesIndexRoute
+  SummariesIndexRoute: typeof SummariesIndexRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  AdminSpacesSpaceIdRoute: typeof AdminSpacesSpaceIdRoute
+  ApiGermanScoreRoute: typeof ApiGermanScoreRoute
+  ApiGermanTtsRoute: typeof ApiGermanTtsRoute
+  ApiPublicArchiveSolverRoute: typeof ApiPublicArchiveSolverRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
+  ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
+  ApiPublicRitaWorkerRoute: typeof ApiPublicRitaWorkerRoute
+  ApiRitaDeepgramTokenRoute: typeof ApiRitaDeepgramTokenRoute
+  ApiRitaDemoRoute: typeof ApiRitaDemoRoute
+  ApiRitaExtractRoute: typeof ApiRitaExtractRoute
+  ApiRitaFillerRoute: typeof ApiRitaFillerRoute
+  ApiRitaLearningRoute: typeof ApiRitaLearningRoute
+  ApiRitaLiveRoute: typeof ApiRitaLiveRoute
+  ApiRitaMetricsRoute: typeof ApiRitaMetricsRoute
+  ApiRitaPreferencesRoute: typeof ApiRitaPreferencesRoute
+  ApiRitaRespondRoute: typeof ApiRitaRespondRoute
+  ApiRitaSessionRoute: typeof ApiRitaSessionRoute
+  ApiRitaSpeechRoute: typeof ApiRitaSpeechRoute
+  ApiRitaSummarizeRoute: typeof ApiRitaSummarizeRoute
+  ApiRitaTranscribeRoute: typeof ApiRitaTranscribeRoute
+  ApiRitaTurnRoute: typeof ApiRitaTurnRoute
+  ApiRitaUsageRoute: typeof ApiRitaUsageRoute
+  ShareQuestionsSetIdRoute: typeof ShareQuestionsSetIdRoute
+  ShareQuestionsNewRoute: typeof ShareQuestionsNewRoute
+  AdminSpacesIndexRoute: typeof AdminSpacesIndexRoute
+  ShareQuestionsIndexRoute: typeof ShareQuestionsIndexRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +1640,1110 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses': {
+      id: '/courses'
+      path: '/courses'
+      fullPath: '/courses'
+      preLoaderRoute: typeof CoursesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/german': {
+      id: '/german'
+      path: '/german'
+      fullPath: '/german'
+      preLoaderRoute: typeof GermanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/locked': {
+      id: '/locked'
+      path: '/locked'
+      fullPath: '/locked'
+      preLoaderRoute: typeof LockedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-plan': {
+      id: '/my-plan'
+      path: '/my-plan'
+      fullPath: '/my-plan'
+      preLoaderRoute: typeof MyPlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notes': {
+      id: '/notes'
+      path: '/notes'
+      fullPath: '/notes'
+      preLoaderRoute: typeof NotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/offers': {
+      id: '/offers'
+      path: '/offers'
+      fullPath: '/offers'
+      preLoaderRoute: typeof OffersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/question-bank': {
+      id: '/question-bank'
+      path: '/question-bank'
+      fullPath: '/question-bank'
+      preLoaderRoute: typeof QuestionBankRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refund-policy': {
+      id: '/refund-policy'
+      path: '/refund-policy'
+      fullPath: '/refund-policy'
+      preLoaderRoute: typeof RefundPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rita-live': {
+      id: '/rita-live'
+      path: '/rita-live'
+      fullPath: '/rita-live'
+      preLoaderRoute: typeof RitaLiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/study': {
+      id: '/study'
+      path: '/study'
+      fullPath: '/study'
+      preLoaderRoute: typeof StudyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/toolkit': {
+      id: '/toolkit'
+      path: '/toolkit'
+      fullPath: '/toolkit'
+      preLoaderRoute: typeof ToolkitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tour': {
+      id: '/tour'
+      path: '/tour'
+      fullPath: '/tour'
+      preLoaderRoute: typeof TourRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tutorial': {
+      id: '/tutorial'
+      path: '/tutorial'
+      fullPath: '/tutorial'
+      preLoaderRoute: typeof TutorialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/ai': {
+      id: '/admin/ai'
+      path: '/admin/ai'
+      fullPath: '/admin/ai'
+      preLoaderRoute: typeof AdminAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/ai-keys': {
+      id: '/admin/ai-keys'
+      path: '/admin/ai-keys'
+      fullPath: '/admin/ai-keys'
+      preLoaderRoute: typeof AdminAiKeysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/content-protection': {
+      id: '/admin/content-protection'
+      path: '/admin/content-protection'
+      fullPath: '/admin/content-protection'
+      preLoaderRoute: typeof AdminContentProtectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/devices': {
+      id: '/admin/devices'
+      path: '/admin/devices'
+      fullPath: '/admin/devices'
+      preLoaderRoute: typeof AdminDevicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/german': {
+      id: '/admin/german'
+      path: '/admin/german'
+      fullPath: '/admin/german'
+      preLoaderRoute: typeof AdminGermanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/groups': {
+      id: '/admin/groups'
+      path: '/admin/groups'
+      fullPath: '/admin/groups'
+      preLoaderRoute: typeof AdminGroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/admin/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/offers': {
+      id: '/admin/offers'
+      path: '/admin/offers'
+      fullPath: '/admin/offers'
+      preLoaderRoute: typeof AdminOffersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/paddle-sync': {
+      id: '/admin/paddle-sync'
+      path: '/admin/paddle-sync'
+      fullPath: '/admin/paddle-sync'
+      preLoaderRoute: typeof AdminPaddleSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/people': {
+      id: '/admin/people'
+      path: '/admin/people'
+      fullPath: '/admin/people'
+      preLoaderRoute: typeof AdminPeopleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/plans': {
+      id: '/admin/plans'
+      path: '/admin/plans'
+      fullPath: '/admin/plans'
+      preLoaderRoute: typeof AdminPlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/promo-codes': {
+      id: '/admin/promo-codes'
+      path: '/admin/promo-codes'
+      fullPath: '/admin/promo-codes'
+      preLoaderRoute: typeof AdminPromoCodesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/ritax-announcements': {
+      id: '/admin/ritax-announcements'
+      path: '/admin/ritax-announcements'
+      fullPath: '/admin/ritax-announcements'
+      preLoaderRoute: typeof AdminRitaxAnnouncementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/roles': {
+      id: '/admin/roles'
+      path: '/admin/roles'
+      fullPath: '/admin/roles'
+      preLoaderRoute: typeof AdminRolesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/admin/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/toolkit': {
+      id: '/admin/toolkit'
+      path: '/admin/toolkit'
+      fullPath: '/admin/toolkit'
+      preLoaderRoute: typeof AdminToolkitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/': {
+      id: '/checkout/'
+      path: '/checkout'
+      fullPath: '/checkout/'
+      preLoaderRoute: typeof CheckoutIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/success': {
+      id: '/checkout/success'
+      path: '/checkout/success'
+      fullPath: '/checkout/success'
+      preLoaderRoute: typeof CheckoutSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses/$courseId': {
+      id: '/courses/$courseId'
+      path: '/$courseId'
+      fullPath: '/courses/$courseId'
+      preLoaderRoute: typeof CoursesCourseIdRouteImport
+      parentRoute: typeof CoursesRoute
+    }
+    '/german/': {
+      id: '/german/'
+      path: '/'
+      fullPath: '/german/'
+      preLoaderRoute: typeof GermanIndexRouteImport
+      parentRoute: typeof GermanRoute
+    }
+    '/german/add': {
+      id: '/german/add'
+      path: '/add'
+      fullPath: '/german/add'
+      preLoaderRoute: typeof GermanAddRouteImport
+      parentRoute: typeof GermanRoute
+    }
+    '/german/articles': {
+      id: '/german/articles'
+      path: '/articles'
+      fullPath: '/german/articles'
+      preLoaderRoute: typeof GermanArticlesRouteImport
+      parentRoute: typeof GermanRoute
+    }
+    '/german/build': {
+      id: '/german/build'
+      path: '/build'
+      fullPath: '/german/build'
+      preLoaderRoute: typeof GermanBuildRouteImport
+      parentRoute: typeof GermanRoute
+    }
+    '/german/speak': {
+      id: '/german/speak'
+      path: '/speak'
+      fullPath: '/german/speak'
+      preLoaderRoute: typeof GermanSpeakRouteImport
+      parentRoute: typeof GermanRoute
+    }
+    '/join/$code': {
+      id: '/join/$code'
+      path: '/join/$code'
+      fullPath: '/join/$code'
+      preLoaderRoute: typeof JoinCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/': {
+      id: '/learn/'
+      path: '/learn'
+      fullPath: '/learn/'
+      preLoaderRoute: typeof LearnIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/german': {
+      id: '/learn/german'
+      path: '/learn/german'
+      fullPath: '/learn/german'
+      preLoaderRoute: typeof LearnGermanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/study-room': {
+      id: '/learn/study-room'
+      path: '/learn/study-room'
+      fullPath: '/learn/study-room'
+      preLoaderRoute: typeof LearnStudyRoomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn/study-space': {
+      id: '/learn/study-space'
+      path: '/learn/study-space'
+      fullPath: '/learn/study-space'
+      preLoaderRoute: typeof LearnStudySpaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/share/': {
+      id: '/share/'
+      path: '/share'
+      fullPath: '/share/'
+      preLoaderRoute: typeof ShareIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/share/$deckId': {
+      id: '/share/$deckId'
+      path: '/share/$deckId'
+      fullPath: '/share/$deckId'
+      preLoaderRoute: typeof ShareDeckIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/share/new': {
+      id: '/share/new'
+      path: '/share/new'
+      fullPath: '/share/new'
+      preLoaderRoute: typeof ShareNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spaces/': {
+      id: '/spaces/'
+      path: '/spaces'
+      fullPath: '/spaces/'
+      preLoaderRoute: typeof SpacesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spaces/$spaceId': {
+      id: '/spaces/$spaceId'
+      path: '/spaces/$spaceId'
+      fullPath: '/spaces/$spaceId'
+      preLoaderRoute: typeof SpacesSpaceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/study/': {
+      id: '/study/'
+      path: '/'
+      fullPath: '/study/'
+      preLoaderRoute: typeof StudyIndexRouteImport
+      parentRoute: typeof StudyRoute
+    }
+    '/study/exams': {
+      id: '/study/exams'
+      path: '/exams'
+      fullPath: '/study/exams'
+      preLoaderRoute: typeof StudyExamsRouteImport
+      parentRoute: typeof StudyRoute
+    }
+    '/study/match': {
+      id: '/study/match'
+      path: '/match'
+      fullPath: '/study/match'
+      preLoaderRoute: typeof StudyMatchRouteImport
+      parentRoute: typeof StudyRoute
+    }
+    '/study/pdf': {
+      id: '/study/pdf'
+      path: '/pdf'
+      fullPath: '/study/pdf'
+      preLoaderRoute: typeof StudyPdfRouteImport
+      parentRoute: typeof StudyRoute
+    }
+    '/study/progress': {
+      id: '/study/progress'
+      path: '/progress'
+      fullPath: '/study/progress'
+      preLoaderRoute: typeof StudyProgressRouteImport
+      parentRoute: typeof StudyRoute
+    }
+    '/study/session': {
+      id: '/study/session'
+      path: '/session'
+      fullPath: '/study/session'
+      preLoaderRoute: typeof StudySessionRouteImport
+      parentRoute: typeof StudyRoute
+    }
+    '/study/summaries': {
+      id: '/study/summaries'
+      path: '/summaries'
+      fullPath: '/study/summaries'
+      preLoaderRoute: typeof StudySummariesRouteImport
+      parentRoute: typeof StudyRoute
+    }
+    '/study/todo': {
+      id: '/study/todo'
+      path: '/todo'
+      fullPath: '/study/todo'
+      preLoaderRoute: typeof StudyTodoRouteImport
+      parentRoute: typeof StudyRoute
+    }
+    '/summaries/': {
+      id: '/summaries/'
+      path: '/summaries'
+      fullPath: '/summaries/'
+      preLoaderRoute: typeof SummariesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/summaries/$summaryId': {
+      id: '/summaries/$summaryId'
+      path: '/summaries/$summaryId'
+      fullPath: '/summaries/$summaryId'
+      preLoaderRoute: typeof SummariesSummaryIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/summaries/new': {
+      id: '/summaries/new'
+      path: '/summaries/new'
+      fullPath: '/summaries/new'
+      preLoaderRoute: typeof SummariesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/german/': {
+      id: '/admin/german/'
+      path: '/'
+      fullPath: '/admin/german/'
+      preLoaderRoute: typeof AdminGermanIndexRouteImport
+      parentRoute: typeof AdminGermanRoute
+    }
+    '/admin/german/$courseId': {
+      id: '/admin/german/$courseId'
+      path: '/$courseId'
+      fullPath: '/admin/german/$courseId'
+      preLoaderRoute: typeof AdminGermanCourseIdRouteImport
+      parentRoute: typeof AdminGermanRoute
+    }
+    '/admin/spaces/': {
+      id: '/admin/spaces/'
+      path: '/admin/spaces'
+      fullPath: '/admin/spaces/'
+      preLoaderRoute: typeof AdminSpacesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/spaces/$spaceId': {
+      id: '/admin/spaces/$spaceId'
+      path: '/admin/spaces/$spaceId'
+      fullPath: '/admin/spaces/$spaceId'
+      preLoaderRoute: typeof AdminSpacesSpaceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/german/score': {
+      id: '/api/german/score'
+      path: '/api/german/score'
+      fullPath: '/api/german/score'
+      preLoaderRoute: typeof ApiGermanScoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/german/tts': {
+      id: '/api/german/tts'
+      path: '/api/german/tts'
+      fullPath: '/api/german/tts'
+      preLoaderRoute: typeof ApiGermanTtsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/archive-solver': {
+      id: '/api/public/archive-solver'
+      path: '/api/public/archive-solver'
+      fullPath: '/api/public/archive-solver'
+      preLoaderRoute: typeof ApiPublicArchiveSolverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/push-dispatch': {
+      id: '/api/public/push-dispatch'
+      path: '/api/public/push-dispatch'
+      fullPath: '/api/public/push-dispatch'
+      preLoaderRoute: typeof ApiPublicPushDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/rita-worker': {
+      id: '/api/public/rita-worker'
+      path: '/api/public/rita-worker'
+      fullPath: '/api/public/rita-worker'
+      preLoaderRoute: typeof ApiPublicRitaWorkerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/deepgram-token': {
+      id: '/api/rita/deepgram-token'
+      path: '/api/rita/deepgram-token'
+      fullPath: '/api/rita/deepgram-token'
+      preLoaderRoute: typeof ApiRitaDeepgramTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/demo': {
+      id: '/api/rita/demo'
+      path: '/api/rita/demo'
+      fullPath: '/api/rita/demo'
+      preLoaderRoute: typeof ApiRitaDemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/extract': {
+      id: '/api/rita/extract'
+      path: '/api/rita/extract'
+      fullPath: '/api/rita/extract'
+      preLoaderRoute: typeof ApiRitaExtractRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/filler': {
+      id: '/api/rita/filler'
+      path: '/api/rita/filler'
+      fullPath: '/api/rita/filler'
+      preLoaderRoute: typeof ApiRitaFillerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/learning': {
+      id: '/api/rita/learning'
+      path: '/api/rita/learning'
+      fullPath: '/api/rita/learning'
+      preLoaderRoute: typeof ApiRitaLearningRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/live': {
+      id: '/api/rita/live'
+      path: '/api/rita/live'
+      fullPath: '/api/rita/live'
+      preLoaderRoute: typeof ApiRitaLiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/metrics': {
+      id: '/api/rita/metrics'
+      path: '/api/rita/metrics'
+      fullPath: '/api/rita/metrics'
+      preLoaderRoute: typeof ApiRitaMetricsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/preferences': {
+      id: '/api/rita/preferences'
+      path: '/api/rita/preferences'
+      fullPath: '/api/rita/preferences'
+      preLoaderRoute: typeof ApiRitaPreferencesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/respond': {
+      id: '/api/rita/respond'
+      path: '/api/rita/respond'
+      fullPath: '/api/rita/respond'
+      preLoaderRoute: typeof ApiRitaRespondRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/session': {
+      id: '/api/rita/session'
+      path: '/api/rita/session'
+      fullPath: '/api/rita/session'
+      preLoaderRoute: typeof ApiRitaSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/speech': {
+      id: '/api/rita/speech'
+      path: '/api/rita/speech'
+      fullPath: '/api/rita/speech'
+      preLoaderRoute: typeof ApiRitaSpeechRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/summarize': {
+      id: '/api/rita/summarize'
+      path: '/api/rita/summarize'
+      fullPath: '/api/rita/summarize'
+      preLoaderRoute: typeof ApiRitaSummarizeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/transcribe': {
+      id: '/api/rita/transcribe'
+      path: '/api/rita/transcribe'
+      fullPath: '/api/rita/transcribe'
+      preLoaderRoute: typeof ApiRitaTranscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/turn': {
+      id: '/api/rita/turn'
+      path: '/api/rita/turn'
+      fullPath: '/api/rita/turn'
+      preLoaderRoute: typeof ApiRitaTurnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita/usage': {
+      id: '/api/rita/usage'
+      path: '/api/rita/usage'
+      fullPath: '/api/rita/usage'
+      preLoaderRoute: typeof ApiRitaUsageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses/$courseId/': {
+      id: '/courses/$courseId/'
+      path: '/'
+      fullPath: '/courses/$courseId/'
+      preLoaderRoute: typeof CoursesCourseIdIndexRouteImport
+      parentRoute: typeof CoursesCourseIdRoute
+    }
+    '/courses/$courseId/add-questions': {
+      id: '/courses/$courseId/add-questions'
+      path: '/add-questions'
+      fullPath: '/courses/$courseId/add-questions'
+      preLoaderRoute: typeof CoursesCourseIdAddQuestionsRouteImport
+      parentRoute: typeof CoursesCourseIdRoute
+    }
+    '/courses/$courseId/run': {
+      id: '/courses/$courseId/run'
+      path: '/run'
+      fullPath: '/courses/$courseId/run'
+      preLoaderRoute: typeof CoursesCourseIdRunRouteImport
+      parentRoute: typeof CoursesCourseIdRoute
+    }
+    '/german/$courseId/': {
+      id: '/german/$courseId/'
+      path: '/$courseId'
+      fullPath: '/german/$courseId/'
+      preLoaderRoute: typeof GermanCourseIdIndexRouteImport
+      parentRoute: typeof GermanRoute
+    }
+    '/german/$courseId/exam': {
+      id: '/german/$courseId/exam'
+      path: '/$courseId/exam'
+      fullPath: '/german/$courseId/exam'
+      preLoaderRoute: typeof GermanCourseIdExamRouteImport
+      parentRoute: typeof GermanRoute
+    }
+    '/german/$courseId/match': {
+      id: '/german/$courseId/match'
+      path: '/$courseId/match'
+      fullPath: '/german/$courseId/match'
+      preLoaderRoute: typeof GermanCourseIdMatchRouteImport
+      parentRoute: typeof GermanRoute
+    }
+    '/german/$courseId/review': {
+      id: '/german/$courseId/review'
+      path: '/$courseId/review'
+      fullPath: '/german/$courseId/review'
+      preLoaderRoute: typeof GermanCourseIdReviewRouteImport
+      parentRoute: typeof GermanRoute
+    }
+    '/german/$courseId/run': {
+      id: '/german/$courseId/run'
+      path: '/$courseId/run'
+      fullPath: '/german/$courseId/run'
+      preLoaderRoute: typeof GermanCourseIdRunRouteImport
+      parentRoute: typeof GermanRoute
+    }
+    '/german/$courseId/tap': {
+      id: '/german/$courseId/tap'
+      path: '/$courseId/tap'
+      fullPath: '/german/$courseId/tap'
+      preLoaderRoute: typeof GermanCourseIdTapRouteImport
+      parentRoute: typeof GermanRoute
+    }
+    '/share/questions/': {
+      id: '/share/questions/'
+      path: '/share/questions'
+      fullPath: '/share/questions/'
+      preLoaderRoute: typeof ShareQuestionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/share/questions/$setId': {
+      id: '/share/questions/$setId'
+      path: '/share/questions/$setId'
+      fullPath: '/share/questions/$setId'
+      preLoaderRoute: typeof ShareQuestionsSetIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/share/questions/new': {
+      id: '/share/questions/new'
+      path: '/share/questions/new'
+      fullPath: '/share/questions/new'
+      preLoaderRoute: typeof ShareQuestionsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/study/all-in-one/': {
+      id: '/study/all-in-one/'
+      path: '/all-in-one'
+      fullPath: '/study/all-in-one/'
+      preLoaderRoute: typeof StudyAllInOneIndexRouteImport
+      parentRoute: typeof StudyRoute
+    }
+    '/study/all-in-one/$lectureId': {
+      id: '/study/all-in-one/$lectureId'
+      path: '/all-in-one/$lectureId'
+      fullPath: '/study/all-in-one/$lectureId'
+      preLoaderRoute: typeof StudyAllInOneLectureIdRouteImport
+      parentRoute: typeof StudyRoute
+    }
+    '/study/lectures/': {
+      id: '/study/lectures/'
+      path: '/lectures'
+      fullPath: '/study/lectures/'
+      preLoaderRoute: typeof StudyLecturesIndexRouteImport
+      parentRoute: typeof StudyRoute
+    }
+    '/study/lectures/new': {
+      id: '/study/lectures/new'
+      path: '/lectures/new'
+      fullPath: '/study/lectures/new'
+      preLoaderRoute: typeof StudyLecturesNewRouteImport
+      parentRoute: typeof StudyRoute
+    }
+    '/study/lectures/run': {
+      id: '/study/lectures/run'
+      path: '/lectures/run'
+      fullPath: '/study/lectures/run'
+      preLoaderRoute: typeof StudyLecturesRunRouteImport
+      parentRoute: typeof StudyRoute
+    }
+    '/study/subject/$subjectId': {
+      id: '/study/subject/$subjectId'
+      path: '/subject/$subjectId'
+      fullPath: '/study/subject/$subjectId'
+      preLoaderRoute: typeof StudySubjectSubjectIdRouteImport
+      parentRoute: typeof StudyRoute
+    }
+    '/admin/german/$courseId/manage': {
+      id: '/admin/german/$courseId/manage'
+      path: '/manage'
+      fullPath: '/admin/german/$courseId/manage'
+      preLoaderRoute: typeof AdminGermanCourseIdManageRouteImport
+      parentRoute: typeof AdminGermanCourseIdRoute
+    }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/german/$courseId/review/': {
+      id: '/german/$courseId/review/'
+      path: '/'
+      fullPath: '/german/$courseId/review/'
+      preLoaderRoute: typeof GermanCourseIdReviewIndexRouteImport
+      parentRoute: typeof GermanCourseIdReviewRoute
+    }
+    '/german/$courseId/review/run': {
+      id: '/german/$courseId/review/run'
+      path: '/run'
+      fullPath: '/german/$courseId/review/run'
+      preLoaderRoute: typeof GermanCourseIdReviewRunRouteImport
+      parentRoute: typeof GermanCourseIdReviewRoute
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface CoursesCourseIdRouteChildren {
+  CoursesCourseIdAddQuestionsRoute: typeof CoursesCourseIdAddQuestionsRoute
+  CoursesCourseIdRunRoute: typeof CoursesCourseIdRunRoute
+  CoursesCourseIdIndexRoute: typeof CoursesCourseIdIndexRoute
+}
+
+const CoursesCourseIdRouteChildren: CoursesCourseIdRouteChildren = {
+  CoursesCourseIdAddQuestionsRoute: CoursesCourseIdAddQuestionsRoute,
+  CoursesCourseIdRunRoute: CoursesCourseIdRunRoute,
+  CoursesCourseIdIndexRoute: CoursesCourseIdIndexRoute,
+}
+
+const CoursesCourseIdRouteWithChildren = CoursesCourseIdRoute._addFileChildren(
+  CoursesCourseIdRouteChildren,
+)
+
+interface CoursesRouteChildren {
+  CoursesCourseIdRoute: typeof CoursesCourseIdRouteWithChildren
+}
+
+const CoursesRouteChildren: CoursesRouteChildren = {
+  CoursesCourseIdRoute: CoursesCourseIdRouteWithChildren,
+}
+
+const CoursesRouteWithChildren =
+  CoursesRoute._addFileChildren(CoursesRouteChildren)
+
+interface GermanCourseIdReviewRouteChildren {
+  GermanCourseIdReviewRunRoute: typeof GermanCourseIdReviewRunRoute
+  GermanCourseIdReviewIndexRoute: typeof GermanCourseIdReviewIndexRoute
+}
+
+const GermanCourseIdReviewRouteChildren: GermanCourseIdReviewRouteChildren = {
+  GermanCourseIdReviewRunRoute: GermanCourseIdReviewRunRoute,
+  GermanCourseIdReviewIndexRoute: GermanCourseIdReviewIndexRoute,
+}
+
+const GermanCourseIdReviewRouteWithChildren =
+  GermanCourseIdReviewRoute._addFileChildren(GermanCourseIdReviewRouteChildren)
+
+interface GermanRouteChildren {
+  GermanAddRoute: typeof GermanAddRoute
+  GermanArticlesRoute: typeof GermanArticlesRoute
+  GermanBuildRoute: typeof GermanBuildRoute
+  GermanSpeakRoute: typeof GermanSpeakRoute
+  GermanIndexRoute: typeof GermanIndexRoute
+  GermanCourseIdExamRoute: typeof GermanCourseIdExamRoute
+  GermanCourseIdMatchRoute: typeof GermanCourseIdMatchRoute
+  GermanCourseIdReviewRoute: typeof GermanCourseIdReviewRouteWithChildren
+  GermanCourseIdRunRoute: typeof GermanCourseIdRunRoute
+  GermanCourseIdTapRoute: typeof GermanCourseIdTapRoute
+  GermanCourseIdIndexRoute: typeof GermanCourseIdIndexRoute
+}
+
+const GermanRouteChildren: GermanRouteChildren = {
+  GermanAddRoute: GermanAddRoute,
+  GermanArticlesRoute: GermanArticlesRoute,
+  GermanBuildRoute: GermanBuildRoute,
+  GermanSpeakRoute: GermanSpeakRoute,
+  GermanIndexRoute: GermanIndexRoute,
+  GermanCourseIdExamRoute: GermanCourseIdExamRoute,
+  GermanCourseIdMatchRoute: GermanCourseIdMatchRoute,
+  GermanCourseIdReviewRoute: GermanCourseIdReviewRouteWithChildren,
+  GermanCourseIdRunRoute: GermanCourseIdRunRoute,
+  GermanCourseIdTapRoute: GermanCourseIdTapRoute,
+  GermanCourseIdIndexRoute: GermanCourseIdIndexRoute,
+}
+
+const GermanRouteWithChildren =
+  GermanRoute._addFileChildren(GermanRouteChildren)
+
+interface StudyRouteChildren {
+  StudyExamsRoute: typeof StudyExamsRoute
+  StudyMatchRoute: typeof StudyMatchRoute
+  StudyPdfRoute: typeof StudyPdfRoute
+  StudyProgressRoute: typeof StudyProgressRoute
+  StudySessionRoute: typeof StudySessionRoute
+  StudySummariesRoute: typeof StudySummariesRoute
+  StudyTodoRoute: typeof StudyTodoRoute
+  StudyIndexRoute: typeof StudyIndexRoute
+  StudyAllInOneLectureIdRoute: typeof StudyAllInOneLectureIdRoute
+  StudyLecturesNewRoute: typeof StudyLecturesNewRoute
+  StudyLecturesRunRoute: typeof StudyLecturesRunRoute
+  StudySubjectSubjectIdRoute: typeof StudySubjectSubjectIdRoute
+  StudyAllInOneIndexRoute: typeof StudyAllInOneIndexRoute
+  StudyLecturesIndexRoute: typeof StudyLecturesIndexRoute
+}
+
+const StudyRouteChildren: StudyRouteChildren = {
+  StudyExamsRoute: StudyExamsRoute,
+  StudyMatchRoute: StudyMatchRoute,
+  StudyPdfRoute: StudyPdfRoute,
+  StudyProgressRoute: StudyProgressRoute,
+  StudySessionRoute: StudySessionRoute,
+  StudySummariesRoute: StudySummariesRoute,
+  StudyTodoRoute: StudyTodoRoute,
+  StudyIndexRoute: StudyIndexRoute,
+  StudyAllInOneLectureIdRoute: StudyAllInOneLectureIdRoute,
+  StudyLecturesNewRoute: StudyLecturesNewRoute,
+  StudyLecturesRunRoute: StudyLecturesRunRoute,
+  StudySubjectSubjectIdRoute: StudySubjectSubjectIdRoute,
+  StudyAllInOneIndexRoute: StudyAllInOneIndexRoute,
+  StudyLecturesIndexRoute: StudyLecturesIndexRoute,
+}
+
+const StudyRouteWithChildren = StudyRoute._addFileChildren(StudyRouteChildren)
+
+interface AdminGermanCourseIdRouteChildren {
+  AdminGermanCourseIdManageRoute: typeof AdminGermanCourseIdManageRoute
+}
+
+const AdminGermanCourseIdRouteChildren: AdminGermanCourseIdRouteChildren = {
+  AdminGermanCourseIdManageRoute: AdminGermanCourseIdManageRoute,
+}
+
+const AdminGermanCourseIdRouteWithChildren =
+  AdminGermanCourseIdRoute._addFileChildren(AdminGermanCourseIdRouteChildren)
+
+interface AdminGermanRouteChildren {
+  AdminGermanCourseIdRoute: typeof AdminGermanCourseIdRouteWithChildren
+  AdminGermanIndexRoute: typeof AdminGermanIndexRoute
+}
+
+const AdminGermanRouteChildren: AdminGermanRouteChildren = {
+  AdminGermanCourseIdRoute: AdminGermanCourseIdRouteWithChildren,
+  AdminGermanIndexRoute: AdminGermanIndexRoute,
+}
+
+const AdminGermanRouteWithChildren = AdminGermanRoute._addFileChildren(
+  AdminGermanRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  CoursesRoute: CoursesRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  GermanRoute: GermanRouteWithChildren,
+  LockedRoute: LockedRoute,
+  LoginRoute: LoginRoute,
+  McpRoute: McpRoute,
+  MyPlanRoute: MyPlanRoute,
+  NotesRoute: NotesRoute,
+  OffersRoute: OffersRoute,
+  PricingRoute: PricingRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
+  ProfileRoute: ProfileRoute,
+  QuestionBankRoute: QuestionBankRoute,
+  RefundPolicyRoute: RefundPolicyRoute,
+  RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  RitaLiveRoute: RitaLiveRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StudyRoute: StudyRouteWithChildren,
+  SupportRoute: SupportRoute,
+  TermsRoute: TermsRoute,
+  ToolkitRoute: ToolkitRoute,
+  TourRoute: TourRoute,
+  TutorialRoute: TutorialRoute,
+  WelcomeRoute: WelcomeRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  AdminAiRoute: AdminAiRoute,
+  AdminAiKeysRoute: AdminAiKeysRoute,
+  AdminContentProtectionRoute: AdminContentProtectionRoute,
+  AdminDevicesRoute: AdminDevicesRoute,
+  AdminGermanRoute: AdminGermanRouteWithChildren,
+  AdminGroupsRoute: AdminGroupsRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminOffersRoute: AdminOffersRoute,
+  AdminPaddleSyncRoute: AdminPaddleSyncRoute,
+  AdminPeopleRoute: AdminPeopleRoute,
+  AdminPlansRoute: AdminPlansRoute,
+  AdminPromoCodesRoute: AdminPromoCodesRoute,
+  AdminRitaxAnnouncementsRoute: AdminRitaxAnnouncementsRoute,
+  AdminRolesRoute: AdminRolesRoute,
+  AdminSupportRoute: AdminSupportRoute,
+  AdminToolkitRoute: AdminToolkitRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  CheckoutSuccessRoute: CheckoutSuccessRoute,
+  JoinCodeRoute: JoinCodeRoute,
+  LearnGermanRoute: LearnGermanRoute,
+  LearnStudyRoomRoute: LearnStudyRoomRoute,
+  LearnStudySpaceRoute: LearnStudySpaceRoute,
+  ShareDeckIdRoute: ShareDeckIdRoute,
+  ShareNewRoute: ShareNewRoute,
+  SpacesSpaceIdRoute: SpacesSpaceIdRoute,
+  SummariesSummaryIdRoute: SummariesSummaryIdRoute,
+  SummariesNewRoute: SummariesNewRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  CheckoutIndexRoute: CheckoutIndexRoute,
+  LearnIndexRoute: LearnIndexRoute,
+  ShareIndexRoute: ShareIndexRoute,
+  SpacesIndexRoute: SpacesIndexRoute,
+  SummariesIndexRoute: SummariesIndexRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  AdminSpacesSpaceIdRoute: AdminSpacesSpaceIdRoute,
+  ApiGermanScoreRoute: ApiGermanScoreRoute,
+  ApiGermanTtsRoute: ApiGermanTtsRoute,
+  ApiPublicArchiveSolverRoute: ApiPublicArchiveSolverRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
+  ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
+  ApiPublicRitaWorkerRoute: ApiPublicRitaWorkerRoute,
+  ApiRitaDeepgramTokenRoute: ApiRitaDeepgramTokenRoute,
+  ApiRitaDemoRoute: ApiRitaDemoRoute,
+  ApiRitaExtractRoute: ApiRitaExtractRoute,
+  ApiRitaFillerRoute: ApiRitaFillerRoute,
+  ApiRitaLearningRoute: ApiRitaLearningRoute,
+  ApiRitaLiveRoute: ApiRitaLiveRoute,
+  ApiRitaMetricsRoute: ApiRitaMetricsRoute,
+  ApiRitaPreferencesRoute: ApiRitaPreferencesRoute,
+  ApiRitaRespondRoute: ApiRitaRespondRoute,
+  ApiRitaSessionRoute: ApiRitaSessionRoute,
+  ApiRitaSpeechRoute: ApiRitaSpeechRoute,
+  ApiRitaSummarizeRoute: ApiRitaSummarizeRoute,
+  ApiRitaTranscribeRoute: ApiRitaTranscribeRoute,
+  ApiRitaTurnRoute: ApiRitaTurnRoute,
+  ApiRitaUsageRoute: ApiRitaUsageRoute,
+  ShareQuestionsSetIdRoute: ShareQuestionsSetIdRoute,
+  ShareQuestionsNewRoute: ShareQuestionsNewRoute,
+  AdminSpacesIndexRoute: AdminSpacesIndexRoute,
+  ShareQuestionsIndexRoute: ShareQuestionsIndexRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

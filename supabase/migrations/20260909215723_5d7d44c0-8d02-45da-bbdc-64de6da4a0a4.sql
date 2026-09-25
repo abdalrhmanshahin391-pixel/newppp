@@ -1,0 +1,1 @@
+update public.plans set paddle_price_monthly = 'study_monthly', paddle_price_yearly = 'study_yearly' where slug = 'study';
