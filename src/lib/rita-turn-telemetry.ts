@@ -31,6 +31,8 @@ export type RitaTurnTimeline = {
   fillerUsed: boolean;
   fallbackUsed: boolean;
   reconnectCount: number;
+  deepgramEvent?: string;
+  deepgramDetail?: string;
   transcriptionEndReason?: string;
   voiceEngine?: string;
   errorStage?: string;
