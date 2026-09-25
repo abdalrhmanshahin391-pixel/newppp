@@ -191,7 +191,7 @@ export const Route = createFileRoute("/api/rita/respond")({
             })));
             const emitSpeechSegments = async (segments: string[]) => {
               for (const text of segments) {
-                if (!text || segmentIndex >= 3) continue;
+                if (!text || segmentIndex >= 8) continue;
                 const index = segmentIndex++;
                 const ticket = await createRitaSpeechTicket({
                   userId: auth.userId,

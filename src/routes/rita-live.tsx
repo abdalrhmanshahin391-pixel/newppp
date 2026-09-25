@@ -1231,6 +1231,10 @@ function RitaLivePage() {
         onStarted: () => {
           const firstAudioAt = performance.now();
           if (!fillerPlaying.current) submitTurnMetric(firstAudioAt);
+          if (!fillerPlaying.current && turnTimeline.current) {
+            markRitaTurn(turnTimeline.current, "firstAudio");
+            persistTurnTimeline();
+          }
           if (voiceTurnStartedAt.current !== null) {
             setLastVoiceLatencyMs(Math.round(performance.now() - voiceTurnStartedAt.current));
             voiceTurnStartedAt.current = null;
@@ -1243,6 +1247,10 @@ function RitaLivePage() {
           startOutputMeter();
         },
         onEnded: () => {
+          if (!fillerPlaying.current && turnTimeline.current) {
+            markRitaTurn(turnTimeline.current, "playbackEnd");
+            finalizeTurnTimeline("completed", "completed");
+          }
           stopOutputMeter();
           economic.current?.setOutputSpeaking(false);
           setMood(activeRef.current ? "listening" : "ready");
@@ -1253,6 +1261,36 @@ function RitaLivePage() {
                 : "Rita Economic v2 is listening"
               : "Lesson paused",
           );
+        },
+        onSegmentStarted: (segmentIndex) => {
+          const timeline = turnTimeline.current;
+          const segment = segmentTimelines.current.get(segmentIndex);
+          if (!timeline || !segment) return;
+          segment.playbackStartMs = Math.round(performance.now() - timeline.originMs);
+          segment.status = "playing";
+          timeline.segmentsPlayed += 1;
+          persistTurnTimeline(segment);
+        },
+        onSegmentEnded: (segmentIndex, playedAudioMs) => {
+          const timeline = turnTimeline.current;
+          const segment = segmentTimelines.current.get(segmentIndex);
+          if (!timeline || !segment) return;
+          segment.playbackEndMs = Math.round(performance.now() - timeline.originMs);
+          segment.playedAudioMs = playedAudioMs;
+          segment.status = "completed";
+          timeline.segmentsCompleted += 1;
+          timeline.playedAudioMs += playedAudioMs;
+          persistTurnTimeline(segment);
+        },
+        onInterrupted: (segmentIndex) => {
+          const timeline = turnTimeline.current;
+          if (!timeline || segmentIndex === null || fillerPlaying.current) return;
+          const segment = segmentTimelines.current.get(segmentIndex);
+          if (segment) {
+            segment.status = "interrupted";
+            segment.playbackEndMs = Math.round(performance.now() - timeline.originMs);
+            persistTurnTimeline(segment);
+          }
         },
       });
       const token = await getToken();
@@ -1380,7 +1418,9 @@ function RitaLivePage() {
           },
           onBargeIn: () => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
-            stopSpeaking();
+            stopSpeaking("user_barge_in");
+            turnTimeline.current = createRitaTurnTimeline(pendingSpeechStart.current || performance.now());
+            segmentTimelines.current.clear();
             metricRef.current = {
               speechStart: pendingSpeechStart.current || performance.now(),
               speechEnd: 0,
@@ -1398,14 +1438,19 @@ function RitaLivePage() {
           },
           onInterim: (value) => {
             if (epoch !== lessonEpoch.current) return;
-            if (value) setStatus(`Hearing: ${value.slice(0, 90)}`);
+            if (value) {
+              if (turnTimeline.current) markRitaTurn(turnTimeline.current, "firstInterim");
+              setStatus(`Hearing: ${value.slice(0, 90)}`);
+            }
           },
           onSpeechEnd: () => {
             if (!metricRef.current.speechEnd) metricRef.current.speechEnd = performance.now();
+            if (turnTimeline.current) markRitaTurn(turnTimeline.current, "speechEnd");
           },
           onFinal: (turn) => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
             metricRef.current.transcriptFinal = performance.now();
+            if (turnTimeline.current) markRitaTurn(turnTimeline.current, "transcriptFinal");
             lastSpoken.current = turn.text;
             void processTurnRef.current({
               text: turn.text,
@@ -1418,6 +1463,7 @@ function RitaLivePage() {
           onFallback: ({ audio, durationMs, reason }) => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
             metricRef.current.fallbackUsed = true;
+            if (turnTimeline.current) turnTimeline.current.fallbackUsed = true;
             setStatus("Recovering this sentence with OpenAI transcription…");
             const form = new FormData();
             form.append("audio", audio, "rita-turn.wav");
@@ -1454,6 +1500,7 @@ function RitaLivePage() {
                 setError(
                   `${reason} ${cause instanceof Error ? cause.message : "Fallback transcription failed."}`,
                 );
+                finalizeTurnTimeline("failed", "transcription_error", "transcription");
               });
           },
           onError: (message) => {

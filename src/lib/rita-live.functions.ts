@@ -107,7 +107,7 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
     const { supabase } = await requireAdmin(context);
     const month = new Date();
     const start = new Date(Date.UTC(month.getUTCFullYear(), month.getUTCMonth(), 1)).toISOString();
-    const [{ data: settings }, { data: usage }, { data: sessions }, { data: timings }] =
+    const [{ data: settings }, { data: usage }, { data: sessions }, { data: timings }, { data: recentTurns }] =
       await Promise.all([
         (supabase.from as any)("rita_voice_settings")
           .select(
@@ -124,9 +124,12 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
           .select("id,user_id,ended_at")
           .gte("started_at", start),
         (supabase.from as any)("rita_turn_metrics")
-          .select("speech_end_to_first_audio_ms")
-          .gte("created_at", start)
-          .not("speech_end_to_first_audio_ms", "is", null),
+          .select("speech_end_to_first_audio_ms,speech_end_ms,transcript_final_ms,first_token_ms,first_audio_ms,playback_end_ms,status")
+          .gte("created_at", start),
+        (supabase.from as any)("rita_turn_metrics")
+          .select("turn_id,diagnostic_code,status,end_reason,last_stage,speech_end_ms,transcript_final_ms,first_token_ms,text_complete_ms,first_audio_ms,playback_end_ms,segments_planned,segments_completed,played_audio_ms,fallback_used,created_at")
+          .order("created_at", { ascending: false })
+          .limit(20),
       ]);
     const rows = (usage ?? []) as any[];
     const activeMs = rows.reduce(
@@ -134,8 +137,8 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
       0,
     );
     const costMicros = rows.reduce((sum, row) => sum + Number(row.estimated_cost_micros || 0), 0);
-    const latencyValues = ((timings ?? []) as any[])
-      .map((row) => Number(row.speech_end_to_first_audio_ms))
+    const timingRows = (timings ?? []) as any[];
+    const latencyValues = timingRows.map((row) => Number(row.speech_end_to_first_audio_ms))
       .filter((value) => Number.isFinite(value) && value >= 0)
       .sort((left, right) => left - right);
     const percentile = (ratio: number) =>
@@ -144,6 +147,13 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
             Math.min(latencyValues.length - 1, Math.ceil(latencyValues.length * ratio) - 1)
           ]
         : 0;
+    const stagePercentile = (from: string, to: string, ratio: number) => {
+      const values = timingRows
+        .map((row) => Number(row[to]) - Number(row[from]))
+        .filter((value) => Number.isFinite(value) && value >= 0)
+        .sort((a, b) => a - b);
+      return values.length ? values[Math.min(values.length - 1, Math.ceil(values.length * ratio) - 1)] : 0;
+    };
     return {
       settings: {
         enabled: settings?.enabled !== false,
@@ -165,7 +175,12 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
         turns: rows.length,
         latencyP50: percentile(0.5),
         latencyP95: percentile(0.95),
+        transcriptP50: stagePercentile("speech_end_ms", "transcript_final_ms", 0.5),
+        responseP50: stagePercentile("transcript_final_ms", "first_token_ms", 0.5),
+        audioP50: stagePercentile("first_token_ms", "first_audio_ms", 0.5),
+        incompleteTurns: timingRows.filter((row) => row.status && row.status !== "completed").length,
       },
+      recentTurns: recentTurns ?? [],
     };
   });
 
