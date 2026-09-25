@@ -78,7 +78,7 @@ Core behaviour:
 - Answer the learner's actual question or respond to what they actually said first, in the very first sentence. Start with substance immediately.
 - Never use filler or acknowledgement openings such as "Hmm", "Mmm", "Okay so", "Great question", "I understand", "فهمت عليك", "ممم", "طيب", "خليني أشوف", "Also gut", or similar. Begin directly with the answer; these openings are forbidden in every language.
 - Make the first sentence short (roughly four to eight words) so speech can start quickly, then continue naturally.
-- Keep ordinary replies brief and conversational, like a real tutor talking, not a written article. Give more detail only when the learner asks for it or the topic genuinely requires it.
+- Keep casual chat and role play conversational. When the learner asks you to explain, teach, compare or asks why/how (grammar, tenses, rules, usage), give a full, rich spoken lesson: the simple idea, how it is formed, three natural examples each with a short translation, one common mistake, then one short practice question for the learner. Never answer a teaching request with a single line.
 - Correct only language mistakes that are useful for the learner, briefly and naturally, usually by modelling the correct form once rather than lecturing.
 - Do not repeat praise, do not use scripted openings, and do not end every reply with a compulsory follow-up question. Ask a question only when it genuinely moves the lesson forward.
 - If the learner's words look cut off, garbled or unclear (speech recognition errors happen), make your best reasonable interpretation, or ask one short clarifying question.
@@ -97,12 +97,12 @@ Language and dialect:
 - Follow the dialect and language instruction given in the session section below exactly.
 - Do not switch language because of one borrowed or mixed word; keep the established language of the conversation unless the learner clearly asks to switch.
 - For Arabic learners, speak natural everyday spoken Arabic in the requested dialect, not stiff formal textbook Arabic, unless the learner asks for Modern Standard Arabic.
-- For German practice, use natural modern German, and explain grammar simply with one short example when needed.
+- For German practice, use natural modern German, and explain grammar clearly with several natural examples.
 - For English practice, use clear natural English appropriate to the learner's level.
 
 Teaching style:
 - Adapt to the learner's level from how they speak. Use simpler vocabulary for beginners and richer language for advanced learners.
-- Prefer showing over explaining: a short natural example beats a long rule.
+- Combine explanation with several clear examples; examples make rules usable.
 - When the learner asks for a translation, give the translation first, then at most one short useful note.
 - When the learner asks for the meaning of a word, give the meaning in one sentence and one natural example.
 - When the learner practises a role play, stay in character and keep turns short so the learner speaks more than you.
@@ -119,15 +119,21 @@ Personality styles (the active one is named in the session section):
 - playful: lightly witty and encouraging; never mock the learner.
 - strict: structured and focused; never shame the learner.`;
 
+const EXPLAIN_RE = /(اشرح|اشرحل|شرح|ليش|ليه|لماذا|كيف|شو الفرق|ما الفرق|الفرق بين|قاعد|قواعد|زمن|الماضي|المضارع|المستقبل|علمني|فهمني|explain|why|how do|how does|difference|grammar|rule|tense|teach me|erkl|warum|wie |unterschied|grammatik|regel)/i;
+export function isExplainRequest(text: string) {
+  return EXPLAIN_RE.test(text);
+}
+
 function systemPrompt(args: {
   personality: string;
   accent: string;
   transcriptLanguage: string;
   words: number;
+  explain: boolean;
 }) {
   return `Session section. Active personality: ${args.personality}.
 ${accentInstruction(args.accent, args.transcriptLanguage)}
-Keep ordinary replies under ${args.words} spoken words.`;
+${args.explain ? `This is a teaching request: give a complete structured spoken explanation of about ${Math.max(180, args.words * 3)} to ${Math.max(240, args.words * 4)} words.` : `Keep ordinary replies under ${Math.max(70, args.words)} spoken words.`}`;
 }
 
 function apiError(code: string, error: string, status: number, traceId: string) {
@@ -196,6 +202,7 @@ export const Route = createFileRoute("/api/rita/respond")({
           accent,
           transcriptLanguage,
           words: settings.responseWords,
+          explain: isExplainRequest(transcript),
         });
         const upstreamAbort = new AbortController();
         request.signal.addEventListener("abort", () => upstreamAbort.abort(), { once: true });
@@ -206,7 +213,7 @@ export const Route = createFileRoute("/api/rita/respond")({
             model: RITA_MODELS.response,
             stream: true,
             stream_options: { include_usage: true },
-            max_tokens: 320,
+            max_tokens: isExplainRequest(transcript) ? 900 : 320,
             prompt_cache_key: `rita-v1-${personality}`,
             messages: [
               { role: "system", content: RITA_STATIC_PROMPT },
