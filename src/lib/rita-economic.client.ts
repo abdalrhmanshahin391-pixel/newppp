@@ -637,6 +637,7 @@ export async function startRitaEconomicListening(args: {
         suppressFinalUntil = 0;
         bargedIn = false;
         voicedMs = 0;
+        heardWords = false;
         callbacks.onSpeechStart();
         callbacks.onTurnSignal?.("vad_start", "local_vad");
       }
