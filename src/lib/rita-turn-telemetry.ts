@@ -30,6 +30,10 @@ export type RitaTurnTimeline = {
   playedAudioMs: number;
   fillerUsed: boolean;
   fallbackUsed: boolean;
+  secondPassUsed: boolean;
+  secondPassMs?: number;
+  responseProvider?: string;
+  responseModel?: string;
   reconnectCount: number;
   deepgramEvent?: string;
   deepgramDetail?: string;
@@ -70,6 +74,7 @@ export function createRitaTurnTimeline(
     playedAudioMs: 0,
     fillerUsed: false,
     fallbackUsed: false,
+    secondPassUsed: false,
     reconnectCount: 0,
   };
 }
