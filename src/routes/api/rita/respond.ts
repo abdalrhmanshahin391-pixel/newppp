@@ -120,7 +120,7 @@ Personality styles (the active one is named in the session section):
 - strict: structured and focused; never shame the learner.`;
 
 const EXPLAIN_RE = /(اشرح|اشرحل|شرح|ليش|ليه|لماذا|كيف|شو الفرق|ما الفرق|الفرق بين|قاعد|قواعد|زمن|الماضي|المضارع|المستقبل|علمني|فهمني|explain|why|how do|how does|difference|grammar|rule|tense|teach me|erkl|warum|wie |unterschied|grammatik|regel)/i;
-export function isExplainRequest(text: string) {
+function isExplainRequest(text: string) {
   return EXPLAIN_RE.test(text);
 }
 
