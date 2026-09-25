@@ -43,7 +43,7 @@ export const Route = createFileRoute("/admin/ai-keys")({
 const FALLBACK_MODELS = [{ id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash-Lite" }];
 
 const SINGLE_PROVIDERS: {
-  id: "openai" | "anthropic" | "deepgram";
+  id: "openai" | "anthropic" | "deepgram" | "cartesia";
   name: string;
   tier: string;
   model: string;
@@ -112,7 +112,7 @@ function AiKeysPage() {
 
   // single-provider status
   const [singleStatus, setSingleStatus] = useState<
-    Record<"openai" | "anthropic" | "deepgram", string | null>
+    Record<"openai" | "anthropic" | "deepgram" | "cartesia", string | null>
   >({
     openai: null,
     anthropic: null,
@@ -122,7 +122,7 @@ function AiKeysPage() {
   // drafts
   const [geminiDraft, setGeminiDraft] = useState<string[]>(["", "", "", "", ""]);
   const [singleDraft, setSingleDraft] = useState<
-    Record<"openai" | "anthropic" | "deepgram", string>
+    Record<"openai" | "anthropic" | "deepgram" | "cartesia", string>
   >({
     openai: "",
     anthropic: "",
@@ -166,7 +166,7 @@ function AiKeysPage() {
     try {
       const r: any = await list();
       const slots: (string | null)[] = [null, null, null, null, null];
-      const single: Record<"openai" | "anthropic" | "deepgram", string | null> = {
+      const single: Record<"openai" | "anthropic" | "deepgram" | "cartesia", string | null> = {
         openai: null,
         anthropic: null,
         deepgram: null,
@@ -251,7 +251,7 @@ function AiKeysPage() {
     }
   }
 
-  async function saveSingle(p: "openai" | "anthropic" | "deepgram") {
+  async function saveSingle(p: "openai" | "anthropic" | "deepgram" | "cartesia") {
     if (!singleDraft[p].trim()) return;
     setBusy(p);
     try {
@@ -266,7 +266,7 @@ function AiKeysPage() {
     }
   }
 
-  async function deleteSingle(p: "openai" | "anthropic" | "deepgram") {
+  async function deleteSingle(p: "openai" | "anthropic" | "deepgram" | "cartesia") {
     if (!confirm(`Remove the ${p} key?`)) return;
     setBusy(p);
     try {
