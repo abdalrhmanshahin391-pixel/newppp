@@ -10,12 +10,20 @@ class RitaPcmPlayer extends AudioWorkletProcessor {
     this.started = false;
     this.activeSegment = null;
     this.activeSegmentSamples = 0;
+    this.endedSegments = new Set();
     this.port.onmessage = (event) => {
       if (event.data.type === "chunk") {
         this.queue.push({ samples: new Int16Array(event.data.buffer), segmentIndex: event.data.segmentIndex });
         this.ended = false;
       } else if (event.data.type === "end") {
         this.ended = true;
+      } else if (event.data.type === "segment_end") {
+        this.endedSegments.add(event.data.segmentIndex);
+        if (this.activeSegment === event.data.segmentIndex && !this.queue.some((item) => item.segmentIndex === event.data.segmentIndex)) {
+          this.port.postMessage({ type: "segment_ended", segmentIndex: this.activeSegment, samples: this.activeSegmentSamples });
+          this.activeSegment = null;
+          this.activeSegmentSamples = 0;
+        }
       } else if (event.data.type === "flush") {
         this.queue = [];
         this.offset = 0;
@@ -24,6 +32,7 @@ class RitaPcmPlayer extends AudioWorkletProcessor {
         this.started = false;
         this.activeSegment = null;
         this.activeSegmentSamples = 0;
+        this.endedSegments.clear();
       }
     };
   }
@@ -49,11 +58,15 @@ class RitaPcmPlayer extends AudioWorkletProcessor {
       }
       count -= available;
       this.activeSegmentSamples += available;
-      this.port.postMessage({ type: "segment_ended", segmentIndex: current.segmentIndex, samples: this.activeSegmentSamples });
       this.queue.shift();
       this.offset = 0;
-      this.activeSegment = null;
-      this.activeSegmentSamples = 0;
+      const sameSegmentQueued = this.queue.some((item) => item.segmentIndex === current.segmentIndex);
+      if (!sameSegmentQueued && this.endedSegments.has(current.segmentIndex)) {
+        this.port.postMessage({ type: "segment_ended", segmentIndex: current.segmentIndex, samples: this.activeSegmentSamples });
+        this.endedSegments.delete(current.segmentIndex);
+        this.activeSegment = null;
+        this.activeSegmentSamples = 0;
+      }
     }
   }
   process(inputs, outputs) {
@@ -205,6 +218,7 @@ export async function createRitaPcmPlayer(callbacks: {
         reader.releaseLock();
       }
       if (signal.aborted) throw new DOMException("Voice stopped", "AbortError");
+      node.port.postMessage({ type: "segment_end", segmentIndex });
       onProgress?.({ type: "received", bytes: receivedBytes });
       return new Blob(stored, { type: "audio/pcm;rate=24000" });
     },
