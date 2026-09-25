@@ -175,7 +175,7 @@ export async function fetchAllSetQuestions(setId: string) {
  */
 export async function publishQuestionSet(input: {
   title: string;
-  description: string;
+  description: string | null;
   source_type: QuestionSourceType;
   subject?: string | null;
   cover: string;
