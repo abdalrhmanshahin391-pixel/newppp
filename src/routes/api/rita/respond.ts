@@ -140,7 +140,7 @@ export const Route = createFileRoute("/api/rita/respond")({
         });
         const upstreamAbort = new AbortController();
         request.signal.addEventListener("abort", () => upstreamAbort.abort(), { once: true });
-        const upstream = await fetch("https://api.openai.com/v1/chat/completions", {
+        const upstreamPromise = fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -159,6 +159,18 @@ export const Route = createFileRoute("/api/rita/respond")({
           }),
           signal: upstreamAbort.signal,
         });
+        const allowed = await allowancePromise;
+        if (!allowed) {
+          upstreamAbort.abort();
+          upstreamPromise.catch(() => undefined);
+          return apiError(
+            "allowance_reached",
+            "Rita Economic v2 usage limit was reached.",
+            429,
+            traceId,
+          );
+        }
+        const upstream = await upstreamPromise;
         if (!upstream.ok || !upstream.body) {
           const detail = await upstream.text().catch(() => "");
           console.error("Rita Economic GPT failed", traceId, upstream.status, detail.slice(0, 240));
