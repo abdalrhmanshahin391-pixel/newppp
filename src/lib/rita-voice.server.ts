@@ -229,6 +229,20 @@ export type RitaAllowance = {
   premiumVoice: boolean;
 };
 
+// 20s per-user allowance cache so consecutive turns (and the warm-up) skip the DB wait.
+const allowanceCache = new Map<string, { at: number; value: Promise<RitaAllowance> }>();
+export function getRitaAllowanceCached(userId: string, settings = DEFAULT_SETTINGS) {
+  const hit = allowanceCache.get(userId);
+  if (hit && Date.now() - hit.at < 20_000) return hit.value;
+  const value = getRitaAllowance(userId, settings);
+  allowanceCache.set(userId, { at: Date.now(), value });
+  value.catch(() => allowanceCache.delete(userId));
+  return value;
+}
+export function clearRitaAllowanceCache(userId: string) {
+  allowanceCache.delete(userId);
+}
+
 export async function getRitaAllowance(
   userId: string,
   settings = DEFAULT_SETTINGS,

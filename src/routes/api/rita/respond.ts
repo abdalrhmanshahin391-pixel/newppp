@@ -4,7 +4,8 @@ import {
   RITA_MODELS,
   estimateSpeechDurationMs,
   estimateTurnCostMicros,
-  getRitaAllowance,
+  getRitaAllowanceCached,
+  clearRitaAllowanceCache,
   getRitaSettings,
   normalizePersonality,
   requireRitaUser,
@@ -112,7 +113,7 @@ export const Route = createFileRoute("/api/rita/respond")({
           return apiError("openai_not_configured", "Rita needs an OpenAI key.", 503, traceId);
         // Allowance runs in parallel with GPT; nothing is sent to the user until it passes.
         let allowanceMs = 0;
-        const allowancePromise = getRitaAllowance(auth.userId, settings)
+        const allowancePromise = getRitaAllowanceCached(auth.userId, settings)
           .then((value) => {
             allowanceMs = Math.round(performance.now() - startedAt);
             return Boolean(value.allowed);
@@ -296,6 +297,7 @@ export const Route = createFileRoute("/api/rita/respond")({
                 });
                 if (error) throw error;
                 usageSaved = true;
+                clearRitaAllowanceCache(auth.userId);
               } catch (error) {
                 console.error("Rita Economic usage write failed", traceId, error);
               }
