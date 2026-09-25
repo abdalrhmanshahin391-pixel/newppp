@@ -31,9 +31,10 @@ import {
 } from "@/lib/share-questions";
 
 export const Route = createFileRoute("/share/")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    type: (s.type === "questions" ? "questions" : "flashcards") as "flashcards" | "questions",
-  }),
+  validateSearch: (s: Record<string, unknown>): { type?: "flashcards" | "questions" } =>
+    s.type === "questions" || s.type === "flashcards"
+      ? { type: s.type as "flashcards" | "questions" }
+      : {},
   head: () => ({
     meta: [
       { title: "Shared study materials — flashcards and questions | RitaJet" },
