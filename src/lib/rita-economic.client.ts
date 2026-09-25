@@ -129,6 +129,17 @@ function normalizedWords(value: string) {
     .filter(Boolean);
 }
 
+const SHORT_REPLIES = new Set([
+  "شكرا", "شكرًا", "مشكور", "يسلمو", "نعم", "لا", "اه", "آه", "ايوه", "أيوه", "تمام", "ماشي", "طيب", "اوكي", "خلص", "صح",
+  "ok", "okay", "yes", "no", "thanks", "thank", "you", "sure", "right",
+  "danke", "ja", "nein", "genau", "gut", "okay",
+]);
+
+export function isShortReply(text: string) {
+  const words = normalizedWords(text);
+  return words.length > 0 && words.length <= 3 && words.every((word) => SHORT_REPLIES.has(word));
+}
+
 export function isLikelyRitaEcho(transcript: string, spokenText: string) {
   const heard = normalizedWords(transcript);
   const output = normalizedWords(spokenText);
@@ -494,10 +505,11 @@ export async function startRitaEconomicListening(args: {
           isRitaStopCommand(combined) ||
           (canInterrupt && normalizedWords(combined).length >= 2 && !isLikelyRitaEcho(combined, outputText))
         ) confirmBargeIn();
-      } else if (normalizedWords(combined).length >= 2) confirmBargeIn();
+      } else if (normalizedWords(combined).length >= 1) confirmBargeIn();
       if (message.is_final) finalParts.push(text);
       else callbacks.onInterim(combined);
-      if (message.speech_final) {
+      const shortReply = !outputSpeaking && message.is_final && isShortReply(combined);
+      if (message.speech_final || shortReply) {
         const complete = finalParts.join(" ").replace(/\s+/g, " ").trim();
         finalParts = [];
         emitFinal(

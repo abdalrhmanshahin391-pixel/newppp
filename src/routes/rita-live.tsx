@@ -804,6 +804,19 @@ function RitaLivePage() {
       turnAbort.current?.abort();
       const controller = new AbortController();
       turnAbort.current = controller;
+      // Freeze guard: if Rita has not started answering within 8s, cancel quietly and listen again.
+      const watchdog = window.setTimeout(() => {
+        if (controller.signal.aborted || timeline.marks.firstToken !== undefined) return;
+        timeline.lastStage = "watchdog_llm";
+        controller.abort();
+        stopSpeaking();
+        if (turnAbort.current === controller) turnAbort.current = null;
+        setProcessing(false);
+        processingRef.current = false;
+        setMood("listening");
+        setStatus("That took too long — please say it again, Rita is listening");
+      }, 8_000);
+      controller.signal.addEventListener("abort", () => window.clearTimeout(watchdog), { once: true });
       setError(null);
       setProcessing(true);
       processingRef.current = true;
@@ -992,6 +1005,7 @@ function RitaLivePage() {
         timeline.replyCharCount = result.reply.length;
         timeline.segmentsPlanned = result.segmentsPlanned ?? timeline.segmentsPlanned;
         timeline.serverTimings = result.serverTimings ?? timeline.serverTimings;
+        window.clearTimeout(watchdog);
         markRitaTurn(timeline, "textComplete");
         requestAnimationFrame(() => markRitaTurn(timeline, "textRendered"));
         completedTurns.current += 1;
