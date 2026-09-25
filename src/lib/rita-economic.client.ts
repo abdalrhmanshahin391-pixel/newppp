@@ -26,7 +26,7 @@ export type RitaEconomicCallbacks = {
 export type RitaEconomicController = {
   stream: MediaStream;
   mute: (muted: boolean) => void;
-  setOutputSpeaking: (speaking: boolean) => void;
+  setOutputSpeaking: (speaking: boolean, spokenText?: string) => void;
   beginPushToTalk: () => void;
   endPushToTalk: () => void;
   stop: () => void;
@@ -120,6 +120,28 @@ type DeepgramConnection = {
 
 export const RITA_RECONNECT_DELAYS_MS = [250, 750, 1_500] as const;
 export const RITA_IDLE_CLOSE_MS = 120_000;
+export const RITA_OUTPUT_ECHO_GUARD_MS = 320;
+
+function normalizedWords(value: string) {
+  return value
+    .toLocaleLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+export function isLikelyRitaEcho(transcript: string, spokenText: string) {
+  const heard = normalizedWords(transcript);
+  const output = normalizedWords(spokenText);
+  if (heard.length < 2 || output.length < 2) return false;
+  const outputSet = new Set(output);
+  const overlap = heard.filter((word) => outputSet.has(word)).length / heard.length;
+  return overlap >= 0.75;
+}
+
+export function isRitaStopCommand(transcript: string) {
+  return /^(?:لا|وقف|توقف|اسكتي|بس|stop|pause|stopp)$/iu.test(transcript.trim());
+}
 
 function scriptRatio(text: string, pattern: RegExp) {
   const letters = Array.from(text).filter((character) => /\p{L}/u.test(character));
@@ -148,8 +170,8 @@ function listenUrl(language: string, keyterms: string[]) {
   url.searchParams.set("punctuate", "true");
   url.searchParams.set("smart_format", "true");
   url.searchParams.set("vad_events", "true");
-  url.searchParams.set("endpointing", "350");
-  url.searchParams.set("utterance_end_ms", "1000");
+  url.searchParams.set("endpointing", "250");
+  url.searchParams.set("utterance_end_ms", "700");
   for (const term of keyterms.slice(0, 25)) {
     const clean = term.trim().slice(0, 80);
     if (clean) url.searchParams.append("keyterm", clean);
@@ -261,6 +283,8 @@ export async function startRitaEconomicListening(args: {
   const reconnectAttempts = new Map<string, number>();
   let bargedIn = false;
   let voicedMs = 0;
+  let outputText = "";
+  let outputGuardUntil = 0;
   const confirmBargeIn = () => {
     if (bargedIn || stopped) return;
     bargedIn = true;
@@ -378,7 +402,7 @@ export async function startRitaEconomicListening(args: {
 
   const scheduleCandidate = (candidate: ProbeCandidate) => {
     if (semanticTimer) window.clearTimeout(semanticTimer);
-    const extraDelay = Math.max(0, ritaEndOfTurnDelay(candidate.text) - 350);
+    const extraDelay = Math.max(0, ritaEndOfTurnDelay(candidate.text) - 250);
     semanticTimer = window.setTimeout(() => {
       semanticTimer = 0;
       emitCandidate(candidate);
@@ -486,8 +510,14 @@ export async function startRitaEconomicListening(args: {
       const alternative = message.channel?.alternatives?.[0];
       const text = String(alternative?.transcript ?? "").trim();
       if (!text) return;
-      if ([...connection.finalParts, text].join(" ").split(/\s+/).filter(Boolean).length >= 2)
-        confirmBargeIn();
+       const confirmedText = [...connection.finalParts, text].join(" ").replace(/\s+/g, " ").trim();
+       if (outputSpeaking) {
+         const canInterrupt = performance.now() >= outputGuardUntil;
+         if (
+           isRitaStopCommand(confirmedText) ||
+           (canInterrupt && normalizedWords(confirmedText).length >= 2 && !isLikelyRitaEcho(confirmedText, outputText))
+         ) confirmBargeIn();
+       } else if (normalizedWords(confirmedText).length >= 2) confirmBargeIn();
       if (message.is_final) connection.finalParts.push(text);
       else if (selectedLanguage || !candidates.size)
         callbacks.onInterim([...connection.finalParts, text].join(" ").trim());
@@ -599,7 +629,7 @@ export async function startRitaEconomicListening(args: {
       const threshold = Math.max(0.008, noiseFloor * (outputSpeaking ? 3 : 1.55));
       quietMs = rms < threshold ? quietMs + frameMs : 0;
       if (rms >= threshold) voicedMs += frameMs;
-      if (voicedMs >= 400) confirmBargeIn();
+       if (!outputSpeaking && voicedMs >= 400) confirmBargeIn();
     }
     const pcm = encoder.encode(frame);
     if (!pcm.byteLength) return;
@@ -632,8 +662,12 @@ export async function startRitaEconomicListening(args: {
         track.enabled = !value;
       });
     },
-    setOutputSpeaking(value) {
+    setOutputSpeaking(value, spokenText) {
       outputSpeaking = value;
+      if (typeof spokenText === "string" && spokenText.trim())
+        outputText = `${outputText} ${spokenText}`.trim();
+      outputGuardUntil = performance.now() + RITA_OUTPUT_ECHO_GUARD_MS;
+      if (!value) outputText = "";
     },
     beginPushToTalk() {
       if (stopped || muted) return;

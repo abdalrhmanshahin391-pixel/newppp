@@ -79,7 +79,6 @@ const EMPTY_DESTINATIONS: Destinations = {
   germanSubjects: [],
   germanSubtopics: [],
 };
-const RITA_FILLERS = { ar: 3, en: 3, de: 3 } as const;
 const loadEconomic = createClientOnlyFn(() => import("@/lib/rita-economic.client"));
 const loadEconomicResponse = createClientOnlyFn(
   () => import("@/lib/rita-economic-response.client"),
@@ -128,7 +127,21 @@ function matchingDestination(spoken: string, target: SaveTarget, data: Destinati
 
 export const Route = createFileRoute("/rita-live")({
   head: () => ({
-    meta: [{ title: "Talk with Rita — RitaJet" }, { name: "robots", content: "noindex" }],
+    meta: [
+      { title: "Talk with Rita — RitaJet" },
+      {
+        name: "description",
+        content: "Practise Arabic, English, or German in a live voice lesson with Rita.",
+      },
+      { property: "og:title", content: "Talk with Rita — RitaJet" },
+      {
+        property: "og:description",
+        content: "Practise Arabic, English, or German in a live voice lesson with Rita.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
   }),
   component: RitaLivePage,
 });
@@ -169,7 +182,6 @@ function RitaLivePage() {
   const [muted, setMuted] = useState(false);
   const [pushToTalking, setPushToTalking] = useState(false);
   const [premiumVoice, setPremiumVoice] = useState(true);
-  const [ritaVoice, setRitaVoice] = useState<"marin" | "cedar">("marin");
   const [hasReplay, setHasReplay] = useState(false);
   const [needsTapToPlay, setNeedsTapToPlay] = useState(false);
   const [inputLevel, setInputLevel] = useState(0);
@@ -186,11 +198,8 @@ function RitaLivePage() {
   const sessionId = useRef<string | null>(null);
   const lastSpeechBlob = useRef<Blob | null>(null);
   const speechAbort = useRef<AbortController | null>(null);
-  const fillerTimer = useRef<number | null>(null);
-  const fillerPlaying = useRef(false);
   const reconnectCount = useRef(0);
   const pendingSpeechStart = useRef(0);
-  const lastFiller = useRef<Record<string, number>>({ ar: -1, en: -1, de: -1 });
   const turnAbort = useRef<AbortController | null>(null);
   const outputFrame = useRef<number | null>(null);
   const messageEnd = useRef<HTMLDivElement | null>(null);
@@ -224,6 +233,8 @@ function RitaLivePage() {
     interrupted: false,
   });
   const turnTimeline = useRef<RitaTurnTimeline | null>(null);
+  const timelineWriteQueue = useRef(Promise.resolve());
+  const playbackSafetyTimer = useRef<number | null>(null);
   const segmentTimelines = useRef<Map<number, Record<string, unknown>>>(new Map());
   const languageState = useRef<RitaLanguageState>(
     initialRitaLanguageState({ language: "automatic", dialect: "" }),
@@ -316,22 +327,28 @@ function RitaLivePage() {
   );
 
   const persistTurnTimeline = useCallback(
-    (segment?: Record<string, unknown>) => {
-      const timeline = turnTimeline.current;
+    (segment?: Record<string, unknown>, target?: RitaTurnTimeline) => {
+      const timeline = target ?? turnTimeline.current;
       if (!timeline) return;
       const connection = navigator as Navigator & { connection?: { effectiveType?: string } };
-      void getToken()
+      const snapshot = {
+        ...timeline,
+        marks: { ...timeline.marks },
+        serverTimings: timeline.serverTimings ? { ...timeline.serverTimings } : undefined,
+        sessionId: sessionId.current,
+        pipelineMode: connectedModeRef.current,
+        language: languageState.current.activeLanguage,
+        browser: navigator.userAgent.slice(0, 120),
+        networkType: connection.connection?.effectiveType || "unknown",
+      } as RitaTurnTimeline;
+      const segmentSnapshot = segment ? { ...segment } : undefined;
+      timelineWriteQueue.current = timelineWriteQueue.current
+        .catch(() => undefined)
+        .then(() => getToken())
         .then((token) =>
-          postRitaTurnTimeline(token, {
-            ...timeline,
-            sessionId: sessionId.current,
-            pipelineMode: connectedModeRef.current,
-            language: languageState.current.activeLanguage,
-            browser: navigator.userAgent.slice(0, 120),
-            networkType: connection.connection?.effectiveType || "unknown",
-          } as RitaTurnTimeline, segment),
+          postRitaTurnTimeline(token, snapshot, segmentSnapshot),
         )
-        .catch(() => undefined);
+        .then(() => undefined);
     },
     [getToken],
   );
@@ -350,7 +367,7 @@ function RitaLivePage() {
       timeline.errorStage = errorStage;
       timeline.reconnectCount = reconnectCount.current;
       timeline.lastStage = reason;
-      persistTurnTimeline();
+      persistTurnTimeline(undefined, timeline);
     },
     [persistTurnTimeline],
   );
@@ -607,9 +624,8 @@ function RitaLivePage() {
   }, [stopOutputMeter]);
 
   const stopSpeaking = useCallback((reason?: RitaTurnEndReason) => {
-    if (fillerTimer.current) window.clearTimeout(fillerTimer.current);
-    fillerTimer.current = null;
-    fillerPlaying.current = false;
+    if (playbackSafetyTimer.current) window.clearTimeout(playbackSafetyTimer.current);
+    playbackSafetyTimer.current = null;
     if (speechAbort.current) metricRef.current.interrupted = true;
     speechAbort.current?.abort();
     speechAbort.current = null;
@@ -824,48 +840,10 @@ function RitaLivePage() {
           speechAbort.current = voiceController;
           lastSpeechBlob.current = null;
           setHasReplay(false);
-          const fillerLanguage = stableLanguage.startsWith("ar")
-            ? "ar"
-            : stableLanguage.startsWith("de")
-              ? "de"
-              : "en";
-          fillerTimer.current = window.setTimeout(() => {
-            if (voiceController.signal.aborted || metricRef.current.ttsStart || !pcmPlayer.current)
-              return;
-            const next = (lastFiller.current[fillerLanguage] + 1) % RITA_FILLERS[fillerLanguage];
-            lastFiller.current[fillerLanguage] = next;
-            const fillerUrl = `/api/rita/filler?language=${fillerLanguage}&index=${next}&voice=${encodeURIComponent(ritaVoice)}`;
-            void caches
-              .open("rita-fillers-v1")
-              .then(async (cache) => {
-                const cached = await cache.match(fillerUrl);
-                if (cached) return cached;
-                const response = await fetch(fillerUrl, {
-                  headers: { Authorization: `Bearer ${token}` },
-                  signal: voiceController.signal,
-                });
-                if (response.ok) await cache.put(fillerUrl, response.clone());
-                return response;
-              })
-              .then((response) => (response.ok ? response.blob() : null))
-              .then((blob) => {
-                if (!blob || voiceController.signal.aborted || metricRef.current.ttsStart) return;
-                fillerPlaying.current = true;
-                // Rita's own filler must never count as the student speaking.
-                economic.current?.setOutputSpeaking(true);
-                return pcmPlayer.current?.replay(blob);
-              })
-              .catch(() => undefined);
-          }, 650);
         }
         const queueSpeech = (segment: RitaSpeechSegment) => {
           if (!activeRef.current || voiceController.signal.aborted) return;
-          if (fillerTimer.current) window.clearTimeout(fillerTimer.current);
-          fillerTimer.current = null;
-          if (fillerPlaying.current) {
-            pcmPlayer.current?.interrupt();
-            fillerPlaying.current = false;
-          }
+          economic.current?.setOutputSpeaking(true, segment.text);
           // Start the next HTTP request immediately. Playback remains ordered, so the
           // following clause is already arriving while Rita speaks the current one.
           timeline.segmentsPlanned = Math.max(timeline.segmentsPlanned, segment.index + 1);
@@ -1033,6 +1011,22 @@ function RitaLivePage() {
             await speechChain;
             if (!voiceController.signal.aborted && pcmPlayer.current) {
               pcmPlayer.current.finish();
+              if (playbackSafetyTimer.current) window.clearTimeout(playbackSafetyTimer.current);
+              playbackSafetyTimer.current = window.setTimeout(() => {
+                const currentTimeline = turnTimeline.current;
+                if (!currentTimeline || currentTimeline.endReason || voiceController.signal.aborted)
+                  return;
+                economic.current?.setOutputSpeaking(false);
+                stopOutputMeter();
+                setMood(activeRef.current ? "listening" : "ready");
+                setStatus(activeRef.current ? "Rita is listening" : "Reply ready");
+                finalizeTurnTimeline(
+                  currentTimeline.segmentsPlayed > 0 ? "partial" : "failed",
+                  "tts_error",
+                  "playback_timeout",
+                  currentTimeline,
+                );
+              }, 45_000);
               lastSpeechBlob.current = new Blob(speechBlobs, {
                 type: "audio/pcm;rate=24000",
               });
@@ -1083,19 +1077,13 @@ function RitaLivePage() {
         }
       }
     },
-    [add, extractLearningInBackground, finalizeTurnTimeline, getToken, persistTurnTimeline, ritaVoice, stopSpeaking],
+    [add, extractLearningInBackground, finalizeTurnTimeline, getToken, persistTurnTimeline, stopOutputMeter, stopSpeaking],
   );
   processTurnRef.current = processTurn;
 
-  const warmTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const warmNow = useRef<(() => void) | null>(null);
-  const lastSpeechWarm = useRef(0);
   const endSession = useCallback(() => {
     lessonEpoch.current += 1;
     finalizeTurnTimeline("aborted", "session_ended");
-    if (warmTimer.current) clearInterval(warmTimer.current);
-    warmTimer.current = null;
-    warmNow.current = null;
     void loadEconomicResponse()
       .then((m) => m.clearRitaSessionTicket())
       .catch(() => undefined);
@@ -1187,7 +1175,6 @@ function RitaLivePage() {
         setConfigured(Boolean(result?.configured));
         setAvailableMode(result?.pilotMode === "legacy" ? "legacy" : "economic_v2");
         setPremiumVoice(result?.allowance?.premiumVoice !== false);
-        setRitaVoice(result?.voice === "cedar" ? "cedar" : "marin");
         setStatus(
           result?.configured
             ? result?.pilotMode === "legacy"
@@ -1245,8 +1232,10 @@ function RitaLivePage() {
       pcmPlayer.current = await createRitaPcmPlayer({
         onStarted: () => {
           const firstAudioAt = performance.now();
-          if (!fillerPlaying.current) submitTurnMetric(firstAudioAt);
-          if (!fillerPlaying.current && turnTimeline.current) {
+          submitTurnMetric(firstAudioAt);
+          if (playbackSafetyTimer.current) window.clearTimeout(playbackSafetyTimer.current);
+          playbackSafetyTimer.current = null;
+          if (turnTimeline.current) {
             markRitaTurn(turnTimeline.current, "firstAudio");
             persistTurnTimeline();
           }
@@ -1262,7 +1251,7 @@ function RitaLivePage() {
           startOutputMeter();
         },
         onEnded: () => {
-          if (!fillerPlaying.current && turnTimeline.current) {
+          if (turnTimeline.current) {
             markRitaTurn(turnTimeline.current, "playbackEnd");
             finalizeTurnTimeline("completed", "completed");
           }
@@ -1299,7 +1288,7 @@ function RitaLivePage() {
         },
         onInterrupted: (segmentIndex) => {
           const timeline = turnTimeline.current;
-          if (!timeline || segmentIndex === null || fillerPlaying.current) return;
+          if (!timeline || segmentIndex === null) return;
           const segment = segmentTimelines.current.get(segmentIndex);
           if (segment) {
             segment.status = "interrupted";
@@ -1360,33 +1349,8 @@ function RitaLivePage() {
           .then((r) => (r.ok ? r.json() : null))
           .then(async (value) => (await loadEconomicResponse()).setRitaSessionTicket(value))
           .catch(() => undefined);
-      warmNow.current = warm;
       warm();
-      if (warmTimer.current) clearInterval(warmTimer.current);
-      warmTimer.current = setInterval(warm, 45_000);
       setPremiumVoice(result.allowance?.premiumVoice !== false);
-      setRitaVoice(result.voice === "cedar" ? "cedar" : "marin");
-      {
-        // Warm the three filler phrases for this lesson's language in the background.
-        const preloadVoice = result.voice === "cedar" ? "cedar" : "marin";
-        const hint = `${accentPreference || ""} ${navigator.language || ""}`.toLowerCase();
-        const preloadLanguage = /(^|\s)ar/.test(hint) ? "ar" : /(^|\s)de/.test(hint) ? "de" : "en";
-        void caches
-          .open("rita-fillers-v1")
-          .then((cache) =>
-            Promise.all(
-              [0, 1, 2].map(async (index) => {
-                const url = `/api/rita/filler?language=${preloadLanguage}&index=${index}&voice=${preloadVoice}`;
-                if (await cache.match(url)) return;
-                const response = await fetch(url, {
-                  headers: { Authorization: `Bearer ${token}` },
-                });
-                if (response.ok) await cache.put(url, response);
-              }),
-            ),
-          )
-          .catch(() => undefined);
-      }
       let listeningToken = "";
       if (selectedMode === "economic_v2") {
         setStatus("Connecting Deepgram Nova-3…");
@@ -1437,11 +1401,6 @@ function RitaLivePage() {
           onSpeechStart: () => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
             pendingSpeechStart.current = performance.now();
-            // Re-warm the lines while the learner is still speaking (throttled server-side).
-            if (performance.now() - lastSpeechWarm.current > 20_000) {
-              lastSpeechWarm.current = performance.now();
-              warmNow.current?.();
-            }
             // Raw sound alone never interrupts Rita; wait for confirmed speech (onBargeIn).
             if (!processingRef.current && !speechAbort.current) {
               setMood("listening");

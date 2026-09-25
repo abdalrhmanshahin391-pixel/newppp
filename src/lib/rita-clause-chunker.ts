@@ -9,6 +9,36 @@ export function cleanRitaSpokenText(value: string) {
     .trim();
 }
 
+const OPENING_FILLER = /^(?:(?:مم+|همم+|آ?مم+|فهمت\s+عليك(?:ي)?|خليني\s+(?:أ|ا)?شوف|طيب|تمام|حسناً|حسنا|okay(?:\s+so)?|ok(?:ay)?|h+m+|m+h+m+|got\s+you|let\s+me\s+(?:think|see)|also\s+gut|verstehe|lass\s+mich\s+kurz\s+überlegen)[\s،,.!?؟؛:…-]*)+/iu;
+
+export function stripRitaOpeningFiller(value: string) {
+  return value.replace(OPENING_FILLER, "").trimStart();
+}
+
+/** Holds only the opening long enough to remove spoken filler before text or audio sees it. */
+export class RitaReplySanitizer {
+  private pending = "";
+  private released = false;
+
+  push(delta: string) {
+    if (this.released) return delta;
+    this.pending += delta;
+    if (this.pending.length < 48 && !/[.!?؟؛:\n]/u.test(this.pending)) return "";
+    this.released = true;
+    const clean = stripRitaOpeningFiller(this.pending);
+    this.pending = "";
+    return clean;
+  }
+
+  flush() {
+    if (this.released) return "";
+    this.released = true;
+    const clean = stripRitaOpeningFiller(this.pending);
+    this.pending = "";
+    return clean;
+  }
+}
+
 function wordCount(value: string) {
   return value.trim().split(/\s+/).filter(Boolean).length;
 }
