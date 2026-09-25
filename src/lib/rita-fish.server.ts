@@ -42,12 +42,19 @@ export async function listFishArabicVoices(): Promise<{ voices: FishVoice[]; con
   if (!key) return { voices: [], configured: false };
   if (voiceCache && Date.now() - voiceCache.at < 600_000)
     return { voices: voiceCache.value, configured: true };
-  const url =
-    "https://api.fish.audio/model?page_size=40&language=ar&sort_by=task_count&title=" +
-    encodeURIComponent("");
-  const response = await fetch(url, { headers: { Authorization: `Bearer ${key}` } });
-  if (!response.ok) throw new Error(`Fish Audio voice list failed (${response.status})`);
-  const json = (await response.json()) as { items?: any[] };
+  // Generic "popular Arabic" is dominated by celebrity/meme clones, so search Saudi/Gulf terms.
+  const lists = await Promise.all(
+    ["سعودي", "saudi", "خليجي"].map(async (term) => {
+      const response = await fetch(
+        `https://api.fish.audio/model?page_size=20&sort_by=task_count&title=${encodeURIComponent(term)}`,
+        { headers: { Authorization: `Bearer ${key}` } },
+      );
+      if (!response.ok) throw new Error(`Fish Audio voice list failed (${response.status})`);
+      return ((await response.json()) as { items?: any[] }).items ?? [];
+    }),
+  );
+  const seen = new Set<string>();
+  const json = { items: lists.flat().filter((item) => item?._id && !seen.has(item._id) && seen.add(item._id)) };
   const voices: FishVoice[] = (json.items ?? [])
     .filter((item) => item?._id && item?.state !== "failed")
     .map((item) => ({
