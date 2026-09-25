@@ -1,0 +1,1 @@
+ALTER FUNCTION public.merge_cap(integer, integer) SET search_path = public;

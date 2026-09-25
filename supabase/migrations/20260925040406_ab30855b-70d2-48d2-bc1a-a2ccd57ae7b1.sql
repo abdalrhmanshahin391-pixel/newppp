@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.__ritajet_bootstrap_exec(text);

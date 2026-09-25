@@ -1,0 +1,1 @@
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS classic_colors boolean NOT NULL DEFAULT false;

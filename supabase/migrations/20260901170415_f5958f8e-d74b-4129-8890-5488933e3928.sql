@@ -1,0 +1,1 @@
+ALTER TABLE public.site_settings ADD COLUMN IF NOT EXISTS feature_ai_cards_enabled boolean NOT NULL DEFAULT false;

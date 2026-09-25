@@ -1,0 +1,23 @@
+REVOKE EXECUTE ON FUNCTION public.space_role(uuid, uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.is_space_member(uuid, uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.can_manage_space(uuid, uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.space_can_add_decks(uuid, uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.space_can_post(uuid, uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.space_chat_on(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.create_space(text, text, text, text, text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.space_preview(text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.join_space_by_code(text) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.space_members_view(uuid) FROM anon, public;
+REVOKE EXECUTE ON FUNCTION public.my_spaces() FROM anon, public;
+
+GRANT EXECUTE ON FUNCTION public.space_role(uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_space_member(uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.can_manage_space(uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.space_can_add_decks(uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.space_can_post(uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.space_chat_on(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.create_space(text, text, text, text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.space_preview(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.join_space_by_code(text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.space_members_view(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.my_spaces() TO authenticated;

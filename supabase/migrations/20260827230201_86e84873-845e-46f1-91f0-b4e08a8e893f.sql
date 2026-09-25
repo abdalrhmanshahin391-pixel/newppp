@@ -1,0 +1,10 @@
+DELETE FROM public.study_plan_subjects WHERE true;
+DELETE FROM public.study_plan_stages WHERE true;
+DELETE FROM public.committee_subjects WHERE true;
+DELETE FROM public.committee_semesters WHERE true;
+DELETE FROM public.committee_years WHERE true;
+DELETE FROM public.university_tiles WHERE true;
+DELETE FROM public.universities WHERE true;
+DELETE FROM public.guides WHERE true;
+DELETE FROM public.course_options WHERE true;
+DROP FUNCTION IF EXISTS public.__setup_exec(text);

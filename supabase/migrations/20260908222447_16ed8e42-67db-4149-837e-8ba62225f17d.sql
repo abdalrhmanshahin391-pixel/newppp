@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.get_subject_question_counts(uuid[]) TO anon;
