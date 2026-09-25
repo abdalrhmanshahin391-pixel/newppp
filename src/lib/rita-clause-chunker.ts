@@ -30,15 +30,25 @@ export class RitaClauseChunker {
     const output: string[] = [];
     let clean = cleanRitaSpokenText(this.raw);
     while (clean && this.emitted < 2) {
-      const matches = [...clean.matchAll(/[.!?؟؛:](?:\s|$)/g)];
+      // The first clause is released early (≥4 words at any clause mark, hard
+      // cap 10 words) so the voice starts almost as soon as the text appears.
+      // Later clauses stay longer so speech never sounds chopped.
+      const first = this.emitted === 0;
+      const minWords = first ? 4 : 8;
+      const maxWords = first ? 10 : 18;
+      const pattern = first ? /[.!?؟؛:,،](?:\s|$)/g : /[.!?؟؛:](?:\s|$)/g;
+      const matches = [...clean.matchAll(pattern)];
       const boundary = matches.find(
-        (match) => wordCount(clean.slice(0, (match.index ?? 0) + 1)) >= 8,
+        (match) => wordCount(clean.slice(0, (match.index ?? 0) + 1)) >= minWords,
       );
       let cut = boundary ? (boundary.index ?? 0) + 1 : -1;
-      if (cut < 0 && wordCount(clean) >= 18) {
-        const firstWords = clean.split(/\s+/).slice(0, 18).join(" ");
+      if (cut < 0 && wordCount(clean) > maxWords) {
+        const firstWords = clean.split(/\s+/).slice(0, maxWords).join(" ");
         const soft = Math.max(firstWords.lastIndexOf(","), firstWords.lastIndexOf("،"));
-        cut = soft >= 0 && wordCount(firstWords.slice(0, soft)) >= 8 ? soft + 1 : firstWords.length;
+        cut =
+          soft >= 0 && wordCount(firstWords.slice(0, soft)) >= minWords
+            ? soft + 1
+            : firstWords.length;
       }
       if (cut < 0) break;
       const segment = clean.slice(0, cut).trim();
