@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { RITA_MODELS, getRitaSettings, resolveRitaOpenAiKey } from "@/lib/rita-voice.server";
-import { fishSpeech, resolveFishKey } from "@/lib/rita-fish.server";
+import { RITA_MODELS, getRitaSettings, requireRitaUser, resolveRitaOpenAiKey } from "@/lib/rita-voice.server";
+import { fishSpeech, resolveFishKey, RITA_ARABIC_FISH_VOICE_ID, RITA_GERMAN_FISH_VOICE_ID } from "@/lib/rita-fish.server";
 import { ritaVoiceInstructions } from "@/lib/rita-voice-style";
 import { readRitaSpeechTicketUser, verifyRitaSpeechTicket } from "@/lib/rita-speech-ticket.server";
 
@@ -49,6 +49,9 @@ export const Route = createFileRoute("/api/rita/speech")({
           index?: number;
           ticket?: string;
           engine?: string;
+          voiceRole?: "arabic" | "german";
+          speed?: "normal" | "slow";
+          interactive?: boolean;
         } | null;
         const text = String(body?.text ?? "")
           .trim()
@@ -58,11 +61,12 @@ export const Route = createFileRoute("/api/rita/speech")({
         const ticket = String(body?.ticket ?? "");
         // The signed, 90-second ticket from /api/rita/respond is bound to this user,
         // turn, segment and exact text, so it replaces a second sign-in round trip.
-        const ticketUser = readRitaSpeechTicketUser(ticket);
+        const interactiveAuth = body?.interactive ? await requireRitaUser(request) : null;
+        const ticketUser = readRitaSpeechTicketUser(ticket) || interactiveAuth?.userId || "";
         if (!ticketUser)
           return speechError("unauthorized", "Please sign in again.", 401, traceId, false);
         const auth = { userId: ticketUser };
-        if (!text || !/^[0-9a-f-]{36}$/i.test(turnId))
+        if (!text || !/^[0-9a-f-]{36}$/i.test(turnId) || (body?.interactive && text.length > 180))
           return speechError(
             "invalid_request",
             "Rita received an invalid voice request.",
@@ -70,7 +74,7 @@ export const Route = createFileRoute("/api/rita/speech")({
             traceId,
             false,
           );
-        if (
+        if (!body?.interactive && (
           !Number.isInteger(index) ||
           index < 0 ||
           index > 7 ||
@@ -81,7 +85,7 @@ export const Route = createFileRoute("/api/rita/speech")({
             index,
             text,
           }))
-        )
+        ))
           return speechError(
             "invalid_speech_ticket",
             "This voice segment is no longer authorized.",
@@ -93,17 +97,22 @@ export const Route = createFileRoute("/api/rita/speech")({
         const [settings, key] = await configPromise;
         const requestedEngine =
           body?.engine === "fish" || body?.engine === "openai" ? body.engine : settings.voiceEngine;
-        if (requestedEngine === "fish" && settings.fishVoiceId) {
+        const voiceRole = body?.voiceRole === "german" ? "german" : "arabic";
+        const fishVoiceId = voiceRole === "german"
+          ? RITA_GERMAN_FISH_VOICE_ID
+          : (settings.fishVoiceId || RITA_ARABIC_FISH_VOICE_ID);
+        if ((requestedEngine === "fish" || voiceRole === "german") && fishVoiceId) {
           const fishKey = await resolveFishKey();
           if (fishKey) {
             const fishStartedAt = performance.now();
             try {
               const stream = await fishSpeech({
                 key: fishKey,
-                voiceId: settings.fishVoiceId,
+                voiceId: fishVoiceId,
                 text,
                 signal: request.signal,
                 firstAudioTimeoutMs: 2_500,
+                speed: body?.speed === "slow" ? 0.72 : 1,
               });
               return new Response(stream, {
                 headers: {
@@ -117,10 +126,22 @@ export const Route = createFileRoute("/api/rita/speech")({
               });
             } catch (error) {
               if (request.signal.aborted) return new Response(null, { status: 499 });
-              // Fall back to OpenAI for this sentence only.
-              console.warn("Rita Fish voice fell back to OpenAI", traceId, String(error).slice(0, 200));
+              console.warn("Rita Fish voice failed", traceId, voiceRole, String(error).slice(0, 200));
+              return speechError(
+                voiceRole === "german" ? "german_voice_unavailable" : "arabic_voice_unavailable",
+                voiceRole === "german" ? "صوت Emma غير متاح هلأ." : "صوت ليان غير متاح هلأ.",
+                502,
+                traceId,
+              );
             }
           }
+          return speechError(
+            voiceRole === "german" ? "german_voice_unavailable" : "arabic_voice_unavailable",
+            voiceRole === "german" ? "صوت Emma غير متاح هلأ." : "صوت ليان غير متاح هلأ.",
+            503,
+            traceId,
+            false,
+          );
         }
 
         if (!key)
@@ -154,7 +175,7 @@ export const Route = createFileRoute("/api/rita/speech")({
               response_format: responseFormat,
               stream_format: "audio",
               // 1.18 keeps speech natural but removes the slow, dragging feel.
-              speed: 1.18,
+              speed: body?.speed === "slow" ? 0.82 : 1.18,
             }),
             signal: request.signal,
           });

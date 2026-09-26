@@ -17,7 +17,7 @@
 - [ ] Verify ten natural quiet-volume iPad turns before publishing
 - [x] Add Groq-only streamed replies, concise-by-default teaching, mixed-script display, and conditional second-listen transcription
 - [x] Add automatic Rita word cards with a user preference and restricted Undo
-- [ ] Add and verify the user’s Groq key, then run live Arabic/German voice tests
+- [x] Add and verify the user’s Groq key, then run live Arabic/German voice tests
 
 ## Rita speed plan (2026-09-26)
 - [x] Replace retired Groq model, automatic fallback model, friendly error
@@ -26,3 +26,10 @@
 - [ ] Early (pre-emptive) reply start with cancel on new speech
 - [ ] Saved audio for repeated replies/words
 - [ ] Real chat test in admin key check
+
+## Rita bilingual voice and connection plan (2026-09-26)
+- [x] Separate Arabic Layan speech, German Emma speech, and silent written notes
+- [x] Add interactive German phrase cards with normal/slow replay and precise saving
+- [x] Remove second-listen behavior and repair bounded Deepgram reconnection
+- [x] Verify three live Arabic-to-German requests through the live response and voice services
+- [ ] Verify ten consecutive physical microphone turns on iPad before publishing

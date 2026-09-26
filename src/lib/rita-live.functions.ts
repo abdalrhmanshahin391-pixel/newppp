@@ -122,8 +122,9 @@ const SettingsSchema = z.object({
   adminOnlyPreview: z.boolean(),
   voiceEngine: z.enum(["openai", "fish"]).default("openai"),
   fishVoiceId: z.string().regex(/^[a-zA-Z0-9]{8,64}$/).nullable().default(null),
+  germanFishVoiceId: z.string().regex(/^[a-zA-Z0-9]{8,64}$/).default("3235abc9a84b407d92f73539a5651720"),
   groqModel: z.string().trim().min(2).max(120).default("openai/gpt-oss-20b"),
-  secondPassStt: z.boolean().default(true),
+  secondPassStt: z.boolean().default(false),
 });
 
 export const listRitaFishVoices = createServerFn({ method: "GET" })
@@ -144,7 +145,7 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
       await Promise.all([
         (supabase.from as any)("rita_voice_settings")
           .select(
-            "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,voice_engine,fish_voice_id,groq_model,second_pass_stt",
+             "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,voice_engine,fish_voice_id,german_fish_voice_id,groq_model,second_pass_stt",
           )
           .eq("id", true)
           .maybeSingle(),
@@ -200,8 +201,9 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
         adminOnlyPreview: settings?.admin_only_preview === true,
         voiceEngine: (settings?.voice_engine === "fish" ? "fish" : "openai") as "openai" | "fish",
         fishVoiceId: (settings?.fish_voice_id as string | null) ?? null,
+        germanFishVoiceId: String(settings?.german_fish_voice_id || "3235abc9a84b407d92f73539a5651720"),
         groqModel: String(settings?.groq_model || "openai/gpt-oss-20b"),
-        secondPassStt: settings?.second_pass_stt !== false,
+        secondPassStt: false,
       },
       metrics: {
         sessions: (sessions ?? []).length,
@@ -243,8 +245,9 @@ export const saveRitaVoiceSettings = createServerFn({ method: "POST" })
       admin_only_preview: data.adminOnlyPreview,
       voice_engine: data.voiceEngine,
       fish_voice_id: data.fishVoiceId,
+      german_fish_voice_id: data.germanFishVoiceId,
       groq_model: data.groqModel,
-      second_pass_stt: data.secondPassStt,
+      second_pass_stt: false,
       updated_at: new Date().toISOString(),
       updated_by: userId,
     });

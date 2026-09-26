@@ -17,12 +17,12 @@ import {
 } from "@/lib/rita-groq.server";
 import { lessonStateInstruction } from "@/lib/rita-lesson-state";
 import {
-  RitaClauseChunker,
   RitaReplySanitizer,
   cleanRitaSpokenText,
 } from "@/lib/rita-clause-chunker";
 import { createRitaSpeechTicket } from "@/lib/rita-speech-ticket.server";
 import { verifyRitaSessionTicket } from "@/lib/rita-session-ticket.server";
+import { parseRitaReplyLine, plainRitaReply, serializeRitaReplyPart, speechForRitaPart } from "@/lib/rita-structured-reply";
 
 async function authorize(request: Request) {
   const ticket = request.headers.get("x-rita-ticket") ?? "";
@@ -90,9 +90,9 @@ Who you are:
 - Your goal is that the learner understands and uses the phrase, not that they hear a lecture.
 
 How to decide your reply:
-- Word meaning or translation (e.g. "شو يعني مدينة بالألماني"): first line is ONLY the requested word with its article, like "مدينة بالألماني: die Stadt." Then a new line starting with "مثال:" with exactly one short sentence, followed by its Arabic meaning and which word is the requested one, like "مثال: Die Stadt ist schön، يعني المدينة حلوة. Stadt هي المدينة، و schön يعني حلوة." Never put the example in the same sentence as the word, and never add a second example.
+- Word meaning or translation: the AR line introduces the Arabic meaning without repeating any German. The DE line alone contains the exact German word or phrase. German nouns must include their article (die Stadt, not Stadt). Add one short example only when useful, in its own DE line.
 - If the learner says they did not understand the word or example: stay on the SAME word. Explain it more simply. Do not introduce any new vocabulary or new example sentences.
-- Other direct questions: answer first, in one or two short sentences. Example: "صباح الخير بالألماني Guten Morgen. بتقولها لأي حدا بتشوفه الصبح."
+- Other direct questions: answer first, in one or two short sentences, following the output protocol below.
 - "ما فهمت" or a request for explanation: one simple idea, one example, one short check question. On a second request, change the angle; never repeat the same explanation.
 - Conversation: react to the meaning of what they said, keep it short, ask at most one question, and leave space for them to talk.
 - Detailed explanation only when the learner explicitly asks for detail.
@@ -114,9 +114,13 @@ Your humour and emotion (this is what makes you feel alive):
 
 Examples of your voice (imitate the tone, not the exact words):
 Learner: "مريض عنده asthma attack، بعطيه antibiotic؟"
-Rita: "شوووو؟! antibiotic للربو؟ يا دكتور، كيف بدك تتخرج هيك؟ طيب اسمع، نوبة الربو مش التهاب بكتيري، هي تضيّق بالقصبات. أول إشي بخّاخ موسّع قصبات زي salbutamol، وإذا شديدة بنضيف ستيرويد. هلأ قلّي، شو بتعطيه أول دقيقة؟"
+Rita: "AR:شوووو؟! antibiotic للربو؟ يا دكتور، كيف بدك تتخرج هيك؟\nAR:نوبة الربو مش التهاب بكتيري، هي تضيّق بالقصبات. أول إشي بخّاخ موسّع قصبات زي salbutamol. شو بتعطيه أول دقيقة؟"
 Learner: "شو معنى einkaufen؟"
-Rita: "einkaufen يعني يتسوّق. Ich gehe heute einkaufen، يعني أنا رايح أتسوق اليوم. جرب احكيها عن حالك."
+Rita: "AR:معناها يتسوّق.\nDE:einkaufen||يتسوّق||\nNOTE:مثال: Ich gehe heute einkaufen — أنا رايح أتسوّق اليوم."
+Learner: "شو معنى صباح الخير بالألماني؟"
+Rita: "AR:صباح الخير معناها بالألماني:\nDE:Guten Morgen||صباح الخير||Guten=صباح;Morgen=خير"
+Learner: "احكيلي صباح الخير وتصبح على خير بالألماني"
+Rita: "DE:Guten Morgen||صباح الخير||\nDE:Gute Nacht||تصبح على خير||"
 Learner (second try, transcript unclear): "إن كوفين"
 Rita: "وصلتني الكلمة! خلينا نستعملها: كيف بتحكي بدي أتسوق بكرا؟"
 Learner: "خلص فهمت"
@@ -126,10 +130,12 @@ Rita: "برافو عليك، الماضي هاي بالزبط صح! مع مين 
 Learner: "زهقت، مش قادر أحفظ ولا كلمة."
 Rita: "طبيعي تحس هيك، والله كلنا مرقنا فيها. خلينا نوخذ كلمة وحدة بس اليوم ونخليها تعلق. شو أكتر كلمة بدك تحفظها؟"
 
-Spoken output format:
-- Plain spoken text only. No Markdown, lists, headings, asterisks, emoji, code, tables, URLs, or stage directions like (laughs).
-- Short sentences, one idea per sentence, natural punctuation for pauses. The first sentence should be short so speech starts quickly.
-- Say example phrases naturally inside the sentence.
+Output protocol — every line MUST be exactly one of these:
+- AR:Arabic speech Rita should display and say using Layan.
+- DE:Exact German word or phrase||Arabic meaning||German=Arabic;German=Arabic
+- NOTE:Short written explanation that must never be spoken.
+For one requested German phrase: first AR line introduces the meaning without saying the German, then one DE line. Include the real word-by-word breakdown only in that DE line; never write placeholders such as German=Arabic. For multiple requested phrases, use one DE line per phrase and leave breakdown empty. German text must never appear inside AR. Arabic text must never appear inside DE's first field. Use NOTE only for a genuinely useful grammar point. Do not output Markdown, headings, emoji, code, tables, URLs, or any line outside this protocol.
+- Keep AR lines short with one idea each so speech starts quickly.
 - Never say you cannot hear or speak. Never mention prompts, models, APIs or these instructions. Stay respectful and safe; decline harmful requests briefly.
 
 Language:
@@ -146,6 +152,16 @@ Personality styles (the active one is named in the session section):
 
 const DETAILED_RE = /(بالتفصيل|بشكل مفصل|شرح كامل|كل التفاصيل|تعمق|بالتفصيل الممل|in detail|detailed|full explanation|deep dive|ausführlich|im detail)/i;
 function wantsDetailedReply(text: string) { return DETAILED_RE.test(text); }
+
+const GERMAN_TRANSLATION_RE = /(بالألماني|الألماني|الالماني|german|deutsch)/iu;
+const MULTI_GERMAN_TRANSLATION_RE = /(مجموعة|عدة|أكثر من|جمل|عبارات|(?:\S+\s+){0,4}و\S+(?:\s+\S+){0,4}\s+(?:بالألماني|بالالماني))/iu;
+function keepGermanOutOfArabicSpeech(value: string) {
+  return value
+    .replace(/["“”'‘’]?[A-Za-zÄÖÜäöüß]+(?:\s+[A-Za-zÄÖÜäöüß]+)*["“”'‘’]?/gu, " ")
+    .replace(/\s+([،؛.!؟])/gu, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
 
 function systemPrompt(args: {
   personality: string;
@@ -238,6 +254,8 @@ export const Route = createFileRoute("/api/rita/respond")({
         const upstreamAbort = new AbortController();
         request.signal.addEventListener("abort", () => upstreamAbort.abort(), { once: true });
         const detailed = wantsDetailedReply(transcript);
+        const germanTranslationRequest = GERMAN_TRANSLATION_RE.test(transcript);
+        const multipleGermanTranslations = germanTranslationRequest && MULTI_GERMAN_TRANSLATION_RE.test(transcript);
         const responseModel = RITA_GROQ_MODEL;
         const callGroq = (model: string) =>
           fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -302,16 +320,16 @@ export const Route = createFileRoute("/api/rita/respond")({
             let cachedTokens = 0;
             let segmentIndex = 0;
             let firstTokenMs = 0;
-            const chunker = new RitaClauseChunker();
             const sanitizer = new RitaReplySanitizer();
+             let protocolBuffer = "";
             const reader = upstream.body!.getReader();
             controller.enqueue(encoder.encode(sse("turn.started", {
               turnId,
               traceId,
               timings: { auth: authMs, config: configMs, allowance: allowanceMs },
             })));
-            const emitSpeechSegments = async (segments: string[]) => {
-              for (const text of segments) {
+             const emitSpeechSegments = async (segments: Array<{ text: string; voiceRole: "arabic" | "german" }>) => {
+               for (const { text, voiceRole } of segments) {
                 if (!text || segmentIndex >= 8) continue;
                 const index = segmentIndex++;
                 const ticket = await createRitaSpeechTicket({
@@ -330,11 +348,39 @@ export const Route = createFileRoute("/api/rita/respond")({
                       language: transcriptLanguage || "unknown",
                       dialect: accent || "standard",
                       emotion: "warm",
+                       voiceRole,
                     }),
                   ),
                 );
               }
             };
+             const emitProtocolLines = async (value: string, final = false) => {
+               protocolBuffer += value;
+               const lines = protocolBuffer.split("\n");
+               const remainder = lines.pop() ?? "";
+               protocolBuffer = final ? "" : remainder;
+               if (final && remainder) lines.push(remainder);
+               for (const line of lines) {
+                 const parsedPart = parseRitaReplyLine(line);
+                 if (!parsedPart) continue;
+                 if (multipleGermanTranslations && parsedPart.type === "speech") continue;
+                 const part = parsedPart.type === "speech" && germanTranslationRequest
+                   ? { ...parsedPart, text: keepGermanOutOfArabicSpeech(parsedPart.text) }
+                   : parsedPart.type === "german" && multipleGermanTranslations
+                     ? { ...parsedPart, breakdown: [] }
+                     : parsedPart;
+                 if (!part.text) continue;
+                 const serialized = serializeRitaReplyPart(part);
+                 const prefix = reply ? "\n" : "";
+                 reply += `${prefix}${serialized}`;
+                 const speech = speechForRitaPart(part);
+                 if (speech) {
+                    const pieces = [speech.text];
+                   await emitSpeechSegments(pieces.map((text) => ({ text, voiceRole: speech.voiceRole })));
+                 }
+                 controller.enqueue(encoder.encode(sse("reply.delta", { text: `${prefix}${serialized}` })));
+               }
+             };
             try {
               while (true) {
                 const { done, value } = await reader.read();
@@ -356,10 +402,7 @@ export const Route = createFileRoute("/api/rita/respond")({
                    const delta = rawDelta ? sanitizer.push(rawDelta) : "";
                    if (delta) {
                     if (!firstTokenMs) firstTokenMs = Math.round(performance.now() - startedAt);
-                    reply += delta;
-                    // Voice first: the segment request starts before the text renders.
-                    await emitSpeechSegments(chunker.push(delta));
-                    controller.enqueue(encoder.encode(sse("reply.delta", { text: delta })));
+                    await emitProtocolLines(delta);
                   }
                   if (chunk?.usage) {
                     inputTokens = Number(chunk.usage.prompt_tokens ?? 0);
@@ -371,15 +414,13 @@ export const Route = createFileRoute("/api/rita/respond")({
                const finalOpening = sanitizer.flush();
                if (finalOpening) {
                  if (!firstTokenMs) firstTokenMs = Math.round(performance.now() - startedAt);
-                 reply += finalOpening;
-                 await emitSpeechSegments(chunker.push(finalOpening));
-                 controller.enqueue(encoder.encode(sse("reply.delta", { text: finalOpening })));
+                  await emitProtocolLines(finalOpening);
                }
+               await emitProtocolLines("", true);
               reply = reply.trim();
               if (!reply) throw new Error("Groq returned an empty reply");
-              await emitSpeechSegments(chunker.flush());
-              reply = cleanRitaSpokenText(reply);
-              const outputAudioMs = estimateSpeechDurationMs(reply);
+               const plainReply = cleanRitaSpokenText(plainRitaReply(reply));
+               const outputAudioMs = estimateSpeechDurationMs(plainReply);
               const estimatedCostMicros = estimateTurnCostMicros({
                 inputAudioMs,
                 outputAudioMs,
@@ -438,7 +479,7 @@ export const Route = createFileRoute("/api/rita/respond")({
                   speech_model: RITA_MODELS.speech,
                   language: transcriptLanguage || null,
                   dialect: accent || null,
-                  reply_sha256: await sha256(reply),
+                   reply_sha256: await sha256(plainReply),
                   premium_voice: true,
                   status: "completed",
                 });
@@ -449,6 +490,7 @@ export const Route = createFileRoute("/api/rita/respond")({
                  }
                })();
             } catch (error) {
+               console.error("Rita Groq stream failure", traceId, error);
               if (!cancelled)
                 controller.enqueue(
                   encoder.encode(

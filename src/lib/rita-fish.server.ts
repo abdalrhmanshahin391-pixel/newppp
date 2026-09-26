@@ -10,6 +10,9 @@ export type FishVoice = {
   official: boolean;
 };
 
+export const RITA_ARABIC_FISH_VOICE_ID = "5814f46c02f5486d9c72b31bd82217ba"; // Layan — Fish Official
+export const RITA_GERMAN_FISH_VOICE_ID = "3235abc9a84b407d92f73539a5651720"; // Emma — Fish Official
+
 let keyCache: { at: number; value: Promise<string | null> } | null = null;
 export function resolveFishKey(): Promise<string | null> {
   if (keyCache && Date.now() - keyCache.at < 60_000) return keyCache.value;
@@ -117,6 +120,7 @@ export async function fishSpeech(args: {
   text: string;
   signal: AbortSignal;
   firstAudioTimeoutMs: number;
+  speed?: number;
 }): Promise<ReadableStream<Uint8Array>> {
   const controller = new AbortController();
   const abort = () => controller.abort();
@@ -137,6 +141,7 @@ export async function fishSpeech(args: {
         sample_rate: 24000,
         latency: "balanced",
         normalize: true,
+        prosody: { speed: Math.min(1.2, Math.max(0.65, args.speed ?? 1)) },
       }),
       signal: controller.signal,
     });

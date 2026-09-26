@@ -4,11 +4,13 @@ import { test } from "node:test";
 import { explicitRitaAccent, stableRitaDialect } from "../src/lib/rita-voice-style.ts";
 import { playRitaSpeechResponse } from "../src/lib/rita-speech-stream.client.ts";
 import { RitaReplySanitizer, stripRitaOpeningFiller } from "../src/lib/rita-clause-chunker.ts";
-import {
-  isLikelyRitaEcho,
-  isRitaStopCommand,
-  selectRitaDeepgramLanguage,
-} from "../src/lib/rita-economic.client.ts";
+import { readFile } from "node:fs/promises";
+import ts from "typescript";
+
+const economicSource = await readFile(new URL("../src/lib/rita-economic.client.ts", import.meta.url), "utf8");
+const economicJs = ts.transpileModule(economicSource, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
+const economic = await import(`data:text/javascript;base64,${Buffer.from(economicJs).toString("base64")}`);
+const { isLikelyRitaEcho, isRitaStopCommand, selectRitaDeepgramLanguage } = economic;
 import { createRitaTurnTimeline, markRitaTurn } from "../src/lib/rita-turn-telemetry.ts";
 
 test("an explicit Jordanian request wins over an Iraqi dialect guess", () => {

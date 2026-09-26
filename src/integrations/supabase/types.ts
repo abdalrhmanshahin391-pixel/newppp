@@ -3277,6 +3277,7 @@ export type Database = {
           default_monthly_minutes: number
           enabled: boolean
           fish_voice_id: string | null
+          german_fish_voice_id: string
           groq_model: string
           id: boolean
           monthly_budget_cents: number
@@ -3298,6 +3299,7 @@ export type Database = {
           default_monthly_minutes?: number
           enabled?: boolean
           fish_voice_id?: string | null
+          german_fish_voice_id?: string
           groq_model?: string
           id?: boolean
           monthly_budget_cents?: number
@@ -3319,6 +3321,7 @@ export type Database = {
           default_monthly_minutes?: number
           enabled?: boolean
           fish_voice_id?: string | null
+          german_fish_voice_id?: string
           groq_model?: string
           id?: boolean
           monthly_budget_cents?: number
