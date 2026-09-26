@@ -34,7 +34,7 @@ import {
 } from "@/lib/rita-turn-telemetry";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { isGermanItem, learningKey, type LearningItem, type SaveTarget } from "@/lib/rita-learning";
+import { flashcardFaces, isGermanItem, learningKey, type LearningItem, type SaveTarget } from "@/lib/rita-learning";
 import {
   RitaApiError,
   parseServerTiming,
@@ -230,6 +230,7 @@ function RitaLivePage() {
   const stickToLatest = useRef(true);
   const messagesRef = useRef(messages);
   const learningRef = useRef(learningItems);
+  const savedCardIds = useRef(new Map<string, string>());
   const destinationsRef = useRef(destinations);
   const selectedIdsRef = useRef(selectedIds);
   const panelRef = useRef(panel);
@@ -586,6 +587,18 @@ function RitaLivePage() {
   };
 
   const removeLearning = (id: string) => {
+    const cardId = savedCardIds.current.get(id);
+    if (cardId) {
+      savedCardIds.current.delete(id);
+      setUndoCardIds((all) => all.filter((value) => value !== cardId));
+      void getToken().then((token) =>
+        fetch("/api/rita/learning", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "undo", cardIds: [cardId] }),
+        }),
+      ).catch(() => undefined);
+    }
     const next = learningRef.current.filter((item) => item.id !== id);
     learningRef.current = next;
     setLearningItems(next);
@@ -791,9 +804,13 @@ function RitaLivePage() {
               headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
               body: JSON.stringify({ action: "auto_save", items }),
             })
-              .then((response) => response.ok ? response.json() as Promise<{ saved?: number; cardIds?: string[] }> : null)
+              .then((response) => response.ok ? response.json() as Promise<{ saved?: number; cardIds?: string[]; cards?: { id: string; front: string }[] }> : null)
               .then((saved) => {
                 if (!saved?.saved || epoch !== lessonEpoch.current) return;
+                for (const card of saved.cards ?? []) {
+                  const entry = learningRef.current.find((item) => ids.includes(item.id) && flashcardFaces(item).front.trim().toLowerCase() === card.front.trim().toLowerCase());
+                  if (entry) savedCardIds.current.set(entry.id, card.id);
+                }
                 setUndoCardIds(saved.cardIds ?? []);
                 setLearningNotice(`${saved.saved} ${saved.saved === 1 ? "word was" : "words were"} saved automatically.`);
               })
