@@ -25,7 +25,7 @@ export type RitaEconomicCallbacks = {
   /** Confirmed real speech (≥2 transcribed words or ≥400 ms of voice). Only this may interrupt Rita. */
   onBargeIn?: () => void;
   onTurnSignal?: (event: "signal_start" | "vad_start" | "speech_confirmed" | "speech_end", reason?: string) => void;
-  onConnectionState?: (state: "connecting" | "listening" | "reconnecting") => void;
+  onConnectionState?: (state: "connecting" | "listening" | "reconnecting" | "failed") => void;
   onDiagnostic?: (event: "socket_open" | "first_audio_sent" | "deepgram_speech" | "deepgram_result" | "socket_close", detail?: string) => void;
 };
 
@@ -125,6 +125,7 @@ type DeepgramConnection = {
 };
 
 export const RITA_RECONNECT_DELAYS_MS = [250, 750, 1_500] as const;
+const RITA_LONG_RECONNECT_DELAY_MS = 4_000;
 export const RITA_OUTPUT_ECHO_GUARD_MS = 320;
 
 function normalizedWords(value: string) {
@@ -177,36 +178,6 @@ function listenUrl(language: string, keyterms: string[]) {
     if (clean) url.searchParams.append("keyterm", clean);
   }
   return url.toString();
-}
-
-function pcm16Wav(parts: Uint8Array[], sampleRate = 16_000) {
-  const byteLength = parts.reduce((sum, part) => sum + part.byteLength, 0);
-  const buffer = new ArrayBuffer(44 + byteLength);
-  const view = new DataView(buffer);
-  const write = (offset: number, value: string) => {
-    for (let index = 0; index < value.length; index += 1)
-      view.setUint8(offset + index, value.charCodeAt(index));
-  };
-  write(0, "RIFF");
-  view.setUint32(4, 36 + byteLength, true);
-  write(8, "WAVE");
-  write(12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  write(36, "data");
-  view.setUint32(40, byteLength, true);
-  const output = new Uint8Array(buffer, 44);
-  let offset = 0;
-  for (const part of parts) {
-    output.set(part, offset);
-    offset += part.byteLength;
-  }
-  return new Blob([buffer], { type: "audio/wav" });
 }
 
 export async function startRitaEconomicListening(args: {
@@ -280,6 +251,7 @@ export async function startRitaEconomicListening(args: {
   let connectionGeneration = 0;
   let reconnectAttempt = 0;
   let reconnectTimer = 0;
+  let finalWaitTimer = 0;
   let currentToken = args.token;
   let pendingAudio: ArrayBuffer[] = [];
   let fallbackStarted = false;
@@ -317,24 +289,19 @@ export async function startRitaEconomicListening(args: {
     heardWords = false;
     turnStartedAt = 0;
     callbacks.onInterim("");
+    if (finalWaitTimer) window.clearTimeout(finalWaitTimer);
+    finalWaitTimer = 0;
   };
 
   const emitFinal = (text: string, confidence: number, resultLanguage = language, reason = "deepgram_final") => {
     const clean = text.replace(/\s+/g, " ").trim();
-    if (!clean || stopped || fallbackStarted || performance.now() < suppressFinalUntil) return;
+     if (!clean || stopped || fallbackStarted) return;
+     if (performance.now() < suppressFinalUntil) {
+       callbacks.onDiagnostic?.("deepgram_result", "suppressed_stale_final");
+       return;
+     }
     const audioParts = turnAudio.slice();
     const durationMs = turnStartedAt ? Math.round(performance.now() - turnStartedAt) : 0;
-    if (args.secondPassStt !== false && transcriptionMode === "deepgram" && needsRitaSecondPass(clean, confidence) && audioParts.length) {
-      fallbackStarted = true;
-      state = "finalizing";
-      callbacks.onInterim("");
-      callbacks.onSpeechEnd?.();
-      callbacks.onTurnSignal?.("speech_end", "second_pass_stt");
-      const audio = pcm16Wav(audioParts);
-      resetTurn();
-      callbacks.onFallback?.({ audio, durationMs, reason: `second_pass:${confidence.toFixed(2)}` });
-      return;
-    }
     state = "finalizing";
     callbacks.onInterim("");
     callbacks.onSpeechEnd?.();
@@ -354,27 +321,29 @@ export async function startRitaEconomicListening(args: {
       const spoke = heardWords || voicedMs >= 600;
       resetTurn();
       state = connection?.socket.readyState === WebSocket.OPEN ? "listening" : "reconnecting";
-      callbacks.onTurnSignal?.("speech_end", spoke ? "no_transcript" : "silent_reconnect");
+       callbacks.onTurnSignal?.("speech_end", spoke ? "no_transcript" : "silence");
       if (spoke && transcriptionMode === "deepgram") callbacks.onNoTranscript?.();
       return;
     }
     fallbackStarted = true;
     state = "finalizing";
-    const audio = pcm16Wav(turnAudio);
-    const durationMs = Math.round(
-      (turnAudio.reduce((sum, part) => sum + part.byteLength, 0) / 32_000) * 1000,
-    );
-    suppressFinalUntil = performance.now() + 1_000;
-    callbacks.onInterim("");
+    resetTurn();
+    callbacks.onTurnSignal?.("speech_end", "no_transcript");
+    callbacks.onNoTranscript?.();
+  };
+
+  const awaitDeepgramFinal = (reason: string, waitMs = 850) => {
+    if (stopped || finalWaitTimer) return;
+    state = "finalizing";
     callbacks.onSpeechEnd?.();
-    callbacks.onTurnSignal?.("speech_end", "fallback_stt");
-    callbacks.onFallback?.({ audio, durationMs, reason });
-    state = connection?.socket.readyState === WebSocket.OPEN ? "listening" : "reconnecting";
-    pushToTalk = false;
-    hotFrames = 0;
-    quietMs = 0;
-    turnAudio = [];
-    finalParts = [];
+    callbacks.onTurnSignal?.("speech_end", "awaiting_deepgram_final");
+    const live = connection;
+    if (live?.socket.readyState === WebSocket.OPEN)
+      live.socket.send(JSON.stringify({ type: "Finalize" }));
+    finalWaitTimer = window.setTimeout(() => {
+      finalWaitTimer = 0;
+      if (!stopped && state === "finalizing") recoverTurn(reason);
+    }, waitMs);
   };
 
   const rememberPreRoll = (buffer: ArrayBuffer) => {
@@ -433,7 +402,12 @@ export async function startRitaEconomicListening(args: {
     const delay = RITA_RECONNECT_DELAYS_MS[reconnectAttempt];
     if (delay === undefined) {
       if (state === "speaking" || state === "finalizing") recoverTurn("Deepgram connection was lost.");
-      else setConnectionState("reconnecting");
+      callbacks.onConnectionState?.("failed");
+      reconnectAttempt = 0;
+      reconnectTimer = window.setTimeout(() => {
+        reconnectTimer = 0;
+        if (!stopped) openConnection(true);
+      }, RITA_LONG_RECONNECT_DELAY_MS);
       return;
     }
     reconnectAttempt += 1;
@@ -442,12 +416,13 @@ export async function startRitaEconomicListening(args: {
     reconnectTimer = window.setTimeout(async () => {
       reconnectTimer = 0;
       if (stopped || expectedGeneration !== connectionGeneration) return;
-      try {
-        if (args.refreshToken) currentToken = await args.refreshToken();
-      } catch {
-        scheduleReconnect();
-        return;
-      }
+       try {
+         if (args.refreshToken) currentToken = await args.refreshToken();
+       } catch {
+         reconnectAttempt = Math.max(0, reconnectAttempt - 1);
+         scheduleReconnect();
+         return;
+       }
       if (!stopped && expectedGeneration === connectionGeneration) openConnection(true);
     }, delay);
   };
@@ -490,6 +465,7 @@ export async function startRitaEconomicListening(args: {
       if (stopped || next.intentionallyClosing || connection?.generation !== generation) return;
       console.warn("Rita Deepgram socket closed", { code: event.code, reason: event.reason || "none", language });
       callbacks.onDiagnostic?.("socket_close", `${event.code}:${event.reason || "none"}`);
+       if (connection?.generation === generation) connection = null;
       scheduleReconnect();
     };
     socket.onmessage = (event) => {
@@ -611,11 +587,11 @@ export async function startRitaEconomicListening(args: {
     turnAudio.push(new Uint8Array(buffer.slice(0)));
     const fallbackSilenceMs = transcriptionMode === "openai" ? 450 : 1_150;
     if (!pushToTalk && quietMs >= fallbackSilenceMs) {
-      state = "finalizing";
-      recoverTurn(
+      awaitDeepgramFinal(
         transcriptionMode === "openai"
           ? "Legacy transcription turn completed."
           : "Deepgram did not finalize the turn in time.",
+        transcriptionMode === "openai" ? 50 : 850,
       );
     }
   };
@@ -643,14 +619,10 @@ export async function startRitaEconomicListening(args: {
     endPushToTalk() {
       pushToTalk = false;
       if (state !== "speaking") return;
-      state = "finalizing";
-      callbacks.onSpeechEnd?.();
-      const live = connection;
-      if (live?.socket.readyState === WebSocket.OPEN)
-        live.socket.send(JSON.stringify({ type: "Finalize" }));
-      window.setTimeout(() => {
-        if (!stopped && state === "finalizing") recoverTurn("Push-to-talk ended before transcription finalized.");
-      }, transcriptionMode === "openai" ? 50 : 1_200);
+      awaitDeepgramFinal(
+        "Push-to-talk ended before transcription finalized.",
+        transcriptionMode === "openai" ? 50 : 1_000,
+      );
     },
     stop() {
       if (stopped) return;
@@ -658,6 +630,7 @@ export async function startRitaEconomicListening(args: {
       state = "stopped";
       window.clearInterval(keepAlive);
       if (reconnectTimer) window.clearTimeout(reconnectTimer);
+      if (finalWaitTimer) window.clearTimeout(finalWaitTimer);
       capture.port.onmessage = null;
       const live = connection;
       if (live) {

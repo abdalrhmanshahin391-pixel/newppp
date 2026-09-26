@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { RitaStage, type RitaMood } from "@/components/rita-live/RitaStage";
 import { MixedDirectionText } from "@/components/rita-live/MixedDirectionText";
+import { RitaMessageContent } from "@/components/rita-live/RitaMessageContent";
 import type { RitaEconomicController } from "@/lib/rita-economic.client";
 import type { RitaSpeechSegment } from "@/lib/rita-economic-response.client";
 import type { RitaPcmPlayerController } from "@/lib/rita-pcm-player.client";
@@ -50,6 +51,7 @@ import {
   type RitaLanguageState,
 } from "@/lib/rita-language-state";
 import { detectRitaDialectEvidence, explicitRitaAccent } from "@/lib/rita-voice-style";
+import { plainRitaReply } from "@/lib/rita-structured-reply";
 
 type Persona = "mentor" | "kind" | "direct" | "playful" | "strict";
 type Message = {
@@ -177,7 +179,6 @@ function RitaLivePage() {
   const [learningNotice, setLearningNotice] = useState("");
   const [autoSaveWords, setAutoSaveWords] = useState(true);
   const [undoCardIds, setUndoCardIds] = useState<string[]>([]);
-  const [secondPassStt, setSecondPassStt] = useState(true);
   const [draft, setDraft] = useState("");
   const [configured, setConfigured] = useState<boolean | null>(null);
   const [connectedMode, setConnectedMode] = useState<"legacy" | "economic_v2" | null>(null);
@@ -189,22 +190,6 @@ function RitaLivePage() {
   const [pushToTalking, setPushToTalking] = useState(false);
   const [premiumVoice, setPremiumVoice] = useState(true);
   const [hasReplay, setHasReplay] = useState(false);
-  // "" = follow the admin default; otherwise this device's choice.
-  const [voiceEngine, setVoiceEngine] = useState<"" | "openai" | "fish">("");
-  const voiceEngineRef = useRef<"" | "openai" | "fish">("");
-  useEffect(() => {
-    const saved = window.localStorage.getItem("rita-voice-engine");
-    if (saved === "openai" || saved === "fish") {
-      setVoiceEngine(saved);
-      voiceEngineRef.current = saved;
-    }
-  }, []);
-  const cycleVoiceEngine = () => {
-    const next = voiceEngine === "fish" ? "openai" : "fish";
-    setVoiceEngine(next);
-    voiceEngineRef.current = next;
-    window.localStorage.setItem("rita-voice-engine", next);
-  };
   const [needsTapToPlay, setNeedsTapToPlay] = useState(false);
   const [inputLevel, setInputLevel] = useState(0);
   const [outputLevel, setOutputLevel] = useState(0);
@@ -260,6 +245,7 @@ function RitaLivePage() {
   const timelineWriteQueue = useRef(Promise.resolve());
   const playbackSafetyTimer = useRef<number | null>(null);
   const segmentTimelines = useRef<Map<number, Record<string, unknown>>>(new Map());
+  const cardAudio = useRef<{ context: AudioContext; source: AudioBufferSourceNode } | null>(null);
   const languageState = useRef<RitaLanguageState>(
     initialRitaLanguageState({ language: "automatic", dialect: "" }),
   );
@@ -706,6 +692,81 @@ function RitaLivePage() {
     }
   }, [stopSpeaking]);
 
+  const playGermanCard = useCallback(async (
+    item: { text: string; meaning: string },
+    speed: "normal" | "slow",
+  ) => {
+    cardAudio.current?.source.stop();
+    cardAudio.current?.context.close().catch(() => undefined);
+    cardAudio.current = null;
+    setError(null);
+    try {
+      const token = await getToken();
+      const response = await fetch("/api/rita/speech", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: item.text,
+          turnId: crypto.randomUUID(),
+          index: 0,
+          interactive: true,
+          engine: "fish",
+          voiceRole: "german",
+          speed,
+        }),
+      });
+      if (!response.ok) {
+        const detail = await readRitaPayload<RitaErrorPayload>(response);
+        throw ritaApiError(detail, "صوت Emma غير متاح هلأ.");
+      }
+      const bytes = new Int16Array(await response.arrayBuffer());
+      const context = new AudioContext({ sampleRate: 24_000 });
+      const buffer = context.createBuffer(1, bytes.length, 24_000);
+      const samples = buffer.getChannelData(0);
+      for (let index = 0; index < bytes.length; index += 1) samples[index] = bytes[index] / 32_768;
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(context.destination);
+      source.onended = () => {
+        if (cardAudio.current?.source === source) cardAudio.current = null;
+        void context.close();
+      };
+      cardAudio.current = { context, source };
+      await context.resume();
+      source.start();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "صوت Emma غير متاح هلأ.");
+    }
+  }, [getToken]);
+
+  const saveGermanCard = useCallback(async (item: { text: string; meaning: string }) => {
+    const learning: LearningItem = {
+      term: item.text,
+      meaning: item.meaning,
+      language: "de",
+      kind: item.text.trim().includes(" ") ? "sentence" : "word",
+      article: null,
+      plural: null,
+    };
+    const ids = addLearning([learning]);
+    try {
+      const token = await getToken();
+      const response = await fetch("/api/rita/learning", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "auto_save", items: [learning] }),
+      });
+      if (!response.ok) throw new Error("تعذّر حفظ الجملة.");
+      const result = await response.json() as { saved?: number; skipped?: number; cards?: { id: string; front: string }[] };
+      const entry = learningRef.current.find((candidate) => ids.includes(candidate.id));
+      const card = result.cards?.[0];
+      if (entry && card) savedCardIds.current.set(entry.id, card.id);
+      setLearningNotice(result.saved ? "تم حفظ الجملة." : "الجملة محفوظة من قبل.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "تعذّر حفظ الجملة.");
+    }
+  }, [addLearning, getToken]);
+
   const handleSaveIntent = useCallback(
     async (result: SaveIntentResult) => {
       const epoch = lessonEpoch.current;
@@ -887,12 +948,12 @@ function RitaLivePage() {
         const token = await getToken();
         if (epoch !== lessonEpoch.current || controller.signal.aborted) return;
         const current = settingsRef.current;
-        const lastRitaReply = [...messagesRef.current].reverse().find((m) => m.role === "rita")?.text ?? "";
+        const lastRitaReply = plainRitaReply([...messagesRef.current].reverse().find((m) => m.role === "rita")?.text ?? "");
         lessonStateRef.current = nextLessonState(lessonStateRef.current, spoken, lastRitaReply);
         const lessonState = lessonStateRef.current;
         const recent = messagesRef.current.slice(-6).map((item) => ({
           role: item.role === "rita" ? "assistant" : "user",
-          content: item.text,
+          content: item.role === "rita" ? plainRitaReply(item.text) : item.text,
         }));
         if (recent.at(-1)?.role === "user" && recent.at(-1)?.content === spoken) recent.pop();
         if (addUser) add("you", spoken);
@@ -954,9 +1015,7 @@ function RitaLivePage() {
           const responsePromise = fetch("/api/rita/speech", {
             method: "POST",
             headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-            body: JSON.stringify(
-              voiceEngineRef.current ? { ...segment, engine: voiceEngineRef.current } : segment,
-            ),
+             body: JSON.stringify({ ...segment, engine: "fish" }),
             signal: voiceController.signal,
           });
           responsePromise
@@ -1070,8 +1129,9 @@ function RitaLivePage() {
             ),
           );
         }
-        setCaption(result.reply);
-        lessonStateRef.current = rememberBigMistake(lessonStateRef.current, spoken, result.reply);
+         const plainReply = plainRitaReply(result.reply);
+         setCaption(plainReply);
+         lessonStateRef.current = rememberBigMistake(lessonStateRef.current, spoken, plainReply);
         timeline.replyCharCount = result.reply.length;
         timeline.segmentsPlanned = result.segmentsPlanned ?? timeline.segmentsPlanned;
         timeline.serverTimings = result.serverTimings ?? timeline.serverTimings;
@@ -1084,7 +1144,7 @@ function RitaLivePage() {
         if (completedTurns.current % 6 === 0) {
           const summaryTurns = [
             ...messagesRef.current,
-            { id: replyId, role: "rita" as const, text: result.reply },
+             { id: replyId, role: "rita" as const, text: plainReply },
           ]
             .slice(0, -8)
             .map((message) => `${message.role}: ${message.text}`);
@@ -1118,7 +1178,7 @@ function RitaLivePage() {
           if (shouldExtract) {
             window.setTimeout(() => {
               if (epoch === lessonEpoch.current)
-                extractLearningInBackground(spoken, result.reply, replyId, token);
+                 extractLearningInBackground(spoken, plainReply, replyId, token);
             }, 50);
           }
           try {
@@ -1140,7 +1200,7 @@ function RitaLivePage() {
                   "playback_timeout",
                   currentTimeline,
                 );
-              }, 45_000);
+               }, 15_000);
               lastSpeechBlob.current = new Blob(speechBlobs, {
                 type: "audio/pcm;rate=24000",
               });
@@ -1291,7 +1351,6 @@ function RitaLivePage() {
         setConfigured(Boolean(result?.configured));
         setAvailableMode(result?.pilotMode === "legacy" ? "legacy" : "economic_v2");
         setPremiumVoice(result?.allowance?.premiumVoice !== false);
-        setSecondPassStt(result?.secondPassStt !== false);
         setStatus(
           result?.configured
             ? result?.pilotMode === "legacy"
@@ -1470,7 +1529,6 @@ function RitaLivePage() {
           .catch(() => undefined);
       warm();
       setPremiumVoice(result.allowance?.premiumVoice !== false);
-       setSecondPassStt(result.secondPassStt !== false);
       let listeningToken = "";
       if (selectedMode === "economic_v2") {
         setStatus("Connecting Deepgram Nova-3…");
@@ -1497,7 +1555,7 @@ function RitaLivePage() {
           languageState.current.activeLanguage,
         browserLocale: navigator.language || "",
          keyterms: [lessonStateRef.current.targetPhrase, ...learningRef.current.slice(-20).map((item) => item.term)].filter(Boolean),
-         secondPassStt,
+          secondPassStt: false,
         refreshToken: async () => {
           const fresh = await getToken();
           const response = await fetch("/api/rita/deepgram-token", {
@@ -1852,7 +1910,14 @@ function RitaLivePage() {
                     <p
                       className={`font-[family:var(--font-grotesk)] text-xl leading-9 tracking-[-.015em] md:text-[22px] md:leading-10 ${message.role === "rita" ? "text-[#28252d]" : "text-right text-[#3478f6]"}`}
                     >
-                       <MixedDirectionText text={message.text} />
+                       {message.role === "rita" ? (
+                         <RitaMessageContent
+                           text={message.text}
+                           onPlayGerman={playGermanCard}
+                           onSaveGerman={saveGermanCard}
+                           savedTerms={new Set(learningItems.map((item) => item.term.toLocaleLowerCase().trim()))}
+                         />
+                       ) : <MixedDirectionText text={message.text} />}
                     </p>
                     {message.correction && (
                       <p className="mt-3 font-[family:var(--font-grotesk)] text-sm leading-6 text-[#7257a8]">
@@ -1986,14 +2051,6 @@ function RitaLivePage() {
                   >
                     <BookOpen size={14} /> Words{" "}
                     {learningItems.length ? `(${learningItems.length})` : ""}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={cycleVoiceEngine}
-                    aria-label="Switch Rita's voice engine"
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#e2ddd4] px-3 py-1.5 text-xs font-bold text-[#413b39] transition hover:bg-[#f6f3ee]"
-                  >
-                    Voice: {voiceEngine === "fish" ? "Fish (free)" : voiceEngine === "openai" ? "OpenAI" : "Default"}
                   </button>
                   {hasReplay && (
                     <button

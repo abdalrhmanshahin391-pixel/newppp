@@ -26,3 +26,9 @@
 - [ ] Early (pre-emptive) reply start with cancel on new speech
 - [ ] Saved audio for repeated replies/words
 - [ ] Real chat test in admin key check
+
+## Rita bilingual voice and connection plan (2026-09-26)
+- [x] Separate Arabic Layan speech, German Emma speech, and silent written notes
+- [x] Add interactive German phrase cards with normal/slow replay and precise saving
+- [x] Remove second-listen behavior and repair bounded Deepgram reconnection
+- [ ] Verify three live Arabic-to-German requests and ten consecutive microphone turns

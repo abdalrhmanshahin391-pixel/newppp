@@ -18,4 +18,5 @@
 
 ## RitaVoice architecture
 - RitaVoice uses Deepgram for live recognition, Groq only for response generation (single model openai/gpt-oss-20b, no fallback chain by owner choice; lesson state computed in browser via rita-lesson-state.ts), and the selected Fish/OpenAI engine only for speech; no second-listen transcription (Deepgram text used directly); learning items come from JSON-mode extraction with examples stored inside the card.
+- RitaVoice uses structured AR/DE/NOTE reply lines so Layan speaks Arabic, official Emma speaks German, and written breakdowns stay silent; this prevents mixed-language pronunciation errors.
 

@@ -160,8 +160,9 @@ function AiKeysPage() {
     adminOnlyPreview: false,
     voiceEngine: "openai" as "openai" | "fish",
     fishVoiceId: null as string | null,
+    germanFishVoiceId: "3235abc9a84b407d92f73539a5651720",
     groqModel: "openai/gpt-oss-20b",
-    secondPassStt: true,
+    secondPassStt: false,
   });
   const [ritaMetrics, setRitaMetrics] = useState({
     sessions: 0,
@@ -713,7 +714,7 @@ function AiKeysPage() {
               </label>
             ))}
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="mt-4 grid gap-3">
             <label className="text-xs font-bold text-white/60">
               Groq model
               <input
@@ -721,14 +722,6 @@ function AiKeysPage() {
                 onChange={(event) => setRitaSettings((current) => ({ ...current, groqModel: event.target.value }))}
                 className="mt-2 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2.5 text-sm text-white"
               />
-            </label>
-            <label className="flex items-center gap-2 self-end rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-xs font-bold text-white/70">
-              <input
-                type="checkbox"
-                checked={ritaSettings.secondPassStt}
-                onChange={(event) => setRitaSettings((current) => ({ ...current, secondPassStt: event.target.checked }))}
-              />
-              Double-check unclear or mixed-language speech
             </label>
           </div>
           <button

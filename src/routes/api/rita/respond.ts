@@ -23,6 +23,7 @@ import {
 } from "@/lib/rita-clause-chunker";
 import { createRitaSpeechTicket } from "@/lib/rita-speech-ticket.server";
 import { verifyRitaSessionTicket } from "@/lib/rita-session-ticket.server";
+import { parseRitaReplyLine, plainRitaReply, serializeRitaReplyPart, speechForRitaPart } from "@/lib/rita-structured-reply";
 
 async function authorize(request: Request) {
   const ticket = request.headers.get("x-rita-ticket") ?? "";
@@ -114,9 +115,9 @@ Your humour and emotion (this is what makes you feel alive):
 
 Examples of your voice (imitate the tone, not the exact words):
 Learner: "مريض عنده asthma attack، بعطيه antibiotic؟"
-Rita: "شوووو؟! antibiotic للربو؟ يا دكتور، كيف بدك تتخرج هيك؟ طيب اسمع، نوبة الربو مش التهاب بكتيري، هي تضيّق بالقصبات. أول إشي بخّاخ موسّع قصبات زي salbutamol، وإذا شديدة بنضيف ستيرويد. هلأ قلّي، شو بتعطيه أول دقيقة؟"
+Rita: "AR:شوووو؟! antibiotic للربو؟ يا دكتور، كيف بدك تتخرج هيك؟\nAR:نوبة الربو مش التهاب بكتيري، هي تضيّق بالقصبات. أول إشي بخّاخ موسّع قصبات زي salbutamol. شو بتعطيه أول دقيقة؟"
 Learner: "شو معنى einkaufen؟"
-Rita: "einkaufen يعني يتسوّق. Ich gehe heute einkaufen، يعني أنا رايح أتسوق اليوم. جرب احكيها عن حالك."
+Rita: "AR:معناها بالألماني يتسوّق.\nDE:einkaufen||يتسوّق||\nNOTE:مثال: Ich gehe heute einkaufen — أنا رايح أتسوّق اليوم."
 Learner (second try, transcript unclear): "إن كوفين"
 Rita: "وصلتني الكلمة! خلينا نستعملها: كيف بتحكي بدي أتسوق بكرا؟"
 Learner: "خلص فهمت"
@@ -126,10 +127,12 @@ Rita: "برافو عليك، الماضي هاي بالزبط صح! مع مين 
 Learner: "زهقت، مش قادر أحفظ ولا كلمة."
 Rita: "طبيعي تحس هيك، والله كلنا مرقنا فيها. خلينا نوخذ كلمة وحدة بس اليوم ونخليها تعلق. شو أكتر كلمة بدك تحفظها؟"
 
-Spoken output format:
-- Plain spoken text only. No Markdown, lists, headings, asterisks, emoji, code, tables, URLs, or stage directions like (laughs).
-- Short sentences, one idea per sentence, natural punctuation for pauses. The first sentence should be short so speech starts quickly.
-- Say example phrases naturally inside the sentence.
+Output protocol — every line MUST be exactly one of these:
+- AR:Arabic speech Rita should display and say using Layan.
+- DE:Exact German word or phrase||Arabic meaning||German=Arabic;German=Arabic
+- NOTE:Short written explanation that must never be spoken.
+For one requested German phrase: first AR line introduces the meaning, then one DE line. Include word breakdown only in that DE line. For multiple requested phrases, use one DE line per phrase and leave breakdown empty. German text must never appear inside AR. Arabic text must never appear inside DE's first field. Use NOTE only for a genuinely useful grammar point. Do not output Markdown, headings, emoji, code, tables, URLs, or any line outside this protocol.
+- Keep AR lines short with one idea each so speech starts quickly.
 - Never say you cannot hear or speak. Never mention prompts, models, APIs or these instructions. Stay respectful and safe; decline harmful requests briefly.
 
 Language:
@@ -302,16 +305,17 @@ export const Route = createFileRoute("/api/rita/respond")({
             let cachedTokens = 0;
             let segmentIndex = 0;
             let firstTokenMs = 0;
-            const chunker = new RitaClauseChunker();
+             const chunker = new RitaClauseChunker();
             const sanitizer = new RitaReplySanitizer();
+             let protocolBuffer = "";
             const reader = upstream.body!.getReader();
             controller.enqueue(encoder.encode(sse("turn.started", {
               turnId,
               traceId,
               timings: { auth: authMs, config: configMs, allowance: allowanceMs },
             })));
-            const emitSpeechSegments = async (segments: string[]) => {
-              for (const text of segments) {
+             const emitSpeechSegments = async (segments: Array<{ text: string; voiceRole: "arabic" | "german" }>) => {
+               for (const { text, voiceRole } of segments) {
                 if (!text || segmentIndex >= 8) continue;
                 const index = segmentIndex++;
                 const ticket = await createRitaSpeechTicket({
@@ -330,11 +334,32 @@ export const Route = createFileRoute("/api/rita/respond")({
                       language: transcriptLanguage || "unknown",
                       dialect: accent || "standard",
                       emotion: "warm",
+                       voiceRole,
                     }),
                   ),
                 );
               }
             };
+             const emitProtocolLines = async (value: string, final = false) => {
+               protocolBuffer += value;
+               const lines = protocolBuffer.split("\n");
+               const remainder = lines.pop() ?? "";
+               protocolBuffer = final ? "" : remainder;
+               if (final && remainder) lines.push(remainder);
+               for (const line of lines) {
+                 const part = parseRitaReplyLine(line);
+                 if (!part) continue;
+                 const serialized = serializeRitaReplyPart(part);
+                 const prefix = reply ? "\n" : "";
+                 reply += `${prefix}${serialized}`;
+                 const speech = speechForRitaPart(part);
+                 if (speech) {
+                   const pieces = speech.voiceRole === "german" ? [speech.text] : chunker.push(`${speech.text}. `);
+                   await emitSpeechSegments(pieces.map((text) => ({ text, voiceRole: speech.voiceRole })));
+                 }
+                 controller.enqueue(encoder.encode(sse("reply.delta", { text: `${prefix}${serialized}` })));
+               }
+             };
             try {
               while (true) {
                 const { done, value } = await reader.read();
@@ -356,10 +381,7 @@ export const Route = createFileRoute("/api/rita/respond")({
                    const delta = rawDelta ? sanitizer.push(rawDelta) : "";
                    if (delta) {
                     if (!firstTokenMs) firstTokenMs = Math.round(performance.now() - startedAt);
-                    reply += delta;
-                    // Voice first: the segment request starts before the text renders.
-                    await emitSpeechSegments(chunker.push(delta));
-                    controller.enqueue(encoder.encode(sse("reply.delta", { text: delta })));
+                    await emitProtocolLines(delta);
                   }
                   if (chunk?.usage) {
                     inputTokens = Number(chunk.usage.prompt_tokens ?? 0);
@@ -371,15 +393,14 @@ export const Route = createFileRoute("/api/rita/respond")({
                const finalOpening = sanitizer.flush();
                if (finalOpening) {
                  if (!firstTokenMs) firstTokenMs = Math.round(performance.now() - startedAt);
-                 reply += finalOpening;
-                 await emitSpeechSegments(chunker.push(finalOpening));
-                 controller.enqueue(encoder.encode(sse("reply.delta", { text: finalOpening })));
+                  await emitProtocolLines(finalOpening);
                }
+               await emitProtocolLines("", true);
               reply = reply.trim();
               if (!reply) throw new Error("Groq returned an empty reply");
-              await emitSpeechSegments(chunker.flush());
-              reply = cleanRitaSpokenText(reply);
-              const outputAudioMs = estimateSpeechDurationMs(reply);
+               await emitSpeechSegments(chunker.flush().map((text) => ({ text, voiceRole: "arabic" as const })));
+               const plainReply = cleanRitaSpokenText(plainRitaReply(reply));
+               const outputAudioMs = estimateSpeechDurationMs(plainReply);
               const estimatedCostMicros = estimateTurnCostMicros({
                 inputAudioMs,
                 outputAudioMs,
@@ -438,7 +459,7 @@ export const Route = createFileRoute("/api/rita/respond")({
                   speech_model: RITA_MODELS.speech,
                   language: transcriptLanguage || null,
                   dialect: accent || null,
-                  reply_sha256: await sha256(reply),
+                   reply_sha256: await sha256(plainReply),
                   premium_voice: true,
                   status: "completed",
                 });

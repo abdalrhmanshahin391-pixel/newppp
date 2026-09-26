@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/rita/session")({
             enabled: settings.enabled,
             pilotMode,
             voice: settings.voice,
-            secondPassStt: settings.secondPassStt,
+            secondPassStt: false,
             allowance,
           },
           { headers: { "Cache-Control": "no-store" } },
@@ -88,6 +88,21 @@ export const Route = createFileRoute("/api/rita/session")({
           return Response.json({ ok: false, allowance, message }, { status: 429 });
         }
 
+         if (!voiceReady || !groq || (pilotMode === "economic_v2" && !deepgramKey))
+           return Response.json(
+             {
+               ok: false,
+               code: "rita_pipeline_not_configured",
+               stage: !voiceReady ? "speech_auth" : !groq ? "groq_auth" : "deepgram_auth",
+               message: !voiceReady
+                 ? `Add a ${settings.voiceEngine === "fish" ? "Fish Audio" : "OpenAI"} key in Admin → AI keys.`
+                 : !groq
+                   ? "Add a Groq key in Admin → AI keys."
+                   : "Add a Deepgram key in Admin → AI keys for Economic v2.",
+             },
+             { status: 503 },
+           );
+
         const personality = normalizePersonality(body.personality);
         const languagePreference = cleanLanguage(body.language);
         const clientLabel = String(body.clientLabel ?? "browser").slice(0, 120);
@@ -111,22 +126,6 @@ export const Route = createFileRoute("/api/rita/session")({
         } catch (error) {
           console.warn("Rita session logging is not ready", error);
         }
-        if (!voiceReady || !groq || (pilotMode === "economic_v2" && !deepgramKey))
-          return Response.json(
-            {
-              ok: false,
-              code: "rita_pipeline_not_configured",
-               stage: !voiceReady ? "speech_auth" : !groq ? "groq_auth" : "deepgram_auth",
-               message: !voiceReady
-                 ? `Add a ${settings.voiceEngine === "fish" ? "Fish Audio" : "OpenAI"} key in Admin → AI keys.`
-                 : !groq
-                   ? "Add a Groq key in Admin → AI keys."
-                   : !deepgramKey
-                  ? "Add a Deepgram key in Admin → AI keys for Economic v2."
-                  : "Add an OpenAI key in Admin → AI keys.",
-            },
-            { status: 503 },
-          );
         if (!persisted)
           return Response.json(
             {
@@ -144,7 +143,7 @@ export const Route = createFileRoute("/api/rita/session")({
             providers: { openai: Boolean(openAiKey), fish: Boolean(fishKey), deepgram: Boolean(deepgramKey), groq: true },
             pilotMode,
             voice: settings.voice,
-            secondPassStt: settings.secondPassStt,
+            secondPassStt: false,
             allowance,
           },
           { headers: { "Cache-Control": "no-store" } },

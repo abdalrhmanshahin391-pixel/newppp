@@ -20,6 +20,7 @@ export type RitaSpeechSegment = {
   language: string;
   dialect: string;
   emotion: string;
+  voiceRole?: "arabic" | "german";
 };
 
 let sessionTicket: { ticket: string; expiresAt: number } | null = null;
