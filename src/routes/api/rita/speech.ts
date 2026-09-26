@@ -126,12 +126,22 @@ export const Route = createFileRoute("/api/rita/speech")({
               });
             } catch (error) {
               if (request.signal.aborted) return new Response(null, { status: 499 });
-              if (voiceRole === "german")
-                return speechError("german_voice_unavailable", "صوت Emma غير متاح هلأ.", 502, traceId);
-              // Fall back to OpenAI for this Arabic sentence only.
-              console.warn("Rita Fish voice fell back to OpenAI", traceId, String(error).slice(0, 200));
+              console.warn("Rita Fish voice failed", traceId, voiceRole, String(error).slice(0, 200));
+              return speechError(
+                voiceRole === "german" ? "german_voice_unavailable" : "arabic_voice_unavailable",
+                voiceRole === "german" ? "صوت Emma غير متاح هلأ." : "صوت ليان غير متاح هلأ.",
+                502,
+                traceId,
+              );
             }
           }
+          return speechError(
+            voiceRole === "german" ? "german_voice_unavailable" : "arabic_voice_unavailable",
+            voiceRole === "german" ? "صوت Emma غير متاح هلأ." : "صوت ليان غير متاح هلأ.",
+            503,
+            traceId,
+            false,
+          );
         }
 
         if (!key)

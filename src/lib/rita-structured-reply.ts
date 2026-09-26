@@ -21,6 +21,7 @@ export function parseRitaReplyLine(line: string): RitaReplyPart | null {
       .split(";")
       .map((entry) => entry.split("=").map(clean))
       .filter((entry) => entry[0] && entry[1])
+      .filter(([german, itemMeaning]) => german.toLowerCase() !== "german" && itemMeaning.toLowerCase() !== "arabic")
       .map(([german, itemMeaning]) => ({ german, meaning: itemMeaning }));
     if (!clean(text)) return null;
     return { type: "german", text: clean(text), meaning: clean(meaning), breakdown };
