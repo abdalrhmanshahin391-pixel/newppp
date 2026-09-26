@@ -11,14 +11,11 @@ import {
   requireRitaUser,
 } from "@/lib/rita-voice.server";
 import {
-  DEFAULT_RITA_GROQ_MODEL,
-  RITA_GROQ_DETAILED_MODEL,
-  isRetiredModelError,
+  RITA_GROQ_MODEL,
   resolveRitaGroqConfig,
-  ritaGroqModelChain,
   ritaGroqReasoningFields,
-  usableRitaGroqModel,
 } from "@/lib/rita-groq.server";
+import { lessonStateInstruction } from "@/lib/rita-lesson-state";
 import {
   RitaClauseChunker,
   RitaReplySanitizer,
@@ -41,7 +38,7 @@ type HistoryItem = { role: "user" | "assistant"; content: string };
 function safeHistory(value: unknown): HistoryItem[] {
   if (!Array.isArray(value)) return [];
   return value
-    .slice(-8)
+    .slice(-6)
     .filter((item) => item?.role === "user" || item?.role === "assistant")
     .map((item) => ({
       role: item.role as HistoryItem["role"],
