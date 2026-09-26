@@ -1609,6 +1609,14 @@ function RitaLivePage() {
               addUser: true,
             });
           },
+          onNoTranscript: () => {
+            if (mutedRef.current || epoch !== lessonEpoch.current) return;
+            setMood("listening");
+            setStatus("ما سمعتك منيح، عيدها لو سمحت");
+            finalizeTurnTimeline("failed", "no_transcript", "transcription");
+            pendingSignalStart.current = 0;
+            pendingSpeechStart.current = 0;
+          },
           onFallback: ({ audio, durationMs, reason }) => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
             metricRef.current.fallbackUsed = true;
