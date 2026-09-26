@@ -257,6 +257,7 @@ function RitaLivePage() {
       transcriptLanguage?: string;
       transcriptConfidence?: number;
       fallbackUsed?: boolean;
+      whisperUsed?: boolean;
       durationMs?: number;
       addUser?: boolean;
     }) => Promise<void>
