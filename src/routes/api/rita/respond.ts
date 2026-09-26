@@ -90,7 +90,7 @@ Who you are:
 - Your goal is that the learner understands and uses the phrase, not that they hear a lecture.
 
 How to decide your reply:
-- Word meaning or translation: the AR line introduces the Arabic meaning without repeating any German. The DE line alone contains the exact German word or phrase. Add one short example only when useful, in its own DE line.
+- Word meaning or translation: the AR line introduces the Arabic meaning without repeating any German. The DE line alone contains the exact German word or phrase. German nouns must include their article (die Stadt, not Stadt). Add one short example only when useful, in its own DE line.
 - If the learner says they did not understand the word or example: stay on the SAME word. Explain it more simply. Do not introduce any new vocabulary or new example sentences.
 - Other direct questions: answer first, in one or two short sentences, following the output protocol below.
 - "ما فهمت" or a request for explanation: one simple idea, one example, one short check question. On a second request, change the angle; never repeat the same explanation.
@@ -154,6 +154,7 @@ const DETAILED_RE = /(بالتفصيل|بشكل مفصل|شرح كامل|كل ا
 function wantsDetailedReply(text: string) { return DETAILED_RE.test(text); }
 
 const GERMAN_TRANSLATION_RE = /(بالألماني|الألماني|الالماني|german|deutsch)/iu;
+const MULTI_GERMAN_TRANSLATION_RE = /(مجموعة|عدة|أكثر من|جمل|عبارات|(?:\S+\s+){0,4}و\S+(?:\s+\S+){0,4}\s+(?:بالألماني|بالالماني))/iu;
 function keepGermanOutOfArabicSpeech(value: string) {
   return value
     .replace(/["“”'‘’]?[A-Za-zÄÖÜäöüß]+(?:\s+[A-Za-zÄÖÜäöüß]+)*["“”'‘’]?/gu, " ")
@@ -254,6 +255,7 @@ export const Route = createFileRoute("/api/rita/respond")({
         request.signal.addEventListener("abort", () => upstreamAbort.abort(), { once: true });
         const detailed = wantsDetailedReply(transcript);
         const germanTranslationRequest = GERMAN_TRANSLATION_RE.test(transcript);
+        const multipleGermanTranslations = germanTranslationRequest && MULTI_GERMAN_TRANSLATION_RE.test(transcript);
         const responseModel = RITA_GROQ_MODEL;
         const callGroq = (model: string) =>
           fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -361,9 +363,12 @@ export const Route = createFileRoute("/api/rita/respond")({
                for (const line of lines) {
                  const parsedPart = parseRitaReplyLine(line);
                  if (!parsedPart) continue;
+                 if (multipleGermanTranslations && parsedPart.type === "speech") continue;
                  const part = parsedPart.type === "speech" && germanTranslationRequest
                    ? { ...parsedPart, text: keepGermanOutOfArabicSpeech(parsedPart.text) }
-                   : parsedPart;
+                   : parsedPart.type === "german" && multipleGermanTranslations
+                     ? { ...parsedPart, breakdown: [] }
+                     : parsedPart;
                  if (!part.text) continue;
                  const serialized = serializeRitaReplyPart(part);
                  const prefix = reply ? "\n" : "";
