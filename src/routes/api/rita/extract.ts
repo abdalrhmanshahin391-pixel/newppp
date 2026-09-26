@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { requireRitaUser, resolveRitaOpenAiKey } from "@/lib/rita-voice.server";
+import { requireRitaUser } from "@/lib/rita-voice.server";
+import { resolveRitaGroqConfig, ritaGroqReasoningFields } from "@/lib/rita-groq.server";
 import { classifyRitaLearningIntent } from "@/lib/rita-learning-intent";
 
 export const Route = createFileRoute("/api/rita/extract")({
@@ -18,14 +19,16 @@ export const Route = createFileRoute("/api/rita/extract")({
         if (!spoken || !reply) return Response.json({ learningItems: [], saveRequest: "none" });
         const intent = classifyRitaLearningIntent(spoken);
         if (intent === "none") return Response.json({ learningItems: [], saveRequest: "none" });
-        const key = await resolveRitaOpenAiKey();
+        const groq = await resolveRitaGroqConfig();
+        const key = groq?.key;
         if (!key) return new Response("Rita key unavailable", { status: 503 });
         try {
-          const provider = await fetch("https://api.openai.com/v1/chat/completions", {
+          const provider = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "gpt-4o-mini",
+              model: "openai/gpt-oss-20b",
+            ...ritaGroqReasoningFields("openai/gpt-oss-20b"),
               temperature: 0,
               max_tokens: 1_200,
               response_format: { type: "json_object" },

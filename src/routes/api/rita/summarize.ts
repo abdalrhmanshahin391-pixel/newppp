@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { requireRitaUser, resolveRitaOpenAiKey } from "@/lib/rita-voice.server";
+import { requireRitaUser } from "@/lib/rita-voice.server";
+import { resolveRitaGroqConfig, ritaGroqReasoningFields } from "@/lib/rita-groq.server";
 
 export const Route = createFileRoute("/api/rita/summarize")({
   server: {
@@ -15,13 +16,15 @@ export const Route = createFileRoute("/api/rita/summarize")({
           ? body.turns.slice(-12).map((item: unknown) => String(item ?? "").slice(0, 500))
           : [];
         if (!turns.length) return Response.json({ summary: previous });
-        const key = await resolveRitaOpenAiKey();
-        if (!key) return new Response("OpenAI unavailable", { status: 503 });
-        const upstream = await fetch("https://api.openai.com/v1/chat/completions", {
+        const groq = await resolveRitaGroqConfig();
+        const key = groq?.key;
+        if (!key) return new Response("Groq unavailable", { status: 503 });
+        const upstream = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "openai/gpt-oss-20b",
+            ...ritaGroqReasoningFields("openai/gpt-oss-20b"),
             temperature: 0,
             max_tokens: 140,
             messages: [
