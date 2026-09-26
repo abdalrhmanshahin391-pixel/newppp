@@ -1616,13 +1616,13 @@ function RitaLivePage() {
             setStatus("Rita is thinking…");
           },
           onTranscript: (text) => {
-            if (epoch === lessonEpoch.current) add("user", text);
+            if (epoch === lessonEpoch.current) add("you", text);
           },
           onReply: (text) => {
             if (epoch === lessonEpoch.current) add("rita", text);
           },
           onSpeaking: () => {
-            if (epoch === lessonEpoch.current) setMood("speaking");
+            if (epoch === lessonEpoch.current) setMood("talking" as never);
           },
           onListening: () => {
             if (epoch !== lessonEpoch.current) return;
