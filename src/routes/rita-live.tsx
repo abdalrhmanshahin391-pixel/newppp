@@ -230,8 +230,10 @@ function RitaLivePage() {
   const voiceTurnStartedAt = useRef<number | null>(null);
   const settingsRef = useRef({ persona, language, dialect, accentPreference });
   const connectedModeRef = useRef<"legacy" | "economic_v2">("economic_v2");
-  const sttEngineRef = useRef<"whisper" | "deepgram">("whisper");
-  const [sttEngine, setSttEngine] = useState<"whisper" | "deepgram">("whisper");
+  const sttEngineRef = useRef<"whisper" | "deepgram" | "realtime">("whisper");
+  const [sttEngine, setSttEngine] = useState<"whisper" | "deepgram" | "realtime">("whisper");
+  const realtimeRef = useRef<import("@/lib/rita-realtime.client").RitaRealtimeController | null>(null);
+  const endSessionRef = useRef<(() => void) | null>(null);
   const metricRef = useRef({
     speechStart: 0,
     speechEnd: 0,
@@ -1329,6 +1331,8 @@ function RitaLivePage() {
     turnAbort.current = null;
     economic.current?.stop();
     economic.current = null;
+    realtimeRef.current?.stop();
+    realtimeRef.current = null;
     pcmPlayer.current?.close();
     pcmPlayer.current = null;
     lastSpoken.current = "";
@@ -1561,7 +1565,7 @@ function RitaLivePage() {
           allowance?: { premiumVoice?: boolean };
           voice?: string;
            secondPassStt?: boolean;
-          sttEngine?: "whisper" | "deepgram";
+          sttEngine?: "whisper" | "deepgram" | "realtime";
         } & RitaErrorPayload
       >(response);
       if (epoch !== lessonEpoch.current) {
@@ -1595,6 +1599,61 @@ function RitaLivePage() {
       warm();
       setPremiumVoice(result.allowance?.premiumVoice !== false);
       let listeningToken = "";
+      if (result.sttEngine === "realtime") {
+        // Premium mode: OpenAI hears and speaks directly; Whisper, Deepgram, Groq and Fish stay off.
+        setStatus("Connecting OpenAI Realtime…");
+        const { startRitaRealtime } = await import("@/lib/rita-realtime.client");
+        const live = await startRitaRealtime(token, String(result.sessionId), {
+          onSpeechStart: () => {
+            if (epoch !== lessonEpoch.current) return;
+            setMood("listening");
+            setStatus("Rita is listening…");
+          },
+          onSpeechEnd: () => {
+            if (epoch !== lessonEpoch.current) return;
+            setMood("thinking");
+            setStatus("Rita is thinking…");
+          },
+          onTranscript: (text) => {
+            if (epoch === lessonEpoch.current) add("user", text);
+          },
+          onReply: (text) => {
+            if (epoch === lessonEpoch.current) add("rita", text);
+          },
+          onSpeaking: () => {
+            if (epoch === lessonEpoch.current) setMood("speaking");
+          },
+          onListening: () => {
+            if (epoch !== lessonEpoch.current) return;
+            setMood("listening");
+            setStatus("Rita is listening — OpenAI Realtime");
+          },
+          onPlaybackBlocked: () => setStatus("Tap the screen to hear Rita."),
+          onUsage: () => undefined,
+          onError: (message) => {
+            if (epoch === lessonEpoch.current) setError(message);
+          },
+          onEnded: (message) => {
+            if (epoch !== lessonEpoch.current) return;
+            setStatus(message);
+            endSessionRef.current?.();
+          },
+        });
+        if (epoch !== lessonEpoch.current) {
+          live.stop();
+          return;
+        }
+        realtimeRef.current = live;
+        sttEngineRef.current = "realtime";
+        setSttEngine("realtime");
+        setConnectedMode(selectedMode);
+        setAvailableMode(selectedMode);
+        setActive(true);
+        activeRef.current = true;
+        setMood("listening");
+        setStatus("Rita is listening — OpenAI Realtime");
+        return;
+      }
       const engine = result.sttEngine === "deepgram" ? "deepgram" : "whisper";
       sttEngineRef.current = engine;
       setSttEngine(engine);
