@@ -242,7 +242,9 @@ export const Route = createFileRoute("/api/rita/respond")({
           ? "openai"
           : body?.transcriptionSource === "gemini"
             ? "gemini"
-            : "deepgram";
+            : body?.transcriptionSource === "whisper"
+              ? "whisper"
+              : "deepgram";
         const prompt = systemPrompt({
           personality,
           accent,
@@ -468,13 +470,17 @@ export const Route = createFileRoute("/api/rita/respond")({
                   provider:
                     pipelineMode === "legacy" || transcriptionSource === "openai"
                        ? "openai+groq"
-                       : "deepgram+groq",
+                       : transcriptionSource === "whisper"
+                         ? "groq-whisper+groq"
+                         : "deepgram+groq",
                   transcription_model:
                     transcriptionSource === "openai"
                       ? "gpt-4o-mini-transcribe"
                       : transcriptionSource === "gemini"
                         ? "google/gemini-3.5-transcribe"
-                        : "deepgram-nova-3",
+                        : transcriptionSource === "whisper"
+                          ? "whisper-large-v3-turbo"
+                          : "deepgram-nova-3",
                    response_model: responseModel,
                   speech_model: RITA_MODELS.speech,
                   language: transcriptLanguage || null,
