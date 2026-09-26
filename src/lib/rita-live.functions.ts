@@ -98,6 +98,7 @@ export const testRitaGroqKey = createServerFn({ method: "POST" })
 
 const SettingsSchema = z.object({
   enabled: z.boolean(),
+  sttEngine: z.enum(["whisper", "deepgram"]).optional(),
   voice: z.enum([
     "alloy",
     "ash",
@@ -145,7 +146,7 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
       await Promise.all([
         (supabase.from as any)("rita_voice_settings")
           .select(
-             "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,voice_engine,fish_voice_id,german_fish_voice_id,groq_model,second_pass_stt",
+             "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,voice_engine,fish_voice_id,german_fish_voice_id,groq_model,second_pass_stt,stt_engine",
           )
           .eq("id", true)
           .maybeSingle(),
@@ -204,6 +205,7 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
         germanFishVoiceId: String(settings?.german_fish_voice_id || "3235abc9a84b407d92f73539a5651720"),
         groqModel: String(settings?.groq_model || "openai/gpt-oss-20b"),
         secondPassStt: false,
+        sttEngine: (settings?.stt_engine === "deepgram" ? "deepgram" : "whisper") as "whisper" | "deepgram",
       },
       metrics: {
         sessions: (sessions ?? []).length,
@@ -248,6 +250,7 @@ export const saveRitaVoiceSettings = createServerFn({ method: "POST" })
       german_fish_voice_id: data.germanFishVoiceId,
       groq_model: data.groqModel,
       second_pass_stt: false,
+      ...(data.sttEngine ? { stt_engine: data.sttEngine } : {}),
       updated_at: new Date().toISOString(),
       updated_by: userId,
     });

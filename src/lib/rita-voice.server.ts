@@ -50,6 +50,7 @@ export type RitaSettings = {
   germanFishVoiceId: string;
   groqModel: string;
   secondPassStt: boolean;
+  sttEngine: "whisper" | "deepgram";
 };
 
 export type RitaAuth = { userId: string };
@@ -69,6 +70,7 @@ const DEFAULT_SETTINGS: RitaSettings = {
   germanFishVoiceId: "3235abc9a84b407d92f73539a5651720",
   groqModel: "openai/gpt-oss-20b",
   secondPassStt: false,
+  sttEngine: "whisper",
 };
 
 function apiUrl() {
@@ -173,7 +175,7 @@ async function loadRitaSettings(): Promise<RitaSettings> {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await (supabaseAdmin.from as any)("rita_voice_settings")
       .select(
-         "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,voice_engine,fish_voice_id,german_fish_voice_id,groq_model,second_pass_stt",
+         "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,voice_engine,fish_voice_id,german_fish_voice_id,groq_model,second_pass_stt,stt_engine",
       )
       .eq("id", true)
       .maybeSingle();
@@ -195,6 +197,7 @@ async function loadRitaSettings(): Promise<RitaSettings> {
       germanFishVoiceId: String(data.german_fish_voice_id || DEFAULT_SETTINGS.germanFishVoiceId),
       groqModel: String(data.groq_model || DEFAULT_SETTINGS.groqModel),
       secondPassStt: false,
+      sttEngine: data.stt_engine === "deepgram" ? "deepgram" : "whisper",
     };
   } catch {
     // Allows the application to run before the migration reaches production.
