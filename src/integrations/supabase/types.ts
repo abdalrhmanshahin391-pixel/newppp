@@ -3285,6 +3285,7 @@ export type Database = {
           response_words: number
           rollout_percent: number
           second_pass_stt: boolean
+          stt_engine: string
           tts_provider: string
           updated_at: string
           updated_by: string | null
@@ -3307,6 +3308,7 @@ export type Database = {
           response_words?: number
           rollout_percent?: number
           second_pass_stt?: boolean
+          stt_engine?: string
           tts_provider?: string
           updated_at?: string
           updated_by?: string | null
@@ -3329,6 +3331,7 @@ export type Database = {
           response_words?: number
           rollout_percent?: number
           second_pass_stt?: boolean
+          stt_engine?: string
           tts_provider?: string
           updated_at?: string
           updated_by?: string | null
