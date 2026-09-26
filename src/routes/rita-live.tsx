@@ -899,6 +899,7 @@ function RitaLivePage() {
       transcriptLanguage = "unknown",
       transcriptConfidence = 0.74,
       fallbackUsed = false,
+      whisperUsed = false,
       durationMs = 0,
       addUser = false,
     }: {
@@ -906,6 +907,7 @@ function RitaLivePage() {
       transcriptLanguage?: string;
       transcriptConfidence?: number;
       fallbackUsed?: boolean;
+      whisperUsed?: boolean;
       durationMs?: number;
       addUser?: boolean;
     }) => {
@@ -1079,9 +1081,11 @@ function RitaLivePage() {
             transcriptionSource:
               connectedModeRef.current === "legacy"
                 ? "openai"
-                : fallbackUsed
-                  ? "gemini"
-                  : "deepgram",
+                : whisperUsed
+                  ? "whisper"
+                  : fallbackUsed
+                    ? "gemini"
+                    : "deepgram",
             personality: current.persona,
             accent: stableAccent,
             history: recent,
