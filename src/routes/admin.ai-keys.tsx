@@ -57,7 +57,7 @@ const SINGLE_PROVIDERS: {
     id: "groq",
     name: "Groq — Rita’s replies",
     tier: "Fast text generation",
-    model: "Llama 3.3 70B",
+    model: "Qwen 3.8 27B",
     color: "from-orange-400 to-rose-500",
     url: "https://console.groq.com/keys",
     steps: [
