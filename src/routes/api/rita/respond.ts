@@ -363,24 +363,21 @@ export const Route = createFileRoute("/api/rita/respond")({
                protocolBuffer = final ? "" : remainder;
                if (final && remainder) lines.push(remainder);
                for (const line of lines) {
-                 const parsedPart = parseRitaReplyLine(line);
-                 if (!parsedPart) continue;
-                 if (multipleGermanTranslations && parsedPart.type === "speech") continue;
-                 const part = parsedPart.type === "speech" && germanTranslationRequest
-                   ? { ...parsedPart, text: keepGermanOutOfArabicSpeech(parsedPart.text) }
-                   : parsedPart.type === "german" && multipleGermanTranslations
-                     ? { ...parsedPart, breakdown: [] }
-                     : parsedPart;
-                 if (!part.text) continue;
-                 const serialized = serializeRitaReplyPart(part);
-                 const prefix = reply ? "\n" : "";
-                 reply += `${prefix}${serialized}`;
-                 const speech = speechForRitaPart(part);
-                 if (speech) {
-                    const pieces = [speech.text];
-                   await emitSpeechSegments(pieces.map((text) => ({ text, voiceRole: speech.voiceRole })));
+                 for (const parsedPart of parseRitaReply(line)) {
+                   if (multipleGermanTranslations && parsedPart.type === "speech") continue;
+                   const part = parsedPart.type === "speech" && germanTranslationRequest
+                     ? { ...parsedPart, text: keepGermanOutOfArabicSpeech(parsedPart.text) }
+                     : parsedPart.type === "german" && multipleGermanTranslations
+                       ? { ...parsedPart, breakdown: [] }
+                       : parsedPart;
+                   if (!part.text) continue;
+                   const serialized = serializeRitaReplyPart(part);
+                   const prefix = reply ? "\n" : "";
+                   reply += `${prefix}${serialized}`;
+                   const speech = speechForRitaPart(part);
+                   if (speech) await emitSpeechSegments([{ text: speech.text, voiceRole: speech.voiceRole }]);
+                   controller.enqueue(encoder.encode(sse("reply.delta", { text: `${prefix}${serialized}` })));
                  }
-                 controller.enqueue(encoder.encode(sse("reply.delta", { text: `${prefix}${serialized}` })));
                }
              };
             try {
