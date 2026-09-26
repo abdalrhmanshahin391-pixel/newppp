@@ -22,7 +22,7 @@ import {
 } from "@/lib/rita-clause-chunker";
 import { createRitaSpeechTicket } from "@/lib/rita-speech-ticket.server";
 import { verifyRitaSessionTicket } from "@/lib/rita-session-ticket.server";
-import { parseRitaReplyLine, plainRitaReply, serializeRitaReplyPart, speechForRitaPart } from "@/lib/rita-structured-reply";
+import { parseRitaReply, plainRitaReply, serializeRitaReplyPart, speechForRitaPart } from "@/lib/rita-structured-reply";
 
 async function authorize(request: Request) {
   const ticket = request.headers.get("x-rita-ticket") ?? "";
