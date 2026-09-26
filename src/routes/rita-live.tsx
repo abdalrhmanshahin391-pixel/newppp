@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { EMPTY_LESSON_STATE, nextLessonState, rememberBigMistake, type RitaLessonState } from "@/lib/rita-lesson-state";
 import { createClientOnlyFn } from "@tanstack/react-start";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -150,7 +151,8 @@ export const Route = createFileRoute("/rita-live")({
 function RitaLivePage() {
   const navigate = useNavigate();
   const { user, isAdmin, loading } = useAuth();
-  const persona: Persona = "kind";
+  const persona: Persona = "mentor";
+  const lessonStateRef = useRef<RitaLessonState>(EMPTY_LESSON_STATE);
   const language = "automatic";
   const [dialect, setDialect] = useState("unknown");
   const [accentPreference, setAccentPreference] = useState("");
@@ -868,7 +870,10 @@ function RitaLivePage() {
         const token = await getToken();
         if (epoch !== lessonEpoch.current || controller.signal.aborted) return;
         const current = settingsRef.current;
-        const recent = messagesRef.current.slice(-8).map((item) => ({
+        const lastRitaReply = [...messagesRef.current].reverse().find((m) => m.role === "rita")?.text ?? "";
+        lessonStateRef.current = nextLessonState(lessonStateRef.current, spoken, lastRitaReply);
+        const lessonState = lessonStateRef.current;
+        const recent = messagesRef.current.slice(-6).map((item) => ({
           role: item.role === "rita" ? "assistant" : "user",
           content: item.text,
         }));
@@ -1002,6 +1007,7 @@ function RitaLivePage() {
             personality: current.persona,
             accent: stableAccent,
             history: recent,
+            lessonState,
             sessionSummary: sessionSummary.current,
           },
           onDelta(delta) {
@@ -1048,6 +1054,7 @@ function RitaLivePage() {
           );
         }
         setCaption(result.reply);
+        lessonStateRef.current = rememberBigMistake(lessonStateRef.current, spoken, result.reply);
         timeline.replyCharCount = result.reply.length;
         timeline.segmentsPlanned = result.segmentsPlanned ?? timeline.segmentsPlanned;
         timeline.serverTimings = result.serverTimings ?? timeline.serverTimings;
@@ -1472,7 +1479,7 @@ function RitaLivePage() {
           languageState.current.activeDialect ||
           languageState.current.activeLanguage,
         browserLocale: navigator.language || "",
-         keyterms: learningRef.current.slice(-20).map((item) => item.term),
+         keyterms: [lessonStateRef.current.targetPhrase, ...learningRef.current.slice(-20).map((item) => item.term)].filter(Boolean),
          secondPassStt,
         refreshToken: async () => {
           const fresh = await getToken();
