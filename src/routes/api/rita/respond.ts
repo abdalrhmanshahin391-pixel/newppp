@@ -49,6 +49,11 @@ function safeHistory(value: unknown): HistoryItem[] {
     .filter((item) => item.content);
 }
 
+function lastAssistant(history: HistoryItem[]) {
+  for (let i = history.length - 1; i >= 0; i--) if (history[i]!.role === "assistant") return history[i]!.content;
+  return "";
+}
+
 function sse(type: string, data: unknown) {
   return `event: ${type}\ndata: ${JSON.stringify(data)}\n\n`;
 }
@@ -225,15 +230,13 @@ export const Route = createFileRoute("/api/rita/respond")({
           accent,
           transcriptLanguage,
           words: settings.responseWords,
-           detailed: wantsDetailedReply(transcript),
+          detailed: wantsDetailedReply(transcript),
+          lessonState: lessonStateInstruction(body?.lessonState, lastAssistant(history)),
         });
         const upstreamAbort = new AbortController();
         request.signal.addEventListener("abort", () => upstreamAbort.abort(), { once: true });
         const detailed = wantsDetailedReply(transcript);
-        const mainModel = usableRitaGroqModel(settings.groqModel || groq.model);
-        const preferred = detailed ? RITA_GROQ_DETAILED_MODEL : mainModel;
-        const chain = await ritaGroqModelChain(groq.key, preferred);
-        let responseModel = chain[0] ?? DEFAULT_RITA_GROQ_MODEL;
+        const responseModel = RITA_GROQ_MODEL;
         const callGroq = (model: string) =>
           fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -268,15 +271,7 @@ export const Route = createFileRoute("/api/rita/respond")({
             traceId,
           );
         }
-        let upstream = await upstreamPromise;
-        // Walk the chain on model errors (retired/unsupported field) so one bad model never blocks Rita.
-        for (let i = 1; !upstream.ok && i < chain.length; i++) {
-          const detail = await upstream.text().catch(() => "");
-          console.error("Rita Groq response failed", traceId, responseModel, upstream.status, detail.slice(0, 240));
-          if (!(upstream.status === 400 || upstream.status === 404 || isRetiredModelError(upstream.status, detail))) break;
-          responseModel = chain[i]!;
-          upstream = await callGroq(responseModel);
-        }
+        const upstream = await upstreamPromise;
         if (!upstream.ok || !upstream.body) {
           const detail = upstream.bodyUsed ? "" : await upstream.text().catch(() => "");
           console.error("Rita Groq final failure", traceId, responseModel, upstream.status, detail.slice(0, 240));
