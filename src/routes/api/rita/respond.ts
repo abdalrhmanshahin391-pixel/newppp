@@ -17,7 +17,6 @@ import {
 } from "@/lib/rita-groq.server";
 import { lessonStateInstruction } from "@/lib/rita-lesson-state";
 import {
-  RitaClauseChunker,
   RitaReplySanitizer,
   cleanRitaSpokenText,
 } from "@/lib/rita-clause-chunker";
@@ -154,6 +153,15 @@ Personality styles (the active one is named in the session section):
 const DETAILED_RE = /(بالتفصيل|بشكل مفصل|شرح كامل|كل التفاصيل|تعمق|بالتفصيل الممل|in detail|detailed|full explanation|deep dive|ausführlich|im detail)/i;
 function wantsDetailedReply(text: string) { return DETAILED_RE.test(text); }
 
+const GERMAN_TRANSLATION_RE = /(بالألماني|الألماني|الالماني|german|deutsch)/iu;
+function keepGermanOutOfArabicSpeech(value: string) {
+  return value
+    .replace(/["“”'‘’]?[A-Za-zÄÖÜäöüß]+(?:\s+[A-Za-zÄÖÜäöüß]+)*["“”'‘’]?/gu, " ")
+    .replace(/\s+([،؛.!؟])/gu, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 function systemPrompt(args: {
   personality: string;
   accent: string;
@@ -245,6 +253,7 @@ export const Route = createFileRoute("/api/rita/respond")({
         const upstreamAbort = new AbortController();
         request.signal.addEventListener("abort", () => upstreamAbort.abort(), { once: true });
         const detailed = wantsDetailedReply(transcript);
+        const germanTranslationRequest = GERMAN_TRANSLATION_RE.test(transcript);
         const responseModel = RITA_GROQ_MODEL;
         const callGroq = (model: string) =>
           fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -309,7 +318,6 @@ export const Route = createFileRoute("/api/rita/respond")({
             let cachedTokens = 0;
             let segmentIndex = 0;
             let firstTokenMs = 0;
-             const chunker = new RitaClauseChunker();
             const sanitizer = new RitaReplySanitizer();
              let protocolBuffer = "";
             const reader = upstream.body!.getReader();
@@ -351,14 +359,18 @@ export const Route = createFileRoute("/api/rita/respond")({
                protocolBuffer = final ? "" : remainder;
                if (final && remainder) lines.push(remainder);
                for (const line of lines) {
-                 const part = parseRitaReplyLine(line);
-                 if (!part) continue;
+                 const parsedPart = parseRitaReplyLine(line);
+                 if (!parsedPart) continue;
+                 const part = parsedPart.type === "speech" && germanTranslationRequest
+                   ? { ...parsedPart, text: keepGermanOutOfArabicSpeech(parsedPart.text) }
+                   : parsedPart;
+                 if (!part.text) continue;
                  const serialized = serializeRitaReplyPart(part);
                  const prefix = reply ? "\n" : "";
                  reply += `${prefix}${serialized}`;
                  const speech = speechForRitaPart(part);
                  if (speech) {
-                   const pieces = speech.voiceRole === "german" ? [speech.text] : chunker.push(`${speech.text}. `);
+                    const pieces = [speech.text];
                    await emitSpeechSegments(pieces.map((text) => ({ text, voiceRole: speech.voiceRole })));
                  }
                  controller.enqueue(encoder.encode(sse("reply.delta", { text: `${prefix}${serialized}` })));
@@ -402,7 +414,6 @@ export const Route = createFileRoute("/api/rita/respond")({
                await emitProtocolLines("", true);
               reply = reply.trim();
               if (!reply) throw new Error("Groq returned an empty reply");
-               await emitSpeechSegments(chunker.flush().map((text) => ({ text, voiceRole: "arabic" as const })));
                const plainReply = cleanRitaSpokenText(plainRitaReply(reply));
                const outputAudioMs = estimateSpeechDurationMs(plainReply);
               const estimatedCostMicros = estimateTurnCostMicros({
