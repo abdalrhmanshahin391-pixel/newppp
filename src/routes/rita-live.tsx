@@ -695,21 +695,45 @@ function RitaLivePage() {
     }
   }, [stopSpeaking]);
 
-  const playGermanCard = useCallback(async (
-    item: { text: string; meaning: string },
-    speed: "normal" | "slow",
-  ) => {
-    cardAudio.current?.source.stop();
-    cardAudio.current?.context.close().catch(() => undefined);
-    cardAudio.current = null;
-    setError(null);
-    try {
+  // Card audio: cached per text+speed for 3 minutes, one voice at a time.
+  const cardCache = useRef(new Map<string, { buffer: AudioBuffer | null; pending: Promise<AudioBuffer> | null; lastUsed: number }>());
+  const cardContext = useRef<AudioContext | null>(null);
+  const cardGeneration = useRef(0);
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const cutoff = Date.now() - 180_000;
+      for (const [key, entry] of cardCache.current) if (entry.lastUsed < cutoff && !entry.pending) cardCache.current.delete(key);
+    }, 30_000);
+    return () => {
+      window.clearInterval(timer);
+      cardCache.current.clear();
+      void cardContext.current?.close().catch(() => undefined);
+      cardContext.current = null;
+    };
+  }, []);
+
+  const getCardContext = useCallback(() => {
+    if (!cardContext.current || cardContext.current.state === "closed")
+      cardContext.current = new AudioContext({ sampleRate: 24_000 });
+    return cardContext.current;
+  }, []);
+
+  const loadGermanCardAudio = useCallback(async (text: string, speed: "normal" | "slow") => {
+    const spoken = germanSpeechText(text);
+    const key = `${speed}|${spoken.toLocaleLowerCase()}`;
+    const hit = cardCache.current.get(key);
+    if (hit) {
+      hit.lastUsed = Date.now();
+      if (hit.buffer) return hit.buffer;
+      if (hit.pending) return hit.pending;
+    }
+    const pending = (async () => {
       const token = await getToken();
       const response = await fetch("/api/rita/speech", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: item.text,
+          text: spoken,
           turnId: crypto.randomUUID(),
           index: 0,
           interactive: true,
@@ -722,25 +746,58 @@ function RitaLivePage() {
         const detail = await readRitaPayload<RitaErrorPayload>(response);
         throw ritaApiError(detail, "صوت Emma غير متاح هلأ.");
       }
-      const bytes = new Int16Array(await response.arrayBuffer());
-      const context = new AudioContext({ sampleRate: 24_000 });
-      const buffer = context.createBuffer(1, bytes.length, 24_000);
+      const raw = await response.arrayBuffer();
+      const bytes = new Int16Array(raw, 0, Math.floor(raw.byteLength / 2));
+      const context = getCardContext();
+      const buffer = context.createBuffer(1, Math.max(1, bytes.length), 24_000);
       const samples = buffer.getChannelData(0);
       for (let index = 0; index < bytes.length; index += 1) samples[index] = bytes[index] / 32_768;
+      return buffer;
+    })();
+    const entry = { buffer: null as AudioBuffer | null, pending: pending as Promise<AudioBuffer> | null, lastUsed: Date.now() };
+    cardCache.current.set(key, entry);
+    try {
+      entry.buffer = await pending;
+      return entry.buffer;
+    } catch (cause) {
+      cardCache.current.delete(key);
+      throw cause;
+    } finally {
+      entry.pending = null;
+    }
+  }, [getCardContext, getToken]);
+
+  const prefetchGermanCard = useCallback((item: { text: string }) => {
+    void loadGermanCardAudio(item.text, "normal").catch(() => undefined);
+  }, [loadGermanCardAudio]);
+
+  const playGermanCard = useCallback(async (
+    item: { text: string; meaning: string },
+    speed: "normal" | "slow",
+  ) => {
+    const generation = ++cardGeneration.current;
+    try { cardAudio.current?.source.stop(); } catch { /* already stopped */ }
+    cardAudio.current = null;
+    setError(null);
+    try {
+      const context = getCardContext();
+      void context.resume();
+      const buffer = await loadGermanCardAudio(item.text, speed);
+      if (generation !== cardGeneration.current) return;
+      await context.resume();
       const source = context.createBufferSource();
       source.buffer = buffer;
       source.connect(context.destination);
       source.onended = () => {
         if (cardAudio.current?.source === source) cardAudio.current = null;
-        void context.close();
       };
       cardAudio.current = { context, source };
-      await context.resume();
       source.start();
     } catch (cause) {
+      if (generation !== cardGeneration.current) return;
       setError(cause instanceof Error ? cause.message : "صوت Emma غير متاح هلأ.");
     }
-  }, [getToken]);
+  }, [getCardContext, loadGermanCardAudio]);
 
   const saveGermanCard = useCallback(async (item: { text: string; meaning: string }) => {
     const learning: LearningItem = {
@@ -1949,6 +2006,7 @@ function RitaLivePage() {
                          <RitaMessageContent
                            text={message.text}
                            onPlayGerman={playGermanCard}
+                          onPrefetchGerman={prefetchGermanCard}
                            onSaveGerman={saveGermanCard}
                            savedTerms={new Set(learningItems.map((item) => item.term.toLocaleLowerCase().trim()))}
                          />
