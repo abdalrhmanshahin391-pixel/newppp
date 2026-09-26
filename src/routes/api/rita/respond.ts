@@ -273,7 +273,12 @@ export const Route = createFileRoute("/api/rita/respond")({
             traceId,
           );
         }
-        const upstream = await upstreamPromise;
+        let upstream = await upstreamPromise;
+        if (!upstream.ok && (upstream.status === 429 || upstream.status >= 500)) {
+          await upstream.body?.cancel().catch(() => undefined);
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          upstream = await callGroq(responseModel);
+        }
         if (!upstream.ok || !upstream.body) {
           const detail = upstream.bodyUsed ? "" : await upstream.text().catch(() => "");
           console.error("Rita Groq final failure", traceId, responseModel, upstream.status, detail.slice(0, 240));
