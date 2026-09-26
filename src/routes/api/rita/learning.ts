@@ -16,6 +16,8 @@ const itemSchema = z.object({
   kind: z.enum(["word", "sentence"]),
   article: z.enum(["der", "die", "das"]).nullable(),
   plural: z.string().max(120).nullable(),
+  example: z.string().max(240).nullable().optional(),
+  exampleMeaning: z.string().max(240).nullable().optional(),
 });
 const saveSchema = z.object({
   action: z.literal("save"),
@@ -176,12 +178,13 @@ export const Route = createFileRoute("/api/rita/learning")({
                 sort: index,
               }));
             if (!rows.length) return Response.json({ saved: 0, skipped: unique.length, cardIds: [] });
-            const { data: saved, error } = await table("flash_cards").insert(rows).select("id");
+            const { data: saved, error } = await table("flash_cards").insert(rows).select("id, front");
             if (error) throw error;
             return Response.json({
               saved: saved?.length ?? 0,
               skipped: unique.length - rows.length,
               cardIds: (saved ?? []).map((card: { id: string }) => card.id),
+              cards: (saved ?? []).map((card: { id: string; front: string }) => ({ id: card.id, front: card.front })),
             });
           }
 

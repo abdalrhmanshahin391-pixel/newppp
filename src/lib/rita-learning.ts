@@ -5,6 +5,8 @@ export type LearningItem = {
   kind: "word" | "sentence";
   article: "der" | "die" | "das" | null;
   plural: string | null;
+  example?: string | null;
+  exampleMeaning?: string | null;
 };
 
 export type SaveTarget = "flashcards" | "german_lab";
@@ -31,6 +33,8 @@ export function termWithoutArticle(item: LearningItem) {
 export function flashcardFaces(item: LearningItem) {
   return {
     front: item.article ? `${item.article} ${termWithoutArticle(item)}` : item.term,
-    back: item.meaning,
+    back: item.example
+      ? `${item.meaning}\n\nمثال: ${item.example}${item.exampleMeaning ? ` — ${item.exampleMeaning}` : ""}`
+      : item.meaning,
   };
 }

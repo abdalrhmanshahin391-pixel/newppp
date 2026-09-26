@@ -5,9 +5,9 @@ export type RitaEconomicTranscript = {
   durationMs: number;
 };
 
-export function needsRitaSecondPass(text: string, confidence: number) {
-  const mixedScripts = /[\u0600-\u06ff]/u.test(text) && /[A-Za-zÄÖÜäöüß]/u.test(text);
-  return confidence < 0.7 || mixedScripts;
+/** Second-pass transcription is permanently off: Deepgram's text is used directly. */
+export function needsRitaSecondPass(_text: string, _confidence: number) {
+  return false;
 }
 
 export type RitaEconomicCallbacks = {
@@ -17,6 +17,7 @@ export type RitaEconomicCallbacks = {
   onSpeechEnd?: () => void;
   onInterim: (text: string) => void;
   onFinal: (turn: RitaEconomicTranscript) => void;
+  onNoTranscript?: () => void;
   onFallback?: (turn: { audio: Blob; durationMs: number; reason: string }) => void;
   onError: (message: string) => void;
   /** Fired each time the Deepgram stream is reopened after a drop or idle pause. */
@@ -349,9 +350,12 @@ export async function startRitaEconomicListening(args: {
       emitFinal(complete, 0.8, language, "utterance_end");
       return;
     }
-    if (!heardWords && voicedMs < 600) {
+    if (transcriptionMode === "deepgram" || (!heardWords && voicedMs < 600)) {
+      const spoke = heardWords || voicedMs >= 600;
       resetTurn();
-      callbacks.onTurnSignal?.("speech_end", "silent_reconnect");
+      state = connection?.socket.readyState === WebSocket.OPEN ? "listening" : "reconnecting";
+      callbacks.onTurnSignal?.("speech_end", spoke ? "no_transcript" : "silent_reconnect");
+      if (spoke && transcriptionMode === "deepgram") callbacks.onNoTranscript?.();
       return;
     }
     fallbackStarted = true;
