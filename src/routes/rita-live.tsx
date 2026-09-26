@@ -51,7 +51,7 @@ import {
 } from "@/lib/rita-language-state";
 import { detectRitaDialectEvidence, explicitRitaAccent } from "@/lib/rita-voice-style";
 
-type Persona = "kind" | "direct" | "playful" | "strict";
+type Persona = "mentor" | "kind" | "direct" | "playful" | "strict";
 type Message = {
   id: string;
   role: "rita" | "you";

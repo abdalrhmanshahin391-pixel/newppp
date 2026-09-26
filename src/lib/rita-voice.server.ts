@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export const RITA_MODELS = {
   transcription: "deepgram-nova-3",
-  response: "qwen/qwen3.8-27b",
+  response: "openai/gpt-oss-20b",
   speech: "gpt-4o-mini-tts",
 } as const;
 
@@ -32,7 +32,7 @@ export async function getRitaPilotMode(userId: string): Promise<RitaPilotMode> {
   return (await rolloutBucket(userId)) < settings.rolloutPercent ? "economic_v2" : "legacy";
 }
 
-export const RITA_PERSONALITIES = ["kind", "direct", "playful", "strict"] as const;
+export const RITA_PERSONALITIES = ["mentor", "kind", "direct", "playful", "strict"] as const;
 export type RitaPersonality = (typeof RITA_PERSONALITIES)[number];
 
 export type RitaSettings = {
@@ -65,7 +65,7 @@ const DEFAULT_SETTINGS: RitaSettings = {
   adminOnlyPreview: false,
   voiceEngine: "openai",
   fishVoiceId: null,
-  groqModel: "qwen/qwen3.8-27b",
+  groqModel: "openai/gpt-oss-20b",
   secondPassStt: true,
 };
 
@@ -368,8 +368,8 @@ export function estimateTurnCostMicros(args: {
 }
 
 export function normalizePersonality(value: unknown): RitaPersonality {
-  const requested = String(value ?? "kind") as RitaPersonality;
-  return RITA_PERSONALITIES.includes(requested) ? requested : "kind";
+  const requested = String(value ?? "mentor") as RitaPersonality;
+  return RITA_PERSONALITIES.includes(requested) ? requested : "mentor";
 }
 
 export function cleanLanguage(value: unknown) {
