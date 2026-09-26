@@ -10,7 +10,14 @@ import {
   normalizePersonality,
   requireRitaUser,
 } from "@/lib/rita-voice.server";
-import { resolveRitaGroqConfig } from "@/lib/rita-groq.server";
+import {
+  DEFAULT_RITA_GROQ_MODEL,
+  RITA_GROQ_FALLBACK_MODELS,
+  RITA_GROQ_FAST_MODEL,
+  isRetiredModelError,
+  resolveRitaGroqConfig,
+  usableRitaGroqModel,
+} from "@/lib/rita-groq.server";
 import {
   RitaClauseChunker,
   RitaReplySanitizer,
@@ -208,27 +215,33 @@ export const Route = createFileRoute("/api/rita/respond")({
         });
         const upstreamAbort = new AbortController();
         request.signal.addEventListener("abort", () => upstreamAbort.abort(), { once: true });
-        const responseModel = settings.groqModel || groq.model;
-        const upstreamPromise = fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-           headers: { Authorization: `Bearer ${groq.key}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-             model: responseModel,
-            stream: true,
-            stream_options: { include_usage: true },
-             max_tokens: wantsDetailedReply(transcript) ? 420 : 180,
-            messages: [
-              { role: "system", content: RITA_STATIC_PROMPT },
-              { role: "system", content: prompt },
-              ...(sessionSummary
-                ? [{ role: "system" as const, content: `Earlier lesson memory: ${sessionSummary}` }]
-                : []),
-              ...history,
-              { role: "user", content: transcript },
-            ],
-          }),
-          signal: upstreamAbort.signal,
-        });
+        const detailed = wantsDetailedReply(transcript);
+        const mainModel = usableRitaGroqModel(settings.groqModel || groq.model);
+        // Short, casual turns use the small instant model: faster and cheaper.
+        const shortTurn = !detailed && transcript.split(/\s+/).length <= 6;
+        let responseModel = shortTurn ? RITA_GROQ_FAST_MODEL : mainModel;
+        const callGroq = (model: string) =>
+          fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${groq.key}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model,
+              stream: true,
+              stream_options: { include_usage: true },
+              max_tokens: detailed ? 420 : 180,
+              messages: [
+                { role: "system", content: RITA_STATIC_PROMPT },
+                { role: "system", content: prompt },
+                ...(sessionSummary
+                  ? [{ role: "system" as const, content: `Earlier lesson memory: ${sessionSummary}` }]
+                  : []),
+                ...history,
+                { role: "user", content: transcript },
+              ],
+            }),
+            signal: upstreamAbort.signal,
+          });
+        const upstreamPromise = callGroq(responseModel);
         const allowed = await allowancePromise;
         if (!allowed) {
           upstreamAbort.abort();
@@ -240,13 +253,29 @@ export const Route = createFileRoute("/api/rita/respond")({
             traceId,
           );
         }
-        const upstream = await upstreamPromise;
-        if (!upstream.ok || !upstream.body) {
+        let upstream = await upstreamPromise;
+        if (!upstream.ok) {
           const detail = await upstream.text().catch(() => "");
           console.error("Rita Groq response failed", traceId, upstream.status, detail.slice(0, 240));
+          // A retired or unknown model: retry once with the next working model.
+          if (isRetiredModelError(upstream.status, detail)) {
+            const next = RITA_GROQ_FALLBACK_MODELS.find((m) => m !== responseModel) ?? DEFAULT_RITA_GROQ_MODEL;
+            responseModel = next;
+            upstream = await callGroq(next);
+          } else {
+            return apiError(
+              "groq_unavailable",
+              "Rita couldn’t answer just now. Please say it again.",
+              upstream.status === 429 || upstream.status >= 500 ? upstream.status : 502,
+              traceId,
+            );
+          }
+        }
+        if (!upstream.ok || !upstream.body) {
+          console.error("Rita Groq fallback failed", traceId, upstream.status);
           return apiError(
             "groq_unavailable",
-            detail.slice(0, 180) || "Groq could not answer this turn.",
+            "Rita couldn’t answer just now. Please say it again.",
             upstream.status === 429 || upstream.status >= 500 ? upstream.status : 502,
             traceId,
           );

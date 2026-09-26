@@ -169,8 +169,8 @@ function listenUrl(language: string, keyterms: string[]) {
   url.searchParams.set("punctuate", "true");
   url.searchParams.set("smart_format", "true");
   url.searchParams.set("vad_events", "true");
-  url.searchParams.set("endpointing", language.startsWith("ar") ? "350" : "300");
-  url.searchParams.set("utterance_end_ms", "800");
+  url.searchParams.set("endpointing", language.startsWith("ar") ? "250" : "200");
+  url.searchParams.set("utterance_end_ms", "1000");
   for (const term of keyterms.slice(0, 25)) {
     const clean = term.trim().slice(0, 80);
     if (clean) url.searchParams.append("keyterm", clean);

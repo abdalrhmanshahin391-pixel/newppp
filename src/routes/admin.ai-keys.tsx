@@ -57,7 +57,7 @@ const SINGLE_PROVIDERS: {
     id: "groq",
     name: "Groq — Rita’s replies",
     tier: "Fast text generation",
-    model: "Mistral Saba 24B",
+    model: "Llama 3.3 70B",
     color: "from-orange-400 to-rose-500",
     url: "https://console.groq.com/keys",
     steps: [
@@ -160,7 +160,7 @@ function AiKeysPage() {
     adminOnlyPreview: false,
     voiceEngine: "openai" as "openai" | "fish",
     fishVoiceId: null as string | null,
-    groqModel: "mistral-saba-24b",
+    groqModel: "llama-3.3-70b-versatile",
     secondPassStt: true,
   });
   const [ritaMetrics, setRitaMetrics] = useState({

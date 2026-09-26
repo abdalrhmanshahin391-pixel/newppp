@@ -64,8 +64,8 @@ export class RitaClauseChunker {
       // cap 10 words) so the voice starts almost as soon as the text appears.
       // Later clauses stay longer so speech never sounds chopped.
       const first = this.emitted === 0;
-      const minWords = first ? 4 : 8;
-      const maxWords = first ? 10 : 18;
+      const minWords = first ? 3 : 8;
+      const maxWords = first ? 6 : 18;
       const pattern = first ? /[.!?؟؛:,،](?:\s|$)/g : /[.!?؟؛:](?:\s|$)/g;
       const matches = [...clean.matchAll(pattern)];
       const boundary = matches.find(

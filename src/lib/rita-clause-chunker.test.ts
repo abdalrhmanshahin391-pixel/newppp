@@ -14,11 +14,11 @@ test("releases a short first clause early", () => {
   ]);
 });
 
-test("first clause is capped at ten words without punctuation", () => {
+test("first clause is capped at six words without punctuation", () => {
   const chunker = new RitaClauseChunker();
   const out = chunker.push("one two three four five six seven eight nine ten eleven ");
   assert.equal(out.length, 1);
-  assert.equal(out[0].split(" ").length, 10);
+  assert.equal(out[0].split(" ").length, 6);
 });
 
 test("Arabic comma releases the first clause", () => {
