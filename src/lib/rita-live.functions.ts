@@ -98,7 +98,7 @@ export const testRitaGroqKey = createServerFn({ method: "POST" })
 
 const SettingsSchema = z.object({
   enabled: z.boolean(),
-  sttEngine: z.enum(["whisper", "whisper_large", "deepgram"]).optional(),
+  sttEngine: z.enum(["whisper", "deepgram"]).optional(),
   voice: z.enum([
     "alloy",
     "ash",
@@ -205,7 +205,7 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
         germanFishVoiceId: String(settings?.german_fish_voice_id || "3235abc9a84b407d92f73539a5651720"),
         groqModel: String(settings?.groq_model || "openai/gpt-oss-20b"),
         secondPassStt: false,
-        sttEngine: (settings?.stt_engine === "deepgram" ? "deepgram" : settings?.stt_engine === "whisper_large" ? "whisper_large" : "whisper") as "whisper" | "whisper_large" | "deepgram",
+        sttEngine: (settings?.stt_engine === "deepgram" ? "deepgram" : "whisper") as "whisper" | "deepgram",
       },
       metrics: {
         sessions: (sessions ?? []).length,

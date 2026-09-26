@@ -50,7 +50,7 @@ export type RitaSettings = {
   germanFishVoiceId: string;
   groqModel: string;
   secondPassStt: boolean;
-  sttEngine: "whisper" | "whisper_large" | "deepgram";
+  sttEngine: "whisper" | "deepgram";
 };
 
 export type RitaAuth = { userId: string };
@@ -197,7 +197,7 @@ async function loadRitaSettings(): Promise<RitaSettings> {
       germanFishVoiceId: String(data.german_fish_voice_id || DEFAULT_SETTINGS.germanFishVoiceId),
       groqModel: String(data.groq_model || DEFAULT_SETTINGS.groqModel),
       secondPassStt: false,
-      sttEngine: data.stt_engine === "deepgram" ? "deepgram" : data.stt_engine === "whisper_large" ? "whisper_large" : "whisper",
+      sttEngine: data.stt_engine === "deepgram" ? "deepgram" : "whisper",
     };
   } catch {
     // Allows the application to run before the migration reaches production.

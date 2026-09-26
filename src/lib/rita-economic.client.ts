@@ -311,36 +311,7 @@ export async function startRitaEconomicListening(args: {
     callbacks.onFinal({ text: clean, confidence, language: resultLanguage, durationMs });
   };
 
-  // Trim leading/trailing silence (keeps 200 ms before and 300 ms after speech)
-  // so Whisper does not invent words in the quiet edges.
-  const trimSilence = (parts: Uint8Array[]): Uint8Array[] => {
-    const total = parts.reduce((sum, part) => sum + part.byteLength, 0);
-    const all = new Uint8Array(total);
-    let at = 0;
-    for (const part of parts) { all.set(part, at); at += part.byteLength; }
-    const samples = new Int16Array(all.buffer, 0, Math.floor(total / 2));
-    const frame = 320; // 20 ms at 16 kHz
-    const frames = Math.floor(samples.length / frame);
-    if (frames < 10) return parts;
-    const rms: number[] = [];
-    for (let f = 0; f < frames; f += 1) {
-      let sum = 0;
-      for (let i = f * frame; i < (f + 1) * frame; i += 1) sum += samples[i] * samples[i];
-      rms.push(Math.sqrt(sum / frame));
-    }
-    const sorted = [...rms].sort((a, b) => a - b);
-    const threshold = Math.max(300, sorted[Math.floor(frames * 0.2)] * 2.5);
-    const first = rms.findIndex((value) => value > threshold);
-    let last = -1;
-    for (let f = frames - 1; f >= 0; f -= 1) if (rms[f] > threshold) { last = f; break; }
-    if (first < 0 || last < first) return parts;
-    const start = Math.max(0, first - 10) * frame * 2;
-    const end = Math.min(frames, last + 16) * frame * 2;
-    return [all.slice(start, end)];
-  };
-
-  const buildWav = (rawParts: Uint8Array[]) => {
-    const parts = trimSilence(rawParts);
+  const buildWav = (parts: Uint8Array[]) => {
     const size = parts.reduce((sum, part) => sum + part.byteLength, 0);
     const out = new Uint8Array(44 + size);
     const view = new DataView(out.buffer);
