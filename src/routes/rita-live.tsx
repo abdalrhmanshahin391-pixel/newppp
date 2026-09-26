@@ -1622,7 +1622,7 @@ function RitaLivePage() {
             if (epoch === lessonEpoch.current) add("rita", text);
           },
           onSpeaking: () => {
-            if (epoch === lessonEpoch.current) setMood("talking" as never);
+            if (epoch === lessonEpoch.current) setMood("talking");
           },
           onListening: () => {
             if (epoch !== lessonEpoch.current) return;
