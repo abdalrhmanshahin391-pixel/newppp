@@ -333,7 +333,11 @@ export async function startRitaEconomicListening(args: {
       emitFinal(complete, 0.8, language, "utterance_end");
       return;
     }
-    if (transcriptionMode === "deepgram" || (!heardWords && voicedMs < 600)) {
+    const turnBytes = turnAudio.reduce((sum, part) => sum + part.byteLength, 0);
+    const tooQuiet = transcriptionMode === "whisper"
+      ? voicedMs < 180 && turnBytes < 16_000
+      : !heardWords && voicedMs < 600;
+    if (transcriptionMode === "deepgram" || tooQuiet) {
       const spoke = heardWords || voicedMs >= 600;
       resetTurn();
       state = connection?.socket.readyState === WebSocket.OPEN || transcriptionMode !== "deepgram" ? "listening" : "reconnecting";
