@@ -32,7 +32,7 @@ export const Route = createFileRoute("/api/rita/session")({
         const voiceReady = settings.voiceEngine === "fish" ? Boolean(fishKey) : Boolean(openAiKey);
         return Response.json(
           {
-            configured: Boolean(voiceReady && groq && (pilotMode === "legacy" || settings.sttEngine === "whisper" || deepgramKey)),
+            configured: settings.sttEngine === "realtime" ? Boolean(openAiKey) : Boolean(voiceReady && groq && (pilotMode === "legacy" || settings.sttEngine === "whisper" || deepgramKey)),
             sttEngine: settings.sttEngine,
             providers: { openai: Boolean(openAiKey), fish: Boolean(fishKey), deepgram: Boolean(deepgramKey), groq: Boolean(groq) },
             enabled: settings.enabled,
@@ -89,7 +89,14 @@ export const Route = createFileRoute("/api/rita/session")({
           return Response.json({ ok: false, allowance, message }, { status: 429 });
         }
 
-         if (!voiceReady || !groq || (pilotMode === "economic_v2" && settings.sttEngine === "deepgram" && !deepgramKey))
+        const realtime = settings.sttEngine === "realtime";
+        if (realtime && !openAiKey)
+          return Response.json(
+            { ok: false, code: "rita_pipeline_not_configured", stage: "openai_auth", message: "Add an OpenAI key in Admin → AI keys for Realtime mode." },
+            { status: 503 },
+          );
+
+         if (!realtime && (!voiceReady || !groq || (pilotMode === "economic_v2" && settings.sttEngine === "deepgram" && !deepgramKey)))
            return Response.json(
              {
                ok: false,
