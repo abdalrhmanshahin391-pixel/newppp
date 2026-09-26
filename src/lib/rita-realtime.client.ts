@@ -20,7 +20,8 @@ type Events = {
   onEnded(message: string): void;
 };
 
-const MODEL = "gpt-realtime-2.1-mini";
+const MODEL = "gpt-realtime";
+const isModel = (value: unknown) => typeof value === "string" && value.startsWith(MODEL);
 
 export async function startRitaRealtime(
   token: string,
@@ -73,7 +74,7 @@ export async function startRitaRealtime(
         }
         switch (event.type) {
           case "session.created":
-            if (event.session?.model !== MODEL) {
+            if (event.session?.model && !isModel(event.session.model)) {
               reject(new Error("OpenAI connected a different voice model. Pilot stopped."));
               break;
             }
@@ -84,7 +85,7 @@ export async function startRitaRealtime(
             }
             break;
           case "session.updated":
-            if (event.session?.model && event.session.model !== MODEL) {
+            if (event.session?.model && !isModel(event.session.model)) {
               callbacks.onError("Voice model changed unexpectedly. End this lesson.");
               stop();
               callbacks.onEnded("Voice model changed unexpectedly.");
