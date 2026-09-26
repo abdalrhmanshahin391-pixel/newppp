@@ -10,7 +10,14 @@ import {
   normalizePersonality,
   requireRitaUser,
 } from "@/lib/rita-voice.server";
-import { resolveRitaGroqConfig } from "@/lib/rita-groq.server";
+import {
+  DEFAULT_RITA_GROQ_MODEL,
+  RITA_GROQ_FALLBACK_MODELS,
+  RITA_GROQ_FAST_MODEL,
+  isRetiredModelError,
+  resolveRitaGroqConfig,
+  usableRitaGroqModel,
+} from "@/lib/rita-groq.server";
 import {
   RitaClauseChunker,
   RitaReplySanitizer,
