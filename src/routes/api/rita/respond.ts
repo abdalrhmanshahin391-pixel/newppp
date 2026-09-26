@@ -470,6 +470,7 @@ export const Route = createFileRoute("/api/rita/respond")({
                  }
                })();
             } catch (error) {
+               console.error("Rita Groq stream failure", traceId, error);
               if (!cancelled)
                 controller.enqueue(
                   encoder.encode(
