@@ -122,7 +122,7 @@ const SettingsSchema = z.object({
   adminOnlyPreview: z.boolean(),
   voiceEngine: z.enum(["openai", "fish"]).default("openai"),
   fishVoiceId: z.string().regex(/^[a-zA-Z0-9]{8,64}$/).nullable().default(null),
-  groqModel: z.string().trim().min(2).max(120).default("qwen/qwen3.8-27b"),
+  groqModel: z.string().trim().min(2).max(120).default("openai/gpt-oss-20b"),
   secondPassStt: z.boolean().default(true),
 });
 
@@ -200,7 +200,7 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
         adminOnlyPreview: settings?.admin_only_preview === true,
         voiceEngine: (settings?.voice_engine === "fish" ? "fish" : "openai") as "openai" | "fish",
         fishVoiceId: (settings?.fish_voice_id as string | null) ?? null,
-        groqModel: String(settings?.groq_model || "qwen/qwen3.8-27b"),
+        groqModel: String(settings?.groq_model || "openai/gpt-oss-20b"),
         secondPassStt: settings?.second_pass_stt !== false,
       },
       metrics: {
