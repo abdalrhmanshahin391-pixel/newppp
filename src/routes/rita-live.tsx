@@ -26,6 +26,7 @@ import { RitaMessageContent } from "@/components/rita-live/RitaMessageContent";
 import type { RitaEconomicController } from "@/lib/rita-economic.client";
 import type { RitaSpeechSegment } from "@/lib/rita-economic-response.client";
 import type { RitaPcmPlayerController } from "@/lib/rita-pcm-player.client";
+import type { RitaRealtimeController } from "@/lib/rita-realtime.client";
 import {
   createRitaTurnTimeline,
   markRitaTurn,
@@ -88,6 +89,7 @@ const loadEconomicResponse = createClientOnlyFn(
   () => import("@/lib/rita-economic-response.client"),
 );
 const loadPcmPlayer = createClientOnlyFn(() => import("@/lib/rita-pcm-player.client"));
+const loadRealtime = createClientOnlyFn(() => import("@/lib/rita-realtime.client"));
 
 function matchingDestination(spoken: string, target: SaveTarget, data: Destinations) {
   const clean = spoken
@@ -232,7 +234,7 @@ function RitaLivePage() {
   const connectedModeRef = useRef<"legacy" | "economic_v2">("economic_v2");
   const sttEngineRef = useRef<"whisper" | "deepgram" | "realtime">("whisper");
   const [sttEngine, setSttEngine] = useState<"whisper" | "deepgram" | "realtime">("whisper");
-  const realtimeRef = useRef<import("@/lib/rita-realtime.client").RitaRealtimeController | null>(null);
+  const realtimeRef = useRef<RitaRealtimeController | null>(null);
   const endSessionRef = useRef<(() => void) | null>(null);
   const metricRef = useRef({
     speechStart: 0,
@@ -1603,7 +1605,7 @@ function RitaLivePage() {
       if (result.sttEngine === "realtime") {
         // Premium mode: OpenAI hears and speaks directly; Whisper, Deepgram, Groq and Fish stay off.
         setStatus("Connecting OpenAI Realtime…");
-        const { startRitaRealtime } = await import("@/lib/rita-realtime.client");
+        const { startRitaRealtime } = (await loadRealtime())!;
         const live = await startRitaRealtime(token, String(result.sessionId), {
           onSpeechStart: () => {
             if (epoch !== lessonEpoch.current) return;
