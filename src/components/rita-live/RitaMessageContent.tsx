@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bookmark, Check, Rabbit, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MixedDirectionText } from "@/components/rita-live/MixedDirectionText";
@@ -10,15 +10,24 @@ export function RitaMessageContent({
   text,
   onPlayGerman,
   onSaveGerman,
+  onPrefetchGerman,
   savedTerms,
 }: {
   text: string;
   onPlayGerman: GermanAction;
   onSaveGerman: (item: { text: string; meaning: string }) => void;
   savedTerms: Set<string>;
+  onPrefetchGerman?: (item: { text: string }) => void;
 }) {
   const [open, setOpen] = useState<string | null>(null);
   const parts = parseRitaReply(text);
+  const germanKey = parts.filter((part) => part.type === "german").map((part) => part.text).join("\n");
+  useEffect(() => {
+    if (!onPrefetchGerman || !germanKey) return;
+    // Warm the normal-speed audio shortly after the card appears so the first tap plays instantly.
+    const timer = window.setTimeout(() => germanKey.split("\n").forEach((item) => onPrefetchGerman({ text: item })), 600);
+    return () => window.clearTimeout(timer);
+  }, [germanKey, onPrefetchGerman]);
   return (
     <span className="block space-y-3">
       {parts.map((part, index) => {
@@ -38,7 +47,10 @@ export function RitaMessageContent({
           <span key={key} className="relative block">
             <button
               type="button"
-              onClick={() => setOpen((current) => current === key ? null : key)}
+              onClick={() => {
+                onPrefetchGerman?.(part);
+                setOpen((current) => current === key ? null : key);
+              }}
               className="block w-full rounded-md border border-rita-german-border bg-rita-german px-4 py-3 text-start transition hover:bg-rita-german-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <bdi dir="ltr" className="block text-lg font-extrabold text-rita-german-foreground">{part.text}</bdi>

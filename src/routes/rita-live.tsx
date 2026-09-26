@@ -51,7 +51,7 @@ import {
   type RitaLanguageState,
 } from "@/lib/rita-language-state";
 import { detectRitaDialectEvidence, explicitRitaAccent } from "@/lib/rita-voice-style";
-import { plainRitaReply } from "@/lib/rita-structured-reply";
+import { germanSpeechText, plainRitaReply } from "@/lib/rita-structured-reply";
 
 type Persona = "mentor" | "kind" | "direct" | "playful" | "strict";
 type Message = {
