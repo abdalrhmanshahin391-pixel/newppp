@@ -71,7 +71,7 @@ export const Route = createFileRoute("/api/rita/transcribe")({
         return Response.json(
           {
             text,
-            language: inferRitaTranscriptLanguage(text),
+            language: inferRitaTranscriptLanguage(text).language,
             engine: RITA_WHISPER_MODEL,
             traceId,
             totalMs: Math.round(elapsed),
