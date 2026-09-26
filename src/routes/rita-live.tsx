@@ -1155,7 +1155,7 @@ function RitaLivePage() {
         setError(
           cause instanceof Error
             ? cause.message
-            : "gpt_response: Rita Economic v2 could not answer.",
+            : "ريتا ما قدرت ترد هلأ، احكيها مرة ثانية.",
         );
       } finally {
         if (turnAbort.current === controller) {
@@ -1796,9 +1796,9 @@ function RitaLivePage() {
             </div>
             <p className="mt-2 text-xs font-bold text-[#6553a1]" role="status">
               {connectedMode === "economic_v2"
-                ? "متصل: Rita Economic v2 · Deepgram Nova-3 → GPT-4o mini → OpenAI PCM"
+                ? "متصل: Rita Economic v2 · Deepgram Nova-3 → Groq → صوت ريتا"
                 : connectedMode === "legacy"
-                  ? "متصل: Rita Legacy · OpenAI Transcribe → GPT-4o mini → OpenAI PCM"
+                  ? "متصل: Rita Legacy · OpenAI Transcribe → Groq → صوت ريتا"
                   : availableMode === "legacy"
                     ? "Rita Legacy مختارة من لوحة الإدارة"
                     : "Rita Economic v2 مختارة · ابدأ الدرس للاتصال"}

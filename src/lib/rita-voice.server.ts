@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export const RITA_MODELS = {
   transcription: "deepgram-nova-3",
-  response: "gpt-4o-mini",
+  response: "qwen/qwen3.8-27b",
   speech: "gpt-4o-mini-tts",
 } as const;
 
@@ -65,7 +65,7 @@ const DEFAULT_SETTINGS: RitaSettings = {
   adminOnlyPreview: false,
   voiceEngine: "openai",
   fishVoiceId: null,
-  groqModel: "llama-3.3-70b-versatile",
+  groqModel: "qwen/qwen3.8-27b",
   secondPassStt: true,
 };
 
