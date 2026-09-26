@@ -1630,7 +1630,7 @@ function RitaLivePage() {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
             setMood("listening");
             setStatus("ما سمعتك منيح، عيدها لو سمحت");
-            finalizeTurnTimeline("failed", "no_transcript", "transcription");
+            finalizeTurnTimeline("failed", "transcription_error", "transcription");
             pendingSignalStart.current = 0;
             pendingSpeechStart.current = 0;
           },

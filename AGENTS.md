@@ -17,5 +17,5 @@
 4. **Execution**: Only execute the changes after the user explicitly replies to apply it.
 
 ## RitaVoice architecture
-- RitaVoice uses Deepgram for live recognition, Groq only for response generation (single model openai/gpt-oss-20b, no fallback chain by owner choice; lesson state computed in browser via rita-lesson-state.ts), and the selected Fish/OpenAI engine only for speech; second-listen transcription is conditional on low confidence or mixed scripts.
+- RitaVoice uses Deepgram for live recognition, Groq only for response generation (single model openai/gpt-oss-20b, no fallback chain by owner choice; lesson state computed in browser via rita-lesson-state.ts), and the selected Fish/OpenAI engine only for speech; no second-listen transcription (Deepgram text used directly); learning items come from JSON-mode extraction with examples stored inside the card.
 
