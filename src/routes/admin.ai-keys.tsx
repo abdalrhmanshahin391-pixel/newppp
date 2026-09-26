@@ -160,7 +160,7 @@ function AiKeysPage() {
     adminOnlyPreview: false,
     voiceEngine: "openai" as "openai" | "fish",
     fishVoiceId: null as string | null,
-    groqModel: "llama-3.3-70b-versatile",
+    groqModel: "qwen/qwen3.8-27b",
     secondPassStt: true,
   });
   const [ritaMetrics, setRitaMetrics] = useState({

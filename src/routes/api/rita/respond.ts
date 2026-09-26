@@ -12,10 +12,11 @@ import {
 } from "@/lib/rita-voice.server";
 import {
   DEFAULT_RITA_GROQ_MODEL,
-  RITA_GROQ_FALLBACK_MODELS,
-  RITA_GROQ_FAST_MODEL,
+  RITA_GROQ_DETAILED_MODEL,
   isRetiredModelError,
   resolveRitaGroqConfig,
+  ritaGroqModelChain,
+  ritaGroqReasoningFields,
   usableRitaGroqModel,
 } from "@/lib/rita-groq.server";
 import {
@@ -143,7 +144,7 @@ ${args.detailed ? `The learner explicitly requested detail. Give a clear spoken 
 
 function apiError(code: string, error: string, status: number, traceId: string) {
   return Response.json(
-    { code, error, stage: "gpt_response", retryable: status >= 500, traceId },
+    { code, error, stage: "rita_response", retryable: status >= 500, traceId },
     { status, headers: { "Cache-Control": "no-store", "X-Rita-Trace": traceId } },
   );
 }
@@ -217,9 +218,9 @@ export const Route = createFileRoute("/api/rita/respond")({
         request.signal.addEventListener("abort", () => upstreamAbort.abort(), { once: true });
         const detailed = wantsDetailedReply(transcript);
         const mainModel = usableRitaGroqModel(settings.groqModel || groq.model);
-        // Short, casual turns use the small instant model: faster and cheaper.
-        const shortTurn = !detailed && transcript.split(/\s+/).length <= 6;
-        let responseModel = shortTurn ? RITA_GROQ_FAST_MODEL : mainModel;
+        const preferred = detailed ? RITA_GROQ_DETAILED_MODEL : mainModel;
+        const chain = await ritaGroqModelChain(groq.key, preferred);
+        let responseModel = chain[0] ?? DEFAULT_RITA_GROQ_MODEL;
         const callGroq = (model: string) =>
           fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -228,7 +229,8 @@ export const Route = createFileRoute("/api/rita/respond")({
               model,
               stream: true,
               stream_options: { include_usage: true },
-              max_tokens: detailed ? 420 : 180,
+              max_tokens: detailed ? 700 : 300,
+              ...ritaGroqReasoningFields(model),
               messages: [
                 { role: "system", content: RITA_STATIC_PROMPT },
                 { role: "system", content: prompt },
@@ -254,28 +256,20 @@ export const Route = createFileRoute("/api/rita/respond")({
           );
         }
         let upstream = await upstreamPromise;
-        if (!upstream.ok) {
+        // Walk the chain on model errors (retired/unsupported field) so one bad model never blocks Rita.
+        for (let i = 1; !upstream.ok && i < chain.length; i++) {
           const detail = await upstream.text().catch(() => "");
-          console.error("Rita Groq response failed", traceId, upstream.status, detail.slice(0, 240));
-          // A retired or unknown model: retry once with the next working model.
-          if (isRetiredModelError(upstream.status, detail)) {
-            const next = RITA_GROQ_FALLBACK_MODELS.find((m) => m !== responseModel) ?? DEFAULT_RITA_GROQ_MODEL;
-            responseModel = next;
-            upstream = await callGroq(next);
-          } else {
-            return apiError(
-              "groq_unavailable",
-              "Rita couldn’t answer just now. Please say it again.",
-              upstream.status === 429 || upstream.status >= 500 ? upstream.status : 502,
-              traceId,
-            );
-          }
+          console.error("Rita Groq response failed", traceId, responseModel, upstream.status, detail.slice(0, 240));
+          if (!(upstream.status === 400 || upstream.status === 404 || isRetiredModelError(upstream.status, detail))) break;
+          responseModel = chain[i]!;
+          upstream = await callGroq(responseModel);
         }
         if (!upstream.ok || !upstream.body) {
-          console.error("Rita Groq fallback failed", traceId, upstream.status);
+          const detail = upstream.bodyUsed ? "" : await upstream.text().catch(() => "");
+          console.error("Rita Groq final failure", traceId, responseModel, upstream.status, detail.slice(0, 240));
           return apiError(
             "groq_unavailable",
-            "Rita couldn’t answer just now. Please say it again.",
+            "ريتا ما قدرت ترد هلأ، احكيها مرة ثانية.",
             upstream.status === 429 || upstream.status >= 500 ? upstream.status : 502,
             traceId,
           );
