@@ -182,7 +182,7 @@ function listenUrl(language: string, keyterms: string[]) {
 
 export async function startRitaEconomicListening(args: {
   token: string;
-  transcriptionMode?: "deepgram" | "openai";
+  transcriptionMode?: "deepgram" | "openai" | "whisper";
   accent: string;
   browserLocale: string;
   keyterms?: string[];
@@ -275,7 +275,7 @@ export async function startRitaEconomicListening(args: {
   };
 
   const resetTurn = () => {
-    state = connection?.socket.readyState === WebSocket.OPEN || transcriptionMode === "openai"
+    state = connection?.socket.readyState === WebSocket.OPEN || transcriptionMode !== "deepgram"
       ? "listening"
       : "reconnecting";
     pushToTalk = false;
@@ -310,6 +310,22 @@ export async function startRitaEconomicListening(args: {
     callbacks.onFinal({ text: clean, confidence, language: resultLanguage, durationMs });
   };
 
+  const buildWav = (parts: Uint8Array[]) => {
+    const size = parts.reduce((sum, part) => sum + part.byteLength, 0);
+    const out = new Uint8Array(44 + size);
+    const view = new DataView(out.buffer);
+    const text = (offset: number, value: string) => {
+      for (let index = 0; index < value.length; index += 1) out[offset + index] = value.charCodeAt(index);
+    };
+    text(0, "RIFF"); view.setUint32(4, 36 + size, true); text(8, "WAVE"); text(12, "fmt ");
+    view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+    view.setUint32(24, 16_000, true); view.setUint32(28, 32_000, true); view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true); text(36, "data"); view.setUint32(40, size, true);
+    let offset = 44;
+    for (const part of parts) { out.set(part, offset); offset += part.byteLength; }
+    return new Blob([out], { type: "audio/wav" });
+  };
+
   const recoverTurn = (reason: string) => {
     if ((state !== "speaking" && state !== "finalizing") || !turnAudio.length || fallbackStarted) return;
     const complete = finalParts.join(" ").replace(/\s+/g, " ").trim();
@@ -320,13 +336,21 @@ export async function startRitaEconomicListening(args: {
     if (transcriptionMode === "deepgram" || (!heardWords && voicedMs < 600)) {
       const spoke = heardWords || voicedMs >= 600;
       resetTurn();
-      state = connection?.socket.readyState === WebSocket.OPEN ? "listening" : "reconnecting";
+      state = connection?.socket.readyState === WebSocket.OPEN || transcriptionMode !== "deepgram" ? "listening" : "reconnecting";
        callbacks.onTurnSignal?.("speech_end", spoke ? "no_transcript" : "silence");
       if (spoke && transcriptionMode === "deepgram") callbacks.onNoTranscript?.();
       return;
     }
     fallbackStarted = true;
     state = "finalizing";
+    if (transcriptionMode === "whisper") {
+      const audio = buildWav(turnAudio);
+      const durationMs = turnStartedAt ? Math.round(performance.now() - turnStartedAt) : 0;
+      resetTurn();
+      callbacks.onTurnSignal?.("speech_end", "whisper_upload");
+      callbacks.onFallback?.({ audio, durationMs, reason: `whisper:${reason}` });
+      return;
+    }
     resetTurn();
     callbacks.onTurnSignal?.("speech_end", "no_transcript");
     callbacks.onNoTranscript?.();
@@ -522,7 +546,7 @@ export async function startRitaEconomicListening(args: {
 
   callbacks.onConnectionState?.(transcriptionMode === "deepgram" ? "connecting" : "listening");
   if (transcriptionMode === "deepgram") openConnection();
-  else callbacks.onReady("OpenAI transcription");
+  else callbacks.onReady(transcriptionMode === "whisper" ? "Whisper Turbo" : "OpenAI transcription");
 
   const keepAlive = window.setInterval(() => {
     const live = connection;
@@ -585,13 +609,13 @@ export async function startRitaEconomicListening(args: {
     }
     if (startedThisFrame && !turnAudio.length) appendPreRollToTurn();
     turnAudio.push(new Uint8Array(buffer.slice(0)));
-    const fallbackSilenceMs = transcriptionMode === "openai" ? 450 : 1_150;
+    const fallbackSilenceMs = transcriptionMode === "openai" ? 450 : transcriptionMode === "whisper" ? 650 : 1_150;
     if (!pushToTalk && quietMs >= fallbackSilenceMs) {
       awaitDeepgramFinal(
         transcriptionMode === "openai"
           ? "Legacy transcription turn completed."
           : "Deepgram did not finalize the turn in time.",
-        transcriptionMode === "openai" ? 50 : 850,
+        transcriptionMode === "deepgram" ? 850 : 50,
       );
     }
   };
@@ -621,7 +645,7 @@ export async function startRitaEconomicListening(args: {
       if (state !== "speaking") return;
       awaitDeepgramFinal(
         "Push-to-talk ended before transcription finalized.",
-        transcriptionMode === "openai" ? 50 : 1_000,
+        transcriptionMode === "deepgram" ? 1_000 : 50,
       );
     },
     stop() {

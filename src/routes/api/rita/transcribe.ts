@@ -7,7 +7,7 @@ import {
 import { resolveRitaGroqConfig } from "@/lib/rita-groq.server";
 import { inferRitaTranscriptLanguage } from "@/lib/rita-language-state";
 
-export const RITA_WHISPER_MODEL = "whisper-large-v3-turbo";
+const RITA_WHISPER_MODEL = "whisper-large-v3-turbo";
 
 function fail(code: string, error: string, status: number, traceId: string) {
   return Response.json({ code, error, traceId }, { status, headers: { "X-Rita-Trace": traceId } });
