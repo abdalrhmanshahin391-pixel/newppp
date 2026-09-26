@@ -261,6 +261,7 @@ export async function startRitaEconomicListening(args: {
   let outputText = "";
   let outputGuardUntil = 0;
   let receivedResultOnConnection = false;
+  let pttTurn = false;
 
   const setConnectionState = (next: "connecting" | "listening" | "reconnecting") => {
     if (state !== "speaking" && state !== "finalizing" && state !== "stopped") state = next;
@@ -335,7 +336,7 @@ export async function startRitaEconomicListening(args: {
     }
     const turnBytes = turnAudio.reduce((sum, part) => sum + part.byteLength, 0);
     const tooQuiet = transcriptionMode === "whisper"
-      ? voicedMs < 180 && turnBytes < 16_000
+      ? (pttTurn ? turnBytes < 12_000 : voicedMs < 250)
       : !heardWords && voicedMs < 600;
     if (transcriptionMode === "deepgram" || tooQuiet) {
       const spoke = heardWords || voicedMs >= 600;
@@ -408,6 +409,7 @@ export async function startRitaEconomicListening(args: {
   const startTurn = (source: "local_vad" | "deepgram") => {
     if (state === "speaking" || state === "finalizing" || state === "stopped") return false;
     state = "speaking";
+    pttTurn = pushToTalk;
     turnStartedAt = performance.now();
     turnAudio = [];
     finalParts = [];
