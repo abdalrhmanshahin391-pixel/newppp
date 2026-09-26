@@ -21,3 +21,4 @@
 - RitaVoice uses structured AR/DE/NOTE reply lines so Layan speaks Arabic, official Emma speaks German, and written breakdowns stay silent; this prevents mixed-language pronunciation errors.
 
 - RitaVoice listening engine is an admin switch (`rita_voice_settings.stt_engine`): `whisper` (Groq whisper-large-v3-turbo, uploads the finished turn as 16 kHz WAV, no Deepgram socket/token) or `deepgram` (live stream); only the selected engine runs, to avoid paying for or debugging two listeners.
+- RitaVoice `stt_engine = realtime` is a premium admin-only mode: OpenAI Realtime (`gpt-realtime`, WebRTC via `/api/rita/live`) hears and speaks directly, with Whisper/Deepgram/Groq/Fish all off and no fallback between modes; keeps costs and debugging to one pipeline.

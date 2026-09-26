@@ -1393,6 +1393,7 @@ function RitaLivePage() {
     setHasReplay(false);
     setNeedsTapToPlay(false);
   }, [finalizeTurnTimeline, getToken, stopSpeaking]);
+  endSessionRef.current = endSession;
 
   useEffect(() => () => endSession(), [endSession]);
 
@@ -1949,6 +1950,7 @@ function RitaLivePage() {
     mutedRef.current = next;
     setMuted(next);
     economic.current?.mute(next);
+    realtimeRef.current?.mute(next);
     setMood(next ? "ready" : "listening");
     setStatus(next ? "Microphone muted" : "Rita is listening");
   };
@@ -2037,7 +2039,7 @@ function RitaLivePage() {
             </div>
             <p className="mt-2 text-xs font-bold text-[#6553a1]" role="status">
               {connectedMode === "economic_v2"
-                ? `متصل: ${sttEngine === "whisper" ? "Whisper Turbo" : "Deepgram Nova-3"} → Groq → صوت ريتا`
+                ? (sttEngine === "realtime" ? "متصل: OpenAI Realtime (premium)" : `متصل: ${sttEngine === "whisper" ? "Whisper Turbo" : "Deepgram Nova-3"} → Groq → صوت ريتا`)
                 : connectedMode === "legacy"
                   ? "متصل: Rita Legacy · OpenAI Transcribe → Groq → صوت ريتا"
                   : availableMode === "legacy"
@@ -2295,7 +2297,7 @@ function RitaLivePage() {
                   ]
                     .filter((entry): entry is [string, number] => typeof entry[1] === "number")
                     .map(([label, duration]) => `${label} ${Math.round(duration)}ms`)
-                    .concat(connectedMode === "economic_v2" ? [`Heard by: ${sttEngine === "whisper" ? "Whisper Turbo" : "Deepgram"}`] : [])
+                    .concat(connectedMode === "economic_v2" ? [`Heard by: ${sttEngine === "whisper" ? "Whisper Turbo" : sttEngine === "realtime" ? "OpenAI Realtime" : "Deepgram"}`] : [])
                     .join(" · ")
                 : undefined
             }
