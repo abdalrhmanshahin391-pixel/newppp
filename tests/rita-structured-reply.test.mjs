@@ -28,3 +28,19 @@ test("safely displays an unformatted model line as speech", () => {
   const parts = parseRitaReply("جواب عادي بدون ترميز");
   assert.equal(parts[0].type, "speech");
 });
+test("repairs wrong separators from the model (dash and single pipe)", () => {
+  const [card] = parseRitaReply("DE:Gute Nacht — تصبح على خير || Gute=تصبح;Nacht=على خير");
+  assert.equal(card.text, "Gute Nacht");
+  assert.equal(card.meaning, "تصبح على خير");
+  assert.equal(card.breakdown.length, 2);
+  const [second] = parseRitaReply("DE:Ich sehe dich morgen — بشوفك بكرة — |Ich=أنا;sehe=أرى;dich=ك;morgen=بكرة");
+  assert.deepEqual(speechForRitaPart(second), { text: "Ich sehe dich morgen", voiceRole: "german" });
+  assert.equal(second.breakdown.length, 4);
+});
+
+test("lifts a quoted German sentence out of Arabic speech into its own card", () => {
+  const parts = parseRitaReply('AR:في ألمانيا، للذهاب للحمام، نقول "Ich möchte zur Toilette gehen"');
+  assert.equal(parts.at(-1).type, "german");
+  assert.equal(parts.at(-1).text, "Ich möchte zur Toilette gehen");
+  assert.ok(!parts[0].text.includes("Toilette"));
+});

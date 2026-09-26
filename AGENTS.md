@@ -20,3 +20,4 @@
 - RitaVoice uses Deepgram for live recognition, Groq only for response generation (single model openai/gpt-oss-20b, no fallback chain by owner choice; lesson state computed in browser via rita-lesson-state.ts), and the selected Fish/OpenAI engine only for speech; no second-listen transcription (Deepgram text used directly); learning items come from JSON-mode extraction with examples stored inside the card.
 - RitaVoice uses structured AR/DE/NOTE reply lines so Layan speaks Arabic, official Emma speaks German, and written breakdowns stay silent; this prevents mixed-language pronunciation errors.
 
+- RitaVoice listening engine is an admin switch (`rita_voice_settings.stt_engine`): `whisper` (Groq whisper-large-v3-turbo, uploads the finished turn as 16 kHz WAV, no Deepgram socket/token) or `deepgram` (live stream); only the selected engine runs, to avoid paying for or debugging two listeners.

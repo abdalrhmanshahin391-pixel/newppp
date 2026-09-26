@@ -32,7 +32,8 @@ export const Route = createFileRoute("/api/rita/session")({
         const voiceReady = settings.voiceEngine === "fish" ? Boolean(fishKey) : Boolean(openAiKey);
         return Response.json(
           {
-            configured: Boolean(voiceReady && groq && (pilotMode === "legacy" || deepgramKey)),
+            configured: Boolean(voiceReady && groq && (pilotMode === "legacy" || settings.sttEngine === "whisper" || deepgramKey)),
+            sttEngine: settings.sttEngine,
             providers: { openai: Boolean(openAiKey), fish: Boolean(fishKey), deepgram: Boolean(deepgramKey), groq: Boolean(groq) },
             enabled: settings.enabled,
             pilotMode,
@@ -88,7 +89,7 @@ export const Route = createFileRoute("/api/rita/session")({
           return Response.json({ ok: false, allowance, message }, { status: 429 });
         }
 
-         if (!voiceReady || !groq || (pilotMode === "economic_v2" && !deepgramKey))
+         if (!voiceReady || !groq || (pilotMode === "economic_v2" && settings.sttEngine === "deepgram" && !deepgramKey))
            return Response.json(
              {
                ok: false,
@@ -142,6 +143,7 @@ export const Route = createFileRoute("/api/rita/session")({
             configured: true,
             providers: { openai: Boolean(openAiKey), fish: Boolean(fishKey), deepgram: Boolean(deepgramKey), groq: true },
             pilotMode,
+            sttEngine: settings.sttEngine,
             voice: settings.voice,
             secondPassStt: false,
             allowance,

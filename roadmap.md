@@ -33,3 +33,7 @@
 - [x] Remove second-listen behavior and repair bounded Deepgram reconnection
 - [x] Verify three live Arabic-to-German requests through the live response and voice services
 - [ ] Verify ten consecutive physical microphone turns on iPad before publishing
+- [x] Whisper Turbo listening with one-click Deepgram switch (admin)
+- [x] German card audio cached 3 min, one voice at a time, Emma reads German only
+- [x] Tolerant green-card parser + quoted German lifted into its own card
+- [ ] Live iPad mic test of Whisper mode before publishing (needs the user)

@@ -79,6 +79,22 @@ export function RitaFishVoicePanel() {
           </button>
         ))}
       </div>
+      <h3 className="mt-5 text-sm font-black">Listening engine</h3>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Whisper Turbo (Groq whisper-large-v3-turbo) is more accurate for mixed Arabic/German but listens after you finish (~+300 ms). Deepgram streams live. Only the selected one runs.
+      </p>
+      <div className="mt-2 flex gap-2">
+        {(["whisper", "deepgram"] as const).map((engine) => (
+          <button
+            key={engine}
+            disabled={busy}
+            onClick={() => persist({ sttEngine: engine })}
+            className={`rounded-xl border-2 px-4 py-2 text-sm font-black ${(settings.sttEngine ?? "whisper") === engine ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+          >
+            {engine === "whisper" ? "Whisper Turbo" : "Deepgram"}
+          </button>
+        ))}
+      </div>
       <div className="mt-4 flex items-center gap-3">
         <button onClick={loadVoices} disabled={loading} className="rounded-xl border-2 border-border px-3 py-2 text-xs font-black">
           {loading ? "Loading…" : "Refresh voices"}

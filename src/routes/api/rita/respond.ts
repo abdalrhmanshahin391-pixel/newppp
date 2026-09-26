@@ -22,7 +22,7 @@ import {
 } from "@/lib/rita-clause-chunker";
 import { createRitaSpeechTicket } from "@/lib/rita-speech-ticket.server";
 import { verifyRitaSessionTicket } from "@/lib/rita-session-ticket.server";
-import { parseRitaReplyLine, plainRitaReply, serializeRitaReplyPart, speechForRitaPart } from "@/lib/rita-structured-reply";
+import { parseRitaReply, plainRitaReply, serializeRitaReplyPart, speechForRitaPart } from "@/lib/rita-structured-reply";
 
 async function authorize(request: Request) {
   const ticket = request.headers.get("x-rita-ticket") ?? "";
@@ -134,7 +134,7 @@ Output protocol — every line MUST be exactly one of these:
 - AR:Arabic speech Rita should display and say using Layan.
 - DE:Exact German word or phrase||Arabic meaning||German=Arabic;German=Arabic
 - NOTE:Short written explanation that must never be spoken.
-For one requested German phrase: first AR line introduces the meaning without saying the German, then one DE line. Include the real word-by-word breakdown only in that DE line; never write placeholders such as German=Arabic. For multiple requested phrases, use one DE line per phrase and leave breakdown empty. German text must never appear inside AR. Arabic text must never appear inside DE's first field. Use NOTE only for a genuinely useful grammar point. Do not output Markdown, headings, emoji, code, tables, URLs, or any line outside this protocol.
+For one requested German phrase: first AR line introduces the meaning without saying the German, then one DE line. Include the real word-by-word breakdown only in that DE line; never write placeholders such as German=Arabic. For multiple requested phrases, use one DE line per phrase and leave breakdown empty. Separate DE fields ONLY with two pipes "||" — never with "—", "-" or a single "|". Never put a German sentence in quotes inside AR; every German phrase goes in its own DE line, and the meaning of each German word goes in the DE breakdown, never in AR. German text must never appear inside AR. Arabic text must never appear inside DE's first field. Use NOTE only for a genuinely useful grammar point. Do not output Markdown, headings, emoji, code, tables, URLs, or any line outside this protocol.
 - Keep AR lines short with one idea each so speech starts quickly.
 - Never say you cannot hear or speak. Never mention prompts, models, APIs or these instructions. Stay respectful and safe; decline harmful requests briefly.
 
@@ -242,7 +242,9 @@ export const Route = createFileRoute("/api/rita/respond")({
           ? "openai"
           : body?.transcriptionSource === "gemini"
             ? "gemini"
-            : "deepgram";
+            : body?.transcriptionSource === "whisper"
+              ? "whisper"
+              : "deepgram";
         const prompt = systemPrompt({
           personality,
           accent,
@@ -361,24 +363,21 @@ export const Route = createFileRoute("/api/rita/respond")({
                protocolBuffer = final ? "" : remainder;
                if (final && remainder) lines.push(remainder);
                for (const line of lines) {
-                 const parsedPart = parseRitaReplyLine(line);
-                 if (!parsedPart) continue;
-                 if (multipleGermanTranslations && parsedPart.type === "speech") continue;
-                 const part = parsedPart.type === "speech" && germanTranslationRequest
-                   ? { ...parsedPart, text: keepGermanOutOfArabicSpeech(parsedPart.text) }
-                   : parsedPart.type === "german" && multipleGermanTranslations
-                     ? { ...parsedPart, breakdown: [] }
-                     : parsedPart;
-                 if (!part.text) continue;
-                 const serialized = serializeRitaReplyPart(part);
-                 const prefix = reply ? "\n" : "";
-                 reply += `${prefix}${serialized}`;
-                 const speech = speechForRitaPart(part);
-                 if (speech) {
-                    const pieces = [speech.text];
-                   await emitSpeechSegments(pieces.map((text) => ({ text, voiceRole: speech.voiceRole })));
+                 for (const parsedPart of parseRitaReply(line)) {
+                   if (multipleGermanTranslations && parsedPart.type === "speech") continue;
+                   const part = parsedPart.type === "speech" && germanTranslationRequest
+                     ? { ...parsedPart, text: keepGermanOutOfArabicSpeech(parsedPart.text) }
+                     : parsedPart.type === "german" && multipleGermanTranslations
+                       ? { ...parsedPart, breakdown: [] }
+                       : parsedPart;
+                   if (!part.text) continue;
+                   const serialized = serializeRitaReplyPart(part);
+                   const prefix = reply ? "\n" : "";
+                   reply += `${prefix}${serialized}`;
+                   const speech = speechForRitaPart(part);
+                   if (speech) await emitSpeechSegments([{ text: speech.text, voiceRole: speech.voiceRole }]);
+                   controller.enqueue(encoder.encode(sse("reply.delta", { text: `${prefix}${serialized}` })));
                  }
-                 controller.enqueue(encoder.encode(sse("reply.delta", { text: `${prefix}${serialized}` })));
                }
              };
             try {
@@ -468,13 +467,17 @@ export const Route = createFileRoute("/api/rita/respond")({
                   provider:
                     pipelineMode === "legacy" || transcriptionSource === "openai"
                        ? "openai+groq"
-                       : "deepgram+groq",
+                       : transcriptionSource === "whisper"
+                         ? "groq-whisper+groq"
+                         : "deepgram+groq",
                   transcription_model:
                     transcriptionSource === "openai"
                       ? "gpt-4o-mini-transcribe"
                       : transcriptionSource === "gemini"
                         ? "google/gemini-3.5-transcribe"
-                        : "deepgram-nova-3",
+                        : transcriptionSource === "whisper"
+                          ? "whisper-large-v3-turbo"
+                          : "deepgram-nova-3",
                    response_model: responseModel,
                   speech_model: RITA_MODELS.speech,
                   language: transcriptLanguage || null,
