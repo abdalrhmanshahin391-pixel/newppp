@@ -18,3 +18,11 @@
 - [x] Add Groq-only streamed replies, concise-by-default teaching, mixed-script display, and conditional second-listen transcription
 - [x] Add automatic Rita word cards with a user preference and restricted Undo
 - [ ] Add and verify the user’s Groq key, then run live Arabic/German voice tests
+
+## Rita speed plan (2026-09-26)
+- [x] Replace retired Groq model, automatic fallback model, friendly error
+- [x] Small instant model for short turns; last 6 messages only
+- [x] Faster end-of-speech (Deepgram 200/250ms) and earlier first voice clause (3–6 words)
+- [ ] Early (pre-emptive) reply start with cancel on new speech
+- [ ] Saved audio for repeated replies/words
+- [ ] Real chat test in admin key check
