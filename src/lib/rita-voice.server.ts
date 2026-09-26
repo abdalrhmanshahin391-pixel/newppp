@@ -65,7 +65,7 @@ const DEFAULT_SETTINGS: RitaSettings = {
   adminOnlyPreview: false,
   voiceEngine: "openai",
   fishVoiceId: null,
-  groqModel: "mistral-saba-24b",
+  groqModel: "llama-3.3-70b-versatile",
   secondPassStt: true,
 };
 

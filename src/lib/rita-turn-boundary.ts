@@ -8,8 +8,8 @@ export function ritaEndOfTurnDelay(text: string) {
   const clean = text.trim();
   if (!clean) return 900;
   if (INCOMPLETE_ENDINGS.some((pattern) => pattern.test(clean))) return 900;
-  if (/[.!?؟؛:]$/.test(clean)) return 180;
+  if (/[.!?؟؛:]$/.test(clean)) return 150;
   const words = clean.split(/\s+/).length;
   if (words <= 2) return 550;
-  return 320;
+  return 250;
 }
