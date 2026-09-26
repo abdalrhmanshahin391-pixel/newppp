@@ -230,6 +230,8 @@ function RitaLivePage() {
   const voiceTurnStartedAt = useRef<number | null>(null);
   const settingsRef = useRef({ persona, language, dialect, accentPreference });
   const connectedModeRef = useRef<"legacy" | "economic_v2">("economic_v2");
+  const sttEngineRef = useRef<"whisper" | "deepgram">("whisper");
+  const [sttEngine, setSttEngine] = useState<"whisper" | "deepgram">("whisper");
   const metricRef = useRef({
     speechStart: 0,
     speechEnd: 0,
@@ -1497,6 +1499,7 @@ function RitaLivePage() {
           allowance?: { premiumVoice?: boolean };
           voice?: string;
            secondPassStt?: boolean;
+          sttEngine?: "whisper" | "deepgram";
         } & RitaErrorPayload
       >(response);
       if (epoch !== lessonEpoch.current) {
@@ -1530,7 +1533,13 @@ function RitaLivePage() {
       warm();
       setPremiumVoice(result.allowance?.premiumVoice !== false);
       let listeningToken = "";
-      if (selectedMode === "economic_v2") {
+      const engine = result.sttEngine === "deepgram" ? "deepgram" : "whisper";
+      sttEngineRef.current = engine;
+      setSttEngine(engine);
+      const useWhisper = selectedMode === "economic_v2" && engine === "whisper";
+      if (useWhisper) {
+        setStatus("Starting Whisper Turbo listening…");
+      } else if (selectedMode === "economic_v2") {
         setStatus("Connecting Deepgram Nova-3…");
         const deepgramResponse = await fetch("/api/rita/deepgram-token", {
           method: "POST",
@@ -1548,7 +1557,7 @@ function RitaLivePage() {
       const { startRitaEconomicListening } = await loadEconomic();
       const controller = await startRitaEconomicListening({
         token: listeningToken,
-        transcriptionMode: selectedMode === "legacy" ? "openai" : "deepgram",
+        transcriptionMode: selectedMode === "legacy" ? "openai" : useWhisper ? "whisper" : "deepgram",
         accent:
           accentPreference ||
           languageState.current.activeDialect ||
@@ -1556,7 +1565,7 @@ function RitaLivePage() {
         browserLocale: navigator.language || "",
          keyterms: [lessonStateRef.current.targetPhrase, ...learningRef.current.slice(-20).map((item) => item.term)].filter(Boolean),
           secondPassStt: false,
-        refreshToken: async () => {
+        refreshToken: useWhisper ? undefined : async () => {
           const fresh = await getToken();
           const response = await fetch("/api/rita/deepgram-token", {
             method: "POST",
@@ -1599,7 +1608,9 @@ function RitaLivePage() {
             setStatus(
               selectedMode === "legacy"
                 ? "Rita Legacy listening · OpenAI transcription"
-                : `Deepgram Nova-3 listening · ${connectedLanguage}`,
+                : useWhisper
+                  ? "Whisper Turbo listening"
+                  : `Deepgram Nova-3 listening · ${connectedLanguage}`,
             );
           },
           onVolume: setInputLevel,
@@ -1615,7 +1626,7 @@ function RitaLivePage() {
             // Raw sound alone never interrupts Rita; wait for confirmed speech (onBargeIn).
             if (!processingRef.current && !speechAbort.current) {
               setMood("listening");
-              setStatus("Deepgram is listening…");
+              setStatus(sttEngineRef.current === "whisper" ? "Rita is listening…" : "Deepgram is listening…");
             }
           },
           onBargeIn: () => {
@@ -1641,7 +1652,7 @@ function RitaLivePage() {
             };
             turnAbort.current?.abort();
             setMood("listening");
-            setStatus("Deepgram is listening…");
+            setStatus(sttEngineRef.current === "whisper" ? "Rita is listening…" : "Deepgram is listening…");
           },
           onDiagnostic: (event, detail) => {
             if (epoch !== lessonEpoch.current) return;
@@ -1694,9 +1705,15 @@ function RitaLivePage() {
           },
           onFallback: ({ audio, durationMs, reason }) => {
             if (mutedRef.current || epoch !== lessonEpoch.current) return;
-            metricRef.current.fallbackUsed = true;
-            if (turnTimeline.current) turnTimeline.current.fallbackUsed = true;
-             if (reason.startsWith("second_pass:")) {
+            const whisperTurn = reason.startsWith("whisper:");
+            if (!whisperTurn) {
+              metricRef.current.fallbackUsed = true;
+              if (turnTimeline.current) turnTimeline.current.fallbackUsed = true;
+            }
+             if (whisperTurn) {
+               setMood("thinking");
+               setStatus("Rita is thinking…");
+             } else if (reason.startsWith("second_pass:")) {
                if (turnTimeline.current) turnTimeline.current.secondPassUsed = true;
                setStatus("Double-checking what you said…");
              } else {
@@ -1704,6 +1721,8 @@ function RitaLivePage() {
              }
             const form = new FormData();
             form.append("audio", audio, "rita-turn.wav");
+            const accentHint = String(accentPreference || languageState.current.activeLanguage || "").toLowerCase();
+            if (/^(ar|de|en)/.test(accentHint)) form.append("language", accentHint.slice(0, 2));
             void fetch("/api/rita/transcribe", {
               method: "POST",
               headers: { Authorization: `Bearer ${token}` },
@@ -1715,8 +1734,16 @@ function RitaLivePage() {
                   ...parseServerTiming(fallbackResponse.headers.get("Server-Timing")),
                 }));
                 const fallback = await readRitaPayload<
-                  { text?: string; language?: string } & RitaErrorPayload
+                  { text?: string; language?: string; engine?: string; totalMs?: number } & RitaErrorPayload
                 >(fallbackResponse);
+                if (whisperTurn && fallbackResponse.status === 422) {
+                  if (epoch !== lessonEpoch.current) return;
+                  setMood("listening");
+                  setStatus("Rita is listening");
+                  pendingSignalStart.current = 0;
+                  pendingSpeechStart.current = 0;
+                  return;
+                }
                 if (!fallbackResponse.ok || !fallback?.text)
                   throw ritaApiError(fallback, "Rita could not recover the sentence.");
                 if (epoch !== lessonEpoch.current) return;
@@ -1729,7 +1756,8 @@ function RitaLivePage() {
                   transcriptLanguage: fallback.language || "unknown",
                   durationMs,
                   addUser: true,
-                  fallbackUsed: true,
+                  fallbackUsed: !whisperTurn,
+                  whisperUsed: whisperTurn,
                 });
               })
               .catch((cause) => {
@@ -1764,7 +1792,9 @@ function RitaLivePage() {
       setStatus(
         selectedMode === "legacy"
           ? "Rita Legacy is listening — OpenAI transcription"
-          : "Rita Economic v2 is listening — Deepgram Nova-3",
+          : useWhisper
+            ? "Rita is listening — Whisper Turbo"
+            : "Rita Economic v2 is listening — Deepgram Nova-3",
       );
     } catch (cause) {
       if (epoch !== lessonEpoch.current) return;
@@ -1886,7 +1916,7 @@ function RitaLivePage() {
             </div>
             <p className="mt-2 text-xs font-bold text-[#6553a1]" role="status">
               {connectedMode === "economic_v2"
-                ? "متصل: Rita Economic v2 · Deepgram Nova-3 → Groq → صوت ريتا"
+                ? `متصل: ${sttEngine === "whisper" ? "Whisper Turbo" : "Deepgram Nova-3"} → Groq → صوت ريتا`
                 : connectedMode === "legacy"
                   ? "متصل: Rita Legacy · OpenAI Transcribe → Groq → صوت ريتا"
                   : availableMode === "legacy"
@@ -2136,13 +2166,14 @@ function RitaLivePage() {
             timingDetails={
               isAdmin
                 ? [
-                    ["STT", lastVoiceTimings.stt],
+                    ["STT", lastVoiceTimings.stt ?? lastVoiceTimings.whisper_stt],
                     ["AI", lastVoiceTimings.answer],
                     ["Voice", lastVoiceTimings.speech],
                     ["DB", lastVoiceTimings.usage ?? lastVoiceTimings.claim],
                   ]
                     .filter((entry): entry is [string, number] => typeof entry[1] === "number")
                     .map(([label, duration]) => `${label} ${Math.round(duration)}ms`)
+                    .concat(connectedMode === "economic_v2" ? [`Heard by: ${sttEngine === "whisper" ? "Whisper Turbo" : "Deepgram"}`] : [])
                     .join(" · ")
                 : undefined
             }
