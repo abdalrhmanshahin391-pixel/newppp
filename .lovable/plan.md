@@ -1,48 +1,31 @@
-# كيف يعمل وضع OpenAI Realtime في ريتا — بالتفصيل
+# Move RitaJet to GitHub (code + database structure) for Codex editing
 
-## هل نستخدم LiveKit؟
-لا. LiveKit هو وسيط (سيرفر صوت مستأجر) يضيف تكلفة وتعقيداً وتأخيراً. نحن نستخدم اتصال **WebRTC مباشر** من متصفحك إلى OpenAI — وهذا بالضبط ما تستخدمه تطبيقات الصوت الاحترافية الحديثة. دورنا كموقع يقتصر على "فتح الباب" مرة واحدة عند البداية، وبعدها الصوت يسير مباشرة بينك وبين OpenAI.
+## What you want
 
-## النماذج المستخدمة في هذا الوضع
-- **gpt-realtime** (الكامل، ليس mini): يسمع صوتك مباشرة ويرد بصوته — موديل واحد يقوم بكل شيء.
-- **gpt-4o-transcribe**: يحوّل كلامك إلى نص يظهر في الشات (للعرض فقط، ليس جزءاً من الفهم).
-- **صوت marin** من OpenAI للرد الصوتي.
-- كل شيء آخر مطفأ في هذا الوضع: لا Whisper، لا Deepgram، لا Groq، لا Fish. لا يوجد أي رجوع تلقائي بين الأوضاع.
+Everything we built here — the code and the database tables — available on GitHub so you can edit from Codex and have the changes appear here without breakage.
 
-## رحلة الصوت خطوة بخطوة
+## The honest picture first
 
-```text
-مايك الآيباد
-   │  (1) التقاط الصوت في المتصفح + تنقية (إزالة صدى وضوضاء)
-   ▼
-اتصال WebRTC مباشر ──────────────► OpenAI gpt-realtime
-   │                                   │ (2) كشف نهاية الكلام (server VAD، صمت 500ms)
-   │                                   │ (3) الفهم + التفكير + الرد — كلها داخل الموديل نفسه
-   │                                   │ (4) توليد صوت الرد (marin)
-   ◄────────────────────────────── صوت ريتا يُبث فوراً
-   │  (5) تشغيل الصوت في المتصفح لحظة وصوله
-   ▼
-سماعاتك
-وبالتوازي: نص كلامك ونص رد ريتا يظهران في الشات كالمعتاد
-```
+- **Code: full two-way sync.** Once connected, every change I make here pushes to GitHub automatically, and every change you push from Codex appears here. This works well and is safe.
+- **Database: one-way export, not live sync.** The database itself (the live tables and the data inside them) stays on Lovable Cloud — GitHub cannot host a live database. What we CAN put on GitHub is the **database structure as SQL files** (every table, every rule, every function we created). Codex can then read and edit those files, and when you push changes, I apply them to the live database here.
+- **Important rule to avoid breakage:** if Codex edits the SQL files, the change only becomes real after it's applied to the live database. If you edit tables directly in Codex's SQL files and also let me change the database here without syncing, the two will drift. The safe workflow: Codex edits SQL files → push → tell me → I apply them here.
 
-1. **الدخول:** المتصفح يلتقط صوتك مع تنقية تلقائية (echo cancellation + noise suppression). لا يوجد تسجيل ولا رفع ملفات — الصوت يتدفق حياً.
-2. **معرفة أنك انتهيت:** OpenAI نفسه يكتشف توقفك عن الكلام (500ms صمت). لا نحتاج Deepgram ولا كشف صمت محلي.
-3. **الفهم والرد:** الموديل "يسمع" الصوت نفسه — لهذا يفهم الخلط بين العربي والألماني والإنجليزي بشكل طبيعي، لأنه لا يمر بمرحلة نص قد تتلف. شخصية ريتا (معلمة دافئة، صارمة قليلاً، لا تخترع حقائق، جملة ألمانية بسطر مستقل) محقونة كتعليمات ثابتة.
-4. **الصوت الخارج:** رد ريتا يتولد كصوت ويُبث إليك أثناء توليده — تسمع البداية قبل اكتمال الجملة.
-5. **المقاطعة:** لو تكلمت أثناء كلام ريتا، تتوقف فوراً وتسمعك — بدون أزرار.
+## Steps
 
-## حواجز الأمان والتكلفة
-- قبل فتح الاتصال، السيرفر يتحقق: مستخدم مسجل دخول + الوضع "realtime" مختار من الأدمن + مفتاح OpenAI موجود + رصيد الاستخدام اليومي يسمح.
-- كل مكالمة مقيدة بـ **5 دقائق** كحد أقصى، ثم تنتهي برسالة واضحة.
-- المفتاح يبقى على السيرفر فقط ولا يصل المتصفح أبداً.
-- لو المفتاح مرفوض أو الرصيد انتهى، تظهر رسالة واضحة ولا يتحول النظام لوضع آخر.
+1. **Export the database structure to the project** — I generate clean SQL files under `supabase/migrations/` covering everything we built: all tables (profiles, roles, courses, German content, notes, question bank, plans, offers, promo codes, support, notifications, spaces, RitaVoice settings/usage/metrics), the security rules (RLS policies), the role system (`has_role`), and the RitaVoice settings row. These files become part of the code and sync to GitHub like everything else.
+2. **Connect the project to GitHub** — you do this part (it needs your GitHub login): open the **+ menu** in the chat input → **GitHub** → **Connect project** → authorize the Lovable GitHub App → create the repository. From that moment, code syncs both ways in real time.
+3. **Verify the sync** — I make a small harmless change here, confirm it appears on GitHub, and confirm the repo contains the full app plus the database SQL files.
+4. **Write a short `AGENTS.md` note for Codex** — a file at the repo root telling Codex (or any editor) the rules: where the SQL files live, that database changes must be applied through Lovable, which files are auto-generated and must not be edited, and the RitaVoice architecture rules, so edits from Codex don't break the app.
 
-## لماذا هذا أفضل من مسار Whisper؟
-مسار Whisper: صوت ← ملف ← رفع ← تحويل لنص ← نص لـ Groq ← نص لـ Fish ← صوت (4 قفزات، وكل قفزة تفقد معلومات). مسار Realtime: صوت ← الموديل ← صوت (قفزة واحدة). الفرق في الفهم والسرعة جوهري، والفرق في التكلفة أيضاً — لذلك هو وضع "بريميوم" اختياري بزر واحد من لوحة الأدمن.
+## What this does NOT do
 
-## الحالة الحالية
-- الكود جاهز ومطبق في المعاينة: زر "OpenAI Realtime (premium)" في لوحة الأدمن، مسار `/api/rita/live`، والعميل `rita-realtime.client.ts`.
-- لم يتم اختبار مكالمة حية فعلية بعد — يحتاج مفتاح OpenAI صالحاً وتجربة منك على الآيباد.
+- Your users' data (accounts, progress, saved cards) is not copied to GitHub — it stays private in the live database. Only the empty structure goes to GitHub.
+- GitHub will not run the app by itself; it stays hosted here. GitHub is for editing and backup.
+
+## Technical notes
+
+- Schema export produced from the live database (tables, constraints, RLS policies, functions, grants) into ordered migration files under `supabase/migrations/`.
+- `AGENTS.md` updated with: sync workflow, do-not-edit list (generated client/types, routeTree), and the rule that SQL file edits require applying a migration here.
+- No changes to how the app runs; this is export + connection + documentation only.
 
 do u want to apply it like lovable
