@@ -4,6 +4,7 @@ import { Eye, EyeOff, MailCheck, X, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/legacy-client";
+import { lovable } from "@/integrations/lovable";
 import { checkIdentityAvailability } from "@/lib/auth.functions";
 import {
   loadRememberedLogin,
@@ -280,8 +281,30 @@ function SignInPanel({ next }: { next?: string }) {
     }
   }
 
-  function handleGoogle() {
-    setError("Google sign-in is coming soon. Please use email for now.");
+  async function handleGoogle() {
+    setError(null);
+    setLoading(true);
+    try {
+      if (next?.startsWith("/") && !next.startsWith("//")) {
+        sessionStorage.setItem("rita-auth-next", next);
+      }
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+        extraParams: { prompt: "select_account" },
+      });
+      if (result.error) throw result.error;
+      if (result.redirected) return;
+      closeAuth();
+      await router.invalidate();
+      const destination = sessionStorage.getItem("rita-auth-next");
+      sessionStorage.removeItem("rita-auth-next");
+      if (destination?.startsWith("/") && !destination.startsWith("//")) {
+        void router.navigate({ href: destination });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-in could not start. Please try again.");
+      setLoading(false);
+    }
   }
 
   if (blocked) {
@@ -581,8 +604,20 @@ function SignUpPanel() {
     );
   }
 
-  const googleSignUp = () => {
-    setError("Google sign-up is coming soon. Please use email for now.");
+  const googleSignUp = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+        extraParams: { prompt: "select_account" },
+      });
+      if (result.error) throw result.error;
+      if (!result.redirected) closeAuth();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-up could not start. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -598,7 +633,7 @@ function SignUpPanel() {
         />
       )}
 
-      <GoogleButton label="Sign up with Google" onClick={googleSignUp} disabled={loading} />
+      <GoogleButton label="Sign up with Google" onClick={() => void googleSignUp()} disabled={loading} />
       <p className="mt-2 text-center text-xs font-medium text-muted-foreground">
         By continuing with Google you agree to RitaJet's{" "}
         <Link to="/terms" className="underline">Terms</Link>,{" "}

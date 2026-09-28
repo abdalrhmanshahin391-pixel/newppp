@@ -85,12 +85,13 @@ export const DEFAULT_LAYOUT: HubLayout = {
       tiles: [
         t("/admin/ai", "AI engine", "Sparkles"),
         {
-          id: "/admin/ai-keys",
-          to: "/admin/ai-keys",
-          label: "Rita API Keys",
-          labelAr: "مفاتيح ريتا API",
+          id: "/admin/rita-voice",
+          to: "/admin/rita-voice",
+          label: "Rita Voice v3",
+          labelAr: "صوت ريتا الجديد",
           icon: "KeyRound",
         },
+        t("/admin/ai-keys", "General AI keys", "KeyRound"),
       ],
     },
     {

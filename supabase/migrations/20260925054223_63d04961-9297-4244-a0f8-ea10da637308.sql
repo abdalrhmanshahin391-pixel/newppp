@@ -1,1 +1,0 @@
-ALTER TABLE public.rita_turn_metrics ADD COLUMN IF NOT EXISTS reconnect_count integer NOT NULL DEFAULT 0;

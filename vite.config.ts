@@ -8,18 +8,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 import { loadEnv } from "vite";
 import path from "node:path";
-
-// Public connection values for the new RitaJet backend (publishable, safe for the browser).
-// The imported repo's .gitignore excludes .env, so published builds would otherwise lose them.
-const PUBLIC_BACKEND = {
-  SUPABASE_URL: "https://aeawoexywnyankbeqkmz.supabase.co",
-  SUPABASE_PUBLISHABLE_KEY: "sb_publishable_HPfzBNn4ii7aDgi0HjwziQ_SZBfhXWO",
-  SUPABASE_PROJECT_ID: "aeawoexywnyankbeqkmz",
-};
-for (const [k, v] of Object.entries(PUBLIC_BACKEND)) {
-  process.env[k] ||= v;
-  process.env[`VITE_${k}`] ||= v;
-}
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 // Load non-VITE_ env vars into process.env for server routes (never into the client bundle).
 Object.assign(process.env, loadEnv(process.env["NODE_ENV"] ?? "development", process.cwd(), ""));
@@ -30,7 +19,7 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
-  plugins: [mcpPlugin()],
+  plugins: [mcpPlugin(), nodePolyfills({ include: ["events"] })],
   // rehype-katex ships its own nested copy of katex; without deduping, the
   // mhchem extension (\ce{...} chemistry) would be loaded into a different
   // instance than the one that renders the math.
@@ -38,6 +27,9 @@ export default defineConfig({
     resolve: {
       dedupe: ["katex"],
       alias: [
+        // Pipecat's browser SDK uses the standard EventEmitter API. Force the
+        // maintained browser shim instead of Vite's empty node builtin stub.
+        { find: /^events$/, replacement: path.resolve(process.cwd(), "node_modules/events/events.js") },
         { find: "entities/lib/decode.js", replacement: path.resolve(process.cwd(), "node_modules/entities/lib/decode.js") },
         { find: "entities/lib/encode.js", replacement: path.resolve(process.cwd(), "node_modules/entities/lib/encode.js") },
         // Exact match only: parse5 imports "entities/decode" from its own

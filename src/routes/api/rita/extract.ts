@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { requireRitaUser } from "@/lib/rita-voice.server";
-import { resolveRitaGroqConfig, ritaGroqReasoningFields } from "@/lib/rita-groq.server";
 import { classifyRitaLearningIntent } from "@/lib/rita-learning-intent";
+import { resolveRitaV3Key } from "@/lib/rita-v3.server";
 
 export const Route = createFileRoute("/api/rita/extract")({
   server: {
@@ -19,23 +19,21 @@ export const Route = createFileRoute("/api/rita/extract")({
         if (!spoken || !reply) return Response.json({ learningItems: [], saveRequest: "none" });
         const intent = classifyRitaLearningIntent(spoken);
         if (intent === "none") return Response.json({ learningItems: [], saveRequest: "none" });
-        const groq = await resolveRitaGroqConfig();
-        const key = groq?.key;
+        const key = await resolveRitaV3Key("groq", "GROQ_API_KEY");
         if (!key) return new Response("Rita key unavailable", { status: 503 });
         try {
           const provider = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "openai/gpt-oss-20b",
-            ...ritaGroqReasoningFields("openai/gpt-oss-20b"),
+              model: "openai/gpt-oss-120b",
               temperature: 0,
-              max_tokens: 1_200,
+              max_completion_tokens: 1_200,
               response_format: { type: "json_object" },
               messages: [
                 {
                   role: "system",
-                  content: `The deterministic gate classified this exchange as ${intent}. Extract only genuine language-learning material from the actual exchange. Valid: an explicit translation, word/sentence meaning, requested target-language vocabulary list, or explicit save to Flashcards/German Lab. Never extract general-knowledge concepts, people, wars, science explanations, or ordinary conversation. Extract ONLY the word or phrase the learner actually asked about (or explicitly requested sentences). Example sentences the tutor added to illustrate a word are NOT items: put them in that word's example field instead. Return JSON with learningItems (up to 20 objects: term, meaning (Arabic/learner language), language BCP-47, kind word|sentence, article der|die|das|null, plural string|null, example string|null, exampleMeaning string|null); saveRequest none|flashcards|german_lab; destinationName string only if user named it; rememberDestination boolean only when explicitly requested. If no valid language item was taught, learningItems is []. Never imply persistence.`,
+                  content: `The deterministic gate classified this exchange as ${intent}. Extract only genuine language-learning material from the actual exchange. Valid: an explicit translation, word/sentence meaning, requested target-language vocabulary list, or explicit save to Flashcards/German Lab. Never extract general-knowledge concepts, people, wars, science explanations, or ordinary conversation. Return JSON with learningItems (up to 20 objects: term, meaning, language BCP-47, kind word|sentence, article der|die|das|null, plural string|null); saveRequest none|flashcards|german_lab; destinationName string only if user named it; rememberDestination boolean only when explicitly requested. If no valid language item was taught, learningItems is []. Never imply persistence.`,
                 },
                 { role: "user", content: JSON.stringify({ spoken, reply }) },
               ],
@@ -70,8 +68,6 @@ export const Route = createFileRoute("/api/rita/extract")({
                       ? item.article
                       : null,
                   plural: item.plural ? String(item.plural).slice(0, 120) : null,
-                  example: item.example ? String(item.example).slice(0, 240) : null,
-                  exampleMeaning: item.exampleMeaning ? String(item.exampleMeaning).slice(0, 240) : null,
                 },
               ];
             });

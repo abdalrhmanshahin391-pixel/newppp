@@ -18,8 +18,6 @@ export const testRitaLiveKey = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase } = await requireAdmin(context);
-    const { clearRitaServerCache } = await import("@/lib/rita-voice.server");
-    clearRitaServerCache();
 
     let key = "";
     let source: "admin" | "environment" = "admin";
@@ -75,30 +73,8 @@ export const testRitaLiveKey = createServerFn({ method: "POST" })
     }
   });
 
-export const testRitaGroqKey = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    await requireAdmin(context);
-    const { resolveRitaGroqConfig } = await import("@/lib/rita-groq.server");
-    const config = await resolveRitaGroqConfig();
-    if (!config) return { ok: false, message: "No Groq key is saved yet." };
-    const response = await fetch("https://api.groq.com/openai/v1/models", {
-      headers: { Authorization: `Bearer ${config.key}` },
-    });
-    if (!response.ok) {
-      const detail = await response.text().catch(() => "");
-      return { ok: false, message: detail.slice(0, 180) || `Groq returned ${response.status}.` };
-    }
-    const result = (await response.json()) as { data?: { id?: string }[] };
-    const available = result.data?.some((model) => model.id === config.model);
-    return available
-      ? { ok: true, message: `Working — ${config.model} is available.` }
-      : { ok: false, message: `${config.model} is not available on this Groq account.` };
-  });
-
 const SettingsSchema = z.object({
   enabled: z.boolean(),
-  sttEngine: z.enum(["whisper", "deepgram", "realtime"]).optional(),
   voice: z.enum([
     "alloy",
     "ash",
@@ -121,20 +97,7 @@ const SettingsSchema = z.object({
   pipelineMode: z.enum(["legacy", "economic_v2"]),
   rolloutPercent: z.number().int().min(0).max(100),
   adminOnlyPreview: z.boolean(),
-  voiceEngine: z.enum(["openai", "fish"]).default("openai"),
-  fishVoiceId: z.string().regex(/^[a-zA-Z0-9]{8,64}$/).nullable().default(null),
-  germanFishVoiceId: z.string().regex(/^[a-zA-Z0-9]{8,64}$/).default("3235abc9a84b407d92f73539a5651720"),
-  groqModel: z.string().trim().min(2).max(120).default("openai/gpt-oss-20b"),
-  secondPassStt: z.boolean().default(false),
 });
-
-export const listRitaFishVoices = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    await requireAdmin(context);
-    const { listFishArabicVoices } = await import("@/lib/rita-fish.server");
-    return listFishArabicVoices();
-  });
 
 export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -142,11 +105,11 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
     const { supabase } = await requireAdmin(context);
     const month = new Date();
     const start = new Date(Date.UTC(month.getUTCFullYear(), month.getUTCMonth(), 1)).toISOString();
-    const [{ data: settings }, { data: usage }, { data: sessions }, { data: timings }, { data: recentTurns }] =
+    const [{ data: settings }, { data: usage }, { data: sessions }, { data: timings }] =
       await Promise.all([
         (supabase.from as any)("rita_voice_settings")
           .select(
-             "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,voice_engine,fish_voice_id,german_fish_voice_id,groq_model,second_pass_stt,stt_engine",
+            "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview",
           )
           .eq("id", true)
           .maybeSingle(),
@@ -159,12 +122,9 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
           .select("id,user_id,ended_at")
           .gte("started_at", start),
         (supabase.from as any)("rita_turn_metrics")
-          .select("speech_end_to_first_audio_ms,speech_end_ms,transcript_final_ms,first_token_ms,first_audio_ms,playback_end_ms,status,fallback_used,reconnect_count,signal_start_ms,speech_start_ms,first_audio_sent_ms,deepgram_speech_ms,deepgram_result_ms")
-          .gte("created_at", start),
-        (supabase.from as any)("rita_turn_metrics")
-          .select("turn_id,diagnostic_code,status,end_reason,last_stage,transcription_end_reason,voice_engine,deepgram_event,deepgram_detail,signal_start_ms,speech_start_ms,first_audio_sent_ms,deepgram_speech_ms,deepgram_result_ms,speech_end_ms,transcript_final_ms,first_token_ms,text_complete_ms,first_audio_ms,playback_end_ms,segments_planned,segments_completed,played_audio_ms,fallback_used,reconnect_count,created_at")
-          .order("created_at", { ascending: false })
-          .limit(20),
+          .select("speech_end_to_first_audio_ms")
+          .gte("created_at", start)
+          .not("speech_end_to_first_audio_ms", "is", null),
       ]);
     const rows = (usage ?? []) as any[];
     const activeMs = rows.reduce(
@@ -172,8 +132,8 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
       0,
     );
     const costMicros = rows.reduce((sum, row) => sum + Number(row.estimated_cost_micros || 0), 0);
-    const timingRows = (timings ?? []) as any[];
-    const latencyValues = timingRows.map((row) => Number(row.speech_end_to_first_audio_ms))
+    const latencyValues = ((timings ?? []) as any[])
+      .map((row) => Number(row.speech_end_to_first_audio_ms))
       .filter((value) => Number.isFinite(value) && value >= 0)
       .sort((left, right) => left - right);
     const percentile = (ratio: number) =>
@@ -182,13 +142,6 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
             Math.min(latencyValues.length - 1, Math.ceil(latencyValues.length * ratio) - 1)
           ]
         : 0;
-    const stagePercentile = (from: string, to: string, ratio: number) => {
-      const values = timingRows
-        .map((row) => Number(row[to]) - Number(row[from]))
-        .filter((value) => Number.isFinite(value) && value >= 0)
-        .sort((a, b) => a - b);
-      return values.length ? values[Math.min(values.length - 1, Math.ceil(values.length * ratio) - 1)] : 0;
-    };
     return {
       settings: {
         enabled: settings?.enabled !== false,
@@ -200,12 +153,6 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
         pipelineMode: settings?.pipeline_mode === "legacy" ? "legacy" : "economic_v2",
         rolloutPercent: Math.min(100, Math.max(0, Number(settings?.rollout_percent ?? 100))),
         adminOnlyPreview: settings?.admin_only_preview === true,
-        voiceEngine: (settings?.voice_engine === "fish" ? "fish" : "openai") as "openai" | "fish",
-        fishVoiceId: (settings?.fish_voice_id as string | null) ?? null,
-        germanFishVoiceId: String(settings?.german_fish_voice_id || "3235abc9a84b407d92f73539a5651720"),
-        groqModel: String(settings?.groq_model || "openai/gpt-oss-20b"),
-        secondPassStt: false,
-        sttEngine: (settings?.stt_engine === "deepgram" ? "deepgram" : settings?.stt_engine === "realtime" ? "realtime" : "whisper") as "whisper" | "deepgram" | "realtime",
       },
       metrics: {
         sessions: (sessions ?? []).length,
@@ -216,16 +163,7 @@ export const getRitaVoiceAdmin = createServerFn({ method: "GET" })
         turns: rows.length,
         latencyP50: percentile(0.5),
         latencyP95: percentile(0.95),
-        transcriptP50: stagePercentile("speech_end_ms", "transcript_final_ms", 0.5),
-        responseP50: stagePercentile("transcript_final_ms", "first_token_ms", 0.5),
-        audioP50: stagePercentile("first_token_ms", "first_audio_ms", 0.5),
-        incompleteTurns: timingRows.filter((row) => row.status && row.status !== "completed").length,
-        fallbackRate: timingRows.length
-          ? Math.round((timingRows.filter((row) => row.fallback_used === true).length / timingRows.length) * 100)
-          : 0,
-        reconnectTurns: timingRows.filter((row) => Number(row.reconnect_count) > 0).length,
       },
-      recentTurns: recentTurns ?? [],
     };
   });
 
@@ -245,17 +183,9 @@ export const saveRitaVoiceSettings = createServerFn({ method: "POST" })
       pipeline_mode: data.pipelineMode,
       rollout_percent: data.rolloutPercent,
       admin_only_preview: data.adminOnlyPreview,
-      voice_engine: data.voiceEngine,
-      fish_voice_id: data.fishVoiceId,
-      german_fish_voice_id: data.germanFishVoiceId,
-      groq_model: data.groqModel,
-      second_pass_stt: false,
-      ...(data.sttEngine ? { stt_engine: data.sttEngine } : {}),
       updated_at: new Date().toISOString(),
       updated_by: userId,
     });
     if (error) throw error;
-    const { clearRitaServerCache } = await import("@/lib/rita-voice.server");
-    clearRitaServerCache();
     return { ok: true };
   });

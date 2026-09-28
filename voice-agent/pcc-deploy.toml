@@ -1,0 +1,9 @@
+agent_name = "ritajet-voice-v3"
+image = "rita-realtime-voice-agent:latest"
+secret_set = "ritajet-voice-v3-secrets"
+region = "eu-central"
+agent_profile = "agent-1x"
+
+[scaling]
+min_agents = 0
+max_agents = 50

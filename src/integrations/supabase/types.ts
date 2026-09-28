@@ -221,6 +221,7 @@ export type Database = {
           id: string
           lecture_id: string
           short_md: string
+          summary_id: string | null
           updated_at: string
           user_id: string
         }
@@ -230,6 +231,7 @@ export type Database = {
           id?: string
           lecture_id: string
           short_md?: string
+          summary_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -239,6 +241,7 @@ export type Database = {
           id?: string
           lecture_id?: string
           short_md?: string
+          summary_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -248,6 +251,13 @@ export type Database = {
             columns: ["lecture_id"]
             isOneToOne: true
             referencedRelation: "lq_lectures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aio_summaries_summary_id_fkey"
+            columns: ["summary_id"]
+            isOneToOne: false
+            referencedRelation: "summaries"
             referencedColumns: ["id"]
           },
         ]
@@ -792,54 +802,6 @@ export type Database = {
           university_id?: string
           updated_at?: string
           year?: number
-        }
-        Relationships: []
-      }
-      customer_payment_methods: {
-        Row: {
-          card_brand: string
-          card_exp_month: number | null
-          card_exp_year: number | null
-          card_last4: string
-          cardholder_name: string | null
-          created_at: string
-          environment: string
-          id: string
-          is_default: boolean | null
-          paddle_customer_id: string | null
-          paddle_payment_method_id: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          card_brand?: string
-          card_exp_month?: number | null
-          card_exp_year?: number | null
-          card_last4: string
-          cardholder_name?: string | null
-          created_at?: string
-          environment?: string
-          id?: string
-          is_default?: boolean | null
-          paddle_customer_id?: string | null
-          paddle_payment_method_id?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          card_brand?: string
-          card_exp_month?: number | null
-          card_exp_year?: number | null
-          card_last4?: string
-          cardholder_name?: string | null
-          created_at?: string
-          environment?: string
-          id?: string
-          is_default?: boolean | null
-          paddle_customer_id?: string | null
-          paddle_payment_method_id?: string | null
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -2215,7 +2177,6 @@ export type Database = {
           ribbon_color: string | null
           ribbon_label: string | null
           rich_cards: boolean
-          rita_voice_minutes_monthly: number
           slug: string
           sort: number
           tagline: string
@@ -2256,7 +2217,6 @@ export type Database = {
           ribbon_color?: string | null
           ribbon_label?: string | null
           rich_cards?: boolean
-          rita_voice_minutes_monthly?: number
           slug: string
           sort?: number
           tagline?: string
@@ -2297,7 +2257,6 @@ export type Database = {
           ribbon_color?: string | null
           ribbon_label?: string | null
           rich_cards?: boolean
-          rita_voice_minutes_monthly?: number
           slug?: string
           sort?: number
           tagline?: string
@@ -2364,39 +2323,6 @@ export type Database = {
           tour_seen_at?: string | null
           updated_at?: string
           username?: string
-        }
-        Relationships: []
-      }
-      promo_code_redemptions: {
-        Row: {
-          billing: string
-          code: string
-          created_at: string
-          expires_at: string
-          id: string
-          plan_slug: string
-          redeemed_at: string
-          user_id: string
-        }
-        Insert: {
-          billing?: string
-          code: string
-          created_at?: string
-          expires_at: string
-          id?: string
-          plan_slug: string
-          redeemed_at?: string
-          user_id: string
-        }
-        Update: {
-          billing?: string
-          code?: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          plan_slug?: string
-          redeemed_at?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -2674,57 +2600,6 @@ export type Database = {
           },
         ]
       }
-      question_set_ratings: {
-        Row: {
-          created_at: string
-          id: string
-          note: string | null
-          set_id: string
-          space_id: string | null
-          stars: number
-          under_review: boolean
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          note?: string | null
-          set_id: string
-          space_id?: string | null
-          stars: number
-          under_review?: boolean
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          note?: string | null
-          set_id?: string
-          space_id?: string | null
-          stars?: number
-          under_review?: boolean
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "question_set_ratings_set_id_fkey"
-            columns: ["set_id"]
-            isOneToOne: false
-            referencedRelation: "shared_question_sets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "question_set_ratings_space_id_fkey"
-            columns: ["space_id"]
-            isOneToOne: false
-            referencedRelation: "spaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       questions: {
         Row: {
           created_at: string
@@ -2930,493 +2805,6 @@ export type Database = {
         }
         Relationships: []
       }
-      rita_turn_metrics: {
-        Row: {
-          browser: string | null
-          client_turn_id: string | null
-          created_at: string
-          deepgram_detail: string | null
-          deepgram_event: string | null
-          deepgram_result_ms: number | null
-          deepgram_speech_ms: number | null
-          diagnostic_code: string | null
-          end_reason: string | null
-          error_stage: string | null
-          fallback_used: boolean
-          filler_used: boolean
-          first_audio_ms: number | null
-          first_audio_sent_ms: number | null
-          first_interim_ms: number | null
-          first_token_ms: number | null
-          first_token_to_tts_ms: number | null
-          id: string
-          interrupted: boolean
-          language: string | null
-          last_stage: string | null
-          network_type: string | null
-          pipeline_mode: string
-          planned_audio_ms: number
-          playback_end_ms: number | null
-          played_audio_ms: number
-          received_audio_ms: number
-          reconnect_count: number
-          reply_char_count: number
-          request_sent_ms: number | null
-          response_model: string | null
-          response_provider: string | null
-          second_pass_ms: number | null
-          second_pass_used: boolean
-          segments_completed: number
-          segments_planned: number
-          segments_played: number
-          segments_received: number
-          segments_requested: number
-          server_allowance_ms: number | null
-          server_auth_ms: number | null
-          server_config_ms: number | null
-          server_first_token_ms: number | null
-          server_reply_done_ms: number | null
-          session_id: string | null
-          signal_start_ms: number | null
-          speech_end_ms: number | null
-          speech_end_to_first_audio_ms: number | null
-          speech_end_to_transcript_ms: number | null
-          speech_start_ms: number | null
-          status: string
-          text_complete_ms: number | null
-          text_rendered_ms: number | null
-          trace_id: string | null
-          transcript_char_count: number
-          transcript_final_ms: number | null
-          transcript_to_first_token_ms: number | null
-          transcription_end_reason: string | null
-          turn_id: string | null
-          updated_at: string
-          user_id: string
-          voice_engine: string | null
-        }
-        Insert: {
-          browser?: string | null
-          client_turn_id?: string | null
-          created_at?: string
-          deepgram_detail?: string | null
-          deepgram_event?: string | null
-          deepgram_result_ms?: number | null
-          deepgram_speech_ms?: number | null
-          diagnostic_code?: string | null
-          end_reason?: string | null
-          error_stage?: string | null
-          fallback_used?: boolean
-          filler_used?: boolean
-          first_audio_ms?: number | null
-          first_audio_sent_ms?: number | null
-          first_interim_ms?: number | null
-          first_token_ms?: number | null
-          first_token_to_tts_ms?: number | null
-          id?: string
-          interrupted?: boolean
-          language?: string | null
-          last_stage?: string | null
-          network_type?: string | null
-          pipeline_mode: string
-          planned_audio_ms?: number
-          playback_end_ms?: number | null
-          played_audio_ms?: number
-          received_audio_ms?: number
-          reconnect_count?: number
-          reply_char_count?: number
-          request_sent_ms?: number | null
-          response_model?: string | null
-          response_provider?: string | null
-          second_pass_ms?: number | null
-          second_pass_used?: boolean
-          segments_completed?: number
-          segments_planned?: number
-          segments_played?: number
-          segments_received?: number
-          segments_requested?: number
-          server_allowance_ms?: number | null
-          server_auth_ms?: number | null
-          server_config_ms?: number | null
-          server_first_token_ms?: number | null
-          server_reply_done_ms?: number | null
-          session_id?: string | null
-          signal_start_ms?: number | null
-          speech_end_ms?: number | null
-          speech_end_to_first_audio_ms?: number | null
-          speech_end_to_transcript_ms?: number | null
-          speech_start_ms?: number | null
-          status?: string
-          text_complete_ms?: number | null
-          text_rendered_ms?: number | null
-          trace_id?: string | null
-          transcript_char_count?: number
-          transcript_final_ms?: number | null
-          transcript_to_first_token_ms?: number | null
-          transcription_end_reason?: string | null
-          turn_id?: string | null
-          updated_at?: string
-          user_id: string
-          voice_engine?: string | null
-        }
-        Update: {
-          browser?: string | null
-          client_turn_id?: string | null
-          created_at?: string
-          deepgram_detail?: string | null
-          deepgram_event?: string | null
-          deepgram_result_ms?: number | null
-          deepgram_speech_ms?: number | null
-          diagnostic_code?: string | null
-          end_reason?: string | null
-          error_stage?: string | null
-          fallback_used?: boolean
-          filler_used?: boolean
-          first_audio_ms?: number | null
-          first_audio_sent_ms?: number | null
-          first_interim_ms?: number | null
-          first_token_ms?: number | null
-          first_token_to_tts_ms?: number | null
-          id?: string
-          interrupted?: boolean
-          language?: string | null
-          last_stage?: string | null
-          network_type?: string | null
-          pipeline_mode?: string
-          planned_audio_ms?: number
-          playback_end_ms?: number | null
-          played_audio_ms?: number
-          received_audio_ms?: number
-          reconnect_count?: number
-          reply_char_count?: number
-          request_sent_ms?: number | null
-          response_model?: string | null
-          response_provider?: string | null
-          second_pass_ms?: number | null
-          second_pass_used?: boolean
-          segments_completed?: number
-          segments_planned?: number
-          segments_played?: number
-          segments_received?: number
-          segments_requested?: number
-          server_allowance_ms?: number | null
-          server_auth_ms?: number | null
-          server_config_ms?: number | null
-          server_first_token_ms?: number | null
-          server_reply_done_ms?: number | null
-          session_id?: string | null
-          signal_start_ms?: number | null
-          speech_end_ms?: number | null
-          speech_end_to_first_audio_ms?: number | null
-          speech_end_to_transcript_ms?: number | null
-          speech_start_ms?: number | null
-          status?: string
-          text_complete_ms?: number | null
-          text_rendered_ms?: number | null
-          trace_id?: string | null
-          transcript_char_count?: number
-          transcript_final_ms?: number | null
-          transcript_to_first_token_ms?: number | null
-          transcription_end_reason?: string | null
-          turn_id?: string | null
-          updated_at?: string
-          user_id?: string
-          voice_engine?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "rita_turn_metrics_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "rita_voice_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      rita_turn_segments: {
-        Row: {
-          char_count: number
-          created_at: string
-          error_code: string | null
-          first_byte_ms: number | null
-          headers_ms: number | null
-          http_status: number | null
-          id: string
-          playback_end_ms: number | null
-          playback_start_ms: number | null
-          played_audio_ms: number
-          provider_ms: number | null
-          queued_ms: number | null
-          received_bytes: number
-          received_ms: number | null
-          request_ms: number | null
-          segment_index: number
-          status: string
-          turn_id: string
-          updated_at: string
-          user_id: string
-          voice_engine: string | null
-        }
-        Insert: {
-          char_count?: number
-          created_at?: string
-          error_code?: string | null
-          first_byte_ms?: number | null
-          headers_ms?: number | null
-          http_status?: number | null
-          id?: string
-          playback_end_ms?: number | null
-          playback_start_ms?: number | null
-          played_audio_ms?: number
-          provider_ms?: number | null
-          queued_ms?: number | null
-          received_bytes?: number
-          received_ms?: number | null
-          request_ms?: number | null
-          segment_index: number
-          status?: string
-          turn_id: string
-          updated_at?: string
-          user_id: string
-          voice_engine?: string | null
-        }
-        Update: {
-          char_count?: number
-          created_at?: string
-          error_code?: string | null
-          first_byte_ms?: number | null
-          headers_ms?: number | null
-          http_status?: number | null
-          id?: string
-          playback_end_ms?: number | null
-          playback_start_ms?: number | null
-          played_audio_ms?: number
-          provider_ms?: number | null
-          queued_ms?: number | null
-          received_bytes?: number
-          received_ms?: number | null
-          request_ms?: number | null
-          segment_index?: number
-          status?: string
-          turn_id?: string
-          updated_at?: string
-          user_id?: string
-          voice_engine?: string | null
-        }
-        Relationships: []
-      }
-      rita_user_preferences: {
-        Row: {
-          active_dialect: string
-          active_language: string
-          auto_save_words: boolean
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          active_dialect?: string
-          active_language?: string
-          auto_save_words?: boolean
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          active_dialect?: string
-          active_language?: string
-          auto_save_words?: boolean
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      rita_voice_sessions: {
-        Row: {
-          client_label: string | null
-          detected_dialect: string | null
-          detected_language: string | null
-          ended_at: string | null
-          id: string
-          language_preference: string
-          last_active_at: string
-          personality: string
-          started_at: string
-          user_id: string
-        }
-        Insert: {
-          client_label?: string | null
-          detected_dialect?: string | null
-          detected_language?: string | null
-          ended_at?: string | null
-          id?: string
-          language_preference?: string
-          last_active_at?: string
-          personality?: string
-          started_at?: string
-          user_id: string
-        }
-        Update: {
-          client_label?: string | null
-          detected_dialect?: string | null
-          detected_language?: string | null
-          ended_at?: string | null
-          id?: string
-          language_preference?: string
-          last_active_at?: string
-          personality?: string
-          started_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      rita_voice_settings: {
-        Row: {
-          admin_only_preview: boolean
-          cartesia_model: string
-          cartesia_voice_id: string
-          daily_guard_minutes: number
-          default_monthly_minutes: number
-          enabled: boolean
-          fish_voice_id: string | null
-          german_fish_voice_id: string
-          groq_model: string
-          id: boolean
-          monthly_budget_cents: number
-          pipeline_mode: string
-          response_words: number
-          rollout_percent: number
-          second_pass_stt: boolean
-          stt_engine: string
-          tts_provider: string
-          updated_at: string
-          updated_by: string | null
-          voice: string
-          voice_engine: string
-        }
-        Insert: {
-          admin_only_preview?: boolean
-          cartesia_model?: string
-          cartesia_voice_id?: string
-          daily_guard_minutes?: number
-          default_monthly_minutes?: number
-          enabled?: boolean
-          fish_voice_id?: string | null
-          german_fish_voice_id?: string
-          groq_model?: string
-          id?: boolean
-          monthly_budget_cents?: number
-          pipeline_mode?: string
-          response_words?: number
-          rollout_percent?: number
-          second_pass_stt?: boolean
-          stt_engine?: string
-          tts_provider?: string
-          updated_at?: string
-          updated_by?: string | null
-          voice?: string
-          voice_engine?: string
-        }
-        Update: {
-          admin_only_preview?: boolean
-          cartesia_model?: string
-          cartesia_voice_id?: string
-          daily_guard_minutes?: number
-          default_monthly_minutes?: number
-          enabled?: boolean
-          fish_voice_id?: string | null
-          german_fish_voice_id?: string
-          groq_model?: string
-          id?: boolean
-          monthly_budget_cents?: number
-          pipeline_mode?: string
-          response_words?: number
-          rollout_percent?: number
-          second_pass_stt?: boolean
-          stt_engine?: string
-          tts_provider?: string
-          updated_at?: string
-          updated_by?: string | null
-          voice?: string
-          voice_engine?: string
-        }
-        Relationships: []
-      }
-      rita_voice_usage: {
-        Row: {
-          created_at: string
-          dialect: string | null
-          estimated_cost_micros: number
-          id: string
-          input_audio_ms: number
-          input_tokens: number
-          language: string | null
-          output_audio_ms: number
-          output_tokens: number
-          premium_voice: boolean
-          provider: string
-          reply_sha256: string | null
-          response_model: string
-          session_id: string | null
-          speech_generated_at: string | null
-          speech_model: string
-          status: string
-          transcription_model: string
-          turn_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          dialect?: string | null
-          estimated_cost_micros?: number
-          id?: string
-          input_audio_ms?: number
-          input_tokens?: number
-          language?: string | null
-          output_audio_ms?: number
-          output_tokens?: number
-          premium_voice?: boolean
-          provider?: string
-          reply_sha256?: string | null
-          response_model?: string
-          session_id?: string | null
-          speech_generated_at?: string | null
-          speech_model?: string
-          status?: string
-          transcription_model?: string
-          turn_id?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          dialect?: string | null
-          estimated_cost_micros?: number
-          id?: string
-          input_audio_ms?: number
-          input_tokens?: number
-          language?: string | null
-          output_audio_ms?: number
-          output_tokens?: number
-          premium_voice?: boolean
-          provider?: string
-          reply_sha256?: string | null
-          response_model?: string
-          session_id?: string | null
-          speech_generated_at?: string | null
-          speech_model?: string
-          status?: string
-          transcription_model?: string
-          turn_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "rita_voice_usage_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "rita_voice_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       shared_deck_cards: {
         Row: {
           back: string
@@ -3532,142 +2920,6 @@ export type Database = {
           rating_avg?: number
           rating_count?: number
           save_count?: number
-          tags?: string[]
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      shared_question_items: {
-        Row: {
-          created_at: string
-          explanation: string
-          id: string
-          options: Json
-          owner_id: string
-          set_id: string
-          sort: number
-          source_type: string
-          stem: string
-          subject: string | null
-          subtopic: string | null
-        }
-        Insert: {
-          created_at?: string
-          explanation?: string
-          id?: string
-          options?: Json
-          owner_id: string
-          set_id: string
-          sort?: number
-          source_type?: string
-          stem: string
-          subject?: string | null
-          subtopic?: string | null
-        }
-        Update: {
-          created_at?: string
-          explanation?: string
-          id?: string
-          options?: Json
-          owner_id?: string
-          set_id?: string
-          sort?: number
-          source_type?: string
-          stem?: string
-          subject?: string | null
-          subtopic?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "shared_question_items_set_id_fkey"
-            columns: ["set_id"]
-            isOneToOne: false
-            referencedRelation: "shared_question_sets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      shared_question_saves: {
-        Row: {
-          created_at: string
-          set_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          set_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          set_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "shared_question_saves_set_id_fkey"
-            columns: ["set_id"]
-            isOneToOne: false
-            referencedRelation: "shared_question_sets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      shared_question_sets: {
-        Row: {
-          audience: string
-          cover: string
-          created_at: string
-          description: string | null
-          emoji: string | null
-          id: string
-          owner_id: string
-          published: boolean
-          question_count: number
-          rating_avg: number
-          rating_count: number
-          save_count: number
-          source_type: string
-          subject: string | null
-          tags: string[]
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          audience?: string
-          cover?: string
-          created_at?: string
-          description?: string | null
-          emoji?: string | null
-          id?: string
-          owner_id: string
-          published?: boolean
-          question_count?: number
-          rating_avg?: number
-          rating_count?: number
-          save_count?: number
-          source_type?: string
-          subject?: string | null
-          tags?: string[]
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          audience?: string
-          cover?: string
-          created_at?: string
-          description?: string | null
-          emoji?: string | null
-          id?: string
-          owner_id?: string
-          published?: boolean
-          question_count?: number
-          rating_avg?: number
-          rating_count?: number
-          save_count?: number
-          source_type?: string
-          subject?: string | null
           tags?: string[]
           title?: string
           updated_at?: string
@@ -4155,52 +3407,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "space_messages_space_id_fkey"
-            columns: ["space_id"]
-            isOneToOne: false
-            referencedRelation: "spaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      space_question_sets: {
-        Row: {
-          added_by: string | null
-          created_at: string
-          folder_id: string | null
-          set_id: string
-          space_id: string
-        }
-        Insert: {
-          added_by?: string | null
-          created_at?: string
-          folder_id?: string | null
-          set_id: string
-          space_id: string
-        }
-        Update: {
-          added_by?: string | null
-          created_at?: string
-          folder_id?: string | null
-          set_id?: string
-          space_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "space_question_sets_folder_id_fkey"
-            columns: ["folder_id"]
-            isOneToOne: false
-            referencedRelation: "space_folders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "space_question_sets_set_id_fkey"
-            columns: ["set_id"]
-            isOneToOne: false
-            referencedRelation: "shared_question_sets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "space_question_sets_space_id_fkey"
             columns: ["space_id"]
             isOneToOne: false
             referencedRelation: "spaces"
@@ -5278,11 +4484,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      __restore_exec: { Args: { sql: string }; Returns: undefined }
       account_active: { Args: { _user_id: string }; Returns: boolean }
-      activate_user_plan: {
-        Args: { _plan_slug: string; _user_id: string }
-        Returns: boolean
-      }
       admin_deck_ratings: {
         Args: { _deck_id: string }
         Returns: {
@@ -5512,7 +4715,6 @@ export type Database = {
         }[]
       }
       bump_deck_saves: { Args: { _deck_id: string }; Returns: undefined }
-      bump_question_set_saves: { Args: { _set_id: string }; Returns: undefined }
       bump_usage: {
         Args: { _kind: string; _n?: number; _user_id: string }
         Returns: undefined
@@ -5523,14 +4725,6 @@ export type Database = {
       }
       can_manage_space: {
         Args: { _space_id: string; _user_id: string }
-        Returns: boolean
-      }
-      can_read_question_set: {
-        Args: { _set_id: string; _user_id: string }
-        Returns: boolean
-      }
-      cancel_user_subscription: {
-        Args: { _paddle_sub_id: string; _user_id: string }
         Returns: boolean
       }
       claim_offer: {
@@ -5666,10 +4860,6 @@ export type Database = {
           user_id: string
         }[]
       }
-      question_set_rating_summary: {
-        Args: { _set_id: string; _space_id?: string }
-        Returns: Json
-      }
       rate_deck: {
         Args: {
           _deck_id: string
@@ -5679,28 +4869,7 @@ export type Database = {
         }
         Returns: undefined
       }
-      rate_question_set: {
-        Args: {
-          _note?: string
-          _set_id: string
-          _space_id?: string
-          _stars: number
-        }
-        Returns: undefined
-      }
-      remove_user_card_and_cancel_auto_renew: {
-        Args: { _card_id: string; _user_id: string }
-        Returns: boolean
-      }
       revoke_golden_user: { Args: { _user_id: string }; Returns: undefined }
-      rita_voice_usage_totals: {
-        Args: { _user_id: string }
-        Returns: {
-          global_month_micros: number
-          used_month_ms: number
-          used_today_ms: number
-        }[]
-      }
       save_lq_generation: {
         Args: {
           _difficulty: string

@@ -51,6 +51,7 @@ import { Route as AdminPaddleSyncRouteImport } from './routes/admin.paddle-sync'
 import { Route as AdminPeopleRouteImport } from './routes/admin.people'
 import { Route as AdminPlansRouteImport } from './routes/admin.plans'
 import { Route as AdminPromoCodesRouteImport } from './routes/admin.promo-codes'
+import { Route as AdminRitaVoiceRouteImport } from './routes/admin.rita-voice'
 import { Route as AdminRitaxAnnouncementsRouteImport } from './routes/admin.ritax-announcements'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
@@ -96,21 +97,9 @@ import { Route as ApiPublicArchiveSolverRouteImport } from './routes/api/public/
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push-dispatch'
 import { Route as ApiPublicRitaWorkerRouteImport } from './routes/api/public/rita-worker'
-import { Route as ApiRitaDeepgramTokenRouteImport } from './routes/api/rita/deepgram-token'
-import { Route as ApiRitaDemoRouteImport } from './routes/api/rita/demo'
+import { Route as ApiRitaV3FillerRouteImport } from './routes/api/rita-v3/filler'
 import { Route as ApiRitaExtractRouteImport } from './routes/api/rita/extract'
 import { Route as ApiRitaLearningRouteImport } from './routes/api/rita/learning'
-import { Route as ApiRitaLiveRouteImport } from './routes/api/rita/live'
-import { Route as ApiRitaMetricsRouteImport } from './routes/api/rita/metrics'
-import { Route as ApiRitaPreferencesRouteImport } from './routes/api/rita/preferences'
-import { Route as ApiRitaRespondRouteImport } from './routes/api/rita/respond'
-import { Route as ApiRitaSessionRouteImport } from './routes/api/rita/session'
-import { Route as ApiRitaSpeechRouteImport } from './routes/api/rita/speech'
-import { Route as ApiRitaSummarizeRouteImport } from './routes/api/rita/summarize'
-import { Route as ApiRitaTranscribeRouteImport } from './routes/api/rita/transcribe'
-import { Route as ApiRitaTurnRouteImport } from './routes/api/rita/turn'
-import { Route as ApiRitaUsageRouteImport } from './routes/api/rita/usage'
-import { Route as ApiRitaWarmRouteImport } from './routes/api/rita/warm'
 import { Route as CoursesCourseIdIndexRouteImport } from './routes/courses.$courseId.index'
 import { Route as CoursesCourseIdAddQuestionsRouteImport } from './routes/courses.$courseId.add-questions'
 import { Route as CoursesCourseIdRunRouteImport } from './routes/courses.$courseId.run'
@@ -131,6 +120,9 @@ import { Route as StudyLecturesRunRouteImport } from './routes/study.lectures.ru
 import { Route as StudySubjectSubjectIdRouteImport } from './routes/study.subject.$subjectId'
 import { Route as AdminGermanCourseIdManageRouteImport } from './routes/admin.german.$courseId.manage'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiRitaV3SessionEndRouteImport } from './routes/api/rita-v3/session/end'
+import { Route as ApiRitaV3SessionMetricsRouteImport } from './routes/api/rita-v3/session/metrics'
+import { Route as ApiRitaV3SessionStartRouteImport } from './routes/api/rita-v3/session/start'
 import { Route as GermanCourseIdReviewIndexRouteImport } from './routes/german.$courseId.review.index'
 import { Route as GermanCourseIdReviewRunRouteImport } from './routes/german.$courseId.review.run'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -346,6 +338,11 @@ const AdminPlansRoute = AdminPlansRouteImport.update({
 const AdminPromoCodesRoute = AdminPromoCodesRouteImport.update({
   id: '/admin/promo-codes',
   path: '/admin/promo-codes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRitaVoiceRoute = AdminRitaVoiceRouteImport.update({
+  id: '/admin/rita-voice',
+  path: '/admin/rita-voice',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRitaxAnnouncementsRoute = AdminRitaxAnnouncementsRouteImport.update({
@@ -574,14 +571,9 @@ const ApiPublicRitaWorkerRoute = ApiPublicRitaWorkerRouteImport.update({
   path: '/api/public/rita-worker',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiRitaDeepgramTokenRoute = ApiRitaDeepgramTokenRouteImport.update({
-  id: '/api/rita/deepgram-token',
-  path: '/api/rita/deepgram-token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRitaDemoRoute = ApiRitaDemoRouteImport.update({
-  id: '/api/rita/demo',
-  path: '/api/rita/demo',
+const ApiRitaV3FillerRoute = ApiRitaV3FillerRouteImport.update({
+  id: '/api/rita-v3/filler',
+  path: '/api/rita-v3/filler',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiRitaExtractRoute = ApiRitaExtractRouteImport.update({
@@ -592,61 +584,6 @@ const ApiRitaExtractRoute = ApiRitaExtractRouteImport.update({
 const ApiRitaLearningRoute = ApiRitaLearningRouteImport.update({
   id: '/api/rita/learning',
   path: '/api/rita/learning',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRitaLiveRoute = ApiRitaLiveRouteImport.update({
-  id: '/api/rita/live',
-  path: '/api/rita/live',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRitaMetricsRoute = ApiRitaMetricsRouteImport.update({
-  id: '/api/rita/metrics',
-  path: '/api/rita/metrics',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRitaPreferencesRoute = ApiRitaPreferencesRouteImport.update({
-  id: '/api/rita/preferences',
-  path: '/api/rita/preferences',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRitaRespondRoute = ApiRitaRespondRouteImport.update({
-  id: '/api/rita/respond',
-  path: '/api/rita/respond',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRitaSessionRoute = ApiRitaSessionRouteImport.update({
-  id: '/api/rita/session',
-  path: '/api/rita/session',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRitaSpeechRoute = ApiRitaSpeechRouteImport.update({
-  id: '/api/rita/speech',
-  path: '/api/rita/speech',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRitaSummarizeRoute = ApiRitaSummarizeRouteImport.update({
-  id: '/api/rita/summarize',
-  path: '/api/rita/summarize',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRitaTranscribeRoute = ApiRitaTranscribeRouteImport.update({
-  id: '/api/rita/transcribe',
-  path: '/api/rita/transcribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRitaTurnRoute = ApiRitaTurnRouteImport.update({
-  id: '/api/rita/turn',
-  path: '/api/rita/turn',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRitaUsageRoute = ApiRitaUsageRouteImport.update({
-  id: '/api/rita/usage',
-  path: '/api/rita/usage',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiRitaWarmRoute = ApiRitaWarmRouteImport.update({
-  id: '/api/rita/warm',
-  path: '/api/rita/warm',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoursesCourseIdIndexRoute = CoursesCourseIdIndexRouteImport.update({
@@ -752,6 +689,21 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiRitaV3SessionEndRoute = ApiRitaV3SessionEndRouteImport.update({
+  id: '/api/rita-v3/session/end',
+  path: '/api/rita-v3/session/end',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaV3SessionMetricsRoute = ApiRitaV3SessionMetricsRouteImport.update({
+  id: '/api/rita-v3/session/metrics',
+  path: '/api/rita-v3/session/metrics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaV3SessionStartRoute = ApiRitaV3SessionStartRouteImport.update({
+  id: '/api/rita-v3/session/start',
+  path: '/api/rita-v3/session/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GermanCourseIdReviewIndexRoute =
   GermanCourseIdReviewIndexRouteImport.update({
     id: '/',
@@ -816,6 +768,7 @@ export interface FileRoutesByFullPath {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/plans': typeof AdminPlansRoute
   '/admin/promo-codes': typeof AdminPromoCodesRoute
+  '/admin/rita-voice': typeof AdminRitaVoiceRoute
   '/admin/ritax-announcements': typeof AdminRitaxAnnouncementsRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/support': typeof AdminSupportRoute
@@ -860,21 +813,9 @@ export interface FileRoutesByFullPath {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
-  '/api/rita/deepgram-token': typeof ApiRitaDeepgramTokenRoute
-  '/api/rita/demo': typeof ApiRitaDemoRoute
+  '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
-  '/api/rita/live': typeof ApiRitaLiveRoute
-  '/api/rita/metrics': typeof ApiRitaMetricsRoute
-  '/api/rita/preferences': typeof ApiRitaPreferencesRoute
-  '/api/rita/respond': typeof ApiRitaRespondRoute
-  '/api/rita/session': typeof ApiRitaSessionRoute
-  '/api/rita/speech': typeof ApiRitaSpeechRoute
-  '/api/rita/summarize': typeof ApiRitaSummarizeRoute
-  '/api/rita/transcribe': typeof ApiRitaTranscribeRoute
-  '/api/rita/turn': typeof ApiRitaTurnRoute
-  '/api/rita/usage': typeof ApiRitaUsageRoute
-  '/api/rita/warm': typeof ApiRitaWarmRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -897,6 +838,9 @@ export interface FileRoutesByFullPath {
   '/study/lectures/': typeof StudyLecturesIndexRoute
   '/admin/german/$courseId/manage': typeof AdminGermanCourseIdManageRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/rita-v3/session/end': typeof ApiRitaV3SessionEndRoute
+  '/api/rita-v3/session/metrics': typeof ApiRitaV3SessionMetricsRoute
+  '/api/rita-v3/session/start': typeof ApiRitaV3SessionStartRoute
   '/german/$courseId/review/run': typeof GermanCourseIdReviewRunRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -941,6 +885,7 @@ export interface FileRoutesByTo {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/plans': typeof AdminPlansRoute
   '/admin/promo-codes': typeof AdminPromoCodesRoute
+  '/admin/rita-voice': typeof AdminRitaVoiceRoute
   '/admin/ritax-announcements': typeof AdminRitaxAnnouncementsRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/support': typeof AdminSupportRoute
@@ -984,21 +929,9 @@ export interface FileRoutesByTo {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
-  '/api/rita/deepgram-token': typeof ApiRitaDeepgramTokenRoute
-  '/api/rita/demo': typeof ApiRitaDemoRoute
+  '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
-  '/api/rita/live': typeof ApiRitaLiveRoute
-  '/api/rita/metrics': typeof ApiRitaMetricsRoute
-  '/api/rita/preferences': typeof ApiRitaPreferencesRoute
-  '/api/rita/respond': typeof ApiRitaRespondRoute
-  '/api/rita/session': typeof ApiRitaSessionRoute
-  '/api/rita/speech': typeof ApiRitaSpeechRoute
-  '/api/rita/summarize': typeof ApiRitaSummarizeRoute
-  '/api/rita/transcribe': typeof ApiRitaTranscribeRoute
-  '/api/rita/turn': typeof ApiRitaTurnRoute
-  '/api/rita/usage': typeof ApiRitaUsageRoute
-  '/api/rita/warm': typeof ApiRitaWarmRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -1020,6 +953,9 @@ export interface FileRoutesByTo {
   '/study/lectures': typeof StudyLecturesIndexRoute
   '/admin/german/$courseId/manage': typeof AdminGermanCourseIdManageRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/rita-v3/session/end': typeof ApiRitaV3SessionEndRoute
+  '/api/rita-v3/session/metrics': typeof ApiRitaV3SessionMetricsRoute
+  '/api/rita-v3/session/start': typeof ApiRitaV3SessionStartRoute
   '/german/$courseId/review/run': typeof GermanCourseIdReviewRunRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -1068,6 +1004,7 @@ export interface FileRoutesById {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/plans': typeof AdminPlansRoute
   '/admin/promo-codes': typeof AdminPromoCodesRoute
+  '/admin/rita-voice': typeof AdminRitaVoiceRoute
   '/admin/ritax-announcements': typeof AdminRitaxAnnouncementsRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/support': typeof AdminSupportRoute
@@ -1112,21 +1049,9 @@ export interface FileRoutesById {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
-  '/api/rita/deepgram-token': typeof ApiRitaDeepgramTokenRoute
-  '/api/rita/demo': typeof ApiRitaDemoRoute
+  '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
-  '/api/rita/live': typeof ApiRitaLiveRoute
-  '/api/rita/metrics': typeof ApiRitaMetricsRoute
-  '/api/rita/preferences': typeof ApiRitaPreferencesRoute
-  '/api/rita/respond': typeof ApiRitaRespondRoute
-  '/api/rita/session': typeof ApiRitaSessionRoute
-  '/api/rita/speech': typeof ApiRitaSpeechRoute
-  '/api/rita/summarize': typeof ApiRitaSummarizeRoute
-  '/api/rita/transcribe': typeof ApiRitaTranscribeRoute
-  '/api/rita/turn': typeof ApiRitaTurnRoute
-  '/api/rita/usage': typeof ApiRitaUsageRoute
-  '/api/rita/warm': typeof ApiRitaWarmRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -1149,6 +1074,9 @@ export interface FileRoutesById {
   '/study/lectures/': typeof StudyLecturesIndexRoute
   '/admin/german/$courseId/manage': typeof AdminGermanCourseIdManageRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/rita-v3/session/end': typeof ApiRitaV3SessionEndRoute
+  '/api/rita-v3/session/metrics': typeof ApiRitaV3SessionMetricsRoute
+  '/api/rita-v3/session/start': typeof ApiRitaV3SessionStartRoute
   '/german/$courseId/review/run': typeof GermanCourseIdReviewRunRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -1198,6 +1126,7 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/plans'
     | '/admin/promo-codes'
+    | '/admin/rita-voice'
     | '/admin/ritax-announcements'
     | '/admin/roles'
     | '/admin/support'
@@ -1242,21 +1171,9 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/push-dispatch'
     | '/api/public/rita-worker'
-    | '/api/rita/deepgram-token'
-    | '/api/rita/demo'
+    | '/api/rita-v3/filler'
     | '/api/rita/extract'
     | '/api/rita/learning'
-    | '/api/rita/live'
-    | '/api/rita/metrics'
-    | '/api/rita/preferences'
-    | '/api/rita/respond'
-    | '/api/rita/session'
-    | '/api/rita/speech'
-    | '/api/rita/summarize'
-    | '/api/rita/transcribe'
-    | '/api/rita/turn'
-    | '/api/rita/usage'
-    | '/api/rita/warm'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1279,6 +1196,9 @@ export interface FileRouteTypes {
     | '/study/lectures/'
     | '/admin/german/$courseId/manage'
     | '/api/public/payments/webhook'
+    | '/api/rita-v3/session/end'
+    | '/api/rita-v3/session/metrics'
+    | '/api/rita-v3/session/start'
     | '/german/$courseId/review/run'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1323,6 +1243,7 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/plans'
     | '/admin/promo-codes'
+    | '/admin/rita-voice'
     | '/admin/ritax-announcements'
     | '/admin/roles'
     | '/admin/support'
@@ -1366,21 +1287,9 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/push-dispatch'
     | '/api/public/rita-worker'
-    | '/api/rita/deepgram-token'
-    | '/api/rita/demo'
+    | '/api/rita-v3/filler'
     | '/api/rita/extract'
     | '/api/rita/learning'
-    | '/api/rita/live'
-    | '/api/rita/metrics'
-    | '/api/rita/preferences'
-    | '/api/rita/respond'
-    | '/api/rita/session'
-    | '/api/rita/speech'
-    | '/api/rita/summarize'
-    | '/api/rita/transcribe'
-    | '/api/rita/turn'
-    | '/api/rita/usage'
-    | '/api/rita/warm'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1402,6 +1311,9 @@ export interface FileRouteTypes {
     | '/study/lectures'
     | '/admin/german/$courseId/manage'
     | '/api/public/payments/webhook'
+    | '/api/rita-v3/session/end'
+    | '/api/rita-v3/session/metrics'
+    | '/api/rita-v3/session/start'
     | '/german/$courseId/review/run'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1449,6 +1361,7 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/plans'
     | '/admin/promo-codes'
+    | '/admin/rita-voice'
     | '/admin/ritax-announcements'
     | '/admin/roles'
     | '/admin/support'
@@ -1493,21 +1406,9 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/push-dispatch'
     | '/api/public/rita-worker'
-    | '/api/rita/deepgram-token'
-    | '/api/rita/demo'
+    | '/api/rita-v3/filler'
     | '/api/rita/extract'
     | '/api/rita/learning'
-    | '/api/rita/live'
-    | '/api/rita/metrics'
-    | '/api/rita/preferences'
-    | '/api/rita/respond'
-    | '/api/rita/session'
-    | '/api/rita/speech'
-    | '/api/rita/summarize'
-    | '/api/rita/transcribe'
-    | '/api/rita/turn'
-    | '/api/rita/usage'
-    | '/api/rita/warm'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1530,6 +1431,9 @@ export interface FileRouteTypes {
     | '/study/lectures/'
     | '/admin/german/$courseId/manage'
     | '/api/public/payments/webhook'
+    | '/api/rita-v3/session/end'
+    | '/api/rita-v3/session/metrics'
+    | '/api/rita-v3/session/start'
     | '/german/$courseId/review/run'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1578,6 +1482,7 @@ export interface RootRouteChildren {
   AdminPeopleRoute: typeof AdminPeopleRoute
   AdminPlansRoute: typeof AdminPlansRoute
   AdminPromoCodesRoute: typeof AdminPromoCodesRoute
+  AdminRitaVoiceRoute: typeof AdminRitaVoiceRoute
   AdminRitaxAnnouncementsRoute: typeof AdminRitaxAnnouncementsRoute
   AdminRolesRoute: typeof AdminRolesRoute
   AdminSupportRoute: typeof AdminSupportRoute
@@ -1607,26 +1512,17 @@ export interface RootRouteChildren {
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
   ApiPublicRitaWorkerRoute: typeof ApiPublicRitaWorkerRoute
-  ApiRitaDeepgramTokenRoute: typeof ApiRitaDeepgramTokenRoute
-  ApiRitaDemoRoute: typeof ApiRitaDemoRoute
+  ApiRitaV3FillerRoute: typeof ApiRitaV3FillerRoute
   ApiRitaExtractRoute: typeof ApiRitaExtractRoute
   ApiRitaLearningRoute: typeof ApiRitaLearningRoute
-  ApiRitaLiveRoute: typeof ApiRitaLiveRoute
-  ApiRitaMetricsRoute: typeof ApiRitaMetricsRoute
-  ApiRitaPreferencesRoute: typeof ApiRitaPreferencesRoute
-  ApiRitaRespondRoute: typeof ApiRitaRespondRoute
-  ApiRitaSessionRoute: typeof ApiRitaSessionRoute
-  ApiRitaSpeechRoute: typeof ApiRitaSpeechRoute
-  ApiRitaSummarizeRoute: typeof ApiRitaSummarizeRoute
-  ApiRitaTranscribeRoute: typeof ApiRitaTranscribeRoute
-  ApiRitaTurnRoute: typeof ApiRitaTurnRoute
-  ApiRitaUsageRoute: typeof ApiRitaUsageRoute
-  ApiRitaWarmRoute: typeof ApiRitaWarmRoute
   ShareQuestionsSetIdRoute: typeof ShareQuestionsSetIdRoute
   ShareQuestionsNewRoute: typeof ShareQuestionsNewRoute
   AdminSpacesIndexRoute: typeof AdminSpacesIndexRoute
   ShareQuestionsIndexRoute: typeof ShareQuestionsIndexRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  ApiRitaV3SessionEndRoute: typeof ApiRitaV3SessionEndRoute
+  ApiRitaV3SessionMetricsRoute: typeof ApiRitaV3SessionMetricsRoute
+  ApiRitaV3SessionStartRoute: typeof ApiRitaV3SessionStartRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
@@ -1925,6 +1821,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/promo-codes'
       fullPath: '/admin/promo-codes'
       preLoaderRoute: typeof AdminPromoCodesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/rita-voice': {
+      id: '/admin/rita-voice'
+      path: '/admin/rita-voice'
+      fullPath: '/admin/rita-voice'
+      preLoaderRoute: typeof AdminRitaVoiceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/ritax-announcements': {
@@ -2242,18 +2145,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRitaWorkerRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/rita/deepgram-token': {
-      id: '/api/rita/deepgram-token'
-      path: '/api/rita/deepgram-token'
-      fullPath: '/api/rita/deepgram-token'
-      preLoaderRoute: typeof ApiRitaDeepgramTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/rita/demo': {
-      id: '/api/rita/demo'
-      path: '/api/rita/demo'
-      fullPath: '/api/rita/demo'
-      preLoaderRoute: typeof ApiRitaDemoRouteImport
+    '/api/rita-v3/filler': {
+      id: '/api/rita-v3/filler'
+      path: '/api/rita-v3/filler'
+      fullPath: '/api/rita-v3/filler'
+      preLoaderRoute: typeof ApiRitaV3FillerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/rita/extract': {
@@ -2268,83 +2164,6 @@ declare module '@tanstack/react-router' {
       path: '/api/rita/learning'
       fullPath: '/api/rita/learning'
       preLoaderRoute: typeof ApiRitaLearningRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/rita/live': {
-      id: '/api/rita/live'
-      path: '/api/rita/live'
-      fullPath: '/api/rita/live'
-      preLoaderRoute: typeof ApiRitaLiveRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/rita/metrics': {
-      id: '/api/rita/metrics'
-      path: '/api/rita/metrics'
-      fullPath: '/api/rita/metrics'
-      preLoaderRoute: typeof ApiRitaMetricsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/rita/preferences': {
-      id: '/api/rita/preferences'
-      path: '/api/rita/preferences'
-      fullPath: '/api/rita/preferences'
-      preLoaderRoute: typeof ApiRitaPreferencesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/rita/respond': {
-      id: '/api/rita/respond'
-      path: '/api/rita/respond'
-      fullPath: '/api/rita/respond'
-      preLoaderRoute: typeof ApiRitaRespondRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/rita/session': {
-      id: '/api/rita/session'
-      path: '/api/rita/session'
-      fullPath: '/api/rita/session'
-      preLoaderRoute: typeof ApiRitaSessionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/rita/speech': {
-      id: '/api/rita/speech'
-      path: '/api/rita/speech'
-      fullPath: '/api/rita/speech'
-      preLoaderRoute: typeof ApiRitaSpeechRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/rita/summarize': {
-      id: '/api/rita/summarize'
-      path: '/api/rita/summarize'
-      fullPath: '/api/rita/summarize'
-      preLoaderRoute: typeof ApiRitaSummarizeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/rita/transcribe': {
-      id: '/api/rita/transcribe'
-      path: '/api/rita/transcribe'
-      fullPath: '/api/rita/transcribe'
-      preLoaderRoute: typeof ApiRitaTranscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/rita/turn': {
-      id: '/api/rita/turn'
-      path: '/api/rita/turn'
-      fullPath: '/api/rita/turn'
-      preLoaderRoute: typeof ApiRitaTurnRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/rita/usage': {
-      id: '/api/rita/usage'
-      path: '/api/rita/usage'
-      fullPath: '/api/rita/usage'
-      preLoaderRoute: typeof ApiRitaUsageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/rita/warm': {
-      id: '/api/rita/warm'
-      path: '/api/rita/warm'
-      fullPath: '/api/rita/warm'
-      preLoaderRoute: typeof ApiRitaWarmRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/courses/$courseId/': {
@@ -2485,6 +2304,27 @@ declare module '@tanstack/react-router' {
       path: '/api/public/payments/webhook'
       fullPath: '/api/public/payments/webhook'
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita-v3/session/end': {
+      id: '/api/rita-v3/session/end'
+      path: '/api/rita-v3/session/end'
+      fullPath: '/api/rita-v3/session/end'
+      preLoaderRoute: typeof ApiRitaV3SessionEndRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita-v3/session/metrics': {
+      id: '/api/rita-v3/session/metrics'
+      path: '/api/rita-v3/session/metrics'
+      fullPath: '/api/rita-v3/session/metrics'
+      preLoaderRoute: typeof ApiRitaV3SessionMetricsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita-v3/session/start': {
+      id: '/api/rita-v3/session/start'
+      path: '/api/rita-v3/session/start'
+      fullPath: '/api/rita-v3/session/start'
+      preLoaderRoute: typeof ApiRitaV3SessionStartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/german/$courseId/review/': {
@@ -2693,6 +2533,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPeopleRoute: AdminPeopleRoute,
   AdminPlansRoute: AdminPlansRoute,
   AdminPromoCodesRoute: AdminPromoCodesRoute,
+  AdminRitaVoiceRoute: AdminRitaVoiceRoute,
   AdminRitaxAnnouncementsRoute: AdminRitaxAnnouncementsRoute,
   AdminRolesRoute: AdminRolesRoute,
   AdminSupportRoute: AdminSupportRoute,
@@ -2722,26 +2563,17 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
   ApiPublicRitaWorkerRoute: ApiPublicRitaWorkerRoute,
-  ApiRitaDeepgramTokenRoute: ApiRitaDeepgramTokenRoute,
-  ApiRitaDemoRoute: ApiRitaDemoRoute,
+  ApiRitaV3FillerRoute: ApiRitaV3FillerRoute,
   ApiRitaExtractRoute: ApiRitaExtractRoute,
   ApiRitaLearningRoute: ApiRitaLearningRoute,
-  ApiRitaLiveRoute: ApiRitaLiveRoute,
-  ApiRitaMetricsRoute: ApiRitaMetricsRoute,
-  ApiRitaPreferencesRoute: ApiRitaPreferencesRoute,
-  ApiRitaRespondRoute: ApiRitaRespondRoute,
-  ApiRitaSessionRoute: ApiRitaSessionRoute,
-  ApiRitaSpeechRoute: ApiRitaSpeechRoute,
-  ApiRitaSummarizeRoute: ApiRitaSummarizeRoute,
-  ApiRitaTranscribeRoute: ApiRitaTranscribeRoute,
-  ApiRitaTurnRoute: ApiRitaTurnRoute,
-  ApiRitaUsageRoute: ApiRitaUsageRoute,
-  ApiRitaWarmRoute: ApiRitaWarmRoute,
   ShareQuestionsSetIdRoute: ShareQuestionsSetIdRoute,
   ShareQuestionsNewRoute: ShareQuestionsNewRoute,
   AdminSpacesIndexRoute: AdminSpacesIndexRoute,
   ShareQuestionsIndexRoute: ShareQuestionsIndexRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  ApiRitaV3SessionEndRoute: ApiRitaV3SessionEndRoute,
+  ApiRitaV3SessionMetricsRoute: ApiRitaV3SessionMetricsRoute,
+  ApiRitaV3SessionStartRoute: ApiRitaV3SessionStartRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }

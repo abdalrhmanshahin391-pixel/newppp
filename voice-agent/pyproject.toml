@@ -1,0 +1,20 @@
+[project]
+name = "rita-realtime-voice-agent"
+version = "3.0.0"
+description = "RitaJet realtime multilingual voice tutor"
+requires-python = ">=3.11"
+dependencies = [
+  "pipecat-ai[daily,groq,local-smart-turn,runner,silero,soniox]==0.0.105",
+  "google-genai[aiohttp]>=1.53.0,<2",
+  "python-dotenv>=1.1.0,<2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3,<9", "ruff>=0.11,<1"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

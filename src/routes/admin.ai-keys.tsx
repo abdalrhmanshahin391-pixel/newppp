@@ -20,12 +20,10 @@ import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { AiEnginePanel } from "@/components/admin/AiEnginePanel";
-import { RitaFishVoicePanel } from "@/components/admin/RitaFishVoicePanel";
 import {
   getRitaVoiceAdmin,
   saveRitaVoiceSettings,
   testRitaLiveKey,
-  testRitaGroqKey,
 } from "@/lib/rita-live.functions";
 import {
   saveAiKey,
@@ -45,7 +43,7 @@ export const Route = createFileRoute("/admin/ai-keys")({
 const FALLBACK_MODELS = [{ id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash-Lite" }];
 
 const SINGLE_PROVIDERS: {
-  id: "openai" | "anthropic" | "deepgram" | "groq";
+  id: "openai" | "anthropic" | "deepgram";
   name: string;
   tier: string;
   model: string;
@@ -53,19 +51,6 @@ const SINGLE_PROVIDERS: {
   url: string;
   steps: string[];
 }[] = [
-  {
-    id: "groq",
-    name: "Groq — Rita’s replies",
-    tier: "Fast text generation",
-    model: "Qwen 3.8 27B",
-    color: "from-orange-400 to-rose-500",
-    url: "https://console.groq.com/keys",
-    steps: [
-      "Create a Groq API key in Groq Console.",
-      "Paste it here; the key remains protected on the server.",
-      "Save it, then use the Rita test button above to verify the selected model.",
-    ],
-  },
   {
     id: "openai",
     name: "OpenAI — Rita Live",
@@ -117,7 +102,6 @@ function AiKeysPage() {
   const del = useServerFn(deleteAiKey);
   const setModel = useServerFn(savePreferredGeminiModel);
   const testOpenAi = useServerFn(testRitaLiveKey);
-  const testGroq = useServerFn(testRitaGroqKey);
   const getRitaAdmin = useServerFn(getRitaVoiceAdmin);
   const updateRitaAdmin = useServerFn(saveRitaVoiceSettings);
 
@@ -128,23 +112,21 @@ function AiKeysPage() {
 
   // single-provider status
   const [singleStatus, setSingleStatus] = useState<
-    Record<"openai" | "anthropic" | "deepgram" | "groq", string | null>
+    Record<"openai" | "anthropic" | "deepgram", string | null>
   >({
     openai: null,
     anthropic: null,
     deepgram: null,
-    groq: null,
   });
 
   // drafts
   const [geminiDraft, setGeminiDraft] = useState<string[]>(["", "", "", "", ""]);
   const [singleDraft, setSingleDraft] = useState<
-    Record<"openai" | "anthropic" | "deepgram" | "groq", string>
+    Record<"openai" | "anthropic" | "deepgram", string>
   >({
     openai: "",
     anthropic: "",
     deepgram: "",
-    groq: "",
   });
   const [busy, setBusy] = useState<string | null>(null);
   const [showRitaKey, setShowRitaKey] = useState(false);
@@ -158,11 +140,6 @@ function AiKeysPage() {
     pipelineMode: "economic_v2" as "legacy" | "economic_v2",
     rolloutPercent: 100,
     adminOnlyPreview: false,
-    voiceEngine: "openai" as "openai" | "fish",
-    fishVoiceId: null as string | null,
-    germanFishVoiceId: "3235abc9a84b407d92f73539a5651720",
-    groqModel: "openai/gpt-oss-20b",
-    secondPassStt: false,
   });
   const [ritaMetrics, setRitaMetrics] = useState({
     sessions: 0,
@@ -173,14 +150,7 @@ function AiKeysPage() {
     turns: 0,
     latencyP50: 0,
     latencyP95: 0,
-    transcriptP50: 0,
-    responseP50: 0,
-    audioP50: 0,
-    incompleteTurns: 0,
-    fallbackRate: 0,
-    reconnectTurns: 0,
   });
-  const [ritaRecentTurns, setRitaRecentTurns] = useState<any[]>([]);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
@@ -191,11 +161,10 @@ function AiKeysPage() {
     try {
       const r: any = await list();
       const slots: (string | null)[] = [null, null, null, null, null];
-      const single: Record<"openai" | "anthropic" | "deepgram" | "groq", string | null> = {
+      const single: Record<"openai" | "anthropic" | "deepgram", string | null> = {
         openai: null,
         anthropic: null,
         deepgram: null,
-        groq: null,
       };
       for (const k of r.keys ?? []) {
         if (k.provider === "gemini") {
@@ -207,8 +176,6 @@ function AiKeysPage() {
           single.anthropic = k.updated_at;
         } else if (k.provider === "deepgram") {
           single.deepgram = k.updated_at;
-        } else if (k.provider === "groq") {
-          single.groq = k.updated_at;
         }
       }
       setGeminiSlots(slots);
@@ -229,7 +196,6 @@ function AiKeysPage() {
       .then((result) => {
         if (result?.settings) setRitaSettings(result.settings);
         if (result?.metrics) setRitaMetrics(result.metrics);
-        if (result?.recentTurns) setRitaRecentTurns(result.recentTurns);
       })
       .catch(() => undefined);
   }, [getRitaAdmin, isAdmin]);
@@ -279,19 +245,14 @@ function AiKeysPage() {
     }
   }
 
-  async function saveSingle(p: "openai" | "anthropic" | "deepgram" | "groq") {
+  async function saveSingle(p: "openai" | "anthropic" | "deepgram") {
     if (!singleDraft[p].trim()) return;
     setBusy(p);
     try {
       await save({ data: { provider: p, apiKey: singleDraft[p].trim(), slot: 1 } });
       toast.success(`${p} key saved`);
       setSingleDraft((d) => ({ ...d, [p]: "" }));
-      await refresh();
-      if (p === "groq") {
-        const result = await testGroq();
-        if (!result.ok) throw new Error(result.message);
-        toast.success(result.message);
-      }
+      refresh();
     } catch (e: any) {
       toast.error(e?.message || "Save failed");
     } finally {
@@ -299,7 +260,7 @@ function AiKeysPage() {
     }
   }
 
-  async function deleteSingle(p: "openai" | "anthropic" | "deepgram" | "groq") {
+  async function deleteSingle(p: "openai" | "anthropic" | "deepgram") {
     if (!confirm(`Remove the ${p} key?`)) return;
     setBusy(p);
     try {
@@ -340,7 +301,6 @@ function AiKeysPage() {
       toast.success("Rita voice settings saved");
       const result = await getRitaAdmin();
       if (result?.metrics) setRitaMetrics(result.metrics);
-      if (result?.recentTurns) setRitaRecentTurns(result.recentTurns);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Could not save Rita settings");
     } finally {
@@ -396,6 +356,9 @@ function AiKeysPage() {
           between them automatically when one is rate-limited.
         </p>
 
+        {/* Archived Rita v2 controls are intentionally not rendered. Rita v3 has one
+            dedicated control room at /admin/rita-voice. Keep this page for non-voice AI only. */}
+        {false && <>
         <section
           className="mb-6 rounded-3xl border-[3px] border-red-500 bg-red-950/70 p-5 shadow-[0_0_48px_-15px_rgba(239,68,68,.8)] md:p-7"
           aria-label="Rita Economic v2 status"
@@ -404,7 +367,7 @@ function AiKeysPage() {
             🔴 RITA PIPELINE SWITCH — APPLIES TO USERS
           </p>
           <h2 className="mt-2 text-2xl font-black text-white">
-             Deepgram Nova-3 → Groq → OpenAI/Fish voice
+            Deepgram Nova-3 → GPT-4o mini → OpenAI Mini TTS
           </h2>
           <p className="mt-2 text-sm text-red-100/85">
             اختر النظام بوضوح. لن يغيّر الموقع النظام تلقائيًا عند حدوث خطأ.
@@ -429,7 +392,7 @@ function AiKeysPage() {
             >
               <span className="block text-lg font-black">Rita Economic v2</span>
               <span className="mt-1 block text-xs font-bold opacity-75">
-                 Deepgram Nova-3 → streaming Groq → streamed PCM voice
+                Deepgram Nova-3 → streaming GPT → streamed PCM voice
               </span>
             </button>
             <label className="text-xs font-black">
@@ -471,8 +434,6 @@ function AiKeysPage() {
             تقديري؛ فواتير OpenAI هي المرجع النهائي، وقد لا تصل بيانات الرد إذا انقطع الاتصال.
           </p>
         </section>
-
-        <RitaFishVoicePanel />
 
         <section className="mb-5 overflow-hidden rounded-3xl border-2 border-emerald-400/70 bg-gradient-to-br from-emerald-400/[0.16] via-teal-400/[0.08] to-black p-6 shadow-[0_0_55px_-25px_rgba(52,211,153,.8)] md:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -609,7 +570,7 @@ function AiKeysPage() {
             </label>
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-7">
+          <div className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-7">
             {[
               ["Sessions", ritaMetrics.sessions],
               ["Live now", ritaMetrics.activeSessions],
@@ -618,12 +579,6 @@ function AiKeysPage() {
               ["Est. cost", `$${ritaMetrics.estimatedCost.toFixed(2)}`],
               ["Latency p50", ritaMetrics.latencyP50 ? `${ritaMetrics.latencyP50}ms` : "—"],
               ["Latency p95", ritaMetrics.latencyP95 ? `${ritaMetrics.latencyP95}ms` : "—"],
-              ["STT p50", ritaMetrics.transcriptP50 ? `${ritaMetrics.transcriptP50}ms` : "—"],
-              ["GPT p50", ritaMetrics.responseP50 ? `${ritaMetrics.responseP50}ms` : "—"],
-              ["Audio p50", ritaMetrics.audioP50 ? `${ritaMetrics.audioP50}ms` : "—"],
-              ["Fallback", `${ritaMetrics.fallbackRate}%`],
-              ["Reconnect turns", ritaMetrics.reconnectTurns],
-              ["Incomplete", ritaMetrics.incompleteTurns],
             ].map(([label, value]) => (
               <div
                 key={String(label)}
@@ -635,44 +590,6 @@ function AiKeysPage() {
                 <p className="mt-1 text-lg font-black text-white">{value}</p>
               </div>
             ))}
-          </div>
-
-          <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10 bg-black/20">
-            <table className="w-full min-w-[820px] text-left text-xs">
-              <thead className="border-b border-white/10 text-white/45">
-                <tr>{["Turn", "Result", "Slowest stage", "Pickup", "Speech→text", "Text→token", "Token→audio", "Voice", "Reconnects", "When"].map((label) => <th key={label} className="px-3 py-2 font-bold">{label}</th>)}</tr>
-              </thead>
-              <tbody>
-                {ritaRecentTurns.map((turn) => {
-                  const deltaValue = (from: string, to: string) => turn[from] != null && turn[to] != null ? turn[to] - turn[from] : null;
-                  const delta = (from: string, to: string) => {
-                    const value = deltaValue(from, to);
-                    return value === null ? "—" : `${value}ms`;
-                  };
-                  const stages = [
-                    ["Pickup", deltaValue("signal_start_ms", "speech_start_ms")],
-                    ["Speech→text", deltaValue("speech_end_ms", "transcript_final_ms")],
-                    ["Text→token", deltaValue("transcript_final_ms", "first_token_ms")],
-                    ["Token→audio", deltaValue("first_token_ms", "first_audio_ms")],
-                  ] as const;
-                  const slowest = [...stages].filter((item) => item[1] !== null).sort((a, b) => Number(b[1]) - Number(a[1]))[0];
-                  const total = deltaValue("speech_end_ms", "first_audio_ms");
-                  const latencyClass = total === null ? "text-white/50" : total < 2000 ? "text-emerald-300" : total <= 4000 ? "text-amber-300" : "text-red-300";
-                  return <tr key={turn.turn_id || turn.created_at} className="border-b border-white/5 text-white/75">
-                    <td className="px-3 py-2 font-mono">{turn.diagnostic_code || String(turn.turn_id || "").slice(0, 8)}</td>
-                    <td className="px-3 py-2"><span className={turn.status === "completed" ? "text-emerald-300" : "text-amber-300"}>{turn.status || "legacy"}</span><div className="text-white/35">{turn.end_reason || turn.last_stage || ""}</div></td>
-                    <td className={`px-3 py-2 font-bold ${latencyClass}`}>{slowest ? `${slowest[0]} ${slowest[1]}ms` : "—"}<div className="text-[10px] font-normal text-white/35">{turn.transcription_end_reason || ""}</div></td>
-                    <td className="px-3 py-2">{delta("signal_start_ms", "speech_start_ms")}<div className="text-[10px] text-white/35">{turn.deepgram_event || ""}</div></td>
-                    <td className="px-3 py-2">{delta("speech_end_ms", "transcript_final_ms")}</td>
-                    <td className="px-3 py-2">{delta("transcript_final_ms", "first_token_ms")}</td>
-                    <td className="px-3 py-2">{delta("first_token_ms", "first_audio_ms")}</td>
-                    <td className="px-3 py-2">{turn.voice_engine || "—"}{turn.fallback_used ? <div className="text-amber-300">STT fallback</div> : null}</td>
-                    <td className="px-3 py-2">{turn.reconnect_count || 0}</td>
-                    <td className="px-3 py-2 text-white/45">{new Date(turn.created_at).toLocaleString()}</td>
-                  </tr>;
-                })}
-              </tbody>
-            </table>
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -714,16 +631,6 @@ function AiKeysPage() {
               </label>
             ))}
           </div>
-          <div className="mt-4 grid gap-3">
-            <label className="text-xs font-bold text-white/60">
-              Groq model
-              <input
-                value={ritaSettings.groqModel}
-                onChange={(event) => setRitaSettings((current) => ({ ...current, groqModel: event.target.value }))}
-                className="mt-2 w-full rounded-xl border border-white/15 bg-black/40 px-3 py-2.5 text-sm text-white"
-              />
-            </label>
-          </div>
           <button
             type="button"
             onClick={saveRitaSettingsPanel}
@@ -738,6 +645,16 @@ function AiKeysPage() {
             Save Rita controls
           </button>
         </section>
+
+        </>}
+
+        <Link
+          to="/admin/rita-voice"
+          className="mb-6 flex items-center justify-between rounded-3xl border-2 border-violet-400/60 bg-violet-500/10 p-5 text-violet-100 hover:bg-violet-500/15"
+        >
+          <span><strong className="block text-lg">Rita Realtime Voice v3</strong><span className="text-sm text-white/60">Soniox, Groq, Gemini TTS and Pipecat keys are managed in the new clean voice panel.</span></span>
+          <ExternalLink className="h-5 w-5" />
+        </Link>
 
         {/* ────── Gemini multi-key card ────── */}
         <div className="rounded-3xl border border-sky-500/30 bg-gradient-to-br from-sky-500/[0.05] to-indigo-500/[0.05] backdrop-blur p-6 md:p-7 mb-5">

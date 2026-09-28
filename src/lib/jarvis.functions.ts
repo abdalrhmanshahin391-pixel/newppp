@@ -336,7 +336,7 @@ export const insertExtractedQuestion = createServerFn({ method: "POST" })
 
 
 const KeyInput = z.object({
-  provider: z.enum(["gemini", "openai", "anthropic", "deepgram", "groq"]),
+  provider: z.enum(["gemini", "openai", "anthropic", "deepgram"]),
   apiKey: z.string().min(8).max(500),
   slot: z.number().int().min(1).max(5).default(1),
 });
@@ -367,7 +367,7 @@ export const deleteAiKey = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
-        provider: z.enum(["gemini", "openai", "anthropic", "deepgram", "groq"]),
+        provider: z.enum(["gemini", "openai", "anthropic", "deepgram"]),
         slot: z.number().int().min(1).max(5).default(1),
       })
       .parse(d),

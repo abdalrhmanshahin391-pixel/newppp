@@ -347,13 +347,6 @@ text-primary).
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-rita-german: var(--rita-german);
-  --color-rita-german-hover: var(--rita-german-hover);
-  --color-rita-german-border: var(--rita-german-border);
-  --color-rita-german-foreground: var(--rita-german-foreground);
-  --color-rita-german-muted: var(--rita-german-muted);
-  --color-rita-note: var(--rita-note);
-  --color-rita-note-foreground: var(--rita-note-foreground);
 }
 :root {
   --radius: 1rem;
@@ -404,13 +397,6 @@ text-primary).
   --sidebar-accent-foreground: oklch(0.32 0 0);
   --sidebar-border: oklch(0.9 0 0);
   --sidebar-ring: oklch(0.74 0.22 130);
-  --rita-german: oklch(0.96 0.045 151);
-  --rita-german-hover: oklch(0.935 0.065 151);
-  --rita-german-border: oklch(0.82 0.1 151);
-  --rita-german-foreground: oklch(0.31 0.07 151);
-  --rita-german-muted: oklch(0.45 0.045 151);
-  --rita-note: oklch(0.72 0.12 230);
-  --rita-note-foreground: oklch(0.38 0.04 230);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.05), 0 8px 24px -16px rgba(0, 0, 0, 0.12);
   --shadow-brand: 0 12px 32px -12px rgba(88, 204, 2, 0.35);
   --gradient-brand: linear-gradient(135deg, #58cc02 0%, #89e219 100%);

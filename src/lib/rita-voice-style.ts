@@ -234,10 +234,5 @@ export function ritaVoiceInstructions(language: string, dialect: string, emotion
         : emotion === "thoughtful"
           ? "Sound attentive and thoughtful."
           : "Sound warm and relaxed.";
-  const isArabic =
-    baseLanguage(language) === "ar" || baseLanguage(dialect) === "ar" || /arabic/i.test(accent);
-  const fluency = isArabic
-    ? "Speak with smooth, connected Arabic — never letter-by-letter or robotic. Use the natural melody and rhythm of everyday spoken Arabic, exactly as a native speaker would say it in a real conversation. Stay in the colloquial dialect; do not drift into stiff formal Arabic."
-    : "Speak with smooth, connected, lively delivery — never robotic or word-by-word.";
-  return `You are Rita, a friendly tutor talking one-to-one, not reading a script. Speak naturally in ${accent || spokenLanguage}. Keep the exact colloquial wording and code-switching in the text. ${fluency} Use conversational rhythm, varied intonation, and brief natural pauses. ${style} Start immediately with the supplied meaning. Never add filler, acknowledgements, hesitation sounds, or introductory words such as ممم، فهمت عليك، طيب، خليني أشوف, hmm, okay, got you, or verstehe. Do not exaggerate an accent or add words.`;
+  return `You are Rita, a friendly tutor talking one-to-one, not reading a script. Speak naturally in ${accent || spokenLanguage}. Keep the exact colloquial wording and code-switching in the text. Use conversational rhythm, varied intonation, and brief natural pauses. ${style} Do not exaggerate an accent or add words.`;
 }

@@ -63,12 +63,20 @@ function AiEnginePage() {
 
         <AiEnginePanel />
 
-        <Link
-          to="/admin/ai-keys"
-          className="inline-flex items-center gap-2 rounded-2xl border border-white/15 px-4 py-3 text-sm font-bold text-white/80 hover:bg-white/5"
-        >
-          <Key className="h-4 w-4" /> Advanced: shared key pool, models and rate limits
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            to="/admin/rita-voice"
+            className="inline-flex items-center gap-2 rounded-2xl bg-violet-500 px-4 py-3 text-sm font-bold text-white hover:bg-violet-400"
+          >
+            <Key className="h-4 w-4" /> Rita Realtime Voice v3
+          </Link>
+          <Link
+            to="/admin/ai-keys"
+            className="inline-flex items-center gap-2 rounded-2xl border border-white/15 px-4 py-3 text-sm font-bold text-white/80 hover:bg-white/5"
+          >
+            <Key className="h-4 w-4" /> General key pool, models and rate limits
+          </Link>
+        </div>
       </main>
     </div>
   );

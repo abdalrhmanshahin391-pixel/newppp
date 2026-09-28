@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export const RITA_MODELS = {
   transcription: "deepgram-nova-3",
-  response: "openai/gpt-oss-20b",
+  response: "gpt-4o-mini",
   speech: "gpt-4o-mini-tts",
 } as const;
 
@@ -32,7 +32,7 @@ export async function getRitaPilotMode(userId: string): Promise<RitaPilotMode> {
   return (await rolloutBucket(userId)) < settings.rolloutPercent ? "economic_v2" : "legacy";
 }
 
-export const RITA_PERSONALITIES = ["mentor", "kind", "direct", "playful", "strict"] as const;
+export const RITA_PERSONALITIES = ["kind", "direct", "playful", "strict"] as const;
 export type RitaPersonality = (typeof RITA_PERSONALITIES)[number];
 
 export type RitaSettings = {
@@ -45,12 +45,6 @@ export type RitaSettings = {
   pipelineMode: RitaPilotMode;
   rolloutPercent: number;
   adminOnlyPreview: boolean;
-  voiceEngine: "openai" | "fish";
-  fishVoiceId: string | null;
-  germanFishVoiceId: string;
-  groqModel: string;
-  secondPassStt: boolean;
-  sttEngine: "whisper" | "deepgram" | "realtime";
 };
 
 export type RitaAuth = { userId: string };
@@ -58,19 +52,13 @@ export type RitaAuth = { userId: string };
 const DEFAULT_SETTINGS: RitaSettings = {
   enabled: true,
   voice: "marin",
-  responseWords: 40,
+  responseWords: 55,
   dailyGuardMinutes: 120,
   defaultMonthlyMinutes: 1200,
   monthlyBudgetCents: 10_000,
   pipelineMode: "economic_v2",
   rolloutPercent: 100,
   adminOnlyPreview: false,
-  voiceEngine: "openai",
-  fishVoiceId: "5814f46c02f5486d9c72b31bd82217ba",
-  germanFishVoiceId: "3235abc9a84b407d92f73539a5651720",
-  groqModel: "openai/gpt-oss-20b",
-  secondPassStt: false,
-  sttEngine: "whisper",
 };
 
 function apiUrl() {
@@ -98,30 +86,7 @@ export async function requireRitaUser(request: Request): Promise<RitaAuth | null
   return error || !userId ? null : { userId };
 }
 
-// Short-lived per-worker cache. Every voice segment previously re-read settings
-// and keys from the database before OpenAI could start, adding 200–500 ms.
-const RITA_CACHE_TTL_MS = 60_000;
-const ritaCache = new Map<string, { at: number; value: Promise<unknown> }>();
-function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
-  const hit = ritaCache.get(key);
-  if (hit && Date.now() - hit.at < RITA_CACHE_TTL_MS) return hit.value as Promise<T>;
-  const value = load().catch((error) => {
-    ritaCache.delete(key);
-    throw error;
-  });
-  ritaCache.set(key, { at: Date.now(), value });
-  return value;
-}
-/** Call after an admin saves Rita keys or settings. */
-export function clearRitaServerCache() {
-  ritaCache.clear();
-}
-
-export function resolveRitaOpenAiKey(): Promise<string | null> {
-  return cached("openai-key", loadRitaOpenAiKey);
-}
-
-async function loadRitaOpenAiKey(): Promise<string | null> {
+export async function resolveRitaOpenAiKey(): Promise<string | null> {
   const environmentKey = (process.env["OPENAI_API_KEY"] ?? "").trim();
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -142,11 +107,7 @@ async function loadRitaOpenAiKey(): Promise<string | null> {
   return environmentKey.length > 20 ? environmentKey : null;
 }
 
-export function resolveRitaDeepgramKey(): Promise<string | null> {
-  return cached("deepgram-key", loadRitaDeepgramKey);
-}
-
-async function loadRitaDeepgramKey(): Promise<string | null> {
+export async function resolveRitaDeepgramKey(): Promise<string | null> {
   const environmentKey = (process.env["DEEPGRAM_API_KEY"] ?? "").trim();
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -166,16 +127,12 @@ async function loadRitaDeepgramKey(): Promise<string | null> {
   return environmentKey.length > 20 ? environmentKey : null;
 }
 
-export function getRitaSettings(): Promise<RitaSettings> {
-  return cached("settings", loadRitaSettings);
-}
-
-async function loadRitaSettings(): Promise<RitaSettings> {
+export async function getRitaSettings(): Promise<RitaSettings> {
   try {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await (supabaseAdmin.from as any)("rita_voice_settings")
       .select(
-         "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview,voice_engine,fish_voice_id,german_fish_voice_id,groq_model,second_pass_stt,stt_engine",
+        "enabled,voice,response_words,daily_guard_minutes,default_monthly_minutes,monthly_budget_cents,pipeline_mode,rollout_percent,admin_only_preview",
       )
       .eq("id", true)
       .maybeSingle();
@@ -192,12 +149,6 @@ async function loadRitaSettings(): Promise<RitaSettings> {
       pipelineMode: data.pipeline_mode === "legacy" ? "legacy" : "economic_v2",
       rolloutPercent: Math.min(100, Math.max(0, Number(data.rollout_percent ?? 100))),
       adminOnlyPreview: data.admin_only_preview === true,
-      voiceEngine: data.voice_engine === "fish" ? "fish" : "openai",
-      fishVoiceId: data.fish_voice_id ? String(data.fish_voice_id) : null,
-      germanFishVoiceId: String(data.german_fish_voice_id || DEFAULT_SETTINGS.germanFishVoiceId),
-      groqModel: String(data.groq_model || DEFAULT_SETTINGS.groqModel),
-      secondPassStt: false,
-      sttEngine: data.stt_engine === "deepgram" ? "deepgram" : data.stt_engine === "realtime" ? "realtime" : "whisper",
     };
   } catch {
     // Allows the application to run before the migration reaches production.
@@ -246,20 +197,6 @@ export type RitaAllowance = {
   remainingMs: number;
   premiumVoice: boolean;
 };
-
-// 20s per-user allowance cache so consecutive turns (and the warm-up) skip the DB wait.
-const allowanceCache = new Map<string, { at: number; value: Promise<RitaAllowance> }>();
-export function getRitaAllowanceCached(userId: string, settings = DEFAULT_SETTINGS) {
-  const hit = allowanceCache.get(userId);
-  if (hit && Date.now() - hit.at < 20_000) return hit.value;
-  const value = getRitaAllowance(userId, settings);
-  allowanceCache.set(userId, { at: Date.now(), value });
-  value.catch(() => allowanceCache.delete(userId));
-  return value;
-}
-export function clearRitaAllowanceCache(userId: string) {
-  allowanceCache.delete(userId);
-}
 
 export async function getRitaAllowance(
   userId: string,
@@ -350,8 +287,7 @@ export function estimateWavDurationMs(file: File) {
 
 export function estimateSpeechDurationMs(text: string) {
   const words = text.trim().split(/\s+/).filter(Boolean).length;
-  // Speech now runs at speed 1.18, so ~170 words/min instead of 145.
-  return Math.min(60_000, Math.max(900, Math.round((words / 170) * 60_000)));
+  return Math.min(60_000, Math.max(900, Math.round((words / 145) * 60_000)));
 }
 
 export function estimateTurnCostMicros(args: {
@@ -374,8 +310,8 @@ export function estimateTurnCostMicros(args: {
 }
 
 export function normalizePersonality(value: unknown): RitaPersonality {
-  const requested = String(value ?? "mentor") as RitaPersonality;
-  return RITA_PERSONALITIES.includes(requested) ? requested : "mentor";
+  const requested = String(value ?? "kind") as RitaPersonality;
+  return RITA_PERSONALITIES.includes(requested) ? requested : "kind";
 }
 
 export function cleanLanguage(value: unknown) {
