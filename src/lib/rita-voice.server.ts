@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- Rita's new migration tables are not in the generated Supabase types until the production schema is regenerated. */
 import { createClient } from "@supabase/supabase-js";
+import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 
 export const RITA_MODELS = {
   transcription: "deepgram-nova-3",
@@ -61,24 +62,12 @@ const DEFAULT_SETTINGS: RitaSettings = {
   adminOnlyPreview: false,
 };
 
-function apiUrl() {
-  return process.env["SUPABASE_URL"] ?? process.env["VITE_SUPABASE_URL"] ?? "";
-}
-
-function publicKey() {
-  return (
-    process.env["SUPABASE_PUBLISHABLE_KEY"] ??
-    process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ??
-    process.env["SUPABASE_ANON_KEY"] ??
-    ""
-  );
-}
-
 export async function requireRitaUser(request: Request): Promise<RitaAuth | null> {
   const auth = request.headers.get("authorization") ?? "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-  if (!token || token.split(".").length !== 3 || !apiUrl() || !publicKey()) return null;
-  const client = createClient(apiUrl(), publicKey(), {
+  if (!token || token.split(".").length !== 3) return null;
+  const { url, publishableKey } = getSupabasePublicConfig();
+  const client = createClient(url, publishableKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const { data, error } = await client.auth.getClaims(token);

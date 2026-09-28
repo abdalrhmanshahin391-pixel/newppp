@@ -2805,6 +2805,139 @@ export type Database = {
         }
         Relationships: []
       }
+      rita_v3_events: {
+        Row: {
+          created_at: string
+          event_name: string
+          id: number
+          metadata: Json
+          session_id: string
+          user_id: string
+          value_ms: number | null
+        }
+        Insert: {
+          created_at?: string
+          event_name: string
+          id?: number
+          metadata?: Json
+          session_id: string
+          user_id: string
+          value_ms?: number | null
+        }
+        Update: {
+          created_at?: string
+          event_name?: string
+          id?: number
+          metadata?: Json
+          session_id?: string
+          user_id?: string
+          value_ms?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_v3_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "rita_v3_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rita_v3_learning_staging: {
+        Row: {
+          created_at: string
+          destination: Json
+          expires_at: string
+          id: string
+          intent: string
+          items: Json
+          saved_at: string | null
+          session_id: string
+          undone_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          destination?: Json
+          expires_at?: string
+          id?: string
+          intent: string
+          items?: Json
+          saved_at?: string | null
+          session_id: string
+          undone_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          destination?: Json
+          expires_at?: string
+          id?: string
+          intent?: string
+          items?: Json
+          saved_at?: string | null
+          session_id?: string
+          undone_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_v3_learning_staging_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "rita_v3_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rita_v3_sessions: {
+        Row: {
+          connected_at: string | null
+          dialect_preference: string
+          ended_at: string | null
+          error_code: string | null
+          id: string
+          language_preference: string
+          model_proof: Json
+          personality: string
+          provider_session_id: string | null
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          connected_at?: string | null
+          dialect_preference?: string
+          ended_at?: string | null
+          error_code?: string | null
+          id?: string
+          language_preference?: string
+          model_proof?: Json
+          personality?: string
+          provider_session_id?: string | null
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          connected_at?: string | null
+          dialect_preference?: string
+          ended_at?: string | null
+          error_code?: string | null
+          id?: string
+          language_preference?: string
+          model_proof?: Json
+          personality?: string
+          provider_session_id?: string | null
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       shared_deck_cards: {
         Row: {
           back: string
@@ -4981,8 +5114,7 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -5006,8 +5138,7 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -5031,8 +5162,7 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }

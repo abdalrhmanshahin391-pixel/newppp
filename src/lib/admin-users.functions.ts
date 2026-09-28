@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";
+import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 
 async function assertAdmin(ctx: { supabase: any; userId: string }) {
   const { data, error } = await ctx.supabase.rpc("has_role", {
@@ -26,8 +27,6 @@ export type AdminUserRow = {
   roles: string[];
 };
 
-
-
 export type AdminDeviceRow = {
   id: string;
   user_id: string;
@@ -45,81 +44,81 @@ export type AdminDeviceRow = {
  */
 export const adminListUsersAndDevices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<{ users: AdminUserRow[]; devices: AdminDeviceRow[]; globalDeviceLimit: number }> => {
-    await assertAdmin(context);
-    const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
+  .handler(
+    async ({
+      context,
+    }): Promise<{
+      users: AdminUserRow[];
+      devices: AdminDeviceRow[];
+      globalDeviceLimit: number;
+    }> => {
+      await assertAdmin(context);
+      const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
 
-    // Canonical user list comes from an admin RPC that reads auth.users +
-    // profiles + roles, so the admin sees every real account even when
-    // the profiles row is missing after a remix.
-    const [rpcRes, devicesRes, profilesRes, settingsRes] = await Promise.all([
-      context.supabase.rpc("admin_list_all_users"),
-      supabaseAdmin
-        .from("user_devices")
-        .select("id, user_id, device_id, nickname, user_agent, platform, ip, first_seen_at, last_seen_at")
-        .order("last_seen_at", { ascending: false }),
-      (supabaseAdmin.from as any)("profiles").select(
-        "id, device_limit, locked_at, lock_kind, lock_until, lock_message",
-      ),
-      supabaseAdmin
-        .from("device_security_settings")
-        .select("default_device_limit")
-        .eq("id", true)
-        .maybeSingle(),
-    ]);
-    if (rpcRes.error) throw new Error(rpcRes.error.message);
+      // Canonical user list comes from an admin RPC that reads auth.users +
+      // profiles + roles, so the admin sees every real account even when
+      // the profiles row is missing after a remix.
+      const [rpcRes, devicesRes, profilesRes, settingsRes] = await Promise.all([
+        context.supabase.rpc("admin_list_all_users"),
+        supabaseAdmin
+          .from("user_devices")
+          .select("id, user_id, device_id, nickname, user_agent, platform, ip, first_seen_at, last_seen_at")
+          .order("last_seen_at", { ascending: false }),
+        (supabaseAdmin.from as any)("profiles").select(
+          "id, device_limit, locked_at, lock_kind, lock_until, lock_message",
+        ),
+        supabaseAdmin.from("device_security_settings").select("default_device_limit").eq("id", true).maybeSingle(),
+      ]);
+      if (rpcRes.error) throw new Error(rpcRes.error.message);
 
-    const globalLimit =
-      (settingsRes.data as { default_device_limit?: number } | null)?.default_device_limit ?? 50;
-    const profMap = new Map<string, any>();
-    for (const p of (profilesRes.data ?? []) as any[]) {
-      profMap.set(p.id, p);
-    }
-
-    // Email verification state lives on the auth account, not in profiles.
-    const confirmedMap = new Map<string, string | null>();
-    for (let page = 1; page <= 20; page++) {
-      const { data: pageData, error: pageErr } = await supabaseAdmin.auth.admin.listUsers({
-        page,
-        perPage: 1000,
-      });
-      if (pageErr) break;
-      const list = pageData?.users ?? [];
-      for (const au of list) {
-        confirmedMap.set(au.id, (au as any).email_confirmed_at ?? null);
+      const globalLimit = (settingsRes.data as { default_device_limit?: number } | null)?.default_device_limit ?? 50;
+      const profMap = new Map<string, any>();
+      for (const p of (profilesRes.data ?? []) as any[]) {
+        profMap.set(p.id, p);
       }
-      if (list.length < 1000) break;
-    }
 
-    const users: AdminUserRow[] = ((rpcRes.data ?? []) as any[]).map((r) => {
-      const p = profMap.get(r.id) ?? {};
+      // Email verification state lives on the auth account, not in profiles.
+      const confirmedMap = new Map<string, string | null>();
+      for (let page = 1; page <= 20; page++) {
+        const { data: pageData, error: pageErr } = await supabaseAdmin.auth.admin.listUsers({
+          page,
+          perPage: 1000,
+        });
+        if (pageErr) break;
+        const list = pageData?.users ?? [];
+        for (const au of list) {
+          confirmedMap.set(au.id, (au as any).email_confirmed_at ?? null);
+        }
+        if (list.length < 1000) break;
+      }
+
+      const users: AdminUserRow[] = ((rpcRes.data ?? []) as any[]).map((r) => {
+        const p = profMap.get(r.id) ?? {};
+        return {
+          id: r.id,
+          full_name: r.full_name ?? null,
+          username: r.username ?? null,
+          email: r.email ?? null,
+          phone: r.phone ?? null,
+          device_limit: p.device_limit ?? globalLimit,
+          device_limit_override: p.device_limit ?? null,
+          locked_at: p.locked_at ?? null,
+          lock_kind: p.lock_kind ?? null,
+          lock_until: p.lock_until ?? null,
+          lock_message: p.lock_message ?? null,
+          created_at: r.created_at,
+          email_confirmed_at: confirmedMap.get(r.id) ?? null,
+          roles: (r.roles ?? []) as string[],
+        };
+      });
+
       return {
-        id: r.id,
-        full_name: r.full_name ?? null,
-        username: r.username ?? null,
-        email: r.email ?? null,
-        phone: r.phone ?? null,
-        device_limit: p.device_limit ?? globalLimit,
-        device_limit_override: p.device_limit ?? null,
-        locked_at: p.locked_at ?? null,
-        lock_kind: p.lock_kind ?? null,
-        lock_until: p.lock_until ?? null,
-        lock_message: p.lock_message ?? null,
-        created_at: r.created_at,
-        email_confirmed_at: confirmedMap.get(r.id) ?? null,
-        roles: (r.roles ?? []) as string[],
+        users,
+        devices: (devicesRes.data ?? []) as AdminDeviceRow[],
+        globalDeviceLimit: globalLimit,
       };
-    });
-
-
-
-    return {
-      users,
-      devices: (devicesRes.data ?? []) as AdminDeviceRow[],
-      globalDeviceLimit: globalLimit,
-    };
-  });
-
+    },
+  );
 
 export const adminSetDeviceLimit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -131,10 +130,7 @@ export const adminSetDeviceLimit = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
-    const { error } = await supabaseAdmin
-      .from("profiles")
-      .update({ device_limit: data.limit })
-      .eq("id", data.userId);
+    const { error } = await supabaseAdmin.from("profiles").update({ device_limit: data.limit }).eq("id", data.userId);
     if (error) throw new Error(error.message);
     return { ok: true, limit: data.limit };
   });
@@ -145,10 +141,7 @@ export const adminRevokeDevice = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
-    const { error } = await supabaseAdmin
-      .from("user_devices")
-      .delete()
-      .eq("id", data.deviceRowId);
+    const { error } = await supabaseAdmin.from("user_devices").delete().eq("id", data.deviceRowId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -159,10 +152,7 @@ export const adminResetUserDevices = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
-    const { error } = await supabaseAdmin
-      .from("user_devices")
-      .delete()
-      .eq("user_id", data.userId);
+    const { error } = await supabaseAdmin.from("user_devices").delete().eq("user_id", data.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -192,11 +182,7 @@ export const adminSetUserPhone = createServerFn({ method: "POST" })
     }
 
     // Ensure a profile row exists (users without one show `—` for phone).
-    const { data: existing } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .eq("id", data.userId)
-      .maybeSingle();
+    const { data: existing } = await supabaseAdmin.from("profiles").select("id").eq("id", data.userId).maybeSingle();
     if (!existing) {
       const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(data.userId);
       const meta = (authUser?.user?.user_metadata ?? {}) as Record<string, any>;
@@ -267,9 +253,7 @@ export const adminSetUserBlock = createServerFn({ method: "POST" })
             lock_until: data.kind === "suspend" ? data.until : null,
             lock_message: data.message || null,
           };
-    const { error } = await (supabaseAdmin.from as any)("profiles")
-      .update(patch)
-      .eq("id", data.userId);
+    const { error } = await (supabaseAdmin.from as any)("profiles").update(patch).eq("id", data.userId);
     if (error) throw new Error(error.message);
     return { ok: true, ...patch };
   });
@@ -337,31 +321,25 @@ export const adminUpdateUser = createServerFn({ method: "POST" })
     }
 
     const authPatch: Record<string, unknown> = {};
-    if (data.email) authPatch['email'] = data.email;
-    if (data.password) authPatch['password'] = data.password;
+    if (data.email) authPatch["email"] = data.email;
+    if (data.password) authPatch["password"] = data.password;
     if (Object.keys(authPatch).length > 0) {
       // Keep the account verified when an admin changes the address directly.
-      if (data.email) authPatch['email_confirm'] = true;
+      if (data.email) authPatch["email_confirm"] = true;
       const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, authPatch as any);
       if (error) throw new Error(error.message);
     }
 
     const profilePatch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (data.full_name !== undefined) profilePatch['full_name'] = data.full_name;
-    if (data.username !== undefined) profilePatch['username'] = data.username;
-    if (data.email !== undefined) profilePatch['email'] = data.email;
-    if (data.phone !== undefined) profilePatch['phone'] = data.phone || null;
+    if (data.full_name !== undefined) profilePatch["full_name"] = data.full_name;
+    if (data.username !== undefined) profilePatch["username"] = data.username;
+    if (data.email !== undefined) profilePatch["email"] = data.email;
+    if (data.phone !== undefined) profilePatch["phone"] = data.phone || null;
 
-    const { data: existing } = await supabaseAdmin
-      .from("profiles")
-      .select("id")
-      .eq("id", data.userId)
-      .maybeSingle();
+    const { data: existing } = await supabaseAdmin.from("profiles").select("id").eq("id", data.userId).maybeSingle();
 
     if (existing) {
-      const { error } = await (supabaseAdmin.from as any)("profiles")
-        .update(profilePatch)
-        .eq("id", data.userId);
+      const { error } = await (supabaseAdmin.from as any)("profiles").update(profilePatch).eq("id", data.userId);
       if (error) throw new Error(error.message);
     } else {
       const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(data.userId);
@@ -369,10 +347,10 @@ export const adminUpdateUser = createServerFn({ method: "POST" })
       const { error } = await (supabaseAdmin.from as any)("profiles").insert({
         id: data.userId,
         email: data.email ?? authUser?.user?.email ?? "",
-        full_name: data.full_name ?? meta['full_name'] ?? "",
+        full_name: data.full_name ?? meta["full_name"] ?? "",
         username:
           data.username ??
-          meta['username'] ??
+          meta["username"] ??
           (authUser?.user?.email ? authUser.user.email.split("@")[0] : data.userId),
         phone: data.phone || null,
       });
@@ -416,16 +394,14 @@ export const adminResendConfirmation = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
-    const { data: authUser, error: getErr } = await supabaseAdmin.auth.admin.getUserById(
-      data.userId,
-    );
+    const { data: authUser, error: getErr } = await supabaseAdmin.auth.admin.getUserById(data.userId);
     if (getErr) throw new Error(getErr.message);
     const email = authUser?.user?.email;
     if (!email) throw new Error("This account has no email address.");
 
     const { createClient } = await import("@supabase/supabase-js");
-    const key = process.env['SUPABASE_PUBLISHABLE_KEY'] ?? process.env['SUPABASE_ANON_KEY']!;
-    const anon = createClient(process.env['SUPABASE_URL']!, key, {
+    const { url, publishableKey: key } = getSupabasePublicConfig();
+    const anon = createClient(url, key, {
       auth: { persistSession: false, autoRefreshToken: false },
       global: {
         fetch: (input: any, init?: any) => {

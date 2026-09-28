@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";
 import { z } from "zod";
+import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 
 export type PlanRow = {
   slug: string;
@@ -51,18 +52,14 @@ export type PlanUsage = {
   is_admin: boolean;
 };
 
-
-
 const PLANS_CACHE_TTL_MS = 60_000;
 let cachedPlans: { at: number; data: PlanRow[] } | null = null;
 let inFlightPlans: Promise<PlanRow[]> | null = null;
 
 async function fetchPlans(): Promise<PlanRow[]> {
-  const url = process.env["VITE_SUPABASE_URL"] || process.env["SUPABASE_URL"];
-  const key = process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] || process.env["SUPABASE_PUBLISHABLE_KEY"];
-  if (!url || !key) return [];
+  const { url, publishableKey } = getSupabasePublicConfig();
   const { createClient } = await import("@supabase/supabase-js");
-  const client = createClient(url, key, { auth: { persistSession: false } });
+  const client = createClient(url, publishableKey, { auth: { persistSession: false } });
   const { data, error } = await (client.from as any)("plans").select("*").order("sort");
   if (error) throw new Error(error.message);
   return (data ?? []) as PlanRow[];
@@ -270,9 +267,7 @@ export const claimFreePlanWithPromo = createServerFn({ method: "POST" })
         if (res.ok) {
           const body = await res.json();
           const list = (body?.data ?? []) as any[];
-          const match = list.find(
-            (x: any) => (x.code ?? "").toUpperCase() === cleanCode,
-          );
+          const match = list.find((x: any) => (x.code ?? "").toUpperCase() === cleanCode);
           if (match) {
             discountObj = match;
             break;

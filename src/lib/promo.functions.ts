@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";
+import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 
 const envSchema = z.enum(["sandbox", "live"]).default("sandbox");
 
@@ -85,7 +86,7 @@ export async function doesPromoApplyToPlan(
   // 4. Query plan from Supabase to check plan external price IDs and aliases
   if (planSlug) {
     try {
-      const url = process.env["VITE_SUPABASE_URL"] || process.env["SUPABASE_URL"];
+      const { url } = getSupabasePublicConfig();
       const key = process.env["SUPABASE_SERVICE_ROLE_KEY"];
       if (url && key) {
         const { createClient } = await import("@supabase/supabase-js");
@@ -305,9 +306,7 @@ export const adminCreateDiscount = createServerFn({ method: "POST" })
       code: data.code.toUpperCase(),
       type: data.type,
       amount:
-        data.type === "percentage"
-          ? String(data.amount)
-          : String(Math.round(data.amount * 100)),
+        data.type === "percentage" ? String(data.amount) : String(Math.round(data.amount * 100)),
       enabled_for_checkout: true,
       recur: data.recur,
     };

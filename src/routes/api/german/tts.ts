@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 
 const MAX_TTS_CHARS = 240;
 
@@ -13,10 +14,8 @@ export const Route = createFileRoute("/api/german/tts")({
         if (!token || token.split(".").length !== 3) {
           return new Response("Unauthorized", { status: 401 });
         }
-        const supabaseUrl = process.env["SUPABASE_URL"];
-        const anonKey = process.env["SUPABASE_PUBLISHABLE_KEY"];
-        if (!supabaseUrl || !anonKey) return new Response("Backend not configured", { status: 503 });
-        const supabase = createClient(supabaseUrl, anonKey, {
+        const { url, publishableKey } = getSupabasePublicConfig();
+        const supabase = createClient(url, publishableKey, {
           auth: { persistSession: false, autoRefreshToken: false },
         });
         const { data: claims, error: claimsError } = await supabase.auth.getClaims(token);
@@ -31,12 +30,13 @@ export const Route = createFileRoute("/api/german/tts")({
           return new Response("Invalid request", { status: 400 });
         }
 
-        const text = String(payload.text ?? "").trim().slice(0, MAX_TTS_CHARS);
+        const text = String(payload.text ?? "")
+          .trim()
+          .slice(0, MAX_TTS_CHARS);
         if (!text) return new Response("Text required", { status: 400 });
 
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("High-quality voice is unavailable", { status: 503 });
-
 
         const speed = Math.max(0.65, Math.min(1.05, Number(payload.rate ?? 0.92)));
 

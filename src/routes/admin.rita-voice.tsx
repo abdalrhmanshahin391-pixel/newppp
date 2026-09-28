@@ -1,26 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  CheckCircle2,
-  ExternalLink,
-  Eye,
-  EyeOff,
-  KeyRound,
-  Loader2,
-  RefreshCw,
-  Trash2,
-  XCircle,
-} from "lucide-react";
+import { CheckCircle2, ExternalLink, KeyRound, Loader2, RefreshCw, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { guardRedirect } from "@/lib/guard-redirect";
-import {
-  deleteRitaV3Key,
-  getRitaV3Admin,
-  saveRitaV3Key,
-  testRitaV3ControlPlane,
-} from "@/lib/rita-v3.functions";
+import { getRitaV3Admin, testRitaV3ControlPlane } from "@/lib/rita-v3.functions";
+
+const LOVABLE_SECRETS_URL =
+  "https://lovable.dev/projects/84f9560d-cda3-444b-b692-31491571e090?view=more&subview=cloud&section=secrets";
 
 export const Route = createFileRoute("/admin/rita-voice")({
   head: () => ({ meta: [{ title: "Rita Voice v3 — Admin" }] }),
@@ -60,34 +48,13 @@ const PROVIDERS = [
   },
 ] as const;
 
-type Provider = (typeof PROVIDERS)[number]["id"];
-
 function RitaVoiceAdmin() {
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const getAdmin = useServerFn(getRitaV3Admin);
-  const saveKey = useServerFn(saveRitaV3Key);
-  const deleteKey = useServerFn(deleteRitaV3Key);
   const testPlane = useServerFn(testRitaV3ControlPlane);
   const [data, setData] = useState<Awaited<ReturnType<typeof getAdmin>> | null>(null);
-  const [drafts, setDrafts] = useState<Record<Provider, string>>({
-    soniox: "",
-    groq: "",
-    google: "",
-    pipecat_public: "",
-    pipecat_private: "",
-  });
-  const [visible, setVisible] = useState<Record<Provider, boolean>>({
-    soniox: false,
-    groq: false,
-    google: false,
-    pipecat_public: false,
-    pipecat_private: false,
-  });
-  const [feedback, setFeedback] = useState<
-    Partial<Record<Provider, { kind: "success" | "warning" | "error"; message: string }>>
-  >({});
-  const [busy, setBusy] = useState<Provider | "refresh" | "test" | null>(null);
+  const [busy, setBusy] = useState<"refresh" | "test" | null>(null);
 
   useEffect(() => {
     if (!loading && !user) void navigate({ to: "/login" });
@@ -107,44 +74,6 @@ function RitaVoiceAdmin() {
   useEffect(() => {
     if (isAdmin) void refresh();
   }, [isAdmin]);
-
-  async function save(provider: Provider) {
-    const apiKey = drafts[provider].trim();
-    if (!apiKey) return;
-    setBusy(provider);
-    setFeedback((current) => ({ ...current, [provider]: undefined }));
-    try {
-      const result = await saveKey({ data: { provider, apiKey } });
-      setDrafts((current) => ({ ...current, [provider]: "" }));
-      const message = result.synced ? `${provider} saved and synced to the worker` : result.reason;
-      setFeedback((current) => ({
-        ...current,
-        [provider]: {
-          kind: result.synced || provider.startsWith("pipecat_") ? "success" : "warning",
-          message,
-        },
-      }));
-      toast.success(message);
-      setData(await getAdmin());
-    } catch (error) {
-      const message = String((error as Error)?.message ?? error);
-      setFeedback((current) => ({ ...current, [provider]: { kind: "error", message } }));
-      toast.error(message);
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function remove(provider: Provider) {
-    if (!confirm(`Remove the Rita v3 ${provider} key?`)) return;
-    setBusy(provider);
-    try {
-      await deleteKey({ data: { provider } });
-      setData(await getAdmin());
-    } finally {
-      setBusy(null);
-    }
-  }
 
   if (loading || !isAdmin)
     return (
@@ -220,6 +149,24 @@ function RitaVoiceAdmin() {
           Rita worker redeploy.
         </section>
 
+        <section className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+          <div>
+            <p className="font-black text-emerald-900">Keys are protected by Lovable Cloud</p>
+            <p className="mt-1 text-sm text-emerald-800">
+              This page never stores or reveals secret values. Add or replace them only in Lovable
+              Secrets, then refresh this status page.
+            </p>
+          </div>
+          <a
+            href={LOVABLE_SECRETS_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-800 px-4 py-3 font-bold text-white"
+          >
+            Manage Lovable Secrets <ExternalLink size={16} />
+          </a>
+        </section>
+
         <section className="mt-6 grid gap-4 lg:grid-cols-2">
           {PROVIDERS.map((provider) => {
             const configured = Boolean(data?.configured?.[provider.id]);
@@ -245,8 +192,8 @@ function RitaVoiceAdmin() {
                       {workerConfigured
                         ? "Available to the running worker configuration"
                         : configured
-                          ? "Stored in RitaJet, not synced to the worker"
-                          : "Not configured"}
+                          ? "Configured in Lovable; worker sync is still pending"
+                          : "Not configured in Lovable Secrets"}
                     </p>
                   </div>
                   <a
@@ -258,54 +205,15 @@ function RitaVoiceAdmin() {
                     <ExternalLink size={18} />
                   </a>
                 </div>
-                <div className="relative mt-4">
-                  <input
-                    type={visible[provider.id] ? "text" : "password"}
-                    value={drafts[provider.id]}
-                    onChange={(event) =>
-                      setDrafts((current) => ({ ...current, [provider.id]: event.target.value }))
-                    }
-                    placeholder={
-                      configured ? "Configured — paste only to replace" : "Paste the API key"
-                    }
-                    className="w-full rounded-xl border border-[#ddd7df] px-4 py-3 pr-12 outline-none focus:border-[#8c5ee7]"
-                  />
-                  <button
-                    onClick={() =>
-                      setVisible((current) => ({
-                        ...current,
-                        [provider.id]: !current[provider.id],
-                      }))
-                    }
-                    className="absolute right-3 top-3.5 text-[#77717a]"
-                  >
-                    {visible[provider.id] ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => void save(provider.id)}
-                    disabled={!drafts[provider.id].trim() || busy === provider.id}
-                    className="flex-1 rounded-xl bg-[#21172c] px-4 py-2.5 font-bold text-white disabled:opacity-40"
-                  >
-                    {busy === provider.id ? "Saving…" : configured ? "Replace" : "Save"}
-                  </button>
-                  {configured && (
-                    <button
-                      onClick={() => void remove(provider.id)}
-                      className="rounded-xl border border-red-200 px-3 text-red-700"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
-                </div>
-                {feedback[provider.id] && (
-                  <p
-                    className={`mt-3 rounded-xl px-3 py-2 text-xs font-bold ${feedback[provider.id]?.kind === "error" ? "bg-red-50 text-red-700" : feedback[provider.id]?.kind === "warning" ? "bg-amber-50 text-amber-800" : "bg-emerald-50 text-emerald-700"}`}
-                  >
-                    {feedback[provider.id]?.message}
-                  </p>
-                )}
+                <a
+                  href={LOVABLE_SECRETS_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[#ddd7df] px-4 py-2.5 text-sm font-bold text-[#5c3f7c]"
+                >
+                  {configured ? "Replace in Lovable Secrets" : "Add in Lovable Secrets"}
+                  <ExternalLink size={15} />
+                </a>
               </article>
             );
           })}
@@ -314,9 +222,9 @@ function RitaVoiceAdmin() {
         <section className="mt-6 rounded-3xl bg-[#241932] p-6 text-white">
           <h2 className="text-xl font-black">Deployment check</h2>
           <p className="mt-2 text-sm text-white/65">
-            Saving provider keys here protects the configuration inside RitaJet. Before deployment,
-            the same Soniox, Groq, and Google keys must exist in the Pipecat secret set{" "}
-            <code>ritajet-voice-v3-secrets</code>.
+            Lovable Secrets supply the website control plane. Soniox, Groq, and Google must also
+            exist in the Pipecat secret set <code>ritajet-voice-v3-secrets</code> before the worker
+            can serve calls.
           </p>
           <button
             onClick={async () => {

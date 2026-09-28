@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 
 /** Transcribes a short German recording so the client can score the pronunciation. */
 export const Route = createFileRoute("/api/german/score")({
@@ -12,11 +13,8 @@ export const Route = createFileRoute("/api/german/score")({
           return new Response("Unauthorized", { status: 401 });
         }
 
-        const url = process.env["SUPABASE_URL"];
-        const anon = process.env["SUPABASE_PUBLISHABLE_KEY"];
-        if (!url || !anon) return new Response("Backend not configured", { status: 503 });
-
-        const supabase = createClient(url, anon, {
+        const { url, publishableKey } = getSupabasePublicConfig();
+        const supabase = createClient(url, publishableKey, {
           auth: { persistSession: false, autoRefreshToken: false },
         });
         const { data: claims, error } = await supabase.auth.getClaims(token);

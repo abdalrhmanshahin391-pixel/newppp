@@ -1,15 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";
 import {
   RITA_V3_MODELS,
-  deleteRitaV3WorkerSecret,
   getRitaV3WorkerSecretStatus,
   resolveRitaV3Key,
   ritaV3Environment,
-  syncRitaV3WorkerSecret,
 } from "@/lib/rita-v3.server";
 
 const providers = ["soniox", "groq", "google", "pipecat_public", "pipecat_private"] as const;
@@ -26,11 +23,7 @@ export const getRitaV3Admin = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase } = await requireAdmin(context);
     const start = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const [{ data: keys }, { data: sessions }, { data: events }] = await Promise.all([
-      (supabase.from as any)("admin_ai_keys")
-        .select("provider,updated_at")
-        .eq("purpose", "rita")
-        .in("provider", providers as unknown as string[]),
+    const [{ data: sessions }, { data: events }] = await Promise.all([
       (supabase.from as any)("rita_v3_sessions")
         .select("id,status,user_id,started_at")
         .gte("started_at", start),
@@ -76,8 +69,7 @@ export const getRitaV3Admin = createServerFn({ method: "GET" })
       configured: Object.fromEntries(
         providers.map((provider) => [
           provider,
-          Boolean((keys ?? []).find((item: any) => item.provider === provider)) ||
-            Boolean(resolvedKeys.find(([name]) => name === provider)?.[1]),
+          Boolean(resolvedKeys.find(([name]) => name === provider)?.[1]),
         ]),
       ),
       workerConfigured: {
@@ -97,58 +89,6 @@ export const getRitaV3Admin = createServerFn({ method: "GET" })
         latencyP99: percentile(0.99),
       },
     };
-  });
-
-export const saveRitaV3Key = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((value: unknown) =>
-    z
-      .object({ provider: z.enum(providers), apiKey: z.string().trim().min(8).max(1000) })
-      .parse(value),
-  )
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = await requireAdmin(context);
-    const { error } = await (supabase.from as any)("admin_ai_keys").upsert(
-      {
-        provider: data.provider,
-        purpose: "rita",
-        slot: 1,
-        api_key: data.apiKey,
-        updated_by: userId,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "provider,slot,purpose" },
-    );
-    if (error) throw error;
-    let sync = { synced: false, reason: "Control-plane keys are stored only in RitaJet." };
-    if (data.provider === "soniox" || data.provider === "groq" || data.provider === "google") {
-      try {
-        sync = await syncRitaV3WorkerSecret(data.provider, data.apiKey);
-      } catch (cause) {
-        sync = {
-          synced: false,
-          reason: `Saved in RitaJet, but worker sync failed: ${cause instanceof Error ? cause.message : "unknown error"}`,
-        };
-      }
-    }
-    return { ok: true, ...sync };
-  });
-
-export const deleteRitaV3Key = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((value: unknown) => z.object({ provider: z.enum(providers) }).parse(value))
-  .handler(async ({ data, context }) => {
-    const { supabase } = await requireAdmin(context);
-    const { error } = await (supabase.from as any)("admin_ai_keys")
-      .delete()
-      .eq("provider", data.provider)
-      .eq("purpose", "rita")
-      .eq("slot", 1);
-    if (error) throw error;
-    if (data.provider === "soniox" || data.provider === "groq" || data.provider === "google") {
-      await deleteRitaV3WorkerSecret(data.provider);
-    }
-    return { ok: true };
   });
 
 export const testRitaV3ControlPlane = createServerFn({ method: "GET" })

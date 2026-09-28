@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 
 export type BootstrapSettings = Record<string, string | number | boolean | null>;
 
@@ -25,9 +26,7 @@ let cached: { at: number; data: BootstrapData } | null = null;
 let inFlight: Promise<BootstrapData> | null = null;
 
 async function load(): Promise<BootstrapData> {
-  const url = process.env["SUPABASE_URL"];
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
-  if (!url || !key) return EMPTY;
+  const { url, publishableKey: key } = getSupabasePublicConfig();
 
   const client = createClient(url, key, {
     auth: { persistSession: false },
@@ -58,7 +57,9 @@ async function load(): Promise<BootstrapData> {
     const signed = paths.length
       ? (await client.storage.from("site-media").createSignedUrls(paths, 60 * 60 * 6)).data
       : [];
-    const byPath = new Map((signed ?? []).map((s: any) => [s.path as string, s.signedUrl as string]));
+    const byPath = new Map(
+      (signed ?? []).map((s: any) => [s.path as string, s.signedUrl as string]),
+    );
     for (const row of rows) {
       const url = /^https?:\/\//i.test(row.path) ? row.path : byPath.get(row.path);
       if (url) siteImages[row.key] = url;

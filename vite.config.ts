@@ -6,24 +6,8 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
-import { loadEnv } from "vite";
 import path from "node:path";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
-
-// Public connection values for this Lovable Cloud project. These values are
-// intentionally browser-visible; privileged access stays in Lovable Secrets.
-const LOVABLE_CLOUD_PUBLIC_BACKEND = {
-  SUPABASE_URL: "https://aeawoexywnyankbeqkmz.supabase.co",
-  SUPABASE_PUBLISHABLE_KEY: "sb_publishable_HPfzBNn4ii7aDgi0HjwziQ_SZBfhXWO",
-  SUPABASE_PROJECT_ID: "aeawoexywnyankbeqkmz",
-};
-for (const [key, value] of Object.entries(LOVABLE_CLOUD_PUBLIC_BACKEND)) {
-  process.env[key] ||= value;
-  process.env[`VITE_${key}`] ||= value;
-}
-
-// Load non-VITE_ env vars into process.env for server routes (never into the client bundle).
-Object.assign(process.env, loadEnv(process.env["NODE_ENV"] ?? "development", process.cwd(), ""));
 
 export default defineConfig({
   tanstackStart: {
@@ -41,15 +25,22 @@ export default defineConfig({
       alias: [
         // Pipecat's browser SDK uses the standard EventEmitter API. Force the
         // maintained browser shim instead of Vite's empty node builtin stub.
-        { find: /^events$/, replacement: path.resolve(process.cwd(), "node_modules/events/events.js") },
-        { find: "entities/lib/decode.js", replacement: path.resolve(process.cwd(), "node_modules/entities/lib/decode.js") },
-        { find: "entities/lib/encode.js", replacement: path.resolve(process.cwd(), "node_modules/entities/lib/encode.js") },
+        {
+          find: /^events$/,
+          replacement: path.resolve(process.cwd(), "node_modules/events/events.js"),
+        },
+        {
+          find: "entities/lib/decode.js",
+          replacement: path.resolve(process.cwd(), "node_modules/entities/lib/decode.js"),
+        },
+        {
+          find: "entities/lib/encode.js",
+          replacement: path.resolve(process.cwd(), "node_modules/entities/lib/encode.js"),
+        },
         // Exact match only: parse5 imports "entities/decode" from its own
         // nested entities v6 copy, which must not be rewritten to v4.5.0.
         { find: /^entities$/, replacement: path.resolve(process.cwd(), "node_modules/entities") },
       ],
-
     },
   },
 });
-

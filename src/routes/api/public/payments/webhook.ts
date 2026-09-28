@@ -1,14 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { verifyWebhook, EventName, type PaddleEnv } from "@/lib/paddle.server";
+import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 
 let _supabase: ReturnType<typeof createClient> | null = null;
 function getSupabase() {
   if (!_supabase) {
-    const url = process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"]!;
+    const { url } = getSupabasePublicConfig();
     const key = process.env["SUPABASE_SERVICE_ROLE_KEY"];
     if (!url || !key) {
-      throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY for payment webhook");
+      throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY for payment webhook");
     }
     _supabase = createClient(url, key, { auth: { persistSession: false } });
   }
@@ -31,11 +32,7 @@ const GRANT_COLUMNS = [
 async function planForPrice(priceId?: string | null, planSlug?: string | null) {
   const db = getSupabase();
   if (planSlug) {
-    const { data } = await (db as any)
-      .from("plans")
-      .select("*")
-      .eq("slug", planSlug)
-      .maybeSingle();
+    const { data } = await (db as any).from("plans").select("*").eq("slug", planSlug).maybeSingle();
     if (data) return data as Record<string, any>;
   }
   if (!priceId) return null;
@@ -51,12 +48,18 @@ async function planForPrice(priceId?: string | null, planSlug?: string | null) {
 
 async function putOnPlan(userId: string, slug: string) {
   const db = getSupabase();
-  const { error } = await (db as any).rpc("activate_user_plan", { _user_id: userId, _plan_slug: slug });
+  const { error } = await (db as any).rpc("activate_user_plan", {
+    _user_id: userId,
+    _plan_slug: slug,
+  });
   if (error) {
     console.warn("RPC activate_user_plan error, trying direct upsert:", error);
     await (db as any)
       .from("user_plans")
-      .upsert({ user_id: userId, plan_slug: slug, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+      .upsert(
+        { user_id: userId, plan_slug: slug, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" },
+      );
   }
 }
 
