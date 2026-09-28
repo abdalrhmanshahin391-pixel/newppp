@@ -10,6 +10,18 @@ import { loadEnv } from "vite";
 import path from "node:path";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 
+// Public connection values for this Lovable Cloud project. These values are
+// intentionally browser-visible; privileged access stays in Lovable Secrets.
+const LOVABLE_CLOUD_PUBLIC_BACKEND = {
+  SUPABASE_URL: "https://aeawoexywnyankbeqkmz.supabase.co",
+  SUPABASE_PUBLISHABLE_KEY: "sb_publishable_HPfzBNn4ii7aDgi0HjwziQ_SZBfhXWO",
+  SUPABASE_PROJECT_ID: "aeawoexywnyankbeqkmz",
+};
+for (const [key, value] of Object.entries(LOVABLE_CLOUD_PUBLIC_BACKEND)) {
+  process.env[key] ||= value;
+  process.env[`VITE_${key}`] ||= value;
+}
+
 // Load non-VITE_ env vars into process.env for server routes (never into the client bundle).
 Object.assign(process.env, loadEnv(process.env["NODE_ENV"] ?? "development", process.cwd(), ""));
 
