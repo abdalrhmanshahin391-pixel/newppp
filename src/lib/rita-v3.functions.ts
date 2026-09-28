@@ -7,6 +7,7 @@ import {
   RITA_V3_MODELS,
   deleteRitaV3WorkerSecret,
   getRitaV3WorkerSecretStatus,
+  resolveRitaV3Key,
   ritaV3Environment,
   syncRitaV3WorkerSecret,
 } from "@/lib/rita-v3.server";
@@ -37,9 +38,29 @@ export const getRitaV3Admin = createServerFn({ method: "GET" })
         .select("event_name,value_ms")
         .gte("created_at", start),
     ]);
-    const [env, workerSecrets] = await Promise.all([
+    const [env, workerSecrets, resolvedKeys] = await Promise.all([
       ritaV3Environment(),
       getRitaV3WorkerSecretStatus(),
+      Promise.all(
+        providers.map(
+          async (provider) =>
+            [
+              provider,
+              Boolean(
+                await resolveRitaV3Key(
+                  provider,
+                  {
+                    soniox: "SONIOX_API_KEY",
+                    groq: "GROQ_API_KEY",
+                    google: "GOOGLE_API_KEY",
+                    pipecat_public: "PIPECAT_PUBLIC_API_KEY",
+                    pipecat_private: "PIPECAT_PRIVATE_API_KEY",
+                  }[provider],
+                ),
+              ),
+            ] as const,
+        ),
+      ),
     ]);
     const firstAudio = (events ?? [])
       .filter((item: any) => item.event_name === "first_audio" && Number.isFinite(item.value_ms))
@@ -56,7 +77,7 @@ export const getRitaV3Admin = createServerFn({ method: "GET" })
         providers.map((provider) => [
           provider,
           Boolean((keys ?? []).find((item: any) => item.provider === provider)) ||
-            (provider === "pipecat_public" ? Boolean(env.publicKey) : provider === "pipecat_private" ? Boolean(env.privateKey) : false),
+            Boolean(resolvedKeys.find(([name]) => name === provider)?.[1]),
         ]),
       ),
       workerConfigured: {
@@ -81,18 +102,23 @@ export const getRitaV3Admin = createServerFn({ method: "GET" })
 export const saveRitaV3Key = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((value: unknown) =>
-    z.object({ provider: z.enum(providers), apiKey: z.string().trim().min(8).max(1000) }).parse(value),
+    z
+      .object({ provider: z.enum(providers), apiKey: z.string().trim().min(8).max(1000) })
+      .parse(value),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = await requireAdmin(context);
-    const { error } = await (supabase.from as any)("admin_ai_keys").upsert({
-      provider: data.provider,
-      purpose: "rita",
-      slot: 1,
-      api_key: data.apiKey,
-      updated_by: userId,
-      updated_at: new Date().toISOString(),
-    });
+    const { error } = await (supabase.from as any)("admin_ai_keys").upsert(
+      {
+        provider: data.provider,
+        purpose: "rita",
+        slot: 1,
+        api_key: data.apiKey,
+        updated_by: userId,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "provider,slot,purpose" },
+    );
     if (error) throw error;
     let sync = { synced: false, reason: "Control-plane keys are stored only in RitaJet." };
     if (data.provider === "soniox" || data.provider === "groq" || data.provider === "google") {
