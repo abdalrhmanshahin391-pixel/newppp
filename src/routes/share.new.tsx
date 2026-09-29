@@ -240,7 +240,6 @@ function ShareNew() {
                 simply delete one of the items you shared today in{" "}
                 <Link
                   to="/share" search={{ type: "flashcards" }}
-                  search={{ type: "flashcards" }}
                   className="font-black text-red-900 underline"
                 >
                   My Shared Items

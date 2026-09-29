@@ -287,10 +287,10 @@ export function QuestionSetDetailPage() {
                   <span className="rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] font-black text-[#23201d]">
                     {set.save_count} saves
                   </span>
-                  {set.rating_count > 0 ? (
+                  {(set.rating_count ?? 0) > 0 ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-black text-amber-900 shadow-sm">
                       <Star size={11} className="fill-amber-500 text-amber-500" />
-                      {set.rating_avg.toFixed(1)} ({set.rating_count})
+                      {(set.rating_avg ?? 0).toFixed(1)} ({set.rating_count ?? 0})
                     </span>
                   ) : (
                     <span className="rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] font-black text-[#23201d]">

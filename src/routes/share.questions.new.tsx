@@ -243,7 +243,7 @@ export function NewQuestionSetPage() {
 
       const newSetId = await publishQuestionSet({
         title: finalTitle,
-        description: description.trim() || null,
+        description: description.trim(),
         source_type: sourceType,
         subject: subjectLabel,
         cover,
@@ -320,7 +320,7 @@ export function NewQuestionSetPage() {
             </Link>
           ) : (
             <Link
-              to="/share"
+              to="/share" search={{ type: "flashcards" }}
               className="inline-flex items-center gap-1.5 text-sm font-black text-[#6b655c] transition hover:text-[#23201d]"
             >
               <ArrowLeft size={15} /> Back to shared resources
@@ -398,7 +398,7 @@ export function NewQuestionSetPage() {
               <p className="font-bold">Daily sharing limit reached (5/5 items shared today)</p>
               <p className="mt-1 leading-relaxed">
                 You have used all 5 sharing slots today. Simply delete an item you shared today in{" "}
-                <Link to="/share" className="font-black text-red-900 underline">
+                <Link to="/share" search={{ type: "flashcards" }} className="font-black text-red-900 underline">
                   My Shared Items
                 </Link>{" "}
                 to immediately recover an upload slot!
