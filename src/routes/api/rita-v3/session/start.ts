@@ -7,6 +7,7 @@ import {
   updateRitaV3Session,
 } from "@/lib/rita-v3.server";
 import { cleanLanguage, normalizePersonality } from "@/lib/rita-voice.server";
+import { classifyPipecatStartFailure } from "@/lib/rita-v3-diagnostics";
 
 export const Route = createFileRoute("/api/rita-v3/session/start")({
   server: {
@@ -18,7 +19,9 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
         const personality = normalizePersonality(body.personality);
         const language = cleanLanguage(body.language);
         const dialect = String(body.dialect ?? "ar-JO").slice(0, 32) || "ar-JO";
-        const mode = ["free_conversation", "guided_lesson", "pronunciation_drill"].includes(String(body.mode))
+        const mode = ["free_conversation", "guided_lesson", "pronunciation_drill"].includes(
+          String(body.mode),
+        )
           ? String(body.mode)
           : "free_conversation";
         const env = await ritaV3Environment();
@@ -46,13 +49,17 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
         } catch (error) {
           console.error("Rita v3 session persistence failed", error);
           return Response.json(
-            { ok: false, code: "session_storage_failed", message: "Rita session storage is not ready." },
+            {
+              ok: false,
+              code: "session_storage_failed",
+              message: "Rita session storage is not ready.",
+            },
             { status: 503 },
           );
         }
 
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15_000);
+        const timeout = setTimeout(() => controller.abort(), 45_000);
         try {
           const upstream = await fetch(
             `https://api.pipecat.daily.co/v1/public/${encodeURIComponent(env.agentName)}/start`,
@@ -78,21 +85,29 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           );
           const payload = (await upstream.json().catch(() => ({}))) as Record<string, unknown>;
           if (!upstream.ok || !payload.dailyRoom || !payload.dailyToken) {
+            const failure = classifyPipecatStartFailure(upstream.status, payload, upstream.headers);
             await updateRitaV3Session(sessionId, access.auth.userId, {
               status: "failed",
-              error_code: String(payload.code ?? upstream.status),
+              error_code: failure.code,
+              model_proof: {
+                ...RITA_V3_MODELS,
+                startDiagnostic: {
+                  code: failure.code,
+                  upstreamStatus: failure.upstreamStatus,
+                  requestId: failure.requestId,
+                },
+              },
             });
-            const isCapacity = upstream.status === 429;
             return Response.json(
               {
                 ok: false,
-                code: isCapacity ? "capacity_busy" : "pipecat_start_failed",
-                message: isCapacity
-                  ? "Rita is busy right now. Please retry in a moment."
-                  : "Rita v3 could not start. The old voice system was not used.",
+                ...failure,
+                info: failure.message,
+                detail: failure.message,
+                fallbackUsed: false,
                 models: RITA_V3_MODELS,
               },
-              { status: isCapacity ? 429 : 502 },
+              { status: upstream.status >= 400 ? upstream.status : 502 },
             );
           }
           await updateRitaV3Session(sessionId, access.auth.userId, {
@@ -111,18 +126,31 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             { headers: { "Cache-Control": "no-store" } },
           );
         } catch (error) {
+          const timedOut = error instanceof DOMException && error.name === "AbortError";
+          const code = timedOut ? "cold_start_timeout" : "pipecat_network_error";
+          const message = timedOut
+            ? "Rita's Pipecat worker did not wake within 45 seconds. Check its deployment health and logs."
+            : "The Rita website could not reach Pipecat. Check the network and Pipecat service status.";
           await updateRitaV3Session(sessionId, access.auth.userId, {
             status: "failed",
-            error_code: error instanceof DOMException && error.name === "AbortError" ? "start_timeout" : "network_error",
+            error_code: code,
+            model_proof: {
+              ...RITA_V3_MODELS,
+              startDiagnostic: { code },
+            },
           }).catch(() => undefined);
           return Response.json(
             {
               ok: false,
-              code: "pipecat_unreachable",
-              message: "Rita v3 did not answer in time. Please retry; no legacy fallback was started.",
+              code,
+              message,
+              info: message,
+              detail: message,
+              retryable: true,
+              fallbackUsed: false,
               models: RITA_V3_MODELS,
             },
-            { status: 504 },
+            { status: timedOut ? 504 : 502 },
           );
         } finally {
           clearTimeout(timeout);

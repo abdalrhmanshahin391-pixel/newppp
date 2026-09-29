@@ -39,8 +39,7 @@ type ExtractionResult = {
   rememberDestination?: boolean;
 };
 
-const MODEL_PROOF =
-  "Soniox stt-rt-v5 → Groq GPT-OSS 120B → Gemini 3.8 Flash-Lite TTS · Achernar";
+const MODEL_PROOF = "Soniox stt-rt-v5 → Groq GPT-OSS 120B → Gemini 3.8 Flash-Lite TTS · Achernar";
 
 async function authHeaders() {
   const { data } = await supabase.auth.getSession();
@@ -50,7 +49,12 @@ async function authHeaders() {
 }
 
 function humanError(error: unknown) {
-  if (error instanceof Error) return error.message;
+  if (error instanceof Error && error.message.trim()) return error.message.trim();
+  if (error && typeof error === "object") {
+    const candidate = error as { info?: unknown; detail?: unknown; message?: unknown };
+    const text = String(candidate.info ?? candidate.detail ?? candidate.message ?? "").trim();
+    if (text) return text;
+  }
   return "Rita v3 could not start. No old voice system was used.";
 }
 
@@ -78,7 +82,9 @@ export function RitaRealtimeV3() {
     germanSubjects: [],
     germanSubtopics: [],
   });
-  const rememberedDestination = useRef<{ target: SaveTarget; id: string; label: string } | null>(null);
+  const rememberedDestination = useRef<{ target: SaveTarget; id: string; label: string } | null>(
+    null,
+  );
 
   const [status, setStatus] = useState("Ready to start");
   const [mood, setMood] = useState<RitaMood>("ready");
@@ -111,22 +117,21 @@ export function RitaRealtimeV3() {
     if (!loading && !user) void navigate({ to: "/login" });
   }, [loading, navigate, user]);
 
-  const metric = useCallback(async (
-    name: string,
-    valueMs?: number,
-    metadata?: Record<string, unknown>,
-  ) => {
-    if (!sessionId.current) return;
-    try {
-      await fetch("/api/rita-v3/session/metrics", {
-        method: "POST",
-        headers: await authHeaders(),
-        body: JSON.stringify({ sessionId: sessionId.current, name, valueMs, metadata }),
-      });
-    } catch {
-      // Metrics never interrupt a lesson.
-    }
-  }, []);
+  const metric = useCallback(
+    async (name: string, valueMs?: number, metadata?: Record<string, unknown>) => {
+      if (!sessionId.current) return;
+      try {
+        await fetch("/api/rita-v3/session/metrics", {
+          method: "POST",
+          headers: await authHeaders(),
+          body: JSON.stringify({ sessionId: sessionId.current, name, valueMs, metadata }),
+        });
+      } catch {
+        // Metrics never interrupt a lesson.
+      }
+    },
+    [],
+  );
 
   const fetchDestinations = useCallback(async () => {
     if (
@@ -143,85 +148,97 @@ export function RitaRealtimeV3() {
     return payload;
   }, []);
 
-  const runExtraction = useCallback(async (spoken: string, reply: string) => {
-    if (!spoken.trim() || !reply.trim()) return;
-    try {
-      const response = await fetch("/api/rita/extract", {
-        method: "POST",
-        headers: await authHeaders(),
-        body: JSON.stringify({ spoken, reply }),
-      });
-      if (!response.ok) return;
-      const data = (await response.json()) as ExtractionResult;
-      if (!data.learningItems?.length) return;
-      setLearning((current) => {
-        const byKey = new Map(current.map((item) => [`${item.language}:${item.term.toLowerCase()}`, item]));
-        for (const item of data.learningItems ?? [])
-          byKey.set(`${item.language}:${item.term.toLowerCase()}`, item);
-        return [...byKey.values()];
-      });
-      const requestedTarget = data.saveRequest && data.saveRequest !== "none" ? data.saveRequest : null;
-      if (requestedTarget) setTarget(requestedTarget);
-
-      let selected = rememberedDestination.current;
-      if (data.destinationName || requestedTarget) {
-        const payload = await fetchDestinations();
-        const optionsFor = (nextTarget: SaveTarget) =>
-          nextTarget === "flashcards"
-            ? payload.flashSubjects.map((item) => ({ id: item.id, label: item.name }))
-            : payload.germanSubtopics.map((item) => ({
-                id: item.id,
-                label: `${payload.germanSubjects.find((parent) => parent.id === item.subject_id)?.name ?? "German"} / ${item.name}`,
-              }));
-        const nextTarget = requestedTarget ?? selected?.target ?? "flashcards";
-        const wanted = String(data.destinationName ?? "").trim().toLocaleLowerCase();
-        const match = wanted
-          ? optionsFor(nextTarget).find((item) => item.label.toLocaleLowerCase().includes(wanted))
-          : undefined;
-        if (match) {
-          selected = { target: nextTarget, id: match.id, label: match.label };
-          setTarget(nextTarget);
-          setDestinationId(match.id);
-          if (data.rememberDestination) rememberedDestination.current = selected;
-        } else if (selected && (!requestedTarget || selected.target === requestedTarget)) {
-          setTarget(selected.target);
-          setDestinationId(selected.id);
-        }
-      }
-
-      if (requestedTarget && selected?.id && selected.target === requestedTarget) {
-        const saveResponse = await fetch("/api/rita/learning", {
+  const runExtraction = useCallback(
+    async (spoken: string, reply: string) => {
+      if (!spoken.trim() || !reply.trim()) return;
+      try {
+        const response = await fetch("/api/rita/extract", {
           method: "POST",
           headers: await authHeaders(),
-          body: JSON.stringify({
-            action: "save",
-            target: selected.target,
-            destinationId: selected.id,
-            items: data.learningItems,
-          }),
+          body: JSON.stringify({ spoken, reply }),
         });
-        const saved = (await saveResponse.json().catch(() => ({}))) as {
-          saved?: number;
-          error?: string;
-        };
-        setNotice(
-          saveResponse.ok
-            ? `${saved.saved ?? 0} item(s) saved to ${selected.label}.`
-            : saved.error ?? "The language items were collected but could not be saved.",
-        );
+        if (!response.ok) return;
+        const data = (await response.json()) as ExtractionResult;
+        if (!data.learningItems?.length) return;
+        setLearning((current) => {
+          const byKey = new Map(
+            current.map((item) => [`${item.language}:${item.term.toLowerCase()}`, item]),
+          );
+          for (const item of data.learningItems ?? [])
+            byKey.set(`${item.language}:${item.term.toLowerCase()}`, item);
+          return [...byKey.values()];
+        });
+        const requestedTarget =
+          data.saveRequest && data.saveRequest !== "none" ? data.saveRequest : null;
+        if (requestedTarget) setTarget(requestedTarget);
+
+        let selected = rememberedDestination.current;
+        if (data.destinationName || requestedTarget) {
+          const payload = await fetchDestinations();
+          const optionsFor = (nextTarget: SaveTarget) =>
+            nextTarget === "flashcards"
+              ? payload.flashSubjects.map((item) => ({ id: item.id, label: item.name }))
+              : payload.germanSubtopics.map((item) => ({
+                  id: item.id,
+                  label: `${payload.germanSubjects.find((parent) => parent.id === item.subject_id)?.name ?? "German"} / ${item.name}`,
+                }));
+          const nextTarget = requestedTarget ?? selected?.target ?? "flashcards";
+          const wanted = String(data.destinationName ?? "")
+            .trim()
+            .toLocaleLowerCase();
+          const match = wanted
+            ? optionsFor(nextTarget).find((item) => item.label.toLocaleLowerCase().includes(wanted))
+            : undefined;
+          if (match) {
+            selected = { target: nextTarget, id: match.id, label: match.label };
+            setTarget(nextTarget);
+            setDestinationId(match.id);
+            if (data.rememberDestination) rememberedDestination.current = selected;
+          } else if (selected && (!requestedTarget || selected.target === requestedTarget)) {
+            setTarget(selected.target);
+            setDestinationId(selected.id);
+          }
+        }
+
+        if (requestedTarget && selected?.id && selected.target === requestedTarget) {
+          const saveResponse = await fetch("/api/rita/learning", {
+            method: "POST",
+            headers: await authHeaders(),
+            body: JSON.stringify({
+              action: "save",
+              target: selected.target,
+              destinationId: selected.id,
+              items: data.learningItems,
+            }),
+          });
+          const saved = (await saveResponse.json().catch(() => ({}))) as {
+            saved?: number;
+            error?: string;
+          };
+          setNotice(
+            saveResponse.ok
+              ? `${saved.saved ?? 0} item(s) saved to ${selected.label}.`
+              : (saved.error ?? "The language items were collected but could not be saved."),
+          );
+        }
+        setLearningOpen(true);
+      } catch {
+        // Learning extraction is intentionally outside the voice critical path.
       }
-      setLearningOpen(true);
-    } catch {
-      // Learning extraction is intentionally outside the voice critical path.
-    }
-  }, [fetchDestinations]);
+    },
+    [fetchDestinations],
+  );
 
   const cancelFiller = useCallback(() => {
     if (fillerTimer.current) clearTimeout(fillerTimer.current);
     fillerTimer.current = null;
     fillerAbort.current?.abort();
     fillerAbort.current = null;
-    try { fillerSource.current?.stop(); } catch { /* Already stopped. */ }
+    try {
+      fillerSource.current?.stop();
+    } catch {
+      /* Already stopped. */
+    }
     fillerSource.current = null;
   }, []);
 
@@ -234,7 +251,11 @@ export function RitaRealtimeV3() {
         ? "ar"
         : /[äöüß]|\b(?:ich|du|der|die|das|nicht|bitte|danke|guten|morgen)\b/iu.test(spoken)
           ? "de"
-          : language === "de" || language === "en" ? language : dialect.startsWith("ar") ? "ar" : "en";
+          : language === "de" || language === "en"
+            ? language
+            : dialect.startsWith("ar")
+              ? "ar"
+              : "en";
       const confident = currentTurnHasFinalTranscript.current && spoken.trim().length >= 3;
       const index = confident ? fillerSequence.current++ % 3 : 0;
       const controller = new AbortController();
@@ -259,7 +280,9 @@ export function RitaRealtimeV3() {
         const source = context.createBufferSource();
         source.buffer = buffer;
         source.connect(context.destination);
-        source.onended = () => { if (fillerSource.current === source) fillerSource.current = null; };
+        source.onended = () => {
+          if (fillerSource.current === source) fillerSource.current = null;
+        };
         fillerSource.current = source;
         source.start();
         void metric("backchannel", undefined, { language: detected, index });
@@ -279,7 +302,9 @@ export function RitaRealtimeV3() {
     if (sessionId.current) {
       fetch("/api/rita-v3/session/end", {
         method: "POST",
-        headers: await authHeaders().catch(() => new Headers({ "Content-Type": "application/json" })),
+        headers: await authHeaders().catch(
+          () => new Headers({ "Content-Type": "application/json" }),
+        ),
         body: JSON.stringify({
           sessionId: sessionId.current,
           providerSessionId: providerSessionId.current,
@@ -297,7 +322,13 @@ export function RitaRealtimeV3() {
     setStatus("Lesson ended");
     setCaption("");
     // Chat and unsaved vocabulary are session-only by design.
-    setMessages([{ id: crypto.randomUUID(), role: "rita", text: "Hi, I’m Rita. What would you like to practise?" }]);
+    setMessages([
+      {
+        id: crypto.randomUUID(),
+        role: "rita",
+        text: "Hi, I’m Rita. What would you like to practise?",
+      },
+    ]);
     setLearning([]);
     rememberedDestination.current = null;
     destinationsRef.current = { flashSubjects: [], germanSubjects: [], germanSubtopics: [] };
@@ -459,11 +490,12 @@ export function RitaRealtimeV3() {
       });
       client.current = pc;
       const headers = await authHeaders();
+      setStatus("Waking Rita's voice worker…");
       const ready = await pc.startBotAndConnect({
         endpoint: "/api/rita-v3/session/start",
         headers,
         requestData: { personality, language, dialect, mode },
-        timeout: 20_000,
+        timeout: 55_000,
       });
       // startBotAndConnect returns bot-ready protocol data; session identifiers are
       // returned by the start endpoint and retained inside the transport. Fetch a
@@ -474,12 +506,14 @@ export function RitaRealtimeV3() {
       activeRef.current = true;
       setStatus("Rita is listening");
     } catch (cause) {
+      const pending = client.current;
       client.current = null;
+      if (pending) await pending.disconnect().catch(() => undefined);
       activeRef.current = false;
       setActive(false);
       setMood("ready");
-      setStatus("Could not start Rita v3");
-      setError(`${humanError(cause)} No legacy fallback was started.`);
+      setStatus("Rita could not connect");
+      setError(`${humanError(cause)} Rita v3 stayed isolated; no legacy voice system was started.`);
     } finally {
       setStarting(false);
     }
@@ -535,7 +569,11 @@ export function RitaRealtimeV3() {
   }
 
   if (loading || !user) {
-    return <div className="grid min-h-screen place-items-center"><Loader2 className="animate-spin" /></div>;
+    return (
+      <div className="grid min-h-screen place-items-center">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
   }
 
   const options =
@@ -553,25 +591,49 @@ export function RitaRealtimeV3() {
           <header className="border-b border-[#ece7ee] px-5 py-5 sm:px-10">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <Link to="/" className="text-2xl text-[#716c73]" aria-label="Leave Rita">×</Link>
-                <h1 className="text-xl font-extrabold tracking-tight">RitaJet <span className="font-medium text-[#7c777f]">| Live lesson</span></h1>
+                <Link to="/" className="text-2xl text-[#716c73]" aria-label="Leave Rita">
+                  ×
+                </Link>
+                <h1 className="text-xl font-extrabold tracking-tight">
+                  RitaJet <span className="font-medium text-[#7c777f]">| Live lesson</span>
+                </h1>
               </div>
-              {isAdmin && <Link to="/admin/rita-voice" className="rounded-full border border-[#ded7e4] px-4 py-2 text-sm font-bold">Voice admin</Link>}
+              {isAdmin && (
+                <Link
+                  to="/admin/rita-voice"
+                  className="rounded-full border border-[#ded7e4] px-4 py-2 text-sm font-bold"
+                >
+                  Voice admin
+                </Link>
+              )}
             </div>
             <div className="mt-5 h-1 w-40 rounded-full bg-[#814be8]" />
-            <p className="mt-3 text-xs font-bold text-[#5b4181]">Rita Realtime v3 · {MODEL_PROOF}</p>
+            <p className="mt-3 text-xs font-bold text-[#5b4181]">
+              Rita Realtime v3 · {MODEL_PROOF}
+            </p>
             <p className="mt-2 text-sm font-semibold text-[#6d6671]">{status}</p>
           </header>
 
           <div className="flex-1 overflow-y-auto px-5 py-7 sm:px-10">
             <div className="mx-auto max-w-3xl space-y-7">
               {messages.map((message) => (
-                <div key={message.id} className={message.role === "you" ? "ml-auto max-w-[80%] text-right text-[#377ad9]" : "max-w-[82%] text-lg leading-8"}>
+                <div
+                  key={message.id}
+                  className={
+                    message.role === "you"
+                      ? "ml-auto max-w-[80%] text-right text-[#377ad9]"
+                      : "max-w-[82%] text-lg leading-8"
+                  }
+                >
                   {message.text}
                 </div>
               ))}
               {caption && <p className="text-sm text-[#8a858d]">Live transcript: {caption}</p>}
-              {error && <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</div>}
+              {error && (
+                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                  {error}
+                </div>
+              )}
             </div>
           </div>
 
@@ -579,32 +641,95 @@ export function RitaRealtimeV3() {
             {!active ? (
               <div className="mx-auto max-w-3xl space-y-4">
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <select value={personality} onChange={(event) => setPersonality(event.target.value as Persona)} className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold">
-                    <option value="kind">Kind teacher</option><option value="direct">Direct teacher</option><option value="playful">Playful teacher</option><option value="strict">Strict teacher</option>
+                  <select
+                    value={personality}
+                    onChange={(event) => setPersonality(event.target.value as Persona)}
+                    className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold"
+                  >
+                    <option value="kind">Kind teacher</option>
+                    <option value="direct">Direct teacher</option>
+                    <option value="playful">Playful teacher</option>
+                    <option value="strict">Strict teacher</option>
                   </select>
-                  <select value={language} onChange={(event) => setLanguage(event.target.value)} className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold">
-                    <option value="automatic">Automatic language</option><option value="ar">Arabic</option><option value="de">German</option><option value="en">English</option>
+                  <select
+                    value={language}
+                    onChange={(event) => setLanguage(event.target.value)}
+                    className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold"
+                  >
+                    <option value="automatic">Automatic language</option>
+                    <option value="ar">Arabic</option>
+                    <option value="de">German</option>
+                    <option value="en">English</option>
                   </select>
-                  <select value={dialect} onChange={(event) => setDialect(event.target.value)} className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold">
-                    <option value="ar-JO">Jordanian Arabic</option><option value="standard">Standard Arabic</option><option value="en-GB">British English</option>
+                  <select
+                    value={dialect}
+                    onChange={(event) => setDialect(event.target.value)}
+                    className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold"
+                  >
+                    <option value="ar-JO">Jordanian Arabic</option>
+                    <option value="standard">Standard Arabic</option>
+                    <option value="en-GB">British English</option>
                   </select>
-                  <select value={mode} onChange={(event) => setMode(event.target.value as LessonMode)} className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold">
-                    <option value="free_conversation">Free conversation</option><option value="guided_lesson">Guided lesson</option><option value="pronunciation_drill">Pronunciation drill</option>
+                  <select
+                    value={mode}
+                    onChange={(event) => setMode(event.target.value as LessonMode)}
+                    className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold"
+                  >
+                    <option value="free_conversation">Free conversation</option>
+                    <option value="guided_lesson">Guided lesson</option>
+                    <option value="pronunciation_drill">Pronunciation drill</option>
                   </select>
                 </div>
-                <button onClick={startLesson} disabled={starting} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7b46df] px-5 py-4 font-extrabold text-white shadow-lg shadow-purple-200 disabled:opacity-60">
-                  {starting ? <Loader2 className="animate-spin" size={18} /> : <Mic size={18} />} Start Rita Realtime v3
+                <button
+                  onClick={startLesson}
+                  disabled={starting}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7b46df] px-5 py-4 font-extrabold text-white shadow-lg shadow-purple-200 disabled:opacity-60"
+                >
+                  {starting ? <Loader2 className="animate-spin" size={18} /> : <Mic size={18} />}{" "}
+                  Start Rita Realtime v3
                 </button>
               </div>
             ) : (
               <div className="mx-auto max-w-3xl">
-                <form onSubmit={sendText} className="rounded-3xl border border-[#ddd7e1] bg-white p-3 shadow-sm">
-                  <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Ask Rita anything…" className="w-full border-0 bg-transparent px-3 py-3 outline-none" />
+                <form
+                  onSubmit={sendText}
+                  className="rounded-3xl border border-[#ddd7e1] bg-white p-3 shadow-sm"
+                >
+                  <input
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                    placeholder="Ask Rita anything…"
+                    className="w-full border-0 bg-transparent px-3 py-3 outline-none"
+                  />
                   <div className="flex flex-wrap items-center gap-2 border-t border-[#eee9f0] pt-3">
-                    <button type="button" onClick={toggleMute} className="flex items-center gap-1 rounded-full border border-[#ddd7e1] px-3 py-2 text-sm font-bold">{muted ? <MicOff size={15} /> : <Mic size={15} />}{muted ? "Unmute" : "Mute"}</button>
-                    <button type="button" onClick={() => void loadDestinations("flashcards")} className="flex items-center gap-1 rounded-full border border-[#ddd7e1] px-3 py-2 text-sm font-bold"><Layers size={15} /> Learning ({learning.length})</button>
-                    <button type="button" onClick={() => void endLesson()} className="ml-auto flex items-center gap-1 rounded-full px-3 py-2 text-sm font-bold text-red-700"><PhoneOff size={15} /> End lesson</button>
-                    <button type="submit" className="grid h-10 w-10 place-items-center rounded-full bg-[#c8adff] text-white"><Send size={17} /></button>
+                    <button
+                      type="button"
+                      onClick={toggleMute}
+                      className="flex items-center gap-1 rounded-full border border-[#ddd7e1] px-3 py-2 text-sm font-bold"
+                    >
+                      {muted ? <MicOff size={15} /> : <Mic size={15} />}
+                      {muted ? "Unmute" : "Mute"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void loadDestinations("flashcards")}
+                      className="flex items-center gap-1 rounded-full border border-[#ddd7e1] px-3 py-2 text-sm font-bold"
+                    >
+                      <Layers size={15} /> Learning ({learning.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void endLesson()}
+                      className="ml-auto flex items-center gap-1 rounded-full px-3 py-2 text-sm font-bold text-red-700"
+                    >
+                      <PhoneOff size={15} /> End lesson
+                    </button>
+                    <button
+                      type="submit"
+                      className="grid h-10 w-10 place-items-center rounded-full bg-[#c8adff] text-white"
+                    >
+                      <Send size={17} />
+                    </button>
                   </div>
                 </form>
               </div>
@@ -614,18 +739,116 @@ export function RitaRealtimeV3() {
 
         <aside className="relative hidden min-h-screen overflow-hidden bg-[radial-gradient(circle_at_50%_45%,#59327f_0,#26163b_47%,#160d25_100%)] text-white lg:block">
           <div className="absolute left-8 top-7 font-bold">Rita</div>
-          <div className="absolute right-8 top-7 flex items-center gap-2 text-sm"><span className="h-2 w-2 rounded-full bg-[#bd86ff]" />{active ? "Live" : "Ready"}</div>
-          <div className="h-full"><RitaStage mood={mood} active={active} inputLevel={mood === "listening" ? 0.38 : 0} outputLevel={mood === "talking" ? 0.58 : 0} /></div>
+          <div className="absolute right-8 top-7 flex items-center gap-2 text-sm">
+            <span className="h-2 w-2 rounded-full bg-[#bd86ff]" />
+            {active ? "Live" : "Ready"}
+          </div>
+          <div className="h-full">
+            <RitaStage
+              mood={mood}
+              active={active}
+              inputLevel={mood === "listening" ? 0.38 : 0}
+              outputLevel={mood === "talking" ? 0.58 : 0}
+            />
+          </div>
         </aside>
       </div>
 
       {learningOpen && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/30 sm:items-center sm:justify-center" onClick={() => setLearningOpen(false)}>
-          <section className="max-h-[88vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-7" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-between"><div><p className="text-sm font-bold text-[#7b46df]">Learning Tray</p><h2 className="text-2xl font-extrabold">Useful language from this lesson</h2></div><button onClick={() => setLearningOpen(false)}><X /></button></div>
-            {!learning.length ? <p className="py-10 text-center text-[#77717a]">Ask for a translation, a word meaning, or a language word list. General knowledge will not be saved here.</p> : <div className="mt-6 divide-y divide-[#eee9f0]">{learning.map((item) => <div key={`${item.language}:${item.term}`} className="grid gap-1 py-4 sm:grid-cols-[1fr_1fr_auto]"><strong>{item.article ? `${item.article} ` : ""}{item.term}</strong><span className="text-[#67616a]">{item.meaning}</span><span className="text-xs font-bold uppercase text-[#8a60cf]">{item.language}</span></div>)}</div>}
-            {learning.length > 0 && <div className="mt-6 rounded-2xl bg-[#f6f1ff] p-4"><div className="flex flex-wrap gap-2"><button onClick={() => void loadDestinations("flashcards")} className={`rounded-full px-4 py-2 text-sm font-bold ${target === "flashcards" ? "bg-[#7b46df] text-white" : "bg-white"}`}><Layers className="mr-1 inline" size={15} />Flashcards</button><button onClick={() => void loadDestinations("german_lab")} className={`rounded-full px-4 py-2 text-sm font-bold ${target === "german_lab" ? "bg-[#7b46df] text-white" : "bg-white"}`}><BookOpen className="mr-1 inline" size={15} />German Lab</button></div><div className="relative mt-3"><select value={destinationId} onChange={(event) => setDestinationId(event.target.value)} className="w-full appearance-none rounded-xl border border-[#ddd6e2] bg-white px-4 py-3 pr-10"><option value="">Choose a subject…</option>{options.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select><ChevronDown className="pointer-events-none absolute right-3 top-3.5" size={18} /></div>{rememberedDestination.current && <p className="mt-2 text-xs font-bold text-[#6f4bad]">Remembered for this lesson: {rememberedDestination.current.label}</p>}<button onClick={saveLearning} disabled={!destinationId || saving} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#21172c] px-4 py-3 font-bold text-white disabled:opacity-40">{saving ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}Save selected lesson language</button>{notice && <p className="mt-3 text-sm font-semibold">{notice}</p>}</div>}
-            <p className="mt-5 flex items-center gap-2 text-xs text-[#77717a]"><Sparkles size={14} />Unsaved items and this chat are deleted when the lesson ends.</p>
+        <div
+          className="fixed inset-0 z-50 flex items-end bg-black/30 sm:items-center sm:justify-center"
+          onClick={() => setLearningOpen(false)}
+        >
+          <section
+            className="max-h-[88vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-7"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold text-[#7b46df]">Learning Tray</p>
+                <h2 className="text-2xl font-extrabold">Useful language from this lesson</h2>
+              </div>
+              <button onClick={() => setLearningOpen(false)}>
+                <X />
+              </button>
+            </div>
+            {!learning.length ? (
+              <p className="py-10 text-center text-[#77717a]">
+                Ask for a translation, a word meaning, or a language word list. General knowledge
+                will not be saved here.
+              </p>
+            ) : (
+              <div className="mt-6 divide-y divide-[#eee9f0]">
+                {learning.map((item) => (
+                  <div
+                    key={`${item.language}:${item.term}`}
+                    className="grid gap-1 py-4 sm:grid-cols-[1fr_1fr_auto]"
+                  >
+                    <strong>
+                      {item.article ? `${item.article} ` : ""}
+                      {item.term}
+                    </strong>
+                    <span className="text-[#67616a]">{item.meaning}</span>
+                    <span className="text-xs font-bold uppercase text-[#8a60cf]">
+                      {item.language}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {learning.length > 0 && (
+              <div className="mt-6 rounded-2xl bg-[#f6f1ff] p-4">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => void loadDestinations("flashcards")}
+                    className={`rounded-full px-4 py-2 text-sm font-bold ${target === "flashcards" ? "bg-[#7b46df] text-white" : "bg-white"}`}
+                  >
+                    <Layers className="mr-1 inline" size={15} />
+                    Flashcards
+                  </button>
+                  <button
+                    onClick={() => void loadDestinations("german_lab")}
+                    className={`rounded-full px-4 py-2 text-sm font-bold ${target === "german_lab" ? "bg-[#7b46df] text-white" : "bg-white"}`}
+                  >
+                    <BookOpen className="mr-1 inline" size={15} />
+                    German Lab
+                  </button>
+                </div>
+                <div className="relative mt-3">
+                  <select
+                    value={destinationId}
+                    onChange={(event) => setDestinationId(event.target.value)}
+                    className="w-full appearance-none rounded-xl border border-[#ddd6e2] bg-white px-4 py-3 pr-10"
+                  >
+                    <option value="">Choose a subject…</option>
+                    {options.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-3.5" size={18} />
+                </div>
+                {rememberedDestination.current && (
+                  <p className="mt-2 text-xs font-bold text-[#6f4bad]">
+                    Remembered for this lesson: {rememberedDestination.current.label}
+                  </p>
+                )}
+                <button
+                  onClick={saveLearning}
+                  disabled={!destinationId || saving}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#21172c] px-4 py-3 font-bold text-white disabled:opacity-40"
+                >
+                  {saving ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
+                  Save selected lesson language
+                </button>
+                {notice && <p className="mt-3 text-sm font-semibold">{notice}</p>}
+              </div>
+            )}
+            <p className="mt-5 flex items-center gap-2 text-xs text-[#77717a]">
+              <Sparkles size={14} />
+              Unsaved items and this chat are deleted when the lesson ends.
+            </p>
           </section>
         </div>
       )}

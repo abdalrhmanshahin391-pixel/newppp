@@ -19,6 +19,7 @@ import {
   deleteRitaV3Key,
   getRitaV3Admin,
   retryRitaV3WorkerSync,
+  runRitaV3LiveProbe,
   saveRitaV3Key,
   testRitaV3ControlPlane,
 } from "@/lib/rita-v3.functions";
@@ -71,6 +72,7 @@ function RitaVoiceAdmin() {
   const deleteKey = useServerFn(deleteRitaV3Key);
   const retryWorkerSync = useServerFn(retryRitaV3WorkerSync);
   const testPlane = useServerFn(testRitaV3ControlPlane);
+  const runLiveProbe = useServerFn(runRitaV3LiveProbe);
   const [data, setData] = useState<Awaited<ReturnType<typeof getAdmin>> | null>(null);
   const [drafts, setDrafts] = useState<Record<Provider, string>>({
     soniox: "",
@@ -89,7 +91,17 @@ function RitaVoiceAdmin() {
   const [feedback, setFeedback] = useState<
     Partial<Record<Provider, { kind: "success" | "warning" | "error"; message: string }>>
   >({});
-  const [busy, setBusy] = useState<Provider | "refresh" | "sync" | "test" | null>(null);
+  const [readiness, setReadiness] = useState<{
+    ok: boolean;
+    message: string;
+    checks?: { id: string; label: string; ok: boolean; message: string }[];
+  } | null>(null);
+  const [probe, setProbe] = useState<{
+    ok: boolean;
+    message: string;
+    startupMs?: number;
+  } | null>(null);
+  const [busy, setBusy] = useState<Provider | "refresh" | "sync" | "test" | "probe" | null>(null);
 
   useEffect(() => {
     if (!loading && !user) void navigate({ to: "/login" });
@@ -414,7 +426,7 @@ function RitaVoiceAdmin() {
         </section>
 
         <section className="mt-6 rounded-3xl bg-[#241932] p-6 text-white">
-          <h2 className="text-xl font-black">Deployment check</h2>
+          <h2 className="text-xl font-black">Worker readiness</h2>
           <p className="mt-2 text-sm text-white/65">
             Keys saved above supply the website control plane. Soniox, Groq, and Google are also
             synchronized automatically to the Pipecat secret set{" "}
@@ -426,6 +438,7 @@ function RitaVoiceAdmin() {
               setBusy("test");
               try {
                 const result = await testPlane();
+                setReadiness(result);
                 if (result.ok) toast.success(result.message);
                 else toast.error(result.message);
               } catch (error) {
@@ -436,8 +449,65 @@ function RitaVoiceAdmin() {
             }}
             className="mt-4 rounded-xl bg-white px-4 py-3 font-bold text-[#241932]"
           >
-            {busy === "test" ? "Checking…" : "Check Pipecat deployment"}
+            {busy === "test" ? "Checking…" : "Run full readiness check"}
           </button>
+          {readiness && (
+            <div className="mt-5 grid gap-2">
+              {(readiness.checks ?? []).map((check) => (
+                <div
+                  key={check.id}
+                  className={`rounded-xl border px-4 py-3 ${check.ok ? "border-emerald-400/30 bg-emerald-400/10" : "border-red-400/40 bg-red-400/10"}`}
+                >
+                  <div className="flex items-center gap-2 font-black">
+                    {check.ok ? (
+                      <CheckCircle2 size={17} className="text-emerald-300" />
+                    ) : (
+                      <XCircle size={17} className="text-red-300" />
+                    )}
+                    {check.label}
+                  </div>
+                  <p className="mt-1 text-xs text-white/75">{check.message}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="mt-5 border-t border-white/10 pt-5">
+            <p className="text-sm text-white/65">
+              The live probe briefly starts the real worker and immediately stops it. It does not
+              use a microphone or the Legacy voice system.
+            </p>
+            <button
+              type="button"
+              onClick={async () => {
+                setBusy("probe");
+                setProbe(null);
+                try {
+                  const result = await runLiveProbe();
+                  setProbe(result);
+                  if (result.ok) toast.success(result.message);
+                  else toast.error(result.message);
+                } catch (error) {
+                  const message = String((error as Error)?.message ?? error);
+                  setProbe({ ok: false, message });
+                  toast.error(message);
+                } finally {
+                  setBusy(null);
+                }
+              }}
+              disabled={busy === "probe"}
+              className="mt-3 rounded-xl border border-white/25 px-4 py-3 font-bold disabled:opacity-40"
+            >
+              {busy === "probe" ? "Starting real worker…" : "Run short live worker probe"}
+            </button>
+            {probe && (
+              <p
+                className={`mt-3 rounded-xl px-4 py-3 text-sm font-bold ${probe.ok ? "bg-emerald-400/15 text-emerald-100" : "bg-red-400/15 text-red-100"}`}
+              >
+                {probe.message}
+                {probe.startupMs !== undefined ? ` Startup: ${probe.startupMs}ms.` : ""}
+              </p>
+            )}
+          </div>
         </section>
       </div>
     </main>

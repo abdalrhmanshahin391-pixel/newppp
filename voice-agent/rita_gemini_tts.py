@@ -1,23 +1,16 @@
-"""Gemini 3.8 streaming TTS adapter for Rita.
-
-Pipecat 0.0.105's bundled ``GeminiTTSService`` targets the Google Cloud
-Text-to-Speech streaming API. Rita uses the newer Gemini Developer API model
-``gemini-3.8-flash-lite-tts`` instead, so this adapter deliberately calls the
-official Google Gen AI SDK and emits raw 24 kHz PCM frames into Pipecat.
-"""
+"""Gemini 3.8 Interactions streaming TTS adapter for Rita."""
 
 from __future__ import annotations
 
 import base64
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
-from typing import AsyncGenerator
 
 from google import genai
 from loguru import logger
-
 from pipecat.frames.frames import CancelFrame, EndFrame, ErrorFrame, Frame, TTSAudioRawFrame
 from pipecat.services.settings import TTSSettings
-from pipecat.services.tts_service import TTSService, TextAggregationMode
+from pipecat.services.tts_service import TextAggregationMode, TTSService
 from pipecat.utils.tracing.service_decorators import traced_tts
 
 
@@ -80,48 +73,58 @@ class RitaGeminiTTSService(TTSService):
         return True
 
     @staticmethod
-    def _audio_bytes(chunk) -> bytes:
-        """Collect every inline audio part emitted by a streaming response."""
+    def _audio_bytes(event) -> bytes:
+        """Decode one Interactions ``step.delta`` audio event."""
 
-        pieces: list[bytes] = []
-        for candidate in getattr(chunk, "candidates", None) or []:
-            content = getattr(candidate, "content", None)
-            for part in getattr(content, "parts", None) or []:
-                inline = getattr(part, "inline_data", None)
-                data = getattr(inline, "data", None)
-                if isinstance(data, bytes):
-                    pieces.append(data)
-                elif isinstance(data, str) and data:
-                    pieces.append(base64.b64decode(data))
-        return b"".join(pieces)
+        if getattr(event, "event_type", None) != "step.delta":
+            return b""
+        delta = getattr(event, "delta", None)
+        if getattr(delta, "type", None) != "audio":
+            return b""
+        data = getattr(delta, "data", None)
+        if isinstance(data, bytes):
+            return data
+        if isinstance(data, str) and data:
+            return base64.b64decode(data)
+        return b""
 
     @traced_tts
     async def run_tts(self, text: str, context_id: str) -> AsyncGenerator[Frame, None]:
         logger.debug(f"{self}: Gemini 3.8 TTS [{text}]")
         try:
-            contents = [
+            interaction_input = [
                 {
-                    "role": "user",
-                    "parts": [
+                    "type": "user_input",
+                    "content": [
                         {
+                            "type": "text",
                             "text": text,
-                            "speech_metadata": {"style": self._settings.style},
+                            "annotations": [
+                                {
+                                    "type": "speech_metadata",
+                                    "style": self._settings.style,
+                                }
+                            ],
                         }
                     ],
                 }
             ]
-            config = {
-                "response_modalities": ["AUDIO"],
-                "speech_config": {"voice_config": {"voice": self._settings.voice}},
-            }
-            stream = await self._client.aio.models.generate_content_stream(
+            stream = await self._client.aio.interactions.create(
                 model=self._settings.model,
-                contents=contents,
-                config=config,
+                input=interaction_input,
+                response_format={
+                    "type": "audio",
+                    "mime_type": "audio/l16",
+                    "sample_rate": self.SAMPLE_RATE,
+                },
+                generation_config={
+                    "speech_config": [{"voice": self._settings.voice}],
+                },
+                stream=True,
             )
             await self.start_tts_usage_metrics(text)
-            async for chunk in stream:
-                audio = self._audio_bytes(chunk)
+            async for event in stream:
+                audio = self._audio_bytes(event)
                 if not audio:
                     continue
                 await self.stop_ttfb_metrics()
@@ -131,7 +134,9 @@ class RitaGeminiTTSService(TTSService):
                     1,
                     context_id=context_id,
                 )
-        except Exception as exc:
+        # Provider/transport SDKs expose several exception families. Pipecat must
+        # receive every one as an ErrorFrame rather than losing the session task.
+        except Exception as exc:  # noqa: BLE001
             logger.exception("Gemini 3.8 TTS request failed")
             yield ErrorFrame(error=f"Gemini 3.8 TTS generation error: {exc}")
 

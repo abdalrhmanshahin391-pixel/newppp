@@ -35,3 +35,4 @@ dist-ssr
 *.sw?
 __pycache__/
 *.py[cod]
+.venv/

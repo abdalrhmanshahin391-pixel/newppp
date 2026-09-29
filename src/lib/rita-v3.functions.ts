@@ -7,7 +7,9 @@ import {
   RITA_V3_MODELS,
   RITA_V3_WORKER_SECRET_NAMES,
   deleteRitaV3WorkerSecret,
+  getRitaV3Readiness,
   getRitaV3WorkerSecretStatus,
+  probeRitaV3Worker,
   resolveRitaV3Key,
   ritaV3Environment,
   syncRitaV3WorkerSecrets,
@@ -297,20 +299,27 @@ export const testRitaV3ControlPlane = createServerFn({ method: "GET" })
     const privateKey = (await getStoredRitaKey(supabase, "pipecat_private")) || env.privateKey;
     if (!privateKey) return { ok: false, message: "Add the Pipecat private key first." };
     try {
-      const response = await fetch("https://api.pipecat.daily.co/v1/agents", {
-        headers: { Authorization: `Bearer ${privateKey}` },
-        signal: AbortSignal.timeout(8_000),
-      });
-      if (!response.ok) return { ok: false, message: `Pipecat returned ${response.status}.` };
-      const data = (await response.json()) as { agents?: { name?: string }[] };
-      const found = data.agents?.some((agent) => agent.name === env.agentName) ?? false;
+      const readiness = await getRitaV3Readiness(privateKey);
       return {
-        ok: found,
-        message: found
-          ? `${env.agentName} is deployed and visible.`
-          : `Pipecat is connected, but ${env.agentName} has not been deployed yet.`,
+        ...readiness,
+        message: readiness.ok
+          ? `${env.agentName} passed every control-plane readiness check.`
+          : "Rita is not ready. Review the failed checks below.",
       };
-    } catch {
-      return { ok: false, message: "Could not reach the Pipecat control plane." };
+    } catch (cause) {
+      return {
+        ok: false,
+        message: cause instanceof Error ? cause.message : "Could not reach Pipecat.",
+        checks: [],
+        latestSession: null,
+        latestLogError: null,
+      };
     }
+  });
+
+export const runRitaV3LiveProbe = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireAdmin(context);
+    return probeRitaV3Worker();
   });
