@@ -5,19 +5,20 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";
 import {
   RITA_V3_MODELS,
+  RITA_V3_WORKER_SECRET_NAMES,
   deleteRitaV3WorkerSecret,
   getRitaV3WorkerSecretStatus,
   resolveRitaV3Key,
   ritaV3Environment,
-  syncRitaV3WorkerSecret,
+  syncRitaV3WorkerSecrets,
 } from "@/lib/rita-v3.server";
+import type { RitaV3WorkerProvider } from "@/lib/rita-v3.server";
 
 const providers = ["soniox", "groq", "google", "pipecat_public", "pipecat_private"] as const;
 const workerProviders = ["soniox", "groq", "google"] as const;
-type WorkerProvider = (typeof workerProviders)[number];
 
-function isWorkerProvider(provider: (typeof providers)[number]): provider is WorkerProvider {
-  return workerProviders.includes(provider as WorkerProvider);
+function isWorkerProvider(provider: (typeof providers)[number]): provider is RitaV3WorkerProvider {
+  return workerProviders.includes(provider as RitaV3WorkerProvider);
 }
 
 async function requireAdmin(context: unknown) {
@@ -34,7 +35,7 @@ export const getRitaV3Admin = createServerFn({ method: "GET" })
     const start = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const [{ data: keys }, { data: sessions }, { data: events }] = await Promise.all([
       (supabase.from as any)("admin_ai_keys")
-        .select("provider,updated_at")
+        .select("provider,updated_at,api_key")
         .eq("purpose", "rita")
         .eq("slot", 1)
         .in("provider", providers as unknown as string[]),
@@ -45,9 +46,8 @@ export const getRitaV3Admin = createServerFn({ method: "GET" })
         .select("event_name,value_ms")
         .gte("created_at", start),
     ]);
-    const [env, workerSecrets, resolvedKeys] = await Promise.all([
+    const [env, resolvedKeys] = await Promise.all([
       ritaV3Environment(),
-      getRitaV3WorkerSecretStatus(),
       Promise.all(
         providers.map(
           async (provider) =>
@@ -69,6 +69,10 @@ export const getRitaV3Admin = createServerFn({ method: "GET" })
         ),
       ),
     ]);
+    const storedPrivateKey = String(
+      (keys ?? []).find((item: any) => item.provider === "pipecat_private")?.api_key ?? "",
+    ).trim();
+    const workerSecrets = await getRitaV3WorkerSecretStatus(storedPrivateKey || env.privateKey);
     const firstAudio = (events ?? [])
       .filter((item: any) => item.event_name === "first_audio" && Number.isFinite(item.value_ms))
       .map((item: any) => Number(item.value_ms))
@@ -106,7 +110,21 @@ export const getRitaV3Admin = createServerFn({ method: "GET" })
     };
   });
 
-async function syncStoredWorkerKeys(supabase: SupabaseClient<any>) {
+async function getStoredRitaKey(
+  supabase: SupabaseClient<any>,
+  provider: (typeof providers)[number],
+) {
+  const { data, error } = await (supabase.from as any)("admin_ai_keys")
+    .select("api_key")
+    .eq("provider", provider)
+    .eq("purpose", "rita")
+    .eq("slot", 1)
+    .maybeSingle();
+  if (error) throw error;
+  return String(data?.api_key ?? "").trim();
+}
+
+async function syncStoredWorkerKeys(supabase: SupabaseClient<any>, privateKey: string) {
   const { data, error } = await (supabase.from as any)("admin_ai_keys")
     .select("provider,api_key")
     .eq("purpose", "rita")
@@ -114,22 +132,26 @@ async function syncStoredWorkerKeys(supabase: SupabaseClient<any>) {
     .in("provider", workerProviders as unknown as string[]);
   if (error) throw error;
 
-  const results = await Promise.all(
-    (data ?? []).map(async (item: { provider: WorkerProvider; api_key: string }) => {
-      try {
-        const result = await syncRitaV3WorkerSecret(item.provider, item.api_key);
-        return { provider: item.provider, ...result };
-      } catch (cause) {
-        return {
-          provider: item.provider,
-          synced: false,
-          reason: cause instanceof Error ? cause.message : "unknown error",
-        };
-      }
+  const stored = (data ?? []) as { provider: RitaV3WorkerProvider; api_key: string }[];
+  const values = Object.fromEntries(
+    stored.map((item) => [item.provider, String(item.api_key ?? "").trim()]),
+  ) as Partial<Record<RitaV3WorkerProvider, string>>;
+  const sync = await syncRitaV3WorkerSecrets(values, privateKey);
+  const providerSync = Object.fromEntries(
+    stored.map((item) => {
+      const ready = sync.fields.includes(RITA_V3_WORKER_SECRET_NAMES[item.provider]);
+      return [
+        item.provider,
+        {
+          synced: ready,
+          pending: !ready && sync.pending,
+          reason: ready ? "Ready in Pipecat." : sync.reason,
+        },
+      ];
     }),
   );
 
-  return results;
+  return { ...sync, providerSync };
 }
 
 export const saveRitaV3Key = createServerFn({ method: "POST" })
@@ -156,50 +178,91 @@ export const saveRitaV3Key = createServerFn({ method: "POST" })
 
     if (isWorkerProvider(data.provider)) {
       try {
-        const sync = await syncRitaV3WorkerSecret(data.provider, data.apiKey);
-        return { ok: true, ...sync };
+        const privateKey = await getStoredRitaKey(supabase, "pipecat_private");
+        const sync = await syncStoredWorkerKeys(supabase, privateKey);
+        const providerResult = sync.providerSync[data.provider];
+        return {
+          ok: true,
+          ...sync,
+          synced: providerResult?.synced ?? sync.synced,
+          pending: providerResult?.pending ?? sync.pending,
+          reason: providerResult?.reason ?? sync.reason,
+        };
       } catch (cause) {
         return {
           ok: true,
           synced: false,
+          pending: false,
           reason: `Saved securely, but Pipecat sync failed: ${cause instanceof Error ? cause.message : "unknown error"}`,
+          providerSync: {},
         };
       }
     }
 
     if (data.provider === "pipecat_private") {
       try {
-        const syncResults = await syncStoredWorkerKeys(supabase);
-        if (!syncResults.length) {
+        const syncResult = await syncStoredWorkerKeys(supabase, data.apiKey);
+        const providerCount = Object.keys(syncResult.providerSync).length;
+        if (!providerCount) {
           return {
             ok: true,
             synced: true,
+            pending: false,
             reason: "Pipecat private key saved. Add the Soniox, Groq, and Google keys next.",
-          };
-        }
-        const failures = syncResults.filter((result) => !result.synced);
-        if (failures.length) {
-          return {
-            ok: true,
-            synced: false,
-            reason: `Pipecat key saved. Could not sync: ${failures.map((result) => result.provider).join(", ")}.`,
+            providerSync: syncResult.providerSync,
           };
         }
         return {
           ok: true,
-          synced: true,
-          reason: `Pipecat private key saved and ${syncResults.length} provider key${syncResults.length === 1 ? "" : "s"} synced.`,
+          ...syncResult,
+          reason: syncResult.synced
+            ? `Pipecat private key saved and ${providerCount} provider key${providerCount === 1 ? "" : "s"} synced.`
+            : syncResult.reason,
         };
       } catch (cause) {
         return {
           ok: true,
           synced: false,
+          pending: false,
           reason: `Pipecat key saved, but provider resync failed: ${cause instanceof Error ? cause.message : "unknown error"}`,
+          providerSync: {},
         };
       }
     }
 
-    return { ok: true, synced: true, reason: "Pipecat public key saved securely." };
+    return {
+      ok: true,
+      synced: true,
+      pending: false,
+      reason: "Pipecat public key saved securely.",
+    };
+  });
+
+export const retryRitaV3WorkerSync = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = await requireAdmin(context);
+    const privateKey = await getStoredRitaKey(supabase, "pipecat_private");
+    if (!privateKey) {
+      return {
+        ok: false,
+        synced: false,
+        pending: false,
+        reason: "Add the Pipecat private key first.",
+        providerSync: {},
+      };
+    }
+    try {
+      return { ok: true, ...(await syncStoredWorkerKeys(supabase, privateKey)) };
+    } catch (cause) {
+      return {
+        ok: false,
+        synced: false,
+        pending: false,
+        reason: cause instanceof Error ? cause.message : "Pipecat sync failed.",
+        providerSync: {},
+      };
+    }
   });
 
 export const deleteRitaV3Key = createServerFn({ method: "POST" })
@@ -210,7 +273,8 @@ export const deleteRitaV3Key = createServerFn({ method: "POST" })
 
     if (isWorkerProvider(data.provider)) {
       try {
-        await deleteRitaV3WorkerSecret(data.provider);
+        const privateKey = await getStoredRitaKey(supabase, "pipecat_private");
+        await deleteRitaV3WorkerSecret(data.provider, privateKey);
       } catch (error) {
         console.warn(`Could not remove ${data.provider} from Pipecat`, error);
       }
@@ -228,12 +292,13 @@ export const deleteRitaV3Key = createServerFn({ method: "POST" })
 export const testRitaV3ControlPlane = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await requireAdmin(context);
+    const { supabase } = await requireAdmin(context);
     const env = await ritaV3Environment();
-    if (!env.privateKey) return { ok: false, message: "Add the Pipecat private key first." };
+    const privateKey = (await getStoredRitaKey(supabase, "pipecat_private")) || env.privateKey;
+    if (!privateKey) return { ok: false, message: "Add the Pipecat private key first." };
     try {
       const response = await fetch("https://api.pipecat.daily.co/v1/agents", {
-        headers: { Authorization: `Bearer ${env.privateKey}` },
+        headers: { Authorization: `Bearer ${privateKey}` },
         signal: AbortSignal.timeout(8_000),
       });
       if (!response.ok) return { ok: false, message: `Pipecat returned ${response.status}.` };

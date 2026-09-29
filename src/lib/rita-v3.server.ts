@@ -13,11 +13,19 @@ export const RITA_V3_AGENT = "ritajet-voice-v3";
 export const RITA_V3_SECRET_SET = "ritajet-voice-v3-secrets";
 export const RITA_V3_REGION = "eu-central";
 
-const WORKER_SECRET_NAMES = {
+export const RITA_V3_WORKER_SECRET_NAMES = {
   soniox: "SONIOX_API_KEY",
   groq: "GROQ_API_KEY",
   google: "GOOGLE_API_KEY",
 } as const;
+
+export type RitaV3WorkerProvider = keyof typeof RITA_V3_WORKER_SECRET_NAMES;
+
+export type RitaV3WorkerSecretStatus = {
+  status: string;
+  region: string | null;
+  fields: string[];
+};
 
 export type RitaV3Auth = NonNullable<Awaited<ReturnType<typeof requireRitaUser>>>;
 
@@ -49,58 +57,24 @@ export async function ritaV3Environment() {
 }
 
 export async function syncRitaV3WorkerSecret(
-  provider: keyof typeof WORKER_SECRET_NAMES,
+  provider: RitaV3WorkerProvider,
   secretValue: string,
+  privateKey?: string,
 ) {
-  const env = await ritaV3Environment();
-  if (!env.privateKey) {
-    return { synced: false, reason: "Add the Pipecat private key before syncing worker secrets." };
-  }
-  const response = await fetch(`https://api.pipecat.daily.co/v1/secrets/${RITA_V3_SECRET_SET}`, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${env.privateKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      secrets: [{ secretKey: WORKER_SECRET_NAMES[provider], secretValue }],
-      region: RITA_V3_REGION,
-    }),
-    signal: AbortSignal.timeout(10_000),
-  });
-  if (!response.ok) throw new Error(`Pipecat secret sync failed (${response.status}).`);
-  return { synced: true, reason: "Worker secret accepted; redeploy Rita after it becomes ready." };
+  return syncRitaV3WorkerSecrets({ [provider]: secretValue }, privateKey);
 }
 
-export async function deleteRitaV3WorkerSecret(provider: keyof typeof WORKER_SECRET_NAMES) {
-  const env = await ritaV3Environment();
-  if (!env.privateKey) return false;
-  const response = await fetch(
-    `https://api.pipecat.daily.co/v1/secrets/${RITA_V3_SECRET_SET}/${WORKER_SECRET_NAMES[provider]}`,
-    {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${env.privateKey}` },
-      signal: AbortSignal.timeout(10_000),
-    },
-  );
-  return response.ok || response.status === 404;
-}
-
-export async function getRitaV3WorkerSecretStatus() {
-  const env = await ritaV3Environment();
-  if (!env.privateKey) {
-    return { status: "not-connected", region: null, fields: [] as string[] };
-  }
+async function readRitaV3WorkerSecretStatus(privateKey: string): Promise<RitaV3WorkerSecretStatus> {
   try {
     const response = await fetch(`https://api.pipecat.daily.co/v1/secrets/${RITA_V3_SECRET_SET}`, {
-      headers: { Authorization: `Bearer ${env.privateKey}` },
+      headers: { Authorization: `Bearer ${privateKey}` },
       signal: AbortSignal.timeout(8_000),
     });
     if (response.status === 404) {
-      return { status: "missing", region: null, fields: [] as string[] };
+      return { status: "missing", region: null, fields: [] };
     }
     if (!response.ok) {
-      return { status: `error-${response.status}`, region: null, fields: [] as string[] };
+      return { status: `error-${response.status}`, region: null, fields: [] };
     }
     const payload = (await response.json()) as {
       status?: string;
@@ -108,13 +82,131 @@ export async function getRitaV3WorkerSecretStatus() {
       secrets?: { fieldName?: string }[];
     };
     return {
-      status: payload.status ?? "unknown",
+      status: payload.status ?? "ready",
       region: payload.region ?? null,
       fields: (payload.secrets ?? []).flatMap((item) => (item.fieldName ? [item.fieldName] : [])),
     };
   } catch {
-    return { status: "unreachable", region: null, fields: [] as string[] };
+    return { status: "unreachable", region: null, fields: [] };
   }
+}
+
+export async function syncRitaV3WorkerSecrets(
+  values: Partial<Record<RitaV3WorkerProvider, string>>,
+  privateKeyOverride?: string,
+) {
+  const privateKey =
+    privateKeyOverride === undefined
+      ? (await ritaV3Environment()).privateKey
+      : String(privateKeyOverride).trim();
+  if (!privateKey) {
+    return {
+      synced: false,
+      pending: false,
+      reason: "Add the Pipecat private key before syncing worker secrets.",
+      status: "not-connected",
+      fields: [] as string[],
+    };
+  }
+
+  const entries = (Object.entries(values) as [RitaV3WorkerProvider, string][]).filter(([, value]) =>
+    Boolean(String(value ?? "").trim()),
+  );
+  if (!entries.length) {
+    return {
+      synced: true,
+      pending: false,
+      reason: "No provider keys are waiting to be synced.",
+      status: "ready",
+      fields: [] as string[],
+    };
+  }
+
+  const before = await readRitaV3WorkerSecretStatus(privateKey);
+  if (before.status.startsWith("error-")) {
+    throw new Error(`Pipecat private key was rejected (${before.status.slice(6)}).`);
+  }
+  if (before.status === "unreachable") {
+    throw new Error("Pipecat could not be reached.");
+  }
+
+  const region = before.region ?? RITA_V3_REGION;
+  const response = await fetch(`https://api.pipecat.daily.co/v1/secrets/${RITA_V3_SECRET_SET}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${privateKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      secrets: entries.map(([provider, secretValue]) => ({
+        secretKey: RITA_V3_WORKER_SECRET_NAMES[provider],
+        secretValue: secretValue.trim(),
+      })),
+      region,
+    }),
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok) {
+    throw new Error(`Pipecat secret sync failed (${response.status}).`);
+  }
+
+  const expectedFields = entries.map(([provider]) => RITA_V3_WORKER_SECRET_NAMES[provider]);
+  let latest = before;
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    latest = await readRitaV3WorkerSecretStatus(privateKey);
+    if (
+      latest.status === "ready" &&
+      expectedFields.every((fieldName) => latest.fields.includes(fieldName))
+    ) {
+      return {
+        synced: true,
+        pending: false,
+        reason: "Worker secrets are ready in Pipecat. Redeploy Rita to use replacement values.",
+        status: latest.status,
+        fields: latest.fields,
+      };
+    }
+  }
+
+  return {
+    synced: false,
+    pending: true,
+    reason: "Pipecat accepted the keys and is still preparing them. Refresh or retry shortly.",
+    status: latest.status,
+    fields: latest.fields,
+  };
+}
+
+export async function deleteRitaV3WorkerSecret(
+  provider: RitaV3WorkerProvider,
+  privateKeyOverride?: string,
+) {
+  const privateKey =
+    privateKeyOverride === undefined
+      ? (await ritaV3Environment()).privateKey
+      : String(privateKeyOverride).trim();
+  if (!privateKey) return false;
+  const response = await fetch(
+    `https://api.pipecat.daily.co/v1/secrets/${RITA_V3_SECRET_SET}/${RITA_V3_WORKER_SECRET_NAMES[provider]}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${privateKey}` },
+      signal: AbortSignal.timeout(10_000),
+    },
+  );
+  return response.ok || response.status === 404;
+}
+
+export async function getRitaV3WorkerSecretStatus(privateKeyOverride?: string) {
+  const privateKey =
+    privateKeyOverride === undefined
+      ? (await ritaV3Environment()).privateKey
+      : String(privateKeyOverride).trim();
+  if (!privateKey) {
+    return { status: "not-connected", region: null, fields: [] as string[] };
+  }
+  return readRitaV3WorkerSecretStatus(privateKey);
 }
 
 export async function requireRitaV3Access(request: Request) {

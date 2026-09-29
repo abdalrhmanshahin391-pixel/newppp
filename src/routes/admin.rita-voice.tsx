@@ -18,6 +18,7 @@ import { guardRedirect } from "@/lib/guard-redirect";
 import {
   deleteRitaV3Key,
   getRitaV3Admin,
+  retryRitaV3WorkerSync,
   saveRitaV3Key,
   testRitaV3ControlPlane,
 } from "@/lib/rita-v3.functions";
@@ -68,6 +69,7 @@ function RitaVoiceAdmin() {
   const getAdmin = useServerFn(getRitaV3Admin);
   const saveKey = useServerFn(saveRitaV3Key);
   const deleteKey = useServerFn(deleteRitaV3Key);
+  const retryWorkerSync = useServerFn(retryRitaV3WorkerSync);
   const testPlane = useServerFn(testRitaV3ControlPlane);
   const [data, setData] = useState<Awaited<ReturnType<typeof getAdmin>> | null>(null);
   const [drafts, setDrafts] = useState<Record<Provider, string>>({
@@ -87,23 +89,58 @@ function RitaVoiceAdmin() {
   const [feedback, setFeedback] = useState<
     Partial<Record<Provider, { kind: "success" | "warning" | "error"; message: string }>>
   >({});
-  const [busy, setBusy] = useState<Provider | "refresh" | "test" | null>(null);
+  const [busy, setBusy] = useState<Provider | "refresh" | "sync" | "test" | null>(null);
 
   useEffect(() => {
     if (!loading && !user) void navigate({ to: "/login" });
     else if (!loading && user && !isAdmin) guardRedirect(navigate);
   }, [isAdmin, loading, navigate, user]);
 
+  const applyAdminData = useCallback((nextData: Awaited<ReturnType<typeof getAdmin>>) => {
+    setData(nextData);
+    setFeedback((current) => {
+      const next = { ...current };
+      for (const provider of ["soniox", "groq", "google"] as const) {
+        if (nextData.workerConfigured[provider]) delete next[provider];
+      }
+      return next;
+    });
+  }, []);
+
+  const applyProviderSync = useCallback(
+    (
+      providerSync: Record<
+        string,
+        { synced?: boolean; pending?: boolean; reason?: string } | undefined
+      >,
+    ) => {
+      setFeedback((current) => {
+        const next = { ...current };
+        for (const provider of ["soniox", "groq", "google"] as const) {
+          const result = providerSync[provider];
+          if (!result) continue;
+          next[provider] = {
+            kind: result.synced ? "success" : result.pending ? "warning" : "error",
+            message:
+              result.reason || (result.synced ? "Ready in Pipecat." : "Pipecat sync failed."),
+          };
+        }
+        return next;
+      });
+    },
+    [],
+  );
+
   const refresh = useCallback(async () => {
     setBusy("refresh");
     try {
-      setData(await getAdmin());
+      applyAdminData(await getAdmin());
     } catch (error) {
       toast.error(String((error as Error)?.message ?? error));
     } finally {
       setBusy(null);
     }
-  }, [getAdmin]);
+  }, [applyAdminData, getAdmin]);
   useEffect(() => {
     if (isAdmin) void refresh();
   }, [isAdmin, refresh]);
@@ -126,7 +163,10 @@ function RitaVoiceAdmin() {
       }));
       if (result.synced) toast.success(message);
       else toast.warning(message);
-      setData(await getAdmin());
+      if ("providerSync" in result && result.providerSync) {
+        applyProviderSync(result.providerSync);
+      }
+      applyAdminData(await getAdmin());
     } catch (error) {
       const message = String((error as Error)?.message ?? error);
       setFeedback((current) => ({ ...current, [provider]: { kind: "error", message } }));
@@ -148,11 +188,27 @@ function RitaVoiceAdmin() {
         [provider]: { kind: "success", message: "Key removed." },
       }));
       toast.success("Key removed");
-      setData(await getAdmin());
+      applyAdminData(await getAdmin());
     } catch (error) {
       const message = String((error as Error)?.message ?? error);
       setFeedback((current) => ({ ...current, [provider]: { kind: "error", message } }));
       toast.error(message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function retrySync() {
+    setBusy("sync");
+    try {
+      const result = await retryWorkerSync();
+      applyProviderSync(result.providerSync);
+      if (result.synced) toast.success(result.reason);
+      else if (result.pending) toast.warning(result.reason);
+      else toast.error(result.reason);
+      applyAdminData(await getAdmin());
+    } catch (error) {
+      toast.error(String((error as Error)?.message ?? error));
     } finally {
       setBusy(null);
     }
@@ -226,10 +282,20 @@ function RitaVoiceAdmin() {
           ))}
         </section>
 
-        <section className="mt-4 rounded-2xl border bg-white px-5 py-4 text-sm font-semibold text-[#5d5661]">
-          Pipecat secret set: <strong>{data?.workerSecretStatus ?? "not checked"}</strong>
-          {data?.workerRegion ? ` · ${data.workerRegion}` : ""}. Updating a worker secret requires a
-          Rita worker redeploy.
+        <section className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-white px-5 py-4 text-sm font-semibold text-[#5d5661]">
+          <p>
+            Pipecat secret set: <strong>{data?.workerSecretStatus ?? "not checked"}</strong>
+            {data?.workerRegion ? ` · ${data.workerRegion}` : ""}. Updating a worker secret requires
+            a Rita worker redeploy.
+          </p>
+          <button
+            type="button"
+            onClick={() => void retrySync()}
+            disabled={busy === "sync" || !data?.configured?.pipecat_private}
+            className="rounded-xl bg-[#21172c] px-4 py-2.5 font-bold text-white disabled:opacity-40"
+          >
+            {busy === "sync" ? "Syncing…" : "Retry Pipecat sync"}
+          </button>
         </section>
 
         <section className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
