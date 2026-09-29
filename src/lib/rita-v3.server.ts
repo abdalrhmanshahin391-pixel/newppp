@@ -22,7 +22,21 @@ const WORKER_SECRET_NAMES = {
 export type RitaV3Auth = NonNullable<Awaited<ReturnType<typeof requireRitaUser>>>;
 
 export async function resolveRitaV3Key(provider: string, environmentName: string) {
-  void provider;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await (supabaseAdmin.from as any)("admin_ai_keys")
+      .select("api_key")
+      .eq("provider", provider)
+      .eq("purpose", "rita")
+      .eq("slot", 1)
+      .maybeSingle();
+    if (error) throw error;
+    const saved = String(data?.api_key ?? "").trim();
+    if (saved) return saved;
+  } catch (error) {
+    console.warn(`Could not read Rita v3 ${provider} key`, error);
+  }
+
   return String(process.env[environmentName] ?? "").trim();
 }
 
