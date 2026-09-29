@@ -60,23 +60,23 @@ function renderToolDemo(kind: DemoKind, tool: ToolDef, isAr: boolean) {
     case "match":
       return <MemoryLabMock isAr={isAr} tool={tool} />;
     case "summary":
-      return <PdfSummaryMock isAr={isAr} tool={tool} />;
+      return <PdfSummaryMock isAr={isAr} />;
     case "allinone":
-      return <AllInOneMock isAr={isAr} tool={tool} />;
+      return <AllInOneMock isAr={isAr} />;
     case "todo":
-      return <TodoListMock isAr={isAr} tool={tool} />;
+      return <TodoListMock isAr={isAr} />;
     case "calendar":
-      return <ExamScheduleMock isAr={isAr} tool={tool} />;
+      return <ExamScheduleMock isAr={isAr} />;
     case "lecture":
-      return <LectureLabMock isAr={isAr} tool={tool} />;
+      return <LectureLabMock isAr={isAr} />;
     case "share":
-      return <SharedDecksMock isAr={isAr} tool={tool} />;
+      return <SharedDecksMock isAr={isAr} />;
     case "spaces":
-      return <SpacesMock isAr={isAr} tool={tool} />;
+      return <SpacesMock isAr={isAr} />;
     case "german":
-      return <GermanLabMock isAr={isAr} tool={tool} />;
+      return <GermanLabMock isAr={isAr} />;
     case "timer":
-      return <TimerMock isAr={isAr} tool={tool} />;
+      return <TimerMock isAr={isAr} />;
     default:
       return null;
   }

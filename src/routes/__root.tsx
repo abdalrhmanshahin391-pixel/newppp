@@ -150,8 +150,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&display=swap",
-        media: "print",
-        onLoad: "this.media='all'",
       },
 
       { rel: "icon", href: "/favicon.ico", sizes: "48x48" },

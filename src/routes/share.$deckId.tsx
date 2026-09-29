@@ -72,7 +72,7 @@ function DeckPage() {
     return (
       <Shell>
         <h1 className="font-display text-3xl font-black">Deck not found</h1>
-        <Link to="/share" className="mt-4 inline-block font-black text-[#8ec63f]">
+        <Link to="/share" search={{ type: "flashcards" }} className="mt-4 inline-block font-black text-[#8ec63f]">
           Back to shared flashcards
         </Link>
       </Shell>
@@ -87,7 +87,7 @@ function DeckPage() {
     try {
       await setPublished(deck.id, false);
       toast.success("Deck is no longer public");
-      void navigate({ to: "/share" });
+      void navigate({ to: "/share", search: { type: "flashcards" } });
     } catch (e: any) {
       toast.error(e?.message || "Could not unshare this deck.");
     }
@@ -98,7 +98,7 @@ function DeckPage() {
     try {
       await deleteDeck(deck.id);
       toast.success("Shared deck deleted");
-      void navigate({ to: "/share" });
+      void navigate({ to: "/share", search: { type: "flashcards" } });
     } catch (e: any) {
       toast.error(e?.message || "Could not delete this deck.");
     }
@@ -106,7 +106,7 @@ function DeckPage() {
 
   return (
     <Shell>
-      <Link to="/share" className="inline-flex items-center gap-1.5 text-sm font-black text-[#6b655c] hover:text-[#23201d]">
+      <Link to="/share" search={{ type: "flashcards" }} className="inline-flex items-center gap-1.5 text-sm font-black text-[#6b655c] hover:text-[#23201d]">
         <ArrowLeft size={15} /> Shared flashcards
       </Link>
 
