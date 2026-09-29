@@ -163,7 +163,7 @@ export function QuestionSetDetailPage() {
     try {
       await deleteQuestionSet(set.id);
       toast.success("Question set deleted (daily sharing slot recovered if shared today)");
-      void navigate({ to: "/share" });
+      void navigate({ to: "/share", search: { type: "flashcards" } });
     } catch (e: any) {
       toast.error(e?.message || "Could not delete set");
     }
@@ -192,7 +192,7 @@ export function QuestionSetDetailPage() {
             This set may have been removed or you may not have access to it.
           </p>
           <Link
-            to="/share"
+            to="/share" search={{ type: "flashcards" }}
             className="mt-6 inline-flex rounded-full bg-[#23201d] px-6 py-2.5 text-sm font-black text-white"
           >
             Browse shared materials
@@ -210,7 +210,7 @@ export function QuestionSetDetailPage() {
         {/* Navigation Breadcrumb */}
         <div className="mb-6 flex items-center justify-between">
           <Link
-            to="/share"
+            to="/share" search={{ type: "flashcards" }}
             className="inline-flex items-center gap-1.5 text-sm font-black text-[#6b655c] transition hover:text-[#23201d]"
           >
             <ArrowLeft size={15} /> All shared materials
@@ -287,10 +287,10 @@ export function QuestionSetDetailPage() {
                   <span className="rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] font-black text-[#23201d]">
                     {set.save_count} saves
                   </span>
-                  {set.rating_count > 0 ? (
+                  {(set.rating_count ?? 0) > 0 ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-black text-amber-900 shadow-sm">
                       <Star size={11} className="fill-amber-500 text-amber-500" />
-                      {set.rating_avg.toFixed(1)} ({set.rating_count})
+                      {(set.rating_avg ?? 0).toFixed(1)} ({set.rating_count ?? 0})
                     </span>
                   ) : (
                     <span className="rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] font-black text-[#23201d]">

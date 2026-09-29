@@ -195,7 +195,7 @@ function ShareNew() {
             <ArrowLeft size={15} /> Back to your space
           </Link>
         ) : (
-          <Link to="/share" className="inline-flex items-center gap-1.5 text-sm font-black text-[#6b655c] hover:text-[#23201d]">
+          <Link to="/share" search={{ type: "flashcards" }} className="inline-flex items-center gap-1.5 text-sm font-black text-[#6b655c] hover:text-[#23201d]">
             <ArrowLeft size={15} /> Shared flashcards
           </Link>
         )}
@@ -239,8 +239,7 @@ function ShareNew() {
                 You have used all 5 sharing slots for today. To share this flashcard deck right now,
                 simply delete one of the items you shared today in{" "}
                 <Link
-                  to="/share"
-                  search={{ type: "flashcards" }}
+                  to="/share" search={{ type: "flashcards" }}
                   className="font-black text-red-900 underline"
                 >
                   My Shared Items

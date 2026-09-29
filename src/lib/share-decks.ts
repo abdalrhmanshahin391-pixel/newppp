@@ -18,6 +18,8 @@ export type SharedDeck = {
   published: boolean;
   audience: DeckAudience;
   created_at: string;
+  rating_avg: number | null;
+  rating_count: number;
 };
 
 

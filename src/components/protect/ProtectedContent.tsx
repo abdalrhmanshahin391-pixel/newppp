@@ -320,7 +320,7 @@ export function ProtectedContent({
           <div
             key={tick}
             aria-hidden
-            className={`pointer-events-none absolute inset-0 ${scope === "card" ? "z-20" : "z-30"}`}
+            className={`pointer-events-none absolute inset-0 z-30`}
             style={{
               backgroundImage: tiledWatermark(identity!, opacity),
               backgroundRepeat: "repeat",
@@ -328,7 +328,7 @@ export function ProtectedContent({
           />
           <div
             aria-hidden
-            className={`pointer-events-none absolute inset-0 ${scope === "card" ? "z-20" : "z-30"}`}
+            className={`pointer-events-none absolute inset-0 z-30`}
             style={{
               backgroundImage: fingerprintPattern(identity?.code ?? "00000000"),
               backgroundRepeat: "repeat",

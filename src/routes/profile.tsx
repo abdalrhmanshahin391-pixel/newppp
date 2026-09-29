@@ -286,7 +286,7 @@ function ProfilePage() {
         />
 
         <Link
-          to="/share"
+          to="/share" search={{ type: "flashcards" }}
           className="mb-8 flex items-center gap-3 rounded-3xl border border-black/[0.07] bg-white px-6 py-5 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-28px_rgba(0,0,0,0.5)]"
         >
           <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#e6f4d8] text-[#3d5c14]">
