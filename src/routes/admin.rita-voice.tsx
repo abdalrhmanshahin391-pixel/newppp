@@ -237,9 +237,10 @@ function RitaVoiceAdmin() {
     active: 0,
     failed: 0,
     uniqueUsers: 0,
-    latencyP50: 0,
-    latencyP95: 0,
-    latencyP99: 0,
+    latencySamples: 0,
+    latencyP50: null,
+    latencyP95: null,
+    latencyP99: null,
   };
 
   return (
@@ -283,9 +284,10 @@ function RitaVoiceAdmin() {
             ["Active", metrics.active],
             ["Failed", metrics.failed],
             ["Learners", metrics.uniqueUsers],
-            ["p50 audio", `${metrics.latencyP50}ms`],
-            ["p95 audio", `${metrics.latencyP95}ms`],
-            ["p99 audio", `${metrics.latencyP99}ms`],
+            ["Audio samples", metrics.latencySamples],
+            ["p50 remote audio", metrics.latencyP50 === null ? "—" : `${metrics.latencyP50}ms`],
+            ["p95 remote audio", metrics.latencyP95 === null ? "—" : `${metrics.latencyP95}ms`],
+            ["p99 remote audio", metrics.latencyP99 === null ? "—" : `${metrics.latencyP99}ms`],
           ].map(([label, value]) => (
             <div key={String(label)} className="rounded-2xl bg-white p-4 shadow-sm">
               <p className="text-xs font-bold text-[#817a84]">{label}</p>
@@ -293,6 +295,11 @@ function RitaVoiceAdmin() {
             </div>
           ))}
         </section>
+
+        <p className="mt-2 text-xs text-[#6f6972]">
+          Remote-audio timing is a transport-level proxy, not proof that a speaker played the first
+          sample. Percentiles are provisional below 200 samples (p95) or 1,000 samples (p99).
+        </p>
 
         <section className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-white px-5 py-4 text-sm font-semibold text-[#5d5661]">
           <p>
