@@ -26,7 +26,6 @@ from pipecat.processors.aggregators.llm_response_universal import (
     LLMContextAggregatorPair,
     LLMUserAggregatorParams,
 )
-from pipecat.runner.run import main
 from pipecat.runner.types import DailyRunnerArguments
 from pipecat.services.groq.llm import GroqLLMService
 from pipecat.services.soniox.stt import (
@@ -278,4 +277,6 @@ async def bot(args: DailyRunnerArguments):
 
 
 if __name__ == "__main__":
+    from pipecat.runner.run import main
+
     main()

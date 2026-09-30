@@ -8,4 +8,3 @@ COPY voice-agent/pyproject.toml ./
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --no-dev
 COPY voice-agent/ .
 
-CMD ["uv", "run", "--no-sync", "bot.py", "-t", "daily", "--host", "0.0.0.0", "--port", "8080"]
