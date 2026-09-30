@@ -20,3 +20,8 @@ def test_no_provider_fallback_is_hidden_in_worker():
         for path in ROOT.glob("*.py")
     )
     assert "fallback" not in worker.casefold()
+
+
+def test_cloud_worker_starts_daily_transport():
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    assert 'CMD ["uv", "run", "bot.py", "-t", "daily"]' in dockerfile
