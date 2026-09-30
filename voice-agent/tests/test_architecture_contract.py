@@ -24,4 +24,4 @@ def test_no_provider_fallback_is_hidden_in_worker():
 
 def test_cloud_worker_starts_daily_transport():
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
-    assert 'CMD ["uv", "run", "bot.py", "-t", "daily"]' in dockerfile
+    assert 'CMD ["uv", "run", "--no-sync", "bot.py", "-t", "daily", "--host", "0.0.0.0", "--port", "8080"]' in dockerfile
