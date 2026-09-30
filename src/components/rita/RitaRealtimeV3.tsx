@@ -16,6 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { LearningItem, SaveTarget } from "@/lib/rita-learning";
+import { committedRitaReply, wasRitaInterrupted } from "@/lib/rita-v3-heard";
 import { RitaStage, type RitaMood } from "@/components/rita-live/RitaStage";
 
 type Persona = "kind" | "direct" | "playful" | "strict";
@@ -71,6 +72,13 @@ export function RitaRealtimeV3() {
   const heardBuffer = useRef("");
   const botSpeaking = useRef(false);
   const speechEndedAt = useRef(0);
+  const sessionStartedAt = useRef(0);
+  const llmStartedAt = useRef(0);
+  const firstLlmTokenRecorded = useRef(false);
+  const firstPartialRecorded = useRef(false);
+  const firstRemoteAudioRecorded = useRef(false);
+  const interruptCandidateAt = useRef(0);
+  const turnId = useRef("");
   const fillerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fillerAbort = useRef<AbortController | null>(null);
   const fillerSource = useRef<AudioBufferSourceNode | null>(null);
@@ -119,18 +127,40 @@ export function RitaRealtimeV3() {
 
   const metric = useCallback(
     async (name: string, valueMs?: number, metadata?: Record<string, unknown>) => {
-      if (!sessionId.current) return;
+      const currentSessionId = sessionId.current;
+      if (!currentSessionId) return;
       try {
+        const currentTurnId = turnId.current;
+        const connection = navigator as Navigator & {
+          connection?: { effectiveType?: string };
+        };
         await fetch("/api/rita-v3/session/metrics", {
           method: "POST",
           headers: await authHeaders(),
-          body: JSON.stringify({ sessionId: sessionId.current, name, valueMs, metadata }),
+          body: JSON.stringify({
+            sessionId: currentSessionId,
+            name,
+            valueMs,
+            metadata: {
+              ...metadata,
+              turnId: currentTurnId || undefined,
+              device: /ipad|iphone/i.test(navigator.userAgent)
+                ? "ios"
+                : /android/i.test(navigator.userAgent)
+                  ? "android"
+                  : "desktop",
+              network: connection.connection?.effectiveType ?? "unknown",
+              language,
+              dialect,
+              mode,
+            },
+          }),
         });
       } catch {
         // Metrics never interrupt a lesson.
       }
     },
-    [],
+    [dialect, language, mode],
   );
 
   const fetchDestinations = useCallback(async () => {
@@ -351,15 +381,21 @@ export function RitaRealtimeV3() {
       generatedBuffer.current = "";
       heardBuffer.current = "";
       botSpeaking.current = false;
+      sessionStartedAt.current = performance.now();
       const commitHeardReply = (interrupted = false) => {
-        const reply = heardBuffer.current.trim();
+        // Generated/TTS text is not evidence that interrupted audio was heard.
+        const reply = committedRitaReply({
+          reportedSpokenText: heardBuffer.current,
+          generatedText: generatedBuffer.current,
+          interrupted,
+        });
         heardBuffer.current = "";
         if (!reply) return;
         setMessages((current) => [
           ...current,
           { id: crypto.randomUUID(), role: "rita", text: reply },
         ]);
-        void runExtraction(lastUserText.current, reply);
+        if (!interrupted) void runExtraction(lastUserText.current, reply);
         if (interrupted) void metric("interrupted");
       };
       const pc = new PipecatClient({
@@ -414,20 +450,29 @@ export function RitaRealtimeV3() {
           onUserStartedSpeaking: () => {
             cancelFiller();
             currentTurnHasFinalTranscript.current = false;
-            if (botSpeaking.current) commitHeardReply(true);
-            setStatus("I’m listening…");
-            setMood("listening");
+            firstPartialRecorded.current = false;
+            if (botSpeaking.current) interruptCandidateAt.current = performance.now();
+            turnId.current = crypto.randomUUID();
+            if (!botSpeaking.current) {
+              setStatus("I’m listening…");
+              setMood("listening");
+            }
             void metric("speech_start");
           },
           onUserStoppedSpeaking: () => {
             speechEndedAt.current = performance.now();
+            void metric("speech_end");
+            if (botSpeaking.current) return;
             setStatus("Rita is thinking…");
             setMood("thinking");
-            void metric("speech_end");
             scheduleFiller();
           },
           onUserTranscript: (data) => {
             setCaption(data.text);
+            if (!data.final && data.text.trim() && !firstPartialRecorded.current) {
+              firstPartialRecorded.current = true;
+              void metric("transcript_partial");
+            }
             if (!data.final || !data.text.trim()) return;
             lastUserText.current = data.text.trim();
             currentTurnHasFinalTranscript.current = true;
@@ -440,30 +485,44 @@ export function RitaRealtimeV3() {
           onBotLlmStarted: () => {
             generatedBuffer.current = "";
             heardBuffer.current = "";
+            llmStartedAt.current = performance.now();
+            firstLlmTokenRecorded.current = false;
+            firstRemoteAudioRecorded.current = false;
+            interruptCandidateAt.current = 0;
             setStatus("Rita is answering…");
             void metric("llm_start");
           },
           onBotLlmText: ({ text }) => {
+            if (text && !firstLlmTokenRecorded.current) {
+              firstLlmTokenRecorded.current = true;
+              void metric("llm_first_token", performance.now() - llmStartedAt.current);
+            }
             generatedBuffer.current += text;
           },
           onBotOutput: (data) => {
-            if (data.will_be_spoken === false) return;
+            if (data.will_be_spoken === false || data.spoken_status === "new") return;
             const audible = data.spoken_progress?.accumulated_text?.trim();
             if (audible) heardBuffer.current = audible;
-            else if (data.spoken_status === "completed" && data.text.trim()) {
-              heardBuffer.current = `${heardBuffer.current} ${data.text}`.trim();
-            }
-          },
-          onBotTtsText: ({ text }) => {
-            if (!heardBuffer.current && text.trim()) heardBuffer.current = text.trim();
           },
           onBotStartedSpeaking: () => {
             cancelFiller();
             botSpeaking.current = true;
+            void metric("bot_speaking_signal");
             setStatus("Rita is speaking — interrupt whenever you want");
             setMood("talking");
+          },
+          onRemoteAudioLevel: (level, participant) => {
+            if (
+              participant.local ||
+              !botSpeaking.current ||
+              level < 0.02 ||
+              firstRemoteAudioRecorded.current
+            )
+              return;
+            firstRemoteAudioRecorded.current = true;
             if (speechEndedAt.current) {
-              void metric("first_audio", performance.now() - speechEndedAt.current, {
+              void metric("first_remote_audio", performance.now() - speechEndedAt.current, {
+                source: "remote_audio_level_proxy",
                 generatedCharacters: generatedBuffer.current.length,
               });
               speechEndedAt.current = 0;
@@ -471,7 +530,9 @@ export function RitaRealtimeV3() {
           },
           onBotStoppedSpeaking: () => {
             botSpeaking.current = false;
-            commitHeardReply(false);
+            const interrupted = wasRitaInterrupted(interruptCandidateAt.current, performance.now());
+            commitHeardReply(interrupted);
+            interruptCandidateAt.current = 0;
             void metric("playback_stop");
           },
           onBotTtsStarted: () => {
@@ -502,6 +563,7 @@ export function RitaRealtimeV3() {
       // lightweight start response is not repeated, so the server also reconciles
       // orphaned sessions by timeout.
       void ready;
+      void metric("session_ready", performance.now() - sessionStartedAt.current);
       setActive(true);
       activeRef.current = true;
       setStatus("Rita is listening");
