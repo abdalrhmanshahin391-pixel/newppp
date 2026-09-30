@@ -5,10 +5,14 @@ import { recordRitaV3Event } from "@/lib/rita-v3.server";
 const ALLOWED_EVENTS = new Set([
   "speech_start",
   "speech_end",
+  "transcript_partial",
   "transcript_final",
   "llm_start",
+  "llm_first_token",
   "tts_start",
-  "first_audio",
+  "bot_speaking_signal",
+  "first_remote_audio",
+  "session_ready",
   "interrupted",
   "provider_error",
   "session_connected",
@@ -32,20 +36,25 @@ export const Route = createFileRoute("/api/rita-v3/session/metrics")({
           return Response.json({ ok: false }, { status: 400 });
         }
         const rawMetadata =
-          body.metadata && typeof body.metadata === "object"
-            ? JSON.stringify(body.metadata)
-            : "{}";
+          body.metadata && typeof body.metadata === "object" ? JSON.stringify(body.metadata) : "{}";
         const metadata =
           rawMetadata.length <= 12_000
             ? (JSON.parse(rawMetadata) as Record<string, unknown>)
             : { truncated: true, preview: rawMetadata.slice(0, 11_500) };
-        await recordRitaV3Event({
-          sessionId,
-          userId: auth.userId,
-          name,
-          valueMs: Number.isFinite(Number(body.valueMs)) ? Math.max(0, Number(body.valueMs)) : undefined,
-          metadata,
-        }).catch(() => undefined);
+        try {
+          await recordRitaV3Event({
+            sessionId,
+            userId: auth.userId,
+            name,
+            valueMs: Number.isFinite(Number(body.valueMs))
+              ? Math.max(0, Number(body.valueMs))
+              : undefined,
+            metadata,
+          });
+        } catch (error) {
+          console.error("Rita v3 metric storage failed", error);
+          return Response.json({ ok: false }, { status: 503 });
+        }
         return Response.json({ ok: true });
       },
     },
