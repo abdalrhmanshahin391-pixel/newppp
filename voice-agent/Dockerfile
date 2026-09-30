@@ -4,8 +4,8 @@ ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 
 WORKDIR /app
-COPY pyproject.toml ./
+COPY voice-agent/pyproject.toml ./
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --no-dev
-COPY . .
+COPY voice-agent/ .
 
 CMD ["uv", "run", "bot.py"]
