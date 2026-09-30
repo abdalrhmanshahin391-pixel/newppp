@@ -76,13 +76,15 @@ export const getRitaV3Admin = createServerFn({ method: "GET" })
     ).trim();
     const workerSecrets = await getRitaV3WorkerSecretStatus(storedPrivateKey || env.privateKey);
     const firstAudio = (events ?? [])
-      .filter((item: any) => item.event_name === "first_audio" && Number.isFinite(item.value_ms))
+      .filter(
+        (item: any) => item.event_name === "first_remote_audio" && Number.isFinite(item.value_ms),
+      )
       .map((item: any) => Number(item.value_ms))
       .sort((a: number, b: number) => a - b);
     const percentile = (ratio: number) =>
       firstAudio.length
         ? firstAudio[Math.min(firstAudio.length - 1, Math.ceil(firstAudio.length * ratio) - 1)]
-        : 0;
+        : null;
     return {
       models: RITA_V3_MODELS,
       agentName: env.agentName,
@@ -105,6 +107,7 @@ export const getRitaV3Admin = createServerFn({ method: "GET" })
         active: (sessions ?? []).filter((item: any) => item.status === "connected").length,
         failed: (sessions ?? []).filter((item: any) => item.status === "failed").length,
         uniqueUsers: new Set((sessions ?? []).map((item: any) => item.user_id)).size,
+        latencySamples: firstAudio.length,
         latencyP50: percentile(0.5),
         latencyP95: percentile(0.95),
         latencyP99: percentile(0.99),

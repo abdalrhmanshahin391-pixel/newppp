@@ -323,7 +323,7 @@ export async function getRitaV3Readiness(privateKeyOverride?: string) {
       : `${env.agentName} is not deployed in this Pipecat organization.`,
   });
 
-  let latestSession: Record<string, unknown> | null = null;
+  let latestSession: { id: string; status: string } | null = null;
   let latestLogError: string | null = null;
   if (agent) {
     const [sessionsResult, logsResult] = await Promise.all([
@@ -339,7 +339,10 @@ export async function getRitaV3Readiness(privateKeyOverride?: string) {
     const sessions = Array.isArray(sessionsResult?.payload.sessions)
       ? (sessionsResult.payload.sessions as Record<string, unknown>[])
       : [];
-    latestSession = sessions[0] ?? null;
+    const latest = sessions[0];
+    latestSession = latest
+      ? { id: String(latest.id ?? ""), status: String(latest.status ?? latest.state ?? "unknown") }
+      : null;
     const logs = Array.isArray(logsResult?.payload.logs)
       ? (logsResult.payload.logs as Record<string, unknown>[])
       : [];
