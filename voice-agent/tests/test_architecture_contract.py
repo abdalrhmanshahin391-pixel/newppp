@@ -22,6 +22,12 @@ def test_no_provider_fallback_is_hidden_in_worker():
     assert "fallback" not in worker.casefold()
 
 
-def test_cloud_worker_starts_daily_transport():
+def test_cloud_worker_keeps_base_image_entrypoint():
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
-    assert 'CMD ["uv", "run", "--no-sync", "bot.py", "-t", "daily", "--host", "0.0.0.0", "--port", "8080"]' in dockerfile
+    assert "dailyco/pipecat-base" in dockerfile
+    assert "CMD " not in dockerfile
+
+
+def test_development_runner_is_not_imported_by_cloud_worker():
+    source = (ROOT / "bot.py").read_text(encoding="utf-8")
+    assert 'if __name__ == "__main__":\n    from pipecat.runner.run import main' in source
