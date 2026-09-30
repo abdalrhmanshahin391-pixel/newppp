@@ -26,6 +26,7 @@ def test_cloud_worker_keeps_base_image_entrypoint():
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     assert "dailyco/pipecat-base" in dockerfile
     assert "CMD " not in dockerfile
+    assert "uv sync --inexact --no-dev" in dockerfile
 
 
 def test_development_runner_is_not_imported_by_cloud_worker():
