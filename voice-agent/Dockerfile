@@ -5,6 +5,6 @@ ENV UV_LINK_MODE=copy
 
 WORKDIR /app
 COPY voice-agent/pyproject.toml ./
-RUN --mount=type=cache,target=/root/.cache/uv uv sync --no-dev
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --inexact --no-dev
 COPY voice-agent/ .
 
