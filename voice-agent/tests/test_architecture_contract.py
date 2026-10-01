@@ -32,3 +32,9 @@ def test_cloud_worker_keeps_base_image_entrypoint():
 def test_development_runner_is_not_imported_by_cloud_worker():
     source = (ROOT / "bot.py").read_text(encoding="utf-8")
     assert 'if __name__ == "__main__":\n    from pipecat.runner.run import main' in source
+
+
+def test_groq_reasoning_effort_uses_supported_settings_extra():
+    source = (ROOT / "bot.py").read_text(encoding="utf-8")
+    assert 'extra={"reasoning_effort": "low"}' in source
+    assert '\n            reasoning_effort="low",' not in source
