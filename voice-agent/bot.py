@@ -176,7 +176,7 @@ async def bot(args: DailyRunnerArguments):
             temperature=0.45,
             top_p=0.9,
             max_completion_tokens=240,
-            reasoning_effort="low",
+            extra={"reasoning_effort": "low"},
         ),
     )
 
