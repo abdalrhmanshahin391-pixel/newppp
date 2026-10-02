@@ -23,7 +23,7 @@ function ProductCard({ imageKey, label, title, note, image, imageAlt, side, lear
 
   return (
     <article className="relative min-h-[690px] overflow-hidden rounded-[28px] border border-white/10 bg-[#121212] px-6 pt-12 text-center md:min-h-[760px] md:rounded-[34px] md:px-10 md:pt-14">
-      <p className="text-[20px] font-bold text-white md:text-[22px]">{BRAND_NAME} <span className="font-normal text-white/50">{label}</span></p>
+      <p className="text-[20px] font-bold text-white md:text-[22px]">{BRAND_NAME} <span className="rita-accent font-normal">{label}</span></p>
       <h2 className="mt-6 text-[36px] font-bold leading-[1.05] text-white md:text-[44px]">{title}</h2>
 
       <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
@@ -46,7 +46,7 @@ function ProductCard({ imageKey, label, title, note, image, imageAlt, side, lear
             transform: left ? "perspective(1400px) rotateY(4deg)" : "perspective(1400px) rotateY(-4deg)",
           }}
         >
-          <div className="relative h-full w-full overflow-hidden rounded-[23px] bg-black md:rounded-[28px]">
+          <div className="relative h-full w-full overflow-hidden rounded-[23px] md:rounded-[28px]" style={{ background: "var(--edith-screen)" }}>
             {/* The tablet deliberately runs off the card, so the picture is
                 fitted to the part of the screen that stays visible. */}
             <div
@@ -82,7 +82,7 @@ function CommunityCard() {
   return (
     <article className="relative order-2 flex min-h-[700px] flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[#121212] px-7 pt-10 md:order-1 md:min-h-[790px] md:rounded-[34px] md:px-9 md:pt-12">
       <p className="text-[19px] font-bold text-white md:text-[21px]">
-        {BRAND_NAME} <span className="font-normal text-white/50">Classrooms</span>
+        {BRAND_NAME} <span className="rita-accent font-normal">Classrooms</span>
       </p>
       <h2 className="mt-4 text-[34px] font-bold leading-[1.06] text-white md:text-[40px]">
         Study in your
@@ -106,7 +106,7 @@ function CommunityCard() {
               boxShadow: "0 1px 0 rgba(255,255,255,.22) inset",
             }}
           >
-            <div className="relative h-full w-full overflow-hidden rounded-[33px] bg-black md:rounded-[39px]">
+            <div className="relative h-full w-full overflow-hidden rounded-[33px] md:rounded-[39px]" style={{ background: "var(--edith-screen)" }}>
               <EditableImage
                 imageKey="home.feature.community"
                 fallback={classroomArt.url}
@@ -116,7 +116,7 @@ function CommunityCard() {
                 loading="lazy"
                 className="h-full w-full object-cover object-center"
               />
-              <span aria-hidden className="absolute left-1/2 top-2 z-10 h-[20px] w-[68px] -translate-x-1/2 rounded-full bg-black" />
+              <span aria-hidden className="absolute left-1/2 top-2 z-10 h-[20px] w-[68px] -translate-x-1/2 rounded-full" style={{ background: "#05070b" }} />
             </div>
           </div>
         </div>

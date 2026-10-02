@@ -2,7 +2,6 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { ProHome } from "@/components/home/procreate/ProHome";
 import { InstallAppBanner } from "@/components/InstallAppButton";
-import screenAsset from "@/assets/home-ipad-restored.webp.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -35,7 +34,6 @@ export const Route = createFileRoute("/")({
     ],
     links: [
       { rel: "canonical", href: "https://ritajet.com/" },
-      { rel: "preload", as: "image", href: screenAsset.url, fetchPriority: "high" },
       { rel: "prefetch", href: "/pricing" },
     ],
   }),
@@ -66,7 +64,7 @@ function Index() {
   }, [router]);
 
   return (
-    <div className="edith-dark min-h-screen bg-black text-white">
+    <div className="rita-cream edith-light min-h-screen bg-black text-white">
       <ProHome />
       <InstallAppBanner />
     </div>

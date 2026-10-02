@@ -26,8 +26,14 @@ const SIMPLE_LINKS: { to: string; label: string }[] = [
   { to: "/tutorial", label: "Tutorial" },
 ];
 
-/** Frosted black bar: floats over the home page, sticky on every other page. */
-export function ProHeader({ variant = "transparent" }: { variant?: "transparent" | "solid" } = {}) {
+/**
+ * Frosted bar: floats over the home page, sticky on every other page.
+ * tone "dark" is the black bar; tone "light" is the white bar used on the home page.
+ */
+export function ProHeader({
+  variant = "transparent",
+  tone: headerTone = "dark",
+}: { variant?: "transparent" | "solid"; tone?: "dark" | "light" } = {}) {
   const { t } = useTranslation();
   const { user, profile, isAdmin, isRealAdmin, isGolden, loading: authLoading } = useAuth();
   
@@ -35,6 +41,7 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
   const [accountOpen, setAccountOpen] = useState(false);
   const [sheet, setSheet] = useState(false);
   const solid = variant === "solid";
+  const light = headerTone === "light";
 
   const displayName = profile?.username ?? user?.email ?? "";
   const avatar = useAvatarUrl((profile as any)?.avatar_url ?? null);
@@ -62,23 +69,27 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
 
   const menuLink =
     "rita-ink flex items-center gap-3 border-t border-white/10 px-5 py-3 text-[14px] font-semibold transition-opacity hover:opacity-65";
-  const headerText = "text-white";
-  const headerTextSoft = "text-white/80";
+  const headerText = light ? "rita-ink" : "text-white";
+  const headerTextSoft = light ? "rita-ink-soft" : "text-white/80";
 
   return (
     <header
       className={
-        solid
-          ? "edith-dark edith-header sticky top-0 z-50 border-b border-white/10"
-          : "edith-dark edith-header edith-header-fx fixed inset-x-0 top-0 z-50"
+        light
+          ? solid
+            ? "edith-header edith-header-light sticky top-0 z-50"
+            : "edith-header edith-header-light fixed inset-x-0 top-0 z-50"
+          : solid
+            ? "edith-dark edith-header sticky top-0 z-50 border-b border-white/10"
+            : "edith-dark edith-header edith-header-fx fixed inset-x-0 top-0 z-50"
       }
       style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <div
-        className={`rita-onart relative mx-auto flex h-[72px] max-w-[1120px] items-center justify-between gap-4 px-6 md:px-10`}
+        className={`${light ? "" : "rita-onart"} relative mx-auto flex h-[72px] max-w-[1120px] items-center justify-between gap-4 px-6 md:px-10`}
       >
         <Link to="/" aria-label="EdithLab home" className="shrink-0">
-          <EdithWordmark size={26} />
+          <EdithWordmark size={26} tone={headerTone} />
         </Link>
 
         <nav className="hidden items-center gap-8 lg:flex">
@@ -112,7 +123,7 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
           >
             Pricing
           </Link>
-          {user && <CreditsMeter dark />}
+          {user && <CreditsMeter dark={!light} />}
 
           {authLoading ? (
             <div aria-hidden="true" className="h-9 w-9 animate-pulse rounded-full bg-white/10" />
@@ -120,7 +131,11 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
             <button
               type="button"
               onClick={() => openAuth("signin")}
-              className="inline-flex h-10 items-center rounded-full border border-white/15 bg-white/[0.06] px-5 text-[14px] font-semibold text-white/90 transition-colors hover:bg-white/[0.12] hover:text-white"
+              className={`inline-flex h-10 items-center rounded-full px-5 text-[14px] font-semibold transition-colors ${
+                light
+                  ? "rita-ink border border-black/[0.08] bg-black/[0.03] hover:bg-black/[0.07]"
+                  : "border border-white/15 bg-white/[0.06] text-white/90 hover:bg-white/[0.12] hover:text-white"
+              }`}
               style={{ fontFamily: "var(--font-grotesk)" }}
             >
               Sign in
@@ -133,7 +148,7 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
                 aria-label="Account menu"
                 aria-expanded={accountOpen}
                 data-open={accountOpen ? "true" : "false"}
-                className="rita-ghost ps-1 pe-2"
+                className={`rita-ghost ps-1 pe-2 ${light ? "rita-ghost-solid" : ""}`}
               >
                 <span
                   className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full text-sm font-black text-white ring-2 ring-white/35"
@@ -146,11 +161,11 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
                   )}
                 </span>
                 {isRealAdmin && (
-                  <span className="text-[11px] font-black uppercase tracking-[0.14em] text-white/85">
+                  <span className={`text-[11px] font-black uppercase tracking-[0.14em] ${light ? "rita-accent" : "text-white/85"}`}>
                     Admin
                   </span>
                 )}
-                <ChevronDown size={14} className="text-white/70" />
+                <ChevronDown size={14} className={light ? "rita-ink-soft" : "text-white/70"} />
               </button>
 
               {accountOpen && (
