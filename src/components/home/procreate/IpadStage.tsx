@@ -1,4 +1,5 @@
-import { HandwrittenSignature } from "./HandwrittenSignature";
+import screenAsset from "@/assets/home-ipad-restored.webp.asset.json";
+import { EditableImage } from "@/components/site/EditableImage";
 
 /**
  * A photoreal horizontal iPad Pro shell, deliberately cropped by the top of
@@ -11,7 +12,7 @@ export function IpadStage() {
     <div className="relative w-full overflow-hidden">
       <div className="relative mx-auto w-full max-w-[1100px] px-4 md:px-10">
         {/* Negative top margin pushes about a third of the device off-screen. */}
-        <div className="edith-in-soft -mt-[20%] md:-mt-[22%]" style={{ "--d": "0ms" } as React.CSSProperties}>
+        <div className="-mt-[20%] md:-mt-[22%]">
           <div
             className="relative mx-auto rounded-[2rem] p-[9px] md:rounded-[2.5rem] md:p-[11px]"
             style={{
@@ -33,13 +34,16 @@ export function IpadStage() {
             className="relative aspect-[16/11.6] overflow-hidden rounded-[1.8rem] md:rounded-[2.3rem]"
             style={{ background: "var(--edith-screen)" }}
           >
-            {/* Soft bloom behind the signature */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute left-1/2 top-[66%] aspect-[2/1] w-[80%] -translate-x-1/2 -translate-y-1/2 md:top-[62%] md:w-[64%]"
-              style={{ background: "radial-gradient(closest-side, rgba(190,220,255,0.34), transparent)" }}
+            <EditableImage
+              imageKey="home.ipad"
+              fallback={screenAsset.url}
+              alt="A student reading in a green forest lit by fireflies, shown on an iPad screen"
+              className="absolute inset-x-0 bottom-0 top-[32%] w-full object-cover object-center"
+              width={1280}
+              height={800}
+              loading="eager"
+              fetchPriority="high"
             />
-            <HandwrittenSignature className="absolute left-1/2 top-[66%] w-[66%] -translate-x-1/2 -translate-y-1/2 md:top-[62%] md:w-[52%]" />
 
             {/* Glass sheen across the panel */}
             <span
