@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { EditableImage } from "@/components/site/EditableImage";
 import { useReveal } from "@/hooks/useReveal";
+import { BRAND_NAME } from "@/lib/brand";
 import memoryArt from "@/assets/card-memory.jpg.asset.json";
 import examsArt from "@/assets/card-exams.jpg.asset.json";
 import todoArt from "@/assets/card-todo.jpg.asset.json";
@@ -50,14 +51,14 @@ export function FeatureTriptych() {
     <section className="py-28 md:py-40">
       <div className="mx-auto w-full max-w-[1240px] px-5 md:px-8">
         <div className="mx-auto max-w-[920px] text-center">
-          <p className="rita-accent text-[12px] font-black uppercase tracking-[0.18em]">
+          <p className="text-[12px] font-black uppercase tracking-[0.18em] text-white/60">
             Three ways to stay ahead
           </p>
           <h2 className="mt-6 text-[42px] font-bold leading-[1.04] text-white md:text-[68px]">
-            Your memory, schedule and next move — <span className="rita-accent">working together.</span>
+            Your memory, schedule and next move, <span className="rita-accent">working together.</span>
           </h2>
           <p className="mx-auto mt-7 max-w-[680px] text-[18px] leading-[1.6] text-white/55 md:text-[21px]">
-            RitaJet turns a busy semester into three clear habits: remember what matters,
+            {BRAND_NAME} turns a busy semester into three clear habits: remember what matters,
             know what is coming and finish one useful task at a time.
           </p>
         </div>

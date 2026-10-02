@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { EditableImage } from "@/components/site/EditableImage";
+import { BRAND_NAME } from "@/lib/brand";
 import face1 from "@/assets/student-face-1.jpg.asset.json";
 import face2 from "@/assets/student-face-2.jpg.asset.json";
 import face3 from "@/assets/student-face-3.jpg.asset.json";
@@ -36,7 +37,7 @@ export function ShareBand() {
               {FACES.map((url, i) => (
                 <span
                   key={url}
-                  className="relative h-[74px] w-[74px] overflow-hidden rounded-full ring-[3px] ring-[color:var(--pro-card)]"
+                  className="relative h-[74px] w-[74px] overflow-hidden rounded-full ring-[3px] ring-[#131313]"
                   style={{ marginLeft: i === 0 ? 0 : -14 }}
                 >
                   <EditableImage
@@ -51,7 +52,7 @@ export function ShareBand() {
               ))}
             </div>
             <p className="mt-6 max-w-[430px] text-[17px] font-semibold leading-[1.45] text-white md:text-[19px]">
-              Publish a deck once and every student on RitaJet can study it,
+              Publish a deck once and every student on {BRAND_NAME} can study it,
               save it and build on it.
             </p>
           </div>

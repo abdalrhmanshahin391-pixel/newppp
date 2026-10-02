@@ -80,7 +80,7 @@ export function PhoneExperienceTip() {
             ) : (
               <>
                 For the best study experience with flashcards, PDF summaries & question banks, we recommend opening{" "}
-                <span className="font-bold text-[#23201d]">RitaJet</span> on an{" "}
+                <span className="font-bold text-[#23201d]">EdithLab</span> on an{" "}
                 <span className="font-bold text-emerald-950">iPad or laptop</span>! 💻📱
               </>
             )}

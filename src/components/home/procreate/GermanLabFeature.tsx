@@ -12,7 +12,7 @@ export function GermanLabFeature() {
     <section className="overflow-hidden py-32 md:py-52">
       <div className="mx-auto w-full max-w-[1240px] px-5 md:px-8">
         <div ref={opening.ref} className={`rita-reveal max-w-[1040px] ${opening.shown ? "rita-reveal-in" : ""}`}>
-          <p className="rita-accent text-[12px] font-black uppercase tracking-[0.18em]">German Lab</p>
+          <p className="text-[12px] font-black uppercase tracking-[0.18em] text-white/60">German Lab</p>
           <h2 className="rita-ink mt-7 text-[42px] font-bold leading-[1.06] md:text-[70px]">
             Stop guessing the words that matter. Learn the pattern, then{" "}
             <span className="rita-accent">say it with confidence.</span>
@@ -40,7 +40,7 @@ export function GermanLabFeature() {
         <div ref={closing.ref} className={`rita-reveal mx-auto mt-24 max-w-[900px] text-center md:mt-40 ${closing.shown ? "rita-reveal-in" : ""}`} style={{ transitionDelay: "120ms" }}>
           <p className="rita-ink text-[36px] font-bold leading-[1.12] md:text-[58px]">
             See <span className="text-[color:var(--german-der)]">der</span>, hear every sound,
-            and rebuild the sentence — <span className="rita-accent">all from one word shelf.</span>
+            and rebuild the sentence, <span className="rita-accent">all from one word shelf.</span>
           </p>
           <div className="mt-10 flex justify-center">
             <Link to="/german" className="rita-btn rita-btn-primary">Open German Lab</Link>

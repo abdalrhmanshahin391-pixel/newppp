@@ -2841,3 +2841,215 @@ hairline borders and generous radii.
     animation: none;
   }
 }
+
+/* ===========================================================================
+   EdithLab dark scope (home page, header, footer)
+   Black surface, white ink, white as the single accent. Scoped so the cream
+   pages (pricing, study, admin) keep their own palette.
+   =========================================================================== */
+.edith-dark {
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --foreground: oklch(0.98 0 0);
+  --muted-foreground: oklch(1 0 0 / 60%);
+  --border: oklch(1 0 0 / 12%);
+  color-scheme: dark;
+}
+
+/* White replaces the green emphasis; the rest of the headline steps back. */
+.edith-dark .rita-accent {
+  color: #fff !important;
+}
+.edith-dark :is(h1, h2):has(> .rita-accent) {
+  color: rgb(255 255 255 / 0.5);
+}
+.edith-dark .rita-ink {
+  color: #fff !important;
+}
+.edith-dark .rita-ink-soft {
+  color: rgb(255 255 255 / 0.62) !important;
+}
+.edith-dark .rita-hairline {
+  border-color: rgb(255 255 255 / 0.12) !important;
+}
+
+/* Buttons: white pill with black text, quiet translucent secondary. */
+.edith-dark .rita-btn-primary,
+.edith-dark.rita-btn-primary {
+  background-color: #fff;
+  color: #000;
+}
+.edith-dark .rita-btn-primary:hover {
+  background-color: rgb(255 255 255 / 0.86);
+}
+.edith-dark .rita-btn-secondary {
+  background-color: rgb(255 255 255 / 0.1);
+  color: #fff;
+}
+.edith-dark .rita-btn-secondary:hover {
+  background-color: rgb(255 255 255 / 0.17);
+}
+.edith-dark .rita-btn:focus-visible {
+  outline-color: #fff;
+}
+.edith-dark .rita-btn {
+  transition:
+    background-color 0.15s ease,
+    transform 0.16s var(--ease-out-strong),
+    opacity 0.15s ease;
+}
+.edith-dark .rita-btn:active {
+  transform: scale(0.97);
+}
+
+/* Dropped panels (account menu, mobile sheet) turn dark with the header. */
+.edith-dark .rita-panel {
+  background-color: #0d0d0d !important;
+  color: #fff !important;
+  border-color: rgb(255 255 255 / 0.12) !important;
+}
+.edith-dark .rita-onart .rita-panel .text-white,
+.edith-dark .rita-panel .text-white {
+  color: #fff !important;
+}
+.edith-dark .rita-onart .rita-panel [class*="text-white/"],
+.edith-dark .rita-panel [class*="text-white/"] {
+  color: rgb(255 255 255 / 0.62) !important;
+}
+.edith-dark .rita-onart .rita-panel [class*="border-white/"],
+.edith-dark .rita-panel [class*="border-white/"] {
+  border-color: rgb(255 255 255 / 0.12) !important;
+}
+.edith-dark .rita-onart .rita-panel [class*="bg-white/"],
+.edith-dark .rita-panel [class*="bg-white/"] {
+  background-color: rgb(255 255 255 / 0.08) !important;
+}
+
+/* Header: a frosted layer behind the bar. On the home page it fades in as the
+   page scrolls (scroll-driven, no JS); everywhere else it is always on. */
+.edith-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgb(0 0 0 / 0.78);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  pointer-events: none;
+}
+@keyframes edith-header-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@supports (animation-timeline: scroll()) {
+  .edith-header-fx::before {
+    opacity: 0;
+    animation: edith-header-in linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 96px;
+  }
+}
+
+/* Entrance: transform and opacity only, once, strong ease-out. */
+@keyframes edith-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes edith-rise-soft {
+  from {
+    opacity: 0.55;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.edith-in {
+  animation: edith-rise 650ms var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) both;
+  animation-delay: var(--d, 0ms);
+}
+.edith-in-soft {
+  animation: edith-rise-soft 800ms var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) both;
+  animation-delay: var(--d, 0ms);
+}
+
+/* Scroll reveal on the home sections: same hook, stronger curve. */
+.edith-dark .rita-reveal {
+  transform: translateY(22px);
+  transition:
+    opacity 700ms var(--ease-out-strong),
+    transform 700ms var(--ease-out-strong);
+}
+.edith-dark .rita-reveal-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Footer links: colour only, quick. */
+.edith-link {
+  color: rgb(255 255 255 / 0.62);
+  transition: color 0.15s ease;
+}
+.edith-link:hover {
+  color: #fff;
+}
+.edith-link:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edith-in,
+  .edith-in-soft {
+    animation: none;
+  }
+  .edith-header-fx::before {
+    animation: none;
+    opacity: 1;
+  }
+  .edith-dark .rita-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .edith-dark .rita-btn:active {
+    transform: none;
+  }
+  .edith-link {
+    transition: none;
+  }
+}
+
+/* Install banner on the dark home page. */
+.edith-dark .rita-install-banner {
+  border-color: rgb(255 255 255 / 0.14);
+  background: #111;
+  box-shadow: 0 20px 55px -30px rgb(0 0 0 / 0.9);
+}
+.edith-dark .rita-install-banner p {
+  color: #fff;
+}
+.edith-dark .rita-install-banner p + p {
+  color: rgb(255 255 255 / 0.6);
+}
+
+/* Headlines that use rita-ink (forced white) still step back around the accent. */
+.edith-dark .rita-ink:has(> .rita-accent) {
+  color: rgb(255 255 255 / 0.5) !important;
+}
+
+/* Solid header (every page except home): fully black, no cream bleed-through. */
+.edith-header:not(.edith-header-fx)::before {
+  background: #000;
+}

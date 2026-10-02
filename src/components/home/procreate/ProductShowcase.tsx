@@ -4,6 +4,7 @@ import plansArt from "@/assets/home-plans-restored.webp.asset.json";
 import classroomArt from "@/assets/classroom-study-group.jpg.asset.json";
 import flashcardsArt from "@/assets/rita-flashcards-feature.webp.asset.json";
 import { EditableImage } from "@/components/site/EditableImage";
+import { BRAND_NAME } from "@/lib/brand";
 
 type ProductCardProps = {
   imageKey: string;
@@ -22,7 +23,7 @@ function ProductCard({ imageKey, label, title, note, image, imageAlt, side, lear
 
   return (
     <article className="relative min-h-[690px] overflow-hidden rounded-[28px] border border-white/10 bg-[#121212] px-6 pt-12 text-center md:min-h-[760px] md:rounded-[34px] md:px-10 md:pt-14">
-      <p className="text-[20px] font-bold text-white md:text-[22px]">RitaJet <span className="rita-accent font-normal">{label}</span></p>
+      <p className="text-[20px] font-bold text-white md:text-[22px]">{BRAND_NAME} <span className="font-normal text-white/50">{label}</span></p>
       <h2 className="mt-6 text-[36px] font-bold leading-[1.05] text-white md:text-[44px]">{title}</h2>
 
       <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
@@ -81,7 +82,7 @@ function CommunityCard() {
   return (
     <article className="relative order-2 flex min-h-[700px] flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[#121212] px-7 pt-10 md:order-1 md:min-h-[790px] md:rounded-[34px] md:px-9 md:pt-12">
       <p className="text-[19px] font-bold text-white md:text-[21px]">
-        RitaJet <span className="rita-accent font-normal">Classrooms</span>
+        {BRAND_NAME} <span className="font-normal text-white/50">Classrooms</span>
       </p>
       <h2 className="mt-4 text-[34px] font-bold leading-[1.06] text-white md:text-[40px]">
         Study in your
@@ -109,7 +110,7 @@ function CommunityCard() {
               <EditableImage
                 imageKey="home.feature.community"
                 fallback={classroomArt.url}
-                alt="A group of students studying together with shared RitaJet flashcards"
+                alt="A group of students studying together with shared EdithLab flashcards"
                 width={1024}
                 height={1536}
                 loading="lazy"
@@ -130,7 +131,7 @@ function FlashcardsFeatureCard() {
       <EditableImage
         imageKey="home.feature.flashcards"
         fallback={flashcardsArt.url}
-        alt="A student reviewing a RitaJet medical flashcard on an iPad"
+        alt="A student reviewing an EdithLab medical flashcard on an iPad"
         width={1536}
         height={1024}
         loading="eager"
@@ -169,7 +170,7 @@ export function ProductShowcase() {
           title="Study without limits."
           note="Flexible plans for every study rhythm."
           image={plansArt.url}
-          imageAlt="RitaJet study plans displayed across a focused night-time study workspace"
+          imageAlt="EdithLab study plans displayed across a focused night-time study workspace"
           side="left"
           learnLabel="See plan details"
           buyLabel="Buy a plan"
@@ -180,7 +181,7 @@ export function ProductShowcase() {
           title="Everything in one place."
           note="Flashcards, summaries and questions."
           image={toolkitArt.url}
-          imageAlt="A student reviewing colorful flashcards with the RitaJet toolkit on an iPad"
+          imageAlt="A student reviewing colorful flashcards with the EdithLab toolkit on an iPad"
           side="right"
           learnLabel="Explore the toolkit"
           buyLabel="Buy the toolkit"

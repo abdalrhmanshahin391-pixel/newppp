@@ -7,13 +7,13 @@ import screenAsset from "@/assets/home-ipad-restored.webp.asset.json";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "RitaJet — Learn. Recall. Pass." },
+      { title: "EdithLab: Learn. Recall. Pass." },
       {
         name: "description",
         content:
-          "RitaJet turns your notes and lecture PDFs into smart flashcards, clean one-page summaries and AI-written practice questions.",
+          "EdithLab turns your notes and lecture PDFs into smart flashcards, clean one-page summaries and AI-written practice questions.",
       },
-      { property: "og:title", content: "RitaJet — Learn. Recall. Pass." },
+      { property: "og:title", content: "EdithLab: Learn. Recall. Pass." },
       {
         property: "og:description",
         content:
@@ -66,7 +66,7 @@ function Index() {
   }, [router]);
 
   return (
-    <div className="rita-cream min-h-screen bg-black text-white">
+    <div className="edith-dark min-h-screen bg-black text-white">
       <ProHome />
       <InstallAppBanner />
     </div>

@@ -3,14 +3,14 @@ import { Link } from "@tanstack/react-router";
 import { useLang } from "@/components/LanguageProvider";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { SUPPORT_EMAIL } from "@/lib/legal-content";
-import { RitaBrand } from "@/components/brand/RitaBrand";
+import { EdithWordmark } from "@/components/brand/EdithWordmark";
+import { BRAND_NAME } from "@/lib/brand";
 
 type Col = { heading: string; links: { label: string; to: string }[] };
 
 /**
- * RitaJet footer — cream paper, warm ink, green as the only accent.
- * Wordmark and tagline on the left, four link columns on the right,
- * then a quiet bottom row.
+ * EdithLab footer: black surface, white ink. Wordmark and tagline on the
+ * left, four link columns on the right, then a quiet bottom row.
  */
 export function SiteFooter() {
   const { lang } = useLang();
@@ -59,42 +59,36 @@ export function SiteFooter() {
 
   return (
     <footer
-      className="mt-auto"
-      style={{
-        fontFamily: "var(--font-grotesk)",
-        background: "var(--pro-page)",
-        color: "var(--pro-ink)",
-        borderTop: "1px solid color-mix(in oklab, var(--pro-ink) 10%, transparent)",
-      }}
+      className="edith-dark mt-auto bg-black text-white"
+      style={{ fontFamily: "var(--font-grotesk)", borderTop: "1px solid rgb(255 255 255 / 0.1)" }}
     >
-      <div className="mx-auto max-w-[1240px] px-6 py-16 md:px-10 md:py-20">
-        <div className="grid gap-12 md:grid-cols-[minmax(0,1fr)_minmax(0,2.1fr)]">
+      <div className="mx-auto max-w-[1240px] px-6 py-16 md:px-10 md:py-24">
+        <div className="grid gap-14 md:grid-cols-[minmax(0,1fr)_minmax(0,2.1fr)]">
           <div className="min-w-0">
-            <RitaBrand size={52} />
-            <p className="rita-ink-soft mt-2 max-w-[22rem] text-[16px] leading-relaxed">
+            <Link to="/" aria-label={`${BRAND_NAME} home`} className="inline-block">
+              <EdithWordmark size={36} />
+            </Link>
+            <p className="mt-4 max-w-[22rem] text-[16px] leading-relaxed text-white/60">
               {ar
-                ? "بطاقات وملخّصات وأسئلة من مادّتك أنت — في مكان واحد هادئ."
-                : "Flashcards, summaries and practice questions from your own material — in one calm place."}
+                ? "بطاقات وملخّصات وأسئلة من مادّتك أنت، في مكان واحد هادئ."
+                : "Flashcards, summaries and practice questions from your own material, in one calm place."}
             </p>
             <a
               href={`mailto:${SUPPORT_EMAIL}`}
-              className="rita-accent mt-6 inline-block text-[15px] font-semibold hover:underline"
+              className="mt-6 inline-block text-[15px] font-semibold text-white underline decoration-white/30 underline-offset-4 transition-colors hover:decoration-white"
             >
               {SUPPORT_EMAIL}
             </a>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-4">
             {columns.map((col) => (
-              <nav key={col.heading} className="min-w-0">
-                <h3 className="text-[15px] font-bold tracking-[-0.01em]">{col.heading}</h3>
-                <ul className="mt-4 space-y-3">
+              <nav key={col.heading} className="min-w-0" aria-label={col.heading}>
+                <h3 className="text-[14px] font-semibold tracking-[-0.01em] text-white">{col.heading}</h3>
+                <ul className="mt-5 space-y-3.5">
                   {col.links.map((l) => (
                     <li key={l.to + l.label}>
-                      <Link
-                        to={l.to as any}
-                        className="rita-ink-soft text-[15px] transition-colors hover:!text-[color:var(--rita-green-deep)]"
-                      >
+                      <Link to={l.to as any} className="edith-link text-[15px]">
                         {l.label}
                       </Link>
                     </li>
@@ -105,28 +99,25 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div
-          className="mt-14 pt-7 md:mt-16"
-          style={{ borderTop: "1px solid color-mix(in oklab, var(--pro-ink) 10%, transparent)" }}
-        >
+        <div className="mt-16 border-t border-white/10 pt-7 md:mt-20">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-            <p className="rita-ink-soft max-w-md text-[13.5px] leading-relaxed">
-              © {new Date().getFullYear()} {settings.site_name || "RitaJet"}.{" "}
+            <p className="max-w-md text-[13.5px] leading-relaxed text-white/50">
+              © {new Date().getFullYear()} {BRAND_NAME}.{" "}
               {ar ? "جميع الحقوق محفوظة." : "All rights reserved."}
             </p>
-            <div className="rita-ink-soft flex flex-wrap gap-x-8 gap-y-2 text-[13.5px]">
-              <Link to="/support" className="transition-colors hover:!text-[color:var(--rita-green-deep)]">
+            <div className="flex flex-wrap gap-x-8 gap-y-2 text-[13.5px]">
+              <Link to="/support" className="edith-link">
                 {ar ? "مركز المساعدة" : "Help Center"}
               </Link>
-              <Link to="/my-plan" className="transition-colors hover:!text-[color:var(--rita-green-deep)]">
+              <Link to="/my-plan" className="edith-link">
                 {ar ? "خطتي" : "My plan"}
               </Link>
-              <Link to="/register" className="transition-colors hover:!text-[color:var(--rita-green-deep)]">
+              <Link to="/register" className="edith-link">
                 {ar ? "إنشاء حساب" : "Create account"}
               </Link>
-              <Link to="/terms" className="transition-colors hover:!text-[color:var(--rita-green-deep)]">Terms</Link>
-              <Link to="/privacy-policy" className="transition-colors hover:!text-[color:var(--rita-green-deep)]">Privacy</Link>
-              <Link to="/refund-policy" className="transition-colors hover:!text-[color:var(--rita-green-deep)]">Refunds</Link>
+              <Link to="/terms" className="edith-link">Terms</Link>
+              <Link to="/privacy-policy" className="edith-link">Privacy</Link>
+              <Link to="/refund-policy" className="edith-link">Refunds</Link>
             </div>
           </div>
         </div>
