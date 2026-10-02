@@ -3115,44 +3115,7 @@ hairline borders and generous radii.
   box-shadow: 0 1px 0 rgb(10 15 26 / 0.08);
 }
 
-/* Handwritten signature: write-on by CSS (works on first paint and without JS). */
-.edith-sig {
-  overflow: visible;
-  filter: drop-shadow(0 0 16px rgb(170 205 255 / 0.55));
-}
-.edith-sig .sig-draw {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: edith-sig-draw var(--sig-dur) var(--sig-ease) var(--sig-delay) both;
-}
-@keyframes edith-sig-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-.edith-sig .sig-dot {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: edith-sig-dot 140ms var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) 2080ms both;
-}
-@keyframes edith-sig-dot {
-  from {
-    opacity: 0;
-    transform: scale(0.2);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
-  .edith-sig .sig-draw {
-    animation: none;
-    stroke-dashoffset: 0;
-  }
-  .edith-sig .sig-dot {
-    animation: none;
-  }
   .edith-light .rita-reveal {
     opacity: 1;
     transform: none;
@@ -3162,3 +3125,4 @@ hairline borders and generous radii.
     transform: none;
   }
 }
+
