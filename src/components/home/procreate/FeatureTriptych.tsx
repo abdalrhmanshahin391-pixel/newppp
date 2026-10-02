@@ -51,7 +51,7 @@ export function FeatureTriptych() {
     <section className="py-28 md:py-40">
       <div className="mx-auto w-full max-w-[1240px] px-5 md:px-8">
         <div className="mx-auto max-w-[920px] text-center">
-          <p className="text-[12px] font-black uppercase tracking-[0.18em] text-white/60">
+          <p className="rita-accent text-[12px] font-black uppercase tracking-[0.18em]">
             Three ways to stay ahead
           </p>
           <h2 className="mt-6 text-[42px] font-bold leading-[1.04] text-white md:text-[68px]">

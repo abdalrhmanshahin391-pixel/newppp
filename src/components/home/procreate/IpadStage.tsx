@@ -1,5 +1,4 @@
-import screenAsset from "@/assets/home-ipad-restored.webp.asset.json";
-import { EditableImage } from "@/components/site/EditableImage";
+import { HandwrittenSignature } from "./HandwrittenSignature";
 
 /**
  * A photoreal horizontal iPad Pro shell, deliberately cropped by the top of
@@ -30,17 +29,17 @@ export function IpadStage() {
           />
 
           {/* Screen — landscape tablet panel; artwork fills the visible band */}
-          <div className="relative aspect-[16/11.6] overflow-hidden rounded-[1.8rem] bg-black md:rounded-[2.3rem]">
-            <EditableImage
-              imageKey="home.ipad"
-              fallback={screenAsset.url}
-              alt="A student reading in a green forest lit by fireflies, shown on an iPad screen"
-              className="absolute inset-x-0 bottom-0 top-[32%] w-full object-cover object-center"
-              width={1280}
-              height={800}
-              loading="eager"
-              fetchPriority="high"
+          <div
+            className="relative aspect-[16/11.6] overflow-hidden rounded-[1.8rem] md:rounded-[2.3rem]"
+            style={{ background: "var(--edith-screen)" }}
+          >
+            {/* Soft bloom behind the signature */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 top-[66%] aspect-[2/1] w-[80%] -translate-x-1/2 -translate-y-1/2 md:top-[62%] md:w-[64%]"
+              style={{ background: "radial-gradient(closest-side, rgba(190,220,255,0.34), transparent)" }}
             />
+            <HandwrittenSignature className="absolute left-1/2 top-[66%] w-[66%] -translate-x-1/2 -translate-y-1/2 md:top-[62%] md:w-[52%]" />
 
             {/* Glass sheen across the panel */}
             <span

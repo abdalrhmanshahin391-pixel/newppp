@@ -37,7 +37,7 @@ export function ShareBand() {
               {FACES.map((url, i) => (
                 <span
                   key={url}
-                  className="relative h-[74px] w-[74px] overflow-hidden rounded-full ring-[3px] ring-[#131313]"
+                  className="relative h-[74px] w-[74px] overflow-hidden rounded-full ring-[3px] ring-[color:var(--pro-card)]"
                   style={{ marginLeft: i === 0 ? 0 : -14 }}
                 >
                   <EditableImage

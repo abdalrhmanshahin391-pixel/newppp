@@ -3053,3 +3053,112 @@ hairline borders and generous radii.
 .edith-header:not(.edith-header-fx)::before {
   background: #000;
 }
+
+/* ===========================================================================
+   EdithLab light scope (home page): white surface, ink text, blue accent.
+   Reuses the cream remapping (.rita-cream) by overriding its variables, so the
+   original layout and device shells are untouched; only colour changes.
+   =========================================================================== */
+.edith-light {
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --pro-page: #ffffff;
+  --pro-card: #f4f6f9;
+  --pro-ink: #0a0f1a;
+  --pro-muted: #5b6676;
+  --rita-green: #0457cb;
+  --rita-green-deep: #0457cb;
+  --rita-green-ink: #ffffff;
+  --rita-green-soft: #e7f3ff;
+  --font-grotesk: "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
+  /* Deep blue "screen" with a soft light, used inside the iPad and phone shells. */
+  --edith-screen:
+    radial-gradient(70% 55% at 78% 30%, rgb(125 185 255 / 0.5), transparent 62%),
+    radial-gradient(75% 70% at 12% 100%, rgb(4 87 203 / 0.95), transparent 66%),
+    linear-gradient(162deg, #0b2468 0%, #0457cb 46%, #06194a 100%);
+  color-scheme: light;
+}
+.edith-light .rita-btn-primary:hover {
+  background-color: #0a47a8;
+}
+.edith-light .rita-btn-secondary {
+  background-color: rgb(4 87 203 / 0.09);
+  color: #0457cb;
+}
+.edith-light .rita-btn-secondary:hover {
+  background-color: rgb(4 87 203 / 0.15);
+}
+.edith-light .rita-btn {
+  transition:
+    background-color 0.15s ease,
+    transform 0.16s var(--ease-out-strong),
+    opacity 0.15s ease;
+}
+.edith-light .rita-btn:active {
+  transform: scale(0.97);
+}
+.edith-light .rita-reveal {
+  transform: translateY(22px);
+  transition:
+    opacity 700ms var(--ease-out-strong),
+    transform 700ms var(--ease-out-strong);
+}
+.edith-light .rita-reveal-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Light header: white frosted layer behind the bar, fades in on scroll on the home page. */
+.edith-header.edith-header-light::before {
+  background: rgb(255 255 255 / 0.84);
+  box-shadow: 0 1px 0 rgb(10 15 26 / 0.08);
+}
+
+/* Handwritten signature: write-on by CSS (works on first paint and without JS). */
+.edith-sig {
+  overflow: visible;
+  filter: drop-shadow(0 0 16px rgb(170 205 255 / 0.55));
+}
+.edith-sig .sig-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: edith-sig-draw var(--sig-dur) var(--sig-ease) var(--sig-delay) both;
+}
+@keyframes edith-sig-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.edith-sig .sig-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: edith-sig-dot 140ms var(--ease-out-strong, cubic-bezier(0.23, 1, 0.32, 1)) 2080ms both;
+}
+@keyframes edith-sig-dot {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .edith-sig .sig-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .edith-sig .sig-dot {
+    animation: none;
+  }
+  .edith-light .rita-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .edith-light .rita-btn:active {
+    transform: none;
+  }
+}
