@@ -86,7 +86,7 @@ function IosSheet({ onClose }: { onClose: () => void }) {
           <div className="flex items-center gap-3">
             <RitaFace size={52} />
             <div>
-              <p className="text-[17px] font-black leading-tight">Keep RitaJet one tap away</p>
+              <p className="text-[17px] font-black leading-tight">Keep EdithLab one tap away</p>
               <p className="mt-1 text-[13px] text-[color:var(--pro-muted)]">Add it to your Home Screen.</p>
             </div>
           </div>
@@ -115,7 +115,7 @@ function IosSheet({ onClose }: { onClose: () => void }) {
         </ol>
 
         <p className="mt-5 border-t border-[color:color-mix(in_oklab,var(--pro-ink)_9%,transparent)] pt-4 text-[12px] leading-relaxed text-[color:var(--pro-muted)]">
-          Safari uses these two quick steps on iPhone and iPad. RitaJet will then open like an app.
+          Safari uses these two quick steps on iPhone and iPad. EdithLab will then open like an app.
         </p>
       </div>
     </div>
@@ -177,7 +177,7 @@ export function InstallAppBanner() {
         <div className="rita-install-banner flex items-center gap-3 rounded-[24px] border p-3 shadow-xl">
           <RitaFace size={44} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[14px] font-black text-[color:var(--pro-ink)]">Keep RitaJet close</p>
+            <p className="truncate text-[14px] font-black text-[color:var(--pro-ink)]">Keep EdithLab close</p>
             <p className="truncate text-[12px] text-[color:var(--pro-muted)]">Open it from your Home Screen.</p>
           </div>
           <button

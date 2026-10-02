@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CreditsMeter } from "@/components/CreditsMeter";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { avatarTone, useAvatarUrl } from "@/lib/avatars";
-import { RitaBrand } from "@/components/brand/RitaBrand";
+import { EdithWordmark } from "@/components/brand/EdithWordmark";
 import { StartLearningLink } from "@/components/StartLearningLink";
 
 const SIMPLE_LINKS: { to: string; label: string }[] = [
@@ -26,7 +26,7 @@ const SIMPLE_LINKS: { to: string; label: string }[] = [
   { to: "/tutorial", label: "Tutorial" },
 ];
 
-/** Transparent over artwork on the home page, solid cream everywhere else. */
+/** Frosted black bar: floats over the home page, sticky on every other page. */
 export function ProHeader({ variant = "transparent" }: { variant?: "transparent" | "solid" } = {}) {
   const { t } = useTranslation();
   const { user, profile, isAdmin, isRealAdmin, isGolden, loading: authLoading } = useAuth();
@@ -61,36 +61,24 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
   }
 
   const menuLink =
-    "rita-ink flex items-center gap-3 border-t border-black/[0.07] px-5 py-3 text-[14px] font-semibold transition-opacity hover:opacity-65";
-  const headerText = solid ? "rita-ink" : "text-white";
-  const headerTextSoft = solid ? "rita-ink-soft" : "text-white/80";
+    "rita-ink flex items-center gap-3 border-t border-white/10 px-5 py-3 text-[14px] font-semibold transition-opacity hover:opacity-65";
+  const headerText = "text-white";
+  const headerTextSoft = "text-white/80";
 
   return (
     <header
       className={
         solid
-          ? "rita-cream rita-panel sticky top-0 z-50 border-b border-black/[0.06]"
-          : "absolute inset-x-0 top-0 z-50"
+          ? "edith-dark edith-header sticky top-0 z-50 border-b border-white/10"
+          : "edith-dark edith-header edith-header-fx fixed inset-x-0 top-0 z-50"
       }
+      style={{ fontFamily: "var(--font-grotesk)" }}
     >
-      {/* Soft scrim so white words stay readable over the artwork below. */}
-      {!solid && (
-        <span
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 h-[130px]"
-          style={{
-            background:
-              "linear-gradient(180deg,rgba(0,0,0,.34) 0%,rgba(0,0,0,.14) 55%,rgba(0,0,0,0) 100%)",
-          }}
-        />
-      )}
       <div
-        className={`${
-          solid ? "" : "rita-onart"
-        } relative mx-auto flex h-[72px] max-w-[1120px] items-center justify-between gap-4 px-6 md:px-10`}
+        className={`rita-onart relative mx-auto flex h-[72px] max-w-[1120px] items-center justify-between gap-4 px-6 md:px-10`}
       >
-        <Link to="/" className="shrink-0">
-          <RitaBrand size={38} onArtwork={!solid} />
+        <Link to="/" aria-label="EdithLab home" className="shrink-0">
+          <EdithWordmark size={26} />
         </Link>
 
         <nav className="hidden items-center gap-8 lg:flex">
@@ -124,7 +112,7 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
           >
             Pricing
           </Link>
-          {user && <CreditsMeter dark={!solid} />}
+          {user && <CreditsMeter dark />}
 
           {authLoading ? (
             <div aria-hidden="true" className="h-9 w-9 animate-pulse rounded-full bg-white/10" />
@@ -132,11 +120,7 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
             <button
               type="button"
               onClick={() => openAuth("signin")}
-              className={`inline-flex h-10 items-center rounded-full px-5 text-[14px] font-semibold transition-colors ${
-                solid
-                  ? "rita-ink border border-black/[0.08] bg-black/[0.03] hover:bg-black/[0.07]"
-                  : "border border-white/15 bg-white/[0.06] text-white/90 backdrop-blur-xl hover:bg-white/[0.12] hover:text-white"
-              }`}
+              className="inline-flex h-10 items-center rounded-full border border-white/15 bg-white/[0.06] px-5 text-[14px] font-semibold text-white/90 transition-colors hover:bg-white/[0.12] hover:text-white"
               style={{ fontFamily: "var(--font-grotesk)" }}
             >
               Sign in
@@ -149,7 +133,7 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
                 aria-label="Account menu"
                 aria-expanded={accountOpen}
                 data-open={accountOpen ? "true" : "false"}
-                className={`rita-ghost ps-1 pe-2 ${solid ? "rita-ghost-solid" : ""}`}
+                className="rita-ghost ps-1 pe-2"
               >
                 <span
                   className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full text-sm font-black text-white ring-2 ring-white/35"
@@ -162,15 +146,15 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
                   )}
                 </span>
                 {isRealAdmin && (
-                  <span className={`rita-accent text-[11px] font-black uppercase tracking-[0.14em] ${solid ? "" : "!text-white/85"}`}>
+                  <span className="text-[11px] font-black uppercase tracking-[0.14em] text-white/85">
                     Admin
                   </span>
                 )}
-                <ChevronDown size={14} className={solid ? "rita-ink-soft" : "text-white/70"} />
+                <ChevronDown size={14} className="text-white/70" />
               </button>
 
               {accountOpen && (
-                <div className="rita-panel absolute right-0 z-50 mt-3 flex max-h-[calc(100vh-8rem)] w-72 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[22px] border border-black/[0.07] shadow-[0_28px_70px_-30px_rgba(60,45,20,0.45)]">
+                <div className="rita-panel absolute right-0 z-50 mt-3 flex max-h-[calc(100vh-8rem)] w-72 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[22px] border border-white/10 shadow-[0_28px_70px_-30px_rgba(0,0,0,0.8)]">
                   <div className="shrink-0 px-4 pb-3 pt-4">
                     <div className="flex items-center gap-3 px-1 py-1">
                       <span
@@ -218,7 +202,7 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
                     )}
                   </div>
 
-                  <div className="shrink-0 border-t border-black/[0.07]">
+                  <div className="shrink-0 border-t border-white/10">
                     <button
                       type="button"
                       onClick={handleLogout}
@@ -253,7 +237,7 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
       </div>
 
       {sheet && (
-        <div className="rita-panel relative mx-4 max-h-[80vh] overflow-y-auto rounded-2xl border border-black/[0.07] p-3 shadow-[0_28px_70px_-30px_rgba(60,45,20,0.45)] lg:hidden">
+        <div className="rita-panel relative mx-4 max-h-[80vh] overflow-y-auto rounded-2xl border border-white/10 p-3 shadow-[0_28px_70px_-30px_rgba(0,0,0,0.8)] lg:hidden">
           <div className="pb-2 pt-1">
             <StartLearningLink
               onOpen={() => setSheet(false)}
@@ -268,7 +252,7 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
               key={l.to}
               to={l.to as never}
               onClick={() => setSheet(false)}
-              className="rita-ink block border-b border-black/[0.06] px-3 py-3 text-[16px]"
+              className="rita-ink block border-b border-white/10 px-3 py-3 text-[16px]"
               style={{ fontFamily: "var(--font-grotesk)" }}
             >
               {l.label}
@@ -278,7 +262,7 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
           <Link
             to="/pricing"
             onClick={() => setSheet(false)}
-            className="rita-ink block border-b border-black/[0.06] px-3 py-3 text-[16px]"
+            className="rita-ink block border-b border-white/10 px-3 py-3 text-[16px]"
             style={{ fontFamily: "var(--font-grotesk)" }}
           >
             Pricing
@@ -305,21 +289,21 @@ export function ProHeader({ variant = "transparent" }: { variant?: "transparent"
                   </p>
                 </div>
               </div>
-              <Link to="/profile" onClick={() => setSheet(false)} className="rita-ink block border-t border-black/[0.06] px-3 py-3 text-[16px]" style={{ fontFamily: "var(--font-grotesk)" }}>
+              <Link to="/profile" onClick={() => setSheet(false)} className="rita-ink block border-t border-white/10 px-3 py-3 text-[16px]" style={{ fontFamily: "var(--font-grotesk)" }}>
                 Profile settings
               </Link>
-              <Link to="/my-plan" onClick={() => setSheet(false)} className="rita-ink block border-t border-black/[0.06] px-3 py-3 text-[16px]" style={{ fontFamily: "var(--font-grotesk)" }}>
+              <Link to="/my-plan" onClick={() => setSheet(false)} className="rita-ink block border-t border-white/10 px-3 py-3 text-[16px]" style={{ fontFamily: "var(--font-grotesk)" }}>
                 My plan
               </Link>
               {isAdmin && (
-                <Link to="/admin" onClick={() => setSheet(false)} className="block border-t border-black/[0.06] px-3 py-3 text-[16px] font-bold text-white" style={{ fontFamily: "var(--font-grotesk)" }}>
+                <Link to="/admin" onClick={() => setSheet(false)} className="block border-t border-white/10 px-3 py-3 text-[16px] font-bold text-white" style={{ fontFamily: "var(--font-grotesk)" }}>
                   Admin panel
                 </Link>
               )}
               <button
                 type="button"
                 onClick={handleLogout}
-                className="block w-full border-t border-black/[0.06] px-3 py-3 text-left text-[16px] font-bold text-rose-600"
+                className="block w-full border-t border-white/10 px-3 py-3 text-left text-[16px] font-bold text-rose-600"
                 style={{ fontFamily: "var(--font-grotesk)" }}
               >
                 {t("cms.header.logout")}

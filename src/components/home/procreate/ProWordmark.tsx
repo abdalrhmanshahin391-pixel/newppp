@@ -1,17 +1,6 @@
-/** "RitaJet" in white — "Rita" heavy, "Jet" light, like Pro + create. */
+import { EdithWordmark } from "@/components/brand/EdithWordmark";
+
+/** Kept for older imports; renders the EdithLab wordmark. */
 export function ProWordmark({ size = 30 }: { size?: number }) {
-  return (
-    <span
-      className="select-none whitespace-nowrap text-white"
-      style={{
-        fontFamily: "var(--font-grotesk)",
-        fontSize: size,
-        lineHeight: 1,
-        letterSpacing: "-0.02em",
-      }}
-    >
-      <span style={{ fontWeight: 700 }}>Rita</span>
-      <span style={{ fontWeight: 300 }}>Jet</span>
-    </span>
-  );
+  return <EdithWordmark size={size} />;
 }

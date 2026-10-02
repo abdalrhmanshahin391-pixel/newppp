@@ -12,7 +12,7 @@ export function IpadStage() {
     <div className="relative w-full overflow-hidden">
       <div className="relative mx-auto w-full max-w-[1100px] px-4 md:px-10">
         {/* Negative top margin pushes about a third of the device off-screen. */}
-        <div className="-mt-[20%] md:-mt-[22%]">
+        <div className="edith-in-soft -mt-[20%] md:-mt-[22%]" style={{ "--d": "0ms" } as React.CSSProperties}>
           <div
             className="relative mx-auto rounded-[2rem] p-[9px] md:rounded-[2.5rem] md:p-[11px]"
             style={{
