@@ -30,6 +30,9 @@ _GERMAN_MARKERS = re.compile(
     r"sprechen|möchte|kann|können|ist|sind|hallo)\b|[ÄÖÜäöüß]",
     re.IGNORECASE,
 )
+_ARABIC_LEARNING_REQUEST = re.compile(
+    r"(?:شو|ما|إيش|ايش)\s+معنى|(?:ترجم|ترجمة|يعني|معنى|كلمة|كلمات|بالألماني|بالالماني|بالإنجليزي|بالانجليزي)"
+)
 
 
 def infer_turn_language(text: str) -> str:
@@ -40,7 +43,7 @@ def infer_turn_language(text: str) -> str:
     # Arabic function words wrapped around a German/English learning target are
     # still an Arabic turn. Requiring twice as many Arabic characters made
     # short questions such as "شو معنى Guten Morgen بالألماني؟" drift languages.
-    if arabic >= 4 and arabic >= latin:
+    if arabic >= 4 and (arabic >= latin or _ARABIC_LEARNING_REQUEST.search(text)):
         return "ar"
     if latin >= 4 and _GERMAN_MARKERS.search(text):
         return "de"
