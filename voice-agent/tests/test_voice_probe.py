@@ -1,6 +1,6 @@
 import unittest
 
-from voice_probe import first_non_silent_offset_ms, is_remote_participant
+from voice_probe import first_non_silent_offset_ms, is_remote_participant, probe_succeeded
 
 
 class VoiceProbeTest(unittest.TestCase):
@@ -14,3 +14,11 @@ class VoiceProbeTest(unittest.TestCase):
         self.assertTrue(is_remote_participant({"id": "bot-id", "info": {"isLocal": False}}))
         self.assertFalse(is_remote_participant({"id": "self-id", "info": {"isLocal": True}}))
         self.assertFalse(is_remote_participant({"id": "unknown-id", "info": {}}))
+
+    def test_empty_or_partial_probe_cannot_pass(self):
+        self.assertFalse(probe_succeeded({"error": None, "turns": []}))
+        self.assertFalse(probe_succeeded({"error": None, "turns": [{"observed_answer": True}]}))
+        self.assertTrue(probe_succeeded({
+            "error": None,
+            "turns": [{"observed_answer": True} for _ in range(4)],
+        }))
