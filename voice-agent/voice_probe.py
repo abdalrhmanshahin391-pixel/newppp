@@ -52,6 +52,15 @@ def is_remote_participant(participant: dict) -> bool:
     return bool(participant.get("id")) and participant.get("info", {}).get("isLocal") is False
 
 
+def probe_succeeded(result: dict) -> bool:
+    turns = result.get("turns", [])
+    return (
+        not result.get("error")
+        and len(turns) == len(PROBE_FILES)
+        and all(turn.get("observed_answer") is True for turn in turns)
+    )
+
+
 def start_session(key: str, agent: str) -> tuple[str, str, str, float]:
     address = f"https://api.pipecat.daily.co/v1/public/{agent}/start"
     body = json.dumps({
@@ -264,7 +273,7 @@ def main():
     result = run(args.input_dir, args.output_dir, key, args.agent)
     (args.output_dir / "metrics.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(json.dumps(result, indent=2))
-    if result["error"] or not all(turn["observed_answer"] for turn in result["turns"]):
+    if not probe_succeeded(result):
         raise SystemExit("Probe failed: missing bot readiness, audio, or a completed test turn")
 
 
