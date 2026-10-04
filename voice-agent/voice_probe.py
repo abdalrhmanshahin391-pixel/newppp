@@ -20,7 +20,8 @@ from pathlib import Path
 
 SAMPLE_RATE = 16000
 FRAME_SAMPLES = 320
-MAX_SECONDS = 90
+MAX_STARTUP_SECONDS = 120
+MAX_VOICE_SECONDS = 60
 PROBE_FILES = (
     "01-meaning.wav",
     "02-switch.wav",
@@ -45,6 +46,10 @@ def read_wav(path: Path) -> bytes:
         if (source.getnchannels(), source.getsampwidth(), source.getframerate()) != (1, 2, SAMPLE_RATE):
             raise ValueError(f"{path.name}: expected mono PCM16 at {SAMPLE_RATE} Hz")
         return source.readframes(source.getnframes())
+
+
+def is_remote_participant(participant: dict) -> bool:
+    return bool(participant.get("id")) and participant.get("info", {}).get("isLocal") is False
 
 
 def start_session(key: str, agent: str) -> tuple[str, str, str, float]:
@@ -110,7 +115,7 @@ def send_wav(mic, wav: bytes, deadline: float):
     chunk_size = FRAME_SAMPLES * 2
     for offset in range(0, len(wav), chunk_size):
         if time.monotonic() > deadline:
-            raise TimeoutError("90-second probe limit reached")
+            raise TimeoutError("Voice probe limit reached")
         chunk = wav[offset:offset + chunk_size]
         if len(chunk) < chunk_size:
             chunk += b"\0" * (chunk_size - len(chunk))
@@ -119,16 +124,29 @@ def send_wav(mic, wav: bytes, deadline: float):
 
 
 def run(input_dir: Path, output_dir: Path, key: str, agent: str) -> dict:
-    from daily import CallClient, Daily
+    from daily import CallClient, Daily, EventHandler
 
     wavs = [read_wav(input_dir / name) for name in PROBE_FILES]
     output_dir.mkdir(parents=True, exist_ok=True)
+    session_started_at = time.monotonic()
     room, token, session_id, start_seconds = start_session(key, agent)
     Daily.init()
     mic = Daily.create_microphone_device("rita-qa-mic", sample_rate=SAMPLE_RATE, channels=1)
     speaker = Daily.create_speaker_device("rita-qa-speaker", sample_rate=SAMPLE_RATE, channels=1)
     Daily.select_speaker_device("rita-qa-speaker")
-    client = CallClient()
+    class ParticipantHandler(EventHandler):
+        def __init__(self):
+            super().__init__()
+            self.bot_joined = threading.Event()
+            self.bot_joined_at: float | None = None
+
+        def on_participant_joined(self, participant):
+            if is_remote_participant(participant) and not self.bot_joined.is_set():
+                self.bot_joined_at = time.monotonic()
+                self.bot_joined.set()
+
+    participant_handler = ParticipantHandler()
+    client = CallClient(event_handler=participant_handler)
     client.update_subscription_profiles({"base": {"camera": "unsubscribed", "microphone": "subscribed"}})
     joined = threading.Event()
     join_error = []
@@ -139,10 +157,11 @@ def run(input_dir: Path, output_dir: Path, key: str, agent: str) -> dict:
         joined.set()
 
     started = time.monotonic()
-    deadline = started + MAX_SECONDS
+    startup_deadline = session_started_at + MAX_STARTUP_SECONDS
     joined_at = None
     capture = AudioCapture(speaker, output_dir / "rita-response.wav")
     turns: list[dict] = []
+    error: str | None = None
     try:
         client.join(
             room,
@@ -155,14 +174,22 @@ def run(input_dir: Path, output_dir: Path, key: str, agent: str) -> dict:
             },
             completion=on_joined,
         )
-        if not joined.wait(min(30, max(0, deadline - time.monotonic()))):
+        if not joined.wait(min(30, max(0, startup_deadline - time.monotonic()))):
             raise TimeoutError("Daily join timed out")
         if join_error:
             raise RuntimeError("Daily join failed")
         joined_at = time.monotonic()
+        # The bot may already be in the room before the join callback returns.
+        for participant in client.participants().values():
+            if is_remote_participant(participant) and not participant_handler.bot_joined.is_set():
+                participant_handler.bot_joined_at = time.monotonic()
+                participant_handler.bot_joined.set()
+        if not participant_handler.bot_joined.wait(max(0, startup_deadline - time.monotonic())):
+            raise TimeoutError("Rita bot did not join Daily within 120 seconds")
+        ready_at = participant_handler.bot_joined_at or time.monotonic()
+        deadline = min(ready_at + MAX_VOICE_SECONDS, session_started_at + MAX_STARTUP_SECONDS + MAX_VOICE_SECONDS)
         capture.thread.start()
-        # Wait briefly for the worker to join without assuming room creation == bot readiness.
-        time.sleep(min(3, max(0, deadline - time.monotonic())))
+        time.sleep(min(0.5, max(0, deadline - time.monotonic())))
         for index, (name, wav) in enumerate(zip(PROBE_FILES, wavs)):
             if time.monotonic() >= deadline - 5:
                 break
@@ -192,12 +219,14 @@ def run(input_dir: Path, output_dir: Path, key: str, agent: str) -> dict:
                 "observed_answer": first is not None,
             })
         time.sleep(min(2, max(0, deadline - time.monotonic())))
+    except Exception as exc:
+        error = f"{type(exc).__name__}: {exc}"
     finally:
         capture.stop.set()
         if capture.thread.is_alive():
             capture.thread.join(timeout=3)
-        done = threading.Event()
         try:
+            done = threading.Event()
             client.leave(completion=lambda *_: done.set())
             done.wait(3)
         finally:
@@ -206,12 +235,19 @@ def run(input_dir: Path, output_dir: Path, key: str, agent: str) -> dict:
         "provider_session_id": session_id,
         "pipecat_start_ms": round(start_seconds * 1000),
         "daily_join_ms": round((joined_at - started) * 1000) if joined_at else None,
-        "probe_limit_seconds": MAX_SECONDS,
+        "bot_join_after_session_start_ms": (
+            round((participant_handler.bot_joined_at - session_started_at) * 1000)
+            if participant_handler.bot_joined_at else None
+        ),
+        "startup_limit_seconds": MAX_STARTUP_SECONDS,
+        "voice_limit_seconds": MAX_VOICE_SECONDS,
+        "error": error,
         "turns": turns,
         "notes": [
             "Synthetic voice; not a dialect-quality or iPad speaker measurement.",
             "First non-silent received PCM is not proof that a person heard the sound.",
             "No retry; a failed/empty turn remains visible as a failure.",
+            "The bot must join Daily before any test speech is transmitted.",
         ],
     }
 
@@ -228,6 +264,8 @@ def main():
     result = run(args.input_dir, args.output_dir, key, args.agent)
     (args.output_dir / "metrics.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(json.dumps(result, indent=2))
+    if result["error"] or not all(turn["observed_answer"] for turn in result["turns"]):
+        raise SystemExit("Probe failed: missing bot readiness, audio, or a completed test turn")
 
 
 if __name__ == "__main__":

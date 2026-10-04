@@ -13,6 +13,8 @@ from pipecat.services.settings import TTSSettings
 from pipecat.services.tts_service import TextAggregationMode, TTSService
 from pipecat.utils.tracing.service_decorators import traced_tts
 
+from rita_latency import RitaLatencyRecorder, first_non_silent_sample_ms
+
 
 @dataclass
 class RitaGeminiTTSSettings(TTSSettings):
@@ -37,6 +39,7 @@ class RitaGeminiTTSService(TTSService):
         model: str = "gemini-3.8-flash-lite-tts",
         voice: str = "Achernar",
         style: str | None = None,
+        latency_recorder: RitaLatencyRecorder | None = None,
         **kwargs,
     ):
         settings = RitaGeminiTTSSettings(
@@ -62,6 +65,7 @@ class RitaGeminiTTSService(TTSService):
         )
         self._client = genai.Client(api_key=api_key)
         self._closed = False
+        self._latency_recorder = latency_recorder
 
     async def _close_client(self) -> None:
         if self._closed:
@@ -90,7 +94,9 @@ class RitaGeminiTTSService(TTSService):
 
     @traced_tts
     async def run_tts(self, text: str, context_id: str) -> AsyncGenerator[Frame, None]:
-        logger.debug(f"{self}: Gemini 3.8 TTS [{text}]")
+        if self._latency_recorder:
+            self._latency_recorder.tts_requested(context_id, text)
+        logger.debug("Gemini 3.8 TTS request: {} characters", len(text))
         try:
             interaction_input = [
                 {
@@ -128,6 +134,11 @@ class RitaGeminiTTSService(TTSService):
                 if not audio:
                     continue
                 await self.stop_ttfb_metrics()
+                if self._latency_recorder:
+                    self._latency_recorder.tts_first_bytes(context_id)
+                    first_sample_ms = first_non_silent_sample_ms(audio, self.sample_rate)
+                    if first_sample_ms is not None:
+                        self._latency_recorder.tts_first_non_silent(context_id, first_sample_ms)
                 yield TTSAudioRawFrame(
                     audio,
                     self.sample_rate,
