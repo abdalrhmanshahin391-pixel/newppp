@@ -17,6 +17,9 @@ from loguru import logger
 from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
+from pipecat.observers.loggers.metrics_log_observer import MetricsLogObserver
+from pipecat.observers.startup_timing_observer import StartupTimingObserver
+from pipecat.observers.user_bot_latency_observer import UserBotLatencyObserver
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineParams, PipelineTask
@@ -44,6 +47,7 @@ from pipecat.utils.context.llm_context_summarization import (
 
 from rita_gemini_tts import RitaGeminiTTSService
 from rita_interruption import RitaUserTurnStartStrategy
+from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
 from rita_state import RitaSessionState
 
 load_dotenv(override=False)
@@ -123,6 +127,7 @@ TEACHING CONTROL
 
 async def bot(args: DailyRunnerArguments):
     body = args.body if isinstance(args.body, dict) else {}
+    latency = RitaLatencyRecorder(args.session_id)
     state = RitaSessionState(
         active_language=str(body.get("language", "automatic")),
         active_dialect=str(body.get("dialect", "ar-JO")),
@@ -184,6 +189,7 @@ async def bot(args: DailyRunnerArguments):
         api_key=require_secret("GOOGLE_API_KEY"),
         model=TTS_MODEL,
         voice=TTS_VOICE,
+        latency_recorder=latency,
     )
 
     context = LLMContext(
@@ -236,6 +242,40 @@ async def bot(args: DailyRunnerArguments):
             assistant_aggregator,
         ]
     )
+    startup_observer = StartupTimingObserver()
+    user_bot_observer = UserBotLatencyObserver()
+
+    @startup_observer.event_handler("on_startup_timing_report")
+    async def on_startup_timing_report(observer, report):
+        logger.bind(
+            session_id=args.session_id,
+            total_ms=round(report.total_duration_secs * 1000, 2),
+            processors=[
+                {"name": item.processor_name, "duration_ms": round(item.duration_secs * 1000, 2)}
+                for item in report.processor_timings
+            ],
+        ).info("Rita worker startup timing")
+
+    @startup_observer.event_handler("on_transport_timing_report")
+    async def on_transport_timing_report(observer, report):
+        logger.bind(
+            session_id=args.session_id,
+            bot_connected_ms=(
+                round(report.bot_connected_secs * 1000, 2)
+                if report.bot_connected_secs is not None
+                else None
+            ),
+            client_connected_ms=round(report.client_connected_secs * 1000, 2),
+        ).info("Rita transport timing")
+
+    @user_bot_observer.event_handler("on_latency_measured")
+    async def on_user_bot_latency(observer, latency_seconds):
+        logger.bind(
+            session_id=args.session_id,
+            turn_id=latency.turn,
+            latency_ms=round(latency_seconds * 1000, 2),
+        ).info("Rita user-to-bot speaking signal latency")
+
     task = PipelineTask(
         pipeline,
         params=PipelineParams(
@@ -245,10 +285,17 @@ async def bot(args: DailyRunnerArguments):
             audio_out_sample_rate=24_000,
         ),
         enable_turn_tracking=True,
+        observers=[
+            RitaLatencyObserver(latency),
+            MetricsLogObserver(),
+            startup_observer,
+            user_bot_observer,
+        ],
     )
 
     @user_aggregator.event_handler("on_user_turn_stopped")
     async def on_user_turn_stopped(aggregator, strategy, message):
+        latency.mark("turn_committed")
         state.observe_user_turn(message.content)
         messages = context.get_messages()
         if messages and messages[0].get("role") == "system":
@@ -262,7 +309,7 @@ async def bot(args: DailyRunnerArguments):
     @assistant_aggregator.event_handler("on_assistant_turn_stopped")
     async def on_assistant_turn_stopped(aggregator, message):
         state.observe_assistant_turn(message.content)
-        logger.bind(heard_text=message.content).info("Rita assistant heard-text committed")
+        logger.bind(heard_characters=len(message.content)).info("Rita assistant turn committed")
 
     @transport.event_handler("on_first_participant_joined")
     async def on_first_participant_joined(transport, participant):

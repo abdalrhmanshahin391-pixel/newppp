@@ -3,6 +3,7 @@ from rita_state import LanguageSource, ResponseType, RitaSessionState, infer_tur
 
 def test_code_switched_arabic_does_not_become_german():
     assert infer_turn_language("شو معنى Guten Morgen بالألماني؟") == "ar"
+    assert infer_turn_language("شو معنى Guten Morgen؟") == "ar"
 
 
 def test_automatic_language_needs_two_clear_turns():
