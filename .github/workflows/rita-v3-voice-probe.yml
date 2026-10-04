@@ -1,0 +1,46 @@
+name: Rita v3 short voice probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  voice-probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install synthetic voice and Daily client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq espeak-ng ffmpeg
+          python -m pip install --disable-pip-version-check daily-python==0.33.0
+      - name: Synthesize bounded test prompts
+        shell: bash
+        run: |
+          mkdir -p voice-probe-input voice-probe-output
+          espeak-ng -v ar -s 145 -w /tmp/meaning.wav 'شو معنى غوتن مورغن؟'
+          espeak-ng -v ar -s 145 -w /tmp/switch.wav 'احكي معي بالألماني من هسا.'
+          espeak-ng -v ar -s 145 -w /tmp/general.wav 'شو صار بحرب المغول؟'
+          espeak-ng -v ar -s 145 -w /tmp/interrupt.wav 'استني، مش فاهم.'
+          ffmpeg -v error -i /tmp/meaning.wav -ar 16000 -ac 1 -sample_fmt s16 voice-probe-input/01-meaning.wav
+          ffmpeg -v error -i /tmp/switch.wav -ar 16000 -ac 1 -sample_fmt s16 voice-probe-input/02-switch.wav
+          ffmpeg -v error -i /tmp/general.wav -ar 16000 -ac 1 -sample_fmt s16 voice-probe-input/03-general.wav
+          ffmpeg -v error -i /tmp/interrupt.wav -ar 16000 -ac 1 -sample_fmt s16 voice-probe-input/04-interrupt.wav
+      - name: Probe one Pipecat session (maximum 90 seconds, no retry)
+        env:
+          PIPECAT_PUBLIC_API_KEY: ${{ secrets.PIPECAT_PUBLIC_API_KEY }}
+        run: python voice-agent/voice_probe.py --input-dir voice-probe-input --output-dir voice-probe-output
+      - name: Retain synthetic recording and measurements for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rita-v3-synthetic-voice-probe
+          path: voice-probe-output/
+          retention-days: 1
+          if-no-files-found: warn
