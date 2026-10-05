@@ -2,6 +2,7 @@ import asyncio
 import struct
 from types import SimpleNamespace
 
+from loguru import logger
 from pipecat.frames.frames import (
     InterimTranscriptionFrame,
     LLMTextFrame,
@@ -54,3 +55,17 @@ def test_turn_milestones_are_deduplicated_without_storing_transcript():
         "tts_first_non_silent_pcm",
     }
     assert not any("Guten" in str(value) for value in recorder._marks.values())
+
+
+def test_milestone_fields_are_visible_in_plain_log_without_transcript():
+    messages = []
+    sink_id = logger.add(lambda message: messages.append(str(message)), format="{message}")
+    try:
+        recorder = RitaLatencyRecorder("test-session")
+        recorder.start_turn("frame-1")
+        recorder.mark("speech_end")
+        recorder.tts_requested("context-1", "private spoken content")
+    finally:
+        logger.remove(sink_id)
+    assert any("event=tts_request turn_id=1" in message for message in messages)
+    assert not any("private spoken content" in message for message in messages)
