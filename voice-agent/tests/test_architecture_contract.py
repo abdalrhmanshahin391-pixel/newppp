@@ -29,6 +29,14 @@ def test_cloud_worker_keeps_base_image_entrypoint():
     assert "uv sync --inexact --no-dev" in dockerfile
 
 
+def test_onnx_smart_turn_does_not_pull_gpu_runtime():
+    project = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    assert "local-smart-turn" not in project
+    assert 'pipecat-ai[daily,groq,runner,silero,soniox]==0.0.105' in project
+    source = (ROOT / "bot.py").read_text(encoding="utf-8")
+    assert "LocalSmartTurnAnalyzerV3()" in source
+
+
 def test_development_runner_is_not_imported_by_cloud_worker():
     source = (ROOT / "bot.py").read_text(encoding="utf-8")
     assert 'if __name__ == "__main__":\n    from pipecat.runner.run import main' in source
