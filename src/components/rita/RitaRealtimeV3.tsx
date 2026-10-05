@@ -73,6 +73,11 @@ export function RitaRealtimeV3() {
   const botSpeaking = useRef(false);
   const speechEndedAt = useRef(0);
   const sessionStartedAt = useRef(0);
+  const transportConnectedAt = useRef(0);
+  const transportMetricRecorded = useRef(false);
+  const botReady = useRef(false);
+  const botReadyAt = useRef(0);
+  const botReadyMetricRecorded = useRef(false);
   const llmStartedAt = useRef(0);
   const firstLlmTokenRecorded = useRef(false);
   const firstPartialRecorded = useRef(false);
@@ -382,6 +387,11 @@ export function RitaRealtimeV3() {
       heardBuffer.current = "";
       botSpeaking.current = false;
       sessionStartedAt.current = performance.now();
+      transportConnectedAt.current = 0;
+      transportMetricRecorded.current = false;
+      botReady.current = false;
+      botReadyAt.current = 0;
+      botReadyMetricRecorded.current = false;
       const commitHeardReply = (interrupted = false) => {
         // Generated/TTS text is not evidence that interrupted audio was heard.
         const reply = committedRitaReply({
@@ -417,11 +427,18 @@ export function RitaRealtimeV3() {
         disconnectOnBotDisconnect: true,
         callbacks: {
           onConnected: () => {
+            transportConnectedAt.current = performance.now();
             activeRef.current = true;
             setActive(true);
-            setStatus("Rita is listening");
-            setMood("listening");
-            void metric("session_connected");
+            setStatus("Audio connected; waiting for Rita…");
+            setMood("ready");
+            if (sessionId.current && !transportMetricRecorded.current) {
+              transportMetricRecorded.current = true;
+              void metric(
+                "transport_connected",
+                transportConnectedAt.current - sessionStartedAt.current,
+              );
+            }
           },
           onBotStarted: (botResponse) => {
             const started = botResponse as {
@@ -430,6 +447,27 @@ export function RitaRealtimeV3() {
             };
             sessionId.current = String(started.sessionId ?? "");
             providerSessionId.current = String(started.providerSessionId ?? "");
+            if (transportConnectedAt.current && !transportMetricRecorded.current) {
+              transportMetricRecorded.current = true;
+              void metric(
+                "transport_connected",
+                transportConnectedAt.current - sessionStartedAt.current,
+              );
+            }
+            if (botReadyAt.current && !botReadyMetricRecorded.current) {
+              botReadyMetricRecorded.current = true;
+              void metric("bot_ready", botReadyAt.current - sessionStartedAt.current);
+            }
+          },
+          onBotReady: () => {
+            botReady.current = true;
+            botReadyAt.current = performance.now();
+            setStatus("Rita is listening");
+            setMood("listening");
+            if (sessionId.current && !botReadyMetricRecorded.current) {
+              botReadyMetricRecorded.current = true;
+              void metric("bot_ready", botReadyAt.current - sessionStartedAt.current);
+            }
           },
           onDisconnected: () => {
             activeRef.current = false;
@@ -556,17 +594,19 @@ export function RitaRealtimeV3() {
         endpoint: "/api/rita-v3/session/start",
         headers,
         requestData: { personality, language, dialect, mode },
-        timeout: 55_000,
+        // A cold agent has taken 88s to join Daily. This prevents a false
+        // failure while startup and turn latency remain separately measured.
+        timeout: 125_000,
       });
       // startBotAndConnect returns bot-ready protocol data; session identifiers are
       // returned by the start endpoint and retained inside the transport. Fetch a
       // lightweight start response is not repeated, so the server also reconciles
       // orphaned sessions by timeout.
       void ready;
-      void metric("session_ready", performance.now() - sessionStartedAt.current);
+      void metric("start_call_returned", performance.now() - sessionStartedAt.current);
       setActive(true);
       activeRef.current = true;
-      setStatus("Rita is listening");
+      if (!botReady.current) setStatus("Connected; waiting for Rita…");
     } catch (cause) {
       const pending = client.current;
       client.current = null;

@@ -1,0 +1,28 @@
+name: Rita v3 frontend checks
+
+on:
+  pull_request:
+    paths:
+      - "src/components/rita/RitaRealtimeV3.tsx"
+      - "src/routes/api/rita-v3/session/**"
+      - "src/lib/rita-v3-startup*"
+      - ".github/workflows/rita-v3-frontend-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend-checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Check startup regressions and types
+        run: |
+          node --test src/lib/rita-v3-startup.test.mjs
+          bunx tsc --noEmit
+      - name: Build site
+        run: bun run build
