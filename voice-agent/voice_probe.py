@@ -58,7 +58,12 @@ def probe_succeeded(result: dict) -> bool:
     return (
         not result.get("error")
         and len(turns) == len(PROBE_FILES)
-        and all(turn.get("candidate_audio") is True for turn in turns)
+        and all(
+            turn.get("candidate_audio") is True
+            and isinstance(turn.get("first_candidate_audio_after_input_ms"), (int, float))
+            and turn["first_candidate_audio_after_input_ms"] >= 0
+            for turn in turns
+        )
         and result.get("interrupt_sent_during_audio") is True
     )
 
@@ -142,13 +147,14 @@ def wait_for_quiet(capture: AudioCapture, deadline: float, quiet_seconds: float 
     return False
 
 
-def wait_for_onset(capture: AudioCapture, baseline: int, deadline: float) -> float | None:
+def wait_for_onset(capture: AudioCapture, baseline: int, earliest: float, deadline: float) -> float | None:
     while time.monotonic() < deadline:
         if capture.error:
             return None
         with capture.lock:
-            if len(capture.onsets) > baseline:
-                return capture.onsets[baseline]
+            for onset in capture.onsets[baseline:]:
+                if onset >= earliest:
+                    return onset
         time.sleep(0.05)
     return None
 
@@ -256,7 +262,7 @@ def run(input_dir: Path, output_dir: Path, key: str, agent: str) -> dict:
             send_wav(mic, wav, deadline)
             end = time.monotonic()
             input_ended_utc = utc_now()
-            first = wait_for_onset(capture, baseline, min(deadline, end + 12))
+            first = wait_for_onset(capture, baseline, end, min(deadline, end + 12))
             turns.append({
                 "prompt_file": name,
                 "input_duration_ms": round(len(wav) / 2 / SAMPLE_RATE * 1000),
@@ -305,7 +311,7 @@ def run(input_dir: Path, output_dir: Path, key: str, agent: str) -> dict:
         "notes": [
             "Synthetic voice; not a dialect-quality or iPad speaker measurement.",
             "First non-silent received PCM is not proof that a person heard the sound.",
-            "Audio candidates must be correlated with worker turn IDs; they alone do not prove answers.",
+            "An audio onset after input ends is not proof of a response to that input; correlate with worker turn IDs.",
             "No retry; a failed/empty turn remains visible as a failure.",
             "The bot must join Daily before any test speech is transmitted.",
         ],
