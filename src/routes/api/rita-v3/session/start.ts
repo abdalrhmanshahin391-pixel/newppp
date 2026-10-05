@@ -8,6 +8,7 @@ import {
 } from "@/lib/rita-v3.server";
 import { cleanLanguage, normalizePersonality } from "@/lib/rita-voice.server";
 import { classifyPipecatStartFailure } from "@/lib/rita-v3-diagnostics";
+import { fetchPipecatStartWithDeadline } from "@/lib/rita-v3-startup";
 
 export const Route = createFileRoute("/api/rita-v3/session/start")({
   server: {
@@ -58,10 +59,10 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           );
         }
 
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 45_000);
+        const startedAt = performance.now();
         try {
-          const upstream = await fetch(
+          const upstream = await fetchPipecatStartWithDeadline(
+            fetch,
             `https://api.pipecat.daily.co/v1/public/${encodeURIComponent(env.agentName)}/start`,
             {
               method: "POST",
@@ -80,9 +81,13 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
                   userId: access.auth.userId,
                 },
               }),
-              signal: controller.signal,
             },
+            45_000,
           );
+          console.info("Rita Pipecat start request", {
+            elapsedMs: Math.round(performance.now() - startedAt),
+            upstreamStatus: upstream.status,
+          });
           const payload = (await upstream.json().catch(() => ({}))) as Record<string, unknown>;
           if (!upstream.ok || !payload.dailyRoom || !payload.dailyToken) {
             const failure = classifyPipecatStartFailure(upstream.status, payload, upstream.headers);
@@ -126,6 +131,10 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             { headers: { "Cache-Control": "no-store" } },
           );
         } catch (error) {
+          console.error("Rita Pipecat start request failed", {
+            elapsedMs: Math.round(performance.now() - startedAt),
+            errorName: error instanceof Error ? error.name : "unknown",
+          });
           const timedOut = error instanceof DOMException && error.name === "AbortError";
           const code = timedOut ? "cold_start_timeout" : "pipecat_network_error";
           const message = timedOut
@@ -152,8 +161,6 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             },
             { status: timedOut ? 504 : 502 },
           );
-        } finally {
-          clearTimeout(timeout);
         }
       },
     },
