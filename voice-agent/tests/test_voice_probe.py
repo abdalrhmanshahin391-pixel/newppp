@@ -1,6 +1,15 @@
 import unittest
+import threading
+import time
+from types import SimpleNamespace
 
-from voice_probe import first_non_silent_offset_ms, is_remote_participant, probe_succeeded
+from voice_probe import (
+    first_non_silent_offset_ms,
+    is_remote_participant,
+    probe_succeeded,
+    wait_for_onset,
+    wait_for_quiet,
+)
 
 
 class VoiceProbeTest(unittest.TestCase):
@@ -17,8 +26,25 @@ class VoiceProbeTest(unittest.TestCase):
 
     def test_empty_or_partial_probe_cannot_pass(self):
         self.assertFalse(probe_succeeded({"error": None, "turns": []}))
-        self.assertFalse(probe_succeeded({"error": None, "turns": [{"observed_answer": True}]}))
+        self.assertFalse(probe_succeeded({"error": None, "turns": [{"candidate_audio": True}]}))
+        self.assertFalse(probe_succeeded({
+            "error": None,
+            "interrupt_sent_during_audio": False,
+            "turns": [{"candidate_audio": True} for _ in range(4)],
+        }))
         self.assertTrue(probe_succeeded({
             "error": None,
-            "turns": [{"observed_answer": True} for _ in range(4)],
+            "interrupt_sent_during_audio": True,
+            "turns": [{"candidate_audio": True} for _ in range(4)],
         }))
+
+    def test_quiet_gate_and_new_onset_require_fresh_audio(self):
+        capture = SimpleNamespace(
+            lock=threading.Lock(), last_audio=None, onsets=[1.0], error=None,
+        )
+        self.assertTrue(wait_for_quiet(capture, time.monotonic() + 0.01))
+        self.assertIsNone(wait_for_onset(capture, 1, time.monotonic() + 0.01))
+        capture.onsets.append(2.0)
+        self.assertEqual(wait_for_onset(capture, 1, time.monotonic() + 0.01), 2.0)
+        capture.last_audio = time.monotonic()
+        self.assertFalse(wait_for_quiet(capture, time.monotonic() + 0.01))
