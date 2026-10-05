@@ -11,6 +11,7 @@ import json
 import os
 import threading
 import time
+from datetime import datetime, timezone
 import urllib.error
 import urllib.request
 import uuid
@@ -57,8 +58,13 @@ def probe_succeeded(result: dict) -> bool:
     return (
         not result.get("error")
         and len(turns) == len(PROBE_FILES)
-        and all(turn.get("observed_answer") is True for turn in turns)
+        and all(turn.get("candidate_audio") is True for turn in turns)
+        and result.get("interrupt_sent_during_audio") is True
     )
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds")
 
 
 def start_session(key: str, agent: str) -> tuple[str, str, str, float]:
@@ -97,27 +103,54 @@ class AudioCapture:
         self.output = output
         self.stop = threading.Event()
         self.lock = threading.Lock()
-        self.first_after_input: float | None = None
-        self.input_end: float | None = None
+        self.onsets: list[float] = []
         self.last_audio: float | None = None
+        self.error: str | None = None
         self.thread = threading.Thread(target=self._run, daemon=True)
 
     def _run(self):
-        with wave.open(str(self.output), "wb") as sink:
-            sink.setnchannels(1)
-            sink.setsampwidth(2)
-            sink.setframerate(SAMPLE_RATE)
-            while not self.stop.is_set():
-                chunk = self.speaker.read_frames(FRAME_SAMPLES)
-                if not chunk:
-                    continue
-                now = time.monotonic()
-                sink.writeframes(chunk)
-                if first_non_silent_offset_ms(chunk, SAMPLE_RATE) is not None:
-                    with self.lock:
-                        self.last_audio = now
-                        if self.input_end is not None and self.first_after_input is None:
-                            self.first_after_input = now
+        try:
+            with wave.open(str(self.output), "wb") as sink:
+                sink.setnchannels(1)
+                sink.setsampwidth(2)
+                sink.setframerate(SAMPLE_RATE)
+                while not self.stop.is_set():
+                    chunk = self.speaker.read_frames(FRAME_SAMPLES)
+                    if not chunk:
+                        continue
+                    now = time.monotonic()
+                    sink.writeframes(chunk)
+                    if first_non_silent_offset_ms(chunk, SAMPLE_RATE) is not None:
+                        with self.lock:
+                            if self.last_audio is None or now - self.last_audio >= 0.4:
+                                self.onsets.append(now)
+                            self.last_audio = now
+        except Exception as exc:
+            # Preserve a sanitized failure instead of silently producing a green run.
+            self.error = type(exc).__name__
+
+
+def wait_for_quiet(capture: AudioCapture, deadline: float, quiet_seconds: float = 0.9) -> bool:
+    while time.monotonic() < deadline:
+        if capture.error:
+            return False
+        with capture.lock:
+            last_audio = capture.last_audio
+        if last_audio is None or time.monotonic() - last_audio >= quiet_seconds:
+            return True
+        time.sleep(0.05)
+    return False
+
+
+def wait_for_onset(capture: AudioCapture, baseline: int, deadline: float) -> float | None:
+    while time.monotonic() < deadline:
+        if capture.error:
+            return None
+        with capture.lock:
+            if len(capture.onsets) > baseline:
+                return capture.onsets[baseline]
+        time.sleep(0.05)
+    return None
 
 
 def send_wav(mic, wav: bytes, deadline: float):
@@ -137,6 +170,7 @@ def run(input_dir: Path, output_dir: Path, key: str, agent: str) -> dict:
 
     wavs = [read_wav(input_dir / name) for name in PROBE_FILES]
     output_dir.mkdir(parents=True, exist_ok=True)
+    session_started_utc = utc_now()
     session_started_at = time.monotonic()
     room, token, session_id, start_seconds = start_session(key, agent)
     Daily.init()
@@ -171,6 +205,7 @@ def run(input_dir: Path, output_dir: Path, key: str, agent: str) -> dict:
     capture = AudioCapture(speaker, output_dir / "rita-response.wav")
     turns: list[dict] = []
     error: str | None = None
+    interrupt_sent_during_audio = False
     try:
         client.join(
             room,
@@ -199,49 +234,63 @@ def run(input_dir: Path, output_dir: Path, key: str, agent: str) -> dict:
         deadline = min(ready_at + MAX_VOICE_SECONDS, session_started_at + MAX_STARTUP_SECONDS + MAX_VOICE_SECONDS)
         capture.thread.start()
         time.sleep(min(0.5, max(0, deadline - time.monotonic())))
+        # Any unsolicited greeting must finish before the first prompt.
+        if not wait_for_quiet(capture, min(deadline, time.monotonic() + 5)):
+            raise TimeoutError("Bot audio did not become quiet before first prompt")
         for index, (name, wav) in enumerate(zip(PROBE_FILES, wavs)):
             if time.monotonic() >= deadline - 5:
                 break
+            if index < 3 and not wait_for_quiet(capture, min(deadline, time.monotonic() + 5)):
+                raise TimeoutError("Prior bot audio did not finish before next prompt")
             with capture.lock:
-                capture.input_end = None
-                capture.first_after_input = None
+                baseline = len(capture.onsets)
+                was_speaking = (
+                    capture.last_audio is not None
+                    and time.monotonic() - capture.last_audio < 0.15
+                )
+            if index == 3:
+                interrupt_sent_during_audio = was_speaking
+                if not interrupt_sent_during_audio:
+                    raise RuntimeError("Interruption was not sent during bot audio")
+            input_started_utc = utc_now()
             send_wav(mic, wav, deadline)
             end = time.monotonic()
-            with capture.lock:
-                capture.input_end = end
-            # Allow STT to endpoint and the first answer to arrive. Turn four is a
-            # deliberate interruption after three seconds of the preceding answer.
-            wait_limit = min(deadline, end + (3 if index == 2 else 12))
-            while time.monotonic() < wait_limit:
-                with capture.lock:
-                    first = capture.first_after_input
-                    last = capture.last_audio
-                if first and (index == 2 or (last and time.monotonic() - last > 0.9)):
-                    break
-                time.sleep(0.05)
-            with capture.lock:
-                first = capture.first_after_input
+            input_ended_utc = utc_now()
+            first = wait_for_onset(capture, baseline, min(deadline, end + 12))
             turns.append({
                 "prompt_file": name,
                 "input_duration_ms": round(len(wav) / 2 / SAMPLE_RATE * 1000),
-                "first_non_silent_audio_after_input_ms": round((first - end) * 1000) if first else None,
-                "observed_answer": first is not None,
+                "input_started_utc": input_started_utc,
+                "input_ended_utc": input_ended_utc,
+                "first_candidate_audio_after_input_ms": round((first - end) * 1000) if first else None,
+                "candidate_audio": first is not None,
             })
+            if first is None:
+                raise TimeoutError(f"No received audio candidate for prompt {index + 1}")
+            if index == 2:
+                # The next prompt is the barge-in: send it immediately while
+                # answer audio is active, not after an arbitrary fixed delay.
+                continue
+            if index < 2 and not wait_for_quiet(capture, min(deadline, end + 12)):
+                raise TimeoutError(f"Received audio did not finish for prompt {index + 1}")
         time.sleep(min(2, max(0, deadline - time.monotonic())))
     except Exception as exc:
         error = f"{type(exc).__name__}: {exc}"
     finally:
         capture.stop.set()
-        if capture.thread.is_alive():
-            capture.thread.join(timeout=3)
         try:
             done = threading.Event()
             client.leave(completion=lambda *_: done.set())
             done.wait(3)
         finally:
             client.release()
+            if capture.thread.is_alive():
+                capture.thread.join(timeout=3)
+    if capture.error and error is None:
+        error = f"AudioCaptureError: {capture.error}"
     return {
         "provider_session_id": session_id,
+        "session_started_utc": session_started_utc,
         "pipecat_start_ms": round(start_seconds * 1000),
         "daily_join_ms": round((joined_at - started) * 1000) if joined_at else None,
         "bot_join_after_session_start_ms": (
@@ -251,10 +300,12 @@ def run(input_dir: Path, output_dir: Path, key: str, agent: str) -> dict:
         "startup_limit_seconds": MAX_STARTUP_SECONDS,
         "voice_limit_seconds": MAX_VOICE_SECONDS,
         "error": error,
+        "interrupt_sent_during_audio": interrupt_sent_during_audio,
         "turns": turns,
         "notes": [
             "Synthetic voice; not a dialect-quality or iPad speaker measurement.",
             "First non-silent received PCM is not proof that a person heard the sound.",
+            "Audio candidates must be correlated with worker turn IDs; they alone do not prove answers.",
             "No retry; a failed/empty turn remains visible as a failure.",
             "The bot must join Daily before any test speech is transmitted.",
         ],
