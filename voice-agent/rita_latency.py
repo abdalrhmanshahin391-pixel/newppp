@@ -59,16 +59,24 @@ class RitaLatencyRecorder:
         now_ns = time.perf_counter_ns()
         marks[event] = now_ns
         speech_end = marks.get("speech_end")
+        monotonic_ms = round((now_ns - self.started_ns) / 1_000_000, 2)
+        after_speech_end_ms = (
+            round((now_ns - speech_end) / 1_000_000, 2) if speech_end else None
+        )
         logger.bind(
             session_id=self.session_id,
             turn_id=turn,
             event=event,
-            monotonic_ms=round((now_ns - self.started_ns) / 1_000_000, 2),
-            after_speech_end_ms=(
-                round((now_ns - speech_end) / 1_000_000, 2) if speech_end else None
-            ),
+            monotonic_ms=monotonic_ms,
+            after_speech_end_ms=after_speech_end_ms,
             **details,
-        ).info("Rita voice latency milestone")
+        ).info(
+            "Rita voice latency milestone event={} turn_id={} monotonic_ms={} after_speech_end_ms={}",
+            event,
+            turn,
+            monotonic_ms,
+            after_speech_end_ms,
+        )
 
     def tts_requested(self, context_id: str, text: str) -> None:
         self._contexts[context_id] = self.turn
