@@ -126,17 +126,26 @@ TEACHING CONTROL
 
 
 async def bot(args: DailyRunnerArguments):
-    body = args.body if isinstance(args.body, dict) else {}
-    latency = RitaLatencyRecorder(args.session_id)
+    """Pipecat Cloud entrypoint; the Modal worker calls run_bot directly."""
+    await run_bot(
+        room_url=args.room_url,
+        token=args.token,
+        session_id=args.session_id,
+        body=args.body if isinstance(args.body, dict) else {},
+    )
+
+
+async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str, Any]):
+    latency = RitaLatencyRecorder(session_id)
     state = RitaSessionState(
         active_language=str(body.get("language", "automatic")),
         active_dialect=str(body.get("dialect", "ar-JO")),
     )
-    logger.bind(session_id=args.session_id).info("Starting Rita v3 session")
+    logger.bind(session_id=session_id).info("Starting Rita v3 session")
 
     transport = DailyTransport(
-        args.room_url,
-        args.token,
+        room_url,
+        token,
         "Rita",
         DailyParams(
             audio_in_enabled=True,
@@ -248,7 +257,7 @@ async def bot(args: DailyRunnerArguments):
     @startup_observer.event_handler("on_startup_timing_report")
     async def on_startup_timing_report(observer, report):
         logger.bind(
-            session_id=args.session_id,
+            session_id=session_id,
             total_ms=round(report.total_duration_secs * 1000, 2),
             processors=[
                 {"name": item.processor_name, "duration_ms": round(item.duration_secs * 1000, 2)}
@@ -259,7 +268,7 @@ async def bot(args: DailyRunnerArguments):
     @startup_observer.event_handler("on_transport_timing_report")
     async def on_transport_timing_report(observer, report):
         logger.bind(
-            session_id=args.session_id,
+            session_id=session_id,
             bot_connected_ms=(
                 round(report.bot_connected_secs * 1000, 2)
                 if report.bot_connected_secs is not None
@@ -271,7 +280,7 @@ async def bot(args: DailyRunnerArguments):
     @user_bot_observer.event_handler("on_latency_measured")
     async def on_user_bot_latency(observer, latency_seconds):
         logger.bind(
-            session_id=args.session_id,
+            session_id=session_id,
             turn_id=latency.turn,
             latency_ms=round(latency_seconds * 1000, 2),
         ).info("Rita user-to-bot speaking signal latency")

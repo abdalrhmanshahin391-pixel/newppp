@@ -46,3 +46,13 @@ def test_groq_reasoning_effort_uses_supported_settings_extra():
     source = (ROOT / "bot.py").read_text(encoding="utf-8")
     assert 'extra={"reasoning_effort": "low"}' in source
     assert '\n            reasoning_effort="low",' not in source
+
+
+def test_modal_worker_is_warm_snapshotted_and_shares_the_bot_entrypoint():
+    source = (ROOT / "modal_app.py").read_text(encoding="utf-8")
+    assert "min_containers=1" in source
+    assert "enable_memory_snapshot=True" in source
+    assert "@modal.enter(snap=True)" in source
+    assert "bot.run_bot(" in source
+    assert 'pipecat-ai[daily,groq,runner,silero,soniox]==0.0.105' in source
+    assert "hmac.compare_digest" in source

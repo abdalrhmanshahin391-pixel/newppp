@@ -29,5 +29,5 @@ jobs:
         run: |
           python -c 'from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3; LocalSmartTurnAnalyzerV3()'
           python -c 'import importlib.util; assert importlib.util.find_spec("torch") is None, "CPU-only worker unexpectedly installed PyTorch"'
-          python -m compileall -q bot.py rita_gemini_tts.py rita_latency.py rita_state.py voice_probe.py
+          python -m compileall -q bot.py modal_app.py rita_gemini_tts.py rita_latency.py rita_state.py voice_probe.py
           python -m pytest tests -q
