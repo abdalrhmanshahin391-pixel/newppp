@@ -81,7 +81,7 @@ export function pick(lang: string, en: string, ar: string) {
 }
 
 export async function fetchSupportSettings(): Promise<SupportSettings> {
-  const { data } = await (supabase.from as any)("support_settings")
+  const { data } = await (supabase.from as any)("support_settings_public")
     // notify_* are admin-only columns; fetch them separately via fetchSupportNotify()
     .select(
       "id,page_enabled,form_enabled,channels_enabled,intro_title_en,intro_title_ar,intro_text_en,intro_text_ar,response_note_en,response_note_ar,categories,created_at,updated_at",
