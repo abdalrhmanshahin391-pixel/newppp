@@ -43,8 +43,8 @@ async function load(): Promise<BootstrapData> {
   });
 
   const [settingsRes, imagesRes] = await Promise.all([
-    (client.from as any)("site_settings").select(SETTINGS_COLUMNS).eq("id", true).maybeSingle(),
-    (client.from as any)("site_images").select("key,path"),
+    (client.from as any)("site_settings_public").select(SETTINGS_COLUMNS).eq("id", true).maybeSingle(),
+    (client.from as any)("site_images_public").select("key,path"),
   ]);
 
   // Sign the replaced artwork here so the very first HTML frame already points

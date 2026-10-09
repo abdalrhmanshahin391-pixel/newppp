@@ -10,7 +10,7 @@ export function useSiteImages() {
     queryKey: ["site-images"],
     staleTime: 5 * 60_000,
     queryFn: async () => {
-      const { data } = await (supabase.from as any)("site_images").select("key,path");
+      const { data } = await (supabase.from as any)("site_images_public").select("key,path");
       const rows = (data ?? []) as { key: string; path: string }[];
       const entries = await Promise.all(
         rows.map(async (r) => [r.key, (await signSiteMedia(r.path)) ?? ""] as const),
