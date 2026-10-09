@@ -148,6 +148,8 @@ class RitaGeminiTTSService(TTSService):
         # Provider/transport SDKs expose several exception families. Pipecat must
         # receive every one as an ErrorFrame rather than losing the session task.
         except Exception as exc:  # noqa: BLE001
+            if self._latency_recorder:
+                self._latency_recorder.provider_error("gemini_tts", exc)
             logger.exception("Gemini 3.8 TTS request failed")
             yield ErrorFrame(error=f"Gemini 3.8 TTS generation error: {exc}")
 

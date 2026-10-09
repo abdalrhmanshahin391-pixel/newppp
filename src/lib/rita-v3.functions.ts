@@ -77,7 +77,9 @@ export const getRitaV3Admin = createServerFn({ method: "GET" })
     const workerSecrets = await getRitaV3WorkerSecretStatus(storedPrivateKey || env.privateKey);
     const firstAudio = (events ?? [])
       .filter(
-        (item: any) => item.event_name === "first_remote_audio" && Number.isFinite(item.value_ms),
+        (item: any) =>
+          ["first_remote_audio", "first_remote_audio_level"].includes(item.event_name) &&
+          Number.isFinite(item.value_ms),
       )
       .map((item: any) => Number(item.value_ms))
       .sort((a: number, b: number) => a - b);

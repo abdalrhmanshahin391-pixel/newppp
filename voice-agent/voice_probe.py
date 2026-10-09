@@ -72,22 +72,39 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="milliseconds")
 
 
-def start_session(key: str, agent: str) -> tuple[str, str, str, float]:
-    address = f"https://api.pipecat.daily.co/v1/public/{agent}/start"
-    body = json.dumps({
-        "createDailyRoom": True,
-        "body": {
-            "appSessionId": str(uuid.uuid4()),
-            "language": "automatic",
-            "dialect": "ar-JO",
-            "mode": "free_conversation",
-            "personality": "kind",
-        },
-    }).encode("utf-8")
+def start_session(
+    key: str, agent: str, modal_start_url: str = "", modal_start_token: str = ""
+) -> tuple[str, str, str, float, str, str]:
+    """Start exactly one probe through the selected production entry point.
+
+    The Modal token is read only from an environment variable. It is never
+    echoed, written to metrics, or accepted as a command-line argument.
+    """
+
+    app_session_id = str(uuid.uuid4())
+    trace_id = str(uuid.uuid4())
+    worker_body = {
+        "appSessionId": app_session_id,
+        "traceId": trace_id,
+        "language": "automatic",
+        "dialect": "ar-JO",
+        "mode": "free_conversation",
+        "personality": "kind",
+    }
+    use_modal = bool(modal_start_url and modal_start_token)
+    address = modal_start_url if use_modal else f"https://api.pipecat.daily.co/v1/public/{agent}/start"
+    body = json.dumps(
+        {"token": modal_start_token, "body": worker_body}
+        if use_modal
+        else {"createDailyRoom": True, "body": worker_body}
+    ).encode("utf-8")
+    headers = {"Content-Type": "application/json"}
+    if not use_modal:
+        headers["Authorization"] = f"Bearer {key}"
     request = urllib.request.Request(
         address,
         data=body,
-        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+        headers=headers,
         method="POST",
     )
     started = time.monotonic()
@@ -99,7 +116,14 @@ def start_session(key: str, agent: str) -> tuple[str, str, str, float]:
         raise RuntimeError(f"Pipecat start returned HTTP {exc.code}") from None
     if not data.get("dailyRoom") or not data.get("dailyToken"):
         raise RuntimeError("Pipecat start omitted Daily room or token")
-    return data["dailyRoom"], data["dailyToken"], str(data.get("sessionId", "")), time.monotonic() - started
+    return (
+        data["dailyRoom"],
+        data["dailyToken"],
+        str(data.get("sessionId", "")),
+        time.monotonic() - started,
+        "modal" if use_modal else "pipecat",
+        trace_id,
+    )
 
 
 class AudioCapture:
@@ -171,14 +195,23 @@ def send_wav(mic, wav: bytes, deadline: float):
         time.sleep(FRAME_SAMPLES / SAMPLE_RATE)
 
 
-def run(input_dir: Path, output_dir: Path, key: str, agent: str) -> dict:
+def run(
+    input_dir: Path,
+    output_dir: Path,
+    key: str,
+    agent: str,
+    modal_start_url: str = "",
+    modal_start_token: str = "",
+) -> dict:
     from daily import CallClient, Daily, EventHandler
 
     wavs = [read_wav(input_dir / name) for name in PROBE_FILES]
     output_dir.mkdir(parents=True, exist_ok=True)
     session_started_utc = utc_now()
     session_started_at = time.monotonic()
-    room, token, session_id, start_seconds = start_session(key, agent)
+    room, token, session_id, start_seconds, start_backend, trace_id = start_session(
+        key, agent, modal_start_url, modal_start_token
+    )
     Daily.init()
     mic = Daily.create_microphone_device("rita-qa-mic", sample_rate=SAMPLE_RATE, channels=1)
     speaker = Daily.create_speaker_device("rita-qa-speaker", sample_rate=SAMPLE_RATE, channels=1)
@@ -295,6 +328,8 @@ def run(input_dir: Path, output_dir: Path, key: str, agent: str) -> dict:
     if capture.error and error is None:
         error = f"AudioCaptureError: {capture.error}"
     return {
+        "diagnostic_trace_id": trace_id,
+        "start_backend": start_backend,
         "provider_session_id": session_id,
         "session_started_utc": session_started_utc,
         "pipecat_start_ms": round(start_seconds * 1000),
@@ -325,9 +360,20 @@ def main():
     parser.add_argument("--agent", default="ritajet-voice-v3")
     args = parser.parse_args()
     key = os.environ.get("PIPECAT_PUBLIC_API_KEY", "").strip()
-    if not key:
-        raise SystemExit("PIPECAT_PUBLIC_API_KEY is missing")
-    result = run(args.input_dir, args.output_dir, key, args.agent)
+    modal_start_url = os.environ.get("RITA_PROBE_START_URL", "").strip()
+    modal_start_token = os.environ.get("RITA_PROBE_START_TOKEN", "").strip()
+    if not key and not (modal_start_url and modal_start_token):
+        raise SystemExit(
+            "Set PIPECAT_PUBLIC_API_KEY, or set both RITA_PROBE_START_URL and RITA_PROBE_START_TOKEN."
+        )
+    result = run(
+        args.input_dir,
+        args.output_dir,
+        key,
+        args.agent,
+        modal_start_url,
+        modal_start_token,
+    )
     (args.output_dir / "metrics.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(json.dumps(result, indent=2))
     if not probe_succeeded(result):

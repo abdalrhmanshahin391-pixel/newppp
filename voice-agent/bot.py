@@ -136,7 +136,8 @@ async def bot(args: DailyRunnerArguments):
 
 
 async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str, Any]):
-    latency = RitaLatencyRecorder(session_id)
+    latency = RitaLatencyRecorder(session_id, str(body.get("traceId") or ""))
+    latency.session_mark("worker_session_started")
     state = RitaSessionState(
         active_language=str(body.get("language", "automatic")),
         active_dialect=str(body.get("dialect", "ar-JO")),
@@ -153,6 +154,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             camera_in_enabled=False,
         ),
     )
+    latency.session_mark("daily_transport_created")
 
     stt = SonioxSTTService(
         api_key=require_secret("SONIOX_API_KEY"),
@@ -322,7 +324,9 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
 
     @transport.event_handler("on_first_participant_joined")
     async def on_first_participant_joined(transport, participant):
+        latency.session_mark("daily_participant_joined")
         await transport.capture_participant_audio(participant["id"], sample_rate=16_000)
+        latency.session_mark("daily_audio_capture_started")
 
     @transport.event_handler("on_participant_left")
     async def on_participant_left(transport, participant, reason):

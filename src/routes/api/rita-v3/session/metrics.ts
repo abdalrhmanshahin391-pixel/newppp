@@ -5,6 +5,7 @@ import { recordRitaV3Event } from "@/lib/rita-v3.server";
 const ALLOWED_EVENTS = new Set([
   "speech_start",
   "speech_end",
+  "start_clicked",
   "transcript_partial",
   "transcript_final",
   "llm_start",
@@ -12,6 +13,7 @@ const ALLOWED_EVENTS = new Set([
   "tts_start",
   "bot_speaking_signal",
   "first_remote_audio",
+  "first_remote_audio_level",
   "session_ready",
   "interrupted",
   "provider_error",
@@ -24,6 +26,10 @@ const ALLOWED_EVENTS = new Set([
   "turn_commit",
   "backchannel",
   "false_interruption",
+  "microphone_permission_error",
+  "client_connection_error",
+  "network_snapshot",
+  "network_stats_unavailable",
 ]);
 
 export const Route = createFileRoute("/api/rita-v3/session/metrics")({

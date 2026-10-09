@@ -2,12 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   RITA_V3_MODELS,
   persistRitaV3Session,
+  recordRitaV3Event,
   requireRitaV3Access,
   ritaV3Environment,
   updateRitaV3Session,
 } from "@/lib/rita-v3.server";
 import { cleanLanguage, normalizePersonality } from "@/lib/rita-voice.server";
 import { classifyPipecatStartFailure } from "@/lib/rita-v3-diagnostics";
+import {
+  normalizeRitaDiagnosticTraceId,
+  readModalTimingEvidence,
+} from "@/lib/rita-v3-diagnostics-trace";
 import { fetchPipecatStartWithDeadline } from "@/lib/rita-v3-startup";
 
 export const Route = createFileRoute("/api/rita-v3/session/start")({
@@ -25,6 +30,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
         )
           ? String(body.mode)
           : "free_conversation";
+        const traceId = normalizeRitaDiagnosticTraceId(body.traceId);
         const env = await ritaV3Environment();
 
         const modalReady =
@@ -51,6 +57,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             personality,
             language,
             dialect,
+            traceId,
           });
         } catch (error) {
           console.error("Rita v3 session persistence failed", error);
@@ -72,12 +79,28 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           Boolean(modalUrl && modalToken);
         const startBody = {
           appSessionId: sessionId,
+          traceId,
           personality,
           language,
           dialect,
           mode,
           userId: access.auth.userId,
         };
+        const diagnosticBase = {
+          traceId,
+          source: "lovable-server",
+          backend: useModal ? "modal" : "pipecat",
+        };
+        const recordStartMetric = (name: string, valueMs?: number, metadata?: Record<string, unknown>) =>
+          recordRitaV3Event({
+            sessionId,
+            userId: access.auth.userId,
+            name,
+            valueMs,
+            metadata: { ...diagnosticBase, ...metadata },
+          }).catch((error) => console.warn("Rita diagnostic metric failed", { name, error }));
+        await recordStartMetric("start_request_received");
+        await recordStartMetric("start_upstream_requested");
         try {
           // The Modal worker is kept warm, so a short deadline is enough; Pipecat may cold start.
           const upstream = useModal
@@ -109,6 +132,10 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             upstreamStatus: upstream.status,
           });
           const payload = (await upstream.json().catch(() => ({}))) as Record<string, unknown>;
+          const upstreamElapsedMs = Math.round(performance.now() - startedAt);
+          await recordStartMetric("start_upstream_response", upstreamElapsedMs, {
+            upstreamStatus: upstream.status,
+          });
           if (!upstream.ok || !payload.dailyRoom || !payload.dailyToken) {
             const failure = classifyPipecatStartFailure(upstream.status, payload, upstream.headers);
             await updateRitaV3Session(sessionId, access.auth.userId, {
@@ -122,6 +149,11 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
                   requestId: failure.requestId,
                 },
               },
+            });
+            await recordStartMetric("start_upstream_failed", upstreamElapsedMs, {
+              code: failure.code,
+              upstreamStatus: failure.upstreamStatus,
+              requestId: failure.requestId,
             });
             return Response.json(
               {
@@ -140,12 +172,18 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             provider_session_id: String(payload.sessionId ?? payload.id ?? ""),
             connected_at: new Date().toISOString(),
           });
+          const modalTimings = readModalTimingEvidence(payload.diagnostics);
+          await recordStartMetric("start_credentials_ready", upstreamElapsedMs, {
+            upstreamStatus: upstream.status,
+            modalTimings,
+          });
           return Response.json(
             {
               dailyRoom: payload.dailyRoom,
               dailyToken: payload.dailyToken,
               sessionId,
               providerSessionId: payload.sessionId ?? payload.id ?? null,
+              traceId,
               models: RITA_V3_MODELS,
             },
             { headers: { "Cache-Control": "no-store" } },
@@ -168,6 +206,10 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
               startDiagnostic: { code },
             },
           }).catch(() => undefined);
+          await recordStartMetric("start_upstream_failed", Math.round(performance.now() - startedAt), {
+            code,
+            errorName: error instanceof Error ? error.name : "unknown",
+          });
           return Response.json(
             {
               ok: false,

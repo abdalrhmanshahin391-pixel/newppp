@@ -10,6 +10,7 @@ from pipecat.frames.frames import (
     BotStartedSpeakingFrame,
     InterimTranscriptionFrame,
     LLMTextFrame,
+    ErrorFrame,
     TranscriptionFrame,
     TTSAudioRawFrame,
     UserStartedSpeakingFrame,
@@ -34,8 +35,9 @@ def first_non_silent_sample_ms(audio: bytes, sample_rate: int, threshold: int = 
 class RitaLatencyRecorder:
     """Track monotonic worker milestones without logging speech or transcript content."""
 
-    def __init__(self, session_id: str):
+    def __init__(self, session_id: str, trace_id: str = ""):
         self.session_id = session_id
+        self.trace_id = trace_id
         self.started_ns = time.perf_counter_ns()
         self.turn = 0
         self._marks: dict[int, dict[str, int]] = {}
@@ -65,6 +67,8 @@ class RitaLatencyRecorder:
         )
         logger.bind(
             session_id=self.session_id,
+            trace_id=self.trace_id or None,
+            event_source="worker",
             turn_id=turn,
             event=event,
             monotonic_ms=monotonic_ms,
@@ -76,6 +80,27 @@ class RitaLatencyRecorder:
             turn,
             monotonic_ms,
             after_speech_end_ms,
+        )
+
+    def session_mark(self, event: str, **details: object) -> None:
+        """Log startup/transport evidence that occurs before the first user turn."""
+
+        logger.bind(
+            session_id=self.session_id,
+            trace_id=self.trace_id or None,
+            event_source="worker",
+            event=event,
+            monotonic_ms=round((time.perf_counter_ns() - self.started_ns) / 1_000_000, 2),
+            **details,
+        ).info("Rita voice session milestone event={}", event)
+
+    def provider_error(self, provider: str, error: object) -> None:
+        """Classify a provider error without recording provider text or user content."""
+
+        self.session_mark(
+            "provider_error",
+            provider=provider,
+            error_type=type(error).__name__,
         )
 
     def tts_requested(self, context_id: str, text: str) -> None:
@@ -117,3 +142,15 @@ class RitaLatencyObserver(BaseObserver):
             self.recorder.mark("bot_speaking_signal")
         elif isinstance(frame, TTSAudioRawFrame):
             self.recorder.mark("worker_first_audio_frame")
+        elif isinstance(frame, ErrorFrame):
+            text = str(getattr(frame, "error", "")).casefold()
+            provider = (
+                "gemini_tts"
+                if "gemini" in text
+                else "soniox_stt"
+                if "soniox" in text
+                else "groq_llm"
+                if "groq" in text
+                else "pipeline"
+            )
+            self.recorder.provider_error(provider, getattr(frame, "error", ""))
