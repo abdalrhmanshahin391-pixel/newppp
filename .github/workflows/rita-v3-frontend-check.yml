@@ -23,6 +23,7 @@ jobs:
       - name: Check startup regressions and types
         run: |
           node --test src/lib/rita-v3-startup.test.mjs
+          node --test src/lib/rita-v3-diagnostics-trace.test.mjs
           bunx tsc --noEmit
       - name: Build site
         run: bun run build

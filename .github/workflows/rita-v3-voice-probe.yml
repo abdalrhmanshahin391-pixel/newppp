@@ -35,6 +35,10 @@ jobs:
       - name: Probe one Pipecat session (120s readiness plus 60s voice, no retry)
         env:
           PIPECAT_PUBLIC_API_KEY: ${{ secrets.PIPECAT_PUBLIC_API_KEY }}
+          # When these two optional repository secrets are set, the probe uses
+          # the same Modal start endpoint as production rather than Pipecat Cloud.
+          RITA_PROBE_START_URL: ${{ secrets.RITA_PROBE_START_URL }}
+          RITA_PROBE_START_TOKEN: ${{ secrets.RITA_PROBE_START_TOKEN }}
         run: python voice-agent/voice_probe.py --input-dir voice-probe-input --output-dir voice-probe-output
       - name: Retain synthetic recording and measurements for review
         if: always()

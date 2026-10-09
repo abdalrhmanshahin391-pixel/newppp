@@ -478,6 +478,7 @@ export async function persistRitaV3Session(args: {
   personality: string;
   language: string;
   dialect: string;
+  traceId?: string;
 }) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await (supabaseAdmin.from as any)("rita_v3_sessions")
@@ -487,7 +488,11 @@ export async function persistRitaV3Session(args: {
       language_preference: args.language,
       dialect_preference: args.dialect,
       status: "starting",
-      model_proof: RITA_V3_MODELS,
+      diagnostic_trace_id: args.traceId ?? null,
+      model_proof: {
+        ...RITA_V3_MODELS,
+        ...(args.traceId ? { diagnosticTraceId: args.traceId } : {}),
+      },
     })
     .select("id")
     .single();

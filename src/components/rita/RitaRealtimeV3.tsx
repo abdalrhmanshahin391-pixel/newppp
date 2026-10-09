@@ -39,6 +39,11 @@ type ExtractionResult = {
   destinationName?: string;
   rememberDestination?: boolean;
 };
+type PendingMetric = {
+  name: string;
+  valueMs?: number;
+  metadata: Record<string, unknown>;
+};
 
 const MODEL_PROOF = "Soniox stt-rt-v5 → Groq GPT-OSS 120B → Gemini 3.8 Flash-Lite TTS · Achernar";
 
@@ -67,6 +72,8 @@ export function RitaRealtimeV3() {
   const mutedRef = useRef(false);
   const sessionId = useRef("");
   const providerSessionId = useRef("");
+  const traceId = useRef("");
+  const pendingMetrics = useRef<PendingMetric[]>([]);
   const lastUserText = useRef("");
   const generatedBuffer = useRef("");
   const heardBuffer = useRef("");
@@ -130,42 +137,72 @@ export function RitaRealtimeV3() {
     if (!loading && !user) void navigate({ to: "/login" });
   }, [loading, navigate, user]);
 
-  const metric = useCallback(
-    async (name: string, valueMs?: number, metadata?: Record<string, unknown>) => {
-      const currentSessionId = sessionId.current;
-      if (!currentSessionId) return;
+  const sendMetric = useCallback(
+    async (currentSessionId: string, event: PendingMetric) => {
       try {
-        const currentTurnId = turnId.current;
-        const connection = navigator as Navigator & {
-          connection?: { effectiveType?: string };
-        };
         await fetch("/api/rita-v3/session/metrics", {
           method: "POST",
           headers: await authHeaders(),
           body: JSON.stringify({
             sessionId: currentSessionId,
-            name,
-            valueMs,
-            metadata: {
-              ...metadata,
-              turnId: currentTurnId || undefined,
-              device: /ipad|iphone/i.test(navigator.userAgent)
-                ? "ios"
-                : /android/i.test(navigator.userAgent)
-                  ? "android"
-                  : "desktop",
-              network: connection.connection?.effectiveType ?? "unknown",
-              language,
-              dialect,
-              mode,
-            },
+            name: event.name,
+            valueMs: event.valueMs,
+            metadata: event.metadata,
           }),
         });
       } catch {
         // Metrics never interrupt a lesson.
       }
     },
-    [dialect, language, mode],
+    [],
+  );
+
+  const metric = useCallback(
+    async (name: string, valueMs?: number, metadata?: Record<string, unknown>) => {
+      const connection = navigator as Navigator & {
+        connection?: { effectiveType?: string; rtt?: number; downlink?: number; saveData?: boolean };
+      };
+      const event: PendingMetric = {
+        name,
+        valueMs,
+        metadata: {
+          ...metadata,
+          traceId: traceId.current || undefined,
+          turnId: turnId.current || undefined,
+          source: "browser",
+          device: /ipad|iphone/i.test(navigator.userAgent)
+            ? "ios"
+            : /android/i.test(navigator.userAgent)
+              ? "android"
+              : "desktop",
+          network: connection.connection?.effectiveType ?? "unknown",
+          networkRttMs: connection.connection?.rtt,
+          networkDownlinkMbps: connection.connection?.downlink,
+          networkSaveData: connection.connection?.saveData,
+          language,
+          dialect,
+          mode,
+        },
+      };
+      const currentSessionId = sessionId.current;
+      if (!currentSessionId) {
+        // Start events happen before Pipecat returns the application session ID.
+        // Queue them once, then persist them after onBotStarted supplies that ID.
+        pendingMetrics.current.push(event);
+        return;
+      }
+      await sendMetric(currentSessionId, event);
+    },
+    [dialect, language, mode, sendMetric],
+  );
+
+  const flushPendingMetrics = useCallback(
+    (currentSessionId: string) => {
+      const pending = pendingMetrics.current;
+      pendingMetrics.current = [];
+      void Promise.all(pending.map((event) => sendMetric(currentSessionId, event)));
+    },
+    [sendMetric],
   );
 
   const fetchDestinations = useCallback(async () => {
@@ -349,6 +386,8 @@ export function RitaRealtimeV3() {
     }
     sessionId.current = "";
     providerSessionId.current = "";
+    traceId.current = "";
+    pendingMetrics.current = [];
     activeRef.current = false;
     mutedRef.current = false;
     setActive(false);
@@ -386,12 +425,17 @@ export function RitaRealtimeV3() {
       generatedBuffer.current = "";
       heardBuffer.current = "";
       botSpeaking.current = false;
+      sessionId.current = "";
+      providerSessionId.current = "";
+      traceId.current = crypto.randomUUID();
+      pendingMetrics.current = [];
       sessionStartedAt.current = performance.now();
       transportConnectedAt.current = 0;
       transportMetricRecorded.current = false;
       botReady.current = false;
       botReadyAt.current = 0;
       botReadyMetricRecorded.current = false;
+      void metric("start_clicked");
       const commitHeardReply = (interrupted = false) => {
         // Generated/TTS text is not evidence that interrupted audio was heard.
         const reply = committedRitaReply({
@@ -408,8 +452,7 @@ export function RitaRealtimeV3() {
         if (!interrupted) void runExtraction(lastUserText.current, reply);
         if (interrupted) void metric("interrupted");
       };
-      const pc = new PipecatClient({
-        transport: new DailyTransport({
+      const transport = new DailyTransport({
           bufferLocalAudioUntilBotReady: true,
           inputSettings: {
             audio: {
@@ -421,7 +464,39 @@ export function RitaRealtimeV3() {
               },
             },
           },
-        }),
+      });
+      const networkSnapshotPhases = new Set<string>();
+      const snapshotNetwork = (phase: string) => {
+        if (networkSnapshotPhases.has(phase)) return;
+        networkSnapshotPhases.add(phase);
+        void transport.dailyCallClient
+          .getNetworkStats()
+          .then((networkStats: unknown) => {
+            const stats = networkStats as {
+              networkState?: unknown;
+              networkStateReasons?: unknown;
+              stats?: { latest?: Record<string, unknown> };
+            };
+            const latest = stats.stats?.latest ?? {};
+            const numberOrUndefined = (value: unknown) =>
+              Number.isFinite(Number(value)) ? Number(value) : undefined;
+            return metric("network_snapshot", undefined, {
+              phase,
+              dailyNetworkState: typeof stats.networkState === "string" ? stats.networkState : "unknown",
+              dailyNetworkReasons: Array.isArray(stats.networkStateReasons)
+                ? stats.networkStateReasons.slice(0, 4)
+                : [],
+              roundTripTimeMs: numberOrUndefined(latest.networkRoundTripTime),
+              audioReceivePacketLoss: numberOrUndefined(latest.audioRecvPacketLoss),
+              audioSendPacketLoss: numberOrUndefined(latest.audioSendPacketLoss),
+              audioReceiveJitter: numberOrUndefined(latest.audioRecvJitter),
+              audioSendJitter: numberOrUndefined(latest.audioSendJitter),
+            });
+          })
+          .catch(() => void metric("network_stats_unavailable", undefined, { phase }));
+      };
+      const pc = new PipecatClient({
+        transport,
         enableMic: true,
         enableCam: false,
         disconnectOnBotDisconnect: true,
@@ -432,7 +507,8 @@ export function RitaRealtimeV3() {
             setActive(true);
             setStatus("Audio connected; waiting for Rita…");
             setMood("ready");
-            if (sessionId.current && !transportMetricRecorded.current) {
+            snapshotNetwork("transport_connected");
+            if (!transportMetricRecorded.current) {
               transportMetricRecorded.current = true;
               void metric(
                 "transport_connected",
@@ -447,6 +523,7 @@ export function RitaRealtimeV3() {
             };
             sessionId.current = String(started.sessionId ?? "");
             providerSessionId.current = String(started.providerSessionId ?? "");
+            if (sessionId.current) flushPendingMetrics(sessionId.current);
             if (transportConnectedAt.current && !transportMetricRecorded.current) {
               transportMetricRecorded.current = true;
               void metric(
@@ -464,7 +541,7 @@ export function RitaRealtimeV3() {
             botReadyAt.current = performance.now();
             setStatus("Rita is listening");
             setMood("listening");
-            if (sessionId.current && !botReadyMetricRecorded.current) {
+            if (!botReadyMetricRecorded.current) {
               botReadyMetricRecorded.current = true;
               void metric("bot_ready", botReadyAt.current - sessionStartedAt.current);
             }
@@ -480,10 +557,12 @@ export function RitaRealtimeV3() {
             const detail = String(eventData.error ?? eventData.message ?? "Provider error");
             setError(`${detail}. Rita did not switch to the old system.`);
             setStatus("Rita v3 error");
-            void metric("provider_error");
+            void metric("provider_error", undefined, { provider: "transport_or_pipeline" });
+            snapshotNetwork("transport_error");
           },
           onDeviceError: () => {
             setError("Microphone permission is blocked or the microphone is already in use.");
+            void metric("microphone_permission_error");
           },
           onUserStartedSpeaking: () => {
             cancelFiller();
@@ -559,10 +638,11 @@ export function RitaRealtimeV3() {
               return;
             firstRemoteAudioRecorded.current = true;
             if (speechEndedAt.current) {
-              void metric("first_remote_audio", performance.now() - speechEndedAt.current, {
-                source: "remote_audio_level_proxy",
+              void metric("first_remote_audio_level", performance.now() - speechEndedAt.current, {
+                measurement: "remote_audio_level_proxy",
                 generatedCharacters: generatedBuffer.current.length,
               });
+              snapshotNetwork("first_remote_audio_level");
               speechEndedAt.current = 0;
             }
           },
@@ -593,16 +673,22 @@ export function RitaRealtimeV3() {
       const ready = await pc.startBotAndConnect({
         endpoint: "/api/rita-v3/session/start",
         headers,
-        requestData: { personality, language, dialect, mode },
+        // traceId is intentionally content-free and lets server-side diagnostics
+        // be correlated with browser events before a Daily bot response exists.
+        requestData: { personality, language, dialect, mode, traceId: traceId.current },
         // A cold agent has taken 88s to join Daily. This prevents a false
         // failure while startup and turn latency remain separately measured.
         timeout: 125_000,
       });
-      // startBotAndConnect returns bot-ready protocol data; session identifiers are
-      // returned by the start endpoint and retained inside the transport. Fetch a
-      // lightweight start response is not repeated, so the server also reconciles
-      // orphaned sessions by timeout.
-      void ready;
+      // Normally onBotStarted supplies these IDs. Retain this fallback because a
+      // transport may resolve before it invokes that callback; otherwise the early
+      // trace would remain queued and the run would look falsely incomplete.
+      const startResult = ready as { sessionId?: unknown; providerSessionId?: unknown } | undefined;
+      if (!sessionId.current && typeof startResult?.sessionId === "string") {
+        sessionId.current = startResult.sessionId;
+        providerSessionId.current = String(startResult.providerSessionId ?? "");
+        flushPendingMetrics(sessionId.current);
+      }
       void metric("start_call_returned", performance.now() - sessionStartedAt.current);
       setActive(true);
       activeRef.current = true;
@@ -616,6 +702,9 @@ export function RitaRealtimeV3() {
       setMood("ready");
       setStatus("Rita could not connect");
       setError(`${humanError(cause)} Rita v3 stayed isolated; no legacy voice system was started.`);
+      void metric("client_connection_error", undefined, {
+        errorKind: cause instanceof Error ? cause.name : "unknown",
+      });
     } finally {
       setStarting(false);
     }
