@@ -27,7 +27,12 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           : "free_conversation";
         const env = await ritaV3Environment();
 
-        if (!env.publicKey) {
+        const modalReady =
+          String(process.env["RITA_BACKEND"] ?? "pipecat").trim() === "modal" &&
+          Boolean(String(process.env["MODAL_START_URL"] ?? "").trim()) &&
+          Boolean(String(process.env["MODAL_START_TOKEN"] ?? "").trim());
+
+        if (!env.publicKey && !modalReady) {
           return Response.json(
             {
               ok: false,
@@ -60,30 +65,45 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
         }
 
         const startedAt = performance.now();
+        const modalUrl = String(process.env["MODAL_START_URL"] ?? "").trim();
+        const modalToken = String(process.env["MODAL_START_TOKEN"] ?? "").trim();
+        const useModal =
+          String(process.env["RITA_BACKEND"] ?? "pipecat").trim() === "modal" &&
+          Boolean(modalUrl && modalToken);
+        const startBody = {
+          appSessionId: sessionId,
+          personality,
+          language,
+          dialect,
+          mode,
+          userId: access.auth.userId,
+        };
         try {
-          const upstream = await fetchPipecatStartWithDeadline(
-            fetch,
-            `https://api.pipecat.daily.co/v1/public/${encodeURIComponent(env.agentName)}/start`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${env.publicKey}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                createDailyRoom: true,
-                body: {
-                  appSessionId: sessionId,
-                  personality,
-                  language,
-                  dialect,
-                  mode,
-                  userId: access.auth.userId,
+          // The Modal worker is kept warm, so a short deadline is enough; Pipecat may cold start.
+          const upstream = useModal
+            ? await fetchPipecatStartWithDeadline(
+                fetch,
+                modalUrl,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ token: modalToken, body: startBody }),
                 },
-              }),
-            },
-            45_000,
-          );
+                10_000,
+              )
+            : await fetchPipecatStartWithDeadline(
+                fetch,
+                `https://api.pipecat.daily.co/v1/public/${encodeURIComponent(env.agentName)}/start`,
+                {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Bearer ${env.publicKey}`,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ createDailyRoom: true, body: startBody }),
+                },
+                45_000,
+              );
           console.info("Rita Pipecat start request", {
             elapsedMs: Math.round(performance.now() - startedAt),
             upstreamStatus: upstream.status,
@@ -138,7 +158,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           const timedOut = error instanceof DOMException && error.name === "AbortError";
           const code = timedOut ? "cold_start_timeout" : "pipecat_network_error";
           const message = timedOut
-            ? "Rita's Pipecat worker did not wake within 45 seconds. Check its deployment health and logs."
+            ? "Rita's voice worker did not respond in time. Check its deployment health and logs."
             : "The Rita website could not reach Pipecat. Check the network and Pipecat service status.";
           await updateRitaV3Session(sessionId, access.auth.userId, {
             status: "failed",
