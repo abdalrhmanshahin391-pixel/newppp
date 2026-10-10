@@ -13,6 +13,7 @@ from pipecat.services.settings import TTSSettings
 from pipecat.services.tts_service import TextAggregationMode, TTSService
 from pipecat.utils.tracing.service_decorators import traced_tts
 
+from rita_gemini_auth import DEFAULT_TTS_STYLE, gemini_error_category, gemini_interaction_payload
 from rita_latency import RitaLatencyRecorder, first_non_silent_sample_ms
 
 
@@ -20,11 +21,7 @@ from rita_latency import RitaLatencyRecorder, first_non_silent_sample_ms
 class RitaGeminiTTSSettings(TTSSettings):
     """Runtime settings shared by every Rita speech chunk."""
 
-    style: str = (
-        "Natural close-mic conversation. Warm, quick and emotionally present, never theatrical. "
-        "Use a friendly Jordanian accent for Arabic, natural native pronunciation for German and "
-        "English words, and preserve seamless code-switching."
-    )
+    style: str = DEFAULT_TTS_STYLE
 
 
 class RitaGeminiTTSService(TTSService):
@@ -46,12 +43,7 @@ class RitaGeminiTTSService(TTSService):
             model=model,
             voice=voice,
             language=None,
-            style=style
-            or (
-                "Natural close-mic conversation. Warm, quick and emotionally present, never "
-                "theatrical. Use a friendly Jordanian accent for Arabic, natural native "
-                "pronunciation for German and English words, and preserve seamless code-switching."
-            ),
+            style=style or DEFAULT_TTS_STYLE,
         )
         super().__init__(
             sample_rate=self.SAMPLE_RATE,
@@ -98,34 +90,14 @@ class RitaGeminiTTSService(TTSService):
             self._latency_recorder.tts_requested(context_id, text)
         logger.debug("Gemini 3.8 TTS request: {} characters", len(text))
         try:
-            interaction_input = [
-                {
-                    "type": "user_input",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": text,
-                            "annotations": [
-                                {
-                                    "type": "speech_metadata",
-                                    "style": self._settings.style,
-                                }
-                            ],
-                        }
-                    ],
-                }
-            ]
             stream = await self._client.aio.interactions.create(
-                model=self._settings.model,
-                input=interaction_input,
-                response_format={
-                    "type": "audio",
-                    "mime_type": "audio/l16",
-                    "sample_rate": self.SAMPLE_RATE,
-                },
-                generation_config={
-                    "speech_config": [{"voice": self._settings.voice}],
-                },
+                **gemini_interaction_payload(
+                    text=text,
+                    model=self._settings.model,
+                    voice=self._settings.voice,
+                    style=self._settings.style,
+                    sample_rate=self.SAMPLE_RATE,
+                ),
                 stream=True,
             )
             await self.start_tts_usage_metrics(text)
@@ -148,10 +120,14 @@ class RitaGeminiTTSService(TTSService):
         # Provider/transport SDKs expose several exception families. Pipecat must
         # receive every one as an ErrorFrame rather than losing the session task.
         except Exception as exc:  # noqa: BLE001
+            category, status = gemini_error_category(exc)
             if self._latency_recorder:
-                self._latency_recorder.provider_error("gemini_tts", exc)
-            logger.exception("Gemini 3.8 TTS request failed")
-            yield ErrorFrame(error=f"Gemini 3.8 TTS generation error: {exc}")
+                self._latency_recorder.provider_error("gemini_tts", exc, category=category)
+            logger.bind(category=category, status_code=status).warning(
+                "Gemini 3.8 TTS request failed"
+            )
+            error_code = "gemini_auth_failed" if category == "authentication" else "gemini_tts_failed"
+            yield ErrorFrame(error=error_code)
 
     async def stop(self, frame: EndFrame):
         """Close Gemini's async HTTP client when a lesson ends."""

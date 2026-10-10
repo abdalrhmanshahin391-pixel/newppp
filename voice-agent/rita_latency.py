@@ -8,9 +8,9 @@ from array import array
 from loguru import logger
 from pipecat.frames.frames import (
     BotStartedSpeakingFrame,
+    ErrorFrame,
     InterimTranscriptionFrame,
     LLMTextFrame,
-    ErrorFrame,
     TranscriptionFrame,
     TTSAudioRawFrame,
     UserStartedSpeakingFrame,
@@ -94,13 +94,14 @@ class RitaLatencyRecorder:
             **details,
         ).info("Rita voice session milestone event={}", event)
 
-    def provider_error(self, provider: str, error: object) -> None:
+    def provider_error(self, provider: str, error: object, *, category: str | None = None) -> None:
         """Classify a provider error without recording provider text or user content."""
 
         self.session_mark(
             "provider_error",
             provider=provider,
             error_type=type(error).__name__,
+            category=category,
         )
 
     def tts_requested(self, context_id: str, text: str) -> None:
