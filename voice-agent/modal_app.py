@@ -29,12 +29,12 @@ image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install(
         "pipecat-ai[daily,groq,runner,silero,soniox]==0.0.105",
-        "google-genai[aiohttp]>=2.25.0,<3",
+        "google-genai[aiohttp]==2.25.0",
         "python-dotenv>=1.1.0,<2",
         "fastapi[standard]",
     )
     .add_local_python_source(
-        "bot", "rita_gemini_tts", "rita_interruption", "rita_latency", "rita_state"
+        "bot", "rita_gemini_auth", "rita_gemini_tts", "rita_interruption", "rita_latency", "rita_state"
     )
 )
 
@@ -68,6 +68,19 @@ class RitaWorker:
         import bot
 
         await bot.run_bot(room_url=room_url, token=token, session_id=session_id, body=body)
+
+
+@app.function(secrets=secrets, min_containers=1, scaledown_window=300)
+async def diagnose_gemini_auth() -> dict[str, Any]:
+    """Run a bounded, private Gemini credential check from the deployed Modal environment."""
+
+    from rita_gemini_auth import run_gemini_auth_probe
+
+    api_key = os.environ.get("GOOGLE_API_KEY", "").strip()
+    if not api_key:
+        return {"outcome": "secret_missing"}
+    result = await run_gemini_auth_probe(api_key)
+    return result.public_dict()
 
 
 async def _daily_post(session, path: str, payload: dict[str, Any]) -> dict[str, Any]:

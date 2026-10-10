@@ -56,3 +56,13 @@ def test_modal_worker_is_warm_snapshotted_and_shares_the_bot_entrypoint():
     assert "bot.run_bot(" in source
     assert 'pipecat-ai[daily,groq,runner,silero,soniox]==0.0.105' in source
     assert "hmac.compare_digest" in source
+
+
+def test_gemini_sdk_version_is_reproducible_and_private_probe_is_not_public_endpoint():
+    project = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    modal_app = (ROOT / "modal_app.py").read_text(encoding="utf-8")
+    assert 'google-genai[aiohttp]==2.25.0' in project
+    assert "async def diagnose_gemini_auth()" in modal_app
+    assert "fastapi_endpoint" not in modal_app.split("async def diagnose_gemini_auth()", 1)[0].split(
+        "@app.function(secrets=secrets, min_containers=1, scaledown_window=300)", 1
+    )[-1]
