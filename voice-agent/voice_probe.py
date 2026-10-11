@@ -90,6 +90,9 @@ def start_session(
         "dialect": "ar-JO",
         "mode": "free_conversation",
         "personality": "kind",
+        # The synthetic probe is Rita's canary for the validated onset trimmer.
+        # Normal production sessions remain controlled by the Modal env flag.
+        "trimLeadingSilence": True,
     }
     use_modal = bool(modal_start_url and modal_start_token)
     address = modal_start_url if use_modal else f"https://api.pipecat.daily.co/v1/public/{agent}/start"

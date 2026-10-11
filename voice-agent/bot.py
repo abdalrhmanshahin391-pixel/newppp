@@ -1,7 +1,7 @@
 """Rita Realtime Voice Engine v3 production worker.
 
 Daily WebRTC -> Soniox stt-rt-v5 -> Smart Turn v3 ->
-Groq openai/gpt-oss-120b -> Gemini 3.8 Flash-Lite TTS -> Daily WebRTC.
+Groq openai/gpt-oss-120b -> Cartesia Sonic 3.6 TTS -> Daily WebRTC.
 
 No legacy provider is configured. Provider failures surface as real errors so
 an incomplete experiment can never be mistaken for the approved architecture.
@@ -45,7 +45,7 @@ from pipecat.utils.context.llm_context_summarization import (
     LLMContextSummaryConfig,
 )
 
-from rita_gemini_tts import RitaGeminiTTSService
+from rita_cartesia_tts import RitaCartesiaTTSService
 from rita_interruption import RitaUserTurnStartStrategy
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
 from rita_state import RitaSessionState
@@ -54,8 +54,19 @@ load_dotenv(override=False)
 
 STT_MODEL = "stt-rt-v5"
 LLM_MODEL = "openai/gpt-oss-120b"
-TTS_MODEL = "gemini-3.8-flash-lite-tts"
-TTS_VOICE = os.getenv("RITA_GEMINI_VOICE", "Achernar").strip() or "Achernar"
+TTS_PROVIDER = os.getenv("RITA_TTS_PROVIDER", "cartesia").strip().casefold()
+TTS_MODEL = "sonic-3.6"
+# Layan is the explicitly selected Cartesia library voice. Voice IDs are not
+# credentials; the Cartesia API key remains only in Modal's secret store.
+TTS_VOICE_ID = os.getenv(
+    "RITA_CARTESIA_VOICE_ID", "64a941ac-07ac-462c-a81c-008e353dd83e"
+).strip()
+TTS_MAX_BUFFER_DELAY_MS = int(os.getenv("RITA_CARTESIA_MAX_BUFFER_DELAY_MS", "0"))
+TTS_TRIM_LEADING_SILENCE = os.getenv(
+    "RITA_CARTESIA_TRIM_ENABLED", "false"
+).strip().casefold() in {"1", "true", "yes", "on"}
+TTS_TRIM_RMS_FLOOR = float(os.getenv("RITA_CARTESIA_TRIM_RMS_FLOOR", "32"))
+TTS_TRIM_PEAK_FLOOR = int(os.getenv("RITA_CARTESIA_TRIM_PEAK_FLOOR", "128"))
 SONIOX_URL = os.getenv(
     "SONIOX_URL", "wss://stt-rt.eu.soniox.com/transcribe-websocket"
 ).strip()
@@ -136,6 +147,10 @@ async def bot(args: DailyRunnerArguments):
 
 
 async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str, Any]):
+    if TTS_PROVIDER != "cartesia":
+        raise RuntimeError("Rita v3 production is configured only for Cartesia TTS")
+    if not TTS_VOICE_ID:
+        raise RuntimeError("Required Cartesia voice ID is missing")
     latency = RitaLatencyRecorder(session_id, str(body.get("traceId") or ""))
     latency.session_mark("worker_session_started")
     state = RitaSessionState(
@@ -196,11 +211,15 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         ),
     )
 
-    tts = RitaGeminiTTSService(
-        api_key=require_secret("GOOGLE_API_KEY"),
-        model=TTS_MODEL,
-        voice=TTS_VOICE,
+    tts = RitaCartesiaTTSService(
+        api_key=require_secret("CARTESIA_API_KEY"),
+        voice_id=TTS_VOICE_ID,
         latency_recorder=latency,
+        max_buffer_delay_ms=TTS_MAX_BUFFER_DELAY_MS,
+        trim_leading_silence=TTS_TRIM_LEADING_SILENCE
+        or body.get("trimLeadingSilence") is True,
+        trim_rms_floor=TTS_TRIM_RMS_FLOOR,
+        trim_peak_floor=TTS_TRIM_PEAK_FLOOR,
     )
 
     context = LLMContext(
@@ -308,6 +327,13 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
     async def on_user_turn_stopped(aggregator, strategy, message):
         latency.mark("turn_committed")
         state.observe_user_turn(message.content)
+        # In automatic mode the prompt replies in the current turn language
+        # before a language becomes stable, so TTS must make the same choice.
+        tts.set_turn_language(
+            state.active_language
+            if state.active_language in {"ar", "de", "en"}
+            else state.current_turn_language
+        )
         messages = context.get_messages()
         if messages and messages[0].get("role") == "system":
             messages[0]["content"] = build_prompt(body, state)

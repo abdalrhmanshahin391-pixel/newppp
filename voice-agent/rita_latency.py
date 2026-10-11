@@ -108,15 +108,74 @@ class RitaLatencyRecorder:
         self._contexts[context_id] = self.turn
         self.mark("first_clause_ready", turn=self.turn, characters=len(text))
         self.mark("tts_request", turn=self.turn)
+        # Called immediately before the Cartesia adapter builds and sends the
+        # WebSocket payload. The isolated benchmark measures the exact socket
+        # send; this production mark keeps the full-pipeline trace correlated.
+        self.mark("cartesia_first_text_sent", turn=self.turn)
+
+    def turn_for_context(self, context_id: str) -> int:
+        return self._contexts.get(context_id, self.turn)
 
     def tts_first_bytes(self, context_id: str) -> None:
         self.mark("tts_first_bytes", turn=self._contexts.get(context_id, self.turn))
 
     def tts_first_non_silent(self, context_id: str, offset_ms: float) -> None:
+        turn = self.turn_for_context(context_id)
         self.mark(
             "tts_first_non_silent_pcm",
-            turn=self._contexts.get(context_id, self.turn),
+            turn=turn,
             chunk_offset_ms=round(offset_ms, 2),
+        )
+        self.mark(
+            "cartesia_first_non_silent_pcm",
+            turn=turn,
+            chunk_offset_ms=round(offset_ms, 2),
+        )
+
+    def tts_audio_received(self, context_id: str, audio: bytes, sample_rate: int) -> None:
+        """Record first Cartesia audio frame without retaining speech content."""
+
+        turn = self._contexts.get(context_id, self.turn)
+        # This is deliberately an audio-frame milestone, not a claim about the
+        # first WebSocket byte or the instant a listener hears it on a device.
+        self.mark("tts_first_audio_frame", turn=turn)
+        first_sample_ms = first_non_silent_sample_ms(audio, sample_rate)
+        if first_sample_ms is not None:
+            self.tts_first_non_silent(context_id, first_sample_ms)
+
+    def cartesia_raw_audio_received(
+        self, context_id: str, audio: bytes, sample_rate: int
+    ) -> None:
+        """Record provider PCM before any local leading-silence processing."""
+
+        turn = self.turn_for_context(context_id)
+        self.mark("cartesia_raw_first_chunk", turn=turn)
+        first_sample_ms = first_non_silent_sample_ms(audio, sample_rate)
+        if first_sample_ms is not None:
+            self.mark(
+                "cartesia_raw_speech_onset",
+                turn=turn,
+                chunk_offset_ms=round(first_sample_ms, 2),
+            )
+
+    def cartesia_trim_decision(
+        self,
+        context_id: str,
+        *,
+        bypassed: bool,
+        onset_ms: float | None,
+        trimmed_ms: float,
+        preroll_ms: float,
+    ) -> None:
+        """Record safe numeric trim evidence without retaining provider audio."""
+
+        event = "cartesia_trim_bypassed" if bypassed else "cartesia_leading_silence_trimmed"
+        self.mark(
+            event,
+            turn=self.turn_for_context(context_id),
+            onset_ms=round(onset_ms, 2) if onset_ms is not None else None,
+            trimmed_ms=round(trimmed_ms, 2),
+            preroll_ms=round(preroll_ms, 2),
         )
 
 
@@ -143,10 +202,15 @@ class RitaLatencyObserver(BaseObserver):
             self.recorder.mark("bot_speaking_signal")
         elif isinstance(frame, TTSAudioRawFrame):
             self.recorder.mark("worker_first_audio_frame")
+            self.recorder.tts_audio_received(
+                frame.context_id, frame.audio, frame.sample_rate
+            )
         elif isinstance(frame, ErrorFrame):
             text = str(getattr(frame, "error", "")).casefold()
             provider = (
-                "gemini_tts"
+                "cartesia_tts"
+                if "cartesia" in text
+                else "gemini_tts"
                 if "gemini" in text
                 else "soniox_stt"
                 if "soniox" in text
