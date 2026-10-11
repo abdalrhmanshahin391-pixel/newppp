@@ -53,6 +53,8 @@ def test_turn_milestones_are_deduplicated_without_storing_transcript():
         "tts_request",
         "tts_first_bytes",
         "tts_first_non_silent_pcm",
+        "cartesia_first_text_sent",
+        "cartesia_first_non_silent_pcm",
     }
     assert not any("Guten" in str(value) for value in recorder._marks.values())
 
