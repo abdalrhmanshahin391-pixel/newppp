@@ -8,6 +8,13 @@
       "when": 1791777147408,
       "tag": "0000_rita_v3_diagnostic_trace",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791818928715,
+      "tag": "0001_rita_v3_user_runtime_writes",
+      "breakpoints": true
     }
   ]
 }
