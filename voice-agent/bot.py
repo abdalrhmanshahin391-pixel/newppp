@@ -63,7 +63,10 @@ TTS_VOICE_ID = os.getenv(
 ).strip()
 TTS_MAX_BUFFER_DELAY_MS = int(os.getenv("RITA_CARTESIA_MAX_BUFFER_DELAY_MS", "0"))
 TTS_TRIM_LEADING_SILENCE = os.getenv(
-    "RITA_CARTESIA_TRIM_ENABLED", "false"
+    # Enabled for every production session after the Arabic/German/English
+    # safety corpus and Soniox first-token checks passed. Operators retain an
+    # immediate kill switch by setting the variable explicitly to `false`.
+    "RITA_CARTESIA_TRIM_ENABLED", "true"
 ).strip().casefold() in {"1", "true", "yes", "on"}
 TTS_TRIM_RMS_FLOOR = float(os.getenv("RITA_CARTESIA_TRIM_RMS_FLOOR", "32"))
 TTS_TRIM_PEAK_FLOOR = int(os.getenv("RITA_CARTESIA_TRIM_PEAK_FLOOR", "128"))
