@@ -270,10 +270,10 @@ function RitaVoiceAdmin() {
             Active architecture — no hidden fallback
           </p>
           <h2 className="mt-2 text-xl font-black">
-            Daily WebRTC → Soniox → Groq → Gemini 3.8 Flash-Lite TTS
+            Daily WebRTC → Soniox → Groq → Cartesia Sonic 3.6
           </h2>
           <p className="mt-2 text-sm text-red-800">
-            Voice: Achernar · Agent: {data?.agentName ?? "ritajet-voice-v3"}. A provider failure
+            Voice: Layan · Agent: {data?.agentName ?? "ritajet-voice-v3"}. A provider failure
             produces a visible error; Rita never drops into Legacy.
           </p>
         </section>
