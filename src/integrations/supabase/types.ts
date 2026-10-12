@@ -5408,7 +5408,201 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      site_images_public: {
+        Row: {
+          key: string | null
+          path: string | null
+        }
+        Insert: {
+          key?: string | null
+          path?: string | null
+        }
+        Update: {
+          key?: string | null
+          path?: string | null
+        }
+        Relationships: []
+      }
+      site_settings_public: {
+        Row: {
+          brand_style: string | null
+          classic_colors: boolean | null
+          committee_default_storage: string | null
+          committee_qr_link: string | null
+          committee_qr_path: string | null
+          credit_packs_enabled: boolean | null
+          feature_ai_cards_enabled: boolean | null
+          header_style: string | null
+          home_video_poster_url: string | null
+          home_video_url: string | null
+          id: boolean | null
+          logo_url: string | null
+          offers_page_enabled: boolean | null
+          privacy_ar: string | null
+          privacy_en: string | null
+          protect_auto_lock_threshold: number | null
+          protect_block_copy: boolean | null
+          protect_block_print: boolean | null
+          protect_blur_on_blur: boolean | null
+          protect_consent_required: boolean | null
+          protect_devtools_guard: boolean | null
+          protect_enabled: boolean | null
+          protect_terms_ar: string | null
+          protect_terms_en: string | null
+          protect_watermark_opacity: number | null
+          refund_ar: string | null
+          refund_en: string | null
+          show_signature: boolean | null
+          site_name: string | null
+          study_hub_subtitle: string | null
+          study_hub_subtitle_ar: string | null
+          study_hub_title: string | null
+          study_hub_title_ar: string | null
+          study_plan_path: string | null
+          study_plan_subtitle: string | null
+          study_plan_title: string | null
+          tagline: string | null
+          terms_ar: string | null
+          terms_en: string | null
+          theme: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          brand_style?: string | null
+          classic_colors?: boolean | null
+          committee_default_storage?: string | null
+          committee_qr_link?: string | null
+          committee_qr_path?: string | null
+          credit_packs_enabled?: boolean | null
+          feature_ai_cards_enabled?: boolean | null
+          header_style?: string | null
+          home_video_poster_url?: string | null
+          home_video_url?: string | null
+          id?: boolean | null
+          logo_url?: string | null
+          offers_page_enabled?: boolean | null
+          privacy_ar?: string | null
+          privacy_en?: string | null
+          protect_auto_lock_threshold?: number | null
+          protect_block_copy?: boolean | null
+          protect_block_print?: boolean | null
+          protect_blur_on_blur?: boolean | null
+          protect_consent_required?: boolean | null
+          protect_devtools_guard?: boolean | null
+          protect_enabled?: boolean | null
+          protect_terms_ar?: string | null
+          protect_terms_en?: string | null
+          protect_watermark_opacity?: number | null
+          refund_ar?: string | null
+          refund_en?: string | null
+          show_signature?: boolean | null
+          site_name?: string | null
+          study_hub_subtitle?: string | null
+          study_hub_subtitle_ar?: string | null
+          study_hub_title?: string | null
+          study_hub_title_ar?: string | null
+          study_plan_path?: string | null
+          study_plan_subtitle?: string | null
+          study_plan_title?: string | null
+          tagline?: string | null
+          terms_ar?: string | null
+          terms_en?: string | null
+          theme?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          brand_style?: string | null
+          classic_colors?: boolean | null
+          committee_default_storage?: string | null
+          committee_qr_link?: string | null
+          committee_qr_path?: string | null
+          credit_packs_enabled?: boolean | null
+          feature_ai_cards_enabled?: boolean | null
+          header_style?: string | null
+          home_video_poster_url?: string | null
+          home_video_url?: string | null
+          id?: boolean | null
+          logo_url?: string | null
+          offers_page_enabled?: boolean | null
+          privacy_ar?: string | null
+          privacy_en?: string | null
+          protect_auto_lock_threshold?: number | null
+          protect_block_copy?: boolean | null
+          protect_block_print?: boolean | null
+          protect_blur_on_blur?: boolean | null
+          protect_consent_required?: boolean | null
+          protect_devtools_guard?: boolean | null
+          protect_enabled?: boolean | null
+          protect_terms_ar?: string | null
+          protect_terms_en?: string | null
+          protect_watermark_opacity?: number | null
+          refund_ar?: string | null
+          refund_en?: string | null
+          show_signature?: boolean | null
+          site_name?: string | null
+          study_hub_subtitle?: string | null
+          study_hub_subtitle_ar?: string | null
+          study_hub_title?: string | null
+          study_hub_title_ar?: string | null
+          study_plan_path?: string | null
+          study_plan_subtitle?: string | null
+          study_plan_title?: string | null
+          tagline?: string | null
+          terms_ar?: string | null
+          terms_en?: string | null
+          theme?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      support_settings_public: {
+        Row: {
+          categories: Json | null
+          channels_enabled: boolean | null
+          created_at: string | null
+          form_enabled: boolean | null
+          id: boolean | null
+          intro_text_ar: string | null
+          intro_text_en: string | null
+          intro_title_ar: string | null
+          intro_title_en: string | null
+          page_enabled: boolean | null
+          response_note_ar: string | null
+          response_note_en: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          categories?: Json | null
+          channels_enabled?: boolean | null
+          created_at?: string | null
+          form_enabled?: boolean | null
+          id?: boolean | null
+          intro_text_ar?: string | null
+          intro_text_en?: string | null
+          intro_title_ar?: string | null
+          intro_title_en?: string | null
+          page_enabled?: boolean | null
+          response_note_ar?: string | null
+          response_note_en?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          categories?: Json | null
+          channels_enabled?: boolean | null
+          created_at?: string | null
+          form_enabled?: boolean | null
+          id?: boolean | null
+          intro_text_ar?: string | null
+          intro_text_en?: string | null
+          intro_title_ar?: string | null
+          intro_title_en?: string | null
+          page_enabled?: boolean | null
+          response_note_ar?: string | null
+          response_note_en?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       account_active: { Args: { _user_id: string }; Returns: boolean }
