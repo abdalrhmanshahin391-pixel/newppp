@@ -3346,6 +3346,18 @@ main.rita-live-premium {
   color: #fca5a5;
 }
 
+/* One continuous black canvas: no divider between the lesson panel and the stage. */
+main.rita-live-premium,
+.rita-live-premium section[class*="border-[#e6e1e8]"] {
+  background-color: #000;
+}
+.rita-live-premium section[class*="border-[#e6e1e8]"] {
+  border-color: transparent;
+}
+.rita-live-premium aside[class*="radial-gradient"] {
+  background: #000;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rita-live-premium button[class*="bg-[#7b46df]"] {
     transition: none;
