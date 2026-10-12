@@ -66,7 +66,7 @@ function Index() {
   }, [router]);
 
   return (
-    <div className="rita-cream edith-light min-h-screen bg-black text-white">
+    <div className="rita-cream edith-light edith-premium min-h-screen bg-black text-white">
       <ProHome />
       <InstallAppBanner />
     </div>

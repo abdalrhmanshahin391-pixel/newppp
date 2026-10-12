@@ -31,23 +31,22 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           ? String(body.mode)
           : "free_conversation";
         const traceId = normalizeRitaDiagnosticTraceId(body.traceId);
-        // Modal is the production backend. Do not read the retired Pipecat
-        // configuration in Modal mode: that legacy lookup requires a service-role
-        // secret which Lovable Cloud intentionally does not expose to this worker.
-        const backend = String(process.env["RITA_BACKEND"] ?? "pipecat").trim().toLowerCase();
+        const configuredBackend = String(process.env["RITA_BACKEND"] ?? "pipecat").trim();
         const modalUrl = String(process.env["MODAL_START_URL"] ?? "").trim();
         const modalToken = String(process.env["MODAL_START_TOKEN"] ?? "").trim();
-        const useModal = backend === "modal";
+        const useModal = configuredBackend === "modal";
 
+        // Modal does not use the retired Pipecat control-plane keys. Avoid reading that
+        // legacy configuration (and emitting misleading Pipecat warnings) in Modal mode.
         if (useModal && (!modalUrl || !modalToken)) {
+          const missing = [!modalUrl ? "MODAL_START_URL" : null, !modalToken ? "MODAL_START_TOKEN" : null]
+            .filter(Boolean)
+            .join(", ");
           return Response.json(
             {
               ok: false,
               code: "modal_not_configured",
-              message: "Rita's Modal start configuration is incomplete.",
-              missing: [!modalUrl ? "MODAL_START_URL" : null, !modalToken ? "MODAL_START_TOKEN" : null].filter(
-                Boolean,
-              ),
+              message: `Rita v3 is set to Modal, but ${missing} is not configured in Lovable Cloud.`,
               models: RITA_V3_MODELS,
             },
             { status: 503 },

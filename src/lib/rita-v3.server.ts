@@ -8,8 +8,8 @@ export const RITA_V3_MODELS = {
   transport: "Daily WebRTC 1:1 voice",
   transcription: "Soniox stt-rt-v5",
   response: "Groq openai/gpt-oss-120b",
-  speech: "Gemini 3.8 Flash-Lite TTS",
-  voice: "Achernar",
+  speech: "Cartesia Sonic 3.6 streaming TTS",
+  voice: "Layan",
 } as const;
 
 export const RITA_V3_AGENT = "ritajet-voice-v3";

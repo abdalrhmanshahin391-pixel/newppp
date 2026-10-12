@@ -13,7 +13,7 @@ const ShareBand = lazy(() => import("./ShareBand").then((m) => ({ default: m.Sha
 export function ProHome() {
   return (
     <main
-      className="rita-cream edith-light relative min-h-screen overflow-hidden bg-black text-white"
+      className="rita-cream edith-light edith-premium relative min-h-screen overflow-hidden bg-black text-white"
       style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <ProHeader tone="light" />

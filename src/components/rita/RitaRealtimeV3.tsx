@@ -17,7 +17,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { LearningItem, SaveTarget } from "@/lib/rita-learning";
 import { committedRitaReply, wasRitaInterrupted } from "@/lib/rita-v3-heard";
-import { RitaStage, type RitaMood } from "@/components/rita-live/RitaStage";
+import { RitaStage, orbModeFor, type RitaMood } from "@/components/rita-live/RitaStage";
+import { VoiceOrb, type OrbLevels } from "@/components/rita-live/VoiceOrb";
 
 type Persona = "kind" | "direct" | "playful" | "strict";
 type LessonMode = "free_conversation" | "guided_lesson" | "pronunciation_drill";
@@ -45,7 +46,7 @@ type PendingMetric = {
   metadata: Record<string, unknown>;
 };
 
-const MODEL_PROOF = "Soniox stt-rt-v5 → Groq GPT-OSS 120B → Gemini 3.8 Flash-Lite TTS · Achernar";
+const MODEL_PROOF = "Soniox stt-rt-v5 → Groq GPT-OSS 120B → Cartesia Sonic 3.6 · Layan";
 
 async function authHeaders() {
   const { data } = await supabase.auth.getSession();
@@ -108,6 +109,8 @@ export function RitaRealtimeV3() {
 
   const [status, setStatus] = useState("Ready to start");
   const [mood, setMood] = useState<RitaMood>("ready");
+  // Live audio levels for the orb. A ref, not state: they change dozens of times per second.
+  const orbLevels = useRef<OrbLevels>({ input: 0, output: 0 });
   const [active, setActive] = useState(false);
   const [starting, setStarting] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -628,7 +631,11 @@ export function RitaRealtimeV3() {
             setStatus("Rita is speaking — interrupt whenever you want");
             setMood("talking");
           },
+          onLocalAudioLevel: (level) => {
+            orbLevels.current.input = level;
+          },
           onRemoteAudioLevel: (level, participant) => {
+            if (!participant.local) orbLevels.current.output = level;
             if (
               participant.local ||
               !botSpeaking.current ||
@@ -776,7 +783,7 @@ export function RitaRealtimeV3() {
         }));
 
   return (
-    <main className="min-h-screen bg-[#faf9f6] text-[#211f24]">
+    <main className="rita-live-premium min-h-screen bg-[#faf9f6] text-[#211f24]">
       <div className="grid min-h-screen lg:grid-cols-[minmax(0,1.55fr)_minmax(320px,.95fr)]">
         <section className="flex min-h-screen flex-col border-r border-[#e6e1e8] bg-white">
           <header className="border-b border-[#ece7ee] px-5 py-5 sm:px-10">
@@ -804,6 +811,15 @@ export function RitaRealtimeV3() {
             </p>
             <p className="mt-2 text-sm font-semibold text-[#6d6671]">{status}</p>
           </header>
+
+          <div className="flex justify-center lg:hidden">
+            <VoiceOrb
+              levelsRef={orbLevels}
+              mode={orbModeFor(active, mood)}
+              label="Rita voice"
+              className="w-[min(86vw,360px)]"
+            />
+          </div>
 
           <div className="flex-1 overflow-y-auto px-5 py-7 sm:px-10">
             <div className="mx-auto max-w-3xl space-y-7">
@@ -938,8 +954,7 @@ export function RitaRealtimeV3() {
             <RitaStage
               mood={mood}
               active={active}
-              inputLevel={mood === "listening" ? 0.38 : 0}
-              outputLevel={mood === "talking" ? 0.58 : 0}
+              levelsRef={orbLevels}
             />
           </div>
         </aside>
