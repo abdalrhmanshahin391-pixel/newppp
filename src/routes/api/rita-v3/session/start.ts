@@ -127,7 +127,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
               )
             : await fetchPipecatStartWithDeadline(
                 fetch,
-                `https://api.pipecat.daily.co/v1/public/${encodeURIComponent(env?.agentName ?? "")}/start`,
+                `https://api.pipecat.daily.co/v1/public/${encodeURIComponent(env!.agentName)}/start`,
                 {
                   method: "POST",
                   headers: {
