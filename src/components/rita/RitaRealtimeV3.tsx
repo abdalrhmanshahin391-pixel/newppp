@@ -776,7 +776,7 @@ export function RitaRealtimeV3() {
         }));
 
   return (
-    <main className="min-h-screen bg-[#faf9f6] text-[#211f24]">
+    <main className="rita-live-premium min-h-screen bg-[#faf9f6] text-[#211f24]">
       <div className="grid min-h-screen lg:grid-cols-[minmax(0,1.55fr)_minmax(320px,.95fr)]">
         <section className="flex min-h-screen flex-col border-r border-[#e6e1e8] bg-white">
           <header className="border-b border-[#ece7ee] px-5 py-5 sm:px-10">
