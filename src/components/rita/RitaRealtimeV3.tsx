@@ -45,7 +45,7 @@ type PendingMetric = {
   metadata: Record<string, unknown>;
 };
 
-const MODEL_PROOF = "Soniox stt-rt-v5 → Groq GPT-OSS 120B → Gemini 3.8 Flash-Lite TTS · Achernar";
+const MODEL_PROOF = "Soniox stt-rt-v5 → Groq GPT-OSS 120B → Cartesia Sonic 3.6 · Layan";
 
 async function authHeaders() {
   const { data } = await supabase.auth.getSession();

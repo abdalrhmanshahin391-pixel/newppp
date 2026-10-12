@@ -31,14 +31,30 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           ? String(body.mode)
           : "free_conversation";
         const traceId = normalizeRitaDiagnosticTraceId(body.traceId);
-        const env = await ritaV3Environment();
+        const configuredBackend = String(process.env["RITA_BACKEND"] ?? "pipecat").trim();
+        const modalUrl = String(process.env["MODAL_START_URL"] ?? "").trim();
+        const modalToken = String(process.env["MODAL_START_TOKEN"] ?? "").trim();
+        const useModal = configuredBackend === "modal";
 
-        const modalReady =
-          String(process.env["RITA_BACKEND"] ?? "pipecat").trim() === "modal" &&
-          Boolean(String(process.env["MODAL_START_URL"] ?? "").trim()) &&
-          Boolean(String(process.env["MODAL_START_TOKEN"] ?? "").trim());
+        // Modal does not use the retired Pipecat control-plane keys. Avoid reading that
+        // legacy configuration (and emitting misleading Pipecat warnings) in Modal mode.
+        if (useModal && (!modalUrl || !modalToken)) {
+          const missing = [!modalUrl ? "MODAL_START_URL" : null, !modalToken ? "MODAL_START_TOKEN" : null]
+            .filter(Boolean)
+            .join(", ");
+          return Response.json(
+            {
+              ok: false,
+              code: "modal_not_configured",
+              message: `Rita v3 is set to Modal, but ${missing} is not configured in Lovable Cloud.`,
+              models: RITA_V3_MODELS,
+            },
+            { status: 503 },
+          );
+        }
 
-        if (!env.publicKey && !modalReady) {
+        const env = useModal ? null : await ritaV3Environment();
+        if (!useModal && !env?.publicKey) {
           return Response.json(
             {
               ok: false,
@@ -72,11 +88,6 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
         }
 
         const startedAt = performance.now();
-        const modalUrl = String(process.env["MODAL_START_URL"] ?? "").trim();
-        const modalToken = String(process.env["MODAL_START_TOKEN"] ?? "").trim();
-        const useModal =
-          String(process.env["RITA_BACKEND"] ?? "pipecat").trim() === "modal" &&
-          Boolean(modalUrl && modalToken);
         const startBody = {
           appSessionId: sessionId,
           traceId,
@@ -116,11 +127,11 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
               )
             : await fetchPipecatStartWithDeadline(
                 fetch,
-                `https://api.pipecat.daily.co/v1/public/${encodeURIComponent(env.agentName)}/start`,
+                `https://api.pipecat.daily.co/v1/public/${encodeURIComponent(env!.agentName)}/start`,
                 {
                   method: "POST",
                   headers: {
-                    Authorization: `Bearer ${env.publicKey}`,
+                    Authorization: `Bearer ${env!.publicKey}`,
                     "Content-Type": "application/json",
                   },
                   body: JSON.stringify({ createDailyRoom: true, body: startBody }),
