@@ -131,7 +131,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
                 {
                   method: "POST",
                   headers: {
-                    Authorization: `Bearer ${env.publicKey}`,
+                    Authorization: `Bearer ${env!.publicKey}`,
                     "Content-Type": "application/json",
                   },
                   body: JSON.stringify({ createDailyRoom: true, body: startBody }),
