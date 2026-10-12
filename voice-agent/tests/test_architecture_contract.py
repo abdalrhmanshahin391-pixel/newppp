@@ -76,7 +76,7 @@ def test_cartesia_leading_silence_trim_is_fail_open_and_feature_flagged():
     bot = (ROOT / "bot.py").read_text(encoding="utf-8")
     assert "def _open_without_trimming" in trimmer
     assert "def cancel" in trimmer
-    assert '"RITA_CARTESIA_TRIM_ENABLED", "false"' in bot
+    assert '"RITA_CARTESIA_TRIM_ENABLED", "true"' in bot
     assert '"RITA_CARTESIA_TRIM_RMS_FLOOR", "32"' in bot
     assert '"RITA_CARTESIA_TRIM_PEAK_FLOOR", "128"' in bot
     assert 'body.get("trimLeadingSilence") is True' in bot
