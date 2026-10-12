@@ -3317,6 +3317,7 @@ export type Database = {
       rita_v3_sessions: {
         Row: {
           connected_at: string | null
+          diagnostic_trace_id: string | null
           dialect_preference: string
           ended_at: string | null
           error_code: string | null
@@ -3332,6 +3333,7 @@ export type Database = {
         }
         Insert: {
           connected_at?: string | null
+          diagnostic_trace_id?: string | null
           dialect_preference?: string
           ended_at?: string | null
           error_code?: string | null
@@ -3347,6 +3349,7 @@ export type Database = {
         }
         Update: {
           connected_at?: string | null
+          diagnostic_trace_id?: string | null
           dialect_preference?: string
           ended_at?: string | null
           error_code?: string | null
