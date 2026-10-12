@@ -54,6 +54,7 @@ export const Route = createFileRoute("/api/rita-v3/session/metrics")({
           await recordRitaV3Event({
             sessionId,
             userId: auth.userId,
+            accessToken: auth.token,
             name,
             valueMs: Number.isFinite(Number(body.valueMs))
               ? Math.max(0, Number(body.valueMs))
