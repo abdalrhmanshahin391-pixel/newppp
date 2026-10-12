@@ -8,6 +8,7 @@ to a Cartesia context and sends a cancel message when the learner interrupts.
 from __future__ import annotations
 
 import asyncio
+import base64
 import json
 import os
 import time
@@ -116,6 +117,58 @@ class RitaCartesiaTTSService(CartesiaTTSService):
                 modal_region=os.environ.get("MODAL_REGION", "unknown"),
                 modal_cloud_provider=os.environ.get("MODAL_CLOUD_PROVIDER", "unknown"),
             )
+
+    async def _process_messages(self):
+        """Process Cartesia frames with compatibility for ``flush_done``.
+
+        Cartesia's 2026 API sends ``flush_done`` as a boundary acknowledgement
+        before the final ``done`` event. Pipecat 0.0.105 predates that message
+        type and reports it as a provider error, which can leave Rita's audio
+        context unfinished. A flush acknowledgement carries no audio and must
+        not stop, remove, or otherwise mutate the active context.
+
+        Keep this parser aligned with Pipecat 0.0.105 apart from the explicit
+        ``flush_done`` branch. That avoids the wider behavioural changes of a
+        Pipecat upgrade while preserving its timestamp, error, and completion
+        semantics.
+        """
+
+        async for message in self._get_websocket():
+            msg = json.loads(message)
+            if not msg or not self.audio_context_available(msg["context_id"]):
+                continue
+            ctx_id = msg["context_id"]
+            if msg["type"] == "done":
+                await self.stop_ttfb_metrics()
+                await self.add_word_timestamps(
+                    [("TTSStoppedFrame", 0), ("Reset", 0)], ctx_id
+                )
+                await self.remove_audio_context(ctx_id)
+            elif msg["type"] == "flush_done":
+                # Boundary acknowledgement only. The context stays active
+                # until Cartesia emits its terminal `done` event.
+                continue
+            elif msg["type"] == "timestamps":
+                processed_timestamps = self._process_word_timestamps_for_language(
+                    msg["word_timestamps"]["words"],
+                    msg["word_timestamps"]["start"],
+                )
+                await self.add_word_timestamps(processed_timestamps, ctx_id)
+            elif msg["type"] == "chunk":
+                frame = TTSAudioRawFrame(
+                    audio=base64.b64decode(msg["data"]),
+                    sample_rate=self.sample_rate,
+                    num_channels=1,
+                    context_id=ctx_id,
+                )
+                await self.append_to_audio_context(ctx_id, frame)
+            elif msg["type"] == "error":
+                await self.push_frame(TTSStoppedFrame(context_id=ctx_id))
+                await self.stop_all_metrics()
+                await self.push_error(error_msg=f"Error: {msg}")
+                self.reset_active_audio_context()
+            else:
+                await self.push_error(error_msg=f"Error, unknown message type: {msg}")
 
     async def _idle_socket_monitor(self) -> None:
         """Refresh a quiet socket before Cartesia's five-minute idle timeout."""
