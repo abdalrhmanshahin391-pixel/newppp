@@ -3145,10 +3145,8 @@ hairline borders and generous radii.
   --rita-green-soft: rgb(52 106 234 / 0.16);
   --wordmark-prefix: #6f93f5;
   --wordmark-suffix: #a9c0fa;
-  --edith-screen:
-    radial-gradient(70% 55% at 78% 30%, rgb(120 160 255 / 0.45), transparent 62%),
-    radial-gradient(75% 70% at 12% 100%, rgb(52 106 234 / 0.9), transparent 66%),
-    linear-gradient(162deg, #0a1a4d 0%, #346aea 46%, #071236 100%);
+  /* --edith-screen (the iPad and phone shell screens) is intentionally NOT overridden here:
+     the device artwork keeps its original look. */
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
