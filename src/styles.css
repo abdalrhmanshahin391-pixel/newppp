@@ -3126,3 +3126,115 @@ hairline borders and generous radii.
   }
 }
 
+/* ===========================================================================
+   Premium home scope. Layered on top of .edith-light (same structure and
+   remapping rules), so only colour, type weight, buttons and surfaces change:
+   no content, component or layout is touched. Reference: a near-black surface
+   (#050505), neutral cards, hairline borders at 8-12% white, ONE blue accent
+   (#346aea), medium-weight headlines and fully rounded action buttons.
+   Scoped to the home wrapper so pricing, study and admin keep their palette.
+   =========================================================================== */
+.edith-premium {
+  --pro-page: #050505;
+  --pro-card: #0e0f11;
+  --pro-ink: #fafafa;
+  --pro-muted: #a1a1a1;
+  --rita-green: #346aea;
+  --rita-green-deep: #6f93f5; /* accent text on dark: >= 7:1 against the page */
+  --rita-green-ink: #ffffff;
+  --rita-green-soft: rgb(52 106 234 / 0.16);
+  --wordmark-prefix: #6f93f5;
+  --wordmark-suffix: #a9c0fa;
+  --edith-screen:
+    radial-gradient(70% 55% at 78% 30%, rgb(120 160 255 / 0.45), transparent 62%),
+    radial-gradient(75% 70% at 12% 100%, rgb(52 106 234 / 0.9), transparent 66%),
+    linear-gradient(162deg, #0a1a4d 0%, #346aea 46%, #071236 100%);
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.edith-premium ::selection {
+  background: rgb(52 106 234 / 0.45);
+  color: #fff;
+}
+
+/* Type: one medium-weight, tightly tracked display voice; balanced wrapping. */
+.edith-premium h1,
+.edith-premium h2 {
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.edith-premium h3 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Buttons: pill, medium weight, 15-16px, quiet depth, tactile press. */
+.edith-premium .rita-btn {
+  font-size: 15px;
+  font-weight: 500;
+  height: 44px;
+  padding-inline: 24px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.16s var(--ease-out-strong),
+    opacity 0.15s ease;
+}
+@media (min-width: 768px) {
+  .edith-premium .rita-btn {
+    font-size: 16px;
+    height: 48px;
+    padding-inline: 28px;
+  }
+}
+.edith-premium .rita-btn-primary {
+  background-color: #346aea;
+  color: #fff;
+}
+.edith-premium .rita-btn-primary:hover {
+  background-color: #2f5fd6;
+}
+.edith-premium .rita-btn-secondary {
+  background-color: rgb(255 255 255 / 0.07);
+  color: #fafafa;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+}
+.edith-premium .rita-btn-secondary:hover {
+  background-color: rgb(255 255 255 / 0.13);
+}
+.edith-premium .rita-btn:focus-visible {
+  outline: 2px solid #6f93f5;
+  outline-offset: 3px;
+}
+
+/* Surfaces: neutral cards get a hairline instead of a heavier fill. */
+.edith-premium [class*="bg-[#121212]"],
+.edith-premium [class*="bg-[#131313]"],
+.edith-premium [class*="bg-[#151515]"],
+.edith-premium .rita-panel {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}
+
+/* Header: dark frosted bar, hairline underneath, ghost account button. */
+.edith-premium .edith-header.edith-header-light::before {
+  background: rgb(5 5 5 / 0.72);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.08);
+  -webkit-backdrop-filter: saturate(160%) blur(18px);
+  backdrop-filter: saturate(160%) blur(18px);
+}
+.edith-premium .edith-header-light a[class*="bg-black/"] {
+  border-color: rgb(255 255 255 / 0.12);
+  background-color: rgb(255 255 255 / 0.06);
+}
+.edith-premium .edith-header-light a[class*="bg-black/"]:hover {
+  background-color: rgb(255 255 255 / 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edith-premium .rita-btn {
+    transition: none;
+  }
+}
