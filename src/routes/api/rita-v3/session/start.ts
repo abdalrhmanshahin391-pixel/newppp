@@ -54,6 +54,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
         try {
           sessionId = await persistRitaV3Session({
             userId: access.auth.userId,
+            accessToken: access.auth.token,
             personality,
             language,
             dialect,
@@ -95,6 +96,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           recordRitaV3Event({
             sessionId,
             userId: access.auth.userId,
+            accessToken: access.auth.token,
             name,
             valueMs,
             metadata: { ...diagnosticBase, ...metadata },
@@ -138,7 +140,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           });
           if (!upstream.ok || !payload.dailyRoom || !payload.dailyToken) {
             const failure = classifyPipecatStartFailure(upstream.status, payload, upstream.headers);
-            await updateRitaV3Session(sessionId, access.auth.userId, {
+            await updateRitaV3Session(sessionId, access.auth.userId, access.auth.token, {
               status: "failed",
               error_code: failure.code,
               model_proof: {
@@ -167,7 +169,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
               { status: upstream.status >= 400 ? upstream.status : 502 },
             );
           }
-          await updateRitaV3Session(sessionId, access.auth.userId, {
+          await updateRitaV3Session(sessionId, access.auth.userId, access.auth.token, {
             status: "connected",
             provider_session_id: String(payload.sessionId ?? payload.id ?? ""),
             connected_at: new Date().toISOString(),
@@ -198,7 +200,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           const message = timedOut
             ? "Rita's voice worker did not respond in time. Check its deployment health and logs."
             : "The Rita website could not reach Pipecat. Check the network and Pipecat service status.";
-          await updateRitaV3Session(sessionId, access.auth.userId, {
+          await updateRitaV3Session(sessionId, access.auth.userId, access.auth.token, {
             status: "failed",
             error_code: code,
             model_proof: {

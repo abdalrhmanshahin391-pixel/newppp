@@ -48,7 +48,7 @@ export type RitaSettings = {
   adminOnlyPreview: boolean;
 };
 
-export type RitaAuth = { userId: string };
+export type RitaAuth = { userId: string; token: string };
 
 const DEFAULT_SETTINGS: RitaSettings = {
   enabled: true,
@@ -72,7 +72,7 @@ export async function requireRitaUser(request: Request): Promise<RitaAuth | null
   });
   const { data, error } = await client.auth.getClaims(token);
   const userId = String(data?.claims?.sub ?? "");
-  return error || !userId ? null : { userId };
+  return error || !userId ? null : { userId, token };
 }
 
 export async function resolveRitaOpenAiKey(): Promise<string | null> {

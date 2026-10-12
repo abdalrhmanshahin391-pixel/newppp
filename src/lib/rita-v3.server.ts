@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { requireRitaUser, getRitaAllowance, getRitaSettings } from "@/lib/rita-voice.server";
 import { classifyPipecatStartFailure, sanitizePipecatDiagnostic } from "@/lib/rita-v3-diagnostics";
+import { createClient } from "@supabase/supabase-js";
+import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 
 export const RITA_V3_MODELS = {
   transport: "Daily WebRTC 1:1 voice",
@@ -473,15 +475,23 @@ export async function requireRitaV3Access(request: Request) {
   return { ok: true as const, auth, allowance };
 }
 
+function ritaV3UserClient(accessToken: string) {
+  const { url, publishableKey } = getSupabasePublicConfig();
+  return createClient(url, publishableKey, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
 export async function persistRitaV3Session(args: {
   userId: string;
+  accessToken: string;
   personality: string;
   language: string;
   dialect: string;
   traceId?: string;
 }) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await (supabaseAdmin.from as any)("rita_v3_sessions")
+  const { data, error } = await (ritaV3UserClient(args.accessToken).from as any)("rita_v3_sessions")
     .insert({
       user_id: args.userId,
       personality: args.personality,
@@ -503,10 +513,10 @@ export async function persistRitaV3Session(args: {
 export async function updateRitaV3Session(
   sessionId: string,
   userId: string,
+  accessToken: string,
   patch: Record<string, unknown>,
 ) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { error } = await (supabaseAdmin.from as any)("rita_v3_sessions")
+  const { error } = await (ritaV3UserClient(accessToken).from as any)("rita_v3_sessions")
     .update({ ...patch, updated_at: new Date().toISOString() })
     .eq("id", sessionId)
     .eq("user_id", userId);
@@ -516,12 +526,12 @@ export async function updateRitaV3Session(
 export async function recordRitaV3Event(args: {
   sessionId: string;
   userId: string;
+  accessToken: string;
   name: string;
   valueMs?: number;
   metadata?: Record<string, unknown>;
 }) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { error } = await (supabaseAdmin.from as any)("rita_v3_events").insert({
+  const { error } = await (ritaV3UserClient(args.accessToken).from as any)("rita_v3_events").insert({
     session_id: args.sessionId,
     user_id: args.userId,
     event_name: args.name,

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { requireRitaUser } from "@/lib/rita-voice.server";
-import { ritaV3Environment, updateRitaV3Session } from "@/lib/rita-v3.server";
+import { updateRitaV3Session } from "@/lib/rita-v3.server";
 
 export const Route = createFileRoute("/api/rita-v3/session/end")({
   server: {
@@ -15,14 +15,9 @@ export const Route = createFileRoute("/api/rita-v3/session/end")({
           return Response.json({ ok: false, code: "invalid_session" }, { status: 400 });
         }
 
-        const env = await ritaV3Environment();
-        if (providerSessionId && env.privateKey) {
-          await fetch(
-            `https://api.pipecat.daily.co/v1/agents/${encodeURIComponent(env.agentName)}/sessions/${encodeURIComponent(providerSessionId)}`,
-            { method: "DELETE", headers: { Authorization: `Bearer ${env.privateKey}` } },
-          ).catch(() => undefined);
-        }
-        await updateRitaV3Session(sessionId, auth.userId, {
+        // Modal owns worker lifetime; do not invoke the retired Pipecat control plane.
+        void providerSessionId;
+        await updateRitaV3Session(sessionId, auth.userId, auth.token, {
           status: "ended",
           ended_at: new Date().toISOString(),
         }).catch(() => undefined);
