@@ -4,16 +4,19 @@ import {
   persistRitaV3Session,
   recordRitaV3Event,
   requireRitaV3Access,
-  ritaV3Environment,
   updateRitaV3Session,
 } from "@/lib/rita-v3.server";
 import { cleanLanguage, normalizePersonality } from "@/lib/rita-voice.server";
-import { classifyPipecatStartFailure } from "@/lib/rita-v3-diagnostics";
+import { classifyPipecatStartFailure as classifyWorkerStartFailure } from "@/lib/rita-v3-diagnostics";
 import {
   normalizeRitaDiagnosticTraceId,
   readModalTimingEvidence,
 } from "@/lib/rita-v3-diagnostics-trace";
-import { fetchPipecatStartWithDeadline } from "@/lib/rita-v3-startup";
+import { fetchPipecatStartWithDeadline as fetchStartWithDeadline } from "@/lib/rita-v3-startup";
+import { getServerRuntimeSecret } from "@/lib/config.server";
+
+const DEFAULT_MODAL_START_URL =
+  "https://abdalrhmanshahin391--ritajet-voice-start-session.modal.run";
 
 export const Route = createFileRoute("/api/rita-v3/session/start")({
   server: {
@@ -31,35 +34,22 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           ? String(body.mode)
           : "free_conversation";
         const traceId = normalizeRitaDiagnosticTraceId(body.traceId);
-        const configuredBackend = String(process.env["RITA_BACKEND"] ?? "pipecat").trim();
-        const modalUrl = String(process.env["MODAL_START_URL"] ?? "").trim();
-        const modalToken = String(process.env["MODAL_START_TOKEN"] ?? "").trim();
-        const useModal = configuredBackend === "modal";
+        const modalUrl =
+          (await getServerRuntimeSecret("MODAL_START_URL")) || DEFAULT_MODAL_START_URL;
+        const modalToken = await getServerRuntimeSecret("MODAL_START_TOKEN");
 
-        // Modal does not use the retired Pipecat control-plane keys. Avoid reading that
-        // legacy configuration (and emitting misleading Pipecat warnings) in Modal mode.
-        if (useModal && (!modalUrl || !modalToken)) {
-          const missing = [!modalUrl ? "MODAL_START_URL" : null, !modalToken ? "MODAL_START_TOKEN" : null]
-            .filter(Boolean)
-            .join(", ");
+        console.info("Rita v3 runtime configuration", {
+          backend: "modal",
+          hasModalUrl: Boolean(modalUrl),
+          hasModalToken: Boolean(modalToken),
+        });
+
+        if (!modalToken) {
           return Response.json(
             {
               ok: false,
               code: "modal_not_configured",
-              message: `Rita v3 is set to Modal, but ${missing} is not configured in Lovable Cloud.`,
-              models: RITA_V3_MODELS,
-            },
-            { status: 503 },
-          );
-        }
-
-        const env = useModal ? null : await ritaV3Environment();
-        if (!useModal && !env?.publicKey) {
-          return Response.json(
-            {
-              ok: false,
-              code: "pipecat_not_configured",
-              message: "Rita v3 is installed but its Pipecat public key is not configured yet.",
+              message: "Rita v3 needs MODAL_START_TOKEN in the Lovable server runtime.",
               models: RITA_V3_MODELS,
             },
             { status: 503 },
@@ -101,9 +91,13 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
         const diagnosticBase = {
           traceId,
           source: "lovable-server",
-          backend: useModal ? "modal" : "pipecat",
+          backend: "modal",
         };
-        const recordStartMetric = (name: string, valueMs?: number, metadata?: Record<string, unknown>) =>
+        const recordStartMetric = (
+          name: string,
+          valueMs?: number,
+          metadata?: Record<string, unknown>,
+        ) =>
           recordRitaV3Event({
             sessionId,
             userId: access.auth.userId,
@@ -115,32 +109,17 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
         await recordStartMetric("start_request_received");
         await recordStartMetric("start_upstream_requested");
         try {
-          // The Modal worker is kept warm, so a short deadline is enough; Pipecat may cold start.
-          const upstream = useModal
-            ? await fetchPipecatStartWithDeadline(
-                fetch,
-                modalUrl,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ token: modalToken, body: startBody }),
-                },
-                10_000,
-              )
-            : await fetchPipecatStartWithDeadline(
-                fetch,
-                `https://api.pipecat.daily.co/v1/public/${encodeURIComponent(env!.agentName)}/start`,
-                {
-                  method: "POST",
-                  headers: {
-                    Authorization: `Bearer ${env!.publicKey}`,
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({ createDailyRoom: true, body: startBody }),
-                },
-                45_000,
-              );
-          console.info("Rita Pipecat start request", {
+          const upstream = await fetchStartWithDeadline(
+            fetch,
+            modalUrl,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token: modalToken, body: startBody }),
+            },
+            10_000,
+          );
+          console.info("Rita Modal start request", {
             elapsedMs: Math.round(performance.now() - startedAt),
             upstreamStatus: upstream.status,
           });
@@ -150,7 +129,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             upstreamStatus: upstream.status,
           });
           if (!upstream.ok || !payload.dailyRoom || !payload.dailyToken) {
-            const failure = classifyPipecatStartFailure(upstream.status, payload, upstream.headers);
+            const failure = classifyWorkerStartFailure(upstream.status, payload, upstream.headers);
             await updateRitaV3Session(sessionId, access.auth.userId, access.auth.token, {
               status: "failed",
               error_code: failure.code,
@@ -202,15 +181,15 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             { headers: { "Cache-Control": "no-store" } },
           );
         } catch (error) {
-          console.error("Rita Pipecat start request failed", {
+          console.error("Rita Modal start request failed", {
             elapsedMs: Math.round(performance.now() - startedAt),
             errorName: error instanceof Error ? error.name : "unknown",
           });
           const timedOut = error instanceof DOMException && error.name === "AbortError";
-          const code = timedOut ? "cold_start_timeout" : "pipecat_network_error";
+          const code = timedOut ? "modal_start_timeout" : "modal_network_error";
           const message = timedOut
             ? "Rita's voice worker did not respond in time. Check its deployment health and logs."
-            : "The Rita website could not reach Pipecat. Check the network and Pipecat service status.";
+            : "The Rita website could not reach the Modal voice worker. Check its deployment and network status.";
           await updateRitaV3Session(sessionId, access.auth.userId, access.auth.token, {
             status: "failed",
             error_code: code,
@@ -219,10 +198,14 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
               startDiagnostic: { code },
             },
           }).catch(() => undefined);
-          await recordStartMetric("start_upstream_failed", Math.round(performance.now() - startedAt), {
-            code,
-            errorName: error instanceof Error ? error.name : "unknown",
-          });
+          await recordStartMetric(
+            "start_upstream_failed",
+            Math.round(performance.now() - startedAt),
+            {
+              code,
+              errorName: error instanceof Error ? error.name : "unknown",
+            },
+          );
           return Response.json(
             {
               ok: false,

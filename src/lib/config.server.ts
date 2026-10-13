@@ -1,5 +1,7 @@
 import process from "node:process";
 
+type RuntimeEnvironment = Record<string, unknown>;
+
 // Server-only config. The .server.ts suffix prevents Vite from bundling
 // this file into the client — values here never reach the browser.
 //
@@ -23,4 +25,36 @@ export function getServerConfig() {
     //   databaseUrl: process.env.DATABASE_URL,
     //   stripeSecretKey: process.env.STRIPE_SECRET_KEY,
   };
+}
+
+export function resolveServerRuntimeValue(
+  name: string,
+  processEnvironment: NodeJS.ProcessEnv,
+  runtimeEnvironment?: RuntimeEnvironment,
+) {
+  const processValue = processEnvironment[name]?.trim();
+  if (processValue) return processValue;
+
+  const runtimeValue = runtimeEnvironment?.[name];
+  return typeof runtimeValue === "string" ? runtimeValue.trim() : "";
+}
+
+/**
+ * Resolve a server-only value at request time.
+ *
+ * Lovable's production server runs on Cloudflare Workers. Custom secrets can
+ * be exposed as Cloudflare bindings even when the Node compatibility layer
+ * does not mirror them into process.env, so both sources must be checked.
+ */
+export async function getServerRuntimeSecret(name: string) {
+  const processValue = resolveServerRuntimeValue(name, process.env);
+  if (processValue) return processValue;
+
+  try {
+    const { env } = await import("cloudflare:workers");
+    return resolveServerRuntimeValue(name, {}, env as RuntimeEnvironment);
+  } catch {
+    // Local Node builds do not provide the Cloudflare runtime module.
+    return "";
+  }
 }
