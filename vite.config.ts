@@ -20,6 +20,16 @@ export default defineConfig({
   // mhchem extension (\ce{...} chemistry) would be loaded into a different
   // instance than the one that renders the math.
   vite: {
+    // Cloudflare provides this module at runtime. Keep it out of the server
+    // bundle so Lovable's Worker can expose request-time secret bindings.
+    ssr: {
+      external: ["cloudflare:workers"],
+    },
+    build: {
+      rollupOptions: {
+        external: ["cloudflare:workers"],
+      },
+    },
     resolve: {
       dedupe: ["katex"],
       alias: [
