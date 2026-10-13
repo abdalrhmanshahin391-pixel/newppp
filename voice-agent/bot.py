@@ -61,7 +61,11 @@ TTS_MODEL = "sonic-3.6"
 TTS_VOICE_ID = os.getenv(
     "RITA_CARTESIA_VOICE_ID", "64a941ac-07ac-462c-a81c-008e353dd83e"
 ).strip()
-TTS_MAX_BUFFER_DELAY_MS = int(os.getenv("RITA_CARTESIA_MAX_BUFFER_DELAY_MS", "0"))
+# 0 made Cartesia synthesise every streamed LLM fragment on its own: Arabic replies
+# came out as separate syllables with ~100 ms gaps and ~3x the natural duration.
+# A short buffer lets it group fragments into words and clauses; measured time to
+# first audio is unchanged (modal_cartesia_chop.py).
+TTS_MAX_BUFFER_DELAY_MS = int(os.getenv("RITA_CARTESIA_MAX_BUFFER_DELAY_MS", "150"))
 TTS_TRIM_LEADING_SILENCE = os.getenv(
     # Enabled for every production session after the Arabic/German/English
     # safety corpus and Soniox first-token checks passed. Operators retain an

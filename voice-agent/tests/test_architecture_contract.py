@@ -65,7 +65,7 @@ def test_cartesia_keeps_token_streaming_and_context_cancellation_contract():
     assert "def set_turn_language" in source
     assert 'message["language"] = self._rita_language' in source
     assert 'message["max_buffer_delay_ms"] = self._rita_max_buffer_delay_ms' in source
-    assert "max_buffer_delay_ms: int | None = 0" in source
+    assert "max_buffer_delay_ms: int | None = 150" in source
     assert '"cartesia_context_cancelled"' in source
     assert "LeadingSilenceTrimmer" in source
     assert '"cartesia_trim_cancelled"' in source
@@ -136,3 +136,9 @@ def test_groq_is_warmed_on_every_container_start():
     assert "async def warm_groq" in source
     assert "max_completion_tokens=1" in source
     assert "warm-up must never block the worker" in source
+
+
+def test_cartesia_buffer_delay_is_never_zero_by_default():
+    # 0 synthesises each streamed fragment separately and chops speech into syllables.
+    bot_source = (ROOT / "bot.py").read_text(encoding="utf-8")
+    assert 'RITA_CARTESIA_MAX_BUFFER_DELAY_MS", "150"' in bot_source
