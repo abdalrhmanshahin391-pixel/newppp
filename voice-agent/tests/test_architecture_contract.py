@@ -128,3 +128,11 @@ def test_bounded_end_of_turn_commit_is_wired_and_cancellable():
     policy = (ROOT / "rita_turn_policy.py").read_text(encoding="utf-8")
     assert "_handle_vad_user_started_speaking" in policy  # new speech must cancel a pending commit
     assert "MAX_BOUNDED_COMMIT_SECS" in policy
+
+
+def test_groq_is_warmed_on_every_container_start():
+    source = (ROOT / "modal_app.py").read_text(encoding="utf-8")
+    assert "@modal.enter(snap=False)" in source
+    assert "async def warm_groq" in source
+    assert "max_completion_tokens=1" in source
+    assert "warm-up must never block the worker" in source

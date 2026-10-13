@@ -77,6 +77,53 @@ class RitaWorker:
         SileroVADAnalyzer()
         LocalSmartTurnAnalyzerV3()
 
+    @modal.enter(snap=False)
+    async def warm_groq(self) -> None:
+        """Prime Groq on every container start (after snapshot restore).
+
+        The first Groq call in a fresh process measured ~0.7-1.2 s (DNS, TLS and lazy first-use work) versus
+        0.07-0.2 s afterwards, and it lands on the first learner's first turn. One tiny request pays it here.
+        """
+
+        import asyncio
+        import time
+
+        from loguru import logger
+
+        api_key = os.environ.get("GROQ_API_KEY", "").strip()
+        if not api_key:
+            return
+        started = time.perf_counter()
+        outcome = "ok"
+        try:
+            import bot
+            from pipecat.services.groq.llm import GroqLLMService
+
+            service = GroqLLMService(
+                api_key=api_key,
+                settings=GroqLLMService.Settings(model=bot.LLM_MODEL, max_completion_tokens=1),
+            )
+            try:
+                stream = await asyncio.wait_for(
+                    service._client.chat.completions.create(
+                        model=bot.LLM_MODEL,
+                        messages=[{"role": "user", "content": "ok"}],
+                        stream=True,
+                        max_completion_tokens=1,
+                        reasoning_effort="low",
+                    ),
+                    timeout=8,
+                )
+                async for _ in stream:
+                    break
+            finally:
+                await service._client.close()
+        except Exception as exc:  # noqa: BLE001  # warm-up must never block the worker from starting
+            outcome = type(exc).__name__
+        logger.bind(outcome=outcome, warmup_ms=round((time.perf_counter() - started) * 1000)).info(
+            "Rita Groq warm-up outcome={}", outcome
+        )
+
     @modal.method()
     async def run_session(
         self, room_url: str, token: str, session_id: str, body: dict[str, Any]
