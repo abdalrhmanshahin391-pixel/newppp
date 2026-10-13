@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { type CSSProperties, FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   BookOpen,
   Check,
@@ -7,27 +7,44 @@ import {
   Layers,
   Loader2,
   Mic,
-  MicOff,
+  Moon,
   PhoneOff,
   Send,
   Sparkles,
+  Sun,
+  Trash2,
   X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import type { LearningItem, SaveTarget } from "@/lib/rita-learning";
+import { learningKey, type LearningItem, type SaveTarget } from "@/lib/rita-learning";
 import {
   committedRitaReply,
   settleDraftReply,
   upsertDraftReply,
   wasRitaInterrupted,
 } from "@/lib/rita-v3-heard";
-import { RitaStage, orbModeFor, type RitaMood } from "@/components/rita-live/RitaStage";
+import { orbModeFor, type RitaMood } from "@/components/rita-live/RitaStage";
 import { VoiceOrb, type OrbLevels } from "@/components/rita-live/VoiceOrb";
+import { spokenTextOf } from "@/lib/rita-message";
+import {
+  matchesCorrection,
+  shouldCheckCorrection,
+  type Correction,
+  type CorrectionRecord,
+} from "@/lib/rita-correction";
+import { lessonGoal } from "@/lib/rita-goals";
+import type { LessonMessage, Phase } from "@/lib/rita-lesson-types";
+import { speakSample, stopSpeaking } from "@/lib/rita-speak";
+import { buildSummary, type LessonSummary } from "@/lib/rita-summary";
+import { readStoredTheme, storeTheme, themeStyle, type ThemeName } from "@/lib/rita-theme";
+import { LessonGoalPanel } from "@/components/rita/lesson/LessonGoalPanel";
+import { LessonSummaryView } from "@/components/rita/lesson/LessonSummaryView";
+import { MessageBubble } from "@/components/rita/lesson/MessageBubble";
+import { VoiceStatusBar } from "@/components/rita/lesson/VoiceStatusBar";
 
 type Persona = "kind" | "direct" | "playful" | "strict";
 type LessonMode = "free_conversation" | "guided_lesson" | "pronunciation_drill";
-type Message = { id: string; role: "you" | "rita"; text: string };
 type DestinationPayload = {
   flashSubjects: { id: string; name: string; parent_id: string | null }[];
   germanSubjects: { id: string; name: string }[];
@@ -45,6 +62,7 @@ type ExtractionResult = {
   destinationName?: string;
   rememberDestination?: boolean;
 };
+type CorrectionResult = { correction?: Correction | null };
 type PendingMetric = {
   name: string;
   valueMs?: number;
@@ -69,6 +87,15 @@ function humanError(error: unknown) {
   }
   return "Rita v3 could not start. No old voice system was used.";
 }
+
+/** Plain words for the learner. The technical detail stays in the admin debug panel. */
+function learnerMessage(kind: "connect" | "voice") {
+  return kind === "connect"
+    ? "Rita couldn’t connect. Check your internet connection and try again."
+    : "Something went wrong with Rita’s voice. Give it a moment and try again.";
+}
+
+const WELCOME = "Hi, I’m Rita. What would you like to practise?";
 
 export function RitaRealtimeV3() {
   const navigate = useNavigate();
@@ -103,6 +130,18 @@ export function RitaRealtimeV3() {
   const fillerAudioContext = useRef<AudioContext | null>(null);
   const fillerSequence = useRef(0);
   const currentTurnHasFinalTranscript = useRef(false);
+  const modeRef = useRef<LessonMode>("free_conversation");
+  const learningRef = useRef<LearningItem[]>([]);
+  const correctionsRef = useRef<CorrectionRecord[]>([]);
+  const pendingRetryId = useRef<string | null>(null);
+  const turnsRef = useRef(0);
+  const speakMsRef = useRef(0);
+  const speakStartedAt = useRef(0);
+  const lessonStartedAt = useRef(0);
+  const chatRef = useRef<HTMLDivElement | null>(null);
+  const stickToBottom = useRef(true);
+  const sheetRef = useRef<HTMLElement | null>(null);
+  const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const destinationsRef = useRef<DestinationPayload>({
     flashSubjects: [],
     germanSubjects: [],
@@ -125,10 +164,20 @@ export function RitaRealtimeV3() {
   const [starting, setStarting] = useState(false);
   const [muted, setMuted] = useState(false);
   const [error, setError] = useState("");
+  const [errorDetail, setErrorDetail] = useState("");
   const [caption, setCaption] = useState("");
   const [draft, setDraft] = useState("");
-  const [messages, setMessages] = useState<Message[]>([
-    { id: "welcome", role: "rita", text: "Hi, I’m Rita. What would you like to practise?" },
+  const [phase, setPhase] = useState<Phase>("connecting");
+  const [theme, setTheme] = useState<ThemeName>("dark");
+  const [turnStats, setTurnStats] = useState({ turns: 0, targetTurns: 0 });
+  const [corrections, setCorrections] = useState<CorrectionRecord[]>([]);
+  const [savedCorrections, setSavedCorrections] = useState<ReadonlySet<string>>(new Set());
+  const [summary, setSummary] = useState<LessonSummary | null>(null);
+  const [goalOpen, setGoalOpen] = useState(false);
+  const [showJump, setShowJump] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [messages, setMessages] = useState<LessonMessage[]>([
+    { id: "welcome", role: "rita", text: WELCOME },
   ]);
   const [personality, setPersonality] = useState<Persona>("kind");
   const [mode, setMode] = useState<LessonMode>("free_conversation");
@@ -150,30 +199,70 @@ export function RitaRealtimeV3() {
     if (!loading && !user) void navigate({ to: "/login" });
   }, [loading, navigate, user]);
 
-  const sendMetric = useCallback(
-    async (currentSessionId: string, event: PendingMetric) => {
-      try {
-        await fetch("/api/rita-v3/session/metrics", {
-          method: "POST",
-          headers: await authHeaders(),
-          body: JSON.stringify({
-            sessionId: currentSessionId,
-            name: event.name,
-            valueMs: event.valueMs,
-            metadata: event.metadata,
-          }),
-        });
-      } catch {
-        // Metrics never interrupt a lesson.
-      }
+  useEffect(() => {
+    setTheme(readStoredTheme());
+    // The goal panel starts open on wide screens and closed on phones.
+    setGoalOpen(window.matchMedia("(min-width: 1024px)").matches);
+  }, []);
+
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
+
+  useEffect(() => {
+    learningRef.current = learning;
+  }, [learning]);
+
+  useEffect(() => {
+    const element = chatRef.current;
+    if (element && stickToBottom.current) element.scrollTop = element.scrollHeight;
+  }, [messages, summary]);
+
+  useEffect(() => {
+    if (!learningOpen) return;
+    sheetRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setLearningOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [learningOpen]);
+
+  const updateCorrections = useCallback(
+    (change: (current: CorrectionRecord[]) => CorrectionRecord[]) => {
+      const next = change(correctionsRef.current);
+      correctionsRef.current = next;
+      setCorrections(next);
     },
     [],
   );
 
+  const sendMetric = useCallback(async (currentSessionId: string, event: PendingMetric) => {
+    try {
+      await fetch("/api/rita-v3/session/metrics", {
+        method: "POST",
+        headers: await authHeaders(),
+        body: JSON.stringify({
+          sessionId: currentSessionId,
+          name: event.name,
+          valueMs: event.valueMs,
+          metadata: event.metadata,
+        }),
+      });
+    } catch {
+      // Metrics never interrupt a lesson.
+    }
+  }, []);
+
   const metric = useCallback(
     async (name: string, valueMs?: number, metadata?: Record<string, unknown>) => {
       const connection = navigator as Navigator & {
-        connection?: { effectiveType?: string; rtt?: number; downlink?: number; saveData?: boolean };
+        connection?: {
+          effectiveType?: string;
+          rtt?: number;
+          downlink?: number;
+          saveData?: boolean;
+        };
       };
       const event: PendingMetric = {
         name,
@@ -314,6 +403,61 @@ export function RitaRealtimeV3() {
     [fetchDestinations],
   );
 
+  const runCorrection = useCallback(
+    async (spoken: string, reply: string, messageId: string) => {
+      if (!shouldCheckCorrection(spoken, modeRef.current) || !reply.trim()) return;
+      try {
+        const response = await fetch("/api/rita/correct", {
+          method: "POST",
+          headers: await authHeaders(),
+          body: JSON.stringify({ spoken, reply, mode: modeRef.current }),
+        });
+        if (!response.ok) return;
+        const data = (await response.json()) as CorrectionResult;
+        if (!data.correction) return;
+        const record: CorrectionRecord = {
+          ...data.correction,
+          id: crypto.randomUUID(),
+          attempts: 0,
+          fixed: false,
+        };
+        updateCorrections((current) => [...current, record]);
+        pendingRetryId.current = record.id;
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === messageId ? { ...message, correctionId: record.id } : message,
+          ),
+        );
+      } catch {
+        // The correction card is a bonus; the spoken correction already happened.
+      }
+    },
+    [updateCorrections],
+  );
+
+  /** Did the learner just repeat the phrase Rita corrected? */
+  const registerRetry = useCallback(
+    (spokenText: string) => {
+      const pendingId = pendingRetryId.current;
+      if (!pendingId || !/\p{Script=Latin}/u.test(spokenText)) return;
+      const record = correctionsRef.current.find((item) => item.id === pendingId);
+      if (!record) {
+        pendingRetryId.current = null;
+        return;
+      }
+      const fixed = matchesCorrection(spokenText, record.better);
+      updateCorrections((current) =>
+        current.map((item) =>
+          item.id === pendingId
+            ? { ...item, attempts: item.attempts + 1, fixed: item.fixed || fixed }
+            : item,
+        ),
+      );
+      if (fixed || record.attempts + 1 >= 3) pendingRetryId.current = null;
+    },
+    [updateCorrections],
+  );
+
   const cancelFiller = useCallback(() => {
     if (fillerTimer.current) clearTimeout(fillerTimer.current);
     fillerTimer.current = null;
@@ -381,6 +525,21 @@ export function RitaRealtimeV3() {
 
   const endLesson = useCallback(async () => {
     cancelFiller();
+    stopSpeaking();
+    const endedAt = performance.now();
+    const hadTurns = turnsRef.current > 0;
+    if (hadTurns) {
+      setSummary(
+        buildSummary({
+          startedAt: lessonStartedAt.current || endedAt,
+          endedAt,
+          speakMs: speakMsRef.current,
+          turns: turnsRef.current,
+          learning: learningRef.current,
+          corrections: correctionsRef.current,
+        }),
+      );
+    }
     const current = client.current;
     client.current = null;
     if (current) await current.disconnect().catch(() => undefined);
@@ -414,17 +573,22 @@ export function RitaRealtimeV3() {
     setActive(false);
     setMuted(false);
     setMood("ready");
+    setPhase("connecting");
     setStatus("Lesson ended");
     setCaption("");
-    // Chat and unsaved vocabulary are session-only by design.
-    setMessages([
-      {
-        id: crypto.randomUUID(),
-        role: "rita",
-        text: "Hi, I’m Rita. What would you like to practise?",
-      },
-    ]);
-    setLearning([]);
+    // The chat is session-only by design. Words stay until the summary is closed,
+    // so the learner can still review and save them.
+    setMessages([{ id: crypto.randomUUID(), role: "rita", text: WELCOME }]);
+    if (!hadTurns) setLearning([]);
+    turnsRef.current = 0;
+    speakMsRef.current = 0;
+    speakStartedAt.current = 0;
+    lessonStartedAt.current = 0;
+    pendingRetryId.current = null;
+    correctionsRef.current = [];
+    setCorrections([]);
+    setSavedCorrections(new Set());
+    setTurnStats({ turns: 0, targetTurns: 0 });
     rememberedDestination.current = null;
     destinationsRef.current = { flashSubjects: [], germanSubjects: [], germanSubtopics: [] };
     setDestinations(destinationsRef.current);
@@ -527,7 +691,10 @@ export function RitaRealtimeV3() {
     setSoundBlocked(false);
     setStarting(true);
     setError("");
-    setStatus("Connecting Rita v3…");
+    setErrorDetail("");
+    setSummary(null);
+    setPhase("connecting");
+    setStatus("Connecting…");
     try {
       const [{ PipecatClient }, { DailyTransport }] = await Promise.all([
         import("@pipecat-ai/client-js"),
@@ -555,30 +722,42 @@ export function RitaRealtimeV3() {
         heardBuffer.current = "";
         const draftId = draftReplyId.current;
         draftReplyId.current = null;
+        const messageId = draftId ?? crypto.randomUUID();
         setMessages((current) =>
-          settleDraftReply(
+          settleDraftReply<LessonMessage>(
             current,
             draftId,
             reply,
-            reply ? { id: crypto.randomUUID(), role: "rita", text: reply } : null,
+            reply
+              ? { id: messageId, role: "rita", text: reply, createdAt: Date.now(), interrupted }
+              : null,
+          ).map((message) =>
+            message.id === messageId
+              ? { ...message, streaming: false, interrupted: interrupted || undefined }
+              : message,
           ),
         );
         if (!reply) return;
-        if (!interrupted) void runExtraction(lastUserText.current, reply);
+        if (!interrupted) {
+          // The learning and correction helpers read clean text, never markdown.
+          const plain = spokenTextOf(reply);
+          void runExtraction(lastUserText.current, plain);
+          void runCorrection(lastUserText.current, plain, messageId);
+        }
         if (interrupted) void metric("interrupted");
       };
       const transport = new DailyTransport({
-          bufferLocalAudioUntilBotReady: true,
-          inputSettings: {
-            audio: {
-              settings: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true,
-                channelCount: 1,
-              },
+        bufferLocalAudioUntilBotReady: true,
+        inputSettings: {
+          audio: {
+            settings: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+              channelCount: 1,
             },
           },
+        },
       });
       const networkSnapshotPhases = new Set<string>();
       const snapshotNetwork = (phase: string) => {
@@ -597,7 +776,8 @@ export function RitaRealtimeV3() {
               Number.isFinite(Number(value)) ? Number(value) : undefined;
             return metric("network_snapshot", undefined, {
               phase,
-              dailyNetworkState: typeof stats.networkState === "string" ? stats.networkState : "unknown",
+              dailyNetworkState:
+                typeof stats.networkState === "string" ? stats.networkState : "unknown",
               dailyNetworkReasons: Array.isArray(stats.networkStateReasons)
                 ? stats.networkStateReasons.slice(0, 4)
                 : [],
@@ -620,7 +800,7 @@ export function RitaRealtimeV3() {
             transportConnectedAt.current = performance.now();
             activeRef.current = true;
             setActive(true);
-            setStatus("Audio connected; waiting for Rita…");
+            setStatus("Connected. Waiting for Rita…");
             setMood("ready");
             snapshotNetwork("transport_connected");
             if (!transportMetricRecorded.current) {
@@ -654,8 +834,10 @@ export function RitaRealtimeV3() {
           onBotReady: () => {
             botReady.current = true;
             botReadyAt.current = performance.now();
+            if (!lessonStartedAt.current) lessonStartedAt.current = botReadyAt.current;
             setStatus("Rita is listening");
             setMood("listening");
+            setPhase(mutedRef.current ? "muted" : "listening");
             if (!botReadyMetricRecorded.current) {
               botReadyMetricRecorded.current = true;
               void metric("bot_ready", botReadyAt.current - sessionStartedAt.current);
@@ -665,13 +847,15 @@ export function RitaRealtimeV3() {
             activeRef.current = false;
             setActive(false);
             setMood("ready");
+            setPhase("connecting");
             setStatus("Disconnected");
           },
           onError: (event) => {
             const eventData = (event?.data ?? {}) as { error?: unknown; message?: unknown };
             const detail = String(eventData.error ?? eventData.message ?? "Provider error");
-            setError(`${detail}. Rita did not switch to the old system.`);
-            setStatus("Rita v3 error");
+            setError(learnerMessage("voice"));
+            setErrorDetail(`${detail}. Rita did not switch to the old system.`);
+            setStatus("Voice error");
             void metric("provider_error", undefined, { provider: "transport_or_pipeline" });
             snapshotNetwork("transport_error");
           },
@@ -685,32 +869,49 @@ export function RitaRealtimeV3() {
             firstPartialRecorded.current = false;
             if (botSpeaking.current) interruptCandidateAt.current = performance.now();
             turnId.current = crypto.randomUUID();
+            speakStartedAt.current = performance.now();
             if (!botSpeaking.current) {
               setStatus("I’m listening…");
               setMood("listening");
+              setPhase(mutedRef.current ? "muted" : "listening");
             }
             void metric("speech_start");
           },
           onUserStoppedSpeaking: () => {
             speechEndedAt.current = performance.now();
+            if (speakStartedAt.current) {
+              speakMsRef.current += speechEndedAt.current - speakStartedAt.current;
+              speakStartedAt.current = 0;
+            }
             void metric("speech_end");
             if (botSpeaking.current) return;
             setStatus("Rita is thinking…");
             setMood("thinking");
+            setPhase("understanding");
             scheduleFiller();
           },
           onUserTranscript: (data) => {
-            setCaption(data.text);
+            // The live line shows only what is still being heard. A final transcript
+            // moves into the chat, so it is never shown twice.
+            setCaption(data.final ? "" : data.text);
             if (!data.final && data.text.trim() && !firstPartialRecorded.current) {
               firstPartialRecorded.current = true;
               void metric("transcript_partial");
             }
             if (!data.final || !data.text.trim()) return;
-            lastUserText.current = data.text.trim();
+            const finalText = data.text.trim();
+            lastUserText.current = finalText;
             currentTurnHasFinalTranscript.current = true;
+            turnsRef.current += 1;
+            const targetTurn = /\p{Script=Latin}{2,}/u.test(finalText);
+            setTurnStats((current) => ({
+              turns: current.turns + 1,
+              targetTurns: current.targetTurns + (targetTurn ? 1 : 0),
+            }));
+            registerRetry(finalText);
             setMessages((current) => [
               ...current,
-              { id: crypto.randomUUID(), role: "you", text: data.text.trim() },
+              { id: crypto.randomUUID(), role: "you", text: finalText, createdAt: Date.now() },
             ]);
             void metric("transcript_final");
           },
@@ -723,6 +924,7 @@ export function RitaRealtimeV3() {
             firstRemoteAudioRecorded.current = false;
             interruptCandidateAt.current = 0;
             setStatus("Rita is answering…");
+            if (!botSpeaking.current) setPhase("preparing");
             void metric("llm_start");
           },
           onBotLlmText: ({ text }) => {
@@ -737,7 +939,13 @@ export function RitaRealtimeV3() {
               const id = draftReplyId.current ?? crypto.randomUUID();
               draftReplyId.current = id;
               setMessages((current) =>
-                upsertDraftReply(current, { id, role: "rita", text: draftText }),
+                upsertDraftReply<LessonMessage>(current, {
+                  id,
+                  role: "rita",
+                  text: draftText,
+                  createdAt: Date.now(),
+                  streaming: true,
+                }),
               );
             }
           },
@@ -752,6 +960,7 @@ export function RitaRealtimeV3() {
             void metric("bot_speaking_signal");
             setStatus("Rita is speaking — interrupt whenever you want");
             setMood("talking");
+            setPhase("speaking");
           },
           onTrackStarted: (track, participant) => {
             if (track.kind !== "audio" || participant?.local) return;
@@ -800,8 +1009,9 @@ export function RitaRealtimeV3() {
             void metric("tts_start");
           },
           onBotTtsStopped: () => {
-            setStatus(muted ? "Microphone muted" : "Rita is listening");
-            setMood(muted ? "ready" : "listening");
+            setStatus(mutedRef.current ? "Microphone muted" : "Rita is listening");
+            setMood(mutedRef.current ? "ready" : "listening");
+            setPhase(mutedRef.current ? "muted" : "listening");
           },
           onMetrics: (data) => {
             void metric("provider_metrics", undefined, {
@@ -812,7 +1022,7 @@ export function RitaRealtimeV3() {
       });
       client.current = pc;
       const headers = await authHeaders();
-      setStatus("Waking Rita's voice worker…");
+      setStatus("Waking Rita up. The first start can take a minute…");
       const ready = await pc.startBotAndConnect({
         endpoint: "/api/rita-v3/session/start",
         headers,
@@ -844,7 +1054,10 @@ export function RitaRealtimeV3() {
       setActive(false);
       setMood("ready");
       setStatus("Rita could not connect");
-      setError(`${humanError(cause)} Rita v3 stayed isolated; no legacy voice system was started.`);
+      setError(learnerMessage("connect"));
+      setErrorDetail(
+        `${humanError(cause)} Rita v3 stayed isolated; no legacy voice system was started.`,
+      );
       void metric("client_connection_error", undefined, {
         errorKind: cause instanceof Error ? cause.name : "unknown",
       });
@@ -861,6 +1074,7 @@ export function RitaRealtimeV3() {
     if (next) cancelFiller();
     setStatus(next ? "Microphone muted" : "Rita is listening");
     setMood(next ? "ready" : "listening");
+    setPhase(next ? "muted" : botSpeaking.current ? "speaking" : "listening");
   }
 
   async function sendText(event: FormEvent) {
@@ -869,7 +1083,16 @@ export function RitaRealtimeV3() {
     if (!text || !client.current?.connected) return;
     setDraft("");
     lastUserText.current = text;
-    setMessages((current) => [...current, { id: crypto.randomUUID(), role: "you", text }]);
+    turnsRef.current += 1;
+    setTurnStats((current) => ({
+      turns: current.turns + 1,
+      targetTurns: current.targetTurns + (/\p{Script=Latin}{2,}/u.test(text) ? 1 : 0),
+    }));
+    registerRetry(text);
+    setMessages((current) => [
+      ...current,
+      { id: crypto.randomUUID(), role: "you", text, createdAt: Date.now() },
+    ]);
     await client.current.sendText(text);
   }
 
@@ -902,6 +1125,80 @@ export function RitaRealtimeV3() {
     }
   }
 
+  function toggleTheme() {
+    const next: ThemeName = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    storeTheme(next);
+  }
+
+  function onChatScroll() {
+    const element = chatRef.current;
+    if (!element) return;
+    const nearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 80;
+    stickToBottom.current = nearBottom;
+    setShowJump(!nearBottom);
+  }
+
+  function jumpToLatest() {
+    const element = chatRef.current;
+    if (!element) return;
+    stickToBottom.current = true;
+    setShowJump(false);
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    element.scrollTo({ top: element.scrollHeight, behavior: calm ? "auto" : "smooth" });
+  }
+
+  function speakCorrection(record: CorrectionRecord, rate: number) {
+    // The phone mic would hear the sample, so it pauses while the sample plays.
+    speakSample(record.better, record.language, rate, {
+      onStart: () => client.current?.enableMic(false),
+      onEnd: () => {
+        if (!mutedRef.current) client.current?.enableMic(true);
+      },
+    });
+  }
+
+  function saveCorrection(record: CorrectionRecord) {
+    const item: LearningItem = {
+      term: record.better,
+      meaning: record.translation || record.why || record.said,
+      language: record.language,
+      kind: "sentence",
+      article: null,
+      plural: null,
+    };
+    setLearning((current) =>
+      current.some((existing) => learningKey(existing) === learningKey(item))
+        ? current
+        : [...current, item],
+    );
+    setSavedCorrections((current) => new Set(current).add(record.id));
+  }
+
+  function clearTranscript() {
+    if (!confirmClear) {
+      setConfirmClear(true);
+      if (clearTimer.current) clearTimeout(clearTimer.current);
+      clearTimer.current = setTimeout(() => setConfirmClear(false), 4_000);
+      return;
+    }
+    if (clearTimer.current) clearTimeout(clearTimer.current);
+    setConfirmClear(false);
+    setCaption("");
+    setMessages([{ id: crypto.randomUUID(), role: "rita", text: WELCOME }]);
+    pendingRetryId.current = null;
+    correctionsRef.current = [];
+    setCorrections([]);
+    setSavedCorrections(new Set());
+  }
+
+  function closeSummary() {
+    setSummary(null);
+    setLearning([]);
+    setNotice("");
+    setStatus("Ready to start");
+  }
+
   if (loading || !user) {
     return (
       <div className="grid min-h-screen place-items-center">
@@ -918,8 +1215,30 @@ export function RitaRealtimeV3() {
           label: `${destinations.germanSubjects.find((parent) => parent.id === item.subject_id)?.name ?? "German"} / ${item.name}`,
         }));
 
+  const goal = lessonGoal(mode, {
+    turns: turnStats.turns,
+    targetTurns: turnStats.targetTurns,
+    items: learning.length,
+    retries: corrections.filter((item) => item.attempts > 0).length,
+    fixed: corrections.filter((item) => item.fixed).length,
+  });
+  const correctionById = new Map(corrections.map((item) => [item.id, item]));
+  const showSetup = !active && !summary;
+
+  const privacy = (
+    <details className="rl-privacy">
+      <summary>How your lesson is handled</summary>
+      <p>
+        Your voice is processed live by speech and language services so Rita can hear you, answer
+        and speak. Rita doesn’t save your chat to your account, and it is cleared when the lesson
+        ends. Only phrases you choose to save are kept. Use “Clear transcript” to remove the chat
+        right now.
+      </p>
+    </details>
+  );
+
   return (
-    <main className="rita-live-premium min-h-screen bg-[#faf9f6] text-[#211f24]">
+    <main className="rl" data-theme={theme} style={themeStyle(theme) as CSSProperties}>
       <audio
         ref={botAudio}
         autoPlay
@@ -933,259 +1252,335 @@ export function RitaRealtimeV3() {
         onStalled={() => void metric("audio_stalled")}
         onEnded={() => void metric("audio_ended")}
       />
-      <div className="grid min-h-screen lg:grid-cols-[minmax(0,1.55fr)_minmax(320px,.95fr)]">
-        <section className="flex min-h-screen flex-col border-r border-[#e6e1e8] bg-white">
-          <header className="border-b border-[#ece7ee] px-5 py-5 sm:px-10">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Link to="/" className="text-2xl text-[#716c73]" aria-label="Leave Rita">
-                  ×
-                </Link>
-                <h1 className="text-xl font-extrabold tracking-tight">
-                  RitaJet <span className="font-medium text-[#7c777f]">| Live lesson</span>
-                </h1>
-              </div>
-              {isAdmin && (
-                <Link
-                  to="/admin/rita-voice"
-                  className="rounded-full border border-[#ded7e4] px-4 py-2 text-sm font-bold"
-                >
-                  Voice admin
-                </Link>
+      <div className="rl-shell">
+        <section className="rl-main" aria-label="Lesson">
+          <header className="rl-header">
+            <Link to="/" className="rl-iconbtn" aria-label="Leave lesson">
+              <X size={18} aria-hidden="true" />
+            </Link>
+            <h1>
+              {goal.title}
+              <small>Live lesson with Rita</small>
+            </h1>
+            <button
+              type="button"
+              className="rl-iconbtn"
+              onClick={toggleTheme}
+              aria-label={
+                theme === "dark" ? "Switch to the light theme" : "Switch to the dark theme"
+              }
+            >
+              {theme === "dark" ? (
+                <Sun size={18} aria-hidden="true" />
+              ) : (
+                <Moon size={18} aria-hidden="true" />
               )}
-            </div>
-            <div className="mt-5 h-1 w-40 rounded-full bg-[#814be8]" />
-            <p className="mt-3 text-xs font-bold text-[#5b4181]">
-              Rita Realtime v3 · {MODEL_PROOF}
-            </p>
-            <p className="mt-2 text-sm font-semibold text-[#6d6671]">{status}</p>
+            </button>
+            {isAdmin && (
+              <Link to="/admin/rita-voice" className="rl-adminlink">
+                Voice admin
+              </Link>
+            )}
           </header>
 
-          {active && soundBlocked && (
-            <div className="px-5 pt-4 sm:px-10">
-              <button
-                type="button"
-                onClick={enableSound}
-                className="rounded-full bg-[#7b46df] px-5 py-2.5 text-sm font-extrabold text-white"
-              >
-                Tap to enable sound
-              </button>
-            </div>
+          {isAdmin && (
+            <details className="rl-debug">
+              <summary>Debug · admin only</summary>
+              <p>
+                {status} · Rita Realtime v3 · {MODEL_PROOF}
+              </p>
+              {errorDetail && <p>Error detail: {errorDetail}</p>}
+            </details>
           )}
 
-          <div className="flex justify-center lg:hidden">
-            <VoiceOrb
-              levelsRef={orbLevels}
-              mode={orbModeFor(active, mood)}
-              label="Rita voice"
-              className="w-[min(86vw,360px)]"
-            />
-          </div>
+          <details
+            className="rl-goalstrip"
+            open={goalOpen}
+            onToggle={(event) => setGoalOpen(event.currentTarget.open)}
+          >
+            <summary>
+              <span>Today’s goal</span>
+              <span style={{ color: "var(--l-muted)", fontSize: "0.85rem" }}>
+                {goal.tasks.filter((task) => task.done).length} of {goal.tasks.length} done
+              </span>
+            </summary>
+            <LessonGoalPanel goal={goal} />
+          </details>
 
-          <div className="flex-1 overflow-y-auto px-5 py-7 sm:px-10">
-            <div className="mx-auto max-w-3xl space-y-7">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={
-                    message.role === "you"
-                      ? "ml-auto max-w-[80%] text-right text-[#377ad9]"
-                      : "max-w-[82%] text-lg leading-8"
-                  }
-                >
-                  {message.text}
-                </div>
-              ))}
-              {caption && <p className="text-sm text-[#8a858d]">Live transcript: {caption}</p>}
-              {error && (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-                  {error}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="border-t border-[#ece7ee] p-4 sm:p-7">
-            {!active ? (
-              <div className="mx-auto max-w-3xl space-y-4">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <select
-                    value={personality}
-                    onChange={(event) => setPersonality(event.target.value as Persona)}
-                    className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold"
-                  >
-                    <option value="kind">Kind teacher</option>
-                    <option value="direct">Direct teacher</option>
-                    <option value="playful">Playful teacher</option>
-                    <option value="strict">Strict teacher</option>
-                  </select>
-                  <select
-                    value={language}
-                    onChange={(event) => setLanguage(event.target.value)}
-                    className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold"
-                  >
-                    <option value="automatic">Automatic language</option>
-                    <option value="ar">Arabic</option>
-                    <option value="de">German</option>
-                    <option value="en">English</option>
-                  </select>
-                  <select
-                    value={dialect}
-                    onChange={(event) => setDialect(event.target.value)}
-                    className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold"
-                  >
-                    <option value="ar-JO">Jordanian Arabic</option>
-                    <option value="standard">Standard Arabic</option>
-                    <option value="en-GB">British English</option>
-                  </select>
-                  <select
-                    value={mode}
-                    onChange={(event) => setMode(event.target.value as LessonMode)}
-                    className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold"
-                  >
-                    <option value="free_conversation">Free conversation</option>
-                    <option value="guided_lesson">Guided lesson</option>
-                    <option value="pronunciation_drill">Pronunciation drill</option>
-                  </select>
-                </div>
-                <button
-                  onClick={startLesson}
-                  disabled={starting}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7b46df] px-5 py-4 font-extrabold text-white shadow-lg shadow-purple-200 disabled:opacity-60"
-                >
-                  {starting ? <Loader2 className="animate-spin" size={18} /> : <Mic size={18} />}{" "}
-                  Start Rita Realtime v3
-                </button>
-              </div>
+          <div className="rl-chat" ref={chatRef} onScroll={onChatScroll}>
+            {summary && !active ? (
+              <LessonSummaryView
+                summary={summary}
+                onReview={() => void loadDestinations("flashcards")}
+                onNewLesson={closeSummary}
+              />
             ) : (
-              <div className="mx-auto max-w-3xl">
-                <form
-                  onSubmit={sendText}
-                  className="rounded-3xl border border-[#ddd7e1] bg-white p-3 shadow-sm"
+              <div className="rl-thread">
+                <div
+                  className="rl-log"
+                  role="log"
+                  aria-live="polite"
+                  aria-relevant="additions"
+                  aria-label="Conversation"
                 >
+                  {messages.map((message) => (
+                    <MessageBubble
+                      key={message.id}
+                      message={message}
+                      correction={
+                        message.correctionId ? correctionById.get(message.correctionId) : undefined
+                      }
+                      speakBusy={phase === "speaking"}
+                      saved={
+                        message.correctionId ? savedCorrections.has(message.correctionId) : false
+                      }
+                      onSpeak={speakCorrection}
+                      onSave={saveCorrection}
+                    />
+                  ))}
+                </div>
+                {error && (
+                  <div className="rl-error" role="alert">
+                    {error}
+                  </div>
+                )}
+                {showSetup && (
+                  <section className="rl-setup" aria-labelledby="rl-setup-title">
+                    <div>
+                      <h2 id="rl-setup-title">{goal.title}</h2>
+                      <p>{goal.goal}</p>
+                    </div>
+                    <div className="rl-fields">
+                      <label className="rl-field">
+                        Teacher style
+                        <select
+                          className="rl-select"
+                          value={personality}
+                          onChange={(event) => setPersonality(event.target.value as Persona)}
+                        >
+                          <option value="kind">Kind teacher</option>
+                          <option value="direct">Direct teacher</option>
+                          <option value="playful">Playful teacher</option>
+                          <option value="strict">Strict teacher</option>
+                        </select>
+                      </label>
+                      <label className="rl-field">
+                        Language
+                        <select
+                          className="rl-select"
+                          value={language}
+                          onChange={(event) => setLanguage(event.target.value)}
+                        >
+                          <option value="automatic">Automatic language</option>
+                          <option value="ar">Arabic</option>
+                          <option value="de">German</option>
+                          <option value="en">English</option>
+                        </select>
+                      </label>
+                      <label className="rl-field">
+                        Arabic dialect
+                        <select
+                          className="rl-select"
+                          value={dialect}
+                          onChange={(event) => setDialect(event.target.value)}
+                        >
+                          <option value="ar-JO">Jordanian Arabic</option>
+                          <option value="standard">Standard Arabic</option>
+                          <option value="en-GB">British English</option>
+                        </select>
+                      </label>
+                      <label className="rl-field">
+                        Lesson type
+                        <select
+                          className="rl-select"
+                          value={mode}
+                          onChange={(event) => setMode(event.target.value as LessonMode)}
+                        >
+                          <option value="free_conversation">Free conversation</option>
+                          <option value="guided_lesson">Guided lesson</option>
+                          <option value="pronunciation_drill">Pronunciation drill</option>
+                        </select>
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={startLesson}
+                      disabled={starting}
+                      className="rl-btn rl-btn--primary"
+                    >
+                      {starting ? (
+                        <Loader2 className="animate-spin" size={18} aria-hidden="true" />
+                      ) : (
+                        <Mic size={18} aria-hidden="true" />
+                      )}
+                      Start lesson
+                    </button>
+                    {starting && (
+                      <p role="status" style={{ margin: 0 }}>
+                        {status}
+                      </p>
+                    )}
+                    {privacy}
+                  </section>
+                )}
+              </div>
+            )}
+            {showJump && (
+              <button type="button" className="rl-jump" onClick={jumpToLatest}>
+                Jump to latest
+              </button>
+            )}
+          </div>
+
+          {active && (
+            <div className="rl-dock">
+              <div className="rl-dock-inner">
+                {soundBlocked && (
+                  <button type="button" onClick={enableSound} className="rl-btn rl-btn--primary">
+                    Tap to enable sound
+                  </button>
+                )}
+                <VoiceStatusBar
+                  phase={phase}
+                  connectingText={status}
+                  caption={caption}
+                  muted={muted}
+                  onToggleMute={toggleMute}
+                  levelsRef={orbLevels}
+                  orbMode={orbModeFor(active, mood)}
+                />
+                <form onSubmit={sendText} className="rl-form">
                   <input
                     value={draft}
                     onChange={(event) => setDraft(event.target.value)}
-                    placeholder="Ask Rita anything…"
-                    className="w-full border-0 bg-transparent px-3 py-3 outline-none"
+                    placeholder="Or type to Rita…"
+                    aria-label="Message to Rita"
+                    className="rl-input"
                   />
-                  <div className="flex flex-wrap items-center gap-2 border-t border-[#eee9f0] pt-3">
-                    <button
-                      type="button"
-                      onClick={toggleMute}
-                      className="flex items-center gap-1 rounded-full border border-[#ddd7e1] px-3 py-2 text-sm font-bold"
-                    >
-                      {muted ? <MicOff size={15} /> : <Mic size={15} />}
-                      {muted ? "Unmute" : "Mute"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void loadDestinations("flashcards")}
-                      className="flex items-center gap-1 rounded-full border border-[#ddd7e1] px-3 py-2 text-sm font-bold"
-                    >
-                      <Layers size={15} /> Learning ({learning.length})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void endLesson()}
-                      className="ml-auto flex items-center gap-1 rounded-full px-3 py-2 text-sm font-bold text-red-700"
-                    >
-                      <PhoneOff size={15} /> End lesson
-                    </button>
-                    <button
-                      type="submit"
-                      className="grid h-10 w-10 place-items-center rounded-full bg-[#c8adff] text-white"
-                    >
-                      <Send size={17} />
-                    </button>
-                  </div>
+                  <button type="submit" className="rl-iconbtn" aria-label="Send message">
+                    <Send size={18} aria-hidden="true" />
+                  </button>
                 </form>
+                <div className="rl-controls">
+                  <button
+                    type="button"
+                    className="rl-btn"
+                    onClick={() => void loadDestinations("flashcards")}
+                  >
+                    <Layers size={16} aria-hidden="true" /> Learning ({learning.length})
+                  </button>
+                  <button type="button" className="rl-btn" onClick={clearTranscript}>
+                    <Trash2 size={16} aria-hidden="true" />
+                    {confirmClear ? "Tap again to clear" : "Clear transcript"}
+                  </button>
+                  <span className="rl-spacer" />
+                  <button
+                    type="button"
+                    className="rl-btn rl-btn--danger"
+                    onClick={() => void endLesson()}
+                  >
+                    <PhoneOff size={16} aria-hidden="true" /> End lesson
+                  </button>
+                </div>
+                {privacy}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </section>
 
-        <aside className="relative hidden min-h-screen overflow-hidden bg-[radial-gradient(circle_at_50%_45%,#59327f_0,#26163b_47%,#160d25_100%)] text-white lg:block">
-          <div className="absolute left-8 top-7 font-bold">Rita</div>
-          <div className="absolute right-8 top-7 flex items-center gap-2 text-sm">
-            <span className="h-2 w-2 rounded-full bg-[#bd86ff]" />
-            {active ? "Live" : "Ready"}
-          </div>
-          <div className="h-full">
-            <RitaStage
-              mood={mood}
-              active={active}
-              levelsRef={orbLevels}
-            />
-          </div>
+        <aside className="rl-side" aria-label="Lesson goal">
+          <VoiceOrb
+            levelsRef={orbLevels}
+            mode={orbModeFor(active, mood)}
+            label="Rita’s voice"
+            className="rl-orb-big"
+          />
+          <LessonGoalPanel goal={goal} />
         </aside>
       </div>
 
       {learningOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-end bg-black/30 sm:items-center sm:justify-center"
-          onClick={() => setLearningOpen(false)}
-        >
+        <div className="rl-overlay" onClick={() => setLearningOpen(false)}>
           <section
-            className="max-h-[88vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-7"
+            ref={sheetRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rl-tray-title"
+            tabIndex={-1}
+            className="rl-sheet"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
               <div>
-                <p className="text-sm font-bold text-[#7b46df]">Learning Tray</p>
-                <h2 className="text-2xl font-extrabold">Useful language from this lesson</h2>
+                <p className="rl-kicker">Learning tray</p>
+                <h2 id="rl-tray-title">Useful language from this lesson</h2>
               </div>
-              <button onClick={() => setLearningOpen(false)}>
-                <X />
+              <button
+                type="button"
+                className="rl-iconbtn"
+                onClick={() => setLearningOpen(false)}
+                aria-label="Close learning tray"
+              >
+                <X size={18} aria-hidden="true" />
               </button>
             </div>
             {!learning.length ? (
-              <p className="py-10 text-center text-[#77717a]">
+              <p style={{ padding: "32px 0", textAlign: "center", color: "var(--l-muted)" }}>
                 Ask for a translation, a word meaning, or a language word list. General knowledge
                 will not be saved here.
               </p>
             ) : (
-              <div className="mt-6 divide-y divide-[#eee9f0]">
+              <ul className="rl-list" style={{ marginTop: 16 }}>
                 {learning.map((item) => (
-                  <div
-                    key={`${item.language}:${item.term}`}
-                    className="grid gap-1 py-4 sm:grid-cols-[1fr_1fr_auto]"
-                  >
-                    <strong>
-                      {item.article ? `${item.article} ` : ""}
-                      {item.term}
-                    </strong>
-                    <span className="text-[#67616a]">{item.meaning}</span>
-                    <span className="text-xs font-bold uppercase text-[#8a60cf]">
-                      {item.language}
+                  <li key={`${item.language}:${item.term}`}>
+                    <span dir="auto">
+                      <strong>
+                        <bdi dir="ltr" lang={item.language.split("-")[0]}>
+                          {item.article ? `${item.article} ` : ""}
+                          {item.term}
+                        </bdi>
+                      </strong>
+                      <br />
+                      <small dir="auto">{item.meaning}</small>
                     </span>
-                  </div>
+                    <small>{item.language}</small>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
             {learning.length > 0 && (
-              <div className="mt-6 rounded-2xl bg-[#f6f1ff] p-4">
-                <div className="flex flex-wrap gap-2">
+              <div style={{ display: "grid", gap: 12, marginTop: 20 }}>
+                <div className="rl-pillrow">
                   <button
+                    type="button"
+                    aria-pressed={target === "flashcards"}
                     onClick={() => void loadDestinations("flashcards")}
-                    className={`rounded-full px-4 py-2 text-sm font-bold ${target === "flashcards" ? "bg-[#7b46df] text-white" : "bg-white"}`}
+                    className="rl-btn rl-pill"
                   >
-                    <Layers className="mr-1 inline" size={15} />
-                    Flashcards
+                    <Layers size={15} aria-hidden="true" /> Flashcards
                   </button>
                   <button
+                    type="button"
+                    aria-pressed={target === "german_lab"}
                     onClick={() => void loadDestinations("german_lab")}
-                    className={`rounded-full px-4 py-2 text-sm font-bold ${target === "german_lab" ? "bg-[#7b46df] text-white" : "bg-white"}`}
+                    className="rl-btn rl-pill"
                   >
-                    <BookOpen className="mr-1 inline" size={15} />
-                    German Lab
+                    <BookOpen size={15} aria-hidden="true" /> German Lab
                   </button>
                 </div>
-                <div className="relative mt-3">
+                <label className="rl-field" style={{ position: "relative" }}>
+                  Save to
                   <select
                     value={destinationId}
                     onChange={(event) => setDestinationId(event.target.value)}
-                    className="w-full appearance-none rounded-xl border border-[#ddd6e2] bg-white px-4 py-3 pr-10"
+                    className="rl-select"
                   >
                     <option value="">Choose a subject…</option>
                     {options.map((item) => (
@@ -1194,27 +1589,57 @@ export function RitaRealtimeV3() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-3.5" size={18} />
-                </div>
+                  <ChevronDown
+                    aria-hidden="true"
+                    size={18}
+                    style={{ position: "absolute", right: 12, bottom: 13, pointerEvents: "none" }}
+                  />
+                </label>
                 {rememberedDestination.current && (
-                  <p className="mt-2 text-xs font-bold text-[#6f4bad]">
+                  <p
+                    style={{
+                      margin: 0,
+                      color: "var(--l-accent)",
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                    }}
+                  >
                     Remembered for this lesson: {rememberedDestination.current.label}
                   </p>
                 )}
                 <button
+                  type="button"
                   onClick={saveLearning}
                   disabled={!destinationId || saving}
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#21172c] px-4 py-3 font-bold text-white disabled:opacity-40"
+                  className="rl-btn rl-btn--primary"
                 >
-                  {saving ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
+                  {saving ? (
+                    <Loader2 className="animate-spin" size={16} aria-hidden="true" />
+                  ) : (
+                    <Check size={16} aria-hidden="true" />
+                  )}
                   Save selected lesson language
                 </button>
-                {notice && <p className="mt-3 text-sm font-semibold">{notice}</p>}
+                {notice && (
+                  <p role="status" style={{ margin: 0, fontWeight: 600 }}>
+                    {notice}
+                  </p>
+                )}
               </div>
             )}
-            <p className="mt-5 flex items-center gap-2 text-xs text-[#77717a]">
-              <Sparkles size={14} />
-              Unsaved items and this chat are deleted when the lesson ends.
+            <p
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                margin: "20px 0 0",
+                color: "var(--l-muted)",
+                fontSize: "0.8rem",
+              }}
+            >
+              <Sparkles size={14} aria-hidden="true" />
+              The chat is cleared when the lesson ends. Items you don’t save are cleared when you
+              close the lesson summary or leave this page.
             </p>
           </section>
         </div>

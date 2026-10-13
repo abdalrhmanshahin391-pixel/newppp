@@ -98,6 +98,7 @@ import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push-dispatch'
 import { Route as ApiPublicRitaWorkerRouteImport } from './routes/api/public/rita-worker'
 import { Route as ApiRitaV3FillerRouteImport } from './routes/api/rita-v3/filler'
+import { Route as ApiRitaCorrectRouteImport } from './routes/api/rita/correct'
 import { Route as ApiRitaExtractRouteImport } from './routes/api/rita/extract'
 import { Route as ApiRitaLearningRouteImport } from './routes/api/rita/learning'
 import { Route as CoursesCourseIdIndexRouteImport } from './routes/courses.$courseId.index'
@@ -576,6 +577,11 @@ const ApiRitaV3FillerRoute = ApiRitaV3FillerRouteImport.update({
   path: '/api/rita-v3/filler',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRitaCorrectRoute = ApiRitaCorrectRouteImport.update({
+  id: '/api/rita/correct',
+  path: '/api/rita/correct',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRitaExtractRoute = ApiRitaExtractRouteImport.update({
   id: '/api/rita/extract',
   path: '/api/rita/extract',
@@ -814,6 +820,7 @@ export interface FileRoutesByFullPath {
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
   '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
+  '/api/rita/correct': typeof ApiRitaCorrectRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
@@ -930,6 +937,7 @@ export interface FileRoutesByTo {
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
   '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
+  '/api/rita/correct': typeof ApiRitaCorrectRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
@@ -1050,6 +1058,7 @@ export interface FileRoutesById {
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
   '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
   '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
+  '/api/rita/correct': typeof ApiRitaCorrectRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
@@ -1172,6 +1181,7 @@ export interface FileRouteTypes {
     | '/api/public/push-dispatch'
     | '/api/public/rita-worker'
     | '/api/rita-v3/filler'
+    | '/api/rita/correct'
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/courses/$courseId/add-questions'
@@ -1288,6 +1298,7 @@ export interface FileRouteTypes {
     | '/api/public/push-dispatch'
     | '/api/public/rita-worker'
     | '/api/rita-v3/filler'
+    | '/api/rita/correct'
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/courses/$courseId/add-questions'
@@ -1407,6 +1418,7 @@ export interface FileRouteTypes {
     | '/api/public/push-dispatch'
     | '/api/public/rita-worker'
     | '/api/rita-v3/filler'
+    | '/api/rita/correct'
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/courses/$courseId/add-questions'
@@ -1513,6 +1525,7 @@ export interface RootRouteChildren {
   ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
   ApiPublicRitaWorkerRoute: typeof ApiPublicRitaWorkerRoute
   ApiRitaV3FillerRoute: typeof ApiRitaV3FillerRoute
+  ApiRitaCorrectRoute: typeof ApiRitaCorrectRoute
   ApiRitaExtractRoute: typeof ApiRitaExtractRoute
   ApiRitaLearningRoute: typeof ApiRitaLearningRoute
   ShareQuestionsSetIdRoute: typeof ShareQuestionsSetIdRoute
@@ -2152,6 +2165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRitaV3FillerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/rita/correct': {
+      id: '/api/rita/correct'
+      path: '/api/rita/correct'
+      fullPath: '/api/rita/correct'
+      preLoaderRoute: typeof ApiRitaCorrectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/rita/extract': {
       id: '/api/rita/extract'
       path: '/api/rita/extract'
@@ -2564,6 +2584,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
   ApiPublicRitaWorkerRoute: ApiPublicRitaWorkerRoute,
   ApiRitaV3FillerRoute: ApiRitaV3FillerRoute,
+  ApiRitaCorrectRoute: ApiRitaCorrectRoute,
   ApiRitaExtractRoute: ApiRitaExtractRoute,
   ApiRitaLearningRoute: ApiRitaLearningRoute,
   ShareQuestionsSetIdRoute: ShareQuestionsSetIdRoute,
