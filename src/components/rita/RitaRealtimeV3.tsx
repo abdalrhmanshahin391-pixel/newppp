@@ -16,7 +16,12 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { LearningItem, SaveTarget } from "@/lib/rita-learning";
-import { committedRitaReply, wasRitaInterrupted } from "@/lib/rita-v3-heard";
+import {
+  committedRitaReply,
+  settleDraftReply,
+  upsertDraftReply,
+  wasRitaInterrupted,
+} from "@/lib/rita-v3-heard";
 import { RitaStage, orbModeFor, type RitaMood } from "@/components/rita-live/RitaStage";
 import { VoiceOrb, type OrbLevels } from "@/components/rita-live/VoiceOrb";
 
@@ -111,6 +116,11 @@ export function RitaRealtimeV3() {
   const [mood, setMood] = useState<RitaMood>("ready");
   // Live audio levels for the orb. A ref, not state: they change dozens of times per second.
   const orbLevels = useRef<OrbLevels>({ input: 0, output: 0 });
+  // Rita's voice arrives as a remote WebRTC track that the page itself must play.
+  const botAudio = useRef<HTMLAudioElement | null>(null);
+  const botAudioPlaying = useRef(false);
+  const draftReplyId = useRef<string | null>(null);
+  const [soundBlocked, setSoundBlocked] = useState(false);
   const [active, setActive] = useState(false);
   const [starting, setStarting] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -391,6 +401,14 @@ export function RitaRealtimeV3() {
     providerSessionId.current = "";
     traceId.current = "";
     pendingMetrics.current = [];
+    const audio = botAudio.current;
+    if (audio) {
+      audio.pause();
+      audio.srcObject = null;
+    }
+    botAudioPlaying.current = false;
+    draftReplyId.current = null;
+    setSoundBlocked(false);
     activeRef.current = false;
     mutedRef.current = false;
     setActive(false);
@@ -415,8 +433,98 @@ export function RitaRealtimeV3() {
 
   useEffect(() => () => void endLesson(), [endLesson]);
 
+  useEffect(() => {
+    // The voice client bundles are large; fetch them while the page is idle so Start is not delayed.
+    const preload = () => {
+      void import("@pipecat-ai/client-js");
+      void import("@pipecat-ai/daily-transport");
+    };
+    const idle = (
+      window as unknown as {
+        requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+      }
+    ).requestIdleCallback;
+    const handle = idle ? idle(preload, { timeout: 3000 }) : window.setTimeout(preload, 1200);
+    return () => {
+      const cancel = (window as unknown as { cancelIdleCallback?: (id: number) => void })
+        .cancelIdleCallback;
+      if (idle && cancel) cancel(handle as number);
+      else window.clearTimeout(handle as number);
+    };
+  }, []);
+
+  // A silent clip: playing it inside the Start tap lets Safari play Rita's stream later.
+  const SILENT_WAV =
+    "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+
+  function unlockBotAudio() {
+    const audio = botAudio.current;
+    if (!audio) return;
+    audio.muted = false;
+    audio.volume = 1;
+    void fillerAudioContext.current?.resume().catch(() => undefined);
+    if (audio.srcObject) return;
+    audio.src = SILENT_WAV;
+    void audio
+      .play()
+      .then(() => {
+        if (audio.srcObject) return;
+        audio.pause();
+        audio.removeAttribute("src");
+        audio.load();
+      })
+      .catch(() => undefined);
+  }
+
+  function attachBotAudio(track: MediaStreamTrack) {
+    const audio = botAudio.current;
+    if (!audio) return;
+    const existing = audio.srcObject instanceof MediaStream ? audio.srcObject : null;
+    if (existing?.getAudioTracks().some((candidate) => candidate.id === track.id)) return;
+    audio.removeAttribute("src");
+    audio.srcObject = new MediaStream([track]);
+    audio.muted = false;
+    audio.volume = 1;
+    const calledAt = performance.now();
+    void metric("audio_element_attached");
+    void metric("audio_play_called");
+    audio
+      .play()
+      .then(() => {
+        setSoundBlocked(false);
+        void metric("audio_play_resolved", performance.now() - calledAt);
+      })
+      .catch((error: unknown) => {
+        setSoundBlocked(true);
+        void metric("audio_play_blocked", undefined, {
+          errorName: error instanceof Error ? error.name : "unknown",
+        });
+      });
+  }
+
+  function enableSound() {
+    const audio = botAudio.current;
+    if (!audio) return;
+    audio.muted = false;
+    void audio
+      .play()
+      .then(() => {
+        setSoundBlocked(false);
+        void metric("audio_play_resolved", undefined, { recoveredByTap: true });
+      })
+      .catch(() => undefined);
+  }
+
   async function startLesson() {
     if (starting || active) return;
+    // First thing inside the tap: unlock audio and start the real click-to-ready timer.
+    unlockBotAudio();
+    sessionStartedAt.current = performance.now();
+    traceId.current = crypto.randomUUID();
+    pendingMetrics.current = [];
+    botAudioPlaying.current = false;
+    draftReplyId.current = null;
+    setSoundBlocked(false);
     setStarting(true);
     setError("");
     setStatus("Connecting Rita v3…");
@@ -425,14 +533,12 @@ export function RitaRealtimeV3() {
         import("@pipecat-ai/client-js"),
         import("@pipecat-ai/daily-transport"),
       ]);
+      void metric("imports_ready", performance.now() - sessionStartedAt.current);
       generatedBuffer.current = "";
       heardBuffer.current = "";
       botSpeaking.current = false;
       sessionId.current = "";
       providerSessionId.current = "";
-      traceId.current = crypto.randomUUID();
-      pendingMetrics.current = [];
-      sessionStartedAt.current = performance.now();
       transportConnectedAt.current = 0;
       transportMetricRecorded.current = false;
       botReady.current = false;
@@ -447,11 +553,17 @@ export function RitaRealtimeV3() {
           interrupted,
         });
         heardBuffer.current = "";
+        const draftId = draftReplyId.current;
+        draftReplyId.current = null;
+        setMessages((current) =>
+          settleDraftReply(
+            current,
+            draftId,
+            reply,
+            reply ? { id: crypto.randomUUID(), role: "rita", text: reply } : null,
+          ),
+        );
         if (!reply) return;
-        setMessages((current) => [
-          ...current,
-          { id: crypto.randomUUID(), role: "rita", text: reply },
-        ]);
         if (!interrupted) void runExtraction(lastUserText.current, reply);
         if (interrupted) void metric("interrupted");
       };
@@ -605,6 +717,7 @@ export function RitaRealtimeV3() {
           onBotLlmStarted: () => {
             generatedBuffer.current = "";
             heardBuffer.current = "";
+            draftReplyId.current = null;
             llmStartedAt.current = performance.now();
             firstLlmTokenRecorded.current = false;
             firstRemoteAudioRecorded.current = false;
@@ -618,6 +731,15 @@ export function RitaRealtimeV3() {
               void metric("llm_first_token", performance.now() - llmStartedAt.current);
             }
             generatedBuffer.current += text;
+            // Show the reply as it streams; playback accounting settles it later.
+            const draftText = generatedBuffer.current.trim();
+            if (draftText) {
+              const id = draftReplyId.current ?? crypto.randomUUID();
+              draftReplyId.current = id;
+              setMessages((current) =>
+                upsertDraftReply(current, { id, role: "rita", text: draftText }),
+              );
+            }
           },
           onBotOutput: (data) => {
             if (data.will_be_spoken === false || data.spoken_status === "new") return;
@@ -630,6 +752,20 @@ export function RitaRealtimeV3() {
             void metric("bot_speaking_signal");
             setStatus("Rita is speaking — interrupt whenever you want");
             setMood("talking");
+          },
+          onTrackStarted: (track, participant) => {
+            if (track.kind !== "audio" || participant?.local) return;
+            void metric("remote_track_started");
+            attachBotAudio(track);
+          },
+          onTrackStopped: (track, participant) => {
+            if (track.kind !== "audio" || participant?.local) return;
+            const audio = botAudio.current;
+            const current = audio?.srcObject instanceof MediaStream ? audio.srcObject : null;
+            if (audio && current?.getAudioTracks().some((candidate) => candidate.id === track.id)) {
+              audio.srcObject = null;
+            }
+            void metric("remote_track_stopped");
           },
           onLocalAudioLevel: (level) => {
             orbLevels.current.input = level;
@@ -784,6 +920,19 @@ export function RitaRealtimeV3() {
 
   return (
     <main className="rita-live-premium min-h-screen bg-[#faf9f6] text-[#211f24]">
+      <audio
+        ref={botAudio}
+        autoPlay
+        playsInline
+        className="hidden"
+        onPlaying={() => {
+          if (botAudioPlaying.current) return;
+          botAudioPlaying.current = true;
+          void metric("audio_playing");
+        }}
+        onStalled={() => void metric("audio_stalled")}
+        onEnded={() => void metric("audio_ended")}
+      />
       <div className="grid min-h-screen lg:grid-cols-[minmax(0,1.55fr)_minmax(320px,.95fr)]">
         <section className="flex min-h-screen flex-col border-r border-[#e6e1e8] bg-white">
           <header className="border-b border-[#ece7ee] px-5 py-5 sm:px-10">
@@ -811,6 +960,18 @@ export function RitaRealtimeV3() {
             </p>
             <p className="mt-2 text-sm font-semibold text-[#6d6671]">{status}</p>
           </header>
+
+          {active && soundBlocked && (
+            <div className="px-5 pt-4 sm:px-10">
+              <button
+                type="button"
+                onClick={enableSound}
+                className="rounded-full bg-[#7b46df] px-5 py-2.5 text-sm font-extrabold text-white"
+              >
+                Tap to enable sound
+              </button>
+            </div>
+          )}
 
           <div className="flex justify-center lg:hidden">
             <VoiceOrb

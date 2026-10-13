@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { committedRitaReply, wasRitaInterrupted } from "./rita-v3-heard.ts";
+import { committedRitaReply, wasRitaInterrupted, settleDraftReply, upsertDraftReply } from "./rita-v3-heard.ts";
 
 test("interrupted reply cannot fall back to generated but unspoken text", () => {
   assert.equal(
@@ -47,4 +47,23 @@ test("a brief acknowledgement is only an interruption candidate", () => {
   assert.equal(wasRitaInterrupted(1_000, 1_400), true);
   assert.equal(wasRitaInterrupted(1_000, 3_000), false);
   assert.equal(wasRitaInterrupted(0, 1_400), false);
+});
+
+test("streamed replies appear immediately and update in place", () => {
+  const first = upsertDraftReply([{ id: "a", text: "hi" }], { id: "d", text: "Hello" });
+  assert.deepEqual(first, [{ id: "a", text: "hi" }, { id: "d", text: "Hello" }]);
+  const second = upsertDraftReply(first, { id: "d", text: "Hello there" });
+  assert.deepEqual(second, [{ id: "a", text: "hi" }, { id: "d", text: "Hello there" }]);
+});
+
+test("an interrupted reply is trimmed to what was heard, or removed when nothing was", () => {
+  const list = [{ id: "d", text: "Hello there, how are you today" }];
+  assert.deepEqual(settleDraftReply(list, "d", "Hello there", null), [{ id: "d", text: "Hello there" }]);
+  assert.deepEqual(settleDraftReply(list, "d", "", null), []);
+});
+
+test("without a draft the committed reply is appended once", () => {
+  const added = settleDraftReply([], null, "Hi", { id: "n", text: "Hi" });
+  assert.deepEqual(added, [{ id: "n", text: "Hi" }]);
+  assert.deepEqual(settleDraftReply([], null, "", { id: "n", text: "" }), []);
 });

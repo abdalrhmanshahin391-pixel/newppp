@@ -15,3 +15,32 @@ export function wasRitaInterrupted(candidateAtMs: number, botStoppedAtMs: number
     candidateAtMs > 0 && botStoppedAtMs >= candidateAtMs && botStoppedAtMs - candidateAtMs < 1_500
   );
 }
+
+/** Insert a streamed reply, or update its text if the draft is already in the list. */
+export function upsertDraftReply<T extends { id: string; text: string }>(
+  messages: T[],
+  draft: T,
+): T[] {
+  return messages.some((message) => message.id === draft.id)
+    ? messages.map((message) => (message.id === draft.id ? { ...message, text: draft.text } : message))
+    : [...messages, draft];
+}
+
+/**
+ * Settle a streamed reply once playback ends. The learner sees generated text
+ * while Rita speaks; afterwards it is trimmed to what was actually heard if the
+ * reply was interrupted, and removed if nothing was heard.
+ */
+export function settleDraftReply<T extends { id: string; text: string }>(
+  messages: T[],
+  draftId: string | null,
+  committed: string,
+  newMessage: T | null,
+): T[] {
+  if (draftId && messages.some((message) => message.id === draftId)) {
+    return committed
+      ? messages.map((message) => (message.id === draftId ? { ...message, text: committed } : message))
+      : messages.filter((message) => message.id !== draftId);
+  }
+  return committed && newMessage ? [...messages, newMessage] : messages;
+}
