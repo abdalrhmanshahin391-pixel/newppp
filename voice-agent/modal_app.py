@@ -38,12 +38,14 @@ image = (
         "bot",
         "rita_cartesia_benchmark",
         "rita_cartesia_tts",
+        "rita_completeness",
         "rita_gemini_auth",
         "rita_gemini_tts",
         "rita_interruption",
         "rita_latency",
         "rita_leading_silence",
         "rita_state",
+        "rita_turn_policy",
     )
 )
 

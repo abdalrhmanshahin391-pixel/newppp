@@ -38,7 +38,6 @@ from pipecat.services.soniox.stt import (
 )
 from pipecat.transcriptions.language import Language
 from pipecat.transports.daily.transport import DailyParams, DailyTransport
-from pipecat.turns.user_stop import TurnAnalyzerUserTurnStopStrategy
 from pipecat.turns.user_turn_strategies import UserTurnStrategies
 from pipecat.utils.context.llm_context_summarization import (
     LLMAutoContextSummarizationConfig,
@@ -49,6 +48,7 @@ from rita_cartesia_tts import RitaCartesiaTTSService
 from rita_interruption import RitaUserTurnStartStrategy
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
 from rita_state import RitaSessionState
+from rita_turn_policy import RitaBoundedTurnStopStrategy, bounded_commit_secs
 
 load_dotenv(override=False)
 
@@ -238,8 +238,9 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             user_turn_strategies=UserTurnStrategies(
                 start=[RitaUserTurnStartStrategy()],
                 stop=[
-                    TurnAnalyzerUserTurnStopStrategy(
-                        turn_analyzer=LocalSmartTurnAnalyzerV3()
+                    RitaBoundedTurnStopStrategy(
+                        turn_analyzer=LocalSmartTurnAnalyzerV3(),
+                        bounded_secs=bounded_commit_secs(body),
                     )
                 ]
             ),
@@ -329,6 +330,13 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
     @user_aggregator.event_handler("on_user_turn_stopped")
     async def on_user_turn_stopped(aggregator, strategy, message):
         latency.mark("turn_committed")
+        # No strategy means the controller's inactivity timer ended the turn.
+        stop_reason = (
+            getattr(strategy, "last_stop_reason", None)
+            if strategy is not None
+            else "long_incomplete_timeout"
+        )
+        latency.session_mark("turn_stop_reason", stop_reason=stop_reason)
         state.observe_user_turn(message.content)
         # In automatic mode the prompt replies in the current turn language
         # before a language becomes stable, so TTS must make the same choice.

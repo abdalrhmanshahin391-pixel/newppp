@@ -1,0 +1,49 @@
+import sys
+import unittest
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from rita_completeness import looks_complete  # noqa: E402
+
+
+class LooksCompleteTests(unittest.TestCase):
+    def test_the_failed_real_ipad_utterance_counts_as_complete(self):
+        self.assertTrue(looks_complete("Hey, how are you?"))
+
+    def test_complete_questions_and_statements_in_three_languages(self):
+        for text in (
+            "What does Guten Morgen mean?",
+            "شو معنى صباح الخير بالألماني؟",
+            "Wie sage ich das auf Deutsch?",
+            "I want to practise ordering food.",
+            "بدي أتدرب على المحادثة.",
+            "Yes?",
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(looks_complete(text))
+
+    def test_unfinished_speech_keeps_the_long_safety_net(self):
+        for text in (
+            "How are you",  # no terminal punctuation
+            "I want to, um",
+            "I think that.",  # ends on a connective
+            "ich habe eine Frage, aber",
+            "بدي أسألك عن...",
+            "Well,",
+            "Okay.",  # a single word statement
+            "and",
+            "",
+            "   ",
+        ):
+            with self.subTest(text=text):
+                self.assertFalse(looks_complete(text))
+
+    def test_trailing_off_marks_are_never_complete(self):
+        for text in ("So what I wanted to say…", "Let me think...", "Because:"):
+            with self.subTest(text=text):
+                self.assertFalse(looks_complete(text))
+
+
+if __name__ == "__main__":
+    unittest.main()

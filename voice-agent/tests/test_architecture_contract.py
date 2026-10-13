@@ -105,3 +105,26 @@ def test_gemini_sdk_version_is_reproducible_and_private_probe_is_not_public_endp
     )[-1]
     assert "fastapi_endpoint" not in latency_probe_decorator
     assert "min_containers" not in latency_probe_decorator
+
+
+def test_every_local_worker_module_is_shipped_to_modal():
+    import re
+
+    modal_source = (ROOT / "modal_app.py").read_text(encoding="utf-8")
+    shipped = set(re.findall(r'"(\w+)"', modal_source.split("add_local_python_source(")[1].split(")")[0]))
+    imported = set(
+        re.findall(r"^from (rita_\w+) import", (ROOT / "bot.py").read_text(encoding="utf-8"), re.M)
+    )
+    imported |= set(
+        re.findall(r"^from (rita_\w+) import", (ROOT / "rita_turn_policy.py").read_text(encoding="utf-8"), re.M)
+    )
+    assert imported <= shipped, f"modal_app.py does not ship: {sorted(imported - shipped)}"
+
+
+def test_bounded_end_of_turn_commit_is_wired_and_cancellable():
+    bot_source = (ROOT / "bot.py").read_text(encoding="utf-8")
+    assert "RitaBoundedTurnStopStrategy(" in bot_source
+    assert "LocalSmartTurnAnalyzerV3()" in bot_source
+    policy = (ROOT / "rita_turn_policy.py").read_text(encoding="utf-8")
+    assert "_handle_vad_user_started_speaking" in policy  # new speech must cancel a pending commit
+    assert "MAX_BOUNDED_COMMIT_SECS" in policy
