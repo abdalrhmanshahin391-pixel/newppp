@@ -1,0 +1,748 @@
+[
+  {
+    "image_url": "/curriculum/hello.svg",
+    "lesson": {
+      "title": "Hello & Goodbye",
+      "title_ar": "مرحبا",
+      "topic": "greetings",
+      "source_from_page": 2,
+      "source_to_page": 2,
+      "summary": "Rita practises saying hello, asking How are you?, answering, and saying goodbye at different times of day.",
+      "objectives": [
+        {
+          "id": "greet",
+          "text": "Greet Rita and ask how she is",
+          "text_ar": "يحيّي ريتا ويسأل عن حالها",
+          "criteria": "The learner says a greeting (hello / hi / good morning ...) and asks How are you?",
+          "check_prompts": [
+            "Imagine you meet me in the morning. What do you say?"
+          ],
+          "weight": 2
+        },
+        {
+          "id": "answer-how",
+          "text": "Answer How are you?",
+          "text_ar": "يجيب على How are you?",
+          "criteria": "The learner answers with a phrase like I'm fine, thank you.",
+          "check_prompts": [
+            "How are you today?"
+          ],
+          "weight": 1
+        },
+        {
+          "id": "goodbye",
+          "text": "Say goodbye",
+          "text_ar": "يودّع",
+          "criteria": "The learner says goodbye / see you later / good night.",
+          "check_prompts": [
+            "It is late and you are going home. What do you say?"
+          ],
+          "weight": 1
+        }
+      ],
+      "plan": {
+        "phases": [
+          {
+            "phase": "warmup",
+            "minutes": 1,
+            "steps": [
+              "Greet the learner warmly and say today's words are about greetings"
+            ]
+          },
+          {
+            "phase": "teach",
+            "minutes": 2,
+            "steps": [
+              "Say four or five key words with their Arabic meaning",
+              "Use each in a short example"
+            ]
+          },
+          {
+            "phase": "practice",
+            "minutes": 3,
+            "steps": [
+              "Role-play a short everyday situation",
+              "Swap roles so the learner starts"
+            ]
+          },
+          {
+            "phase": "check",
+            "minutes": 2,
+            "steps": [
+              "Ask each objective's question and wait"
+            ]
+          },
+          {
+            "phase": "wrap",
+            "minutes": 1,
+            "steps": [
+              "Praise one thing the learner did well",
+              "Say one sentence that sums up the lesson"
+            ]
+          }
+        ],
+        "teacher_notes": "Keep it playful. If the learner answers in Arabic, give the English and ask them to repeat it."
+      },
+      "vocabulary": [
+        {
+          "word": "hello",
+          "meaning_ar": "مرحبا",
+          "example": "Hello, Sara!"
+        },
+        {
+          "word": "hi",
+          "meaning_ar": "أهلاً",
+          "example": "Hi, how are you?"
+        },
+        {
+          "word": "good morning",
+          "meaning_ar": "صباح الخير",
+          "example": "Good morning, teacher."
+        },
+        {
+          "word": "good afternoon",
+          "meaning_ar": "مساء الخير (بعد الظهر)",
+          "example": "Good afternoon, everyone."
+        },
+        {
+          "word": "good evening",
+          "meaning_ar": "مساء الخير",
+          "example": "Good evening, Mr. Ali."
+        },
+        {
+          "word": "good night",
+          "meaning_ar": "تصبح على خير",
+          "example": "Good night, Mum."
+        },
+        {
+          "word": "goodbye",
+          "meaning_ar": "مع السلامة",
+          "example": "Goodbye, see you tomorrow."
+        },
+        {
+          "word": "see you later",
+          "meaning_ar": "أراك لاحقاً",
+          "example": "See you later, Omar!"
+        },
+        {
+          "word": "nice to meet you",
+          "meaning_ar": "تشرفت بمعرفتك",
+          "example": "Nice to meet you, Lina."
+        },
+        {
+          "word": "How are you?",
+          "meaning_ar": "كيف حالك؟",
+          "example": "Hi Rita! How are you?"
+        },
+        {
+          "word": "I'm fine",
+          "meaning_ar": "أنا بخير",
+          "example": "I'm fine, thank you."
+        },
+        {
+          "word": "welcome",
+          "meaning_ar": "أهلاً وسهلاً",
+          "example": "Welcome to our class!"
+        }
+      ],
+      "image_prompt": "A friendly cartoon character showing 'Hello & Goodbye'"
+    }
+  },
+  {
+    "image_url": "/curriculum/me-and-you.svg",
+    "lesson": {
+      "title": "Me & You",
+      "title_ar": "أنا وأنت",
+      "topic": "introducing yourself",
+      "source_from_page": 3,
+      "source_to_page": 3,
+      "summary": "Rita helps the learner introduce themselves: name, country, city, age and job, and ask the same questions back.",
+      "objectives": [
+        {
+          "id": "my-name",
+          "text": "Say their name",
+          "text_ar": "يقول اسمه",
+          "criteria": "The learner says My name is ... or I'm ...",
+          "check_prompts": [
+            "What's your name?"
+          ],
+          "weight": 2
+        },
+        {
+          "id": "from",
+          "text": "Say where they are from",
+          "text_ar": "يقول من أين هو",
+          "criteria": "The learner says I'm from ... or I live in ...",
+          "check_prompts": [
+            "Where are you from?"
+          ],
+          "weight": 1
+        },
+        {
+          "id": "ask-back",
+          "text": "Ask Rita a question about her",
+          "text_ar": "يسأل ريتا سؤالاً عنها",
+          "criteria": "The learner asks a question like What's your name? / Where are you from? / How old are you?",
+          "check_prompts": [
+            "Now you ask me a question."
+          ],
+          "weight": 1
+        }
+      ],
+      "plan": {
+        "phases": [
+          {
+            "phase": "warmup",
+            "minutes": 1,
+            "steps": [
+              "Greet the learner warmly and say today's words are about introducing yourself"
+            ]
+          },
+          {
+            "phase": "teach",
+            "minutes": 2,
+            "steps": [
+              "Say four or five key words with their Arabic meaning",
+              "Use each in a short example"
+            ]
+          },
+          {
+            "phase": "practice",
+            "minutes": 3,
+            "steps": [
+              "Role-play a short everyday situation",
+              "Swap roles so the learner starts"
+            ]
+          },
+          {
+            "phase": "check",
+            "minutes": 2,
+            "steps": [
+              "Ask each objective's question and wait"
+            ]
+          },
+          {
+            "phase": "wrap",
+            "minutes": 1,
+            "steps": [
+              "Praise one thing the learner did well",
+              "Say one sentence that sums up the lesson"
+            ]
+          }
+        ],
+        "teacher_notes": "Keep it playful. If the learner answers in Arabic, give the English and ask them to repeat it."
+      },
+      "vocabulary": [
+        {
+          "word": "name",
+          "meaning_ar": "اسم",
+          "example": "My name is Rita."
+        },
+        {
+          "word": "What's your name?",
+          "meaning_ar": "ما اسمك؟",
+          "example": "What's your name? — I'm Sami."
+        },
+        {
+          "word": "from",
+          "meaning_ar": "من (بلد)",
+          "example": "I'm from Jordan."
+        },
+        {
+          "word": "Where are you from?",
+          "meaning_ar": "من أين أنت؟",
+          "example": "Where are you from?"
+        },
+        {
+          "word": "country",
+          "meaning_ar": "بلد",
+          "example": "Jordan is a beautiful country."
+        },
+        {
+          "word": "city",
+          "meaning_ar": "مدينة",
+          "example": "I live in a big city."
+        },
+        {
+          "word": "age",
+          "meaning_ar": "عمر",
+          "example": "What's your age?"
+        },
+        {
+          "word": "How old are you?",
+          "meaning_ar": "كم عمرك؟",
+          "example": "How old are you? — I'm twenty."
+        },
+        {
+          "word": "friend",
+          "meaning_ar": "صديق",
+          "example": "This is my friend, Ali."
+        },
+        {
+          "word": "student",
+          "meaning_ar": "طالب",
+          "example": "I'm a student."
+        },
+        {
+          "word": "teacher",
+          "meaning_ar": "معلم",
+          "example": "She is my teacher."
+        },
+        {
+          "word": "family",
+          "meaning_ar": "عائلة",
+          "example": "I love my family."
+        }
+      ],
+      "image_prompt": "A friendly cartoon character showing 'Me & You'"
+    }
+  },
+  {
+    "image_url": "/curriculum/thank-you.svg",
+    "lesson": {
+      "title": "Thank you & Please",
+      "title_ar": "شكراً",
+      "topic": "polite words",
+      "source_from_page": 4,
+      "source_to_page": 4,
+      "summary": "Rita practises please, thank you, sorry, excuse me and the replies you're welcome and no problem.",
+      "objectives": [
+        {
+          "id": "ask-please",
+          "text": "Ask for something with please",
+          "text_ar": "يطلب شيئاً مع please",
+          "criteria": "The learner asks for something using please (e.g. A glass of water, please / Can I ..., please?).",
+          "check_prompts": [
+            "You are thirsty in a café. Ask for water."
+          ],
+          "weight": 2
+        },
+        {
+          "id": "thank",
+          "text": "Thank someone",
+          "text_ar": "يشكر",
+          "criteria": "The learner says thank you or thanks.",
+          "check_prompts": [
+            "I give you a gift. What do you say?"
+          ],
+          "weight": 1
+        },
+        {
+          "id": "reply-welcome",
+          "text": "Reply to thank you",
+          "text_ar": "يرد على الشكر",
+          "criteria": "The learner replies with You're welcome / No problem.",
+          "check_prompts": [
+            "Thank you for your help! What do you say back?"
+          ],
+          "weight": 1
+        }
+      ],
+      "plan": {
+        "phases": [
+          {
+            "phase": "warmup",
+            "minutes": 1,
+            "steps": [
+              "Greet the learner warmly and say today's words are about polite words"
+            ]
+          },
+          {
+            "phase": "teach",
+            "minutes": 2,
+            "steps": [
+              "Say four or five key words with their Arabic meaning",
+              "Use each in a short example"
+            ]
+          },
+          {
+            "phase": "practice",
+            "minutes": 3,
+            "steps": [
+              "Role-play a short everyday situation",
+              "Swap roles so the learner starts"
+            ]
+          },
+          {
+            "phase": "check",
+            "minutes": 2,
+            "steps": [
+              "Ask each objective's question and wait"
+            ]
+          },
+          {
+            "phase": "wrap",
+            "minutes": 1,
+            "steps": [
+              "Praise one thing the learner did well",
+              "Say one sentence that sums up the lesson"
+            ]
+          }
+        ],
+        "teacher_notes": "Keep it playful. If the learner answers in Arabic, give the English and ask them to repeat it."
+      },
+      "vocabulary": [
+        {
+          "word": "thank you",
+          "meaning_ar": "شكراً",
+          "example": "Thank you for your help."
+        },
+        {
+          "word": "thanks",
+          "meaning_ar": "شكراً (غير رسمية)",
+          "example": "Thanks, Omar!"
+        },
+        {
+          "word": "please",
+          "meaning_ar": "من فضلك",
+          "example": "A glass of water, please."
+        },
+        {
+          "word": "sorry",
+          "meaning_ar": "آسف",
+          "example": "Sorry, I'm late."
+        },
+        {
+          "word": "excuse me",
+          "meaning_ar": "عفواً / لو سمحت",
+          "example": "Excuse me, where is the bank?"
+        },
+        {
+          "word": "you're welcome",
+          "meaning_ar": "عفواً (رداً على الشكر)",
+          "example": "Thank you! — You're welcome."
+        },
+        {
+          "word": "no problem",
+          "meaning_ar": "لا مشكلة",
+          "example": "Sorry! — No problem."
+        },
+        {
+          "word": "of course",
+          "meaning_ar": "طبعاً",
+          "example": "Can you help me? — Of course."
+        },
+        {
+          "word": "help",
+          "meaning_ar": "مساعدة / يساعد",
+          "example": "Can you help me, please?"
+        },
+        {
+          "word": "Can I …?",
+          "meaning_ar": "هل يمكنني …؟",
+          "example": "Can I sit here?"
+        },
+        {
+          "word": "kind",
+          "meaning_ar": "لطيف",
+          "example": "You are very kind."
+        },
+        {
+          "word": "pardon?",
+          "meaning_ar": "عفواً؟ (لم أسمع)",
+          "example": "Pardon? Can you say it again?"
+        }
+      ],
+      "image_prompt": "A friendly cartoon character showing 'Thank you & Please'"
+    }
+  },
+  {
+    "image_url": "/curriculum/great-idea.svg",
+    "lesson": {
+      "title": "Yes, No & Great idea!",
+      "title_ar": "فكرة عظيمة!",
+      "topic": "agreeing and answering",
+      "source_from_page": 5,
+      "source_to_page": 5,
+      "summary": "Rita practises answering with yes, no, maybe and sure, suggesting with Let's ... and replying Great idea!",
+      "objectives": [
+        {
+          "id": "yes-no-answer",
+          "text": "Answer a question with yes or no and a short reason",
+          "text_ar": "يجيب بنعم أو لا",
+          "criteria": "The learner answers a yes/no question with yes or no plus a few more words.",
+          "check_prompts": [
+            "Do you like coffee?",
+            "Are you ready?"
+          ],
+          "weight": 1
+        },
+        {
+          "id": "suggest",
+          "text": "Make a suggestion with Let's",
+          "text_ar": "يقترح بـ Let's",
+          "criteria": "The learner says a suggestion starting with Let's (e.g. Let's play football).",
+          "check_prompts": [
+            "It is the weekend. What can we do together?"
+          ],
+          "weight": 2
+        },
+        {
+          "id": "react",
+          "text": "React with Great idea! or I agree",
+          "text_ar": "يتفاعل مع الاقتراح",
+          "criteria": "The learner replies to a suggestion with Great idea!, I agree, sure or OK.",
+          "check_prompts": [
+            "Let's eat pizza tonight! What do you say?"
+          ],
+          "weight": 1
+        }
+      ],
+      "plan": {
+        "phases": [
+          {
+            "phase": "warmup",
+            "minutes": 1,
+            "steps": [
+              "Greet the learner warmly and say today's words are about agreeing and answering"
+            ]
+          },
+          {
+            "phase": "teach",
+            "minutes": 2,
+            "steps": [
+              "Say four or five key words with their Arabic meaning",
+              "Use each in a short example"
+            ]
+          },
+          {
+            "phase": "practice",
+            "minutes": 3,
+            "steps": [
+              "Role-play a short everyday situation",
+              "Swap roles so the learner starts"
+            ]
+          },
+          {
+            "phase": "check",
+            "minutes": 2,
+            "steps": [
+              "Ask each objective's question and wait"
+            ]
+          },
+          {
+            "phase": "wrap",
+            "minutes": 1,
+            "steps": [
+              "Praise one thing the learner did well",
+              "Say one sentence that sums up the lesson"
+            ]
+          }
+        ],
+        "teacher_notes": "Keep it playful. If the learner answers in Arabic, give the English and ask them to repeat it."
+      },
+      "vocabulary": [
+        {
+          "word": "yes",
+          "meaning_ar": "نعم",
+          "example": "Yes, I'm ready."
+        },
+        {
+          "word": "no",
+          "meaning_ar": "لا",
+          "example": "No, thank you."
+        },
+        {
+          "word": "maybe",
+          "meaning_ar": "ربما",
+          "example": "Maybe later."
+        },
+        {
+          "word": "OK",
+          "meaning_ar": "حسناً",
+          "example": "OK, let's go."
+        },
+        {
+          "word": "sure",
+          "meaning_ar": "أكيد",
+          "example": "Sure! I can do it."
+        },
+        {
+          "word": "Great idea!",
+          "meaning_ar": "فكرة عظيمة!",
+          "example": "Let's play football! — Great idea!"
+        },
+        {
+          "word": "I agree",
+          "meaning_ar": "أوافق",
+          "example": "I agree with you."
+        },
+        {
+          "word": "I don't know",
+          "meaning_ar": "لا أعرف",
+          "example": "I don't know the answer."
+        },
+        {
+          "word": "Let's …",
+          "meaning_ar": "هيا نـ …",
+          "example": "Let's eat now."
+        },
+        {
+          "word": "again",
+          "meaning_ar": "مرة أخرى",
+          "example": "Let's do it again!"
+        },
+        {
+          "word": "right",
+          "meaning_ar": "صحيح",
+          "example": "That's right!"
+        },
+        {
+          "word": "wrong",
+          "meaning_ar": "خطأ",
+          "example": "Sorry, that's wrong."
+        }
+      ],
+      "image_prompt": "A friendly cartoon character showing 'Yes, No & Great idea!'"
+    }
+  },
+  {
+    "image_url": "/curriculum/busy.svg",
+    "lesson": {
+      "title": "I'm busy",
+      "title_ar": "أنا مشغول",
+      "topic": "feelings and being busy",
+      "source_from_page": 6,
+      "source_to_page": 6,
+      "summary": "Rita practises saying how you feel and whether you are busy or free: tired, happy, hungry, ready, late.",
+      "objectives": [
+        {
+          "id": "feeling",
+          "text": "Say how they feel",
+          "text_ar": "يعبّر عن شعوره",
+          "criteria": "The learner says I'm + a feeling word (tired, happy, hungry, sad, bored ...).",
+          "check_prompts": [
+            "How do you feel right now?"
+          ],
+          "weight": 2
+        },
+        {
+          "id": "busy-free",
+          "text": "Say if they are busy or free",
+          "text_ar": "يقول إن كان مشغولاً أو متفرغاً",
+          "criteria": "The learner says I'm busy or I'm free (with a time if possible).",
+          "check_prompts": [
+            "Are you free on Friday?"
+          ],
+          "weight": 1
+        },
+        {
+          "id": "later",
+          "text": "Put off a plan politely",
+          "text_ar": "يؤجل بلطف",
+          "criteria": "The learner says something like Sorry, I'm busy now. Talk to you later.",
+          "check_prompts": [
+            "Let's talk now! (You are busy.) What do you say?"
+          ],
+          "weight": 1
+        }
+      ],
+      "plan": {
+        "phases": [
+          {
+            "phase": "warmup",
+            "minutes": 1,
+            "steps": [
+              "Greet the learner warmly and say today's words are about feelings and being busy"
+            ]
+          },
+          {
+            "phase": "teach",
+            "minutes": 2,
+            "steps": [
+              "Say four or five key words with their Arabic meaning",
+              "Use each in a short example"
+            ]
+          },
+          {
+            "phase": "practice",
+            "minutes": 3,
+            "steps": [
+              "Role-play a short everyday situation",
+              "Swap roles so the learner starts"
+            ]
+          },
+          {
+            "phase": "check",
+            "minutes": 2,
+            "steps": [
+              "Ask each objective's question and wait"
+            ]
+          },
+          {
+            "phase": "wrap",
+            "minutes": 1,
+            "steps": [
+              "Praise one thing the learner did well",
+              "Say one sentence that sums up the lesson"
+            ]
+          }
+        ],
+        "teacher_notes": "Keep it playful. If the learner answers in Arabic, give the English and ask them to repeat it."
+      },
+      "vocabulary": [
+        {
+          "word": "busy",
+          "meaning_ar": "مشغول",
+          "example": "I'm busy now."
+        },
+        {
+          "word": "free",
+          "meaning_ar": "متفرغ",
+          "example": "Are you free on Friday?"
+        },
+        {
+          "word": "tired",
+          "meaning_ar": "متعب",
+          "example": "I'm tired today."
+        },
+        {
+          "word": "happy",
+          "meaning_ar": "سعيد",
+          "example": "She is very happy."
+        },
+        {
+          "word": "sad",
+          "meaning_ar": "حزين",
+          "example": "Why are you sad?"
+        },
+        {
+          "word": "hungry",
+          "meaning_ar": "جائع",
+          "example": "I'm hungry. Let's eat!"
+        },
+        {
+          "word": "thirsty",
+          "meaning_ar": "عطشان",
+          "example": "Are you thirsty?"
+        },
+        {
+          "word": "bored",
+          "meaning_ar": "ملول / زهقان",
+          "example": "I'm bored at home."
+        },
+        {
+          "word": "ready",
+          "meaning_ar": "جاهز",
+          "example": "Are you ready?"
+        },
+        {
+          "word": "late",
+          "meaning_ar": "متأخر",
+          "example": "Hurry, we're late!"
+        },
+        {
+          "word": "now",
+          "meaning_ar": "الآن",
+          "example": "Call me now."
+        },
+        {
+          "word": "later",
+          "meaning_ar": "لاحقاً",
+          "example": "I'm busy. Talk to you later."
+        }
+      ],
+      "image_prompt": "A friendly cartoon character showing 'I'm busy'"
+    }
+  }
+]

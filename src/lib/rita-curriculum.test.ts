@@ -192,3 +192,27 @@ test("turns are cleaned and JSON is pulled out of fenced replies", () => {
   assert.deepEqual(parseJsonObject('```json\n{"a":1}\n```'), { a: 1 });
   assert.throws(() => parseJsonObject("no json"));
 });
+
+test("the sample books' summaries and lessons are valid imports", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const dir = new URL("../../docs/curriculum-samples/", import.meta.url);
+  for (const book of ["a1-english-grammar", "a1-english-words"]) {
+    const window = JSON.parse(await readFile(new URL(`${book}.summary.json`, dir), "utf8"));
+    const summary = WindowSummarySchema.parse(window.summary);
+    assert.equal(checkSummaryPages(summary, window.from_page, window.to_page), null);
+    const lessons = JSON.parse(await readFile(new URL(`${book}.lessons.json`, dir), "utf8"));
+    assert.equal(lessons.length, 5);
+    for (const item of lessons) {
+      const lesson = LessonDraftSchema.parse(item.lesson);
+      assert.equal(
+        checkLessonPages(
+          { read_cursor: window.to_page },
+          lesson.source_from_page,
+          lesson.source_to_page,
+        ),
+        null,
+      );
+      assert.match(item.image_url, /^\/curriculum\/[a-z-]+\.svg$/);
+    }
+  }
+});

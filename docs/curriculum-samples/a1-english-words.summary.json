@@ -1,0 +1,428 @@
+{
+  "from_page": 1,
+  "to_page": 6,
+  "summary": {
+    "overview": "Five A1 word units, one per page, each with twelve everyday words or phrases, their Arabic meaning and an example: greetings, introducing yourself, polite words, yes/no answers and feelings.",
+    "overview_ar": "خمس وحدات كلمات للمستوى A1، في كل صفحة اثنتا عشرة كلمة مع المعنى ومثال: التحية، التعريف بالنفس، كلمات المجاملة، نعم ولا، والمشاعر.",
+    "topics": [
+      {
+        "title": "Hello & Goodbye",
+        "title_ar": "مرحبا ومع السلامة",
+        "from_page": 2,
+        "to_page": 2,
+        "key_points": [
+          "12 everyday words and phrases for hello & goodbye"
+        ],
+        "examples": [
+          "Hello, Sara!",
+          "Hi, how are you?",
+          "Good morning, teacher.",
+          "Good afternoon, everyone."
+        ],
+        "vocabulary": [
+          {
+            "word": "hello",
+            "meaning_ar": "مرحبا",
+            "example": "Hello, Sara!"
+          },
+          {
+            "word": "hi",
+            "meaning_ar": "أهلاً",
+            "example": "Hi, how are you?"
+          },
+          {
+            "word": "good morning",
+            "meaning_ar": "صباح الخير",
+            "example": "Good morning, teacher."
+          },
+          {
+            "word": "good afternoon",
+            "meaning_ar": "مساء الخير (بعد الظهر)",
+            "example": "Good afternoon, everyone."
+          },
+          {
+            "word": "good evening",
+            "meaning_ar": "مساء الخير",
+            "example": "Good evening, Mr. Ali."
+          },
+          {
+            "word": "good night",
+            "meaning_ar": "تصبح على خير",
+            "example": "Good night, Mum."
+          },
+          {
+            "word": "goodbye",
+            "meaning_ar": "مع السلامة",
+            "example": "Goodbye, see you tomorrow."
+          },
+          {
+            "word": "see you later",
+            "meaning_ar": "أراك لاحقاً",
+            "example": "See you later, Omar!"
+          },
+          {
+            "word": "nice to meet you",
+            "meaning_ar": "تشرفت بمعرفتك",
+            "example": "Nice to meet you, Lina."
+          },
+          {
+            "word": "How are you?",
+            "meaning_ar": "كيف حالك؟",
+            "example": "Hi Rita! How are you?"
+          },
+          {
+            "word": "I'm fine",
+            "meaning_ar": "أنا بخير",
+            "example": "I'm fine, thank you."
+          },
+          {
+            "word": "welcome",
+            "meaning_ar": "أهلاً وسهلاً",
+            "example": "Welcome to our class!"
+          }
+        ]
+      },
+      {
+        "title": "Me & You",
+        "title_ar": "أنا وأنت",
+        "from_page": 3,
+        "to_page": 3,
+        "key_points": [
+          "12 everyday words and phrases for me & you"
+        ],
+        "examples": [
+          "My name is Rita.",
+          "What's your name? — I'm Sami.",
+          "I'm from Jordan.",
+          "Where are you from?"
+        ],
+        "vocabulary": [
+          {
+            "word": "name",
+            "meaning_ar": "اسم",
+            "example": "My name is Rita."
+          },
+          {
+            "word": "What's your name?",
+            "meaning_ar": "ما اسمك؟",
+            "example": "What's your name? — I'm Sami."
+          },
+          {
+            "word": "from",
+            "meaning_ar": "من (بلد)",
+            "example": "I'm from Jordan."
+          },
+          {
+            "word": "Where are you from?",
+            "meaning_ar": "من أين أنت؟",
+            "example": "Where are you from?"
+          },
+          {
+            "word": "country",
+            "meaning_ar": "بلد",
+            "example": "Jordan is a beautiful country."
+          },
+          {
+            "word": "city",
+            "meaning_ar": "مدينة",
+            "example": "I live in a big city."
+          },
+          {
+            "word": "age",
+            "meaning_ar": "عمر",
+            "example": "What's your age?"
+          },
+          {
+            "word": "How old are you?",
+            "meaning_ar": "كم عمرك؟",
+            "example": "How old are you? — I'm twenty."
+          },
+          {
+            "word": "friend",
+            "meaning_ar": "صديق",
+            "example": "This is my friend, Ali."
+          },
+          {
+            "word": "student",
+            "meaning_ar": "طالب",
+            "example": "I'm a student."
+          },
+          {
+            "word": "teacher",
+            "meaning_ar": "معلم",
+            "example": "She is my teacher."
+          },
+          {
+            "word": "family",
+            "meaning_ar": "عائلة",
+            "example": "I love my family."
+          }
+        ]
+      },
+      {
+        "title": "Thank you & Please",
+        "title_ar": "شكراً ومن فضلك",
+        "from_page": 4,
+        "to_page": 4,
+        "key_points": [
+          "12 everyday words and phrases for thank you & please"
+        ],
+        "examples": [
+          "Thank you for your help.",
+          "Thanks, Omar!",
+          "A glass of water, please.",
+          "Sorry, I'm late."
+        ],
+        "vocabulary": [
+          {
+            "word": "thank you",
+            "meaning_ar": "شكراً",
+            "example": "Thank you for your help."
+          },
+          {
+            "word": "thanks",
+            "meaning_ar": "شكراً (غير رسمية)",
+            "example": "Thanks, Omar!"
+          },
+          {
+            "word": "please",
+            "meaning_ar": "من فضلك",
+            "example": "A glass of water, please."
+          },
+          {
+            "word": "sorry",
+            "meaning_ar": "آسف",
+            "example": "Sorry, I'm late."
+          },
+          {
+            "word": "excuse me",
+            "meaning_ar": "عفواً / لو سمحت",
+            "example": "Excuse me, where is the bank?"
+          },
+          {
+            "word": "you're welcome",
+            "meaning_ar": "عفواً (رداً على الشكر)",
+            "example": "Thank you! — You're welcome."
+          },
+          {
+            "word": "no problem",
+            "meaning_ar": "لا مشكلة",
+            "example": "Sorry! — No problem."
+          },
+          {
+            "word": "of course",
+            "meaning_ar": "طبعاً",
+            "example": "Can you help me? — Of course."
+          },
+          {
+            "word": "help",
+            "meaning_ar": "مساعدة / يساعد",
+            "example": "Can you help me, please?"
+          },
+          {
+            "word": "Can I …?",
+            "meaning_ar": "هل يمكنني …؟",
+            "example": "Can I sit here?"
+          },
+          {
+            "word": "kind",
+            "meaning_ar": "لطيف",
+            "example": "You are very kind."
+          },
+          {
+            "word": "pardon?",
+            "meaning_ar": "عفواً؟ (لم أسمع)",
+            "example": "Pardon? Can you say it again?"
+          }
+        ]
+      },
+      {
+        "title": "Yes, No & Great idea!",
+        "title_ar": "نعم، لا، وفكرة عظيمة!",
+        "from_page": 5,
+        "to_page": 5,
+        "key_points": [
+          "12 everyday words and phrases for yes, no & great idea!"
+        ],
+        "examples": [
+          "Yes, I'm ready.",
+          "No, thank you.",
+          "Maybe later.",
+          "OK, let's go."
+        ],
+        "vocabulary": [
+          {
+            "word": "yes",
+            "meaning_ar": "نعم",
+            "example": "Yes, I'm ready."
+          },
+          {
+            "word": "no",
+            "meaning_ar": "لا",
+            "example": "No, thank you."
+          },
+          {
+            "word": "maybe",
+            "meaning_ar": "ربما",
+            "example": "Maybe later."
+          },
+          {
+            "word": "OK",
+            "meaning_ar": "حسناً",
+            "example": "OK, let's go."
+          },
+          {
+            "word": "sure",
+            "meaning_ar": "أكيد",
+            "example": "Sure! I can do it."
+          },
+          {
+            "word": "Great idea!",
+            "meaning_ar": "فكرة عظيمة!",
+            "example": "Let's play football! — Great idea!"
+          },
+          {
+            "word": "I agree",
+            "meaning_ar": "أوافق",
+            "example": "I agree with you."
+          },
+          {
+            "word": "I don't know",
+            "meaning_ar": "لا أعرف",
+            "example": "I don't know the answer."
+          },
+          {
+            "word": "Let's …",
+            "meaning_ar": "هيا نـ …",
+            "example": "Let's eat now."
+          },
+          {
+            "word": "again",
+            "meaning_ar": "مرة أخرى",
+            "example": "Let's do it again!"
+          },
+          {
+            "word": "right",
+            "meaning_ar": "صحيح",
+            "example": "That's right!"
+          },
+          {
+            "word": "wrong",
+            "meaning_ar": "خطأ",
+            "example": "Sorry, that's wrong."
+          }
+        ]
+      },
+      {
+        "title": "I'm busy",
+        "title_ar": "أنا مشغول",
+        "from_page": 6,
+        "to_page": 6,
+        "key_points": [
+          "12 everyday words and phrases for i'm busy"
+        ],
+        "examples": [
+          "I'm busy now.",
+          "Are you free on Friday?",
+          "I'm tired today.",
+          "She is very happy."
+        ],
+        "vocabulary": [
+          {
+            "word": "busy",
+            "meaning_ar": "مشغول",
+            "example": "I'm busy now."
+          },
+          {
+            "word": "free",
+            "meaning_ar": "متفرغ",
+            "example": "Are you free on Friday?"
+          },
+          {
+            "word": "tired",
+            "meaning_ar": "متعب",
+            "example": "I'm tired today."
+          },
+          {
+            "word": "happy",
+            "meaning_ar": "سعيد",
+            "example": "She is very happy."
+          },
+          {
+            "word": "sad",
+            "meaning_ar": "حزين",
+            "example": "Why are you sad?"
+          },
+          {
+            "word": "hungry",
+            "meaning_ar": "جائع",
+            "example": "I'm hungry. Let's eat!"
+          },
+          {
+            "word": "thirsty",
+            "meaning_ar": "عطشان",
+            "example": "Are you thirsty?"
+          },
+          {
+            "word": "bored",
+            "meaning_ar": "ملول / زهقان",
+            "example": "I'm bored at home."
+          },
+          {
+            "word": "ready",
+            "meaning_ar": "جاهز",
+            "example": "Are you ready?"
+          },
+          {
+            "word": "late",
+            "meaning_ar": "متأخر",
+            "example": "Hurry, we're late!"
+          },
+          {
+            "word": "now",
+            "meaning_ar": "الآن",
+            "example": "Call me now."
+          },
+          {
+            "word": "later",
+            "meaning_ar": "لاحقاً",
+            "example": "I'm busy. Talk to you later."
+          }
+        ]
+      }
+    ],
+    "suggested_lessons": [
+      {
+        "topic": "Hello & Goodbye",
+        "title_ar": "مرحبا",
+        "from_page": 2,
+        "to_page": 2
+      },
+      {
+        "topic": "Me & You",
+        "title_ar": "أنا وأنت",
+        "from_page": 3,
+        "to_page": 3
+      },
+      {
+        "topic": "Thank you & Please",
+        "title_ar": "شكراً",
+        "from_page": 4,
+        "to_page": 4
+      },
+      {
+        "topic": "Yes, No & Great idea!",
+        "title_ar": "فكرة عظيمة!",
+        "from_page": 5,
+        "to_page": 5
+      },
+      {
+        "topic": "I'm busy",
+        "title_ar": "أنا مشغول",
+        "from_page": 6,
+        "to_page": 6
+      }
+    ],
+    "continues_next_window": false
+  }
+}

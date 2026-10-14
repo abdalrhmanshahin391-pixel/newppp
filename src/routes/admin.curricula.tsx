@@ -441,9 +441,14 @@ function BookDetail({
     await run(
       "import",
       async () => {
-        const summary = JSON.parse(summaryJson);
+        const parsed = JSON.parse(summaryJson) as Record<string, unknown>;
+        // Accepts the summary itself or { from_page, to_page, summary } (the sample files).
+        const wrapped = parsed.summary && typeof parsed.summary === "object";
+        const from =
+          wrapped && typeof parsed.from_page === "number" ? parsed.from_page : range.from;
+        const to = wrapped && typeof parsed.to_page === "number" ? parsed.to_page : range.to;
         await importWindowFn({
-          data: { curriculumId: book.id, from: range.from, to: range.to, summary },
+          data: { curriculumId: book.id, from, to, summary: wrapped ? parsed.summary : parsed },
         });
         setSummaryJson("");
         setImportOpen(false);
@@ -765,9 +770,16 @@ function LessonsCard({
     }
   }
 
-  function parseLessonJson(text: string): { lesson: LessonDraft; image_url: string | null } {
-    const parsed = JSON.parse(text) as Record<string, unknown>;
-    // Accepts either the lesson itself or { "lesson": {...}, "image_url": "..." }.
+  type LessonImport = { lesson: LessonDraft; image_url: string | null };
+
+  /** Accepts one lesson, { lesson, image_url }, or a list of either (the sample files). */
+  function parseLessonJson(text: string): LessonImport[] {
+    const parsed = JSON.parse(text) as unknown;
+    const items = Array.isArray(parsed) ? parsed : [parsed];
+    return items.map((item) => parseLessonItem(item as Record<string, unknown>));
+  }
+
+  function parseLessonItem(parsed: Record<string, unknown>): LessonImport {
     if (parsed.lesson && typeof parsed.lesson === "object") {
       return {
         lesson: parsed.lesson as LessonDraft,
@@ -886,8 +898,11 @@ function LessonsCard({
                   void run(
                     "import",
                     async () => {
-                      const parsed = parseLessonJson(lessonJson);
-                      await importFn({ data: { curriculumId: book.id, ...parsed } });
+                      const items = parseLessonJson(lessonJson);
+                      // In order, so lesson numbers follow the file.
+                      for (const item of items) {
+                        await importFn({ data: { curriculumId: book.id, ...item } });
+                      }
                       setLessonJson("");
                     },
                     "تم استيراد الدرس",
