@@ -3127,108 +3127,208 @@ hairline borders and generous radii.
 }
 
 /* ===========================================================================
-   Premium home scope. Layered on top of .edith-light (same structure and
-   remapping rules), so only colour, type weight, buttons and surfaces change:
-   no content, component or layout is touched. Reference: a near-black surface
-   (#050505), neutral cards, hairline borders at 8-12% white, ONE blue accent
-   (#346aea), medium-weight headlines and fully rounded action buttons.
-   Scoped to the home wrapper so pricing, study and admin keep their palette.
+   Home page theme (scope: .edith-premium, used only by the home route).
+   Typography, colour, buttons and surfaces follow the reference design
+   (values read from its computed styles): white page, ink #121117, pink
+   action buttons #ff7aac with a 2px ink border and 8px corners, 16px cards,
+   a dark #121117 top bar. Layout, copy, device shells and behaviour are
+   untouched. Layered on .edith-light, so the cream remapping (white-on-dark
+   utilities -> ink on page) flips the whole page automatically.
+   Pricing, study, admin and /rita-live keep their own palettes.
    =========================================================================== */
 .edith-premium {
-  --pro-page: #050505;
-  --pro-card: #0e0f11;
-  --pro-ink: #fafafa;
-  --pro-muted: #a1a1a1;
-  --rita-green: #346aea;
-  --rita-green-deep: #6f93f5; /* accent text on dark: >= 7:1 against the page */
-  --rita-green-ink: #ffffff;
-  --rita-green-soft: rgb(52 106 234 / 0.16);
-  --wordmark-prefix: #6f93f5;
-  --wordmark-suffix: #a9c0fa;
-  /* --edith-screen (the iPad and phone shell screens) is intentionally NOT overridden here:
-     the device artwork keeps its original look. */
-  color-scheme: dark;
+  --pp-ink: #121117;
+  --pp-muted: #6a697c;
+  --pp-line: #dcdce5;
+  --pp-grey: #f4f4f8;
+  --pp-pink: #ff7aac;
+  --pp-pink-hover: #fe9fc3;
+  --pp-pink-text: #d13d76;
+  --pp-pink-soft: #ffe5f0;
+  --pp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --pp-display: "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
+  --pro-page: #ffffff;
+  --pro-card: #f4f4f8;
+  --pro-ink: #121117;
+  --pro-muted: #6a697c;
+  --rita-green: #ff7aac;
+  --rita-green-deep: #d13d76; /* accent words: darker pink so they stay readable on white */
+  --rita-green-ink: #121117;
+  --rita-green-soft: #ffe5f0;
+  --font-grotesk: "Figtree", Helvetica, Arial, sans-serif;
+  --font-display: "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
+  --font-sans: "Figtree", Helvetica, Arial, sans-serif;
+  --wordmark-font: "Figtree", Helvetica, Arial, sans-serif;
+  --wordmark-prefix: #ffffff;
+  --wordmark-suffix: #ffffff;
+  --wordmark-prefix-weight: 800;
+  --wordmark-suffix-weight: 800;
+  --wordmark-tracking: -0.045em;
+  /* Device shell screens sit behind the photo: neutral ink instead of the old blue wash. */
+  --edith-screen: linear-gradient(162deg, #26252e 0%, #121117 100%);
+  color-scheme: light;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 .edith-premium ::selection {
-  background: rgb(52 106 234 / 0.45);
-  color: #fff;
+  background: var(--pp-pink);
+  color: var(--pp-ink);
 }
 
-/* Type: one medium-weight, tightly tracked display voice; balanced wrapping. */
+/* Type: tight bold display voice for headlines (64/68 -> 48/52 on phones). */
 .edith-premium h1,
-.edith-premium h2 {
-  font-weight: 600;
+.edith-premium h2,
+.edith-premium h3 {
+  font-family: var(--pp-display);
+  font-weight: 700;
   letter-spacing: -0.035em;
   text-wrap: balance;
 }
+.edith-premium h1 {
+  font-size: 48px !important;
+  line-height: 52px !important;
+}
+@media (min-width: 1024px) {
+  .edith-premium h1 {
+    font-size: 64px !important;
+    line-height: 68px !important;
+  }
+}
+.edith-premium h2 {
+  line-height: 1.08;
+}
 .edith-premium h3 {
-  font-weight: 600;
   letter-spacing: -0.02em;
 }
+/* Eyebrow labels read as quiet ink, not accent. */
+.edith-premium p.rita-accent {
+  color: var(--pp-muted) !important;
+}
 
-/* Buttons: pill, medium weight, 15-16px, quiet depth, tactile press. */
+/* Buttons: 8px corners, 2px ink border, Figtree 18/600, pink fill. */
 .edith-premium .rita-btn {
-  font-size: 15px;
-  font-weight: 500;
-  height: 44px;
+  height: 48px;
   padding-inline: 24px;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+  border: 2px solid var(--pp-ink);
+  border-radius: 8px;
+  font-family: "Figtree", Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: 0.005em;
+  box-shadow: none;
   transition:
-    background-color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.16s var(--ease-out-strong),
-    opacity 0.15s ease;
+    color 0.22s var(--pp-ease),
+    border-color 0.22s var(--pp-ease),
+    background-color 0.22s var(--pp-ease),
+    transform 0.16s var(--pp-ease);
 }
 @media (min-width: 768px) {
   .edith-premium .rita-btn {
-    font-size: 16px;
     height: 48px;
-    padding-inline: 28px;
+    padding-inline: 24px;
+    font-size: 18px;
   }
 }
 .edith-premium .rita-btn-primary {
-  background-color: #346aea;
-  color: #fff;
+  background-color: var(--pp-pink);
+  color: var(--pp-ink);
 }
 .edith-premium .rita-btn-primary:hover {
-  background-color: #2f5fd6;
+  background-color: var(--pp-pink-hover);
+}
+.edith-premium .rita-btn-primary:active {
+  background-color: var(--pp-ink);
+  color: #fff;
 }
 .edith-premium .rita-btn-secondary {
-  background-color: rgb(255 255 255 / 0.07);
-  color: #fafafa;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+  background-color: transparent;
+  color: var(--pp-ink);
+  box-shadow: none;
 }
 .edith-premium .rita-btn-secondary:hover {
-  background-color: rgb(255 255 255 / 0.13);
+  background-color: var(--pp-grey);
+}
+.edith-premium .rita-btn-secondary:active {
+  background-color: var(--pp-ink);
+  color: #fff;
 }
 .edith-premium .rita-btn:focus-visible {
-  outline: 2px solid #6f93f5;
+  outline: 2px solid var(--pp-ink);
   outline-offset: 3px;
 }
 
-/* Surfaces: neutral cards get a hairline instead of a heavier fill. */
+/* Surfaces: 16px cards on light grey, no hairline. */
 .edith-premium [class*="bg-[#121212]"],
 .edith-premium [class*="bg-[#131313]"],
 .edith-premium [class*="bg-[#151515]"],
 .edith-premium .rita-panel {
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+  box-shadow: none;
+}
+.edith-premium article[class*="bg-[#121212]"],
+.edith-premium div[class*="bg-[#131313]"],
+.edith-premium div[class*="bg-[#121212]"] {
+  background-color: var(--pp-grey) !important;
+  border-color: transparent !important;
+  border-radius: 16px !important;
 }
 
-/* Header: dark frosted bar, hairline underneath, ghost account button. */
+/* Header: solid #121117 bar, Figtree 16/600 white links, outlined ghost button. */
 .edith-premium .edith-header.edith-header-light::before {
-  background: rgb(5 5 5 / 0.72);
-  box-shadow: 0 1px 0 rgb(255 255 255 / 0.08);
-  -webkit-backdrop-filter: saturate(160%) blur(18px);
-  backdrop-filter: saturate(160%) blur(18px);
+  background: #121117;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  opacity: 1;
+  animation: none;
 }
-.edith-premium .edith-header-light a[class*="bg-black/"] {
-  border-color: rgb(255 255 255 / 0.12);
-  background-color: rgb(255 255 255 / 0.06);
+.edith-premium .edith-header {
+  --pro-ink: #ffffff;
+  color: #fff;
 }
-.edith-premium .edith-header-light a[class*="bg-black/"]:hover {
+.edith-premium .edith-header .rita-ink-soft {
+  color: #fff !important;
+}
+.edith-premium .edith-header .rita-panel {
+  --pro-ink: #121117;
+  --pro-card: #ffffff;
+}
+.edith-premium .edith-header nav a,
+.edith-premium .edith-header a[href="/pricing"] {
+  font-family: "Figtree", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  padding: 8px;
+  border-radius: 8px;
+}
+.edith-premium .edith-header-light a[class*="bg-black/"],
+.edith-premium .edith-header button[class*="rounded-full"][class*="h-10"] {
+  height: 48px;
+  padding-inline: 12px;
+  border: 2px solid #fff;
+  border-radius: 8px;
+  background-color: transparent;
+  color: #fff !important;
+  font-family: "Figtree", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+}
+.edith-premium .edith-header button[class*="rounded-full"][class*="h-10"]:hover {
   background-color: rgb(255 255 255 / 0.12);
+}
+.edith-premium .edith-header .rita-btn {
+  height: 48px;
+}
+/* Mobile header action: keep it compact, same pink + ink border. */
+.edith-premium .edith-header .rita-btn.\!h-9 {
+  height: 40px !important;
+  padding-inline: 14px !important;
+  font-size: 15px !important;
+}
+.edith-premium .edith-header .rita-ghost:hover,
+.edith-premium .edith-header .rita-ghost[data-open="true"] {
+  background-color: rgb(255 255 255 / 0.14);
 }
 
 @media (prefers-reduced-motion: reduce) {

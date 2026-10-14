@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import toolkitArt from "@/assets/home-toolkit-restored.webp.asset.json";
-import plansArt from "@/assets/home-plans-restored.webp.asset.json";
-import classroomArt from "@/assets/classroom-study-group.jpg.asset.json";
-import flashcardsArt from "@/assets/rita-flashcards-feature.webp.asset.json";
+import toolkitArt from "@/assets/home-toolkit-desk.webp";
+import plansArt from "@/assets/home-plans-library.webp";
+import classroomArt from "@/assets/home-classroom-notes.webp";
+import flashcardsArt from "@/assets/home-flashcards-books.webp";
 import { EditableImage } from "@/components/site/EditableImage";
 import { BRAND_NAME } from "@/lib/brand";
 
@@ -109,8 +109,8 @@ function CommunityCard() {
             <div className="relative h-full w-full overflow-hidden rounded-[33px] md:rounded-[39px]" style={{ background: "var(--edith-screen)" }}>
               <EditableImage
                 imageKey="home.feature.community"
-                fallback={classroomArt.url}
-                alt="A group of students studying together with shared EdithLab flashcards"
+                fallback={classroomArt}
+                alt="A hand writing study notes in a notebook"
                 width={1024}
                 height={1536}
                 loading="lazy"
@@ -130,8 +130,8 @@ function FlashcardsFeatureCard() {
     <article className="relative order-1 min-h-[520px] overflow-hidden rounded-[28px] border border-white/10 bg-[#121212] md:order-2 md:min-h-[700px] md:rounded-[34px]">
       <EditableImage
         imageKey="home.feature.flashcards"
-        fallback={flashcardsArt.url}
-        alt="A student reviewing an EdithLab medical flashcard on an iPad"
+        fallback={flashcardsArt}
+        alt="An open book and notebook on a desk in front of a bookshelf"
         width={1536}
         height={1024}
         loading="eager"
@@ -169,8 +169,8 @@ export function ProductShowcase() {
           label="Plans"
           title="Study without limits."
           note="Flexible plans for every study rhythm."
-          image={plansArt.url}
-          imageAlt="EdithLab study plans displayed across a focused night-time study workspace"
+          image={plansArt}
+          imageAlt="A long library aisle lined with books, shown on an iPad screen"
           side="left"
           learnLabel="See plan details"
           buyLabel="Buy a plan"
@@ -180,8 +180,8 @@ export function ProductShowcase() {
           label="Toolkit"
           title="Everything in one place."
           note="Flashcards, summaries and questions."
-          image={toolkitArt.url}
-          imageAlt="A student reviewing colorful flashcards with the EdithLab toolkit on an iPad"
+          image={toolkitArt}
+          imageAlt="A desk with a notebook, coffee and a tablet, shown on an iPad screen"
           side="right"
           learnLabel="Explore the toolkit"
           buyLabel="Buy the toolkit"

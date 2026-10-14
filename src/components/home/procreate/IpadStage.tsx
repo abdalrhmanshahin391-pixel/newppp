@@ -1,4 +1,4 @@
-import screenAsset from "@/assets/home-ipad-restored.webp.asset.json";
+import screenArt from "@/assets/home-hero-students.webp";
 import { EditableImage } from "@/components/site/EditableImage";
 
 /**
@@ -36,8 +36,8 @@ export function IpadStage() {
           >
             <EditableImage
               imageKey="home.ipad"
-              fallback={screenAsset.url}
-              alt="A student reading in a green forest lit by fireflies, shown on an iPad screen"
+              fallback={screenArt}
+              alt="Three students studying together around a laptop, shown on an iPad screen"
               className="absolute inset-x-0 bottom-0 top-[32%] w-full object-cover object-center"
               width={1280}
               height={800}
