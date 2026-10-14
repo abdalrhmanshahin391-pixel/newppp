@@ -23,7 +23,8 @@ import {
   wasRitaInterrupted,
 } from "@/lib/rita-v3-heard";
 import { RitaStage, orbModeFor, type RitaMood } from "@/components/rita-live/RitaStage";
-import { VoiceOrb, type OrbLevels } from "@/components/rita-live/VoiceOrb";
+import { RitaAvatar } from "@/components/rita-live/RitaAvatar";
+import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
 
 type Persona = "kind" | "direct" | "playful" | "strict";
 type LessonMode = "free_conversation" | "guided_lesson" | "pronunciation_drill";
@@ -974,11 +975,11 @@ export function RitaRealtimeV3() {
           )}
 
           <div className="flex justify-center lg:hidden">
-            <VoiceOrb
+            <RitaAvatar
               levelsRef={orbLevels}
               mode={orbModeFor(active, mood)}
-              label="Rita voice"
-              className="w-[min(86vw,360px)]"
+              label="Rita"
+              className="h-[min(56vh,460px)] max-w-[86vw]"
             />
           </div>
 
