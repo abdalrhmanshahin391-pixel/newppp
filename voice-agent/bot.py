@@ -97,6 +97,30 @@ def lesson_terms(body: dict[str, Any]) -> list[str]:
     return cleaned[:40]
 
 
+def lesson_section(body: dict[str, Any]) -> str:
+    """Curriculum lesson notes sent by the website, or an empty string."""
+    lesson = body.get("lesson")
+    if not isinstance(lesson, dict):
+        return ""
+    brief = str(lesson.get("brief") or "").strip()[:4000]
+    if not brief:
+        return ""
+    return f"""
+CURRICULUM LESSON
+You are teaching this lesson now. The notes are for you only; never read them aloud.
+{brief}
+How to run it:
+- On the learner's first turn, greet them briefly, name today's topic in one sentence, then start.
+- Follow the plan in order. Teach one small point, give one example, then ask the learner to say
+  their own sentence. Keep the learner talking more than you.
+- Work through the objectives one at a time. For each one, ask one of its questions and wait.
+- The website checks the objectives from what the learner says; never announce scores or stars.
+- If an answer has a mistake, model the correct sentence once and ask them to try again.
+- Stay on this lesson. If the learner drifts, answer in one sentence and bring them back.
+- When every objective has been practised, praise the learner and wrap up in two sentences.
+"""
+
+
 def build_prompt(body: dict[str, Any], state: RitaSessionState) -> str:
     personality = str(body.get("personality", "kind"))
     profile_language = str(body.get("language", "automatic"))
@@ -136,7 +160,7 @@ TEACHING CONTROL
 - Never turn a general-knowledge answer into vocabulary or flashcards.
 - Never claim Flashcards or German Lab were saved; the website confirms only after a real transaction.
 - If unsure what was heard, ask one short clarification in the same stable language.
-"""
+{lesson_section(body)}"""
 
 
 async def bot(args: DailyRunnerArguments):
