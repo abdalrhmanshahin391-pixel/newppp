@@ -22,7 +22,7 @@ const LOOK = {
   rim: [1.0, 0.83, 0.52] as const,
   rimStrength: 2.200,
   exposure: 1.080,
-  bloom: { strength: 1.100, radius: 0.400, threshold: 0.900 },
+  bloom: { strength: 0.800, radius: 0.550, threshold: 0.900 },
   /** Body turned to show the ponytail; the head turns back towards the viewer. */
   bodyYaw: 0.55,
   headYaw: -0.4,
