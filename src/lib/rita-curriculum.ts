@@ -55,7 +55,10 @@ export const ObjectiveSchema = z.object({
   id: z
     .string()
     .trim()
-    .regex(/^[a-z0-9][a-z0-9-]{0,39}$/, "objective id must be lowercase letters, digits and dashes"),
+    .regex(
+      /^[a-z0-9][a-z0-9-]{0,39}$/,
+      "objective id must be lowercase letters, digits and dashes",
+    ),
   text: shortText(240).min(3),
   text_ar: shortText(240).default(""),
   /** what the learner must say or do for the objective to count as met */
@@ -98,12 +101,20 @@ export const LessonDraftSchema = z
   })
   .superRefine((lesson, ctx) => {
     if (lesson.source_to_page < lesson.source_from_page) {
-      ctx.addIssue({ code: "custom", path: ["source_to_page"], message: "to page is before from page" });
+      ctx.addIssue({
+        code: "custom",
+        path: ["source_to_page"],
+        message: "to page is before from page",
+      });
     }
     const seen = new Set<string>();
     lesson.objectives.forEach((objective, index) => {
       if (seen.has(objective.id)) {
-        ctx.addIssue({ code: "custom", path: ["objectives", index, "id"], message: "duplicate objective id" });
+        ctx.addIssue({
+          code: "custom",
+          path: ["objectives", index, "id"],
+          message: "duplicate objective id",
+        });
       }
       seen.add(objective.id);
     });
@@ -214,7 +225,11 @@ export function percentOf(part: number, whole: number): number {
 }
 
 /** Joins page text for the AI with page markers, trimmed to the size limits. */
-export function buildWindowText(pages: { page_no: number; text: string }[], from: number, to: number) {
+export function buildWindowText(
+  pages: { page_no: number; text: string }[],
+  from: number,
+  to: number,
+) {
   let total = 0;
   const parts: string[] = [];
   const sorted = [...pages]
@@ -281,7 +296,9 @@ export function mergeObjectiveState(
 }
 
 export function isLessonComplete(objectives: Pick<Objective, "id">[], state: ObjectiveState) {
-  return objectives.length > 0 && objectives.every((objective) => state[objective.id]?.met === true);
+  return (
+    objectives.length > 0 && objectives.every((objective) => state[objective.id]?.met === true)
+  );
 }
 
 /** 0-100: the weighted quality of met objectives. */
@@ -338,7 +355,11 @@ export type LessonBriefInput = {
  * Compact lesson notes for the voice worker's system prompt. Unmet objectives
  * are listed first so a resumed lesson starts where the learner stopped.
  */
-export function buildLessonBrief(lesson: LessonBriefInput, state: ObjectiveState = {}, limit = 3_500) {
+export function buildLessonBrief(
+  lesson: LessonBriefInput,
+  state: ObjectiveState = {},
+  limit = 3_500,
+) {
   const ordered = [...lesson.objectives].sort(
     (a, b) => Number(state[a.id]?.met === true) - Number(state[b.id]?.met === true),
   );
@@ -347,7 +368,9 @@ export function buildLessonBrief(lesson: LessonBriefInput, state: ObjectiveState
     `Topic: ${lesson.topic}`,
   ];
   if (lesson.summary) lines.push(`Teacher summary: ${lesson.summary}`);
-  lines.push("Objectives (teach and check each one; the learner must produce it in their own words):");
+  lines.push(
+    "Objectives (teach and check each one; the learner must produce it in their own words):",
+  );
   for (const objective of ordered) {
     const done = state[objective.id]?.met ? " [already met - only review briefly]" : "";
     lines.push(`- [${objective.id}] ${objective.text}${done}`);
@@ -387,7 +410,10 @@ export function cleanTurns(input: unknown, keep = 8): LessonTurn[] {
 
 /** Parses a JSON object out of a model reply that may be wrapped in a code fence. */
 export function parseJsonObject(raw: string): unknown {
-  const trimmed = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+  const trimmed = raw
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```\s*$/, "");
   const start = trimmed.indexOf("{");
   const end = trimmed.lastIndexOf("}");
   if (start < 0 || end <= start) throw new Error("The AI reply had no JSON object.");

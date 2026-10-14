@@ -44,7 +44,9 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
         }
         const mode = lesson
           ? "guided_lesson"
-          : ["free_conversation", "guided_lesson", "pronunciation_drill"].includes(String(body.mode))
+          : ["free_conversation", "guided_lesson", "pronunciation_drill"].includes(
+                String(body.mode),
+              )
             ? String(body.mode)
             : "free_conversation";
         const traceId = normalizeRitaDiagnosticTraceId(body.traceId);

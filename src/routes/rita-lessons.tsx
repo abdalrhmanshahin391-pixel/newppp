@@ -8,10 +8,7 @@ import { LessonImage, LessonStars } from "@/components/rita-lessons/LessonArt";
 
 export const Route = createFileRoute("/rita-lessons")({
   head: () => ({
-    meta: [
-      { title: "دروس ريتا — RitaJet" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "دروس ريتا — RitaJet" }, { name: "robots", content: "noindex" }],
   }),
   component: RitaLessonsPage,
 });
@@ -24,7 +21,11 @@ const NODE = 104;
 
 function UkFlag() {
   return (
-    <svg viewBox="0 0 60 40" className="h-6 w-9 overflow-hidden rounded-md shadow-sm" aria-label="English">
+    <svg
+      viewBox="0 0 60 40"
+      className="h-6 w-9 overflow-hidden rounded-md shadow-sm"
+      aria-label="English"
+    >
       <rect width="60" height="40" fill="#1F3F8F" />
       <path d="M0 0l60 40M60 0L0 40" stroke="#fff" strokeWidth="8" />
       <path d="M0 0l60 40M60 0L0 40" stroke="#D7263D" strokeWidth="3" />
@@ -79,10 +80,17 @@ function RitaLessonsPage() {
     .join(" ");
 
   return (
-    <main dir="rtl" className="min-h-screen bg-[#FBFAFF] pb-32 font-[Nunito,'Noto_Sans_Arabic',sans-serif] text-[#1E2A4A]">
+    <main
+      dir="rtl"
+      className="min-h-screen bg-[#FBFAFF] pb-32 font-[Nunito,'Noto_Sans_Arabic',sans-serif] text-[#1E2A4A]"
+    >
       <header className="sticky top-0 z-20 border-b border-[#EEE8FB] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
-          <Link to="/" aria-label="رجوع" className="grid h-10 w-10 place-items-center rounded-full text-[#8A8FA3] hover:bg-[#F4EFFE]">
+          <Link
+            to="/"
+            aria-label="رجوع"
+            className="grid h-10 w-10 place-items-center rounded-full text-[#8A8FA3] hover:bg-[#F4EFFE]"
+          >
             <ArrowRight size={22} />
           </Link>
           <div className="flex items-center gap-4 text-sm font-black">
@@ -100,11 +108,15 @@ function RitaLessonsPage() {
       <section className="mx-auto max-w-md px-4 pt-6 text-center">
         <p className="text-sm font-extrabold text-[#9B5CF6]">English · A1</p>
         <h1 className="mt-1 text-2xl font-black">دروسك مع ريتا</h1>
-        <p className="mt-1 text-sm font-semibold text-[#6B6F86]">تحدّث مع ريتا، حقّق أهداف كل درس، واجمع النجوم.</p>
+        <p className="mt-1 text-sm font-semibold text-[#6B6F86]">
+          تحدّث مع ريتا، حقّق أهداف كل درس، واجمع النجوم.
+        </p>
       </section>
 
       {error && (
-        <p className="mx-auto mt-6 max-w-md rounded-2xl bg-red-50 px-4 py-3 text-center text-sm font-bold text-red-700">{error}</p>
+        <p className="mx-auto mt-6 max-w-md rounded-2xl bg-red-50 px-4 py-3 text-center text-sm font-bold text-red-700">
+          {error}
+        </p>
       )}
       {!lessons && !error && (
         <div className="grid place-items-center py-24 text-[#9B5CF6]">
@@ -112,18 +124,30 @@ function RitaLessonsPage() {
         </div>
       )}
       {lessons && lessons.length === 0 && (
-        <p className="mx-auto mt-16 max-w-xs text-center font-bold text-[#8A8FA3]">لا توجد دروس منشورة بعد. عُد قريباً!</p>
+        <p className="mx-auto mt-16 max-w-xs text-center font-bold text-[#8A8FA3]">
+          لا توجد دروس منشورة بعد. عُد قريباً!
+        </p>
       )}
 
       {lessons && lessons.length > 0 && (
-        <div className="relative mx-auto mt-6" style={{ width: WIDTH, height: lessons.length * ROW + 40 }}>
+        <div
+          className="relative mx-auto mt-6"
+          style={{ width: WIDTH, height: lessons.length * ROW + 40 }}
+        >
           <svg
             className="pointer-events-none absolute inset-0"
             width={WIDTH}
             height={lessons.length * ROW + 40}
             aria-hidden="true"
           >
-            <path d={pathD} fill="none" stroke="#D9CFF5" strokeWidth="5" strokeLinecap="round" strokeDasharray="0.1 14" />
+            <path
+              d={pathD}
+              fill="none"
+              stroke="#D9CFF5"
+              strokeWidth="5"
+              strokeLinecap="round"
+              strokeDasharray="0.1 14"
+            />
           </svg>
           {lessons.map((lesson, index) => {
             const centre = centres[index];
@@ -140,7 +164,9 @@ function RitaLessonsPage() {
               >
                 <LessonStars stars={lesson.stars} />
                 <span className="relative mt-1 block" style={{ width: NODE, height: NODE }}>
-                  {isCurrent && <span className="absolute -inset-2 animate-pulse rounded-full bg-[#C9A7FF]/40" />}
+                  {isCurrent && (
+                    <span className="absolute -inset-2 animate-pulse rounded-full bg-[#C9A7FF]/40" />
+                  )}
                   <LessonImage
                     src={lesson.image_url}
                     alt=""
@@ -161,11 +187,15 @@ function RitaLessonsPage() {
                     {lesson.kind === "vocabulary" ? "كلمات" : "قواعد"}
                   </span>
                 </span>
-                <span className={`mt-2 text-[15px] font-black leading-5 ${locked ? "text-[#A3A7BA]" : ""}`}>
+                <span
+                  className={`mt-2 text-[15px] font-black leading-5 ${locked ? "text-[#A3A7BA]" : ""}`}
+                >
                   {lesson.title_ar || lesson.title}
                 </span>
                 {lesson.in_progress && !locked && (
-                  <span className="mt-1 text-[11px] font-extrabold text-[#9B5CF6]">قيد التقدّم</span>
+                  <span className="mt-1 text-[11px] font-extrabold text-[#9B5CF6]">
+                    قيد التقدّم
+                  </span>
                 )}
               </button>
             );
@@ -174,7 +204,10 @@ function RitaLessonsPage() {
       )}
 
       {hint && (
-        <p className="fixed inset-x-4 bottom-28 z-30 mx-auto max-w-sm rounded-2xl bg-[#1E2A4A] px-4 py-3 text-center text-sm font-bold text-white" onClick={() => setHint("")}>
+        <p
+          className="fixed inset-x-4 bottom-28 z-30 mx-auto max-w-sm rounded-2xl bg-[#1E2A4A] px-4 py-3 text-center text-sm font-bold text-white"
+          onClick={() => setHint("")}
+        >
           {hint}
         </p>
       )}

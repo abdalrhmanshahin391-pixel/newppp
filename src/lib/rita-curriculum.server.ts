@@ -1,6 +1,12 @@
 // Loads the lesson notes that the voice worker adds to Rita's prompt.
 import { supabaseAdmin } from "@/integrations/supabase/legacy-client.server";
-import { buildLessonBrief, type LessonPlan, type Objective, type ObjectiveState, type VocabularyItem } from "@/lib/rita-curriculum";
+import {
+  buildLessonBrief,
+  type LessonPlan,
+  type Objective,
+  type ObjectiveState,
+  type VocabularyItem,
+} from "@/lib/rita-curriculum";
 
 export type VoiceLesson = { id: string; title: string; brief: string };
 
@@ -9,17 +15,27 @@ export type VoiceLesson = { id: string; title: string; brief: string };
  * with the objectives this learner already met listed last. Null when the
  * lesson does not exist or is not available to this user.
  */
-export async function loadVoiceLesson(userId: string, lessonId: string): Promise<VoiceLesson | null> {
+export async function loadVoiceLesson(
+  userId: string,
+  lessonId: string,
+): Promise<VoiceLesson | null> {
   if (!/^[0-9a-f-]{36}$/i.test(lessonId)) return null;
   const { data: lesson, error } = await supabaseAdmin
     .from("rita_lessons")
-    .select("id, title, title_ar, topic, objectives, plan, vocabulary, status, curriculum:rita_curricula!inner(status)")
+    .select(
+      "id, title, title_ar, topic, objectives, plan, vocabulary, status, curriculum:rita_curricula!inner(status)",
+    )
     .eq("id", lessonId)
     .maybeSingle();
   if (error || !lesson) return null;
-  const published = lesson.status === "published" && (lesson.curriculum as { status?: string })?.status === "published";
+  const published =
+    lesson.status === "published" &&
+    (lesson.curriculum as { status?: string })?.status === "published";
   if (!published) {
-    const { data: isAdmin } = await supabaseAdmin.rpc("has_role", { _user_id: userId, _role: "admin" });
+    const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
     if (!isAdmin || lesson.status === "archived") return null;
   }
   const { data: progress } = await supabaseAdmin

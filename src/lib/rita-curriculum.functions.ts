@@ -28,10 +28,16 @@ import {
   type WindowSummary,
 } from "@/lib/rita-curriculum";
 
-type AuthContext = { supabase: any; userId: string };
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AuthContext = { supabase: SupabaseClient<any, "public", any>; userId: string };
 
 async function assertAdmin(ctx: AuthContext) {
-  const { data, error } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
+  const { data, error } = await ctx.supabase.rpc("has_role", {
+    _user_id: ctx.userId,
+    _role: "admin",
+  });
   if (error || !data) throw new Error("Forbidden: admin only");
 }
 
@@ -54,7 +60,10 @@ const imageUrlSchema = z
   .string()
   .trim()
   .max(600)
-  .refine((value) => value.startsWith("/curriculum/") || value.startsWith("https://"), "image url must be https or /curriculum/");
+  .refine(
+    (value) => value.startsWith("/curriculum/") || value.startsWith("https://"),
+    "image url must be https or /curriculum/",
+  );
 
 function parseWith<S extends z.ZodTypeAny>(schema: S, data: unknown): z.infer<S> {
   const result = schema.safeParse(data);
@@ -125,7 +134,11 @@ export const adminCurriculumOverview = createServerFn({ method: "GET" })
     await assertAdmin(context);
     const db = await admin();
     const [books, windows, lessons, pages] = await Promise.all([
-      db.from("rita_curricula").select(CURRICULUM_COLUMNS).neq("status", "archived").order("created_at"),
+      db
+        .from("rita_curricula")
+        .select(CURRICULUM_COLUMNS)
+        .neq("status", "archived")
+        .order("created_at"),
       db
         .from("rita_curriculum_windows")
         .select("id, curriculum_id, from_page, to_page, summary, source, model, created_at")
@@ -139,7 +152,11 @@ export const adminCurriculumOverview = createServerFn({ method: "GET" })
     fail(pages.error, "pages");
     // Per book: which pages still need text (scanned pages that were not read yet).
     const missingText: Record<string, number[]> = {};
-    for (const page of (pages.data ?? []) as { curriculum_id: string; page_no: number; text: string }[]) {
+    for (const page of (pages.data ?? []) as {
+      curriculum_id: string;
+      page_no: number;
+      text: string;
+    }[]) {
       if (page.text.trim().length >= 20) continue;
       (missingText[page.curriculum_id] ??= []).push(page.page_no);
     }
@@ -225,7 +242,12 @@ export const adminTranscribeCurriculumPages = createServerFn({ method: "POST" })
       z.object({
         curriculumId: uuid,
         pages: z
-          .array(z.object({ page_no: z.number().int().min(1), jpegBase64: z.string().min(100).max(1_500_000) }))
+          .array(
+            z.object({
+              page_no: z.number().int().min(1),
+              jpegBase64: z.string().min(100).max(1_500_000),
+            }),
+          )
           .min(1)
           .max(4),
       }),
@@ -255,19 +277,29 @@ export const adminTranscribeCurriculumPages = createServerFn({ method: "POST" })
 export const adminSetCurriculumStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    parseWith(z.object({ curriculumId: uuid, status: z.enum(["draft", "published", "archived"]) }), data),
+    parseWith(
+      z.object({ curriculumId: uuid, status: z.enum(["draft", "published", "archived"]) }),
+      data,
+    ),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const db = await admin();
-    const { error } = await db.from("rita_curricula").update({ status: data.status }).eq("id", data.curriculumId);
+    const { error } = await db
+      .from("rita_curricula")
+      .update({ status: data.status })
+      .eq("id", data.curriculumId);
     fail(error, "update book");
     return { ok: true };
   });
 
 async function loadBook(curriculumId: string) {
   const db = await admin();
-  const { data, error } = await db.from("rita_curricula").select(CURRICULUM_COLUMNS).eq("id", curriculumId).single();
+  const { data, error } = await db
+    .from("rita_curricula")
+    .select(CURRICULUM_COLUMNS)
+    .eq("id", curriculumId)
+    .single();
   fail(error, "book");
   return data as CurriculumRow;
 }
@@ -354,12 +386,22 @@ export const adminReadCurriculumWindow = createServerFn({ method: "POST" })
       to: data.to,
       pageText: text,
     });
-    return storeWindow({ book, from: data.from, to: data.to, summary, source: "ai", model, userId: context.userId });
+    return storeWindow({
+      book,
+      from: data.from,
+      to: data.to,
+      summary,
+      source: "ai",
+      model,
+      userId: context.userId,
+    });
   });
 
 export const adminImportCurriculumWindow = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => parseWith(windowInput.extend({ summary: WindowSummarySchema }), data))
+  .inputValidator((data: unknown) =>
+    parseWith(windowInput.extend({ summary: WindowSummarySchema }), data),
+  )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const book = await loadBook(data.curriculumId);
@@ -384,7 +426,11 @@ async function insertLesson(input: {
   imageUrl: string | null;
   userId: string;
 }) {
-  const pageProblem = checkLessonPages(input.book, input.lesson.source_from_page, input.lesson.source_to_page);
+  const pageProblem = checkLessonPages(
+    input.book,
+    input.lesson.source_from_page,
+    input.lesson.source_to_page,
+  );
   if (pageProblem) throw new Error(pageProblem);
   const db = await admin();
   // Two tries: a parallel insert can take the same lesson number.
@@ -453,7 +499,11 @@ export const adminGenerateLesson = createServerFn({ method: "POST" })
         .eq("curriculum_id", book.id)
         .lte("from_page", data.to)
         .gte("to_page", data.from),
-      db.from("rita_lessons").select("title").eq("curriculum_id", book.id).neq("status", "archived"),
+      db
+        .from("rita_lessons")
+        .select("title")
+        .eq("curriculum_id", book.id)
+        .neq("status", "archived"),
     ]);
     fail(windows.error, "summaries");
     fail(lessons.error, "lessons");
@@ -470,15 +520,29 @@ export const adminGenerateLesson = createServerFn({ method: "POST" })
     });
     // The model is told the range; clamp anyway so a stray page number cannot fail the save.
     lesson.source_from_page = Math.max(data.from, Math.min(lesson.source_from_page, data.to));
-    lesson.source_to_page = Math.max(lesson.source_from_page, Math.min(lesson.source_to_page, data.to));
-    return insertLesson({ book, lesson, source: "ai", model, imageUrl: null, userId: context.userId });
+    lesson.source_to_page = Math.max(
+      lesson.source_from_page,
+      Math.min(lesson.source_to_page, data.to),
+    );
+    return insertLesson({
+      book,
+      lesson,
+      source: "ai",
+      model,
+      imageUrl: null,
+      userId: context.userId,
+    });
   });
 
 export const adminImportLesson = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     parseWith(
-      z.object({ curriculumId: uuid, lesson: LessonDraftSchema, image_url: imageUrlSchema.nullable().default(null) }),
+      z.object({
+        curriculumId: uuid,
+        lesson: LessonDraftSchema,
+        image_url: imageUrlSchema.nullable().default(null),
+      }),
       data,
     ),
   )
@@ -497,7 +561,9 @@ export const adminImportLesson = createServerFn({ method: "POST" })
 
 export const adminUpdateLesson = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => parseWith(z.object({ lessonId: uuid, lesson: LessonDraftSchema }), data))
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ lessonId: uuid, lesson: LessonDraftSchema }), data),
+  )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const db = await admin();
@@ -508,7 +574,11 @@ export const adminUpdateLesson = createServerFn({ method: "POST" })
       .single();
     fail(error, "lesson");
     const book = await loadBook(current.curriculum_id);
-    const pageProblem = checkLessonPages(book, data.lesson.source_from_page, data.lesson.source_to_page);
+    const pageProblem = checkLessonPages(
+      book,
+      data.lesson.source_from_page,
+      data.lesson.source_to_page,
+    );
     if (pageProblem) throw new Error(pageProblem);
     const { lesson } = data;
     const { data: row, error: updateError } = await db
@@ -536,7 +606,10 @@ export const adminUpdateLesson = createServerFn({ method: "POST" })
 export const adminSetLessonStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    parseWith(z.object({ lessonId: uuid, status: z.enum(["draft", "published", "archived"]) }), data),
+    parseWith(
+      z.object({ lessonId: uuid, status: z.enum(["draft", "published", "archived"]) }),
+      data,
+    ),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
@@ -561,7 +634,10 @@ export const adminSetLessonStatus = createServerFn({ method: "POST" })
         patch.path_order = Number(last?.path_order ?? 0) + 1;
       }
     }
-    const { error: updateError } = await db.from("rita_lessons").update(patch).eq("id", data.lessonId);
+    const { error: updateError } = await db
+      .from("rita_lessons")
+      .update(patch)
+      .eq("id", data.lessonId);
     fail(updateError, "update lesson");
     if (data.status === "published") {
       const book = await loadBook(lesson.curriculum_id);
@@ -581,7 +657,9 @@ export const adminSetLessonStatus = createServerFn({ method: "POST" })
 /** Moves a lesson one step up or down in the learners' path. */
 export const adminMoveLesson = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => parseWith(z.object({ lessonId: uuid, direction: z.enum(["up", "down"]) }), data))
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ lessonId: uuid, direction: z.enum(["up", "down"]) }), data),
+  )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const db = await admin();
@@ -600,7 +678,10 @@ export const adminMoveLesson = createServerFn({ method: "POST" })
     const b = list[swapWith];
     const first = await db.from("rita_lessons").update({ path_order: b.path_order }).eq("id", a.id);
     fail(first.error, "move lesson");
-    const second = await db.from("rita_lessons").update({ path_order: a.path_order }).eq("id", b.id);
+    const second = await db
+      .from("rita_lessons")
+      .update({ path_order: a.path_order })
+      .eq("id", b.id);
     fail(second.error, "move lesson");
     return { ok: true };
   });
@@ -636,6 +717,16 @@ export const adminGenerateLessonImage = createServerFn({ method: "POST" })
 
 // ---------- learners ----------
 
+type PathSourceRow = {
+  id: string;
+  title: string;
+  title_ar: string;
+  topic: string;
+  image_url: string | null;
+  objectives: unknown;
+  curriculum: { kind?: string } | null;
+};
+
 export type PathLesson = {
   id: string;
   kind: "grammar" | "vocabulary";
@@ -656,7 +747,9 @@ export const getLessonPath = createServerFn({ method: "GET" })
     // RLS limits this to published lessons of published books.
     const { data: lessons, error } = await context.supabase
       .from("rita_lessons")
-      .select("id, title, title_ar, topic, image_url, objectives, path_order, curriculum:rita_curricula!inner(kind, status)")
+      .select(
+        "id, title, title_ar, topic, image_url, objectives, path_order, curriculum:rita_curricula!inner(kind, status)",
+      )
       .eq("status", "published")
       .eq("curriculum.status", "published")
       .order("path_order", { ascending: true, nullsFirst: false });
@@ -667,10 +760,15 @@ export const getLessonPath = createServerFn({ method: "GET" })
       .eq("user_id", context.userId);
     fail(progressError, "progress");
     const byLesson: Record<string, { status: string; stars: number; best_score: number }> = {};
-    for (const row of (progress ?? []) as { lesson_id: string; status: string; stars: number; best_score: number }[]) {
+    for (const row of (progress ?? []) as {
+      lesson_id: string;
+      status: string;
+      stars: number;
+      best_score: number;
+    }[]) {
       byLesson[row.lesson_id] = row;
     }
-    const nodes = lessonPathStates((lessons ?? []) as any[], byLesson).map(
+    const nodes = lessonPathStates((lessons ?? []) as PathSourceRow[], byLesson).map(
       (lesson): PathLesson => ({
         id: lesson.id,
         kind: lesson.curriculum?.kind === "vocabulary" ? "vocabulary" : "grammar",
@@ -698,14 +796,22 @@ export type LessonSession = {
     image_url: string | null;
     objectives: { id: string; text: string; text_ar: string; weight: number }[];
   };
-  progress: { status: string; objectives: ObjectiveState; score: number; stars: number; attempts: number };
+  progress: {
+    status: string;
+    objectives: ObjectiveState;
+    score: number;
+    stars: number;
+    attempts: number;
+  };
   nextLessonId: string | null;
 };
 
 async function loadPublishedLesson(ctx: AuthContext, lessonId: string) {
   const { data, error } = await ctx.supabase
     .from("rita_lessons")
-    .select("id, title, title_ar, topic, image_url, objectives, plan, vocabulary, version, path_order, status")
+    .select(
+      "id, title, title_ar, topic, image_url, objectives, plan, vocabulary, version, path_order, status",
+    )
     .eq("id", lessonId)
     .eq("status", "published")
     .maybeSingle();
@@ -729,7 +835,8 @@ async function loadPublishedLesson(ctx: AuthContext, lessonId: string) {
 function currentState(objectives: Objective[], stored: unknown): ObjectiveState {
   const state: ObjectiveState = {};
   const raw = (stored && typeof stored === "object" ? stored : {}) as ObjectiveState;
-  for (const objective of objectives) if (raw[objective.id]?.met) state[objective.id] = raw[objective.id];
+  for (const objective of objectives)
+    if (raw[objective.id]?.met) state[objective.id] = raw[objective.id];
   return state;
 }
 
@@ -739,7 +846,9 @@ function currentState(objectives: Objective[], stored: unknown): ObjectiveState 
  */
 export const startLessonAttempt = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => parseWith(z.object({ lessonId: uuid, restart: z.boolean().default(false) }), data))
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ lessonId: uuid, restart: z.boolean().default(false) }), data),
+  )
   .handler(async ({ data, context }): Promise<LessonSession> => {
     const lesson = await loadPublishedLesson(context, data.lessonId);
     const db = await admin();
@@ -750,9 +859,14 @@ export const startLessonAttempt = createServerFn({ method: "POST" })
       .eq("lesson_id", lesson.id)
       .maybeSingle();
     fail(error, "progress");
-    let row = existing as
-      | { id: string; status: string; objectives: unknown; score: number; stars: number; attempts: number }
-      | null;
+    let row = existing as {
+      id: string;
+      status: string;
+      objectives: unknown;
+      score: number;
+      stars: number;
+      attempts: number;
+    } | null;
     const fresh = {
       status: "in_progress",
       objectives: {},
@@ -766,7 +880,10 @@ export const startLessonAttempt = createServerFn({ method: "POST" })
     if (!row) {
       const { data: created, error: insertError } = await db
         .from("rita_lesson_progress")
-        .upsert({ user_id: context.userId, lesson_id: lesson.id, ...fresh }, { onConflict: "user_id,lesson_id" })
+        .upsert(
+          { user_id: context.userId, lesson_id: lesson.id, ...fresh },
+          { onConflict: "user_id,lesson_id" },
+        )
         .select("id, status, objectives, score, stars, attempts")
         .single();
       fail(insertError, "start lesson");
@@ -875,8 +992,18 @@ export const evaluateLessonTurn = createServerFn({ method: "POST" })
 
     const open = lesson.objectives.filter((objective) => !state[objective.id]?.met);
     const { evaluateTurns } = await ai();
-    const { evaluation } = await evaluateTurns({ lessonTitle: lesson.title, objectives: open, turns });
-    const merged = mergeObjectiveState(state, evaluation, open, learnerText, new Date().toISOString());
+    const { evaluation } = await evaluateTurns({
+      lessonTitle: lesson.title,
+      objectives: open,
+      turns,
+    });
+    const merged = mergeObjectiveState(
+      state,
+      evaluation,
+      open,
+      learnerText,
+      new Date().toISOString(),
+    );
     const score = scoreLesson(lesson.objectives, merged.state);
     const completed = isLessonComplete(lesson.objectives, merged.state);
     const stars = starsFor(score);

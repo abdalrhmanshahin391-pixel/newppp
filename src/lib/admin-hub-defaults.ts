@@ -91,6 +91,13 @@ export const DEFAULT_LAYOUT: HubLayout = {
           labelAr: "صوت ريتا الجديد",
           icon: "KeyRound",
         },
+        {
+          id: "/admin/curricula",
+          to: "/admin/curricula",
+          label: "Rita lessons & curriculum",
+          labelAr: "مناهج دروس ريتا",
+          icon: "GraduationCap",
+        },
         t("/admin/ai-keys", "General AI keys", "KeyRound"),
       ],
     },

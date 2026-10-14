@@ -23,10 +23,16 @@ export function LessonObjectivesPanel({
   return (
     <section dir="rtl" className="rounded-3xl border border-[#EEE8FB] bg-[#FBFAFF] p-4">
       <div className="flex items-center gap-3">
-        <LessonImage src={session.lesson.image_url} alt="" className="h-14 w-14 shrink-0 border-2 border-white shadow" />
+        <LessonImage
+          src={session.lesson.image_url}
+          alt=""
+          className="h-14 w-14 shrink-0 border-2 border-white shadow"
+        />
         <div className="min-w-0 flex-1">
           <p className="text-xs font-extrabold text-[#9B5CF6]">درس اليوم</p>
-          <h2 className="truncate text-lg font-black">{session.lesson.title_ar || session.lesson.title}</h2>
+          <h2 className="truncate text-lg font-black">
+            {session.lesson.title_ar || session.lesson.title}
+          </h2>
           <p className="truncate text-xs font-semibold text-[#6B6F86]" dir="ltr">
             {session.lesson.title}
           </p>
@@ -101,10 +107,18 @@ export function LessonResultCard({
   onRetry: () => void;
   onClose: () => void;
 }) {
-  const praise = stars === 3 ? "ممتاز!" : stars === 2 ? "عمل رائع!" : stars === 1 ? "أحسنت!" : "أكملت الدرس!";
+  const praise =
+    stars === 3 ? "ممتاز!" : stars === 2 ? "عمل رائع!" : stars === 1 ? "أحسنت!" : "أكملت الدرس!";
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-[#1E2A4A]/40 p-4" role="dialog" aria-modal="true">
-      <section dir="rtl" className="w-full max-w-sm rounded-[28px] bg-white p-6 text-center shadow-2xl">
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-[#1E2A4A]/40 p-4"
+      role="dialog"
+      aria-modal="true"
+    >
+      <section
+        dir="rtl"
+        className="w-full max-w-sm rounded-[28px] bg-white p-6 text-center shadow-2xl"
+      >
         <LessonStars stars={stars} size={44} />
         <h2 className="mt-3 text-3xl font-black text-[#1E2A4A]">{praise}</h2>
         <p className="mt-1 font-bold text-[#6B6F86]">حققت كل أهداف الدرس</p>
@@ -120,9 +134,15 @@ export function LessonResultCard({
               الدرس التالي
             </Link>
           ) : (
-            <p className="rounded-2xl bg-[#F4EFFE] py-3 text-sm font-bold text-[#6D35D8]">أنهيت كل الدروس المتاحة 🎉</p>
+            <p className="rounded-2xl bg-[#F4EFFE] py-3 text-sm font-bold text-[#6D35D8]">
+              أنهيت كل الدروس المتاحة 🎉
+            </p>
           )}
-          <Link to="/rita-lessons" className="block rounded-2xl border-2 border-[#EEE8FB] py-3 font-black text-[#6D35D8]" onClick={onClose}>
+          <Link
+            to="/rita-lessons"
+            className="block rounded-2xl border-2 border-[#EEE8FB] py-3 font-black text-[#6D35D8]"
+            onClick={onClose}
+          >
             العودة إلى المسار
           </Link>
           <button

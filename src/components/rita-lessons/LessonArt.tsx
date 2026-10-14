@@ -38,7 +38,13 @@ function PlaceholderCharacter() {
       <path d="M33 43c0-12 8-19 17-19s17 7 17 19c-5-6-11-9-17-9s-12 3-17 9z" fill="#4A2A1A" />
       <circle cx="44" cy="47" r="2.2" fill="#2B1B3D" />
       <circle cx="56" cy="47" r="2.2" fill="#2B1B3D" />
-      <path d="M44 53c3 3 9 3 12 0" stroke="#2B1B3D" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+      <path
+        d="M44 53c3 3 9 3 12 0"
+        stroke="#2B1B3D"
+        strokeWidth="2.2"
+        fill="none"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

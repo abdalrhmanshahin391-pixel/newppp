@@ -101,7 +101,12 @@ test("objectives only move forward and ignore invented evidence", () => {
   const learner = "I am Sami and my friend is Omar. We are happy.";
   const evaluation = EvaluationSchema.parse({
     updates: [
-      { objective_id: "am-is-are", met: true, quality: 0.8, evidence: "I am Sami and my friend is Omar" },
+      {
+        objective_id: "am-is-are",
+        met: true,
+        quality: 0.8,
+        evidence: "I am Sami and my friend is Omar",
+      },
       { objective_id: "negative", met: true, quality: 1, evidence: "I am not tired" },
       { objective_id: "unknown", met: true, quality: 1, evidence: "I am Sami" },
     ],
@@ -122,7 +127,9 @@ test("objectives only move forward and ignore invented evidence", () => {
 
   const done = mergeObjectiveState(
     later.state,
-    { updates: [{ objective_id: "negative", met: true, quality: 0.6, evidence: "she isn't here" }] },
+    {
+      updates: [{ objective_id: "negative", met: true, quality: 0.6, evidence: "she isn't here" }],
+    },
     lesson.objectives,
     "No, she isn't here.",
     "t3",
@@ -157,7 +164,9 @@ test("the first unfinished lesson is current and later ones are locked", () => {
 });
 
 test("lesson brief lists unmet objectives first", () => {
-  const brief = buildLessonBrief(lesson, { "am-is-are": { met: true, quality: 1, evidence: "x", at: "t" } });
+  const brief = buildLessonBrief(lesson, {
+    "am-is-are": { met: true, quality: 1, evidence: "x", at: "t" },
+  });
   assert.ok(brief.indexOf("[negative]") < brief.indexOf("[am-is-are]"));
   assert.match(brief, /already met/);
   assert.ok(buildLessonBrief(lesson, {}, 120).length <= 120);

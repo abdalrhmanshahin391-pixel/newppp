@@ -43,6 +43,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAiRouteImport } from './routes/admin.ai'
 import { Route as AdminAiKeysRouteImport } from './routes/admin.ai-keys'
 import { Route as AdminContentProtectionRouteImport } from './routes/admin.content-protection'
+import { Route as AdminCurriculaRouteImport } from './routes/admin.curricula'
 import { Route as AdminDevicesRouteImport } from './routes/admin.devices'
 import { Route as AdminGermanRouteImport } from './routes/admin.german'
 import { Route as AdminGroupsRouteImport } from './routes/admin.groups'
@@ -299,6 +300,11 @@ const AdminAiKeysRoute = AdminAiKeysRouteImport.update({
 const AdminContentProtectionRoute = AdminContentProtectionRouteImport.update({
   id: '/admin/content-protection',
   path: '/admin/content-protection',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCurriculaRoute = AdminCurriculaRouteImport.update({
+  id: '/admin/curricula',
+  path: '/admin/curricula',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminDevicesRoute = AdminDevicesRouteImport.update({
@@ -766,6 +772,7 @@ export interface FileRoutesByFullPath {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
+  '/admin/curricula': typeof AdminCurriculaRoute
   '/admin/devices': typeof AdminDevicesRoute
   '/admin/german': typeof AdminGermanRouteWithChildren
   '/admin/groups': typeof AdminGroupsRoute
@@ -885,6 +892,7 @@ export interface FileRoutesByTo {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
+  '/admin/curricula': typeof AdminCurriculaRoute
   '/admin/devices': typeof AdminDevicesRoute
   '/admin/groups': typeof AdminGroupsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -1004,6 +1012,7 @@ export interface FileRoutesById {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
+  '/admin/curricula': typeof AdminCurriculaRoute
   '/admin/devices': typeof AdminDevicesRoute
   '/admin/german': typeof AdminGermanRouteWithChildren
   '/admin/groups': typeof AdminGroupsRoute
@@ -1127,6 +1136,7 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-keys'
     | '/admin/content-protection'
+    | '/admin/curricula'
     | '/admin/devices'
     | '/admin/german'
     | '/admin/groups'
@@ -1246,6 +1256,7 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-keys'
     | '/admin/content-protection'
+    | '/admin/curricula'
     | '/admin/devices'
     | '/admin/groups'
     | '/admin/notifications'
@@ -1364,6 +1375,7 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-keys'
     | '/admin/content-protection'
+    | '/admin/curricula'
     | '/admin/devices'
     | '/admin/german'
     | '/admin/groups'
@@ -1486,6 +1498,7 @@ export interface RootRouteChildren {
   AdminAiRoute: typeof AdminAiRoute
   AdminAiKeysRoute: typeof AdminAiKeysRoute
   AdminContentProtectionRoute: typeof AdminContentProtectionRoute
+  AdminCurriculaRoute: typeof AdminCurriculaRoute
   AdminDevicesRoute: typeof AdminDevicesRoute
   AdminGermanRoute: typeof AdminGermanRouteWithChildren
   AdminGroupsRoute: typeof AdminGroupsRoute
@@ -1778,6 +1791,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/content-protection'
       fullPath: '/admin/content-protection'
       preLoaderRoute: typeof AdminContentProtectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/curricula': {
+      id: '/admin/curricula'
+      path: '/admin/curricula'
+      fullPath: '/admin/curricula'
+      preLoaderRoute: typeof AdminCurriculaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/devices': {
@@ -2545,6 +2565,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAiRoute: AdminAiRoute,
   AdminAiKeysRoute: AdminAiKeysRoute,
   AdminContentProtectionRoute: AdminContentProtectionRoute,
+  AdminCurriculaRoute: AdminCurriculaRoute,
   AdminDevicesRoute: AdminDevicesRoute,
   AdminGermanRoute: AdminGermanRouteWithChildren,
   AdminGroupsRoute: AdminGroupsRoute,

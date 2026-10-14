@@ -37,7 +37,10 @@ async function apiKey() {
   if (fromEnv.length > 20) return fromEnv;
   const saved = await resolveRitaOpenAiKey();
   if (saved) return saved;
-  throw new CurriculumAiError(503, "Add OPENAI_API_KEY to the server secrets to use the curriculum AI.");
+  throw new CurriculumAiError(
+    503,
+    "Add OPENAI_API_KEY to the server secrets to use the curriculum AI.",
+  );
 }
 
 export async function curriculumTextModel() {
@@ -94,7 +97,7 @@ async function chatJson<S extends z.ZodTypeAny>(
   ];
   let lastProblem = "";
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    let json: any;
+    let json: { choices?: { message?: { content?: string } }[] };
     try {
       json = await postJson(
         CHAT_URL,
@@ -130,10 +133,16 @@ async function chatJson<S extends z.ZodTypeAny>(
     if (attempt === 2) break;
     messages.push(
       { role: "assistant", content: content.slice(0, 6_000) },
-      { role: "user", content: `That JSON is not valid: ${lastProblem}. Send the corrected JSON object only.` },
+      {
+        role: "user",
+        content: `That JSON is not valid: ${lastProblem}. Send the corrected JSON object only.`,
+      },
     );
   }
-  throw new CurriculumAiError(502, `The AI reply did not match the expected format (${lastProblem}).`);
+  throw new CurriculumAiError(
+    502,
+    `The AI reply did not match the expected format (${lastProblem}).`,
+  );
 }
 
 const SUMMARY_SHAPE = `{
@@ -178,7 +187,9 @@ ${SUMMARY_SHAPE}`;
 }
 
 const TranscriptionSchema = z.object({
-  pages: z.array(z.object({ page_no: z.number().int().min(1), text: z.string().max(12_000) })).max(10),
+  pages: z
+    .array(z.object({ page_no: z.number().int().min(1), text: z.string().max(12_000) }))
+    .max(10),
 });
 
 /** Reads scanned pages (no text layer) so the rest of the flow can work with text. */
@@ -196,7 +207,10 @@ Reply with JSON: {"pages":[{"page_no":N,"text":"..."}]}`,
     },
   ];
   for (const page of pages) {
-    content.push({ type: "image_url", image_url: { url: `data:image/jpeg;base64,${page.jpegBase64}`, detail: "high" } });
+    content.push({
+      type: "image_url",
+      image_url: { url: `data:image/jpeg;base64,${page.jpegBase64}`, detail: "high" },
+    });
   }
   const json = await postJson(
     CHAT_URL,
@@ -210,8 +224,11 @@ Reply with JSON: {"pages":[{"page_no":N,"text":"..."}]}`,
     },
     120_000,
   );
-  const parsed = TranscriptionSchema.safeParse(parseJsonObject(String(json?.choices?.[0]?.message?.content ?? "")));
-  if (!parsed.success) throw new CurriculumAiError(502, "The AI could not read those scanned pages.");
+  const parsed = TranscriptionSchema.safeParse(
+    parseJsonObject(String(json?.choices?.[0]?.message?.content ?? "")),
+  );
+  if (!parsed.success)
+    throw new CurriculumAiError(502, "The AI could not read those scanned pages.");
   const wanted = new Set(pages.map((page) => page.page_no));
   return { pages: parsed.data.pages.filter((page) => wanted.has(page.page_no)), model };
 }
@@ -311,7 +328,9 @@ soft cel shading, bright cheerful colours, centred inside a solid violet circle 
 frame, plain white outside the circle, no words, no letters, no numbers, no logos.`;
 }
 
-export async function generateLessonImage(scene: string): Promise<{ bytes: Uint8Array; model: string; contentType: string }> {
+export async function generateLessonImage(
+  scene: string,
+): Promise<{ bytes: Uint8Array; model: string; contentType: string }> {
   const key = await apiKey();
   const model = (await getServerRuntimeSecret("RITA_IMAGE_MODEL")) || DEFAULT_IMAGE_MODEL;
   const json = await postJson(
