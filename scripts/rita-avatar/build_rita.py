@@ -74,6 +74,15 @@ mod.decimate_type = "COLLAPSE"
 mod.ratio = min(1.0, TARGET_TRIS / n)
 mod.use_collapse_triangulate = True
 bpy.ops.object.modifier_apply(modifier="Decimate")
+# Weld cracks left by the collapse (they show up as tiny dark specks), drop degenerate faces.
+bm = bmesh.new()
+bm.from_mesh(body.data)
+bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0004)
+bmesh.ops.dissolve_degenerate(bm, edges=bm.edges, dist=1e-6)
+loose = [v for v in bm.verts if not v.link_faces]
+bmesh.ops.delete(bm, geom=loose, context="VERTS")
+bm.to_mesh(body.data)
+bm.free()
 bpy.ops.object.shade_flat()
 V = np.array([v.co[:] for v in body.data.vertices])
 print("BODY", len(body.data.polygons), "tris", len(V), "verts")

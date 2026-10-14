@@ -17,12 +17,12 @@ type Props = {
 /** Look of the figure: ivory facets lit from inside with a warm golden rim. */
 const LOOK = {
   ivory: 0xffffff,
-  ivoryGlow: 0xfffaf2,
-  ivoryGlowStrength: 0.400,
+  ivoryGlow: 0xfffdf8,
+  ivoryGlowStrength: 0.520,
   rim: [1.0, 0.83, 0.52] as const,
-  rimStrength: 1.200,
-  exposure: 1.000,
-  bloom: { strength: 0.800, radius: 0.400, threshold: 0.900 },
+  rimStrength: 2.200,
+  exposure: 1.080,
+  bloom: { strength: 1.100, radius: 0.400, threshold: 0.900 },
   /** Body turned to show the ponytail; the head turns back towards the viewer. */
   bodyYaw: 0.55,
   headYaw: -0.4,
@@ -120,7 +120,7 @@ export function RitaAvatar({
       const key = new THREE.DirectionalLight(0xfff6ea, 2.100);
       key.position.set(-1.2, 2.2, 2.4);
       scene.add(key);
-      const fill = new THREE.DirectionalLight(0xfff6ea, 2.100);
+      const fill = new THREE.DirectionalLight(0xffe2b0, 0.800);
       fill.position.set(1.5, 0.6, 1.2);
       scene.add(fill);
 
