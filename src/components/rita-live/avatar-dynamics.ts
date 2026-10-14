@@ -105,8 +105,8 @@ export const GESTURES: Record<GestureName, Gesture> = {
   },
   // Hands clasped behind the back with a gentle forward lean.
   behindBack: {
-    left: { target: [0.05, -0.1, -0.12], pole: [0.32, -0.05, -0.05], wrist: [0, 0, 0], open: 0 },
-    right: { target: [-0.05, -0.1, -0.12], pole: [-0.32, -0.05, -0.05], wrist: [0, 0, 0], open: 0 },
+    left: { target: [0.075, -0.13, -0.2], pole: [0.16, -0.1, -0.5], wrist: [0, 0, 0], open: 0 },
+    right: { target: [-0.075, -0.13, -0.2], pole: [-0.16, -0.1, -0.5], wrist: [0, 0, 0], open: 0 },
     chest: [0.075, 0, 0],
     head: [-0.04, 0, 0.03],
   },

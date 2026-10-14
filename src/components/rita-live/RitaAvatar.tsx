@@ -17,36 +17,32 @@ type Props = {
 /** Look of the figure: ivory facets lit from inside with a warm golden rim. */
 const LOOK = {
   ivory: 0xffffff,
-  ivoryGlow: 0xfff0d8,
-  ivoryGlowStrength: 0.2,
-  skinGlow: 0xfff2de,
-  skinGlowStrength: 0.38,
+  ivoryGlow: 0xfffaf2,
+  ivoryGlowStrength: 0.4,
   rim: [1.0, 0.83, 0.52] as const,
-  rimStrength: 1.25,
-  exposure: 0.95,
-  bloom: { strength: 0.5, radius: 0.22, threshold: 0.92 },
-  /** Body turned a little to her left, face back towards the viewer. */
-  bodyYaw: 0.25,
-  headYaw: -0.14,
+  rimStrength: 1.7,
+  exposure: 1.0,
+  bloom: { strength: 0.8, radius: 0.4, threshold: 0.9 },
+  /** Body turned to show the ponytail; the head turns back towards the viewer. */
+  bodyYaw: 0.55,
+  headYaw: -0.4,
 };
 
-const JOINTS = [
-  "Root",
-  "Hips",
-  "Chest",
-  "Neck",
-  "Head",
-  "Pony1",
-  "Pony2",
-  "ShoulderL",
-  "ElbowL",
-  "WristL",
-  "ShoulderR",
-  "ElbowR",
-  "WristR",
-  "EyeL",
-  "EyeR",
+/** The authored gesture targets were tuned for a 0.46 m arm; scaled to the model's arm. */
+const REFERENCE_ARM = 0.46;
+const REFERENCE_SHOULDER: Record<"L" | "R", Vec3> = { L: [0.086, 0.228, 0], R: [-0.086, 0.228, 0] };
+
+const FLOW = ["Hips", "Spine", "Neck", "Head", "PonyA", "PonyB", "PonyC"] as const;
+const BONES = [
+  ...FLOW,
+  "UpperArmL",
+  "ForearmL",
+  "HandL",
+  "UpperArmR",
+  "ForearmR",
+  "HandR",
 ] as const;
+type BoneName = (typeof BONES)[number];
 
 /**
  * Rita as a glowing low-poly 3D figure that talks with her voice: the mouth
@@ -120,10 +116,8 @@ export function RitaAvatar({
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(background);
       const camera = new THREE.PerspectiveCamera(24, 3 / 4, 0.05, 20);
-      camera.position.set(0, 1.21, 3.1);
-      camera.lookAt(0, 1.19, 0);
-      scene.add(new THREE.HemisphereLight(0xe8ecff, 0x3a3050, 0.32));
-      const key = new THREE.DirectionalLight(0xfff6ea, 1.8);
+      scene.add(new THREE.HemisphereLight(0xf4f4ff, 0x5a4a60, 0.5));
+      const key = new THREE.DirectionalLight(0xfff6ea, 2.1);
       key.position.set(-1.2, 2.2, 2.4);
       scene.add(key);
       const fill = new THREE.DirectionalLight(0xffe2b0, 0.8);
@@ -131,54 +125,29 @@ export function RitaAvatar({
       scene.add(fill);
 
       // Warm rim light baked into the material: brighter where the surface turns away from the viewer.
-      const withRim = <M extends InstanceType<typeof THREE.MeshStandardMaterial>>(
-        material: M,
-        strength: number,
-      ) => {
-        material.onBeforeCompile = (shader) => {
-          shader.fragmentShader = shader.fragmentShader.replace(
-            "#include <emissivemap_fragment>",
-            `#include <emissivemap_fragment>
-             float ritaRim = pow(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), 2.2);
-             totalEmissiveRadiance += vec3(${LOOK.rim.map((v) => v.toFixed(2)).join(", ")}) * ritaRim * ${strength.toFixed(2)};`,
-          );
-        };
-        return material;
+      const ivory = new THREE.MeshStandardMaterial({
+        color: LOOK.ivory,
+        emissive: LOOK.ivoryGlow,
+        emissiveIntensity: LOOK.ivoryGlowStrength,
+        roughness: 0.85,
+        metalness: 0,
+        flatShading: true,
+      });
+      ivory.onBeforeCompile = (shader) => {
+        shader.fragmentShader = shader.fragmentShader.replace(
+          "#include <emissivemap_fragment>",
+          `#include <emissivemap_fragment>
+           float ritaRim = pow(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), 2.2);
+           totalEmissiveRadiance += vec3(${LOOK.rim.map((v) => v.toFixed(2)).join(", ")}) * ritaRim * ${LOOK.rimStrength.toFixed(2)};`,
+        );
       };
       const materials: Record<string, InstanceType<typeof THREE.Material>> = {
-        Ivory: withRim(
-          new THREE.MeshStandardMaterial({
-            color: LOOK.ivory,
-            emissive: LOOK.ivoryGlow,
-            emissiveIntensity: LOOK.ivoryGlowStrength,
-            roughness: 0.85,
-            metalness: 0,
-            flatShading: true,
-            side: THREE.DoubleSide,
-          }),
-          LOOK.rimStrength,
-        ),
-        Skin: withRim(
-          new THREE.MeshStandardMaterial({
-            color: LOOK.ivory,
-            emissive: LOOK.skinGlow,
-            emissiveIntensity: LOOK.skinGlowStrength,
-            roughness: 0.9,
-            metalness: 0,
-          }),
-          LOOK.rimStrength * 0.6,
-        ),
+        Ivory: ivory,
         Eye: new THREE.MeshStandardMaterial({ color: 0x120d0e, roughness: 0.25, metalness: 0 }),
         Mouth: new THREE.MeshStandardMaterial({
           color: 0x7a3e34,
           roughness: 0.6,
           side: THREE.DoubleSide,
-        }),
-        Blush: new THREE.MeshBasicMaterial({
-          color: 0xffb4a8,
-          transparent: true,
-          opacity: 0.28,
-          depthWrite: false,
         }),
       };
 
@@ -218,8 +187,8 @@ export function RitaAvatar({
           blending: THREE.AdditiveBlending,
         }),
       );
-      halo.scale.set(0.95, 1.7, 1);
-      halo.position.set(0, 1.0, -0.3);
+      halo.scale.set(1.0, 1.8, 1);
+      halo.position.set(0, 1.1, -0.4);
       // Bloom already glows; the halo only stands in once bloom is switched off.
       halo.visible = false;
       scene.add(halo);
@@ -231,110 +200,189 @@ export function RitaAvatar({
         const name = (mesh.material as InstanceType<typeof THREE.Material>).name;
         (mesh.material as InstanceType<typeof THREE.Material>).dispose();
         mesh.material = materials[name] ?? materials.Ivory;
+        mesh.frustumCulled = false;
       });
       scene.add(root);
+      root.updateMatrixWorld(true);
 
-      const node = Object.fromEntries(JOINTS.map((n) => [n, root.getObjectByName(n)])) as Record<
-        (typeof JOINTS)[number],
-        InstanceType<typeof THREE.Object3D>
-      >;
-      const missing = JOINTS.filter((n) => !node[n]);
-      if (missing.length) {
-        console.warn("Rita avatar model is missing joints", missing);
-        renderer.dispose();
-        if (!disposed) setFallback(true);
-        return;
+      const bone = {} as Record<BoneName, InstanceType<typeof THREE.Bone>>;
+      for (const name of BONES) {
+        const found = root.getObjectByName(name) as InstanceType<typeof THREE.Bone> | undefined;
+        if (!found) {
+          console.warn("Rita avatar model is missing bone", name);
+          renderer.dispose();
+          if (!disposed) setFallback(true);
+          return;
+        }
+        bone[name] = found;
       }
-      const hands = {
-        L: { open: root.getObjectByName("HandOpenL"), fist: root.getObjectByName("HandFistL") },
-        R: { open: root.getObjectByName("HandOpenR"), fist: root.getObjectByName("HandFistR") },
+      const morphTargets = (name: string) =>
+        root.getObjectByName(name) as InstanceType<typeof THREE.Mesh> | undefined;
+      const mouth = morphTargets("Mouth");
+      const eyes = [morphTargets("EyeL"), morphTargets("EyeR")];
+      const index = (mesh: InstanceType<typeof THREE.Mesh> | undefined, key: string) =>
+        mesh?.morphTargetDictionary?.[key];
+      const mouthKeys = {
+        open: index(mouth, "Open"),
+        wide: index(mouth, "Wide"),
+        round: index(mouth, "Round"),
+        smile: index(mouth, "Smile"),
       };
-      const mouth = root.getObjectByName("MouthMesh") as
-        InstanceType<typeof THREE.Mesh> | undefined;
-      const morph = (key: string) => mouth?.morphTargetDictionary?.[key];
-      const morphIndex = {
-        open: morph("Open"),
-        wide: morph("Wide"),
-        round: morph("Round"),
-        smile: morph("Smile"),
-      };
-      if (mouth?.morphTargetInfluences) mouth.morphTargetInfluences.fill(0);
-      root.rotation.y = LOOK.bodyYaw;
+      for (const mesh of [mouth, ...eyes]) mesh?.morphTargetInfluences?.fill(0);
 
-      // Two-bone IK for the arms: hand target + pole -> shoulder and elbow rotations.
-      const restArm = {
-        L: { upper: node.ElbowL.position.clone(), fore: node.WristL.position.clone() },
-        R: { upper: node.ElbowR.position.clone(), fore: node.WristR.position.clone() },
+      // Rest data. Poses are written as rotations about the world axes on top of the rest
+      // orientation, so the model's own bone roll never matters.
+      const restWorld = {} as Record<BoneName, InstanceType<typeof THREE.Quaternion>>;
+      const restPosition = {} as Record<BoneName, InstanceType<typeof THREE.Vector3>>;
+      const parentWorld = {} as Record<BoneName, InstanceType<typeof THREE.Quaternion>>;
+      for (const name of BONES) {
+        restWorld[name] = bone[name].getWorldQuaternion(new THREE.Quaternion());
+        restPosition[name] = bone[name].getWorldPosition(new THREE.Vector3());
+        parentWorld[name] = bone[name].parent!.getWorldQuaternion(new THREE.Quaternion());
+      }
+      const upperLength = restPosition.ForearmL.distanceTo(restPosition.UpperArmL);
+      const foreLength = restPosition.HandL.distanceTo(restPosition.ForearmL);
+      const reach = (upperLength + foreLength) / REFERENCE_ARM;
+
+      const parentOf = (name: BoneName): BoneName | null => {
+        const parent = bone[name].parent as InstanceType<typeof THREE.Object3D> | null;
+        return parent && BONES.includes(parent.name as BoneName) ? (parent.name as BoneName) : null;
       };
-      const v = {
-        S: new THREE.Vector3(),
-        T: new THREE.Vector3(),
-        P: new THREE.Vector3(),
-        D: new THREE.Vector3(),
-        E: new THREE.Vector3(),
-        tmp: new THREE.Vector3(),
-        R: new THREE.Vector3(),
+      const world = {} as Record<BoneName, InstanceType<typeof THREE.Quaternion>>;
+      const place = (name: BoneName, worldQuaternion: InstanceType<typeof THREE.Quaternion>) => {
+        const parent = parentOf(name);
+        const parentQuaternion = parent ? world[parent] : parentWorld[name];
+        bone[name].quaternion.copy(parentQuaternion).invert().multiply(worldQuaternion);
+        world[name] = worldQuaternion;
+      };
+
+      const scratch = {
         q: new THREE.Quaternion(),
+        e: new THREE.Euler(),
+        a: new THREE.Vector3(),
+        b: new THREE.Vector3(),
+        c: new THREE.Vector3(),
+        d: new THREE.Vector3(),
+        pole: new THREE.Vector3(),
+        elbow: new THREE.Vector3(),
+        shoulder: new THREE.Vector3(),
       };
-      const solveArm = (side: "L" | "R", target: Vec3, pole: Vec3) => {
-        const shoulder = node[`Shoulder${side}`];
-        const elbow = node[`Elbow${side}`];
-        const rest = restArm[side];
-        const l1 = rest.upper.length();
-        const l2 = rest.fore.length();
-        v.S.copy(shoulder.position);
-        v.T.set(...target);
-        v.D.copy(v.T).sub(v.S);
-        const d = Math.min(Math.max(v.D.length(), Math.abs(l1 - l2) + 1e-4), l1 + l2 - 1e-4);
-        v.D.normalize();
-        const a = (l1 * l1 - l2 * l2 + d * d) / (2 * d);
-        const h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
-        v.P.set(...pole).sub(v.S);
-        v.P.addScaledVector(v.D, -v.P.dot(v.D)).normalize();
-        v.E.copy(v.S).addScaledVector(v.D, a).addScaledVector(v.P, h);
-        v.tmp.copy(v.E).sub(v.S).normalize();
-        shoulder.quaternion.setFromUnitVectors(v.R.copy(rest.upper).normalize(), v.tmp);
-        // Forearm direction, expressed in the (rotated) shoulder frame.
-        v.T.copy(v.S).addScaledVector(v.D, d).sub(v.E).normalize();
-        v.q.copy(shoulder.quaternion).invert();
-        v.T.applyQuaternion(v.q);
-        elbow.quaternion.setFromUnitVectors(v.R.copy(rest.fore).normalize(), v.T);
+      const euler = (r: Vec3, extraY = 0) => {
+        scratch.e.set(r[0], r[1] + extraY, r[2]);
+        return new THREE.Quaternion().setFromEuler(scratch.e);
       };
-
-      const setRot = (object: InstanceType<typeof THREE.Object3D>, r: Vec3, extraY = 0) =>
-        object.rotation.set(r[0], r[1] + extraY, r[2]);
+      const restDirection = (from: BoneName, to: BoneName) =>
+        new THREE.Vector3().subVectors(restPosition[to], restPosition[from]).normalize();
+      const armRest = {
+        L: {
+          upper: restDirection("UpperArmL", "ForearmL"),
+          fore: restDirection("ForearmL", "HandL"),
+        },
+        R: {
+          upper: restDirection("UpperArmR", "ForearmR"),
+          fore: restDirection("ForearmR", "HandR"),
+        },
+      };
 
       const apply = (pose: AvatarPose) => {
-        node.Root.position.y = pose.root.y;
-        setRot(node.Hips, pose.hips);
-        setRot(node.Chest, pose.chest);
-        setRot(node.Neck, pose.neck, LOOK.headYaw * 0.35);
-        setRot(node.Head, pose.head, LOOK.headYaw * 0.65);
-        setRot(node.Pony1, pose.pony1);
-        setRot(node.Pony2, pose.pony2);
-        solveArm("L", pose.left.target, pose.left.pole);
-        solveArm("R", pose.right.target, pose.right.pole);
-        setRot(node.WristL, pose.left.wrist);
-        setRot(node.WristR, pose.right.wrist);
-        for (const [side, open] of [
-          ["L", pose.left.open],
-          ["R", pose.right.open],
-        ] as const) {
-          if (hands[side].open) hands[side].open.visible = open >= 0.5;
-          if (hands[side].fist) hands[side].fist.visible = open < 0.5;
+        // 1) Trunk, head and ponytail: cumulative rotations about the world axes.
+        const cumulative = {} as Record<
+          (typeof FLOW)[number],
+          InstanceType<typeof THREE.Quaternion>
+        >;
+        const local: Record<(typeof FLOW)[number], InstanceType<typeof THREE.Quaternion>> = {
+          Hips: euler(pose.hips),
+          Spine: euler(pose.chest),
+          Neck: euler(pose.neck, LOOK.headYaw * 0.35),
+          Head: euler(pose.head, LOOK.headYaw * 0.65),
+          PonyA: euler(pose.pony1),
+          PonyB: euler(pose.pony2),
+          PonyC: euler([pose.pony2[0] * 1.3, pose.pony2[1] * 1.3, pose.pony2[2] * 1.3]),
+        };
+        for (const name of FLOW) {
+          const parent = parentOf(name) as (typeof FLOW)[number] | null;
+          cumulative[name] = (
+            parent ? cumulative[parent].clone() : new THREE.Quaternion()
+          ).multiply(local[name]);
+          place(name, cumulative[name].clone().multiply(restWorld[name]));
         }
-        const eye = 1 - 0.92 * pose.blink;
-        node.EyeL.scale.y = eye;
-        node.EyeR.scale.y = eye;
+        root.position.y = pose.root.y;
+
+        // 2) Arms: two-bone IK towards the hand target, in the leaning chest's frame.
+        const chest = cumulative.Spine;
+        root.updateMatrixWorld(true);
+        for (const side of ["L", "R"] as const) {
+          const upperName = `UpperArm${side}` as const;
+          const foreName = `Forearm${side}` as const;
+          const handName = `Hand${side}` as const;
+          const hand = side === "L" ? pose.left : pose.right;
+
+          // Shoulder in the model's own frame (the scene is yawed and lifted as a whole).
+          const shoulderLocal = root.worldToLocal(
+            bone[upperName].getWorldPosition(scratch.shoulder),
+          );
+          const ref = REFERENCE_SHOULDER[side];
+          scratch.a
+            .set(hand.target[0] - ref[0], hand.target[1] - ref[1], hand.target[2] - ref[2])
+            .multiplyScalar(reach)
+            .applyQuaternion(chest);
+          const target = shoulderLocal.clone().add(scratch.a);
+          scratch.pole
+            .set(hand.pole[0] - ref[0], hand.pole[1] - ref[1], hand.pole[2] - ref[2])
+            .applyQuaternion(chest)
+            .normalize();
+
+          const direction = target.clone().sub(shoulderLocal);
+          const distance = Math.min(
+            Math.max(direction.length(), Math.abs(upperLength - foreLength) + 1e-4),
+            upperLength + foreLength - 1e-4,
+          );
+          direction.normalize();
+          const along =
+            (upperLength * upperLength - foreLength * foreLength + distance * distance) /
+            (2 * distance);
+          const height = Math.sqrt(Math.max(0, upperLength * upperLength - along * along));
+          scratch.b.copy(scratch.pole).addScaledVector(direction, -scratch.pole.dot(direction));
+          if (scratch.b.lengthSq() < 1e-8) scratch.b.set(0, 0, -1);
+          scratch.b.normalize();
+          scratch.elbow
+            .copy(shoulderLocal)
+            .addScaledVector(direction, along)
+            .addScaledVector(scratch.b, height);
+          scratch.c.copy(scratch.elbow).sub(shoulderLocal).normalize(); // upper arm direction
+          scratch.d
+            .copy(shoulderLocal)
+            .addScaledVector(direction, distance)
+            .sub(scratch.elbow)
+            .normalize(); // forearm direction
+
+          const upperDelta = new THREE.Quaternion().setFromUnitVectors(
+            armRest[side].upper,
+            scratch.c,
+          );
+          const foreDelta = new THREE.Quaternion().setFromUnitVectors(
+            armRest[side].fore,
+            scratch.d,
+          );
+          place(upperName, upperDelta.clone().multiply(restWorld[upperName]));
+          place(foreName, foreDelta.clone().multiply(restWorld[foreName]));
+          place(handName, euler(hand.wrist).multiply(foreDelta).multiply(restWorld[handName]));
+        }
+
+        // 3) Face: eyes blink, the mouth morphs with the voice.
+        for (const eye of eyes) {
+          if (eye?.morphTargetInfluences) eye.morphTargetInfluences[0] = pose.blink;
+        }
         const influences = mouth?.morphTargetInfluences;
         if (influences) {
-          if (morphIndex.open !== undefined) influences[morphIndex.open] = pose.mouth.open;
-          if (morphIndex.wide !== undefined) influences[morphIndex.wide] = pose.mouth.wide;
-          if (morphIndex.round !== undefined) influences[morphIndex.round] = pose.mouth.round;
-          if (morphIndex.smile !== undefined)
-            influences[morphIndex.smile] = pose.mouth.smile * (1 - pose.mouth.open);
+          if (mouthKeys.open !== undefined) influences[mouthKeys.open] = pose.mouth.open;
+          if (mouthKeys.wide !== undefined) influences[mouthKeys.wide] = pose.mouth.wide;
+          if (mouthKeys.round !== undefined) influences[mouthKeys.round] = pose.mouth.round;
+          if (mouthKeys.smile !== undefined)
+            influences[mouthKeys.smile] = pose.mouth.smile * (1 - pose.mouth.open);
         }
       };
+      root.rotation.y = LOOK.bodyYaw;
 
       const composer = new EffectComposer(renderer);
       composer.addPass(new RenderPass(scene, camera));
@@ -371,9 +419,10 @@ export function RitaAvatar({
         // Bloom at half resolution: it is a soft glow, so this costs nothing visible.
         bloom.resolution.set((width * dpr) / 2, (height * dpr) / 2);
         camera.aspect = width / height;
-        // Keep the figure's width in view on narrow stages.
+        // Frame from the hips up; back off on narrow stages so the arms stay in view.
         const fit = Math.max(1, 3 / 4 / camera.aspect);
-        camera.position.set(0, 1.21, 3.1 * Math.min(fit, 1.6));
+        camera.position.set(0, 1.3, 2.5 * Math.min(fit, 1.6));
+        camera.lookAt(0, 1.24, 0);
         camera.updateProjectionMatrix();
       };
       resize();
