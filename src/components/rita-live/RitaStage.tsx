@@ -1,5 +1,6 @@
 import { useRef, type MutableRefObject } from "react";
-import { VoiceOrb, type OrbLevels } from "./VoiceOrb";
+import { RitaAvatar } from "./RitaAvatar";
+import type { OrbLevels } from "./VoiceOrb";
 import type { OrbMode } from "./orb-dynamics";
 
 export type RitaMood = "ready" | "listening" | "thinking" | "talking" | "laughing";
@@ -82,14 +83,14 @@ export function RitaStage({
       </header>
 
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pb-8">
-        <VoiceOrb
+        <RitaAvatar
           levelsRef={levels}
           mode={orbModeFor(active, mood)}
           label={active ? moodCopy[mood] : "Rita, your language tutor"}
-          className="w-[min(100%,760px)]"
+          className="h-[min(72vh,760px)] max-w-full"
         />
 
-        <div className="-mt-[14%] text-center md:-mt-24" aria-live="polite">
+        <div className="mt-4 text-center" aria-live="polite">
           <p className="text-sm font-medium text-white/70">
             {active ? moodCopy[mood] : "Your language tutor"}
           </p>
