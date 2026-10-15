@@ -2989,25 +2989,31 @@ export type Database = {
       }
       rita_curriculum_pages: {
         Row: {
+          blank_confirmed: boolean
           created_at: string
           curriculum_id: string
           has_text_layer: boolean
           page_no: number
           text: string
+          transcribed_at: string | null
         }
         Insert: {
+          blank_confirmed?: boolean
           created_at?: string
           curriculum_id: string
           has_text_layer?: boolean
           page_no: number
           text?: string
+          transcribed_at?: string | null
         }
         Update: {
+          blank_confirmed?: boolean
           created_at?: string
           curriculum_id?: string
           has_text_layer?: boolean
           page_no?: number
           text?: string
+          transcribed_at?: string | null
         }
         Relationships: [
           {
@@ -3070,6 +3076,7 @@ export type Database = {
           completed_at: string | null
           evaluations: number
           id: string
+          last_completed_at: string | null
           lesson_id: string
           lesson_version: number
           objectives: Json
@@ -3087,6 +3094,7 @@ export type Database = {
           completed_at?: string | null
           evaluations?: number
           id?: string
+          last_completed_at?: string | null
           lesson_id: string
           lesson_version?: number
           objectives?: Json
@@ -3104,6 +3112,7 @@ export type Database = {
           completed_at?: string | null
           evaluations?: number
           id?: string
+          last_completed_at?: string | null
           lesson_id?: string
           lesson_version?: number
           objectives?: Json
@@ -6301,6 +6310,23 @@ export type Database = {
         Returns: boolean
       }
       revoke_golden_user: { Args: { _user_id: string }; Returns: undefined }
+      rita_confirm_blank_page: {
+        Args: { p_curriculum_id: string; p_page_no: number }
+        Returns: undefined
+      }
+      rita_curriculum_page_report: {
+        Args: { p_curriculum_id: string }
+        Returns: {
+          blank_confirmed: boolean
+          page_no: number
+          text_len: number
+          transcribed: boolean
+        }[]
+      }
+      rita_set_lesson_path_orders: {
+        Args: { p_orders: Json }
+        Returns: undefined
+      }
       rita_voice_usage_totals: {
         Args: { _user_id: string }
         Returns: {
