@@ -439,8 +439,7 @@ export const adminReorderLessons = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-async function loadBook(curriculumId: string) {
-  const db = context.supabase;
+async function loadBook(db: AuthContext["supabase"], curriculumId: string) {
   const { data, error } = await db
     .from("rita_curricula")
     .select(CURRICULUM_COLUMNS)
@@ -451,7 +450,7 @@ async function loadBook(curriculumId: string) {
 }
 
 /** Saves a window summary and moves the read cursor forward when it is the next window. */
-async function storeWindow(input: {
+async function storeWindow(db: AuthContext["supabase"], input: {
   book: CurriculumRow;
   from: number;
   to: number;
@@ -464,7 +463,6 @@ async function storeWindow(input: {
   if (!check.ok) throw new Error(check.reason);
   const pageProblem = checkSummaryPages(input.summary, input.from, input.to);
   if (pageProblem) throw new Error(pageProblem);
-  const db = context.supabase;
   const { error } = await db.from("rita_curriculum_windows").upsert(
     {
       curriculum_id: input.book.id,
@@ -489,7 +487,7 @@ async function storeWindow(input: {
 }
 
 async function legacyRemainingPages(
-  db: Awaited<ReturnType<typeof admin>>,
+  db: AuthContext["supabase"],
   alreadyFetched: number,
 ) {
   const rows: { curriculum_id: string; page_no: number; text: string }[] = [];
@@ -507,8 +505,7 @@ async function legacyRemainingPages(
   return rows;
 }
 
-async function pageText(curriculumId: string, from: number, to: number) {
-  const db = context.supabase;
+async function pageText(db: AuthContext["supabase"], curriculumId: string, from: number, to: number) {
   const gaps = await hasCurriculumGaps(db);
   const { data, error } = await db
     .from("rita_curriculum_pages")
@@ -537,10 +534,10 @@ export const adminReadCurriculumWindow = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => parseWith(windowInput, data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const book = await loadBook(data.curriculumId);
+    const book = await loadBook(context.supabase, data.curriculumId);
     const check = checkWindow(book, data.from, data.to);
     if (!check.ok) throw new Error(check.reason);
-    const { text, missing } = await pageText(book.id, data.from, data.to);
+    const { text, missing } = await pageText(context.supabase, book.id, data.from, data.to);
     if (missing.length > 0) {
       throw new Error(
         `These pages have no text yet: ${missing.join(", ")}. Read the scanned pages first or confirm a page blank.`,
@@ -554,7 +551,7 @@ export const adminReadCurriculumWindow = createServerFn({ method: "POST" })
       to: data.to,
       pageText: text,
     });
-    return storeWindow({
+    return storeWindow(context.supabase, {
       book,
       from: data.from,
       to: data.to,
@@ -572,8 +569,8 @@ export const adminImportCurriculumWindow = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const book = await loadBook(data.curriculumId);
-    return storeWindow({
+    const book = await loadBook(context.supabase, data.curriculumId);
+    return storeWindow(context.supabase, {
       book,
       from: data.from,
       to: data.to,
@@ -586,7 +583,7 @@ export const adminImportCurriculumWindow = createServerFn({ method: "POST" })
 
 // ---------- admin: lessons ----------
 
-async function insertLesson(input: {
+async function insertLesson(db: AuthContext["supabase"], input: {
   book: CurriculumRow;
   lesson: LessonDraft;
   source: "ai" | "manual";
@@ -600,7 +597,6 @@ async function insertLesson(input: {
     input.lesson.source_to_page,
   );
   if (pageProblem) throw new Error(pageProblem);
-  const db = context.supabase;
   // Two tries: a parallel insert can take the same lesson number.
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const { data: last } = await db
@@ -654,13 +650,13 @@ export const adminGenerateLesson = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const book = await loadBook(data.curriculumId);
+    const book = await loadBook(context.supabase, data.curriculumId);
     if (data.to - data.from + 1 > 10) throw new Error("A lesson can use at most 10 pages.");
     const pageProblem = checkLessonPages(book, data.from, data.to);
     if (pageProblem) throw new Error(pageProblem);
     const db = context.supabase;
     const [{ text }, windows, lessons] = await Promise.all([
-      pageText(book.id, data.from, data.to),
+      pageText(context.supabase, book.id, data.from, data.to),
       db
         .from("rita_curriculum_windows")
         .select("from_page, to_page, summary")
@@ -692,7 +688,7 @@ export const adminGenerateLesson = createServerFn({ method: "POST" })
       lesson.source_from_page,
       Math.min(lesson.source_to_page, data.to),
     );
-    return insertLesson({
+    return insertLesson(context.supabase, {
       book,
       lesson,
       source: "ai",
@@ -716,8 +712,8 @@ export const adminImportLesson = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const book = await loadBook(data.curriculumId);
-    return insertLesson({
+    const book = await loadBook(context.supabase, data.curriculumId);
+    return insertLesson(context.supabase, {
       book,
       lesson: data.lesson,
       source: "manual",
@@ -741,7 +737,7 @@ export const adminUpdateLesson = createServerFn({ method: "POST" })
       .eq("id", data.lessonId)
       .single();
     fail(error, "lesson");
-    const book = await loadBook(current.curriculum_id);
+    const book = await loadBook(context.supabase, current.curriculum_id);
     const pageProblem = checkLessonPages(
       book,
       data.lesson.source_from_page,
@@ -808,7 +804,7 @@ export const adminSetLessonStatus = createServerFn({ method: "POST" })
       .eq("id", data.lessonId);
     fail(updateError, "update lesson");
     if (data.status === "published") {
-      const book = await loadBook(lesson.curriculum_id);
+      const book = await loadBook(context.supabase, lesson.curriculum_id);
       const taught = taughtCursorAfterPublish(book, Number(lesson.source_to_page));
       if (taught > book.taught_cursor) {
         const { error: cursorError } = await db
