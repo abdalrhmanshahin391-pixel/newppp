@@ -37,7 +37,10 @@ test("recovery is proportional to the pause: word gap < comma < end of sentence"
   const sentence = run(talk(), 1.4, 0, 0, "listening").radius;
 
   assert.ok(wordGap > minimum, "a word gap should open the orb a little");
-  assert.ok(wordGap - minimum < 0.075, `a word gap should open it only slightly (${wordGap - minimum})`);
+  assert.ok(
+    wordGap - minimum < 0.075,
+    `a word gap should open it only slightly (${wordGap - minimum})`,
+  );
   assert.ok(comma > wordGap + 0.025, "a comma should open it more than a word gap");
   assert.ok(sentence > comma + 0.025, "the end of a sentence should open it the most");
   assert.ok(sentence > 0.95, `after a full pause the orb should be nearly full size (${sentence})`);
@@ -61,10 +64,17 @@ test("while Rita speaks the orb is full size and the clouds move fast", () => {
   const idle = new OrbDynamics();
   const a = run(speaking, 1.5, 0, 0.5, "speaking");
   const b = run(idle, 1.5, 0, 0, "idle");
-  assert.ok(a.radius >= 1.0, `radius was ${a.radius}`);
+  assert.ok(a.radius > 0.99 && a.radius <= 1.0005, `radius was ${a.radius}`);
   assert.ok(a.flowSpeed > 1.0, `flow was ${a.flowSpeed}`);
   assert.ok(a.flowSpeed > b.flowSpeed * 5);
   assert.ok(a.warp > b.warp + 0.3);
+});
+
+test("the orb outline stays still while Rita speaks, only the inside moves", () => {
+  const quiet = run(new OrbDynamics(), 1.5, 0, 0.15, "speaking");
+  const loud = run(new OrbDynamics(), 1.5, 0, 0.95, "speaking");
+  assert.ok(Math.abs(quiet.radius - loud.radius) < 0.001);
+  assert.ok(loud.flowSpeed > quiet.flowSpeed * 1.5);
 });
 
 test("thinking is calm and slightly smaller than full size", () => {

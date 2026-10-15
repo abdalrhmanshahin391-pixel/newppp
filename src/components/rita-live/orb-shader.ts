@@ -99,7 +99,7 @@ void main() {
   // Clouds are present at rest, and richer while someone is talking.
   float presence = 0.80 + 0.24 * uMix.w + 0.12 * uMix.y - 0.10 * uMix.z - 0.08 * uMix.x;
 
-  vec3 col = vec3(1.0);
+  vec3 col = vec3(1.0, 0.90, 0.94);
   col = mix(col, uColA, m1 * presence);
   col = mix(col, uColB, m2 * presence * 0.85);
   col = mix(col, uColC, m3 * presence * 0.70);
@@ -110,8 +110,8 @@ void main() {
   col *= mix(0.80, 1.03, diff);
 
   float rim = pow(1.0 - z, 2.6);
-  col = mix(col, vec3(1.0), rim * 0.55);
-  col += vec3(0.65, 0.75, 1.0) * rim * (0.08 + 0.10 * uMix.w);
+  col = mix(col, vec3(1.0, 0.62, 0.76), rim * 0.5);
+  col += vec3(1.0, 0.55, 0.72) * rim * (0.05 + 0.08 * uMix.w);
 
   float spec = pow(max(dot(reflect(-L, N), vec3(0.0, 0.0, 1.0)), 0.0), 38.0);
   col += vec3(spec * 0.16);
@@ -126,15 +126,17 @@ void main() {
   float a = clamp(mask + g * (1.0 - mask), 0.0, 1.0);
 
   // Film grain keeps the dark gradients free of banding.
+  // Dither colour and alpha: on a white page the soft outer glow would otherwise show rings.
   float grain = (hash(vec3(frag, 7.0)) - 0.5) / 255.0;
-  rgb += grain * a;
+  rgb += grain * a * 2.0;
+  a = clamp(a + grain * 1.5 * step(0.002, a), 0.0, 1.0);
 
   outColor = vec4(min(rgb, vec3(a)), a);
 }`;
 
-/** Pearl white base with three restrained pastels. Linear 0..1 sRGB. */
+/** The home page pink on a soft pink-white base: #ff7aac, a lighter pink and a deeper rose for depth. 0..1 sRGB. */
 export const ORB_COLORS = {
-  a: [0.5, 0.67, 1.0],
-  b: [0.74, 0.58, 1.0],
-  c: [1.0, 0.7, 0.6],
+  a: [1.0, 0.48, 0.67],
+  b: [1.0, 0.72, 0.83],
+  c: [0.86, 0.3, 0.5],
 } as const;

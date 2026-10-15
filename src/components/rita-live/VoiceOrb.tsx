@@ -14,8 +14,8 @@ type Props = {
 
 const FALLBACK_STYLE = {
   background:
-    "radial-gradient(circle at 38% 30%, #ffffff 0%, #eef2ff 42%, #cfd9ff 78%, #b9c6f5 100%)",
-  boxShadow: "0 0 90px 10px rgba(160, 190, 255, 0.28)",
+    "radial-gradient(circle at 38% 30%, #ffffff 0%, #ffe5f0 42%, #ffb3cf 78%, #ff7aac 100%)",
+  boxShadow: "0 0 90px 10px rgba(255, 122, 172, 0.26)",
 } as const;
 
 function compile(gl: WebGL2RenderingContext, type: number, source: string) {
@@ -32,7 +32,7 @@ function compile(gl: WebGL2RenderingContext, type: number, source: string) {
 }
 
 /**
- * Pearl-white voice orb rendered with a single WebGL2 fragment shader. It
+ * Soft white and pink voice orb (the home page palette) rendered with a single WebGL2 fragment shader. It
  * contracts while the learner speaks, opens up in pauses, and churns quickly
  * while Rita speaks. Falls back to a still gradient disc without WebGL2.
  */
@@ -147,7 +147,13 @@ export function VoiceOrb({ levelsRef, mode, label, className = "" }: Props) {
       gl.uniform1f(uWarp, frame.warp);
       gl.uniform1f(uGlow, frame.glow);
       gl.uniform1f(uPulse, frame.pulse);
-      gl.uniform4f(uMix, frame.mix.idle, frame.mix.listening, frame.mix.thinking, frame.mix.speaking);
+      gl.uniform4f(
+        uMix,
+        frame.mix.idle,
+        frame.mix.listening,
+        frame.mix.thinking,
+        frame.mix.speaking,
+      );
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -179,7 +185,9 @@ export function VoiceOrb({ levelsRef, mode, label, className = "" }: Props) {
       document.removeEventListener("visibilitychange", onVisibility);
       observer?.disconnect();
       canvas.removeEventListener("webglcontextlost", onContextLost);
-      gl.getExtension("WEBGL_lose_context")?.loseContext();
+      // Free the GPU context only when the canvas is really gone. React's development
+      // double-run re-uses the same canvas, and a lost context would send it to the fallback.
+      if (!canvas.isConnected) gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
   }, [levelsRef]);
 

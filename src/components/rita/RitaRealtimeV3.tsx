@@ -22,9 +22,9 @@ import {
   upsertDraftReply,
   wasRitaInterrupted,
 } from "@/lib/rita-v3-heard";
-import type { RitaMood } from "@/components/rita-live/RitaStage";
+import { orbModeFor, type RitaMood } from "@/components/rita-live/RitaStage";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
-import { StaticModelViewer } from "@/components/rita-live/StaticModelViewer";
+import { VoiceOrb } from "@/components/rita-live/VoiceOrb";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
 import { useRitaLesson } from "@/components/rita-lessons/useRitaLesson";
 import { LessonObjectivesPanel, LessonResultCard } from "@/components/rita-lessons/LessonPanels";
@@ -1039,7 +1039,14 @@ export function RitaRealtimeV3({ lessonId }: { lessonId?: string } = {}) {
           )}
 
           {!wide && (
-            <StaticModelViewer className="mb-2 h-[320px] w-full overflow-hidden rounded-2xl" />
+            <div className="flex justify-center">
+              <VoiceOrb
+                levelsRef={orbLevels}
+                mode={orbModeFor(active, mood)}
+                label="Rita"
+                className="h-[min(58vw,300px)] w-[min(58vw,300px)]"
+              />
+            </div>
           )}
 
           <div className="flex-1 overflow-y-auto py-4">
@@ -1183,8 +1190,13 @@ export function RitaRealtimeV3({ lessonId }: { lessonId?: string } = {}) {
         </section>
         {wide && (
           <aside className="p-6 pl-0">
-            <div className="sticky top-6 h-[calc(100vh-72px-48px)] min-h-[420px] overflow-hidden rounded-2xl">
-              <StaticModelViewer className="h-full w-full" />
+            <div className="sticky top-6 flex h-[calc(100vh-72px-48px)] min-h-[420px] items-center justify-center">
+              <VoiceOrb
+                levelsRef={orbLevels}
+                mode={orbModeFor(active, mood)}
+                label={active ? "Rita is with you" : "Rita, your language tutor"}
+                className="h-[min(70vh,600px)] w-full max-w-[600px]"
+              />
             </div>
           </aside>
         )}

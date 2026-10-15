@@ -9,7 +9,8 @@
  *   syllables, and a slow "speech activity" one that only releases after a real
  *   pause. A gap between words barely lets the orb grow, a comma lets it grow a
  *   little more, the end of a sentence lets it open fully.
- * - While Rita talks the orb is full size and the clouds inside move quickly.
+ * - While Rita talks the orb stays at full size and only the clouds inside move,
+ *   faster and wilder with her voice. The orb itself never pulses.
  */
 
 export type OrbMode = "idle" | "listening" | "thinking" | "speaking";
@@ -68,7 +69,8 @@ export const ORB_TUNING = {
   /** Rest sizes per mode. */
   idleRadius: 0.86,
   thinkingRadius: 0.94,
-  speakingBoost: 0.05,
+  /** Rita's voice moves the inside only; the outline stays put. */
+  speakingBoost: 0,
 } as const;
 
 export class OrbDynamics {
