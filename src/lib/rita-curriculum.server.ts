@@ -1,5 +1,5 @@
 // Loads the lesson notes that the voice worker adds to Rita's prompt.
-import { supabaseAdmin } from "@/integrations/supabase/legacy-client.server";
+import { ritaV3UserClient } from "@/lib/rita-v3.server";
 import {
   buildLessonBrief,
   type LessonPlan,
@@ -16,11 +16,15 @@ export type VoiceLesson = { id: string; title: string; brief: string };
  * lesson does not exist or is not available to this user.
  */
 export async function loadVoiceLesson(
+  accessToken: string,
   userId: string,
   lessonId: string,
   preview = false,
 ): Promise<VoiceLesson | null> {
   if (!/^[0-9a-f-]{36}$/i.test(lessonId)) return null;
+  // Signed-in caller's connection: database policies decide which lessons are visible.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabaseAdmin = ritaV3UserClient(accessToken) as any;
   const { data: lesson, error } = await supabaseAdmin
     .from("rita_lessons")
     .select(

@@ -29,6 +29,13 @@
       "when": 1792064753496,
       "tag": "0003_rita_curriculum_gaps",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792065527442,
+      "tag": "0004_rita_lesson_progress_own_writes",
+      "breakpoints": true
     }
   ]
 }

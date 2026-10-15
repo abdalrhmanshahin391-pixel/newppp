@@ -475,7 +475,7 @@ export async function requireRitaV3Access(request: Request) {
   return { ok: true as const, auth, allowance };
 }
 
-function ritaV3UserClient(accessToken: string) {
+export function ritaV3UserClient(accessToken: string) {
   const { url, publishableKey } = getSupabasePublicConfig();
   return createClient(url, publishableKey, {
     global: { headers: { Authorization: `Bearer ${accessToken}` } },
