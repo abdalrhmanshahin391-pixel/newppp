@@ -21,7 +21,7 @@ export function LessonObjectivesPanel({
   const goals = session.lesson.objectives;
   const met = goals.filter((goal) => objectives[goal.id]?.met).length;
   return (
-    <section dir="rtl" className="rounded-3xl border border-[#EEE8FB] bg-[#FBFAFF] p-4">
+    <section dir="rtl" className="rounded-2xl bg-[var(--pp-grey)] p-4">
       <div className="flex items-center gap-3">
         <LessonImage
           src={session.lesson.image_url}
@@ -29,24 +29,24 @@ export function LessonObjectivesPanel({
           className="h-14 w-14 shrink-0 border-2 border-white shadow"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-extrabold text-[#9B5CF6]">درس اليوم</p>
-          <h2 className="truncate text-lg font-black">
+          <p className="text-xs font-semibold text-[var(--pp-pink-text)]">درس اليوم</p>
+          <h2 className="truncate text-lg font-bold">
             {session.lesson.title_ar || session.lesson.title}
           </h2>
-          <p className="truncate text-xs font-semibold text-[#6B6F86]" dir="ltr">
+          <p className="truncate text-xs font-semibold text-[var(--pp-muted)]" dir="ltr">
             {session.lesson.title}
           </p>
         </div>
         <div className="text-center">
-          <p className="text-2xl font-black text-[#6D35D8]">
+          <p className="text-2xl font-bold text-[var(--pp-ink)]">
             {met}/{goals.length}
           </p>
-          <p className="text-[10px] font-bold text-[#8A8FA3]">أهداف</p>
+          <p className="text-[10px] font-bold text-[var(--pp-muted)]">أهداف</p>
         </div>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#ECE6FA]">
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--pp-line)]">
         <div
-          className="h-full rounded-full bg-[#9B5CF6] transition-all duration-500"
+          className="h-full rounded-full bg-[var(--pp-pink)] transition-all duration-500"
           style={{ width: `${goals.length ? (met / goals.length) * 100 : 0}%` }}
         />
       </div>
@@ -58,12 +58,12 @@ export function LessonObjectivesPanel({
             <li
               key={goal.id}
               className={`flex items-start gap-2 rounded-2xl px-3 py-2 text-sm transition-colors ${
-                done ? "bg-[#EAF8EF]" : "bg-white"
-              } ${fresh ? "ring-2 ring-[#48C774]" : ""}`}
+                done ? "bg-[var(--pp-pink-soft)]" : "bg-white"
+              } ${fresh ? "ring-2 ring-[var(--pp-ink)]" : ""}`}
             >
               <span
                 className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full ${
-                  done ? "bg-[#48C774] text-white" : "border-2 border-[#D9DCE6]"
+                  done ? "bg-[var(--pp-ink)] text-white" : "border-2 border-[#cfcfdb]"
                 }`}
               >
                 {done && <Check size={13} strokeWidth={3} />}
@@ -71,12 +71,15 @@ export function LessonObjectivesPanel({
               <span className="min-w-0">
                 <span className="block font-bold">{goal.text_ar || goal.text}</span>
                 {goal.text_ar && (
-                  <span className="block text-xs text-[#6B6F86]" dir="ltr">
+                  <span className="block text-xs text-[var(--pp-muted)]" dir="ltr">
                     {goal.text}
                   </span>
                 )}
                 {done && objectives[goal.id]?.evidence && (
-                  <span className="mt-0.5 block text-xs italic text-[#2F8F55]" dir="ltr">
+                  <span
+                    className="mt-0.5 block text-xs italic text-[var(--pp-pink-text)]"
+                    dir="ltr"
+                  >
                     “{objectives[goal.id].evidence}”
                   </span>
                 )}
@@ -85,7 +88,7 @@ export function LessonObjectivesPanel({
           );
         })}
       </ul>
-      <p className="mt-3 flex items-center gap-1.5 text-xs font-bold text-[#8A8FA3]">
+      <p className="mt-3 flex items-center gap-1.5 text-xs font-bold text-[var(--pp-muted)]">
         {checking && <Loader2 size={12} className="animate-spin" />}
         {checking ? "ريتا تراجع إجابتك…" : `النتيجة حتى الآن: ${score}%`}
       </p>
@@ -111,36 +114,36 @@ export function LessonResultCard({
     stars === 3 ? "ممتاز!" : stars === 2 ? "عمل رائع!" : stars === 1 ? "أحسنت!" : "أكملت الدرس!";
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-[#1E2A4A]/40 p-4"
+      className="edith-premium fixed inset-0 z-50 grid place-items-center bg-[#121117]/40 p-4"
       role="dialog"
       aria-modal="true"
     >
       <section
         dir="rtl"
-        className="w-full max-w-sm rounded-[28px] bg-white p-6 text-center shadow-2xl"
+        className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl"
       >
         <LessonStars stars={stars} size={44} />
-        <h2 className="mt-3 text-3xl font-black text-[#1E2A4A]">{praise}</h2>
-        <p className="mt-1 font-bold text-[#6B6F86]">حققت كل أهداف الدرس</p>
-        <p className="mt-4 text-5xl font-black text-[#6D35D8]">{score}%</p>
+        <h2 className="mt-3 text-3xl font-bold text-[var(--pp-ink)]">{praise}</h2>
+        <p className="mt-1 font-bold text-[var(--pp-muted)]">حققت كل أهداف الدرس</p>
+        <p className="mt-4 text-5xl font-bold text-[var(--pp-ink)]">{score}%</p>
         <div className="mt-6 space-y-2">
           {nextLessonId ? (
             <Link
               to="/rita-live"
               search={{ lesson: nextLessonId }}
-              className="block rounded-2xl bg-[#9B5CF6] py-3.5 text-lg font-black text-white shadow-[0_5px_0_#6D35D8]"
+              className="rita-btn rita-btn-primary !flex !w-full !self-stretch"
               onClick={onClose}
             >
               الدرس التالي
             </Link>
           ) : (
-            <p className="rounded-2xl bg-[#F4EFFE] py-3 text-sm font-bold text-[#6D35D8]">
+            <p className="rounded-2xl bg-[var(--pp-grey)] py-3 text-sm font-bold text-[var(--pp-pink-text)]">
               أنهيت كل الدروس المتاحة 🎉
             </p>
           )}
           <Link
             to="/rita-lessons"
-            className="block rounded-2xl border-2 border-[#EEE8FB] py-3 font-black text-[#6D35D8]"
+            className="rita-btn rita-btn-secondary !flex !w-full !self-stretch"
             onClick={onClose}
           >
             العودة إلى المسار
@@ -148,7 +151,7 @@ export function LessonResultCard({
           <button
             type="button"
             onClick={onRetry}
-            className="flex w-full items-center justify-center gap-1.5 py-2 text-sm font-bold text-[#8A8FA3]"
+            className="flex w-full items-center justify-center gap-1.5 py-2 text-sm font-bold text-[var(--pp-muted)]"
           >
             <RotateCcw size={14} /> أعد الدرس لتحسين نتيجتك
           </button>
