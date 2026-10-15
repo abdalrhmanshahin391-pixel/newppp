@@ -1,0 +1,571 @@
+[
+  {
+    "image_url": "/curriculum/to-be.svg",
+    "lesson": {
+      "title": "The verb \"to be\"",
+      "title_ar": "أنا ريتا",
+      "topic": "to be: am / is / are",
+      "source_from_page": 2,
+      "source_to_page": 2,
+      "summary": "Rita teaches am, is and are with the learner's own life: who they are, how they feel and where they are from, then the negative and yes/no questions.",
+      "objectives": [
+        {
+          "id": "say-i-am",
+          "text": "Say a sentence about themselves with I am / I'm",
+          "text_ar": "يقول جملة عن نفسه بـ I am",
+          "criteria": "The learner says a correct sentence starting with I am or I'm (name, feeling, job or country).",
+          "check_prompts": [
+            "Tell me about you. Who are you?",
+            "How are you today?"
+          ],
+          "weight": 2
+        },
+        {
+          "id": "use-is",
+          "text": "Use is with he, she or it",
+          "text_ar": "يستخدم is مع he / she / it",
+          "criteria": "The learner says a correct sentence with he is, she is or it is (or he's, she's, it's).",
+          "check_prompts": [
+            "Tell me about your friend or someone in your family."
+          ],
+          "weight": 1
+        },
+        {
+          "id": "use-are",
+          "text": "Use are with you, we or they",
+          "text_ar": "يستخدم are مع you / we / they",
+          "criteria": "The learner says a correct sentence with we are, they are or you are.",
+          "check_prompts": [
+            "Tell me about you and your family together."
+          ],
+          "weight": 1
+        },
+        {
+          "id": "negative",
+          "text": "Make a negative with not",
+          "text_ar": "يكوّن جملة نفي",
+          "criteria": "The learner says a correct negative: I'm not, isn't, aren't or is not / are not.",
+          "check_prompts": [
+            "Are you tired? Say no with a full sentence."
+          ],
+          "weight": 1
+        }
+      ],
+      "plan": {
+        "phases": [
+          {
+            "phase": "warmup",
+            "minutes": 1,
+            "steps": [
+              "Greet the learner and say: I am Rita. I am your teacher."
+            ]
+          },
+          {
+            "phase": "teach",
+            "minutes": 2,
+            "steps": [
+              "Show I am, you are, he/she/it is with one example each",
+              "Show the short forms I'm, she's, they're"
+            ]
+          },
+          {
+            "phase": "practice",
+            "minutes": 3,
+            "steps": [
+              "Ask the learner to say three sentences about themselves",
+              "Ask about a friend: he is / she is",
+              "Practise negatives: I'm not tired"
+            ]
+          },
+          {
+            "phase": "check",
+            "minutes": 2,
+            "steps": [
+              "Ask each objective's question and wait for a full sentence"
+            ]
+          },
+          {
+            "phase": "wrap",
+            "minutes": 1,
+            "steps": [
+              "Praise one thing the learner did well",
+              "Say one sentence that sums up the lesson"
+            ]
+          }
+        ],
+        "teacher_notes": "Arabic has no 'to be' in the present, so learners drop it: 'I happy'. Model 'I am happy' and ask them to repeat."
+      },
+      "vocabulary": [
+        {
+          "word": "am",
+          "meaning_ar": "أكون (مع I)",
+          "example": "I am Rita."
+        },
+        {
+          "word": "is",
+          "meaning_ar": "يكون (مع he/she/it)",
+          "example": "She is my friend."
+        },
+        {
+          "word": "are",
+          "meaning_ar": "يكون (مع you/we/they)",
+          "example": "We are from Jordan."
+        }
+      ],
+      "image_prompt": "A smiling girl pointing at herself with a speech bubble"
+    }
+  },
+  {
+    "image_url": "/curriculum/pronouns.svg",
+    "lesson": {
+      "title": "Subject pronouns",
+      "title_ar": "هو وهي ونحن",
+      "topic": "subject pronouns",
+      "source_from_page": 3,
+      "source_to_page": 3,
+      "summary": "Rita teaches I, you, he, she, it, we and they by replacing names with pronouns in short spoken sentences.",
+      "objectives": [
+        {
+          "id": "he-she",
+          "text": "Replace a person's name with he or she",
+          "text_ar": "يستبدل الاسم بـ he أو she",
+          "criteria": "Given a name, the learner says a sentence using he or she correctly (e.g. Omar is tall → He is tall).",
+          "check_prompts": [
+            "Omar is tall. Say it with he or she.",
+            "Sara is a doctor. Say it again with a pronoun."
+          ],
+          "weight": 2
+        },
+        {
+          "id": "it-things",
+          "text": "Use it for a thing or an animal",
+          "text_ar": "يستخدم it للأشياء والحيوانات",
+          "criteria": "The learner says a sentence using it for a thing or an animal.",
+          "check_prompts": [
+            "Tell me about your phone or your cat."
+          ],
+          "weight": 1
+        },
+        {
+          "id": "we-they",
+          "text": "Use we and they for groups",
+          "text_ar": "يستخدم we و they للجماعة",
+          "criteria": "The learner says a correct sentence with we or they for more than one person.",
+          "check_prompts": [
+            "Ali and Sami are friends. Say it with they.",
+            "You and I are students. Say it with we."
+          ],
+          "weight": 1
+        }
+      ],
+      "plan": {
+        "phases": [
+          {
+            "phase": "warmup",
+            "minutes": 1,
+            "steps": [
+              "Ask: Who is your best friend? What is his or her name?"
+            ]
+          },
+          {
+            "phase": "teach",
+            "minutes": 2,
+            "steps": [
+              "Say each pronoun with one short example",
+              "Explain: it is for things and animals"
+            ]
+          },
+          {
+            "phase": "practice",
+            "minutes": 3,
+            "steps": [
+              "Give a name and ask the learner to replace it",
+              "Mix single people, groups and things"
+            ]
+          },
+          {
+            "phase": "check",
+            "minutes": 2,
+            "steps": [
+              "Ask each objective's question and wait"
+            ]
+          },
+          {
+            "phase": "wrap",
+            "minutes": 1,
+            "steps": [
+              "Praise one thing the learner did well",
+              "Say one sentence that sums up the lesson"
+            ]
+          }
+        ],
+        "teacher_notes": "Arabic speakers may say 'he' for objects (هو for كتاب). Correct gently to 'it'."
+      },
+      "vocabulary": [
+        {
+          "word": "I",
+          "meaning_ar": "أنا",
+          "example": "I am hungry."
+        },
+        {
+          "word": "you",
+          "meaning_ar": "أنتَ / أنتِ / أنتم",
+          "example": "You are kind."
+        },
+        {
+          "word": "he",
+          "meaning_ar": "هو",
+          "example": "He is Omar."
+        },
+        {
+          "word": "she",
+          "meaning_ar": "هي",
+          "example": "She is Sara."
+        },
+        {
+          "word": "it",
+          "meaning_ar": "هو / هي (لغير العاقل)",
+          "example": "It is a cat."
+        },
+        {
+          "word": "we",
+          "meaning_ar": "نحن",
+          "example": "We are friends."
+        },
+        {
+          "word": "they",
+          "meaning_ar": "هم / هن",
+          "example": "They are here."
+        }
+      ],
+      "image_prompt": "Three friends standing together and waving"
+    }
+  },
+  {
+    "image_url": "/curriculum/articles.svg",
+    "lesson": {
+      "title": "Articles \"a\" and \"an\"",
+      "title_ar": "تفاحة وكتاب",
+      "topic": "a / an",
+      "source_from_page": 4,
+      "source_to_page": 4,
+      "summary": "Rita teaches when to say a and when to say an by listening to the first sound of the word, and using a/an for jobs.",
+      "objectives": [
+        {
+          "id": "use-a",
+          "text": "Use a before a consonant sound",
+          "text_ar": "يستخدم a قبل الصوت الساكن",
+          "criteria": "The learner says a correct phrase or sentence with a before a consonant sound (a book, a teacher).",
+          "check_prompts": [
+            "What is in your bag? Name two things."
+          ],
+          "weight": 1
+        },
+        {
+          "id": "use-an",
+          "text": "Use an before a vowel sound",
+          "text_ar": "يستخدم an قبل الصوت المتحرك",
+          "criteria": "The learner says a correct phrase or sentence with an before a vowel sound (an apple, an egg, an hour).",
+          "check_prompts": [
+            "What fruit do you like? Use an apple or an orange."
+          ],
+          "weight": 2
+        },
+        {
+          "id": "jobs",
+          "text": "Say a job with a or an",
+          "text_ar": "يذكر مهنة مع a أو an",
+          "criteria": "The learner says a sentence like 'I am a student' or 'She is an engineer' with the right article.",
+          "check_prompts": [
+            "What is your job? What is your mother's or father's job?"
+          ],
+          "weight": 1
+        }
+      ],
+      "plan": {
+        "phases": [
+          {
+            "phase": "warmup",
+            "minutes": 1,
+            "steps": [
+              "Ask: What do you have on your table right now?"
+            ]
+          },
+          {
+            "phase": "teach",
+            "minutes": 2,
+            "steps": [
+              "Explain: a + consonant sound, an + vowel sound",
+              "Special cases: an hour, a university"
+            ]
+          },
+          {
+            "phase": "practice",
+            "minutes": 3,
+            "steps": [
+              "Say a word and ask the learner to add a or an",
+              "Talk about jobs: I am a ..., she is an ..."
+            ]
+          },
+          {
+            "phase": "check",
+            "minutes": 2,
+            "steps": [
+              "Ask each objective's question and wait"
+            ]
+          },
+          {
+            "phase": "wrap",
+            "minutes": 1,
+            "steps": [
+              "Praise one thing the learner did well",
+              "Say one sentence that sums up the lesson"
+            ]
+          }
+        ],
+        "teacher_notes": "Learners often drop the article: 'I am student'. Model 'I am a student'."
+      },
+      "vocabulary": [
+        {
+          "word": "a",
+          "meaning_ar": "أداة نكرة قبل الصوت الساكن",
+          "example": "a book"
+        },
+        {
+          "word": "an",
+          "meaning_ar": "أداة نكرة قبل الصوت المتحرك",
+          "example": "an apple"
+        }
+      ],
+      "image_prompt": "A boy holding a red apple"
+    }
+  },
+  {
+    "image_url": "/curriculum/possessives.svg",
+    "lesson": {
+      "title": "Possessive adjectives",
+      "title_ar": "بيتي وعائلتي",
+      "topic": "my / your / his / her / our / their",
+      "source_from_page": 5,
+      "source_to_page": 5,
+      "summary": "Rita teaches my, your, his, her, its, our and their by talking about the learner's family and things.",
+      "objectives": [
+        {
+          "id": "my-your",
+          "text": "Use my and your",
+          "text_ar": "يستخدم my و your",
+          "criteria": "The learner says a correct sentence with my (e.g. My name is ..., my brother is ...).",
+          "check_prompts": [
+            "What's your name? Tell me about your family."
+          ],
+          "weight": 2
+        },
+        {
+          "id": "his-her",
+          "text": "Use his and her correctly",
+          "text_ar": "يفرّق بين his و her",
+          "criteria": "The learner uses his for a male and her for a female correctly in one sentence.",
+          "check_prompts": [
+            "Tell me your father's name and your mother's name with his and her."
+          ],
+          "weight": 1
+        },
+        {
+          "id": "our-their",
+          "text": "Use our or their",
+          "text_ar": "يستخدم our أو their",
+          "criteria": "The learner says a correct sentence with our or their.",
+          "check_prompts": [
+            "Tell me about your home. Say our house ..."
+          ],
+          "weight": 1
+        }
+      ],
+      "plan": {
+        "phases": [
+          {
+            "phase": "warmup",
+            "minutes": 1,
+            "steps": [
+              "Ask: What's your name? What's your friend's name?"
+            ]
+          },
+          {
+            "phase": "teach",
+            "minutes": 2,
+            "steps": [
+              "Match each pronoun to its possessive: I-my, he-his, she-her",
+              "Possessives don't change for plurals: my books"
+            ]
+          },
+          {
+            "phase": "practice",
+            "minutes": 3,
+            "steps": [
+              "Ask about family members using his and her",
+              "Talk about home with our"
+            ]
+          },
+          {
+            "phase": "check",
+            "minutes": 2,
+            "steps": [
+              "Ask each objective's question and wait"
+            ]
+          },
+          {
+            "phase": "wrap",
+            "minutes": 1,
+            "steps": [
+              "Praise one thing the learner did well",
+              "Say one sentence that sums up the lesson"
+            ]
+          }
+        ],
+        "teacher_notes": "his/her follow the owner, not the thing (Arabic matches the thing). Correct 'her father' vs 'his father' by asking who owns it."
+      },
+      "vocabulary": [
+        {
+          "word": "my",
+          "meaning_ar": "",
+          "example": "my bag"
+        },
+        {
+          "word": "your",
+          "meaning_ar": "",
+          "example": "your phone"
+        },
+        {
+          "word": "his",
+          "meaning_ar": "",
+          "example": "his car"
+        },
+        {
+          "word": "her",
+          "meaning_ar": "",
+          "example": "her book"
+        },
+        {
+          "word": "its",
+          "meaning_ar": "",
+          "example": "its name"
+        },
+        {
+          "word": "our",
+          "meaning_ar": "",
+          "example": "our house"
+        },
+        {
+          "word": "their",
+          "meaning_ar": "",
+          "example": "their teacher"
+        }
+      ],
+      "image_prompt": "A girl pointing at herself next to a small house with a heart"
+    }
+  },
+  {
+    "image_url": "/curriculum/present-simple.svg",
+    "lesson": {
+      "title": "Present simple",
+      "title_ar": "يومي العادي",
+      "topic": "present simple routines",
+      "source_from_page": 6,
+      "source_to_page": 6,
+      "summary": "Rita teaches the present simple for daily routines: I work, she works, don't/doesn't and do/does questions.",
+      "objectives": [
+        {
+          "id": "routine",
+          "text": "Describe a daily routine with I",
+          "text_ar": "يصف روتينه اليومي",
+          "criteria": "The learner says a correct present simple sentence about their routine (e.g. I drink tea every morning).",
+          "check_prompts": [
+            "What do you do every morning?"
+          ],
+          "weight": 2
+        },
+        {
+          "id": "third-person-s",
+          "text": "Add -s with he or she",
+          "text_ar": "يضيف -s مع he / she",
+          "criteria": "The learner says a sentence with he or she and the verb ending in -s / -es (she works, he goes).",
+          "check_prompts": [
+            "What does your mother or father do every day?"
+          ],
+          "weight": 2
+        },
+        {
+          "id": "negative-dont",
+          "text": "Make a negative with don't or doesn't",
+          "text_ar": "ينفي بـ don't / doesn't",
+          "criteria": "The learner says a correct negative with don't or doesn't + base verb.",
+          "check_prompts": [
+            "What don't you like to eat?"
+          ],
+          "weight": 1
+        }
+      ],
+      "plan": {
+        "phases": [
+          {
+            "phase": "warmup",
+            "minutes": 1,
+            "steps": [
+              "Ask: What time do you wake up?"
+            ]
+          },
+          {
+            "phase": "teach",
+            "minutes": 2,
+            "steps": [
+              "Show I work / she works",
+              "Show don't and doesn't, and do/does questions"
+            ]
+          },
+          {
+            "phase": "practice",
+            "minutes": 3,
+            "steps": [
+              "Ask about the learner's day",
+              "Ask about a family member's day to practise -s"
+            ]
+          },
+          {
+            "phase": "check",
+            "minutes": 2,
+            "steps": [
+              "Ask each objective's question and wait"
+            ]
+          },
+          {
+            "phase": "wrap",
+            "minutes": 1,
+            "steps": [
+              "Praise one thing the learner did well",
+              "Say one sentence that sums up the lesson"
+            ]
+          }
+        ],
+        "teacher_notes": "The most common mistake is dropping -s: 'she work'. Ask them to repeat with -s."
+      },
+      "vocabulary": [
+        {
+          "word": "every day",
+          "meaning_ar": "كل يوم",
+          "example": "I study every day."
+        },
+        {
+          "word": "usually",
+          "meaning_ar": "عادةً",
+          "example": "I usually drink tea."
+        },
+        {
+          "word": "never",
+          "meaning_ar": "أبداً",
+          "example": "He never drinks coffee."
+        }
+      ],
+      "image_prompt": "A boy waving in the morning with a cup of tea"
+    }
+  }
+]

@@ -1,0 +1,134 @@
+{
+  "from_page": 1,
+  "to_page": 6,
+  "summary": {
+    "overview": "Five A1 grammar rules, one per page: the verb to be, subject pronouns, the articles a/an, possessive adjectives and the present simple. Each page gives the form, rules to remember, examples and practice.",
+    "overview_ar": "خمس قواعد للمستوى A1، قاعدة في كل صفحة: فعل الكينونة، الضمائر، أداتا a/an، صفات الملكية، والمضارع البسيط. لكل قاعدة جدول وأمثلة وتمارين.",
+    "topics": [
+      {
+        "title": "The verb \"to be\"",
+        "title_ar": "فعل الكينونة: am / is / are",
+        "from_page": 2,
+        "to_page": 2,
+        "key_points": [
+          "We use “to be” to say who someone is, how they feel, where they are and what something is like.",
+          "Negative: add not → I am not tired. She isn't at home. They aren't late.",
+          "Question: put the verb first → Are you a student? Is he your brother?",
+          "Short answers: Yes, I am. / No, she isn't."
+        ],
+        "examples": [
+          "I am Rita.",
+          "She is my friend.",
+          "We are from Jordan.",
+          "It isn't cold today."
+        ],
+        "vocabulary": []
+      },
+      {
+        "title": "Subject pronouns",
+        "title_ar": "الضمائر: I, you, he, she, it, we, they",
+        "from_page": 3,
+        "to_page": 3,
+        "key_points": [
+          "A subject pronoun takes the place of a name. It comes before the verb.",
+          "I is always a capital letter: Sara and I are friends.",
+          "Use it for things and animals: The book? It is on the table.",
+          "You is the same for one person and for many people."
+        ],
+        "examples": [
+          "Omar is tall. → He is tall.",
+          "Lina and I are sisters. → We are sisters.",
+          "The phones are new. → They are new."
+        ],
+        "vocabulary": []
+      },
+      {
+        "title": "Articles \"a\" and \"an\"",
+        "title_ar": "أدوات النكرة: a و an",
+        "from_page": 4,
+        "to_page": 4,
+        "key_points": [
+          "Use “a” or “an” before one thing (singular) when we talk about it for the first time.",
+          "Listen to the sound, not the letter: an hour (h is silent), a university (sounds like “you”).",
+          "Not with plurals: a cat → cats (not “a cats”).",
+          "Use “a/an” for jobs: She is a doctor. He is an engineer."
+        ],
+        "examples": [
+          "I have a pen.",
+          "It's an orange.",
+          "He is an actor."
+        ],
+        "vocabulary": []
+      },
+      {
+        "title": "Possessive adjectives",
+        "title_ar": "صفات الملكية: my, your, his, her…",
+        "from_page": 5,
+        "to_page": 5,
+        "key_points": [
+          "Possessive adjectives show who something belongs to. They come before a noun.",
+          "They never change for plural nouns: my book, my books.",
+          "Its (no apostrophe) = belongs to it. It's = it is.",
+          "Ask with whose: Whose bag is this? It's her bag."
+        ],
+        "examples": [
+          "What's your name? My name is Rita.",
+          "This is his brother.",
+          "Their house is big."
+        ],
+        "vocabulary": []
+      },
+      {
+        "title": "Present simple",
+        "title_ar": "المضارع البسيط: I like / she likes",
+        "from_page": 6,
+        "to_page": 6,
+        "key_points": [
+          "Use the present simple for habits, routines and facts.",
+          "He / she / it → add -s: play → plays; -es after ch, sh, o: watches, goes.",
+          "Consonant + y → -ies: study → studies. Special: have → has.",
+          "Time words: every day, usually, always, never, on Mondays."
+        ],
+        "examples": [
+          "I drink tea every morning.",
+          "She doesn't like coffee.",
+          "Do they live in Amman?"
+        ],
+        "vocabulary": []
+      }
+    ],
+    "suggested_lessons": [
+      {
+        "topic": "The verb \"to be\"",
+        "title_ar": "أنا ريتا",
+        "from_page": 2,
+        "to_page": 2
+      },
+      {
+        "topic": "Subject pronouns",
+        "title_ar": "هو وهي ونحن",
+        "from_page": 3,
+        "to_page": 3
+      },
+      {
+        "topic": "Articles \"a\" and \"an\"",
+        "title_ar": "تفاحة وكتاب",
+        "from_page": 4,
+        "to_page": 4
+      },
+      {
+        "topic": "Possessive adjectives",
+        "title_ar": "بيتي وعائلتي",
+        "from_page": 5,
+        "to_page": 5
+      },
+      {
+        "topic": "Present simple",
+        "title_ar": "يومي العادي",
+        "from_page": 6,
+        "to_page": 6
+      }
+    ],
+    "continues_next_window": false
+  }
+}

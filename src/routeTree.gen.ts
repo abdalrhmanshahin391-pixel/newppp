@@ -27,6 +27,7 @@ import { Route as QuestionBankRouteImport } from './routes/question-bank'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RitaLessonsRouteImport } from './routes/rita-lessons'
 import { Route as RitaLiveRouteImport } from './routes/rita-live'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StudyRouteImport } from './routes/study'
@@ -42,6 +43,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAiRouteImport } from './routes/admin.ai'
 import { Route as AdminAiKeysRouteImport } from './routes/admin.ai-keys'
 import { Route as AdminContentProtectionRouteImport } from './routes/admin.content-protection'
+import { Route as AdminCurriculaRouteImport } from './routes/admin.curricula'
 import { Route as AdminDevicesRouteImport } from './routes/admin.devices'
 import { Route as AdminGermanRouteImport } from './routes/admin.german'
 import { Route as AdminGroupsRouteImport } from './routes/admin.groups'
@@ -218,6 +220,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RitaLessonsRoute = RitaLessonsRouteImport.update({
+  id: '/rita-lessons',
+  path: '/rita-lessons',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RitaLiveRoute = RitaLiveRouteImport.update({
   id: '/rita-live',
   path: '/rita-live',
@@ -293,6 +300,11 @@ const AdminAiKeysRoute = AdminAiKeysRouteImport.update({
 const AdminContentProtectionRoute = AdminContentProtectionRouteImport.update({
   id: '/admin/content-protection',
   path: '/admin/content-protection',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCurriculaRoute = AdminCurriculaRouteImport.update({
+  id: '/admin/curricula',
+  path: '/admin/curricula',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminDevicesRoute = AdminDevicesRouteImport.update({
@@ -745,6 +757,7 @@ export interface FileRoutesByFullPath {
   '/refund-policy': typeof RefundPolicyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rita-lessons': typeof RitaLessonsRoute
   '/rita-live': typeof RitaLiveRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/study': typeof StudyRouteWithChildren
@@ -759,6 +772,7 @@ export interface FileRoutesByFullPath {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
+  '/admin/curricula': typeof AdminCurriculaRoute
   '/admin/devices': typeof AdminDevicesRoute
   '/admin/german': typeof AdminGermanRouteWithChildren
   '/admin/groups': typeof AdminGroupsRoute
@@ -864,6 +878,7 @@ export interface FileRoutesByTo {
   '/refund-policy': typeof RefundPolicyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rita-lessons': typeof RitaLessonsRoute
   '/rita-live': typeof RitaLiveRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
@@ -877,6 +892,7 @@ export interface FileRoutesByTo {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
+  '/admin/curricula': typeof AdminCurriculaRoute
   '/admin/devices': typeof AdminDevicesRoute
   '/admin/groups': typeof AdminGroupsRoute
   '/admin/notifications': typeof AdminNotificationsRoute
@@ -981,6 +997,7 @@ export interface FileRoutesById {
   '/refund-policy': typeof RefundPolicyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rita-lessons': typeof RitaLessonsRoute
   '/rita-live': typeof RitaLiveRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/study': typeof StudyRouteWithChildren
@@ -995,6 +1012,7 @@ export interface FileRoutesById {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
+  '/admin/curricula': typeof AdminCurriculaRoute
   '/admin/devices': typeof AdminDevicesRoute
   '/admin/german': typeof AdminGermanRouteWithChildren
   '/admin/groups': typeof AdminGroupsRoute
@@ -1103,6 +1121,7 @@ export interface FileRouteTypes {
     | '/refund-policy'
     | '/register'
     | '/reset-password'
+    | '/rita-lessons'
     | '/rita-live'
     | '/sitemap.xml'
     | '/study'
@@ -1117,6 +1136,7 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-keys'
     | '/admin/content-protection'
+    | '/admin/curricula'
     | '/admin/devices'
     | '/admin/german'
     | '/admin/groups'
@@ -1222,6 +1242,7 @@ export interface FileRouteTypes {
     | '/refund-policy'
     | '/register'
     | '/reset-password'
+    | '/rita-lessons'
     | '/rita-live'
     | '/sitemap.xml'
     | '/support'
@@ -1235,6 +1256,7 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-keys'
     | '/admin/content-protection'
+    | '/admin/curricula'
     | '/admin/devices'
     | '/admin/groups'
     | '/admin/notifications'
@@ -1338,6 +1360,7 @@ export interface FileRouteTypes {
     | '/refund-policy'
     | '/register'
     | '/reset-password'
+    | '/rita-lessons'
     | '/rita-live'
     | '/sitemap.xml'
     | '/study'
@@ -1352,6 +1375,7 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-keys'
     | '/admin/content-protection'
+    | '/admin/curricula'
     | '/admin/devices'
     | '/admin/german'
     | '/admin/groups'
@@ -1459,6 +1483,7 @@ export interface RootRouteChildren {
   RefundPolicyRoute: typeof RefundPolicyRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RitaLessonsRoute: typeof RitaLessonsRoute
   RitaLiveRoute: typeof RitaLiveRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StudyRoute: typeof StudyRouteWithChildren
@@ -1473,6 +1498,7 @@ export interface RootRouteChildren {
   AdminAiRoute: typeof AdminAiRoute
   AdminAiKeysRoute: typeof AdminAiKeysRoute
   AdminContentProtectionRoute: typeof AdminContentProtectionRoute
+  AdminCurriculaRoute: typeof AdminCurriculaRoute
   AdminDevicesRoute: typeof AdminDevicesRoute
   AdminGermanRoute: typeof AdminGermanRouteWithChildren
   AdminGroupsRoute: typeof AdminGroupsRoute
@@ -1655,6 +1681,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rita-lessons': {
+      id: '/rita-lessons'
+      path: '/rita-lessons'
+      fullPath: '/rita-lessons'
+      preLoaderRoute: typeof RitaLessonsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rita-live': {
       id: '/rita-live'
       path: '/rita-live'
@@ -1758,6 +1791,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/content-protection'
       fullPath: '/admin/content-protection'
       preLoaderRoute: typeof AdminContentProtectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/curricula': {
+      id: '/admin/curricula'
+      path: '/admin/curricula'
+      fullPath: '/admin/curricula'
+      preLoaderRoute: typeof AdminCurriculaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/devices': {
@@ -2509,6 +2549,7 @@ const rootRouteChildren: RootRouteChildren = {
   RefundPolicyRoute: RefundPolicyRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RitaLessonsRoute: RitaLessonsRoute,
   RitaLiveRoute: RitaLiveRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StudyRoute: StudyRouteWithChildren,
@@ -2524,6 +2565,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAiRoute: AdminAiRoute,
   AdminAiKeysRoute: AdminAiKeysRoute,
   AdminContentProtectionRoute: AdminContentProtectionRoute,
+  AdminCurriculaRoute: AdminCurriculaRoute,
   AdminDevicesRoute: AdminDevicesRoute,
   AdminGermanRoute: AdminGermanRouteWithChildren,
   AdminGroupsRoute: AdminGroupsRoute,

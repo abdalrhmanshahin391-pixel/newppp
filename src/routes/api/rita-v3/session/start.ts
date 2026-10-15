@@ -14,6 +14,7 @@ import {
 } from "@/lib/rita-v3-diagnostics-trace";
 import { fetchPipecatStartWithDeadline as fetchStartWithDeadline } from "@/lib/rita-v3-startup";
 import { getServerRuntimeSecret } from "@/lib/config.server";
+import { loadVoiceLesson } from "@/lib/rita-curriculum.server";
 
 const DEFAULT_MODAL_START_URL =
   "https://abdalrhmanshahin391--ritajet-voice-start-session.modal.run";
@@ -28,11 +29,26 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
         const personality = normalizePersonality(body.personality);
         const language = cleanLanguage(body.language);
         const dialect = String(body.dialect ?? "ar-JO").slice(0, 32) || "ar-JO";
-        const mode = ["free_conversation", "guided_lesson", "pronunciation_drill"].includes(
-          String(body.mode),
-        )
-          ? String(body.mode)
-          : "free_conversation";
+        const requestedLessonId = typeof body.lessonId === "string" ? body.lessonId : "";
+        const lesson = requestedLessonId
+          ? await loadVoiceLesson(access.auth.userId, requestedLessonId).catch((error) => {
+              console.warn("Rita lesson could not be loaded", error);
+              return null;
+            })
+          : null;
+        if (requestedLessonId && !lesson) {
+          return Response.json(
+            { ok: false, code: "lesson_unavailable", message: "This lesson is not available." },
+            { status: 404 },
+          );
+        }
+        const mode = lesson
+          ? "guided_lesson"
+          : ["free_conversation", "guided_lesson", "pronunciation_drill"].includes(
+                String(body.mode),
+              )
+            ? String(body.mode)
+            : "free_conversation";
         const traceId = normalizeRitaDiagnosticTraceId(body.traceId);
         const modalUrl =
           (await getServerRuntimeSecret("MODAL_START_URL")) || DEFAULT_MODAL_START_URL;
@@ -87,6 +103,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           dialect,
           mode,
           userId: access.auth.userId,
+          ...(lesson ? { lesson } : {}),
         };
         const diagnosticBase = {
           traceId,

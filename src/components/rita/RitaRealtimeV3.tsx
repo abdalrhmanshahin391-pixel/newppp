@@ -25,6 +25,8 @@ import {
 import { RitaStage, orbModeFor, type RitaMood } from "@/components/rita-live/RitaStage";
 import { RitaAvatar } from "@/components/rita-live/RitaAvatar";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
+import { useRitaLesson } from "@/components/rita-lessons/useRitaLesson";
+import { LessonObjectivesPanel, LessonResultCard } from "@/components/rita-lessons/LessonPanels";
 
 type Persona = "kind" | "direct" | "playful" | "strict";
 type LessonMode = "free_conversation" | "guided_lesson" | "pronunciation_drill";
@@ -71,8 +73,11 @@ function humanError(error: unknown) {
   return "Rita v3 could not start. No old voice system was used.";
 }
 
-export function RitaRealtimeV3() {
+export function RitaRealtimeV3({ lessonId }: { lessonId?: string } = {}) {
   const navigate = useNavigate();
+  const lesson = useRitaLesson(lessonId);
+  const lastCheckedMessage = useRef("");
+  const [resultDismissed, setResultDismissed] = useState(false);
   const { user, isAdmin, loading } = useAuth();
   const client = useRef<ClientHandle | null>(null);
   const activeRef = useRef(false);
@@ -129,7 +134,13 @@ export function RitaRealtimeV3() {
   const [caption, setCaption] = useState("");
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<Message[]>([
-    { id: "welcome", role: "rita", text: "Hi, I’m Rita. What would you like to practise?" },
+    {
+      id: "welcome",
+      role: "rita",
+      text: lessonId
+        ? "Hi, I’m Rita. Press start and say hello when you are ready for today’s lesson."
+        : "Hi, I’m Rita. What would you like to practise?",
+    },
   ]);
   const [personality, setPersonality] = useState<Persona>("kind");
   const [mode, setMode] = useState<LessonMode>("free_conversation");
@@ -150,6 +161,27 @@ export function RitaRealtimeV3() {
   useEffect(() => {
     if (!loading && !user) void navigate({ to: "/login" });
   }, [loading, navigate, user]);
+
+  // Curriculum lessons: after each learner turn, check the lesson objectives.
+  const { enabled: lessonEnabled, checkTurns } = lesson;
+  useEffect(() => {
+    if (!lessonEnabled) return;
+    let lastYou = -1;
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+      if (messages[index].role === "you") {
+        lastYou = index;
+        break;
+      }
+    }
+    if (lastYou < 0 || messages[lastYou].id === lastCheckedMessage.current) return;
+    lastCheckedMessage.current = messages[lastYou].id;
+    checkTurns(
+      messages
+        .slice(0, lastYou + 1)
+        .filter((message) => message.id !== "welcome")
+        .map((message) => ({ role: message.role === "you" ? "user" : "assistant", text: message.text })),
+    );
+  }, [checkTurns, lessonEnabled, messages]);
 
   const sendMetric = useCallback(
     async (currentSessionId: string, event: PendingMetric) => {
@@ -819,7 +851,14 @@ export function RitaRealtimeV3() {
         headers,
         // traceId is intentionally content-free and lets server-side diagnostics
         // be correlated with browser events before a Daily bot response exists.
-        requestData: { personality, language, dialect, mode, traceId: traceId.current },
+        requestData: {
+          personality,
+          language,
+          dialect,
+          mode: lessonId ? "guided_lesson" : mode,
+          traceId: traceId.current,
+          ...(lessonId ? { lessonId } : {}),
+        },
         // A cold agent has taken 88s to join Daily. This prevents a false
         // failure while startup and turn latency remain separately measured.
         timeout: 125_000,
@@ -946,6 +985,12 @@ export function RitaRealtimeV3() {
                   RitaJet <span className="font-medium text-[#7c777f]">| Live lesson</span>
                 </h1>
               </div>
+              <Link
+                to="/rita-lessons"
+                className="rounded-full bg-[#f4effe] px-4 py-2 text-sm font-bold text-[#6d35d8]"
+              >
+                دروسي
+              </Link>
               {isAdmin && (
                 <Link
                   to="/admin/rita-voice"
@@ -985,6 +1030,23 @@ export function RitaRealtimeV3() {
 
           <div className="flex-1 overflow-y-auto px-5 py-7 sm:px-10">
             <div className="mx-auto max-w-3xl space-y-7">
+              {lesson.session && (
+                <LessonObjectivesPanel
+                  session={lesson.session}
+                  objectives={lesson.objectives}
+                  score={lesson.score}
+                  checking={lesson.checking}
+                  justMet={lesson.justMet}
+                />
+              )}
+              {lesson.error && (
+                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                  {lesson.error}{" "}
+                  <Link to="/rita-lessons" className="underline">
+                    العودة إلى المسار
+                  </Link>
+                </div>
+              )}
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -1039,23 +1101,25 @@ export function RitaRealtimeV3() {
                     <option value="standard">Standard Arabic</option>
                     <option value="en-GB">British English</option>
                   </select>
-                  <select
-                    value={mode}
-                    onChange={(event) => setMode(event.target.value as LessonMode)}
-                    className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold"
-                  >
-                    <option value="free_conversation">Free conversation</option>
-                    <option value="guided_lesson">Guided lesson</option>
-                    <option value="pronunciation_drill">Pronunciation drill</option>
-                  </select>
+                  {!lessonId && (
+                    <select
+                      value={mode}
+                      onChange={(event) => setMode(event.target.value as LessonMode)}
+                      className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold"
+                    >
+                      <option value="free_conversation">Free conversation</option>
+                      <option value="guided_lesson">Guided lesson</option>
+                      <option value="pronunciation_drill">Pronunciation drill</option>
+                    </select>
+                  )}
                 </div>
                 <button
                   onClick={startLesson}
-                  disabled={starting}
+                  disabled={starting || (Boolean(lessonId) && !lesson.session)}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7b46df] px-5 py-4 font-extrabold text-white shadow-lg shadow-purple-200 disabled:opacity-60"
                 >
                   {starting ? <Loader2 className="animate-spin" size={18} /> : <Mic size={18} />}{" "}
-                  Start Rita Realtime v3
+                  {lessonId ? "ابدأ الدرس مع ريتا" : "Start Rita Realtime v3"}
                 </button>
               </div>
             ) : (
@@ -1121,6 +1185,19 @@ export function RitaRealtimeV3() {
           </div>
         </aside>
       </div>
+
+      {lesson.result && !resultDismissed && (
+        <LessonResultCard
+          score={lesson.result.score}
+          stars={lesson.result.stars}
+          nextLessonId={lesson.session?.nextLessonId ?? null}
+          onRetry={() => {
+            setResultDismissed(false);
+            void lesson.restart();
+          }}
+          onClose={() => setResultDismissed(true)}
+        />
+      )}
 
       {learningOpen && (
         <div
