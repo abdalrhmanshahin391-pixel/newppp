@@ -706,13 +706,18 @@ export const adminGenerateLessonImage = createServerFn({ method: "POST" })
       .from("rita-lesson-images")
       .upload(path, image.bytes, { contentType: image.contentType, upsert: true });
     fail(upload.error, "upload image");
-    const { data: publicUrl } = db.storage.from("rita-lesson-images").getPublicUrl(path);
+    // The bucket is private (public buckets are blocked), so store a long-lived signed link.
+    const signed = await db.storage
+      .from("rita-lesson-images")
+      .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+    fail(signed.error, "sign image");
+    const imageUrl = signed.data!.signedUrl;
     const { error: updateError } = await db
       .from("rita_lessons")
-      .update({ image_url: publicUrl.publicUrl })
+      .update({ image_url: imageUrl })
       .eq("id", lesson.id);
     fail(updateError, "save image");
-    return { imageUrl: publicUrl.publicUrl };
+    return { imageUrl };
   });
 
 // ---------- learners ----------
