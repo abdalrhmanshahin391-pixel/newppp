@@ -37,13 +37,13 @@
           },
           {
             "word": "good afternoon",
-            "meaning_ar": "مساء الخير (بعد الظهر)",
+            "meaning_ar": "نهارك سعيد (بعد الظهر)",
             "example": "Good afternoon, everyone."
           },
           {
             "word": "good evening",
             "meaning_ar": "مساء الخير",
-            "example": "Good evening, Mr. Ali."
+            "example": "Good evening, Mr Ali."
           },
           {
             "word": "good night",
@@ -128,9 +128,9 @@
             "example": "I live in a big city."
           },
           {
-            "word": "age",
-            "meaning_ar": "عمر",
-            "example": "What's your age?"
+            "word": "years old",
+            "meaning_ar": "سنة (من العمر)",
+            "example": "I'm twenty years old."
           },
           {
             "word": "How old are you?",
@@ -139,17 +139,17 @@
           },
           {
             "word": "friend",
-            "meaning_ar": "صديق",
+            "meaning_ar": "صديق / صديقة",
             "example": "This is my friend, Ali."
           },
           {
             "word": "student",
-            "meaning_ar": "طالب",
+            "meaning_ar": "طالب / طالبة",
             "example": "I'm a student."
           },
           {
             "word": "teacher",
-            "meaning_ar": "معلم",
+            "meaning_ar": "معلم / معلمة",
             "example": "She is my teacher."
           },
           {
@@ -176,7 +176,7 @@
         "vocabulary": [
           {
             "word": "thank you",
-            "meaning_ar": "شكراً",
+            "meaning_ar": "شكراً لك / شكراً جزيلاً",
             "example": "Thank you for your help."
           },
           {
@@ -191,22 +191,22 @@
           },
           {
             "word": "sorry",
-            "meaning_ar": "آسف",
+            "meaning_ar": "آسف / آسفة",
             "example": "Sorry, I'm late."
           },
           {
             "word": "excuse me",
-            "meaning_ar": "عفواً / لو سمحت",
+            "meaning_ar": "لو سمحت / عن إذنك",
             "example": "Excuse me, where is the bank?"
           },
           {
             "word": "you're welcome",
-            "meaning_ar": "عفواً (رداً على الشكر)",
+            "meaning_ar": "العفو / على الرحب والسعة",
             "example": "Thank you! — You're welcome."
           },
           {
             "word": "no problem",
-            "meaning_ar": "لا مشكلة",
+            "meaning_ar": "لا مشكلة / ولا يهمك",
             "example": "Sorry! — No problem."
           },
           {
@@ -226,7 +226,7 @@
           },
           {
             "word": "kind",
-            "meaning_ar": "لطيف",
+            "meaning_ar": "لطيف / لطيفة",
             "example": "You are very kind."
           },
           {
@@ -330,52 +330,52 @@
         "vocabulary": [
           {
             "word": "busy",
-            "meaning_ar": "مشغول",
+            "meaning_ar": "مشغول / مشغولة",
             "example": "I'm busy now."
           },
           {
             "word": "free",
-            "meaning_ar": "متفرغ",
+            "meaning_ar": "متفرغ / متفرغة",
             "example": "Are you free on Friday?"
           },
           {
             "word": "tired",
-            "meaning_ar": "متعب",
+            "meaning_ar": "متعب / متعبة",
             "example": "I'm tired today."
           },
           {
             "word": "happy",
-            "meaning_ar": "سعيد",
+            "meaning_ar": "سعيد / سعيدة",
             "example": "She is very happy."
           },
           {
             "word": "sad",
-            "meaning_ar": "حزين",
+            "meaning_ar": "حزين / حزينة",
             "example": "Why are you sad?"
           },
           {
             "word": "hungry",
-            "meaning_ar": "جائع",
+            "meaning_ar": "جائع / جائعة",
             "example": "I'm hungry. Let's eat!"
           },
           {
             "word": "thirsty",
-            "meaning_ar": "عطشان",
+            "meaning_ar": "عطشان / عطشانة",
             "example": "Are you thirsty?"
           },
           {
             "word": "bored",
-            "meaning_ar": "ملول / زهقان",
+            "meaning_ar": "ملول / ملولة",
             "example": "I'm bored at home."
           },
           {
             "word": "ready",
-            "meaning_ar": "جاهز",
+            "meaning_ar": "جاهز / جاهزة",
             "example": "Are you ready?"
           },
           {
             "word": "late",
-            "meaning_ar": "متأخر",
+            "meaning_ar": "متأخر / متأخرة",
             "example": "Hurry, we're late!"
           },
           {

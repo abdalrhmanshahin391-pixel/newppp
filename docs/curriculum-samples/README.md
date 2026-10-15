@@ -21,3 +21,14 @@ Two small A1 English books for testing the curriculum flow without spending AI c
 
 Pictures for the samples live in `public/curriculum/` (drawn by `scripts/curriculum-samples/make_lesson_art.py`).
 New lessons get an AI picture in the same style from the **إنشاء صورة** button.
+
+## Review notes
+
+The sample content was reviewed for accuracy: the possessives teacher note was
+corrected (Arabic attaches the possessive to the noun, which is why learners say
+"book my"), the questions with to be and do/does now have objectives, every
+taught word has an Arabic meaning, no two phrases share one Arabic meaning, the
+plans are specific to each lesson, and meanings show masculine and feminine
+forms. A language teacher should still review the content before real use.
+The books are regenerated from `scripts/curriculum-samples/sample_books.py`
+(PDFs) and `make_sample_lessons.py` (summaries and lessons).

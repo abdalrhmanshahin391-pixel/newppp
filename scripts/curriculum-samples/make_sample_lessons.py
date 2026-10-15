@@ -48,9 +48,14 @@ def plan(warm, teach, practice, check, notes):
 def obj(id, text, text_ar, criteria, prompts, weight=1):
     return {"id": id, "text": text, "text_ar": text_ar, "criteria": criteria, "check_prompts": prompts, "weight": weight}
 
+POSSESSIVE_AR = {
+    "my": "ـي (لي)", "your": "ـك / ـكم", "his": "ـه (لمذكر)", "her": "ـها (لمؤنث)",
+    "its": "ـه / ـها (لغير العاقل)", "our": "ـنا", "their": "ـهم / ـهن",
+}
+
 G = [
   dict(key="to-be", title='The verb "to be"', title_ar="أنا ريتا", topic="to be: am / is / are", page=2,
-    summary="Rita teaches am, is and are with the learner's own life: who they are, how they feel and where they are from, then the negative and yes/no questions.",
+    summary="Rita teaches am, is and are with the learner's own life: who they are, how they feel and where they are from, then the negative and yes/no questions with short answers.",
     objectives=[
       obj("say-i-am", "Say a sentence about themselves with I am / I'm", "يقول جملة عن نفسه بـ I am",
           "The learner says a correct sentence starting with I am or I'm (name, feeling, job or country).", ["Tell me about you. Who are you?", "How are you today?"], 2),
@@ -60,12 +65,15 @@ G = [
           "The learner says a correct sentence with we are, they are or you are.", ["Tell me about you and your family together."]),
       obj("negative", "Make a negative with not", "يكوّن جملة نفي",
           "The learner says a correct negative: I'm not, isn't, aren't or is not / are not.", ["Are you tired? Say no with a full sentence."]),
+      obj("question", "Ask or answer a yes/no question with to be", "يسأل أو يجيب بسؤال نعم/لا",
+          "The learner asks a correct question (Are you ...? / Is she ...?) or gives a correct short answer (Yes, I am. / No, she isn't.).",
+          ["Are you a student? Answer with a short answer.", "Now ask me a question. Start with: Are you ...?"]),
     ],
     plan=plan(["Greet the learner and say: I am Rita. I am your teacher."],
-              ["Show I am, you are, he/she/it is with one example each", "Show the short forms I'm, she's, they're"],
-              ["Ask the learner to say three sentences about themselves", "Ask about a friend: he is / she is", "Practise negatives: I'm not tired"],
+              ["Show I am, you are, he/she/it is with one example each", "Show the short forms I'm, she's, they're", "Show questions with the verb first (Are you ...? Is he ...?) and the short answers Yes, I am. / No, she isn't."],
+              ["Ask the learner to say three sentences about themselves", "Ask about a friend: he is / she is", "Practise negatives: I'm not tired", "Swap: the learner asks Rita Are you ...? questions"],
               ["Ask each objective's question and wait for a full sentence"],
-              "Arabic has no 'to be' in the present, so learners drop it: 'I happy'. Model 'I am happy' and ask them to repeat."),
+              "Arabic has no 'to be' in the present, so learners drop it: 'I happy'. Model 'I am happy' and ask them to repeat. Another common slip is 'I am agree' (from أنا موافق): say 'I agree'."),
     vocabulary=[{"word": "am", "meaning_ar": "أكون (مع I)", "example": "I am Rita."}, {"word": "is", "meaning_ar": "يكون (مع he/she/it)", "example": "She is my friend."}, {"word": "are", "meaning_ar": "يكون (مع you/we/they)", "example": "We are from Jordan."}],
     image="to-be", scene="A smiling girl pointing at herself with a speech bubble"),
   dict(key="pronouns", title="Subject pronouns", title_ar="هو وهي ونحن", topic="subject pronouns", page=3,
@@ -82,42 +90,43 @@ G = [
               ["Say each pronoun with one short example", "Explain: it is for things and animals"],
               ["Give a name and ask the learner to replace it", "Mix single people, groups and things"],
               ["Ask each objective's question and wait"],
-              "Arabic speakers may say 'he' for objects (هو for كتاب). Correct gently to 'it'."),
+              "Arabic nouns have gender (كتاب = هو, سيارة = هي), so learners may say 'he' or 'she' for objects. Correct gently to 'it'. Pets and babies can be he/she when we know them, but 'it' is the safe choice for beginners."),
     vocabulary=[{"word": p, "meaning_ar": m, "example": e} for p, m, e in GRAMMAR["pages"][1]["table"]],
     image="pronouns", scene="Three friends standing together and waving"),
   dict(key="articles", title='Articles "a" and "an"', title_ar="تفاحة وكتاب", topic="a / an", page=4,
     summary="Rita teaches when to say a and when to say an by listening to the first sound of the word, and using a/an for jobs.",
     objectives=[
-      obj("use-a", "Use a before a consonant sound", "يستخدم a قبل الصوت الساكن",
+      obj("use-a", "Use a before a consonant sound", "يستخدم a قبل صوت صامت (consonant)",
           "The learner says a correct phrase or sentence with a before a consonant sound (a book, a teacher).", ["What is in your bag? Name two things."], 1),
-      obj("use-an", "Use an before a vowel sound", "يستخدم an قبل الصوت المتحرك",
+      obj("use-an", "Use an before a vowel sound", "يستخدم an قبل صوت صائت (vowel)",
           "The learner says a correct phrase or sentence with an before a vowel sound (an apple, an egg, an hour).", ["What fruit do you like? Use an apple or an orange."], 2),
       obj("jobs", "Say a job with a or an", "يذكر مهنة مع a أو an",
           "The learner says a sentence like 'I am a student' or 'She is an engineer' with the right article.", ["What is your job? What is your mother's or father's job?"]),
     ],
     plan=plan(["Ask: What do you have on your table right now?"],
-              ["Explain: a + consonant sound, an + vowel sound", "Special cases: an hour, a university"],
+              ["Explain: a + consonant sound, an + vowel sound", "Special cases: an hour, a university", "Remind: no a/an with plurals (cats, not a cats)"],
               ["Say a word and ask the learner to add a or an", "Talk about jobs: I am a ..., she is an ..."],
               ["Ask each objective's question and wait"],
-              "Learners often drop the article: 'I am student'. Model 'I am a student'."),
-    vocabulary=[{"word": "a", "meaning_ar": "أداة نكرة قبل الصوت الساكن", "example": "a book"}, {"word": "an", "meaning_ar": "أداة نكرة قبل الصوت المتحرك", "example": "an apple"}],
+              "Arabic has no indefinite article (كتاب = a book), so learners often drop it: 'I am student'. Model 'I am a student'. Stress that the rule is about the sound, not the letter: an hour, a university."),
+    vocabulary=[{"word": "a", "meaning_ar": "أداة نكرة قبل صوت صامت (consonant)", "example": "a book"}, {"word": "an", "meaning_ar": "أداة نكرة قبل صوت صائت (vowel)", "example": "an apple"}],
     image="articles", scene="A boy holding a red apple"),
   dict(key="possessives", title="Possessive adjectives", title_ar="بيتي وعائلتي", topic="my / your / his / her / our / their", page=5,
     summary="Rita teaches my, your, his, her, its, our and their by talking about the learner's family and things.",
     objectives=[
       obj("my-your", "Use my and your", "يستخدم my و your",
-          "The learner says a correct sentence with my (e.g. My name is ..., my brother is ...).", ["What's your name? Tell me about your family."], 2),
+          "The learner says a correct sentence with my (e.g. My name is ...) and also uses your correctly in a question or sentence (e.g. What's your name?).",
+          ["What's your name? Tell me about your family.", "Now ask me a question about me. Start with: What's your ...?"], 2),
       obj("his-her", "Use his and her correctly", "يفرّق بين his و her",
           "The learner uses his for a male and her for a female correctly in one sentence.", ["Tell me your father's name and your mother's name with his and her."]),
       obj("our-their", "Use our or their", "يستخدم our أو their",
           "The learner says a correct sentence with our or their.", ["Tell me about your home. Say our house ..."]),
     ],
     plan=plan(["Ask: What's your name? What's your friend's name?"],
-              ["Match each pronoun to its possessive: I-my, he-his, she-her", "Possessives don't change for plurals: my books"],
+              ["Match each pronoun to its possessive: I-my, he-his, she-her", "Show where it goes: my book (not book my)", "Possessives don't change for plurals: my books"],
               ["Ask about family members using his and her", "Talk about home with our"],
               ["Ask each objective's question and wait"],
-              "his/her follow the owner, not the thing (Arabic matches the thing). Correct 'her father' vs 'his father' by asking who owns it."),
-    vocabulary=[{"word": w, "meaning_ar": "", "example": e} for _, w, e in GRAMMAR["pages"][3]["table"]],
+              "In Arabic the possessive is attached to the end of the noun (كتابي, بيتنا), so learners say 'book my' or 'house our'. In English it comes before the noun: my book. his/her follow the owner, as in Arabic (أبوه / أبوها): when a learner mixes them up, ask 'Who owns it? A boy or a girl?'. Also stress its (no apostrophe) vs it's = it is."),
+    vocabulary=[{"word": w, "meaning_ar": POSSESSIVE_AR[w], "example": e} for _, w, e in GRAMMAR["pages"][3]["table"]],
     image="possessives", scene="A girl pointing at herself next to a small house with a heart"),
   dict(key="present-simple", title="Present simple", title_ar="يومي العادي", topic="present simple routines", page=6,
     summary="Rita teaches the present simple for daily routines: I work, she works, don't/doesn't and do/does questions.",
@@ -127,14 +136,18 @@ G = [
       obj("third-person-s", "Add -s with he or she", "يضيف -s مع he / she",
           "The learner says a sentence with he or she and the verb ending in -s / -es (she works, he goes).", ["What does your mother or father do every day?"], 2),
       obj("negative-dont", "Make a negative with don't or doesn't", "ينفي بـ don't / doesn't",
-          "The learner says a correct negative with don't or doesn't + base verb.", ["What don't you like to eat?"]),
+          "The learner says a correct negative with don't or doesn't + base verb (I don't like fish. / She doesn't work on Friday.).",
+          ["Tell me one food you don't like. Use a full sentence.", "Tell me one thing your brother or sister doesn't do."]),
+      obj("question-do", "Ask a question with do or does", "يسأل بـ do / does",
+          "The learner asks a correct question: Do you ...? / Does she ...? (with the base verb, no -s after does).",
+          ["Ask me a question about my day. Start with: Do you ...?"]),
     ],
     plan=plan(["Ask: What time do you wake up?"],
               ["Show I work / she works", "Show don't and doesn't, and do/does questions"],
               ["Ask about the learner's day", "Ask about a family member's day to practise -s"],
               ["Ask each objective's question and wait"],
-              "The most common mistake is dropping -s: 'she work'. Ask them to repeat with -s."),
-    vocabulary=[{"word": "every day", "meaning_ar": "كل يوم", "example": "I study every day."}, {"word": "usually", "meaning_ar": "عادةً", "example": "I usually drink tea."}, {"word": "never", "meaning_ar": "أبداً", "example": "He never drinks coffee."}],
+              "The most common mistake is dropping -s: 'she work'. Arabic verbs change for every person, so learners often forget that English changes only for he/she/it. Also watch 'she doesn't works' and 'Does she works?': after does/doesn't the verb stays plain. Ask them to repeat the correct sentence."),
+    vocabulary=[{"word": "every day", "meaning_ar": "كل يوم", "example": "I study every day."}, {"word": "usually", "meaning_ar": "عادةً", "example": "I usually drink tea."}, {"word": "always", "meaning_ar": "دائماً", "example": "She always walks to school."}, {"word": "never", "meaning_ar": "أبداً", "example": "He never drinks coffee."}],
     image="present-simple", scene="A boy waving in the morning with a cup of tea"),
 ]
 
@@ -191,6 +204,39 @@ V = [
     ]),
 ]
 
+VOCAB_PLANS = {
+    "hello": (
+        ["Greet the learner with the right greeting for the time of day and ask: How are you?"],
+        ["Teach hello / hi and good morning, good afternoon, good evening with the time of day each one fits", "Teach How are you? and the answers I'm fine, thank you", "Teach goodbye, see you later and good night"],
+        ["Role-play meeting in the morning, then saying goodbye in the evening", "Swap roles so the learner starts the greeting"],
+        ["Ask each objective's question and wait"],
+        "Good evening is for meeting someone; good night is for leaving or going to bed, and learners often swap them. Arabic uses مساء الخير for both afternoon and evening. If the learner answers in Arabic, give the English and ask them to repeat it."),
+    "me-and-you": (
+        ["Say: My name is Rita. I'm from Jordan. Then ask: What's your name?"],
+        ["Model the three sentences: My name is ... / I'm from ... / I'm ... years old", "Teach the matching questions: What's your name? Where are you from? How old are you?"],
+        ["Interview the learner with the three questions", "Swap roles: the learner interviews Rita", "Add friend, student, teacher or family: This is my friend, Ali."],
+        ["Ask each objective's question and wait"],
+        "Learners often say 'My age is 20' or 'I have 20 years'. Model 'I'm twenty years old.' Remember I am / I'm: learners drop it (I from Jordan)."),
+    "thank-you": (
+        ["Set the scene: you are in a café. Say: Hello! What would you like?"],
+        ["Teach please at the end of a request: A glass of water, please.", "Teach thank you / thanks and the replies you're welcome / no problem", "Teach sorry (for a mistake) and excuse me (to get attention or to pass)"],
+        ["Role-play ordering in a café, swapping roles", "Practise Can I ...? and Of course", "Say 'Pardon?' when the learner speaks too fast so they ask you to repeat"],
+        ["Ask each objective's question and wait"],
+        "Thanks is informal; thank you is safe everywhere. Learners mix up sorry (a mistake) and excuse me (getting attention). Keep the tone warm and polite."),
+    "yes-no": (
+        ["Ask three quick questions: Do you like tea? Are you ready? Is it Friday?"],
+        ["Teach yes / no / maybe and short answers: Yes, I do. / No, I don't. / Yes, I am.", "Teach suggestions with Let's ... and the replies Great idea!, I agree, Sure, OK"],
+        ["Rita suggests an activity; the learner answers with Great idea! or Maybe later", "Swap: the learner suggests with Let's ... and Rita reacts", "Add right / wrong when you correct something"],
+        ["Ask each objective's question and wait"],
+        "Learners often answer Do you like ...? with 'Yes, I like'. Model the short answer 'Yes, I do.' Encourage more than a bare yes or no."),
+    "busy": (
+        ["Ask: How do you feel today? Are you busy or free?"],
+        ["Teach feeling words with I'm: tired, happy, sad, hungry, thirsty, bored, ready", "Teach busy / free and the polite postpone: Sorry, I'm busy now. Talk to you later."],
+        ["Mime a feeling and let the learner guess: Are you tired?", "Role-play a friend inviting the learner while they are busy", "Ask: Are you free on Friday?"],
+        ["Ask each objective's question and wait"],
+        "Feelings use I'm + the word (I'm tired). Learners drop I'm (I busy): model the full sentence. Free here means 'not busy', not 'costing nothing'."),
+}
+
 def vocab_lessons():
     out = []
     for v in V:
@@ -200,11 +246,7 @@ def vocab_lessons():
             "title": v["title"], "title_ar": v["title_ar"], "topic": v["topic"],
             "source_from_page": v["page"], "source_to_page": v["page"], "summary": v["summary"],
             "objectives": v["objectives"],
-            "plan": plan(["Greet the learner warmly and say today's words are about " + v["topic"]],
-                         ["Say four or five key words with their Arabic meaning", "Use each in a short example"],
-                         ["Role-play a short everyday situation", "Swap roles so the learner starts"],
-                         ["Ask each objective's question and wait"],
-                         "Keep it playful. If the learner answers in Arabic, give the English and ask them to repeat it."),
+            "plan": plan(*VOCAB_PLANS[v["key"]]),
             "vocabulary": words,
             "image_prompt": f"A friendly cartoon character showing '{v['title']}'"}})
     return out
