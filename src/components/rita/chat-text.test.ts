@@ -1,12 +1,24 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseParagraph, showCaption, splitParagraphs, textDirection } from "./chat-text.ts";
+import {
+  groupTurns,
+  parseParagraph,
+  showCaption,
+  splitParagraphs,
+  textDirection,
+} from "./chat-text.ts";
 
 test("Arabic with a German word reads right to left", () => {
   assert.equal(textDirection('إيه، بدي أسألك شو معنى "صباح الخير" بالألماني؟ Guten Morgen'), "rtl");
   assert.equal(textDirection("Hi, I'm Rita. What would you like to practise?"), "ltr");
   assert.equal(textDirection("Good morning, يا صديقي and welcome to the lesson today"), "ltr");
   assert.equal(textDirection("12345 ?!"), "ltr");
+  // An Arabic sentence around bolded English phrases is still Arabic.
+  assert.equal(
+    textDirection("فيك تقول **Good morning, again** أو **Good morning, once more**."),
+    "rtl",
+  );
+  assert.equal(textDirection("Say hello (مرحبا) to Anna and everybody"), "ltr");
   assert.equal(textDirection(""), "ltr");
 });
 
@@ -74,4 +86,23 @@ test("quotes hugging a foreign word are dropped, lone quotes stay", () => {
       .join("");
   assert.equal(joined("وتضيف \u201Cagain\u201D أو"), "وتضيف again أو");
   assert.equal(joined("قال \u201Cصباح\u201D و again"), "قال \u201Cصباح\u201D و again");
+});
+
+test("short pieces from the learner become one turn; Rita's replies stay apart", () => {
+  const turns = groupTurns([
+    { id: "1", role: "you" as const, text: "طيب،" },
+    { id: "2", role: "you" as const, text: "أمم..." },
+    { id: "3", role: "rita" as const, text: "أهلاً" },
+    { id: "4", role: "rita" as const, text: "تفضل" },
+    { id: "5", role: "you" as const, text: "شكراً" },
+  ]);
+  assert.deepEqual(
+    turns.map((t) => [t.id, t.role, t.text]),
+    [
+      ["1", "you", "طيب، أمم..."],
+      ["3", "rita", "أهلاً"],
+      ["4", "rita", "تفضل"],
+      ["5", "you", "شكراً"],
+    ],
+  );
 });

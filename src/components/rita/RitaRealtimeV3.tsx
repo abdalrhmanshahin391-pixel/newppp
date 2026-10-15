@@ -12,6 +12,7 @@ import {
   Send,
   Sparkles,
   X,
+  ArrowLeft,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,7 +25,9 @@ import {
 } from "@/lib/rita-v3-heard";
 import { orbModeFor, type RitaMood } from "@/components/rita-live/RitaStage";
 import { ChatText } from "./ChatText";
-import { showCaption } from "./chat-text";
+import { PhraseDialog } from "./PhraseDialog";
+import { stopPhraseAudio } from "@/lib/phrase-cache";
+import { groupTurns, showCaption } from "./chat-text";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { VoiceOrb } from "@/components/rita-live/VoiceOrb";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
@@ -152,6 +155,26 @@ export function RitaRealtimeV3({
   const language: string = "automatic";
   const dialect: string = "ar-JO";
   const [learningOpen, setLearningOpen] = useState(false);
+  // The "tap a word" window. While one of its clips plays, the microphone is
+  // muted so the clip is not heard as the learner's own speech.
+  const [phrase, setPhrase] = useState<string | null>(null);
+  const phraseMuted = useRef(false);
+  const openPhrase = useCallback((text: string) => setPhrase(text), []);
+  const closePhrase = useCallback(() => setPhrase(null), []);
+  const phrasePlaying = useCallback((playing: boolean) => {
+    if (playing) {
+      if (activeRef.current && !mutedRef.current && !phraseMuted.current) {
+        client.current?.enableMic(false);
+        phraseMuted.current = true;
+      }
+    } else if (phraseMuted.current) {
+      phraseMuted.current = false;
+      if (activeRef.current && !mutedRef.current) client.current?.enableMic(true);
+    }
+  }, []);
+  useEffect(() => {
+    if (mood === "talking") stopPhraseAudio();
+  }, [mood]);
   const [learning, setLearning] = useState<LearningItem[]>([]);
   const [target, setTarget] = useState<SaveTarget>("flashcards");
   const [destinationId, setDestinationId] = useState("");
@@ -997,10 +1020,10 @@ export function RitaRealtimeV3({
         <div className="pt-6">
           <Link
             to={lessonId ? "/rita-lessons" : "/rita"}
-            aria-label="Back"
-            className="grid h-11 w-11 place-items-center rounded-full bg-[#fdecec] text-[#d92d20] transition-colors hover:bg-[#fbd5d5]"
+            className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
           >
-            <X size={22} strokeWidth={2.5} />
+            <ArrowLeft size={16} />
+            {lessonId ? "Lessons" : "Back"}
           </Link>
         </div>
 
@@ -1011,33 +1034,25 @@ export function RitaRealtimeV3({
             label={active ? "Rita is with you" : "Rita, your language tutor"}
             className="h-[min(70vw,360px)] w-[min(70vw,360px)]"
           />
-          {lessonId && (
-            <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
-              {lesson.session?.lesson.title_ar || "Lesson"}
-            </h2>
-          )}
-          {(active || starting) && (
-            <p className="mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]">
-              <span
-                aria-hidden="true"
-                className={`h-2.5 w-2.5 shrink-0 rounded-full ${
-                  mood === "talking"
-                    ? "animate-pulse bg-[var(--pp-pink)]"
-                    : mood === "listening"
-                      ? "bg-[var(--pp-pink-text)]"
-                      : "bg-[var(--pp-line)]"
-                }`}
-              />
-              {status}
-            </p>
-          )}
+          <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
+            {lessonId ? lesson.session?.lesson.title_ar || "Lesson" : "Talk with Rita"}
+          </h2>
+          <p className="mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]">
+            <span
+              aria-hidden="true"
+              className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                mood === "talking"
+                  ? "animate-pulse bg-[var(--pp-pink)]"
+                  : mood === "listening"
+                    ? "bg-[var(--pp-pink-text)]"
+                    : "bg-[var(--pp-line)]"
+              }`}
+            />
+            {status}
+          </p>
         </aside>
 
-        <section
-          className={`flex min-h-[calc(100vh-200px)] w-full flex-col ${
-            !active && !lessonId ? "justify-center" : ""
-          }`}
-        >
+        <section className="flex min-h-[calc(100vh-72px)] w-full flex-col">
           {active && soundBlocked && (
             <div className="flex justify-center pt-4">
               <button type="button" onClick={enableSound} className="rita-btn rita-btn-primary">
@@ -1046,7 +1061,7 @@ export function RitaRealtimeV3({
             </div>
           )}
 
-          <div className={!active && !lessonId ? "py-2" : "flex-1 py-6"}>
+          <div className="flex-1 py-6">
             <div className="space-y-6">
               {lesson.session && (
                 <LessonObjectivesPanel
@@ -1065,24 +1080,33 @@ export function RitaRealtimeV3({
                   </Link>
                 </div>
               )}
-              {(!active && messages.length === 1 ? [] : messages).map((message) => (
-                <ChatText
-                  key={message.id}
-                  text={message.text}
-                  className={
-                    message.role === "you"
-                      ? "ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-[var(--pp-pink-soft)] px-4 py-2.5 text-[18px] leading-7"
-                      : "mr-auto w-fit max-w-[92%] rounded-2xl rounded-bl-md bg-[var(--pp-grey)] px-5 py-3.5 text-[19px] leading-8"
-                  }
-                />
-              ))}
+              {groupTurns(messages).map((message) =>
+                message.role === "you" ? (
+                  <ChatText
+                    key={message.id}
+                    text={message.text}
+                    className="ml-auto w-fit max-w-[80%] rounded-2xl rounded-br-md bg-[var(--pp-pink-soft)] px-4 py-2 text-[17px] leading-8"
+                  />
+                ) : (
+                  <ChatText
+                    key={message.id}
+                    text={message.text}
+                    onPhrase={openPhrase}
+                    className={
+                      !active && messages.length === 1
+                        ? "mx-auto text-center text-[20px] leading-8"
+                        : "max-w-[94%] text-[18px] leading-9"
+                    }
+                  />
+                ),
+              )}
               {showCaption(
                 caption,
                 [...messages].reverse().find((m) => m.role === "you")?.text,
               ) && (
                 <ChatText
                   text={caption}
-                  className="ml-auto w-fit max-w-[85%] px-2 text-[15px] leading-6 text-[var(--pp-muted)]"
+                  className="ml-auto w-fit max-w-[80%] px-2 text-[15px] leading-6 text-[var(--pp-muted)]"
                 />
               )}
               {error && (
@@ -1093,7 +1117,7 @@ export function RitaRealtimeV3({
             </div>
           </div>
 
-          <div className={!active && !lessonId ? "py-3" : "sticky bottom-0 bg-white pb-6 pt-3"}>
+          <div className="sticky bottom-0 bg-white pb-6 pt-3">
             {!active ? (
               <div className="flex justify-center">
                 <button
@@ -1149,6 +1173,10 @@ export function RitaRealtimeV3({
           </div>
         </section>
       </div>
+
+      {phrase && (
+        <PhraseDialog phrase={phrase} onClose={closePhrase} onPlayingChange={phrasePlaying} />
+      )}
 
       {lesson.result && !resultDismissed && (
         <LessonResultCard

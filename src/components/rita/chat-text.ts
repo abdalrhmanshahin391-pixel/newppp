@@ -7,7 +7,7 @@ export type ChatSegment =
   | { kind: "text"; value: string }
   | { kind: "bold"; value: string }
   // A word or phrase in another script inside an Arabic sentence (e.g. German).
-  | { kind: "foreign"; value: string };
+  | { kind: "foreign"; value: string; strong?: boolean };
 
 const ARABIC_LETTER = /[ؠ-يٮ-ۓەۺ-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-ﻼ]/g;
 const LATIN_LETTER = /[A-Za-zÀ-ɏ]/g;
@@ -21,11 +21,20 @@ function count(text: string, pattern: RegExp) {
   return text.match(pattern)?.length ?? 0;
 }
 
-/** Reads right-to-left when Arabic letters are at least as common as Latin ones. */
+const ARABIC_WORD = new RegExp(`[^\\s]*${ARABIC_LETTER.source}[^\\s]*`, "g");
+const LATIN_WORDS = /[A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F0-9'\u2019-]*/g;
+
+/**
+ * Reads right-to-left when there are Arabic words and the foreign ones are not
+ * clearly the majority. Words in **bold** are the phrases being taught, so they
+ * do not count: an Arabic explanation around three English phrases is still Arabic.
+ */
 export function textDirection(text: string): TextDirection {
-  const arabic = count(text, ARABIC_LETTER);
-  if (arabic === 0) return "ltr";
-  return arabic >= count(text, LATIN_LETTER) ? "rtl" : "ltr";
+  const arabicWords = count(text, ARABIC_WORD);
+  if (arabicWords === 0) return "ltr";
+  const withoutBold = text.replace(/\*\*[^*]*\*\*/g, " ");
+  const latinWords = count(withoutBold, LATIN_WORDS);
+  return arabicWords * 2 >= latinWords ? "rtl" : "ltr";
 }
 
 /** Splits on blank or single line breaks; empty lines are dropped. */
@@ -70,7 +79,7 @@ export function parseParagraph(paragraph: string, direction: TextDirection): Cha
       count(part, LATIN_LETTER) > 0 &&
       count(part, ARABIC_LETTER) === 0
     ) {
-      out.push({ kind: "foreign", value: part.trim() });
+      out.push({ kind: "foreign", value: part.trim(), strong: true });
     } else {
       out.push({ kind: "bold", value: part });
     }
@@ -101,4 +110,23 @@ export function showCaption(caption: string, lastYouText: string | undefined) {
   const clean = caption.trim();
   if (!clean) return false;
   return clean !== (lastYouText ?? "").trim();
+}
+
+export type ChatTurn = { id: string; role: "you" | "rita"; text: string };
+
+/**
+ * Consecutive messages from the learner become one turn (speech recognition
+ * often delivers a thought in several short pieces). Display only.
+ */
+export function groupTurns<T extends ChatTurn>(messages: T[]): T[] {
+  const out: T[] = [];
+  for (const message of messages) {
+    const last = out[out.length - 1];
+    if (last && last.role === "you" && message.role === "you") {
+      out[out.length - 1] = { ...last, text: `${last.text.trim()} ${message.text.trim()}`.trim() };
+    } else {
+      out.push(message);
+    }
+  }
+  return out;
 }

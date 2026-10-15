@@ -43,8 +43,13 @@ added since.
      `/rita-lessons` and press متابعة.
    - With the key from step 3, opening a lesson makes its real picture.
 
+5. **Check the Lovable AI key for the tap-a-word window**
+   - The word window (translation and three pronunciation speeds) uses the same
+     `LOVABLE_API_KEY` as the German Lab voice. If German Lab audio works, nothing
+     to do; if it does not, set that secret. No migration needed.
+
 ## Done
 
 - PR #25 (hub page, simpler conversation, pink orb) merged into `main`.
-- PR #26 (chat left / orb right, automatic lesson pictures, red X) is open as a
+- PR #26 (tidier chat, tap-a-word window, automatic lesson pictures) is open as a
   draft.

@@ -1,3 +1,4 @@
+import { Volume2 } from "lucide-react";
 import { parseParagraph, splitParagraphs, textDirection } from "./chat-text";
 
 /**
@@ -6,32 +7,71 @@ import { parseParagraph, splitParagraphs, textDirection } from "./chat-text";
  * (German, English) are set apart as small pink chips so the word being
  * taught stands out and keeps its own letter order.
  */
-export function ChatText({ text, className = "" }: { text: string; className?: string }) {
+export function ChatText({
+  text,
+  className = "",
+  onPhrase,
+}: {
+  text: string;
+  className?: string;
+  /** When given, foreign words become small buttons that open the word window. */
+  onPhrase?: (phrase: string) => void;
+}) {
   const direction = textDirection(text);
   const paragraphs = splitParagraphs(text);
   return (
     <div dir={direction} lang={direction === "rtl" ? "ar" : undefined} className={className}>
-      {paragraphs.map((paragraph, paragraphIndex) => (
-        <p key={paragraphIndex} className={paragraphIndex > 0 ? "mt-2" : undefined}>
-          {parseParagraph(paragraph, direction).map((segment, index) =>
-            segment.kind === "foreign" ? (
-              <bdi
-                key={index}
-                dir="ltr"
-                className="inline-block rounded-md bg-[var(--pp-pink-soft)] px-1.5 font-semibold leading-7 text-[var(--pp-ink)]"
-              >
-                {segment.value}
-              </bdi>
-            ) : segment.kind === "bold" ? (
-              <strong key={index} className="font-bold">
-                {segment.value}
-              </strong>
-            ) : (
-              <span key={index}>{segment.value}</span>
-            ),
-          )}
-        </p>
-      ))}
+      {paragraphs.map((paragraph, paragraphIndex) => {
+        // Each paragraph reads in its own direction (an Arabic line and an
+        // English line can share a message).
+        const own = paragraphs.length > 1 ? textDirection(paragraph) : direction;
+        return (
+          <p key={paragraphIndex} dir={own} className={paragraphIndex > 0 ? "mt-2" : undefined}>
+            {parseParagraph(paragraph, own).map((segment, index) =>
+              segment.kind === "foreign" ? (
+                onPhrase ? (
+                  <button
+                    key={index}
+                    type="button"
+                    dir="ltr"
+                    onClick={() => onPhrase(segment.value)}
+                    aria-label={`${segment.value}: translation and pronunciation`}
+                    className="mx-0.5 inline-flex items-center gap-1 rounded-md bg-[var(--pp-pink-soft)] px-2 py-px align-baseline font-semibold leading-7 text-[var(--pp-ink)] transition-colors hover:bg-[#ffd3e5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--pp-ink)]"
+                  >
+                    {segment.value}
+                    <Volume2 size={12} aria-hidden="true" className="text-[var(--pp-pink-text)]" />
+                  </button>
+                ) : (
+                  <bdi
+                    key={index}
+                    dir="ltr"
+                    className="inline-block rounded-md bg-[var(--pp-pink-soft)] px-1.5 font-semibold leading-7 text-[var(--pp-ink)]"
+                  >
+                    {segment.value}
+                  </bdi>
+                )
+              ) : segment.kind === "bold" && onPhrase && own === "ltr" ? (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => onPhrase(segment.value)}
+                  aria-label={`${segment.value}: translation and pronunciation`}
+                  className="mx-0.5 inline-flex items-center gap-1 rounded-md bg-[var(--pp-pink-soft)] px-2 py-px align-baseline font-bold hover:bg-[#ffd3e5]"
+                >
+                  {segment.value}
+                  <Volume2 size={12} aria-hidden="true" className="text-[var(--pp-pink-text)]" />
+                </button>
+              ) : segment.kind === "bold" ? (
+                <strong key={index} className="font-bold">
+                  {segment.value}
+                </strong>
+              ) : (
+                <span key={index}>{segment.value}</span>
+              ),
+            )}
+          </p>
+        );
+      })}
     </div>
   );
 }

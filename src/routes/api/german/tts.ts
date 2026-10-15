@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabasePublicConfig } from "@/integrations/supabase/config";
+import { ttsPlan, type PronounceStyle } from "@/lib/rita-phrase";
 
 const MAX_TTS_CHARS = 240;
 
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/api/german/tts")({
           return new Response("Unauthorized", { status: 401 });
         }
 
-        let payload: { text?: string; rate?: number } = {};
+        let payload: { text?: string; rate?: number; lang?: string; style?: string } = {};
         try {
           payload = await request.json();
         } catch {
@@ -38,7 +39,20 @@ export const Route = createFileRoute("/api/german/tts")({
         const key = process.env.LOVABLE_API_KEY;
         if (!key) return new Response("High-quality voice is unavailable", { status: 503 });
 
-        const speed = Math.max(0.65, Math.min(1.05, Number(payload.rate ?? 0.92)));
+        // The "tap a word" window asks for a language and a style (fast, slow,
+        // precise); older callers send only a rate and keep the German voice.
+        const style = ["fast", "slow", "precise"].includes(String(payload.style))
+          ? (payload.style as PronounceStyle)
+          : null;
+        const lang = payload.lang === "en" ? "en" : "de";
+        const plan = style ? ttsPlan(lang, style, text) : null;
+        const speed = plan
+          ? plan.speed
+          : Math.max(0.65, Math.min(1.05, Number(payload.rate ?? 0.92)));
+        const spoken = plan ? plan.input : text;
+        const instructions =
+          plan?.instructions ??
+          "Speak as a calm native German woman from Germany. Clear standard Hochdeutsch accent, warm classroom tone, crisp consonants, natural short pauses, no English accent.";
 
         try {
           const response = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
@@ -49,13 +63,12 @@ export const Route = createFileRoute("/api/german/tts")({
             },
             body: JSON.stringify({
               model: "openai/gpt-4o-mini-tts",
-              input: text,
+              input: spoken,
               voice: "coral",
               response_format: "mp3",
               stream_format: "audio",
               speed,
-              instructions:
-                "Speak as a calm native German woman from Germany. Clear standard Hochdeutsch accent, warm classroom tone, crisp consonants, natural short pauses, no English accent.",
+              instructions,
             }),
             signal: request.signal,
           });
