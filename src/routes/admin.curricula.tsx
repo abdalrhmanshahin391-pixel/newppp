@@ -1,16 +1,38 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical } from "lucide-react";
+import {
+  AlertTriangle,
   ArrowDown,
   ArrowLeft,
   ArrowUp,
   BookOpen,
+  CheckCircle2,
+  Circle,
+  Eye,
   FileUp,
   ImagePlus,
   Loader2,
   Sparkles,
   Upload,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/legacy-client";
@@ -22,8 +44,10 @@ import {
   nextWindow,
   percentOf,
   type LessonDraft,
+  type Objective,
 } from "@/lib/rita-curriculum";
 import {
+  adminConfirmBlankPage,
   adminCreateCurriculum,
   adminCurriculumOverview,
   adminGenerateLesson,
@@ -32,6 +56,8 @@ import {
   adminImportLesson,
   adminMoveLesson,
   adminReadCurriculumWindow,
+  adminReorderLessons,
+  adminRegenerateObjective,
   adminSaveCurriculumPages,
   adminSetCurriculumStatus,
   adminSetLessonStatus,
@@ -42,6 +68,7 @@ import {
   type WindowRow,
 } from "@/lib/rita-curriculum.functions";
 import { LessonImage } from "@/components/rita-lessons/LessonArt";
+import { LessonForm } from "@/components/rita-lessons/LessonForm";
 
 export const Route = createFileRoute("/admin/curricula")({
   head: () => ({
@@ -54,8 +81,37 @@ type Overview = Awaited<ReturnType<typeof adminCurriculumOverview>>;
 
 const BUCKET = "rita-curricula";
 
+/** Common server errors translated into Arabic guidance. */
+const ERROR_HINTS: [RegExp, string][] = [
+  [
+    /OPENAI_API_KEY|server secrets/i,
+    "مفتاح OpenAI غير مضبوط في أسرار الخادم — أضِف OPENAI_API_KEY من إعدادات المشروع ثم أعد المحاولة.",
+  ],
+  [/took too long/i, "استغرق رد الذكاء الاصطناعي وقتًا طويلًا — انتظر دقيقة وأعد المحاولة."],
+  [
+    /did not match the expected format/i,
+    "رد الذكاء الاصطناعي لم يطابق الشكل المطلوب — أعد المحاولة، وإذا تكرر جرّب صياغة أبسط.",
+  ],
+  [/429|rate limit/i, "تجاوزت حد الاستخدام مؤقتًا — انتظر قليلًا ثم أعد المحاولة."],
+  [/Forbidden: admin only/i, "هذا الإجراء يتطلب صلاحيات مشرف."],
+  [/has not been read yet/i, "لا يمكن إنشاء الدرس قبل قراءة هذه الصفحات — اقرأ النافذة أولًا."],
+  [
+    /Could not find the function|does not exist/i,
+    "هذه الميزة تحتاج تطبيق تحديث قاعدة البيانات (migration 20261015120000) في Lovable Cloud.",
+  ],
+];
+
 function errorText(error: unknown) {
-  return error instanceof Error ? error.message : "حدث خطأ";
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  // Keep the actionable page list from the server, not just the generic hint.
+  const missingPages = message.match(/no text yet: ([0-9,\s]+)/i);
+  if (missingPages) {
+    return `الصفحات ${missingPages[1].trim()} بلا نص بعد — ستُقرأ تلقائيًا، أو أكّدها فارغة من قائمة الصفحات الناقصة.`;
+  }
+  for (const [pattern, hint] of ERROR_HINTS) {
+    if (pattern.test(message)) return hint;
+  }
+  return message || "حدث خطأ";
 }
 
 /** A lesson row back in the shape the AI and the import box use. */
@@ -91,6 +147,7 @@ function AdminCurricula() {
   const navigate = useNavigate();
   const overviewFn = useServerFn(adminCurriculumOverview);
   const [overview, setOverview] = useState<Overview | null>(null);
+  const [loadError, setLoadError] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [pdfCache] = useState(() => new Map<string, File>());
 
@@ -99,12 +156,15 @@ function AdminCurricula() {
   }, [loading, isAdmin, navigate]);
 
   const refresh = useCallback(async () => {
+    setLoadError("");
     try {
       const next = await overviewFn();
       setOverview(next);
       setSelectedId((current) => current || next.curricula[0]?.id || "");
     } catch (error) {
-      toast.error(errorText(error));
+      // A failed load must never leave a silent spinner: show the error and a retry.
+      setOverview(null);
+      setLoadError(errorText(error));
     }
   }, [overviewFn]);
 
@@ -151,6 +211,34 @@ function AdminCurricula() {
         </div>
       </header>
 
+      <div className="mx-auto max-w-6xl space-y-4 px-5 pt-6">
+        {loadError && (
+          <div className="flex items-start justify-between gap-3 rounded-3xl border-2 border-[#FFD1D1] bg-[#FFF1F1] p-5">
+            <div>
+              <p className="font-bold text-[#C0392B]">فشل تحميل لوحة المناهج</p>
+              <p className="mt-1 text-sm font-bold text-[#8A4A3A]">{loadError}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              className="shrink-0 rounded-lg bg-[#C0392B] px-4 py-2 text-sm font-bold text-white"
+            >
+              أعد المحاولة
+            </button>
+          </div>
+        )}
+        {overview?.needsMigration && (
+          <div className="flex items-start gap-3 rounded-3xl border-2 border-[#FFD98A] bg-[#FFF6D6] p-4 text-sm font-bold text-[#B07A00]">
+            <AlertTriangle size={18} className="shrink-0" />
+            <p>
+              بعض ميزات هذه اللوحة تحتاج تحديث قاعدة البيانات: طبّق migration ‏20261015120000
+              (‏rita_curriculum_gaps) في Lovable Cloud ثم حدّث الصفحة. حتى ذلك الحين تعمل اللوحة
+              بالوضع القديم الأبطأ.
+            </p>
+          </div>
+        )}
+      </div>
+
       <div className="mx-auto grid max-w-6xl gap-6 px-5 pt-6 lg:grid-cols-[320px_1fr]">
         <aside className="space-y-4">
           <AddBookCard
@@ -160,7 +248,9 @@ function AdminCurricula() {
               setSelectedId(id);
             }}
           />
-          {!overview && <Loader2 className="mx-auto animate-spin text-[var(--pp-pink-text)]" />}
+          {!overview && !loadError && (
+            <Loader2 className="mx-auto animate-spin text-[var(--pp-pink-text)]" />
+          )}
           {overview?.curricula.map((book) => (
             <button
               key={book.id}
@@ -196,11 +286,13 @@ function AdminCurricula() {
               lessons={overview.lessons.filter((lesson) => lesson.curriculum_id === selected.id)}
               allLessons={overview.lessons}
               missingText={overview.missingText[selected.id] ?? []}
+              needsMigration={overview.needsMigration}
               pdfCache={pdfCache}
               onChanged={refresh}
             />
           ) : (
-            overview && (
+            overview &&
+            !loadError && (
               <p className="rounded-2xl border-2 border-dashed border-[var(--pp-line)] p-10 text-center font-bold text-[var(--pp-muted)]">
                 ارفع كتاب القواعد وكتاب الكلمات للبدء.
               </p>
@@ -249,6 +341,43 @@ function CursorBars({ book }: { book: CurriculumRow }) {
   );
 }
 
+/** The path to a published lesson: book AND lesson must both be published. */
+function PublishChecklist({ book, lessons }: { book: CurriculumRow; lessons: LessonRow[] }) {
+  const publishedLessons = lessons.filter((lesson) => lesson.status === "published").length;
+  const items = [
+    {
+      done: book.read_cursor > 0,
+      label: `قراءة الكتاب (${book.read_cursor}/${book.page_count} صفحة)`,
+    },
+    { done: lessons.length > 0, label: `إنشاء الدروس (${lessons.length})` },
+    {
+      done: lessons.length > 0 && publishedLessons > 0,
+      label: `نشر الدروس (${publishedLessons}/${lessons.length})`,
+    },
+    { done: book.status === "published", label: "نشر الكتاب للطلاب" },
+  ];
+  return (
+    <div className="mt-3 rounded-2xl bg-white p-3">
+      <p className="text-xs font-bold text-[var(--pp-muted)]">قائمة تجهيز الكتاب للنشر</p>
+      <ul className="mt-2 space-y-1">
+        {items.map((item) => (
+          <li key={item.label} className="flex items-center gap-2 text-xs font-bold">
+            {item.done ? (
+              <CheckCircle2 size={14} className="text-[#2F8F55]" />
+            ) : (
+              <Circle size={14} className="text-[#C9A7FF]" />
+            )}
+            {item.label}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-[11px] font-bold text-[#B07A00]">
+        الدرس لا يظهر للطالب إلا إذا كان الدرس والكتاب منشورين معًا.
+      </p>
+    </div>
+  );
+}
+
 function AddBookCard({
   pdfCache,
   onCreated,
@@ -268,6 +397,12 @@ function AddBookCard({
     if (!file || !title.trim()) {
       toast.error("اختر ملف PDF واكتب اسم الكتاب.");
       return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      const proceed = window.confirm(
+        `الملف كبير (${Math.round(file.size / 1024 / 1024)} ميغابايت) — استخراج النص في المتصفح ممكن ياخذ وقتًا طويلًا. تكمل؟`,
+      );
+      if (!proceed) return;
     }
     try {
       setProgress("قراءة الملف…");
@@ -333,7 +468,7 @@ function AddBookCard({
       <input
         value={title}
         onChange={(event) => setTitle(event.target.value)}
-        placeholder="Book title (English)"
+        placeholder="عنوان الكتاب بالإنجليزية"
         dir="ltr"
         className="mt-2 w-full rounded-xl border border-[var(--pp-line)] px-3 py-2 text-sm"
       />
@@ -372,6 +507,7 @@ function BookDetail({
   lessons,
   allLessons,
   missingText,
+  needsMigration,
   pdfCache,
   onChanged,
 }: {
@@ -380,6 +516,7 @@ function BookDetail({
   lessons: LessonRow[];
   allLessons: LessonRow[];
   missingText: number[];
+  needsMigration: boolean;
   pdfCache: Map<string, File>;
   onChanged: () => Promise<void>;
 }) {
@@ -387,6 +524,9 @@ function BookDetail({
   const readFn = useServerFn(adminReadCurriculumWindow);
   const transcribeFn = useServerFn(adminTranscribeCurriculumPages);
   const importWindowFn = useServerFn(adminImportCurriculumWindow);
+  const blankFn = useServerFn(adminConfirmBlankPage);
+  const savePagesFn = useServerFn(adminSaveCurriculumPages);
+  const reorderFn = useServerFn(adminReorderLessons);
   const [busy, setBusy] = useState("");
   const [openWindow, setOpenWindow] = useState<string | null>(
     windows[windows.length - 1]?.id ?? null,
@@ -395,6 +535,18 @@ function BookDetail({
   const next = nextWindow(book);
   const [range, setRange] = useState({ from: next?.from ?? 1, to: next?.to ?? 1 });
   const [summaryJson, setSummaryJson] = useState("");
+  const [readAll, setReadAll] = useState({ active: false, progress: "" });
+  const cancelReadAll = useRef(false);
+
+  // The async read-all loop needs the freshest book and gaps, not the render-time props.
+  const bookRef = useRef(book);
+  useEffect(() => {
+    bookRef.current = book;
+  }, [book]);
+  const missingRef = useRef(missingText);
+  useEffect(() => {
+    missingRef.current = missingText;
+  }, [missingText]);
 
   async function run(label: string, task: () => Promise<unknown>, done?: string) {
     setBusy(label);
@@ -409,37 +561,102 @@ function BookDetail({
     }
   }
 
+  /** Reads one window: transcribes its missing pages first, then summarizes. */
+  async function readWindow(from: number, to: number): Promise<number> {
+    const bookNow = bookRef.current;
+    const scanned = missingRef.current.filter((page) => page >= from && page <= to);
+    if (scanned.length) {
+      const { loadPdfForRender, renderPageToJpegBase64 } = await import("@/lib/pdf-page-render");
+      const doc = await loadPdfForRender(await pdfFileFor(bookNow, pdfCache));
+      for (let index = 0; index < scanned.length; index += 3) {
+        const group = scanned.slice(index, index + 3);
+        setBusy(`read:${group.join(",")}`);
+        const pages = [];
+        for (const page of group) {
+          pages.push({
+            page_no: page,
+            jpegBase64: await renderPageToJpegBase64(doc, page, {
+              targetWidth: 1200,
+              quality: 0.72,
+            }),
+          });
+        }
+        await transcribeFn({ data: { curriculumId: bookNow.id, pages } });
+      }
+    }
+    setBusy("read");
+    const result = await readFn({ data: { curriculumId: bookNow.id, from, to } });
+    return result.readCursor;
+  }
+
   async function readNext() {
     if (!next) return;
     await run(
       "read",
+      () => readWindow(next.from, next.to),
+      `تمت قراءة الصفحات ${next.from}–${next.to}`,
+    );
+  }
+
+  /**
+   * Reads every remaining window in order. This is a sequential in-tab queue —
+   * not a background job: keep the tab open, and you can stop at any window.
+   */
+  async function readAllWindows() {
+    setReadAll({ active: true, progress: "بدء القراءة…" });
+    cancelReadAll.current = false;
+    let windowsRead = 0;
+    try {
+      let cursor = bookRef.current.read_cursor;
+      const total = bookRef.current.page_count;
+      while (!cancelReadAll.current) {
+        const window = nextWindow({ page_count: total, read_cursor: cursor });
+        if (!window) break;
+        windowsRead += 1;
+        setReadAll({
+          active: true,
+          progress: `قراءة الصفحات ${window.from}–${window.to} من ${total}…`,
+        });
+        const advanced = await readWindow(window.from, window.to);
+        if (advanced <= cursor) break; // safety: the cursor did not move
+        cursor = advanced;
+      }
+      if (cancelReadAll.current) toast.info("أوقفت القراءة المتتابعة عند آخر نافذة مكتملة");
+      else if (windowsRead) toast.success(`قُرئت ${windowsRead} نافذة — تم تحديث الكتاب`);
+      else toast.info("الكتاب مقروء كاملًا");
+    } catch (error) {
+      toast.error(errorText(error));
+    } finally {
+      setReadAll({ active: false, progress: "" });
+      setBusy("");
+      await onChanged();
+    }
+  }
+
+  /** Re-extracts text for pages whose extraction was interrupted. */
+  async function resumeExtraction() {
+    await run(
+      "extract",
       async () => {
-        // Scanned pages first: render them here and let the AI transcribe them.
-        const scanned = missingText.filter((page) => page >= next.from && page <= next.to);
-        if (scanned.length) {
-          const { loadPdfForRender, renderPageToJpegBase64 } =
-            await import("@/lib/pdf-page-render");
-          const doc = await loadPdfForRender(await pdfFileFor(book, pdfCache));
-          for (let index = 0; index < scanned.length; index += 3) {
-            const group = scanned.slice(index, index + 3);
-            setBusy(`read:${group.join(",")}`);
-            const pages = [];
-            for (const page of group) {
-              pages.push({
-                page_no: page,
-                jpegBase64: await renderPageToJpegBase64(doc, page, {
-                  targetWidth: 1200,
-                  quality: 0.72,
-                }),
-              });
-            }
-            await transcribeFn({ data: { curriculumId: book.id, pages } });
+        const { loadPdfForText, getPageText } = await import("@/lib/pdf-page-render");
+        const bookNow = bookRef.current;
+        const doc = await loadPdfForText(await pdfFileFor(bookNow, pdfCache));
+        const pages = missingRef.current.filter((page) => page <= bookNow.page_count);
+        let batch: { page_no: number; text: string; has_text_layer: boolean }[] = [];
+        for (const page of pages) {
+          setBusy(`extract:${page}`);
+          const text = (await getPageText(doc, page)).slice(0, 20_000);
+          batch.push({ page_no: page, text, has_text_layer: text.trim().length >= 20 });
+          if (batch.length === 20) {
+            await savePagesFn({ data: { curriculumId: bookNow.id, pages: batch } });
+            batch = [];
           }
         }
-        setBusy("read");
-        await readFn({ data: { curriculumId: book.id, from: next.from, to: next.to } });
+        if (batch.length) {
+          await savePagesFn({ data: { curriculumId: bookNow.id, pages: batch } });
+        }
       },
-      `تمت قراءة الصفحات ${next.from}–${next.to}`,
+      "تم استكمال استخراج النص — الصفحات الممسوحة ستُقرأ عند الوصول إليها",
     );
   }
 
@@ -462,6 +679,14 @@ function BookDetail({
       "تم حفظ الملخص",
     );
   }
+
+  const publishedPath = useMemo(
+    () =>
+      allLessons
+        .filter((lesson) => lesson.status === "published" && lesson.path_order != null)
+        .sort((a, b) => Number(a.path_order) - Number(b.path_order)),
+    [allLessons],
+  );
 
   return (
     <div className="space-y-6">
@@ -526,12 +751,48 @@ function BookDetail({
             value={`${lessons.filter((lesson) => lesson.status === "published").length} منشور · ${lessons.length} الكل`}
           />
         </div>
+        <PublishChecklist book={book} lessons={lessons} />
         <PageStrip book={book} missingText={missingText} />
         {missingText.length > 0 && (
-          <p className="mt-2 text-xs font-bold text-[var(--pp-pink-text)]">
-            {missingText.length} صفحة بلا نص (ممسوحة ضوئياً) — ستقرؤها الصور تلقائياً عند الوصول
-            إليها.
-          </p>
+          <div className="mt-3 rounded-2xl border border-[#FFD98A] bg-[#FFF6D6]/60 p-3">
+            <p className="text-xs font-bold text-[#B07A00]">
+              {missingText.length} صفحة ناقصة (بلا نص أو غير محفوظة بعد).{" "}
+              {needsMigration && "(تعليم الصفحة الفارغة يحتاج تطبيق الـ migration)"}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {missingText.slice(0, 40).map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  title="تعليم هذه الصفحة كصفحة فارغة (غلاف أو فاصل)"
+                  onClick={() =>
+                    void run(
+                      `blank:${page}`,
+                      () => blankFn({ data: { curriculumId: book.id, pageNo: page } }),
+                      `تم تعليم ص${page} كصفحة فارغة`,
+                    )
+                  }
+                  className="rounded-lg border border-[#FFD98A] bg-white px-2 py-1 text-[11px] font-bold text-[#B07A00]"
+                >
+                  ص{page} فارغة؟
+                </button>
+              ))}
+              {missingText.length > 40 && (
+                <span className="text-[11px] font-bold text-[#B07A00]">
+                  و{missingText.length - 40} أخرى
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              disabled={Boolean(busy)}
+              onClick={() => void resumeExtraction()}
+              className="mt-3 rounded-lg bg-[var(--pp-ink)] px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+            >
+              {busy.startsWith("extract") ? <Loader2 size={13} className="animate-spin" /> : null}
+              استكمال استخراج النص من الملف المحفوظ
+            </button>
+          </div>
         )}
       </div>
 
@@ -550,7 +811,7 @@ function BookDetail({
             </button>
             <button
               type="button"
-              disabled={!next || Boolean(busy)}
+              disabled={!next || Boolean(busy) || readAll.active}
               onClick={() => void readNext()}
               className="flex items-center gap-2 rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] px-4 py-2 text-sm font-bold text-[var(--pp-ink)] disabled:opacity-50"
             >
@@ -561,8 +822,35 @@ function BookDetail({
               )}
               {next ? `اقرأ الصفحات ${next.from}–${next.to}` : "قُرئ الكتاب كاملاً"}
             </button>
+            {next && !readAll.active && (
+              <button
+                type="button"
+                disabled={Boolean(busy)}
+                onClick={() => void readAllWindows()}
+                className="rounded-lg border-2 border-[var(--pp-ink)] px-4 py-2 text-sm font-bold text-[var(--pp-pink-text)] disabled:opacity-50"
+              >
+                اقرأ الكتاب كاملاً
+              </button>
+            )}
+            {readAll.active && (
+              <button
+                type="button"
+                onClick={() => {
+                  cancelReadAll.current = true;
+                }}
+                className="flex items-center gap-1 rounded-lg bg-[#C0392B] px-4 py-2 text-sm font-bold text-white"
+              >
+                <X size={15} /> إيقاف القراءة
+              </button>
+            )}
           </div>
         </div>
+        {readAll.active && (
+          <p className="mt-2 flex items-center gap-2 text-xs font-bold text-[var(--pp-pink-text)]">
+            <Loader2 size={13} className="animate-spin" />
+            {readAll.progress} (قراءة متتابعة — أبقِ الصفحة مفتوحة)
+          </p>
+        )}
         {busy.startsWith("read:") && (
           <p className="mt-2 text-xs font-bold text-[var(--pp-pink-text)]">
             قراءة الصفحات الممسوحة {busy.slice(5)}…
@@ -634,7 +922,115 @@ function BookDetail({
         allLessons={allLessons}
         onChanged={onChanged}
       />
+
+      {publishedPath.length > 1 && (
+        <PathOrderCard
+          lessons={publishedPath}
+          disabled={Boolean(busy)}
+          onReorder={async (lessonIds) => {
+            setBusy("reorder");
+            try {
+              await reorderFn({ data: { lessonIds } });
+              toast.success("تم تحديث ترتيب المسار");
+            } catch (error) {
+              toast.error(errorText(error));
+              // Rethrow so the card can restore the previous on-screen order.
+              throw error;
+            } finally {
+              setBusy("");
+              await onChanged();
+            }
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+/** Drag-and-drop ordering of the learner path (published lessons, all books). */
+function PathOrderCard({
+  lessons,
+  disabled,
+  onReorder,
+}: {
+  lessons: LessonRow[];
+  disabled: boolean;
+  onReorder: (lessonIds: string[]) => Promise<void>;
+}) {
+  const [items, setItems] = useState(() =>
+    lessons.map((lesson) => ({ id: lesson.id, title: lesson.title_ar || lesson.title })),
+  );
+  useEffect(() => {
+    setItems(lessons.map((lesson) => ({ id: lesson.id, title: lesson.title_ar || lesson.title })));
+  }, [lessons]);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor),
+  );
+
+  function onDragEnd(event: DragEndEvent) {
+    if (disabled) return;
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = items.findIndex((item) => item.id === active.id);
+    const newIndex = items.findIndex((item) => item.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+    const next = arrayMove(items, oldIndex, newIndex);
+    const previous = items;
+    setItems(next);
+    void onReorder(next.map((item) => item.id)).catch(() => {
+      // The server rejected the change: put the old order back on screen.
+      setItems(previous);
+    });
+  }
+
+  return (
+    <div className="rounded-2xl bg-[var(--pp-grey)] p-5">
+      <h3 className="text-lg font-bold">ترتيب مسار الطلاب</h3>
+      <p className="mt-1 text-xs font-bold text-[var(--pp-muted)]">
+        اسحب لإعادة الترتيب (أو استخدم أسهم التقديم والتأخير في بطاقة كل درس). الترتيب هنا عبر كل
+        الكتب المنشورة.
+      </p>
+      <DndContext
+        sensors={disabled ? [] : sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={onDragEnd}
+      >
+        <SortableContext
+          items={items.map((item) => item.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          <ol className={`mt-3 space-y-2 ${disabled ? "pointer-events-none opacity-50" : ""}`}>
+            {items.map((item, index) => (
+              <SortablePathRow key={item.id} id={item.id} title={item.title} index={index} />
+            ))}
+          </ol>
+        </SortableContext>
+      </DndContext>
+    </div>
+  );
+}
+
+function SortablePathRow({ id, title, index }: { id: string; title: string; index: number }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  });
+  return (
+    <li
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.7 : 1,
+      }}
+      {...attributes}
+      {...listeners}
+      className="flex cursor-grab touch-none items-center gap-3 rounded-2xl border border-[var(--pp-line)] bg-white px-4 py-2 text-sm font-bold"
+    >
+      <GripVertical size={15} className="text-[var(--pp-muted)]/70" />
+      <span className="text-xs font-bold text-[var(--pp-pink-text)]">{index + 1}</span>
+      {title}
+    </li>
   );
 }
 
@@ -647,7 +1043,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** One square per page: grey unread, light read, dark taught, amber scanned. */
+/** One square per page: grey unread, light read, dark taught, amber missing. */
 function PageStrip({ book, missingText }: { book: CurriculumRow; missingText: number[] }) {
   const missing = new Set(missingText);
   const pages = Array.from({ length: Math.min(book.page_count, 400) }, (_, index) => index + 1);
@@ -742,14 +1138,18 @@ function LessonsCard({
   const importFn = useServerFn(adminImportLesson);
   const updateFn = useServerFn(adminUpdateLesson);
   const statusFn = useServerFn(adminSetLessonStatus);
+  const curriculumStatusFn = useServerFn(adminSetCurriculumStatus);
   const imageFn = useServerFn(adminGenerateLessonImage);
   const moveFn = useServerFn(adminMoveLesson);
+  const regenerateFn = useServerFn(adminRegenerateObjective);
   const [busy, setBusy] = useState("");
   const firstUntaught = Math.min(book.taught_cursor + 1, Math.max(1, book.read_cursor));
   const [form, setForm] = useState({ topic: "", from: firstUntaught, to: firstUntaught });
   const [mode, setMode] = useState<"ai" | "json">("ai");
   const [lessonJson, setLessonJson] = useState("");
-  const [editing, setEditing] = useState<{ id: string; json: string } | null>(null);
+  const [editing, setEditing] = useState<{ id: string; draft: LessonDraft } | null>(null);
+  const [selectedDrafts, setSelectedDrafts] = useState<Set<string>>(new Set());
+  const [publishAsk, setPublishAsk] = useState<LessonRow | null>(null);
 
   const suggestions = useMemo(
     () =>
@@ -778,6 +1178,81 @@ function LessonsCard({
     }
   }
 
+  function publishLesson(lesson: LessonRow) {
+    return run(
+      `status:${lesson.id}`,
+      () =>
+        statusFn({
+          data: {
+            lessonId: lesson.id,
+            status: lesson.status === "published" ? "draft" : "published",
+          },
+        }),
+      lesson.status === "published" ? "أُعيد الدرس إلى المسودة" : "نُشر الدرس",
+    );
+  }
+
+  /** Publish a lesson while its book is still a draft: offer both at once. */
+  function askPublish(lesson: LessonRow) {
+    if (book.status === "draft" && lesson.status !== "published") {
+      setPublishAsk(lesson);
+      return;
+    }
+    void publishLesson(lesson);
+  }
+
+  function toggleDraft(lessonId: string) {
+    setSelectedDrafts((current) => {
+      const next = new Set(current);
+      if (next.has(lessonId)) next.delete(lessonId);
+      else next.add(lessonId);
+      return next;
+    });
+  }
+
+  async function publishSelected() {
+    // Only currently-draft lessons of this book are eligible; stale selections
+    // (archived or already published) are filtered out, not published blindly.
+    const ids = lessons
+      .filter((lesson) => lesson.status === "draft" && selectedDrafts.has(lesson.id))
+      .map((lesson) => lesson.id);
+    if (!ids.length) {
+      setSelectedDrafts(new Set());
+      toast.info("لا مسودات محددة للنشر بعد الآن.");
+      return;
+    }
+    const confirmed = window.confirm(
+      `ستنشر ${ids.length} درسًا مختارًا. تأكدت من مراجعة كل واحد منها؟`,
+    );
+    if (!confirmed) return;
+    setBusy("bulk");
+    let published = 0;
+    try {
+      for (const lessonId of ids) {
+        await statusFn({ data: { lessonId, status: "published" } });
+        published += 1;
+      }
+      if (book.status === "draft") {
+        const alsoBook = window.confirm(
+          "الكتاب ما زال مسودة — الدروس لن تظهر للطلاب بدونه. تنشر الكتاب معها الآن؟",
+        );
+        if (alsoBook) {
+          await curriculumStatusFn({ data: { curriculumId: book.id, status: "published" } });
+        }
+      }
+      setSelectedDrafts(new Set());
+      toast.success(`نُشرت ${published} دروس`);
+    } catch (error) {
+      toast.error(
+        `نُشر ${published} من ${ids.length} قبل التوقف — عالِج الخطأ ثم أكمل الباقي: ${errorText(error)}`,
+      );
+    } finally {
+      setBusy("");
+      // Refresh even after partial failure so the list matches the server.
+      await onChanged();
+    }
+  }
+
   type LessonImport = { lesson: LessonDraft; image_url: string | null };
 
   /** Accepts one lesson, { lesson, image_url }, or a list of either (the sample files). */
@@ -803,7 +1278,19 @@ function LessonsCard({
 
   return (
     <div className="rounded-2xl bg-[var(--pp-grey)] p-5">
-      <h3 className="text-lg font-bold">الدروس</h3>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-lg font-bold">الدروس</h3>
+        {selectedDrafts.size > 0 && (
+          <button
+            type="button"
+            disabled={Boolean(busy)}
+            onClick={() => void publishSelected()}
+            className="rounded-lg bg-[#2F8F55] px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+          >
+            انشر المحدد ({selectedDrafts.size})
+          </button>
+        )}
+      </div>
       {book.read_cursor === 0 ? (
         <p className="mt-2 text-sm font-bold text-[var(--pp-muted)]/70">
           اقرأ أول {CURRICULUM_WINDOW_PAGES} صفحات قبل إنشاء الدروس.
@@ -953,37 +1440,44 @@ function LessonsCard({
                     ))}
                   </ul>
                 </div>
-                <span
-                  className={`rounded-lg px-2.5 py-1 text-[11px] font-bold ${
-                    lesson.status === "published"
-                      ? "bg-[var(--pp-pink-soft)] text-[var(--pp-pink-text)]"
-                      : "bg-white text-[var(--pp-muted)]"
-                  }`}
-                >
-                  {lesson.status === "published" ? "منشور" : "مسودة"}
-                </span>
+                <div className="flex flex-col items-end gap-2">
+                  <span
+                    className={`rounded-lg px-2.5 py-1 text-[11px] font-bold ${
+                      lesson.status === "published"
+                        ? "bg-[var(--pp-pink-soft)] text-[var(--pp-pink-text)]"
+                        : "bg-white text-[var(--pp-muted)]"
+                    }`}
+                  >
+                    {lesson.status === "published" ? "منشور" : "مسودة"}
+                  </span>
+                  {lesson.status === "draft" && (
+                    <label className="flex items-center gap-1 text-[11px] font-bold text-[var(--pp-muted)]">
+                      <input
+                        type="checkbox"
+                        checked={selectedDrafts.has(lesson.id)}
+                        onChange={() => toggleDraft(lesson.id)}
+                      />
+                      تحديد للنشر
+                    </label>
+                  )}
+                </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
                 <button
                   type="button"
                   disabled={Boolean(busy)}
-                  onClick={() =>
-                    void run(
-                      `status:${lesson.id}`,
-                      () =>
-                        statusFn({
-                          data: {
-                            lessonId: lesson.id,
-                            status: lesson.status === "published" ? "draft" : "published",
-                          },
-                        }),
-                      lesson.status === "published" ? "أُعيد الدرس إلى المسودة" : "نُشر الدرس",
-                    )
-                  }
+                  onClick={() => askPublish(lesson)}
                   className="rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] px-3 py-1.5 text-[var(--pp-ink)] disabled:opacity-50"
                 >
                   {lesson.status === "published" ? "إلغاء النشر" : "نشر"}
                 </button>
+                <Link
+                  to="/rita-live"
+                  search={{ lesson: lesson.id, preview: true }}
+                  className="flex items-center gap-1 rounded-lg border border-[var(--pp-line)] px-3 py-1.5"
+                >
+                  <Eye size={13} /> معاينة كطالب
+                </Link>
                 <button
                   type="button"
                   disabled={Boolean(busy)}
@@ -1008,7 +1502,7 @@ function LessonsCard({
                   onClick={() =>
                     setEditing({
                       id: lesson.id,
-                      json: JSON.stringify(lessonToDraft(lesson), null, 2),
+                      draft: lessonToDraft(lesson),
                     })
                   }
                   className="rounded-lg border border-[var(--pp-line)] px-3 py-1.5"
@@ -1063,48 +1557,107 @@ function LessonsCard({
                 </button>
               </div>
               {editing?.id === lesson.id && (
-                <div className="mt-3 space-y-2">
-                  <textarea
-                    value={editing.json}
-                    onChange={(event) => setEditing({ id: lesson.id, json: event.target.value })}
-                    dir="ltr"
-                    rows={14}
-                    className="w-full rounded-xl border border-[var(--pp-line)] p-3 font-mono text-xs"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      disabled={Boolean(busy)}
-                      onClick={() =>
-                        void run(
-                          `edit:${lesson.id}`,
-                          async () => {
-                            await updateFn({
-                              data: { lessonId: lesson.id, lesson: JSON.parse(editing.json) },
-                            });
-                            setEditing(null);
-                          },
-                          "تم حفظ التعديل",
-                        )
-                      }
-                      className="rounded-lg bg-[var(--pp-ink)] px-4 py-1.5 text-xs font-bold text-white"
-                    >
-                      حفظ
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditing(null)}
-                      className="rounded-lg px-4 py-1.5 text-xs font-bold"
-                    >
-                      إلغاء
-                    </button>
-                  </div>
-                </div>
+                <LessonForm
+                  initial={editing.draft}
+                  busy={Boolean(busy)}
+                  onCancel={() => setEditing(null)}
+                  onSave={(draft) => {
+                    setEditing({ id: lesson.id, draft });
+                    void run(
+                      `edit:${lesson.id}`,
+                      async () => {
+                        await updateFn({ data: { lessonId: lesson.id, lesson: draft } });
+                        setEditing(null);
+                      },
+                      "تم حفظ التعديل",
+                    );
+                  }}
+                  onRegenerateObjective={async (objective) => {
+                    try {
+                      const result = await regenerateFn({
+                        data: { lessonId: lesson.id, objective },
+                      });
+                      return result.objective as Objective;
+                    } catch (error) {
+                      toast.error(errorText(error));
+                      return null;
+                    }
+                  }}
+                />
               )}
             </div>
           );
         })}
       </div>
+
+      {publishAsk && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4"
+          onClick={() => setPublishAsk(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl bg-white p-5"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="font-bold">نشر «{publishAsk.title_ar || publishAsk.title}»</p>
+            <p className="mt-2 text-sm font-semibold text-[var(--pp-muted)]">
+              هذا الدرس لن يظهر للطلاب إلا إذا كان الكتاب منشورًا أيضًا — والكتاب حاليًا مسودة. شو
+              تحب نسوي؟
+            </p>
+            <div className="mt-4 flex flex-col gap-2 text-sm font-bold">
+              <button
+                type="button"
+                disabled={Boolean(busy)}
+                onClick={() => {
+                  const lesson = publishAsk;
+                  setPublishAsk(null);
+                  void run(
+                    "status",
+                    async () => {
+                      await curriculumStatusFn({
+                        data: { curriculumId: book.id, status: "published" },
+                      });
+                      await statusFn({
+                        data: { lessonId: lesson.id, status: "published" },
+                      });
+                    },
+                    "نُشر الدرس والكتاب — ظهر للطلاب",
+                  );
+                }}
+                className="rounded-lg bg-[#2F8F55] px-4 py-2.5 text-white disabled:opacity-50"
+              >
+                انشر الدرس والكتاب معًا (يظهر للطلاب)
+              </button>
+              <button
+                type="button"
+                disabled={Boolean(busy)}
+                onClick={() => {
+                  const lesson = publishAsk;
+                  setPublishAsk(null);
+                  void run(
+                    `status:${lesson.id}`,
+                    () =>
+                      statusFn({
+                        data: { lessonId: lesson.id, status: "published" },
+                      }),
+                    "نُشر الدرس — وسيبقى مخفيًا للطلاب حتى ينشر الكتاب",
+                  );
+                }}
+                className="rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] px-4 py-2.5 text-[var(--pp-ink)] disabled:opacity-50"
+              >
+                انشر الدرس فقط (يبقى مخفيًا حتى نشر الكتاب)
+              </button>
+              <button
+                type="button"
+                onClick={() => setPublishAsk(null)}
+                className="rounded-lg px-4 py-2 text-[var(--pp-muted)]"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

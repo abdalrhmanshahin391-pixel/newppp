@@ -8,6 +8,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middlew
 import {
   LessonDraftSchema,
   MAX_EVALUATIONS_PER_ATTEMPT,
+  ObjectiveSchema,
   WindowSummarySchema,
   buildWindowText,
   checkLessonPages,
@@ -15,9 +16,13 @@ import {
   checkWindow,
   cleanTurns,
   describeSchemaError,
+  effectiveProgressStatus,
   isLessonComplete,
   lessonPathStates,
   mergeObjectiveState,
+  missingPages,
+  pageIsReady,
+  reorderPositions,
   scoreLesson,
   starsFor,
   taughtCursorAfterPublish,
@@ -41,9 +46,33 @@ async function assertAdmin(ctx: AuthContext) {
   if (error || !data) throw new Error("Forbidden: admin only");
 }
 
-async function admin() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
-  return supabaseAdmin;
+
+/**
+ * Whether the 20261015120000 curriculum-gaps columns exist. True is cached for
+ * the process; false is re-probed (a tiny query) so applying the migration is
+ * picked up without a restart. When false, every read/write below omits the new
+ * columns, so the site keeps working before the migration is applied. Only a
+ * recognized missing-schema error means "migration not applied"; a service
+ * failure is assumed compatible so it surfaces from the real query instead.
+ */
+let gapsColumnsReady = false;
+function isMissingSchemaError(error: { message?: string } | null): boolean {
+  const message = error?.message ?? "";
+  return /could not find|does not exist|PGRST20[0-9]/i.test(message);
+}
+async function hasCurriculumGaps(db: AuthContext["supabase"]): Promise<boolean> {
+  if (gapsColumnsReady) return true;
+  try {
+    const { error } = await db.from("rita_curriculum_pages").select("transcribed_at").limit(1);
+    if (!error) {
+      gapsColumnsReady = true;
+      return true;
+    }
+    // Only a missing-column answer means the migration is absent.
+    return isMissingSchemaError(error);
+  } catch {
+    return false;
+  }
 }
 
 async function ai() {
@@ -126,14 +155,17 @@ const CURRICULUM_COLUMNS =
 const LESSON_COLUMNS =
   "id, curriculum_id, lesson_no, path_order, title, title_ar, topic, source_from_page, source_to_page, objectives, plan, vocabulary, image_url, image_prompt, status, version, source, model, updated_at";
 
+/** Review suggestions appear for lessons finished more than a week ago. */
+const REVIEW_AFTER_MS = 7 * 24 * 60 * 60 * 1_000;
+
 // ---------- admin: books ----------
 
 export const adminCurriculumOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const db = await admin();
-    const [books, windows, lessons, pages] = await Promise.all([
+    const db = context.supabase;
+    const [books, windows, lessons] = await Promise.all([
       db
         .from("rita_curricula")
         .select(CURRICULUM_COLUMNS)
@@ -144,27 +176,91 @@ export const adminCurriculumOverview = createServerFn({ method: "GET" })
         .select("id, curriculum_id, from_page, to_page, summary, source, model, created_at")
         .order("from_page"),
       db.from("rita_lessons").select(LESSON_COLUMNS).neq("status", "archived").order("lesson_no"),
-      db.from("rita_curriculum_pages").select("curriculum_id, page_no, has_text_layer, text"),
     ]);
     fail(books.error, "books");
     fail(windows.error, "windows");
     fail(lessons.error, "lessons");
-    fail(pages.error, "pages");
-    // Per book: which pages still need text (scanned pages that were not read yet).
+    const bookRows = (books.data ?? []) as CurriculumRow[];
+    // Cheap per-book readiness report so the overview no longer downloads every
+    // page's full text. Falls back to the legacy full-text query (read-only, so
+    // still safe) when the 20261015120000 migration has not been applied yet.
     const missingText: Record<string, number[]> = {};
-    for (const page of (pages.data ?? []) as {
-      curriculum_id: string;
-      page_no: number;
-      text: string;
-    }[]) {
-      if (page.text.trim().length >= 20) continue;
-      (missingText[page.curriculum_id] ??= []).push(page.page_no);
+    let needsMigration = false;
+    if (bookRows.length) {
+      const gaps = await hasCurriculumGaps(db);
+      let reports:
+        | { rows: { page_no: number; text_len: number; blank_confirmed: boolean }[]; error: { message?: string } | null }[]
+        | null = null;
+      if (gaps) {
+        reports = [];
+        for (const book of bookRows) {
+          // Paginated: a book may hold thousands of pages and one call is capped
+          // by the API row limit.
+          const rows: { page_no: number; text_len: number; blank_confirmed: boolean }[] = [];
+          let from = 0;
+          let reportError: { message?: string } | null = null;
+          for (let guard = 0; guard < 30; guard += 1) {
+            const result = (await db
+              .rpc("rita_curriculum_page_report", { p_curriculum_id: book.id })
+              .range(from, from + 999)) as unknown as {
+              data: { page_no: number; text_len: number; blank_confirmed: boolean }[] | null;
+              error: { message?: string } | null;
+            };
+            if (result.error) {
+              reportError = result.error;
+              break;
+            }
+            rows.push(...(result.data ?? []));
+            if ((result.data ?? []).length < 1000) break;
+            from += 1000;
+          }
+          reports.push({ rows: reportError ? [] : rows, error: reportError });
+        }
+      }
+      if (reports && !reports.some((report) => report.error)) {
+        for (let index = 0; index < bookRows.length; index += 1) {
+          const book = bookRows[index];
+          missingText[book.id] = missingPages(reports[index].rows, Number(book.page_count));
+        }
+      } else {
+        const reportError = reports?.find((report) => report.error)?.error ?? null;
+        if (reportError && !isMissingSchemaError(reportError)) {
+          // A service failure must reach the error state, not be relabeled as
+          // a missing migration.
+          fail(reportError, "page report");
+        }
+        needsMigration = true;
+        const { data: pages, error } = await db
+          .from("rita_curriculum_pages")
+          .select("curriculum_id, page_no, text")
+          .range(0, 999);
+        fail(error, "pages");
+        const allPages = [
+          ...(pages ?? []),
+          // The legacy fallback is paginated too: books can hold thousands of
+          // pages and one call is capped by the API row limit.
+          ...(await legacyRemainingPages(db, (pages ?? []).length)),
+        ] as { curriculum_id: string; page_no: number; text: string }[];
+        const byBook: Record<string, { page_no: number; text_len: number; blank_confirmed: boolean }[]> =
+          {};
+        for (const page of allPages) {
+          (byBook[page.curriculum_id] ??= []).push({
+            page_no: page.page_no,
+            text_len: page.text.trim().length,
+            blank_confirmed: false,
+          });
+        }
+        for (const book of bookRows) {
+          missingText[book.id] = missingPages(byBook[book.id] ?? [], Number(book.page_count));
+        }
+      }
     }
     return {
-      curricula: (books.data ?? []) as CurriculumRow[],
+      curricula: bookRows,
       windows: (windows.data ?? []) as WindowRow[],
       lessons: (lessons.data ?? []) as LessonRow[],
       missingText,
+      needsMigration,
     };
   });
 
@@ -184,7 +280,7 @@ export const adminCreateCurriculum = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { data: row, error } = await db
       .from("rita_curricula")
       .insert({ ...data, title_ar: data.title_ar || null, created_by: context.userId })
@@ -216,7 +312,7 @@ export const adminSaveCurriculumPages = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { data: book, error: bookError } = await db
       .from("rita_curricula")
       .select("page_count")
@@ -258,7 +354,8 @@ export const adminTranscribeCurriculumPages = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { transcribePages } = await ai();
     const result = await transcribePages(data.pages);
-    const db = await admin();
+    const db = context.supabase;
+    const gaps = await hasCurriculumGaps(db);
     if (result.pages.length) {
       const { error } = await db.from("rita_curriculum_pages").upsert(
         result.pages.map((page) => ({
@@ -266,12 +363,19 @@ export const adminTranscribeCurriculumPages = createServerFn({ method: "POST" })
           page_no: page.page_no,
           text: page.text,
           has_text_layer: false,
+          // An attempted transcription is provenance, not readiness: a page whose
+          // read came back empty stays missing until re-read or confirmed blank.
+          ...(gaps ? { transcribed_at: new Date().toISOString() } : {}),
         })),
         { onConflict: "curriculum_id,page_no" },
       );
       fail(error, "save transcription");
     }
-    return { transcribed: result.pages.map((page) => page.page_no) };
+    const transcribed = result.pages.map((page) => page.page_no);
+    return {
+      transcribed,
+      stillMissing: data.pages.map((page) => page.page_no).filter((pageNo) => !transcribed.includes(pageNo)),
+    };
   });
 
 export const adminSetCurriculumStatus = createServerFn({ method: "POST" })
@@ -284,7 +388,7 @@ export const adminSetCurriculumStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { error } = await db
       .from("rita_curricula")
       .update({ status: data.status })
@@ -293,8 +397,49 @@ export const adminSetCurriculumStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-async function loadBook(curriculumId: string) {
-  const db = await admin();
+/** Marks a page as blank (a cover image, a divider) so it stops blocking reads. */
+export const adminConfirmBlankPage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ curriculumId: uuid, pageNo: z.number().int().min(1).max(5_000) }), data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const db = context.supabase;
+    const { error } = await db.rpc("rita_confirm_blank_page", {
+      p_curriculum_id: data.curriculumId,
+      p_page_no: data.pageNo,
+    });
+    fail(error, "confirm blank page");
+    return { ok: true };
+  });
+
+/** Reorders published lessons in the learner path (drag and drop). */
+export const adminReorderLessons = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ lessonIds: z.array(uuid).min(1).max(500) }), data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const db = context.supabase;
+    const { data: rows, error } = await db
+      .from("rita_lessons")
+      .select("id, path_order")
+      .eq("status", "published")
+      .not("path_order", "is", null)
+      .order("path_order");
+    fail(error, "path");
+    // The dragged lessons keep the actual position slots they already occupy,
+    // so lessons from other books are never renumbered.
+    const positions = reorderPositions((rows ?? []) as { id: string; path_order: number }[], data.lessonIds);
+    const orders = data.lessonIds.map((id, index) => ({ id, path_order: positions[index] }));
+    const { error: rpcError } = await db.rpc("rita_set_lesson_path_orders", { p_orders: orders });
+    fail(rpcError, "reorder lessons");
+    return { ok: true };
+  });
+
+async function loadBook(db: AuthContext["supabase"], curriculumId: string) {
   const { data, error } = await db
     .from("rita_curricula")
     .select(CURRICULUM_COLUMNS)
@@ -305,7 +450,7 @@ async function loadBook(curriculumId: string) {
 }
 
 /** Saves a window summary and moves the read cursor forward when it is the next window. */
-async function storeWindow(input: {
+async function storeWindow(db: AuthContext["supabase"], input: {
   book: CurriculumRow;
   from: number;
   to: number;
@@ -318,7 +463,6 @@ async function storeWindow(input: {
   if (!check.ok) throw new Error(check.reason);
   const pageProblem = checkSummaryPages(input.summary, input.from, input.to);
   if (pageProblem) throw new Error(pageProblem);
-  const db = await admin();
   const { error } = await db.from("rita_curriculum_windows").upsert(
     {
       curriculum_id: input.book.id,
@@ -342,20 +486,39 @@ async function storeWindow(input: {
   return { readCursor: check.advancesTo };
 }
 
-async function pageText(curriculumId: string, from: number, to: number) {
-  const db = await admin();
+async function legacyRemainingPages(
+  db: AuthContext["supabase"],
+  alreadyFetched: number,
+) {
+  const rows: { curriculum_id: string; page_no: number; text: string }[] = [];
+  let from = alreadyFetched;
+  for (let guard = 0; guard < 30; guard += 1) {
+    const { data, error } = await db
+      .from("rita_curriculum_pages")
+      .select("curriculum_id, page_no, text")
+      .range(from, from + 999);
+    fail(error, "pages");
+    rows.push(...((data ?? []) as typeof rows));
+    if ((data ?? []).length < 1000) break;
+    from += 1000;
+  }
+  return rows;
+}
+
+async function pageText(db: AuthContext["supabase"], curriculumId: string, from: number, to: number) {
+  const gaps = await hasCurriculumGaps(db);
   const { data, error } = await db
     .from("rita_curriculum_pages")
-    .select("page_no, text")
+    .select(gaps ? "page_no, text, blank_confirmed" : "page_no, text")
     .eq("curriculum_id", curriculumId)
     .gte("page_no", from)
     .lte("page_no", to);
   fail(error, "page text");
-  const rows = (data ?? []) as { page_no: number; text: string }[];
-  const missing = [];
+  const rows = (data ?? []) as unknown as { page_no: number; text: string; blank_confirmed?: boolean }[];
+  const missing: number[] = [];
   for (let page = from; page <= to; page += 1) {
     const row = rows.find((item) => item.page_no === page);
-    if (!row || row.text.trim().length < 20) missing.push(page);
+    if (!row || !pageIsReady(row.text.trim().length, row.blank_confirmed === true)) missing.push(page);
   }
   return { text: buildWindowText(rows, from, to), missing };
 }
@@ -371,12 +534,14 @@ export const adminReadCurriculumWindow = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => parseWith(windowInput, data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const book = await loadBook(data.curriculumId);
+    const book = await loadBook(context.supabase, data.curriculumId);
     const check = checkWindow(book, data.from, data.to);
     if (!check.ok) throw new Error(check.reason);
-    const { text, missing } = await pageText(book.id, data.from, data.to);
-    if (missing.length === data.to - data.from + 1) {
-      throw new Error("These pages have no text yet. Read the scanned pages first.");
+    const { text, missing } = await pageText(context.supabase, book.id, data.from, data.to);
+    if (missing.length > 0) {
+      throw new Error(
+        `These pages have no text yet: ${missing.join(", ")}. Read the scanned pages first or confirm a page blank.`,
+      );
     }
     const { summarizeWindow } = await ai();
     const { summary, model } = await summarizeWindow({
@@ -386,7 +551,7 @@ export const adminReadCurriculumWindow = createServerFn({ method: "POST" })
       to: data.to,
       pageText: text,
     });
-    return storeWindow({
+    return storeWindow(context.supabase, {
       book,
       from: data.from,
       to: data.to,
@@ -404,8 +569,8 @@ export const adminImportCurriculumWindow = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const book = await loadBook(data.curriculumId);
-    return storeWindow({
+    const book = await loadBook(context.supabase, data.curriculumId);
+    return storeWindow(context.supabase, {
       book,
       from: data.from,
       to: data.to,
@@ -418,7 +583,7 @@ export const adminImportCurriculumWindow = createServerFn({ method: "POST" })
 
 // ---------- admin: lessons ----------
 
-async function insertLesson(input: {
+async function insertLesson(db: AuthContext["supabase"], input: {
   book: CurriculumRow;
   lesson: LessonDraft;
   source: "ai" | "manual";
@@ -432,7 +597,6 @@ async function insertLesson(input: {
     input.lesson.source_to_page,
   );
   if (pageProblem) throw new Error(pageProblem);
-  const db = await admin();
   // Two tries: a parallel insert can take the same lesson number.
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const { data: last } = await db
@@ -486,13 +650,13 @@ export const adminGenerateLesson = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const book = await loadBook(data.curriculumId);
+    const book = await loadBook(context.supabase, data.curriculumId);
     if (data.to - data.from + 1 > 10) throw new Error("A lesson can use at most 10 pages.");
     const pageProblem = checkLessonPages(book, data.from, data.to);
     if (pageProblem) throw new Error(pageProblem);
-    const db = await admin();
+    const db = context.supabase;
     const [{ text }, windows, lessons] = await Promise.all([
-      pageText(book.id, data.from, data.to),
+      pageText(context.supabase, book.id, data.from, data.to),
       db
         .from("rita_curriculum_windows")
         .select("from_page, to_page, summary")
@@ -524,7 +688,7 @@ export const adminGenerateLesson = createServerFn({ method: "POST" })
       lesson.source_from_page,
       Math.min(lesson.source_to_page, data.to),
     );
-    return insertLesson({
+    return insertLesson(context.supabase, {
       book,
       lesson,
       source: "ai",
@@ -548,8 +712,8 @@ export const adminImportLesson = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const book = await loadBook(data.curriculumId);
-    return insertLesson({
+    const book = await loadBook(context.supabase, data.curriculumId);
+    return insertLesson(context.supabase, {
       book,
       lesson: data.lesson,
       source: "manual",
@@ -566,14 +730,14 @@ export const adminUpdateLesson = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { data: current, error } = await db
       .from("rita_lessons")
       .select("curriculum_id, status, version")
       .eq("id", data.lessonId)
       .single();
     fail(error, "lesson");
-    const book = await loadBook(current.curriculum_id);
+    const book = await loadBook(context.supabase, current.curriculum_id);
     const pageProblem = checkLessonPages(
       book,
       data.lesson.source_from_page,
@@ -613,7 +777,7 @@ export const adminSetLessonStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { data: lesson, error } = await db
       .from("rita_lessons")
       .select("id, curriculum_id, path_order, source_to_page")
@@ -640,7 +804,7 @@ export const adminSetLessonStatus = createServerFn({ method: "POST" })
       .eq("id", data.lessonId);
     fail(updateError, "update lesson");
     if (data.status === "published") {
-      const book = await loadBook(lesson.curriculum_id);
+      const book = await loadBook(context.supabase, lesson.curriculum_id);
       const taught = taughtCursorAfterPublish(book, Number(lesson.source_to_page));
       if (taught > book.taught_cursor) {
         const { error: cursorError } = await db
@@ -654,7 +818,7 @@ export const adminSetLessonStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Moves a lesson one step up or down in the learners' path. */
+/** Moves a lesson one step up or down in the learners' path (atomic swap). */
 export const adminMoveLesson = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
@@ -662,7 +826,7 @@ export const adminMoveLesson = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { data: rows, error } = await db
       .from("rita_lessons")
       .select("id, path_order")
@@ -676,14 +840,50 @@ export const adminMoveLesson = createServerFn({ method: "POST" })
     if (index < 0 || swapWith < 0 || swapWith >= list.length) return { ok: true };
     const a = list[index];
     const b = list[swapWith];
-    const first = await db.from("rita_lessons").update({ path_order: b.path_order }).eq("id", a.id);
-    fail(first.error, "move lesson");
-    const second = await db
-      .from("rita_lessons")
-      .update({ path_order: a.path_order })
-      .eq("id", b.id);
-    fail(second.error, "move lesson");
+    // One atomic call: both positions change together or not at all.
+    const { error: rpcError } = await db.rpc("rita_set_lesson_path_orders", {
+      p_orders: [
+        { id: a.id, path_order: Number(b.path_order) },
+        { id: b.id, path_order: Number(a.path_order) },
+      ],
+    });
+    fail(rpcError, "move lesson");
     return { ok: true };
+  });
+
+/** Asks the AI to rewrite one objective (same id, new wording). */
+export const adminRegenerateObjective = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parseWith(
+      z.object({
+        lessonId: uuid,
+        // The objective as currently edited in the form, not the saved array
+        // index — local edits must never regenerate different saved content.
+        objective: ObjectiveSchema,
+      }),
+      data,
+    ),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const db = context.supabase;
+    const { data: lesson, error } = await db
+      .from("rita_lessons")
+      .select("title, topic")
+      .eq("id", data.lessonId)
+      .single();
+    fail(error, "lesson");
+    const { regenerateObjective } = await ai();
+    const objective = await regenerateObjective({
+      lessonTitle: lesson.title,
+      topic: lesson.topic,
+      objective: data.objective,
+    });
+    return {
+      // The id is kept so learners' earned progress for this objective survives.
+      objective: { ...objective, id: data.objective.id },
+    };
   });
 
 export const adminGenerateLessonImage = createServerFn({ method: "POST" })
@@ -691,7 +891,7 @@ export const adminGenerateLessonImage = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => parseWith(z.object({ lessonId: uuid }), data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { data: lesson, error } = await db
       .from("rita_lessons")
       .select("id, title, topic, image_prompt")
@@ -706,13 +906,18 @@ export const adminGenerateLessonImage = createServerFn({ method: "POST" })
       .from("rita-lesson-images")
       .upload(path, image.bytes, { contentType: image.contentType, upsert: true });
     fail(upload.error, "upload image");
-    const { data: publicUrl } = db.storage.from("rita-lesson-images").getPublicUrl(path);
+    // The bucket is private (public buckets are blocked), so store a long-lived signed link.
+    const signed = await db.storage
+      .from("rita-lesson-images")
+      .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+    fail(signed.error, "sign image");
+    const imageUrl = signed.data!.signedUrl;
     const { error: updateError } = await db
       .from("rita_lessons")
-      .update({ image_url: publicUrl.publicUrl })
+      .update({ image_url: imageUrl })
       .eq("id", lesson.id);
     fail(updateError, "save image");
-    return { imageUrl: publicUrl.publicUrl };
+    return { imageUrl };
   });
 
 // ---------- learners ----------
@@ -741,6 +946,13 @@ export type PathLesson = {
   in_progress: boolean;
 };
 
+/** A finished lesson suggested for review after a week. */
+export type ReviewSuggestion = {
+  id: string;
+  title: string;
+  daysAgo: number;
+};
+
 export const getLessonPath = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -754,21 +966,37 @@ export const getLessonPath = createServerFn({ method: "GET" })
       .eq("curriculum.status", "published")
       .order("path_order", { ascending: true, nullsFirst: false });
     fail(error, "lessons");
+    // Before the 20261015120000 migration is applied, last_completed_at does not
+    // exist yet and must not be requested (completed_at still backs the logic).
+    const gaps = await hasCurriculumGaps(context.supabase);
     const { data: progress, error: progressError } = await context.supabase
       .from("rita_lesson_progress")
-      .select("lesson_id, status, stars, best_score")
+      .select(
+        gaps
+          ? "lesson_id, status, stars, best_score, completed_at, last_completed_at"
+          : "lesson_id, status, stars, best_score, completed_at",
+      )
       .eq("user_id", context.userId);
     fail(progressError, "progress");
-    const byLesson: Record<string, { status: string; stars: number; best_score: number }> = {};
-    for (const row of (progress ?? []) as {
+    type ProgressRow = {
       lesson_id: string;
       status: string;
       stars: number;
       best_score: number;
-    }[]) {
+      completed_at: string | null;
+      last_completed_at: string | null;
+    };
+    const byLesson: Record<string, ProgressRow> = {};
+    for (const row of (progress ?? []) as unknown as ProgressRow[]) {
       byLesson[row.lesson_id] = row;
     }
-    const nodes = lessonPathStates((lessons ?? []) as PathSourceRow[], byLesson).map(
+    // A lesson completed once stays done while the learner retries it, so a
+    // replay never locks the frontier lesson.
+    const pathProgress: Record<string, { status: string; stars: number }> = {};
+    for (const [lessonId, row] of Object.entries(byLesson)) {
+      pathProgress[lessonId] = { status: effectiveProgressStatus(row), stars: row.stars };
+    }
+    const nodes = lessonPathStates((lessons ?? []) as PathSourceRow[], pathProgress).map(
       (lesson): PathLesson => ({
         id: lesson.id,
         kind: lesson.curriculum?.kind === "vocabulary" ? "vocabulary" : "grammar",
@@ -778,13 +1006,28 @@ export const getLessonPath = createServerFn({ method: "GET" })
         image_url: lesson.image_url,
         objective_count: Array.isArray(lesson.objectives) ? lesson.objectives.length : 0,
         state: lesson.state,
-        // Show the best result even while a retry is in progress.
         stars: Math.max(lesson.stars, starsFor(byLesson[lesson.id]?.best_score ?? 0)),
         best_score: byLesson[lesson.id]?.best_score ?? 0,
         in_progress: byLesson[lesson.id]?.status === "in_progress",
       }),
     );
-    return { lessons: nodes };
+    // Spaced review: lessons finished more than a week ago come back as
+    // suggestions (a replay never locks the learner's frontier lesson).
+    const now = Date.now();
+    const reviews: ReviewSuggestion[] = [];
+    for (const lesson of (lessons ?? []) as { id: string; title: string; title_ar: string }[]) {
+      const row = byLesson[lesson.id];
+      const finishedAt = row?.last_completed_at ?? row?.completed_at;
+      if (!finishedAt) continue;
+      const age = now - Date.parse(finishedAt);
+      if (!Number.isFinite(age) || age < REVIEW_AFTER_MS) continue;
+      reviews.push({
+        id: lesson.id,
+        title: lesson.title_ar || lesson.title,
+        daysAgo: Math.floor(age / 86_400_000),
+      });
+    }
+    return { lessons: nodes, reviews };
   });
 
 export type LessonSession = {
@@ -806,17 +1049,20 @@ export type LessonSession = {
   nextLessonId: string | null;
 };
 
-async function loadPublishedLesson(ctx: AuthContext, lessonId: string) {
+async function loadPublishedLesson(ctx: AuthContext, lessonId: string, allowDraft = false) {
   const { data, error } = await ctx.supabase
     .from("rita_lessons")
     .select(
       "id, title, title_ar, topic, image_url, objectives, plan, vocabulary, version, path_order, status",
     )
     .eq("id", lessonId)
-    .eq("status", "published")
     .maybeSingle();
   fail(error, "lesson");
   if (!data) throw new Error("This lesson is not available.");
+  // Admin preview may open a draft; RLS already hides drafts from learners.
+  if (data.status !== "published" && !(allowDraft && data.status === "draft")) {
+    throw new Error("This lesson is not available.");
+  }
   return data as {
     id: string;
     title: string;
@@ -828,6 +1074,7 @@ async function loadPublishedLesson(ctx: AuthContext, lessonId: string) {
     vocabulary: LessonDraft["vocabulary"];
     version: number;
     path_order: number | null;
+    status: string;
   };
 }
 
@@ -847,11 +1094,39 @@ function currentState(objectives: Objective[], stored: unknown): ObjectiveState 
 export const startLessonAttempt = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    parseWith(z.object({ lessonId: uuid, restart: z.boolean().default(false) }), data),
+    parseWith(
+      z.object({ lessonId: uuid, restart: z.boolean().default(false), preview: z.boolean().default(false) }),
+      data,
+    ),
   )
   .handler(async ({ data, context }): Promise<LessonSession> => {
-    const lesson = await loadPublishedLesson(context, data.lessonId);
-    const db = await admin();
+    if (data.preview) await assertAdmin(context);
+    const lesson = await loadPublishedLesson(context, data.lessonId, data.preview);
+    const lessonPayload = {
+      lesson: {
+        id: lesson.id,
+        title: lesson.title,
+        title_ar: lesson.title_ar,
+        topic: lesson.topic,
+        image_url: lesson.image_url,
+        objectives: lesson.objectives.map((objective) => ({
+          id: objective.id,
+          text: objective.text,
+          text_ar: objective.text_ar,
+          weight: objective.weight,
+        })),
+      },
+    };
+    if (data.preview) {
+      // Admin preview: the session is transient and no progress row is written.
+      const next = await nextLessonAfter(context, lesson.path_order);
+      return {
+        ...lessonPayload,
+        progress: { status: "in_progress", objectives: {}, score: 0, stars: 0, attempts: 0 },
+        nextLessonId: next,
+      };
+    }
+    const db = context.supabase;
     const { data: existing, error } = await db
       .from("rita_lesson_progress")
       .select("id, status, objectives, score, stars, attempts")
@@ -900,20 +1175,10 @@ export const startLessonAttempt = createServerFn({ method: "POST" })
     }
     const state = currentState(lesson.objectives, row!.objectives);
     const next = await nextLessonAfter(context, lesson.path_order);
+    // last_completed_at is never cleared on a restart, so a replay keeps the
+    // lesson marked done in the learner path.
     return {
-      lesson: {
-        id: lesson.id,
-        title: lesson.title,
-        title_ar: lesson.title_ar,
-        topic: lesson.topic,
-        image_url: lesson.image_url,
-        objectives: lesson.objectives.map((objective) => ({
-          id: objective.id,
-          text: objective.text,
-          text_ar: objective.text_ar,
-          weight: objective.weight,
-        })),
-      },
+      ...lessonPayload,
       progress: {
         status: row!.status,
         objectives: state,
@@ -955,11 +1220,62 @@ export type LessonEvaluationResult = {
 export const evaluateLessonTurn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    parseWith(z.object({ lessonId: uuid, turns: z.array(z.unknown()).max(20) }), data),
+    parseWith(
+      z.object({
+        lessonId: uuid,
+        turns: z.array(z.unknown()).max(20),
+        preview: z.boolean().default(false),
+        // Transient preview state kept client-side between checks, so objectives
+        // met earlier in the preview are never forgotten. Never persisted.
+        previewState: z.record(z.string(), z.unknown()).nullable().default(null),
+      }),
+      data,
+    ),
   )
   .handler(async ({ data, context }): Promise<LessonEvaluationResult> => {
-    const lesson = await loadPublishedLesson(context, data.lessonId);
-    const db = await admin();
+    if (data.preview) await assertAdmin(context);
+    const lesson = await loadPublishedLesson(context, data.lessonId, data.preview);
+    if (data.preview) {
+      // Admin preview: the objectives are judged but nothing is saved.
+      const previous =
+        data.previewState && typeof data.previewState === "object"
+          ? (data.previewState as ObjectiveState)
+          : {};
+      const turns = cleanTurns(data.turns);
+      const learnerText = turns
+        .filter((turn) => turn.role === "user")
+        .map((turn) => turn.text)
+        .join("\n");
+      if (learnerText.replace(/\s+/g, "").length < 2) {
+        // No answer: the transient state is preserved, not wiped.
+        return {
+          objectives: previous,
+          newlyMet: [],
+          score: scoreLesson(lesson.objectives, previous),
+          stars: starsFor(scoreLesson(lesson.objectives, previous)),
+          completed: isLessonComplete(lesson.objectives, previous),
+          skipped: "no_answer",
+        };
+      }
+      const open = lesson.objectives.filter((objective) => objective.id);
+      const { evaluateTurns } = await ai();
+      const { evaluation } = await evaluateTurns({
+        lessonTitle: lesson.title,
+        objectives: open,
+        turns,
+      });
+      const merged = mergeObjectiveState(previous, evaluation, open, learnerText, new Date().toISOString());
+      const score = scoreLesson(lesson.objectives, merged.state);
+      return {
+        objectives: merged.state,
+        newlyMet: merged.newlyMet,
+        score,
+        stars: starsFor(score),
+        completed: isLessonComplete(lesson.objectives, merged.state),
+      };
+    }
+    const db = context.supabase;
+    const gaps = await hasCurriculumGaps(db);
     const { data: row, error } = await db
       .from("rita_lesson_progress")
       .select("id, status, objectives, best_score, evaluations")
@@ -1017,6 +1333,9 @@ export const evaluateLessonTurn = createServerFn({ method: "POST" })
       patch.stars = stars;
       patch.best_score = Math.max(Number(row.best_score), score);
       patch.completed_at = new Date().toISOString();
+      // Remembers "completed at least once" across future restarts. Omitted
+      // before the migration is applied so the write keeps working.
+      if (gaps) patch.last_completed_at = patch.completed_at;
     }
     // Guard on in_progress so two overlapping calls cannot complete twice.
     const { error: updateError } = await db

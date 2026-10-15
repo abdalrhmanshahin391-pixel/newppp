@@ -206,6 +206,57 @@ export function checkLessonPages(
   return null;
 }
 
+/** A book page is readable when its text is long enough or it is confirmed blank. */
+export function pageIsReady(textLen: number, blankConfirmed: boolean): boolean {
+  return textLen >= 20 || blankConfirmed;
+}
+
+export type PageReportRow = {
+  page_no: number;
+  text_len: number;
+  blank_confirmed: boolean;
+};
+
+/** Pages the book still needs: absent rows, empty text, failed reads. */
+export function missingPages(report: PageReportRow[], pageCount: number): number[] {
+  const ready = new Set(
+    report.filter((row) => pageIsReady(row.text_len, row.blank_confirmed)).map((row) => row.page_no),
+  );
+  const missing: number[] = [];
+  for (let page = 1; page <= pageCount; page += 1) {
+    if (!ready.has(page)) missing.push(page);
+  }
+  return missing;
+}
+
+/** A lesson that was completed once stays done while the learner retries it. */
+export function effectiveProgressStatus(row: {
+  status: string;
+  last_completed_at: string | null;
+}): string {
+  return row.status === "completed" || row.last_completed_at ? "completed" : row.status;
+}
+
+/**
+ * New path_order values for a dragged subset. The subset keeps the actual
+ * position slots it already occupies (sorted), so lessons from other books are
+ * never renumbered and gaps left by archived lessons stay untouched.
+ * `publishedRows` is every published lesson with its real path_order.
+ */
+export function reorderPositions(
+  publishedRows: { id: string; path_order: number }[],
+  subset: string[],
+): number[] {
+  const unique = new Set(subset);
+  if (unique.size !== subset.length) throw new Error("duplicate lesson id in reorder");
+  const slots = publishedRows
+    .filter((row) => unique.has(row.id))
+    .map((row) => Number(row.path_order))
+    .sort((a, b) => a - b);
+  if (slots.length !== subset.length) throw new Error("unknown lesson id in reorder");
+  return subset.map((_, index) => slots[index]);
+}
+
 /** Publishing a lesson moves the taught cursor forward, never past the read cursor. */
 export function taughtCursorAfterPublish(
   cursor: Pick<CurriculumCursor, "read_cursor" | "taught_cursor">,

@@ -10,7 +10,11 @@ import {
   checkSummaryPages,
   checkWindow,
   cleanTurns,
+  effectiveProgressStatus,
   evidenceIsQuoted,
+  missingPages,
+  pageIsReady,
+  reorderPositions,
   isLessonComplete,
   lessonPathStates,
   mergeObjectiveState,
@@ -215,4 +219,55 @@ test("the sample books' summaries and lessons are valid imports", async () => {
       assert.match(item.image_url, /^\/curriculum\/[a-z-]+\.svg$/);
     }
   }
+});
+
+test("a page is readable only with long-enough text or a blank confirmation", () => {
+  assert.equal(pageIsReady(25, false), true);
+  assert.equal(pageIsReady(19, false), false);
+  assert.equal(pageIsReady(0, true), true);
+});
+
+test("missing pages include absent rows and gaps, not only short text", () => {
+  const report = [
+    { page_no: 1, text_len: 500, blank_confirmed: false }, // ready
+    { page_no: 3, text_len: 5, blank_confirmed: false }, // short text
+    { page_no: 4, text_len: 0, blank_confirmed: true }, // confirmed blank
+  ];
+  // Page 2 has no row at all (interrupted import) and must be reported missing.
+  assert.deepEqual(missingPages(report, 5), [2, 3, 5]);
+});
+
+test("a lesson completed once stays done while the learner retries it", () => {
+  assert.equal(effectiveProgressStatus({ status: "completed", last_completed_at: null }), "completed");
+  assert.equal(
+    effectiveProgressStatus({ status: "in_progress", last_completed_at: "2026-10-01" }),
+    "completed",
+  );
+  assert.equal(effectiveProgressStatus({ status: "in_progress", last_completed_at: null }), "in_progress");
+  // On the path itself: the replayed lesson stays done and the frontier stays open.
+  const states = lessonPathStates(
+    [{ id: "a" }, { id: "b" }, { id: "c" }],
+    {
+      a: { status: effectiveProgressStatus({ status: "in_progress", last_completed_at: "x" }), stars: 3 },
+      b: { status: "in_progress", stars: 0 },
+    },
+  );
+  assert.deepEqual(
+    states.map((node) => node.state),
+    ["done", "current", "locked"],
+  );
+});
+
+test("drag reorder keeps the occupied slots so other books' lessons are untouched", () => {
+  // Gaps from archived lessons must survive: ranks and slots differ here.
+  const rows = [
+    { id: "a", path_order: 2 },
+    { id: "x", path_order: 3 },
+    { id: "b", path_order: 9 },
+  ];
+  // Reorder subset [b, a]: b takes the lowest slot (2), a takes the highest (9); x stays 3.
+  assert.deepEqual(reorderPositions(rows, ["b", "a"]), [2, 9]);
+  assert.deepEqual(reorderPositions(rows, ["a", "b"]), [2, 9]);
+  assert.throws(() => reorderPositions(rows, ["b", "b"]), /duplicate/);
+  assert.throws(() => reorderPositions(rows, ["b", "nope"]), /unknown/);
 });

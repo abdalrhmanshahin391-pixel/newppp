@@ -73,9 +73,12 @@ function humanError(error: unknown) {
   return "Rita v3 could not start. No old voice system was used.";
 }
 
-export function RitaRealtimeV3({ lessonId }: { lessonId?: string } = {}) {
+export function RitaRealtimeV3({
+  lessonId,
+  preview,
+}: { lessonId?: string; preview?: boolean } = {}) {
   const navigate = useNavigate();
-  const lesson = useRitaLesson(lessonId);
+  const lesson = useRitaLesson(lessonId, preview);
   const lastCheckedMessage = useRef("");
   const [resultDismissed, setResultDismissed] = useState(false);
   const { user, loading } = useAuth();
@@ -865,6 +868,8 @@ export function RitaRealtimeV3({ lessonId }: { lessonId?: string } = {}) {
           mode: lessonId ? "guided_lesson" : mode,
           traceId: traceId.current,
           ...(lessonId ? { lessonId } : {}),
+          // Preview mode: the worker's brief is built fresh, and nothing is saved.
+          ...(lessonId && preview ? { preview: true } : {}),
         },
         // A cold agent has taken 88s to join Daily. This prevents a false
         // failure while startup and turn latency remain separately measured.
