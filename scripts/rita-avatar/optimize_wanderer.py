@@ -2,13 +2,16 @@
 
 Run with Blender's python:  python optimize_wanderer.py <in.glb> <out.glb> [ratio] [texture_px]
 Keeps the four textures (colour, metal/rough, normal, emissive) and the UVs.
+
+Ratio matters: at 0.2 the eye rims, lips and chin turn ragged and the face looks distorted;
+0.5 keeps the features. A per-region (vertex group) decimate was tried and tears the body.
 """
 import sys
 
 import bpy
 
 src, dst = sys.argv[1], sys.argv[2]
-ratio = float(sys.argv[3]) if len(sys.argv) > 3 else 0.22
+ratio = float(sys.argv[3]) if len(sys.argv) > 3 else 0.5
 tex_px = int(sys.argv[4]) if len(sys.argv) > 4 else 1024
 
 bpy.ops.wm.read_factory_settings(use_empty=True)

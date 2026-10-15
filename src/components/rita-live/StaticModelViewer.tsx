@@ -14,7 +14,9 @@ const LOOK = {
   hemisphere: { sky: 0xfff1e0, ground: 0x4a4350, intensity: 0.7 },
   key: { color: 0xfff0dd, intensity: 2.6, position: [0.6, 1.6, 3.2] as const },
   fill: { color: 0xffe6cc, intensity: 0.6, position: [-1.6, 0.4, 1.4] as const },
-  bloom: { strength: 0.45, radius: 0.35, threshold: 0.92 },
+  /** Full emissive washes the face flat (the nose vanishes); a lower value keeps the shading and the chest glow. */
+  emissive: 0.4,
+  bloom: { strength: 0.5, radius: 0.4, threshold: 0.8 },
   fov: 22,
   /** Fraction of the height left empty around the figure. */
   margin: 1.28,
@@ -89,6 +91,14 @@ export function StaticModelViewer({
           return;
         }
         const model = gltf.scene;
+        model.traverse((object) => {
+          const mesh = object as InstanceType<typeof THREE.Mesh>;
+          const material = mesh.isMesh
+            ? (mesh.material as InstanceType<typeof THREE.MeshStandardMaterial>)
+            : null;
+          if (material && "emissiveIntensity" in material)
+            material.emissiveIntensity = LOOK.emissive;
+        });
         scene.add(model);
         const box = new THREE.Box3().setFromObject(model);
         const size = box.getSize(new THREE.Vector3());
