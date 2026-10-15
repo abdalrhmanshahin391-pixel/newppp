@@ -23,6 +23,8 @@ import {
   wasRitaInterrupted,
 } from "@/lib/rita-v3-heard";
 import { orbModeFor, type RitaMood } from "@/components/rita-live/RitaStage";
+import { ChatText } from "./ChatText";
+import { showCaption } from "./chat-text";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { VoiceOrb } from "@/components/rita-live/VoiceOrb";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
@@ -991,9 +993,8 @@ export function RitaRealtimeV3({
         <ProHeader variant="solid" tone="light" />
       </div>
 
-      {/* Chat on the left, Rita on the right; on phones Rita sits above the chat. */}
-      <div className="mx-auto grid w-full max-w-[1200px] px-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.75fr)] lg:gap-12">
-        <div className="pt-6 lg:col-span-2">
+      <div className="mx-auto flex w-full max-w-2xl flex-col px-5 sm:px-8">
+        <div className="pt-6">
           <Link
             to={lessonId ? "/rita-lessons" : "/rita"}
             aria-label="Back"
@@ -1003,12 +1004,12 @@ export function RitaRealtimeV3({
           </Link>
         </div>
 
-        <aside className="flex flex-col items-center pt-2 text-center lg:order-2 lg:sticky lg:top-6 lg:self-start lg:pt-10">
+        <aside className="flex flex-col items-center pt-2 text-center">
           <VoiceOrb
             levelsRef={orbLevels}
             mode={orbModeFor(active, mood)}
             label={active ? "Rita is with you" : "Rita, your language tutor"}
-            className="h-[min(60vw,300px)] w-[min(60vw,300px)] lg:h-[min(30vw,400px)] lg:w-[min(30vw,400px)]"
+            className="h-[min(70vw,360px)] w-[min(70vw,360px)]"
           />
           {lessonId && (
             <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
@@ -1033,8 +1034,8 @@ export function RitaRealtimeV3({
         </aside>
 
         <section
-          className={`mx-auto flex min-h-[calc(100vh-200px)] w-full max-w-2xl flex-col lg:order-1 lg:mx-0 ${
-            !active && !lessonId ? "lg:justify-center" : ""
+          className={`flex min-h-[calc(100vh-200px)] w-full flex-col ${
+            !active && !lessonId ? "justify-center" : ""
           }`}
         >
           {active && soundBlocked && (
@@ -1065,23 +1066,24 @@ export function RitaRealtimeV3({
                 </div>
               )}
               {(!active && messages.length === 1 ? [] : messages).map((message) => (
-                <div
+                <ChatText
                   key={message.id}
+                  text={message.text}
                   className={
                     message.role === "you"
-                      ? "ml-auto w-fit max-w-[82%] rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-2.5 text-right text-[18px] leading-7"
-                      : `text-[20px] leading-8 ${
-                          !active && messages.length === 1
-                            ? "mx-auto text-center lg:mx-0 lg:text-left"
-                            : "max-w-[88%]"
-                        }`
+                      ? "ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-[var(--pp-pink-soft)] px-4 py-2.5 text-[18px] leading-7"
+                      : "mr-auto w-fit max-w-[92%] rounded-2xl rounded-bl-md bg-[var(--pp-grey)] px-5 py-3.5 text-[19px] leading-8"
                   }
-                >
-                  {message.text}
-                </div>
+                />
               ))}
-              {caption && (
-                <p className="text-[14px] text-[var(--pp-muted)]">Live transcript: {caption}</p>
+              {showCaption(
+                caption,
+                [...messages].reverse().find((m) => m.role === "you")?.text,
+              ) && (
+                <ChatText
+                  text={caption}
+                  className="ml-auto w-fit max-w-[85%] px-2 text-[15px] leading-6 text-[var(--pp-muted)]"
+                />
               )}
               {error && (
                 <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
