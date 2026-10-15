@@ -2930,6 +2930,284 @@ export type Database = {
         }
         Relationships: []
       }
+      rita_curricula: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          image_url: string | null
+          kind: string
+          level: string
+          page_count: number
+          page_offset: number
+          pdf_path: string | null
+          read_cursor: number
+          status: string
+          target_language: string
+          taught_cursor: number
+          title: string
+          title_ar: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          kind: string
+          level?: string
+          page_count?: number
+          page_offset?: number
+          pdf_path?: string | null
+          read_cursor?: number
+          status?: string
+          target_language?: string
+          taught_cursor?: number
+          title: string
+          title_ar?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          kind?: string
+          level?: string
+          page_count?: number
+          page_offset?: number
+          pdf_path?: string | null
+          read_cursor?: number
+          status?: string
+          target_language?: string
+          taught_cursor?: number
+          title?: string
+          title_ar?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rita_curriculum_pages: {
+        Row: {
+          created_at: string
+          curriculum_id: string
+          has_text_layer: boolean
+          page_no: number
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          curriculum_id: string
+          has_text_layer?: boolean
+          page_no: number
+          text?: string
+        }
+        Update: {
+          created_at?: string
+          curriculum_id?: string
+          has_text_layer?: boolean
+          page_no?: number
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_curriculum_pages_curriculum_id_fkey"
+            columns: ["curriculum_id"]
+            isOneToOne: false
+            referencedRelation: "rita_curricula"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rita_curriculum_windows: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          curriculum_id: string
+          from_page: number
+          id: string
+          model: string | null
+          source: string
+          summary: Json
+          to_page: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          curriculum_id: string
+          from_page: number
+          id?: string
+          model?: string | null
+          source?: string
+          summary: Json
+          to_page: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          curriculum_id?: string
+          from_page?: number
+          id?: string
+          model?: string | null
+          source?: string
+          summary?: Json
+          to_page?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_curriculum_windows_curriculum_id_fkey"
+            columns: ["curriculum_id"]
+            isOneToOne: false
+            referencedRelation: "rita_curricula"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rita_lesson_progress: {
+        Row: {
+          attempts: number
+          best_score: number
+          completed_at: string | null
+          evaluations: number
+          id: string
+          lesson_id: string
+          lesson_version: number
+          objectives: Json
+          rita_session_id: string | null
+          score: number
+          stars: number
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          best_score?: number
+          completed_at?: string | null
+          evaluations?: number
+          id?: string
+          lesson_id: string
+          lesson_version?: number
+          objectives?: Json
+          rita_session_id?: string | null
+          score?: number
+          stars?: number
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          best_score?: number
+          completed_at?: string | null
+          evaluations?: number
+          id?: string
+          lesson_id?: string
+          lesson_version?: number
+          objectives?: Json
+          rita_session_id?: string | null
+          score?: number
+          stars?: number
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "rita_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rita_lessons: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          curriculum_id: string
+          id: string
+          image_prompt: string | null
+          image_url: string | null
+          lesson_no: number
+          model: string | null
+          objectives: Json
+          path_order: number | null
+          plan: Json
+          published_at: string | null
+          source: string
+          source_from_page: number
+          source_to_page: number
+          status: string
+          title: string
+          title_ar: string
+          topic: string
+          updated_at: string
+          version: number
+          vocabulary: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          curriculum_id: string
+          id?: string
+          image_prompt?: string | null
+          image_url?: string | null
+          lesson_no: number
+          model?: string | null
+          objectives?: Json
+          path_order?: number | null
+          plan?: Json
+          published_at?: string | null
+          source?: string
+          source_from_page: number
+          source_to_page: number
+          status?: string
+          title: string
+          title_ar?: string
+          topic?: string
+          updated_at?: string
+          version?: number
+          vocabulary?: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          curriculum_id?: string
+          id?: string
+          image_prompt?: string | null
+          image_url?: string | null
+          lesson_no?: number
+          model?: string | null
+          objectives?: Json
+          path_order?: number | null
+          plan?: Json
+          published_at?: string | null
+          source?: string
+          source_from_page?: number
+          source_to_page?: number
+          status?: string
+          title?: string
+          title_ar?: string
+          topic?: string
+          updated_at?: string
+          version?: number
+          vocabulary?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_lessons_curriculum_id_fkey"
+            columns: ["curriculum_id"]
+            isOneToOne: false
+            referencedRelation: "rita_curricula"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rita_turn_metrics: {
         Row: {
           browser: string | null
