@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
+  ArrowLeft,
   BookOpen,
   Check,
   ChevronDown,
@@ -55,8 +56,6 @@ type PendingMetric = {
   metadata: Record<string, unknown>;
 };
 
-const MODEL_PROOF = "Soniox stt-rt-v5 → Groq GPT-OSS 120B → Cartesia Sonic 3.6 · Layan";
-
 async function authHeaders() {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
@@ -79,16 +78,7 @@ export function RitaRealtimeV3({ lessonId }: { lessonId?: string } = {}) {
   const lesson = useRitaLesson(lessonId);
   const lastCheckedMessage = useRef("");
   const [resultDismissed, setResultDismissed] = useState(false);
-  // One viewer only: beside the chat on wide screens, above it on phones.
-  const [wide, setWide] = useState(false);
-  useEffect(() => {
-    const query = window.matchMedia("(min-width: 1024px)");
-    const update = () => setWide(query.matches);
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, []);
-  const { user, isAdmin, loading } = useAuth();
+  const { user, loading } = useAuth();
   const client = useRef<ClientHandle | null>(null);
   const activeRef = useRef(false);
   const mutedRef = useRef(false);
@@ -152,10 +142,11 @@ export function RitaRealtimeV3({ lessonId }: { lessonId?: string } = {}) {
         : "Hi, I’m Rita. What would you like to practise?",
     },
   ]);
-  const [personality, setPersonality] = useState<Persona>("kind");
-  const [mode, setMode] = useState<LessonMode>("free_conversation");
-  const [language, setLanguage] = useState("automatic");
-  const [dialect, setDialect] = useState("ar-JO");
+  // The natural defaults. The page no longer asks the learner to pick these.
+  const personality: Persona = "kind";
+  const mode: LessonMode = "free_conversation";
+  const language: string = "automatic";
+  const dialect: string = "ar-JO";
   const [learningOpen, setLearningOpen] = useState(false);
   const [learning, setLearning] = useState<LearningItem[]>([]);
   const [target, setTarget] = useState<SaveTarget>("flashcards");
@@ -996,211 +987,149 @@ export function RitaRealtimeV3({ lessonId }: { lessonId?: string } = {}) {
         <ProHeader variant="solid" tone="light" />
       </div>
 
-      <div className="mx-auto grid w-full max-w-[1280px] lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]">
-        <section className="mx-auto flex min-h-[calc(100vh-72px)] w-full max-w-3xl flex-col px-5 sm:px-8">
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-4 pt-8">
-            <div className="min-w-0">
-              <h2 className="text-[32px] leading-[36px] text-[var(--pp-ink)]">Talk with Rita</h2>
-              <p className="mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]">
-                <span
-                  aria-hidden="true"
-                  className={`h-2.5 w-2.5 shrink-0 rounded-full ${
-                    mood === "talking"
-                      ? "animate-pulse bg-[var(--pp-pink)]"
-                      : mood === "listening"
-                        ? "bg-[var(--pp-pink-text)]"
-                        : "bg-[var(--pp-line)]"
-                  }`}
-                />
-                {status}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Link to="/rita-lessons" className="rita-btn rita-btn-secondary">
-                دروسي
-              </Link>
-              {isAdmin && (
-                <Link to="/admin/rita-voice" className="rita-btn rita-btn-secondary">
-                  Voice admin
-                </Link>
-              )}
-            </div>
-          </div>
-          <p className="pb-4 text-[13px] font-medium text-[var(--pp-muted)]">
-            Rita Realtime v3 · {MODEL_PROOF}
+      <section className="mx-auto flex min-h-[calc(100vh-72px)] w-full max-w-2xl flex-col px-5 sm:px-8">
+        <div className="pt-6">
+          <Link
+            to={lessonId ? "/rita-lessons" : "/rita"}
+            className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
+          >
+            <ArrowLeft size={16} />
+            {lessonId ? "Lessons" : "Back"}
+          </Link>
+        </div>
+
+        <div className="flex flex-col items-center pt-2 text-center">
+          <VoiceOrb
+            levelsRef={orbLevels}
+            mode={orbModeFor(active, mood)}
+            label={active ? "Rita is with you" : "Rita, your language tutor"}
+            className="h-[min(70vw,360px)] w-[min(70vw,360px)]"
+          />
+          <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
+            {lessonId ? lesson.session?.lesson.title_ar || "Lesson" : "Talk with Rita"}
+          </h2>
+          <p className="mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]">
+            <span
+              aria-hidden="true"
+              className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                mood === "talking"
+                  ? "animate-pulse bg-[var(--pp-pink)]"
+                  : mood === "listening"
+                    ? "bg-[var(--pp-pink-text)]"
+                    : "bg-[var(--pp-line)]"
+              }`}
+            />
+            {status}
           </p>
+        </div>
 
-          {active && soundBlocked && (
-            <div className="pb-4">
-              <button type="button" onClick={enableSound} className="rita-btn rita-btn-primary">
-                Tap to enable sound
-              </button>
-            </div>
-          )}
-
-          {!wide && (
-            <div className="flex justify-center">
-              <VoiceOrb
-                levelsRef={orbLevels}
-                mode={orbModeFor(active, mood)}
-                label="Rita"
-                className="h-[min(58vw,300px)] w-[min(58vw,300px)]"
-              />
-            </div>
-          )}
-
-          <div className="flex-1 overflow-y-auto py-4">
-            <div className="space-y-6">
-              {lesson.session && (
-                <LessonObjectivesPanel
-                  session={lesson.session}
-                  objectives={lesson.objectives}
-                  score={lesson.score}
-                  checking={lesson.checking}
-                  justMet={lesson.justMet}
-                />
-              )}
-              {lesson.error && (
-                <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
-                  {lesson.error}{" "}
-                  <Link to="/rita-lessons" className="underline">
-                    العودة إلى المسار
-                  </Link>
-                </div>
-              )}
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={
-                    message.role === "you"
-                      ? "ml-auto w-fit max-w-[82%] rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-2.5 text-right text-[18px] leading-7"
-                      : "max-w-[88%] text-[20px] leading-8"
-                  }
-                >
-                  {message.text}
-                </div>
-              ))}
-              {caption && (
-                <p className="text-[14px] text-[var(--pp-muted)]">Live transcript: {caption}</p>
-              )}
-              {error && (
-                <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
-                  {error}
-                </div>
-              )}
-            </div>
+        {active && soundBlocked && (
+          <div className="flex justify-center pt-4">
+            <button type="button" onClick={enableSound} className="rita-btn rita-btn-primary">
+              Tap to enable sound
+            </button>
           </div>
+        )}
 
-          <div className="sticky bottom-0 border-t border-[var(--pp-line)] bg-white py-4 sm:py-6">
-            {!active ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <select
-                    value={personality}
-                    onChange={(event) => setPersonality(event.target.value as Persona)}
-                    className="rita-select"
-                  >
-                    <option value="kind">Kind teacher</option>
-                    <option value="direct">Direct teacher</option>
-                    <option value="playful">Playful teacher</option>
-                    <option value="strict">Strict teacher</option>
-                  </select>
-                  <select
-                    value={language}
-                    onChange={(event) => setLanguage(event.target.value)}
-                    className="rita-select"
-                  >
-                    <option value="automatic">Automatic language</option>
-                    <option value="ar">Arabic</option>
-                    <option value="de">German</option>
-                    <option value="en">English</option>
-                  </select>
-                  <select
-                    value={dialect}
-                    onChange={(event) => setDialect(event.target.value)}
-                    className="rita-select"
-                  >
-                    <option value="ar-JO">Jordanian Arabic</option>
-                    <option value="standard">Standard Arabic</option>
-                    <option value="en-GB">British English</option>
-                  </select>
-                  {!lessonId && (
-                    <select
-                      value={mode}
-                      onChange={(event) => setMode(event.target.value as LessonMode)}
-                      className="rita-select"
-                    >
-                      <option value="free_conversation">Free conversation</option>
-                      <option value="guided_lesson">Guided lesson</option>
-                      <option value="pronunciation_drill">Pronunciation drill</option>
-                    </select>
-                  )}
-                </div>
-                <button
-                  onClick={startLesson}
-                  disabled={starting || (Boolean(lessonId) && !lesson.session)}
-                  className="rita-btn rita-btn-primary gap-2 disabled:opacity-60"
-                >
-                  {starting ? <Loader2 className="animate-spin" size={18} /> : <Mic size={18} />}{" "}
-                  {lessonId ? "ابدأ الدرس مع ريتا" : "Start Rita Realtime v3"}
-                </button>
+        <div className="flex-1 py-6">
+          <div className="space-y-6">
+            {lesson.session && (
+              <LessonObjectivesPanel
+                session={lesson.session}
+                objectives={lesson.objectives}
+                score={lesson.score}
+                checking={lesson.checking}
+                justMet={lesson.justMet}
+              />
+            )}
+            {lesson.error && (
+              <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
+                {lesson.error}{" "}
+                <Link to="/rita-lessons" className="underline">
+                  العودة إلى المسار
+                </Link>
               </div>
-            ) : (
-              <form onSubmit={sendText} className="rounded-2xl bg-[var(--pp-grey)] p-3">
-                <input
-                  value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
-                  placeholder="Ask Rita anything…"
-                  className="w-full border-0 bg-transparent px-3 py-3 text-[18px] text-[var(--pp-ink)] outline-none placeholder:text-[var(--pp-muted)]"
-                />
-                <div className="flex flex-wrap items-center gap-2 border-t border-[var(--pp-line)] pt-3">
-                  <button
-                    type="button"
-                    onClick={toggleMute}
-                    className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
-                  >
-                    {muted ? <MicOff size={16} /> : <Mic size={16} />}
-                    {muted ? "Unmute" : "Mute"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void loadDestinations("flashcards")}
-                    className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
-                  >
-                    <Layers size={16} /> Learning ({learning.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void endLesson()}
-                    className="rita-btn rita-btn-secondary rita-btn-sm ml-auto gap-1.5 !text-[var(--pp-pink-text)]"
-                  >
-                    <PhoneOff size={16} /> End lesson
-                  </button>
-                  <button
-                    type="submit"
-                    aria-label="Send"
-                    className="rita-btn rita-btn-primary rita-btn-sm !w-10 !px-0"
-                  >
-                    <Send size={16} />
-                  </button>
-                </div>
-              </form>
+            )}
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={
+                  message.role === "you"
+                    ? "ml-auto w-fit max-w-[82%] rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-2.5 text-right text-[18px] leading-7"
+                    : `text-[20px] leading-8 ${
+                        !active && messages.length === 1 ? "mx-auto text-center" : "max-w-[88%]"
+                      }`
+                }
+              >
+                {message.text}
+              </div>
+            ))}
+            {caption && (
+              <p className="text-[14px] text-[var(--pp-muted)]">Live transcript: {caption}</p>
+            )}
+            {error && (
+              <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
+                {error}
+              </div>
             )}
           </div>
-        </section>
-        {wide && (
-          <aside className="p-6 pl-0">
-            <div className="sticky top-6 flex h-[calc(100vh-72px-48px)] min-h-[420px] items-center justify-center">
-              <VoiceOrb
-                levelsRef={orbLevels}
-                mode={orbModeFor(active, mood)}
-                label={active ? "Rita is with you" : "Rita, your language tutor"}
-                className="h-[min(70vh,600px)] w-full max-w-[600px]"
-              />
+        </div>
+
+        <div className="sticky bottom-0 bg-white pb-6 pt-3">
+          {!active ? (
+            <div className="flex justify-center">
+              <button
+                onClick={startLesson}
+                disabled={starting || (Boolean(lessonId) && !lesson.session)}
+                className="rita-btn rita-btn-primary gap-2 disabled:opacity-60"
+              >
+                {starting ? <Loader2 className="animate-spin" size={18} /> : <Mic size={18} />}{" "}
+                {lessonId ? "ابدأ الدرس مع ريتا" : "Start talking"}
+              </button>
             </div>
-          </aside>
-        )}
-      </div>
+          ) : (
+            <form onSubmit={sendText} className="rounded-2xl bg-[var(--pp-grey)] p-3">
+              <input
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                placeholder="Ask Rita anything…"
+                className="w-full border-0 bg-transparent px-3 py-3 text-[18px] text-[var(--pp-ink)] outline-none placeholder:text-[var(--pp-muted)]"
+              />
+              <div className="flex flex-wrap items-center gap-2 border-t border-[var(--pp-line)] pt-3">
+                <button
+                  type="button"
+                  onClick={toggleMute}
+                  className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
+                >
+                  {muted ? <MicOff size={16} /> : <Mic size={16} />}
+                  {muted ? "Unmute" : "Mute"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void loadDestinations("flashcards")}
+                  className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
+                >
+                  <Layers size={16} /> Learning ({learning.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void endLesson()}
+                  className="rita-btn rita-btn-secondary rita-btn-sm ml-auto gap-1.5 !text-[var(--pp-pink-text)]"
+                >
+                  <PhoneOff size={16} /> End
+                </button>
+                <button
+                  type="submit"
+                  aria-label="Send"
+                  className="rita-btn rita-btn-primary rita-btn-sm !w-10 !px-0"
+                >
+                  <Send size={16} />
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </section>
 
       {lesson.result && !resultDismissed && (
         <LessonResultCard

@@ -72,7 +72,7 @@ export function LessonPathView({
       <header className="sticky top-0 z-20 border-b border-[var(--pp-line)] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
           <Link
-            to="/"
+            to="/rita"
             aria-label="رجوع"
             className="grid h-10 w-10 place-items-center rounded-full text-[var(--pp-muted)] hover:bg-[var(--pp-grey)]"
           >

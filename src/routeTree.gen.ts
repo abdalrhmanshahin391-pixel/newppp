@@ -27,6 +27,7 @@ import { Route as QuestionBankRouteImport } from './routes/question-bank'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RitaRouteImport } from './routes/rita'
 import { Route as RitaLessonsRouteImport } from './routes/rita-lessons'
 import { Route as RitaLiveRouteImport } from './routes/rita-live'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -218,6 +219,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RitaRoute = RitaRouteImport.update({
+  id: '/rita',
+  path: '/rita',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RitaLessonsRoute = RitaLessonsRouteImport.update({
@@ -757,6 +763,7 @@ export interface FileRoutesByFullPath {
   '/refund-policy': typeof RefundPolicyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rita': typeof RitaRoute
   '/rita-lessons': typeof RitaLessonsRoute
   '/rita-live': typeof RitaLiveRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -878,6 +885,7 @@ export interface FileRoutesByTo {
   '/refund-policy': typeof RefundPolicyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rita': typeof RitaRoute
   '/rita-lessons': typeof RitaLessonsRoute
   '/rita-live': typeof RitaLiveRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -997,6 +1005,7 @@ export interface FileRoutesById {
   '/refund-policy': typeof RefundPolicyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/rita': typeof RitaRoute
   '/rita-lessons': typeof RitaLessonsRoute
   '/rita-live': typeof RitaLiveRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -1121,6 +1130,7 @@ export interface FileRouteTypes {
     | '/refund-policy'
     | '/register'
     | '/reset-password'
+    | '/rita'
     | '/rita-lessons'
     | '/rita-live'
     | '/sitemap.xml'
@@ -1242,6 +1252,7 @@ export interface FileRouteTypes {
     | '/refund-policy'
     | '/register'
     | '/reset-password'
+    | '/rita'
     | '/rita-lessons'
     | '/rita-live'
     | '/sitemap.xml'
@@ -1360,6 +1371,7 @@ export interface FileRouteTypes {
     | '/refund-policy'
     | '/register'
     | '/reset-password'
+    | '/rita'
     | '/rita-lessons'
     | '/rita-live'
     | '/sitemap.xml'
@@ -1483,6 +1495,7 @@ export interface RootRouteChildren {
   RefundPolicyRoute: typeof RefundPolicyRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RitaRoute: typeof RitaRoute
   RitaLessonsRoute: typeof RitaLessonsRoute
   RitaLiveRoute: typeof RitaLiveRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -1679,6 +1692,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rita': {
+      id: '/rita'
+      path: '/rita'
+      fullPath: '/rita'
+      preLoaderRoute: typeof RitaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rita-lessons': {
@@ -2549,6 +2569,7 @@ const rootRouteChildren: RootRouteChildren = {
   RefundPolicyRoute: RefundPolicyRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RitaRoute: RitaRoute,
   RitaLessonsRoute: RitaLessonsRoute,
   RitaLiveRoute: RitaLiveRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

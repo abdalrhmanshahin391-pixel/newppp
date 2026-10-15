@@ -22,7 +22,7 @@ import { EdithWordmark } from "@/components/brand/EdithWordmark";
 import { StartLearningLink } from "@/components/StartLearningLink";
 
 const SIMPLE_LINKS: { to: string; label: string }[] = [
-  { to: "/rita-live", label: "Talk to Rita" },
+  { to: "/rita", label: "Talk to Rita" },
   { to: "/tutorial", label: "Tutorial" },
 ];
 
@@ -36,7 +36,7 @@ export function ProHeader({
 }: { variant?: "transparent" | "solid"; tone?: "dark" | "light" } = {}) {
   const { t } = useTranslation();
   const { user, profile, isAdmin, isRealAdmin, isGolden, loading: authLoading } = useAuth();
-  
+
   const navigate = useNavigate();
   const [accountOpen, setAccountOpen] = useState(false);
   const [sheet, setSheet] = useState(false);
@@ -99,8 +99,6 @@ export function ProHeader({
             Start learning
           </StartLearningLink>
 
-
-
           {SIMPLE_LINKS.map((l) => (
             <Link
               key={l.to}
@@ -112,7 +110,6 @@ export function ProHeader({
             </Link>
           ))}
         </nav>
-
 
         {/* Each action stands alone so the header stays light and easy to scan. */}
         <div className="hidden items-center gap-2.5 lg:flex">
@@ -161,7 +158,9 @@ export function ProHeader({
                   )}
                 </span>
                 {isRealAdmin && (
-                  <span className={`text-[11px] font-black uppercase tracking-[0.14em] ${light ? "rita-accent" : "text-white/85"}`}>
+                  <span
+                    className={`text-[11px] font-black uppercase tracking-[0.14em] ${light ? "rita-accent" : "text-white/85"}`}
+                  >
                     Admin
                   </span>
                 )}
@@ -187,7 +186,11 @@ export function ProHeader({
                           {profile?.full_name || displayName}
                         </p>
                         <p className="rita-ink-soft mt-0.5 text-[10.5px] font-bold uppercase tracking-[0.14em]">
-                          {isAdmin ? t("cms.header.roleAdmin") : isGolden ? "Golden member" : t("cms.header.roleUser")}
+                          {isAdmin
+                            ? t("cms.header.roleAdmin")
+                            : isGolden
+                              ? "Golden member"
+                              : t("cms.header.roleUser")}
                         </p>
                       </div>
                     </div>
@@ -209,7 +212,11 @@ export function ProHeader({
                     <InstallAppButton className={menuLink} />
                     {isAdmin && (
                       <>
-                        <Link to="/admin" onClick={() => setAccountOpen(false)} className={menuLink}>
+                        <Link
+                          to="/admin"
+                          onClick={() => setAccountOpen(false)}
+                          className={menuLink}
+                        >
                           <LayoutGrid size={16} className="text-white/50" />
                           Admin
                         </Link>
@@ -234,9 +241,7 @@ export function ProHeader({
         </div>
 
         <div className="flex items-center gap-2.5 lg:hidden">
-          <StartLearningLink
-            className="rita-btn rita-btn-primary !h-9 !px-3.5 !text-[13px] font-bold shadow-xs"
-          >
+          <StartLearningLink className="rita-btn rita-btn-primary !h-9 !px-3.5 !text-[13px] font-bold shadow-xs">
             Start learning
           </StartLearningLink>
 
@@ -295,23 +300,44 @@ export function ProHeader({
                   className="grid h-9 w-9 place-items-center overflow-hidden rounded-full text-sm font-black text-white"
                   style={{ background: tone }}
                 >
-                  {avatar ? <img src={avatar} alt="" className="h-full w-full object-cover" /> : initial}
+                  {avatar ? (
+                    <img src={avatar} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    initial
+                  )}
                 </span>
                 <div className="min-w-0">
-                   <p className="rita-ink truncate text-[14px] font-bold">{profile?.full_name || displayName}</p>
-                   <p className="rita-ink-soft text-[11px] font-semibold uppercase tracking-wider">
+                  <p className="rita-ink truncate text-[14px] font-bold">
+                    {profile?.full_name || displayName}
+                  </p>
+                  <p className="rita-ink-soft text-[11px] font-semibold uppercase tracking-wider">
                     {isAdmin ? "Admin" : isGolden ? "Golden member" : "Student"}
                   </p>
                 </div>
               </div>
-              <Link to="/profile" onClick={() => setSheet(false)} className="rita-ink block border-t border-white/10 px-3 py-3 text-[16px]" style={{ fontFamily: "var(--font-grotesk)" }}>
+              <Link
+                to="/profile"
+                onClick={() => setSheet(false)}
+                className="rita-ink block border-t border-white/10 px-3 py-3 text-[16px]"
+                style={{ fontFamily: "var(--font-grotesk)" }}
+              >
                 Profile settings
               </Link>
-              <Link to="/my-plan" onClick={() => setSheet(false)} className="rita-ink block border-t border-white/10 px-3 py-3 text-[16px]" style={{ fontFamily: "var(--font-grotesk)" }}>
+              <Link
+                to="/my-plan"
+                onClick={() => setSheet(false)}
+                className="rita-ink block border-t border-white/10 px-3 py-3 text-[16px]"
+                style={{ fontFamily: "var(--font-grotesk)" }}
+              >
                 My plan
               </Link>
               {isAdmin && (
-                <Link to="/admin" onClick={() => setSheet(false)} className="block border-t border-white/10 px-3 py-3 text-[16px] font-bold text-white" style={{ fontFamily: "var(--font-grotesk)" }}>
+                <Link
+                  to="/admin"
+                  onClick={() => setSheet(false)}
+                  className="block border-t border-white/10 px-3 py-3 text-[16px] font-bold text-white"
+                  style={{ fontFamily: "var(--font-grotesk)" }}
+                >
                   Admin panel
                 </Link>
               )}
@@ -332,7 +358,7 @@ export function ProHeader({
                   setSheet(false);
                   openAuth("signin");
                 }}
-                  className="rita-ink block w-full px-3 py-3 text-left text-[16px]"
+                className="rita-ink block w-full px-3 py-3 text-left text-[16px]"
                 style={{ fontFamily: "var(--font-grotesk)" }}
               >
                 Sign in
