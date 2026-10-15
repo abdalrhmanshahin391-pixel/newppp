@@ -46,13 +46,6 @@ async function assertAdmin(ctx: AuthContext) {
   if (error || !data) throw new Error("Forbidden: admin only");
 }
 
-// Uses the signed-in caller's connection; access is enforced by database policies
-// (admins manage curriculum tables, learners write only their own progress).
-let currentDb: AuthContext["supabase"] | null = null;
-async function admin(): Promise<AuthContext["supabase"]> {
-  if (!currentDb) throw new Error("Not signed in");
-  return currentDb;
-}
 
 /**
  * Whether the 20261015120000 curriculum-gaps columns exist. True is cached for
@@ -171,7 +164,7 @@ export const adminCurriculumOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const [books, windows, lessons] = await Promise.all([
       db
         .from("rita_curricula")
@@ -287,7 +280,7 @@ export const adminCreateCurriculum = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { data: row, error } = await db
       .from("rita_curricula")
       .insert({ ...data, title_ar: data.title_ar || null, created_by: context.userId })
@@ -319,7 +312,7 @@ export const adminSaveCurriculumPages = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { data: book, error: bookError } = await db
       .from("rita_curricula")
       .select("page_count")
@@ -361,7 +354,7 @@ export const adminTranscribeCurriculumPages = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { transcribePages } = await ai();
     const result = await transcribePages(data.pages);
-    const db = await admin();
+    const db = context.supabase;
     const gaps = await hasCurriculumGaps(db);
     if (result.pages.length) {
       const { error } = await db.from("rita_curriculum_pages").upsert(
@@ -395,7 +388,7 @@ export const adminSetCurriculumStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { error } = await db
       .from("rita_curricula")
       .update({ status: data.status })
@@ -412,7 +405,7 @@ export const adminConfirmBlankPage = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { error } = await db.rpc("rita_confirm_blank_page", {
       p_curriculum_id: data.curriculumId,
       p_page_no: data.pageNo,
@@ -429,7 +422,7 @@ export const adminReorderLessons = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { data: rows, error } = await db
       .from("rita_lessons")
       .select("id, path_order")
@@ -447,7 +440,7 @@ export const adminReorderLessons = createServerFn({ method: "POST" })
   });
 
 async function loadBook(curriculumId: string) {
-  const db = await admin();
+  const db = context.supabase;
   const { data, error } = await db
     .from("rita_curricula")
     .select(CURRICULUM_COLUMNS)
@@ -471,7 +464,7 @@ async function storeWindow(input: {
   if (!check.ok) throw new Error(check.reason);
   const pageProblem = checkSummaryPages(input.summary, input.from, input.to);
   if (pageProblem) throw new Error(pageProblem);
-  const db = await admin();
+  const db = context.supabase;
   const { error } = await db.from("rita_curriculum_windows").upsert(
     {
       curriculum_id: input.book.id,
@@ -515,7 +508,7 @@ async function legacyRemainingPages(
 }
 
 async function pageText(curriculumId: string, from: number, to: number) {
-  const db = await admin();
+  const db = context.supabase;
   const gaps = await hasCurriculumGaps(db);
   const { data, error } = await db
     .from("rita_curriculum_pages")
@@ -607,7 +600,7 @@ async function insertLesson(input: {
     input.lesson.source_to_page,
   );
   if (pageProblem) throw new Error(pageProblem);
-  const db = await admin();
+  const db = context.supabase;
   // Two tries: a parallel insert can take the same lesson number.
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const { data: last } = await db
@@ -665,7 +658,7 @@ export const adminGenerateLesson = createServerFn({ method: "POST" })
     if (data.to - data.from + 1 > 10) throw new Error("A lesson can use at most 10 pages.");
     const pageProblem = checkLessonPages(book, data.from, data.to);
     if (pageProblem) throw new Error(pageProblem);
-    const db = await admin();
+    const db = context.supabase;
     const [{ text }, windows, lessons] = await Promise.all([
       pageText(book.id, data.from, data.to),
       db
@@ -741,7 +734,7 @@ export const adminUpdateLesson = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { data: current, error } = await db
       .from("rita_lessons")
       .select("curriculum_id, status, version")
@@ -788,7 +781,7 @@ export const adminSetLessonStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { data: lesson, error } = await db
       .from("rita_lessons")
       .select("id, curriculum_id, path_order, source_to_page")
@@ -837,7 +830,7 @@ export const adminMoveLesson = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { data: rows, error } = await db
       .from("rita_lessons")
       .select("id, path_order")
@@ -878,7 +871,7 @@ export const adminRegenerateObjective = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { data: lesson, error } = await db
       .from("rita_lessons")
       .select("title, topic")
@@ -902,7 +895,7 @@ export const adminGenerateLessonImage = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => parseWith(z.object({ lessonId: uuid }), data))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const db = await admin();
+    const db = context.supabase;
     const { data: lesson, error } = await db
       .from("rita_lessons")
       .select("id, title, topic, image_prompt")
@@ -1137,7 +1130,7 @@ export const startLessonAttempt = createServerFn({ method: "POST" })
         nextLessonId: next,
       };
     }
-    const db = await admin();
+    const db = context.supabase;
     const { data: existing, error } = await db
       .from("rita_lesson_progress")
       .select("id, status, objectives, score, stars, attempts")
@@ -1285,7 +1278,7 @@ export const evaluateLessonTurn = createServerFn({ method: "POST" })
         completed: isLessonComplete(lesson.objectives, merged.state),
       };
     }
-    const db = await admin();
+    const db = context.supabase;
     const gaps = await hasCurriculumGaps(db);
     const { data: row, error } = await db
       .from("rita_lesson_progress")
