@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
-  ArrowLeft,
   BookOpen,
   Check,
   ChevronDown,
@@ -997,10 +996,10 @@ export function RitaRealtimeV3({
         <div className="pt-6 lg:col-span-2">
           <Link
             to={lessonId ? "/rita-lessons" : "/rita"}
-            className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
+            aria-label="Back"
+            className="grid h-11 w-11 place-items-center rounded-full bg-[#fdecec] text-[#d92d20] transition-colors hover:bg-[#fbd5d5]"
           >
-            <ArrowLeft size={16} />
-            {lessonId ? "Lessons" : "Back"}
+            <X size={22} strokeWidth={2.5} />
           </Link>
         </div>
 
@@ -1011,25 +1010,33 @@ export function RitaRealtimeV3({
             label={active ? "Rita is with you" : "Rita, your language tutor"}
             className="h-[min(60vw,300px)] w-[min(60vw,300px)] lg:h-[min(30vw,400px)] lg:w-[min(30vw,400px)]"
           />
-          <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
-            {lessonId ? lesson.session?.lesson.title_ar || "Lesson" : "Talk with Rita"}
-          </h2>
-          <p className="mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]">
-            <span
-              aria-hidden="true"
-              className={`h-2.5 w-2.5 shrink-0 rounded-full ${
-                mood === "talking"
-                  ? "animate-pulse bg-[var(--pp-pink)]"
-                  : mood === "listening"
-                    ? "bg-[var(--pp-pink-text)]"
-                    : "bg-[var(--pp-line)]"
-              }`}
-            />
-            {status}
-          </p>
+          {lessonId && (
+            <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
+              {lesson.session?.lesson.title_ar || "Lesson"}
+            </h2>
+          )}
+          {(active || starting) && (
+            <p className="mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]">
+              <span
+                aria-hidden="true"
+                className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                  mood === "talking"
+                    ? "animate-pulse bg-[var(--pp-pink)]"
+                    : mood === "listening"
+                      ? "bg-[var(--pp-pink-text)]"
+                      : "bg-[var(--pp-line)]"
+                }`}
+              />
+              {status}
+            </p>
+          )}
         </aside>
 
-        <section className="mx-auto flex min-h-[calc(100vh-200px)] w-full max-w-2xl flex-col lg:order-1 lg:mx-0">
+        <section
+          className={`mx-auto flex min-h-[calc(100vh-200px)] w-full max-w-2xl flex-col lg:order-1 lg:mx-0 ${
+            !active && !lessonId ? "lg:justify-center" : ""
+          }`}
+        >
           {active && soundBlocked && (
             <div className="flex justify-center pt-4">
               <button type="button" onClick={enableSound} className="rita-btn rita-btn-primary">
@@ -1038,7 +1045,7 @@ export function RitaRealtimeV3({
             </div>
           )}
 
-          <div className="flex-1 py-6">
+          <div className={!active && !lessonId ? "py-2" : "flex-1 py-6"}>
             <div className="space-y-6">
               {lesson.session && (
                 <LessonObjectivesPanel
@@ -1057,7 +1064,7 @@ export function RitaRealtimeV3({
                   </Link>
                 </div>
               )}
-              {messages.map((message) => (
+              {(!active && messages.length === 1 ? [] : messages).map((message) => (
                 <div
                   key={message.id}
                   className={
@@ -1084,7 +1091,7 @@ export function RitaRealtimeV3({
             </div>
           </div>
 
-          <div className="sticky bottom-0 bg-white pb-6 pt-3">
+          <div className={!active && !lessonId ? "py-3" : "sticky bottom-0 bg-white pb-6 pt-3"}>
             {!active ? (
               <div className="flex justify-center">
                 <button
