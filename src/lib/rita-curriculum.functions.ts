@@ -46,9 +46,12 @@ async function assertAdmin(ctx: AuthContext) {
   if (error || !data) throw new Error("Forbidden: admin only");
 }
 
-async function admin() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
-  return supabaseAdmin;
+// Uses the signed-in caller's connection; access is enforced by database policies
+// (admins manage curriculum tables, learners write only their own progress).
+let currentDb: AuthContext["supabase"] | null = null;
+async function admin(): Promise<AuthContext["supabase"]> {
+  if (!currentDb) throw new Error("Not signed in");
+  return currentDb;
 }
 
 /**
@@ -64,7 +67,7 @@ function isMissingSchemaError(error: { message?: string } | null): boolean {
   const message = error?.message ?? "";
   return /could not find|does not exist|PGRST20[0-9]/i.test(message);
 }
-async function hasCurriculumGaps(db: Awaited<ReturnType<typeof admin>>): Promise<boolean> {
+async function hasCurriculumGaps(db: AuthContext["supabase"]): Promise<boolean> {
   if (gapsColumnsReady) return true;
   try {
     const { error } = await db.from("rita_curriculum_pages").select("transcribed_at").limit(1);
@@ -976,7 +979,7 @@ export const getLessonPath = createServerFn({ method: "GET" })
     fail(error, "lessons");
     // Before the 20261015120000 migration is applied, last_completed_at does not
     // exist yet and must not be requested (completed_at still backs the logic).
-    const gaps = await hasCurriculumGaps(await admin());
+    const gaps = await hasCurriculumGaps(context.supabase);
     const { data: progress, error: progressError } = await context.supabase
       .from("rita_lesson_progress")
       .select(
