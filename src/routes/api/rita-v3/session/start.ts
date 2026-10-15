@@ -32,7 +32,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
         const requestedLessonId = typeof body.lessonId === "string" ? body.lessonId : "";
         const lessonPreview = body.preview === true;
         const lesson = requestedLessonId
-          ? await loadVoiceLesson(access.auth.userId, requestedLessonId, lessonPreview).catch((error) => {
+          ? await loadVoiceLesson(access.auth.token, access.auth.userId, requestedLessonId, lessonPreview).catch((error) => {
               console.warn("Rita lesson could not be loaded", error);
               return null;
             })
