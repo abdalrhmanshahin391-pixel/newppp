@@ -5,18 +5,14 @@ type RitaLiveSearch = { lesson?: string; preview?: boolean };
 
 export const Route = createFileRoute("/rita-live")({
   head: () => ({
-    meta: [
-      { title: "Talk with Rita — RitaJet" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Talk with Rita — RitaJet" }, { name: "robots", content: "noindex" }],
   }),
   validateSearch: (search: Record<string, unknown>): RitaLiveSearch => {
     const lesson = typeof search.lesson === "string" ? search.lesson.trim() : "";
     // preview=1 (or true) marks an admin-only lesson preview; nothing is saved.
-    const preview =
-      search.preview === "1" || search.preview === "true" || search.preview === true;
+    const preview = search.preview === "1" || search.preview === "true" || search.preview === true;
     return {
-      ...( /^[0-9a-f-]{36}$/i.test(lesson) ? { lesson } : {}),
+      ...(/^[0-9a-f-]{36}$/i.test(lesson) ? { lesson } : {}),
       ...(preview ? { preview: true } : {}),
     };
   },

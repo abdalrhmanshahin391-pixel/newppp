@@ -354,7 +354,10 @@ export function LessonForm({
         </div>
         <div className="mt-2 space-y-2">
           {form.plan.phases.map((phase, index) => (
-            <div key={index} className="flex flex-wrap items-center gap-2 rounded-xl border border-[#E6E1F5] bg-white p-2">
+            <div
+              key={index}
+              className="flex flex-wrap items-center gap-2 rounded-xl border border-[#E6E1F5] bg-white p-2"
+            >
               <select
                 value={phase.phase}
                 onChange={(event) =>
@@ -363,7 +366,9 @@ export function LessonForm({
                     plan: {
                       ...current.plan,
                       phases: current.plan.phases.map((item, position) =>
-                        position === index ? { ...item, phase: event.target.value as typeof item.phase } : item,
+                        position === index
+                          ? { ...item, phase: event.target.value as typeof item.phase }
+                          : item,
                       ),
                     },
                   }))
@@ -389,7 +394,10 @@ export function LessonForm({
                       ...current.plan,
                       phases: current.plan.phases.map((item, position) =>
                         position === index
-                          ? { ...item, minutes: Math.min(10, Math.max(1, Number(event.target.value) || 1)) }
+                          ? {
+                              ...item,
+                              minutes: Math.min(10, Math.max(1, Number(event.target.value) || 1)),
+                            }
                           : item,
                       ),
                     },

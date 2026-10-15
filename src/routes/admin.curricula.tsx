@@ -87,20 +87,14 @@ const ERROR_HINTS: [RegExp, string][] = [
     /OPENAI_API_KEY|server secrets/i,
     "مفتاح OpenAI غير مضبوط في أسرار الخادم — أضِف OPENAI_API_KEY من إعدادات المشروع ثم أعد المحاولة.",
   ],
-  [
-    /took too long/i,
-    "استغرق رد الذكاء الاصطناعي وقتًا طويلًا — انتظر دقيقة وأعد المحاولة.",
-  ],
+  [/took too long/i, "استغرق رد الذكاء الاصطناعي وقتًا طويلًا — انتظر دقيقة وأعد المحاولة."],
   [
     /did not match the expected format/i,
     "رد الذكاء الاصطناعي لم يطابق الشكل المطلوب — أعد المحاولة، وإذا تكرر جرّب صياغة أبسط.",
   ],
   [/429|rate limit/i, "تجاوزت حد الاستخدام مؤقتًا — انتظر قليلًا ثم أعد المحاولة."],
   [/Forbidden: admin only/i, "هذا الإجراء يتطلب صلاحيات مشرف."],
-  [
-    /has not been read yet/i,
-    "لا يمكن إنشاء الدرس قبل قراءة هذه الصفحات — اقرأ النافذة أولًا.",
-  ],
+  [/has not been read yet/i, "لا يمكن إنشاء الدرس قبل قراءة هذه الصفحات — اقرأ النافذة أولًا."],
   [
     /Could not find the function|does not exist/i,
     "هذه الميزة تحتاج تطبيق تحديث قاعدة البيانات (migration 20261015120000) في Lovable Cloud.",
@@ -189,23 +183,27 @@ function AdminCurricula() {
   }
 
   return (
-    <main dir="rtl" className="min-h-screen bg-[#FBFAFF] pb-24 text-[#1E2A4A]">
-      <header className="border-b border-[#EEE8FB] bg-white">
+    <main
+      dir="rtl"
+      className="edith-premium min-h-screen bg-white pb-24 text-[var(--pp-ink)]"
+      style={{ fontFamily: "var(--font-grotesk), 'Noto Sans Arabic', sans-serif" }}
+    >
+      <header className="border-b border-[var(--pp-line)] bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
           <div>
-            <p className="text-xs font-extrabold text-[#9B5CF6]">لوحة الإدارة</p>
-            <h1 className="text-2xl font-black">مناهج دروس ريتا</h1>
+            <p className="text-xs font-semibold text-[var(--pp-pink-text)]">لوحة الإدارة</p>
+            <h2 className="text-[28px] font-bold leading-8">مناهج دروس ريتا</h2>
           </div>
           <div className="flex items-center gap-2">
             <Link
               to="/rita-lessons"
-              className="rounded-full bg-[#F4EFFE] px-4 py-2 text-sm font-bold text-[#6D35D8]"
+              className="rounded-lg bg-white px-4 py-2 text-sm font-bold text-[var(--pp-pink-text)]"
             >
               مسار الطالب
             </Link>
             <Link
               to="/admin"
-              className="flex items-center gap-1 rounded-full border border-[#E6E1F5] px-4 py-2 text-sm font-bold"
+              className="flex items-center gap-1 rounded-lg border border-[var(--pp-line)] px-4 py-2 text-sm font-bold"
             >
               الإدارة <ArrowLeft size={15} />
             </Link>
@@ -217,13 +215,13 @@ function AdminCurricula() {
         {loadError && (
           <div className="flex items-start justify-between gap-3 rounded-3xl border-2 border-[#FFD1D1] bg-[#FFF1F1] p-5">
             <div>
-              <p className="font-black text-[#C0392B]">فشل تحميل لوحة المناهج</p>
+              <p className="font-bold text-[#C0392B]">فشل تحميل لوحة المناهج</p>
               <p className="mt-1 text-sm font-bold text-[#8A4A3A]">{loadError}</p>
             </div>
             <button
               type="button"
               onClick={() => void refresh()}
-              className="shrink-0 rounded-full bg-[#C0392B] px-4 py-2 text-sm font-black text-white"
+              className="shrink-0 rounded-lg bg-[#C0392B] px-4 py-2 text-sm font-bold text-white"
             >
               أعد المحاولة
             </button>
@@ -251,7 +249,7 @@ function AdminCurricula() {
             }}
           />
           {!overview && !loadError && (
-            <Loader2 className="mx-auto animate-spin text-[#9B5CF6]" />
+            <Loader2 className="mx-auto animate-spin text-[var(--pp-pink-text)]" />
           )}
           {overview?.curricula.map((book) => (
             <button
@@ -259,16 +257,16 @@ function AdminCurricula() {
               type="button"
               onClick={() => setSelectedId(book.id)}
               className={`w-full rounded-3xl border-2 bg-white p-4 text-right transition ${
-                book.id === selectedId ? "border-[#9B5CF6]" : "border-[#EEE8FB]"
+                book.id === selectedId ? "border-[var(--pp-ink)]" : "border-[var(--pp-line)]"
               }`}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="font-black">{book.title_ar || book.title}</span>
+                <span className="font-bold">{book.title_ar || book.title}</span>
                 <KindBadge kind={book.kind} />
               </div>
               <CursorBars book={book} />
-              <p className="mt-2 text-xs font-bold text-[#6B6F86]">{cursorLabelAr(book)}</p>
-              <p className="mt-1 text-[11px] font-bold text-[#A3A7BA]">
+              <p className="mt-2 text-xs font-bold text-[var(--pp-muted)]">{cursorLabelAr(book)}</p>
+              <p className="mt-1 text-[11px] font-bold text-[var(--pp-muted)]/70">
                 {book.status === "published"
                   ? "منشور للطلاب"
                   : book.status === "draft"
@@ -295,7 +293,7 @@ function AdminCurricula() {
           ) : (
             overview &&
             !loadError && (
-              <p className="rounded-3xl border-2 border-dashed border-[#E6E1F5] p-10 text-center font-bold text-[#8A8FA3]">
+              <p className="rounded-2xl border-2 border-dashed border-[var(--pp-line)] p-10 text-center font-bold text-[var(--pp-muted)]">
                 ارفع كتاب القواعد وكتاب الكلمات للبدء.
               </p>
             )
@@ -309,8 +307,10 @@ function AdminCurricula() {
 function KindBadge({ kind }: { kind: "grammar" | "vocabulary" }) {
   return (
     <span
-      className={`rounded-full px-2.5 py-0.5 text-[11px] font-black text-white ${
-        kind === "vocabulary" ? "bg-[#3BA7FF]" : "bg-[#FF6FA8]"
+      className={`rounded-lg px-2.5 py-0.5 text-[11px] font-bold text-white ${
+        kind === "vocabulary"
+          ? "border border-[var(--pp-ink)] bg-[var(--pp-pink)] !text-[var(--pp-ink)]"
+          : "bg-[var(--pp-ink)]"
       }`}
     >
       {kind === "vocabulary" ? "كلمات" : "قواعد"}
@@ -321,19 +321,19 @@ function KindBadge({ kind }: { kind: "grammar" | "vocabulary" }) {
 function CursorBars({ book }: { book: CurriculumRow }) {
   return (
     <div className="mt-3 space-y-1.5">
-      <div className="h-2 overflow-hidden rounded-full bg-[#EEE8FB]">
+      <div className="h-2 overflow-hidden rounded-full bg-[var(--pp-line)]">
         <div
-          className="h-full rounded-full bg-[#C9A7FF]"
+          className="h-full rounded-full bg-[var(--pp-pink)]"
           style={{ width: `${percentOf(book.read_cursor, book.page_count)}%` }}
         />
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-[#EEE8FB]">
+      <div className="h-2 overflow-hidden rounded-full bg-[var(--pp-line)]">
         <div
-          className="h-full rounded-full bg-[#7B3FE4]"
+          className="h-full rounded-full bg-[var(--pp-ink)]"
           style={{ width: `${percentOf(book.taught_cursor, book.page_count)}%` }}
         />
       </div>
-      <p className="flex justify-between text-[10px] font-bold text-[#A3A7BA]">
+      <p className="flex justify-between text-[10px] font-bold text-[var(--pp-muted)]/70">
         <span>فاتح: مقروء</span>
         <span>غامق: مُدرَّس</span>
       </p>
@@ -342,16 +342,13 @@ function CursorBars({ book }: { book: CurriculumRow }) {
 }
 
 /** The path to a published lesson: book AND lesson must both be published. */
-function PublishChecklist({
-  book,
-  lessons,
-}: {
-  book: CurriculumRow;
-  lessons: LessonRow[];
-}) {
+function PublishChecklist({ book, lessons }: { book: CurriculumRow; lessons: LessonRow[] }) {
   const publishedLessons = lessons.filter((lesson) => lesson.status === "published").length;
   const items = [
-    { done: book.read_cursor > 0, label: `قراءة الكتاب (${book.read_cursor}/${book.page_count} صفحة)` },
+    {
+      done: book.read_cursor > 0,
+      label: `قراءة الكتاب (${book.read_cursor}/${book.page_count} صفحة)`,
+    },
     { done: lessons.length > 0, label: `إنشاء الدروس (${lessons.length})` },
     {
       done: lessons.length > 0 && publishedLessons > 0,
@@ -360,8 +357,8 @@ function PublishChecklist({
     { done: book.status === "published", label: "نشر الكتاب للطلاب" },
   ];
   return (
-    <div className="mt-3 rounded-2xl bg-[#FBFAFF] p-3">
-      <p className="text-xs font-black text-[#6B6F86]">قائمة تجهيز الكتاب للنشر</p>
+    <div className="mt-3 rounded-2xl bg-white p-3">
+      <p className="text-xs font-bold text-[var(--pp-muted)]">قائمة تجهيز الكتاب للنشر</p>
       <ul className="mt-2 space-y-1">
         {items.map((item) => (
           <li key={item.label} className="flex items-center gap-2 text-xs font-bold">
@@ -452,9 +449,9 @@ function AddBookCard({
   }
 
   return (
-    <div className="rounded-3xl border-2 border-[#EEE8FB] bg-white p-4">
-      <h2 className="flex items-center gap-2 font-black">
-        <FileUp size={18} className="text-[#9B5CF6]" /> كتاب جديد
+    <div className="rounded-2xl bg-[var(--pp-grey)] p-4">
+      <h2 className="flex items-center gap-2 font-bold">
+        <FileUp size={18} className="text-[var(--pp-pink-text)]" /> كتاب جديد
       </h2>
       <div className="mt-3 grid grid-cols-2 gap-2">
         {(["grammar", "vocabulary"] as const).map((value) => (
@@ -462,7 +459,7 @@ function AddBookCard({
             key={value}
             type="button"
             onClick={() => setKind(value)}
-            className={`rounded-xl py-2 text-sm font-black ${kind === value ? "bg-[#9B5CF6] text-white" : "bg-[#F4EFFE] text-[#6D35D8]"}`}
+            className={`rounded-xl py-2 text-sm font-bold ${kind === value ? "border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] text-[var(--pp-ink)]" : "bg-white text-[var(--pp-pink-text)]"}`}
           >
             {value === "grammar" ? "قواعد" : "كلمات"}
           </button>
@@ -473,15 +470,15 @@ function AddBookCard({
         onChange={(event) => setTitle(event.target.value)}
         placeholder="عنوان الكتاب بالإنجليزية"
         dir="ltr"
-        className="mt-2 w-full rounded-xl border border-[#E6E1F5] px-3 py-2 text-sm"
+        className="mt-2 w-full rounded-xl border border-[var(--pp-line)] px-3 py-2 text-sm"
       />
       <input
         value={titleAr}
         onChange={(event) => setTitleAr(event.target.value)}
         placeholder="اسم الكتاب بالعربية"
-        className="mt-2 w-full rounded-xl border border-[#E6E1F5] px-3 py-2 text-sm"
+        className="mt-2 w-full rounded-xl border border-[var(--pp-line)] px-3 py-2 text-sm"
       />
-      <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#D9CFF5] py-3 text-sm font-bold text-[#6D35D8]">
+      <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--pp-line)] py-3 text-sm font-bold text-[var(--pp-pink-text)]">
         <Upload size={16} />
         {file ? file.name : "اختر ملف PDF"}
         <input
@@ -495,7 +492,7 @@ function AddBookCard({
         type="button"
         disabled={Boolean(progress)}
         onClick={() => void submit()}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E2A4A] py-2.5 text-sm font-black text-white disabled:opacity-60"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--pp-ink)] py-2.5 text-sm font-bold text-white disabled:opacity-60"
       >
         {progress ? <Loader2 size={15} className="animate-spin" /> : <BookOpen size={15} />}
         {progress || "رفع وقراءة الصفحات"}
@@ -569,9 +566,7 @@ function BookDetail({
     const bookNow = bookRef.current;
     const scanned = missingRef.current.filter((page) => page >= from && page <= to);
     if (scanned.length) {
-      const { loadPdfForRender, renderPageToJpegBase64 } = await import(
-        "@/lib/pdf-page-render"
-      );
+      const { loadPdfForRender, renderPageToJpegBase64 } = await import("@/lib/pdf-page-render");
       const doc = await loadPdfForRender(await pdfFileFor(bookNow, pdfCache));
       for (let index = 0; index < scanned.length; index += 3) {
         const group = scanned.slice(index, index + 3);
@@ -627,8 +622,7 @@ function BookDetail({
         cursor = advanced;
       }
       if (cancelReadAll.current) toast.info("أوقفت القراءة المتتابعة عند آخر نافذة مكتملة");
-      else if (windowsRead)
-        toast.success(`قُرئت ${windowsRead} نافذة — تم تحديث الكتاب`);
+      else if (windowsRead) toast.success(`قُرئت ${windowsRead} نافذة — تم تحديث الكتاب`);
       else toast.info("الكتاب مقروء كاملًا");
     } catch (error) {
       toast.error(errorText(error));
@@ -696,14 +690,14 @@ function BookDetail({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border-2 border-[#EEE8FB] bg-white p-5">
+      <div className="rounded-2xl bg-[var(--pp-grey)] p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-black">{book.title_ar || book.title}</h2>
+              <h2 className="text-xl font-bold">{book.title_ar || book.title}</h2>
               <KindBadge kind={book.kind} />
             </div>
-            <p className="text-sm font-semibold text-[#6B6F86]" dir="ltr">
+            <p className="text-sm font-semibold text-[var(--pp-muted)]" dir="ltr">
               {book.title} · {book.page_count} pages
             </p>
           </div>
@@ -723,10 +717,10 @@ function BookDetail({
                   book.status === "published" ? "أصبح الكتاب مسودة" : "نُشر الكتاب للطلاب",
                 )
               }
-              className={`rounded-full px-4 py-2 text-sm font-black ${
+              className={`rounded-lg px-4 py-2 text-sm font-bold ${
                 book.status === "published"
-                  ? "bg-[#EAF8EF] text-[#2F8F55]"
-                  : "bg-[#9B5CF6] text-white"
+                  ? "bg-[var(--pp-pink-soft)] text-[var(--pp-pink-text)]"
+                  : "border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] text-[var(--pp-ink)]"
               }`}
             >
               {book.status === "published" ? "منشور ✓" : "نشر الكتاب"}
@@ -742,7 +736,7 @@ function BookDetail({
                   );
                 }
               }}
-              className="rounded-full border border-[#E6E1F5] px-4 py-2 text-sm font-bold text-[#8A8FA3]"
+              className="rounded-lg border border-[var(--pp-line)] px-4 py-2 text-sm font-bold text-[var(--pp-muted)]"
             >
               أرشفة
             </button>
@@ -793,27 +787,25 @@ function BookDetail({
               type="button"
               disabled={Boolean(busy)}
               onClick={() => void resumeExtraction()}
-              className="mt-3 rounded-full bg-[#1E2A4A] px-4 py-1.5 text-xs font-black text-white disabled:opacity-50"
+              className="mt-3 rounded-lg bg-[var(--pp-ink)] px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
             >
-              {busy.startsWith("extract") ? (
-                <Loader2 size={13} className="animate-spin" />
-              ) : null}
+              {busy.startsWith("extract") ? <Loader2 size={13} className="animate-spin" /> : null}
               استكمال استخراج النص من الملف المحفوظ
             </button>
           </div>
         )}
       </div>
 
-      <div className="rounded-3xl border-2 border-[#EEE8FB] bg-white p-5">
+      <div className="rounded-2xl bg-[var(--pp-grey)] p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-lg font-black">
+          <h3 className="text-lg font-bold">
             ملخصات القراءة ({CURRICULUM_WINDOW_PAGES} صفحات في كل مرة)
           </h3>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setImportOpen((value) => !value)}
-              className="rounded-full border border-[#E6E1F5] px-4 py-2 text-sm font-bold"
+              className="rounded-lg border border-[var(--pp-line)] px-4 py-2 text-sm font-bold"
             >
               استيراد ملخص JSON
             </button>
@@ -821,7 +813,7 @@ function BookDetail({
               type="button"
               disabled={!next || Boolean(busy) || readAll.active}
               onClick={() => void readNext()}
-              className="flex items-center gap-2 rounded-full bg-[#9B5CF6] px-4 py-2 text-sm font-black text-white disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] px-4 py-2 text-sm font-bold text-[var(--pp-ink)] disabled:opacity-50"
             >
               {busy.startsWith("read") ? (
                 <Loader2 size={15} className="animate-spin" />
@@ -835,7 +827,7 @@ function BookDetail({
                 type="button"
                 disabled={Boolean(busy)}
                 onClick={() => void readAllWindows()}
-                className="rounded-full border-2 border-[#9B5CF6] px-4 py-2 text-sm font-black text-[#6D35D8] disabled:opacity-50"
+                className="rounded-lg border-2 border-[var(--pp-ink)] px-4 py-2 text-sm font-bold text-[var(--pp-pink-text)] disabled:opacity-50"
               >
                 اقرأ الكتاب كاملاً
               </button>
@@ -846,7 +838,7 @@ function BookDetail({
                 onClick={() => {
                   cancelReadAll.current = true;
                 }}
-                className="flex items-center gap-1 rounded-full bg-[#C0392B] px-4 py-2 text-sm font-black text-white"
+                className="flex items-center gap-1 rounded-lg bg-[#C0392B] px-4 py-2 text-sm font-bold text-white"
               >
                 <X size={15} /> إيقاف القراءة
               </button>
@@ -854,18 +846,18 @@ function BookDetail({
           </div>
         </div>
         {readAll.active && (
-          <p className="mt-2 flex items-center gap-2 text-xs font-bold text-[#9B5CF6]">
+          <p className="mt-2 flex items-center gap-2 text-xs font-bold text-[var(--pp-pink-text)]">
             <Loader2 size={13} className="animate-spin" />
             {readAll.progress} (قراءة متتابعة — أبقِ الصفحة مفتوحة)
           </p>
         )}
         {busy.startsWith("read:") && (
-          <p className="mt-2 text-xs font-bold text-[#9B5CF6]">
+          <p className="mt-2 text-xs font-bold text-[var(--pp-pink-text)]">
             قراءة الصفحات الممسوحة {busy.slice(5)}…
           </p>
         )}
         {importOpen && (
-          <div className="mt-4 space-y-2 rounded-2xl bg-[#FBFAFF] p-4">
+          <div className="mt-4 space-y-2 rounded-2xl bg-white p-4">
             <div className="flex items-center gap-2 text-sm font-bold">
               من ص
               <NumberBox
@@ -884,13 +876,13 @@ function BookDetail({
               dir="ltr"
               rows={8}
               placeholder='{"overview": "...", "topics": [...]}'
-              className="w-full rounded-xl border border-[#E6E1F5] p-3 font-mono text-xs"
+              className="w-full rounded-xl border border-[var(--pp-line)] p-3 font-mono text-xs"
             />
             <button
               type="button"
               disabled={!summaryJson.trim() || Boolean(busy)}
               onClick={() => void importSummary()}
-              className="rounded-full bg-[#1E2A4A] px-4 py-2 text-sm font-black text-white disabled:opacity-50"
+              className="rounded-lg bg-[var(--pp-ink)] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
             >
               حفظ الملخص
             </button>
@@ -898,10 +890,10 @@ function BookDetail({
         )}
         <div className="mt-4 space-y-2">
           {windows.length === 0 && (
-            <p className="text-sm font-bold text-[#A3A7BA]">لم تُقرأ أي صفحات بعد.</p>
+            <p className="text-sm font-bold text-[var(--pp-muted)]/70">لم تُقرأ أي صفحات بعد.</p>
           )}
           {windows.map((window) => (
-            <div key={window.id} className="rounded-2xl border border-[#EEE8FB]">
+            <div key={window.id} className="rounded-2xl border border-[var(--pp-line)]">
               <button
                 type="button"
                 onClick={() =>
@@ -909,10 +901,10 @@ function BookDetail({
                 }
                 className="flex w-full items-center justify-between px-4 py-3 text-right"
               >
-                <span className="font-black">
+                <span className="font-bold">
                   الصفحات {window.from_page}–{window.to_page}
                 </span>
-                <span className="text-xs font-bold text-[#8A8FA3]">
+                <span className="text-xs font-bold text-[var(--pp-muted)]">
                   {window.summary.topics.length} مواضيع ·{" "}
                   {window.source === "ai" ? "ذكاء اصطناعي" : "يدوي"}
                 </span>
@@ -993,9 +985,9 @@ function PathOrderCard({
   }
 
   return (
-    <div className="rounded-3xl border-2 border-[#EEE8FB] bg-white p-5">
-      <h3 className="text-lg font-black">ترتيب مسار الطلاب</h3>
-      <p className="mt-1 text-xs font-bold text-[#8A8FA3]">
+    <div className="rounded-2xl bg-[var(--pp-grey)] p-5">
+      <h3 className="text-lg font-bold">ترتيب مسار الطلاب</h3>
+      <p className="mt-1 text-xs font-bold text-[var(--pp-muted)]">
         اسحب لإعادة الترتيب (أو استخدم أسهم التقديم والتأخير في بطاقة كل درس). الترتيب هنا عبر كل
         الكتب المنشورة.
       </p>
@@ -1019,15 +1011,7 @@ function PathOrderCard({
   );
 }
 
-function SortablePathRow({
-  id,
-  title,
-  index,
-}: {
-  id: string;
-  title: string;
-  index: number;
-}) {
+function SortablePathRow({ id, title, index }: { id: string; title: string; index: number }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
   });
@@ -1041,10 +1025,10 @@ function SortablePathRow({
       }}
       {...attributes}
       {...listeners}
-      className="flex cursor-grab touch-none items-center gap-3 rounded-2xl border border-[#EEE8FB] bg-[#FBFAFF] px-4 py-2 text-sm font-bold"
+      className="flex cursor-grab touch-none items-center gap-3 rounded-2xl border border-[var(--pp-line)] bg-white px-4 py-2 text-sm font-bold"
     >
-      <GripVertical size={15} className="text-[#A3A7BA]" />
-      <span className="text-xs font-black text-[#9B5CF6]">{index + 1}</span>
+      <GripVertical size={15} className="text-[var(--pp-muted)]/70" />
+      <span className="text-xs font-bold text-[var(--pp-pink-text)]">{index + 1}</span>
       {title}
     </li>
   );
@@ -1052,9 +1036,9 @@ function SortablePathRow({
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-[#FBFAFF] px-4 py-3">
-      <p className="text-xs font-bold text-[#8A8FA3]">{label}</p>
-      <p className="mt-1 text-lg font-black">{value}</p>
+    <div className="rounded-2xl bg-white px-4 py-3">
+      <p className="text-xs font-bold text-[var(--pp-muted)]">{label}</p>
+      <p className="mt-1 text-lg font-bold">{value}</p>
     </div>
   );
 }
@@ -1068,12 +1052,12 @@ function PageStrip({ book, missingText }: { book: CurriculumRow; missingText: nu
       {pages.map((page) => {
         const colour =
           page <= book.taught_cursor
-            ? "bg-[#7B3FE4]"
+            ? "bg-[var(--pp-ink)]"
             : page <= book.read_cursor
-              ? "bg-[#C9A7FF]"
+              ? "bg-[var(--pp-pink)]"
               : missing.has(page)
                 ? "bg-[#FFD98A]"
-                : "bg-[#E6E1F5]";
+                : "bg-[var(--pp-line)]";
         return <span key={page} title={`ص${page}`} className={`h-3 w-3 rounded-[3px] ${colour}`} />;
       })}
     </div>
@@ -1087,7 +1071,7 @@ function NumberBox({ value, onChange }: { value: number; onChange: (value: numbe
       min={1}
       value={value}
       onChange={(event) => onChange(Math.max(1, Number(event.target.value) || 1))}
-      className="w-20 rounded-lg border border-[#E6E1F5] px-2 py-1 text-center"
+      className="w-20 rounded-lg border border-[var(--pp-line)] px-2 py-1 text-center"
     />
   );
 }
@@ -1095,13 +1079,13 @@ function NumberBox({ value, onChange }: { value: number; onChange: (value: numbe
 function WindowSummaryView({ window }: { window: WindowRow }) {
   const { summary } = window;
   return (
-    <div className="space-y-3 border-t border-[#EEE8FB] px-4 py-3 text-sm">
+    <div className="space-y-3 border-t border-[var(--pp-line)] px-4 py-3 text-sm">
       <p className="font-semibold">{summary.overview_ar || summary.overview}</p>
       {summary.topics.map((topic, index) => (
-        <div key={index} className="rounded-xl bg-[#FBFAFF] p-3">
-          <p className="font-black">
+        <div key={index} className="rounded-xl bg-white p-3">
+          <p className="font-bold">
             {topic.title_ar || topic.title}{" "}
-            <span className="text-xs font-bold text-[#8A8FA3]">
+            <span className="text-xs font-bold text-[var(--pp-muted)]">
               (ص{topic.from_page}
               {topic.to_page !== topic.from_page ? `–${topic.to_page}` : ""})
             </span>
@@ -1116,20 +1100,22 @@ function WindowSummaryView({ window }: { window: WindowRow }) {
             </ul>
           )}
           {topic.vocabulary.length > 0 && (
-            <p className="mt-1 text-xs text-[#6B6F86]">
+            <p className="mt-1 text-xs text-[var(--pp-muted)]">
               {topic.vocabulary.map((item) => `${item.word} = ${item.meaning_ar}`).join(" · ")}
             </p>
           )}
         </div>
       ))}
       {summary.suggested_lessons.length > 0 && (
-        <p className="text-xs font-bold text-[#9B5CF6]">
+        <p className="text-xs font-bold text-[var(--pp-pink-text)]">
           دروس مقترحة:{" "}
           {summary.suggested_lessons.map((item) => item.title_ar || item.topic).join(" · ")}
         </p>
       )}
       {summary.continues_next_window && (
-        <p className="text-xs font-bold text-[#E8A400]">الموضوع الأخير يكمل في الصفحات التالية.</p>
+        <p className="text-xs font-bold text-[var(--pp-pink-text)]">
+          الموضوع الأخير يكمل في الصفحات التالية.
+        </p>
       )}
     </div>
   );
@@ -1291,33 +1277,33 @@ function LessonsCard({
   }
 
   return (
-    <div className="rounded-3xl border-2 border-[#EEE8FB] bg-white p-5">
+    <div className="rounded-2xl bg-[var(--pp-grey)] p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-lg font-black">الدروس</h3>
+        <h3 className="text-lg font-bold">الدروس</h3>
         {selectedDrafts.size > 0 && (
           <button
             type="button"
             disabled={Boolean(busy)}
             onClick={() => void publishSelected()}
-            className="rounded-full bg-[#2F8F55] px-4 py-1.5 text-xs font-black text-white disabled:opacity-50"
+            className="rounded-lg bg-[#2F8F55] px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
           >
             انشر المحدد ({selectedDrafts.size})
           </button>
         )}
       </div>
       {book.read_cursor === 0 ? (
-        <p className="mt-2 text-sm font-bold text-[#A3A7BA]">
+        <p className="mt-2 text-sm font-bold text-[var(--pp-muted)]/70">
           اقرأ أول {CURRICULUM_WINDOW_PAGES} صفحات قبل إنشاء الدروس.
         </p>
       ) : (
-        <div className="mt-3 rounded-2xl bg-[#FBFAFF] p-4">
+        <div className="mt-3 rounded-2xl bg-white p-4">
           <div className="flex gap-2">
             {(["ai", "json"] as const).map((value) => (
               <button
                 key={value}
                 type="button"
                 onClick={() => setMode(value)}
-                className={`rounded-full px-3 py-1.5 text-xs font-black ${mode === value ? "bg-[#1E2A4A] text-white" : "bg-white"}`}
+                className={`rounded-lg px-3 py-1.5 text-xs font-bold ${mode === value ? "bg-[var(--pp-ink)] text-white" : "bg-white"}`}
               >
                 {value === "ai" ? "إنشاء بالذكاء الاصطناعي" : "استيراد JSON"}
               </button>
@@ -1331,7 +1317,7 @@ function LessonsCard({
                   setForm((current) => ({ ...current, topic: event.target.value }))
                 }
                 placeholder="موضوع الدرس، مثال: to be verbs"
-                className="w-full rounded-xl border border-[#E6E1F5] px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-[var(--pp-line)] px-3 py-2 text-sm"
               />
               {suggestions.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
@@ -1342,7 +1328,7 @@ function LessonsCard({
                       onClick={() =>
                         setForm({ topic: item.topic, from: item.from_page, to: item.to_page })
                       }
-                      className="rounded-full bg-[#F4EFFE] px-3 py-1 text-xs font-bold text-[#6D35D8]"
+                      className="rounded-lg bg-white px-3 py-1 text-xs font-bold text-[var(--pp-pink-text)]"
                     >
                       {item.title_ar || item.topic} · ص{item.from_page}
                     </button>
@@ -1360,7 +1346,9 @@ function LessonsCard({
                   value={form.to}
                   onChange={(to) => setForm((current) => ({ ...current, to }))}
                 />
-                <span className="text-xs text-[#8A8FA3]">(حتى ص{book.read_cursor} مقروءة)</span>
+                <span className="text-xs text-[var(--pp-muted)]">
+                  (حتى ص{book.read_cursor} مقروءة)
+                </span>
               </div>
               <button
                 type="button"
@@ -1380,7 +1368,7 @@ function LessonsCard({
                     "أُنشئ الدرس كمسودة — راجعه ثم انشره",
                   )
                 }
-                className="flex items-center gap-2 rounded-full bg-[#9B5CF6] px-4 py-2 text-sm font-black text-white disabled:opacity-50"
+                className="flex items-center gap-2 rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] px-4 py-2 text-sm font-bold text-[var(--pp-ink)] disabled:opacity-50"
               >
                 {busy === "generate" ? (
                   <Loader2 size={15} className="animate-spin" />
@@ -1398,7 +1386,7 @@ function LessonsCard({
                 dir="ltr"
                 rows={8}
                 placeholder='{"title": "...", "objectives": [...], "plan": {...}}'
-                className="w-full rounded-xl border border-[#E6E1F5] p-3 font-mono text-xs"
+                className="w-full rounded-xl border border-[var(--pp-line)] p-3 font-mono text-xs"
               />
               <button
                 type="button"
@@ -1417,7 +1405,7 @@ function LessonsCard({
                     "تم استيراد الدرس",
                   )
                 }
-                className="rounded-full bg-[#1E2A4A] px-4 py-2 text-sm font-black text-white disabled:opacity-50"
+                className="rounded-lg bg-[var(--pp-ink)] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
               >
                 استيراد الدرس
               </button>
@@ -1430,11 +1418,11 @@ function LessonsCard({
         {lessons.map((lesson) => {
           const pathIndex = published.findIndex((item) => item.id === lesson.id);
           return (
-            <div key={lesson.id} className="rounded-2xl border border-[#EEE8FB] p-4">
+            <div key={lesson.id} className="rounded-2xl border border-[var(--pp-line)] p-4">
               <div className="flex items-start gap-3">
                 <LessonImage src={lesson.image_url} alt="" className="h-16 w-16 shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-[#8A8FA3]">
+                  <p className="text-xs font-bold text-[var(--pp-muted)]">
                     درس {lesson.lesson_no} · ص{lesson.source_from_page}
                     {lesson.source_to_page !== lesson.source_from_page
                       ? `–${lesson.source_to_page}`
@@ -1442,11 +1430,11 @@ function LessonsCard({
                     · {lesson.objectives.length} أهداف · v{lesson.version}
                     {pathIndex >= 0 ? ` · الترتيب في المسار ${pathIndex + 1}` : ""}
                   </p>
-                  <p className="font-black">{lesson.title_ar || lesson.title}</p>
-                  <p className="text-sm text-[#6B6F86]" dir="ltr">
+                  <p className="font-bold">{lesson.title_ar || lesson.title}</p>
+                  <p className="text-sm text-[var(--pp-muted)]" dir="ltr">
                     {lesson.title}
                   </p>
-                  <ul className="mt-1 list-disc pr-5 text-xs text-[#6B6F86]">
+                  <ul className="mt-1 list-disc pr-5 text-xs text-[var(--pp-muted)]">
                     {lesson.objectives.map((objective) => (
                       <li key={objective.id}>{objective.text_ar || objective.text}</li>
                     ))}
@@ -1454,16 +1442,16 @@ function LessonsCard({
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <span
-                    className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
+                    className={`rounded-lg px-2.5 py-1 text-[11px] font-bold ${
                       lesson.status === "published"
-                        ? "bg-[#EAF8EF] text-[#2F8F55]"
-                        : "bg-[#FFF6D6] text-[#B07A00]"
+                        ? "bg-[var(--pp-pink-soft)] text-[var(--pp-pink-text)]"
+                        : "bg-white text-[var(--pp-muted)]"
                     }`}
                   >
                     {lesson.status === "published" ? "منشور" : "مسودة"}
                   </span>
                   {lesson.status === "draft" && (
-                    <label className="flex items-center gap-1 text-[11px] font-bold text-[#6B6F86]">
+                    <label className="flex items-center gap-1 text-[11px] font-bold text-[var(--pp-muted)]">
                       <input
                         type="checkbox"
                         checked={selectedDrafts.has(lesson.id)}
@@ -1479,14 +1467,14 @@ function LessonsCard({
                   type="button"
                   disabled={Boolean(busy)}
                   onClick={() => askPublish(lesson)}
-                  className="rounded-full bg-[#9B5CF6] px-3 py-1.5 text-white disabled:opacity-50"
+                  className="rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] px-3 py-1.5 text-[var(--pp-ink)] disabled:opacity-50"
                 >
                   {lesson.status === "published" ? "إلغاء النشر" : "نشر"}
                 </button>
                 <Link
                   to="/rita-live"
                   search={{ lesson: lesson.id, preview: true }}
-                  className="flex items-center gap-1 rounded-full border border-[#E6E1F5] px-3 py-1.5"
+                  className="flex items-center gap-1 rounded-lg border border-[var(--pp-line)] px-3 py-1.5"
                 >
                   <Eye size={13} /> معاينة كطالب
                 </Link>
@@ -1500,7 +1488,7 @@ function LessonsCard({
                       "تم إنشاء الصورة",
                     )
                   }
-                  className="flex items-center gap-1 rounded-full border border-[#E6E1F5] px-3 py-1.5 disabled:opacity-50"
+                  className="flex items-center gap-1 rounded-lg border border-[var(--pp-line)] px-3 py-1.5 disabled:opacity-50"
                 >
                   {busy === `image:${lesson.id}` ? (
                     <Loader2 size={13} className="animate-spin" />
@@ -1517,7 +1505,7 @@ function LessonsCard({
                       draft: lessonToDraft(lesson),
                     })
                   }
-                  className="rounded-full border border-[#E6E1F5] px-3 py-1.5"
+                  className="rounded-lg border border-[var(--pp-line)] px-3 py-1.5"
                 >
                   تعديل
                 </button>
@@ -1532,7 +1520,7 @@ function LessonsCard({
                           moveFn({ data: { lessonId: lesson.id, direction: "up" } }),
                         )
                       }
-                      className="rounded-full border border-[#E6E1F5] px-2 py-1.5 disabled:opacity-40"
+                      className="rounded-lg border border-[var(--pp-line)] px-2 py-1.5 disabled:opacity-40"
                     >
                       <ArrowUp size={13} />
                     </button>
@@ -1545,7 +1533,7 @@ function LessonsCard({
                           moveFn({ data: { lessonId: lesson.id, direction: "down" } }),
                         )
                       }
-                      className="rounded-full border border-[#E6E1F5] px-2 py-1.5 disabled:opacity-40"
+                      className="rounded-lg border border-[var(--pp-line)] px-2 py-1.5 disabled:opacity-40"
                     >
                       <ArrowDown size={13} />
                     </button>
@@ -1563,7 +1551,7 @@ function LessonsCard({
                       );
                     }
                   }}
-                  className="rounded-full px-3 py-1.5 text-[#8A8FA3]"
+                  className="rounded-lg px-3 py-1.5 text-[var(--pp-muted)]"
                 >
                   أرشفة
                 </button>
@@ -1611,14 +1599,12 @@ function LessonsCard({
             className="w-full max-w-md rounded-3xl bg-white p-5"
             onClick={(event) => event.stopPropagation()}
           >
-            <p className="font-black">
-              نشر «{publishAsk.title_ar || publishAsk.title}»
+            <p className="font-bold">نشر «{publishAsk.title_ar || publishAsk.title}»</p>
+            <p className="mt-2 text-sm font-semibold text-[var(--pp-muted)]">
+              هذا الدرس لن يظهر للطلاب إلا إذا كان الكتاب منشورًا أيضًا — والكتاب حاليًا مسودة. شو
+              تحب نسوي؟
             </p>
-            <p className="mt-2 text-sm font-semibold text-[#6B6F86]">
-              هذا الدرس لن يظهر للطلاب إلا إذا كان الكتاب منشورًا أيضًا — والكتاب حاليًا مسودة.
-              شو تحب نسوي؟
-            </p>
-            <div className="mt-4 flex flex-col gap-2 text-sm font-black">
+            <div className="mt-4 flex flex-col gap-2 text-sm font-bold">
               <button
                 type="button"
                 disabled={Boolean(busy)}
@@ -1638,7 +1624,7 @@ function LessonsCard({
                     "نُشر الدرس والكتاب — ظهر للطلاب",
                   );
                 }}
-                className="rounded-full bg-[#2F8F55] px-4 py-2.5 text-white disabled:opacity-50"
+                className="rounded-lg bg-[#2F8F55] px-4 py-2.5 text-white disabled:opacity-50"
               >
                 انشر الدرس والكتاب معًا (يظهر للطلاب)
               </button>
@@ -1657,14 +1643,14 @@ function LessonsCard({
                     "نُشر الدرس — وسيبقى مخفيًا للطلاب حتى ينشر الكتاب",
                   );
                 }}
-                className="rounded-full bg-[#9B5CF6] px-4 py-2.5 text-white disabled:opacity-50"
+                className="rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] px-4 py-2.5 text-[var(--pp-ink)] disabled:opacity-50"
               >
                 انشر الدرس فقط (يبقى مخفيًا حتى نشر الكتاب)
               </button>
               <button
                 type="button"
                 onClick={() => setPublishAsk(null)}
-                className="rounded-full px-4 py-2 text-[#8A8FA3]"
+                className="rounded-lg px-4 py-2 text-[var(--pp-muted)]"
               >
                 إلغاء
               </button>

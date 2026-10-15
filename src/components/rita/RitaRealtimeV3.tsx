@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
+  ArrowLeft,
   BookOpen,
   Check,
   ChevronDown,
@@ -22,8 +23,9 @@ import {
   upsertDraftReply,
   wasRitaInterrupted,
 } from "@/lib/rita-v3-heard";
-import { RitaStage, orbModeFor, type RitaMood } from "@/components/rita-live/RitaStage";
-import { RitaAvatar } from "@/components/rita-live/RitaAvatar";
+import { orbModeFor, type RitaMood } from "@/components/rita-live/RitaStage";
+import { ProHeader } from "@/components/home/procreate/ProHeader";
+import { VoiceOrb } from "@/components/rita-live/VoiceOrb";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
 import { useRitaLesson } from "@/components/rita-lessons/useRitaLesson";
 import { LessonObjectivesPanel, LessonResultCard } from "@/components/rita-lessons/LessonPanels";
@@ -54,8 +56,6 @@ type PendingMetric = {
   metadata: Record<string, unknown>;
 };
 
-const MODEL_PROOF = "Soniox stt-rt-v5 → Groq GPT-OSS 120B → Cartesia Sonic 3.6 · Layan";
-
 async function authHeaders() {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
@@ -73,12 +73,15 @@ function humanError(error: unknown) {
   return "Rita v3 could not start. No old voice system was used.";
 }
 
-export function RitaRealtimeV3({ lessonId, preview }: { lessonId?: string; preview?: boolean } = {}) {
+export function RitaRealtimeV3({
+  lessonId,
+  preview,
+}: { lessonId?: string; preview?: boolean } = {}) {
   const navigate = useNavigate();
   const lesson = useRitaLesson(lessonId, preview);
   const lastCheckedMessage = useRef("");
   const [resultDismissed, setResultDismissed] = useState(false);
-  const { user, isAdmin, loading } = useAuth();
+  const { user, loading } = useAuth();
   const client = useRef<ClientHandle | null>(null);
   const activeRef = useRef(false);
   const mutedRef = useRef(false);
@@ -142,10 +145,11 @@ export function RitaRealtimeV3({ lessonId, preview }: { lessonId?: string; previ
         : "Hi, I’m Rita. What would you like to practise?",
     },
   ]);
-  const [personality, setPersonality] = useState<Persona>("kind");
-  const [mode, setMode] = useState<LessonMode>("free_conversation");
-  const [language, setLanguage] = useState("automatic");
-  const [dialect, setDialect] = useState("ar-JO");
+  // The natural defaults. The page no longer asks the learner to pick these.
+  const personality: Persona = "kind";
+  const mode: LessonMode = "free_conversation";
+  const language: string = "automatic";
+  const dialect: string = "ar-JO";
   const [learningOpen, setLearningOpen] = useState(false);
   const [learning, setLearning] = useState<LearningItem[]>([]);
   const [target, setTarget] = useState<SaveTarget>("flashcards");
@@ -179,34 +183,39 @@ export function RitaRealtimeV3({ lessonId, preview }: { lessonId?: string; previ
       messages
         .slice(0, lastYou + 1)
         .filter((message) => message.id !== "welcome")
-        .map((message) => ({ role: message.role === "you" ? "user" : "assistant", text: message.text })),
+        .map((message) => ({
+          role: message.role === "you" ? "user" : "assistant",
+          text: message.text,
+        })),
     );
   }, [checkTurns, lessonEnabled, messages]);
 
-  const sendMetric = useCallback(
-    async (currentSessionId: string, event: PendingMetric) => {
-      try {
-        await fetch("/api/rita-v3/session/metrics", {
-          method: "POST",
-          headers: await authHeaders(),
-          body: JSON.stringify({
-            sessionId: currentSessionId,
-            name: event.name,
-            valueMs: event.valueMs,
-            metadata: event.metadata,
-          }),
-        });
-      } catch {
-        // Metrics never interrupt a lesson.
-      }
-    },
-    [],
-  );
+  const sendMetric = useCallback(async (currentSessionId: string, event: PendingMetric) => {
+    try {
+      await fetch("/api/rita-v3/session/metrics", {
+        method: "POST",
+        headers: await authHeaders(),
+        body: JSON.stringify({
+          sessionId: currentSessionId,
+          name: event.name,
+          valueMs: event.valueMs,
+          metadata: event.metadata,
+        }),
+      });
+    } catch {
+      // Metrics never interrupt a lesson.
+    }
+  }, []);
 
   const metric = useCallback(
     async (name: string, valueMs?: number, metadata?: Record<string, unknown>) => {
       const connection = navigator as Navigator & {
-        connection?: { effectiveType?: string; rtt?: number; downlink?: number; saveData?: boolean };
+        connection?: {
+          effectiveType?: string;
+          rtt?: number;
+          downlink?: number;
+          saveData?: boolean;
+        };
       };
       const event: PendingMetric = {
         name,
@@ -601,17 +610,17 @@ export function RitaRealtimeV3({ lessonId, preview }: { lessonId?: string; previ
         if (interrupted) void metric("interrupted");
       };
       const transport = new DailyTransport({
-          bufferLocalAudioUntilBotReady: true,
-          inputSettings: {
-            audio: {
-              settings: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true,
-                channelCount: 1,
-              },
+        bufferLocalAudioUntilBotReady: true,
+        inputSettings: {
+          audio: {
+            settings: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+              channelCount: 1,
             },
           },
+        },
       });
       const networkSnapshotPhases = new Set<string>();
       const snapshotNetwork = (phase: string) => {
@@ -630,7 +639,8 @@ export function RitaRealtimeV3({ lessonId, preview }: { lessonId?: string; previ
               Number.isFinite(Number(value)) ? Number(value) : undefined;
             return metric("network_snapshot", undefined, {
               phase,
-              dailyNetworkState: typeof stats.networkState === "string" ? stats.networkState : "unknown",
+              dailyNetworkState:
+                typeof stats.networkState === "string" ? stats.networkState : "unknown",
               dailyNetworkReasons: Array.isArray(stats.networkStateReasons)
                 ? stats.networkStateReasons.slice(0, 4)
                 : [],
@@ -961,7 +971,10 @@ export function RitaRealtimeV3({ lessonId, preview }: { lessonId?: string; previ
         }));
 
   return (
-    <main className="rita-live-premium min-h-screen bg-[#faf9f6] text-[#211f24]">
+    <main
+      className="edith-premium min-h-screen bg-white text-[var(--pp-ink)]"
+      style={{ fontFamily: "var(--font-grotesk), 'Noto Sans Arabic', sans-serif" }}
+    >
       <audio
         ref={botAudio}
         autoPlay
@@ -975,218 +988,153 @@ export function RitaRealtimeV3({ lessonId, preview }: { lessonId?: string; previ
         onStalled={() => void metric("audio_stalled")}
         onEnded={() => void metric("audio_ended")}
       />
-      <div className="grid min-h-screen lg:grid-cols-[minmax(0,1.55fr)_minmax(320px,.95fr)]">
-        <section className="flex min-h-screen flex-col border-r border-[#e6e1e8] bg-white">
-          <header className="border-b border-[#ece7ee] px-5 py-5 sm:px-10">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Link to="/" className="text-2xl text-[#716c73]" aria-label="Leave Rita">
-                  ×
-                </Link>
-                <h1 className="text-xl font-extrabold tracking-tight">
-                  RitaJet <span className="font-medium text-[#7c777f]">| Live lesson</span>
-                </h1>
-              </div>
-              <Link
-                to="/rita-lessons"
-                className="rounded-full bg-[#f4effe] px-4 py-2 text-sm font-bold text-[#6d35d8]"
-              >
-                دروسي
-              </Link>
-              {isAdmin && (
-                <Link
-                  to="/admin/rita-voice"
-                  className="rounded-full border border-[#ded7e4] px-4 py-2 text-sm font-bold"
-                >
-                  Voice admin
-                </Link>
-              )}
-            </div>
-            <div className="mt-5 h-1 w-40 rounded-full bg-[#814be8]" />
-            <p className="mt-3 text-xs font-bold text-[#5b4181]">
-              Rita Realtime v3 · {MODEL_PROOF}
-            </p>
-            <p className="mt-2 text-sm font-semibold text-[#6d6671]">{status}</p>
-          </header>
+      <div className="rita-cream edith-light edith-premium">
+        <ProHeader variant="solid" tone="light" />
+      </div>
 
-          {active && soundBlocked && (
-            <div className="px-5 pt-4 sm:px-10">
-              <button
-                type="button"
-                onClick={enableSound}
-                className="rounded-full bg-[#7b46df] px-5 py-2.5 text-sm font-extrabold text-white"
-              >
-                Tap to enable sound
-              </button>
-            </div>
-          )}
+      <section className="mx-auto flex min-h-[calc(100vh-72px)] w-full max-w-2xl flex-col px-5 sm:px-8">
+        <div className="pt-6">
+          <Link
+            to={lessonId ? "/rita-lessons" : "/rita"}
+            className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
+          >
+            <ArrowLeft size={16} />
+            {lessonId ? "Lessons" : "Back"}
+          </Link>
+        </div>
 
-          <div className="flex justify-center lg:hidden">
-            <RitaAvatar
-              levelsRef={orbLevels}
-              mode={orbModeFor(active, mood)}
-              label="Rita"
-              className="h-[min(56vh,460px)] max-w-[86vw]"
+        <div className="flex flex-col items-center pt-2 text-center">
+          <VoiceOrb
+            levelsRef={orbLevels}
+            mode={orbModeFor(active, mood)}
+            label={active ? "Rita is with you" : "Rita, your language tutor"}
+            className="h-[min(70vw,360px)] w-[min(70vw,360px)]"
+          />
+          <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
+            {lessonId ? lesson.session?.lesson.title_ar || "Lesson" : "Talk with Rita"}
+          </h2>
+          <p className="mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]">
+            <span
+              aria-hidden="true"
+              className={`h-2.5 w-2.5 shrink-0 rounded-full ${
+                mood === "talking"
+                  ? "animate-pulse bg-[var(--pp-pink)]"
+                  : mood === "listening"
+                    ? "bg-[var(--pp-pink-text)]"
+                    : "bg-[var(--pp-line)]"
+              }`}
             />
-          </div>
+            {status}
+          </p>
+        </div>
 
-          <div className="flex-1 overflow-y-auto px-5 py-7 sm:px-10">
-            <div className="mx-auto max-w-3xl space-y-7">
-              {lesson.session && (
-                <LessonObjectivesPanel
-                  session={lesson.session}
-                  objectives={lesson.objectives}
-                  score={lesson.score}
-                  checking={lesson.checking}
-                  justMet={lesson.justMet}
-                />
-              )}
-              {lesson.error && (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-                  {lesson.error}{" "}
-                  <Link to="/rita-lessons" className="underline">
-                    العودة إلى المسار
-                  </Link>
-                </div>
-              )}
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={
-                    message.role === "you"
-                      ? "ml-auto max-w-[80%] text-right text-[#377ad9]"
-                      : "max-w-[82%] text-lg leading-8"
-                  }
-                >
-                  {message.text}
-                </div>
-              ))}
-              {caption && <p className="text-sm text-[#8a858d]">Live transcript: {caption}</p>}
-              {error && (
-                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-                  {error}
-                </div>
-              )}
-            </div>
+        {active && soundBlocked && (
+          <div className="flex justify-center pt-4">
+            <button type="button" onClick={enableSound} className="rita-btn rita-btn-primary">
+              Tap to enable sound
+            </button>
           </div>
+        )}
 
-          <div className="border-t border-[#ece7ee] p-4 sm:p-7">
-            {!active ? (
-              <div className="mx-auto max-w-3xl space-y-4">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <select
-                    value={personality}
-                    onChange={(event) => setPersonality(event.target.value as Persona)}
-                    className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold"
-                  >
-                    <option value="kind">Kind teacher</option>
-                    <option value="direct">Direct teacher</option>
-                    <option value="playful">Playful teacher</option>
-                    <option value="strict">Strict teacher</option>
-                  </select>
-                  <select
-                    value={language}
-                    onChange={(event) => setLanguage(event.target.value)}
-                    className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold"
-                  >
-                    <option value="automatic">Automatic language</option>
-                    <option value="ar">Arabic</option>
-                    <option value="de">German</option>
-                    <option value="en">English</option>
-                  </select>
-                  <select
-                    value={dialect}
-                    onChange={(event) => setDialect(event.target.value)}
-                    className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold"
-                  >
-                    <option value="ar-JO">Jordanian Arabic</option>
-                    <option value="standard">Standard Arabic</option>
-                    <option value="en-GB">British English</option>
-                  </select>
-                  {!lessonId && (
-                    <select
-                      value={mode}
-                      onChange={(event) => setMode(event.target.value as LessonMode)}
-                      className="rounded-xl border border-[#ddd6e2] bg-white px-3 py-3 text-sm font-semibold"
-                    >
-                      <option value="free_conversation">Free conversation</option>
-                      <option value="guided_lesson">Guided lesson</option>
-                      <option value="pronunciation_drill">Pronunciation drill</option>
-                    </select>
-                  )}
-                </div>
-                <button
-                  onClick={startLesson}
-                  disabled={starting || (Boolean(lessonId) && !lesson.session)}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7b46df] px-5 py-4 font-extrabold text-white shadow-lg shadow-purple-200 disabled:opacity-60"
-                >
-                  {starting ? <Loader2 className="animate-spin" size={18} /> : <Mic size={18} />}{" "}
-                  {lessonId ? "ابدأ الدرس مع ريتا" : "Start Rita Realtime v3"}
-                </button>
+        <div className="flex-1 py-6">
+          <div className="space-y-6">
+            {lesson.session && (
+              <LessonObjectivesPanel
+                session={lesson.session}
+                objectives={lesson.objectives}
+                score={lesson.score}
+                checking={lesson.checking}
+                justMet={lesson.justMet}
+              />
+            )}
+            {lesson.error && (
+              <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
+                {lesson.error}{" "}
+                <Link to="/rita-lessons" className="underline">
+                  العودة إلى المسار
+                </Link>
               </div>
-            ) : (
-              <div className="mx-auto max-w-3xl">
-                <form
-                  onSubmit={sendText}
-                  className="rounded-3xl border border-[#ddd7e1] bg-white p-3 shadow-sm"
-                >
-                  <input
-                    value={draft}
-                    onChange={(event) => setDraft(event.target.value)}
-                    placeholder="Ask Rita anything…"
-                    className="w-full border-0 bg-transparent px-3 py-3 outline-none"
-                  />
-                  <div className="flex flex-wrap items-center gap-2 border-t border-[#eee9f0] pt-3">
-                    <button
-                      type="button"
-                      onClick={toggleMute}
-                      className="flex items-center gap-1 rounded-full border border-[#ddd7e1] px-3 py-2 text-sm font-bold"
-                    >
-                      {muted ? <MicOff size={15} /> : <Mic size={15} />}
-                      {muted ? "Unmute" : "Mute"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void loadDestinations("flashcards")}
-                      className="flex items-center gap-1 rounded-full border border-[#ddd7e1] px-3 py-2 text-sm font-bold"
-                    >
-                      <Layers size={15} /> Learning ({learning.length})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void endLesson()}
-                      className="ml-auto flex items-center gap-1 rounded-full px-3 py-2 text-sm font-bold text-red-700"
-                    >
-                      <PhoneOff size={15} /> End lesson
-                    </button>
-                    <button
-                      type="submit"
-                      className="grid h-10 w-10 place-items-center rounded-full bg-[#c8adff] text-white"
-                    >
-                      <Send size={17} />
-                    </button>
-                  </div>
-                </form>
+            )}
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={
+                  message.role === "you"
+                    ? "ml-auto w-fit max-w-[82%] rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-2.5 text-right text-[18px] leading-7"
+                    : `text-[20px] leading-8 ${
+                        !active && messages.length === 1 ? "mx-auto text-center" : "max-w-[88%]"
+                      }`
+                }
+              >
+                {message.text}
+              </div>
+            ))}
+            {caption && (
+              <p className="text-[14px] text-[var(--pp-muted)]">Live transcript: {caption}</p>
+            )}
+            {error && (
+              <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
+                {error}
               </div>
             )}
           </div>
-        </section>
+        </div>
 
-        <aside className="relative hidden min-h-screen overflow-hidden bg-[radial-gradient(circle_at_50%_45%,#59327f_0,#26163b_47%,#160d25_100%)] text-white lg:block">
-          <div className="absolute left-8 top-7 font-bold">Rita</div>
-          <div className="absolute right-8 top-7 flex items-center gap-2 text-sm">
-            <span className="h-2 w-2 rounded-full bg-[#bd86ff]" />
-            {active ? "Live" : "Ready"}
-          </div>
-          <div className="h-full">
-            <RitaStage
-              mood={mood}
-              active={active}
-              levelsRef={orbLevels}
-            />
-          </div>
-        </aside>
-      </div>
+        <div className="sticky bottom-0 bg-white pb-6 pt-3">
+          {!active ? (
+            <div className="flex justify-center">
+              <button
+                onClick={startLesson}
+                disabled={starting || (Boolean(lessonId) && !lesson.session)}
+                className="rita-btn rita-btn-primary gap-2 disabled:opacity-60"
+              >
+                {starting ? <Loader2 className="animate-spin" size={18} /> : <Mic size={18} />}{" "}
+                {lessonId ? "ابدأ الدرس مع ريتا" : "Start talking"}
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={sendText} className="rounded-2xl bg-[var(--pp-grey)] p-3">
+              <input
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                placeholder="Ask Rita anything…"
+                className="w-full border-0 bg-transparent px-3 py-3 text-[18px] text-[var(--pp-ink)] outline-none placeholder:text-[var(--pp-muted)]"
+              />
+              <div className="flex flex-wrap items-center gap-2 border-t border-[var(--pp-line)] pt-3">
+                <button
+                  type="button"
+                  onClick={toggleMute}
+                  className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
+                >
+                  {muted ? <MicOff size={16} /> : <Mic size={16} />}
+                  {muted ? "Unmute" : "Mute"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void loadDestinations("flashcards")}
+                  className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
+                >
+                  <Layers size={16} /> Learning ({learning.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void endLesson()}
+                  className="rita-btn rita-btn-secondary rita-btn-sm ml-auto gap-1.5 !text-[var(--pp-pink-text)]"
+                >
+                  <PhoneOff size={16} /> End
+                </button>
+                <button
+                  type="submit"
+                  aria-label="Send"
+                  className="rita-btn rita-btn-primary rita-btn-sm !w-10 !px-0"
+                >
+                  <Send size={16} />
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </section>
 
       {lesson.result && !resultDismissed && (
         <LessonResultCard
@@ -1203,16 +1151,16 @@ export function RitaRealtimeV3({ lessonId, preview }: { lessonId?: string; previ
 
       {learningOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end bg-black/30 sm:items-center sm:justify-center"
+          className="fixed inset-0 z-50 flex items-end bg-[#121117]/40 sm:items-center sm:justify-center"
           onClick={() => setLearningOpen(false)}
         >
           <section
-            className="max-h-[88vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-3xl sm:p-7"
+            className="max-h-[88vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-2xl sm:p-7 text-[var(--pp-ink)]"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-[#7b46df]">Learning Tray</p>
+                <p className="text-sm font-bold text-[var(--pp-pink-text)]">Learning Tray</p>
                 <h2 className="text-2xl font-extrabold">Useful language from this lesson</h2>
               </div>
               <button onClick={() => setLearningOpen(false)}>
@@ -1220,12 +1168,12 @@ export function RitaRealtimeV3({ lessonId, preview }: { lessonId?: string; previ
               </button>
             </div>
             {!learning.length ? (
-              <p className="py-10 text-center text-[#77717a]">
+              <p className="py-10 text-center text-[var(--pp-muted)]">
                 Ask for a translation, a word meaning, or a language word list. General knowledge
                 will not be saved here.
               </p>
             ) : (
-              <div className="mt-6 divide-y divide-[#eee9f0]">
+              <div className="mt-6 divide-y divide-[var(--pp-line)]">
                 {learning.map((item) => (
                   <div
                     key={`${item.language}:${item.term}`}
@@ -1235,8 +1183,8 @@ export function RitaRealtimeV3({ lessonId, preview }: { lessonId?: string; previ
                       {item.article ? `${item.article} ` : ""}
                       {item.term}
                     </strong>
-                    <span className="text-[#67616a]">{item.meaning}</span>
-                    <span className="text-xs font-bold uppercase text-[#8a60cf]">
+                    <span className="text-[var(--pp-muted)]">{item.meaning}</span>
+                    <span className="text-xs font-bold uppercase text-[var(--pp-pink-text)]">
                       {item.language}
                     </span>
                   </div>
@@ -1244,18 +1192,18 @@ export function RitaRealtimeV3({ lessonId, preview }: { lessonId?: string; previ
               </div>
             )}
             {learning.length > 0 && (
-              <div className="mt-6 rounded-2xl bg-[#f6f1ff] p-4">
+              <div className="mt-6 rounded-2xl bg-[var(--pp-grey)] p-4">
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => void loadDestinations("flashcards")}
-                    className={`rounded-full px-4 py-2 text-sm font-bold ${target === "flashcards" ? "bg-[#7b46df] text-white" : "bg-white"}`}
+                    className={`rounded-lg px-4 py-2 text-sm font-bold ${target === "flashcards" ? "border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)]" : "border-2 border-transparent bg-white"}`}
                   >
                     <Layers className="mr-1 inline" size={15} />
                     Flashcards
                   </button>
                   <button
                     onClick={() => void loadDestinations("german_lab")}
-                    className={`rounded-full px-4 py-2 text-sm font-bold ${target === "german_lab" ? "bg-[#7b46df] text-white" : "bg-white"}`}
+                    className={`rounded-lg px-4 py-2 text-sm font-bold ${target === "german_lab" ? "border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)]" : "border-2 border-transparent bg-white"}`}
                   >
                     <BookOpen className="mr-1 inline" size={15} />
                     German Lab
@@ -1265,7 +1213,7 @@ export function RitaRealtimeV3({ lessonId, preview }: { lessonId?: string; previ
                   <select
                     value={destinationId}
                     onChange={(event) => setDestinationId(event.target.value)}
-                    className="w-full appearance-none rounded-xl border border-[#ddd6e2] bg-white px-4 py-3 pr-10"
+                    className="w-full appearance-none rita-select !pr-10 w-full appearance-none"
                   >
                     <option value="">Choose a subject…</option>
                     {options.map((item) => (
@@ -1277,14 +1225,14 @@ export function RitaRealtimeV3({ lessonId, preview }: { lessonId?: string; previ
                   <ChevronDown className="pointer-events-none absolute right-3 top-3.5" size={18} />
                 </div>
                 {rememberedDestination.current && (
-                  <p className="mt-2 text-xs font-bold text-[#6f4bad]">
+                  <p className="mt-2 text-xs font-bold text-[var(--pp-pink-text)]">
                     Remembered for this lesson: {rememberedDestination.current.label}
                   </p>
                 )}
                 <button
                   onClick={saveLearning}
                   disabled={!destinationId || saving}
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#21172c] px-4 py-3 font-bold text-white disabled:opacity-40"
+                  className="rita-btn rita-btn-primary mt-3 !w-full !self-stretch gap-2 disabled:opacity-40"
                 >
                   {saving ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
                   Save selected lesson language
@@ -1292,7 +1240,7 @@ export function RitaRealtimeV3({ lessonId, preview }: { lessonId?: string; previ
                 {notice && <p className="mt-3 text-sm font-semibold">{notice}</p>}
               </div>
             )}
-            <p className="mt-5 flex items-center gap-2 text-xs text-[#77717a]">
+            <p className="mt-5 flex items-center gap-2 text-xs text-[var(--pp-muted)]">
               <Sparkles size={14} />
               Unsaved items and this chat are deleted when the lesson ends.
             </p>

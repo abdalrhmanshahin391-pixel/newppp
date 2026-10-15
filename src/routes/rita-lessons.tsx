@@ -2,7 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { getLessonPath, type PathLesson, type ReviewSuggestion } from "@/lib/rita-curriculum.functions";
+import {
+  getLessonPath,
+  type PathLesson,
+  type ReviewSuggestion,
+} from "@/lib/rita-curriculum.functions";
 import { LessonPathView } from "@/components/rita-lessons/LessonPathView";
 
 export const Route = createFileRoute("/rita-lessons")({

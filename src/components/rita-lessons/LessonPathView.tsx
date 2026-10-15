@@ -87,23 +87,24 @@ export function LessonPathView({
   return (
     <main
       dir="rtl"
-      className="min-h-screen bg-[#FBFAFF] pb-32 font-[Nunito,'Noto_Sans_Arabic',sans-serif] text-[#1E2A4A]"
+      className="edith-premium min-h-screen bg-white pb-32 text-[var(--pp-ink)]"
+      style={{ fontFamily: "var(--font-grotesk), 'Noto Sans Arabic', sans-serif" }}
     >
-      <header className="sticky top-0 z-20 border-b border-[#EEE8FB] bg-white/95 backdrop-blur">
+      <header className="sticky top-0 z-20 border-b border-[var(--pp-line)] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
           <Link
-            to="/"
+            to="/rita"
             aria-label="رجوع"
-            className="grid h-10 w-10 place-items-center rounded-full text-[#8A8FA3] hover:bg-[#F4EFFE]"
+            className="grid h-10 w-10 place-items-center rounded-full text-[var(--pp-muted)] hover:bg-[var(--pp-grey)]"
           >
             <ArrowRight size={22} />
           </Link>
-          <div className="flex items-center gap-4 text-sm font-black">
+          <div className="flex items-center gap-4 text-sm font-bold">
             <UkFlag />
             <span className="flex items-center gap-1 text-[#E8A400]">
               <Star size={20} fill="#FFC83D" strokeWidth={1.5} /> {totalStars}
             </span>
-            <span className="flex items-center gap-1 text-[#9B5CF6]">
+            <span className="flex items-center gap-1 text-[var(--pp-pink-text)]">
               <Medal size={20} /> {completed}
             </span>
           </div>
@@ -111,16 +112,18 @@ export function LessonPathView({
       </header>
 
       <section className="mx-auto max-w-md px-4 pt-6 text-center">
-        <p className="text-sm font-extrabold text-[#9B5CF6]">English · A1</p>
-        <h1 className="mt-1 text-2xl font-black">دروسك مع ريتا</h1>
-        <p className="mt-1 text-sm font-semibold text-[#6B6F86]">
+        <p className="text-sm font-semibold text-[var(--pp-pink-text)]">English · A1</p>
+        <h2 className="mt-1 text-[30px] font-bold leading-9">دروسك مع ريتا</h2>
+        <p className="mt-1 text-sm font-semibold text-[var(--pp-muted)]">
           تحدّث مع ريتا، حقّق أهداف كل درس، واجمع النجوم.
         </p>
         <button
           type="button"
           onClick={toggleFreeOrder}
-          className={`mt-3 rounded-full px-4 py-1.5 text-xs font-black ${
-            freeOrder ? "bg-[#9B5CF6] text-white" : "bg-[#F4EFFE] text-[#6D35D8]"
+          className={`mt-3 rounded-lg px-4 py-1.5 text-xs font-bold ${
+            freeOrder
+              ? "border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] text-[var(--pp-ink)]"
+              : "bg-[var(--pp-grey)] text-[var(--pp-ink)]"
           }`}
         >
           {freeOrder ? "الوضع الحر مفعّل — أوقفه" : "الوضع الحر: افتح أي درس بترتيب حر"}
@@ -129,15 +132,15 @@ export function LessonPathView({
 
       {reviews.length > 0 && (
         <section className="mx-auto mt-4 max-w-md px-4">
-          <div className="rounded-2xl border-2 border-[#FFE9BA] bg-[#FFF9EC] p-3 text-right">
-            <p className="text-xs font-black text-[#B07A00]">مراجعة مقترحة</p>
+          <div className="rounded-2xl bg-[var(--pp-grey)] p-3 text-right">
+            <p className="text-xs font-bold text-[var(--pp-pink-text)]">مراجعة مقترحة</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {reviews.slice(0, 4).map((review) => (
                 <button
                   key={review.id}
                   type="button"
                   onClick={() => openReview(review)}
-                  className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#6D35D8]"
+                  className="rounded-lg bg-white px-3 py-1 text-xs font-bold text-[var(--pp-ink)]"
                 >
                   {review.title} · قبل {review.daysAgo} يوم
                 </button>
@@ -153,20 +156,17 @@ export function LessonPathView({
         </p>
       )}
       {!lessons && !error && (
-        <div className="grid place-items-center py-24 text-[#9B5CF6]">
+        <div className="grid place-items-center py-24 text-[var(--pp-pink-text)]">
           <Loader2 className="animate-spin" />
         </div>
       )}
       {lessons && lessons.length === 0 && (
         <div className="mx-auto mt-16 max-w-xs text-center">
-          <p className="font-bold text-[#8A8FA3]">لا توجد دروس منشورة بعد.</p>
-          <p className="mt-1 text-sm font-semibold text-[#A3A7BA]">
+          <p className="font-bold text-[var(--pp-ink)]">لا توجد دروس منشورة بعد.</p>
+          <p className="mt-1 text-sm font-semibold text-[var(--pp-muted)]">
             جرّب محادثة حرة مع ريتا حتى تجهز الدروس:
           </p>
-          <Link
-            to="/rita-live"
-            className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[#9B5CF6] px-5 py-3 text-sm font-black text-white shadow-[0_5px_0_#6D35D8] active:translate-y-1 active:shadow-none"
-          >
+          <Link to="/rita-live" className="rita-btn rita-btn-primary mt-4 gap-2 !inline-flex">
             <MessageCircle size={16} /> محادثة حرة مع ريتا
           </Link>
         </div>
@@ -186,7 +186,7 @@ export function LessonPathView({
             <path
               d={pathD}
               fill="none"
-              stroke="#D9CFF5"
+              stroke="var(--pp-line)"
               strokeWidth="5"
               strokeLinecap="round"
               strokeDasharray="0.1 14"
@@ -208,37 +208,39 @@ export function LessonPathView({
                 <LessonStars stars={lesson.stars} />
                 <span className="relative mt-1 block" style={{ width: NODE, height: NODE }}>
                   {isCurrent && (
-                    <span className="absolute -inset-2 animate-pulse rounded-full bg-[#C9A7FF]/40" />
+                    <span className="absolute -inset-2 animate-pulse rounded-full bg-[var(--pp-pink)]/40" />
                   )}
                   {/* Solid backing so the dotted path never shows through a faded node. */}
-                  <span className="absolute inset-0 rounded-full bg-[#FBFAFF]" />
+                  <span className="absolute inset-0 rounded-full bg-white" />
                   <LessonImage
                     src={lesson.image_url}
                     alt=""
-                    className={`relative h-full w-full border-4 shadow-[0_6px_0_#E6E1F5] ${
-                      isCurrent ? "border-[#7B3FE4]" : "border-white"
+                    className={`relative h-full w-full border-4 shadow-[0_6px_0_var(--pp-line)] ${
+                      isCurrent ? "border-[var(--pp-ink)]" : "border-white"
                     } ${locked ? "opacity-60 grayscale-[0.85]" : ""}`}
                   />
                   {locked && (
-                    <span className="absolute bottom-0 left-0 grid h-8 w-8 place-items-center rounded-full bg-white text-[#8A8FA3] shadow">
+                    <span className="absolute bottom-0 left-0 grid h-8 w-8 place-items-center rounded-full bg-white text-[var(--pp-muted)] shadow">
                       <Lock size={15} />
                     </span>
                   )}
                   <span
-                    className={`absolute -top-1 right-0 rounded-full px-2 py-0.5 text-[10px] font-black text-white ${
-                      lesson.kind === "vocabulary" ? "bg-[#3BA7FF]" : "bg-[#FF6FA8]"
+                    className={`absolute -top-1 right-0 rounded-full px-2 py-0.5 text-[10px] font-bold text-white ${
+                      lesson.kind === "vocabulary"
+                        ? "border border-[var(--pp-ink)] bg-[var(--pp-pink)] !text-[var(--pp-ink)]"
+                        : "bg-[var(--pp-ink)]"
                     }`}
                   >
                     {lesson.kind === "vocabulary" ? "كلمات" : "قواعد"}
                   </span>
                 </span>
                 <span
-                  className={`mt-2 text-[15px] font-black leading-5 ${locked ? "text-[#A3A7BA]" : ""}`}
+                  className={`mt-2 text-[15px] font-bold leading-5 ${locked ? "text-[var(--pp-muted)]/70" : ""}`}
                 >
                   {lesson.title_ar || lesson.title}
                 </span>
                 {lesson.in_progress && !locked && (
-                  <span className="mt-1 text-[11px] font-extrabold text-[#9B5CF6]">
+                  <span className="mt-1 text-[11px] font-semibold text-[var(--pp-pink-text)]">
                     قيد التقدّم
                   </span>
                 )}
@@ -250,7 +252,7 @@ export function LessonPathView({
 
       {hint && (
         <p
-          className="fixed inset-x-4 bottom-28 z-30 mx-auto max-w-sm rounded-2xl bg-[#1E2A4A] px-4 py-3 text-center text-sm font-bold text-white"
+          className="fixed inset-x-4 bottom-28 z-30 mx-auto max-w-sm rounded-lg bg-[var(--pp-ink)] px-4 py-3 text-center text-[15px] font-semibold text-white"
           onClick={() => setHint("")}
         >
           {hint}
@@ -258,11 +260,11 @@ export function LessonPathView({
       )}
 
       {current && (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[#EEE8FB] bg-white/95 px-4 py-4 backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--pp-line)] bg-white/95 px-4 py-4 backdrop-blur">
           <button
             type="button"
             onClick={() => open(current)}
-            className="mx-auto block w-full max-w-md rounded-2xl bg-[#9B5CF6] py-4 text-lg font-black text-white shadow-[0_5px_0_#6D35D8] active:translate-y-1 active:shadow-none"
+            className="rita-btn rita-btn-primary mx-auto !flex !self-center"
           >
             متابعة
           </button>
