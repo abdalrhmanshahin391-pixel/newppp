@@ -992,8 +992,9 @@ export function RitaRealtimeV3({
         <ProHeader variant="solid" tone="light" />
       </div>
 
-      <section className="mx-auto flex min-h-[calc(100vh-72px)] w-full max-w-2xl flex-col px-5 sm:px-8">
-        <div className="pt-6">
+      {/* Chat on the left, Rita on the right; on phones Rita sits above the chat. */}
+      <div className="mx-auto grid w-full max-w-[1200px] px-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.75fr)] lg:gap-12">
+        <div className="pt-6 lg:col-span-2">
           <Link
             to={lessonId ? "/rita-lessons" : "/rita"}
             className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
@@ -1003,12 +1004,12 @@ export function RitaRealtimeV3({
           </Link>
         </div>
 
-        <div className="flex flex-col items-center pt-2 text-center">
+        <aside className="flex flex-col items-center pt-2 text-center lg:order-2 lg:sticky lg:top-6 lg:self-start lg:pt-10">
           <VoiceOrb
             levelsRef={orbLevels}
             mode={orbModeFor(active, mood)}
             label={active ? "Rita is with you" : "Rita, your language tutor"}
-            className="h-[min(70vw,360px)] w-[min(70vw,360px)]"
+            className="h-[min(60vw,300px)] w-[min(60vw,300px)] lg:h-[min(30vw,400px)] lg:w-[min(30vw,400px)]"
           />
           <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
             {lessonId ? lesson.session?.lesson.title_ar || "Lesson" : "Talk with Rita"}
@@ -1026,115 +1027,119 @@ export function RitaRealtimeV3({
             />
             {status}
           </p>
-        </div>
+        </aside>
 
-        {active && soundBlocked && (
-          <div className="flex justify-center pt-4">
-            <button type="button" onClick={enableSound} className="rita-btn rita-btn-primary">
-              Tap to enable sound
-            </button>
-          </div>
-        )}
-
-        <div className="flex-1 py-6">
-          <div className="space-y-6">
-            {lesson.session && (
-              <LessonObjectivesPanel
-                session={lesson.session}
-                objectives={lesson.objectives}
-                score={lesson.score}
-                checking={lesson.checking}
-                justMet={lesson.justMet}
-              />
-            )}
-            {lesson.error && (
-              <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
-                {lesson.error}{" "}
-                <Link to="/rita-lessons" className="underline">
-                  العودة إلى المسار
-                </Link>
-              </div>
-            )}
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={
-                  message.role === "you"
-                    ? "ml-auto w-fit max-w-[82%] rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-2.5 text-right text-[18px] leading-7"
-                    : `text-[20px] leading-8 ${
-                        !active && messages.length === 1 ? "mx-auto text-center" : "max-w-[88%]"
-                      }`
-                }
-              >
-                {message.text}
-              </div>
-            ))}
-            {caption && (
-              <p className="text-[14px] text-[var(--pp-muted)]">Live transcript: {caption}</p>
-            )}
-            {error && (
-              <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
-                {error}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="sticky bottom-0 bg-white pb-6 pt-3">
-          {!active ? (
-            <div className="flex justify-center">
-              <button
-                onClick={startLesson}
-                disabled={starting || (Boolean(lessonId) && !lesson.session)}
-                className="rita-btn rita-btn-primary gap-2 disabled:opacity-60"
-              >
-                {starting ? <Loader2 className="animate-spin" size={18} /> : <Mic size={18} />}{" "}
-                {lessonId ? "ابدأ الدرس مع ريتا" : "Start talking"}
+        <section className="mx-auto flex min-h-[calc(100vh-200px)] w-full max-w-2xl flex-col lg:order-1 lg:mx-0">
+          {active && soundBlocked && (
+            <div className="flex justify-center pt-4">
+              <button type="button" onClick={enableSound} className="rita-btn rita-btn-primary">
+                Tap to enable sound
               </button>
             </div>
-          ) : (
-            <form onSubmit={sendText} className="rounded-2xl bg-[var(--pp-grey)] p-3">
-              <input
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                placeholder="Ask Rita anything…"
-                className="w-full border-0 bg-transparent px-3 py-3 text-[18px] text-[var(--pp-ink)] outline-none placeholder:text-[var(--pp-muted)]"
-              />
-              <div className="flex flex-wrap items-center gap-2 border-t border-[var(--pp-line)] pt-3">
-                <button
-                  type="button"
-                  onClick={toggleMute}
-                  className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
+          )}
+
+          <div className="flex-1 py-6">
+            <div className="space-y-6">
+              {lesson.session && (
+                <LessonObjectivesPanel
+                  session={lesson.session}
+                  objectives={lesson.objectives}
+                  score={lesson.score}
+                  checking={lesson.checking}
+                  justMet={lesson.justMet}
+                />
+              )}
+              {lesson.error && (
+                <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
+                  {lesson.error}{" "}
+                  <Link to="/rita-lessons" className="underline">
+                    العودة إلى المسار
+                  </Link>
+                </div>
+              )}
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={
+                    message.role === "you"
+                      ? "ml-auto w-fit max-w-[82%] rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-2.5 text-right text-[18px] leading-7"
+                      : `text-[20px] leading-8 ${
+                          !active && messages.length === 1
+                            ? "mx-auto text-center lg:mx-0 lg:text-left"
+                            : "max-w-[88%]"
+                        }`
+                  }
                 >
-                  {muted ? <MicOff size={16} /> : <Mic size={16} />}
-                  {muted ? "Unmute" : "Mute"}
-                </button>
+                  {message.text}
+                </div>
+              ))}
+              {caption && (
+                <p className="text-[14px] text-[var(--pp-muted)]">Live transcript: {caption}</p>
+              )}
+              {error && (
+                <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
+                  {error}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="sticky bottom-0 bg-white pb-6 pt-3">
+            {!active ? (
+              <div className="flex justify-center">
                 <button
-                  type="button"
-                  onClick={() => void loadDestinations("flashcards")}
-                  className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
+                  onClick={startLesson}
+                  disabled={starting || (Boolean(lessonId) && !lesson.session)}
+                  className="rita-btn rita-btn-primary gap-2 disabled:opacity-60"
                 >
-                  <Layers size={16} /> Learning ({learning.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void endLesson()}
-                  className="rita-btn rita-btn-secondary rita-btn-sm ml-auto gap-1.5 !text-[var(--pp-pink-text)]"
-                >
-                  <PhoneOff size={16} /> End
-                </button>
-                <button
-                  type="submit"
-                  aria-label="Send"
-                  className="rita-btn rita-btn-primary rita-btn-sm !w-10 !px-0"
-                >
-                  <Send size={16} />
+                  {starting ? <Loader2 className="animate-spin" size={18} /> : <Mic size={18} />}{" "}
+                  {lessonId ? "ابدأ الدرس مع ريتا" : "Start talking"}
                 </button>
               </div>
-            </form>
-          )}
-        </div>
-      </section>
+            ) : (
+              <form onSubmit={sendText} className="rounded-2xl bg-[var(--pp-grey)] p-3">
+                <input
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                  placeholder="Ask Rita anything…"
+                  className="w-full border-0 bg-transparent px-3 py-3 text-[18px] text-[var(--pp-ink)] outline-none placeholder:text-[var(--pp-muted)]"
+                />
+                <div className="flex flex-wrap items-center gap-2 border-t border-[var(--pp-line)] pt-3">
+                  <button
+                    type="button"
+                    onClick={toggleMute}
+                    className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
+                  >
+                    {muted ? <MicOff size={16} /> : <Mic size={16} />}
+                    {muted ? "Unmute" : "Mute"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void loadDestinations("flashcards")}
+                    className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
+                  >
+                    <Layers size={16} /> Learning ({learning.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void endLesson()}
+                    className="rita-btn rita-btn-secondary rita-btn-sm ml-auto gap-1.5 !text-[var(--pp-pink-text)]"
+                  >
+                    <PhoneOff size={16} /> End
+                  </button>
+                  <button
+                    type="submit"
+                    aria-label="Send"
+                    className="rita-btn rita-btn-primary rita-btn-sm !w-10 !px-0"
+                  >
+                    <Send size={16} />
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </section>
+      </div>
 
       {lesson.result && !resultDismissed && (
         <LessonResultCard

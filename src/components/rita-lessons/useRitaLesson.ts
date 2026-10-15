@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  ensureLessonImage,
   evaluateLessonTurn,
   startLessonAttempt,
   type LessonSession,
@@ -18,6 +19,7 @@ export type LessonResult = { score: number; stars: number };
 export function useRitaLesson(lessonId: string | undefined, preview = false) {
   const startFn = useServerFn(startLessonAttempt);
   const evaluateFn = useServerFn(evaluateLessonTurn);
+  const imageFn = useServerFn(ensureLessonImage);
   const [session, setSession] = useState<LessonSession | null>(null);
   const [objectives, setObjectives] = useState<ObjectiveState>({});
   const [score, setScore] = useState(0);
@@ -55,6 +57,30 @@ export function useRitaLesson(lessonId: string | undefined, preview = false) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // A lesson with a placeholder picture gets a real one in the background; the
+  // lesson itself never waits for it, and a failed attempt is silent.
+  const lessonIdNow = session?.lesson.id;
+  const placeholder =
+    !session?.lesson.image_url || session.lesson.image_url.startsWith("/curriculum/");
+  useEffect(() => {
+    if (!lessonIdNow || preview || !placeholder) return;
+    let cancelled = false;
+    imageFn({ data: { lessonId: lessonIdNow } })
+      .then((outcome) => {
+        if (cancelled || !outcome.imageUrl) return;
+        const imageUrl = outcome.imageUrl;
+        setSession((current) =>
+          current && current.lesson.id === lessonIdNow
+            ? { ...current, lesson: { ...current.lesson, image_url: imageUrl } }
+            : current,
+        );
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [imageFn, lessonIdNow, placeholder, preview]);
 
   const run = useCallback(
     async (turns: LessonTurn[]) => {

@@ -920,6 +920,86 @@ export const adminGenerateLessonImage = createServerFn({ method: "POST" })
     return { imageUrl };
   });
 
+const AUTO_IMAGE_COOLDOWN_MS = 10 * 60 * 1000;
+
+/** A picture that is still a placeholder: none yet, or one of the bundled drawings. */
+function needsRealImage(imageUrl: string | null) {
+  return !imageUrl || imageUrl.startsWith("/curriculum/");
+}
+
+export type EnsureImageResult = {
+  status: "ready" | "generated" | "busy" | "unavailable";
+  imageUrl: string | null;
+};
+
+/**
+ * Makes a real picture for a lesson the learner opened, once. The scene is the
+ * lesson's own saved prompt (nothing from the browser), and a short lock in the
+ * database stops two learners paying for the same picture. Every failure is
+ * quiet: the lesson keeps its current picture.
+ */
+export const ensureLessonImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => parseWith(z.object({ lessonId: uuid }), data))
+  .handler(async ({ data, context }): Promise<EnsureImageResult> => {
+    // Row-level security hides unpublished lessons from learners.
+    const lesson = await loadPublishedLesson(context, data.lessonId);
+    if (!needsRealImage(lesson.image_url)) return { status: "ready", imageUrl: lesson.image_url };
+    try {
+      const { supabaseAdmin: admin } = await import("@/integrations/supabase/legacy-client.server");
+      const now = new Date();
+      const staleBefore = new Date(now.getTime() - AUTO_IMAGE_COOLDOWN_MS).toISOString();
+      const { data: claimed, error: claimError } = await admin
+        .from("rita_lessons")
+        .update({ image_generating_at: now.toISOString() })
+        .eq("id", lesson.id)
+        .or("image_url.is.null,image_url.like./curriculum/*")
+        .or(`image_generating_at.is.null,image_generating_at.lt.${staleBefore}`)
+        .select("id, title, topic, image_prompt")
+        .maybeSingle();
+      // The lock column comes from a migration; without it the feature is off.
+      if (claimError) {
+        if (!isMissingSchemaError(claimError))
+          console.warn("Lesson image claim failed", claimError);
+        return { status: "unavailable", imageUrl: null };
+      }
+      if (!claimed) return { status: "busy", imageUrl: null };
+      const release = () =>
+        admin.from("rita_lessons").update({ image_generating_at: null }).eq("id", lesson.id);
+      try {
+        const scene = String(claimed.image_prompt || `${claimed.title}: ${claimed.topic}`);
+        const { generateLessonImage } = await ai();
+        const image = await generateLessonImage(scene);
+        const path = `lessons/${lesson.id}-${Date.now()}.webp`;
+        const upload = await admin.storage
+          .from("rita-lesson-images")
+          .upload(path, image.bytes, { contentType: image.contentType, upsert: true });
+        fail(upload.error, "upload image");
+        const signed = await admin.storage
+          .from("rita-lesson-images")
+          .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        fail(signed.error, "sign image");
+        const imageUrl = signed.data!.signedUrl;
+        const { error: saveError } = await admin
+          .from("rita_lessons")
+          .update({ image_url: imageUrl, image_generating_at: null })
+          .eq("id", lesson.id);
+        fail(saveError, "save image");
+        return { status: "generated", imageUrl };
+      } catch (cause) {
+        // No API key yet: free the lock so adding the key works straight away.
+        // Any other failure keeps the lock as a cool-down before the next try.
+        if (cause instanceof Error && (cause as { status?: number }).status === 503)
+          await release();
+        console.warn("Lesson image generation failed", cause);
+        return { status: "unavailable", imageUrl: null };
+      }
+    } catch (cause) {
+      console.warn("Lesson image generation unavailable", cause);
+      return { status: "unavailable", imageUrl: null };
+    }
+  });
+
 // ---------- learners ----------
 
 type PathSourceRow = {
