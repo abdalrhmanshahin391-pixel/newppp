@@ -24,12 +24,16 @@ update public.rita_lesson_progress
 -- Cheap per-book readiness report so the admin overview no longer downloads
 -- every page's full text. Readiness itself is judged in the application from
 -- text_len and blank_confirmed; this function only reports the raw values.
--- btrim matches the application's trimmed-length readiness rule.
+-- regexp_replace trims exactly like JavaScript .trim() (all whitespace kinds
+-- from both ends), so the report and the server agree on every page.
 create or replace function public.rita_curriculum_page_report(p_curriculum_id uuid)
 returns table (page_no integer, text_len integer, transcribed boolean, blank_confirmed boolean)
 language sql stable
 as $$
-  select page_no, length(btrim(text)), transcribed_at is not null, blank_confirmed
+  select page_no,
+         length(regexp_replace(text, '^\s+|\s+$', '', 'g')),
+         transcribed_at is not null,
+         blank_confirmed
   from public.rita_curriculum_pages
   where curriculum_id = p_curriculum_id
   order by page_no;

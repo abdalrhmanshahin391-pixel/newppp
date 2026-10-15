@@ -55,9 +55,15 @@ async function admin() {
  * Whether the 20261015120000 curriculum-gaps columns exist. True is cached for
  * the process; false is re-probed (a tiny query) so applying the migration is
  * picked up without a restart. When false, every read/write below omits the new
- * columns, so the site keeps working before the migration is applied.
+ * columns, so the site keeps working before the migration is applied. Only a
+ * recognized missing-schema error means "migration not applied"; a service
+ * failure is assumed compatible so it surfaces from the real query instead.
  */
 let gapsColumnsReady = false;
+function isMissingSchemaError(error: { message?: string } | null): boolean {
+  const message = error?.message ?? "";
+  return /could not find|does not exist|PGRST20[0-9]/i.test(message);
+}
 async function hasCurriculumGaps(db: Awaited<ReturnType<typeof admin>>): Promise<boolean> {
   if (gapsColumnsReady) return true;
   try {
@@ -66,7 +72,8 @@ async function hasCurriculumGaps(db: Awaited<ReturnType<typeof admin>>): Promise
       gapsColumnsReady = true;
       return true;
     }
-    return false;
+    // Only a missing-column answer means the migration is absent.
+    return isMissingSchemaError(error);
   } catch {
     return false;
   }
@@ -220,14 +227,27 @@ export const adminCurriculumOverview = createServerFn({ method: "GET" })
           missingText[book.id] = missingPages(reports[index].rows, Number(book.page_count));
         }
       } else {
+        const reportError = reports?.find((report) => report.error)?.error ?? null;
+        if (reportError && !isMissingSchemaError(reportError)) {
+          // A service failure must reach the error state, not be relabeled as
+          // a missing migration.
+          fail(reportError, "page report");
+        }
         needsMigration = true;
         const { data: pages, error } = await db
           .from("rita_curriculum_pages")
-          .select("curriculum_id, page_no, text");
+          .select("curriculum_id, page_no, text")
+          .range(0, 999);
         fail(error, "pages");
+        const allPages = [
+          ...(pages ?? []),
+          // The legacy fallback is paginated too: books can hold thousands of
+          // pages and one call is capped by the API row limit.
+          ...(await legacyRemainingPages(db, (pages ?? []).length)),
+        ] as { curriculum_id: string; page_no: number; text: string }[];
         const byBook: Record<string, { page_no: number; text_len: number; blank_confirmed: boolean }[]> =
           {};
-        for (const page of (pages ?? []) as { curriculum_id: string; page_no: number; text: string }[]) {
+        for (const page of allPages) {
           (byBook[page.curriculum_id] ??= []).push({
             page_no: page.page_no,
             text_len: page.text.trim().length,
@@ -470,6 +490,25 @@ async function storeWindow(input: {
     .lt("read_cursor", check.advancesTo);
   fail(cursorError, "move read cursor");
   return { readCursor: check.advancesTo };
+}
+
+async function legacyRemainingPages(
+  db: Awaited<ReturnType<typeof admin>>,
+  alreadyFetched: number,
+) {
+  const rows: { curriculum_id: string; page_no: number; text: string }[] = [];
+  let from = alreadyFetched;
+  for (let guard = 0; guard < 30; guard += 1) {
+    const { data, error } = await db
+      .from("rita_curriculum_pages")
+      .select("curriculum_id, page_no, text")
+      .range(from, from + 999);
+    fail(error, "pages");
+    rows.push(...((data ?? []) as typeof rows));
+    if ((data ?? []).length < 1000) break;
+    from += 1000;
+  }
+  return rows;
 }
 
 async function pageText(curriculumId: string, from: number, to: number) {
@@ -1201,19 +1240,23 @@ export const evaluateLessonTurn = createServerFn({ method: "POST" })
     const lesson = await loadPublishedLesson(context, data.lessonId, data.preview);
     if (data.preview) {
       // Admin preview: the objectives are judged but nothing is saved.
+      const previous =
+        data.previewState && typeof data.previewState === "object"
+          ? (data.previewState as ObjectiveState)
+          : {};
       const turns = cleanTurns(data.turns);
       const learnerText = turns
         .filter((turn) => turn.role === "user")
         .map((turn) => turn.text)
         .join("\n");
       if (learnerText.replace(/\s+/g, "").length < 2) {
-        const empty: ObjectiveState = {};
+        // No answer: the transient state is preserved, not wiped.
         return {
-          objectives: empty,
+          objectives: previous,
           newlyMet: [],
-          score: 0,
-          stars: 0,
-          completed: false,
+          score: scoreLesson(lesson.objectives, previous),
+          stars: starsFor(scoreLesson(lesson.objectives, previous)),
+          completed: isLessonComplete(lesson.objectives, previous),
           skipped: "no_answer",
         };
       }
@@ -1224,10 +1267,6 @@ export const evaluateLessonTurn = createServerFn({ method: "POST" })
         objectives: open,
         turns,
       });
-      const previous =
-        data.previewState && typeof data.previewState === "object"
-          ? (data.previewState as ObjectiveState)
-          : {};
       const merged = mergeObjectiveState(previous, evaluation, open, learnerText, new Date().toISOString());
       const score = scoreLesson(lesson.objectives, merged.state);
       return {

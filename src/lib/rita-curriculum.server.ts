@@ -32,7 +32,9 @@ export async function loadVoiceLesson(
   const published =
     lesson.status === "published" &&
     (lesson.curriculum as { status?: string })?.status === "published";
-  if (!published) {
+  // Preview is admin-only even for published lessons: the flag must never
+  // change what a normal learner's session brief contains.
+  if (!published || preview) {
     const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
       _user_id: userId,
       _role: "admin",

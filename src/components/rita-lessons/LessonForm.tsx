@@ -82,16 +82,24 @@ export function LessonForm({
     // never on a saved array index (local edits would target the wrong one).
     const current = form.objectives[index];
     if (!current) return;
+    // The response is applied by stable id: if the objective was deleted or
+    // moved while the AI was writing, nothing is overwritten or duplicated.
+    const targetId = current.id;
     setRegenerating(index);
     try {
       const next = await onRegenerateObjective(current);
       if (next) {
-        setForm((state) => ({
-          ...state,
-          objectives: state.objectives.map((objective, position) =>
-            position === index ? next : objective,
-          ),
-        }));
+        setForm((state) => {
+          if (!state.objectives.some((objective) => objective.id === targetId)) {
+            return state; // deleted while regenerating: drop the response
+          }
+          return {
+            ...state,
+            objectives: state.objectives.map((objective) =>
+              objective.id === targetId ? next : objective,
+            ),
+          };
+        });
         toast.success("أُعيدت صياغة الهدف — راجعها قبل الحفظ");
       }
     } finally {

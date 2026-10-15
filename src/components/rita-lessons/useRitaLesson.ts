@@ -28,6 +28,9 @@ export function useRitaLesson(lessonId: string | undefined, preview = false) {
   const running = useRef(false);
   const queued = useRef<LessonTurn[] | null>(null);
   const finished = useRef(false);
+  // The latest objectives, read at call time: a queued check must send the
+  // state that includes the previous check's result, not a stale render's.
+  const objectivesRef = useRef<ObjectiveState>({});
 
   const load = useCallback(
     async (restart = false) => {
@@ -38,6 +41,7 @@ export function useRitaLesson(lessonId: string | undefined, preview = false) {
         finished.current = false;
         setSession(next);
         setObjectives(next.progress.objectives);
+        objectivesRef.current = next.progress.objectives;
         setScore(next.progress.score);
         setResult(null);
         setJustMet([]);
@@ -64,10 +68,11 @@ export function useRitaLesson(lessonId: string | undefined, preview = false) {
             turns,
             preview,
             // Preview keeps its state client-side so nothing is ever persisted.
-            ...(preview ? { previewState: objectives } : {}),
+            ...(preview ? { previewState: objectivesRef.current } : {}),
           },
         });
         setObjectives(outcome.objectives);
+        objectivesRef.current = outcome.objectives;
         setScore(outcome.score);
         if (outcome.newlyMet.length) setJustMet(outcome.newlyMet);
         if (outcome.completed) {
@@ -86,7 +91,7 @@ export function useRitaLesson(lessonId: string | undefined, preview = false) {
         if (pending && !finished.current) void run(pending);
       }
     },
-    [evaluateFn, lessonId, objectives, preview],
+    [evaluateFn, lessonId, preview],
   );
 
   /** Call with the latest conversation after each learner turn. */
