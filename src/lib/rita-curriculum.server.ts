@@ -18,6 +18,7 @@ export type VoiceLesson = { id: string; title: string; brief: string };
 export async function loadVoiceLesson(
   userId: string,
   lessonId: string,
+  preview = false,
 ): Promise<VoiceLesson | null> {
   if (!/^[0-9a-f-]{36}$/i.test(lessonId)) return null;
   const { data: lesson, error } = await supabaseAdmin
@@ -31,19 +32,25 @@ export async function loadVoiceLesson(
   const published =
     lesson.status === "published" &&
     (lesson.curriculum as { status?: string })?.status === "published";
-  if (!published) {
+  // Preview is admin-only even for published lessons: the flag must never
+  // change what a normal learner's session brief contains.
+  if (!published || preview) {
     const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
       _user_id: userId,
       _role: "admin",
     });
     if (!isAdmin || lesson.status === "archived") return null;
   }
-  const { data: progress } = await supabaseAdmin
-    .from("rita_lesson_progress")
-    .select("objectives")
-    .eq("user_id", userId)
-    .eq("lesson_id", lessonId)
-    .maybeSingle();
+  // Preview builds the brief from a fresh state so the worker matches the
+  // transient preview session; the learner's stored progress is never touched.
+  const progress = preview
+    ? null
+    : await supabaseAdmin
+        .from("rita_lesson_progress")
+        .select("objectives")
+        .eq("user_id", userId)
+        .eq("lesson_id", lessonId)
+        .maybeSingle();
   const plan = (lesson.plan ?? { phases: [] }) as LessonPlan & { summary?: string };
   const brief = buildLessonBrief(
     {
@@ -55,7 +62,7 @@ export async function loadVoiceLesson(
       plan: { phases: plan.phases ?? [], teacher_notes: plan.teacher_notes ?? "" },
       vocabulary: (lesson.vocabulary ?? []) as VocabularyItem[],
     },
-    ((progress?.objectives ?? {}) as ObjectiveState) || {},
+    ((progress?.data?.objectives ?? {}) as ObjectiveState) || {},
   );
   return { id: String(lesson.id), title: String(lesson.title), brief };
 }

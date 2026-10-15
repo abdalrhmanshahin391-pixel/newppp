@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowRight, Loader2, Lock, Medal, Star } from "lucide-react";
-import type { PathLesson } from "@/lib/rita-curriculum.functions";
+import { useEffect, useState } from "react";
+import { ArrowRight, Loader2, Lock, Medal, MessageCircle, Star } from "lucide-react";
+import type { PathLesson, ReviewSuggestion } from "@/lib/rita-curriculum.functions";
 import { LessonImage, LessonStars } from "./LessonArt";
 
 // Horizontal offsets that make the path zig-zag, as in the lesson map design.
@@ -9,6 +9,7 @@ const ZIGZAG = [0, 70, 100, 70, 0, -70, -100, -70];
 const ROW = 178;
 const WIDTH = 340;
 const NODE = 104;
+const FREE_ORDER_KEY = "ritaFreeOrder";
 
 function UkFlag() {
   return (
@@ -29,25 +30,45 @@ function UkFlag() {
 /** The lesson map: a zig-zag path of round lesson pictures with stars. */
 export function LessonPathView({
   lessons,
+  reviews,
   error,
   onOpenLesson,
 }: {
   lessons: PathLesson[] | null;
+  reviews: ReviewSuggestion[];
   error: string;
   onOpenLesson: (lesson: PathLesson) => void;
 }) {
   const [hint, setHint] = useState("");
+  // Free order only relaxes the sequencing (any lesson can be opened); it does
+  // not change what the learner can access.
+  const [freeOrder, setFreeOrder] = useState(false);
+  useEffect(() => {
+    setFreeOrder(window.localStorage.getItem(FREE_ORDER_KEY) === "1");
+  }, []);
+
+  function toggleFreeOrder() {
+    setFreeOrder((current) => {
+      window.localStorage.setItem(FREE_ORDER_KEY, current ? "0" : "1");
+      return !current;
+    });
+  }
 
   const current = lessons?.find((lesson) => lesson.state === "current");
   const totalStars = lessons?.reduce((sum, lesson) => sum + lesson.stars, 0) ?? 0;
   const completed = lessons?.filter((lesson) => lesson.state === "done").length ?? 0;
 
   function open(lesson: PathLesson) {
-    if (lesson.state === "locked") {
-      setHint("أكمل الدرس الحالي أولاً لفتح هذا الدرس.");
+    if (lesson.state === "locked" && !freeOrder) {
+      setHint("أكمل الدرس الحالي أولاً لفتح هذا الدرس — أو فعّل الوضع الحر.");
       return;
     }
     onOpenLesson(lesson);
+  }
+
+  function openReview(review: ReviewSuggestion) {
+    const lesson = lessons?.find((item) => item.id === review.id);
+    if (lesson) onOpenLesson(lesson);
   }
 
   const centres = (lessons ?? []).map((_, index) => ({
@@ -95,7 +116,36 @@ export function LessonPathView({
         <p className="mt-1 text-sm font-semibold text-[#6B6F86]">
           تحدّث مع ريتا، حقّق أهداف كل درس، واجمع النجوم.
         </p>
+        <button
+          type="button"
+          onClick={toggleFreeOrder}
+          className={`mt-3 rounded-full px-4 py-1.5 text-xs font-black ${
+            freeOrder ? "bg-[#9B5CF6] text-white" : "bg-[#F4EFFE] text-[#6D35D8]"
+          }`}
+        >
+          {freeOrder ? "الوضع الحر مفعّل — أوقفه" : "الوضع الحر: افتح أي درس بترتيب حر"}
+        </button>
       </section>
+
+      {reviews.length > 0 && (
+        <section className="mx-auto mt-4 max-w-md px-4">
+          <div className="rounded-2xl border-2 border-[#FFE9BA] bg-[#FFF9EC] p-3 text-right">
+            <p className="text-xs font-black text-[#B07A00]">مراجعة مقترحة</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {reviews.slice(0, 4).map((review) => (
+                <button
+                  key={review.id}
+                  type="button"
+                  onClick={() => openReview(review)}
+                  className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#6D35D8]"
+                >
+                  {review.title} · قبل {review.daysAgo} يوم
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {error && (
         <p className="mx-auto mt-6 max-w-md rounded-2xl bg-red-50 px-4 py-3 text-center text-sm font-bold text-red-700">
@@ -108,9 +158,18 @@ export function LessonPathView({
         </div>
       )}
       {lessons && lessons.length === 0 && (
-        <p className="mx-auto mt-16 max-w-xs text-center font-bold text-[#8A8FA3]">
-          لا توجد دروس منشورة بعد. عُد قريباً!
-        </p>
+        <div className="mx-auto mt-16 max-w-xs text-center">
+          <p className="font-bold text-[#8A8FA3]">لا توجد دروس منشورة بعد.</p>
+          <p className="mt-1 text-sm font-semibold text-[#A3A7BA]">
+            جرّب محادثة حرة مع ريتا حتى تجهز الدروس:
+          </p>
+          <Link
+            to="/rita-live"
+            className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-[#9B5CF6] px-5 py-3 text-sm font-black text-white shadow-[0_5px_0_#6D35D8] active:translate-y-1 active:shadow-none"
+          >
+            <MessageCircle size={16} /> محادثة حرة مع ريتا
+          </Link>
+        </div>
       )}
 
       {lessons && lessons.length > 0 && (

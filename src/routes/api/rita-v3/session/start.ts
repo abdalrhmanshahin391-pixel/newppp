@@ -30,8 +30,9 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
         const language = cleanLanguage(body.language);
         const dialect = String(body.dialect ?? "ar-JO").slice(0, 32) || "ar-JO";
         const requestedLessonId = typeof body.lessonId === "string" ? body.lessonId : "";
+        const lessonPreview = body.preview === true;
         const lesson = requestedLessonId
-          ? await loadVoiceLesson(access.auth.userId, requestedLessonId).catch((error) => {
+          ? await loadVoiceLesson(access.auth.userId, requestedLessonId, lessonPreview).catch((error) => {
               console.warn("Rita lesson could not be loaded", error);
               return null;
             })

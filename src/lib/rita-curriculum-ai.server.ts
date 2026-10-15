@@ -319,6 +319,40 @@ Reply with JSON: {"updates":[{"objective_id":"id","met":true,"quality":0.8,"evid
   return { evaluation: value, model };
 }
 
+/** An objective without its id — the id is kept by the caller. */
+const ObjectiveTextSchema = z.object({
+  text: z.string().trim().min(3).max(240),
+  text_ar: z.string().trim().max(240).default(""),
+  criteria: z.string().trim().min(3).max(400),
+  check_prompts: z.array(z.string().trim().min(1).max(240)).min(1).max(4),
+  weight: z.number().int().min(1).max(5).default(1),
+});
+
+export async function regenerateObjective(input: {
+  lessonTitle: string;
+  topic: string;
+  objective: Objective;
+}): Promise<Omit<Objective, "id">> {
+  const system = `You rewrite ONE objective of a spoken English lesson for an Arabic-speaking A1 adult.
+Keep the same teaching goal; improve the wording so the objective is clearer and easier to check from speech.
+Rules:
+- The objective is something the learner says in English that a tutor can hear.
+- criteria must be checkable from one spoken answer.
+- check_prompts are questions Rita asks to check it (1-4 short questions).
+- weight stays between 1 and 5 (keep the original weight unless it is clearly wrong).
+Reply with one JSON object shaped like:
+{"text": "Learner can ...", "text_ar": "النسخة العربية", "criteria": "exactly what counts", "check_prompts": ["a question"], "weight": 2}`;
+  const user = `Lesson: ${input.lessonTitle} (topic: ${input.topic})
+Current objective to rewrite:
+${JSON.stringify(input.objective)}`;
+  const { value } = await chatJson(ObjectiveTextSchema, system, user, {
+    maxTokens: 600,
+    timeoutMs: 30_000,
+    temperature: 0.4,
+  });
+  return value;
+}
+
 /** The look of every lesson picture, matching the purple circle path nodes. */
 export function lessonImagePrompt(scene: string) {
   return `A single round sticker-style cartoon illustration for a language-learning app lesson.
