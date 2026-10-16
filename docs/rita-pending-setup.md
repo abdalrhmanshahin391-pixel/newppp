@@ -50,11 +50,20 @@ added since.
    - Publish the lessons in the order wanted, then both books, then open
      `/rita-lessons` and press متابعة.
    - With the key from step 3, opening a lesson makes its real picture.
+   - The sample books and lessons were corrected after review (a wrong teacher note,
+     new objectives, Arabic meanings). If you imported an older copy, re-import both
+     summary and lessons JSON so the new text is used.
 
 5. **Check the Lovable AI key for the tap-a-word window**
    - The word window (translation and three pronunciation speeds) uses the same
      `LOVABLE_API_KEY` as the German Lab voice. If German Lab audio works, nothing
      to do; if it does not, set that secret. No migration needed.
+
+6. **After merging PR #26 and redeploying Modal: test one real call**
+   - Say "خلص" while Rita explains; answer "إيه" to a two-option question; say "أمم…";
+     tap Stop; tap a German or English word in a reply and play fast, slow and precise.
+   - Tell me what happened (and, if something sounded wrong, the time of the call), so
+     the word lists can be tuned.
 
 ## Done
 
