@@ -45,10 +45,11 @@ from pipecat.utils.context.llm_context_summarization import (
 )
 
 from rita_cartesia_tts import RitaCartesiaTTSService
-from rita_interruption import RitaUserTurnStartStrategy
+from rita_interruption import RitaUserTurnStartStrategy, gate_mode
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
 from rita_state import RitaSessionState
 from rita_turn_policy import RitaBoundedTurnStopStrategy, bounded_commit_secs
+from rita_turn_router import RitaTurnRouter, RouterMode, router_mode
 
 load_dotenv(override=False)
 
@@ -121,7 +122,7 @@ How to run it:
 """
 
 
-def build_prompt(body: dict[str, Any], state: RitaSessionState) -> str:
+def build_prompt(body: dict[str, Any], state: RitaSessionState, *, dialogue: bool = False) -> str:
     personality = str(body.get("personality", "kind"))
     profile_language = str(body.get("language", "automatic"))
     remembered_dialect = str(body.get("dialect", "ar-JO"))
@@ -131,7 +132,7 @@ def build_prompt(body: dict[str, Any], state: RitaSessionState) -> str:
 Delivery: {PERSONALITIES.get(personality, PERSONALITIES['kind'])}
 Profile language: {profile_language}. Stable Arabic dialect: {remembered_dialect}.
 Lesson mode: {mode}.
-Structured session state: {state.prompt_state()}.
+Structured session state: {state.prompt_state(dialogue=dialogue)}.
 
 VOICE CONTRACT
 - Speak for the ear, never for a page. Start with the useful answer; never restate the question.
@@ -160,6 +161,31 @@ TEACHING CONTROL
 - Never turn a general-knowledge answer into vocabulary or flashcards.
 - Never claim Flashcards or German Lab were saved; the website confirms only after a real transaction.
 - If unsure what was heard, ask one short clarification in the same stable language.
+
+TURN-TAKING AND SHORT REPLIES
+- The session state may carry learner_act and a directive about the learner's last short turn. Follow it.
+- Stop words (خلص، خلاص، كفاية، وقف، وقفي، enough, stop) mean stop talking. They never mean "summarize"
+  or "finish the topic". Do not repeat or restart the explanation after them.
+- Thinking sounds (أمم، يعني، استنى، لحظة، um) are not requests. Never answer them.
+- Read a short answer against last_question and options. After a question that offered options, a bare
+  إيه or نعم is not a choice: ask "أي واحد: A ولا B؟" and nothing more.
+- For "مش عارف", choose the simplest option yourself in one short sentence and continue.
+- For "لا قصدي" or "مش هيك", drop your last assumption and say in one sentence what you understood now.
+- Ask at most one question per reply. Never join two questions with "أو" or "ولا".
+- Never explain a word or phrase the learner did not ask about.
+- General-knowledge questions: at most two short sentences, then ask only "بدك أكمل؟".
+
+HUMAN TONE
+- Sound like a warm friend who is also a good teacher, not like an assistant reading a script.
+- React first, teach second: one small natural reaction ("آه فهمت"، "حلو"، "أكيد"), then the point.
+  Vary your openers; never start two replies the same way, and do not keep saying "ممتاز" or "رائع".
+- Match the learner's energy: calm when they sound tired or stuck, light when they are playful. If they
+  are discouraged, say one human sentence about it first ("عادي، هاي صعبة عند الكل").
+- When you misunderstood, say so plainly ("آسفة، فهمتك غلط") and move on.
+- Use natural spoken Jordanian (هلأ، هيك، بدك، طيب) lightly. Short sentences with one idea each.
+- Praise only what is really good, and say what. Never lecture.
+- Do not guess the learner's gender. Avoid gendered commands and adjectives aimed at them
+  (خدي/خد، خبريني/خبرني، جاهز/جاهزة); use neutral wording such as "خلّينا نكمل" and "لما يناسبك".
 {lesson_section(body)}"""
 
 
@@ -185,6 +211,10 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         active_dialect=str(body.get("dialect", "ar-JO")),
     )
     logger.bind(session_id=session_id).info("Starting Rita v3 session")
+    router_state = router_mode()
+    logger.bind(router=router_state.value, interrupt_gate=gate_mode()).info(
+        "Rita turn-taking configuration"
+    )
 
     transport = DailyTransport(
         room_url,
@@ -215,12 +245,29 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
                     SonioxContextGeneralItem(
                         key="mode", value=str(body.get("mode", "free_conversation"))
                     ),
+                    SonioxContextGeneralItem(
+                        key="speech",
+                        value="Jordanian Arabic with frequent short commands and English or German "
+                        "words, sometimes written in Arabic letters",
+                    ),
                 ],
                 terms=[
                     "RitaJet",
                     "German Lab",
                     "Flashcards",
                     "Guten Morgen",
+                    # Short commands and answers that must be heard exactly.
+                    "خلص",
+                    "وقفي",
+                    "كفاية",
+                    "استنى",
+                    "لحظة",
+                    "أمم",
+                    "نوب",
+                    "أوكي",
+                    "ستوب",
+                    "مش عارف",
+                    "قصدي",
                     *lesson_terms(body),
                 ],
             ),
@@ -251,7 +298,10 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
 
     context = LLMContext(
         [
-            {"role": "system", "content": build_prompt(body, state)},
+            {
+                "role": "system",
+                "content": build_prompt(body, state, dialogue=router_state == RouterMode.ON),
+            },
             {"role": "assistant", "content": "Hi, I’m Rita. What would you like to practise?"},
         ]
     )
@@ -274,14 +324,16 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         assistant_params=LLMAssistantAggregatorParams(
             enable_auto_context_summarization=True,
             auto_context_summarization_config=LLMAutoContextSummarizationConfig(
-                max_context_tokens=4_500,
-                max_unsummarized_messages=12,
+                max_context_tokens=8_000,
+                max_unsummarized_messages=24,
                 summary_config=LLMContextSummaryConfig(
-                    target_context_tokens=1_200,
-                    min_messages_after_summary=8,
+                    target_context_tokens=1_500,
+                    min_messages_after_summary=10,
                     summarization_prompt=(
-                        "Summarize only the learner's goal, stable language/dialect, words taught, "
-                        "confirmed understanding, unresolved correction, and tool results."
+                        "Summarize: the topic being discussed right now, the last question the tutor "
+                        "asked with its options word for word, what the learner wants next, the stable "
+                        "language/dialect, words taught, confirmed understanding, unresolved "
+                        "correction, and tool results."
                     ),
                     llm=llm,
                 ),
@@ -289,11 +341,38 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         ),
     )
 
+    def turn_language() -> str:
+        # In automatic mode the prompt replies in the current turn language before a
+        # language becomes stable, so TTS must make the same choice.
+        return (
+            state.active_language
+            if state.active_language in {"ar", "de", "en"}
+            else state.current_turn_language
+        )
+
+    def prepare_turn(text: str) -> None:
+        """Update the session state, the TTS language and the system prompt for one turn."""
+        state.observe_user_turn(text)
+        tts.set_turn_language(turn_language())
+        messages = context.get_messages()
+        if messages and messages[0].get("role") == "system":
+            messages[0]["content"] = build_prompt(
+                body, state, dialogue=router_state == RouterMode.ON
+            )
+
+    router = RitaTurnRouter(
+        state=state,
+        prepare_turn=prepare_turn,
+        language_of_turn=lambda: turn_language() if turn_language() in {"ar", "de", "en"} else "ar",
+        mode=router_state,
+    )
+
     pipeline = Pipeline(
         [
             transport.input(),
             stt,
             user_aggregator,
+            router,
             llm,
             tts,
             transport.output(),
@@ -351,6 +430,15 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         ],
     )
 
+    @task.rtvi.event_handler("on_client_message")
+    async def on_client_message(rtvi, msg):
+        # The learner's "Stop Rita" button: a sure way to interrupt that does not depend on
+        # the microphone, the noise around them or what the speech recognizer heard.
+        if getattr(msg, "type", "") == "rita-stop":
+            logger.info("Rita stopped by the learner's button")
+            state.topic_paused = True
+            await rtvi.interrupt_bot()
+
     @user_aggregator.event_handler("on_user_turn_stopped")
     async def on_user_turn_stopped(aggregator, strategy, message):
         latency.mark("turn_committed")
@@ -361,17 +449,9 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             else "long_incomplete_timeout"
         )
         latency.session_mark("turn_stop_reason", stop_reason=stop_reason)
-        state.observe_user_turn(message.content)
-        # In automatic mode the prompt replies in the current turn language
-        # before a language becomes stable, so TTS must make the same choice.
-        tts.set_turn_language(
-            state.active_language
-            if state.active_language in {"ar", "de", "en"}
-            else state.current_turn_language
-        )
-        messages = context.get_messages()
-        if messages and messages[0].get("role") == "system":
-            messages[0]["content"] = build_prompt(body, state)
+        if router_state != RouterMode.ON:
+            # With the router on, it prepares the turn itself before the model reads it.
+            prepare_turn(message.content)
         logger.bind(
             response_type=state.response_type,
             language=state.active_language,
