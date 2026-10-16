@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 
+from rita_dialect import HOW_TO_SAY_DIRECTIVE, asks_how_to_say
 from rita_dialogue_acts import Act, Awaiting, classify, parse_last_question, tokens
 
 
@@ -80,6 +81,11 @@ class RitaSessionState:
     stop_count: int = 0
     # How many words are in the learner's list on screen (None until the page reports it).
     learning_count: int | None = None
+    # The learner asked how to say something; the reply stays in their own language.
+    asked_how_to_say: bool = False
+    # Rita has already spoken (or been greeted by the scripted hello).
+    assistant_turns: int = 0
+    greeted: bool = False
 
     def __post_init__(self) -> None:
         if self.active_language in {"ar", "en", "de"}:
@@ -94,6 +100,8 @@ class RitaSessionState:
             (r"(?:احكي|تكلم|جاوب).{0,25}(?:انجليزي|إنجليزي)", "en", "en-GB"),
             (r"(?:احكي|تكلم|جاوب).{0,25}(?:ألماني|الماني)", "de", "standard"),
         )
+        if asks_how_to_say(lowered):
+            return False
         for pattern, language, dialect in commands:
             if re.search(pattern, lowered, re.IGNORECASE):
                 self.active_language = language
@@ -122,6 +130,7 @@ class RitaSessionState:
         lowered = clean.casefold()
         self.recent_user_turns = (self.recent_user_turns + [clean])[-8:]
         self._observe_act(clean)
+        self.asked_how_to_say = asks_how_to_say(clean)
         self.current_turn_language = infer_turn_language(clean)
         if not self._apply_explicit_language(lowered):
             self._update_stable_language(self.current_turn_language)
@@ -172,6 +181,7 @@ class RitaSessionState:
             self.clarification_count = 0
 
     def observe_assistant_turn(self, text: str) -> None:
+        self.assistant_turns += 1
         normalized = re.sub(r"[^\w\u0600-\u06ff]+", " ", text.casefold()).strip()
         self.last_feedback_signature = " ".join(normalized.split()[:16])
         question = parse_last_question(text)
@@ -182,6 +192,8 @@ class RitaSessionState:
     def turn_directive(self) -> str:
         """One instruction for the model about the learner's last short turn, or empty."""
 
+        if self.asked_how_to_say:
+            return HOW_TO_SAY_DIRECTIVE
         act, awaiting = self.last_act, self.awaiting
         if act == Act.YES and awaiting == Awaiting.YES_NO:
             return "the learner answered YES to last_question"

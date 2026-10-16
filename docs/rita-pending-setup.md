@@ -18,7 +18,8 @@ added since.
    - Why: `voice-agent/bot.py` has the new lesson section (`lesson_section`), and the
      worker now reads short turns (stop words, hesitation, answers to choices) and has a
      human-tone prompt, and it understands the list commands below. New modules:
-     `rita_dialogue_acts.py`, `rita_turn_router.py`, `rita_ui_commands.py`.
+     `rita_dialogue_acts.py`, `rita_turn_router.py`, `rita_ui_commands.py`, `rita_dialect.py`
+     (Jordanian phrasebank, scripted first greeting, speech cleaner; see `docs/rita-dialect-bank.md`).
    - After: try a normal free conversation on `/rita-live` and confirm sound. Then test
      by voice: say "خلص" while Rita explains (she should stop and say a short "تمام."),
      answer "إيه" to a question with two options (she should ask "أي واحد…؟"), say
@@ -73,7 +74,9 @@ added since.
 
 7. **After merging PR #26 and redeploying Modal: test one real call**
    - Say "خلص" while Rita explains; answer "إيه" to a two-option question; say "أمم…";
-     tap Stop; tap a German or English word in a reply and play fast, slow and precise.
+     tap Stop; say only "مرحبا ريتا" (she should greet you with a scripted, natural greeting); ask
+     "كيف أحكي بدي أروح على الحمام بالإنجليزي" (she should answer in Arabic with the English phrase once);
+     tap a German or English word in a reply and play fast, slow and precise.
    - Tell me what happened (and, if something sounded wrong, the time of the call), so
      the word lists can be tuned.
 

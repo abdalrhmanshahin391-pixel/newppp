@@ -10,7 +10,7 @@ The router sits between the user aggregator and the model. For each finished tur
 - "stop": Rita says one short, human acknowledgement and goes quiet. No model call.
 - "hold": the learner is only thinking ("أمم…", "استنى"). Rita says nothing and waits.
 - "speak": a bare "yes" to a question that offered options. Rita asks "أي واحد: …؟".
-- "ui": a spoken command for the words list ("افتحي القائمة", "حوليهم فلاش كارد"). The page
+- "ui": a first hello (scripted greeting) or a spoken command for the words list ("افتحي القائمة", "حوليهم فلاش كارد"). The page
   does the work; Rita says one short line and the model is not asked.
 - "pass": everything else goes to the model, with a short note about what the learner's
   turn meant (see RitaSessionState.dialogue_state).
@@ -33,6 +33,7 @@ from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 from pipecat.processors.frameworks.rtvi import RTVIServerMessageFrame
 
 from rita_dialogue_acts import Act, Awaiting, Question, Reading, classify, clarify_choice
+from rita_dialect import greeting_for, is_greeting
 from rita_state import RitaSessionState
 from rita_ui_commands import UiAction, UiCommand, read_ui_command
 
@@ -105,6 +106,15 @@ def decide(text: str, state: RitaSessionState, *, language: str, ack: bool = Tru
     reading = classify(text, awaiting=state.awaiting)
     act = reading.act
     lang = language if language in ACKS else "ar"
+
+    # A plain hello as the very first turn gets a vetted greeting (and no model call).
+    if (
+        is_greeting(text)
+        and not state.greeted
+        and state.assistant_turns == 0
+        and len(state.recent_user_turns) <= 1
+    ):
+        return Decision(Action.UI, reading, greeting_for(text, lang))
 
     command = read_ui_command(text)
     if command is not None:
@@ -212,6 +222,8 @@ class RitaTurnRouter(FrameProcessor):
             return
         if decision.action == Action.SPEAK:
             self._state.clarification_count += 1
+        if decision.action == Action.UI and decision.command is None and is_greeting(text):
+            self._state.greeted = True
         if decision.action == Action.UI and decision.command is not None:
             # The page opens the list or saves the words; it reports the real result on screen.
             await self.push_frame(

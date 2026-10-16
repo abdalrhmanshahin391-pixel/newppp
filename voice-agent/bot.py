@@ -45,6 +45,7 @@ from pipecat.utils.context.llm_context_summarization import (
 )
 
 from rita_cartesia_tts import RitaCartesiaTTSService
+from rita_dialect import DIALECT_PROMPT, RitaSpeechCleaner
 from rita_interruption import RitaUserTurnStartStrategy, gate_mode
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
 from rita_state import RitaSessionState
@@ -151,6 +152,7 @@ LANGUAGE AND DIALECT
   use active_language. Never switch because of one borrowed or target-language word.
 - Pronounce German and English target words naturally inside Arabic sentences.
 
+{DIALECT_PROMPT}
 TEACHING CONTROL
 - If the learner says they understand or says move on, do not repeat the previous explanation.
 - If the same correction fails twice, change strategy: slower example, minimal pair, syllable isolation,
@@ -374,6 +376,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             user_aggregator,
             router,
             llm,
+            RitaSpeechCleaner(),
             tts,
             transport.output(),
             assistant_aggregator,

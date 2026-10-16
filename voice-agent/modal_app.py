@@ -38,6 +38,7 @@ image = (
         "bot",
         "rita_cartesia_benchmark",
         "rita_cartesia_tts",
+        "rita_dialect",
         "rita_completeness",
         "rita_dialogue_acts",
         "rita_gemini_auth",
