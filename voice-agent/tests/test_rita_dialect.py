@@ -126,6 +126,53 @@ class FilterTests(unittest.TestCase):
         self.assertEqual(self.feed(text), text)
 
 
+class LeakedNoteTests(unittest.TestCase):
+    """Seen in a real call: "ممتاز!User wants continue.إذا ..." was spoken and shown."""
+
+    def feed(self, *parts):
+        f = SpeechTextFilter()
+        return "".join(f.feed(part) for part in parts) + f.pending
+
+    def test_the_leaked_sentence_is_dropped_and_the_rest_kept(self):
+        self.assertEqual(self.feed("ممتاز!User wants continue.إذا حبيتي"), "ممتاز!إذا حبيتي")
+        self.assertEqual(self.feed("تمام. User wants continue. جربي مرة ثانية."), "تمام. جربي مرة ثانية.")
+
+    def test_result_does_not_depend_on_how_the_stream_is_cut(self):
+        text = "ممتاز!User wants continue.إذا قصدك “Ich muss **auf** die Toilette.”. We should respond in Arabic. تمام؟؟"
+        expected = self.feed(text)
+        self.assertNotIn("User", expected)
+        self.assertNotIn("We should", expected)
+        self.assertNotIn("**", expected)
+        for step in (1, 2, 3, 5, 7):
+            cuts = [text[i : i + step] for i in range(0, len(text), step)]
+            with self.subTest(step=step):
+                self.assertEqual(self.feed(*cuts), expected)
+
+    def test_ordinary_english_and_german_sentences_pass(self):
+        for text in (
+            "Use “need” for a polite request.",
+            "The bathroom is called Toilette.",
+            "We should practise this again, okay?",
+            "Guten Morgen means good morning.",
+            "I need to go to the bathroom.",
+            "User interface is a noun.",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(self.feed(text), text)
+
+    def test_text_held_while_it_might_be_a_note_is_released_at_the_end(self):
+        f = SpeechTextFilter()
+        self.assertEqual(f.feed("The"), "")
+        self.assertEqual(f.pending, "The")
+
+    def test_only_a_few_characters_are_ever_held(self):
+        f = SpeechTextFilter()
+        self.assertEqual(f.feed("Hello there"), "Hello there")
+
+    def test_watch_flags_the_leak(self):
+        self.assertTrue(scan_dialect("ممتاز! User wants continue."))
+
+
 class CleanerInAPipelineTests(unittest.TestCase):
     def test_text_frames_reach_the_voice_cleaned_and_only_once(self):
         async def go():
@@ -140,6 +187,21 @@ class CleanerInAPipelineTests(unittest.TestCase):
             return "".join(f.text for f in down if isinstance(f, LLMTextFrame))
 
         self.assertEqual(asyncio.run(go()), "هو “Guten Morgen.”")
+
+    def test_a_leaked_note_never_reaches_the_voice(self):
+        async def go():
+            frames = [
+                LLMFullResponseStartFrame(),
+                LLMTextFrame("ممتاز!"),
+                LLMTextFrame("User wa"),
+                LLMTextFrame("nts continue."),
+                LLMTextFrame("جربي مرة ثانية."),
+                LLMFullResponseEndFrame(),
+            ]
+            down, _ = await run_test(RitaSpeechCleaner(), frames_to_send=frames)
+            return "".join(f.text for f in down if isinstance(f, LLMTextFrame))
+
+        self.assertEqual(asyncio.run(go()), "ممتاز!جربي مرة ثانية.")
 
 
 if __name__ == "__main__":

@@ -26,6 +26,7 @@ from pipecat.frames.frames import (
     LLMFullResponseEndFrame,
     LLMFullResponseStartFrame,
     LLMTextFrame,
+    TTSSpeakFrame,
 )
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 
@@ -126,6 +127,7 @@ KNOWN_WRONG = (
     (re.compile(r"شو\s+حاب[ةب]"), "شو حابب/حابة -> عن شو بدنا نحكي"),
     (re.compile(r"يمكنك\s+أن"), "يمكنك أن -> بنقول/بتقدر"),
     (re.compile(r"\*\*|__|`"), "markdown mark in speech"),
+    (re.compile(r"(?i)\buser\s+wants?\b|learner_act|\bdirective\b"), "model note leaked into the reply"),
 )
 
 
@@ -138,15 +140,70 @@ def scan_dialect(text: str) -> list[str]:
 _CLOSERS = "”\"’»'"
 _STOPS = ".!?؟"
 
+# Notes the model sometimes writes to itself ("User wants continue.") and that must never be
+# spoken or shown. Only specific openings are matched, so ordinary English sentences pass.
+LEAK_OPENINGS = (
+    "user wants", "user want", "user asks", "user asked", "user said", "user says", "user is",
+    "user needs", "user has", "the user", "the learner", "learner wants", "learner asks",
+    "learner said", "we should respond", "we should answer", "we should continue",
+    "we should reply", "we need to respond", "we need to continue", "we need to answer",
+    "rita should", "assistant should", "need to respond", "learner_act", "directive",
+    "last_question", "topic_paused", "response_type", "teaching_strategy", "respond in arabic",
+    "answer in arabic", "reply in arabic",
+)
+_MAX_PROBE = max(len(item) for item in LEAK_OPENINGS)
+
+
+def _probe(buffer: str) -> str:
+    """"leak" once the buffer starts a known leaked note, "keep" if it cannot become one,
+    otherwise "wait" for more characters."""
+
+    text = re.sub(r"\s+", " ", buffer.lower())
+    if any(text.startswith(item) for item in LEAK_OPENINGS):
+        return "leak"
+    if any(item.startswith(text) for item in LEAK_OPENINGS):
+        return "wait"
+    return "keep"
+
 
 class SpeechTextFilter:
-    """Character-level clean-up that works on any slicing of a streamed reply."""
+    """Clean-up that works on any slicing of a streamed reply: markdown marks, a stop after a
+    closing quote, and self-notes. Only text that starts like a leaked note is ever held back,
+    and only for a few characters."""
 
     def __init__(self) -> None:
-        self._tail = ""  # the last two characters that were let through
+        self.reset()
 
     def reset(self) -> None:
-        self._tail = ""
+        self._tail = ""  # the last two characters that were let through
+        self._at_start = True  # at the start of a sentence
+        self._probe = ""  # Latin text held while it might be a leaked note
+        self._dropping = False  # inside a leaked note, until its sentence ends
+        self._skip_space = False  # swallow the space that follows a dropped note
+
+    @property
+    def pending(self) -> str:
+        """Held-back text that turned out not to be a leak (call at the end of a reply)."""
+
+        held, self._probe = self._probe, ""
+        return held if held and _probe(held) != "leak" else ""
+
+    def _emit(self, out: list[str], text: str) -> None:
+        for ch in text:
+            # "…”." -> a stop, a closing quote, then another stop: drop the second stop.
+            if ch in _STOPS and len(self._tail) == 2 and self._tail[0] in _STOPS and self._tail[1] in _CLOSERS:
+                continue
+            # "!!" or "؟؟": one is enough (a three-dot ellipsis is kept).
+            if ch in "!?؟" and self._tail[-1:] == ch:
+                continue
+            out.append(ch)
+            self._tail = (self._tail + ch)[-2:]
+            if ch in _STOPS or ch == "\n":
+                self._at_start = True
+            elif ch in _CLOSERS and self._at_start:
+                pass  # a closing quote right after a stop still ends the same sentence
+            elif not ch.isspace():
+                self._at_start = False
 
     def feed(self, text: str) -> str:
         out: list[str] = []
@@ -156,14 +213,33 @@ class SpeechTextFilter:
             # A heading mark or a lone underscore at the start of a line is markdown, not speech.
             if ch in "#_" and (not self._tail or self._tail[-1] in " \n"):
                 continue
-            # "…”." -> a stop, a closing quote, then another stop: drop the second stop.
-            if ch in _STOPS and len(self._tail) == 2 and self._tail[0] in _STOPS and self._tail[1] in _CLOSERS:
+            if self._dropping:
+                if ch in _STOPS or ch == "\n":
+                    self._dropping = False
+                    self._skip_space = True
+                    self._at_start = True
                 continue
-            # "!!" or "؟؟": one is enough (a three-dot ellipsis is kept).
-            if ch in "!?؟" and self._tail[-1:] == ch:
+            if self._skip_space:
+                if ch.isspace():
+                    continue
+                self._skip_space = False
+            if self._probe:
+                self._probe += ch
+                verdict = _probe(self._probe)
+                if verdict == "leak":
+                    self._probe = ""
+                    self._dropping = True
+                elif verdict == "keep" or len(self._probe) > _MAX_PROBE:
+                    held, self._probe = self._probe, ""
+                    self._emit(out, held)
                 continue
-            out.append(ch)
-            self._tail = (self._tail + ch)[-2:]
+            if self._at_start and ch.isascii() and ch.isalpha():
+                self._probe = ch
+                if _probe(ch) == "keep":
+                    self._probe = ""
+                    self._emit(out, ch)
+                continue
+            self._emit(out, ch)
         return "".join(out)
 
 
@@ -185,7 +261,12 @@ class RitaSpeechCleaner(FrameProcessor):
             elif isinstance(frame, LLMTextFrame):
                 self._raw.append(frame.text)
                 frame.text = self._filter.feed(frame.text)
+                if not frame.text:
+                    return  # everything in it is being held back or dropped
             elif isinstance(frame, LLMFullResponseEndFrame):
+                tail = self._filter.pending
+                if tail:
+                    await self.push_frame(TTSSpeakFrame(tail), direction)
                 found = scan_dialect("".join(self._raw))
                 if found:
                     logger.bind(findings=found).warning("Rita dialect watch")

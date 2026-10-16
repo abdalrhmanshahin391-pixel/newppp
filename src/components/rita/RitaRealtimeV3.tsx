@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { isGermanItem, type LearningItem, type SaveTarget } from "@/lib/rita-learning";
 import { hasRitaLanguageLearningIntent } from "@/lib/rita-learning-intent";
+import { stripModelNotes } from "@/lib/rita-model-notes";
 import { matchSubject, subjectOptions } from "@/lib/rita-learning-tree";
 import {
   committedRitaReply,
@@ -579,11 +580,13 @@ export function RitaRealtimeV3({
       void metric("start_clicked");
       const commitHeardReply = (interrupted = false) => {
         // Generated/TTS text is not evidence that interrupted audio was heard.
-        const reply = committedRitaReply({
-          reportedSpokenText: heardBuffer.current,
-          generatedText: generatedBuffer.current,
-          interrupted,
-        });
+        const reply = stripModelNotes(
+          committedRitaReply({
+            reportedSpokenText: heardBuffer.current,
+            generatedText: generatedBuffer.current,
+            interrupted,
+          }),
+        ).trim();
         heardBuffer.current = "";
         const draftId = draftReplyId.current;
         draftReplyId.current = null;
@@ -790,7 +793,7 @@ export function RitaRealtimeV3({
             }
             generatedBuffer.current += text;
             // Show the reply as it streams; playback accounting settles it later.
-            const draftText = generatedBuffer.current.trim();
+            const draftText = stripModelNotes(generatedBuffer.current).trim();
             if (draftText) {
               const id = draftReplyId.current ?? crypto.randomUUID();
               draftReplyId.current = id;
@@ -1000,7 +1003,9 @@ export function RitaRealtimeV3({
             className="h-[min(70vw,360px)] w-[min(70vw,360px)]"
           />
           <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
-            {lessonId ? lesson.session?.lesson.title || lesson.session?.lesson.title_ar || "Lesson" : "Talk with Rita"}
+            {lessonId
+              ? lesson.session?.lesson.title || lesson.session?.lesson.title_ar || "Lesson"
+              : "Talk with Rita"}
           </h2>
           <p className="mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]">
             <span
