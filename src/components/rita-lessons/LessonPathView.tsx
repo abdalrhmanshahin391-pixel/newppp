@@ -217,7 +217,7 @@ export function LessonPathView({
                 onClick={() => open(lesson)}
                 className="absolute flex w-[150px] flex-col items-center text-center"
                 style={{ left: centre.x - 75, top: index * ROW }}
-                aria-label={`${lesson.title_ar || lesson.title}${locked ? " (مقفل)" : ""}`}
+                aria-label={`${lesson.title || lesson.title_ar}${locked ? " (مقفل)" : ""}`}
               >
                 <LessonStars stars={lesson.stars} />
                 <span className="relative mt-1 block" style={{ width: NODE, height: NODE }}>
@@ -256,7 +256,7 @@ export function LessonPathView({
                 <span
                   className={`mt-2 text-[15px] font-bold leading-5 ${locked ? "text-[var(--pp-muted)]/70" : ""}`}
                 >
-                  {lesson.title_ar || lesson.title}
+                  {lesson.title || lesson.title_ar}
                 </span>
                 {lesson.in_progress && !locked ? (
                   <span className="mt-1 text-[12px] font-semibold text-[var(--pp-pink-text)]">
@@ -289,7 +289,7 @@ export function LessonPathView({
           <div className="mx-auto flex max-w-md items-center justify-between gap-4">
             <div className="min-w-0 text-right">
               <p className="text-xs font-semibold text-[var(--pp-muted)]">الدرس الحالي</p>
-              <p className="truncate text-[15px] font-bold">{current.title_ar || current.title}</p>
+              <p className="truncate text-[15px] font-bold">{current.title || current.title_ar}</p>
             </div>
             <button
               type="button"

@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { ChatText } from "@/components/rita/ChatText";
 import { useReveal } from "@/hooks/useReveal";
 
 /** Home section for Rita, the voice teacher: what a call looks like and where the words go. */
@@ -51,7 +50,16 @@ export function RitaFeature() {
                 </span>
               </div>
               <div className="max-w-[90%] self-start rounded-2xl rounded-bl-md bg-white px-4 py-3 text-[16px] leading-7 text-[var(--pp-ink)]">
-                <ChatText text="يعني **Guten Morgen** صباح الخير. بنقولها الصبح لحد الساعة عشرة تقريباً." />
+                <p dir="rtl" lang="ar">
+                  يعني{" "}
+                  <span
+                    dir="ltr"
+                    className="mx-0.5 inline-block rounded-md bg-[var(--pp-pink-soft)] px-2 font-semibold"
+                  >
+                    Guten Morgen
+                  </span>{" "}
+                  صباح الخير. بنقولها الصبح لحد الساعة عشرة تقريباً.
+                </p>
               </div>
               <div className="mt-2 rounded-2xl border border-[var(--pp-line)] bg-white px-4 py-3">
                 <p className="text-[13px] font-semibold text-[var(--pp-muted)]">
