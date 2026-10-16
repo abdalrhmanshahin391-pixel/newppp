@@ -2665,41 +2665,6 @@ hairline borders and generous radii.
   background-color: color-mix(in oklab, var(--pro-ink) 6%, transparent) !important;
 }
 
-/* Quiet header controls: no pill, just words that light up on hover. */
-.rita-ghost {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding-inline: 10px;
-  border-radius: 9999px;
-  background-color: transparent;
-  border: 0;
-  transition:
-    background-color 0.16s ease,
-    opacity 0.16s ease;
-}
-.rita-ghost:hover,
-.rita-ghost[data-open="true"] {
-  background-color: rgba(255, 255, 255, 0.14);
-}
-.rita-ghost:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 2px;
-}
-.rita-ghost-solid:hover,
-.rita-ghost-solid[data-open="true"] {
-  background-color: color-mix(in oklab, var(--pro-ink) 7%, transparent);
-}
-.rita-ghost-solid:focus-visible {
-  outline-color: var(--rita-green-deep);
-}
-@media (prefers-reduced-motion: reduce) {
-  .rita-ghost {
-    transition: none;
-  }
-}
-
 /* Gentle fade-up used by the home feature cards when they scroll into view. */
 .rita-reveal {
   opacity: 0;
@@ -3273,64 +3238,6 @@ hairline borders and generous radii.
   border-radius: 16px !important;
 }
 
-/* Header: solid #121117 bar, Figtree 16/600 white links, outlined ghost button. */
-.edith-premium .edith-header.edith-header-light::before {
-  background: #121117;
-  box-shadow: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  opacity: 1;
-  animation: none;
-}
-.edith-premium .edith-header {
-  --pro-ink: #ffffff;
-  color: #fff;
-}
-.edith-premium .edith-header .rita-ink-soft {
-  color: #fff !important;
-}
-.edith-premium .edith-header .rita-panel {
-  --pro-ink: #121117;
-  --pro-card: #ffffff;
-}
-.edith-premium .edith-header nav a,
-.edith-premium .edith-header a[href="/pricing"] {
-  font-family: "Figtree", Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 24px;
-  padding: 8px;
-  border-radius: 8px;
-}
-.edith-premium .edith-header-light a[class*="bg-black/"],
-.edith-premium .edith-header button[class*="rounded-full"][class*="h-10"] {
-  height: 48px;
-  padding-inline: 12px;
-  border: 2px solid #fff;
-  border-radius: 8px;
-  background-color: transparent;
-  color: #fff !important;
-  font-family: "Figtree", Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-}
-.edith-premium .edith-header button[class*="rounded-full"][class*="h-10"]:hover {
-  background-color: rgb(255 255 255 / 0.12);
-}
-.edith-premium .edith-header .rita-btn {
-  height: 48px;
-}
-/* Mobile header action: keep it compact, same pink + ink border. */
-.edith-premium .edith-header .rita-btn.\!h-9 {
-  height: 40px !important;
-  padding-inline: 14px !important;
-  font-size: 15px !important;
-}
-.edith-premium .edith-header .rita-ghost:hover,
-.edith-premium .edith-header .rita-ghost[data-open="true"] {
-  background-color: rgb(255 255 255 / 0.14);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .edith-premium .rita-btn {
     transition: none;
@@ -3587,5 +3494,497 @@ hairline borders and generous radii.
   .edith-premium .rh-chip:hover,
   .edith-premium .rh-chip:active {
     transition: none;
+  }
+}
+
+
+/* ===========================================================================
+   Top bar and menus (every page). The bar is dark ink; the menus are the white card with
+   an ink border from the home page. Colours are explicit so the cream remap cannot touch them.
+   =========================================================================== */
+.rh-bar {
+  --rh-ink: #121117;
+  --rh-muted: #6a697c;
+  --rh-line: #dcdce5;
+  --rh-pink: #ff7aac;
+  --rh-pink-soft: #ffe5f0;
+  --rh-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  background: #121117;
+  color: #fff;
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  font-family: "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+}
+.rh-bar-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  height: 64px;
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+@media (min-width: 768px) {
+  .rh-bar-inner {
+    padding-inline: 40px;
+  }
+}
+.rh-nav {
+  flex: 1;
+  align-items: center;
+  gap: 28px;
+  padding-inline-start: 12px;
+}
+.rh-actions {
+  align-items: center;
+  gap: 12px;
+}
+
+.rh-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 2px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: rgb(255 255 255 / 0.78);
+  font: 600 16px/24px "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  text-decoration: none;
+  transition:
+    color 160ms ease,
+    transform 160ms var(--rh-ease);
+}
+.rh-link:hover,
+.rh-link[aria-current="page"] {
+  color: #fff;
+}
+.rh-link:hover {
+  transform: translateY(-1px);
+}
+.rh-link:focus-visible,
+.rh-avatar-btn:focus-visible,
+.rh-credits-chip:focus-visible,
+.rh-burger:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.rh-logo {
+  --wordmark-prefix: #fff;
+  --wordmark-suffix: rgb(255 255 255 / 0.82);
+}
+/* Pink action button, the same on every page (cream pages use another primary colour). */
+.rh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding-inline: 16px;
+  border: 2px solid #121117;
+  border-radius: 8px;
+  background: #ff7aac;
+  color: #121117;
+  cursor: pointer;
+  font: 600 15px/1 "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 160ms ease,
+    transform 120ms var(--rh-ease);
+}
+.rh-btn:hover {
+  background: #fe9fc3;
+}
+.rh-btn:active {
+  transform: scale(0.97);
+}
+.rh-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.rh-card .rh-btn:focus-visible {
+  outline-color: #121117;
+}
+
+/* The hand-drawn line from the home headline, drawn once under the current page. */
+.rh-squiggle {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 6px;
+  width: 100%;
+  height: 7px;
+  overflow: visible;
+  pointer-events: none;
+  clip-path: inset(0 0 0 0);
+  animation: rh-bar-wipe 520ms var(--rh-ease) backwards;
+}
+.rh-squiggle path {
+  fill: none;
+  stroke: #ff7aac;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+@keyframes rh-bar-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+@keyframes rh-bar-wipe-rtl {
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+}
+[dir="rtl"] .rh-squiggle {
+  animation-name: rh-bar-wipe-rtl;
+}
+
+/* Credits chip: Rita's little orb and what is left. */
+.rh-credits-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding-inline: 10px 12px;
+  border: 1.5px solid rgb(255 255 255 / 0.28);
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font: 600 14px/1 "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+.rh-credits-chip:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+.rh-credits-chip[data-open="true"] {
+  border-color: #fff;
+  background: rgb(255 255 255 / 0.1);
+}
+.rh-chip-val {
+  color: rgb(255 255 255 / 0.78);
+  font-variant-numeric: tabular-nums;
+}
+.rh-chip-val[data-level="low"] {
+  color: #ffd37a;
+}
+.rh-chip-val[data-level="out"] {
+  color: #ff9a9a;
+}
+.rh-orb {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #fff 0 7%, #ffc2da 22%, #ff7aac 62%, #d13d76 100%);
+  box-shadow: 0 0 0 2px rgb(255 122 172 / 0.35);
+}
+.rh-orb[data-level="low"] {
+  box-shadow: 0 0 0 2px #f5b942;
+}
+.rh-orb[data-level="out"] {
+  box-shadow: 0 0 0 2px #ff6b6b;
+}
+
+.rh-avatar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 44px;
+  padding-inline: 4px 8px;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: rgb(255 255 255 / 0.8);
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+.rh-avatar-btn:hover,
+.rh-avatar-btn[data-open="true"] {
+  background: rgb(255 255 255 / 0.1);
+}
+.rh-chevron {
+  transition: transform 180ms var(--rh-ease);
+}
+.rh-avatar-btn[data-open="true"] .rh-chevron {
+  transform: rotate(180deg);
+}
+.rh-avatar {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 0 0 2px #ff7aac;
+}
+.rh-burger {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+.rh-burger:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+
+/* The menu card: the same white card with an ink border as the home page. */
+.rh-card {
+  position: absolute;
+  inset-inline-end: 0;
+  top: calc(100% + 20px);
+  z-index: 60;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 96px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  border: 2px solid #121117;
+  border-radius: 16px;
+  background: #fff;
+  color: #121117;
+  font-family: "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  transform-origin: top right;
+  animation: rh-menu-in 160ms var(--rh-ease);
+}
+[dir="rtl"] .rh-card {
+  transform-origin: top left;
+}
+.rh-account {
+  width: 288px;
+}
+.rh-credits {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+.rh-card-inline {
+  position: static;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  margin: 4px 0 8px;
+  border-width: 1.5px;
+  animation: none;
+}
+@keyframes rh-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+}
+.rh-card-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.rh-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding-inline: 8px;
+  border: 1.5px solid #121117;
+  border-radius: 6px;
+  background: #ffe5f0;
+  color: #121117;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+.rh-who .rh-badge {
+  text-transform: capitalize;
+}
+.rh-offer {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #ffe5f0;
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+.rh-offer p {
+  margin: 0;
+}
+.rh-note {
+  margin: 0;
+  color: #6a697c;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.rh-meters {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rh-meter-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.rh-meter-val {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #6a697c;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.rh-meter-val[data-level="low"] {
+  color: #8a5200;
+}
+.rh-meter-val[data-level="out"] {
+  color: #b3213f;
+}
+.rh-track {
+  height: 10px;
+  margin-top: 6px;
+  overflow: hidden;
+  border: 1.5px solid #121117;
+  border-radius: 9999px;
+  background: #fff;
+}
+.rh-fill {
+  height: 100%;
+  background: #ff7aac;
+  transition: width 300ms var(--rh-ease);
+}
+.rh-fill[data-level="low"] {
+  background: #f5b942;
+}
+.rh-fill[data-level="out"] {
+  background: #e5484d;
+}
+.rh-wide {
+  width: 100%;
+  height: 48px;
+  font-size: 16px;
+}
+
+.rh-who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px 6px;
+}
+.rh-who-name {
+  margin: 0 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.rh-rule {
+  height: 1px;
+  margin: 6px 4px;
+  background: #dcdce5;
+}
+.rh-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #121117;
+  cursor: pointer;
+  font: 600 15px/1.2 "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  text-align: start;
+  text-decoration: none;
+  transition: background-color 140ms ease;
+}
+.rh-item:hover,
+.rh-item:focus-visible {
+  background: #ffe5f0;
+}
+.rh-item:focus-visible {
+  outline: 2px solid #121117;
+  outline-offset: -2px;
+}
+.rh-item svg,
+.rh-item-icon {
+  flex: none;
+  color: #121117;
+}
+.rh-item-dim {
+  color: #6a697c;
+  font-weight: 500;
+}
+.rh-item-danger,
+.rh-item-danger svg {
+  color: #b3213f;
+}
+
+/* Phone: the bar opens one card under it. */
+.rh-sheet-wrap {
+  padding: 0 16px 12px;
+}
+.rh-sheet {
+  position: static;
+  width: auto;
+  max-width: none;
+  max-height: calc(100dvh - 88px);
+  margin-top: 4px;
+}
+.rh-sheet-links {
+  display: grid;
+}
+.rh-sheet-links .rh-link {
+  min-height: 48px;
+  padding-inline: 12px;
+  border-radius: 8px;
+  color: #121117;
+  font-size: 16px;
+}
+.rh-sheet-links .rh-link:hover {
+  background: #ffe5f0;
+  transform: none;
+}
+.rh-sheet-links .rh-squiggle {
+  inset-inline: 12px auto;
+  bottom: 8px;
+  width: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rh-card,
+  .rh-squiggle {
+    animation: none;
+  }
+  .rh-link,
+  .rh-chevron,
+  .rh-fill,
+  .rh-credits-chip,
+  .rh-avatar-btn,
+  .rh-btn,
+  .rh-item {
+    transition: none;
+  }
+  .rh-link:hover {
+    transform: none;
   }
 }

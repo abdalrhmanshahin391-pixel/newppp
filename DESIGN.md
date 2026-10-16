@@ -81,6 +81,22 @@ decorative rounded corners everywhere, stock-photo heroes, fake testimonials or 
 random shadows, more than one accent colour, centre-everything layouts, cards for content
 that is just a list, text under 12px, low-contrast grey on grey.
 
+## Top bar and menus
+
+One bar for the whole site (`ProHeader`, classes `.rh-bar*`, explicit colours so they look the
+same on the cream pages and on the white ones). Dark ink `#121117`, 64px, no blur, no capsule.
+Links sit next to the logo; the current page gets the hand-drawn pink line from the home
+headline, drawn once. Guests get "Sign in" and one pink "Start learning" button. Signed-in
+users get the Credits chip (Rita's small orb plus what is left; the orb ring turns amber below
+20% and red when used up) and the avatar with a pink ring.
+
+Menus are the white card with a 2px ink border (same as the home word card), 16px radius, no
+window inside a window. Rows are 44px, bare ink icons, `--pp-pink-soft` on hover; one `rh-item`
+style for every row. Credits bars show what is left (pink, amber under 20%, red at zero, and
+the words "Used up"). Only one menu is open at a time; Escape and a press outside close it and
+focus returns to the button. Opening is 160ms, `scale(.96)` from the button, off with reduced
+motion.
+
 ## Accessibility floor
 
 Contrast AA (4.5:1 text, 3:1 large text and UI), visible focus, keyboard-reachable controls,
