@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, Loader2, Lock, Medal, MessageCircle, Star } from "lucide-react";
+import { ArrowRight, Check, Loader2, Lock, MessageCircle } from "lucide-react";
 import type { PathLesson, ReviewSuggestion } from "@/lib/rita-curriculum.functions";
 import { LessonImage, LessonStars } from "./LessonArt";
 
 // Horizontal offsets that make the path zig-zag, as in the lesson map design.
-const ZIGZAG = [0, 70, 100, 70, 0, -70, -100, -70];
+const ZIGZAG = [0, 60, 84, 60, 0, -60, -84, -60];
 const ROW = 178;
 const WIDTH = 340;
 const NODE = 104;
@@ -99,32 +99,46 @@ export function LessonPathView({
           >
             <ArrowRight size={22} />
           </Link>
-          <div className="flex items-center gap-4 text-sm font-bold">
+          <div className="flex items-center gap-2 text-sm font-bold">
             <UkFlag />
-            <span className="flex items-center gap-1 text-[#E8A400]">
-              <Star size={20} fill="#FFC83D" strokeWidth={1.5} /> {totalStars}
-            </span>
-            <span className="flex items-center gap-1 text-[var(--pp-pink-text)]">
-              <Medal size={20} /> {completed}
-            </span>
+            <span dir="ltr">English · A1</span>
           </div>
         </div>
       </header>
 
       <section className="mx-auto max-w-md px-4 pt-6 text-center">
-        <p className="text-sm font-semibold text-[var(--pp-pink-text)]">English · A1</p>
-        <h2 className="mt-1 text-[30px] font-bold leading-9">دروسك مع ريتا</h2>
+        <h2 className="text-[30px] font-bold leading-9">دروسك مع ريتا</h2>
         <p className="mt-1 text-sm font-semibold text-[var(--pp-muted)]">
           تحدّث مع ريتا، حقّق أهداف كل درس، واجمع النجوم.
         </p>
+        {lessons && lessons.length > 0 && (
+          <div className="mt-5 text-right">
+            <div className="flex items-baseline justify-between text-sm font-bold">
+              <span>
+                {completed} من {lessons.length} دروس
+              </span>
+              <span className="text-[var(--pp-muted)]">{totalStars} نجمة</span>
+            </div>
+            <div
+              className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--pp-grey)]"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={lessons.length}
+              aria-valuenow={completed}
+              aria-label="تقدّمك في الدروس"
+            >
+              <div
+                className="h-full rounded-full bg-[var(--pp-pink)] transition-[width] duration-300 motion-reduce:transition-none"
+                style={{ width: `${(completed / lessons.length) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
         <button
           type="button"
           onClick={toggleFreeOrder}
-          className={`mt-3 rounded-lg px-4 py-1.5 text-xs font-bold ${
-            freeOrder
-              ? "border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] text-[var(--pp-ink)]"
-              : "bg-[var(--pp-grey)] text-[var(--pp-ink)]"
-          }`}
+          aria-pressed={freeOrder}
+          className="mt-3 min-h-10 rounded-lg px-3 text-xs font-bold text-[var(--pp-muted)] underline decoration-[var(--pp-line)] underline-offset-4 hover:text-[var(--pp-ink)]"
         >
           {freeOrder ? "الوضع الحر مفعّل — أوقفه" : "الوضع الحر: افتح أي درس بترتيب حر"}
         </button>
@@ -140,7 +154,7 @@ export function LessonPathView({
                   key={review.id}
                   type="button"
                   onClick={() => openReview(review)}
-                  className="rounded-lg bg-white px-3 py-1 text-xs font-bold text-[var(--pp-ink)]"
+                  className="min-h-10 rounded-lg bg-white px-3 py-2 text-xs font-bold text-[var(--pp-ink)]"
                 >
                   {review.title} · قبل {review.daysAgo} يوم
                 </button>
@@ -208,20 +222,25 @@ export function LessonPathView({
                 <LessonStars stars={lesson.stars} />
                 <span className="relative mt-1 block" style={{ width: NODE, height: NODE }}>
                   {isCurrent && (
-                    <span className="absolute -inset-2 animate-pulse rounded-full bg-[var(--pp-pink)]/40" />
+                    <span className="absolute -inset-2 rounded-full bg-[var(--pp-pink)]/40 motion-safe:animate-pulse" />
                   )}
                   {/* Solid backing so the dotted path never shows through a faded node. */}
                   <span className="absolute inset-0 rounded-full bg-white" />
                   <LessonImage
                     src={lesson.image_url}
                     alt=""
-                    className={`relative h-full w-full border-4 shadow-[0_6px_0_var(--pp-line)] ${
+                    className={`relative h-full w-full border-4 shadow-[0_10px_22px_-10px_rgba(18,17,23,0.4)] ${
                       isCurrent ? "border-[var(--pp-ink)]" : "border-white"
                     } ${locked ? "opacity-60 grayscale-[0.85]" : ""}`}
                   />
                   {locked && (
                     <span className="absolute bottom-0 left-0 grid h-8 w-8 place-items-center rounded-full bg-white text-[var(--pp-muted)] shadow">
                       <Lock size={15} />
+                    </span>
+                  )}
+                  {lesson.state === "done" && (
+                    <span className="absolute bottom-0 left-0 grid h-8 w-8 place-items-center rounded-full border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] text-[var(--pp-ink)]">
+                      <Check size={16} strokeWidth={3} />
                     </span>
                   )}
                   <span
@@ -239,10 +258,16 @@ export function LessonPathView({
                 >
                   {lesson.title_ar || lesson.title}
                 </span>
-                {lesson.in_progress && !locked && (
-                  <span className="mt-1 text-[11px] font-semibold text-[var(--pp-pink-text)]">
+                {lesson.in_progress && !locked ? (
+                  <span className="mt-1 text-[12px] font-semibold text-[var(--pp-pink-text)]">
                     قيد التقدّم
                   </span>
+                ) : (
+                  lesson.objective_count > 0 && (
+                    <span className="mt-1 text-[12px] font-semibold text-[var(--pp-muted)]">
+                      {lesson.objective_count} أهداف
+                    </span>
+                  )
                 )}
               </button>
             );
@@ -260,14 +285,20 @@ export function LessonPathView({
       )}
 
       {current && (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--pp-line)] bg-white/95 px-4 py-4 backdrop-blur">
-          <button
-            type="button"
-            onClick={() => open(current)}
-            className="rita-btn rita-btn-primary mx-auto !flex !self-center"
-          >
-            متابعة
-          </button>
+        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--pp-line)] bg-white/95 px-4 py-3 backdrop-blur">
+          <div className="mx-auto flex max-w-md items-center justify-between gap-4">
+            <div className="min-w-0 text-right">
+              <p className="text-xs font-semibold text-[var(--pp-muted)]">الدرس الحالي</p>
+              <p className="truncate text-[15px] font-bold">{current.title_ar || current.title}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => open(current)}
+              className="rita-btn rita-btn-primary shrink-0"
+            >
+              متابعة
+            </button>
+          </div>
         </div>
       )}
     </main>
