@@ -5,7 +5,7 @@ const STAR_PATH = "M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5l-5.9 3.1 1.2-6.5-
 /** Three stars on a small arc, grey until earned (like the lesson path reference). */
 export function LessonStars({ stars, size = 22 }: { stars: number; size?: number }) {
   return (
-    <div className="flex items-end justify-center gap-0.5" aria-label={`${stars} of 3 stars`}>
+    <div className="flex items-end justify-center gap-0.5" aria-label={`${stars} / 3`} role="img">
       {[0, 1, 2].map((index) => (
         <svg
           key={index}
@@ -27,22 +27,23 @@ export function LessonStars({ stars, size = 22 }: { stars: number; size?: number
   );
 }
 
-/** Friendly stand-in character for lessons that do not have a picture yet. */
-function PlaceholderCharacter() {
+/** Stand-in for lessons that do not have a picture yet: an open book in the site's own colours. */
+function PlaceholderArt() {
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
-      <circle cx="50" cy="50" r="50" fill="#8B4DEB" />
-      <circle cx="50" cy="50" r="43" fill="#9B5CF6" />
-      <path d="M26 92c3-17 12-26 24-26s21 9 24 26z" fill="#FF8FB8" />
-      <circle cx="50" cy="45" r="17" fill="#FFD3AE" />
-      <path d="M33 43c0-12 8-19 17-19s17 7 17 19c-5-6-11-9-17-9s-12 3-17 9z" fill="#4A2A1A" />
-      <circle cx="44" cy="47" r="2.2" fill="#2B1B3D" />
-      <circle cx="56" cy="47" r="2.2" fill="#2B1B3D" />
+      <rect width="100" height="100" fill="var(--pp-pink-soft, #ffe5f0)" />
       <path
-        d="M44 53c3 3 9 3 12 0"
-        stroke="#2B1B3D"
-        strokeWidth="2.2"
-        fill="none"
+        d="M50 36c-6-4-14-5-22-4v32c8-1 16 0 22 4 6-4 14-5 22-4V32c-8-1-16 0-22 4z"
+        fill="#fff"
+        stroke="var(--pp-ink, #121117)"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+      <path d="M50 36v32" stroke="var(--pp-ink, #121117)" strokeWidth="3" strokeLinecap="round" />
+      <path
+        d="M35 44h9M35 52h9M56 44h9M56 52h9"
+        stroke="var(--pp-pink, #ff7aac)"
+        strokeWidth="3"
         strokeLinecap="round"
       />
     </svg>
@@ -60,7 +61,7 @@ export function LessonImage({
 }) {
   const [broken, setBroken] = useState(false);
   return (
-    <div className={`overflow-hidden rounded-full bg-[#8B4DEB] ${className}`}>
+    <div className={`overflow-hidden rounded-full bg-[var(--pp-pink-soft,#ffe5f0)] ${className}`}>
       {src && !broken ? (
         <img
           src={src}
@@ -70,7 +71,7 @@ export function LessonImage({
           onError={() => setBroken(true)}
         />
       ) : (
-        <PlaceholderCharacter />
+        <PlaceholderArt />
       )}
     </div>
   );

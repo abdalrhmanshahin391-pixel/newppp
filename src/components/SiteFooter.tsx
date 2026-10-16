@@ -10,7 +10,7 @@ type Col = { heading: string; links: { label: string; to: string }[] };
 
 /**
  * EdithLab footer: black surface, white ink. Wordmark and tagline on the
- * left, four link columns on the right, then a quiet bottom row.
+ * left, five link columns on the right (Rita first), then a quiet bottom row.
  */
 export function SiteFooter() {
   const { lang } = useLang();
@@ -18,6 +18,15 @@ export function SiteFooter() {
   const settings = useSiteSettings();
 
   const columns: Col[] = [
+    {
+      heading: ar ? "ريتا" : "Rita",
+      links: [
+        { label: ar ? "تحدّث مع ريتا" : "Talk to Rita", to: "/rita" },
+        { label: ar ? "محادثة حيّة" : "Live conversation", to: "/rita-live" },
+        { label: ar ? "دروس ريتا" : "Rita's lessons", to: "/rita-lessons" },
+        { label: ar ? "الألمانية" : "German Lab", to: "/german" },
+      ],
+    },
     {
       heading: ar ? "أدوات الدراسة" : "Study tools",
       links: [
@@ -31,9 +40,7 @@ export function SiteFooter() {
       heading: ar ? "مع الذكاء الاصطناعي" : "With AI",
       links: [
         { label: ar ? "الكل في واحد" : "All in one", to: "/study/all-in-one" },
-        { label: "Tutorial", to: "/tutorial" },
         { label: ar ? "مختبر المحاضرات" : "Lecture Lab", to: "/study/lectures" },
-        { label: ar ? "الألمانية" : "German Lab", to: "/german" },
       ],
     },
     {
@@ -63,15 +70,15 @@ export function SiteFooter() {
       style={{ fontFamily: "var(--font-grotesk)", borderTop: "1px solid rgb(255 255 255 / 0.1)" }}
     >
       <div className="mx-auto max-w-[1240px] px-6 py-16 md:px-10 md:py-24">
-        <div className="grid gap-14 md:grid-cols-[minmax(0,1fr)_minmax(0,2.1fr)]">
+        <div className="grid gap-14 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,2.6fr)]">
           <div className="min-w-0">
             <Link to="/" aria-label={`${BRAND_NAME} home`} className="inline-block">
               <EdithWordmark size={36} />
             </Link>
             <p className="mt-4 max-w-[22rem] text-[16px] leading-relaxed text-white/60">
               {ar
-                ? "بطاقات وملخّصات وأسئلة من مادّتك أنت، في مكان واحد هادئ."
-                : "Flashcards, summaries and practice questions from your own material, in one calm place."}
+                ? "تحدّث مع ريتا، وادرس من مادّتك أنت: بطاقات وملخّصات وأسئلة، في مكان واحد هادئ."
+                : "Talk with Rita and study from your own material: flashcards, summaries and practice questions, in one calm place."}
             </p>
             <a
               href={`mailto:${SUPPORT_EMAIL}`}
@@ -81,10 +88,12 @@ export function SiteFooter() {
             </a>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 xl:grid-cols-5">
             {columns.map((col) => (
               <nav key={col.heading} className="min-w-0" aria-label={col.heading}>
-                <h3 className="text-[14px] font-semibold tracking-[-0.01em] text-white">{col.heading}</h3>
+                <h3 className="text-[14px] font-semibold tracking-[-0.01em] text-white">
+                  {col.heading}
+                </h3>
                 <ul className="mt-5 space-y-3.5">
                   {col.links.map((l) => (
                     <li key={l.to + l.label}>
@@ -115,9 +124,15 @@ export function SiteFooter() {
               <Link to="/register" className="edith-link">
                 {ar ? "إنشاء حساب" : "Create account"}
               </Link>
-              <Link to="/terms" className="edith-link">Terms</Link>
-              <Link to="/privacy-policy" className="edith-link">Privacy</Link>
-              <Link to="/refund-policy" className="edith-link">Refunds</Link>
+              <Link to="/terms" className="edith-link">
+                {ar ? "الشروط" : "Terms"}
+              </Link>
+              <Link to="/privacy-policy" className="edith-link">
+                {ar ? "الخصوصية" : "Privacy"}
+              </Link>
+              <Link to="/refund-policy" className="edith-link">
+                {ar ? "الاسترجاع" : "Refunds"}
+              </Link>
             </div>
           </div>
         </div>
