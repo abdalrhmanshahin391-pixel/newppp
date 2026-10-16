@@ -5,7 +5,7 @@ already shipped (`src/styles.css`, section "Home page theme", and the Rita compo
 invented. When a design request conflicts with this file, say so first, then follow the owner's
 decision and update this file.
 
-Process for any design request: `docs/design-workflow.md`.
+Process for any design request: `docs/design-workflow.md`. Product context: `PRODUCT.md`.
 
 ## Identity
 

@@ -34,24 +34,28 @@ Report plainly what was verified and what could not be (for example a real call 
 
 ## Which skill is used for what
 
-Installed in `.claude/skills/` (or available in the session) and used when they fit:
+All live in `.claude/skills/` (sources and licences: `.claude/skills/SOURCES.md`). Use the one
+that fits the phase; do not run several full skills at once.
 
-| Need | Skill |
+| Phase | Skill |
 |---|---|
-| Direction, taste, avoiding the generic look | `design-taste-frontend` |
-| Polish and the invisible details | `emil-design-eng` |
-| Fluid, physical interaction and typography | `apple-design` |
-| Motion (only when it earns its place) | `animate`, `animation-vocabulary`, `review-animations` |
-| Worst-case data and edge cases | `break-ui` |
-| Phone feel (tap, zoom, safe areas, 100vh) | `mobile-native` |
-| Picking a UI library or a quick prototype | `pick-ui-library`, `prototype` |
+| Round 1: direction, avoiding the generic look | `design-taste-frontend`, `impeccable` (shape / new-work) |
+| Round 1: patterns, styles, UX rules to look up | `ui-ux-pro-max` (data in `data/`, read with grep) |
+| Round 1–2: tokens and brand when extending `DESIGN.md` | `design-system`, `brand`, `brandkit` |
+| Round 2: build quality and polish | `impeccable` (craft / polish), `emil-design-eng`, `apple-design` |
+| Round 2: motion, only when it earns its place | `animate`, `animation-vocabulary`, `review-animations` |
+| Round 2: phone feel | `mobile-native` |
+| Round 2: art direction for images | `imagegen-frontend-web` |
+| Round 3: visual review | `design-review`, `impeccable` (critique) |
+| Round 3: accessibility | `accessibility-auditor` |
+| Round 3: performance and SEO | `web-quality-audit` |
+| Round 3: worst-case data | `break-ui` |
+| Libraries and quick prototypes | `pick-ui-library`, `prototype` |
 
-The guide also recommends outside skills (Anthropic Frontend Design, Impeccable, UI UX Pro
-Max, Web Design Guidelines, Accessibility Auditor, Web Quality Audit, Imagegen, Brandkit).
-They are not copied into this repository (licences and trust). Their jobs are done here by
-`DESIGN.md` (design system and brand), the review checklist above (UX, accessibility,
-quality) and the skills in the table. The owner can install any of them in Claude's own
-Skills settings; they will then be used too.
+Precedence when they disagree: `AGENTS.md` (plan first) → `DESIGN.md` / `PRODUCT.md` → skills.
+Steps in a skill that need its scripts, launcher or hooks are skipped (none were imported).
+Three skills from the guide were not imported for licence reasons; their jobs are covered by
+the Round 3 checklist above (see `SOURCES.md`).
 
 ## Images
 
