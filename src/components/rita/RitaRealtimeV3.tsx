@@ -11,6 +11,7 @@ import {
   PhoneOff,
   Send,
   Sparkles,
+  Square,
   X,
   ArrowLeft,
 } from "lucide-react";
@@ -28,6 +29,7 @@ import { ChatText } from "./ChatText";
 import { PhraseDialog } from "./PhraseDialog";
 import { stopPhraseAudio } from "@/lib/phrase-cache";
 import { groupTurns, showCaption } from "./chat-text";
+import { skipsFiller } from "./short-turn";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { VoiceOrb } from "@/components/rita-live/VoiceOrb";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
@@ -46,6 +48,7 @@ type ClientHandle = {
   disconnect(): Promise<void>;
   enableMic(enabled: boolean): void;
   sendText(text: string): Promise<void>;
+  sendClientMessage(msgType: string, data?: unknown): void;
   readonly connected: boolean;
 };
 type ExtractionResult = {
@@ -398,6 +401,8 @@ export function RitaRealtimeV3({
     fillerTimer.current = setTimeout(async () => {
       if (!activeRef.current || botSpeaking.current || mutedRef.current) return;
       const spoken = lastUserText.current;
+      // No "mm…" after a command, a thinking sound or a one-word answer: it would sound off.
+      if (skipsFiller(spoken)) return;
       const detected = /[\u0600-\u06ff]/u.test(spoken)
         ? "ar"
         : /[äöüß]|\b(?:ich|du|der|die|das|nicht|bitte|danke|guten|morgen)\b/iu.test(spoken)
@@ -817,7 +822,7 @@ export function RitaRealtimeV3({
             cancelFiller();
             botSpeaking.current = true;
             void metric("bot_speaking_signal");
-            setStatus("Rita is speaking — interrupt whenever you want");
+            setStatus("Rita is speaking — say stop or tap Stop");
             setMood("talking");
           },
           onTrackStarted: (track, participant) => {
@@ -927,6 +932,17 @@ export function RitaRealtimeV3({
     } finally {
       setStarting(false);
     }
+  }
+
+  // A sure way to interrupt: it does not depend on the microphone or on what was heard.
+  function stopRita() {
+    cancelFiller();
+    try {
+      client.current?.sendClientMessage("rita-stop");
+    } catch {
+      /* the voice command still works */
+    }
+    void metric("stop_button");
   }
 
   function toggleMute() {
@@ -1050,6 +1066,15 @@ export function RitaRealtimeV3({
             />
             {status}
           </p>
+          {active && mood === "talking" && (
+            <button
+              type="button"
+              onClick={stopRita}
+              className="rita-btn rita-btn-secondary rita-btn-sm mt-3 gap-1.5"
+            >
+              <Square size={14} fill="currentColor" /> Stop
+            </button>
+          )}
         </aside>
 
         <section className="flex min-h-[calc(100vh-72px)] w-full flex-col">

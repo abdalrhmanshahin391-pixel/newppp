@@ -25,6 +25,7 @@ const ALLOWED_EVENTS = new Set([
   "playback_stop",
   "turn_commit",
   "backchannel",
+  "stop_button",
   "false_interruption",
   "microphone_permission_error",
   "client_connection_error",

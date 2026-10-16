@@ -15,8 +15,16 @@ added since.
    - App `ritajet-voice`, secret `ritajet-voice` must keep: `SONIOX_API_KEY`,
      `GROQ_API_KEY`, `CARTESIA_API_KEY`, `DAILY_API_KEY`, `RITA_MODAL_TOKEN`
      (same value as `MODAL_START_TOKEN` on the website).
-   - Why: `voice-agent/bot.py` has the new lesson section (`lesson_section`).
-   - After: try a normal free conversation on `/rita-live` and confirm sound.
+   - Why: `voice-agent/bot.py` has the new lesson section (`lesson_section`), and the
+     worker now reads short turns (stop words, hesitation, answers to choices) and has a
+     human-tone prompt. New modules: `rita_dialogue_acts.py`, `rita_turn_router.py`.
+   - After: try a normal free conversation on `/rita-live` and confirm sound. Then test
+     by voice: say "خلص" while Rita explains (she should stop and say a short "تمام."),
+     answer "إيه" to a question with two options (she should ask "أي واحد…؟"), say
+     "أمم…" (she should wait), and tap the new **Stop** button while she speaks.
+   - Switches (Modal secret `ritajet-voice`, optional): `RITA_ROUTER_MODE=on|shadow|off`
+     (default `on`; `shadow` only logs what it would do), `RITA_INTERRUPT_GATE=new|legacy`,
+     `RITA_STOP_ACK=say|silent`. Restart the worker after changing them.
 
 2. **Database migrations (Supabase / Lovable Cloud)**
    - `20261014200000_rita_curriculum_lessons.sql` (applied on main by Lovable)
