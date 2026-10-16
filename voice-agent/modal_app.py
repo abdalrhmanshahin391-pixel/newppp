@@ -48,6 +48,7 @@ image = (
         "rita_state",
         "rita_turn_policy",
         "rita_turn_router",
+        "rita_ui_commands",
     )
 )
 

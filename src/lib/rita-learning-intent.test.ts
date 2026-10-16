@@ -22,3 +22,34 @@ test("does not turn ordinary knowledge questions into vocabulary cards", () => {
   assert.equal(hasRitaLanguageLearningIntent("Explain the term photosynthesis"), false);
   assert.equal(hasRitaLanguageLearningIntent("Guten Morgen, how are you?"), false);
 });
+
+test("understands the everyday ways of asking what a word means", () => {
+  for (const text of [
+    "شو يعني Haus؟",
+    "يعني شو Guten Morgen",
+    'إيه بدي أسألك شو معنى "صباح الخير" بالألماني؟',
+    "what's the meaning of nevertheless",
+    "was heißt Danke",
+  ]) {
+    assert.equal(hasRitaLanguageLearningIntent(text), true, text);
+  }
+  for (const text of [
+    "كيف بنحكيها بالإنجليزي؟",
+    "كيف بقول صباح الخير بالألماني",
+    "شو بنقول للمعلم بالإنجليزي",
+    "what is thank you in German",
+    "wie heißt Haus auf Englisch",
+  ]) {
+    assert.equal(classifyRitaLearningIntent(text), "translation", text);
+  }
+});
+
+test("does not mistake knowledge questions for vocabulary", () => {
+  for (const text of [
+    "شو يعني الحرب العالمية؟ احكيلي عن الثورة الفرنسية",
+    "شو بتعرفي عن الثورة الفرنسية؟",
+    "what is the capital of France",
+  ]) {
+    assert.notEqual(classifyRitaLearningIntent(text), "translation", text);
+  }
+});

@@ -78,6 +78,8 @@ class RitaSessionState:
     last_act: Act = Act.OTHER
     clarification_count: int = 0
     stop_count: int = 0
+    # How many words are in the learner's list on screen (None until the page reports it).
+    learning_count: int | None = None
 
     def __post_init__(self) -> None:
         if self.active_language in {"ar", "en", "de"}:

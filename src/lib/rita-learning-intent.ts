@@ -4,9 +4,9 @@ export type RitaLearningIntent =
 const EXPLICIT_SAVE =
   /(?:save|add|put|always put|احفظ|حط|ضيف|أضف|خزّن).{0,55}(?:flashcards?|german lab|فلاش|مختبر|الموضوع|subject|subtopic)|(?:flashcards?|german lab|فلاش|مختبر).{0,45}(?:save|add|put|احفظ|حط|ضيف|أضف)/iu;
 const TRANSLATION =
-  /(?:translate|translation|how do (?:i|you|we) say|ترجم|ترجمة|كيف\s+(?:أحكي|أقول|بنحكي)|übersetz|wie sagt man)/iu;
+  /(?:translate|translation|how do (?:i|you|we) say|what(?:'s| is) .{1,60} in (?:german|english|arabic)|ترجم|ترجمة|كيف\s+(?:أحكي|أقول|بنحكي|بحكي|بنقول|بقول|نقول)|شو\s+(?:بنقول|بقول|بحكي|بنحكي)|übersetz|wie sagt man|wie heißt .{1,60} auf)/iu;
 const WORD_MEANING =
-  /(?:what does .{1,80} mean|what is the meaning of|meaning of|شو\s+(?:معنى|يعني)|(?:ما|ايش|إيش)\s+معنى|was bedeutet|bedeutung von)/iu;
+  /(?:what does .{1,80} mean|what(?:'s| is) the meaning of|meaning of|شو\s+(?:معنى|يعني)|يعني\s+شو|(?:ما|ايش|إيش|وش)\s+معنى|معنى\s+(?:كلمة|جملة)|was bedeutet|was heißt|bedeutung von)/iu;
 const LANGUAGE_LIST =
   /(?:give|teach|show|list|اعط|أعط|علمني|هات|اكتب).{0,35}(?:words?|phrases?|vocabulary|sentences?|كلمات|مفردات|جمل).{0,35}(?:german|english|arabic|deutsch|englisch|عربي|انجليزي|إنجليزي|ألماني|الماني)|(?:german|english|arabic|deutsch|englisch|عربي|انجليزي|إنجليزي|ألماني|الماني).{0,35}(?:words?|phrases?|vocabulary|sentences?|كلمات|مفردات|جمل)/iu;
 

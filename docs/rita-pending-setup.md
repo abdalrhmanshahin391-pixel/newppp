@@ -17,7 +17,8 @@ added since.
      (same value as `MODAL_START_TOKEN` on the website).
    - Why: `voice-agent/bot.py` has the new lesson section (`lesson_section`), and the
      worker now reads short turns (stop words, hesitation, answers to choices) and has a
-     human-tone prompt. New modules: `rita_dialogue_acts.py`, `rita_turn_router.py`.
+     human-tone prompt, and it understands the list commands below. New modules:
+     `rita_dialogue_acts.py`, `rita_turn_router.py`, `rita_ui_commands.py`.
    - After: try a normal free conversation on `/rita-live` and confirm sound. Then test
      by voice: say "خلص" while Rita explains (she should stop and say a short "تمام."),
      answer "إيه" to a question with two options (she should ask "أي واحد…؟"), say
@@ -59,7 +60,18 @@ added since.
      `LOVABLE_API_KEY` as the German Lab voice. If German Lab audio works, nothing
      to do; if it does not, set that secret. No migration needed.
 
-6. **After merging PR #26 and redeploying Modal: test one real call**
+6. **Words I asked about (list in the call page) — checks**
+   - The website needs the Groq key to read what you asked about: in the admin AI keys
+     (provider groq, purpose rita) or the `GROQ_API_KEY` secret. If the list stays at 0
+     after asking "شو معنى Haus", this is the first thing to check (the page now shows
+     "Could not note that word" instead of failing silently).
+   - Test by voice after the Modal redeploy: ask the meaning of a word; open **My words**;
+     say "افتحي القائمة" (Rita says "تفضل." and the list opens); say "حوليهم فلاش كارد"
+     (the screen asks for the subject) or "حوليهم فلاش كارد في موضوع X" (saved if exactly one
+     subject matches); delete or fix a word with the icons; create a subject or sub-subject
+     from the list window.
+
+7. **After merging PR #26 and redeploying Modal: test one real call**
    - Say "خلص" while Rita explains; answer "إيه" to a two-option question; say "أمم…";
      tap Stop; tap a German or English word in a reply and play fast, slow and precise.
    - Tell me what happened (and, if something sounded wrong, the time of the call), so

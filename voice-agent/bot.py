@@ -434,6 +434,14 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
     async def on_client_message(rtvi, msg):
         # The learner's "Stop Rita" button: a sure way to interrupt that does not depend on
         # the microphone, the noise around them or what the speech recognizer heard.
+        if getattr(msg, "type", "") == "rita-learning-count":
+            # How many words the learner has in the list on screen ("open the list" needs it).
+            try:
+                count = int((getattr(msg, "data", None) or {}).get("count"))
+                state.learning_count = max(0, min(count, 1000))
+            except (TypeError, ValueError, AttributeError):
+                state.learning_count = None
+            return
         if getattr(msg, "type", "") == "rita-stop":
             logger.info("Rita stopped by the learner's button")
             state.topic_paused = True

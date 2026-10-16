@@ -10,6 +10,8 @@ The router sits between the user aggregator and the model. For each finished tur
 - "stop": Rita says one short, human acknowledgement and goes quiet. No model call.
 - "hold": the learner is only thinking ("أمم…", "استنى"). Rita says nothing and waits.
 - "speak": a bare "yes" to a question that offered options. Rita asks "أي واحد: …؟".
+- "ui": a spoken command for the words list ("افتحي القائمة", "حوليهم فلاش كارد"). The page
+  does the work; Rita says one short line and the model is not asked.
 - "pass": everything else goes to the model, with a short note about what the learner's
   turn meant (see RitaSessionState.dialogue_state).
 
@@ -28,9 +30,11 @@ from typing import Callable
 from loguru import logger
 from pipecat.frames.frames import Frame, LLMContextFrame, TTSSpeakFrame
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
+from pipecat.processors.frameworks.rtvi import RTVIServerMessageFrame
 
 from rita_dialogue_acts import Act, Awaiting, Question, Reading, classify, clarify_choice
 from rita_state import RitaSessionState
+from rita_ui_commands import UiAction, UiCommand, read_ui_command
 
 
 class RouterMode(StrEnum):
@@ -44,6 +48,7 @@ class Action(StrEnum):
     STOP = "stop"
     HOLD = "hold"
     SPEAK = "speak"
+    UI = "ui"
 
 
 def router_mode() -> RouterMode:
@@ -69,11 +74,29 @@ ACKS = {
 MAX_CLARIFICATIONS = 2
 
 
+# What Rita says after a list command. The page shows the real result on screen.
+UI_SAYS = {
+    "open": {"ar": "تفضل.", "en": "Here it is.", "de": "Bitte."},
+    "choose": {
+        "ar": "اختار الموضوع من الشاشة.",
+        "en": "Choose the subject on the screen.",
+        "de": "Wähl das Thema auf dem Bildschirm.",
+    },
+    "done": {"ar": "تمام، شوف الشاشة.", "en": "Okay, check the screen.", "de": "Okay, schau auf den Bildschirm."},
+    "empty": {
+        "ar": "القائمة لسا فاضية.",
+        "en": "The list is still empty.",
+        "de": "Die Liste ist noch leer.",
+    },
+}
+
+
 @dataclass(frozen=True)
 class Decision:
     action: Action
     reading: Reading
     say: str | None = None
+    command: UiCommand | None = None
 
 
 def decide(text: str, state: RitaSessionState, *, language: str, ack: bool = True) -> Decision:
@@ -82,6 +105,17 @@ def decide(text: str, state: RitaSessionState, *, language: str, ack: bool = Tru
     reading = classify(text, awaiting=state.awaiting)
     act = reading.act
     lang = language if language in ACKS else "ar"
+
+    command = read_ui_command(text)
+    if command is not None:
+        # A count of 0 is known-empty; None means the page has not said, so act anyway.
+        empty = state.learning_count == 0
+        if command.action == UiAction.OPEN_LIST:
+            return Decision(Action.UI, reading, UI_SAYS["open"][lang], command)
+        if empty:
+            return Decision(Action.UI, reading, UI_SAYS["empty"][lang])  # nothing to send
+        key = "done" if command.hint else "choose"
+        return Decision(Action.UI, reading, UI_SAYS[key][lang], command)
 
     if act == Act.STOP:
         phrases = ACKS[lang]
@@ -178,6 +212,18 @@ class RitaTurnRouter(FrameProcessor):
             return
         if decision.action == Action.SPEAK:
             self._state.clarification_count += 1
+        if decision.action == Action.UI and decision.command is not None:
+            # The page opens the list or saves the words; it reports the real result on screen.
+            await self.push_frame(
+                RTVIServerMessageFrame(
+                    data={
+                        "type": "rita-ui",
+                        "action": decision.command.action.value,
+                        "target": decision.command.target,
+                        "hint": decision.command.hint,
+                    }
+                )
+            )
         if decision.say:
             await self.push_frame(TTSSpeakFrame(decision.say, append_to_context=True))
-        # STOP, HOLD and SPEAK never reach the model.
+        # STOP, HOLD, SPEAK and UI never reach the model.
