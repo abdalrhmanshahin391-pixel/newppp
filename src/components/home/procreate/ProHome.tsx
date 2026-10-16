@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { ProHeader } from "./ProHeader";
-import { HeroLive } from "./HeroLive";
+import { HeroTapWord } from "./HeroTapWord";
 import { IpadStage } from "./IpadStage";
 import { StartLearningLink } from "@/components/StartLearningLink";
 import { BRAND_NAME } from "@/lib/brand";
@@ -36,7 +36,7 @@ export function ProHome() {
       </noscript>
       <ProHeader tone="light" />
 
-      <HeroLive />
+      <HeroTapWord />
 
       <Suspense fallback={<div className="min-h-[45vh]" aria-hidden="true" />}>
         <TopicsStrip />
