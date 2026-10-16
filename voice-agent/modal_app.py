@@ -38,7 +38,9 @@ image = (
         "bot",
         "rita_cartesia_benchmark",
         "rita_cartesia_tts",
+        "rita_dialect",
         "rita_completeness",
+        "rita_dialogue_acts",
         "rita_gemini_auth",
         "rita_gemini_tts",
         "rita_interruption",
@@ -46,6 +48,8 @@ image = (
         "rita_leading_silence",
         "rita_state",
         "rita_turn_policy",
+        "rita_turn_router",
+        "rita_ui_commands",
     )
 )
 

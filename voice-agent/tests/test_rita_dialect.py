@@ -1,0 +1,146 @@
+import asyncio
+import sys
+import unittest
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from pipecat.frames.frames import (  # noqa: E402
+    LLMFullResponseEndFrame,
+    LLMFullResponseStartFrame,
+    LLMTextFrame,
+)
+from pipecat.tests.utils import run_test  # noqa: E402
+
+from bot import build_prompt  # noqa: E402
+from rita_dialect import (  # noqa: E402
+    GREETINGS,
+    RitaSpeechCleaner,
+    SpeechTextFilter,
+    asks_how_to_say,
+    greeting_for,
+    is_greeting,
+    scan_dialect,
+)
+from rita_state import RitaSessionState  # noqa: E402
+from rita_turn_router import Action, decide  # noqa: E402
+
+
+class HowToSayTests(unittest.TestCase):
+    def test_questions_about_saying_things(self):
+        for text in (
+            "كيف أحكي؟ بدي أروح على الحمام بالإنجليزي",
+            "كيف احكي بدي ماي بالانجليزي",
+            "شو بنقول صباح الخير بالألماني",
+            "how do I say thank you",
+            "What's the bathroom in German",
+            "wie sagt man danke",
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(asks_how_to_say(text))
+
+    def test_ordinary_turns_are_not(self):
+        for text in ("كيف حالك", "شو الأخبار", "احكي إنجليزي", "مرحبا ريتا"):
+            with self.subTest(text=text):
+                self.assertFalse(asks_how_to_say(text))
+
+    def test_asking_how_to_say_in_english_does_not_switch_the_conversation_language(self):
+        state = RitaSessionState(active_language="ar")
+        state.observe_user_turn("كيف احكي بدي اروح على الحمام بالانجليزي")
+        self.assertEqual(state.active_language, "ar")
+        self.assertIn("answer in the learner's own language", state.turn_directive())
+
+    def test_a_real_language_command_still_works(self):
+        state = RitaSessionState()
+        state.observe_user_turn("احكي انجليزي معي")
+        self.assertEqual(state.active_language, "en")
+
+
+class GreetingTests(unittest.TestCase):
+    def test_plain_hellos(self):
+        for text in ("مرحبا ريتا.", "أهلين", "hello", "Hallo Rita", "السلام عليكم", "صباح الخير ريتا"):
+            with self.subTest(text=text):
+                self.assertTrue(is_greeting(text))
+
+    def test_hello_plus_a_request_is_not_a_greeting(self):
+        self.assertFalse(is_greeting("مرحبا بدي أتعلم ألماني"))
+
+    def test_first_hello_gets_the_scripted_greeting_once(self):
+        state = RitaSessionState()
+        state.observe_user_turn("مرحبا ريتا")
+        decision = decide("مرحبا ريتا", state, language="ar")
+        self.assertEqual(decision.action, Action.UI)
+        self.assertIsNone(decision.command)
+        self.assertIn(decision.say, GREETINGS["ar"])
+        self.assertEqual(decision.say, greeting_for("مرحبا ريتا", "ar"))
+
+    def test_a_later_hello_goes_to_the_model(self):
+        state = RitaSessionState()
+        state.observe_assistant_turn("أهلين! كيف الحال؟")
+        state.observe_user_turn("أهلين")
+        self.assertEqual(decide("أهلين", state, language="ar").action, Action.PASS)
+
+    def test_scripted_greetings_use_the_right_words(self):
+        for line in GREETINGS["ar"]:
+            self.assertNotIn("فيك", line)
+            self.assertNotIn("حابب", line)
+            self.assertEqual(scan_dialect(line), [])
+
+
+class PromptTests(unittest.TestCase):
+    def test_prompt_teaches_the_dialect_and_the_answer_shape(self):
+        prompt = build_prompt({}, RitaSessionState(), dialogue=True)
+        self.assertIn("JORDANIAN SPEECH", prompt)
+        self.assertIn("هيك (not هكذا)", prompt)
+        self.assertIn("answer is in ARABIC", prompt)
+        self.assertIn("I need to go to the bathroom", prompt)
+
+
+class WatchTests(unittest.TestCase):
+    def test_known_wrong_phrases_are_found(self):
+        self.assertTrue(scan_dialect("أهلاً! كيف فيك اليوم؟"))
+        self.assertTrue(scan_dialect("تقولها هكذا"))
+        self.assertTrue(scan_dialect("شو حابب نتكلم عنه"))
+        self.assertEqual(scan_dialect("أهلين! كيف الحال؟ بنقولها هيك."), [])
+
+
+class FilterTests(unittest.TestCase):
+    def feed(self, *parts):
+        f = SpeechTextFilter()
+        return "".join(f.feed(part) for part in parts)
+
+    def test_markdown_marks_are_dropped_however_the_text_is_sliced(self):
+        self.assertEqual(self.feed("هو **Guten Morgen**."), "هو Guten Morgen.")
+        self.assertEqual(self.feed("هو *", "*Guten", " Morgen*", "*."), "هو Guten Morgen.")
+
+    def test_a_stop_after_a_closing_quote_is_dropped(self):
+        self.assertEqual(self.feed('You can say “I need to go.”', "."), "You can say “I need to go.”")
+        self.assertEqual(self.feed("“Hi.”", ".", " Next"), "“Hi.” Next")
+
+    def test_repeated_marks_collapse_but_ellipsis_stays(self):
+        self.assertEqual(self.feed("Great!!"), "Great!")
+        self.assertEqual(self.feed("Well..."), "Well...")
+
+    def test_ordinary_text_is_untouched(self):
+        text = "Use “need” for a polite request. Wie geht's? شو الأخبار؟"
+        self.assertEqual(self.feed(text), text)
+
+
+class CleanerInAPipelineTests(unittest.TestCase):
+    def test_text_frames_reach_the_voice_cleaned_and_only_once(self):
+        async def go():
+            frames = [
+                LLMFullResponseStartFrame(),
+                LLMTextFrame("هو “**Guten "),
+                LLMTextFrame("Morgen**.”"),
+                LLMTextFrame("."),
+                LLMFullResponseEndFrame(),
+            ]
+            down, _ = await run_test(RitaSpeechCleaner(), frames_to_send=frames)
+            return "".join(f.text for f in down if isinstance(f, LLMTextFrame))
+
+        self.assertEqual(asyncio.run(go()), "هو “Guten Morgen.”")
+
+
+if __name__ == "__main__":
+    unittest.main()

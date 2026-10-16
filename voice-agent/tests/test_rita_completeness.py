@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from rita_completeness import looks_complete  # noqa: E402
+from rita_completeness import ends_on_hesitation, looks_complete  # noqa: E402
 
 
 class LooksCompleteTests(unittest.TestCase):
@@ -41,6 +41,25 @@ class LooksCompleteTests(unittest.TestCase):
 
     def test_trailing_off_marks_are_never_complete(self):
         for text in ("So what I wanted to say…", "Let me think...", "Because:"):
+            with self.subTest(text=text):
+                self.assertFalse(looks_complete(text))
+
+
+class ShortCommandsAndThinkingSoundsTests(unittest.TestCase):
+    def test_clear_one_word_commands_and_answers_commit_quickly(self):
+        for text in ("خلص.", "وقفي.", "نوب.", "نعم.", "فهمت.", "Stop.", "Nope.", "مش عارف."):
+            with self.subTest(text=text):
+                self.assertTrue(looks_complete(text))
+
+    def test_thinking_sounds_never_complete_a_turn(self):
+        for text in ("أمم.", "يعني.", "Um.", "أمم. يعني.", "I want to, um.", "بدي أسأل، أمم."):
+            with self.subTest(text=text):
+                self.assertFalse(looks_complete(text))
+        self.assertTrue(ends_on_hesitation("بدي أسأل أمم"))
+        self.assertFalse(ends_on_hesitation("بدي أسأل عن الدرس"))
+
+    def test_a_bare_acknowledgement_is_still_not_a_finished_turn(self):
+        for text in ("آه.", "تمام.", "Okay."):
             with self.subTest(text=text):
                 self.assertFalse(looks_complete(text))
 

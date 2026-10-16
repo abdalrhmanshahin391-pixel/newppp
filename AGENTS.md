@@ -16,3 +16,8 @@
    **"do u want to apply it like lovable"**
 4. **Execution**: Only execute the changes after the user explicitly replies to apply it.
 
+## Design Work Protocol
+For any visual or UI change, follow `docs/design-workflow.md` (three rounds: Design Brief,
+build, hard review) and the system in `DESIGN.md`. Use the skills in `.claude/skills/` listed
+there. The Mandatory Planning Protocol above still applies: the Design Brief is the plan, and
+it ends with the approval phrase.

@@ -353,13 +353,14 @@ ${JSON.stringify(input.objective)}`;
   return value;
 }
 
-/** The look of every lesson picture, matching the purple circle path nodes. */
+/** The look of every lesson picture: Rita's world in the home page colours. */
 export function lessonImagePrompt(scene: string) {
-  return `A single round sticker-style cartoon illustration for a language-learning app lesson.
+  return `A single square illustration for a language-learning app lesson, shown inside a round frame.
 Scene: ${scene.slice(0, 300)}
-Style: flat vector cartoon, one or two friendly characters with simple rounded shapes, bold clean outlines,
-soft cel shading, bright cheerful colours, centred inside a solid violet circle (#8B4DEB) that fills the
-frame, plain white outside the circle, no words, no letters, no numbers, no logos.`;
+Style: friendly flat vector cartoon, one or two characters with simple rounded shapes, thick dark ink outlines
+(#121117), soft cel shading, warm pink (#ff7aac) and soft pink (#ffe5f0) as the main colours with a few cheerful
+accents, on a plain light pink background. The subject is large and centred and fills the frame. No words, no
+letters, no numbers, no logos, no border, no circle drawn around the picture.`;
 }
 
 export async function generateLessonImage(
@@ -374,7 +375,8 @@ export async function generateLessonImage(
       model,
       prompt: lessonImagePrompt(scene),
       size: "1024x1024",
-      quality: "medium",
+      quality:
+        (await getServerRuntimeSecret("RITA_IMAGE_QUALITY")) === "medium" ? "medium" : "high",
       output_format: "webp",
       output_compression: 80,
       n: 1,

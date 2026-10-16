@@ -7,7 +7,7 @@
       "topic": "to be: am / is / are",
       "source_from_page": 2,
       "source_to_page": 2,
-      "summary": "Rita teaches am, is and are with the learner's own life: who they are, how they feel and where they are from, then the negative and yes/no questions.",
+      "summary": "Rita teaches am, is and are with the learner's own life: who they are, how they feel and where they are from, then the negative and yes/no questions with short answers.",
       "objectives": [
         {
           "id": "say-i-am",
@@ -49,6 +49,17 @@
             "Are you tired? Say no with a full sentence."
           ],
           "weight": 1
+        },
+        {
+          "id": "question",
+          "text": "Ask or answer a yes/no question with to be",
+          "text_ar": "يسأل أو يجيب بسؤال نعم/لا",
+          "criteria": "The learner asks a correct question (Are you ...? / Is she ...?) or gives a correct short answer (Yes, I am. / No, she isn't.).",
+          "check_prompts": [
+            "Are you a student? Answer with a short answer.",
+            "Now ask me a question. Start with: Are you ...?"
+          ],
+          "weight": 1
         }
       ],
       "plan": {
@@ -65,7 +76,8 @@
             "minutes": 2,
             "steps": [
               "Show I am, you are, he/she/it is with one example each",
-              "Show the short forms I'm, she's, they're"
+              "Show the short forms I'm, she's, they're",
+              "Show questions with the verb first (Are you ...? Is he ...?) and the short answers Yes, I am. / No, she isn't."
             ]
           },
           {
@@ -74,7 +86,8 @@
             "steps": [
               "Ask the learner to say three sentences about themselves",
               "Ask about a friend: he is / she is",
-              "Practise negatives: I'm not tired"
+              "Practise negatives: I'm not tired",
+              "Swap: the learner asks Rita Are you ...? questions"
             ]
           },
           {
@@ -93,7 +106,7 @@
             ]
           }
         ],
-        "teacher_notes": "Arabic has no 'to be' in the present, so learners drop it: 'I happy'. Model 'I am happy' and ask them to repeat."
+        "teacher_notes": "Arabic has no 'to be' in the present, so learners drop it: 'I happy'. Model 'I am happy' and ask them to repeat. Another common slip is 'I am agree' (from أنا موافق): say 'I agree'."
       },
       "vocabulary": [
         {
@@ -199,7 +212,7 @@
             ]
           }
         ],
-        "teacher_notes": "Arabic speakers may say 'he' for objects (هو for كتاب). Correct gently to 'it'."
+        "teacher_notes": "Arabic nouns have gender (كتاب = هو, سيارة = هي), so learners may say 'he' or 'she' for objects. Correct gently to 'it'. Pets and babies can be he/she when we know them, but 'it' is the safe choice for beginners."
       },
       "vocabulary": [
         {
@@ -254,7 +267,7 @@
         {
           "id": "use-a",
           "text": "Use a before a consonant sound",
-          "text_ar": "يستخدم a قبل الصوت الساكن",
+          "text_ar": "يستخدم a قبل صوت صامت (consonant)",
           "criteria": "The learner says a correct phrase or sentence with a before a consonant sound (a book, a teacher).",
           "check_prompts": [
             "What is in your bag? Name two things."
@@ -264,7 +277,7 @@
         {
           "id": "use-an",
           "text": "Use an before a vowel sound",
-          "text_ar": "يستخدم an قبل الصوت المتحرك",
+          "text_ar": "يستخدم an قبل صوت صائت (vowel)",
           "criteria": "The learner says a correct phrase or sentence with an before a vowel sound (an apple, an egg, an hour).",
           "check_prompts": [
             "What fruit do you like? Use an apple or an orange."
@@ -296,7 +309,8 @@
             "minutes": 2,
             "steps": [
               "Explain: a + consonant sound, an + vowel sound",
-              "Special cases: an hour, a university"
+              "Special cases: an hour, a university",
+              "Remind: no a/an with plurals (cats, not a cats)"
             ]
           },
           {
@@ -323,17 +337,17 @@
             ]
           }
         ],
-        "teacher_notes": "Learners often drop the article: 'I am student'. Model 'I am a student'."
+        "teacher_notes": "Arabic has no indefinite article (كتاب = a book), so learners often drop it: 'I am student'. Model 'I am a student'. Stress that the rule is about the sound, not the letter: an hour, a university."
       },
       "vocabulary": [
         {
           "word": "a",
-          "meaning_ar": "أداة نكرة قبل الصوت الساكن",
+          "meaning_ar": "أداة نكرة قبل صوت صامت (consonant)",
           "example": "a book"
         },
         {
           "word": "an",
-          "meaning_ar": "أداة نكرة قبل الصوت المتحرك",
+          "meaning_ar": "أداة نكرة قبل صوت صائت (vowel)",
           "example": "an apple"
         }
       ],
@@ -354,9 +368,10 @@
           "id": "my-your",
           "text": "Use my and your",
           "text_ar": "يستخدم my و your",
-          "criteria": "The learner says a correct sentence with my (e.g. My name is ..., my brother is ...).",
+          "criteria": "The learner says a correct sentence with my (e.g. My name is ...) and also uses your correctly in a question or sentence (e.g. What's your name?).",
           "check_prompts": [
-            "What's your name? Tell me about your family."
+            "What's your name? Tell me about your family.",
+            "Now ask me a question about me. Start with: What's your ...?"
           ],
           "weight": 2
         },
@@ -395,6 +410,7 @@
             "minutes": 2,
             "steps": [
               "Match each pronoun to its possessive: I-my, he-his, she-her",
+              "Show where it goes: my book (not book my)",
               "Possessives don't change for plurals: my books"
             ]
           },
@@ -422,42 +438,42 @@
             ]
           }
         ],
-        "teacher_notes": "his/her follow the owner, not the thing (Arabic matches the thing). Correct 'her father' vs 'his father' by asking who owns it."
+        "teacher_notes": "In Arabic the possessive is attached to the end of the noun (كتابي, بيتنا), so learners say 'book my' or 'house our'. In English it comes before the noun: my book. his/her follow the owner, as in Arabic (أبوه / أبوها): when a learner mixes them up, ask 'Who owns it? A boy or a girl?'. Also stress its (no apostrophe) vs it's = it is."
       },
       "vocabulary": [
         {
           "word": "my",
-          "meaning_ar": "",
+          "meaning_ar": "ـي (لي)",
           "example": "my bag"
         },
         {
           "word": "your",
-          "meaning_ar": "",
+          "meaning_ar": "ـك / ـكم",
           "example": "your phone"
         },
         {
           "word": "his",
-          "meaning_ar": "",
+          "meaning_ar": "ـه (لمذكر)",
           "example": "his car"
         },
         {
           "word": "her",
-          "meaning_ar": "",
+          "meaning_ar": "ـها (لمؤنث)",
           "example": "her book"
         },
         {
           "word": "its",
-          "meaning_ar": "",
+          "meaning_ar": "ـه / ـها (لغير العاقل)",
           "example": "its name"
         },
         {
           "word": "our",
-          "meaning_ar": "",
+          "meaning_ar": "ـنا",
           "example": "our house"
         },
         {
           "word": "their",
-          "meaning_ar": "",
+          "meaning_ar": "ـهم / ـهن",
           "example": "their teacher"
         }
       ],
@@ -498,9 +514,20 @@
           "id": "negative-dont",
           "text": "Make a negative with don't or doesn't",
           "text_ar": "ينفي بـ don't / doesn't",
-          "criteria": "The learner says a correct negative with don't or doesn't + base verb.",
+          "criteria": "The learner says a correct negative with don't or doesn't + base verb (I don't like fish. / She doesn't work on Friday.).",
           "check_prompts": [
-            "What don't you like to eat?"
+            "Tell me one food you don't like. Use a full sentence.",
+            "Tell me one thing your brother or sister doesn't do."
+          ],
+          "weight": 1
+        },
+        {
+          "id": "question-do",
+          "text": "Ask a question with do or does",
+          "text_ar": "يسأل بـ do / does",
+          "criteria": "The learner asks a correct question: Do you ...? / Does she ...? (with the base verb, no -s after does).",
+          "check_prompts": [
+            "Ask me a question about my day. Start with: Do you ...?"
           ],
           "weight": 1
         }
@@ -546,7 +573,7 @@
             ]
           }
         ],
-        "teacher_notes": "The most common mistake is dropping -s: 'she work'. Ask them to repeat with -s."
+        "teacher_notes": "The most common mistake is dropping -s: 'she work'. Arabic verbs change for every person, so learners often forget that English changes only for he/she/it. Also watch 'she doesn't works' and 'Does she works?': after does/doesn't the verb stays plain. Ask them to repeat the correct sentence."
       },
       "vocabulary": [
         {
@@ -558,6 +585,11 @@
           "word": "usually",
           "meaning_ar": "عادةً",
           "example": "I usually drink tea."
+        },
+        {
+          "word": "always",
+          "meaning_ar": "دائماً",
+          "example": "She always walks to school."
         },
         {
           "word": "never",

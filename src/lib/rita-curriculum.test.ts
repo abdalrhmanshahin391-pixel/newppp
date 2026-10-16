@@ -221,6 +221,46 @@ test("the sample books' summaries and lessons are valid imports", async () => {
   }
 });
 
+test("the sample curriculum is complete and unambiguous", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const dir = new URL("../../docs/curriculum-samples/", import.meta.url);
+  for (const book of ["a1-english-grammar", "a1-english-words"]) {
+    const lessons = JSON.parse(await readFile(new URL(`${book}.lessons.json`, dir), "utf8"));
+    for (const item of lessons) {
+      const lesson = LessonDraftSchema.parse(item.lesson);
+      // Every taught word has an Arabic meaning.
+      for (const word of lesson.vocabulary) {
+        assert.ok(word.meaning_ar.trim(), `${lesson.title}: "${word.word}" has no Arabic meaning`);
+      }
+      // Two different English phrases never share one Arabic meaning, unless both
+      // meanings say in brackets how they differ (is / are: "(مع he/she/it)").
+      // Grammar words differ on purpose (Arabic has no "it"), so only word books are checked.
+      const seen = new Map<string, { word: string; bracketed: boolean }>();
+      for (const word of book === "a1-english-words" ? lesson.vocabulary : []) {
+        const bracketed = word.meaning_ar.includes("(");
+        const key = word.meaning_ar
+          .replace(/\(.*?\)/g, "")
+          .split("/")[0]
+          .trim();
+        const other = seen.get(key);
+        assert.ok(
+          !other || other.word === word.word || (other.bracketed && bracketed),
+          `${lesson.title}: "${word.word}" and "${other?.word}" share the Arabic "${key}"`,
+        );
+        seen.set(key, { word: word.word, bracketed });
+      }
+      // Every objective can be checked: it has a criterion and at least one question.
+      for (const objective of lesson.objectives) {
+        assert.ok(objective.criteria.trim(), `${lesson.title}/${objective.id}: no criteria`);
+        assert.ok(
+          objective.check_prompts.length > 0,
+          `${lesson.title}/${objective.id}: no question`,
+        );
+      }
+    }
+  }
+});
+
 test("a page is readable only with long-enough text or a blank confirmation", () => {
   assert.equal(pageIsReady(25, false), true);
   assert.equal(pageIsReady(19, false), false);
@@ -238,20 +278,26 @@ test("missing pages include absent rows and gaps, not only short text", () => {
 });
 
 test("a lesson completed once stays done while the learner retries it", () => {
-  assert.equal(effectiveProgressStatus({ status: "completed", last_completed_at: null }), "completed");
+  assert.equal(
+    effectiveProgressStatus({ status: "completed", last_completed_at: null }),
+    "completed",
+  );
   assert.equal(
     effectiveProgressStatus({ status: "in_progress", last_completed_at: "2026-10-01" }),
     "completed",
   );
-  assert.equal(effectiveProgressStatus({ status: "in_progress", last_completed_at: null }), "in_progress");
-  // On the path itself: the replayed lesson stays done and the frontier stays open.
-  const states = lessonPathStates(
-    [{ id: "a" }, { id: "b" }, { id: "c" }],
-    {
-      a: { status: effectiveProgressStatus({ status: "in_progress", last_completed_at: "x" }), stars: 3 },
-      b: { status: "in_progress", stars: 0 },
-    },
+  assert.equal(
+    effectiveProgressStatus({ status: "in_progress", last_completed_at: null }),
+    "in_progress",
   );
+  // On the path itself: the replayed lesson stays done and the frontier stays open.
+  const states = lessonPathStates([{ id: "a" }, { id: "b" }, { id: "c" }], {
+    a: {
+      status: effectiveProgressStatus({ status: "in_progress", last_completed_at: "x" }),
+      stars: 3,
+    },
+    b: { status: "in_progress", stars: 0 },
+  });
   assert.deepEqual(
     states.map((node) => node.state),
     ["done", "current", "locked"],

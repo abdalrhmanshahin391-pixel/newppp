@@ -46,23 +46,24 @@
             "phase": "warmup",
             "minutes": 1,
             "steps": [
-              "Greet the learner warmly and say today's words are about greetings"
+              "Greet the learner with the right greeting for the time of day and ask: How are you?"
             ]
           },
           {
             "phase": "teach",
             "minutes": 2,
             "steps": [
-              "Say four or five key words with their Arabic meaning",
-              "Use each in a short example"
+              "Teach hello / hi and good morning, good afternoon, good evening with the time of day each one fits",
+              "Teach How are you? and the answers I'm fine, thank you",
+              "Teach goodbye, see you later and good night"
             ]
           },
           {
             "phase": "practice",
             "minutes": 3,
             "steps": [
-              "Role-play a short everyday situation",
-              "Swap roles so the learner starts"
+              "Role-play meeting in the morning, then saying goodbye in the evening",
+              "Swap roles so the learner starts the greeting"
             ]
           },
           {
@@ -81,7 +82,7 @@
             ]
           }
         ],
-        "teacher_notes": "Keep it playful. If the learner answers in Arabic, give the English and ask them to repeat it."
+        "teacher_notes": "Good evening is for meeting someone; good night is for leaving or going to bed, and learners often swap them. Arabic uses مساء الخير for both afternoon and evening. If the learner answers in Arabic, give the English and ask them to repeat it."
       },
       "vocabulary": [
         {
@@ -101,13 +102,13 @@
         },
         {
           "word": "good afternoon",
-          "meaning_ar": "مساء الخير (بعد الظهر)",
+          "meaning_ar": "نهارك سعيد (بعد الظهر)",
           "example": "Good afternoon, everyone."
         },
         {
           "word": "good evening",
           "meaning_ar": "مساء الخير",
-          "example": "Good evening, Mr. Ali."
+          "example": "Good evening, Mr Ali."
         },
         {
           "word": "good night",
@@ -195,23 +196,24 @@
             "phase": "warmup",
             "minutes": 1,
             "steps": [
-              "Greet the learner warmly and say today's words are about introducing yourself"
+              "Say: My name is Rita. I'm from Jordan. Then ask: What's your name?"
             ]
           },
           {
             "phase": "teach",
             "minutes": 2,
             "steps": [
-              "Say four or five key words with their Arabic meaning",
-              "Use each in a short example"
+              "Model the three sentences: My name is ... / I'm from ... / I'm ... years old",
+              "Teach the matching questions: What's your name? Where are you from? How old are you?"
             ]
           },
           {
             "phase": "practice",
             "minutes": 3,
             "steps": [
-              "Role-play a short everyday situation",
-              "Swap roles so the learner starts"
+              "Interview the learner with the three questions",
+              "Swap roles: the learner interviews Rita",
+              "Add friend, student, teacher or family: This is my friend, Ali."
             ]
           },
           {
@@ -230,7 +232,7 @@
             ]
           }
         ],
-        "teacher_notes": "Keep it playful. If the learner answers in Arabic, give the English and ask them to repeat it."
+        "teacher_notes": "Learners often say 'My age is 20' or 'I have 20 years'. Model 'I'm twenty years old.' Remember I am / I'm: learners drop it (I from Jordan)."
       },
       "vocabulary": [
         {
@@ -264,9 +266,9 @@
           "example": "I live in a big city."
         },
         {
-          "word": "age",
-          "meaning_ar": "عمر",
-          "example": "What's your age?"
+          "word": "years old",
+          "meaning_ar": "سنة (من العمر)",
+          "example": "I'm twenty years old."
         },
         {
           "word": "How old are you?",
@@ -275,17 +277,17 @@
         },
         {
           "word": "friend",
-          "meaning_ar": "صديق",
+          "meaning_ar": "صديق / صديقة",
           "example": "This is my friend, Ali."
         },
         {
           "word": "student",
-          "meaning_ar": "طالب",
+          "meaning_ar": "طالب / طالبة",
           "example": "I'm a student."
         },
         {
           "word": "teacher",
-          "meaning_ar": "معلم",
+          "meaning_ar": "معلم / معلمة",
           "example": "She is my teacher."
         },
         {
@@ -344,23 +346,25 @@
             "phase": "warmup",
             "minutes": 1,
             "steps": [
-              "Greet the learner warmly and say today's words are about polite words"
+              "Set the scene: you are in a café. Say: Hello! What would you like?"
             ]
           },
           {
             "phase": "teach",
             "minutes": 2,
             "steps": [
-              "Say four or five key words with their Arabic meaning",
-              "Use each in a short example"
+              "Teach please at the end of a request: A glass of water, please.",
+              "Teach thank you / thanks and the replies you're welcome / no problem",
+              "Teach sorry (for a mistake) and excuse me (to get attention or to pass)"
             ]
           },
           {
             "phase": "practice",
             "minutes": 3,
             "steps": [
-              "Role-play a short everyday situation",
-              "Swap roles so the learner starts"
+              "Role-play ordering in a café, swapping roles",
+              "Practise Can I ...? and Of course",
+              "Say 'Pardon?' when the learner speaks too fast so they ask you to repeat"
             ]
           },
           {
@@ -379,12 +383,12 @@
             ]
           }
         ],
-        "teacher_notes": "Keep it playful. If the learner answers in Arabic, give the English and ask them to repeat it."
+        "teacher_notes": "Thanks is informal; thank you is safe everywhere. Learners mix up sorry (a mistake) and excuse me (getting attention). Keep the tone warm and polite."
       },
       "vocabulary": [
         {
           "word": "thank you",
-          "meaning_ar": "شكراً",
+          "meaning_ar": "شكراً لك / شكراً جزيلاً",
           "example": "Thank you for your help."
         },
         {
@@ -399,22 +403,22 @@
         },
         {
           "word": "sorry",
-          "meaning_ar": "آسف",
+          "meaning_ar": "آسف / آسفة",
           "example": "Sorry, I'm late."
         },
         {
           "word": "excuse me",
-          "meaning_ar": "عفواً / لو سمحت",
+          "meaning_ar": "لو سمحت / عن إذنك",
           "example": "Excuse me, where is the bank?"
         },
         {
           "word": "you're welcome",
-          "meaning_ar": "عفواً (رداً على الشكر)",
+          "meaning_ar": "العفو / على الرحب والسعة",
           "example": "Thank you! — You're welcome."
         },
         {
           "word": "no problem",
-          "meaning_ar": "لا مشكلة",
+          "meaning_ar": "لا مشكلة / ولا يهمك",
           "example": "Sorry! — No problem."
         },
         {
@@ -434,7 +438,7 @@
         },
         {
           "word": "kind",
-          "meaning_ar": "لطيف",
+          "meaning_ar": "لطيف / لطيفة",
           "example": "You are very kind."
         },
         {
@@ -494,23 +498,24 @@
             "phase": "warmup",
             "minutes": 1,
             "steps": [
-              "Greet the learner warmly and say today's words are about agreeing and answering"
+              "Ask three quick questions: Do you like tea? Are you ready? Is it Friday?"
             ]
           },
           {
             "phase": "teach",
             "minutes": 2,
             "steps": [
-              "Say four or five key words with their Arabic meaning",
-              "Use each in a short example"
+              "Teach yes / no / maybe and short answers: Yes, I do. / No, I don't. / Yes, I am.",
+              "Teach suggestions with Let's ... and the replies Great idea!, I agree, Sure, OK"
             ]
           },
           {
             "phase": "practice",
             "minutes": 3,
             "steps": [
-              "Role-play a short everyday situation",
-              "Swap roles so the learner starts"
+              "Rita suggests an activity; the learner answers with Great idea! or Maybe later",
+              "Swap: the learner suggests with Let's ... and Rita reacts",
+              "Add right / wrong when you correct something"
             ]
           },
           {
@@ -529,7 +534,7 @@
             ]
           }
         ],
-        "teacher_notes": "Keep it playful. If the learner answers in Arabic, give the English and ask them to repeat it."
+        "teacher_notes": "Learners often answer Do you like ...? with 'Yes, I like'. Model the short answer 'Yes, I do.' Encourage more than a bare yes or no."
       },
       "vocabulary": [
         {
@@ -643,23 +648,24 @@
             "phase": "warmup",
             "minutes": 1,
             "steps": [
-              "Greet the learner warmly and say today's words are about feelings and being busy"
+              "Ask: How do you feel today? Are you busy or free?"
             ]
           },
           {
             "phase": "teach",
             "minutes": 2,
             "steps": [
-              "Say four or five key words with their Arabic meaning",
-              "Use each in a short example"
+              "Teach feeling words with I'm: tired, happy, sad, hungry, thirsty, bored, ready",
+              "Teach busy / free and the polite postpone: Sorry, I'm busy now. Talk to you later."
             ]
           },
           {
             "phase": "practice",
             "minutes": 3,
             "steps": [
-              "Role-play a short everyday situation",
-              "Swap roles so the learner starts"
+              "Mime a feeling and let the learner guess: Are you tired?",
+              "Role-play a friend inviting the learner while they are busy",
+              "Ask: Are you free on Friday?"
             ]
           },
           {
@@ -678,57 +684,57 @@
             ]
           }
         ],
-        "teacher_notes": "Keep it playful. If the learner answers in Arabic, give the English and ask them to repeat it."
+        "teacher_notes": "Feelings use I'm + the word (I'm tired). Learners drop I'm (I busy): model the full sentence. Free here means 'not busy', not 'costing nothing'."
       },
       "vocabulary": [
         {
           "word": "busy",
-          "meaning_ar": "مشغول",
+          "meaning_ar": "مشغول / مشغولة",
           "example": "I'm busy now."
         },
         {
           "word": "free",
-          "meaning_ar": "متفرغ",
+          "meaning_ar": "متفرغ / متفرغة",
           "example": "Are you free on Friday?"
         },
         {
           "word": "tired",
-          "meaning_ar": "متعب",
+          "meaning_ar": "متعب / متعبة",
           "example": "I'm tired today."
         },
         {
           "word": "happy",
-          "meaning_ar": "سعيد",
+          "meaning_ar": "سعيد / سعيدة",
           "example": "She is very happy."
         },
         {
           "word": "sad",
-          "meaning_ar": "حزين",
+          "meaning_ar": "حزين / حزينة",
           "example": "Why are you sad?"
         },
         {
           "word": "hungry",
-          "meaning_ar": "جائع",
+          "meaning_ar": "جائع / جائعة",
           "example": "I'm hungry. Let's eat!"
         },
         {
           "word": "thirsty",
-          "meaning_ar": "عطشان",
+          "meaning_ar": "عطشان / عطشانة",
           "example": "Are you thirsty?"
         },
         {
           "word": "bored",
-          "meaning_ar": "ملول / زهقان",
+          "meaning_ar": "ملول / ملولة",
           "example": "I'm bored at home."
         },
         {
           "word": "ready",
-          "meaning_ar": "جاهز",
+          "meaning_ar": "جاهز / جاهزة",
           "example": "Are you ready?"
         },
         {
           "word": "late",
-          "meaning_ar": "متأخر",
+          "meaning_ar": "متأخر / متأخرة",
           "example": "Hurry, we're late!"
         },
         {

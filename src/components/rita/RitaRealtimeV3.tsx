@@ -1,10 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
-  ArrowLeft,
-  BookOpen,
-  Check,
-  ChevronDown,
   Layers,
   Loader2,
   Mic,
@@ -12,11 +8,15 @@ import {
   PhoneOff,
   Send,
   Sparkles,
+  Square,
   X,
+  ArrowLeft,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import type { LearningItem, SaveTarget } from "@/lib/rita-learning";
+import { isGermanItem, type LearningItem, type SaveTarget } from "@/lib/rita-learning";
+import { hasRitaLanguageLearningIntent } from "@/lib/rita-learning-intent";
+import { matchSubject, subjectOptions } from "@/lib/rita-learning-tree";
 import {
   committedRitaReply,
   settleDraftReply,
@@ -24,6 +24,13 @@ import {
   wasRitaInterrupted,
 } from "@/lib/rita-v3-heard";
 import { orbModeFor, type RitaMood } from "@/components/rita-live/RitaStage";
+import { ChatText } from "./ChatText";
+import { PhraseDialog } from "./PhraseDialog";
+import { stopPhraseAudio } from "@/lib/phrase-cache";
+import { groupTurns, showCaption } from "./chat-text";
+import { skipsFiller } from "./short-turn";
+import { LearningTray } from "./LearningTray";
+import { useLearningTray } from "./useLearningTray";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { VoiceOrb } from "@/components/rita-live/VoiceOrb";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
@@ -33,15 +40,11 @@ import { LessonObjectivesPanel, LessonResultCard } from "@/components/rita-lesso
 type Persona = "kind" | "direct" | "playful" | "strict";
 type LessonMode = "free_conversation" | "guided_lesson" | "pronunciation_drill";
 type Message = { id: string; role: "you" | "rita"; text: string };
-type DestinationPayload = {
-  flashSubjects: { id: string; name: string; parent_id: string | null }[];
-  germanSubjects: { id: string; name: string }[];
-  germanSubtopics: { id: string; name: string; subject_id: string }[];
-};
 type ClientHandle = {
   disconnect(): Promise<void>;
   enableMic(enabled: boolean): void;
   sendText(text: string): Promise<void>;
+  sendClientMessage(msgType: string, data?: unknown): void;
   readonly connected: boolean;
 };
 type ExtractionResult = {
@@ -112,14 +115,8 @@ export function RitaRealtimeV3({
   const fillerAudioContext = useRef<AudioContext | null>(null);
   const fillerSequence = useRef(0);
   const currentTurnHasFinalTranscript = useRef(false);
-  const destinationsRef = useRef<DestinationPayload>({
-    flashSubjects: [],
-    germanSubjects: [],
-    germanSubtopics: [],
-  });
-  const rememberedDestination = useRef<{ target: SaveTarget; id: string; label: string } | null>(
-    null,
-  );
+  const turnSpoken = useRef("");
+  const skipExtraction = useRef(false);
 
   const [status, setStatus] = useState("Ready to start");
   const [mood, setMood] = useState<RitaMood>("ready");
@@ -150,17 +147,27 @@ export function RitaRealtimeV3({
   const mode: LessonMode = "free_conversation";
   const language: string = "automatic";
   const dialect: string = "ar-JO";
-  const [learningOpen, setLearningOpen] = useState(false);
-  const [learning, setLearning] = useState<LearningItem[]>([]);
-  const [target, setTarget] = useState<SaveTarget>("flashcards");
-  const [destinationId, setDestinationId] = useState("");
-  const [destinations, setDestinations] = useState<DestinationPayload>({
-    flashSubjects: [],
-    germanSubjects: [],
-    germanSubtopics: [],
-  });
-  const [saving, setSaving] = useState(false);
-  const [notice, setNotice] = useState("");
+  // The "tap a word" window. While one of its clips plays, the microphone is
+  // muted so the clip is not heard as the learner's own speech.
+  const [phrase, setPhrase] = useState<string | null>(null);
+  const phraseMuted = useRef(false);
+  const openPhrase = useCallback((text: string) => setPhrase(text), []);
+  const closePhrase = useCallback(() => setPhrase(null), []);
+  const phrasePlaying = useCallback((playing: boolean) => {
+    if (playing) {
+      if (activeRef.current && !mutedRef.current && !phraseMuted.current) {
+        client.current?.enableMic(false);
+        phraseMuted.current = true;
+      }
+    } else if (phraseMuted.current) {
+      phraseMuted.current = false;
+      if (activeRef.current && !mutedRef.current) client.current?.enableMic(true);
+    }
+  }, []);
+  useEffect(() => {
+    if (mood === "talking") stopPhraseAudio();
+  }, [mood]);
+  const tray = useLearningTray(user?.id);
 
   useEffect(() => {
     if (!loading && !user) void navigate({ to: "/login" });
@@ -260,101 +267,72 @@ export function RitaRealtimeV3({
     [sendMetric],
   );
 
-  const fetchDestinations = useCallback(async () => {
-    if (
-      destinationsRef.current.flashSubjects.length ||
-      destinationsRef.current.germanSubtopics.length
-    ) {
-      return destinationsRef.current;
-    }
-    const response = await fetch("/api/rita/learning", { headers: await authHeaders() });
-    if (!response.ok) throw new Error("Could not load your learning subjects.");
-    const payload = (await response.json()) as DestinationPayload;
-    destinationsRef.current = payload;
-    setDestinations(payload);
-    return payload;
-  }, []);
+  // Callbacks created once read the latest tray through this ref.
+  const trayRef = useRef(tray);
+  trayRef.current = tray;
 
-  const runExtraction = useCallback(
-    async (spoken: string, reply: string) => {
-      if (!spoken.trim() || !reply.trim()) return;
-      try {
-        const response = await fetch("/api/rita/extract", {
-          method: "POST",
-          headers: await authHeaders(),
-          body: JSON.stringify({ spoken, reply }),
-        });
-        if (!response.ok) return;
-        const data = (await response.json()) as ExtractionResult;
-        if (!data.learningItems?.length) return;
-        setLearning((current) => {
-          const byKey = new Map(
-            current.map((item) => [`${item.language}:${item.term.toLowerCase()}`, item]),
-          );
-          for (const item of data.learningItems ?? [])
-            byKey.set(`${item.language}:${item.term.toLowerCase()}`, item);
-          return [...byKey.values()];
-        });
-        const requestedTarget =
-          data.saveRequest && data.saveRequest !== "none" ? data.saveRequest : null;
-        if (requestedTarget) setTarget(requestedTarget);
+  /**
+   * After a finished reply: if the learner asked what a word means or how to say it, note
+   * exactly that word in their list. A failure is shown, never swallowed.
+   */
+  const runExtraction = useCallback(async (spoken: string, reply: string) => {
+    if (!spoken.trim() || !reply.trim()) return;
+    if (!hasRitaLanguageLearningIntent(spoken)) return;
+    const current = () => trayRef.current;
+    try {
+      const response = await fetch("/api/rita/extract", {
+        method: "POST",
+        headers: await authHeaders(),
+        body: JSON.stringify({ spoken, reply }),
+      });
+      if (!response.ok) throw new Error("extract failed");
+      const data = (await response.json()) as ExtractionResult;
+      const items = data.learningItems ?? [];
+      if (!items.length) return;
 
-        let selected = rememberedDestination.current;
-        if (data.destinationName || requestedTarget) {
-          const payload = await fetchDestinations();
-          const optionsFor = (nextTarget: SaveTarget) =>
-            nextTarget === "flashcards"
-              ? payload.flashSubjects.map((item) => ({ id: item.id, label: item.name }))
-              : payload.germanSubtopics.map((item) => ({
-                  id: item.id,
-                  label: `${payload.germanSubjects.find((parent) => parent.id === item.subject_id)?.name ?? "German"} / ${item.name}`,
-                }));
-          const nextTarget = requestedTarget ?? selected?.target ?? "flashcards";
-          const wanted = String(data.destinationName ?? "")
-            .trim()
-            .toLocaleLowerCase();
-          const match = wanted
-            ? optionsFor(nextTarget).find((item) => item.label.toLocaleLowerCase().includes(wanted))
-            : undefined;
-          if (match) {
-            selected = { target: nextTarget, id: match.id, label: match.label };
-            setTarget(nextTarget);
-            setDestinationId(match.id);
-            if (data.rememberDestination) rememberedDestination.current = selected;
-          } else if (selected && (!requestedTarget || selected.target === requestedTarget)) {
-            setTarget(selected.target);
-            setDestinationId(selected.id);
-          }
-        }
-
-        if (requestedTarget && selected?.id && selected.target === requestedTarget) {
-          const saveResponse = await fetch("/api/rita/learning", {
-            method: "POST",
-            headers: await authHeaders(),
-            body: JSON.stringify({
-              action: "save",
-              target: selected.target,
-              destinationId: selected.id,
-              items: data.learningItems,
-            }),
-          });
-          const saved = (await saveResponse.json().catch(() => ({}))) as {
-            saved?: number;
-            error?: string;
-          };
-          setNotice(
-            saveResponse.ok
-              ? `${saved.saved ?? 0} item(s) saved to ${selected.label}.`
-              : (saved.error ?? "The language items were collected but could not be saved."),
-          );
-        }
-        setLearningOpen(true);
-      } catch {
-        // Learning extraction is intentionally outside the voice critical path.
+      const requestedTarget =
+        data.saveRequest && data.saveRequest !== "none" ? data.saveRequest : null;
+      if (!requestedTarget) {
+        current().add(items, spoken);
+        return;
       }
-    },
-    [fetchDestinations],
-  );
+
+      // The learner asked to save straight into a subject.
+      const payload = await current().loadDestinations();
+      const options =
+        requestedTarget === "flashcards"
+          ? subjectOptions(payload.flashSubjects)
+          : payload.germanSubtopics.map((item) => ({
+              id: item.id,
+              depth: 0,
+              label: `${payload.germanSubjects.find((parent) => parent.id === item.subject_id)?.name ?? "German"} / ${item.name}`,
+            }));
+      const wanted = String(data.destinationName ?? "").trim();
+      const remembered = current().remembered;
+      const chosen =
+        (wanted ? matchSubject(options, wanted) : null) ??
+        (remembered && remembered.target === requestedTarget
+          ? { id: remembered.id, label: remembered.label }
+          : null);
+      if (!chosen) {
+        current().add(items, spoken);
+        current().setTarget(requestedTarget);
+        await current().openTray();
+        return;
+      }
+      if (data.rememberDestination)
+        current().setRemembered({ target: requestedTarget, id: chosen.id, label: chosen.label });
+      const germanOnly = requestedTarget === "german_lab";
+      const direct = germanOnly ? items.filter(isGermanItem) : items;
+      const rest = germanOnly ? items.filter((item) => !isGermanItem(item)) : [];
+      if (rest.length) current().add(rest, spoken);
+      if (direct.length)
+        await current().saveNamed(requestedTarget, chosen.id, chosen.label, direct);
+      await current().openTray();
+    } catch {
+      trayRef.current.flash("Could not note that word. Ask again in a moment.");
+    }
+  }, []);
 
   const cancelFiller = useCallback(() => {
     if (fillerTimer.current) clearTimeout(fillerTimer.current);
@@ -374,6 +352,8 @@ export function RitaRealtimeV3({
     fillerTimer.current = setTimeout(async () => {
       if (!activeRef.current || botSpeaking.current || mutedRef.current) return;
       const spoken = lastUserText.current;
+      // No "mm…" after a command, a thinking sound or a one-word answer: it would sound off.
+      if (skipsFiller(spoken)) return;
       const detected = /[\u0600-\u06ff]/u.test(spoken)
         ? "ar"
         : /[äöüß]|\b(?:ich|du|der|die|das|nicht|bitte|danke|guten|morgen)\b/iu.test(spoken)
@@ -466,14 +446,24 @@ export function RitaRealtimeV3({
         text: "Hi, I’m Rita. What would you like to practise?",
       },
     ]);
-    setLearning([]);
-    rememberedDestination.current = null;
-    destinationsRef.current = { flashSubjects: [], germanSubjects: [], germanSubtopics: [] };
-    setDestinations(destinationsRef.current);
-    setDestinationId("");
+    turnSpoken.current = "";
+    skipExtraction.current = false;
+    trayRef.current.closeTray();
   }, [cancelFiller]);
 
   useEffect(() => () => void endLesson(), [endLesson]);
+
+  // Rita's worker answers "open the list" / "turn them into flashcards" by voice, so it
+  // needs to know whether there is anything in the list.
+  const wordCount = tray.entries.length;
+  useEffect(() => {
+    if (!active) return;
+    try {
+      client.current?.sendClientMessage("rita-learning-count", { count: wordCount });
+    } catch {
+      // The count is a convenience for the voice commands only.
+    }
+  }, [active, wordCount]);
 
   useEffect(() => {
     // The voice client bundles are large; fetch them while the page is idle so Start is not delayed.
@@ -605,8 +595,14 @@ export function RitaRealtimeV3({
             reply ? { id: crypto.randomUUID(), role: "rita", text: reply } : null,
           ),
         );
+        const asked = turnSpoken.current;
+        turnSpoken.current = "";
+        const wasCommand = skipExtraction.current;
+        skipExtraction.current = false;
         if (!reply) return;
-        if (!interrupted) void runExtraction(lastUserText.current, reply);
+        // A word the learner asked about counts even if they cut Rita off; only a spoken
+        // command to the list itself ("open the list", "turn them into flashcards") does not.
+        if (!wasCommand) void runExtraction(asked || lastUserText.current, reply);
         if (interrupted) void metric("interrupted");
       };
       const transport = new DailyTransport({
@@ -734,6 +730,22 @@ export function RitaRealtimeV3({
             }
             void metric("speech_start");
           },
+          onServerMessage: (data: unknown) => {
+            const message = data as {
+              type?: string;
+              action?: string;
+              target?: SaveTarget;
+              hint?: string;
+            } | null;
+            if (message?.type !== "rita-ui") return;
+            skipExtraction.current = true;
+            if (message.action === "open_list") void trayRef.current.openTray();
+            if (message.action === "convert_list")
+              void trayRef.current.convertByVoice(
+                message.target === "german_lab" ? "german_lab" : "flashcards",
+                String(message.hint ?? ""),
+              );
+          },
           onUserStoppedSpeaking: () => {
             speechEndedAt.current = performance.now();
             void metric("speech_end");
@@ -750,6 +762,9 @@ export function RitaRealtimeV3({
             }
             if (!data.final || !data.text.trim()) return;
             lastUserText.current = data.text.trim();
+            // A request can arrive in several finished pieces; keep the whole turn.
+            turnSpoken.current = `${turnSpoken.current} ${data.text.trim()}`.trim().slice(-500);
+            skipExtraction.current = false;
             currentTurnHasFinalTranscript.current = true;
             setMessages((current) => [
               ...current,
@@ -793,7 +808,7 @@ export function RitaRealtimeV3({
             cancelFiller();
             botSpeaking.current = true;
             void metric("bot_speaking_signal");
-            setStatus("Rita is speaking — interrupt whenever you want");
+            setStatus("Rita is speaking — say stop or tap Stop");
             setMood("talking");
           },
           onTrackStarted: (track, participant) => {
@@ -905,6 +920,17 @@ export function RitaRealtimeV3({
     }
   }
 
+  // A sure way to interrupt: it does not depend on the microphone or on what was heard.
+  function stopRita() {
+    cancelFiller();
+    try {
+      client.current?.sendClientMessage("rita-stop");
+    } catch {
+      /* the voice command still works */
+    }
+    void metric("stop_button");
+  }
+
   function toggleMute() {
     const next = !muted;
     client.current?.enableMic(!next);
@@ -925,35 +951,6 @@ export function RitaRealtimeV3({
     await client.current.sendText(text);
   }
 
-  async function loadDestinations(nextTarget: SaveTarget) {
-    setTarget(nextTarget);
-    setLearningOpen(true);
-    setNotice("");
-    const remembered = rememberedDestination.current;
-    if (remembered?.target === nextTarget) setDestinationId(remembered.id);
-    await fetchDestinations().catch((cause) => setNotice(humanError(cause)));
-  }
-
-  async function saveLearning() {
-    if (!destinationId || !learning.length) return;
-    setSaving(true);
-    setNotice("");
-    try {
-      const response = await fetch("/api/rita/learning", {
-        method: "POST",
-        headers: await authHeaders(),
-        body: JSON.stringify({ action: "save", target, destinationId, items: learning }),
-      });
-      const data = (await response.json().catch(() => ({}))) as { saved?: number; error?: string };
-      if (!response.ok) throw new Error(data.error || "Could not save the learning items.");
-      setNotice(`${data.saved ?? 0} item(s) saved.`);
-    } catch (cause) {
-      setNotice(humanError(cause));
-    } finally {
-      setSaving(false);
-    }
-  }
-
   if (loading || !user) {
     return (
       <div className="grid min-h-screen place-items-center">
@@ -961,14 +958,6 @@ export function RitaRealtimeV3({
       </div>
     );
   }
-
-  const options =
-    target === "flashcards"
-      ? destinations.flashSubjects.map((item) => ({ id: item.id, label: item.name }))
-      : destinations.germanSubtopics.map((item) => ({
-          id: item.id,
-          label: `${destinations.germanSubjects.find((parent) => parent.id === item.subject_id)?.name ?? "German"} / ${item.name}`,
-        }));
 
   return (
     <main
@@ -992,7 +981,7 @@ export function RitaRealtimeV3({
         <ProHeader variant="solid" tone="light" />
       </div>
 
-      <section className="mx-auto flex min-h-[calc(100vh-72px)] w-full max-w-2xl flex-col px-5 sm:px-8">
+      <div className="mx-auto flex w-full max-w-2xl flex-col px-5 sm:px-8">
         <div className="pt-6">
           <Link
             to={lessonId ? "/rita-lessons" : "/rita"}
@@ -1003,7 +992,7 @@ export function RitaRealtimeV3({
           </Link>
         </div>
 
-        <div className="flex flex-col items-center pt-2 text-center">
+        <aside className="flex flex-col items-center pt-2 text-center">
           <VoiceOrb
             levelsRef={orbLevels}
             mode={orbModeFor(active, mood)}
@@ -1026,115 +1015,147 @@ export function RitaRealtimeV3({
             />
             {status}
           </p>
-        </div>
-
-        {active && soundBlocked && (
-          <div className="flex justify-center pt-4">
-            <button type="button" onClick={enableSound} className="rita-btn rita-btn-primary">
-              Tap to enable sound
+          {active && mood === "talking" && (
+            <button
+              type="button"
+              onClick={stopRita}
+              className="rita-btn rita-btn-secondary rita-btn-sm mt-3 gap-1.5"
+            >
+              <Square size={14} fill="currentColor" /> Stop
             </button>
-          </div>
-        )}
+          )}
+        </aside>
 
-        <div className="flex-1 py-6">
-          <div className="space-y-6">
-            {lesson.session && (
-              <LessonObjectivesPanel
-                session={lesson.session}
-                objectives={lesson.objectives}
-                score={lesson.score}
-                checking={lesson.checking}
-                justMet={lesson.justMet}
-              />
-            )}
-            {lesson.error && (
-              <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
-                {lesson.error}{" "}
-                <Link to="/rita-lessons" className="underline">
-                  العودة إلى المسار
-                </Link>
-              </div>
-            )}
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={
-                  message.role === "you"
-                    ? "ml-auto w-fit max-w-[82%] rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-2.5 text-right text-[18px] leading-7"
-                    : `text-[20px] leading-8 ${
-                        !active && messages.length === 1 ? "mx-auto text-center" : "max-w-[88%]"
-                      }`
-                }
-              >
-                {message.text}
-              </div>
-            ))}
-            {caption && (
-              <p className="text-[14px] text-[var(--pp-muted)]">Live transcript: {caption}</p>
-            )}
-            {error && (
-              <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
-                {error}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="sticky bottom-0 bg-white pb-6 pt-3">
-          {!active ? (
-            <div className="flex justify-center">
-              <button
-                onClick={startLesson}
-                disabled={starting || (Boolean(lessonId) && !lesson.session)}
-                className="rita-btn rita-btn-primary gap-2 disabled:opacity-60"
-              >
-                {starting ? <Loader2 className="animate-spin" size={18} /> : <Mic size={18} />}{" "}
-                {lessonId ? "ابدأ الدرس مع ريتا" : "Start talking"}
+        <section className="flex min-h-[calc(100vh-72px)] w-full flex-col">
+          {active && soundBlocked && (
+            <div className="flex justify-center pt-4">
+              <button type="button" onClick={enableSound} className="rita-btn rita-btn-primary">
+                Tap to enable sound
               </button>
             </div>
-          ) : (
-            <form onSubmit={sendText} className="rounded-2xl bg-[var(--pp-grey)] p-3">
-              <input
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                placeholder="Ask Rita anything…"
-                className="w-full border-0 bg-transparent px-3 py-3 text-[18px] text-[var(--pp-ink)] outline-none placeholder:text-[var(--pp-muted)]"
-              />
-              <div className="flex flex-wrap items-center gap-2 border-t border-[var(--pp-line)] pt-3">
+          )}
+
+          <div className="flex-1 py-6">
+            <div className="space-y-6">
+              {lesson.session && (
+                <LessonObjectivesPanel
+                  session={lesson.session}
+                  objectives={lesson.objectives}
+                  score={lesson.score}
+                  checking={lesson.checking}
+                  justMet={lesson.justMet}
+                />
+              )}
+              {lesson.error && (
+                <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
+                  {lesson.error}{" "}
+                  <Link to="/rita-lessons" className="underline">
+                    العودة إلى المسار
+                  </Link>
+                </div>
+              )}
+              {groupTurns(messages).map((message) =>
+                message.role === "you" ? (
+                  <ChatText
+                    key={message.id}
+                    text={message.text}
+                    className="ml-auto w-fit max-w-[80%] rounded-2xl rounded-br-md bg-[var(--pp-pink-soft)] px-4 py-2 text-[17px] leading-8"
+                  />
+                ) : (
+                  <ChatText
+                    key={message.id}
+                    text={message.text}
+                    onPhrase={openPhrase}
+                    className={
+                      !active && messages.length === 1
+                        ? "mx-auto text-center text-[20px] leading-8"
+                        : "max-w-[94%] text-[18px] leading-9"
+                    }
+                  />
+                ),
+              )}
+              {showCaption(
+                caption,
+                [...messages].reverse().find((m) => m.role === "you")?.text,
+              ) && (
+                <ChatText
+                  text={caption}
+                  className="ml-auto w-fit max-w-[80%] px-2 text-[15px] leading-6 text-[var(--pp-muted)]"
+                />
+              )}
+              {error && (
+                <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
+                  {error}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="sticky bottom-0 bg-white pb-6 pt-3">
+            {!active ? (
+              <div className="flex justify-center">
                 <button
-                  type="button"
-                  onClick={toggleMute}
-                  className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
+                  onClick={startLesson}
+                  disabled={starting || (Boolean(lessonId) && !lesson.session)}
+                  className="rita-btn rita-btn-primary gap-2 disabled:opacity-60"
                 >
-                  {muted ? <MicOff size={16} /> : <Mic size={16} />}
-                  {muted ? "Unmute" : "Mute"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void loadDestinations("flashcards")}
-                  className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
-                >
-                  <Layers size={16} /> Learning ({learning.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void endLesson()}
-                  className="rita-btn rita-btn-secondary rita-btn-sm ml-auto gap-1.5 !text-[var(--pp-pink-text)]"
-                >
-                  <PhoneOff size={16} /> End
-                </button>
-                <button
-                  type="submit"
-                  aria-label="Send"
-                  className="rita-btn rita-btn-primary rita-btn-sm !w-10 !px-0"
-                >
-                  <Send size={16} />
+                  {starting ? <Loader2 className="animate-spin" size={18} /> : <Mic size={18} />}{" "}
+                  {lessonId ? "ابدأ الدرس مع ريتا" : "Start talking"}
                 </button>
               </div>
-            </form>
-          )}
-        </div>
-      </section>
+            ) : (
+              <form onSubmit={sendText} className="rounded-2xl bg-[var(--pp-grey)] p-3">
+                <input
+                  value={draft}
+                  onChange={(event) => setDraft(event.target.value)}
+                  placeholder="Ask Rita anything…"
+                  className="w-full border-0 bg-transparent px-3 py-3 text-[18px] text-[var(--pp-ink)] outline-none placeholder:text-[var(--pp-muted)]"
+                />
+                <div className="flex flex-wrap items-center gap-2 border-t border-[var(--pp-line)] pt-3">
+                  <button
+                    type="button"
+                    onClick={toggleMute}
+                    className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
+                  >
+                    {muted ? <MicOff size={16} /> : <Mic size={16} />}
+                    {muted ? "Unmute" : "Mute"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void tray.openTray()}
+                    className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
+                  >
+                    <Layers size={16} /> My words ({tray.entries.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void endLesson()}
+                    className="rita-btn rita-btn-secondary rita-btn-sm ml-auto gap-1.5 !text-[var(--pp-pink-text)]"
+                  >
+                    <PhoneOff size={16} /> End
+                  </button>
+                  <button
+                    type="submit"
+                    aria-label="Send"
+                    className="rita-btn rita-btn-primary rita-btn-sm !w-10 !px-0"
+                  >
+                    <Send size={16} />
+                  </button>
+                </div>
+                {tray.latest && (
+                  <p role="status" className="text-xs font-semibold text-[var(--pp-muted)]">
+                    {tray.latest}
+                  </p>
+                )}
+              </form>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {phrase && (
+        <PhraseDialog phrase={phrase} onClose={closePhrase} onPlayingChange={phrasePlaying} />
+      )}
 
       {lesson.result && !resultDismissed && (
         <LessonResultCard
@@ -1149,104 +1170,7 @@ export function RitaRealtimeV3({
         />
       )}
 
-      {learningOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-end bg-[#121117]/40 sm:items-center sm:justify-center"
-          onClick={() => setLearningOpen(false)}
-        >
-          <section
-            className="max-h-[88vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-2xl sm:rounded-2xl sm:p-7 text-[var(--pp-ink)]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-bold text-[var(--pp-pink-text)]">Learning Tray</p>
-                <h2 className="text-2xl font-extrabold">Useful language from this lesson</h2>
-              </div>
-              <button onClick={() => setLearningOpen(false)}>
-                <X />
-              </button>
-            </div>
-            {!learning.length ? (
-              <p className="py-10 text-center text-[var(--pp-muted)]">
-                Ask for a translation, a word meaning, or a language word list. General knowledge
-                will not be saved here.
-              </p>
-            ) : (
-              <div className="mt-6 divide-y divide-[var(--pp-line)]">
-                {learning.map((item) => (
-                  <div
-                    key={`${item.language}:${item.term}`}
-                    className="grid gap-1 py-4 sm:grid-cols-[1fr_1fr_auto]"
-                  >
-                    <strong>
-                      {item.article ? `${item.article} ` : ""}
-                      {item.term}
-                    </strong>
-                    <span className="text-[var(--pp-muted)]">{item.meaning}</span>
-                    <span className="text-xs font-bold uppercase text-[var(--pp-pink-text)]">
-                      {item.language}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {learning.length > 0 && (
-              <div className="mt-6 rounded-2xl bg-[var(--pp-grey)] p-4">
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => void loadDestinations("flashcards")}
-                    className={`rounded-lg px-4 py-2 text-sm font-bold ${target === "flashcards" ? "border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)]" : "border-2 border-transparent bg-white"}`}
-                  >
-                    <Layers className="mr-1 inline" size={15} />
-                    Flashcards
-                  </button>
-                  <button
-                    onClick={() => void loadDestinations("german_lab")}
-                    className={`rounded-lg px-4 py-2 text-sm font-bold ${target === "german_lab" ? "border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)]" : "border-2 border-transparent bg-white"}`}
-                  >
-                    <BookOpen className="mr-1 inline" size={15} />
-                    German Lab
-                  </button>
-                </div>
-                <div className="relative mt-3">
-                  <select
-                    value={destinationId}
-                    onChange={(event) => setDestinationId(event.target.value)}
-                    className="w-full appearance-none rita-select !pr-10 w-full appearance-none"
-                  >
-                    <option value="">Choose a subject…</option>
-                    {options.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-3.5" size={18} />
-                </div>
-                {rememberedDestination.current && (
-                  <p className="mt-2 text-xs font-bold text-[var(--pp-pink-text)]">
-                    Remembered for this lesson: {rememberedDestination.current.label}
-                  </p>
-                )}
-                <button
-                  onClick={saveLearning}
-                  disabled={!destinationId || saving}
-                  className="rita-btn rita-btn-primary mt-3 !w-full !self-stretch gap-2 disabled:opacity-40"
-                >
-                  {saving ? <Loader2 className="animate-spin" size={16} /> : <Check size={16} />}
-                  Save selected lesson language
-                </button>
-                {notice && <p className="mt-3 text-sm font-semibold">{notice}</p>}
-              </div>
-            )}
-            <p className="mt-5 flex items-center gap-2 text-xs text-[var(--pp-muted)]">
-              <Sparkles size={14} />
-              Unsaved items and this chat are deleted when the lesson ends.
-            </p>
-          </section>
-        </div>
-      )}
+      <LearningTray tray={tray} />
     </main>
   );
 }

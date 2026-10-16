@@ -6,6 +6,9 @@ import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 
+from rita_dialect import HOW_TO_SAY_DIRECTIVE, asks_how_to_say
+from rita_dialogue_acts import Act, Awaiting, classify, parse_last_question, tokens
+
 
 class ResponseType(StrEnum):
     BACKCHANNEL = "backchannel"
@@ -67,6 +70,22 @@ class RitaSessionState:
     last_feedback_signature: str = ""
     response_type: ResponseType = ResponseType.ANSWER_SHORT
     recent_user_turns: list[str] = field(default_factory=list)
+    # Conversation memory for short answers ("إيه", "مش عارف") and stop commands.
+    last_question: str = ""
+    awaiting: Awaiting = Awaiting.NONE
+    options: tuple[str, ...] = ()
+    topic: str = ""
+    topic_paused: bool = False
+    last_act: Act = Act.OTHER
+    clarification_count: int = 0
+    stop_count: int = 0
+    # How many words are in the learner's list on screen (None until the page reports it).
+    learning_count: int | None = None
+    # The learner asked how to say something; the reply stays in their own language.
+    asked_how_to_say: bool = False
+    # Rita has already spoken (or been greeted by the scripted hello).
+    assistant_turns: int = 0
+    greeted: bool = False
 
     def __post_init__(self) -> None:
         if self.active_language in {"ar", "en", "de"}:
@@ -81,6 +100,8 @@ class RitaSessionState:
             (r"(?:احكي|تكلم|جاوب).{0,25}(?:انجليزي|إنجليزي)", "en", "en-GB"),
             (r"(?:احكي|تكلم|جاوب).{0,25}(?:ألماني|الماني)", "de", "standard"),
         )
+        if asks_how_to_say(lowered):
+            return False
         for pattern, language, dialect in commands:
             if re.search(pattern, lowered, re.IGNORECASE):
                 self.active_language = language
@@ -108,6 +129,8 @@ class RitaSessionState:
         clean = re.sub(r"\s+", " ", text).strip()
         lowered = clean.casefold()
         self.recent_user_turns = (self.recent_user_turns + [clean])[-8:]
+        self._observe_act(clean)
+        self.asked_how_to_say = asks_how_to_say(clean)
         self.current_turn_language = infer_turn_language(clean)
         if not self._apply_explicit_language(lowered):
             self._update_stable_language(self.current_turn_language)
@@ -144,17 +167,81 @@ class RitaSessionState:
         else:
             self.response_type = ResponseType.ANSWER_SHORT
 
+    def _observe_act(self, clean: str) -> None:
+        reading = classify(clean, awaiting=self.awaiting)
+        self.last_act = reading.act
+        if reading.act == Act.STOP:
+            self.topic_paused = True
+            self.stop_count += 1
+        elif reading.act in (Act.OTHER, Act.CONTINUE):
+            self.topic_paused = False
+        if reading.act == Act.OTHER and len(tokens(clean)) >= 3:
+            self.topic = " ".join(clean.split()[:12])
+        if not (reading.act == Act.YES and self.awaiting == Awaiting.CHOICE):
+            self.clarification_count = 0
+
     def observe_assistant_turn(self, text: str) -> None:
+        self.assistant_turns += 1
         normalized = re.sub(r"[^\w\u0600-\u06ff]+", " ", text.casefold()).strip()
         self.last_feedback_signature = " ".join(normalized.split()[:16])
+        question = parse_last_question(text)
+        self.last_question = question.text
+        self.awaiting = question.awaiting
+        self.options = question.options
 
-    def prompt_state(self) -> str:
+    def turn_directive(self) -> str:
+        """One instruction for the model about the learner's last short turn, or empty."""
+
+        if self.asked_how_to_say:
+            return HOW_TO_SAY_DIRECTIVE
+        act, awaiting = self.last_act, self.awaiting
+        if act == Act.YES and awaiting == Awaiting.YES_NO:
+            return "the learner answered YES to last_question"
+        if act == Act.NO:
+            if awaiting == Awaiting.CHOICE:
+                return "the learner refused every option; ask one short open question about what they want"
+            if awaiting == Awaiting.YES_NO:
+                return "the learner answered NO to last_question"
+            return "the learner said no; accept it, do not argue or explain, offer one short alternative"
+        if act == Act.DONT_KNOW:
+            return "the learner does not know; pick the simplest option yourself in one short sentence and continue; do not ask again"
+        if act == Act.CORRECTION:
+            return "the learner is correcting you; drop your last assumption and say in one sentence what you understood now"
+        if act == Act.UNDERSTOOD:
+            return "the learner understood; do not re-explain; take one small next step"
+        if act == Act.CONTINUE:
+            return "continue the topic from where you stopped; do not restart or summarise"
+        if act == Act.REPEAT:
+            return "repeat your last reply, shorter and simpler"
+        if act == Act.UNCLEAR:
+            return "the answer does not fit last_question; ask one short clarification of at most eight words"
+        if act == Act.BACKCHANNEL:
+            return "the learner only acknowledged; answer in one short sentence or continue naturally"
+        return ""
+
+    def dialogue_state(self) -> str:
+        question = self.last_question.replace('"', "'")[:120]
+        options = "|".join(self.options)[:120]
+        parts = [
+            f"awaiting={self.awaiting.value}",
+            f'last_question="{question}"' if question else "last_question=none",
+            f'options="{options}"' if options else "options=none",
+            f'topic="{self.topic.replace(chr(34), chr(39))[:90]}"' if self.topic else "topic=none",
+            f"topic_paused={self.topic_paused}",
+            f"learner_act={self.last_act.value}",
+        ]
+        directive = self.turn_directive()
+        if directive:
+            parts.append(f"directive={directive}")
+        return "; ".join(parts)
+
+    def prompt_state(self, *, dialogue: bool = False) -> str:
         strategy = (
             "normal"
             if self.attempt_count < 2
             else "change-method: slower model, minimal pair, syllable isolation, or new analogy"
         )
-        return (
+        base = (
             f"response_type={self.response_type}; active_language={self.active_language}; "
             f"turn_language={self.current_turn_language}; dialect={self.active_dialect}; "
             f"language_source={self.language_source}; evidence={self.consecutive_evidence}; "
@@ -162,3 +249,4 @@ class RitaSessionState:
             f"frustration={self.frustration_signal}; correction_budget={self.correction_budget}; "
             f"teaching_strategy={strategy}; last_feedback={self.last_feedback_signature or 'none'}"
         )
+        return f"{base}; {self.dialogue_state()}" if dialogue else base

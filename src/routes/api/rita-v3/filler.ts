@@ -2,9 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { requireRitaV3Access, resolveRitaV3Key } from "@/lib/rita-v3.server";
 
 const FILLERS = {
-  ar: ["مم…", "فهمت عليك…", "خليني أشوف…"],
-  en: ["Mm-hm…", "Got you…", "Let me think."],
-  de: ["Mhm…", "Verstehe…", "Lass mich kurz überlegen."],
+  // Only sounds that do not claim to have understood: Rita may still need to ask.
+  ar: ["مم…", "طيب…", "خليني أشوف…"],
+  en: ["Mm-hm…", "Okay…", "Let me think."],
+  de: ["Mhm…", "Okay…", "Lass mich kurz überlegen."],
 } as const;
 
 function decodeBase64(value: string) {
@@ -16,7 +17,8 @@ function pcmPayload(bytes: Uint8Array) {
     bytes.byteLength < 12 ||
     String.fromCharCode(...bytes.slice(0, 4)) !== "RIFF" ||
     String.fromCharCode(...bytes.slice(8, 12)) !== "WAVE"
-  ) return bytes;
+  )
+    return bytes;
 
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let offset = 12;
@@ -41,7 +43,13 @@ export const Route = createFileRoute("/api/rita-v3/filler")({
         const url = new URL(request.url);
         const language = url.searchParams.get("language") as keyof typeof FILLERS | null;
         const index = Number(url.searchParams.get("index"));
-        if (!language || !(language in FILLERS) || !Number.isInteger(index) || index < 0 || index > 2) {
+        if (
+          !language ||
+          !(language in FILLERS) ||
+          !Number.isInteger(index) ||
+          index < 0 ||
+          index > 2
+        ) {
           return Response.json({ error: "Invalid filler" }, { status: 400 });
         }
         const key = await resolveRitaV3Key("google", "GOOGLE_API_KEY");
@@ -52,15 +60,20 @@ export const Route = createFileRoute("/api/rita-v3/filler")({
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              contents: [{
-                role: "user",
-                parts: [{
-                  text: FILLERS[language][index],
-                  speech_metadata: {
-                    style: "Rita: warm, close-mic, quick and natural; friendly Jordanian accent for Arabic.",
-                  },
-                }],
-              }],
+              contents: [
+                {
+                  role: "user",
+                  parts: [
+                    {
+                      text: FILLERS[language][index],
+                      speech_metadata: {
+                        style:
+                          "Rita: warm, close-mic, quick and natural; friendly Jordanian accent for Arabic.",
+                      },
+                    },
+                  ],
+                },
+              ],
               generationConfig: {
                 responseModalities: ["AUDIO"],
                 speechConfig: { voiceConfig: { voice: "Achernar" } },
@@ -69,7 +82,8 @@ export const Route = createFileRoute("/api/rita-v3/filler")({
             signal: AbortSignal.timeout(12_000),
           },
         );
-        if (!response.ok) return Response.json({ error: "Filler generation failed" }, { status: 502 });
+        if (!response.ok)
+          return Response.json({ error: "Filler generation failed" }, { status: 502 });
         const payload = (await response.json()) as {
           candidates?: { content?: { parts?: { inlineData?: { data?: string } }[] } }[];
         };
@@ -78,7 +92,8 @@ export const Route = createFileRoute("/api/rita-v3/filler")({
             part.inlineData?.data ? [pcmPayload(decodeBase64(part.inlineData.data))] : [],
           ),
         );
-        if (!chunks.length) return Response.json({ error: "Gemini returned no filler audio" }, { status: 502 });
+        if (!chunks.length)
+          return Response.json({ error: "Gemini returned no filler audio" }, { status: 502 });
         const length = chunks.reduce((total, chunk) => total + chunk.byteLength, 0);
         const audio = new Uint8Array(length);
         let offset = 0;
