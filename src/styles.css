@@ -3364,3 +3364,141 @@ hairline borders and generous radii.
   font-size: 15px;
   border-width: 1.5px;
 }
+
+/* ===========================================================================
+   Home page: live demo, topic strip, voice band, lesson path, FAQ.
+   Scope: .edith-premium. Motion budget: one authored sequence in the hero,
+   a slow strip, the voice orb, and the usual reveal. Everything is visible
+   without animation; reduced motion switches the motion off.
+   =========================================================================== */
+@keyframes rh-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+@keyframes rh-mark {
+  from {
+    background-color: transparent;
+  }
+}
+@keyframes rh-wave {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes rh-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes rh-ring {
+  from {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+@keyframes rh-float {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-9px);
+  }
+}
+.edith-premium .rh-pop {
+  animation: rh-pop 560ms var(--pp-ease) var(--rh-d, 0ms) backwards;
+}
+.edith-premium .rh-mark {
+  animation: rh-mark 520ms var(--pp-ease) var(--rh-d, 0ms) backwards;
+}
+.edith-premium .rh-wave {
+  transform-origin: center;
+  animation: rh-wave 1100ms ease-in-out var(--rh-d, 0ms) infinite;
+}
+.edith-premium .rh-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: rh-marquee 60s linear infinite;
+}
+.edith-premium .rh-marquee:hover .rh-marquee-track,
+.edith-premium .rh-marquee:focus-within .rh-marquee-track {
+  animation-play-state: paused;
+}
+.edith-premium .rh-ring {
+  animation: rh-ring 3600ms ease-out var(--rh-d, 0ms) infinite;
+}
+.edith-premium .rh-float {
+  animation: rh-float 6s ease-in-out var(--rh-d, 0ms) infinite alternate;
+}
+.edith-premium .rh-lift {
+  transition:
+    transform 220ms var(--pp-ease),
+    box-shadow 220ms var(--pp-ease);
+}
+@media (hover: hover) {
+  .edith-premium .rh-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px -24px rgba(18, 17, 23, 0.35);
+  }
+}
+.edith-premium details.rh-faq summary {
+  list-style: none;
+  cursor: pointer;
+}
+.edith-premium details.rh-faq summary::-webkit-details-marker {
+  display: none;
+}
+.edith-premium details.rh-faq .rh-plus {
+  transition: transform 220ms var(--pp-ease);
+}
+.edith-premium details.rh-faq[open] .rh-plus {
+  transform: rotate(45deg);
+}
+.edith-premium .rh-fade-edges {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .edith-premium .rh-pop,
+  .edith-premium .rh-mark,
+  .edith-premium .rh-wave,
+  .edith-premium .rh-marquee-track,
+  .edith-premium .rh-ring,
+  .edith-premium .rh-float {
+    animation: none;
+  }
+  .edith-premium .rh-marquee {
+    overflow: visible;
+    padding-inline: 20px;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .edith-premium .rh-marquee-track {
+    width: auto;
+    justify-content: center;
+  }
+  .edith-premium .rh-marquee-track > div {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 10px;
+  }
+  .edith-premium .rh-marquee-copy {
+    display: none;
+  }
+  .edith-premium .rh-lift,
+  .edith-premium details.rh-faq .rh-plus {
+    transition: none;
+  }
+  .edith-premium .rh-lift:hover {
+    transform: none;
+  }
+}

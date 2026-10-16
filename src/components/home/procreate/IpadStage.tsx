@@ -7,12 +7,12 @@ import { EditableImage } from "@/components/site/EditableImage";
  * is clipped away. The artwork is placed inside the *visible* band only, so the
  * picture always fills what you can see instead of disappearing behind the cut.
  */
-export function IpadStage() {
+export function IpadStage({ cropped = true }: { cropped?: boolean }) {
   return (
     <div className="relative w-full overflow-hidden">
       <div className="relative mx-auto w-full max-w-[1100px] px-4 md:px-10">
         {/* Negative top margin pushes about a third of the device off-screen. */}
-        <div className="-mt-[20%] md:-mt-[22%]">
+        <div className={cropped ? "-mt-[20%] md:-mt-[22%]" : ""}>
           <div
             className="relative mx-auto rounded-[2rem] p-[9px] md:rounded-[2.5rem] md:p-[11px]"
             style={{
@@ -38,7 +38,7 @@ export function IpadStage() {
               imageKey="home.ipad"
               fallback={screenArt}
               alt="Three students studying together around a laptop, shown on an iPad screen"
-              className="absolute inset-x-0 bottom-0 top-[32%] w-full object-cover object-center"
+              className={`absolute inset-x-0 bottom-0 w-full object-cover object-center ${cropped ? "top-[32%]" : "top-0"}`}
               width={1280}
               height={800}
               loading="eager"
