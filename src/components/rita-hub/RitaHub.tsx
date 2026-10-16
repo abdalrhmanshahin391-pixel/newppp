@@ -182,7 +182,7 @@ export function RitaHub() {
                   ) : null}
                   {current ? (
                     <span lang="ar" className="font-semibold">
-                      {current.title_ar || current.title}
+                      {current.title || current.title_ar}
                     </span>
                   ) : null}
                 </span>

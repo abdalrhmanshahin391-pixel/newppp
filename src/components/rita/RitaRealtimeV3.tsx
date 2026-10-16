@@ -1011,7 +1011,7 @@ export function RitaRealtimeV3({
             className="h-[min(70vw,360px)] w-[min(70vw,360px)]"
           />
           <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
-            {lessonId ? lesson.session?.lesson.title_ar || "Lesson" : "Talk with Rita"}
+            {lessonId ? lesson.session?.lesson.title || lesson.session?.lesson.title_ar || "Lesson" : "Talk with Rita"}
           </h2>
           <p className="mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]">
             <span

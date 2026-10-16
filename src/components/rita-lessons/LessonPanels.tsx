@@ -31,7 +31,7 @@ export function LessonObjectivesPanel({
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold text-[var(--pp-pink-text)]">درس اليوم</p>
           <h2 className="truncate text-lg font-bold">
-            {session.lesson.title_ar || session.lesson.title}
+            {session.lesson.title || session.lesson.title_ar}
           </h2>
           <p className="truncate text-xs font-semibold text-[var(--pp-muted)]" dir="ltr">
             {session.lesson.title}
