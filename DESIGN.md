@@ -125,6 +125,17 @@ labels, no stock illustrations. Question bank, Lecture Lab and All in one follow
 the question player, map rail, explanation panel and subject picker are ink-bordered cards with
 the accent for the action.
 
+## Lesson builder (`/admin/curricula`)
+
+For one book the admin sees: "Lesson N: pick its topic" (three cards from the pages already read,
+plus a field for a topic of their own), then a rail of the book's lessons and, for the chosen
+lesson, three tabs: Overview, Slides and Goals and plan. Slides are written by the AI from the
+lesson's own pages (6-9 slides: title, points, examples, vocabulary, a practice task, a recap),
+then edited by hand: thumbnails strip, live preview, up/down/delete, add, save. Slides are for
+admins only for now and live in their own table (`rita_lesson_slides`), so the page works before
+the migration is applied. Pure rules (slide schema, next-topic suggestions) are in
+`src/lib/rita-slides.ts` with tests in `rita-slides.test.ts`.
+
 ## Accessibility floor
 
 Contrast AA (4.5:1 text, 3:1 large text and UI), visible focus, keyboard-reachable controls,

@@ -34,6 +34,9 @@ added since.
    - `20261015180000_rita_lesson_image_lock.sql` **new**: adds
      `rita_lessons.image_generating_at`. Until it is applied, automatic lesson
      pictures stay off (nothing breaks).
+   - `20261017120000_rita_lesson_slides.sql` **new**: creates `rita_lesson_slides`
+     (one slide deck per lesson, admin only). Until it is applied, the lesson builder
+     shows a note in the Slides tab and everything else works.
    - Check the buckets exist: `rita-curricula` (private) and
      `rita-lesson-images`.
 
@@ -48,7 +51,7 @@ added since.
      `docs/curriculum-samples/a1-english-grammar.pdf`, then the words book
      (type: كلمات) with `a1-english-words.pdf`.
    - For each book: import summary JSON (`*.summary.json`), then
-     الدروس → استيراد JSON (`*.lessons.json`).
+     الدروس → «استيراد درس من JSON» (`*.lessons.json`).
    - Publish the lessons in the order wanted, then both books, then open
      `/rita-lessons` and press متابعة.
    - With the key from step 3, opening a lesson makes its real picture.

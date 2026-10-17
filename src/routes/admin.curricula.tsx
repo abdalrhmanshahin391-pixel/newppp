@@ -52,6 +52,7 @@ import {
   adminCurriculumOverview,
   adminGenerateLesson,
   adminGenerateLessonImage,
+  adminGenerateSlides,
   adminImportCurriculumWindow,
   adminImportLesson,
   adminMoveLesson,
@@ -59,6 +60,7 @@ import {
   adminReorderLessons,
   adminRegenerateObjective,
   adminSaveCurriculumPages,
+  adminSaveSlides,
   adminSetCurriculumStatus,
   adminSetLessonStatus,
   adminTranscribeCurriculumPages,
@@ -69,6 +71,9 @@ import {
 } from "@/lib/rita-curriculum.functions";
 import { LessonImage } from "@/components/rita-lessons/LessonArt";
 import { LessonForm } from "@/components/rita-lessons/LessonForm";
+import { NextLessonPicker } from "@/components/rita-lessons/admin/NextLessonPicker";
+import { SlidesPanel } from "@/components/rita-lessons/admin/SlidesPanel";
+import { suggestNextTopics, type Slide } from "@/lib/rita-slides";
 
 export const Route = createFileRoute("/admin/curricula")({
   head: () => ({
@@ -95,6 +100,10 @@ const ERROR_HINTS: [RegExp, string][] = [
   [/429|rate limit/i, "تجاوزت حد الاستخدام مؤقتًا — انتظر قليلًا ثم أعد المحاولة."],
   [/Forbidden: admin only/i, "هذا الإجراء يتطلب صلاحيات مشرف."],
   [/has not been read yet/i, "لا يمكن إنشاء الدرس قبل قراءة هذه الصفحات — اقرأ النافذة أولًا."],
+  [
+    /rita_lesson_slides/i,
+    "السلايدات تحتاج تطبيق تحديث قاعدة البيانات (migration 20261017120000) في Lovable Cloud.",
+  ],
   [
     /Could not find the function|does not exist/i,
     "هذه الميزة تحتاج تطبيق تحديث قاعدة البيانات (migration 20261015120000) في Lovable Cloud.",
@@ -287,6 +296,8 @@ function AdminCurricula() {
               allLessons={overview.lessons}
               missingText={overview.missingText[selected.id] ?? []}
               needsMigration={overview.needsMigration}
+              slides={overview.slides}
+              slidesReady={overview.slidesReady}
               pdfCache={pdfCache}
               onChanged={refresh}
             />
@@ -508,6 +519,8 @@ function BookDetail({
   allLessons,
   missingText,
   needsMigration,
+  slides,
+  slidesReady,
   pdfCache,
   onChanged,
 }: {
@@ -517,6 +530,8 @@ function BookDetail({
   allLessons: LessonRow[];
   missingText: number[];
   needsMigration: boolean;
+  slides: Record<string, Slide[]>;
+  slidesReady: boolean;
   pdfCache: Map<string, File>;
   onChanged: () => Promise<void>;
 }) {
@@ -920,6 +935,8 @@ function BookDetail({
         windows={windows}
         lessons={lessons}
         allLessons={allLessons}
+        slides={slides}
+        slidesReady={slidesReady}
         onChanged={onChanged}
       />
 
@@ -1126,12 +1143,16 @@ function LessonsCard({
   windows,
   lessons,
   allLessons,
+  slides,
+  slidesReady,
   onChanged,
 }: {
   book: CurriculumRow;
   windows: WindowRow[];
   lessons: LessonRow[];
   allLessons: LessonRow[];
+  slides: Record<string, Slide[]>;
+  slidesReady: boolean;
   onChanged: () => Promise<void>;
 }) {
   const generateFn = useServerFn(adminGenerateLesson);
@@ -1142,25 +1163,30 @@ function LessonsCard({
   const imageFn = useServerFn(adminGenerateLessonImage);
   const moveFn = useServerFn(adminMoveLesson);
   const regenerateFn = useServerFn(adminRegenerateObjective);
+  const slidesFn = useServerFn(adminGenerateSlides);
+  const saveSlidesFn = useServerFn(adminSaveSlides);
   const [busy, setBusy] = useState("");
   const firstUntaught = Math.min(book.taught_cursor + 1, Math.max(1, book.read_cursor));
-  const [form, setForm] = useState({ topic: "", from: firstUntaught, to: firstUntaught });
-  const [mode, setMode] = useState<"ai" | "json">("ai");
   const [lessonJson, setLessonJson] = useState("");
+  const [generatingKey, setGeneratingKey] = useState("");
+  const [activeId, setActiveId] = useState("");
+  const [tab, setTab] = useState<"overview" | "slides" | "edit">("overview");
+  const [deckEpoch, setDeckEpoch] = useState<Record<string, number>>({});
   const [editing, setEditing] = useState<{ id: string; draft: LessonDraft } | null>(null);
   const [selectedDrafts, setSelectedDrafts] = useState<Set<string>>(new Set());
   const [publishAsk, setPublishAsk] = useState<LessonRow | null>(null);
 
   const suggestions = useMemo(
     () =>
-      windows
-        .flatMap((window) => window.summary.suggested_lessons)
-        .filter(
-          (item) =>
-            !lessons.some((lesson) => lesson.topic.toLowerCase() === item.topic.toLowerCase()),
-        ),
-    [lessons, windows],
+      suggestNextTopics({
+        suggestions: windows.flatMap((window) => window.summary.suggested_lessons),
+        lessons,
+        readCursor: book.read_cursor,
+      }),
+    [book.read_cursor, lessons, windows],
   );
+  const nextNo = lessons.reduce((max, lesson) => Math.max(max, lesson.lesson_no), 0) + 1;
+  const active = lessons.find((lesson) => lesson.id === activeId) ?? lessons[lessons.length - 1];
   const published = allLessons
     .filter((lesson) => lesson.status === "published" && lesson.path_order != null)
     .sort((a, b) => Number(a.path_order) - Number(b.path_order));
@@ -1296,97 +1322,45 @@ function LessonsCard({
           اقرأ أول {CURRICULUM_WINDOW_PAGES} صفحات قبل إنشاء الدروس.
         </p>
       ) : (
-        <div className="mt-3 rounded-2xl bg-white p-4">
-          <div className="flex gap-2">
-            {(["ai", "json"] as const).map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setMode(value)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-bold ${mode === value ? "bg-[var(--pp-ink)] text-white" : "bg-white"}`}
-              >
-                {value === "ai" ? "إنشاء بالذكاء الاصطناعي" : "استيراد JSON"}
-              </button>
-            ))}
-          </div>
-          {mode === "ai" ? (
-            <div className="mt-3 space-y-2">
-              <input
-                value={form.topic}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, topic: event.target.value }))
-                }
-                placeholder="موضوع الدرس، مثال: to be verbs"
-                className="w-full rounded-xl border border-[var(--pp-line)] px-3 py-2 text-sm"
-              />
-              {suggestions.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {suggestions.slice(0, 8).map((item) => (
-                    <button
-                      key={`${item.topic}-${item.from_page}`}
-                      type="button"
-                      onClick={() =>
-                        setForm({ topic: item.topic, from: item.from_page, to: item.to_page })
-                      }
-                      className="rounded-lg bg-white px-3 py-1 text-xs font-bold text-[var(--pp-accent-text)]"
-                    >
-                      {item.title_ar || item.topic} · ص{item.from_page}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div className="flex flex-wrap items-center gap-2 text-sm font-bold">
-                من ص
-                <NumberBox
-                  value={form.from}
-                  onChange={(from) => setForm((current) => ({ ...current, from }))}
-                />
-                إلى ص
-                <NumberBox
-                  value={form.to}
-                  onChange={(to) => setForm((current) => ({ ...current, to }))}
-                />
-                <span className="text-xs text-[var(--pp-muted)]">
-                  (حتى ص{book.read_cursor} مقروءة)
-                </span>
-              </div>
-              <button
-                type="button"
-                disabled={form.topic.trim().length < 2 || Boolean(busy)}
-                onClick={() =>
-                  void run(
-                    "generate",
-                    () =>
-                      generateFn({
-                        data: {
-                          curriculumId: book.id,
-                          topic: form.topic.trim(),
-                          from: form.from,
-                          to: form.to,
-                        },
-                      }),
-                    "أُنشئ الدرس كمسودة — راجعه ثم انشره",
-                  )
-                }
-                className="flex items-center gap-2 rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-accent)] px-4 py-2 text-sm font-bold text-[var(--pp-on-accent)] disabled:opacity-50"
-              >
-                {busy === "generate" ? (
-                  <Loader2 size={15} className="animate-spin" />
-                ) : (
-                  <Sparkles size={15} />
-                )}
-                أنشئ الدرس
-              </button>
-            </div>
-          ) : (
+        <div className="mt-3 space-y-3">
+          <NextLessonPicker
+            nextNo={nextNo}
+            suggestions={suggestions}
+            readCursor={book.read_cursor}
+            defaultFrom={firstUntaught}
+            busy={Boolean(busy)}
+            generatingKey={generatingKey}
+            onGenerate={(pick, key) => {
+              setGeneratingKey(key);
+              void run(
+                "generate",
+                async () => {
+                  const row = await generateFn({
+                    data: {
+                      curriculumId: book.id,
+                      topic: pick.topic,
+                      from: pick.from,
+                      to: pick.to,
+                    },
+                  });
+                  setActiveId(row.id);
+                  setTab("slides");
+                },
+                "أُنشئ الدرس كمسودة — ولّد سلايداته ثم راجعه وانشره",
+              ).finally(() => setGeneratingKey(""));
+            }}
+          />
+          <details className="rounded-2xl bg-white p-4">
+            <summary className="cursor-pointer text-sm font-semibold">استيراد درس من JSON</summary>
             <div className="mt-3 space-y-2">
               <textarea
                 value={lessonJson}
                 onChange={(event) => setLessonJson(event.target.value)}
                 dir="ltr"
                 rows={8}
+                aria-label="JSON الدرس"
                 placeholder='{"title": "...", "objectives": [...], "plan": {...}}'
-                className="w-full rounded-xl border border-[var(--pp-line)] p-3 font-mono text-xs"
+                className="w-full rounded-lg border-2 border-[var(--pp-ink)] p-3 font-mono text-xs"
               />
               <button
                 type="button"
@@ -1405,190 +1379,304 @@ function LessonsCard({
                     "تم استيراد الدرس",
                   )
                 }
-                className="rounded-lg bg-[var(--pp-ink)] px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+                className="rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-accent)] px-4 py-2 text-sm font-semibold text-[var(--pp-on-accent)] disabled:opacity-50"
               >
                 استيراد الدرس
               </button>
             </div>
-          )}
+          </details>
         </div>
       )}
 
-      <div className="mt-4 space-y-3">
-        {lessons.map((lesson) => {
-          const pathIndex = published.findIndex((item) => item.id === lesson.id);
-          return (
-            <div key={lesson.id} className="rounded-2xl border border-[var(--pp-line)] p-4">
-              <div className="flex items-start gap-3">
-                <LessonImage src={lesson.image_url} alt="" className="h-16 w-16 shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-[var(--pp-muted)]">
-                    درس {lesson.lesson_no} · ص{lesson.source_from_page}
-                    {lesson.source_to_page !== lesson.source_from_page
-                      ? `–${lesson.source_to_page}`
-                      : ""}{" "}
-                    · {lesson.objectives.length} أهداف · v{lesson.version}
-                    {pathIndex >= 0 ? ` · الترتيب في المسار ${pathIndex + 1}` : ""}
-                  </p>
-                  <p className="font-bold">{lesson.title_ar || lesson.title}</p>
-                  <p className="text-sm text-[var(--pp-muted)]" dir="ltr">
-                    {lesson.title}
-                  </p>
-                  <ul className="mt-1 list-disc pr-5 text-xs text-[var(--pp-muted)]">
-                    {lesson.objectives.map((objective) => (
-                      <li key={objective.id}>{objective.text_ar || objective.text}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <span
-                    className={`rounded-lg px-2.5 py-1 text-[11px] font-bold ${
-                      lesson.status === "published"
-                        ? "bg-[var(--pp-accent-soft)] text-[var(--pp-accent-text)]"
-                        : "bg-white text-[var(--pp-muted)]"
+      {lessons.length === 0 ? (
+        <p className="mt-4 rounded-2xl border-2 border-dashed border-[var(--pp-line)] p-6 text-center text-sm font-semibold text-[var(--pp-muted)]">
+          لا دروس في هذا الكتاب بعد. اختر موضوع الدرس الأول من الأعلى.
+        </p>
+      ) : (
+        <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[16rem_minmax(0,1fr)]">
+          <nav aria-label="دروس الكتاب">
+            <ol className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
+              {lessons.map((lesson) => {
+                const count = slides[lesson.id]?.length ?? 0;
+                const isActive = lesson.id === active?.id;
+                return (
+                  <li key={lesson.id} className="shrink-0 lg:shrink">
+                    <button
+                      type="button"
+                      aria-current={isActive ? "true" : undefined}
+                      onClick={() => {
+                        setActiveId(lesson.id);
+                        setTab("overview");
+                      }}
+                      className={`flex w-56 flex-col gap-1 rounded-2xl border-2 p-3 text-start transition-colors lg:w-full ${
+                        isActive
+                          ? "border-[var(--pp-ink)] bg-[var(--pp-accent-soft)]"
+                          : "border-[var(--pp-line)] bg-white hover:border-[var(--pp-ink)]"
+                      }`}
+                    >
+                      <span className="flex items-center justify-between gap-2 text-xs font-semibold text-[var(--pp-muted)]">
+                        <span>
+                          درس {lesson.lesson_no} · ص{lesson.source_from_page}
+                          {lesson.source_to_page !== lesson.source_from_page
+                            ? `–${lesson.source_to_page}`
+                            : ""}
+                        </span>
+                        <span
+                          className={`rounded-md px-1.5 py-0.5 ${
+                            lesson.status === "published"
+                              ? "bg-[var(--pp-ink)] text-white"
+                              : "border border-[var(--pp-line)] bg-white"
+                          }`}
+                        >
+                          {lesson.status === "published" ? "منشور" : "مسودة"}
+                        </span>
+                      </span>
+                      <span className="line-clamp-2 text-sm font-bold leading-snug">
+                        {lesson.title_ar || lesson.title}
+                      </span>
+                      {slidesReady && (
+                        <span className="text-xs font-medium text-[var(--pp-muted)]">
+                          {count > 0 ? `${count} سلايد` : "بلا سلايدات"}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+
+          {active && (
+            <div className="min-w-0 space-y-3">
+              <div role="tablist" aria-label="أقسام الدرس" className="flex flex-wrap gap-2">
+                {(
+                  [
+                    ["overview", "نظرة عامة"],
+                    ["slides", "السلايدات"],
+                    ["edit", "الأهداف والخطة"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="tab"
+                    aria-selected={tab === value}
+                    onClick={() => {
+                      setTab(value);
+                      if (value === "edit") setEditing({ id: active.id, draft: lessonToDraft(active) });
+                    }}
+                    className={`rounded-lg border-2 border-[var(--pp-ink)] px-4 py-1.5 text-sm font-semibold ${
+                      tab === value ? "bg-[var(--pp-ink)] text-white" : "bg-white"
                     }`}
                   >
-                    {lesson.status === "published" ? "منشور" : "مسودة"}
-                  </span>
-                  {lesson.status === "draft" && (
-                    <label className="flex items-center gap-1 text-[11px] font-bold text-[var(--pp-muted)]">
-                      <input
-                        type="checkbox"
-                        checked={selectedDrafts.has(lesson.id)}
-                        onChange={() => toggleDraft(lesson.id)}
-                      />
-                      تحديد للنشر
-                    </label>
-                  )}
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {tab === "overview" && (
+                <div className="rounded-2xl border-2 border-[var(--pp-line)] bg-white p-4">
+                  <div className="flex items-start gap-3">
+                    <LessonImage src={active.image_url} alt="" className="h-16 w-16 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-[var(--pp-muted)]">
+                        درس {active.lesson_no} · ص{active.source_from_page}
+                        {active.source_to_page !== active.source_from_page
+                          ? `–${active.source_to_page}`
+                          : ""}{" "}
+                        · {active.objectives.length} أهداف · v{active.version}
+                        {published.findIndex((item) => item.id === active.id) >= 0
+                          ? ` · الترتيب في المسار ${published.findIndex((item) => item.id === active.id) + 1}`
+                          : ""}
+                      </p>
+                      <p className="font-bold">{active.title_ar || active.title}</p>
+                      <p className="text-sm text-[var(--pp-muted)]" dir="ltr">
+                        {active.title}
+                      </p>
+                      <ul className="mt-1 list-disc pr-5 text-xs text-[var(--pp-muted)]">
+                        {active.objectives.map((objective) => (
+                          <li key={objective.id}>{objective.text_ar || objective.text}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    {active.status === "draft" && (
+                      <label className="flex items-center gap-1 text-[11px] font-bold text-[var(--pp-muted)]">
+                        <input
+                          type="checkbox"
+                          checked={selectedDrafts.has(active.id)}
+                          onChange={() => toggleDraft(active.id)}
+                        />
+                        تحديد للنشر
+                      </label>
+                    )}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+                    <button
+                      type="button"
+                      disabled={Boolean(busy)}
+                      onClick={() => askPublish(active)}
+                      className="rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-accent)] px-3 py-1.5 text-[var(--pp-on-accent)] disabled:opacity-50"
+                    >
+                      {active.status === "published" ? "إلغاء النشر" : "نشر"}
+                    </button>
+                    <Link
+                      to="/rita-live"
+                      search={{ lesson: active.id, preview: true }}
+                      className="flex items-center gap-1 rounded-lg border-2 border-[var(--pp-ink)] px-3 py-1.5"
+                    >
+                      <Eye size={13} /> معاينة كطالب
+                    </Link>
+                    <button
+                      type="button"
+                      disabled={Boolean(busy)}
+                      onClick={() =>
+                        void run(
+                          `image:${active.id}`,
+                          () => imageFn({ data: { lessonId: active.id } }),
+                          "تم إنشاء الصورة",
+                        )
+                      }
+                      className="flex items-center gap-1 rounded-lg border-2 border-[var(--pp-ink)] px-3 py-1.5 disabled:opacity-50"
+                    >
+                      {busy === `image:${active.id}` ? (
+                        <Loader2 size={13} className="animate-spin" />
+                      ) : (
+                        <ImagePlus size={13} />
+                      )}
+                      {active.image_url ? "صورة جديدة" : "إنشاء صورة"}
+                    </button>
+                    {published.findIndex((item) => item.id === active.id) >= 0 && (
+                      <>
+                        <button
+                          type="button"
+                          aria-label="تقديم في المسار"
+                          disabled={
+                            Boolean(busy) || published.findIndex((item) => item.id === active.id) === 0
+                          }
+                          onClick={() =>
+                            void run(`move:${active.id}`, () =>
+                              moveFn({ data: { lessonId: active.id, direction: "up" } }),
+                            )
+                          }
+                          className="rounded-lg border-2 border-[var(--pp-ink)] px-2 py-1.5 disabled:opacity-40"
+                        >
+                          <ArrowUp size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="تأخير في المسار"
+                          disabled={
+                            Boolean(busy) ||
+                            published.findIndex((item) => item.id === active.id) === published.length - 1
+                          }
+                          onClick={() =>
+                            void run(`move:${active.id}`, () =>
+                              moveFn({ data: { lessonId: active.id, direction: "down" } }),
+                            )
+                          }
+                          className="rounded-lg border-2 border-[var(--pp-ink)] px-2 py-1.5 disabled:opacity-40"
+                        >
+                          <ArrowDown size={13} />
+                        </button>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      disabled={Boolean(busy)}
+                      onClick={() => {
+                        if (window.confirm("أرشفة هذا الدرس؟")) {
+                          void run(
+                            `status:${active.id}`,
+                            () => statusFn({ data: { lessonId: active.id, status: "archived" } }),
+                            "تمت الأرشفة",
+                          );
+                        }
+                      }}
+                      className="rounded-lg px-3 py-1.5 text-[var(--pp-muted)]"
+                    >
+                      أرشفة
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
-                <button
-                  type="button"
-                  disabled={Boolean(busy)}
-                  onClick={() => askPublish(lesson)}
-                  className="rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-accent)] px-3 py-1.5 text-[var(--pp-on-accent)] disabled:opacity-50"
-                >
-                  {lesson.status === "published" ? "إلغاء النشر" : "نشر"}
-                </button>
-                <Link
-                  to="/rita-live"
-                  search={{ lesson: lesson.id, preview: true }}
-                  className="flex items-center gap-1 rounded-lg border border-[var(--pp-line)] px-3 py-1.5"
-                >
-                  <Eye size={13} /> معاينة كطالب
-                </Link>
-                <button
-                  type="button"
-                  disabled={Boolean(busy)}
-                  onClick={() =>
-                    void run(
-                      `image:${lesson.id}`,
-                      () => imageFn({ data: { lessonId: lesson.id } }),
-                      "تم إنشاء الصورة",
-                    )
-                  }
-                  className="flex items-center gap-1 rounded-lg border border-[var(--pp-line)] px-3 py-1.5 disabled:opacity-50"
-                >
-                  {busy === `image:${lesson.id}` ? (
-                    <Loader2 size={13} className="animate-spin" />
-                  ) : (
-                    <ImagePlus size={13} />
-                  )}
-                  {lesson.image_url ? "صورة جديدة" : "إنشاء صورة"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setEditing({
-                      id: lesson.id,
-                      draft: lessonToDraft(lesson),
-                    })
-                  }
-                  className="rounded-lg border border-[var(--pp-line)] px-3 py-1.5"
-                >
-                  تعديل
-                </button>
-                {pathIndex >= 0 && (
-                  <>
-                    <button
-                      type="button"
-                      aria-label="تقديم في المسار"
-                      disabled={Boolean(busy) || pathIndex === 0}
-                      onClick={() =>
-                        void run(`move:${lesson.id}`, () =>
-                          moveFn({ data: { lessonId: lesson.id, direction: "up" } }),
-                        )
-                      }
-                      className="rounded-lg border border-[var(--pp-line)] px-2 py-1.5 disabled:opacity-40"
-                    >
-                      <ArrowUp size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="تأخير في المسار"
-                      disabled={Boolean(busy) || pathIndex === published.length - 1}
-                      onClick={() =>
-                        void run(`move:${lesson.id}`, () =>
-                          moveFn({ data: { lessonId: lesson.id, direction: "down" } }),
-                        )
-                      }
-                      className="rounded-lg border border-[var(--pp-line)] px-2 py-1.5 disabled:opacity-40"
-                    >
-                      <ArrowDown size={13} />
-                    </button>
-                  </>
-                )}
-                <button
-                  type="button"
-                  disabled={Boolean(busy)}
-                  onClick={() => {
-                    if (window.confirm("أرشفة هذا الدرس؟")) {
+              )}
+
+              {tab === "slides" && (
+                <div className="rounded-2xl border-2 border-[var(--pp-line)] bg-white p-4">
+                  <SlidesPanel
+                    key={`${active.id}:${deckEpoch[active.id] ?? 0}`}
+                    from={active.source_from_page}
+                    to={active.source_to_page}
+                    ready={slidesReady}
+                    saved={slides[active.id]}
+                    busy={Boolean(busy)}
+                    generating={busy === `slides:${active.id}`}
+                    onGenerate={() =>
                       void run(
-                        `status:${lesson.id}`,
-                        () => statusFn({ data: { lessonId: lesson.id, status: "archived" } }),
-                        "تمت الأرشفة",
+                        `slides:${active.id}`,
+                        async () => {
+                          await slidesFn({ data: { lessonId: active.id } });
+                          setDeckEpoch((current) => ({
+                            ...current,
+                            [active.id]: (current[active.id] ?? 0) + 1,
+                          }));
+                        },
+                        "كُتبت السلايدات — راجعها قبل الاعتماد",
+                      )
+                    }
+                    onSave={async (deck) => {
+                      try {
+                        await saveSlidesFn({ data: { lessonId: active.id, slides: deck } });
+                        toast.success("حُفظت السلايدات");
+                        await onChanged();
+                        return true;
+                      } catch (error) {
+                        toast.error(errorText(error));
+                        return false;
+                      }
+                    }}
+                  />
+                </div>
+              )}
+
+              {tab === "edit" && editing?.id === active.id && (
+                <div className="rounded-2xl border-2 border-[var(--pp-line)] bg-white p-4">
+                  <LessonForm
+                    initial={editing.draft}
+                    busy={Boolean(busy)}
+                    onCancel={() => {
+                      setEditing(null);
+                      setTab("overview");
+                    }}
+                    onSave={(draft) => {
+                      setEditing({ id: active.id, draft });
+                      void run(
+                        `edit:${active.id}`,
+                        async () => {
+                          await updateFn({ data: { lessonId: active.id, lesson: draft } });
+                          setEditing(null);
+                          setTab("overview");
+                        },
+                        "تم حفظ التعديل",
                       );
-                    }
-                  }}
-                  className="rounded-lg px-3 py-1.5 text-[var(--pp-muted)]"
-                >
-                  أرشفة
-                </button>
-              </div>
-              {editing?.id === lesson.id && (
-                <LessonForm
-                  initial={editing.draft}
-                  busy={Boolean(busy)}
-                  onCancel={() => setEditing(null)}
-                  onSave={(draft) => {
-                    setEditing({ id: lesson.id, draft });
-                    void run(
-                      `edit:${lesson.id}`,
-                      async () => {
-                        await updateFn({ data: { lessonId: lesson.id, lesson: draft } });
-                        setEditing(null);
-                      },
-                      "تم حفظ التعديل",
-                    );
-                  }}
-                  onRegenerateObjective={async (objective) => {
-                    try {
-                      const result = await regenerateFn({
-                        data: { lessonId: lesson.id, objective },
-                      });
-                      return result.objective as Objective;
-                    } catch (error) {
-                      toast.error(errorText(error));
-                      return null;
-                    }
-                  }}
-                />
+                    }}
+                    onRegenerateObjective={async (objective) => {
+                      try {
+                        const result = await regenerateFn({
+                          data: { lessonId: active.id, objective },
+                        });
+                        return result.objective as Objective;
+                      } catch (error) {
+                        toast.error(errorText(error));
+                        return null;
+                      }
+                    }}
+                  />
+                </div>
               )}
             </div>
-          );
-        })}
-      </div>
+          )}
+        </div>
+      )}
 
       {publishAsk && (
         <div

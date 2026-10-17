@@ -46,7 +46,7 @@ function LinesInput({
         );
       }}
       onChange={(event) => setText(event.target.value)}
-      className="w-full rounded-xl border border-[#E6E1F5] px-3 py-2 text-sm"
+      className="w-full rounded-xl border-2 border-[#0b0b0f] px-3 py-2 text-sm"
     />
   );
 }
@@ -117,20 +117,20 @@ export function LessonForm({
   }
 
   return (
-    <div className="mt-3 space-y-4 rounded-2xl bg-[#FBFAFF] p-4" dir="rtl">
+    <div className="mt-3 space-y-4 rounded-2xl bg-[#ffffff] p-4" dir="rtl">
       <div className="grid gap-2 sm:grid-cols-2">
         <input
           value={form.title}
           onChange={(event) => patch({ title: event.target.value })}
           placeholder="عنوان الدرس (إنجليزي)"
           dir="ltr"
-          className="rounded-xl border border-[#E6E1F5] px-3 py-2 text-sm"
+          className="rounded-xl border-2 border-[#0b0b0f] px-3 py-2 text-sm"
         />
         <input
           value={form.title_ar}
           onChange={(event) => patch({ title_ar: event.target.value })}
           placeholder="عنوان الدرس (عربي)"
-          className="rounded-xl border border-[#E6E1F5] px-3 py-2 text-sm"
+          className="rounded-xl border-2 border-[#0b0b0f] px-3 py-2 text-sm"
         />
       </div>
       <div className="grid gap-2 sm:grid-cols-3">
@@ -139,9 +139,9 @@ export function LessonForm({
           onChange={(event) => patch({ topic: event.target.value })}
           placeholder="الموضوع"
           dir="ltr"
-          className="rounded-xl border border-[#E6E1F5] px-3 py-2 text-sm"
+          className="rounded-xl border-2 border-[#0b0b0f] px-3 py-2 text-sm"
         />
-        <label className="flex items-center gap-2 rounded-xl border border-[#E6E1F5] px-3 py-2 text-sm font-bold">
+        <label className="flex items-center gap-2 rounded-xl border-2 border-[#0b0b0f] px-3 py-2 text-sm font-bold">
           من ص
           <input
             type="number"
@@ -150,7 +150,7 @@ export function LessonForm({
             onChange={(event) =>
               patch({ source_from_page: Math.max(1, Number(event.target.value) || 1) })
             }
-            className="w-16 rounded-lg border border-[#E6E1F5] px-2 py-1 text-center"
+            className="w-16 rounded-lg border-2 border-[#0b0b0f] px-2 py-1 text-center"
           />
           إلى ص
           <input
@@ -165,7 +165,7 @@ export function LessonForm({
                 ),
               })
             }
-            className="w-16 rounded-lg border border-[#E6E1F5] px-2 py-1 text-center"
+            className="w-16 rounded-lg border-2 border-[#0b0b0f] px-2 py-1 text-center"
           />
         </label>
         <input
@@ -173,7 +173,7 @@ export function LessonForm({
           onChange={(event) => patch({ image_prompt: event.target.value })}
           placeholder="وصف الصورة (اختياري)"
           dir="ltr"
-          className="rounded-xl border border-[#E6E1F5] px-3 py-2 text-sm"
+          className="rounded-xl border-2 border-[#0b0b0f] px-3 py-2 text-sm"
         />
       </div>
       <textarea
@@ -181,12 +181,12 @@ export function LessonForm({
         onChange={(event) => patch({ summary: event.target.value })}
         placeholder="ملخص: شو بتعلّم ريتا في هذا الدرس؟"
         rows={2}
-        className="w-full rounded-xl border border-[#E6E1F5] px-3 py-2 text-sm"
+        className="w-full rounded-xl border-2 border-[#0b0b0f] px-3 py-2 text-sm"
       />
 
       <div>
         <div className="flex items-center justify-between">
-          <p className="text-sm font-black">الأهداف</p>
+          <p className="text-sm font-bold">الأهداف</p>
           <button
             type="button"
             disabled={form.objectives.length >= 6}
@@ -206,19 +206,19 @@ export function LessonForm({
                 ],
               }))
             }
-            className="flex items-center gap-1 rounded-full bg-[#F4EFFE] px-3 py-1 text-xs font-black text-[#6D35D8] disabled:opacity-50"
+            className="flex items-center gap-1 rounded-full bg-[#ffffff] px-3 py-1 text-xs font-bold text-[#4a82f3] disabled:opacity-50"
           >
             <Plus size={13} /> هدف جديد
           </button>
         </div>
-        <p className="mt-1 text-[11px] font-bold text-[#A3A7BA]">
+        <p className="mt-1 text-[11px] font-bold text-[#c4c4d1]">
           كل هدف يحتفظ بمعرّفه — تقدّم الطلاب في الأهداف الموجودة ما بضيع مع التعديل.
         </p>
         <div className="mt-2 space-y-3">
           {form.objectives.map((objective, index) => (
-            <div key={objective.id} className="rounded-xl border border-[#E6E1F5] bg-white p-3">
+            <div key={objective.id} className="rounded-xl border-2 border-[#0b0b0f] bg-white p-3">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-black text-[#9B5CF6]">
+                <p className="text-xs font-bold text-[#7ba5f5]">
                   هدف {index + 1} · {objective.id}
                 </p>
                 <div className="flex items-center gap-2">
@@ -234,7 +234,7 @@ export function LessonForm({
                         ),
                       }))
                     }
-                    className="rounded-lg border border-[#E6E1F5] px-2 py-1 text-xs font-bold"
+                    className="rounded-lg border-2 border-[#0b0b0f] px-2 py-1 text-xs font-bold"
                     aria-label="وزن الهدف"
                   >
                     {[1, 2, 3, 4, 5].map((weight) => (
@@ -247,7 +247,7 @@ export function LessonForm({
                     type="button"
                     onClick={() => void regenerate(index)}
                     disabled={busy || regenerating >= 0}
-                    className="flex items-center gap-1 rounded-full border border-[#E6E1F5] px-3 py-1 text-xs font-bold disabled:opacity-50"
+                    className="flex items-center gap-1 rounded-full border-2 border-[#0b0b0f] px-3 py-1 text-xs font-bold disabled:opacity-50"
                   >
                     {regenerating === index ? (
                       <Loader2 size={12} className="animate-spin" />
@@ -264,7 +264,7 @@ export function LessonForm({
                         objectives: current.objectives.filter((_, position) => position !== index),
                       }))
                     }
-                    className="rounded-full p-1 text-[#8A8FA3] hover:bg-[#F4EFFE]"
+                    className="rounded-full p-1 text-[#9a9aab] hover:bg-[#ffffff]"
                     aria-label="حذف الهدف"
                   >
                     <Trash2 size={13} />
@@ -284,7 +284,7 @@ export function LessonForm({
                   }
                   placeholder="الهدف (إنجليزي): Learner can …"
                   dir="ltr"
-                  className="rounded-xl border border-[#E6E1F5] px-3 py-2 text-sm"
+                  className="rounded-xl border-2 border-[#0b0b0f] px-3 py-2 text-sm"
                 />
                 <input
                   value={objective.text_ar}
@@ -297,7 +297,7 @@ export function LessonForm({
                     }))
                   }
                   placeholder="الهدف (عربي)"
-                  className="rounded-xl border border-[#E6E1F5] px-3 py-2 text-sm"
+                  className="rounded-xl border-2 border-[#0b0b0f] px-3 py-2 text-sm"
                 />
               </div>
               <input
@@ -312,7 +312,7 @@ export function LessonForm({
                 }
                 placeholder="معيار الإنجاز: شو بالضبط لازم يقول الطالب؟"
                 dir="ltr"
-                className="mt-2 w-full rounded-xl border border-[#E6E1F5] px-3 py-2 text-sm"
+                className="mt-2 w-full rounded-xl border-2 border-[#0b0b0f] px-3 py-2 text-sm"
               />
               <LinesInput
                 value={objective.check_prompts}
@@ -334,7 +334,7 @@ export function LessonForm({
 
       <div>
         <div className="flex items-center justify-between">
-          <p className="text-sm font-black">خطة الدرس</p>
+          <p className="text-sm font-bold">خطة الدرس</p>
           <button
             type="button"
             disabled={form.plan.phases.length >= 6}
@@ -347,7 +347,7 @@ export function LessonForm({
                 },
               }))
             }
-            className="flex items-center gap-1 rounded-full bg-[#F4EFFE] px-3 py-1 text-xs font-black text-[#6D35D8] disabled:opacity-50"
+            className="flex items-center gap-1 rounded-full bg-[#ffffff] px-3 py-1 text-xs font-bold text-[#4a82f3] disabled:opacity-50"
           >
             <Plus size={13} /> مرحلة
           </button>
@@ -356,7 +356,7 @@ export function LessonForm({
           {form.plan.phases.map((phase, index) => (
             <div
               key={index}
-              className="flex flex-wrap items-center gap-2 rounded-xl border border-[#E6E1F5] bg-white p-2"
+              className="flex flex-wrap items-center gap-2 rounded-xl border-2 border-[#0b0b0f] bg-white p-2"
             >
               <select
                 value={phase.phase}
@@ -373,7 +373,7 @@ export function LessonForm({
                     },
                   }))
                 }
-                className="rounded-lg border border-[#E6E1F5] px-2 py-1 text-xs font-bold"
+                className="rounded-lg border-2 border-[#0b0b0f] px-2 py-1 text-xs font-bold"
                 aria-label="نوع المرحلة"
               >
                 {LESSON_PHASES.map((value) => (
@@ -403,7 +403,7 @@ export function LessonForm({
                     },
                   }))
                 }
-                className="w-14 rounded-lg border border-[#E6E1F5] px-2 py-1 text-center text-xs"
+                className="w-14 rounded-lg border-2 border-[#0b0b0f] px-2 py-1 text-center text-xs"
                 aria-label="دقائق"
               />
               <div className="min-w-[160px] flex-1">
@@ -435,7 +435,7 @@ export function LessonForm({
                     },
                   }))
                 }
-                className="rounded-full p-1 text-[#8A8FA3] hover:bg-[#F4EFFE]"
+                className="rounded-full p-1 text-[#9a9aab] hover:bg-[#ffffff]"
                 aria-label="حذف المرحلة"
               >
                 <Trash2 size={13} />
@@ -453,13 +453,13 @@ export function LessonForm({
           }
           placeholder="ملاحظات المعلم: أخطاء الناطقين بالعربية الشائعة وكيف نصححها"
           rows={2}
-          className="mt-2 w-full rounded-xl border border-[#E6E1F5] px-3 py-2 text-sm"
+          className="mt-2 w-full rounded-xl border-2 border-[#0b0b0f] px-3 py-2 text-sm"
         />
       </div>
 
       <div>
         <div className="flex items-center justify-between">
-          <p className="text-sm font-black">الكلمات</p>
+          <p className="text-sm font-bold">الكلمات</p>
           <button
             type="button"
             disabled={form.vocabulary.length >= 30}
@@ -469,7 +469,7 @@ export function LessonForm({
                 vocabulary: [...current.vocabulary, { word: "", meaning_ar: "", example: "" }],
               }))
             }
-            className="flex items-center gap-1 rounded-full bg-[#F4EFFE] px-3 py-1 text-xs font-black text-[#6D35D8] disabled:opacity-50"
+            className="flex items-center gap-1 rounded-full bg-[#ffffff] px-3 py-1 text-xs font-bold text-[#4a82f3] disabled:opacity-50"
           >
             <Plus size={13} /> كلمة
           </button>
@@ -489,7 +489,7 @@ export function LessonForm({
                 }
                 placeholder="word"
                 dir="ltr"
-                className="w-28 rounded-lg border border-[#E6E1F5] px-2 py-1 text-sm"
+                className="w-28 rounded-lg border-2 border-[#0b0b0f] px-2 py-1 text-sm"
               />
               <input
                 value={item.meaning_ar}
@@ -502,7 +502,7 @@ export function LessonForm({
                   }))
                 }
                 placeholder="المعنى"
-                className="w-28 rounded-lg border border-[#E6E1F5] px-2 py-1 text-sm"
+                className="w-28 rounded-lg border-2 border-[#0b0b0f] px-2 py-1 text-sm"
               />
               <input
                 value={item.example}
@@ -516,7 +516,7 @@ export function LessonForm({
                 }
                 placeholder="Example sentence."
                 dir="ltr"
-                className="min-w-[140px] flex-1 rounded-lg border border-[#E6E1F5] px-2 py-1 text-sm"
+                className="min-w-[140px] flex-1 rounded-lg border-2 border-[#0b0b0f] px-2 py-1 text-sm"
               />
               <button
                 type="button"
@@ -526,7 +526,7 @@ export function LessonForm({
                     vocabulary: current.vocabulary.filter((_, position) => position !== index),
                   }))
                 }
-                className="rounded-full p-1 text-[#8A8FA3] hover:bg-[#F4EFFE]"
+                className="rounded-full p-1 text-[#9a9aab] hover:bg-[#ffffff]"
                 aria-label="حذف الكلمة"
               >
                 <Trash2 size={13} />
@@ -541,7 +541,7 @@ export function LessonForm({
           type="button"
           disabled={busy}
           onClick={save}
-          className="rounded-full bg-[#1E2A4A] px-5 py-2 text-sm font-black text-white disabled:opacity-50"
+          className="rounded-full bg-[#1a4ba8] px-5 py-2 text-sm font-bold text-white disabled:opacity-50"
         >
           حفظ الدرس
         </button>

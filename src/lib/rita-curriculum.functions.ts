@@ -33,6 +33,8 @@ import {
   type WindowSummary,
 } from "@/lib/rita-curriculum";
 
+import { SlideDeckSchema, type Slide } from "@/lib/rita-slides";
+
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -70,6 +72,27 @@ async function hasCurriculumGaps(db: AuthContext["supabase"]): Promise<boolean> 
     }
     // Only a missing-column answer means the migration is absent.
     return isMissingSchemaError(error);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Whether the 20261017120000 lesson-slides table exists. Like the gaps probe: a
+ * missing-schema answer means "not applied yet" and the rest of the page keeps
+ * working without slides; any other failure is assumed fine and surfaces from
+ * the real query.
+ */
+let slidesTableReady = false;
+async function hasSlidesTable(db: AuthContext["supabase"]): Promise<boolean> {
+  if (slidesTableReady) return true;
+  try {
+    const { error } = await db.from("rita_lesson_slides").select("lesson_id").limit(1);
+    if (!error) {
+      slidesTableReady = true;
+      return true;
+    }
+    return !isMissingSchemaError(error);
   } catch {
     return false;
   }
@@ -255,12 +278,26 @@ export const adminCurriculumOverview = createServerFn({ method: "GET" })
         }
       }
     }
+    // Slide decks live in their own table so this page works before it exists.
+    const slides: Record<string, Slide[]> = {};
+    const slidesReady = await hasSlidesTable(db);
+    if (slidesReady) {
+      const { data: decks, error: deckError } = await db
+        .from("rita_lesson_slides")
+        .select("lesson_id, slides");
+      fail(deckError, "slides");
+      for (const row of (decks ?? []) as { lesson_id: string; slides: Slide[] }[]) {
+        if (Array.isArray(row.slides)) slides[row.lesson_id] = row.slides;
+      }
+    }
     return {
       curricula: bookRows,
       windows: (windows.data ?? []) as WindowRow[],
       lessons: (lessons.data ?? []) as LessonRow[],
       missingText,
       needsMigration,
+      slides,
+      slidesReady,
     };
   });
 
@@ -918,6 +955,99 @@ export const adminGenerateLessonImage = createServerFn({ method: "POST" })
       .eq("id", lesson.id);
     fail(updateError, "save image");
     return { imageUrl };
+  });
+
+export type SlidesResult = { slides: Slide[]; source: "ai" | "manual"; model: string | null };
+
+async function saveDeck(
+  db: AuthContext["supabase"],
+  input: { lessonId: string; slides: Slide[]; source: "ai" | "manual"; model: string | null; userId: string },
+): Promise<SlidesResult> {
+  const { error } = await db.from("rita_lesson_slides").upsert(
+    {
+      lesson_id: input.lessonId,
+      slides: input.slides,
+      source: input.source,
+      model: input.model,
+      created_by: input.userId,
+    },
+    { onConflict: "lesson_id" },
+  );
+  fail(error, "save slides");
+  return { slides: input.slides, source: input.source, model: input.model };
+}
+
+/** Writes a slide deck for one lesson from its own pages. Replaces any earlier deck. */
+export const adminGenerateSlides = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => parseWith(z.object({ lessonId: uuid }), data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const db = context.supabase;
+    if (!(await hasSlidesTable(db))) {
+      throw new Error("Could not find the table rita_lesson_slides: apply migration 20261017120000.");
+    }
+    const { data: lesson, error } = await db
+      .from("rita_lessons")
+      .select(LESSON_COLUMNS)
+      .eq("id", data.lessonId)
+      .single();
+    fail(error, "lesson");
+    const row = lesson as unknown as LessonRow;
+    const book = await loadBook(db, row.curriculum_id);
+    const pageProblem = checkLessonPages(book, row.source_from_page, row.source_to_page);
+    if (pageProblem) throw new Error(pageProblem);
+    const { text, missing } = await pageText(db, book.id, row.source_from_page, row.source_to_page);
+    if (missing.length > 0) {
+      throw new Error(`These pages have no text yet: ${missing.join(", ")}. Read the scanned pages first.`);
+    }
+    const { generateSlides } = await ai();
+    const { slides, model } = await generateSlides({
+      kind: book.kind,
+      bookTitle: book.title,
+      lessonTitle: row.title,
+      topic: row.topic,
+      objectives: row.objectives,
+      from: row.source_from_page,
+      to: row.source_to_page,
+      pageText: text,
+    });
+    return saveDeck(db, { lessonId: row.id, slides, source: "ai", model, userId: context.userId });
+  });
+
+/** Saves a hand-edited deck. Source pages must stay inside the lesson's pages. */
+export const adminSaveSlides = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ lessonId: uuid, slides: SlideDeckSchema }), data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const db = context.supabase;
+    if (!(await hasSlidesTable(db))) {
+      throw new Error("Could not find the table rita_lesson_slides: apply migration 20261017120000.");
+    }
+    const { data: lesson, error } = await db
+      .from("rita_lessons")
+      .select("id, source_from_page, source_to_page")
+      .eq("id", data.lessonId)
+      .single();
+    fail(error, "lesson");
+    const from = Number(lesson.source_from_page);
+    const to = Number(lesson.source_to_page);
+    const outside = data.slides.findIndex(
+      (slide) => slide.source_page !== null && (slide.source_page < from || slide.source_page > to),
+    );
+    if (outside >= 0) {
+      throw new Error(`slide ${outside + 1}: page is outside the lesson pages (${from}-${to})`);
+    }
+    return saveDeck(db, {
+      lessonId: data.lessonId,
+      slides: data.slides,
+      source: "manual",
+      model: null,
+      userId: context.userId,
+    });
   });
 
 const AUTO_IMAGE_COOLDOWN_MS = 10 * 60 * 1000;

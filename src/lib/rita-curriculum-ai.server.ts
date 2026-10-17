@@ -4,6 +4,7 @@
 import { z } from "zod";
 import { getServerRuntimeSecret } from "@/lib/config.server";
 import { resolveRitaOpenAiKey } from "@/lib/rita-voice.server";
+import { GeneratedDeckSchema, finalizeSlides, type Slide } from "@/lib/rita-slides";
 import {
   EvaluationSchema,
   LessonDraftSchema,
@@ -286,6 +287,57 @@ ${input.pageText}`;
     temperature: 0.5,
   });
   return { lesson: value, model };
+}
+
+const SLIDES_SHAPE = `{
+  "slides": [{
+    "kind": "title|point|example|vocabulary|practice|recap",
+    "heading": "short English heading", "heading_ar": "Arabic heading",
+    "bullets": ["one short idea per bullet, at most 6"],
+    "example": "one example sentence from the pages, or empty",
+    "vocabulary": [{ "word": "word", "meaning_ar": "معنى", "example": "Example sentence." }],
+    "source_page": 1,
+    "speaker_note": "what the tutor says out loud for this slide, one or two sentences"
+  }]
+}`;
+
+/** Slides for one lesson, written only from that lesson's pages. */
+export async function generateSlides(input: {
+  kind: CurriculumKind;
+  bookTitle: string;
+  lessonTitle: string;
+  topic: string;
+  objectives: Objective[];
+  from: number;
+  to: number;
+  pageText: string;
+}): Promise<{ slides: Slide[]; model: string }> {
+  const system = `You turn one lesson of an English course book into a short slide deck for an
+Arabic-speaking A1 adult. The tutor shows the slides while teaching, so each slide is small and clear.
+Rules:
+- Use only content from the given pages (${input.from}-${input.to}); never invent rules, words or examples.
+- 6 to 9 slides. The first slide has kind "title" and the last has kind "recap".
+- In between: "point" slides (one rule or idea each, at most 4 short bullets), "example" slides
+  (sentences from the pages), a "vocabulary" slide when the pages list words (at most 8 words), and one
+  "practice" slide with a spoken task the learner can try.
+- Every slide has a heading in English and Arabic. source_page is the page the slide comes from.
+- Cover every lesson objective somewhere in the deck.
+Reply with one JSON object shaped like:
+${SLIDES_SHAPE}`;
+  const objectives = input.objectives.map((objective) => `- ${objective.text}`).join("\n");
+  const user = `Book: ${input.bookTitle} (${input.kind})
+Lesson: ${input.lessonTitle} (topic: ${input.topic})
+Objectives:
+${objectives}
+
+Page text ${input.from}-${input.to}:
+${input.pageText}`;
+  const { value, model } = await chatJson(GeneratedDeckSchema, system, user, {
+    maxTokens: 4_000,
+    timeoutMs: 90_000,
+    temperature: 0.4,
+  });
+  return { slides: finalizeSlides(value.slides, { from: input.from, to: input.to }), model };
 }
 
 export async function evaluateTurns(input: {
