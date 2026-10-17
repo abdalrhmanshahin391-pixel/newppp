@@ -97,6 +97,16 @@ the words "Used up"). Only one menu is open at a time; Escape and a press outsid
 focus returns to the button. Opening is 160ms, `scale(.96)` from the button, off with reduced
 motion.
 
+## Study rooms (/learn and the room pages)
+
+Same system as the home page, inside `.edith-premium`: white page, Inter Tight titles, one
+pink action. `/learn` shows the three rooms as one dark, one grey and one wide white card, each
+with its tools as small sticker chips. Inside a room, each column is a grey panel; every tool is
+a white card with a 2px ink border, a bare ink icon, its name, one line and an "Open" row. No
+photos or illustrations, no coloured strips, no labels above titles. Locked tools and rooms are
+dashed and say "Coming soon". The Tutorial page was removed (`/tutorial` and `/tour` redirect
+to the home page); the in-page "How it works" tours stay.
+
 ## Accessibility floor
 
 Contrast AA (4.5:1 text, 3:1 large text and UI), visible focus, keyboard-reachable controls,

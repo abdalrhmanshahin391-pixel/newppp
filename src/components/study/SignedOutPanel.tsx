@@ -60,13 +60,6 @@ export function SignedOutPanel({ what }: { what: string }) {
             </li>
           ))}
         </ul>
-
-        <p className="mt-6 text-[14px] text-[#8a8378]">
-          Just looking around?{" "}
-          <Link to="/tutorial" className="rita-accent font-bold underline-offset-4 hover:underline">
-            See how RitaJet works
-          </Link>
-        </p>
       </div>
 
       <div className="rounded-[30px] border border-black/[0.06] bg-[color:var(--pro-card,#f6f1e5)] p-7 md:p-9">

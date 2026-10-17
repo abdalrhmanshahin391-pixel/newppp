@@ -24,7 +24,6 @@ import { StartLearningLink } from "@/components/StartLearningLink";
 
 const SIMPLE_LINKS: { to: string; label: string }[] = [
   { to: "/rita", label: "Talk to Rita" },
-  { to: "/tutorial", label: "Tutorial" },
   { to: "/pricing", label: "Pricing" },
 ];
 

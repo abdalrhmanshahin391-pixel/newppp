@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { ArrowLeft, ArrowRight, Check, Sparkles, X, Languages, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import type { PageTourDef, TourStep } from "@/lib/tour-registry";
-import type { TutorialLang } from "./ToolTutorial";
+import type { TutorialLang } from "./tutorial-lang";
 
 type Rect = {
   top: number;

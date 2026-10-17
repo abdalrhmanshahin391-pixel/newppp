@@ -3988,3 +3988,167 @@ hairline borders and generous radii.
     transform: none;
   }
 }
+
+/* ===========================================================================
+   Study rooms (/learn and the room pages): the same ink, pink and sticker borders as the home
+   page. Rooms and tools are links, so every one has hover, press, focus and a locked state.
+   =========================================================================== */
+.edith-premium .rh-room,
+.edith-premium .rh-tool {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--pp-ink);
+  color: var(--pp-ink);
+  text-decoration: none;
+  transition:
+    transform 200ms var(--pp-ease),
+    background-color 160ms ease;
+}
+.edith-premium .rh-room {
+  min-height: 340px;
+  padding: 1.75rem;
+  border-radius: 24px;
+}
+.edith-premium .rh-room-dark {
+  background: #121117;
+  color: #ffffff;
+}
+.edith-premium .rh-room-grey {
+  background: var(--pp-grey);
+}
+.edith-premium .rh-room-white {
+  background: #ffffff;
+  min-height: 0;
+}
+.edith-premium .rh-room-text {
+  color: var(--pp-muted);
+}
+.edith-premium .rh-room-dark .rh-room-text {
+  color: rgba(255, 255, 255, 0.74);
+}
+.edith-premium .rh-room:hover,
+.edith-premium .rh-tool:hover {
+  transform: translateY(-4px);
+}
+.edith-premium .rh-room:active,
+.edith-premium .rh-tool:active {
+  transform: scale(0.99);
+}
+.edith-premium .rh-room:focus-visible,
+.edith-premium .rh-tool:focus-visible,
+.edith-premium .rh-back:focus-visible {
+  outline: 3px solid var(--pp-ink);
+  outline-offset: 3px;
+}
+.edith-premium .rh-room-dark:focus-visible {
+  outline-color: var(--pp-pink);
+}
+.edith-premium .rh-room-off,
+.edith-premium .rh-tool-locked {
+  cursor: default;
+  border-style: dashed;
+  opacity: 0.6;
+}
+.edith-premium .rh-room-off:hover,
+.edith-premium .rh-tool-locked:hover {
+  transform: none;
+}
+
+.edith-premium .rh-minichip {
+  padding: 0.3rem 0.7rem;
+  border: 1.5px solid var(--pp-ink);
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--pp-ink);
+}
+.edith-premium .rh-room-grey .rh-minichip {
+  background: #ffffff;
+}
+.edith-premium .rh-room-dark .rh-minichip {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+.edith-premium .rh-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 0.6rem 1rem;
+  border: 2px solid var(--pp-ink);
+  border-radius: 8px;
+  background: var(--pp-pink);
+  color: var(--pp-ink);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+}
+.edith-premium .rh-room-off .rh-open {
+  background: transparent;
+  border-style: dashed;
+}
+
+.edith-premium .rh-flag {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding-inline: 8px;
+  border: 1.5px solid var(--pp-ink);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--pp-ink);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1;
+}
+.edith-premium .rh-flag-soft {
+  background: var(--pp-pink-soft);
+}
+.edith-premium .rh-flag-pink {
+  background: var(--pp-pink);
+}
+
+.edith-premium .rh-tool {
+  height: 100%;
+  padding: 1.25rem;
+  border-radius: 16px;
+  background: #ffffff;
+}
+.edith-premium .rh-tool:hover {
+  background: #fffafc;
+}
+.edith-premium .rh-tool-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.edith-premium .rh-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pp-ink);
+  text-decoration: none;
+}
+.edith-premium .rh-back:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edith-premium .rh-room,
+  .edith-premium .rh-tool {
+    transition: none;
+  }
+  .edith-premium .rh-room:hover,
+  .edith-premium .rh-tool:hover {
+    transform: none;
+  }
+}

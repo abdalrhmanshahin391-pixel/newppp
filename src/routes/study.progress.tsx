@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { studyDashboard, type Dashboard } from "@/lib/review.functions";
 import { useAuth } from "@/hooks/useAuth";
-import { useTutorialLang, type TutorialLang } from "@/components/tutorials/ToolTutorial";
+import { useTutorialLang, type TutorialLang } from "@/components/tutorials/tutorial-lang";
 
 export const Route = createFileRoute("/study/progress")({
   head: () => ({
