@@ -4773,3 +4773,29 @@ html.rita-app,
 .rita-app [class*="border-black/"] {
   border-color: var(--pp-line) !important;
 }
+
+/* Timeline bars on the home page grow once; calm motion shows them at full length. */
+@media (prefers-reduced-motion: reduce) {
+  .hood-bar {
+    transition: none !important;
+  }
+}
+
+/* Rita's bars on the home app window: a short burst, then still. */
+@keyframes window-wave {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.window-wave {
+  animation: window-wave 700ms ease-in-out 4;
+}
+@media (prefers-reduced-motion: reduce) {
+  .window-wave {
+    animation: none;
+  }
+}
