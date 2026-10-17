@@ -42,6 +42,10 @@ added since.
      bucket `rita-lesson-resources` (PDF only, 15 MB, admin write). Learners get
      one-hour signed links from the server. Until it is applied, the Resources tab
      shows a note and lessons work as before.
+   - `20261017200000_rita_slides_student_access.sql` **new**: adds
+     `rita_lesson_slides.shared` (default off) and a read policy for learners on shared
+     decks of published lessons. Until it is applied, learners see no slides and the
+     admin switch "أظهر السلايدات للطلاب" stays disabled.
    - Check the buckets exist: `rita-curricula` (private), `rita-lesson-images` and
      `rita-lesson-resources` (private).
 

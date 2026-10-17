@@ -148,6 +148,21 @@ items as a "Lesson resources" list under the lesson goals in the live room: whol
 link, opens in a new tab, never required. PDFs are in a private bucket; links expire after an
 hour. Only `https` addresses are accepted. Rules and tests: `src/lib/rita-resources.ts`.
 
+### Lesson card on the map (`/rita-lessons?lesson=…`)
+
+Tapping a lesson that has shared slides or resources opens a card instead of starting the lesson
+(a lesson with neither starts straight away, as before). Phone: a sheet that rises from the
+bottom; desktop: a centred card. Header: round picture, Arabic and English title, stars, close.
+Tabs (only those with content, each with a count): Overview (what you will learn, plus two big
+rows that jump to slides and resources), Slides, Resources. The primary button "ابدأ الدرس / تابع
+الدرس / أعد الدرس" is always at the bottom; looking at slides or resources records nothing. The
+slide viewer shows one slide at a time with next/previous (arrow keys and swipe follow the right
+to left reading direction), a thin progress bar and "3 / 8"; on the last slide next becomes
+start. The map marks such lessons with a small ink-bordered badge (file icon and a count) at the
+lower right of the circle. Slides are AI drafts, so an admin switches "show to learners" on per
+lesson; regenerating switches it off. The card is a modal: Esc and back close it, focus is kept
+inside and returned, the page behind is locked, motion stops under reduced motion.
+
 ## Home app window
 
 `AppWindow.tsx` replaces the old lesson-path strip. A window built from real markup (no screenshots) that starts tilted (desktop only) and flattens as it scrolls to the middle of the screen, then plays a short story once: the path fills, the lesson in progress shows, two words are saved, Rita listens.

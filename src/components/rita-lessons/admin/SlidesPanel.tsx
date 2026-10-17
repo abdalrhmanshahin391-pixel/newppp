@@ -109,6 +109,9 @@ export function SlidesPanel({
   generating,
   onGenerate,
   onSave,
+  shared,
+  sharedReady,
+  onToggleShared,
 }: {
   from: number;
   to: number;
@@ -119,11 +122,17 @@ export function SlidesPanel({
   generating: boolean;
   onGenerate: () => void;
   onSave: (slides: Slide[]) => Promise<boolean>;
+  /** true when learners can read this deck before the lesson */
+  shared: boolean;
+  /** false until the migration that adds the sharing switch is applied */
+  sharedReady: boolean;
+  onToggleShared: (next: boolean) => Promise<void>;
 }) {
   const [draft, setDraft] = useState<Slide[]>(saved ?? []);
   const [index, setIndex] = useState(0);
   const [newKind, setNewKind] = useState<SlideKind>("point");
   const [saving, setSaving] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const dirty = useMemo(
     () => JSON.stringify(draft) !== JSON.stringify(saved ?? []),
@@ -245,6 +254,39 @@ export function SlidesPanel({
             <Sparkles size={15} /> أعد التوليد
           </button>
         </div>
+      </div>
+      <div
+        className={`rounded-2xl border-2 p-3 ${
+          shared ? "border-[var(--pp-ink)] bg-[var(--pp-accent-soft)]" : "border-[var(--pp-line)]"
+        }`}
+      >
+        <label className="flex min-h-[44px] cursor-pointer items-center gap-3">
+          <input
+            type="checkbox"
+            checked={shared}
+            disabled={!sharedReady || sharing || dirty || busy}
+            onChange={async (event) => {
+              setSharing(true);
+              try {
+                await onToggleShared(event.target.checked);
+              } finally {
+                setSharing(false);
+              }
+            }}
+            className="h-5 w-5 shrink-0 accent-[var(--pp-accent)]"
+          />
+          <span className="text-sm font-bold">أظهر هذه السلايدات للطلاب قبل بدء الدرس</span>
+          {sharing && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
+        </label>
+        <p className="mt-1 ps-8 text-xs text-[var(--pp-muted)]">
+          {!sharedReady
+            ? "يحتاج تحديث قاعدة البيانات (migration 20261017200000)."
+            : dirty
+              ? "احفظ التعديلات أولًا ثم غيّر هذا الخيار."
+              : shared
+                ? "الطلاب يرونها الآن في بطاقة الدرس. إعادة التوليد تخفيها حتى تراجعها."
+                : "السلايدات مسودة ولا يراها الطلاب. راجعها ثم فعّل هذا الخيار."}
+        </p>
       </div>
       {problem && (
         <p

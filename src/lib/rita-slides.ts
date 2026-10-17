@@ -144,6 +144,12 @@ export function deckProblem(slides: Slide[]): string | null {
     : (issue?.message ?? "invalid deck");
 }
 
+/** Moves through a deck without leaving it: the index stays between the first and last slide. */
+export function stepSlide(index: number, delta: number, length: number): number {
+  if (length <= 0) return 0;
+  return Math.max(0, Math.min(length - 1, index + delta));
+}
+
 // ---------- next lesson ----------
 
 export type TopicSuggestion = {

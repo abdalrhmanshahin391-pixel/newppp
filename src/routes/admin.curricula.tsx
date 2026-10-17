@@ -61,6 +61,7 @@ import {
   adminRegenerateObjective,
   adminSaveCurriculumPages,
   adminSaveSlides,
+  adminSetSlidesShared,
   adminSetCurriculumStatus,
   adminSetLessonStatus,
   adminTranscribeCurriculumPages,
@@ -300,6 +301,8 @@ function AdminCurricula() {
               needsMigration={overview.needsMigration}
               slides={overview.slides}
               slidesReady={overview.slidesReady}
+              slidesShared={overview.slidesShared}
+              sharedReady={overview.sharedReady}
               resources={overview.resources}
               resourcesReady={overview.resourcesReady}
               pdfCache={pdfCache}
@@ -525,6 +528,8 @@ function BookDetail({
   needsMigration,
   slides,
   slidesReady,
+  slidesShared,
+  sharedReady,
   resources,
   resourcesReady,
   pdfCache,
@@ -538,6 +543,8 @@ function BookDetail({
   needsMigration: boolean;
   slides: Record<string, Slide[]>;
   slidesReady: boolean;
+  slidesShared: Record<string, boolean>;
+  sharedReady: boolean;
   resources: Record<string, Resource[]>;
   resourcesReady: boolean;
   pdfCache: Map<string, File>;
@@ -945,6 +952,8 @@ function BookDetail({
         allLessons={allLessons}
         slides={slides}
         slidesReady={slidesReady}
+        slidesShared={slidesShared}
+        sharedReady={sharedReady}
         resources={resources}
         resourcesReady={resourcesReady}
         onChanged={onChanged}
@@ -1155,6 +1164,8 @@ function LessonsCard({
   allLessons,
   slides,
   slidesReady,
+  slidesShared,
+  sharedReady,
   resources,
   resourcesReady,
   onChanged,
@@ -1165,10 +1176,13 @@ function LessonsCard({
   allLessons: LessonRow[];
   slides: Record<string, Slide[]>;
   slidesReady: boolean;
+  slidesShared: Record<string, boolean>;
+  sharedReady: boolean;
   resources: Record<string, Resource[]>;
   resourcesReady: boolean;
   onChanged: () => Promise<void>;
 }) {
+  const shareSlidesFn = useServerFn(adminSetSlidesShared);
   const generateFn = useServerFn(adminGenerateLesson);
   const importFn = useServerFn(adminImportLesson);
   const updateFn = useServerFn(adminUpdateLesson);
@@ -1634,6 +1648,19 @@ function LessonsCard({
                     from={active.source_from_page}
                     to={active.source_to_page}
                     ready={slidesReady}
+                    shared={slidesShared[active.id] === true}
+                    sharedReady={sharedReady}
+                    onToggleShared={async (next) => {
+                      try {
+                        await shareSlidesFn({ data: { lessonId: active.id, shared: next } });
+                        toast.success(
+                          next ? "السلايدات ظاهرة للطلاب" : "السلايدات مخفية عن الطلاب",
+                        );
+                        await onChanged();
+                      } catch (error) {
+                        toast.error(errorText(error));
+                      }
+                    }}
                     saved={slides[active.id]}
                     busy={Boolean(busy)}
                     generating={busy === `slides:${active.id}`}

@@ -131,6 +131,25 @@ async function hasResourcesTable(db: AuthContext["supabase"]): Promise<boolean> 
   }
 }
 
+/**
+ * Whether the 20261017200000 `shared` column exists on lesson slides. Without
+ * it no slide is ever shown to a learner and the admin switch stays off.
+ */
+let slidesSharedReady = false;
+async function hasSlidesShared(db: AuthContext["supabase"]): Promise<boolean> {
+  if (slidesSharedReady) return true;
+  try {
+    const { error } = await db.from("rita_lesson_slides").select("shared").limit(1);
+    if (!error) {
+      slidesSharedReady = true;
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 const MISSING_RESOURCES =
   "Could not find the table rita_lesson_resources: apply migration 20261017180000.";
 
@@ -323,14 +342,21 @@ export const adminCurriculumOverview = createServerFn({ method: "GET" })
     }
     // Slide decks live in their own table so this page works before it exists.
     const slides: Record<string, Slide[]> = {};
+    const slidesShared: Record<string, boolean> = {};
     const slidesReady = await hasSlidesTable(db);
+    const sharedReady = slidesReady && (await hasSlidesShared(db));
     if (slidesReady) {
       const { data: decks, error: deckError } = await db
         .from("rita_lesson_slides")
-        .select("lesson_id, slides");
+        .select(sharedReady ? "lesson_id, slides, shared" : "lesson_id, slides");
       fail(deckError, "slides");
-      for (const row of (decks ?? []) as { lesson_id: string; slides: Slide[] }[]) {
+      for (const row of (decks ?? []) as unknown as {
+        lesson_id: string;
+        slides: Slide[];
+        shared?: boolean;
+      }[]) {
         if (Array.isArray(row.slides)) slides[row.lesson_id] = row.slides;
+        slidesShared[row.lesson_id] = row.shared === true;
       }
     }
     // Resources too: their own table, so this page works before it exists.
@@ -352,6 +378,8 @@ export const adminCurriculumOverview = createServerFn({ method: "GET" })
       needsMigration,
       slides,
       slidesReady,
+      slidesShared,
+      sharedReady,
       resources,
       resourcesReady,
     };
@@ -1043,6 +1071,8 @@ async function saveDeck(
     userId: string;
   },
 ): Promise<SlidesResult> {
+  // A freshly written AI deck has not been reviewed, so it stops being shared.
+  const unshare = input.source === "ai" && (await hasSlidesShared(db));
   const { error } = await db.from("rita_lesson_slides").upsert(
     {
       lesson_id: input.lessonId,
@@ -1050,6 +1080,7 @@ async function saveDeck(
       source: input.source,
       model: input.model,
       created_by: input.userId,
+      ...(unshare ? { shared: false } : {}),
     },
     { onConflict: "lesson_id" },
   );
@@ -1352,6 +1383,29 @@ async function lessonResourcesFor(ctx: AuthContext, lessonId: string): Promise<L
   }
 }
 
+/** Shows a lesson's slides to learners, or hides them again. Only a saved deck can be shared. */
+export const adminSetSlidesShared = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ lessonId: uuid, shared: z.boolean() }), data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const db = context.supabase;
+    if (!(await hasSlidesShared(db))) {
+      throw new Error("Could not find the column shared: apply migration 20261017200000.");
+    }
+    const { data: updated, error } = await db
+      .from("rita_lesson_slides")
+      .update({ shared: data.shared })
+      .eq("lesson_id", data.lessonId)
+      .select("lesson_id")
+      .maybeSingle();
+    fail(error, "share slides");
+    if (!updated) throw new Error("Save the slides first, then share them.");
+    return { lessonId: data.lessonId, shared: data.shared };
+  });
+
 const AUTO_IMAGE_COOLDOWN_MS = 10 * 60 * 1000;
 
 /** A picture that is still a placeholder: none yet, or one of the bundled drawings. */
@@ -1456,6 +1510,9 @@ export type PathLesson = {
   stars: number;
   best_score: number;
   in_progress: boolean;
+  /** Slides an admin chose to share, and attached resources: shown before the lesson starts. */
+  slide_count: number;
+  resource_count: number;
 };
 
 /** A finished lesson suggested for review after a week. */
@@ -1508,6 +1565,30 @@ export const getLessonPath = createServerFn({ method: "GET" })
     for (const [lessonId, row] of Object.entries(byLesson)) {
       pathProgress[lessonId] = { status: effectiveProgressStatus(row), stars: row.stars };
     }
+    const slideCounts: Record<string, number> = {};
+    const resourceCounts: Record<string, number> = {};
+    try {
+      if (await hasSlidesShared(context.supabase)) {
+        const { data: decks } = await context.supabase
+          .from("rita_lesson_slides")
+          .select("lesson_id, slides")
+          .eq("shared", true);
+        for (const row of (decks ?? []) as { lesson_id: string; slides: unknown }[]) {
+          if (Array.isArray(row.slides)) slideCounts[row.lesson_id] = row.slides.length;
+        }
+      }
+      if (await hasResourcesTable(context.supabase)) {
+        const { data: rows } = await context.supabase
+          .from("rita_lesson_resources")
+          .select("lesson_id");
+        for (const row of (rows ?? []) as { lesson_id: string }[]) {
+          resourceCounts[row.lesson_id] = (resourceCounts[row.lesson_id] ?? 0) + 1;
+        }
+      }
+    } catch (cause) {
+      // The map works without the extras.
+      console.warn("Lesson extras unavailable", cause);
+    }
     const nodes = lessonPathStates((lessons ?? []) as PathSourceRow[], pathProgress).map(
       (lesson): PathLesson => ({
         id: lesson.id,
@@ -1521,6 +1602,8 @@ export const getLessonPath = createServerFn({ method: "GET" })
         stars: Math.max(lesson.stars, starsFor(byLesson[lesson.id]?.best_score ?? 0)),
         best_score: byLesson[lesson.id]?.best_score ?? 0,
         in_progress: byLesson[lesson.id]?.status === "in_progress",
+        slide_count: slideCounts[lesson.id] ?? 0,
+        resource_count: resourceCounts[lesson.id] ?? 0,
       }),
     );
     // Spaced review: lessons finished more than a week ago come back as
@@ -1540,6 +1623,59 @@ export const getLessonPath = createServerFn({ method: "GET" })
       });
     }
     return { lessons: nodes, reviews };
+  });
+
+/** What a learner can look at before starting a lesson. Reading it records nothing. */
+export type LessonPreview = {
+  lesson: {
+    id: string;
+    title: string;
+    title_ar: string;
+    topic: string;
+    image_url: string | null;
+    objectives: { id: string; text: string; text_ar: string }[];
+  };
+  slides: Slide[];
+  resources: LearnerResource[];
+};
+
+export const getLessonPreview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => parseWith(z.object({ lessonId: uuid }), data))
+  .handler(async ({ data, context }): Promise<LessonPreview> => {
+    // RLS plus the published check keep drafts and archived lessons out.
+    const lesson = await loadPublishedLesson(context, data.lessonId);
+    let slides: Slide[] = [];
+    try {
+      if (await hasSlidesShared(context.supabase)) {
+        const { data: deck } = await context.supabase
+          .from("rita_lesson_slides")
+          .select("slides")
+          .eq("lesson_id", lesson.id)
+          .eq("shared", true)
+          .maybeSingle();
+        const parsed = SlideDeckSchema.safeParse(deck?.slides);
+        if (parsed.success) slides = parsed.data;
+      }
+    } catch (cause) {
+      console.warn("Lesson slides unavailable", cause);
+    }
+    return {
+      lesson: {
+        id: lesson.id,
+        title: lesson.title,
+        title_ar: lesson.title_ar,
+        topic: lesson.topic,
+        image_url: lesson.image_url,
+        objectives: lesson.objectives.map((objective) => ({
+          id: objective.id,
+          text: objective.text,
+          text_ar: objective.text_ar,
+        })),
+      },
+      slides,
+      resources: await lessonResourcesFor(context, lesson.id),
+    };
   });
 
 export type LessonSession = {
