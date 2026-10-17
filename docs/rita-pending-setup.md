@@ -37,8 +37,17 @@ added since.
    - `20261017120000_rita_lesson_slides.sql` **new**: creates `rita_lesson_slides`
      (one slide deck per lesson, admin only). Until it is applied, the lesson builder
      shows a note in the Slides tab and everything else works.
-   - Check the buckets exist: `rita-curricula` (private) and
-     `rita-lesson-images`.
+   - `20261017180000_rita_lesson_resources.sql` **new**: creates
+     `rita_lesson_resources` (PDF / link / video per lesson) and the **private**
+     bucket `rita-lesson-resources` (PDF only, 15 MB, admin write). Learners get
+     one-hour signed links from the server. Until it is applied, the Resources tab
+     shows a note and lessons work as before.
+   - `20261017200000_rita_slides_student_access.sql` **new**: adds
+     `rita_lesson_slides.shared` (default off) and a read policy for learners on shared
+     decks of published lessons. Until it is applied, learners see no slides and the
+     admin switch "أظهر السلايدات للطلاب" stays disabled.
+   - Check the buckets exist: `rita-curricula` (private), `rita-lesson-images` and
+     `rita-lesson-resources` (private).
 
 3. **OpenAI secret**
    - Add `OPENAI_API_KEY` in the project secrets (Lovable Cloud → Secrets).

@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, Check, Loader2, Lock, MessageCircle } from "lucide-react";
+import { ArrowRight, Check, FileText, Loader2, Lock, MessageCircle } from "lucide-react";
 import type { PathLesson, ReviewSuggestion } from "@/lib/rita-curriculum.functions";
 import { LessonImage, LessonStars } from "./LessonArt";
 
@@ -217,7 +217,9 @@ export function LessonPathView({
                 onClick={() => open(lesson)}
                 className="absolute flex w-[150px] flex-col items-center text-center"
                 style={{ left: centre.x - 75, top: index * ROW }}
-                aria-label={`${lesson.title || lesson.title_ar}${locked ? " (مقفل)" : ""}`}
+                aria-label={`${lesson.title || lesson.title_ar}${locked ? " (مقفل)" : ""}${
+                  lesson.slide_count + lesson.resource_count > 0 ? " — فيه سلايدات أو مراجع" : ""
+                }`}
               >
                 <LessonStars stars={lesson.stars} />
                 <span className="relative mt-1 block" style={{ width: NODE, height: NODE }}>
@@ -241,6 +243,15 @@ export function LessonPathView({
                   {lesson.state === "done" && (
                     <span className="absolute bottom-0 left-0 grid h-8 w-8 place-items-center rounded-full border-2 border-[var(--pp-ink)] bg-[var(--pp-accent)] text-[var(--pp-on-accent)]">
                       <Check size={16} strokeWidth={3} />
+                    </span>
+                  )}
+                  {lesson.slide_count + lesson.resource_count > 0 && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute bottom-0 right-0 flex h-8 items-center gap-1 rounded-lg border-2 border-[var(--pp-ink)] bg-white px-1.5 text-[11px] font-bold text-[var(--pp-ink)]"
+                    >
+                      <FileText size={13} />
+                      {lesson.slide_count + lesson.resource_count}
                     </span>
                   )}
                   <span

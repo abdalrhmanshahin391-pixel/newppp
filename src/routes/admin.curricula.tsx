@@ -61,6 +61,7 @@ import {
   adminRegenerateObjective,
   adminSaveCurriculumPages,
   adminSaveSlides,
+  adminSetSlidesShared,
   adminSetCurriculumStatus,
   adminSetLessonStatus,
   adminTranscribeCurriculumPages,
@@ -73,6 +74,8 @@ import { LessonImage } from "@/components/rita-lessons/LessonArt";
 import { LessonForm } from "@/components/rita-lessons/LessonForm";
 import { NextLessonPicker } from "@/components/rita-lessons/admin/NextLessonPicker";
 import { SlidesPanel } from "@/components/rita-lessons/admin/SlidesPanel";
+import { ResourcesPanel } from "@/components/rita-lessons/admin/ResourcesPanel";
+import type { Resource } from "@/lib/rita-resources";
 import { suggestNextTopics, type Slide } from "@/lib/rita-slides";
 
 export const Route = createFileRoute("/admin/curricula")({
@@ -298,6 +301,10 @@ function AdminCurricula() {
               needsMigration={overview.needsMigration}
               slides={overview.slides}
               slidesReady={overview.slidesReady}
+              slidesShared={overview.slidesShared}
+              sharedReady={overview.sharedReady}
+              resources={overview.resources}
+              resourcesReady={overview.resourcesReady}
               pdfCache={pdfCache}
               onChanged={refresh}
             />
@@ -521,6 +528,10 @@ function BookDetail({
   needsMigration,
   slides,
   slidesReady,
+  slidesShared,
+  sharedReady,
+  resources,
+  resourcesReady,
   pdfCache,
   onChanged,
 }: {
@@ -532,6 +543,10 @@ function BookDetail({
   needsMigration: boolean;
   slides: Record<string, Slide[]>;
   slidesReady: boolean;
+  slidesShared: Record<string, boolean>;
+  sharedReady: boolean;
+  resources: Record<string, Resource[]>;
+  resourcesReady: boolean;
   pdfCache: Map<string, File>;
   onChanged: () => Promise<void>;
 }) {
@@ -937,6 +952,10 @@ function BookDetail({
         allLessons={allLessons}
         slides={slides}
         slidesReady={slidesReady}
+        slidesShared={slidesShared}
+        sharedReady={sharedReady}
+        resources={resources}
+        resourcesReady={resourcesReady}
         onChanged={onChanged}
       />
 
@@ -1145,6 +1164,10 @@ function LessonsCard({
   allLessons,
   slides,
   slidesReady,
+  slidesShared,
+  sharedReady,
+  resources,
+  resourcesReady,
   onChanged,
 }: {
   book: CurriculumRow;
@@ -1153,8 +1176,13 @@ function LessonsCard({
   allLessons: LessonRow[];
   slides: Record<string, Slide[]>;
   slidesReady: boolean;
+  slidesShared: Record<string, boolean>;
+  sharedReady: boolean;
+  resources: Record<string, Resource[]>;
+  resourcesReady: boolean;
   onChanged: () => Promise<void>;
 }) {
+  const shareSlidesFn = useServerFn(adminSetSlidesShared);
   const generateFn = useServerFn(adminGenerateLesson);
   const importFn = useServerFn(adminImportLesson);
   const updateFn = useServerFn(adminUpdateLesson);
@@ -1170,7 +1198,7 @@ function LessonsCard({
   const [lessonJson, setLessonJson] = useState("");
   const [generatingKey, setGeneratingKey] = useState("");
   const [activeId, setActiveId] = useState("");
-  const [tab, setTab] = useState<"overview" | "slides" | "edit">("overview");
+  const [tab, setTab] = useState<"overview" | "slides" | "resources" | "edit">("overview");
   const [deckEpoch, setDeckEpoch] = useState<Record<string, number>>({});
   const [editing, setEditing] = useState<{ id: string; draft: LessonDraft } | null>(null);
   const [selectedDrafts, setSelectedDrafts] = useState<Set<string>>(new Set());
@@ -1434,9 +1462,15 @@ function LessonsCard({
                       <span className="line-clamp-2 text-sm font-bold leading-snug">
                         {lesson.title_ar || lesson.title}
                       </span>
-                      {slidesReady && (
+                      {(slidesReady || resourcesReady) && (
                         <span className="text-xs font-medium text-[var(--pp-muted)]">
-                          {count > 0 ? `${count} سلايد` : "بلا سلايدات"}
+                          {slidesReady ? (count > 0 ? `${count} سلايد` : "بلا سلايدات") : ""}
+                          {slidesReady && resourcesReady ? " · " : ""}
+                          {resourcesReady
+                            ? (resources[lesson.id]?.length ?? 0) > 0
+                              ? `${resources[lesson.id].length} مراجع`
+                              : "بلا مراجع"
+                            : ""}
                         </span>
                       )}
                     </button>
@@ -1453,6 +1487,10 @@ function LessonsCard({
                   [
                     ["overview", "نظرة عامة"],
                     ["slides", "السلايدات"],
+                    [
+                      "resources",
+                      `المراجع${resourcesReady ? ` (${resources[active.id]?.length ?? 0})` : ""}`,
+                    ],
                     ["edit", "الأهداف والخطة"],
                   ] as const
                 ).map(([value, label]) => (
@@ -1463,7 +1501,8 @@ function LessonsCard({
                     aria-selected={tab === value}
                     onClick={() => {
                       setTab(value);
-                      if (value === "edit") setEditing({ id: active.id, draft: lessonToDraft(active) });
+                      if (value === "edit")
+                        setEditing({ id: active.id, draft: lessonToDraft(active) });
                     }}
                     className={`rounded-lg border-2 border-[var(--pp-ink)] px-4 py-1.5 text-sm font-semibold ${
                       tab === value ? "bg-[var(--pp-ink)] text-white" : "bg-white"
@@ -1551,7 +1590,8 @@ function LessonsCard({
                           type="button"
                           aria-label="تقديم في المسار"
                           disabled={
-                            Boolean(busy) || published.findIndex((item) => item.id === active.id) === 0
+                            Boolean(busy) ||
+                            published.findIndex((item) => item.id === active.id) === 0
                           }
                           onClick={() =>
                             void run(`move:${active.id}`, () =>
@@ -1567,7 +1607,8 @@ function LessonsCard({
                           aria-label="تأخير في المسار"
                           disabled={
                             Boolean(busy) ||
-                            published.findIndex((item) => item.id === active.id) === published.length - 1
+                            published.findIndex((item) => item.id === active.id) ===
+                              published.length - 1
                           }
                           onClick={() =>
                             void run(`move:${active.id}`, () =>
@@ -1607,6 +1648,19 @@ function LessonsCard({
                     from={active.source_from_page}
                     to={active.source_to_page}
                     ready={slidesReady}
+                    shared={slidesShared[active.id] === true}
+                    sharedReady={sharedReady}
+                    onToggleShared={async (next) => {
+                      try {
+                        await shareSlidesFn({ data: { lessonId: active.id, shared: next } });
+                        toast.success(
+                          next ? "السلايدات ظاهرة للطلاب" : "السلايدات مخفية عن الطلاب",
+                        );
+                        await onChanged();
+                      } catch (error) {
+                        toast.error(errorText(error));
+                      }
+                    }}
                     saved={slides[active.id]}
                     busy={Boolean(busy)}
                     generating={busy === `slides:${active.id}`}
@@ -1634,6 +1688,18 @@ function LessonsCard({
                         return false;
                       }
                     }}
+                  />
+                </div>
+              )}
+
+              {tab === "resources" && (
+                <div className="rounded-2xl border-2 border-[var(--pp-line)] bg-white p-4">
+                  <ResourcesPanel
+                    key={active.id}
+                    lessonId={active.id}
+                    ready={resourcesReady}
+                    resources={resources[active.id] ?? []}
+                    onChanged={onChanged}
                   />
                 </div>
               )}

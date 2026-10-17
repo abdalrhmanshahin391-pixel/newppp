@@ -9,6 +9,7 @@ import {
   finalizeSlides,
   moveSlide,
   removeSlide,
+  stepSlide,
   suggestNextTopics,
   type Slide,
 } from "./rita-slides.ts";
@@ -161,4 +162,12 @@ test("suggestNextTopics falls back to earlier gaps after the topics ahead", () =
     result.map((item) => item.topic),
     ["Ahead", "Gap"],
   );
+});
+
+test("stepping through a deck stops at both ends", () => {
+  assert.equal(stepSlide(0, -1, 5), 0);
+  assert.equal(stepSlide(0, 1, 5), 1);
+  assert.equal(stepSlide(4, 1, 5), 4);
+  assert.equal(stepSlide(2, 1, 0), 0);
+  assert.equal(stepSlide(9, 1, 3), 2);
 });

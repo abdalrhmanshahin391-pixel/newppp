@@ -136,6 +136,33 @@ admins only for now and live in their own table (`rita_lesson_slides`), so the p
 the migration is applied. Pure rules (slide schema, next-topic suggestions) are in
 `src/lib/rita-slides.ts` with tests in `rita-slides.test.ts`.
 
+### Lesson resources (fourth tab: Resources)
+
+Optional study material per lesson: a summary PDF, a helper video, a link (up to 12). One calm
+screen: a PDF drop area and a link field side by side; picking either opens a small form (title
+prefilled from the file name or the host, optional "when to use it" note, link/video choice),
+then the list. Each row is a 2px ink card with a square icon (no tinted circles), title, type and
+size or host, and icon buttons: open, edit, up, down, delete (delete asks inline first). On a
+phone the buttons drop under the text so long titles never get squeezed. The learner sees the same
+items as a "Lesson resources" list under the lesson goals in the live room: whole row is the
+link, opens in a new tab, never required. PDFs are in a private bucket; links expire after an
+hour. Only `https` addresses are accepted. Rules and tests: `src/lib/rita-resources.ts`.
+
+### Lesson card on the map (`/rita-lessons?lesson=…`)
+
+Tapping a lesson that has shared slides or resources opens a card instead of starting the lesson
+(a lesson with neither starts straight away, as before). Phone: a sheet that rises from the
+bottom; desktop: a centred card. Header: round picture, Arabic and English title, stars, close.
+Tabs (only those with content, each with a count): Overview (what you will learn, plus two big
+rows that jump to slides and resources), Slides, Resources. The primary button "ابدأ الدرس / تابع
+الدرس / أعد الدرس" is always at the bottom; looking at slides or resources records nothing. The
+slide viewer shows one slide at a time with next/previous (arrow keys and swipe follow the right
+to left reading direction), a thin progress bar and "3 / 8"; on the last slide next becomes
+start. The map marks such lessons with a small ink-bordered badge (file icon and a count) at the
+lower right of the circle. Slides are AI drafts, so an admin switches "show to learners" on per
+lesson; regenerating switches it off. The card is a modal: Esc and back close it, focus is kept
+inside and returned, the page behind is locked, motion stops under reduced motion.
+
 ## Home app window
 
 `AppWindow.tsx` replaces the old lesson-path strip. A window built from real markup (no screenshots) that starts tilted (desktop only) and flattens as it scrolls to the middle of the screen, then plays a short story once: the path fills, the lesson in progress shows, two words are saved, Rita listens.
@@ -147,9 +174,9 @@ the migration is applied. Pure rules (slide schema, next-topic suggestions) are 
 
 ## Home "Under the hood" band
 
-`src/components/home/procreate/UnderTheHood.tsx`, after the lesson path. Speed story for Rita, told in four parts: a scripted mixed-language transcript demo, an overlap timeline, five capability cells, and a goals table.
+`src/components/home/procreate/UnderTheHood.tsx`, after the lesson path. Speed story for Rita, told in three parts: a scripted mixed-language transcript demo, an overlap timeline, and five capability cells (one is the measured figure).
 
-- Honest numbers only. Latency figures are goals, not results, and the table says so with a "Measuring" status. The one measured figure (about 75 ms) is the voice engine alone, with its date, region and "not end to end" stated next to it. Replace a goal with a result only when recorded calls back it.
+- Honest numbers only. The one measured figure (about 75 ms) is the voice engine alone, with its date, region and "not end to end" stated next to it. Latency goals are not shown on the page; add an end-to-end figure only when recorded calls back it.
 - Every number is defined where it appears (what is measured, from where to where).
 - The demo is labelled as a scripted example. It has a Replay button, a full-text `sr-only` version, and shows the whole text at once under reduced motion.
 - Mixed-direction text is grouped by language into `dir`/`lang` spans so Arabic never reorders neighbouring words.

@@ -373,71 +373,7 @@ function SpecGrid() {
   );
 }
 
-/* ---------- 4. the goals we are held to ---------- */
-
-const GOALS: { goal: string; target: string }[] = [
-  {
-    goal: "From the end of your sentence to Rita's first audible word",
-    target: "Half of turns under 1.5 s, nearly all under 2.5 s",
-  },
-  { goal: "Deciding that you have finished speaking", target: "Half of turns under 0.45 s" },
-  { goal: "Rita goes quiet when you interrupt", target: "Half of the time under 0.2 s" },
-  { goal: "Cutting in while you are still thinking", target: "Fewer than 3 in 100 turns" },
-];
-
-function Goals() {
-  return (
-    <div className="rounded-[20px] p-5 md:p-7" style={ringed}>
-      <h3 className="text-[22px] font-bold tracking-[-0.02em]" style={ink}>
-        What we hold ourselves to
-      </h3>
-      <p className="mt-2 max-w-[46rem] text-[15.5px] leading-[1.6]" style={muted}>
-        These are goals, not results. We are measuring them on recorded calls and will put the
-        numbers here when that review is finished.
-      </p>
-      <div className="mt-5 overflow-x-auto">
-        <table className="w-full min-w-[34rem] border-collapse text-start text-[15px]">
-          <caption className="sr-only">
-            Latency goals for a Rita voice turn and their status
-          </caption>
-          <thead>
-            <tr style={{ borderBottom: "2px solid var(--pp-ink)" }}>
-              <th scope="col" className="py-2 pe-4 text-start font-semibold" style={ink}>
-                What
-              </th>
-              <th scope="col" className="py-2 pe-4 text-start font-semibold" style={ink}>
-                Goal
-              </th>
-              <th scope="col" className="py-2 text-start font-semibold" style={ink}>
-                Status
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {GOALS.map((row) => (
-              <tr key={row.goal} style={{ borderBottom: "1px solid var(--pp-line)" }}>
-                <th scope="row" className="py-3 pe-4 text-start font-medium" style={ink}>
-                  {row.goal}
-                </th>
-                <td
-                  className="py-3 pe-4 font-semibold"
-                  style={{ ...ink, fontVariantNumeric: "tabular-nums" }}
-                >
-                  {row.target}
-                </td>
-                <td className="py-3" style={muted}>
-                  Measuring
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-/** Home page band: how the voice works, with one measured number and honest goals. */
+/** Home page band: how the voice works, with one measured number, stated with its limits. */
 export function UnderTheHood() {
   const head = useReveal<HTMLElement>();
   return (
@@ -472,7 +408,6 @@ export function UnderTheHood() {
         <LiveTranscript />
         <TurnTimeline />
         <SpecGrid />
-        <Goals />
       </div>
     </section>
   );
