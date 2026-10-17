@@ -34,6 +34,20 @@ import {
 } from "@/lib/rita-curriculum";
 
 import { SlideDeckSchema, type Slide } from "@/lib/rita-slides";
+import {
+  MAX_RESOURCES,
+  NewResourceSchema,
+  RESOURCES_BUCKET,
+  ResourceEditSchema,
+  canAddResource,
+  hostLabel,
+  isCompleteOrder,
+  isPdfPathFor,
+  nextPosition,
+  sortResources,
+  type LearnerResource,
+  type Resource,
+} from "@/lib/rita-resources";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -47,7 +61,6 @@ async function assertAdmin(ctx: AuthContext) {
   });
   if (error || !data) throw new Error("Forbidden: admin only");
 }
-
 
 /**
  * Whether the 20261015120000 curriculum-gaps columns exist. True is cached for
@@ -97,6 +110,29 @@ async function hasSlidesTable(db: AuthContext["supabase"]): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Whether the 20261017180000 lesson-resources table exists. Same rule as the
+ * slides probe: a missing-schema answer means "not applied yet" and lessons keep
+ * working without resources.
+ */
+let resourcesTableReady = false;
+async function hasResourcesTable(db: AuthContext["supabase"]): Promise<boolean> {
+  if (resourcesTableReady) return true;
+  try {
+    const { error } = await db.from("rita_lesson_resources").select("id").limit(1);
+    if (!error) {
+      resourcesTableReady = true;
+      return true;
+    }
+    return !isMissingSchemaError(error);
+  } catch {
+    return false;
+  }
+}
+
+const MISSING_RESOURCES =
+  "Could not find the table rita_lesson_resources: apply migration 20261017180000.";
 
 async function ai() {
   return import("@/lib/rita-curriculum-ai.server");
@@ -173,6 +209,8 @@ export type LessonRow = {
   updated_at: string;
 };
 
+const RESOURCE_COLUMNS =
+  "id, lesson_id, kind, title, note, url, file_path, file_name, file_size, position";
 const CURRICULUM_COLUMNS =
   "id, kind, title, title_ar, level, pdf_path, page_count, read_cursor, taught_cursor, image_url, status, created_at";
 const LESSON_COLUMNS =
@@ -212,7 +250,10 @@ export const adminCurriculumOverview = createServerFn({ method: "GET" })
     if (bookRows.length) {
       const gaps = await hasCurriculumGaps(db);
       let reports:
-        | { rows: { page_no: number; text_len: number; blank_confirmed: boolean }[]; error: { message?: string } | null }[]
+        | {
+            rows: { page_no: number; text_len: number; blank_confirmed: boolean }[];
+            error: { message?: string } | null;
+          }[]
         | null = null;
       if (gaps) {
         reports = [];
@@ -264,8 +305,10 @@ export const adminCurriculumOverview = createServerFn({ method: "GET" })
           // pages and one call is capped by the API row limit.
           ...(await legacyRemainingPages(db, (pages ?? []).length)),
         ] as { curriculum_id: string; page_no: number; text: string }[];
-        const byBook: Record<string, { page_no: number; text_len: number; blank_confirmed: boolean }[]> =
-          {};
+        const byBook: Record<
+          string,
+          { page_no: number; text_len: number; blank_confirmed: boolean }[]
+        > = {};
         for (const page of allPages) {
           (byBook[page.curriculum_id] ??= []).push({
             page_no: page.page_no,
@@ -290,6 +333,17 @@ export const adminCurriculumOverview = createServerFn({ method: "GET" })
         if (Array.isArray(row.slides)) slides[row.lesson_id] = row.slides;
       }
     }
+    // Resources too: their own table, so this page works before it exists.
+    const resources: Record<string, Resource[]> = {};
+    const resourcesReady = await hasResourcesTable(db);
+    if (resourcesReady) {
+      const { data: rows, error: resourceError } = await db
+        .from("rita_lesson_resources")
+        .select(RESOURCE_COLUMNS)
+        .order("position");
+      fail(resourceError, "resources");
+      for (const row of (rows ?? []) as Resource[]) (resources[row.lesson_id] ??= []).push(row);
+    }
     return {
       curricula: bookRows,
       windows: (windows.data ?? []) as WindowRow[],
@@ -298,6 +352,8 @@ export const adminCurriculumOverview = createServerFn({ method: "GET" })
       needsMigration,
       slides,
       slidesReady,
+      resources,
+      resourcesReady,
     };
   });
 
@@ -411,7 +467,9 @@ export const adminTranscribeCurriculumPages = createServerFn({ method: "POST" })
     const transcribed = result.pages.map((page) => page.page_no);
     return {
       transcribed,
-      stillMissing: data.pages.map((page) => page.page_no).filter((pageNo) => !transcribed.includes(pageNo)),
+      stillMissing: data.pages
+        .map((page) => page.page_no)
+        .filter((pageNo) => !transcribed.includes(pageNo)),
     };
   });
 
@@ -469,7 +527,10 @@ export const adminReorderLessons = createServerFn({ method: "POST" })
     fail(error, "path");
     // The dragged lessons keep the actual position slots they already occupy,
     // so lessons from other books are never renumbered.
-    const positions = reorderPositions((rows ?? []) as { id: string; path_order: number }[], data.lessonIds);
+    const positions = reorderPositions(
+      (rows ?? []) as { id: string; path_order: number }[],
+      data.lessonIds,
+    );
     const orders = data.lessonIds.map((id, index) => ({ id, path_order: positions[index] }));
     const { error: rpcError } = await db.rpc("rita_set_lesson_path_orders", { p_orders: orders });
     fail(rpcError, "reorder lessons");
@@ -487,15 +548,18 @@ async function loadBook(db: AuthContext["supabase"], curriculumId: string) {
 }
 
 /** Saves a window summary and moves the read cursor forward when it is the next window. */
-async function storeWindow(db: AuthContext["supabase"], input: {
-  book: CurriculumRow;
-  from: number;
-  to: number;
-  summary: WindowSummary;
-  source: "ai" | "manual";
-  model: string | null;
-  userId: string;
-}) {
+async function storeWindow(
+  db: AuthContext["supabase"],
+  input: {
+    book: CurriculumRow;
+    from: number;
+    to: number;
+    summary: WindowSummary;
+    source: "ai" | "manual";
+    model: string | null;
+    userId: string;
+  },
+) {
   const check = checkWindow(input.book, input.from, input.to);
   if (!check.ok) throw new Error(check.reason);
   const pageProblem = checkSummaryPages(input.summary, input.from, input.to);
@@ -523,10 +587,7 @@ async function storeWindow(db: AuthContext["supabase"], input: {
   return { readCursor: check.advancesTo };
 }
 
-async function legacyRemainingPages(
-  db: AuthContext["supabase"],
-  alreadyFetched: number,
-) {
+async function legacyRemainingPages(db: AuthContext["supabase"], alreadyFetched: number) {
   const rows: { curriculum_id: string; page_no: number; text: string }[] = [];
   let from = alreadyFetched;
   for (let guard = 0; guard < 30; guard += 1) {
@@ -542,7 +603,12 @@ async function legacyRemainingPages(
   return rows;
 }
 
-async function pageText(db: AuthContext["supabase"], curriculumId: string, from: number, to: number) {
+async function pageText(
+  db: AuthContext["supabase"],
+  curriculumId: string,
+  from: number,
+  to: number,
+) {
   const gaps = await hasCurriculumGaps(db);
   const { data, error } = await db
     .from("rita_curriculum_pages")
@@ -551,11 +617,16 @@ async function pageText(db: AuthContext["supabase"], curriculumId: string, from:
     .gte("page_no", from)
     .lte("page_no", to);
   fail(error, "page text");
-  const rows = (data ?? []) as unknown as { page_no: number; text: string; blank_confirmed?: boolean }[];
+  const rows = (data ?? []) as unknown as {
+    page_no: number;
+    text: string;
+    blank_confirmed?: boolean;
+  }[];
   const missing: number[] = [];
   for (let page = from; page <= to; page += 1) {
     const row = rows.find((item) => item.page_no === page);
-    if (!row || !pageIsReady(row.text.trim().length, row.blank_confirmed === true)) missing.push(page);
+    if (!row || !pageIsReady(row.text.trim().length, row.blank_confirmed === true))
+      missing.push(page);
   }
   return { text: buildWindowText(rows, from, to), missing };
 }
@@ -620,14 +691,17 @@ export const adminImportCurriculumWindow = createServerFn({ method: "POST" })
 
 // ---------- admin: lessons ----------
 
-async function insertLesson(db: AuthContext["supabase"], input: {
-  book: CurriculumRow;
-  lesson: LessonDraft;
-  source: "ai" | "manual";
-  model: string | null;
-  imageUrl: string | null;
-  userId: string;
-}) {
+async function insertLesson(
+  db: AuthContext["supabase"],
+  input: {
+    book: CurriculumRow;
+    lesson: LessonDraft;
+    source: "ai" | "manual";
+    model: string | null;
+    imageUrl: string | null;
+    userId: string;
+  },
+) {
   const pageProblem = checkLessonPages(
     input.book,
     input.lesson.source_from_page,
@@ -961,7 +1035,13 @@ export type SlidesResult = { slides: Slide[]; source: "ai" | "manual"; model: st
 
 async function saveDeck(
   db: AuthContext["supabase"],
-  input: { lessonId: string; slides: Slide[]; source: "ai" | "manual"; model: string | null; userId: string },
+  input: {
+    lessonId: string;
+    slides: Slide[];
+    source: "ai" | "manual";
+    model: string | null;
+    userId: string;
+  },
 ): Promise<SlidesResult> {
   const { error } = await db.from("rita_lesson_slides").upsert(
     {
@@ -985,7 +1065,9 @@ export const adminGenerateSlides = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const db = context.supabase;
     if (!(await hasSlidesTable(db))) {
-      throw new Error("Could not find the table rita_lesson_slides: apply migration 20261017120000.");
+      throw new Error(
+        "Could not find the table rita_lesson_slides: apply migration 20261017120000.",
+      );
     }
     const { data: lesson, error } = await db
       .from("rita_lessons")
@@ -999,7 +1081,9 @@ export const adminGenerateSlides = createServerFn({ method: "POST" })
     if (pageProblem) throw new Error(pageProblem);
     const { text, missing } = await pageText(db, book.id, row.source_from_page, row.source_to_page);
     if (missing.length > 0) {
-      throw new Error(`These pages have no text yet: ${missing.join(", ")}. Read the scanned pages first.`);
+      throw new Error(
+        `These pages have no text yet: ${missing.join(", ")}. Read the scanned pages first.`,
+      );
     }
     const { generateSlides } = await ai();
     const { slides, model } = await generateSlides({
@@ -1025,7 +1109,9 @@ export const adminSaveSlides = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const db = context.supabase;
     if (!(await hasSlidesTable(db))) {
-      throw new Error("Could not find the table rita_lesson_slides: apply migration 20261017120000.");
+      throw new Error(
+        "Could not find the table rita_lesson_slides: apply migration 20261017120000.",
+      );
     }
     const { data: lesson, error } = await db
       .from("rita_lessons")
@@ -1049,6 +1135,222 @@ export const adminSaveSlides = createServerFn({ method: "POST" })
       userId: context.userId,
     });
   });
+
+// ---------- admin: lesson resources ----------
+
+async function loadResource(db: AuthContext["supabase"], id: string): Promise<Resource> {
+  const { data, error } = await db
+    .from("rita_lesson_resources")
+    .select(RESOURCE_COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+  fail(error, "resource");
+  if (!data) throw new Error("This resource no longer exists.");
+  return data as Resource;
+}
+
+/** Adds a PDF (already uploaded to the private bucket by the browser), a link or a video to a lesson. */
+export const adminAddResource = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ lessonId: uuid, resource: NewResourceSchema }), data),
+  )
+  .handler(async ({ data, context }): Promise<Resource> => {
+    await assertAdmin(context);
+    const db = context.supabase;
+    if (!(await hasResourcesTable(db))) throw new Error(MISSING_RESOURCES);
+    const { data: lesson, error: lessonError } = await db
+      .from("rita_lessons")
+      .select("id")
+      .eq("id", data.lessonId)
+      .maybeSingle();
+    fail(lessonError, "lesson");
+    if (!lesson) throw new Error("This lesson no longer exists.");
+    const { data: existing, error: listError } = await db
+      .from("rita_lesson_resources")
+      .select("id, position")
+      .eq("lesson_id", data.lessonId);
+    fail(listError, "resources");
+    const current = (existing ?? []) as { id: string; position: number }[];
+    if (!canAddResource(current.length)) {
+      throw new Error(`A lesson can hold at most ${MAX_RESOURCES} resources.`);
+    }
+    const resource = data.resource;
+    let row: Record<string, unknown>;
+    if (resource.kind === "pdf") {
+      if (!isPdfPathFor(data.lessonId, resource.file_path)) {
+        throw new Error("The file path does not belong to this lesson.");
+      }
+      // The browser uploaded it a moment ago; make sure it is really there.
+      const folder = resource.file_path.slice(0, resource.file_path.lastIndexOf("/"));
+      const name = resource.file_path.slice(resource.file_path.lastIndexOf("/") + 1);
+      const { data: found, error: findError } = await db.storage
+        .from(RESOURCES_BUCKET)
+        .list(folder, { search: name, limit: 1 });
+      fail(findError, "find file");
+      if (!found?.some((object) => object.name === name)) {
+        throw new Error("The file was not uploaded. Try again.");
+      }
+      row = {
+        kind: "pdf",
+        title: resource.title,
+        note: resource.note,
+        file_path: resource.file_path,
+        file_name: resource.file_name,
+        file_size: resource.file_size,
+      };
+    } else {
+      row = { kind: resource.kind, title: resource.title, note: resource.note, url: resource.url };
+    }
+    const { data: created, error } = await db
+      .from("rita_lesson_resources")
+      .insert({
+        ...row,
+        lesson_id: data.lessonId,
+        position: nextPosition(current),
+        created_by: context.userId,
+      })
+      .select(RESOURCE_COLUMNS)
+      .single();
+    fail(error, "add resource");
+    return created as Resource;
+  });
+
+/** Renames a resource or changes its note. The file or address itself never changes: add a new one instead. */
+export const adminUpdateResource = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ id: uuid, edit: ResourceEditSchema }), data),
+  )
+  .handler(async ({ data, context }): Promise<Resource> => {
+    await assertAdmin(context);
+    const db = context.supabase;
+    if (!(await hasResourcesTable(db))) throw new Error(MISSING_RESOURCES);
+    const { data: updated, error } = await db
+      .from("rita_lesson_resources")
+      .update({ title: data.edit.title, note: data.edit.note })
+      .eq("id", data.id)
+      .select(RESOURCE_COLUMNS)
+      .maybeSingle();
+    fail(error, "update resource");
+    if (!updated) throw new Error("This resource no longer exists.");
+    return updated as Resource;
+  });
+
+/** Removes a resource, and its stored file when it is a PDF. */
+export const adminDeleteResource = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => parseWith(z.object({ id: uuid }), data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const db = context.supabase;
+    if (!(await hasResourcesTable(db))) throw new Error(MISSING_RESOURCES);
+    const row = await loadResource(db, data.id);
+    const { error } = await db.from("rita_lesson_resources").delete().eq("id", row.id);
+    fail(error, "delete resource");
+    if (row.file_path) {
+      // The row is already gone; a leftover file is harmless and only logged.
+      const removed = await db.storage.from(RESOURCES_BUCKET).remove([row.file_path]);
+      if (removed.error) console.warn("Could not remove resource file", removed.error.message);
+    }
+    return { id: row.id };
+  });
+
+/** Saves a new order. The list must name exactly this lesson's resources, once each. */
+export const adminReorderResources = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ lessonId: uuid, ids: z.array(uuid).max(MAX_RESOURCES) }), data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const db = context.supabase;
+    if (!(await hasResourcesTable(db))) throw new Error(MISSING_RESOURCES);
+    const { data: rows, error } = await db
+      .from("rita_lesson_resources")
+      .select("id")
+      .eq("lesson_id", data.lessonId);
+    fail(error, "resources");
+    const current = ((rows ?? []) as { id: string }[]).map((row) => row.id);
+    if (!isCompleteOrder(current, data.ids)) {
+      throw new Error("The list changed. Reload the page and try again.");
+    }
+    for (let index = 0; index < data.ids.length; index += 1) {
+      const result = await db
+        .from("rita_lesson_resources")
+        .update({ position: index })
+        .eq("id", data.ids[index])
+        .eq("lesson_id", data.lessonId);
+      fail(result.error, "reorder resources");
+    }
+    return { ids: data.ids };
+  });
+
+/** A short-lived link so an admin can open a stored PDF. */
+export const adminResourceLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => parseWith(z.object({ id: uuid }), data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const row = await loadResource(context.supabase, data.id);
+    if (row.url) return { href: row.url };
+    if (!row.file_path) throw new Error("This resource has no file.");
+    const signed = await context.supabase.storage
+      .from(RESOURCES_BUCKET)
+      .createSignedUrl(row.file_path, 60 * 10);
+    fail(signed.error, "sign file");
+    return { href: signed.data!.signedUrl };
+  });
+
+/**
+ * The resources a learner (or an admin previewing) sees with a lesson. Rows are
+ * read through RLS, so a draft lesson shows nothing to a learner; PDF links are
+ * signed here and expire in an hour. Any failure leaves the lesson without
+ * resources instead of breaking it.
+ */
+async function lessonResourcesFor(ctx: AuthContext, lessonId: string): Promise<LearnerResource[]> {
+  try {
+    if (!(await hasResourcesTable(ctx.supabase))) return [];
+    const { data, error } = await ctx.supabase
+      .from("rita_lesson_resources")
+      .select(RESOURCE_COLUMNS)
+      .eq("lesson_id", lessonId);
+    if (error || !data?.length) return [];
+    const { supabaseAdmin: admin } = await import("@/integrations/supabase/legacy-client.server");
+    const out: LearnerResource[] = [];
+    for (const row of sortResources(data as Resource[])) {
+      if (row.url) {
+        out.push({
+          id: row.id,
+          kind: row.kind,
+          title: row.title,
+          note: row.note,
+          href: row.url,
+          host: hostLabel(row.url),
+          size: null,
+        });
+      } else if (row.file_path) {
+        const signed = await admin.storage
+          .from(RESOURCES_BUCKET)
+          .createSignedUrl(row.file_path, 60 * 60);
+        if (signed.error || !signed.data) continue;
+        out.push({
+          id: row.id,
+          kind: row.kind,
+          title: row.title,
+          note: row.note,
+          href: signed.data.signedUrl,
+          host: "",
+          size: row.file_size,
+        });
+      }
+    }
+    return out;
+  } catch (cause) {
+    console.warn("Lesson resources unavailable", cause);
+    return [];
+  }
+}
 
 const AUTO_IMAGE_COOLDOWN_MS = 10 * 60 * 1000;
 
@@ -1257,6 +1559,8 @@ export type LessonSession = {
     attempts: number;
   };
   nextLessonId: string | null;
+  /** Study material the admin attached to this lesson (optional, never required to start). */
+  resources: LearnerResource[];
 };
 
 async function loadPublishedLesson(ctx: AuthContext, lessonId: string, allowDraft = false) {
@@ -1305,14 +1609,20 @@ export const startLessonAttempt = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     parseWith(
-      z.object({ lessonId: uuid, restart: z.boolean().default(false), preview: z.boolean().default(false) }),
+      z.object({
+        lessonId: uuid,
+        restart: z.boolean().default(false),
+        preview: z.boolean().default(false),
+      }),
       data,
     ),
   )
   .handler(async ({ data, context }): Promise<LessonSession> => {
     if (data.preview) await assertAdmin(context);
     const lesson = await loadPublishedLesson(context, data.lessonId, data.preview);
+    const resources = await lessonResourcesFor(context, lesson.id);
     const lessonPayload = {
+      resources,
       lesson: {
         id: lesson.id,
         title: lesson.title,
@@ -1474,7 +1784,13 @@ export const evaluateLessonTurn = createServerFn({ method: "POST" })
         objectives: open,
         turns,
       });
-      const merged = mergeObjectiveState(previous, evaluation, open, learnerText, new Date().toISOString());
+      const merged = mergeObjectiveState(
+        previous,
+        evaluation,
+        open,
+        learnerText,
+        new Date().toISOString(),
+      );
       const score = scoreLesson(lesson.objectives, merged.state);
       return {
         objectives: merged.state,

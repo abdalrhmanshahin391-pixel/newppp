@@ -36,7 +36,11 @@ import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { VoiceOrb } from "@/components/rita-live/VoiceOrb";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
 import { useRitaLesson } from "@/components/rita-lessons/useRitaLesson";
-import { LessonObjectivesPanel, LessonResultCard } from "@/components/rita-lessons/LessonPanels";
+import {
+  LessonObjectivesPanel,
+  LessonResourcesPanel,
+  LessonResultCard,
+} from "@/components/rita-lessons/LessonPanels";
 
 type Persona = "kind" | "direct" | "playful" | "strict";
 type LessonMode = "free_conversation" | "guided_lesson" | "pronunciation_drill";
@@ -1051,6 +1055,7 @@ export function RitaRealtimeV3({
                   justMet={lesson.justMet}
                 />
               )}
+              {lesson.session && <LessonResourcesPanel session={lesson.session} />}
               {lesson.error && (
                 <div className="rounded-2xl bg-[var(--pp-accent-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-accent-text)]">
                   {lesson.error}{" "}
