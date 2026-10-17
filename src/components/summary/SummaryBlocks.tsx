@@ -5,8 +5,8 @@ import { Sparkles, AlertTriangle, Lightbulb, StickyNote, Brain } from "lucide-re
  * Light Rita palette for the summary sheet. Every accent is a pale tint that
  * always carries near-black ink on top, so nothing collapses into itself.
  */
-const INK = "#23201d";
-const BODY = "#3b3730";
+const INK = "#121117";
+const BODY = "#2a2933";
 
 function renderInline(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -23,10 +23,10 @@ function renderInline(text: string) {
 }
 
 const TABLE_TONES: Record<string, { head: string; headInk: string; zebra: string }> = {
-  indigo: { head: "#e4dcf3", headInk: "#4a3877", zebra: "#faf7ff" },
-  pink: { head: "#f7d9de", headInk: "#75283a", zebra: "#fff8f9" },
-  emerald: { head: "#d8ecdd", headInk: "#215237", zebra: "#f7fcf8" },
-  amber: { head: "#fbe3c8", headInk: "#7a4b16", zebra: "#fffaf3" },
+  indigo: { head: "#f4f4f8", headInk: "#1d5fd0", zebra: "#ffffff" },
+  pink: { head: "#f4f4f8", headInk: "#961a34", zebra: "#ffffff" },
+  emerald: { head: "#d2ecd4", headInk: "#1d4f20", zebra: "#ffffff" },
+  amber: { head: "#ffe6a3", headInk: "#8a5200", zebra: "#ffffff" },
 };
 
 const CALLOUT_TONES: Record<
@@ -34,36 +34,36 @@ const CALLOUT_TONES: Record<
   { bg: string; border: string; ink: string; label: string; Icon: any; chip: string }
 > = {
   highYield: {
-    bg: "#f7d9de",
-    border: "#eab6c0",
-    ink: "#75283a",
+    bg: "#f4f4f8",
+    border: "#f5b3c0",
+    ink: "#961a34",
     label: "HIGH-YIELD",
     Icon: Sparkles,
-    chip: "#fdeff2",
+    chip: "#f4f4f8",
   },
   trap: {
-    bg: "#fbe3c8",
-    border: "#eec59a",
-    ink: "#7a4b16",
+    bg: "#ffe6a3",
+    border: "#f5b942",
+    ink: "#8a5200",
     label: "COMMON TRAP",
     Icon: AlertTriangle,
-    chip: "#fef6ec",
+    chip: "#f4f4f8",
   },
   pearl: {
-    bg: "#d8ecdd",
-    border: "#a9d5b8",
-    ink: "#215237",
+    bg: "#d2ecd4",
+    border: "#7bc280",
+    ink: "#1d4f20",
     label: "CLINICAL PEARL",
     Icon: Lightbulb,
-    chip: "#f0f9f3",
+    chip: "#f4f4f8",
   },
   note: {
-    bg: "#d6e8f6",
-    border: "#a9cbe5",
-    ink: "#1f4c6d",
+    bg: "#f4f4f8",
+    border: "#cddcfb",
+    ink: "#1a4ba8",
     label: "NOTE",
     Icon: StickyNote,
-    chip: "#eff7fd",
+    chip: "#f4f4f8",
   },
 };
 
@@ -83,7 +83,7 @@ export function BlockRenderer({ block }: { block: SummaryBlock }) {
           <li key={i} className="flex gap-3 text-[15px] leading-relaxed" style={{ color: BODY }}>
             <span
               className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
-              style={{ background: "#6ab887" }}
+              style={{ background: "#3a9042" }}
             />
             <span>{renderInline(it)}</span>
           </li>
@@ -96,11 +96,11 @@ export function BlockRenderer({ block }: { block: SummaryBlock }) {
     return (
       <div
         className="rounded-2xl border p-5"
-        style={{ background: "#eff7fd", borderColor: "#c5ddef" }}
+        style={{ background: "#f4f4f8", borderColor: "#cddcfb" }}
       >
         <p
           className="mb-3 text-[10px] font-extrabold uppercase tracking-[0.3em]"
-          style={{ color: "#1f4c6d" }}
+          style={{ color: "#1a4ba8" }}
         >
           {block.title || "Usage"}
         </p>
@@ -153,18 +153,18 @@ export function BlockRenderer({ block }: { block: SummaryBlock }) {
     return (
       <div
         className="flex gap-4 rounded-2xl border p-5"
-        style={{ background: "#f5f1fd", borderColor: "#d3c7ee" }}
+        style={{ background: "#ffffff", borderColor: "#cddcfb" }}
       >
         <div
           className="grid h-10 w-10 shrink-0 place-items-center rounded-xl"
-          style={{ background: "#e4dcf3", color: "#4a3877" }}
+          style={{ background: "#f4f4f8", color: "#1d5fd0" }}
         >
           <Brain size={18} />
         </div>
         <div className="min-w-0">
           <p
             className="text-[10px] font-extrabold tracking-[0.3em]"
-            style={{ color: "#4a3877" }}
+            style={{ color: "#1d5fd0" }}
           >
             MNEMONIC
           </p>
@@ -182,7 +182,7 @@ export function BlockRenderer({ block }: { block: SummaryBlock }) {
   if (block.type === "table") {
     const tone = TABLE_TONES[block.tone || "indigo"] || TABLE_TONES.indigo!;
     return (
-      <div className="overflow-hidden rounded-2xl border" style={{ borderColor: "#e6e0d4" }}>
+      <div className="overflow-hidden rounded-2xl border" style={{ borderColor: "#ffd266" }}>
         <table className="w-full text-sm">
           <thead>
             <tr style={{ background: tone.head, color: tone.headInk }}>
@@ -200,7 +200,7 @@ export function BlockRenderer({ block }: { block: SummaryBlock }) {
                   <td
                     key={c}
                     className="border-t px-4 py-3"
-                    style={{ color: BODY, borderColor: "#eee8dc" }}
+                    style={{ color: BODY, borderColor: "#ffe6a3" }}
                   >
                     {renderInline(cell)}
                   </td>

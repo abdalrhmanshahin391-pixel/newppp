@@ -95,10 +95,10 @@ export function GameOverlay({
     <div className="fixed inset-0 z-50 overflow-y-auto bg-white px-4 py-5 md:px-8 md:py-8">
       <div className="mx-auto flex max-w-4xl items-center gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b3aa9c]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#9a9aab]">
             Memory Lab
           </p>
-          <h2 className="truncate font-display text-[20px] font-black tracking-tight text-[#23201d]">
+          <h2 className="truncate font-display text-[20px] font-black tracking-tight text-[#121117]">
             {title}
           </h2>
         </div>
@@ -127,10 +127,10 @@ export function GameOverlay({
           />
         ) : timeUp ? (
           <div className="mx-auto w-full max-w-lg rounded-[24px] border-2 border-[#121117] bg-white p-8 text-center">
-            <h3 className="font-display text-[26px] font-black tracking-tight text-[#23201d]">
+            <h3 className="font-display text-[26px] font-black tracking-tight text-[#121117]">
               Time is up
             </h3>
-            <p className="mt-2 text-[14px] font-semibold text-[#a29a8d]">
+            <p className="mt-2 text-[14px] font-semibold text-[#9a9aab]">
               Two minutes gone — go again and beat what you managed.
             </p>
             <button

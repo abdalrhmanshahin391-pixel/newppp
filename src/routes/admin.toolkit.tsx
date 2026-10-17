@@ -194,7 +194,7 @@ function AdminToolkit() {
           codes only.
         </p>
 
-        <div className="mb-6 flex items-center justify-between rounded-2xl border-2 border-emerald-800/30 bg-emerald-50 p-4 text-emerald-950">
+        <div className="mb-6 flex items-center justify-between rounded-2xl border-2 border-[#1d4f20]/30 bg-emerald-50 p-4 text-emerald-950">
           <div>
             <p className="text-sm font-black">Looking for the new Offer Center?</p>
             <p className="text-xs text-emerald-800">

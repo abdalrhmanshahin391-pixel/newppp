@@ -90,7 +90,7 @@ function AdminOfferCenter() {
   const [durationDays, setDurationDays] = useState(90);
   const [requiresCode, setRequiresCode] = useState(true);
   const [isActive, setIsActive] = useState(true);
-  const [accent, setAccent] = useState("#2f7d55");
+  const [accent, setAccent] = useState("#256528");
   const [imageUrl, setImageUrl] = useState("");
 
   // Code state
@@ -136,7 +136,7 @@ function AdminOfferCenter() {
         setDurationDays(activeOffer.duration_days || 90);
         setRequiresCode(activeOffer.requires_code ?? true);
         setIsActive(activeOffer.is_active ?? true);
-        setAccent(activeOffer.accent || "#2f7d55");
+        setAccent(activeOffer.accent || "#256528");
         setImageUrl(activeOffer.image_url || "");
 
         const linkedCode =
@@ -180,7 +180,7 @@ function AdminOfferCenter() {
     setDurationDays(o.duration_days || 90);
     setRequiresCode(o.requires_code ?? true);
     setIsActive(o.is_active ?? true);
-    setAccent(o.accent || "#2f7d55");
+    setAccent(o.accent || "#256528");
     setImageUrl(o.image_url || "");
     const linkedCode =
       data?.codes.find((c) => c.offer_id === o.id && c.is_active) ||
@@ -404,7 +404,7 @@ function AdminOfferCenter() {
   const durationMonths = Math.round(durationDays / 30);
 
   return (
-    <div className="min-h-screen bg-[#f7f5ef] text-[#23201d]">
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
 
       <main className="mx-auto max-w-6xl px-4 py-10 md:px-8">
@@ -417,7 +417,7 @@ function AdminOfferCenter() {
             >
               <ArrowLeft size={14} /> Administration Site
             </Link>
-            <h1 className="mt-2 flex items-center gap-3 font-display text-3xl font-black md:text-4xl text-[#1a1714]">
+            <h1 className="mt-2 flex items-center gap-3 font-display text-3xl font-black md:text-4xl text-[#0b0b0f]">
               <Gift className="text-emerald-700" size={32} /> Offer Center
               <span className="text-xl font-bold text-muted-foreground">· مركز العروض</span>
             </h1>
@@ -431,7 +431,7 @@ function AdminOfferCenter() {
             <Link
               to="/offers"
               target="_blank"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3.5 py-2 text-xs font-bold text-[#332f29] shadow-xs hover:bg-black/5"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3.5 py-2 text-xs font-bold text-[#121117] shadow-xs hover:bg-black/5"
             >
               <ExternalLink size={13} /> View Live Page
             </Link>
@@ -449,12 +449,12 @@ function AdminOfferCenter() {
         </div>
 
         {/* Global Page Killswitch */}
-        <div className="mt-6 flex items-center justify-between rounded-2xl border border-emerald-900/10 bg-emerald-50/70 p-4">
+        <div className="mt-6 flex items-center justify-between rounded-2xl border border-[#163b18]/10 bg-[#e8f5e9]/70 p-4">
           <div className="flex items-center gap-3">
             <Sparkles className="text-emerald-800" size={20} />
             <div>
               <p className="text-sm font-black text-emerald-950">Public Offers Page (/offers) Active</p>
-              <p className="text-xs text-emerald-800/80">
+              <p className="text-xs text-[#1d4f20]/80">
                 When enabled, students can visit /offers to claim their special study packages.
               </p>
             </div>
@@ -562,7 +562,7 @@ function AdminOfferCenter() {
                     className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
                       durationDays === preset.days
                         ? "bg-emerald-800 text-white shadow-xs"
-                        : "border border-black/10 bg-[#faf8f3] text-[#3a352e] hover:bg-black/5"
+                        : "border border-black/10 bg-[#ffffff] text-[#2a2933] hover:bg-black/5"
                     }`}
                   >
                     {preset.label}
@@ -629,24 +629,24 @@ function AdminOfferCenter() {
               </div>
 
               {/* Crucial requested feature: Choose if code is in background of box */}
-              <div className="mt-5 rounded-2xl border-2 border-emerald-800/15 bg-[#faf8f1] p-4.5">
+              <div className="mt-5 rounded-2xl border-2 border-[#1d4f20]/15 bg-[#f4f4f8] p-4.5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
                     <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-800 mt-0.5">
                       {showPlaceholder ? <Eye size={18} /> : <EyeOff size={18} />}
                     </div>
                     <div>
-                      <label className="text-sm font-black text-[#1a1714]">
+                      <label className="text-sm font-black text-[#0b0b0f]">
                         Show code in background of the input box ({promoCode || "YSMU"})
                       </label>
-                      <p className="mt-0.5 text-xs text-[#524b42] leading-relaxed">
+                      <p className="mt-0.5 text-xs text-[#4b4a5c] leading-relaxed">
                         {showPlaceholder ? (
                           <span className="font-semibold text-emerald-800">
                             ✓ The code &ldquo;{promoCode || "YSMU"}&rdquo; will appear in the background of the box
                             (as a placeholder hint), exactly like in your picture!
                           </span>
                         ) : (
-                          <span className="font-semibold text-[#665f54]">
+                          <span className="font-semibold text-[#4b4a5c]">
                             ✗ The input box will show a neutral &ldquo;Enter promo code&rdquo; hint without revealing the
                             code in the background. Students must type it manually.
                           </span>
@@ -772,7 +772,7 @@ function AdminOfferCenter() {
             </section>
 
             {/* 5. Broadcast Student Announcement */}
-            <section className="rounded-3xl border-2 border-emerald-900/20 bg-white p-6 shadow-sm">
+            <section className="rounded-3xl border-2 border-[#163b18]/20 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between border-b border-black/10 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-100 text-emerald-800">
@@ -849,7 +849,7 @@ function AdminOfferCenter() {
                   </div>
 
                   {/* Announcement banner live preview */}
-                  <div className="mt-3 rounded-xl border border-emerald-800/20 bg-[#2f7d55] px-4 py-2 text-white shadow-xs flex items-center justify-between gap-3 text-xs">
+                  <div className="mt-3 rounded-xl border border-[#1d4f20]/20 bg-[#256528] px-4 py-2 text-white shadow-xs flex items-center justify-between gap-3 text-xs">
                     <div className="flex items-center gap-2">
                       <span className="font-black">{annTitle || "Special Offer"}</span>
                       <span className="opacity-90">{annBody}</span>
@@ -879,33 +879,33 @@ function AdminOfferCenter() {
               <div className="relative overflow-hidden rounded-[30px] border border-black/10 bg-white p-7 shadow-[0_24px_50px_-34px_rgba(43,38,32,0.45)]">
                 {/* Badge */}
                 {badge && (
-                  <span className="inline-flex items-center rounded-full bg-[#e8f5ed] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-[#2f7d55]">
+                  <span className="inline-flex items-center rounded-full bg-[#f4f4f8] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-[#256528]">
                     {badge}
                   </span>
                 )}
 
                 {/* Title */}
-                <h2 className="mt-4 font-display text-2xl font-black leading-tight text-[#1a1714]">
+                <h2 className="mt-4 font-display text-2xl font-black leading-tight text-[#0b0b0f]">
                   {title || "The Rita Toolkit — free right now"}
                 </h2>
 
                 {/* Subtitle */}
                 {subtitle && (
-                  <p className="mt-2 text-[14px] leading-relaxed text-[#595247]">{subtitle}</p>
+                  <p className="mt-2 text-[14px] leading-relaxed text-[#4b4a5c]">{subtitle}</p>
                 )}
 
                 {/* Bullets List */}
                 <ul className="mt-5 space-y-2.5">
                   {bullets.map((b, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-[13.5px] font-semibold text-[#3a342c]">
-                      <Check size={16} strokeWidth={3} className="mt-0.5 shrink-0 text-[#2f7d55]" />
+                    <li key={i} className="flex items-start gap-2.5 text-[13.5px] font-semibold text-[#121117]">
+                      <Check size={16} strokeWidth={3} className="mt-0.5 shrink-0 text-[#256528]" />
                       <span>{b}</span>
                     </li>
                   ))}
                 </ul>
 
                 {/* Timer Duration Pill */}
-                <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#f6f0e6] px-3.5 py-1.5 text-[12px] font-semibold text-[#696154]">
+                <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#f4f4f8] px-3.5 py-1.5 text-[12px] font-semibold text-[#4b4a5c]">
                   <Timer size={13} /> Valid{" "}
                   {durationMonths > 0
                     ? `${durationMonths} month${durationMonths > 1 ? "s" : ""}`
@@ -916,12 +916,12 @@ function AdminOfferCenter() {
                 {/* Code input box matching picture */}
                 <div className="mt-6">
                   {requiresCode && (
-                    <label className="mb-3 flex items-center gap-2 rounded-2xl border border-black/10 bg-[#fdf7ee] px-4 py-2.5">
+                    <label className="mb-3 flex items-center gap-2 rounded-2xl border border-black/10 bg-[#f4f4f8] px-4 py-2.5">
                       <KeyRound size={15} className="shrink-0 text-muted-foreground" />
                       <input
                         readOnly
                         placeholder={showPlaceholder ? promoCode || "YSMU" : "Enter promo code"}
-                        className="w-full bg-transparent text-[14px] font-bold tracking-wider text-[#2b2620] placeholder:text-[#b6ada0] focus:outline-none"
+                        className="w-full bg-transparent text-[14px] font-bold tracking-wider text-[#121117] placeholder:text-[#9a9aab] focus:outline-none"
                       />
                     </label>
                   )}
@@ -929,13 +929,13 @@ function AdminOfferCenter() {
                   <button
                     type="button"
                     disabled
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#2f7d55] px-5 py-3 text-[14px] font-black text-white shadow-xs"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#256528] px-5 py-3 text-[14px] font-black text-white shadow-xs"
                   >
                     <Gift size={16} /> Get it free
                   </button>
 
                   <p className="mt-3 text-center text-[11px] text-muted-foreground">
-                    Target Plan: <span className="font-bold text-[#1a1714]">{currentPlan?.name || planSlug}</span>
+                    Target Plan: <span className="font-bold text-[#0b0b0f]">{currentPlan?.name || planSlug}</span>
                   </p>
                 </div>
               </div>

@@ -182,7 +182,7 @@ function GermanCoursePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAFAF9] text-slate-900">
+      <div className="min-h-screen bg-[#ffffff] text-slate-900">
         <SiteHeader variant="light" />
         <main className="mx-auto max-w-7xl px-6 pt-28 pb-24">
           <div className="h-10 w-64 rounded-lg bg-slate-200 animate-pulse mb-6" />
@@ -202,7 +202,7 @@ function GermanCoursePage() {
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-[#FAFAF9] text-slate-900">
+      <div className="min-h-screen bg-[#ffffff] text-slate-900">
         <SiteHeader variant="light" />
         <div className="pt-32 text-center text-slate-600">Course not found.</div>
       </div>
@@ -210,7 +210,7 @@ function GermanCoursePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9] text-slate-900">
+    <div className="min-h-screen bg-[#ffffff] text-slate-900">
       <SiteHeader variant="light" />
       <main className="mx-auto max-w-7xl px-6 md:px-10 pt-24 pb-24">
         {/* Header band */}
@@ -226,7 +226,7 @@ function GermanCoursePage() {
           <h1 className="mt-4 text-4xl md:text-5xl font-black tracking-tight capitalize text-slate-900">
             {course.title.split(" ").map((w, i, arr) =>
               i === arr.length - 1 ? (
-                <span key={i} className="bg-clip-text text-transparent bg-[linear-gradient(120deg,#10b981,#06b6d4,#3b82f6)]">{w}</span>
+                <span key={i} className="bg-clip-text text-transparent bg-[linear-gradient(120deg,#2e7d32,#2b6df0,#7ba5f5)]">{w}</span>
               ) : (
                 <span key={i}>{w} </span>
               ),
@@ -309,7 +309,7 @@ function GermanCoursePage() {
               </div>
 
               {/* Summary */}
-              <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/60">
+              <div className="px-5 py-3 border-b border-slate-100 bg-[#f8f8fb]/60">
                 <div className="flex items-center gap-1.5 mb-2">
                   {[
                     { label: "Items", value: pickedTotal },
@@ -437,13 +437,13 @@ function ModeBtn({
 }: { onClick: () => void; icon: any; label: string; variant: "primary" | "ghost" | "dark" | "cyan" | "amber"; disabled?: boolean }) {
   const styles =
     variant === "primary"
-      ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/30 hover:shadow-emerald-500/50"
+      ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md shadow-[#3a9042]/30 hover:shadow-[#3a9042]/50"
       : variant === "dark"
       ? "bg-slate-900 text-white hover:bg-slate-800"
       : variant === "cyan"
-      ? "bg-gradient-to-r from-cyan-500 to-sky-600 text-white shadow-md shadow-cyan-500/30"
+      ? "bg-gradient-to-r from-cyan-500 to-sky-600 text-white shadow-md shadow-[#4a82f3]/30"
       : variant === "amber"
-      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/30"
+      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-[#d68c0a]/30"
       : "border border-emerald-200 text-emerald-700 hover:bg-emerald-50";
   return (
     <button

@@ -39,7 +39,7 @@ function AiEnginePage() {
   if (loading || !user || !isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-[#07070b] text-white">
+    <div className="min-h-screen bg-[#0b0b0f] text-white">
       <SiteHeader />
       <main className="mx-auto max-w-4xl px-4 py-8">
         <Link

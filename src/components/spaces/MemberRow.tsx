@@ -56,15 +56,15 @@ export function MemberRow({
           >
             {spaceEmoji}
           </span>
-          {isMe && <span className="text-[11px] font-bold text-[#a29a8d]">you</span>}
+          {isMe && <span className="text-[11px] font-bold text-[#9a9aab]">you</span>}
         </p>
-        <p className="truncate text-[13px] text-[#6b655c]">
+        <p className="truncate text-[13px] text-[#54546a]">
           {member.full_name || "—"} · joined {new Date(member.joined_at).toLocaleDateString()}
         </p>
       </div>
       <span
         className={`rounded-full px-3 py-1 text-[11px] font-black ${
-          member.role === "member" ? "bg-black/[0.06] text-[#6b655c]" : "bg-[#e6f4d8] text-[#3d5c14]"
+          member.role === "member" ? "bg-black/[0.06] text-[#54546a]" : "bg-[#e7eefd] text-[#1a4ba8]"
         }`}
       >
         {ROLE_LABEL[member.role]}

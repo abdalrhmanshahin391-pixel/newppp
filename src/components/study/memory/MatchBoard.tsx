@@ -142,7 +142,7 @@ export function MatchBoard({
           isLeaving ? "scale-90 opacity-0" : "opacity-100"
         } ${isWrong ? "animate-[rita-shake_0.4s_ease]" : ""}`}
         style={{
-          background: isWrong ? "#fbe4e4" : isPicked ? soft : "#fff",
+          background: isWrong ? "#f4f4f8" : isPicked ? soft : "#fff",
           borderColor: isWrong ? "#b3213f" : "#121117",
           boxShadow: isPicked ? `0 10px 22px -16px ${ink}` : undefined,
         }}
@@ -151,7 +151,7 @@ export function MatchBoard({
           {side === "left" ? pair.left : pair.right}
         </span>
         {side === "left" && hints.includes(id) && pair.hint && (
-          <span className="mt-1 block text-[11.5px] font-semibold text-[#a29a8d]">{pair.hint}</span>
+          <span className="mt-1 block text-[11.5px] font-semibold text-[#9a9aab]">{pair.hint}</span>
         )}
       </button>
     );

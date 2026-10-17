@@ -7,7 +7,7 @@ import { DeResults, type ResultRow } from "@/components/german/DeResults";
 
 export type ArticleMode = "tap" | "clock" | "endings";
 
-const ACCENT = "#2f6fd0";
+const ACCENT = "#4a82f3";
 
 export function ArticleGame({
   items,
@@ -111,9 +111,9 @@ export function ArticleGame({
   const hint = mode === "endings" ? ruleFor(current.german) : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#fbf5e9] p-4 md:p-8">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#f4f4f8] p-4 md:p-8">
       <div className="mx-auto flex w-full max-w-3xl items-center gap-3">
-        <button onClick={() => setDone(true)} className="rounded-full bg-white p-2.5 text-[#6b645b] shadow-sm">
+        <button onClick={() => setDone(true)} className="rounded-full bg-white p-2.5 text-[#54546a] shadow-sm">
           <X size={18} />
         </button>
         <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-white">
@@ -123,16 +123,16 @@ export function ArticleGame({
           />
         </div>
         {mode === "clock" ? (
-          <span className="rounded-full bg-white px-3 py-1.5 text-[14px] font-black tabular-nums text-[#23201d] shadow-sm">
+          <span className="rounded-full bg-white px-3 py-1.5 text-[14px] font-black tabular-nums text-[#121117] shadow-sm">
             {seconds}s
           </span>
         ) : (
-          <span className="rounded-full bg-white px-3 py-1.5 text-[13px] font-black text-[#23201d] shadow-sm">
+          <span className="rounded-full bg-white px-3 py-1.5 text-[13px] font-black text-[#121117] shadow-sm">
             {answered}/{total}
           </span>
         )}
         {streak > 1 && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#fdebc9] px-3 py-1.5 text-[13px] font-black text-[#8a5b12]">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#ffe6a3] px-3 py-1.5 text-[13px] font-black text-[#8a5200]">
             <Zap size={13} /> {streak}
           </span>
         )}
@@ -143,11 +143,11 @@ export function ArticleGame({
           key={current.id + String(pick)}
           className="w-full rounded-[32px] bg-white px-6 py-12 text-center shadow-[0_24px_60px_-30px_rgba(0,0,0,0.28)] transition"
           style={{
-            outline: pick ? `4px solid ${pick === current.article ? "#2f9e63" : "#d94a4a"}` : "none",
+            outline: pick ? `4px solid ${pick === current.article ? "#2e7d32" : "#c4314f"}` : "none",
           }}
         >
           <div className="flex items-center justify-center gap-3">
-            <span className="font-display text-[clamp(2rem,7vw,3.6rem)] font-black leading-none tracking-tight text-[#23201d]">
+            <span className="font-display text-[clamp(2rem,7vw,3.6rem)] font-black leading-none tracking-tight text-[#121117]">
               {pick && (
                 <span style={{ color: ARTICLE_COLORS[current.article as Article].bg }}>
                   {current.article}{" "}
@@ -157,27 +157,27 @@ export function ArticleGame({
             </span>
             <button
               onClick={() => void speakGerman(`${current.article} ${current.german}`)}
-              className="grid h-11 w-11 place-items-center rounded-2xl bg-[#f3ece0] text-[#5a4a2e]"
+              className="grid h-11 w-11 place-items-center rounded-2xl bg-[#f4f4f8] text-[#6b4000]"
               aria-label="Hear it"
             >
               <Volume2 size={19} />
             </button>
           </div>
-          {current.english && <p className="mt-3 text-[16px] font-semibold text-[#6b645b]">{current.english}</p>}
+          {current.english && <p className="mt-3 text-[16px] font-semibold text-[#54546a]">{current.english}</p>}
           {pick && current.plural && (
-            <p className="mt-2 text-[14px] font-bold text-[#8b8378]">plural · {current.plural}</p>
+            <p className="mt-2 text-[14px] font-bold text-[#6a697c]">plural · {current.plural}</p>
           )}
           {pick && hint && (
-            <p className="mx-auto mt-4 max-w-md rounded-2xl bg-[#f6f1e6] px-4 py-3 text-[14px] font-bold text-[#5a4a2e]">
+            <p className="mx-auto mt-4 max-w-md rounded-2xl bg-[#f4f4f8] px-4 py-3 text-[14px] font-bold text-[#6b4000]">
               {hint.rule}
             </p>
           )}
           <button
             onClick={() => void flag.mutateAsync({ itemId: current.id, on: !current.flagged })}
             className="mt-6 inline-flex items-center gap-2 text-[13px] font-extrabold"
-            style={{ color: current.flagged ? "#d94a4a" : "#b8b0a4" }}
+            style={{ color: current.flagged ? "#c4314f" : "#c4c4d1" }}
           >
-            <Flag size={14} fill={current.flagged ? "#d94a4a" : "none"} /> Red flag
+            <Flag size={14} fill={current.flagged ? "#c4314f" : "none"} /> Red flag
           </button>
         </div>
 
@@ -195,7 +195,7 @@ export function ArticleGame({
                 style={{
                   background: c.bg,
                   opacity: pick && !chosen && !reveal ? 0.35 : 1,
-                  boxShadow: reveal ? "0 0 0 4px #2f9e63" : chosen ? "0 0 0 4px #d94a4a" : "0 10px 24px -14px rgba(0,0,0,0.5)",
+                  boxShadow: reveal ? "0 0 0 4px #2e7d32" : chosen ? "0 0 0 4px #c4314f" : "0 10px 24px -14px rgba(0,0,0,0.5)",
                 }}
               >
                 {a}
@@ -203,7 +203,7 @@ export function ArticleGame({
             );
           })}
         </div>
-        <p className="mt-4 text-[13px] font-bold text-[#8b8378]">
+        <p className="mt-4 text-[13px] font-bold text-[#6a697c]">
           der = blue · die = red · das = green — misses come back until you get them right.
         </p>
       </div>

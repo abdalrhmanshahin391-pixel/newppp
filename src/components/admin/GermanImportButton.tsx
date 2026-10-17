@@ -35,7 +35,7 @@ export function GermanImportButton({
       <button
         onClick={() => setOpen(true)}
         disabled={!subjectId}
-        className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 via-rose-500 to-rose-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:shadow-rose-500/40 disabled:opacity-40"
+        className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 via-rose-500 to-rose-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:shadow-[#c4314f]/40 disabled:opacity-40"
         title={subjectId ? "Import German → English pairs" : "Pick a subject first"}
       >
         <Languages className="w-4 h-4" /> Deutsch
@@ -165,10 +165,10 @@ function GermanModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm grid place-items-center p-4">
-      <div className="w-full max-w-3xl rounded-3xl border border-rose-500/30 bg-zinc-950 shadow-2xl">
+      <div className="w-full max-w-3xl rounded-3xl border border-[#c4314f]/30 bg-zinc-950 shadow-2xl">
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 grid place-items-center rounded-full bg-gradient-to-br from-amber-400 to-rose-600 shadow-lg shadow-rose-500/30">
+            <div className="w-10 h-10 grid place-items-center rounded-full bg-gradient-to-br from-amber-400 to-rose-600 shadow-lg shadow-[#c4314f]/30">
               <Languages className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -196,7 +196,7 @@ function GermanModal({
                   onClick={() => setMode(opt.id)}
                   className={`rounded-2xl border px-3 py-3 text-sm font-semibold flex items-center justify-center gap-2 ${
                     mode === opt.id
-                      ? "border-rose-400 bg-rose-500/10 text-rose-200"
+                      ? "border-rose-400 bg-[#c4314f]/10 text-rose-200"
                       : "border-white/15 text-white/70 hover:bg-white/5"
                   }`}
                 >
@@ -219,7 +219,7 @@ function GermanModal({
                   onClick={() => setProvider(opt.id)}
                   className={`rounded-full border px-4 py-2 text-xs font-semibold ${
                     provider === opt.id
-                      ? "border-emerald-400 text-emerald-200 bg-emerald-500/10"
+                      ? "border-emerald-400 text-emerald-200 bg-[#3a9042]/10"
                       : "border-white/15 text-white/60 hover:bg-white/5"
                   }`}
                 >
@@ -236,7 +236,7 @@ function GermanModal({
               </p>
               <button
                 onClick={() => fileRef.current?.click()}
-                className="w-full rounded-2xl border-2 border-dashed border-white/15 px-4 py-8 text-sm text-white/70 hover:border-rose-400 hover:bg-rose-500/5"
+                className="w-full rounded-2xl border-2 border-dashed border-white/15 px-4 py-8 text-sm text-white/70 hover:border-rose-400 hover:bg-[#c4314f]/5"
               >
                 {pdf ? (
                   <span className="font-semibold">{pdf.name} · {(pdf.size / 1024).toFixed(1)} KB</span>
@@ -259,7 +259,7 @@ function GermanModal({
               <p className="text-xs font-bold uppercase tracking-widest text-white/50 mb-2">Photos (max 10)</p>
               <button
                 onClick={() => imgRef.current?.click()}
-                className="w-full rounded-2xl border-2 border-dashed border-white/15 px-4 py-8 text-sm text-white/70 hover:border-rose-400 hover:bg-rose-500/5"
+                className="w-full rounded-2xl border-2 border-dashed border-white/15 px-4 py-8 text-sm text-white/70 hover:border-rose-400 hover:bg-[#c4314f]/5"
               >
                 {images.length ? (
                   <span className="font-semibold">{images.length} image{images.length > 1 ? "s" : ""} selected</span>
@@ -302,7 +302,7 @@ function GermanModal({
           </div>
 
           {err && (
-            <div className="flex items-start gap-2 rounded-2xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+            <div className="flex items-start gap-2 rounded-2xl border border-[#c4314f]/40 bg-[#c4314f]/10 px-4 py-3 text-sm text-rose-200">
               <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /> {err}
             </div>
           )}
@@ -344,7 +344,7 @@ function GermanModal({
           <button
             onClick={run}
             disabled={busy}
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 via-rose-500 to-rose-600 px-6 py-2.5 text-sm font-bold text-white shadow-md hover:shadow-rose-500/40 disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 via-rose-500 to-rose-600 px-6 py-2.5 text-sm font-bold text-white shadow-md hover:shadow-[#c4314f]/40 disabled:opacity-40"
           >
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Languages className="w-4 h-4" />}
             {busy ? "Importing…" : "Import pairs"}

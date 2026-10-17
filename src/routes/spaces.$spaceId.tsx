@@ -109,21 +109,21 @@ function SpacePage() {
 
   if (space.isLoading) {
     return (
-      <div className="min-h-screen" style={{ background: "#fbf5e9" }}>
+      <div className="min-h-screen" style={{ background: "#f4f4f8" }}>
         <SiteHeader />
-        <p className="mx-auto max-w-7xl px-4 py-20 text-[#6b655c]">Loading…</p>
+        <p className="mx-auto max-w-7xl px-4 py-20 text-[#54546a]">Loading…</p>
       </div>
     );
   }
 
   if (!s) {
     return (
-      <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+      <div className="min-h-screen bg-white text-[#121117]">
         <SiteHeader />
         <main className="mx-auto max-w-2xl px-4 py-24 text-center">
           <h1 className="font-display text-3xl font-black">You can't see this space</h1>
-          <p className="mt-2 text-[#6b655c]">Ask its owner for an invite link.</p>
-          <Link to="/spaces" className="mt-6 inline-flex rounded-full bg-[#23201d] px-6 py-3 text-sm font-black text-white">
+          <p className="mt-2 text-[#54546a]">Ask its owner for an invite link.</p>
+          <Link to="/spaces" className="mt-6 inline-flex rounded-full bg-[#121117] px-6 py-3 text-sm font-black text-white">
             My spaces
           </Link>
         </main>
@@ -141,7 +141,7 @@ function SpacePage() {
   ];
 
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
         <div className="overflow-hidden rounded-[28px] border border-black/[0.07] bg-white">
@@ -150,7 +150,7 @@ function SpacePage() {
               {s.emoji || "🎓"}
             </span>
             <div className="min-w-0">
-              <span className="rounded-full bg-white/70 px-3 py-1 text-[11px] font-black uppercase tracking-[0.15em] text-[#4a453d]">
+              <span className="rounded-full bg-white/70 px-3 py-1 text-[11px] font-black uppercase tracking-[0.15em] text-[#2a2933]">
                 {KIND_LABEL[s.kind]}
               </span>
               <h1 className="mt-2 truncate font-display text-3xl font-black">{s.name}</h1>
@@ -161,7 +161,7 @@ function SpacePage() {
               ))}
             </div>
           </div>
-          {s.description && <p className="px-6 py-4 text-[15px] text-[#4a453d]">{s.description}</p>}
+          {s.description && <p className="px-6 py-4 text-[15px] text-[#2a2933]">{s.description}</p>}
         </div>
 
         <div className="mt-6 flex flex-wrap gap-2">
@@ -170,7 +170,7 @@ function SpacePage() {
               key={id}
               onClick={() => setTab(id)}
               className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-black transition ${
-                tab === id ? "bg-[#23201d] text-white" : "bg-white text-[#6b655c] hover:bg-black/[0.05]"
+                tab === id ? "bg-[#121117] text-white" : "bg-white text-[#54546a] hover:bg-black/[0.05]"
               }`}
             >
               {icon} {label}
@@ -262,8 +262,8 @@ function SpaceQuestionsTab({
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-xl font-black text-[#23201d]">Question sets</h2>
-          <p className="text-sm text-[#6b655c]">
+          <h2 className="font-display text-xl font-black text-[#121117]">Question sets</h2>
+          <p className="text-sm text-[#54546a]">
             Questions shared by members for practice and exam preparation.
           </p>
         </div>
@@ -271,7 +271,7 @@ function SpaceQuestionsTab({
           <Link
             to="/share/questions/new"
             search={{ space: spaceId, source: "lecture" }}
-            className="inline-flex items-center gap-2 rounded-full bg-[#8ec63f] px-5 py-2.5 text-[14px] font-black text-white shadow-sm transition hover:brightness-105"
+            className="inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-5 py-2.5 text-[14px] font-black text-white shadow-sm transition hover:brightness-105"
           >
             <Plus size={15} /> Share questions here
           </Link>
@@ -279,19 +279,19 @@ function SpaceQuestionsTab({
       </div>
 
       {query.isLoading ? (
-        <p className="mt-6 text-[#6b655c]">Loading question sets…</p>
+        <p className="mt-6 text-[#54546a]">Loading question sets…</p>
       ) : sets.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-black/15 bg-white/60 p-10 text-center">
           <span className="text-3xl">❓</span>
-          <p className="mt-3 font-display text-lg font-black text-[#23201d]">No question sets yet</p>
-          <p className="mt-1 text-sm text-[#6b655c]">
+          <p className="mt-3 font-display text-lg font-black text-[#121117]">No question sets yet</p>
+          <p className="mt-1 text-sm text-[#54546a]">
             Share questions from Question Bank, Exam Archive, or Lecture Lab with everyone here.
           </p>
           {canAdd && (
             <Link
               to="/share/questions/new"
               search={{ space: spaceId, source: "lecture" }}
-              className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-[#23201d] px-5 py-2.5 text-xs font-black text-white"
+              className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-[#121117] px-5 py-2.5 text-xs font-black text-white"
             >
               <Plus size={14} /> Add questions
             </Link>
@@ -317,7 +317,7 @@ function SpaceQuestionsTab({
                   >
                     ❓ {sourceMeta.label}
                   </span>
-                  <span className="absolute right-2.5 top-2.5 rounded-full bg-white/90 px-2 py-0.5 text-[10.5px] font-black text-[#23201d]">
+                  <span className="absolute right-2.5 top-2.5 rounded-full bg-white/90 px-2 py-0.5 text-[10.5px] font-black text-[#121117]">
                     {q.question_count} Qs
                   </span>
                 </div>
@@ -326,12 +326,12 @@ function SpaceQuestionsTab({
                   <Link
                     to="/share/questions/$setId"
                     params={{ setId: q.id }}
-                    className="font-display text-[16px] font-black text-[#23201d] hover:underline"
+                    className="font-display text-[16px] font-black text-[#121117] hover:underline"
                   >
                     {q.title}
                   </Link>
                   {q.description && (
-                    <p className="mt-1 line-clamp-2 text-xs text-[#6b655c]">
+                    <p className="mt-1 line-clamp-2 text-xs text-[#54546a]">
                       {q.description}
                     </p>
                   )}
@@ -341,7 +341,7 @@ function SpaceQuestionsTab({
                       <Link
                         to="/share/questions/$setId"
                         params={{ setId: q.id }}
-                        className="inline-flex items-center gap-1 text-xs font-black text-[#8ec63f] hover:underline"
+                        className="inline-flex items-center gap-1 text-xs font-black text-[#4a82f3] hover:underline"
                       >
                         Study questions →
                       </Link>
@@ -366,7 +366,7 @@ function SpaceQuestionsTab({
                             toast.error(e?.message || "Could not remove question set");
                           }
                         }}
-                        className="grid h-7 w-7 place-items-center rounded-lg text-[#a29a8d] hover:bg-red-50 hover:text-red-600"
+                        className="grid h-7 w-7 place-items-center rounded-lg text-[#9a9aab] hover:bg-red-50 hover:text-red-600"
                         title="Remove from space"
                       >
                         <Trash2 size={14} />
@@ -438,14 +438,14 @@ function DecksTab({
           <section key={b.id} className="rounded-[28px] border border-black/[0.06] bg-white p-6">
             <div className="flex flex-wrap items-center gap-3">
               <h3 className="font-display text-xl font-black">{b.name}</h3>
-              <span className="rounded-full bg-[#fbf5e9] px-3 py-1 text-[13px] font-black text-[#6b655c]">
+              <span className="rounded-full bg-[#f4f4f8] px-3 py-1 text-[13px] font-black text-[#54546a]">
                 {items.length} {items.length === 1 ? "deck" : "decks"}
               </span>
               <div className="ml-auto flex items-center gap-2">
                 {canAdd && (
                   <button
                     onClick={() => setPicking(b.id === "none" ? null : b.id)}
-                    className="inline-flex items-center gap-2 rounded-full bg-[#8ec63f] px-6 py-3.5 text-[15px] font-black text-white shadow-[0_16px_30px_-18px_rgba(122,160,44,0.9)] transition-transform hover:-translate-y-0.5"
+                    className="inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-6 py-3.5 text-[15px] font-black text-white shadow-[0_16px_30px_-18px_rgba(122,160,44,0.9)] transition-transform hover:-translate-y-0.5"
                   >
                     <Plus size={18} /> Add deck
                   </button>
@@ -457,7 +457,7 @@ function DecksTab({
                       await deleteFolder(b.id);
                       onChanged();
                     }}
-                    className="grid h-11 w-11 place-items-center rounded-2xl text-[#6b655c] hover:bg-red-50 hover:text-red-600"
+                    className="grid h-11 w-11 place-items-center rounded-2xl text-[#54546a] hover:bg-red-50 hover:text-red-600"
                     aria-label="Delete folder"
                   >
                     <Trash2 size={17} />
@@ -470,18 +470,18 @@ function DecksTab({
               canAdd ? (
                 <button
                   onClick={() => setPicking(b.id === "none" ? null : b.id)}
-                  className="mt-5 flex w-full flex-col items-center gap-2 rounded-[24px] border-2 border-dashed border-black/[0.12] bg-[#fbf5e9] px-6 py-10 text-center transition-colors hover:border-[#8ec63f] hover:bg-[#f7fbef]"
+                  className="mt-5 flex w-full flex-col items-center gap-2 rounded-[24px] border-2 border-dashed border-black/[0.12] bg-[#f4f4f8] px-6 py-10 text-center transition-colors hover:border-[#4a82f3] hover:bg-[#f4f4f8]"
                 >
-                  <span className="grid h-12 w-12 place-items-center rounded-full bg-[#8ec63f] text-white">
+                  <span className="grid h-12 w-12 place-items-center rounded-full bg-[#4a82f3] text-white">
                     <Plus size={22} />
                   </span>
                   <span className="font-display text-[18px] font-black">Add your first deck here</span>
-                  <span className="text-[14px] text-[#6b655c]">
+                  <span className="text-[14px] text-[#54546a]">
                     Pick one of your shared decks — everyone here can study it.
                   </span>
                 </button>
               ) : (
-                <p className="mt-4 text-[15px] text-[#6b655c]">No decks here yet.</p>
+                <p className="mt-4 text-[15px] text-[#54546a]">No decks here yet.</p>
               )
             ) : (
               <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -496,7 +496,7 @@ function DecksTab({
                       <span className="text-xl">{row.deck.emoji || "🃏"}</span>
                       <span className="min-w-0 flex-1">{row.deck.title}</span>
                     </Link>
-                    <p className="mt-2 text-[13px] text-[#6b655c]">{row.deck.card_count} cards</p>
+                    <p className="mt-2 text-[13px] text-[#54546a]">{row.deck.card_count} cards</p>
                     <div className="mt-2">
                       <DeckRating deckId={row.deck.id} spaceId={spaceId} compact />
                     </div>
@@ -592,24 +592,24 @@ function DeckPicker({
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-[#23201d]/50 px-4 py-6 backdrop-blur-sm"
+      className="fixed inset-0 z-50 grid place-items-center bg-[#121117]/50 px-4 py-6 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
         className="flex max-h-[86vh] w-full max-w-3xl flex-col overflow-hidden rounded-[30px] border border-white/70 bg-white shadow-[0_40px_90px_-45px_rgba(35,32,29,0.7)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-start gap-4 bg-gradient-to-br from-[#f3f7e6] to-[#fdf3e2] px-7 py-6">
+        <header className="flex items-start gap-4 bg-gradient-to-br from-[#f4f4f8] to-[#f4f4f8] px-7 py-6">
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-2xl">🃏</span>
           <div className="min-w-0 flex-1">
             <h2 className="font-display text-[26px] font-black leading-tight">Add one of your decks</h2>
-            <p className="mt-1 text-[14px] text-[#6b655c]">
+            <p className="mt-1 text-[14px] text-[#54546a]">
               Pick a deck below — only the people in here can see it.
             </p>
           </div>
           <button
             onClick={onClose}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/80 text-[#6b655c] hover:bg-white"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/80 text-[#54546a] hover:bg-white"
             aria-label="Close"
           >
             <X size={18} />
@@ -622,24 +622,24 @@ function DeckPicker({
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search your decks…"
-              className="h-12 w-full rounded-2xl border-2 border-black/[0.07] bg-[#fbf7ef] px-4 text-[15px] font-medium outline-none focus:border-[#8ec63f] focus:bg-white"
+              className="h-12 w-full rounded-2xl border-2 border-black/[0.07] bg-[#f4f4f8] px-4 text-[15px] font-medium outline-none focus:border-[#4a82f3] focus:bg-white"
             />
           </div>
         )}
 
         <div className="flex-1 overflow-auto px-7 py-6">
           {mine.isLoading ? (
-            <p className="text-[15px] text-[#6b655c]">Loading your decks…</p>
+            <p className="text-[15px] text-[#54546a]">Loading your decks…</p>
           ) : all.length === 0 ? (
-            <div className="rounded-[24px] border-2 border-dashed border-black/[0.12] bg-[#fbf5e9] px-6 py-10 text-center">
+            <div className="rounded-[24px] border-2 border-dashed border-black/[0.12] bg-[#f4f4f8] px-6 py-10 text-center">
               <p className="font-display text-[20px] font-black">No shared decks yet</p>
-              <p className="mx-auto mt-2 max-w-[38ch] text-[14px] text-[#6b655c]">
+              <p className="mx-auto mt-2 max-w-[38ch] text-[14px] text-[#54546a]">
                 Share one of your flashcard decks first, then it will show up here ready to add.
               </p>
               <Link
                 to="/share/new"
                 search={{ space: spaceId }}
-                className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#d94f3d] px-7 py-3.5 text-[16px] font-black text-white shadow-[0_16px_30px_-16px_rgba(217,79,61,0.9)] hover:-translate-y-0.5 transition-transform"
+                className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#c4314f] px-7 py-3.5 text-[16px] font-black text-white shadow-[0_16px_30px_-16px_rgba(217,79,61,0.9)] hover:-translate-y-0.5 transition-transform"
               >
                 <Plus size={18} /> Make a deck for this space
               </Link>
@@ -650,44 +650,44 @@ function DeckPicker({
                 <button
                   key={d.id}
                   onClick={() => onPick(d.id)}
-                  className="group flex items-center gap-4 rounded-[24px] border-2 border-black/[0.07] bg-white p-5 text-left transition-all hover:-translate-y-0.5 hover:border-[#8ec63f] hover:bg-[#f7fbef]"
+                  className="group flex items-center gap-4 rounded-[24px] border-2 border-black/[0.07] bg-white p-5 text-left transition-all hover:-translate-y-0.5 hover:border-[#4a82f3] hover:bg-[#f4f4f8]"
                 >
-                  <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#fbf5e9] text-3xl">
+                  <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#f4f4f8] text-3xl">
                     {d.emoji || "🃏"}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-display text-[17px] font-black">{d.title}</span>
-                    <span className="mt-1 flex items-center gap-2 text-[13px] font-bold text-[#6b655c]">
+                    <span className="mt-1 flex items-center gap-2 text-[13px] font-bold text-[#54546a]">
                       {d.card_count} cards
                       <span
                         className={`rounded-full px-2 py-0.5 text-[11px] font-black ${
                           d.audience === "public"
-                            ? "bg-[#fdf0d8] text-[#8a6a1f]"
-                            : "bg-[#eef7e4] text-[#4e7a1f]"
+                            ? "bg-[#f4f4f8] text-[#8a5200]"
+                            : "bg-[#f4f4f8] text-[#1d5fd0]"
                         }`}
                       >
                         {d.audience === "public" ? "Public deck" : "Space only"}
                       </span>
                     </span>
                   </span>
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#f0f0ec] text-[#3a352e] transition-colors group-hover:bg-[#8ec63f] group-hover:text-white">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#f4f4f8] text-[#2a2933] transition-colors group-hover:bg-[#4a82f3] group-hover:text-white">
                     <Plus size={18} />
                   </span>
                 </button>
               ))}
               {list.length === 0 && (
-                <p className="text-[15px] text-[#6b655c]">Nothing matches "{q}".</p>
+                <p className="text-[15px] text-[#54546a]">Nothing matches "{q}".</p>
               )}
             </div>
           )}
         </div>
 
         {all.length > 0 && (
-          <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-black/[0.06] bg-[#fbf5e9] px-7 py-4">
+          <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-black/[0.06] bg-[#f4f4f8] px-7 py-4">
             <Link
               to="/share/new"
               search={{ space: spaceId }}
-              className="inline-flex items-center gap-2 rounded-full bg-[#d94f3d] px-6 py-3 text-[15px] font-black text-white shadow-[0_14px_26px_-14px_rgba(217,79,61,0.9)] hover:-translate-y-0.5 transition-transform"
+              className="inline-flex items-center gap-2 rounded-full bg-[#c4314f] px-6 py-3 text-[15px] font-black text-white shadow-[0_14px_26px_-14px_rgba(217,79,61,0.9)] hover:-translate-y-0.5 transition-transform"
             >
               <Plus size={18} /> Make a new deck for this space
             </Link>
@@ -774,7 +774,7 @@ function NewsTab({
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="Tell everyone what you added or changed…"
-            className="min-h-[80px] w-full rounded-xl border border-black/[0.1] px-3.5 py-2.5 text-sm font-semibold outline-none focus:border-[#8ec63f]"
+            className="min-h-[80px] w-full rounded-xl border border-black/[0.1] px-3.5 py-2.5 text-sm font-semibold outline-none focus:border-[#4a82f3]"
           />
           <button
             onClick={async () => {
@@ -783,7 +783,7 @@ function NewsTab({
               setBody("");
               onChanged();
             }}
-            className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#8ec63f] px-5 py-2.5 text-[13px] font-black text-white"
+            className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-5 py-2.5 text-[13px] font-black text-white"
           >
             <Bell size={14} /> Post announcement
           </button>
@@ -791,13 +791,13 @@ function NewsTab({
       )}
 
       {(news.data ?? []).length === 0 && (
-        <p className="text-[15px] text-[#6b655c]">No announcements yet.</p>
+        <p className="text-[15px] text-[#54546a]">No announcements yet.</p>
       )}
       {(news.data ?? []).map((a) => (
         <article key={a.id} className="rounded-2xl border border-black/[0.06] bg-white px-5 py-4">
-          <div className="flex items-center gap-2 text-[12px] font-black text-[#6b655c]">
+          <div className="flex items-center gap-2 text-[12px] font-black text-[#54546a]">
             @{nameOf(a.author_id)} · {new Date(a.created_at).toLocaleString()}
-            {a.pinned && <span className="rounded-full bg-[#e6f4d8] px-2 py-0.5 text-[#3d5c14]">Pinned</span>}
+            {a.pinned && <span className="rounded-full bg-[#e7eefd] px-2 py-0.5 text-[#1a4ba8]">Pinned</span>}
             {canManage && (
               <span className="ml-auto flex items-center gap-1">
                 <button
@@ -843,11 +843,11 @@ function ChatTab({ spaceId, onSent }: { spaceId: string; onSent: () => void }) {
     <div className="rounded-[24px] border border-black/[0.06] bg-white p-5">
       <div className="max-h-[52vh] space-y-3 overflow-auto pr-1">
         {(messages.data ?? []).length === 0 && (
-          <p className="text-[15px] text-[#6b655c]">Say hello 👋</p>
+          <p className="text-[15px] text-[#54546a]">Say hello 👋</p>
         )}
         {(messages.data ?? []).map((m) => (
           <div key={m.id} className="rounded-2xl bg-black/[0.03] px-4 py-3">
-            <p className="text-[12px] font-black text-[#6b655c]">
+            <p className="text-[12px] font-black text-[#54546a]">
               @{nameOf(m.author_id)} · {new Date(m.created_at).toLocaleTimeString()}
             </p>
             <p className="mt-1 whitespace-pre-wrap text-[15px]">{m.body}</p>
@@ -866,7 +866,7 @@ function ChatTab({ spaceId, onSent }: { spaceId: string; onSent: () => void }) {
             }
           }}
           placeholder="Write a message…"
-          className="flex-1 rounded-full border border-black/[0.1] px-4 py-2.5 text-sm font-semibold outline-none focus:border-[#8ec63f]"
+          className="flex-1 rounded-full border border-black/[0.1] px-4 py-2.5 text-sm font-semibold outline-none focus:border-[#4a82f3]"
         />
         <button
           onClick={async () => {
@@ -875,7 +875,7 @@ function ChatTab({ spaceId, onSent }: { spaceId: string; onSent: () => void }) {
             setText("");
             onSent();
           }}
-          className="grid h-11 w-11 place-items-center rounded-full bg-[#8ec63f] text-white"
+          className="grid h-11 w-11 place-items-center rounded-full bg-[#4a82f3] text-white"
           aria-label="Send"
         >
           <Send size={16} />
@@ -919,7 +919,7 @@ function SettingsTab({
                 navigator.clipboard.writeText(link);
                 toast.success("Link copied");
               }}
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#23201d] px-4 py-2 text-[12px] font-black text-white"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#121117] px-4 py-2 text-[12px] font-black text-white"
             >
               <Copy size={14} /> Copy
             </button>
@@ -941,7 +941,7 @@ function SettingsTab({
               setCode(c);
               qc.invalidateQueries({ queryKey: ["space-invite", spaceId] });
             }}
-            className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#8ec63f] px-5 py-2.5 text-[13px] font-black text-white"
+            className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-5 py-2.5 text-[13px] font-black text-white"
           >
             <Link2 size={15} /> Create invite link
           </button>
@@ -1031,11 +1031,11 @@ function Toggle({
     <div className="flex items-center gap-4 rounded-2xl bg-black/[0.03] px-4 py-3">
       <div className="min-w-0 flex-1">
         <p className="text-[15px] font-black">{label}</p>
-        <p className="text-[13px] text-[#6b655c]">{note}</p>
+        <p className="text-[13px] text-[#54546a]">{note}</p>
       </div>
       <button
         onClick={() => onChange(!value)}
-        className={`h-8 w-14 rounded-full p-1 transition ${value ? "bg-[#8ec63f]" : "bg-black/20"}`}
+        className={`h-8 w-14 rounded-full p-1 transition ${value ? "bg-[#4a82f3]" : "bg-black/20"}`}
         aria-label={label}
       >
         <span
@@ -1064,7 +1064,7 @@ function Choice({
             key={v}
             onClick={() => onChange(v)}
             className={`rounded-full px-4 py-1.5 text-[12px] font-black ${
-              value === v ? "bg-[#23201d] text-white" : "text-[#6b655c]"
+              value === v ? "bg-[#121117] text-white" : "text-[#54546a]"
             }`}
           >
             {v === "owners" ? "Owners only" : "Everyone"}

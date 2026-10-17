@@ -323,7 +323,7 @@ function CheckoutPage() {
             </div>
 
             {getPaddleEnvironment() === "sandbox" && (
-              <div className="mt-3 flex items-center gap-2 rounded-[12px] bg-amber-500/10 border border-amber-500/20 px-3.5 py-2 text-[12.5px] font-medium text-amber-700 dark:text-amber-300">
+              <div className="mt-3 flex items-center gap-2 rounded-[12px] bg-[#d68c0a]/10 border border-[#d68c0a]/20 px-3.5 py-2 text-[12.5px] font-medium text-amber-700 dark:text-amber-300">
                 <span>💡 <strong>Test Mode:</strong> Use test card <code className="font-mono font-bold">4242 4242 4242 4242</code>, any future date, and CVC <code className="font-mono font-bold">123</code>.</span>
               </div>
             )}
@@ -541,7 +541,7 @@ function CheckoutPage() {
                     </div>
                   )}
                   {promoError && (
-                    <p className="mt-2 text-[13px] font-semibold text-[#ff9f8f]">{promoError}</p>
+                    <p className="mt-2 text-[13px] font-semibold text-[#f5b3c0]">{promoError}</p>
                   )}
                 </div>
 

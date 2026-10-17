@@ -38,19 +38,19 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Without AI",
         items: [
-          { to: "/study", label: "Flashcards", hint: "Active recall", icon: Layers, soft: "#e4dcf3", ink: "#4a3877" },
-          { to: "/study/match", label: "Memory Lab", hint: "Matching games", icon: Brain, soft: "#f6ddd5", ink: "#7d3421" },
-          { to: "/study/pdf", label: "PDF summaries", hint: "One-page sheets", icon: FileText, soft: "#fbe3c8", ink: "#7a4b16" },
-          { to: "/study/todo", label: "To-do list", hint: "Study planner", icon: CheckSquare, soft: "#d8ecdd", ink: "#215237" },
-          { to: "/study/exams", label: "Exam schedule", hint: "Month calendar", icon: CalendarDays, soft: "#e6f0d8", ink: "#2f6318" },
+          { to: "/study", label: "Flashcards", hint: "Active recall", icon: Layers, soft: "#f4f4f8", ink: "#1d5fd0" },
+          { to: "/study/match", label: "Memory Lab", hint: "Matching games", icon: Brain, soft: "#fbd9e0", ink: "#961a34" },
+          { to: "/study/pdf", label: "PDF summaries", hint: "One-page sheets", icon: FileText, soft: "#ffe6a3", ink: "#8a5200" },
+          { to: "/study/todo", label: "To-do list", hint: "Study planner", icon: CheckSquare, soft: "#d2ecd4", ink: "#1d4f20" },
+          { to: "/study/exams", label: "Exam schedule", hint: "Month calendar", icon: CalendarDays, soft: "#d2ecd4", ink: "#1d4f20" },
         ],
       },
       {
         label: "With AI",
         items: [
-          { to: "/study/all-in-one", label: "All in one", hint: "One upload · everything", icon: Wand2, soft: "#e7dcf7", ink: "#3f2c73" },
-          { to: "/courses/$courseId", params: { courseId: "question-bank" }, label: "Question bank", hint: "Study · exam", icon: ListChecks, soft: "#d9ecf7", ink: "#1d4d6b" },
-          { to: "/study/lectures", label: "Lecture Lab", hint: "Lecture → quiz", icon: BookOpen, soft: "#e6f0d8", ink: "#2f6318" },
+          { to: "/study/all-in-one", label: "All in one", hint: "One upload · everything", icon: Wand2, soft: "#f4f4f8", ink: "#1d5fd0" },
+          { to: "/courses/$courseId", params: { courseId: "question-bank" }, label: "Question bank", hint: "Study · exam", icon: ListChecks, soft: "#f4f4f8", ink: "#1a4ba8" },
+          { to: "/study/lectures", label: "Lecture Lab", hint: "Lecture → quiz", icon: BookOpen, soft: "#d2ecd4", ink: "#1d4f20" },
         ],
       },
     ],
@@ -62,8 +62,8 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "Study together",
         items: [
-          { to: "/share", label: "Shared flashcards", hint: "Community decks", icon: Share2, soft: "#e6f4d8", ink: "#3d5c14" },
-          { to: "/spaces", label: "Classrooms & groups", hint: "Your spaces", icon: Users, soft: "#f3e8ff", ink: "#4a3877" },
+          { to: "/share", label: "Shared flashcards", hint: "Community decks", icon: Share2, soft: "#f4f4f8", ink: "#1d4f20" },
+          { to: "/spaces", label: "Classrooms & groups", hint: "Your spaces", icon: Users, soft: "#f4f4f8", ink: "#1d5fd0" },
         ],
       },
     ],
@@ -75,7 +75,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         label: "German study tools",
         items: [
-          { to: "/german", label: "German Lab", hint: "der · die · das", icon: Languages, soft: "#dceafb", ink: "#12315e" },
+          { to: "/german", label: "German Lab", hint: "der · die · das", icon: Languages, soft: "#f4f4f8", ink: "#1a4ba8" },
         ],
       },
     ],

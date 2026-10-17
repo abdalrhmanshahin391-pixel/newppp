@@ -44,7 +44,7 @@ export function SequenceRound({
   if (!target) {
     return (
       <div className="mx-auto w-full max-w-lg rounded-[24px] border-2 border-[#121117] bg-white p-8 text-center">
-        <p className="text-[14px] font-bold text-[#a29a8d]">
+        <p className="text-[14px] font-bold text-[#9a9aab]">
           Sequence needs at least two pairs in a topic. Add a few more and try again.
         </p>
       </div>
@@ -95,7 +95,7 @@ export function SequenceRound({
         label="sets left"
       />
 
-      <p className="mt-5 text-center text-[12.5px] font-bold uppercase tracking-[0.16em] text-[#b3aa9c]">
+      <p className="mt-5 text-center text-[12.5px] font-bold uppercase tracking-[0.16em] text-[#9a9aab]">
         Drag into the right order
       </p>
 
@@ -114,19 +114,19 @@ export function SequenceRound({
               }}
               className="flex items-center gap-3 rounded-xl border-2 px-4 py-3"
               style={{
-                background: flag === true ? "#d8ecdd" : flag === false ? "#fbe4e4" : "#fff",
+                background: flag === true ? "#d2ecd4" : flag === false ? "#f4f4f8" : "#fff",
                 borderColor: flag === true ? "#2e7d32" : flag === false ? "#b3213f" : "#121117",
               }}
             >
-              <GripVertical size={16} className="shrink-0 cursor-grab text-[#ccc4b6]" />
-              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#fbf5e9] text-[12px] font-black text-[#7a4b16]">
+              <GripVertical size={16} className="shrink-0 cursor-grab text-[#c4c4d1]" />
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#f4f4f8] text-[12px] font-black text-[#8a5200]">
                 {i + 1}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[14px] font-extrabold text-[#23201d]">
+                <span className="block truncate text-[14px] font-extrabold text-[#121117]">
                   {p.left}
                 </span>
-                <span className="block truncate text-[12.5px] font-semibold text-[#a29a8d]">
+                <span className="block truncate text-[12.5px] font-semibold text-[#9a9aab]">
                   {p.right}
                 </span>
               </span>

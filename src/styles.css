@@ -58,14 +58,14 @@ body {
 
 /* Rita green — the one brand action colour */
 :root {
-  --rita-green: oklch(0.74 0.22 130);
-  --rita-green-deep: oklch(0.62 0.19 130);
-  --rita-green-ink: oklch(1 0 0);
-  --rita-green-soft: oklch(0.95 0.06 130);
-  /* Cream editorial surface used by the home, pricing, header and footer */
-  --pro-page: #fbf5e9;
-  --pro-card: #fffdf7;
-  --pro-ink: #2b2721;
+  --rita-green: #2b6df0;
+  --rita-green-deep: #2563eb;
+  --rita-green-ink: #ffffff;
+  --rita-green-soft: #e7eefd;
+  /* White editorial surface used by the home, pricing, header and footer */
+  --pro-page: #ffffff;
+  --pro-card: #f4f4f8;
+  --pro-ink: #121117;
   --german-der: oklch(0.58 0.17 255);
   --ipad-edge: oklch(0.46 0.01 255);
   --ipad-edge-highlight: oklch(0.74 0.015 255);
@@ -73,7 +73,7 @@ body {
   --ipad-edge-deep: oklch(0.13 0.008 255);
   --ipad-camera-lens: oklch(0.48 0.1 250);
   --ipad-camera-sensor: oklch(0.35 0.02 255);
-  --pro-muted: oklch(0.5 0.02 75);
+  --pro-muted: #6a697c;
 }
 
 /* Rita pill button — solid green */
@@ -169,7 +169,8 @@ body {
 .rita-cream.bg-\[\#121212\],
 .rita-cream .bg-\[\#121212\],
 .rita-cream.bg-\[\#131313\],
-.rita-cream .bg-\[\#131313\] {
+.rita-cream .bg-\[\#131313\],
+.rita-cream .bg-\[\#0b0b0f\] {
   background-color: var(--pro-card) !important;
 }
 .rita-cream.text-white,
@@ -369,37 +370,37 @@ text-primary).
   --card-foreground: oklch(0.32 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.32 0 0);
-  --primary: oklch(0.74 0.22 130); /* #58cc02 Duolingo green */
-  --primary-foreground: oklch(1 0 0);
-  --primary-soft: oklch(0.95 0.06 130);
-  --primary-deep: oklch(0.62 0.19 130); /* #58a700 — 3D button ledge */
-  --secondary: oklch(0.72 0.15 230); /* #1cb0f6 Duolingo blue */
-  --secondary-foreground: oklch(1 0 0);
+  --primary: #2b6df0;
+  --primary-foreground: #ffffff;
+  --primary-soft: #e7eefd;
+  --primary-deep: #2260e4;
+  --secondary: #f4f4f8;
+  --secondary-foreground: #121117;
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.52 0 0);
-  --accent: oklch(0.74 0.22 130);
-  --accent-foreground: oklch(1 0 0);
+  --accent: #e7eefd;
+  --accent-foreground: #121117;
   --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.9 0 0);
   --input: oklch(0.9 0 0);
-  --ring: oklch(0.74 0.22 130);
-  --chart-1: oklch(0.74 0.22 130);
+  --ring: #121117;
+  --chart-1: #2b6df0;
   --chart-2: oklch(0.72 0.15 230);
   --chart-3: oklch(0.78 0.15 80);
   --chart-4: oklch(0.65 0.2 25);
   --chart-5: oklch(0.6 0.18 290);
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.32 0 0);
-  --sidebar-primary: oklch(0.74 0.22 130);
+  --sidebar-primary: #2b6df0;
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.32 0 0);
   --sidebar-border: oklch(0.9 0 0);
-  --sidebar-ring: oklch(0.74 0.22 130);
+  --sidebar-ring: #121117;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.05), 0 8px 24px -16px rgba(0, 0, 0, 0.12);
-  --shadow-brand: 0 12px 32px -12px rgba(88, 204, 2, 0.35);
-  --gradient-brand: linear-gradient(135deg, #58cc02 0%, #89e219 100%);
+  --shadow-brand: none;
+  --gradient-brand: linear-gradient(135deg, #2b6df0 0%, #4a82f3 100%);
 } /*
  * Golden accounts — cosmetic gold accent applied to <html> by GoldenTheme.
  * Only re-points the semantic tokens,
@@ -4518,4 +4519,257 @@ hairline borders and generous radii.
   --ring: #121117;
   --shadow-card: none;
   --shadow-brand: none;
+}
+
+/* Tailwind palette classes (bg-emerald-600, text-rose-700 ...) take the site palette: greys stay grey,
+   red and green only mean wrong / right, warm tones mean caution, every other hue becomes the blue accent. */
+html.rita-app,
+.rita-app {
+  --color-slate-50: #f8f8fb;
+  --color-slate-100: #f4f4f8;
+  --color-slate-200: #dcdce5;
+  --color-slate-300: #c4c4d1;
+  --color-slate-400: #9a9aab;
+  --color-slate-500: #6a697c;
+  --color-slate-600: #54546a;
+  --color-slate-700: #4b4a5c;
+  --color-slate-800: #2a2933;
+  --color-slate-900: #121117;
+  --color-slate-950: #0b0b0f;
+  --color-gray-50: #f8f8fb;
+  --color-gray-100: #f4f4f8;
+  --color-gray-200: #dcdce5;
+  --color-gray-300: #c4c4d1;
+  --color-gray-400: #9a9aab;
+  --color-gray-500: #6a697c;
+  --color-gray-600: #54546a;
+  --color-gray-700: #4b4a5c;
+  --color-gray-800: #2a2933;
+  --color-gray-900: #121117;
+  --color-gray-950: #0b0b0f;
+  --color-zinc-50: #f8f8fb;
+  --color-zinc-100: #f4f4f8;
+  --color-zinc-200: #dcdce5;
+  --color-zinc-300: #c4c4d1;
+  --color-zinc-400: #9a9aab;
+  --color-zinc-500: #6a697c;
+  --color-zinc-600: #54546a;
+  --color-zinc-700: #4b4a5c;
+  --color-zinc-800: #2a2933;
+  --color-zinc-900: #121117;
+  --color-zinc-950: #0b0b0f;
+  --color-neutral-50: #f8f8fb;
+  --color-neutral-100: #f4f4f8;
+  --color-neutral-200: #dcdce5;
+  --color-neutral-300: #c4c4d1;
+  --color-neutral-400: #9a9aab;
+  --color-neutral-500: #6a697c;
+  --color-neutral-600: #54546a;
+  --color-neutral-700: #4b4a5c;
+  --color-neutral-800: #2a2933;
+  --color-neutral-900: #121117;
+  --color-neutral-950: #0b0b0f;
+  --color-stone-50: #f8f8fb;
+  --color-stone-100: #f4f4f8;
+  --color-stone-200: #dcdce5;
+  --color-stone-300: #c4c4d1;
+  --color-stone-400: #9a9aab;
+  --color-stone-500: #6a697c;
+  --color-stone-600: #54546a;
+  --color-stone-700: #4b4a5c;
+  --color-stone-800: #2a2933;
+  --color-stone-900: #121117;
+  --color-stone-950: #0b0b0f;
+  --color-red-50: #fdecef;
+  --color-red-100: #fbd9e0;
+  --color-red-200: #f5b3c0;
+  --color-red-300: #ec8498;
+  --color-red-400: #d9506d;
+  --color-red-500: #c4314f;
+  --color-red-600: #b3213f;
+  --color-red-700: #961a34;
+  --color-red-800: #781529;
+  --color-red-900: #5a1020;
+  --color-red-950: #3d0b16;
+  --color-rose-50: #fdecef;
+  --color-rose-100: #fbd9e0;
+  --color-rose-200: #f5b3c0;
+  --color-rose-300: #ec8498;
+  --color-rose-400: #d9506d;
+  --color-rose-500: #c4314f;
+  --color-rose-600: #b3213f;
+  --color-rose-700: #961a34;
+  --color-rose-800: #781529;
+  --color-rose-900: #5a1020;
+  --color-rose-950: #3d0b16;
+  --color-green-50: #e8f5e9;
+  --color-green-100: #d2ecd4;
+  --color-green-200: #a8d8ac;
+  --color-green-300: #7bc280;
+  --color-green-400: #4aa552;
+  --color-green-500: #3a9042;
+  --color-green-600: #2e7d32;
+  --color-green-700: #256528;
+  --color-green-800: #1d4f20;
+  --color-green-900: #163b18;
+  --color-green-950: #0e2610;
+  --color-emerald-50: #e8f5e9;
+  --color-emerald-100: #d2ecd4;
+  --color-emerald-200: #a8d8ac;
+  --color-emerald-300: #7bc280;
+  --color-emerald-400: #4aa552;
+  --color-emerald-500: #3a9042;
+  --color-emerald-600: #2e7d32;
+  --color-emerald-700: #256528;
+  --color-emerald-800: #1d4f20;
+  --color-emerald-900: #163b18;
+  --color-emerald-950: #0e2610;
+  --color-amber-50: #fff4d6;
+  --color-amber-100: #ffe6a3;
+  --color-amber-200: #ffd266;
+  --color-amber-300: #f5b942;
+  --color-amber-400: #e9a21f;
+  --color-amber-500: #d68c0a;
+  --color-amber-600: #b26b00;
+  --color-amber-700: #8a5200;
+  --color-amber-800: #6b4000;
+  --color-amber-900: #4d2d00;
+  --color-amber-950: #331e00;
+  --color-yellow-50: #fff4d6;
+  --color-yellow-100: #ffe6a3;
+  --color-yellow-200: #ffd266;
+  --color-yellow-300: #f5b942;
+  --color-yellow-400: #e9a21f;
+  --color-yellow-500: #d68c0a;
+  --color-yellow-600: #b26b00;
+  --color-yellow-700: #8a5200;
+  --color-yellow-800: #6b4000;
+  --color-yellow-900: #4d2d00;
+  --color-yellow-950: #331e00;
+  --color-orange-50: #fff4d6;
+  --color-orange-100: #ffe6a3;
+  --color-orange-200: #ffd266;
+  --color-orange-300: #f5b942;
+  --color-orange-400: #e9a21f;
+  --color-orange-500: #d68c0a;
+  --color-orange-600: #b26b00;
+  --color-orange-700: #8a5200;
+  --color-orange-800: #6b4000;
+  --color-orange-900: #4d2d00;
+  --color-orange-950: #331e00;
+  --color-lime-50: #eef3fe;
+  --color-lime-100: #e7eefd;
+  --color-lime-200: #cddcfb;
+  --color-lime-300: #a9c4f9;
+  --color-lime-400: #7ba5f5;
+  --color-lime-500: #4a82f3;
+  --color-lime-600: #2b6df0;
+  --color-lime-700: #1d5fd0;
+  --color-lime-800: #1a4ba8;
+  --color-lime-900: #153a82;
+  --color-lime-950: #0f2a5e;
+  --color-teal-50: #eef3fe;
+  --color-teal-100: #e7eefd;
+  --color-teal-200: #cddcfb;
+  --color-teal-300: #a9c4f9;
+  --color-teal-400: #7ba5f5;
+  --color-teal-500: #4a82f3;
+  --color-teal-600: #2b6df0;
+  --color-teal-700: #1d5fd0;
+  --color-teal-800: #1a4ba8;
+  --color-teal-900: #153a82;
+  --color-teal-950: #0f2a5e;
+  --color-cyan-50: #eef3fe;
+  --color-cyan-100: #e7eefd;
+  --color-cyan-200: #cddcfb;
+  --color-cyan-300: #a9c4f9;
+  --color-cyan-400: #7ba5f5;
+  --color-cyan-500: #4a82f3;
+  --color-cyan-600: #2b6df0;
+  --color-cyan-700: #1d5fd0;
+  --color-cyan-800: #1a4ba8;
+  --color-cyan-900: #153a82;
+  --color-cyan-950: #0f2a5e;
+  --color-sky-50: #eef3fe;
+  --color-sky-100: #e7eefd;
+  --color-sky-200: #cddcfb;
+  --color-sky-300: #a9c4f9;
+  --color-sky-400: #7ba5f5;
+  --color-sky-500: #4a82f3;
+  --color-sky-600: #2b6df0;
+  --color-sky-700: #1d5fd0;
+  --color-sky-800: #1a4ba8;
+  --color-sky-900: #153a82;
+  --color-sky-950: #0f2a5e;
+  --color-blue-50: #eef3fe;
+  --color-blue-100: #e7eefd;
+  --color-blue-200: #cddcfb;
+  --color-blue-300: #a9c4f9;
+  --color-blue-400: #7ba5f5;
+  --color-blue-500: #4a82f3;
+  --color-blue-600: #2b6df0;
+  --color-blue-700: #1d5fd0;
+  --color-blue-800: #1a4ba8;
+  --color-blue-900: #153a82;
+  --color-blue-950: #0f2a5e;
+  --color-indigo-50: #eef3fe;
+  --color-indigo-100: #e7eefd;
+  --color-indigo-200: #cddcfb;
+  --color-indigo-300: #a9c4f9;
+  --color-indigo-400: #7ba5f5;
+  --color-indigo-500: #4a82f3;
+  --color-indigo-600: #2b6df0;
+  --color-indigo-700: #1d5fd0;
+  --color-indigo-800: #1a4ba8;
+  --color-indigo-900: #153a82;
+  --color-indigo-950: #0f2a5e;
+  --color-violet-50: #eef3fe;
+  --color-violet-100: #e7eefd;
+  --color-violet-200: #cddcfb;
+  --color-violet-300: #a9c4f9;
+  --color-violet-400: #7ba5f5;
+  --color-violet-500: #4a82f3;
+  --color-violet-600: #2b6df0;
+  --color-violet-700: #1d5fd0;
+  --color-violet-800: #1a4ba8;
+  --color-violet-900: #153a82;
+  --color-violet-950: #0f2a5e;
+  --color-purple-50: #eef3fe;
+  --color-purple-100: #e7eefd;
+  --color-purple-200: #cddcfb;
+  --color-purple-300: #a9c4f9;
+  --color-purple-400: #7ba5f5;
+  --color-purple-500: #4a82f3;
+  --color-purple-600: #2b6df0;
+  --color-purple-700: #1d5fd0;
+  --color-purple-800: #1a4ba8;
+  --color-purple-900: #153a82;
+  --color-purple-950: #0f2a5e;
+  --color-fuchsia-50: #eef3fe;
+  --color-fuchsia-100: #e7eefd;
+  --color-fuchsia-200: #cddcfb;
+  --color-fuchsia-300: #a9c4f9;
+  --color-fuchsia-400: #7ba5f5;
+  --color-fuchsia-500: #4a82f3;
+  --color-fuchsia-600: #2b6df0;
+  --color-fuchsia-700: #1d5fd0;
+  --color-fuchsia-800: #1a4ba8;
+  --color-fuchsia-900: #153a82;
+  --color-fuchsia-950: #0f2a5e;
+  --color-pink-50: #eef3fe;
+  --color-pink-100: #e7eefd;
+  --color-pink-200: #cddcfb;
+  --color-pink-300: #a9c4f9;
+  --color-pink-400: #7ba5f5;
+  --color-pink-500: #4a82f3;
+  --color-pink-600: #2b6df0;
+  --color-pink-700: #1d5fd0;
+  --color-pink-800: #1a4ba8;
+  --color-pink-900: #153a82;
+  --color-pink-950: #0f2a5e;
+}
+
+/* Faint card outlines (border-black/5 and friends) read as the palette line colour. */
+.rita-app [class*="border-black/"] {
+  border-color: var(--pp-line) !important;
 }

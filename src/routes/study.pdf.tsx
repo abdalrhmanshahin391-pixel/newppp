@@ -42,11 +42,11 @@ type Row = {
 };
 
 const TONES = [
-  { soft: "#fbe3c8", dot: "#f0a95c", ink: "#7a4b16" },
-  { soft: "#d6e8f6", dot: "#6aa9d8", ink: "#1f4c6d" },
-  { soft: "#e4dcf3", dot: "#9b83d1", ink: "#4a3877" },
-  { soft: "#d8ecdd", dot: "#6ab887", ink: "#215237" },
-  { soft: "#f7d9de", dot: "#dd8496", ink: "#75283a" },
+  { soft: "#ffe6a3", dot: "#e9a21f", ink: "#8a5200" },
+  { soft: "#f4f4f8", dot: "#7ba5f5", ink: "#1a4ba8" },
+  { soft: "#f4f4f8", dot: "#7ba5f5", ink: "#1d5fd0" },
+  { soft: "#d2ecd4", dot: "#3a9042", ink: "#1d4f20" },
+  { soft: "#f4f4f8", dot: "#ec8498", ink: "#961a34" },
 ];
 
 const COLS = "id,title,subtitle,source_type,is_public,share_slug,created_at,author_name,is_example";
@@ -96,13 +96,13 @@ function PdfSummaries() {
   });
 
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
 
       <main className="mx-auto max-w-6xl px-4 py-12 md:px-8 md:py-16">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/70 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-[#4a3877]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/70 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-[#1d5fd0]">
               <FileText size={13} /> One-page summaries
             </span>
             <h1
@@ -111,7 +111,7 @@ function PdfSummaries() {
             >
               Turn a long lecture into one page you actually read
             </h1>
-            <p className="mt-4 text-lg leading-relaxed text-[#4a453d]">
+            <p className="mt-4 text-lg leading-relaxed text-[#2a2933]">
               Upload a PDF, snap photos of your book or paste your notes — RitaJet writes a clean,
               printable summary sheet in your own course wording.
             </p>
@@ -130,7 +130,7 @@ function PdfSummaries() {
         ) : !user ? (
           <div className="mt-12 rounded-3xl border border-black/[0.07] bg-white p-12 text-center">
             <p className="font-display text-2xl font-black">Sign in to make summaries</p>
-            <p className="mt-2 text-[#4a453d]">
+            <p className="mt-2 text-[#2a2933]">
               Your sheets are saved privately to your own account.
             </p>
             <Link
@@ -144,7 +144,7 @@ function PdfSummaries() {
           <section className="mt-14">
             <div className="flex items-end justify-between">
               <h2 className="font-display text-2xl font-black tracking-tight">Your summaries</h2>
-              <span className="text-sm font-bold text-[#6d675e]">
+              <span className="text-sm font-bold text-[#54546a]">
                 {rows.filter((r) => !r.is_example).length} total
               </span>
             </div>
@@ -153,12 +153,12 @@ function PdfSummaries() {
               <div className="mt-6 rounded-3xl border border-dashed border-black/[0.12] bg-white p-14 text-center">
                 <div
                   className="mx-auto grid h-16 w-16 place-items-center rounded-2xl"
-                  style={{ background: "#e4dcf3", color: "#9b83d1" }}
+                  style={{ background: "#f4f4f8", color: "#7ba5f5" }}
                 >
                   <FileText size={26} />
                 </div>
                 <p className="mt-5 font-display text-xl font-black">No summaries yet</p>
-                <p className="mt-1 text-[#4a453d]">
+                <p className="mt-1 text-[#2a2933]">
                   Your first sheet takes about twenty seconds to build.
                 </p>
                 <button
@@ -201,18 +201,18 @@ function PdfSummaries() {
                           {r.title}
                         </h3>
                         {r.subtitle && (
-                          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[#4a453d]">
+                          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[#2a2933]">
                             {r.subtitle}
                           </p>
                         )}
-                        <p className="mt-6 text-[11px] font-bold uppercase tracking-widest text-[#6d675e]">
+                        <p className="mt-6 text-[11px] font-bold uppercase tracking-widest text-[#54546a]">
                           {new Date(r.created_at).toLocaleDateString()}
                           {r.author_name ? ` · ${r.author_name}` : ""}
                         </p>
                       </Link>
 
                       {r.is_example ? (
-                        <div className="flex items-center gap-2 border-t border-black/[0.06] p-3 text-xs font-bold text-[#6d675e]">
+                        <div className="flex items-center gap-2 border-t border-black/[0.06] p-3 text-xs font-bold text-[#54546a]">
                           <BookOpen size={14} /> Example sheet — read it, it stays here
                         </div>
                       ) : (
@@ -220,7 +220,7 @@ function PdfSummaries() {
                         <button
                           type="button"
                           onClick={() => tog.mutate({ id: r.id, isPublic: !r.is_public })}
-                          className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-[#4a453d] hover:bg-black/[0.04]"
+                          className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold text-[#2a2933] hover:bg-black/[0.04]"
                         >
                           {r.is_public ? <Eye size={14} /> : <EyeOff size={14} />}
                           {r.is_public ? "Public" : "Private"}
@@ -235,7 +235,7 @@ function PdfSummaries() {
                                 );
                                 toast.success("Link copied.");
                               }}
-                              className="grid h-9 w-9 place-items-center rounded-full text-[#4a453d] hover:bg-black/[0.05]"
+                              className="grid h-9 w-9 place-items-center rounded-full text-[#2a2933] hover:bg-black/[0.05]"
                               title="Copy share link"
                               aria-label="Copy share link"
                             >
@@ -247,7 +247,7 @@ function PdfSummaries() {
                             onClick={() => {
                               if (confirm("Delete this summary?")) del.mutate(r.id);
                             }}
-                            className="grid h-9 w-9 place-items-center rounded-full text-[#b4485f] hover:bg-[#f7d9de]"
+                            className="grid h-9 w-9 place-items-center rounded-full text-[#c4314f] hover:bg-[#f4f4f8]"
                             title="Delete"
                             aria-label="Delete summary"
                           >

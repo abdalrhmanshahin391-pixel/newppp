@@ -103,7 +103,7 @@ export function AiEnginePanel() {
   }
 
   return (
-    <section className="rounded-3xl border border-violet-500/30 bg-gradient-to-br from-violet-500/[0.06] to-fuchsia-500/[0.04] p-6 md:p-7 mb-6">
+    <section className="rounded-3xl border border-[#4a82f3]/30 bg-gradient-to-br from-[#4a82f3]/[0.06] to-[#4a82f3]/[0.04] p-6 md:p-7 mb-6">
       <div className="flex items-center gap-3">
         <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-violet-400 to-fuchsia-500">
           <Sliders className="h-5 w-5 text-white" />
@@ -151,7 +151,7 @@ export function AiEnginePanel() {
                   value={draft[t.id] ?? ""}
                   onChange={(e) => setDraft((d) => ({ ...d, [t.id]: e.target.value }))}
                   placeholder="AIza…"
-                  className="flex-1 rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-sm outline-none placeholder:text-white/25 focus:border-violet-400/60"
+                  className="flex-1 rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-sm outline-none placeholder:text-white/25 focus:border-[#7ba5f5]/60"
                 />
                 <button
                   type="button"
@@ -180,7 +180,7 @@ export function AiEnginePanel() {
                     type="button"
                     onClick={() => onClear(t.id)}
                     disabled={busy === `${t.id}-del`}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-400/30 px-3 py-2 text-sm font-bold text-rose-300 disabled:opacity-40"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#d9506d]/30 px-3 py-2 text-sm font-bold text-rose-300 disabled:opacity-40"
                     aria-label={`Remove the ${t.name} key`}
                   >
                     <Trash2 className="h-4 w-4" />

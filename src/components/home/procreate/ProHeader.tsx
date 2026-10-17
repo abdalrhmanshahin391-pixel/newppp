@@ -29,7 +29,7 @@ const SIMPLE_LINKS: { to: string; label: string }[] = [
 
 type OpenMenu = "credits" | "account" | null;
 
-/** The hand-drawn pink line from the home headline, drawn once under the current page. */
+/** The hand-drawn accent line from the home headline, drawn once under the current page. */
 function Squiggle() {
   return (
     <svg aria-hidden="true" className="rh-squiggle" viewBox="0 0 60 10" preserveAspectRatio="none">

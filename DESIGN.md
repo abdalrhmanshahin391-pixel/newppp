@@ -108,19 +108,22 @@ photos or illustrations, no coloured strips, no labels above titles. Locked tool
 dashed and say "Coming soon". The Tutorial page was removed (`/tutorial` and `/tour` redirect
 to the home page); the in-page "How it works" tours stay.
 
-## App pages (/study, /courses, /german, /spaces, /share, /notes)
+## App pages (every page except the home design pages)
 
-These tool pages were written with fixed warm colours. They take the home look through a scope
-class, `.rita-app` (set in `__root.tsx`, also on `<html>` so dialogs inherit it): the tokens, the
-Figtree / Inter Tight fonts, the blue 8px/2px-ink buttons, and a block in `styles.css` that
-maps each old hex utility class (`text-[#23201d]`, `bg-[#8ec63f]`, ...) onto the palette by role.
-Delete that block to go back to the old look. Shared frames are hand-built: `StudyLayout` (site
-bar, sticker mode tabs, ink-border action cards with bare icons), `LaunchPanel`, `SubjectBoard`,
-`SessionStarter`, `DailyPanel`, the dialogs and the Memory Lab rounds. Rules: white page, grey
-panels, 2px ink borders on anything you press, blue only for the action and the "on" state,
-green/red only as right/wrong feedback, no tinted icon circles, no capital-letter labels.
-Question bank, Lecture Lab and All in one follow the same rules: the question player, map rail,
-explanation panel and subject picker are ink-bordered cards with blue for the action.
+Every page outside `/`, `/rita*` and `/learn*` was written with fixed warm colours. They take the
+home look through a scope class, `.rita-app` (set in `__root.tsx`, also on `<html>` so dialogs
+inherit it): the tokens, the Figtree / Inter Tight fonts, the blue 8px/2px-ink buttons, and a block
+in `styles.css` that maps each old hex utility class (`text-[#23201d]`, `bg-[#8ec63f]`, ...) onto
+the palette by role. Tailwind palette classes (`bg-emerald-600`, `text-rose-700`) follow the same
+roles through `--color-*` overrides: greys stay grey, red and green only mean wrong / right, warm
+tones mean caution and every other hue is the blue accent. Delete the block to go back to the
+old look. Shared frames are hand-built: `StudyLayout`, `LaunchPanel`, `SubjectBoard`,
+`SessionStarter`, `DailyPanel`, the dialogs, the sign-in dialog and the Memory Lab rounds. Rules:
+white page, grey panels, 2px ink borders on anything you press, blue only for the action and the
+"on" state, green/red only as right/wrong feedback, no tinted icon circles, no capital-letter
+labels, no stock illustrations. Question bank, Lecture Lab and All in one follow the same rules:
+the question player, map rail, explanation panel and subject picker are ink-bordered cards with
+the accent for the action.
 
 ## Accessibility floor
 

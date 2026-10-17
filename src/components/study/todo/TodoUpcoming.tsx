@@ -70,13 +70,13 @@ export function TodoUpcoming({
       <div ref={scroller} className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
         {overdue.length > 0 && (
           <section>
-            <div className="flex items-center gap-3 border-b border-[#d1795e]/30 pb-2">
-              <h2 className="text-[14px] font-black text-[#a8462c]">Overdue · {overdue.length}</h2>
+            <div className="flex items-center gap-3 border-b border-[#d9506d]/30 pb-2">
+              <h2 className="text-[14px] font-black text-[#b3213f]">Overdue · {overdue.length}</h2>
               {onRescheduleOverdue && (
                 <button
                   type="button"
                   onClick={onRescheduleOverdue}
-                  className="ml-auto rounded-full bg-[#fbeae4] px-3 py-1.5 text-[12.5px] font-extrabold text-[#a8462c]"
+                  className="ml-auto rounded-full bg-[#f4f4f8] px-3 py-1.5 text-[12.5px] font-extrabold text-[#b3213f]"
                 >
                   Reschedule
                 </button>
@@ -103,7 +103,7 @@ export function TodoUpcoming({
                 if (id) onDropTask(id, day);
               }}
               className={`rounded-2xl transition-colors ${
-                dropDay === day ? "bg-[#eef6e9] ring-2 ring-[#4c9a2a]/30" : ""
+                dropDay === day ? "bg-[#f4f4f8] ring-2 ring-[#2b6df0]/30" : ""
               }`}
             >
               <h2 className="border-b border-black/[0.07] px-1 pb-2 text-[14px] font-black">
@@ -121,7 +121,7 @@ export function TodoUpcoming({
                   <button
                     type="button"
                     onClick={() => setOpenAdd(day)}
-                    className="flex items-center gap-2 rounded-xl px-1 py-2 text-left text-[13.5px] font-extrabold text-[#c0392b]/80 hover:text-[#c0392b]"
+                    className="flex items-center gap-2 rounded-xl px-1 py-2 text-left text-[13.5px] font-extrabold text-[#b3213f]/80 hover:text-[#b3213f]"
                   >
                     <span className="grid h-5 w-5 place-items-center rounded-full text-[16px] leading-none">
                       +
@@ -136,7 +136,7 @@ export function TodoUpcoming({
 
         <div ref={sentinel} className="h-8" />
         {pages >= 16 && (
-          <p className="pb-4 text-center text-[12.5px] font-bold text-[#b3aa9c]">
+          <p className="pb-4 text-center text-[12.5px] font-bold text-[#9a9aab]">
             That's about two years ahead — pick a date above for anything further.
           </p>
         )}

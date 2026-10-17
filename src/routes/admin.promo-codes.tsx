@@ -267,17 +267,17 @@ function PromoCodesPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
       <main className="mx-auto max-w-4xl px-4 py-12 md:px-8">
         {/* Header & Mode Switch */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/70 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-[#7a4b16]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/70 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-[#8a5200]">
               <Tag size={13} /> Admin
             </span>
             <h1 className="mt-3 font-display text-3xl font-black md:text-4xl">Promo codes</h1>
-            <p className="mt-1 text-[14.5px] text-[#5c554b]">
+            <p className="mt-1 text-[14.5px] text-[#4b4a5c]">
               Create discount codes that apply directly to checkout across all plans.
             </p>
           </div>
@@ -287,7 +287,7 @@ function PromoCodesPage() {
                 key={e}
                 onClick={() => setEnv(e)}
                 className={`rounded-full px-4 py-1.5 text-[13px] font-black transition-colors ${
-                  env === e ? "bg-[#23201d] text-white" : "text-[#6b655c] hover:bg-black/[0.05]"
+                  env === e ? "bg-[#121117] text-white" : "text-[#54546a] hover:bg-black/[0.05]"
                 }`}
               >
                 {e === "sandbox" ? "Test mode" : "Live mode"}
@@ -300,17 +300,17 @@ function PromoCodesPage() {
         <section className="mt-8 rounded-[24px] border border-black/[0.08] bg-white p-6 shadow-sm md:p-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="grid h-8 w-8 place-items-center rounded-full bg-[#8ec63f]/20 text-[#4c7c1a]">
+              <div className="grid h-8 w-8 place-items-center rounded-full bg-[#4a82f3]/20 text-[#1d5fd0]">
                 <Sparkles size={16} />
               </div>
               <h2 className="font-display text-xl font-black">Quick create code</h2>
             </div>
             {selectedTarget.category === "all" ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eaf4dd] px-3 py-1 text-[12px] font-bold text-[#3d6515]">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f4f4f8] px-3 py-1 text-[12px] font-bold text-[#1a4ba8]">
                 <Layers size={13} /> Applies to all plans
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fff4e5] px-3 py-1 text-[12px] font-bold text-[#a4540d]">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f4f4f8] px-3 py-1 text-[12px] font-bold text-[#8a5200]">
                 <Layers size={13} /> Restricted to {selectedTarget.planName} ({selectedTarget.interval})
               </span>
             )}
@@ -320,12 +320,12 @@ function PromoCodesPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               {/* Code Name */}
               <div>
-                <label className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a29a8d]">
+                <label className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">
                   Code name
                 </label>
                 <div className="mt-1.5 relative">
                   <input
-                    className="w-full rounded-xl border-2 border-black/10 bg-white px-3.5 py-2.5 text-base font-black tracking-wider uppercase outline-none focus:border-[#8ec63f]"
+                    className="w-full rounded-xl border-2 border-black/10 bg-white px-3.5 py-2.5 text-base font-black tracking-wider uppercase outline-none focus:border-[#4a82f3]"
                     value={form.code}
                     maxLength={32}
                     onChange={(e) =>
@@ -335,12 +335,12 @@ function PromoCodesPage() {
                     required
                   />
                 </div>
-                <p className="mt-1 text-[11.5px] text-[#a29a8d]">Only letters and numbers</p>
+                <p className="mt-1 text-[11.5px] text-[#9a9aab]">Only letters and numbers</p>
               </div>
 
               {/* Discount Amount & Type */}
               <div>
-                <label className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a29a8d]">
+                <label className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">
                   Discount value
                 </label>
                 <div className="mt-1.5 flex gap-2">
@@ -348,7 +348,7 @@ function PromoCodesPage() {
                     type="number"
                     step="0.01"
                     min="1"
-                    className="w-full rounded-xl border-2 border-black/10 bg-white px-3.5 py-2.5 text-base font-black outline-none focus:border-[#8ec63f]"
+                    className="w-full rounded-xl border-2 border-black/10 bg-white px-3.5 py-2.5 text-base font-black outline-none focus:border-[#4a82f3]"
                     value={form.amount}
                     onChange={(e) => setForm({ ...form, amount: Number(e.target.value) })}
                     required
@@ -378,7 +378,7 @@ function PromoCodesPage() {
                     </button>
                   </div>
                 </div>
-                <p className="mt-1 text-[11.5px] text-[#a29a8d]">
+                <p className="mt-1 text-[11.5px] text-[#9a9aab]">
                   {form.type === "percentage"
                     ? `Students will receive ${form.amount}% off at checkout`
                     : `Students will receive $${form.amount} off at checkout`}
@@ -388,13 +388,13 @@ function PromoCodesPage() {
 
             {/* Applies to Plan Dropdown Selector */}
             <div ref={dropdownRef} className="relative mt-4">
-              <label className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a29a8d]">
+              <label className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">
                 Applies to plan
               </label>
               <button
                 type="button"
                 onClick={() => setPlanDropdownOpen((v) => !v)}
-                className="mt-1.5 flex w-full items-center justify-between rounded-xl border-2 border-black/10 bg-white px-3.5 py-3 text-left text-sm font-bold outline-none transition-colors hover:border-black/20 focus:border-[#8ec63f]"
+                className="mt-1.5 flex w-full items-center justify-between rounded-xl border-2 border-black/10 bg-white px-3.5 py-3 text-left text-sm font-bold outline-none transition-colors hover:border-black/20 focus:border-[#4a82f3]"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   {selectedTarget.category === "all" ? (
@@ -402,14 +402,14 @@ function PromoCodesPage() {
                       <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-emerald-100 text-emerald-800 text-[13px]">
                         🌐
                       </span>
-                      <span className="text-[14.5px] font-black text-[#23201d] truncate">All plans (Universal)</span>
+                      <span className="text-[14.5px] font-black text-[#121117] truncate">All plans (Universal)</span>
                     </>
                   ) : (
                     <>
                       <span className="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-black/5 text-[13px]">
                         📦
                       </span>
-                      <span className="text-[14.5px] font-black text-[#23201d] truncate">
+                      <span className="text-[14.5px] font-black text-[#121117] truncate">
                         RitaJet {selectedTarget.planName}
                       </span>
                       <span
@@ -426,9 +426,9 @@ function PromoCodesPage() {
                     </>
                   )}
                 </div>
-                <div className="flex items-center gap-2.5 text-[#7a736a] shrink-0 ms-2">
+                <div className="flex items-center gap-2.5 text-[#54546a] shrink-0 ms-2">
                   {selectedTarget.category !== "all" && (
-                    <span className="text-[13px] font-semibold text-[#8c8275]">{selectedTarget.priceFormatted}</span>
+                    <span className="text-[13px] font-semibold text-[#6a697c]">{selectedTarget.priceFormatted}</span>
                   )}
                   <ChevronDown
                     size={17}
@@ -448,7 +448,7 @@ function PromoCodesPage() {
                       setPlanDropdownOpen(false);
                     }}
                     className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition-colors ${
-                      selectedTargetKey === "all" ? "bg-[#f3efe6]" : "hover:bg-black/[0.04]"
+                      selectedTargetKey === "all" ? "bg-[#f4f4f8]" : "hover:bg-black/[0.04]"
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
@@ -456,18 +456,18 @@ function PromoCodesPage() {
                         🌐
                       </span>
                       <div>
-                        <p className="text-[14px] font-black text-[#23201d]">All plans (Universal)</p>
-                        <p className="text-[11.5px] text-[#7a736a]">Valid on any plan or pack at checkout</p>
+                        <p className="text-[14px] font-black text-[#121117]">All plans (Universal)</p>
+                        <p className="text-[11.5px] text-[#54546a]">Valid on any plan or pack at checkout</p>
                       </div>
                     </div>
-                    {selectedTargetKey === "all" && <Check size={16} className="text-[#3d5c14]" />}
+                    {selectedTargetKey === "all" && <Check size={16} className="text-[#1a4ba8]" />}
                   </button>
 
                   {/* 3-Month Plans */}
                   {threeMonthsOptions.length > 0 && (
                     <>
                       <div className="my-2 border-t border-black/[0.06]" />
-                      <p className="px-3 py-1 text-[10.5px] font-black uppercase tracking-wider text-[#a29a8d]">
+                      <p className="px-3 py-1 text-[10.5px] font-black uppercase tracking-wider text-[#9a9aab]">
                         3-Month Subscription Plans
                       </p>
                       {threeMonthsOptions.map((opt) => (
@@ -479,18 +479,18 @@ function PromoCodesPage() {
                             setPlanDropdownOpen(false);
                           }}
                           className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors ${
-                            selectedTargetKey === opt.key ? "bg-[#f3efe6]" : "hover:bg-black/[0.04]"
+                            selectedTargetKey === opt.key ? "bg-[#f4f4f8]" : "hover:bg-black/[0.04]"
                           }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            <span className="text-[13.5px] font-bold text-[#23201d]">RitaJet {opt.planName}</span>
+                            <span className="text-[13.5px] font-bold text-[#121117]">RitaJet {opt.planName}</span>
                             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10.5px] font-black text-amber-900 border border-amber-200">
                               3 Months
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[12px] font-semibold text-[#8c8275]">{opt.priceFormatted}</span>
-                            {selectedTargetKey === opt.key && <Check size={15} className="text-[#3d5c14]" />}
+                            <span className="text-[12px] font-semibold text-[#6a697c]">{opt.priceFormatted}</span>
+                            {selectedTargetKey === opt.key && <Check size={15} className="text-[#1a4ba8]" />}
                           </div>
                         </button>
                       ))}
@@ -501,7 +501,7 @@ function PromoCodesPage() {
                   {yearlyOptions.length > 0 && (
                     <>
                       <div className="my-2 border-t border-black/[0.06]" />
-                      <p className="px-3 py-1 text-[10.5px] font-black uppercase tracking-wider text-[#a29a8d]">
+                      <p className="px-3 py-1 text-[10.5px] font-black uppercase tracking-wider text-[#9a9aab]">
                         Yearly Subscription Plans
                       </p>
                       {yearlyOptions.map((opt) => (
@@ -513,18 +513,18 @@ function PromoCodesPage() {
                             setPlanDropdownOpen(false);
                           }}
                           className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors ${
-                            selectedTargetKey === opt.key ? "bg-[#f3efe6]" : "hover:bg-black/[0.04]"
+                            selectedTargetKey === opt.key ? "bg-[#f4f4f8]" : "hover:bg-black/[0.04]"
                           }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            <span className="text-[13.5px] font-bold text-[#23201d]">RitaJet {opt.planName}</span>
+                            <span className="text-[13.5px] font-bold text-[#121117]">RitaJet {opt.planName}</span>
                             <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10.5px] font-black text-emerald-900 border border-emerald-200">
                               Yearly
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[12px] font-semibold text-[#8c8275]">{opt.priceFormatted}</span>
-                            {selectedTargetKey === opt.key && <Check size={15} className="text-[#3d5c14]" />}
+                            <span className="text-[12px] font-semibold text-[#6a697c]">{opt.priceFormatted}</span>
+                            {selectedTargetKey === opt.key && <Check size={15} className="text-[#1a4ba8]" />}
                           </div>
                         </button>
                       ))}
@@ -535,7 +535,7 @@ function PromoCodesPage() {
                   {onceOptions.length > 0 && (
                     <>
                       <div className="my-2 border-t border-black/[0.06]" />
-                      <p className="px-3 py-1 text-[10.5px] font-black uppercase tracking-wider text-[#a29a8d]">
+                      <p className="px-3 py-1 text-[10.5px] font-black uppercase tracking-wider text-[#9a9aab]">
                         One-Time Credit Packs
                       </p>
                       {onceOptions.map((opt) => (
@@ -547,18 +547,18 @@ function PromoCodesPage() {
                             setPlanDropdownOpen(false);
                           }}
                           className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors ${
-                            selectedTargetKey === opt.key ? "bg-[#f3efe6]" : "hover:bg-black/[0.04]"
+                            selectedTargetKey === opt.key ? "bg-[#f4f4f8]" : "hover:bg-black/[0.04]"
                           }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            <span className="text-[13.5px] font-bold text-[#23201d]">RitaJet {opt.planName}</span>
+                            <span className="text-[13.5px] font-bold text-[#121117]">RitaJet {opt.planName}</span>
                             <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10.5px] font-black text-blue-900 border border-blue-200">
                               Pack
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[12px] font-semibold text-[#8c8275]">{opt.priceFormatted}</span>
-                            {selectedTargetKey === opt.key && <Check size={15} className="text-[#3d5c14]" />}
+                            <span className="text-[12px] font-semibold text-[#6a697c]">{opt.priceFormatted}</span>
+                            {selectedTargetKey === opt.key && <Check size={15} className="text-[#1a4ba8]" />}
                           </div>
                         </button>
                       ))}
@@ -568,7 +568,7 @@ function PromoCodesPage() {
               )}
 
               {/* Note */}
-              <p className="mt-1.5 text-[12px] font-medium text-[#6b655c]">
+              <p className="mt-1.5 text-[12px] font-medium text-[#54546a]">
                 {selectedTarget.category === "all" ? (
                   <span>🌐 <strong>Universal:</strong> Students can use this promo code on any RitaJet plan at checkout.</span>
                 ) : (
@@ -579,12 +579,12 @@ function PromoCodesPage() {
 
             {/* Recur checkbox */}
             <div className="mt-4">
-              <label className="flex items-center gap-2 text-[13.5px] font-bold text-[#4a453d] cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-[13.5px] font-bold text-[#2a2933] cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={form.recur}
                   onChange={(e) => setForm({ ...form, recur: e.target.checked })}
-                  className="h-4 w-4 rounded accent-[#8ec63f]"
+                  className="h-4 w-4 rounded accent-[#4a82f3]"
                 />
                 Apply discount to recurring renewals as well
               </label>
@@ -595,7 +595,7 @@ function PromoCodesPage() {
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center gap-1.5 text-[12.5px] font-bold text-[#7a736a] hover:text-black"
+                className="flex items-center gap-1.5 text-[12.5px] font-bold text-[#54546a] hover:text-black"
               >
                 {showAdvanced ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                 {showAdvanced ? "Hide limits & expiration" : "Optional limits & expiration"}
@@ -604,25 +604,25 @@ function PromoCodesPage() {
               {showAdvanced && (
                 <div className="mt-4 grid gap-4 sm:grid-cols-2 animate-in fade-in duration-200">
                   <div>
-                    <label className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a29a8d]">
+                    <label className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">
                       Max uses (leave blank for unlimited)
                     </label>
                     <input
                       type="number"
                       min="1"
-                      className="mt-1 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-[#8ec63f]"
+                      className="mt-1 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-[#4a82f3]"
                       value={form.usage_limit}
                       onChange={(e) => setForm({ ...form, usage_limit: e.target.value })}
                       placeholder="e.g. 50"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a29a8d]">
+                    <label className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">
                       Expiration date (leave blank for never)
                     </label>
                     <input
                       type="date"
-                      className="mt-1 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-[#8ec63f]"
+                      className="mt-1 w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-[#4a82f3]"
                       value={form.expires_at}
                       onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
                     />
@@ -633,13 +633,13 @@ function PromoCodesPage() {
 
             {/* Create CTA */}
             <div className="mt-6 flex items-center justify-between border-t border-black/[0.06] pt-5">
-              <span className="text-[13px] font-semibold text-[#6b655c]">
+              <span className="text-[13px] font-semibold text-[#54546a]">
                 Ready to publish in Paddle ({env === "sandbox" ? "Test" : "Live"})
               </span>
               <button
                 type="submit"
                 disabled={saving || form.code.trim().length < 3}
-                className="inline-flex items-center gap-2 rounded-full bg-[#23201d] px-6 py-3 text-[14px] font-black text-white transition-opacity hover:opacity-90 active:scale-95 disabled:opacity-40"
+                className="inline-flex items-center gap-2 rounded-full bg-[#121117] px-6 py-3 text-[14px] font-black text-white transition-opacity hover:opacity-90 active:scale-95 disabled:opacity-40"
               >
                 <Plus size={16} />{" "}
                 {saving
@@ -656,19 +656,19 @@ function PromoCodesPage() {
         <section className="mt-10">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-xl font-black">All active & past codes</h2>
-            <span className="text-[13px] font-bold text-[#7a736a]">
+            <span className="text-[13px] font-bold text-[#54546a]">
               {(codes.data?.length ?? 0)} code{(codes.data?.length ?? 0) === 1 ? "" : "s"}
             </span>
           </div>
 
           {codes.isLoading ? (
-            <p className="mt-4 text-[#6b655c]">Loading promo codes…</p>
+            <p className="mt-4 text-[#54546a]">Loading promo codes…</p>
           ) : codes.error ? (
-            <p className="mt-4 text-[#a4321f]">
+            <p className="mt-4 text-[#b3213f]">
               {(codes.error as Error).message || "Could not load codes."}
             </p>
           ) : (codes.data?.length ?? 0) === 0 ? (
-            <div className="mt-4 rounded-2xl border border-dashed border-black/15 bg-white/40 p-8 text-center text-[#6b655c]">
+            <div className="mt-4 rounded-2xl border border-dashed border-black/15 bg-white/40 p-8 text-center text-[#54546a]">
               No promo codes found in {env === "sandbox" ? "Test mode" : "Live mode"}. Create one above!
             </div>
           ) : (
@@ -677,7 +677,7 @@ function PromoCodesPage() {
                 const badge = (() => {
                   if (!d.restrict_to || d.restrict_to.length === 0) {
                     return (
-                      <span className="hidden rounded-full bg-black/[0.05] px-2.5 py-0.5 text-[11px] font-bold text-[#6b655c] sm:inline-block">
+                      <span className="hidden rounded-full bg-black/[0.05] px-2.5 py-0.5 text-[11px] font-bold text-[#54546a] sm:inline-block">
                         All plans
                       </span>
                     );
@@ -703,10 +703,10 @@ function PromoCodesPage() {
                       matchedPlan.paddle_price_yearly === id;
                     const intervalLabel = is3m ? "3 Months" : isYearly ? "Yearly" : "Pack";
                     const bgClass = is3m
-                      ? "bg-amber-100 text-amber-900 border border-amber-300/70"
+                      ? "bg-amber-100 text-amber-900 border border-[#f5b942]/70"
                       : isYearly
-                        ? "bg-emerald-100 text-emerald-900 border border-emerald-300/70"
-                        : "bg-blue-100 text-blue-900 border border-blue-300/70";
+                        ? "bg-emerald-100 text-emerald-900 border border-[#7bc280]/70"
+                        : "bg-blue-100 text-blue-900 border border-[#a9c4f9]/70";
 
                     return (
                       <span
@@ -729,13 +729,13 @@ function PromoCodesPage() {
                     className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/[0.07] bg-white px-5 py-4 shadow-sm"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="font-display text-[18px] font-black tracking-wider text-[#23201d]">
+                      <span className="font-display text-[18px] font-black tracking-wider text-[#121117]">
                         {d.code ?? "—"}
                       </span>
                       <button
                         type="button"
                         onClick={() => copyCode(d.code ?? "", d.id)}
-                        className="grid h-7 w-7 place-items-center rounded-lg text-[#7a736a] transition-colors hover:bg-black/[0.06] hover:text-black"
+                        className="grid h-7 w-7 place-items-center rounded-lg text-[#54546a] transition-colors hover:bg-black/[0.06] hover:text-black"
                         title="Copy code"
                       >
                         {copiedId === d.id ? (
@@ -744,7 +744,7 @@ function PromoCodesPage() {
                           <Copy size={14} />
                         )}
                       </button>
-                      <span className="rounded-full bg-[#e6f4d8] px-3 py-1 text-[12px] font-black text-[#3d5c14]">
+                      <span className="rounded-full bg-[#f4f4f8] px-3 py-1 text-[12px] font-black text-[#1a4ba8]">
                         {d.type === "percentage"
                           ? `${d.amount}% off`
                           : `$${(Number(d.amount) / 100).toFixed(2)} off`}
@@ -753,7 +753,7 @@ function PromoCodesPage() {
                     </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="text-[13px] font-medium text-[#6b655c]">
+                    <span className="text-[13px] font-medium text-[#54546a]">
                       {d.times_used}
                       {d.usage_limit ? ` / ${d.usage_limit}` : ""} used
                       {d.expires_at
@@ -764,8 +764,8 @@ function PromoCodesPage() {
                     <span
                       className={`rounded-full px-3 py-1 text-[11.5px] font-black ${
                         d.status === "active"
-                          ? "bg-[#e6f4d8] text-[#3d5c14]"
-                          : "bg-black/[0.06] text-[#6b655c]"
+                          ? "bg-[#f4f4f8] text-[#1a4ba8]"
+                          : "bg-black/[0.06] text-[#54546a]"
                       }`}
                     >
                       {d.status}
@@ -778,7 +778,7 @@ function PromoCodesPage() {
                           onClick={() =>
                             act(d.id, { enabled_for_checkout: !d.enabled_for_checkout })
                           }
-                          className="rounded-full border border-black/10 px-3 py-1 text-[12px] font-bold text-[#6b655c] transition-colors hover:bg-black/[0.05]"
+                          className="rounded-full border border-black/10 px-3 py-1 text-[12px] font-bold text-[#54546a] transition-colors hover:bg-black/[0.05]"
                         >
                           {d.enabled_for_checkout ? "Pause" : "Resume"}
                         </button>
@@ -789,7 +789,7 @@ function PromoCodesPage() {
                               return;
                             act(d.id, { status: "archived" });
                           }}
-                          className="grid h-8 w-8 place-items-center rounded-xl text-[#8e8579] transition-colors hover:bg-red-50 hover:text-red-600"
+                          className="grid h-8 w-8 place-items-center rounded-xl text-[#6a697c] transition-colors hover:bg-red-50 hover:text-red-600"
                           title="Archive code"
                         >
                           <Archive size={15} />

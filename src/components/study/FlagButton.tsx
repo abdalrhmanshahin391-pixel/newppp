@@ -25,11 +25,11 @@ export function FlagButton({
       className="inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-extrabold transition-colors disabled:opacity-50"
       style={
         flagged
-          ? { background: "#f6ddd5", borderColor: "#e2b6a8", color: "#7d3421" }
-          : { background: "transparent", borderColor: "rgba(0,0,0,0.12)", color: "#8c8375" }
+          ? { background: "#fbd9e0", borderColor: "#ec8498", color: "#961a34" }
+          : { background: "transparent", borderColor: "rgba(0,0,0,0.12)", color: "#6a697c" }
       }
     >
-      <Flag size={14} fill={flagged ? "#c4573a" : "none"} strokeWidth={2.2} />
+      <Flag size={14} fill={flagged ? "#c4314f" : "none"} strokeWidth={2.2} />
       {label && (flagged ? "Flagged" : "Flag")}
     </button>
   );

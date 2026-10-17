@@ -24,21 +24,21 @@ const SOURCES: { key: Source; title: string; blurb: string; icon: React.ReactNod
     title: "A PDF",
     blurb: "Lecture slides, a chapter, a handout.",
     icon: <FileText size={20} />,
-    tone: "#fdeed6",
+    tone: "#f4f4f8",
   },
   {
     key: "text",
     title: "Pasted text",
     blurb: "Your notes, a transcript, anything written.",
     icon: <Type size={20} />,
-    tone: "#e2eff9",
+    tone: "#f4f4f8",
   },
   {
     key: "image",
     title: "Photos",
     blurb: "Snap a slide or a page of handwriting.",
     icon: <ImageIcon size={20} />,
-    tone: "#eee8f8",
+    tone: "#f4f4f8",
   },
 ];
 
@@ -160,29 +160,29 @@ export function CardImportSheet({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#fbf5e9]">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#f4f4f8]">
       <header className="flex items-center justify-between gap-3 border-b border-black/[0.06] px-5 py-4">
         <div className="flex min-w-0 items-center gap-3">
           {step !== "source" && (
             <button
               type="button"
               onClick={() => setStep(step === "review" ? "shape" : "source")}
-              className="grid h-9 w-9 place-items-center rounded-full border border-black/10 bg-white text-[#6d6355]"
+              className="grid h-9 w-9 place-items-center rounded-full border border-black/10 bg-white text-[#54546a]"
             >
               <ArrowLeft size={16} />
             </button>
           )}
           <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#a79c8c]">
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#9a9aab]">
               make cards from material
             </p>
-            <p className="truncate text-[15px] font-black text-[#23201d]">{topicLabel}</p>
+            <p className="truncate text-[15px] font-black text-[#121117]">{topicLabel}</p>
           </div>
         </div>
         <button
           type="button"
           onClick={close}
-          className="grid h-9 w-9 place-items-center rounded-full border border-black/10 bg-white text-[#6d6355]"
+          className="grid h-9 w-9 place-items-center rounded-full border border-black/10 bg-white text-[#54546a]"
         >
           <X size={17} />
         </button>
@@ -193,7 +193,7 @@ export function CardImportSheet({
           {/* ---------------------------- step 1 ---------------------------- */}
           {step === "source" && (
             <>
-              <h2 className="font-display text-[1.9rem] font-black leading-tight text-[#23201d]">
+              <h2 className="font-display text-[1.9rem] font-black leading-tight text-[#121117]">
                 What are we turning into cards?
               </h2>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -209,13 +209,13 @@ export function CardImportSheet({
                     }}
                   >
                     <span
-                      className="grid h-10 w-10 place-items-center rounded-xl text-[#3a352e]"
+                      className="grid h-10 w-10 place-items-center rounded-xl text-[#2a2933]"
                       style={{ background: s.tone }}
                     >
                       {s.icon}
                     </span>
-                    <p className="mt-3 text-[15px] font-black text-[#23201d]">{s.title}</p>
-                    <p className="mt-0.5 text-[12.5px] font-semibold text-[#8c8375]">{s.blurb}</p>
+                    <p className="mt-3 text-[15px] font-black text-[#121117]">{s.title}</p>
+                    <p className="mt-0.5 text-[12.5px] font-semibold text-[#6a697c]">{s.blurb}</p>
                   </button>
                 ))}
               </div>
@@ -233,13 +233,13 @@ export function CardImportSheet({
                     <button
                       type="button"
                       onClick={() => pdfInput.current?.click()}
-                      className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-black/[0.12] py-10 text-[14px] font-extrabold text-[#6d6355]"
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-black/[0.12] py-10 text-[14px] font-extrabold text-[#54546a]"
                     >
                       <Upload size={17} />
                       {pdf ? pdf.name : "Choose a PDF"}
                     </button>
                     <div className="mt-4 flex flex-wrap items-center gap-3">
-                      <span className="text-[12.5px] font-bold text-[#8c8375]">Pages</span>
+                      <span className="text-[12.5px] font-bold text-[#6a697c]">Pages</span>
                       <input
                         value={startPage}
                         onChange={(e) => setStartPage(e.target.value.replace(/\D/g, ""))}
@@ -247,7 +247,7 @@ export function CardImportSheet({
                         inputMode="numeric"
                         className="h-10 w-24 rounded-xl border border-black/10 px-3 text-[14px] font-bold outline-none"
                       />
-                      <span className="text-[#b3aa9c]">—</span>
+                      <span className="text-[#9a9aab]">—</span>
                       <input
                         value={endPage}
                         onChange={(e) => setEndPage(e.target.value.replace(/\D/g, ""))}
@@ -255,7 +255,7 @@ export function CardImportSheet({
                         inputMode="numeric"
                         className="h-10 w-24 rounded-xl border border-black/10 px-3 text-[14px] font-bold outline-none"
                       />
-                      <span className="text-[12px] font-semibold text-[#b3aa9c]">
+                      <span className="text-[12px] font-semibold text-[#9a9aab]">
                         leave empty for the whole file
                       </span>
                     </div>
@@ -275,7 +275,7 @@ export function CardImportSheet({
                     <button
                       type="button"
                       onClick={() => imgInput.current?.click()}
-                      className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-black/[0.12] py-10 text-[14px] font-extrabold text-[#6d6355]"
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-black/[0.12] py-10 text-[14px] font-extrabold text-[#54546a]"
                     >
                       <Upload size={17} />
                       {images.length ? `${images.length} photo(s) chosen` : "Choose up to 8 photos"}
@@ -285,7 +285,7 @@ export function CardImportSheet({
                         {images.map((f) => (
                           <span
                             key={f.name}
-                            className="max-w-[14rem] truncate rounded-full bg-[#f4eddf] px-3 py-1.5 text-[12px] font-bold text-[#6d6355]"
+                            className="max-w-[14rem] truncate rounded-full bg-[#f4f4f8] px-3 py-1.5 text-[12px] font-bold text-[#54546a]"
                           >
                             {f.name}
                           </span>
@@ -320,7 +320,7 @@ export function CardImportSheet({
           {/* ---------------------------- step 2 ---------------------------- */}
           {step === "shape" && (
             <>
-              <h2 className="font-display text-[1.9rem] font-black leading-tight text-[#23201d]">
+              <h2 className="font-display text-[1.9rem] font-black leading-tight text-[#121117]">
                 How should the cards read?
               </h2>
 
@@ -336,13 +336,13 @@ export function CardImportSheet({
                       boxShadow: style === s.key ? "0 0 0 2px var(--rita-green)" : "none",
                     }}
                   >
-                    <p className="text-[15px] font-black text-[#23201d]">{s.title}</p>
-                    <p className="mt-0.5 text-[12.5px] font-semibold text-[#8c8375]">{s.blurb}</p>
+                    <p className="text-[15px] font-black text-[#121117]">{s.title}</p>
+                    <p className="mt-0.5 text-[12.5px] font-semibold text-[#6a697c]">{s.blurb}</p>
                   </button>
                 ))}
               </div>
 
-              <p className="mt-7 text-[11px] font-black uppercase tracking-[0.18em] text-[#a79c8c]">
+              <p className="mt-7 text-[11px] font-black uppercase tracking-[0.18em] text-[#9a9aab]">
                 how many
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -359,7 +359,7 @@ export function CardImportSheet({
                             borderColor: "var(--rita-green)",
                             color: "var(--rita-green-ink)",
                           }
-                        : { background: "#fff", borderColor: "rgba(0,0,0,0.1)", color: "#6d6355" }
+                        : { background: "#fff", borderColor: "rgba(0,0,0,0.1)", color: "#54546a" }
                     }
                   >
                     up to {c}
@@ -376,7 +376,7 @@ export function CardImportSheet({
                 {busy ? <Loader2 size={17} className="animate-spin" /> : <Sparkles size={17} />}
                 {busy ? "Reading your material…" : "Draft the cards"}
               </button>
-              <p className="mt-3 text-center text-[12.5px] font-semibold text-[#a79c8c]">
+              <p className="mt-3 text-center text-[12.5px] font-semibold text-[#9a9aab]">
                 Nothing is saved until you approve the drafts.
               </p>
             </>
@@ -385,10 +385,10 @@ export function CardImportSheet({
           {/* ---------------------------- step 3 ---------------------------- */}
           {step === "review" && (
             <>
-              <h2 className="font-display text-[1.9rem] font-black leading-tight text-[#23201d]">
+              <h2 className="font-display text-[1.9rem] font-black leading-tight text-[#121117]">
                 {drafts.length} draft{drafts.length === 1 ? "" : "s"} — keep what is good
               </h2>
-              <p className="mt-1 text-[14px] font-semibold text-[#8c8375]">
+              <p className="mt-1 text-[14px] font-semibold text-[#6a697c]">
                 Edit any wording straight in place, bin the rest.
               </p>
 
@@ -406,7 +406,7 @@ export function CardImportSheet({
                           d.map((x, j) => (j === i ? { ...x, front: e.target.value } : x)),
                         )
                       }
-                      className="w-full resize-y rounded-xl bg-[#faf6ee] p-3 text-[14px] font-extrabold text-[#23201d] outline-none"
+                      className="w-full resize-y rounded-xl bg-[#f4f4f8] p-3 text-[14px] font-extrabold text-[#121117] outline-none"
                     />
                     <textarea
                       value={c.back}
@@ -416,12 +416,12 @@ export function CardImportSheet({
                           d.map((x, j) => (j === i ? { ...x, back: e.target.value } : x)),
                         )
                       }
-                      className="mt-2 w-full resize-y rounded-xl bg-[#f4f7f2] p-3 text-[14px] font-semibold text-[#3a352e] outline-none sm:mt-0"
+                      className="mt-2 w-full resize-y rounded-xl bg-[#f4f4f8] p-3 text-[14px] font-semibold text-[#2a2933] outline-none sm:mt-0"
                     />
                     <button
                       type="button"
                       onClick={() => setDrafts((d) => d.filter((_, j) => j !== i))}
-                      className="mt-2 grid h-10 w-10 place-items-center rounded-xl border border-black/10 text-[#a15b47] sm:mt-0 sm:self-center"
+                      className="mt-2 grid h-10 w-10 place-items-center rounded-xl border border-black/10 text-[#b3213f] sm:mt-0 sm:self-center"
                     >
                       <Trash2 size={16} />
                     </button>

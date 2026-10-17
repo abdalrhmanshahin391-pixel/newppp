@@ -175,9 +175,9 @@ function RitaXStudio() {
                         <span
                           className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${
                             a.status === "live"
-                              ? "bg-emerald-500/15 text-emerald-600"
+                              ? "bg-[#3a9042]/15 text-emerald-600"
                               : a.status === "paused"
-                                ? "bg-amber-500/15 text-amber-600"
+                                ? "bg-[#d68c0a]/15 text-amber-600"
                                 : "bg-muted text-muted-foreground"
                           }`}
                         >

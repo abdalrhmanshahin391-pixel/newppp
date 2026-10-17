@@ -14,23 +14,23 @@ import { FlipCard } from "@/components/study/FlipCard";
 function SessionFace({ side, text, hint }: { side: string; text: string; hint?: string }) {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center overflow-auto rounded-[2rem] border border-black/[0.06] bg-white px-8 py-10 text-center shadow-[0_20px_50px_-30px_rgba(35,32,29,0.3)]">
-      <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">{side}</span>
+      <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9a9aab]">{side}</span>
       <span
-        className="mt-5 font-display font-black leading-tight text-[#23201d]"
+        className="mt-5 font-display font-black leading-tight text-[#121117]"
         style={{ fontSize: "clamp(1.4rem, 3vw, 2.1rem)" }}
       >
         {text}
       </span>
-      {hint && <span className="mt-6 text-[13.5px] font-semibold text-[#b3aa9c]">{hint}</span>}
+      {hint && <span className="mt-6 text-[13.5px] font-semibold text-[#9a9aab]">{hint}</span>}
     </div>
   );
 }
 
 const SM2_GRADES = [
-  { g: 0, label: "Again", key: "1", hint: "10 min", bg: "#f6ddd5", ink: "#7d3421" },
-  { g: 1, label: "Hard", key: "2", hint: "1 d", bg: "#fbe3c8", ink: "#7a4b16" },
-  { g: 2, label: "Good", key: "3", hint: "6 d", bg: "#d6e8f6", ink: "#1f4c6d" },
-  { g: 3, label: "Easy", key: "4", hint: "8 d", bg: "#d8ecdd", ink: "#215237" },
+  { g: 0, label: "Again", key: "1", hint: "10 min", bg: "#fbd9e0", ink: "#961a34" },
+  { g: 1, label: "Hard", key: "2", hint: "1 d", bg: "#ffe6a3", ink: "#8a5200" },
+  { g: 2, label: "Good", key: "3", hint: "6 d", bg: "#f4f4f8", ink: "#1a4ba8" },
+  { g: 3, label: "Easy", key: "4", hint: "8 d", bg: "#d2ecd4", ink: "#1d4f20" },
 ] as const;
 
 function getGradeHint(g: number, reviews: number) {
@@ -197,7 +197,7 @@ function SessionPage() {
           <StudyHeading eyebrow={names || "SM-2 Session"} title={done ? "Session finished" : "SM-2 Study session"} />
 
           {list.length === 0 && cards.isSuccess && (
-            <p className="mt-8 text-[15px] text-[#6d665c]">
+            <p className="mt-8 text-[15px] text-[#54546a]">
               There are no cards in this selection yet.{" "}
               <Link to="/study" className="font-bold underline">
                 Add some first
@@ -215,7 +215,7 @@ function SessionPage() {
                     style={{ width: `${(pos / list.length) * 100}%` }}
                   />
                 </div>
-                <span className="text-[13px] font-bold text-[#a29a8d]">
+                <span className="text-[13px] font-bold text-[#9a9aab]">
                   {pos + 1} / {list.length}
                 </span>
               </div>
@@ -236,7 +236,7 @@ function SessionPage() {
 
               {lastFeedback && (
                 <div className="mt-4 flex justify-center">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-black/[0.04] px-3.5 py-1 text-xs font-bold text-[#7a7164]">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-black/[0.04] px-3.5 py-1 text-xs font-bold text-[#54546a]">
                     <Sparkles size={13} /> {lastFeedback}
                   </span>
                 </div>
@@ -244,7 +244,7 @@ function SessionPage() {
 
               {flipped ? (
                 <div className="mt-6">
-                  <p className="mb-3 text-center text-xs font-bold uppercase tracking-wider text-[#a79c8c]">
+                  <p className="mb-3 text-center text-xs font-bold uppercase tracking-wider text-[#9a9aab]">
                     How well did you recall this? (Keys 1 · 2 · 3 · 4)
                   </p>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -281,10 +281,10 @@ function SessionPage() {
 
           {done && (
             <div className="mt-8 rounded-[2rem] bg-white p-10 text-center">
-              <p className="font-display text-[2.4rem] font-black leading-none text-[#23201d]">
+              <p className="font-display text-[2.4rem] font-black leading-none text-[#121117]">
                 {known}/{list.length}
               </p>
-              <p className="mt-3 text-[15px] text-[#6d665c]">
+              <p className="mt-3 text-[15px] text-[#54546a]">
                 cards successfully remembered and scheduled via SM-2.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">

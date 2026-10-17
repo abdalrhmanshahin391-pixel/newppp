@@ -78,13 +78,13 @@ export function TaskRow({
             onToggleSelect(task.id);
           }
         }}
-        className={`group relative flex cursor-pointer items-start gap-3 overflow-hidden rounded-2xl border py-3.5 pl-4 pr-2 text-[#23201d] transition-all ${
+        className={`group relative flex cursor-pointer items-start gap-3 overflow-hidden rounded-2xl border py-3.5 pl-4 pr-2 text-[#121117] transition-all ${
           isSelected
-            ? "border-[#4c9a2a]/50 shadow-[0_0_0_2px_rgba(76,154,42,0.18)]"
+            ? "border-[#2b6df0]/50 shadow-[0_0_0_2px_rgba(76,154,42,0.18)]"
             : "border-black/[0.06]"
         }`}
         style={{
-          background: task.done ? "#faf8f3" : tone.tint === "transparent" ? "#fff" : tone.tint,
+          background: task.done ? "#ffffff" : tone.tint === "transparent" ? "#fff" : tone.tint,
         }}
       >
         <span
@@ -102,8 +102,8 @@ export function TaskRow({
           aria-label={task.done ? "Mark as not done" : "Mark as done"}
           className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 transition-transform active:scale-90"
           style={{
-            borderColor: task.done ? "#4c9a2a" : tone.key === "none" ? "#ded6c7" : tone.bar,
-            background: task.done ? "#4c9a2a" : "#fff",
+            borderColor: task.done ? "#2b6df0" : tone.key === "none" ? "#ffd266" : tone.bar,
+            background: task.done ? "#2b6df0" : "#fff",
           }}
         >
           {task.done && <Check size={13} strokeWidth={4} color="#fff" />}
@@ -125,12 +125,12 @@ export function TaskRow({
                   setEditing(false);
                 }
               }}
-              className="w-full rounded-lg border border-black/10 bg-white px-2 py-1 text-[16.5px] font-bold text-[#23201d] outline-none"
+              className="w-full rounded-lg border border-black/10 bg-white px-2 py-1 text-[16.5px] font-bold text-[#121117] outline-none"
             />
           ) : (
             <span
               className={`block text-[16.5px] font-bold leading-snug ${
-                task.done ? "text-[#a29a8d] line-through" : "text-[#23201d]"
+                task.done ? "text-[#9a9aab] line-through" : "text-[#121117]"
               }`}
             >
               {task.title}
@@ -151,13 +151,13 @@ export function TaskRow({
               );
             })()}
             {task.time && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[12px] font-extrabold text-[#8a7f6c]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[12px] font-extrabold text-[#6a697c]">
                 <Clock size={12} />
                 {task.time}
               </span>
             )}
             {repeat && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[12px] font-extrabold text-[#4c9a2a]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[12px] font-extrabold text-[#2b6df0]">
                 <Repeat size={12} />
                 {repeat}
               </span>
@@ -173,13 +173,13 @@ export function TaskRow({
             {(task.labels ?? []).map((l) => (
               <span
                 key={l}
-                className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[12px] font-extrabold text-[#8a7f6c]"
+                className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[12px] font-extrabold text-[#6a697c]"
               >
                 <Tag size={11} />@{l}
               </span>
             ))}
             {subtasks.length > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[12px] font-extrabold text-[#8a7f6c]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[12px] font-extrabold text-[#6a697c]">
                 {doneSubs}/{subtasks.length}
               </span>
             )}
@@ -193,7 +193,7 @@ export function TaskRow({
             setSubOpen((v) => !v);
           }}
           aria-label="Add sub-task"
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[#a29a8d] transition hover:bg-black/[0.05]"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[#9a9aab] transition hover:bg-black/[0.05]"
         >
           <CornerDownRight size={16} />
         </button>
@@ -204,13 +204,13 @@ export function TaskRow({
             setEditing(true);
           }}
           aria-label="Rename task"
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[#a29a8d] transition hover:bg-black/[0.05]"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[#9a9aab] transition hover:bg-black/[0.05]"
         >
           <Pencil size={16} />
         </button>
         {task.starred && (
           <span className="grid h-9 w-9 shrink-0 place-items-center" title="Starred">
-            <Star size={16} fill="#f0a95c" style={{ color: "#f0a95c" }} />
+            <Star size={16} fill="#e9a21f" style={{ color: "#e9a21f" }} />
           </span>
         )}
 
@@ -231,15 +231,15 @@ export function TaskRow({
                 aria-label="Toggle sub-task"
                 className="grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 transition-transform active:scale-90"
                 style={{
-                  borderColor: s.done ? "#4c9a2a" : "#ded6c7",
-                  background: s.done ? "#4c9a2a" : "#fff",
+                  borderColor: s.done ? "#2b6df0" : "#ffd266",
+                  background: s.done ? "#2b6df0" : "#fff",
                 }}
               >
                 {s.done && <Check size={11} strokeWidth={4} color="#fff" />}
               </button>
               <span
                 className={`flex-1 text-[14.5px] font-semibold ${
-                  s.done ? "text-[#b3aa9c] line-through" : "text-[#3c372f]"
+                  s.done ? "text-[#9a9aab] line-through" : "text-[#2a2933]"
                 }`}
               >
                 {s.title}
@@ -248,7 +248,7 @@ export function TaskRow({
                 type="button"
                 onClick={() => onRemove(s.id)}
                 aria-label="Delete sub-task"
-                className="grid h-7 w-7 place-items-center rounded-lg text-[#c8bfae] opacity-0 transition hover:text-[#d1795e] group-hover/sub:opacity-100"
+                className="grid h-7 w-7 place-items-center rounded-lg text-[#c4c4d1] opacity-0 transition hover:text-[#d9506d] group-hover/sub:opacity-100"
               >
                 <Trash2 size={14} />
               </button>
@@ -256,7 +256,7 @@ export function TaskRow({
           ))}
           {subOpen && (
             <div className="flex items-center gap-2 pt-0.5">
-              <Plus size={14} className="text-[#a29a8d]" />
+              <Plus size={14} className="text-[#9a9aab]" />
               <input
                 autoFocus
                 value={subText}
@@ -270,7 +270,7 @@ export function TaskRow({
                 }}
                 onBlur={() => setSubOpen(false)}
                 placeholder="Sub-task, then Enter"
-                className="w-full bg-transparent text-[14.5px] font-semibold outline-none placeholder:text-[#b3aa9c]"
+                className="w-full bg-transparent text-[14.5px] font-semibold outline-none placeholder:text-[#9a9aab]"
               />
             </div>
           )}

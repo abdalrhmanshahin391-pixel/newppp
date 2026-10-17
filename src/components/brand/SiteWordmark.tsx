@@ -26,9 +26,9 @@ const PLATFORM = "ACADEMY";
 
 
 /** Brand gold — the accent "Q" and the divider/labels that sit beside it. */
-const GOLD_FROM = "#b45309";
-const GOLD_MID = "#e0a90f";
-const GOLD_TO = "#fcd34d";
+const GOLD_FROM = "#8a5200";
+const GOLD_MID = "#b26b00";
+const GOLD_TO = "#e9a21f";
 
 
 /** Splits a name into [head, accent, tail] around the first capital "Q" (falls back gracefully). */

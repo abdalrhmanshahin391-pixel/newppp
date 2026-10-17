@@ -283,7 +283,7 @@ function RunPage() {
           </div>
 
           {/* Mode chips */}
-          <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-3 mb-3 flex flex-wrap items-center gap-2">
+          <div className="rounded-2xl border border-[#3a9042]/20 bg-[#3a9042]/[0.04] p-3 mb-3 flex flex-wrap items-center gap-2">
             {([
               { m: "study", label: "Study", icon: BookOpen },
               { m: "session", label: "Session", icon: Trophy },
@@ -298,8 +298,8 @@ function RunPage() {
                   onClick={() => switchMode(m, m === "exam" ? { timed: 1, duration: 10 } : {})}
                   className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold border transition ${
                     active
-                      ? "bg-emerald-500 text-black border-emerald-400 shadow-lg shadow-emerald-500/30"
-                      : "bg-white/5 text-white/70 border-white/10 hover:border-emerald-400/40 hover:text-emerald-200"
+                      ? "bg-emerald-500 text-black border-emerald-400 shadow-lg shadow-[#3a9042]/30"
+                      : "bg-white/5 text-white/70 border-white/10 hover:border-[#4aa552]/40 hover:text-emerald-200"
                   }`}
                 >
                   <Icon size={13} /> {label}
@@ -320,8 +320,8 @@ function RunPage() {
                   onClick={() => switchRange(r)}
                   className={`rounded-full px-3 py-1 text-[11px] font-semibold border transition ${
                     active
-                      ? "bg-emerald-500/20 text-emerald-200 border-emerald-400/50"
-                      : "bg-white/5 text-white/60 border-white/10 hover:border-emerald-400/30"
+                      ? "bg-[#3a9042]/20 text-emerald-200 border-[#4aa552]/50"
+                      : "bg-white/5 text-white/60 border-white/10 hover:border-[#4aa552]/30"
                   }`}
                 >
                   {label}
@@ -339,8 +339,8 @@ function RunPage() {
               })}
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold border transition ${
                 smart
-                  ? "bg-emerald-500 text-black border-emerald-400 shadow-md shadow-emerald-500/30"
-                  : "bg-white/5 text-white/70 border-white/10 hover:border-emerald-400/40"
+                  ? "bg-emerald-500 text-black border-emerald-400 shadow-md shadow-[#3a9042]/30"
+                  : "bg-white/5 text-white/70 border-white/10 hover:border-[#4aa552]/40"
               }`}
               title="Show items you fail most, more often"
             >
@@ -372,7 +372,7 @@ function RunPage() {
 
 function EmptyState() {
   return (
-    <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-10 text-center">
+    <div className="rounded-2xl border border-[#3a9042]/20 bg-[#3a9042]/5 p-10 text-center">
       <Sparkles className="mx-auto text-emerald-400 mb-3" size={28} />
       <p className="text-white/70 text-sm">
         No words or sentences in this range yet. Try widening the time range, or add more items in the admin editor.
@@ -423,7 +423,7 @@ function QuizMode({
   if (finished) {
     const correct = questions.filter((q) => answers[q.id] === q.correct).length;
     return (
-      <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-slate-900 p-8 text-center">
+      <div className="rounded-2xl border border-[#3a9042]/30 bg-gradient-to-br from-[#3a9042]/10 to-slate-900 p-8 text-center">
         <Trophy size={40} className="mx-auto text-emerald-300 mb-3" />
         <div className="text-3xl font-black text-emerald-300">
           {correct} / {questions.length}
@@ -508,15 +508,15 @@ function QuizMode({
                 onClick={() => choose(c)}
                 className={`text-left rounded-xl border px-4 py-3 text-sm font-semibold transition ${
                   showCorrect
-                    ? "bg-emerald-500/20 border-emerald-400 text-emerald-100"
+                    ? "bg-[#3a9042]/20 border-emerald-400 text-emerald-100"
                     : showWrong
-                    ? "bg-rose-500/15 border-rose-400/60 text-rose-100"
+                    ? "bg-[#c4314f]/15 border-[#d9506d]/60 text-rose-100"
                     : isPicked
-                    ? "bg-emerald-500/10 border-emerald-400/40 text-white"
-                    : "bg-white/5 border-white/10 hover:border-emerald-400/40 text-white/85"
+                    ? "bg-[#3a9042]/10 border-[#4aa552]/40 text-white"
+                    : "bg-white/5 border-white/10 hover:border-[#4aa552]/40 text-white/85"
                 }`}
               >
-                <span className="inline-block w-6 text-emerald-300/70">{String.fromCharCode(65 + i)}.</span>
+                <span className="inline-block w-6 text-[#7bc280]/70">{String.fromCharCode(65 + i)}.</span>
                 {c}
                 {showCorrect && <CheckCircle2 size={14} className="inline ml-2 text-emerald-300" />}
                 {showWrong && <XCircle size={14} className="inline ml-2 text-rose-300" />}
@@ -526,7 +526,7 @@ function QuizMode({
         </div>
 
         {reveal && q.notes && (
-          <div className="mt-4 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-xs text-emerald-100/80">
+          <div className="mt-4 rounded-lg border border-[#3a9042]/20 bg-[#3a9042]/5 px-3 py-2 text-xs text-[#d2ecd4]/80">
             <span className="font-bold text-emerald-300">Note:</span> {q.notes}
           </div>
         )}
@@ -537,7 +537,7 @@ function QuizMode({
         <button
           disabled={current === 0}
           onClick={() => setCurrent((c) => Math.max(0, c - 1))}
-          className="rounded-full px-4 py-2 text-xs font-bold bg-white/5 text-white/70 border border-white/10 hover:border-emerald-400/40 disabled:opacity-30"
+          className="rounded-full px-4 py-2 text-xs font-bold bg-white/5 text-white/70 border border-white/10 hover:border-[#4aa552]/40 disabled:opacity-30"
         >
           Previous
         </button>
@@ -655,7 +655,7 @@ function GameMode({ entries, userId }: { entries: Entry[]; userId: string | null
 
   if (!tiles) {
     return (
-      <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-slate-900 p-8 text-center">
+      <div className="rounded-2xl border border-[#3a9042]/30 bg-gradient-to-br from-[#3a9042]/10 to-slate-900 p-8 text-center">
         <Trophy size={40} className="mx-auto text-emerald-300 mb-3" />
         <div className="text-3xl font-black text-emerald-300">{score} correct</div>
         <p className="text-white/60 text-sm mt-2">Game complete</p>
@@ -686,8 +686,8 @@ function GameMode({ entries, userId }: { entries: Entry[]; userId: string | null
         <span>Score: <span className="text-emerald-300 font-bold">{score}</span></span>
         <span>{pool.length} left</span>
       </div>
-      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.03] p-4 md:p-8">
-        <p className="text-center text-[11px] uppercase tracking-widest text-emerald-300/80 mb-4">
+      <div className="rounded-2xl border border-[#3a9042]/20 bg-[#3a9042]/[0.03] p-4 md:p-8">
+        <p className="text-center text-[11px] uppercase tracking-widest text-[#7bc280]/80 mb-4">
           Drag the German word toward the correct meaning · or tap a tile
         </p>
         <div className="grid grid-cols-3 grid-rows-3 gap-3 md:gap-5 max-w-xl mx-auto select-none touch-none">
@@ -701,10 +701,10 @@ function GameMode({ entries, userId }: { entries: Entry[]; userId: string | null
                 onClick={() => pickTile(i)}
                 className={`${positions[i]} rounded-2xl border px-3 py-5 text-sm md:text-base font-bold min-h-[80px] flex items-center justify-center text-center transition ${
                   wasPicked && correct
-                    ? "bg-emerald-500/30 border-emerald-400 text-emerald-50"
+                    ? "bg-[#3a9042]/30 border-emerald-400 text-emerald-50"
                     : wasPicked && !correct
-                    ? "bg-rose-500/25 border-rose-400 text-rose-50 animate-pulse"
-                    : "bg-white/5 border-white/10 hover:border-emerald-400/40 text-white"
+                    ? "bg-[#c4314f]/25 border-rose-400 text-rose-50 animate-pulse"
+                    : "bg-white/5 border-white/10 hover:border-[#4aa552]/40 text-white"
                 }`}
                 disabled={isCenterDup}
               >
@@ -722,10 +722,10 @@ function GameMode({ entries, userId }: { entries: Entry[]; userId: string | null
             style={drag ? { transform: `translate(${drag.x}px, ${drag.y}px)` } : undefined}
             className={`col-start-2 row-start-2 cursor-grab active:cursor-grabbing rounded-2xl border-2 px-3 py-6 min-h-[100px] flex items-center justify-center text-center text-lg md:text-2xl font-black shadow-2xl transition-colors ${
               flash === "ok"
-                ? "bg-emerald-400 text-black border-emerald-300 shadow-emerald-400/50"
+                ? "bg-emerald-400 text-black border-emerald-300 shadow-[#4aa552]/50"
                 : flash === "bad"
-                ? "bg-rose-500/30 border-rose-400 text-rose-50"
-                : "bg-gradient-to-br from-emerald-500/30 to-emerald-700/20 border-emerald-400/60 text-white shadow-emerald-500/30"
+                ? "bg-[#c4314f]/30 border-rose-400 text-rose-50"
+                : "bg-gradient-to-br from-[#3a9042]/30 to-[#256528]/20 border-[#4aa552]/60 text-white shadow-[#3a9042]/30"
             }`}
           >
             {tiles.center.prompt}
@@ -864,7 +864,7 @@ function VoiceMode({
   if (entries.length === 0) return <EmptyState />;
   if (supported === false) {
     return (
-      <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-8 text-center">
+      <div className="rounded-2xl border border-[#d68c0a]/30 bg-[#d68c0a]/5 p-8 text-center">
         <Mic size={32} className="mx-auto text-amber-300 mb-3" />
         <p className="text-white/80 font-bold mb-1">Voice mode needs Chrome or Edge</p>
         <p className="text-white/60 text-sm">
@@ -875,7 +875,7 @@ function VoiceMode({
   }
 
   return (
-    <div className="rounded-2xl border border-emerald-500/25 bg-gradient-to-b from-emerald-500/10 to-slate-900 p-6 md:p-10">
+    <div className="rounded-2xl border border-[#3a9042]/25 bg-gradient-to-b from-[#3a9042]/10 to-slate-900 p-6 md:p-10">
       <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-300 mb-2 text-center">
         Pronunciation · say it in German
       </div>
@@ -885,7 +885,7 @@ function VoiceMode({
       <div className="flex items-center justify-center gap-3 mb-6 mt-4">
         <button
           onClick={() => speak(entry.prompt)}
-          className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold bg-white/5 border border-white/10 hover:border-emerald-400/50 text-white"
+          className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold bg-white/5 border border-white/10 hover:border-[#4aa552]/50 text-white"
         >
           <Volume2 size={14} /> Listen
         </button>
@@ -893,14 +893,14 @@ function VoiceMode({
           onClick={listening ? stop : start}
           className={`relative inline-flex items-center justify-center h-20 w-20 rounded-full font-bold text-black transition shadow-2xl ${
             listening
-              ? "bg-rose-400 shadow-rose-500/40"
-              : "bg-emerald-400 hover:bg-emerald-300 shadow-emerald-500/40"
+              ? "bg-rose-400 shadow-[#c4314f]/40"
+              : "bg-emerald-400 hover:bg-emerald-300 shadow-[#3a9042]/40"
           }`}
         >
           {listening && (
             <>
-              <span className="absolute inset-0 rounded-full bg-rose-400/60 animate-ping" />
-              <span className="absolute inset-[-8px] rounded-full border-2 border-rose-300/50 animate-pulse" />
+              <span className="absolute inset-0 rounded-full bg-[#d9506d]/60 animate-ping" />
+              <span className="absolute inset-[-8px] rounded-full border-2 border-[#ec8498]/50 animate-pulse" />
             </>
           )}
           <Mic size={32} className="relative z-10" />
@@ -908,7 +908,7 @@ function VoiceMode({
         <button
           onClick={next}
           disabled={entries.length < 2}
-          className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold bg-white/5 border border-white/10 hover:border-emerald-400/50 text-white disabled:opacity-30"
+          className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold bg-white/5 border border-white/10 hover:border-[#4aa552]/50 text-white disabled:opacity-30"
         >
           Next <ArrowRight size={14} />
         </button>
@@ -936,10 +936,10 @@ function VoiceMode({
                 key={i}
                 className={`px-2 py-1 rounded-md text-sm font-bold ${
                   m.status === "ok"
-                    ? "bg-emerald-500/25 text-emerald-100 border border-emerald-400/40"
+                    ? "bg-[#3a9042]/25 text-emerald-100 border border-[#4aa552]/40"
                     : m.status === "close"
-                    ? "bg-amber-500/20 text-amber-100 border border-amber-400/40"
-                    : "bg-rose-500/20 text-rose-100 border border-rose-400/40"
+                    ? "bg-[#d68c0a]/20 text-amber-100 border border-[#e9a21f]/40"
+                    : "bg-[#c4314f]/20 text-rose-100 border border-[#d9506d]/40"
                 }`}
               >
                 {m.word}

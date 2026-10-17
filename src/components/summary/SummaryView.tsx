@@ -11,13 +11,13 @@ type Props = {
 };
 
 /** Rita sheet palette — cream paper, near-black ink, green + pastel accents. */
-const PAPER = "#fffdf8";
-const CREAM = "#fbf5e9";
-const INK = "#23201d";
-const BODY = "#4a453d";
-const MUTED = "#6d675e";
-const LINE = "#e9e1d2";
-const GREEN = "#58a700";
+const PAPER = "#ffffff";
+const CREAM = "#f4f4f8";
+const INK = "#121117";
+const BODY = "#2a2933";
+const MUTED = "#54546a";
+const LINE = "#ffd266";
+const GREEN = "#1d5fd0";
 
 /**
  * Multi-page A4-style summary in the Rita look: cream paper, dark ink and
@@ -100,12 +100,12 @@ function CoverPage({
       <div
         aria-hidden
         className="absolute -right-24 -top-24 h-[320px] w-[320px] rounded-full"
-        style={{ background: "#e4dcf3", opacity: 0.55 }}
+        style={{ background: "#f4f4f8", opacity: 0.55 }}
       />
       <div
         aria-hidden
         className="absolute -bottom-28 -left-24 h-[340px] w-[340px] rounded-full"
-        style={{ background: "#d8ecdd", opacity: 0.55 }}
+        style={{ background: "#d2ecd4", opacity: 0.55 }}
       />
 
       <div className="relative flex h-full flex-col p-10 md:p-14">
@@ -191,7 +191,7 @@ function TOCPage({ siteName, pages }: { siteName: string; pages: { heading: stri
             </span>
             <span
               className="-translate-y-[4px] flex-1 border-b border-dotted"
-              style={{ borderColor: "#d8cfbc" }}
+              style={{ borderColor: "#ffd266" }}
             />
             <span className="text-sm font-bold" style={{ color: MUTED }}>
               {e.page}
@@ -303,7 +303,7 @@ function RecapPage({
               >
                 <span
                   className="grid h-9 w-9 shrink-0 place-items-center rounded-xl font-extrabold"
-                  style={{ background: "#d8ecdd", color: "#215237" }}
+                  style={{ background: "#d2ecd4", color: "#1d4f20" }}
                 >
                   {i + 1}
                 </span>

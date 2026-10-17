@@ -244,15 +244,15 @@ function RitaVoiceAdmin() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f7f5f8] px-4 py-8 text-[#211f24] sm:px-8">
+    <main className="min-h-screen bg-[#ffffff] px-4 py-8 text-[#121117] sm:px-8">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <Link to="/admin/ai-keys" className="text-sm font-bold text-[#76539f]">
+            <Link to="/admin/ai-keys" className="text-sm font-bold text-[#2b6df0]">
               ← General AI settings
             </Link>
             <h1 className="mt-2 text-3xl font-black">Rita Realtime Voice v3</h1>
-            <p className="mt-1 text-[#6f6972]">
+            <p className="mt-1 text-[#54546a]">
               One clean control room for the new voice system only.
             </p>
           </div>
@@ -290,18 +290,18 @@ function RitaVoiceAdmin() {
             ["p99 remote audio", metrics.latencyP99 === null ? "—" : `${metrics.latencyP99}ms`],
           ].map(([label, value]) => (
             <div key={String(label)} className="rounded-2xl bg-white p-4 shadow-sm">
-              <p className="text-xs font-bold text-[#817a84]">{label}</p>
+              <p className="text-xs font-bold text-[#6a697c]">{label}</p>
               <p className="mt-1 text-xl font-black">{value}</p>
             </div>
           ))}
         </section>
 
-        <p className="mt-2 text-xs text-[#6f6972]">
+        <p className="mt-2 text-xs text-[#54546a]">
           Remote-audio timing is a transport-level proxy, not proof that a speaker played the first
           sample. Percentiles are provisional below 200 samples (p95) or 1,000 samples (p99).
         </p>
 
-        <section className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-white px-5 py-4 text-sm font-semibold text-[#5d5661]">
+        <section className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-white px-5 py-4 text-sm font-semibold text-[#4b4a5c]">
           <p>
             Pipecat secret set: <strong>{data?.workerSecretStatus ?? "not checked"}</strong>
             {data?.workerRegion ? ` · ${data.workerRegion}` : ""}. Updating a worker secret requires
@@ -311,7 +311,7 @@ function RitaVoiceAdmin() {
             type="button"
             onClick={() => void retrySync()}
             disabled={busy === "sync" || !data?.configured?.pipecat_private}
-            className="rounded-xl bg-[#21172c] px-4 py-2.5 font-bold text-white disabled:opacity-40"
+            className="rounded-xl bg-[#153a82] px-4 py-2.5 font-bold text-white disabled:opacity-40"
           >
             {busy === "sync" ? "Syncing…" : "Retry Pipecat sync"}
           </button>
@@ -349,8 +349,8 @@ function RitaVoiceAdmin() {
                         <XCircle className="text-amber-500" size={18} />
                       )}
                     </div>
-                    <p className="mt-1 text-sm text-[#77717a]">{provider.purpose}</p>
-                    <p className="mt-1 text-xs font-bold text-[#8a748f]">
+                    <p className="mt-1 text-sm text-[#54546a]">{provider.purpose}</p>
+                    <p className="mt-1 text-xs font-bold text-[#6a697c]">
                       {workerConfigured
                         ? "Available to the running worker configuration"
                         : configured
@@ -366,7 +366,7 @@ function RitaVoiceAdmin() {
                     href={provider.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[#76539f]"
+                    className="text-[#2b6df0]"
                   >
                     <ExternalLink size={18} />
                   </a>
@@ -383,7 +383,7 @@ function RitaVoiceAdmin() {
                     }
                     autoComplete="off"
                     spellCheck={false}
-                    className="w-full rounded-xl border border-[#ddd7df] px-4 py-3 pr-12 outline-none focus:border-[#8c5ee7]"
+                    className="w-full rounded-xl border border-[#dcdce5] px-4 py-3 pr-12 outline-none focus:border-[#7ba5f5]"
                   />
                   <button
                     type="button"
@@ -394,7 +394,7 @@ function RitaVoiceAdmin() {
                         [provider.id]: !current[provider.id],
                       }))
                     }
-                    className="absolute right-3 top-3.5 text-[#77717a]"
+                    className="absolute right-3 top-3.5 text-[#54546a]"
                   >
                     {visible[provider.id] ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -404,7 +404,7 @@ function RitaVoiceAdmin() {
                     type="button"
                     onClick={() => void save(provider.id)}
                     disabled={!drafts[provider.id].trim() || busy === provider.id}
-                    className="flex-1 rounded-xl bg-[#21172c] px-4 py-2.5 font-bold text-white disabled:opacity-40"
+                    className="flex-1 rounded-xl bg-[#153a82] px-4 py-2.5 font-bold text-white disabled:opacity-40"
                   >
                     {busy === provider.id ? "Saving…" : configured ? "Replace" : "Save"}
                   </button>
@@ -432,7 +432,7 @@ function RitaVoiceAdmin() {
           })}
         </section>
 
-        <section className="mt-6 rounded-3xl bg-[#241932] p-6 text-white">
+        <section className="mt-6 rounded-3xl bg-[#153a82] p-6 text-white">
           <h2 className="text-xl font-black">Worker readiness</h2>
           <p className="mt-2 text-sm text-white/65">
             Keys saved above supply the website control plane. Soniox, Groq, and Google are also
@@ -454,7 +454,7 @@ function RitaVoiceAdmin() {
                 setBusy(null);
               }
             }}
-            className="mt-4 rounded-xl bg-white px-4 py-3 font-bold text-[#241932]"
+            className="mt-4 rounded-xl bg-white px-4 py-3 font-bold text-[#153a82]"
           >
             {busy === "test" ? "Checking…" : "Run full readiness check"}
           </button>
@@ -463,7 +463,7 @@ function RitaVoiceAdmin() {
               {(readiness.checks ?? []).map((check) => (
                 <div
                   key={check.id}
-                  className={`rounded-xl border px-4 py-3 ${check.ok ? "border-emerald-400/30 bg-emerald-400/10" : "border-red-400/40 bg-red-400/10"}`}
+                  className={`rounded-xl border px-4 py-3 ${check.ok ? "border-[#4aa552]/30 bg-[#4aa552]/10" : "border-[#d9506d]/40 bg-[#d9506d]/10"}`}
                 >
                   <div className="flex items-center gap-2 font-black">
                     {check.ok ? (
@@ -508,7 +508,7 @@ function RitaVoiceAdmin() {
             </button>
             {probe && (
               <p
-                className={`mt-3 rounded-xl px-4 py-3 text-sm font-bold ${probe.ok ? "bg-emerald-400/15 text-emerald-100" : "bg-red-400/15 text-red-100"}`}
+                className={`mt-3 rounded-xl px-4 py-3 text-sm font-bold ${probe.ok ? "bg-[#4aa552]/15 text-emerald-100" : "bg-[#d9506d]/15 text-red-100"}`}
               >
                 {probe.message}
                 {probe.startupMs !== undefined ? ` Startup: ${probe.startupMs}ms.` : ""}

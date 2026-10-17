@@ -103,10 +103,10 @@ export function RecallRound({
       />
 
       <div className="mt-5 rounded-[24px] border-2 border-[#121117] bg-white px-6 py-8 text-center">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b3aa9c]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#9a9aab]">
           What belongs to
         </p>
-        <p className="mt-3 font-display text-[27px] font-black leading-tight tracking-tight text-[#23201d]">
+        <p className="mt-3 font-display text-[27px] font-black leading-tight tracking-tight text-[#121117]">
           {current.left}
         </p>
 
@@ -127,7 +127,7 @@ export function RecallRound({
               borderColor:
                 verdict === "right" ? "#2e7d32" : verdict === "wrong" ? "#b3213f" : "#121117",
               background:
-                verdict === "right" ? "#d8ecdd" : verdict === "wrong" ? "#fbe4e4" : "#fff",
+                verdict === "right" ? "#d2ecd4" : verdict === "wrong" ? "#f4f4f8" : "#fff",
             }}
           />
           <button
@@ -142,11 +142,11 @@ export function RecallRound({
 
         {verdict === "wrong" && (
           <div className="mt-4">
-            <p className="text-[13px] font-bold text-[#d1795e]">
-              The answer is <span className="text-[#23201d]">{current.right}</span>
+            <p className="text-[13px] font-bold text-[#d9506d]">
+              The answer is <span className="text-[#121117]">{current.right}</span>
             </p>
             {current.hint && (
-              <p className="mt-1 text-[12.5px] font-semibold text-[#a29a8d]">{current.hint}</p>
+              <p className="mt-1 text-[12.5px] font-semibold text-[#9a9aab]">{current.hint}</p>
             )}
             <button
               type="button"

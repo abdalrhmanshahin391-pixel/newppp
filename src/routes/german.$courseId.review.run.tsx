@@ -77,7 +77,7 @@ function SmartReviewRun() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F5F7FB]">
+      <div className="min-h-screen bg-[#ffffff]">
         <SiteHeader variant="light" />
         <div className="pt-32 text-center text-slate-500">Loading…</div>
       </div>
@@ -86,7 +86,7 @@ function SmartReviewRun() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-[#F5F7FB]">
+      <div className="min-h-screen bg-[#ffffff]">
         <SiteHeader variant="light" />
         <div className="pt-32 text-center">
           <p className="text-slate-600">Nothing to review yet.</p>
@@ -98,7 +98,7 @@ function SmartReviewRun() {
 
   if (phase === "intro") {
     return (
-      <div className="min-h-screen bg-[#F5F7FB]">
+      <div className="min-h-screen bg-[#ffffff]">
         <SiteHeader variant="light" />
         <main className="mx-auto max-w-2xl px-5 pt-20 pb-40 text-center">
           <div className="w-28 h-28 mx-auto rounded-full bg-white shadow grid place-items-center text-5xl">🐧</div>
@@ -120,10 +120,10 @@ function SmartReviewRun() {
             ))}
           </div>
         </main>
-        <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[#F5F7FB] to-transparent">
+        <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[#ffffff] to-transparent">
           <button
             onClick={() => setPhase("play")}
-            className="block w-full max-w-2xl mx-auto h-14 rounded-full bg-blue-500 text-white text-lg font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-600"
+            className="block w-full max-w-2xl mx-auto h-14 rounded-full bg-blue-500 text-white text-lg font-bold shadow-lg shadow-[#4a82f3]/30 hover:bg-blue-600"
           >
             Start
           </button>
@@ -140,7 +140,7 @@ function SmartReviewRun() {
   const avg = results.reduce((a, r) => a + r.score.score, 0) / Math.max(1, results.length);
   const great = results.filter((r) => r.score.band === "great").length;
   return (
-    <div className="min-h-screen bg-[#F5F7FB]">
+    <div className="min-h-screen bg-[#ffffff]">
       <SiteHeader variant="light" />
       <main className="mx-auto max-w-xl px-5 pt-20 pb-24">
         <button

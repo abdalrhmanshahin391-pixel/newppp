@@ -29,8 +29,8 @@ export function ResultCard({
 
   return (
     <div className="mx-auto w-full max-w-lg rounded-[24px] border-2 border-[#121117] bg-white p-7 text-center">
-      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b3aa9c]">Round done</p>
-      <h2 className="mt-2 font-display text-[30px] font-black tracking-tight text-[#23201d]">
+      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#9a9aab]">Round done</p>
+      <h2 className="mt-2 font-display text-[30px] font-black tracking-tight text-[#121117]">
         {acc === 100 ? "Perfect run" : acc >= 80 ? "Strong round" : "Good work"}
       </h2>
 
@@ -38,8 +38,8 @@ export function ResultCard({
         {cells.map((c) => (
           <div key={c.label} className="rounded-xl bg-[#f4f4f8] px-3 py-4">
             <span className="mx-auto grid h-9 w-9 place-items-center text-[#121117]">{c.icon}</span>
-            <p className="mt-2 text-[19px] font-black leading-none text-[#23201d]">{c.value}</p>
-            <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#b3aa9c]">
+            <p className="mt-2 text-[19px] font-black leading-none text-[#121117]">{c.value}</p>
+            <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#9a9aab]">
               {c.label}
             </p>
           </div>
@@ -59,7 +59,7 @@ export function ResultCard({
         <button
           type="button"
           onClick={onAgain}
-          className="flex h-12 items-center justify-center gap-2 rounded-lg border-2 border-[#121117] bg-white text-[15px] font-semibold text-[#23201d] hover:bg-black/[0.03]"
+          className="flex h-12 items-center justify-center gap-2 rounded-lg border-2 border-[#121117] bg-white text-[15px] font-semibold text-[#121117] hover:bg-black/[0.03]"
         >
           <RotateCcw size={16} /> Play again
         </button>

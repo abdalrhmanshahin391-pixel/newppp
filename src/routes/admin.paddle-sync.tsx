@@ -162,28 +162,28 @@ function AdminPaddleSyncPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-[#23201d]">
+    <div className="min-h-screen bg-[#ffffff] text-[#121117]">
       <SiteHeader />
       <main className="mx-auto max-w-5xl px-4 py-8 md:py-12">
         {/* Navigation Breadcrumb */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-sm font-bold text-[#8a8378]">
-            <Link to="/admin" className="hover:text-[#23201d]">
+          <div className="flex items-center gap-2 text-sm font-bold text-[#6a697c]">
+            <Link to="/admin" className="hover:text-[#121117]">
               Admin
             </Link>
             <span>/</span>
-            <Link to="/admin/plans" className="hover:text-[#23201d]">
+            <Link to="/admin/plans" className="hover:text-[#121117]">
               Rita Prices
             </Link>
             <span>/</span>
-            <span className="text-[#23201d]">Paddle Sync Center</span>
+            <span className="text-[#121117]">Paddle Sync Center</span>
           </div>
 
           <a
             href="https://vendors.paddle.com/prices"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-1.5 text-xs font-black text-[#5c554b] shadow-sm hover:bg-black/5"
+            className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3.5 py-1.5 text-xs font-black text-[#4b4a5c] shadow-sm hover:bg-black/5"
           >
             <ExternalLink size={13} />
             Open Paddle Vendor Dashboard
@@ -200,7 +200,7 @@ function AdminPaddleSyncPage() {
             <h1 className="mt-2 text-3xl font-black md:text-4xl">
               Paddle Catalog Sync Center
             </h1>
-            <p className="mt-1 text-sm font-semibold text-[#8a8378]">
+            <p className="mt-1 text-sm font-semibold text-[#6a697c]">
               One-click synchronization of your website prices, 3-Month recurring intervals, and product details with Paddle.
             </p>
           </div>
@@ -210,13 +210,13 @@ function AdminPaddleSyncPage() {
         <div className="mt-8 overflow-hidden rounded-[28px] border-2 border-black/10 bg-white p-6 shadow-sm md:p-8">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="max-w-xl">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#fef7ee] px-3 py-1 text-xs font-black text-[#c05621]">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-[#f4f4f8] px-3 py-1 text-xs font-black text-[#b26b00]">
                 <Sparkles size={13} /> Automated 3-Month Migration
               </div>
               <h2 className="mt-2 text-2xl font-black">
                 Sync All Plans to Live Paddle
               </h2>
-              <p className="mt-1 text-sm font-medium text-[#7a736a]">
+              <p className="mt-1 text-sm font-medium text-[#54546a]">
                 Scans <strong>Toolkit</strong>, <strong>Boost</strong>, <strong>Pro</strong>, and <strong>Ultimate</strong>.
                 If any plan in Paddle is still set to the old 1-month cycle, it automatically creates the official <strong>3-Month recurring subscription</strong> ($10.00 for Toolkit, etc.), sets the yearly price, archives the legacy 1-month price in Paddle, and updates the database.
               </p>
@@ -227,7 +227,7 @@ function AdminPaddleSyncPage() {
                 type="button"
                 disabled={busy}
                 onClick={handleSyncAll}
-                className="group relative inline-flex w-full items-center justify-center gap-3 rounded-full bg-[#8ec63f] px-8 py-4 text-base font-black text-white shadow-lg transition-all hover:bg-[#7db632] hover:shadow-xl active:scale-[0.98] disabled:opacity-60 md:w-auto"
+                className="group relative inline-flex w-full items-center justify-center gap-3 rounded-full bg-[#4a82f3] px-8 py-4 text-base font-black text-white shadow-lg transition-all hover:bg-[#2b6df0] hover:shadow-xl active:scale-[0.98] disabled:opacity-60 md:w-auto"
               >
                 <Zap
                   size={20}
@@ -242,13 +242,13 @@ function AdminPaddleSyncPage() {
         {/* INDIVIDUAL PLAN CARDS GRID */}
         <section className="mt-10">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black uppercase tracking-widest text-[#a29a8d]">
+            <h3 className="text-sm font-black uppercase tracking-widest text-[#9a9aab]">
               Active Paid Plans ({paidPlans.length})
             </h3>
             <button
               type="button"
               onClick={() => void qc.invalidateQueries({ queryKey: ["admin-paddle-inspect"] })}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#5c554b] hover:text-black"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#4b4a5c] hover:text-black"
             >
               <RefreshCw size={12} className={busy ? "animate-spin" : ""} /> Refresh Status
             </button>
@@ -271,8 +271,8 @@ function AdminPaddleSyncPage() {
         <section className="mt-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Terminal size={16} className="text-[#5c554b]" />
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#a29a8d]">
+              <Terminal size={16} className="text-[#4b4a5c]" />
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#9a9aab]">
                 Live Paddle API Activity Console
               </h3>
             </div>
@@ -287,13 +287,13 @@ function AdminPaddleSyncPage() {
                   },
                 ])
               }
-              className="text-xs font-bold text-[#8a8378] hover:text-[#23201d]"
+              className="text-xs font-bold text-[#6a697c] hover:text-[#121117]"
             >
               Clear Log
             </button>
           </div>
 
-          <div className="mt-3 overflow-hidden rounded-2xl border border-black/10 bg-[#1e1b18] p-4 text-xs font-mono text-white shadow-inner">
+          <div className="mt-3 overflow-hidden rounded-2xl border border-black/10 bg-[#0b0b0f] p-4 text-xs font-mono text-white shadow-inner">
             <div className="flex items-center justify-between border-b border-white/10 pb-2 text-[11px] text-white/50">
               <span>Timestamp & Event</span>
               <span>Paddle Gateway Status</span>
@@ -305,12 +305,12 @@ function AdminPaddleSyncPage() {
                   <span
                     className={
                       log.type === "success"
-                        ? "text-[#a3e635] font-bold"
+                        ? "text-[#4a82f3] font-bold"
                         : log.type === "error"
-                          ? "text-[#f87171] font-bold"
+                          ? "text-[#ec8498] font-bold"
                           : log.type === "warn"
-                            ? "text-[#fbbf24]"
-                            : "text-[#e2e8f0]"
+                            ? "text-[#d68c0a]"
+                            : "text-[#f4f4f8]"
                     }
                   >
                     {log.text}
@@ -325,7 +325,7 @@ function AdminPaddleSyncPage() {
         <div className="mt-10 text-center">
           <Link
             to="/admin/plans"
-            className="inline-flex items-center gap-2 text-sm font-bold text-[#5c554b] hover:text-[#23201d] hover:underline"
+            className="inline-flex items-center gap-2 text-sm font-bold text-[#4b4a5c] hover:text-[#121117] hover:underline"
           >
             ← Return to full Plan Limits & Features editor
           </Link>
@@ -366,10 +366,10 @@ function PlanSyncCard({
         <div className="flex items-start justify-between gap-2">
           <div>
             <h4 className="text-lg font-black">{plan.name}</h4>
-            <p className="text-xs font-semibold text-[#8a8378]">{plan.tagline || plan.slug}</p>
+            <p className="text-xs font-semibold text-[#6a697c]">{plan.tagline || plan.slug}</p>
           </div>
           {isLoading ? (
-            <span className="rounded-full bg-[#f1eee8] px-2.5 py-0.5 text-[11px] font-bold text-[#8a8378]">
+            <span className="rounded-full bg-[#f4f4f8] px-2.5 py-0.5 text-[11px] font-bold text-[#6a697c]">
               Checking...
             </span>
           ) : isInSync ? (
@@ -377,11 +377,11 @@ function PlanSyncCard({
               <Check size={12} /> In Sync
             </span>
           ) : isDesynced ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#fef2f2] px-2.5 py-0.5 text-[11px] font-black text-[#dc2626]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#ffffff] px-2.5 py-0.5 text-[11px] font-black text-[#c4314f]">
               <AlertTriangle size={12} /> Desynced
             </span>
           ) : (
-            <span className="rounded-full bg-[#f1eee8] px-2.5 py-0.5 text-[11px] font-bold text-[#8a8378]">
+            <span className="rounded-full bg-[#f4f4f8] px-2.5 py-0.5 text-[11px] font-bold text-[#6a697c]">
               Not Configured
             </span>
           )}
@@ -390,14 +390,14 @@ function PlanSyncCard({
         {/* Pricing Comparison */}
         <div className="mt-4 space-y-2 text-xs">
           {isLifetime ? (
-            <div className="rounded-xl bg-[#fbfaf8] p-3">
+            <div className="rounded-xl bg-[#ffffff] p-3">
               <div className="flex justify-between font-bold">
-                <span className="text-[#8a8378]">Website Price:</span>
-                <span className="font-black text-[#23201d]">{money(plan.once_cents ?? 0, plan.currency)} once</span>
+                <span className="text-[#6a697c]">Website Price:</span>
+                <span className="font-black text-[#121117]">{money(plan.once_cents ?? 0, plan.currency)} once</span>
               </div>
               <div className="mt-1 flex justify-between font-bold">
-                <span className="text-[#8a8378]">Paddle Live:</span>
-                <span className={onceTarget?.status === "in_sync" ? "text-[#2e7d32]" : "text-[#dc2626]"}>
+                <span className="text-[#6a697c]">Paddle Live:</span>
+                <span className={onceTarget?.status === "in_sync" ? "text-[#2e7d32]" : "text-[#c4314f]"}>
                   {onceTarget?.paddleCents !== undefined
                     ? `${money(onceTarget.paddleCents, onceTarget.paddleCurrency || plan.currency)} once`
                     : "Not in catalog"}
@@ -407,14 +407,14 @@ function PlanSyncCard({
           ) : (
             <>
               {/* 3-Month Subscription */}
-              <div className="rounded-xl bg-[#fbfaf8] p-3">
+              <div className="rounded-xl bg-[#ffffff] p-3">
                 <div className="flex justify-between font-bold">
-                  <span className="text-[#8a8378]">3-Month Website Price:</span>
-                  <span className="font-black text-[#23201d]">{money(plan.price_cents, plan.currency)} / 3 mo</span>
+                  <span className="text-[#6a697c]">3-Month Website Price:</span>
+                  <span className="font-black text-[#121117]">{money(plan.price_cents, plan.currency)} / 3 mo</span>
                 </div>
                 <div className="mt-1 flex justify-between font-bold">
-                  <span className="text-[#8a8378]">Paddle Live:</span>
-                  <span className={monthlyTarget?.status === "in_sync" ? "text-[#2e7d32]" : "text-[#dc2626]"}>
+                  <span className="text-[#6a697c]">Paddle Live:</span>
+                  <span className={monthlyTarget?.status === "in_sync" ? "text-[#2e7d32]" : "text-[#c4314f]"}>
                     {monthlyTarget?.paddleCents !== undefined
                       ? `${money(monthlyTarget.paddleCents, monthlyTarget.paddleCurrency || plan.currency)} (${
                           monthlyTarget.billingCycle?.frequency === 3
@@ -429,14 +429,14 @@ function PlanSyncCard({
               </div>
 
               {/* Yearly Subscription */}
-              <div className="rounded-xl bg-[#fbfaf8] p-3">
+              <div className="rounded-xl bg-[#ffffff] p-3">
                 <div className="flex justify-between font-bold">
-                  <span className="text-[#8a8378]">Yearly Website Price:</span>
-                  <span className="font-black text-[#23201d]">{money(plan.yearly_cents, plan.currency)} / yr</span>
+                  <span className="text-[#6a697c]">Yearly Website Price:</span>
+                  <span className="font-black text-[#121117]">{money(plan.yearly_cents, plan.currency)} / yr</span>
                 </div>
                 <div className="mt-1 flex justify-between font-bold">
-                  <span className="text-[#8a8378]">Paddle Live:</span>
-                  <span className={yearlyTarget?.status === "in_sync" ? "text-[#2e7d32]" : "text-[#dc2626]"}>
+                  <span className="text-[#6a697c]">Paddle Live:</span>
+                  <span className={yearlyTarget?.status === "in_sync" ? "text-[#2e7d32]" : "text-[#c4314f]"}>
                     {yearlyTarget?.paddleCents !== undefined
                       ? `${money(yearlyTarget.paddleCents, yearlyTarget.paddleCurrency || plan.currency)} / yr`
                       : "Not in catalog"}
@@ -453,9 +453,9 @@ function PlanSyncCard({
           type="button"
           disabled={busy}
           onClick={onSyncPlan}
-          className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-black/15 bg-white px-4 py-2 text-xs font-black text-[#23201d] shadow-sm hover:bg-black/5 disabled:opacity-50"
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-black/15 bg-white px-4 py-2 text-xs font-black text-[#121117] shadow-sm hover:bg-black/5 disabled:opacity-50"
         >
-          <Sparkles size={13} className="text-[#8ec63f]" />
+          <Sparkles size={13} className="text-[#4a82f3]" />
           Sync {plan.name} to Paddle
         </button>
       </div>

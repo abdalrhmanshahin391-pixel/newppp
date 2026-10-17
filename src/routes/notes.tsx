@@ -104,7 +104,7 @@ function NotesPage() {
   if (loading || !user) return <div className="min-h-screen bg-black" />;
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9] text-slate-900">
+    <div className="min-h-screen bg-[#ffffff] text-slate-900">
       <SiteHeader variant="light" />
 
       {/* Top hero — matches home page language */}
@@ -252,8 +252,8 @@ function NoteCard({
           style={{ background: "#ffffff" }}
         >
           <div
-            className="text-sm leading-relaxed max-w-none [&_*]:!text-[#0a0a0a] [&_strong]:!font-bold [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-zinc-200 [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-zinc-300 [&_th]:px-3 [&_th]:py-2 [&_th]:bg-zinc-900 [&_th]:!text-white"
-            style={{ color: "#0a0a0a", background: "#ffffff" }}
+            className="text-sm leading-relaxed max-w-none [&_*]:!text-[#0b0b0f] [&_strong]:!font-bold [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-zinc-200 [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-zinc-300 [&_th]:px-3 [&_th]:py-2 [&_th]:bg-zinc-900 [&_th]:!text-white"
+            style={{ color: "#0b0b0f", background: "#ffffff" }}
             dangerouslySetInnerHTML={{ __html: html }}
           />
           {note.user_note && (

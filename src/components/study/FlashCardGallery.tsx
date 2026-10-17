@@ -7,7 +7,7 @@ import { FlipCard } from "@/components/study/FlipCard";
 function TileFace({ side, text, image }: { side: string; text: string; image?: string }) {
   return (
     <div className="flex h-full w-full flex-col overflow-hidden rounded-2xl text-left">
-      <span className="mb-2 block text-[10.5px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">
+      <span className="mb-2 block text-[10.5px] font-bold uppercase tracking-[0.18em] text-[#9a9aab]">
         {side}
       </span>
       <span className={`block ${scaleText(text)}`}>{text}</span>
@@ -41,24 +41,24 @@ export function FlashCardGallery({
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9a9aab]">
             {cards.length} card{cards.length === 1 ? "" : "s"}
           </p>
           <h2 className="truncate text-[20px] font-black">{topicLabel}</h2>
         </div>
         <label className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2">
-          <Search size={15} className="text-[#b3aa9c]" />
+          <Search size={15} className="text-[#9a9aab]" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search cards"
-            className="w-44 bg-transparent text-[13px] font-semibold outline-none placeholder:text-[#c3bbad]"
+            className="w-44 bg-transparent text-[13px] font-semibold outline-none placeholder:text-[#c4c4d1]"
           />
         </label>
       </div>
 
       {list.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-black/10 bg-[#fbf5e9] p-10 text-center text-[14px] font-semibold text-[#a29a8d]">
+        <div className="rounded-3xl border border-dashed border-black/10 bg-[#f4f4f8] p-10 text-center text-[14px] font-semibold text-[#9a9aab]">
           {cards.length === 0 ? "No cards here yet — add your first one." : "No cards match that search."}
         </div>
       ) : (
@@ -101,7 +101,7 @@ export function FlashCardGallery({
                           onDelete(card.id);
                           setConfirming(null);
                         }}
-                        className="rounded-full bg-[#f6ddd5] px-3 py-1.5 text-[12px] font-extrabold text-[#7d3421]"
+                        className="rounded-full bg-[#fbd9e0] px-3 py-1.5 text-[12px] font-extrabold text-[#961a34]"
                       >
                         Delete
                       </button>
@@ -144,7 +144,7 @@ function IconBtn({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="grid h-9 w-9 place-items-center rounded-full border border-black/10 bg-white text-[#7a6f5e]"
+      className="grid h-9 w-9 place-items-center rounded-full border border-black/10 bg-white text-[#54546a]"
     >
       {children}
     </button>

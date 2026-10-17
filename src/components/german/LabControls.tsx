@@ -27,9 +27,9 @@ export function Segmented<T extends string>({
 }) {
   return (
     <div>
-      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">{label}</p>
+      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9a9aab]">{label}</p>
       <div
-        className={`mt-2 grid gap-1 rounded-2xl bg-[#f6f1e8] p-1 ${
+        className={`mt-2 grid gap-1 rounded-2xl bg-[#f4f4f8] p-1 ${
           columns === 3 ? "grid-cols-3" : columns === 2 ? "grid-cols-2" : "grid-cols-1"
         }`}
       >
@@ -42,7 +42,7 @@ export function Segmented<T extends string>({
               onClick={() => onChange(o.key)}
               aria-pressed={on}
               className={`flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-[13px] font-extrabold transition-[background,color,box-shadow] duration-150 ${
-                on ? "bg-white shadow-[0_6px_16px_-10px_rgba(0,0,0,0.5)]" : "text-[#8a8175] hover:text-[#5a4a2e]"
+                on ? "bg-white shadow-[0_6px_16px_-10px_rgba(0,0,0,0.5)]" : "text-[#6a697c] hover:text-[#6b4000]"
               }`}
               style={on ? { color: accent } : undefined}
             >
@@ -62,7 +62,7 @@ export function ToggleChip({
   icon,
   children,
   onClick,
-  tone = "#d94a4a",
+  tone = "#c4314f",
 }: {
   on: boolean;
   icon?: ReactNode;
@@ -79,7 +79,7 @@ export function ToggleChip({
       style={{
         borderColor: on ? tone : "rgba(0,0,0,0.07)",
         background: on ? tone : "#fff",
-        color: on ? "#fff" : "#8a8175",
+        color: on ? "#fff" : "#6a697c",
       }}
     >
       {icon}

@@ -180,32 +180,32 @@ function NewSummary() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
       <UpgradeWall block={gate.block} onClose={gate.closeBlock} />
 
       <div className="mx-auto max-w-3xl px-5 py-12 md:py-16">
         <Link
           to="/study/pdf"
-          className="inline-flex items-center gap-1.5 text-sm font-bold text-[#4a453d] hover:text-[#23201d]"
+          className="inline-flex items-center gap-1.5 text-sm font-bold text-[#2a2933] hover:text-[#121117]"
         >
           <ArrowLeft size={14} /> Back to summaries
         </Link>
 
         <div className="mt-6 flex items-center gap-3">
           <span
-            className={`grid h-9 w-9 place-items-center rounded-full text-sm font-extrabold ${step === 1 ? "rita-pill" : "bg-white text-[#6d675e]"}`}
+            className={`grid h-9 w-9 place-items-center rounded-full text-sm font-extrabold ${step === 1 ? "rita-pill" : "bg-white text-[#54546a]"}`}
           >
             1
           </span>
-          <span className="text-sm font-bold text-[#4a453d]">Source</span>
+          <span className="text-sm font-bold text-[#2a2933]">Source</span>
           <span className="h-px flex-1 bg-black/[0.1]" />
           <span
-            className={`grid h-9 w-9 place-items-center rounded-full text-sm font-extrabold ${step === 2 ? "rita-pill" : "bg-white text-[#6d675e]"}`}
+            className={`grid h-9 w-9 place-items-center rounded-full text-sm font-extrabold ${step === 2 ? "rita-pill" : "bg-white text-[#54546a]"}`}
           >
             2
           </span>
-          <span className="text-sm font-bold text-[#4a453d]">Style</span>
+          <span className="text-sm font-bold text-[#2a2933]">Style</span>
         </div>
 
         {step === 1 && (
@@ -234,13 +234,13 @@ function NewSummary() {
             <div className="rounded-3xl border border-black/[0.07] bg-white p-6 md:p-7">
               {source === "photos" && (
                 <div>
-                  <label className="mb-2 block text-xs font-black uppercase tracking-widest text-[#6d675e]">
+                  <label className="mb-2 block text-xs font-black uppercase tracking-widest text-[#54546a]">
                     Upload pages or screenshots (up to 10)
                   </label>
-                  <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-black/[0.12] bg-[#fbf5e9] p-8 text-center transition-colors hover:border-[#58a700] hover:bg-[#f4fae9]">
-                    <Upload className="mx-auto text-[#8d857a]" />
-                    <p className="mt-2 text-sm font-bold text-[#23201d]">Click or drop images</p>
-                    <p className="text-xs text-[#6d675e]">JPG / PNG, up to 8 MB each</p>
+                  <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-black/[0.12] bg-[#f4f4f8] p-8 text-center transition-colors hover:border-[#1d5fd0] hover:bg-[#f4f4f8]">
+                    <Upload className="mx-auto text-[#6a697c]" />
+                    <p className="mt-2 text-sm font-bold text-[#121117]">Click or drop images</p>
+                    <p className="text-xs text-[#54546a]">JPG / PNG, up to 8 MB each</p>
                     <input
                       type="file"
                       accept="image/*"
@@ -277,14 +277,14 @@ function NewSummary() {
 
               {source === "pdf" && (
                 <div>
-                  <label className="mb-2 block text-xs font-black uppercase tracking-widest text-[#6d675e]">
+                  <label className="mb-2 block text-xs font-black uppercase tracking-widest text-[#54546a]">
                     Upload a PDF (lecture, chapter, slides)
                   </label>
                   {!pdfFile ? (
-                    <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-black/[0.12] bg-[#fbf5e9] p-8 text-center transition-colors hover:border-[#58a700] hover:bg-[#f4fae9]">
-                      <FileType2 className="mx-auto text-[#8d857a]" />
-                      <p className="mt-2 text-sm font-bold text-[#23201d]">Click or drop a PDF</p>
-                      <p className="text-xs text-[#6d675e]">Up to 20 MB · we'll read every page</p>
+                    <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-black/[0.12] bg-[#f4f4f8] p-8 text-center transition-colors hover:border-[#1d5fd0] hover:bg-[#f4f4f8]">
+                      <FileType2 className="mx-auto text-[#6a697c]" />
+                      <p className="mt-2 text-sm font-bold text-[#121117]">Click or drop a PDF</p>
+                      <p className="text-xs text-[#54546a]">Up to 20 MB · we'll read every page</p>
                       <input
                         type="file"
                         accept="application/pdf,.pdf"
@@ -298,25 +298,25 @@ function NewSummary() {
                       />
                     </label>
                   ) : (
-                    <div className="flex items-center justify-between gap-3 rounded-2xl border border-black/[0.08] bg-[#fbf5e9] p-4">
+                    <div className="flex items-center justify-between gap-3 rounded-2xl border border-black/[0.08] bg-[#f4f4f8] p-4">
                       <div className="flex min-w-0 items-center gap-3">
-                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e4dcf3] text-[#9b83d1]">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#f4f4f8] text-[#7ba5f5]">
                           <FileType2 size={18} />
                         </span>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-bold text-[#23201d]">{pdfFile.name}</p>
-                          <p className="text-xs text-[#6d675e]">{pdfFile.sizeKb} KB · ready</p>
+                          <p className="truncate text-sm font-bold text-[#121117]">{pdfFile.name}</p>
+                          <p className="text-xs text-[#54546a]">{pdfFile.sizeKb} KB · ready</p>
                         </div>
                       </div>
                       <button
                         onClick={() => setPdfFile(null)}
-                        className="grid h-8 w-8 place-items-center rounded-full border border-black/[0.1] bg-white text-[#6d675e] hover:text-[#b4485f]"
+                        className="grid h-8 w-8 place-items-center rounded-full border border-black/[0.1] bg-white text-[#54546a] hover:text-[#c4314f]"
                       >
                         <X size={14} />
                       </button>
                     </div>
                   )}
-                  <p className="mt-2 text-xs text-[#6d675e]">
+                  <p className="mt-2 text-xs text-[#54546a]">
                     Best for textbook chapters, slide decks, or lecture handouts. Scanned PDFs work too.
                   </p>
                 </div>
@@ -368,25 +368,25 @@ function NewSummary() {
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-xs font-black uppercase tracking-widest text-[#6d675e]">
+                  <label className="mb-1.5 block text-xs font-black uppercase tracking-widest text-[#54546a]">
                     Title (optional)
                   </label>
                   <input
                     value={titleOverride}
                     onChange={(e) => setTitleOverride(e.target.value)}
                     placeholder="Auto from content"
-                    className="w-full rounded-2xl border border-black/[0.1] px-4 py-3 text-sm focus:border-[#58a700] focus:outline-none"
+                    className="w-full rounded-2xl border border-black/[0.1] px-4 py-3 text-sm focus:border-[#1d5fd0] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-black uppercase tracking-widest text-[#6d675e]">
+                  <label className="mb-1.5 block text-xs font-black uppercase tracking-widest text-[#54546a]">
                     Your name
                   </label>
                   <input
                     value={authorName}
                     onChange={(e) => setAuthorName(e.target.value)}
                     placeholder="Shown on cover"
-                    className="w-full rounded-2xl border border-black/[0.1] px-4 py-3 text-sm focus:border-[#58a700] focus:outline-none"
+                    className="w-full rounded-2xl border border-black/[0.1] px-4 py-3 text-sm focus:border-[#1d5fd0] focus:outline-none"
                   />
                 </div>
               </div>
@@ -397,7 +397,7 @@ function NewSummary() {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setStep(1)}
-                className="inline-flex items-center gap-1.5 text-sm font-bold text-[#4a453d] hover:text-[#23201d]"
+                className="inline-flex items-center gap-1.5 text-sm font-bold text-[#2a2933] hover:text-[#121117]"
               >
                 <ArrowLeft size={14} /> Back
               </button>
@@ -411,7 +411,7 @@ function NewSummary() {
               </button>
             </div>
             {generating && (
-              <p className="text-center text-sm text-[#6d675e]">
+              <p className="text-center text-sm text-[#54546a]">
                 This usually takes 10-25 seconds. Hang tight ✨
               </p>
             )}
@@ -484,15 +484,15 @@ function AdminKeyPanel() {
   return (
     <div className="rounded-3xl border border-black/[0.07] bg-white p-6 md:p-7">
       <div className="flex items-center gap-2">
-        <span className="grid h-9 w-9 place-items-center rounded-2xl bg-[#e4dcf3] text-[#9b83d1]">
+        <span className="grid h-9 w-9 place-items-center rounded-2xl bg-[#f4f4f8] text-[#7ba5f5]">
           <Key size={17} />
         </span>
         <div>
-          <p className="text-xs font-black uppercase tracking-widest text-[#6d675e]">Admin only</p>
+          <p className="text-xs font-black uppercase tracking-widest text-[#54546a]">Admin only</p>
           <p className="text-sm font-bold">Summary engine key</p>
         </div>
       </div>
-      <p className="mt-3 text-xs text-[#6d675e]">
+      <p className="mt-3 text-xs text-[#54546a]">
         Every summary runs on this key. Students never see this box. The key itself is never sent back
         to the browser — only the date it was saved.
       </p>
@@ -503,7 +503,7 @@ function AdminKeyPanel() {
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder={updatedAt ? "•••••••••••• (paste to replace)" : "Paste the API key"}
-          className="flex-1 rounded-2xl border border-black/[0.1] px-4 py-3 text-sm focus:border-[#58a700] focus:outline-none"
+          className="flex-1 rounded-2xl border border-black/[0.1] px-4 py-3 text-sm focus:border-[#1d5fd0] focus:outline-none"
         />
         <button
           onClick={save}
@@ -516,7 +516,7 @@ function AdminKeyPanel() {
         <button
           onClick={test}
           disabled={busy === "test" || !updatedAt}
-          className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-black/[0.1] px-5 py-3 text-sm font-bold text-[#4a453d] hover:bg-[#f6efe1] disabled:opacity-40"
+          className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-black/[0.1] px-5 py-3 text-sm font-bold text-[#2a2933] hover:bg-[#f4f4f8] disabled:opacity-40"
         >
           {busy === "test" ? <Loader2 size={15} className="animate-spin" /> : <PlugZap size={15} />}
           Test
@@ -524,12 +524,12 @@ function AdminKeyPanel() {
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
-        <span className={updatedAt ? "font-bold text-[#4c9a2a]" : "text-[#a29a8d]"}>
+        <span className={updatedAt ? "font-bold text-[#2b6df0]" : "text-[#9a9aab]"}>
           {updatedAt ? `Saved · ${new Date(updatedAt).toLocaleString()}` : "No key saved yet"}
         </span>
         {result && (
           <span
-            className={`inline-flex items-center gap-1 font-bold ${result.ok ? "text-[#4c9a2a]" : "text-[#b4485f]"}`}
+            className={`inline-flex items-center gap-1 font-bold ${result.ok ? "text-[#2b6df0]" : "text-[#c4314f]"}`}
           >
             {result.ok ? <Check size={13} /> : <AlertTriangle size={13} />}
             {result.msg}
@@ -541,8 +541,8 @@ function AdminKeyPanel() {
 }
 
 const SOURCE_TONES = [
-  { soft: "#e4dcf3", dot: "#9b83d1", ink: "#4a3877" },
-  { soft: "#d8ecdd", dot: "#6ab887", ink: "#215237" },
+  { soft: "#f4f4f8", dot: "#7ba5f5", ink: "#1d5fd0" },
+  { soft: "#d2ecd4", dot: "#3a9042", ink: "#1d4f20" },
 ];
 
 function SourceCard({ active, onClick, icon, label, toneIndex = 0 }: any) {
@@ -564,7 +564,7 @@ function SourceCard({ active, onClick, icon, label, toneIndex = 0 }: any) {
       >
         {icon}
       </span>
-      <span className="text-sm font-bold" style={{ color: active ? tone.ink : "#23201d" }}>
+      <span className="text-sm font-bold" style={{ color: active ? tone.ink : "#121117" }}>
         {label}
       </span>
     </button>
@@ -574,7 +574,7 @@ function SourceCard({ active, onClick, icon, label, toneIndex = 0 }: any) {
 function Group({ label, children }: any) {
   return (
     <div>
-      <p className="mb-2 text-xs font-black uppercase tracking-widest text-[#6d675e]">{label}</p>
+      <p className="mb-2 text-xs font-black uppercase tracking-widest text-[#54546a]">{label}</p>
       <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   );
@@ -586,7 +586,7 @@ function Pill({ active, onClick, children }: any) {
       type="button"
       onClick={onClick}
       className={`rounded-full px-5 py-2.5 text-sm font-bold transition-all ${
-        active ? "rita-pill" : "border border-black/[0.09] bg-white text-[#4a453d] hover:bg-[#f6efe1]"
+        active ? "rita-pill" : "border border-black/[0.09] bg-white text-[#2a2933] hover:bg-[#f4f4f8]"
       }`}
     >
       {children}

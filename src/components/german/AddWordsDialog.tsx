@@ -12,9 +12,9 @@ import {
 } from "@/lib/de-lab";
 
 const LABS = [
-  { mode: "articles" as const, label: "der/die/das", color: "#2f6fd0" },
-  { mode: "speaking" as const, label: "speak", color: "#d98d3a" },
-  { mode: "build" as const, label: "build", color: "#2f9e63" },
+  { mode: "articles" as const, label: "der/die/das", color: "#4a82f3" },
+  { mode: "speaking" as const, label: "speak", color: "#d68c0a" },
+  { mode: "build" as const, label: "build", color: "#2e7d32" },
 ];
 
 /**
@@ -85,18 +85,18 @@ export function AddWordsDialog({
         className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[28px] bg-white p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="font-display text-[20px] font-black text-[#23201d]">Add to “{name}”</h3>
-        <p className="mt-1 text-[13px] font-bold text-[#8a8175]">
+        <h3 className="font-display text-[20px] font-black text-[#121117]">Add to “{name}”</h3>
+        <p className="mt-1 text-[13px] font-bold text-[#6a697c]">
           Saved once — every German lab uses whatever it can play.
         </p>
 
-        <div className="mt-4 grid grid-cols-2 gap-1.5 rounded-2xl bg-[#faf6ee] p-1">
+        <div className="mt-4 grid grid-cols-2 gap-1.5 rounded-2xl bg-[#f4f4f8] p-1">
           {(["one", "list"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className="h-9 rounded-xl text-[13px] font-extrabold transition"
-              style={tab === t ? { background: "#fff", color: "#23201d" } : { color: "#a29a8d" }}
+              style={tab === t ? { background: "#fff", color: "#121117" } : { color: "#9a9aab" }}
             >
               {t === "one" ? "One at a time" : "Paste a list"}
             </button>
@@ -114,14 +114,14 @@ export function AddWordsDialog({
                   style={
                     article === a
                       ? { borderColor: accent, background: accent, color: "#fff" }
-                      : { borderColor: "#e5ded2", color: "#6b645b" }
+                      : { borderColor: "#ffd266", color: "#54546a" }
                   }
                 >
                   {a}
                 </button>
               ))}
             </div>
-            <p className="text-[12px] font-bold text-[#a89e90]">
+            <p className="text-[12px] font-bold text-[#9a9aab]">
               Pick an article for nouns — that's what unlocks the der/die/das lab. Sentences don't need one.
             </p>
             <Field
@@ -142,8 +142,8 @@ export function AddWordsDialog({
               Add another
             </button>
             {queue.length > 0 && (
-              <div className="rounded-2xl bg-[#faf6ee] p-3">
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a89e90]">
+              <div className="rounded-2xl bg-[#f4f4f8] p-3">
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">
                   Ready to save
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
@@ -151,7 +151,7 @@ export function AddWordsDialog({
                     <button
                       key={`${p.german}-${i}`}
                       onClick={() => setQueue((q) => q.filter((_, j) => j !== i))}
-                      className="rounded-full bg-white px-2.5 py-1 text-[12px] font-extrabold text-[#5a4a2e] hover:bg-[#f1e7d6]"
+                      className="rounded-full bg-white px-2.5 py-1 text-[12px] font-extrabold text-[#6b4000] hover:bg-[#ffe6a3]"
                     >
                       {fullGerman(p)} ✕
                     </button>
@@ -162,7 +162,7 @@ export function AddWordsDialog({
           </div>
         ) : (
           <>
-            <p className="mt-3 text-[13px] text-[#6b645b]">
+            <p className="mt-3 text-[13px] text-[#54546a]">
               One per line. Use <b>=</b> for the English meaning, and a comma for the plural. Nouns keep
               their article, sentences work as they are.
             </p>
@@ -172,14 +172,14 @@ export function AddWordsDialog({
               onChange={(e) => setText(e.target.value)}
               rows={8}
               placeholder={placeholder}
-              className="mt-3 w-full resize-none rounded-2xl border border-black/10 bg-[#fbf8f2] p-4 font-mono text-[14px] leading-relaxed text-[#23201d] outline-none focus:border-black/25"
+              className="mt-3 w-full resize-none rounded-2xl border border-black/10 bg-[#ffffff] p-4 font-mono text-[14px] leading-relaxed text-[#121117] outline-none focus:border-black/25"
             />
           </>
         )}
 
         {raw.length > 0 && (
-          <div className="mt-4 max-h-56 space-y-1.5 overflow-y-auto rounded-2xl bg-[#faf6ee] p-3">
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a89e90]">
+          <div className="mt-4 max-h-56 space-y-1.5 overflow-y-auto rounded-2xl bg-[#f4f4f8] p-3">
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">
               What each lab will get
             </p>
             {raw.map((p, i) => {
@@ -191,14 +191,14 @@ export function AddWordsDialog({
                 >
                   <span
                     className={`min-w-0 flex-1 truncate text-[13.5px] font-extrabold ${
-                      dup ? "text-[#b0a696] line-through" : "text-[#23201d]"
+                      dup ? "text-[#9a9aab] line-through" : "text-[#121117]"
                     }`}
                   >
                     {fullGerman(p)}
-                    {p.english && <span className="font-bold text-[#a89e90]"> — {p.english}</span>}
+                    {p.english && <span className="font-bold text-[#9a9aab]"> — {p.english}</span>}
                   </span>
                   {dup ? (
-                    <span className="rounded-full bg-[#f3ece0] px-2 py-0.5 text-[10.5px] font-black uppercase tracking-wider text-[#8a8175]">
+                    <span className="rounded-full bg-[#f4f4f8] px-2 py-0.5 text-[10.5px] font-black uppercase tracking-wider text-[#6a697c]">
                       already there
                     </span>
                   ) : (
@@ -211,7 +211,7 @@ export function AddWordsDialog({
                           style={
                             ok
                               ? { background: `${l.color}22`, color: l.color }
-                              : { background: "#f3ece0", color: "#c0b7a8" }
+                              : { background: "#f4f4f8", color: "#c4c4d1" }
                           }
                         >
                           {l.label}
@@ -225,16 +225,16 @@ export function AddWordsDialog({
           </div>
         )}
 
-        <div className="mt-4 flex items-center gap-2 text-[13px] font-bold text-[#6b645b]">
+        <div className="mt-4 flex items-center gap-2 text-[13px] font-bold text-[#54546a]">
           <Sparkles size={14} style={{ color: accent }} />
           {items.length} ready
           {duplicates.length > 0 && (
-            <span className="text-[#a89e90]"> · {duplicates.length} already on the shelf</span>
+            <span className="text-[#9a9aab]"> · {duplicates.length} already on the shelf</span>
           )}
         </div>
 
         <div className="mt-5 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-full px-5 py-2.5 text-[14px] font-extrabold text-[#6b645b]">
+          <button onClick={onClose} className="rounded-full px-5 py-2.5 text-[14px] font-extrabold text-[#54546a]">
             Cancel
           </button>
           <button
@@ -267,13 +267,13 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a89e90]">{label}</span>
+      <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">{label}</span>
       <input
         autoFocus={autoFocus}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="mt-1 h-11 w-full rounded-2xl border border-black/10 bg-[#fbf8f2] px-4 text-[15px] font-semibold text-[#23201d] outline-none focus:border-black/25"
+        className="mt-1 h-11 w-full rounded-2xl border border-black/10 bg-[#ffffff] px-4 text-[15px] font-semibold text-[#121117] outline-none focus:border-black/25"
       />
     </label>
   );

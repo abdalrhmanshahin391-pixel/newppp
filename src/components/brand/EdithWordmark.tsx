@@ -25,8 +25,8 @@ export function EdithWordmark({
         letterSpacing: "var(--wordmark-tracking, -0.03em)",
       }}
     >
-      <span style={{ fontWeight: "var(--wordmark-prefix-weight, 700)", color: light ? "var(--wordmark-prefix, #0457cb)" : "#6aa2ff" }}>{BRAND_PREFIX}</span>
-      <span style={{ fontWeight: "var(--wordmark-suffix-weight, 300)", color: light ? "var(--wordmark-suffix, #2b7fff)" : "#9cc3ff" }}>{BRAND_SUFFIX}</span>
+      <span style={{ fontWeight: "var(--wordmark-prefix-weight, 700)", color: light ? "var(--wordmark-prefix, #2b6df0)" : "#a9c4f9" }}>{BRAND_PREFIX}</span>
+      <span style={{ fontWeight: "var(--wordmark-suffix-weight, 300)", color: light ? "var(--wordmark-suffix, #7ba5f5)" : "#cddcfb" }}>{BRAND_SUFFIX}</span>
     </span>
   );
 }

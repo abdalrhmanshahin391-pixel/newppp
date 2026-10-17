@@ -5,7 +5,7 @@ import { useDeRecord } from "@/lib/use-de-lab";
 
 export type BuildLevel = "mix" | "sentence" | "word";
 
-const ACCENT = "#7a5cc4";
+const ACCENT = "#4a82f3";
 
 function makeRounds(items: DeItem[], level: BuildLevel): BuildRound[] {
   const rounds = items
@@ -52,7 +52,7 @@ export function BuildGame({
     return (
       <div className="rounded-[26px] border border-black/[0.07] bg-white p-8 text-center">
         <p className="text-[16px] font-black">Nothing to build here yet.</p>
-        <p className="mt-2 text-[14px] font-semibold text-[#6b645b]">
+        <p className="mt-2 text-[14px] font-semibold text-[#54546a]">
           Pick a sub-subject with sentences, or words long enough to split into syllables.
         </p>
         <button
@@ -103,24 +103,24 @@ export function BuildGame({
     <div className="rounded-[26px] border border-black/[0.07] bg-white p-5 md:p-7">
       {/* top bar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.16em] text-[#b3aa9c]">
+        <div className="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">
           <span>
             {index + 1} / {rounds.length}
           </span>
           <span
             className="rounded-full px-2.5 py-1 text-[11px]"
-            style={{ background: "#efe9fb", color: ACCENT }}
+            style={{ background: "#f4f4f8", color: ACCENT }}
           >
             {round.level === "sentence" ? "Word order" : "Syllables"}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-[#f3ece0] px-3 py-1 text-[12px] font-extrabold text-[#5a4a2e]">
+          <span className="rounded-full bg-[#f4f4f8] px-3 py-1 text-[12px] font-extrabold text-[#6b4000]">
             {score} right · streak {streak}
           </span>
           <button
             onClick={onExit}
-            className="rounded-full border border-black/[0.08] px-3 py-1 text-[12px] font-extrabold text-[#6b645b] hover:bg-[#f7f2e8]"
+            className="rounded-full border border-black/[0.08] px-3 py-1 text-[12px] font-extrabold text-[#54546a] hover:bg-[#f4f4f8]"
           >
             End
           </button>
@@ -128,7 +128,7 @@ export function BuildGame({
       </div>
 
       {/* progress */}
-      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[#f0e9dc]">
+      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[#f4f4f8]">
         <div
           className="h-full rounded-full transition-all"
           style={{ width: `${((index + (state === "playing" ? 0 : 1)) / rounds.length) * 100}%`, background: ACCENT }}
@@ -137,18 +137,18 @@ export function BuildGame({
 
       {/* prompt */}
       <div className="mt-6 text-center">
-        <p className="text-[12px] font-black uppercase tracking-[0.18em] text-[#b3aa9c]">
+        <p className="text-[12px] font-black uppercase tracking-[0.18em] text-[#9a9aab]">
           {round.level === "sentence" ? "Put the words in order" : "Put the syllables in order"}
         </p>
         <p className="mt-2 text-[20px] font-black leading-snug md:text-[24px]">
           {round.english ?? (round.level === "word" ? "Rebuild the word" : "Rebuild the sentence")}
         </p>
         {round.article && (
-          <p className="mt-1 text-[14px] font-extrabold text-[#8a8175]">{round.article} …</p>
+          <p className="mt-1 text-[14px] font-extrabold text-[#6a697c]">{round.article} …</p>
         )}
         <button
           onClick={() => void speakGerman(round.prompt)}
-          className="mt-3 inline-flex items-center gap-2 rounded-full border border-black/[0.08] px-4 py-1.5 text-[13px] font-extrabold text-[#6b645b] hover:bg-[#f7f2e8]"
+          className="mt-3 inline-flex items-center gap-2 rounded-full border border-black/[0.08] px-4 py-1.5 text-[13px] font-extrabold text-[#54546a] hover:bg-[#f4f4f8]"
         >
           <Volume2 size={15} /> Hear it
         </button>
@@ -158,12 +158,12 @@ export function BuildGame({
       <div
         className="mt-6 min-h-[86px] rounded-[22px] border-2 border-dashed p-3 transition-colors"
         style={{
-          borderColor: state === "right" ? "#2f9e63" : state === "wrong" ? "#d94a4a" : "#e3dacb",
-          background: state === "right" ? "#eaf7f0" : state === "wrong" ? "#fdecec" : "#fcf8f1",
+          borderColor: state === "right" ? "#2e7d32" : state === "wrong" ? "#c4314f" : "#ffd266",
+          background: state === "right" ? "#f4f4f8" : state === "wrong" ? "#f4f4f8" : "#ffffff",
         }}
       >
         {placed.length === 0 ? (
-          <p className="grid h-[62px] place-items-center text-[14px] font-bold text-[#b3aa9c]">
+          <p className="grid h-[62px] place-items-center text-[14px] font-bold text-[#9a9aab]">
             Tap the pieces below in the right order
           </p>
         ) : (
@@ -192,7 +192,7 @@ export function BuildGame({
               onClick={() => place(i)}
               className="rounded-2xl px-5 py-3.5 text-[19px] font-black transition-all disabled:opacity-25"
               style={{
-                background: used ? "#f0e9dc" : "#efe9fb",
+                background: used ? "#f4f4f8" : "#f4f4f8",
                 color: ACCENT,
                 border: "1px solid rgba(0,0,0,0.06)",
               }}
@@ -210,14 +210,14 @@ export function BuildGame({
             <button
               onClick={() => setPlaced(placed.slice(0, -1))}
               disabled={!placed.length}
-              className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] px-4 py-2.5 text-[14px] font-extrabold text-[#6b645b] disabled:opacity-40"
+              className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] px-4 py-2.5 text-[14px] font-extrabold text-[#54546a] disabled:opacity-40"
             >
               <Undo2 size={15} /> Undo
             </button>
             <button
               onClick={() => setPlaced([])}
               disabled={!placed.length}
-              className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] px-4 py-2.5 text-[14px] font-extrabold text-[#6b645b] disabled:opacity-40"
+              className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] px-4 py-2.5 text-[14px] font-extrabold text-[#54546a] disabled:opacity-40"
             >
               <RotateCcw size={15} /> Clear
             </button>
@@ -235,13 +235,13 @@ export function BuildGame({
           <div className="w-full text-center">
             <p
               className="inline-flex items-center gap-2 text-[16px] font-black"
-              style={{ color: state === "right" ? "#2f9e63" : "#d94a4a" }}
+              style={{ color: state === "right" ? "#2e7d32" : "#c4314f" }}
             >
               {state === "right" ? <Check size={18} /> : <X size={18} />}
               {state === "right" ? "Perfect" : `It's “${round.answer}”`}
             </p>
             {state === "wrong" && (
-              <p className="mt-1 text-[13.5px] font-bold text-[#8a8175]">You built “{attempt}”</p>
+              <p className="mt-1 text-[13.5px] font-bold text-[#6a697c]">You built “{attempt}”</p>
             )}
             <div className="mt-4 flex justify-center gap-2.5">
               {state === "wrong" && (
@@ -250,7 +250,7 @@ export function BuildGame({
                     setPlaced([]);
                     setState("playing");
                   }}
-                  className="rounded-full border border-black/[0.08] px-5 py-2.5 text-[14px] font-extrabold text-[#6b645b]"
+                  className="rounded-full border border-black/[0.08] px-5 py-2.5 text-[14px] font-extrabold text-[#54546a]"
                 >
                   Try again
                 </button>

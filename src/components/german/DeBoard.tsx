@@ -69,9 +69,9 @@ export function DeBoard({ mode, accent, selected, onSelect }: Props) {
         flags: s.flags,
         badge: everywhere ? "Ready in all three labs" : undefined,
         bars: [
-          { label: "der/die/das", value: s.nouns ?? 0, total, color: "#2f6fd0" },
-          { label: "speak", value: total, total, color: "#d98d3a" },
-          { label: "build", value: s.buildable ?? 0, total, color: "#2f9e63" },
+          { label: "der/die/das", value: s.nouns ?? 0, total, color: "#4a82f3" },
+          { label: "speak", value: total, total, color: "#d68c0a" },
+          { label: "build", value: s.buildable ?? 0, total, color: "#2e7d32" },
         ],
         items: s.subtopics
           .filter((t) => (onlyFlagged ? (t.flags ?? 0) > 0 : true))
@@ -110,7 +110,7 @@ export function DeBoard({ mode, accent, selected, onSelect }: Props) {
       style={
         on
           ? { background: accent, color: "#fff" }
-          : { background: "#f3ece0", color: "#6b645b" }
+          : { background: "#f4f4f8", color: "#54546a" }
       }
     >
       {icon}
@@ -130,7 +130,7 @@ export function DeBoard({ mode, accent, selected, onSelect }: Props) {
         addLabel="Add words"
         chips={
           <>
-            <span className="mr-1 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[12px] font-extrabold text-[#8a8175]">
+            <span className="mr-1 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[12px] font-extrabold text-[#6a697c]">
               <Sparkles size={13} style={{ color: accent }} /> One shelf — every lab sees it
             </span>
             {chip(onlyReady, `Ready for ${LAB_LABEL[mode]}`, () => setOnlyReady((v) => !v))}

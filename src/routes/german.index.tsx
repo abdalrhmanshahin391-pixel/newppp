@@ -3,7 +3,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Blocks, Mic, Shapes, Sparkles } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useAuth } from "@/hooks/useAuth";
-import germanArt from "@/assets/mode-german.jpg";
 
 export const Route = createFileRoute("/german/")({
   head: () => ({
@@ -31,8 +30,6 @@ type HubCard = {
   name: string;
   tag: string;
   icon: ReactNode;
-  accent: string;
-  soft: string;
   text: string;
   adminOnly?: boolean;
 };
@@ -43,17 +40,13 @@ const cards: HubCard[] = [
     name: "Article Lab",
     tag: "der · die · das",
     icon: <Shapes size={22} />,
-    accent: "#2f6fd0",
-    soft: "#dceafb",
     text: "Blue, red and green burn the gender into your memory. Tap mode, beat-the-clock and an endings coach that teaches the rule behind the answer.",
   },
   {
     to: "/german/speak",
     name: "Pronunciation Lab",
-    tag: "Speak & score",
+    tag: "Speak and score",
     icon: <Mic size={22} />,
-    accent: "#e0774f",
-    soft: "#fbe3d6",
     text: "Hear a native German voice at full or slow speed, record yourself and get a 0–100 score with every word marked green, amber or red.",
   },
   {
@@ -61,55 +54,63 @@ const cards: HubCard[] = [
     name: "Build Lab",
     tag: "Order the pieces",
     icon: <Blocks size={22} />,
-    accent: "#7a5cc4",
-    soft: "#efe9fb",
     text: "Guten Morgen? Tap “Guten” then “Morgen”. Nacht? Tap “Na” then “cht”. Rebuild sentences word by word and words syllable by syllable, with audio when you get it right.",
   },
   {
     to: "/german/add",
     adminOnly: true,
     name: "One Place",
-    tag: "Add once · play everywhere",
+    tag: "Add once, play everywhere",
     icon: <Sparkles size={22} />,
-    accent: "#2f9e63",
-    soft: "#d9f2e3",
     text: "Write a word or sentence once, give it one home, and it shows up in der/die/das, pronunciation, the build game and your flashcards. Nothing gets scattered again.",
   },
+];
+
+const ARTICLES = [
+  { word: "der", color: "#2b6df0" },
+  { word: "die", color: "#b3213f" },
+  { word: "das", color: "#2e7d32" },
 ];
 
 function GermanHub() {
   const { isRealAdmin } = useAuth();
   const visible = cards.filter((c) => !c.adminOnly || isRealAdmin);
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-14 md:px-8 md:py-20">
         <div data-tour="german-hero" className="grid items-center gap-10 md:grid-cols-[1.1fr_1fr]">
           <div>
-            <span className="inline-block rounded-full border border-black/[0.08] bg-white/70 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-[#1f4c6d]">
-              German Lab
-            </span>
+            <p className="text-[15px] font-semibold text-[#6a697c]">German Lab</p>
             <h1
-              className="mt-6 font-display font-black leading-[1.08] tracking-tight"
+              className="mt-3 font-display font-bold leading-[1.08] tracking-[-0.03em]"
               style={{ fontSize: "clamp(2rem, 4vw, 3.1rem)" }}
             >
               Stop guessing{" "}
-              <span style={{ color: "#2f6fd0" }}>der</span>,{" "}
-              <span style={{ color: "#d94a4a" }}>die</span>,{" "}
-              <span style={{ color: "#2f9e63" }}>das</span>.
+              <span style={{ color: ARTICLES[0].color }}>der</span>,{" "}
+              <span style={{ color: ARTICLES[1].color }}>die</span>,{" "}
+              <span style={{ color: ARTICLES[2].color }}>das</span>.
             </h1>
-            <p className="mt-4 max-w-xl text-lg leading-relaxed text-[#4a453d]">
+            <p className="mt-4 max-w-xl text-lg leading-relaxed text-[#4b4a5c]">
               Sort your words and sentences into subjects and sub-subjects, then train them with fast games and
               real pronunciation feedback. Red-flag anything hard and it comes back until it sticks.
             </p>
           </div>
-          <img
-            src={germanArt}
-            alt="der, die and das tiles in blue, red and green"
-            width={992}
-            height={672}
-            className="w-full rounded-[32px] border border-black/[0.06]"
-          />
+          <div
+            role="img"
+            aria-label="der, die and das tiles in blue, red and green"
+            className="grid grid-cols-3 gap-3 rounded-[20px] border-2 border-[#121117] bg-[#f4f4f8] p-5 sm:gap-4 sm:p-7"
+          >
+            {ARTICLES.map((a) => (
+              <span
+                key={a.word}
+                className="grid aspect-[4/5] place-items-center rounded-xl border-2 border-[#121117] bg-white font-display text-[clamp(1.6rem,4vw,2.6rem)] font-bold"
+                style={{ color: a.color }}
+              >
+                {a.word}
+              </span>
+            ))}
+          </div>
         </div>
 
         <div data-tour="german-modes" className="mt-12 grid gap-6 md:grid-cols-2">
@@ -117,24 +118,17 @@ function GermanHub() {
             <Link
               key={c.to}
               to={c.to}
-              className="group rounded-[30px] border border-black/[0.07] bg-white p-7 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_26px_50px_-24px_rgba(0,0,0,0.22)]"
+              className="group rounded-[20px] border-2 border-[#121117] bg-white p-7 transition-colors hover:bg-[#f4f4f8]"
             >
               <div className="flex items-center gap-3">
-                <span
-                  className="grid h-12 w-12 place-items-center rounded-2xl"
-                  style={{ background: c.soft, color: c.accent }}
-                >
-                  {c.icon}
-                </span>
+                <span className="text-[#121117]">{c.icon}</span>
                 <div>
-                  <div className="text-[11px] font-black uppercase tracking-[0.16em]" style={{ color: c.accent }}>
-                    {c.tag}
-                  </div>
-                  <h2 className="font-display text-[22px] font-black tracking-tight">{c.name}</h2>
+                  <div className="text-[14px] font-semibold text-[#6a697c]">{c.tag}</div>
+                  <h2 className="font-display text-[22px] font-bold tracking-[-0.02em]">{c.name}</h2>
                 </div>
               </div>
-              <p className="mt-4 text-[15px] leading-relaxed text-[#4a453d]">{c.text}</p>
-              <span className="mt-6 inline-flex items-center gap-2 text-[14px] font-extrabold">
+              <p className="mt-4 text-[15px] leading-relaxed text-[#4b4a5c]">{c.text}</p>
+              <span className="mt-6 inline-flex items-center gap-2 text-[15px] font-semibold">
                 Open {c.name}
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </span>

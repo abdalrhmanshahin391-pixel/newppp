@@ -133,16 +133,16 @@ export function SubjectBoard({
               />
               <GripVertical
                 size={16}
-                className="shrink-0 cursor-grab text-[#d8d0c2] active:cursor-grabbing"
+                className="shrink-0 cursor-grab text-[#ffd266] active:cursor-grabbing"
               />
-              <span className="w-7 shrink-0 text-[13px] font-black tabular-nums text-[#c0b7a8]">
+              <span className="w-7 shrink-0 text-[13px] font-black tabular-nums text-[#c4c4d1]">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[17px] font-black leading-tight text-[#23201d]">
+                <span className="block truncate text-[17px] font-black leading-tight text-[#121117]">
                   {subject.name}
                 </span>
-                <span className="mt-0.5 block text-[12.5px] font-semibold text-[#a29a8d]">
+                <span className="mt-0.5 block text-[12.5px] font-semibold text-[#9a9aab]">
                   {subject.subs.length} sub-topic{subject.subs.length === 1 ? "" : "s"}
                   {countFor && total > 0 ? ` · ${total} card${total === 1 ? "" : "s"}` : ""}
                 </span>
@@ -267,12 +267,12 @@ export function SubjectBoard({
                       />
                       <GripVertical
                         size={14}
-                        className="shrink-0 cursor-grab text-[#d8d0c2] active:cursor-grabbing"
+                        className="shrink-0 cursor-grab text-[#ffd266] active:cursor-grabbing"
                       />
-                      <span className="w-6 shrink-0 text-[12px] font-bold tabular-nums text-[#c0b7a8]">
+                      <span className="w-6 shrink-0 text-[12px] font-bold tabular-nums text-[#c4c4d1]">
                         {String(j + 1).padStart(2, "0")}
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-[15px] font-bold text-[#3d3833]">
+                      <span className="min-w-0 flex-1 truncate text-[15px] font-bold text-[#2a2933]">
                         {sub.name}
                       </span>
                       <span className="flex shrink-0 items-center gap-0.5 opacity-60 transition-opacity group-hover:opacity-100">

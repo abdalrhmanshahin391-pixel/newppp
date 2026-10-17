@@ -127,10 +127,10 @@ export function SpeedRound({
       </div>
 
       <div className="mt-5 rounded-[24px] border-2 border-[#121117] bg-white px-6 py-8 text-center">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b3aa9c]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#9a9aab]">
           Which one?
         </p>
-        <p className="mt-3 font-display text-[26px] font-black leading-tight tracking-tight text-[#23201d]">
+        <p className="mt-3 font-display text-[26px] font-black leading-tight tracking-tight text-[#121117]">
           {current.left}
         </p>
       </div>
@@ -148,9 +148,9 @@ export function SpeedRound({
                 isWrongPick ? "animate-[rita-shake_0.4s_ease]" : ""
               }`}
               style={{
-                background: isRight ? "#d8ecdd" : isWrongPick ? "#fbe4e4" : "#fff",
+                background: isRight ? "#d2ecd4" : isWrongPick ? "#f4f4f8" : "#fff",
                 borderColor: isRight ? "#2e7d32" : isWrongPick ? "#b3213f" : "#121117",
-                color: "#23201d",
+                color: "#121117",
               }}
             >
               {o.right}

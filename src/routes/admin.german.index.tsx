@@ -24,10 +24,10 @@ type Course = {
 };
 
 const COURSE_TYPES: Record<ContentType, { label: string; note: string; icon: any; pill: string }> = {
-  words: { label: "Words course", note: "Vocabulary banks + game + voice", icon: Type, pill: "bg-emerald-500/15 text-emerald-200 border-emerald-400/40" },
-  sentences: { label: "Sentences course", note: "Sentence banks + exam/session/study + voice", icon: MessageSquareText, pill: "bg-sky-500/15 text-sky-200 border-sky-400/40" },
-  mixed: { label: "Choose type", note: "Open course and choose words or sentences", icon: Shuffle, pill: "bg-amber-500/15 text-amber-200 border-amber-400/40" },
-  shadowing: { label: "Smart Review (Shadowing)", note: "Repeat-after-me practice with pronunciation scoring", icon: Languages, pill: "bg-blue-500/15 text-blue-200 border-blue-400/40" },
+  words: { label: "Words course", note: "Vocabulary banks + game + voice", icon: Type, pill: "bg-[#3a9042]/15 text-emerald-200 border-[#4aa552]/40" },
+  sentences: { label: "Sentences course", note: "Sentence banks + exam/session/study + voice", icon: MessageSquareText, pill: "bg-[#4a82f3]/15 text-sky-200 border-[#7ba5f5]/40" },
+  mixed: { label: "Choose type", note: "Open course and choose words or sentences", icon: Shuffle, pill: "bg-[#d68c0a]/15 text-amber-200 border-[#e9a21f]/40" },
+  shadowing: { label: "Smart Review (Shadowing)", note: "Repeat-after-me practice with pronunciation scoring", icon: Languages, pill: "bg-[#4a82f3]/15 text-blue-200 border-[#7ba5f5]/40" },
 };
 
 function AdminGermanPage() {
@@ -132,14 +132,14 @@ function AdminGermanPage() {
             </div>
             <button
               onClick={() => setCreating(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-sm px-5 py-2.5 shadow-lg shadow-emerald-500/30"
+              className="inline-flex items-center gap-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-sm px-5 py-2.5 shadow-lg shadow-[#3a9042]/30"
             >
               <Plus size={16} /> New course
             </button>
           </div>
 
           {courses.length === 0 && (
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-10 text-center">
+            <div className="rounded-2xl border border-[#3a9042]/20 bg-[#3a9042]/5 p-10 text-center">
               <BookOpen size={32} className="mx-auto text-emerald-400 mb-3" />
               <p className="text-white/70 text-sm">No German courses yet. Create your first one to get started.</p>
             </div>
@@ -150,13 +150,13 @@ function AdminGermanPage() {
               const meta = COURSE_TYPES[c.content_type ?? "mixed"];
               const Icon = meta.icon;
               return (
-                <div key={c.id} className="group rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-white/[0.02] overflow-hidden hover:border-emerald-500/40 transition">
+                <div key={c.id} className="group rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-white/[0.02] overflow-hidden hover:border-[#3a9042]/40 transition">
                   <Link to="/german/$courseId" params={{ courseId: c.id }} className="block aspect-video bg-slate-900 relative overflow-hidden cursor-pointer">
                     {covers[c.id] ? (
                       <img src={covers[c.id]} alt="" className="w-full h-full object-cover group-hover:scale-105 transition" />
                     ) : (
-                      <div className="w-full h-full grid place-items-center bg-gradient-to-br from-emerald-900/40 to-slate-900">
-                        <Languages size={36} className="text-emerald-400/50" />
+                      <div className="w-full h-full grid place-items-center bg-gradient-to-br from-[#163b18]/40 to-slate-900">
+                        <Languages size={36} className="text-[#4aa552]/50" />
                       </div>
                     )}
                   </Link>
@@ -171,34 +171,34 @@ function AdminGermanPage() {
                       <Link
                         to="/german/$courseId"
                         params={{ courseId: c.id }}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-500/15 text-emerald-200 border border-emerald-500/30 hover:bg-emerald-500/25"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#3a9042]/15 text-emerald-200 border border-[#3a9042]/30 hover:bg-[#3a9042]/25"
                       >
                         Practice
                       </Link>
                       <Link
                         to="/admin/german/$courseId/manage"
                         params={{ courseId: c.id }}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-500/15 text-amber-200 border border-amber-400/30 hover:bg-amber-500/25"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#d68c0a]/15 text-amber-200 border border-[#e9a21f]/30 hover:bg-[#d68c0a]/25"
                       >
                         <ListChecks size={12} /> Quizzes
                       </Link>
                       <Link
                         to="/admin/german/$courseId"
                         params={{ courseId: c.id }}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-white/5 text-white/70 border border-white/10 hover:border-emerald-400/40"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-white/5 text-white/70 border border-white/10 hover:border-[#4aa552]/40"
                       >
                         Manage
                       </Link>
                       <button
                         onClick={() => togglePublish(c)}
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold ${
-                          c.published ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30" : "bg-white/5 text-white/50 border border-white/10"
+                          c.published ? "bg-[#3a9042]/15 text-emerald-300 border border-[#3a9042]/30" : "bg-white/5 text-white/50 border border-white/10"
                         }`}
                       >
                         {c.published ? <Eye size={12} /> : <EyeOff size={12} />}
                         {c.published ? "Published" : "Draft"}
                       </button>
-                      <button onClick={() => removeCourse(c)} className="ml-auto p-1.5 rounded-md text-white/40 hover:text-rose-400 hover:bg-rose-500/10" aria-label={`Delete ${c.title}`}>
+                      <button onClick={() => removeCourse(c)} className="ml-auto p-1.5 rounded-md text-white/40 hover:text-rose-400 hover:bg-[#c4314f]/10" aria-label={`Delete ${c.title}`}>
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -212,20 +212,20 @@ function AdminGermanPage() {
 
       {creating && (
         <div className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm grid place-items-center p-4">
-          <div className="w-full max-w-md rounded-2xl border border-emerald-500/30 bg-slate-950 shadow-2xl overflow-hidden">
+          <div className="w-full max-w-md rounded-2xl border border-[#3a9042]/30 bg-slate-950 shadow-2xl overflow-hidden">
             <div className="px-5 py-4 border-b border-white/10">
               <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-300">New course</div>
               <div className="font-bold mt-0.5">Create a German course</div>
             </div>
             <div className="p-5 space-y-4">
-              {err && <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">{err}</div>}
+              {err && <div className="rounded-lg border border-[#c4314f]/40 bg-[#c4314f]/10 px-3 py-2 text-xs text-rose-200">{err}</div>}
               <div>
                 <label className="text-[11px] font-bold uppercase tracking-widest text-white/50 block mb-1.5">Title</label>
                 <input
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="e.g. German A1 — Foundations"
-                  className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2.5 text-sm outline-none focus:border-emerald-400/50"
+                  className="w-full rounded-lg border border-white/15 bg-black/40 px-3 py-2.5 text-sm outline-none focus:border-[#4aa552]/50"
                 />
               </div>
               <div>
@@ -240,7 +240,7 @@ function AdminGermanPage() {
                         key={t}
                         type="button"
                         onClick={() => setNewType(t)}
-                        className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition ${active ? meta.pill : "border-white/10 bg-white/5 text-white/70 hover:border-emerald-400/40"}`}
+                        className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition ${active ? meta.pill : "border-white/10 bg-white/5 text-white/70 hover:border-[#4aa552]/40"}`}
                       >
                         <Icon size={17} />
                         <span className="min-w-0">
@@ -254,7 +254,7 @@ function AdminGermanPage() {
               </div>
               <div>
                 <label className="text-[11px] font-bold uppercase tracking-widest text-white/50 block mb-1.5">Cover image</label>
-                <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-dashed border-white/20 bg-black/30 px-3 py-3 text-sm text-white/70 hover:border-emerald-400/50">
+                <label className="flex items-center gap-2 cursor-pointer rounded-lg border border-dashed border-white/20 bg-black/30 px-3 py-3 text-sm text-white/70 hover:border-[#4aa552]/50">
                   <Upload size={16} />
                   {newFile ? newFile.name : "Choose image…"}
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => setNewFile(e.target.files?.[0] ?? null)} />

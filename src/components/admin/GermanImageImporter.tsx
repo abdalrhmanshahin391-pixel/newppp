@@ -169,7 +169,7 @@ export function GermanImageImporter({
           </div>
 
           {/* Drop zone */}
-          <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center hover:border-emerald-400">
+          <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-slate-200 bg-[#f8f8fb]/50 p-6 text-center hover:border-emerald-400">
             <Upload className="mx-auto text-slate-400" />
             <p className="mt-2 text-sm font-bold text-slate-700">Click or drop pages / screenshots</p>
             <p className="text-xs text-slate-500">JPG / PNG · up to 20 images · 10 MB each</p>

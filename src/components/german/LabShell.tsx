@@ -49,12 +49,12 @@ export function LabShell({
   const skipped = chips.reduce((n, t) => n + Math.max(0, (t.items ?? 0) - t.playable), 0);
 
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
       <main className="mx-auto max-w-[86rem] px-4 py-8 md:px-8 md:py-10">
         <WorkspaceHeader
           back={
-            <Link to="/german" className="text-[13px] font-extrabold text-[#6b645b] hover:text-[#23201d]">
+            <Link to="/german" className="text-[13px] font-extrabold text-[#54546a] hover:text-[#121117]">
               ← German Lab
             </Link>
           }
@@ -84,11 +84,11 @@ export function LabShell({
 
             <aside className="lg:sticky lg:top-6">
               <div className="rounded-[26px] border border-black/[0.07] bg-white p-5 shadow-[0_20px_50px_-34px_rgba(0,0,0,0.4)]">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9a9aab]">
                   This round
                 </p>
                 {chips.length === 0 ? (
-                  <p className="mt-2 text-[13.5px] font-bold text-[#8a8175]">
+                  <p className="mt-2 text-[13.5px] font-bold text-[#6a697c]">
                     Nothing selected yet — tick a sub-subject on the left.
                   </p>
                 ) : (
@@ -98,21 +98,21 @@ export function LabShell({
                         <button
                           key={t.id}
                           onClick={() => onSelect(selected.filter((x) => x !== t.id))}
-                          className="inline-flex items-center gap-1 rounded-full bg-[#f3ece0] px-2.5 py-1 text-[12px] font-extrabold text-[#5a4a2e] hover:bg-[#e9dfcd]"
+                          className="inline-flex items-center gap-1 rounded-full bg-[#f4f4f8] px-2.5 py-1 text-[12px] font-extrabold text-[#6b4000] hover:bg-[#ffd266]"
                         >
                           {t.name} · {t.playable} <X size={12} />
                         </button>
                       ))}
                     </div>
-                    <p className="mt-2 text-[12.5px] font-bold text-[#8a8175]">
+                    <p className="mt-2 text-[12.5px] font-bold text-[#6a697c]">
                       {playable} item{playable === 1 ? "" : "s"} to practise here
                       {skipped > 0 && (
-                        <span className="text-[#b0a696]"> · {skipped} not for this lab</span>
+                        <span className="text-[#9a9aab]"> · {skipped} not for this lab</span>
                       )}
                     </p>
                     <button
                       onClick={() => onSelect([])}
-                      className="mt-2 text-[12px] font-extrabold text-[#a89e90] hover:text-[#b13636]"
+                      className="mt-2 text-[12px] font-extrabold text-[#9a9aab] hover:text-[#b3213f]"
                     >
                       Clear selection
                     </button>

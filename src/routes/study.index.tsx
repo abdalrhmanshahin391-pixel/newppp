@@ -42,7 +42,7 @@ import { useStudySubjects } from "@/lib/use-study-subjects";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useAuth } from "@/hooks/useAuth";
 
-const ACCENT = "#c9762a";
+const ACCENT = "#b26b00";
 
 export const Route = createFileRoute("/study/")({
   head: () => ({
@@ -411,13 +411,13 @@ function StudyBoard() {
                   : "Tick as many sub-subjects as you like — Smart review only shows what is due in them."
               }
             >
-              <div className="flex gap-1.5 rounded-xl bg-[#faf6ee] p-1">
+              <div className="flex gap-1.5 rounded-xl bg-[#f4f4f8] p-1">
                 <button
                   type="button"
                   onClick={() => setSessionScope("all")}
                   className="h-8 flex-1 rounded-lg text-[12px] font-extrabold transition-colors"
                   style={
-                    sessionScope === "all" ? { background: "#fff", color: "#23201d" } : { color: "#a29a8d" }
+                    sessionScope === "all" ? { background: "#fff", color: "#121117" } : { color: "#9a9aab" }
                   }
                 >
                   All ticked
@@ -428,8 +428,8 @@ function StudyBoard() {
                   className="inline-flex h-8 flex-1 items-center justify-center gap-1 rounded-lg text-[12px] font-extrabold transition-colors"
                   style={
                     sessionScope === "flagged"
-                      ? { background: "#f6ddd5", color: "#7d3421" }
-                      : { color: "#a29a8d" }
+                      ? { background: "#fbd9e0", color: "#961a34" }
+                      : { color: "#9a9aab" }
                   }
                 >
                   <Flag size={12} /> Flagged {flaggedCards.length > 0 ? flaggedCards.length : ""}
@@ -443,7 +443,7 @@ function StudyBoard() {
                       <button
                         key={p.key}
                         onClick={() => toggle(p.key)}
-                        className="inline-flex items-center gap-1 rounded-full bg-[#f3ece0] px-2.5 py-1 text-[12px] font-extrabold text-[#5a4a2e] hover:bg-[#e9dfcd]"
+                        className="inline-flex items-center gap-1 rounded-full bg-[#f4f4f8] px-2.5 py-1 text-[12px] font-extrabold text-[#6b4000] hover:bg-[#ffd266]"
                       >
                         {p.sub} <X size={12} />
                       </button>
@@ -451,7 +451,7 @@ function StudyBoard() {
                   </div>
                   <button
                     onClick={() => setSelected([])}
-                    className="mt-2 text-[12px] font-extrabold text-[#a89e90] hover:text-[#b13636]"
+                    className="mt-2 text-[12px] font-extrabold text-[#9a9aab] hover:text-[#b3213f]"
                   >
                     Clear selection
                   </button>

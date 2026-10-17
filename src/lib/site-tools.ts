@@ -93,8 +93,8 @@ export const SECTIONS: SectionDef[] = [
       en: "Everything that belongs to you alone — your cards, your plan and your AI tools.",
       ar: "كل ما يخصك وحدك — بطاقاتك وخطتك وأدوات الذكاء الاصطناعي.",
     },
-    tint: "#fdf1de",
-    ink: "#7a4b16",
+    tint: "#f4f4f8",
+    ink: "#8a5200",
     icon: Layers,
     columns: [
       {
@@ -117,8 +117,8 @@ export const SECTIONS: SectionDef[] = [
       en: "Study with your class, your group and the rest of RitaJet.",
       ar: "ادرس مع صفك ومجموعتك وبقية طلاب ريتاجت.",
     },
-    tint: "#eef6ea",
-    ink: "#3d5c14",
+    tint: "#f4f4f8",
+    ink: "#1d4f20",
     icon: Users,
     columns: [
       {
@@ -136,8 +136,8 @@ export const SECTIONS: SectionDef[] = [
       en: "All the German study tools, feeding from one shared shelf of words.",
       ar: "كل أدوات تعلم الألمانية تعمل على رفٍّ واحد من الكلمات.",
     },
-    tint: "#eef2fb",
-    ink: "#12315e",
+    tint: "#f4f4f8",
+    ink: "#1a4ba8",
     icon: Languages,
     columns: [
       {
@@ -161,8 +161,8 @@ export const TOOLS: ToolDef[] = [
     href: "/study",
     icon: Layers,
     image: flashcardsArt,
-    soft: "#fbe3c8",
-    ink: "#7a4b16",
+    soft: "#ffe6a3",
+    ink: "#8a5200",
     name: { en: "My flashcards", ar: "بطاقاتي" },
     tag: { en: "Active recall", ar: "استرجاع نشط" },
     line: {
@@ -199,8 +199,8 @@ export const TOOLS: ToolDef[] = [
     href: "/study/match",
     icon: Brain,
     image: memoryArt,
-    soft: "#f6ddd5",
-    ink: "#7d3421",
+    soft: "#fbd9e0",
+    ink: "#961a34",
     name: { en: "My memory lab", ar: "مختبر الذاكرة" },
     tag: { en: "Matching games", ar: "ألعاب المطابقة" },
     line: {
@@ -225,8 +225,8 @@ export const TOOLS: ToolDef[] = [
     href: "/study/pdf",
     icon: FileText,
     image: summaryArt,
-    soft: "#e4dcf3",
-    ink: "#4a3877",
+    soft: "#f4f4f8",
+    ink: "#1d5fd0",
     name: { en: "PDF summary", ar: "ملخص PDF" },
     tag: { en: "One-page sheets", ar: "ورقة واحدة" },
     line: {
@@ -250,8 +250,8 @@ export const TOOLS: ToolDef[] = [
     href: "/study/todo",
     icon: CheckSquare,
     image: todoArt,
-    soft: "#d8ecdd",
-    ink: "#215237",
+    soft: "#d2ecd4",
+    ink: "#1d4f20",
     name: { en: "To-do list", ar: "قائمة المهام" },
     tag: { en: "Study planner", ar: "مخطط الدراسة" },
     line: {
@@ -276,8 +276,8 @@ export const TOOLS: ToolDef[] = [
     href: "/study/exams",
     icon: CalendarDays,
     image: examsArt,
-    soft: "#e6f0d8",
-    ink: "#2f6318",
+    soft: "#d2ecd4",
+    ink: "#1d4f20",
     name: { en: "Exam schedule", ar: "جدول الامتحانات" },
     tag: { en: "Month calendar", ar: "تقويم شهري" },
     line: {
@@ -300,8 +300,8 @@ export const TOOLS: ToolDef[] = [
     href: "/study/all-in-one",
     icon: Wand2,
     image: allInOneArt,
-    soft: "#e7dcf7",
-    ink: "#3f2c73",
+    soft: "#f4f4f8",
+    ink: "#1d5fd0",
     name: { en: "All in one Rita AI", ar: "ريتا الشاملة" },
     tag: { en: "One upload · everything", ar: "رفع واحد · كل شيء" },
     line: {
@@ -326,8 +326,8 @@ export const TOOLS: ToolDef[] = [
     href: "/courses/question-bank",
     icon: ListChecks,
     image: qbankArt,
-    soft: "#d9ecf7",
-    ink: "#1d4d6b",
+    soft: "#f4f4f8",
+    ink: "#1a4ba8",
     name: { en: "Question bank", ar: "بنك الأسئلة" },
     tag: { en: "Study · session · exam", ar: "دراسة · جلسة · امتحان" },
     line: {
@@ -352,8 +352,8 @@ export const TOOLS: ToolDef[] = [
     href: "/study/lectures",
     icon: BookOpen,
     image: lectureArt,
-    soft: "#e6f0d8",
-    ink: "#2f6318",
+    soft: "#d2ecd4",
+    ink: "#1d4f20",
     name: { en: "Lecture Lab", ar: "مختبر المحاضرات" },
     tag: { en: "Lecture → quiz", ar: "محاضرة ← اختبار" },
     line: {
@@ -378,8 +378,8 @@ export const TOOLS: ToolDef[] = [
     href: "/share",
     icon: Share2,
     image: shareArt,
-    soft: "#e6f4d8",
-    ink: "#3d5c14",
+    soft: "#f4f4f8",
+    ink: "#1d4f20",
     name: { en: "Shared flashcards", ar: "بطاقات مشتركة" },
     tag: { en: "Community decks", ar: "مجموعات الطلاب" },
     line: {
@@ -403,8 +403,8 @@ export const TOOLS: ToolDef[] = [
     href: "/spaces",
     icon: Users,
     image: spacesArt,
-    soft: "#f3e8ff",
-    ink: "#4a3877",
+    soft: "#f4f4f8",
+    ink: "#1d5fd0",
     name: { en: "Classrooms & groups", ar: "الصفوف والمجموعات" },
     tag: { en: "Study together", ar: "دراسة جماعية" },
     line: {
@@ -428,8 +428,8 @@ export const TOOLS: ToolDef[] = [
     href: "/german",
     icon: Languages,
     image: germanArt,
-    soft: "#dceafb",
-    ink: "#12315e",
+    soft: "#f4f4f8",
+    ink: "#1a4ba8",
     name: { en: "German Lab", ar: "مختبر الألمانية" },
     tag: { en: "der · die · das", ar: "der · die · das" },
     line: {

@@ -97,14 +97,14 @@ function SharePage() {
   });
 
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
 
       <main className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-16">
         {/* Top Header */}
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/70 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-[#7a4b16]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/70 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-[#8a5200]">
               <Share2 size={13} /> {mode === "questions" ? "Shared questions" : "Shared flashcards"}
             </span>
             <h1
@@ -115,7 +115,7 @@ function SharePage() {
                 ? "Question sets made by students & doctors"
                 : "Study decks made by other students"}
             </h1>
-            <p className="mt-3 text-lg leading-relaxed text-[#4a453d]">
+            <p className="mt-3 text-lg leading-relaxed text-[#2a2933]">
               {mode === "questions"
                 ? "Browse questions from Question Bank and Lecture Lab quizzes. Test your skills in practice mode or save them directly."
                 : "Pick a deck, flip through it, and copy it straight into your own subjects — or share yours and let the whole class use it."}
@@ -126,7 +126,7 @@ function SharePage() {
             <Link
               data-tour="share-create-btn"
               to="/share/questions/new"
-              className="inline-flex items-center gap-2 rounded-full bg-[#8ec63f] px-6 py-3.5 text-[15px] font-black text-white shadow-[0_14px_30px_-16px_rgba(142,198,63,0.9)] transition hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-6 py-3.5 text-[15px] font-black text-white shadow-[0_14px_30px_-16px_rgba(142,198,63,0.9)] transition hover:-translate-y-0.5"
             >
               <Plus size={17} /> Share questions
             </Link>
@@ -134,7 +134,7 @@ function SharePage() {
             <Link
               data-tour="share-create-btn"
               to="/share/new"
-              className="inline-flex items-center gap-2 rounded-full bg-[#8ec63f] px-6 py-3.5 text-[15px] font-black text-white shadow-[0_14px_30px_-16px_rgba(142,198,63,0.9)] transition hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-6 py-3.5 text-[15px] font-black text-white shadow-[0_14px_30px_-16px_rgba(142,198,63,0.9)] transition hover:-translate-y-0.5"
             >
               <Plus size={17} /> Share flashcards
             </Link>
@@ -153,8 +153,8 @@ function SharePage() {
               }}
               className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13.5px] font-black transition ${
                 mode === "flashcards"
-                  ? "bg-[#23201d] text-white shadow-sm"
-                  : "text-[#6b655c] hover:bg-black/[0.04]"
+                  ? "bg-[#121117] text-white shadow-sm"
+                  : "text-[#54546a] hover:bg-black/[0.04]"
               }`}
             >
               <Layers size={15} /> Flashcards
@@ -167,8 +167,8 @@ function SharePage() {
               }}
               className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13.5px] font-black transition ${
                 mode === "questions"
-                  ? "bg-[#23201d] text-white shadow-sm"
-                  : "text-[#6b655c] hover:bg-black/[0.04]"
+                  ? "bg-[#121117] text-white shadow-sm"
+                  : "text-[#54546a] hover:bg-black/[0.04]"
               }`}
             >
               <ListChecks size={15} /> Questions
@@ -178,7 +178,7 @@ function SharePage() {
           {/* Filter Controls Row */}
           <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-full border border-black/[0.08] bg-white px-4 py-2.5 shadow-sm">
-            <Search size={15} className="text-[#a29a8d]" />
+            <Search size={15} className="text-[#9a9aab]" />
             <input
               value={search}
               onChange={(e) => {
@@ -186,7 +186,7 @@ function SharePage() {
                 setSearch(e.target.value);
               }}
               placeholder={mode === "questions" ? "Search question sets…" : "Search decks…"}
-              className="w-52 bg-transparent text-sm font-semibold outline-none placeholder:text-[#a29a8d]"
+              className="w-52 bg-transparent text-sm font-semibold outline-none placeholder:text-[#9a9aab]"
             />
           </div>
 
@@ -225,7 +225,7 @@ function SharePage() {
                   setPage(0);
                 }}
                 className={`rounded-full px-3.5 py-1.5 text-[12px] font-black transition ${
-                  sourceFilter === "all" ? "bg-[#23201d] text-white" : "text-[#6b655c] hover:bg-black/[0.04]"
+                  sourceFilter === "all" ? "bg-[#121117] text-white" : "text-[#54546a] hover:bg-black/[0.04]"
                 }`}
               >
                 All sources
@@ -237,7 +237,7 @@ function SharePage() {
                   setPage(0);
                 }}
                 className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-black transition ${
-                  sourceFilter === "lecture" ? "bg-[#23201d] text-white" : "text-[#6b655c] hover:bg-black/[0.04]"
+                  sourceFilter === "lecture" ? "bg-[#121117] text-white" : "text-[#54546a] hover:bg-black/[0.04]"
                 }`}
               >
                 <span>🎓</span> Lecture Lab
@@ -249,7 +249,7 @@ function SharePage() {
                   setPage(0);
                 }}
                 className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-black transition ${
-                  sourceFilter === "bank" ? "bg-[#23201d] text-white" : "text-[#6b655c] hover:bg-black/[0.04]"
+                  sourceFilter === "bank" ? "bg-[#121117] text-white" : "text-[#54546a] hover:bg-black/[0.04]"
                 }`}
               >
                 <span>📚</span> Question Bank
@@ -266,7 +266,7 @@ function SharePage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xl">📊</span>
-                  <h3 className="font-display text-base font-black text-[#23201d]">
+                  <h3 className="font-display text-base font-black text-[#121117]">
                     Daily Sharing Limit: {quotaQuery.data?.usedToday ?? 0} / 5 shared today
                   </h3>
                   <span
@@ -279,20 +279,20 @@ function SharePage() {
                     {quotaQuery.data?.remaining ?? 5} slots left
                   </span>
                 </div>
-                <p className="mt-1 max-w-2xl text-xs text-[#6b655c]">
+                <p className="mt-1 max-w-2xl text-xs text-[#54546a]">
                   You can share up to 5 items daily across flashcards and questions. If you need to upload a new item today after hitting 5/5, simply delete any item you shared today below to immediately recover a sharing slot!
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <Link
                   to="/share/new"
-                  className="rounded-full border border-black/[0.08] bg-[#faf8f5] px-4 py-2 text-xs font-black text-[#23201d] transition hover:bg-black/[0.05]"
+                  className="rounded-full border border-black/[0.08] bg-[#ffffff] px-4 py-2 text-xs font-black text-[#121117] transition hover:bg-black/[0.05]"
                 >
                   + New Flashcards
                 </Link>
                 <Link
                   to="/share/questions/new"
-                  className="rounded-full bg-[#8ec63f] px-4 py-2 text-xs font-black text-white transition hover:bg-[#7db534]"
+                  className="rounded-full bg-[#4a82f3] px-4 py-2 text-xs font-black text-white transition hover:bg-[#2b6df0]"
                 >
                   + New Questions
                 </Link>
@@ -305,7 +305,7 @@ function SharePage() {
         {mode === "flashcards" && (
           tab === "all" ? (
             deckFeed.isLoading ? (
-              <p className="mt-12 text-[#6b655c]">Loading decks…</p>
+              <p className="mt-12 text-[#54546a]">Loading decks…</p>
             ) : (deckFeed.data?.decks.length ?? 0) === 0 ? (
               <Empty />
             ) : (
@@ -316,7 +316,7 @@ function SharePage() {
               </div>
             )
           ) : !user ? (
-            <p className="mt-12 text-[#6b655c]">Sign in to see the decks you shared.</p>
+            <p className="mt-12 text-[#54546a]">Sign in to see the decks you shared.</p>
           ) : (deckMine.data?.length ?? 0) === 0 ? (
             <Empty mine />
           ) : (
@@ -334,16 +334,16 @@ function SharePage() {
                   >
                     {d.title}
                   </Link>
-                  <span className="text-[13px] font-bold text-[#6b655c]">
+                  <span className="text-[13px] font-bold text-[#54546a]">
                     {d.card_count} cards · {d.save_count} saves
                   </span>
                   <span
                     className={`rounded-full px-3 py-1 text-[11px] font-black ${
                       d.audience === "space"
-                        ? "bg-black/[0.06] text-[#6b655c]"
+                        ? "bg-black/[0.06] text-[#54546a]"
                         : d.published
-                          ? "bg-[#e6f4d8] text-[#3d5c14]"
-                          : "bg-black/[0.06] text-[#6b655c]"
+                          ? "bg-[#e7eefd] text-[#1a4ba8]"
+                          : "bg-black/[0.06] text-[#54546a]"
                     }`}
                   >
                     {d.audience === "space" ? "Classroom" : d.published ? "Public" : "Hidden"}
@@ -356,7 +356,7 @@ function SharePage() {
                         qc.invalidateQueries({ queryKey: ["share-mine"] });
                         qc.invalidateQueries({ queryKey: ["share-feed"] });
                       }}
-                      className="grid h-9 w-9 place-items-center rounded-xl text-[#6b655c] hover:bg-black/[0.06]"
+                      className="grid h-9 w-9 place-items-center rounded-xl text-[#54546a] hover:bg-black/[0.06]"
                     >
                       {d.published ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
@@ -375,7 +375,7 @@ function SharePage() {
                       qc.invalidateQueries({ queryKey: ["share-feed"] });
                       qc.invalidateQueries({ queryKey: ["daily-share-quota"] });
                     }}
-                    className="grid h-9 w-9 place-items-center rounded-xl text-[#6b655c] hover:bg-red-50 hover:text-red-600"
+                    className="grid h-9 w-9 place-items-center rounded-xl text-[#54546a] hover:bg-red-50 hover:text-red-600"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -389,7 +389,7 @@ function SharePage() {
         {mode === "questions" && (
           tab === "all" ? (
             questionFeed.isLoading ? (
-              <p className="mt-12 text-[#6b655c]">Loading question sets…</p>
+              <p className="mt-12 text-[#54546a]">Loading question sets…</p>
             ) : (questionFeed.data?.sets.length ?? 0) === 0 ? (
               <EmptyQuestions />
             ) : (
@@ -414,7 +414,7 @@ function SharePage() {
                   >
                     <ChevronLeft size={15} /> Previous
                   </button>
-                  <span className="text-[13px] font-bold text-[#6b655c]">Page {page + 1}</span>
+                  <span className="text-[13px] font-bold text-[#54546a]">Page {page + 1}</span>
                   <button
                     type="button"
                     disabled={!questionFeed.data?.hasMore}
@@ -427,7 +427,7 @@ function SharePage() {
               </>
             )
           ) : !user ? (
-            <p className="mt-12 text-[#6b655c]">Sign in to see the question sets you shared.</p>
+            <p className="mt-12 text-[#54546a]">Sign in to see the question sets you shared.</p>
           ) : (questionMine.data?.length ?? 0) === 0 ? (
             <EmptyQuestions mine />
           ) : (
@@ -455,7 +455,7 @@ function SharePage() {
                           {sm.icon} {sm.label}
                         </span>
                       </div>
-                      <p className="text-[12.5px] font-bold text-[#6b655c]">
+                      <p className="text-[12.5px] font-bold text-[#54546a]">
                         {s.question_count} questions · {s.save_count} saves
                       </p>
                     </div>
@@ -463,10 +463,10 @@ function SharePage() {
                     <span
                       className={`rounded-full px-3 py-1 text-[11px] font-black ${
                         s.audience === "space"
-                          ? "bg-black/[0.06] text-[#6b655c]"
+                          ? "bg-black/[0.06] text-[#54546a]"
                           : s.published
-                            ? "bg-[#e6f4d8] text-[#3d5c14]"
-                            : "bg-black/[0.06] text-[#6b655c]"
+                            ? "bg-[#e7eefd] text-[#1a4ba8]"
+                            : "bg-black/[0.06] text-[#54546a]"
                       }`}
                     >
                       {s.audience === "space" ? "Classroom" : s.published ? "Public" : "Hidden"}
@@ -480,7 +480,7 @@ function SharePage() {
                           qc.invalidateQueries({ queryKey: ["qset-mine"] });
                           qc.invalidateQueries({ queryKey: ["qset-feed"] });
                         }}
-                        className="grid h-9 w-9 place-items-center rounded-xl text-[#6b655c] hover:bg-black/[0.06]"
+                        className="grid h-9 w-9 place-items-center rounded-xl text-[#54546a] hover:bg-black/[0.06]"
                         aria-label={s.published ? "Hide set" : "Publish set"}
                       >
                         {s.published ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -501,7 +501,7 @@ function SharePage() {
                         qc.invalidateQueries({ queryKey: ["qset-feed"] });
                         qc.invalidateQueries({ queryKey: ["daily-share-quota"] });
                       }}
-                      className="grid h-9 w-9 place-items-center rounded-xl text-[#6b655c] hover:bg-red-50 hover:text-red-600"
+                      className="grid h-9 w-9 place-items-center rounded-xl text-[#54546a] hover:bg-red-50 hover:text-red-600"
                       aria-label="Delete set"
                     >
                       <Trash2 size={16} />
@@ -548,17 +548,17 @@ export function QuestionSetCard({
         </span>
 
         {/* Question count */}
-        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-black text-[#23201d]">
+        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-black text-[#121117]">
           <ListChecks size={12} /> {set.question_count}
         </span>
       </div>
 
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-display text-[17px] font-black leading-snug tracking-tight text-[#23201d]">
+        <h3 className="font-display text-[17px] font-black leading-snug tracking-tight text-[#121117]">
           {set.title}
         </h3>
         {set.description && (
-          <p className="mt-1.5 line-clamp-2 text-[13.5px] leading-relaxed text-[#6b655c]">
+          <p className="mt-1.5 line-clamp-2 text-[13.5px] leading-relaxed text-[#54546a]">
             {set.description}
           </p>
         )}
@@ -572,7 +572,7 @@ export function QuestionSetCard({
               </span>
             )}
             {set.save_count > 0 && (
-              <span className="text-[11.5px] font-bold text-[#8a8376]">
+              <span className="text-[11.5px] font-bold text-[#6a697c]">
                 {set.save_count} saves
               </span>
             )}
@@ -599,7 +599,7 @@ function Seg<T extends string>({
           key={v}
           onClick={() => onChange(v)}
           className={`rounded-full px-4 py-2 text-[13px] font-black transition ${
-            value === v ? "bg-[#23201d] text-white" : "text-[#6b655c] hover:bg-black/[0.05]"
+            value === v ? "bg-[#121117] text-white" : "text-[#54546a] hover:bg-black/[0.05]"
           }`}
         >
           {label}
@@ -616,13 +616,13 @@ function Empty({ mine }: { mine?: boolean }) {
       <h2 className="mt-4 font-display text-2xl font-black">
         {mine ? "You haven't shared a deck yet" : "No shared decks yet"}
       </h2>
-      <p className="mx-auto mt-2 max-w-md text-[15px] text-[#6b655c]">
+      <p className="mx-auto mt-2 max-w-md text-[15px] text-[#54546a]">
         Pick a few of your flashcard subjects and publish them — everyone studying the same topic
         can use them.
       </p>
       <Link
         to="/share/new"
-        className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#8ec63f] px-6 py-3 text-sm font-black text-white"
+        className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-6 py-3 text-sm font-black text-white"
       >
         <Plus size={16} /> Share flashcards
       </Link>
@@ -637,12 +637,12 @@ function EmptyQuestions({ mine }: { mine?: boolean }) {
       <h2 className="mt-4 font-display text-2xl font-black">
         {mine ? "You haven't shared a question set yet" : "No shared question sets yet"}
       </h2>
-      <p className="mx-auto mt-2 max-w-md text-[15px] text-[#6b655c]">
+      <p className="mx-auto mt-2 max-w-md text-[15px] text-[#54546a]">
         Select questions from Question Bank or Lecture Lab and share them with the RitaJet community.
       </p>
       <Link
         to="/share/questions/new"
-        className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#8ec63f] px-6 py-3 text-sm font-black text-white"
+        className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-6 py-3 text-sm font-black text-white"
       >
         <Plus size={16} /> Share questions
       </Link>

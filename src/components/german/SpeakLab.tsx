@@ -7,7 +7,7 @@ import { useDeFlag, useDeRecord } from "@/lib/use-de-lab";
 import { DeResults, type ResultRow } from "@/components/german/DeResults";
 import { supabase } from "@/integrations/supabase/legacy-client";
 
-const ACCENT = "#e0774f";
+const ACCENT = "#d9506d";
 
 async function transcribe(blob: Blob): Promise<string> {
   const { data } = await supabase.auth.getSession();
@@ -121,9 +121,9 @@ export function SpeakLab({ items, onClose }: { items: DeItem[]; onClose: () => v
   const b = result ? band(result.score) : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#fbf5e9] p-4 md:p-8">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#f4f4f8] p-4 md:p-8">
       <div className="mx-auto flex w-full max-w-3xl items-center gap-3">
-        <button onClick={() => setDone(true)} className="rounded-full bg-white p-2.5 text-[#6b645b] shadow-sm">
+        <button onClick={() => setDone(true)} className="rounded-full bg-white p-2.5 text-[#54546a] shadow-sm">
           <X size={18} />
         </button>
         <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-white">
@@ -132,20 +132,20 @@ export function SpeakLab({ items, onClose }: { items: DeItem[]; onClose: () => v
             style={{ width: `${((index + (result ? 1 : 0)) / list.length) * 100}%`, background: ACCENT }}
           />
         </div>
-        <span className="rounded-full bg-white px-3 py-1.5 text-[13px] font-black text-[#23201d] shadow-sm">
+        <span className="rounded-full bg-white px-3 py-1.5 text-[13px] font-black text-[#121117] shadow-sm">
           {index + 1}/{list.length}
         </span>
       </div>
 
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center">
         <div className="w-full rounded-[32px] bg-white px-6 py-10 text-center shadow-[0_24px_60px_-30px_rgba(0,0,0,0.28)]">
-          <p className="font-display text-[clamp(1.5rem,4.5vw,2.6rem)] font-black leading-tight tracking-tight text-[#23201d]">
+          <p className="font-display text-[clamp(1.5rem,4.5vw,2.6rem)] font-black leading-tight tracking-tight text-[#121117]">
             {result
               ? result.words.map((w, i) => (
                   <span
                     key={i}
                     style={{
-                      color: w.state === "good" ? "#2f9e63" : w.state === "close" ? "#c98a2b" : "#d94a4a",
+                      color: w.state === "good" ? "#2e7d32" : w.state === "close" ? "#b26b00" : "#c4314f",
                     }}
                   >
                     {fullGerman(current).split(/\s+/)[i] ?? w.word}{" "}
@@ -153,27 +153,27 @@ export function SpeakLab({ items, onClose }: { items: DeItem[]; onClose: () => v
                 ))
               : fullGerman(current)}
           </p>
-          {current.english && <p className="mt-3 text-[16px] font-semibold text-[#6b645b]">{current.english}</p>}
+          {current.english && <p className="mt-3 text-[16px] font-semibold text-[#54546a]">{current.english}</p>}
 
           <div className="mt-6 flex items-center justify-center gap-2">
             <button
               onClick={() => void speakGerman(fullGerman(current), 0.92)}
-              className="inline-flex items-center gap-2 rounded-full bg-[#f3ece0] px-4 py-2.5 text-[13px] font-extrabold text-[#5a4a2e]"
+              className="inline-flex items-center gap-2 rounded-full bg-[#f4f4f8] px-4 py-2.5 text-[13px] font-extrabold text-[#6b4000]"
             >
               <Volume2 size={16} /> Native
             </button>
             <button
               onClick={() => void speakGerman(fullGerman(current), 0.7)}
-              className="inline-flex items-center gap-2 rounded-full bg-[#f3ece0] px-4 py-2.5 text-[13px] font-extrabold text-[#5a4a2e]"
+              className="inline-flex items-center gap-2 rounded-full bg-[#f4f4f8] px-4 py-2.5 text-[13px] font-extrabold text-[#6b4000]"
             >
               <Turtle size={16} /> Slow
             </button>
             <button
               onClick={() => void flag.mutateAsync({ itemId: current.id, on: !current.flagged })}
               className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-extrabold"
-              style={{ color: current.flagged ? "#d94a4a" : "#b8b0a4" }}
+              style={{ color: current.flagged ? "#c4314f" : "#c4c4d1" }}
             >
-              <Flag size={15} fill={current.flagged ? "#d94a4a" : "none"} /> Flag
+              <Flag size={15} fill={current.flagged ? "#c4314f" : "none"} /> Flag
             </button>
           </div>
 
@@ -185,19 +185,19 @@ export function SpeakLab({ items, onClose }: { items: DeItem[]; onClose: () => v
               <div className="text-[13px] font-black uppercase tracking-[0.18em]" style={{ color: b!.color }}>
                 {b!.label}
               </div>
-              <p className="mx-auto mt-3 max-w-lg rounded-2xl bg-[#f6f1e6] px-4 py-3 text-[14px] font-semibold text-[#5a4a2e]">
+              <p className="mx-auto mt-3 max-w-lg rounded-2xl bg-[#f4f4f8] px-4 py-3 text-[14px] font-semibold text-[#6b4000]">
                 We heard: “{result.transcript || "…"}”
               </p>
             </div>
           )}
-          {error && <p className="mt-5 text-[14px] font-bold text-[#b13636]">{error}</p>}
+          {error && <p className="mt-5 text-[14px] font-bold text-[#b3213f]">{error}</p>}
         </div>
 
         <div className="mt-8 flex items-center gap-3">
           {state === "recording" ? (
             <button
               onClick={() => void finish()}
-              className="inline-flex items-center gap-3 rounded-full bg-[#d94a4a] px-8 py-4 text-[16px] font-extrabold text-white shadow-lg"
+              className="inline-flex items-center gap-3 rounded-full bg-[#c4314f] px-8 py-4 text-[16px] font-extrabold text-white shadow-lg"
             >
               <Square size={18} fill="white" /> Stop &amp; score
             </button>
@@ -214,12 +214,12 @@ export function SpeakLab({ items, onClose }: { items: DeItem[]; onClose: () => v
           )}
           <button
             onClick={next}
-            className="rounded-full border border-black/10 bg-white px-6 py-4 text-[15px] font-extrabold text-[#23201d]"
+            className="rounded-full border border-black/10 bg-white px-6 py-4 text-[15px] font-extrabold text-[#121117]"
           >
             {index + 1 >= list.length ? "Finish" : "Next"}
           </button>
         </div>
-        <p className="mt-4 text-[13px] font-bold text-[#8b8378]">
+        <p className="mt-4 text-[13px] font-bold text-[#6a697c]">
           Say it out loud — every word is graded green, amber or red.
         </p>
       </div>

@@ -36,7 +36,7 @@ function ReviewFace({
         <p className={scaleText(text)} style={styleToCss(cardStyle)}>
           {text}
         </p>
-        <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-[#a79c8c]">{hint}</p>
+        <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-[#9a9aab]">{hint}</p>
       </div>
     </div>
   );
@@ -219,13 +219,13 @@ export function ReviewSession({
   const isNew = current?.row.state === "new";
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#fbf5e9]">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#f4f4f8]">
       <header className="flex items-center gap-4 px-5 py-4">
         <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#8a8072]">
+          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#6a697c]">
             {title ?? "Smart review"}
           </p>
-          <p className="truncate text-lg font-black text-[#23201d]">
+          <p className="truncate text-lg font-black text-[#121117]">
             {current ? current.row.subject || "Unsorted" : "Session complete"}
           </p>
         </div>
@@ -235,7 +235,7 @@ export function ReviewSession({
               type="button"
               onClick={() => void stepBack()}
               disabled={!canUndo || pos === 0 || busy}
-              className="inline-flex h-10 items-center gap-1.5 rounded-lg border-2 border-[#121117] bg-white px-3 text-sm font-bold text-[#6d6355] disabled:opacity-40"
+              className="inline-flex h-10 items-center gap-1.5 rounded-lg border-2 border-[#121117] bg-white px-3 text-sm font-bold text-[#54546a] disabled:opacity-40"
               title="Undo last answer (U)"
             >
               <Undo2 size={15} /> Undo
@@ -256,7 +256,7 @@ export function ReviewSession({
             />
           )}
           {streak !== null && (
-            <span className="inline-flex items-center gap-1.5 rounded-lg border-2 border-[#121117] bg-white px-3 py-1.5 text-sm font-black text-[#7a4b16]">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border-2 border-[#121117] bg-white px-3 py-1.5 text-sm font-black text-[#8a5200]">
               <Flame size={16} /> {streak}
             </span>
           )}
@@ -264,7 +264,7 @@ export function ReviewSession({
             type="button"
             onClick={onClose}
             aria-label="Close review"
-            className="grid h-10 w-10 place-items-center rounded-full bg-white text-[#23201d]"
+            className="grid h-10 w-10 place-items-center rounded-full bg-white text-[#121117]"
           >
             <X size={18} />
           </button>
@@ -282,7 +282,7 @@ export function ReviewSession({
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-5 p-5">
           {/* Memory strength for this card */}
           <div className="flex w-full max-w-3xl items-center gap-3">
-            <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a79c8c]">
+            <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">
               {isNew ? "new card" : current.row.leech ? "fighting you" : "memory"}
             </span>
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#dcdce5]">
@@ -290,11 +290,11 @@ export function ReviewSession({
                 className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${isNew ? 4 : strength}%`,
-                  background: current.row.leech ? "#d98b6a" : "var(--rita-green)",
+                  background: current.row.leech ? "#d9506d" : "var(--rita-green)",
                 }}
               />
             </div>
-            <span className="text-[11px] font-bold text-[#a79c8c]">
+            <span className="text-[11px] font-bold text-[#9a9aab]">
               {isNew ? "first look" : `holds ${shortGap(Number(current.row.interval_days) || 0)}`}
             </span>
             {current.row.leech && (
@@ -375,7 +375,7 @@ export function ReviewSession({
             </button>
           )}
 
-          <p className="text-xs font-bold text-[#a79c8c]">
+          <p className="text-xs font-bold text-[#9a9aab]">
             {pos + 1} of {queue.length}
             {lastNext && ` · last card comes back ${lastNext}`}
           </p>
@@ -386,15 +386,15 @@ export function ReviewSession({
             <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--rita-green)] text-[color:var(--rita-green-ink)]">
               <Check size={26} />
             </span>
-            <h2 className="mt-4 font-display text-2xl font-black text-[#23201d]">
+            <h2 className="mt-4 font-display text-2xl font-black text-[#121117]">
               {queue.length} cards reviewed
             </h2>
-            <p className="mt-2 text-sm font-semibold text-[#6d6355]">
+            <p className="mt-2 text-sm font-semibold text-[#54546a]">
               {right} answered confidently
               {again.length > 0 && ` · ${again.length} still shaky, they come back soon`}
             </p>
             {tomorrow > 0 && (
-              <p className="mt-3 text-sm font-bold text-[#6d6355]">
+              <p className="mt-3 text-sm font-bold text-[#54546a]">
                 {tomorrow} of them return tomorrow — that is the schedule doing its job.
               </p>
             )}
