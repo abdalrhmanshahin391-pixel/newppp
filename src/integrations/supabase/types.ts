@@ -3134,12 +3134,110 @@ export type Database = {
           },
         ]
       }
+      rita_lesson_resources: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          id: string
+          kind: string
+          lesson_id: string
+          note: string
+          position: number
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          kind: string
+          lesson_id: string
+          note?: string
+          position?: number
+          title: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          kind?: string
+          lesson_id?: string
+          note?: string
+          position?: number
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_lesson_resources_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "rita_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rita_lesson_slides: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          lesson_id: string
+          model: string | null
+          shared: boolean
+          slides: Json
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          lesson_id: string
+          model?: string | null
+          shared?: boolean
+          slides?: Json
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          lesson_id?: string
+          model?: string | null
+          shared?: boolean
+          slides?: Json
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_lesson_slides_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: true
+            referencedRelation: "rita_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rita_lessons: {
         Row: {
           created_at: string
           created_by: string | null
           curriculum_id: string
           id: string
+          image_generating_at: string | null
           image_prompt: string | null
           image_url: string | null
           lesson_no: number
@@ -3164,6 +3262,7 @@ export type Database = {
           created_by?: string | null
           curriculum_id: string
           id?: string
+          image_generating_at?: string | null
           image_prompt?: string | null
           image_url?: string | null
           lesson_no: number
@@ -3188,6 +3287,7 @@ export type Database = {
           created_by?: string | null
           curriculum_id?: string
           id?: string
+          image_generating_at?: string | null
           image_prompt?: string | null
           image_url?: string | null
           lesson_no?: number
