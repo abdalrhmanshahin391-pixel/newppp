@@ -150,7 +150,7 @@ export function PhraseDialog({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             {lang && (
-              <p className="text-sm font-bold text-[var(--pp-pink-text)]">
+              <p className="text-sm font-bold text-[var(--pp-accent-text)]">
                 {lang === "de" ? "Deutsch" : "English"}
               </p>
             )}
@@ -176,7 +176,7 @@ export function PhraseDialog({
             </p>
           )}
           {!loading && failed && (
-            <p className="text-[16px] text-[var(--pp-pink-text)]">
+            <p className="text-[16px] text-[var(--pp-accent-text)]">
               تعذّر تحميل الترجمة.{" "}
               <button
                 type="button"
@@ -216,8 +216,8 @@ export function PhraseDialog({
                   aria-label={`${STYLE_LABEL[style].label}: ${STYLE_LABEL[style].hint}`}
                   className={`flex flex-col items-center gap-1 rounded-xl border-2 border-[var(--pp-ink)] px-2 py-2.5 text-sm font-bold ${
                     playing === style
-                      ? "bg-[var(--pp-pink)]"
-                      : "bg-white hover:bg-[var(--pp-pink-soft)]"
+                      ? "bg-[var(--pp-accent)] text-[var(--pp-on-accent)]"
+                      : "bg-white hover:bg-[var(--pp-accent-soft)]"
                   }`}
                 >
                   {busy === style ? (
@@ -235,7 +235,7 @@ export function PhraseDialog({
               ))}
             </div>
             {audioError && (
-              <p dir="rtl" className="mt-2 text-sm font-semibold text-[var(--pp-pink-text)]">
+              <p dir="rtl" className="mt-2 text-sm font-semibold text-[var(--pp-accent-text)]">
                 تعذّر تشغيل الصوت الآن. حاول مرة ثانية.
               </p>
             )}

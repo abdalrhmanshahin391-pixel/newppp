@@ -9,7 +9,7 @@ Process for any design request: `docs/design-workflow.md`. Product context: `PRO
 
 ## Identity
 
-Clean white page, ink text, one pink action colour, dark top bar. Friendly and clear, never
+Clean white page, ink text, one blue action colour, dark top bar. Friendly and clear, never
 generic SaaS. Rita herself carries the personality (the orb and the Little Light Wanderer);
 the page stays calm around her. Arabic and English are both first-class (RTL per paragraph).
 
@@ -27,10 +27,11 @@ on the Rita side must sit inside `.edith-premium` and use its tokens, never raw 
 | `--pp-muted` | `#6a697c` | secondary text |
 | `--pp-line` | `#dcdce5` | hairlines, input borders |
 | `--pp-grey` | `#f4f4f8` | cards, inputs, quiet surfaces |
-| `--pp-pink` | `#ff7aac` | the one action colour (primary buttons, selection) |
-| `--pp-pink-hover` | `#fe9fc3` | hover of pink |
-| `--pp-pink-text` | `#d13d76` | pink used as text/links (readable on white) |
-| `--pp-pink-soft` | `#ffe5f0` | soft pink backgrounds |
+| `--pp-accent` | `#2b6df0` | the one action colour (primary buttons, selection) |
+| `--pp-accent-hover` | `#2260e4` | hover (a shade deeper) |
+| `--pp-accent-text` | `#2563eb` | accent used as text/links (readable on white) |
+| `--pp-accent-soft` | `#e7eefd` | soft blue backgrounds |
+| `--pp-on-accent` | `#ffffff` | text on the accent (white, 4.6:1 on `#2b6df0`) |
 | `--pp-ease` | `cubic-bezier(0.22, 1, 0.36, 1)` | all transitions |
 
 Page `#fff`; dark device screen `linear-gradient(162deg, #26252e, #121117)`.
@@ -47,7 +48,7 @@ Page `#fff`; dark device screen `linear-gradient(162deg, #26252e, #121117)`.
 ## Shape and spacing
 
 - Radius: buttons and inputs 8px, cards 16px, sheets 24px (top corners on phones).
-- Buttons: 2px ink border, pink fill, ink text, `.rita-btn` / `.rita-btn-primary` /
+- Buttons: 2px ink border, blue fill, white text, `.rita-btn` / `.rita-btn-primary` /
   `.rita-btn-secondary`, small `.rita-btn-sm` (40px). Selects: `.rita-select` (48px).
 - Spacing on a 4px scale; sections breathe (24–48px), controls inside a card 8–16px.
 - Windows: one level only (a sheet from the bottom on phones, centred on wider screens,
@@ -55,8 +56,8 @@ Page `#fff`; dark device screen `linear-gradient(162deg, #26252e, #121117)`.
 
 ## States
 
-Every interactive element has: default, hover (`--pp-pink-hover` or 8–14% ink tint), focus
-(`focus-visible`: 2px ink or deep-pink outline, 2–3px offset), active (1px press), disabled
+Every interactive element has: default, hover (`--pp-accent-hover` or 8–14% ink tint), focus
+(`focus-visible`: 2px ink or deep-blue outline, 2–3px offset), active (1px press), disabled
 (opacity .4, not-allowed), loading (spinner, label kept), and an error/empty state with plain
 words. Errors are shown, never swallowed.
 
@@ -85,14 +86,14 @@ that is just a list, text under 12px, low-contrast grey on grey.
 
 One bar for the whole site (`ProHeader`, classes `.rh-bar*`, explicit colours so they look the
 same on the cream pages and on the white ones). Dark ink `#121117`, 64px, no blur, no capsule.
-Links sit next to the logo; the current page gets the hand-drawn pink line from the home
-headline, drawn once. Guests get "Sign in" and one pink "Start learning" button. Signed-in
+Links sit next to the logo; the current page gets the hand-drawn blue line from the home
+headline, drawn once. Guests get "Sign in" and one blue "Start learning" button. Signed-in
 users get the Credits chip (Rita's small orb plus what is left; the orb ring turns amber below
-20% and red when used up) and the avatar with a pink ring.
+20% and red when used up) and the avatar with a blue ring.
 
 Menus are the white card with a 2px ink border (same as the home word card), 16px radius, no
-window inside a window. Rows are 44px, bare ink icons, `--pp-pink-soft` on hover; one `rh-item`
-style for every row. Credits bars show what is left (pink, amber under 20%, red at zero, and
+window inside a window. Rows are 44px, bare ink icons, `--pp-accent-soft` on hover; one `rh-item`
+style for every row. Credits bars show what is left (blue, amber under 20%, red at zero, and
 the words "Used up"). Only one menu is open at a time; Escape and a press outside close it and
 focus returns to the button. Opening is 160ms, `scale(.96)` from the button, off with reduced
 motion.
@@ -100,7 +101,7 @@ motion.
 ## Study rooms (/learn and the room pages)
 
 Same system as the home page, inside `.edith-premium`: white page, Inter Tight titles, one
-pink action. `/learn` shows the three rooms as one dark, one grey and one wide white card, each
+blue action. `/learn` shows the three rooms as one dark, one grey and one wide white card, each
 with its tools as small sticker chips. Inside a room, each column is a grey panel; every tool is
 a white card with a 2px ink border, a bare ink icon, its name, one line and an "Open" row. No
 photos or illustrations, no coloured strips, no labels above titles. Locked tools and rooms are
@@ -111,15 +112,15 @@ to the home page); the in-page "How it works" tours stay.
 
 These tool pages were written with fixed warm colours. They take the home look through a scope
 class, `.rita-app` (set in `__root.tsx`, also on `<html>` so dialogs inherit it): the tokens, the
-Figtree / Inter Tight fonts, the pink 8px/2px-ink buttons, and a block in `styles.css` that
+Figtree / Inter Tight fonts, the blue 8px/2px-ink buttons, and a block in `styles.css` that
 maps each old hex utility class (`text-[#23201d]`, `bg-[#8ec63f]`, ...) onto the palette by role.
 Delete that block to go back to the old look. Shared frames are hand-built: `StudyLayout` (site
 bar, sticker mode tabs, ink-border action cards with bare icons), `LaunchPanel`, `SubjectBoard`,
 `SessionStarter`, `DailyPanel`, the dialogs and the Memory Lab rounds. Rules: white page, grey
-panels, 2px ink borders on anything you press, pink only for the action and the "on" state,
+panels, 2px ink borders on anything you press, blue only for the action and the "on" state,
 green/red only as right/wrong feedback, no tinted icon circles, no capital-letter labels.
 Question bank, Lecture Lab and All in one follow the same rules: the question player, map rail,
-explanation panel and subject picker are ink-bordered cards with pink for the action.
+explanation panel and subject picker are ink-bordered cards with blue for the action.
 
 ## Accessibility floor
 

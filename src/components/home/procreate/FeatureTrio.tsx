@@ -37,7 +37,7 @@ function TalkPanel() {
         <span
           dir="ltr"
           className="inline-block rounded-md px-1.5 font-bold"
-          style={{ background: "var(--pp-pink-soft)" }}
+          style={{ background: "var(--pp-accent-soft)" }}
         >
           Ich möchte Wasser
         </span>
@@ -70,7 +70,11 @@ function WordsPanel() {
       ))}
       <span
         className="mt-1 self-start rounded-lg px-3 py-1.5 text-[12.5px] font-bold"
-        style={{ background: "var(--pp-pink)", border: "1.5px solid var(--pp-ink)", ...ink }}
+        style={{
+          background: "var(--pp-accent)",
+          border: "1.5px solid var(--pp-ink)",
+          color: "var(--pp-on-accent)",
+        }}
       >
         Turn 3 words into flashcards
       </span>
@@ -101,7 +105,7 @@ function StudyPanel() {
           <span
             className="absolute inset-x-0 top-3 h-[70px] rounded-xl"
             style={{
-              background: "var(--pp-pink-soft)",
+              background: "var(--pp-accent-soft)",
               border: "1px solid var(--pp-line)",
               transform: "rotate(3deg)",
             }}

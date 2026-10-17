@@ -12,10 +12,10 @@ import { useMemo } from "react";
 type Tone = { kicker: string; rule: string; chip: string; dot: string };
 
 const TONES: Tone[] = [
-  { kicker: "#ff7aac", rule: "#e8f5e9", chip: "#e8f5e9", dot: "#ff7aac" },
-  { kicker: "#121117", rule: "#ffe5f0", chip: "#ffe5f0", dot: "#121117" },
-  { kicker: "#121117", rule: "#f4f4f8", chip: "#f4f4f8", dot: "#ff7aac" },
-  { kicker: "#121117", rule: "#ffe5f0", chip: "#ffe5f0", dot: "#b3213f" },
+  { kicker: "#2b6df0", rule: "#e8f5e9", chip: "#e8f5e9", dot: "#2b6df0" },
+  { kicker: "#121117", rule: "#e7eefd", chip: "#e7eefd", dot: "#121117" },
+  { kicker: "#121117", rule: "#f4f4f8", chip: "#f4f4f8", dot: "#2b6df0" },
+  { kicker: "#121117", rule: "#e7eefd", chip: "#e7eefd", dot: "#b3213f" },
   { kicker: "#121117", rule: "#dcdce5", chip: "#f4f4f8", dot: "#121117" },
 ];
 

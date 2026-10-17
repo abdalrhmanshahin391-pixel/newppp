@@ -48,7 +48,7 @@ export function AddQuestionsDialog({
           onChange={(e) => setText(e.target.value)}
           rows={12}
           placeholder={SAMPLE}
-          className="w-full rounded-2xl border-2 border-[#121117] bg-white px-3.5 py-3 font-mono text-[13px] leading-relaxed text-[#121117] outline-none focus:border-[#ff7aac] focus:ring-2 focus:ring-[#ff7aac]/25"
+          className="w-full rounded-2xl border-2 border-[#121117] bg-white px-3.5 py-3 font-mono text-[13px] leading-relaxed text-[#121117] outline-none focus:border-[#2b6df0] focus:ring-2 focus:ring-[#2b6df0]/25"
         />
 
         <div className="flex flex-wrap items-center justify-between gap-3">

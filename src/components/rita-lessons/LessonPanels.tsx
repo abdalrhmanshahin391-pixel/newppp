@@ -29,7 +29,7 @@ export function LessonObjectivesPanel({
           className="h-14 w-14 shrink-0 border-2 border-white shadow"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold text-[var(--pp-pink-text)]">درس اليوم</p>
+          <p className="text-xs font-semibold text-[var(--pp-accent-text)]">درس اليوم</p>
           <h2 className="truncate text-lg font-bold">
             {session.lesson.title || session.lesson.title_ar}
           </h2>
@@ -46,7 +46,7 @@ export function LessonObjectivesPanel({
       </div>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--pp-line)]">
         <div
-          className="h-full rounded-full bg-[var(--pp-pink)] transition-all duration-500"
+          className="h-full rounded-full bg-[var(--pp-accent)] transition-all duration-500"
           style={{ width: `${goals.length ? (met / goals.length) * 100 : 0}%` }}
         />
       </div>
@@ -58,7 +58,7 @@ export function LessonObjectivesPanel({
             <li
               key={goal.id}
               className={`flex items-start gap-2 rounded-2xl px-3 py-2 text-sm transition-colors ${
-                done ? "bg-[var(--pp-pink-soft)]" : "bg-white"
+                done ? "bg-[var(--pp-accent-soft)]" : "bg-white"
               } ${fresh ? "ring-2 ring-[var(--pp-ink)]" : ""}`}
             >
               <span
@@ -77,7 +77,7 @@ export function LessonObjectivesPanel({
                 )}
                 {done && objectives[goal.id]?.evidence && (
                   <span
-                    className="mt-0.5 block text-xs italic text-[var(--pp-pink-text)]"
+                    className="mt-0.5 block text-xs italic text-[var(--pp-accent-text)]"
                     dir="ltr"
                   >
                     “{objectives[goal.id].evidence}”
@@ -137,7 +137,7 @@ export function LessonResultCard({
               الدرس التالي
             </Link>
           ) : (
-            <p className="rounded-2xl bg-[var(--pp-grey)] py-3 text-sm font-bold text-[var(--pp-pink-text)]">
+            <p className="rounded-2xl bg-[var(--pp-grey)] py-3 text-sm font-bold text-[var(--pp-accent-text)]">
               أنهيت كل الدروس المتاحة 🎉
             </p>
           )}

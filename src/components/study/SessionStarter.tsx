@@ -50,7 +50,7 @@ export function SessionStarter({
           className="inline-flex h-9 flex-1 items-center justify-center gap-1 rounded-lg text-[14px] font-semibold transition-colors"
           style={
             scope === "flagged"
-              ? { background: "#ffe5f0", color: "#121117", border: "2px solid #121117" }
+              ? { background: "#e7eefd", color: "#121117", border: "2px solid #121117" }
               : { color: "#6a697c", border: "2px solid transparent" }
           }
         >

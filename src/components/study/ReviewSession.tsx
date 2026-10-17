@@ -45,8 +45,8 @@ function ReviewFace({
 const GRADES = [
   { g: 0, label: "Again", key: "1", hint: "10 min", bg: "#ffffff", ink: "#121117" },
   { g: 1, label: "Hard", key: "2", hint: "soon", bg: "#ffffff", ink: "#121117" },
-  { g: 2, label: "Good", key: "3", hint: "on track", bg: "#ff7aac", ink: "#121117" },
-  { g: 3, label: "Easy", key: "4", hint: "later", bg: "#ffe5f0", ink: "#121117" },
+  { g: 2, label: "Good", key: "3", hint: "on track", bg: "#2b6df0", ink: "#ffffff" },
+  { g: 3, label: "Easy", key: "4", hint: "later", bg: "#e7eefd", ink: "#121117" },
 ] as const;
 
 function human(days: number) {
@@ -305,7 +305,7 @@ export function ReviewSession({
                   toast.success("Card paused — rewrite it when you have a minute");
                   setQueue((q) => q.filter((x) => x.row.card_id !== current.row.card_id));
                 }}
-                className="inline-flex items-center gap-1 rounded-md border-[1.5px] border-[#121117] bg-[#ffe5f0] px-3 py-1 text-[13px] font-semibold text-[#121117]"
+                className="inline-flex items-center gap-1 rounded-md border-[1.5px] border-[#121117] bg-[#e7eefd] px-3 py-1 text-[13px] font-semibold text-[#121117]"
               >
                 <PauseCircle size={13} /> Pause it
               </button>
@@ -342,7 +342,7 @@ export function ReviewSession({
           </button>
 
           {save && (
-            <p className="rita-pop inline-flex items-center gap-2 rounded-lg border-2 border-[#121117] bg-[#ffe5f0] px-4 py-2 text-sm font-semibold text-[#121117]">
+            <p className="rita-pop inline-flex items-center gap-2 rounded-lg border-2 border-[#121117] bg-[#e7eefd] px-4 py-2 text-sm font-semibold text-[#121117]">
               <Sparkles size={15} /> {save}
             </p>
           )}
@@ -399,7 +399,7 @@ export function ReviewSession({
               </p>
             )}
             {streak !== null && (
-              <p className="mt-4 inline-flex items-center gap-2 rounded-lg border-2 border-[#121117] bg-[#ffe5f0] px-4 py-2 text-sm font-semibold text-[#121117]">
+              <p className="mt-4 inline-flex items-center gap-2 rounded-lg border-2 border-[#121117] bg-[#e7eefd] px-4 py-2 text-sm font-semibold text-[#121117]">
                 <Flame size={16} /> {streak} day streak · {todayCards}/{goal} today
               </p>
             )}

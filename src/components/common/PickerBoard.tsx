@@ -116,8 +116,8 @@ export function PickerBoard({
         {onNewGroup && (
           <button
             onClick={onNewGroup}
-            className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-lg border-2 border-[#121117] px-5 text-[15px] font-semibold text-[#121117] transition hover:bg-[#fe9fc3]"
-            style={{ background: "#ff7aac" }}
+            className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-lg border-2 border-[#121117] px-5 text-[15px] font-semibold text-white transition hover:bg-[#2260e4]"
+            style={{ background: "#2b6df0" }}
           >
             <Plus size={15} /> New
           </button>
@@ -220,7 +220,7 @@ export function PickerBoard({
                         onAddToGroup(g);
                       }}
                       className="inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[11.5px] font-extrabold text-white transition hover:brightness-110"
-                      style={{ background: "#ff7aac" }}
+                      style={{ background: "#2b6df0" }}
                     >
                       <Plus size={12} /> {addLabel}
                     </button>
@@ -285,7 +285,7 @@ export function PickerBoard({
                             className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border-2 transition-colors duration-150"
                             style={{
                               borderColor: "#121117",
-                              background: on ? "#ff7aac" : "#ffffff",
+                              background: on ? "#2b6df0" : "#ffffff",
                             }}
                           >
                             {on && (
@@ -324,7 +324,7 @@ export function PickerBoard({
                                 e.stopPropagation();
                                 onAddContent(t, g);
                               }}
-                              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#ffe5f0] px-3 py-1.5 text-[11.5px] font-extrabold text-[#b3213f] transition hover:bg-[#ffe5f0]"
+                              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#e7eefd] px-3 py-1.5 text-[11.5px] font-extrabold text-[#b3213f] transition hover:bg-[#e7eefd]"
                             >
                               <Plus size={12} /> {addLabel}
                             </button>

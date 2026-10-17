@@ -133,7 +133,7 @@ export function SequenceRound({
               <button
                 type="button"
                 onClick={() => setItems((l) => move(l, i, i - 1))}
-                className="grid h-9 w-9 place-items-center rounded-lg text-[#121117] hover:bg-[#ffe5f0]"
+                className="grid h-9 w-9 place-items-center rounded-lg text-[#121117] hover:bg-[#e7eefd]"
                 aria-label="Move up"
               >
                 <ChevronUp size={16} />
@@ -141,7 +141,7 @@ export function SequenceRound({
               <button
                 type="button"
                 onClick={() => setItems((l) => move(l, i, i + 1))}
-                className="grid h-9 w-9 place-items-center rounded-lg text-[#121117] hover:bg-[#ffe5f0]"
+                className="grid h-9 w-9 place-items-center rounded-lg text-[#121117] hover:bg-[#e7eefd]"
                 aria-label="Move down"
               >
                 <ChevronDown size={16} />

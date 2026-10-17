@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 
 export const simpleInputCls =
-  "w-full rounded-lg border-2 border-[#121117] bg-white px-3.5 py-2.5 text-[15px] font-medium text-[#121117] outline-none placeholder:text-[#6a697c] focus:border-[#121117] focus:ring-4 focus:ring-[#ff7aac]/40";
+  "w-full rounded-lg border-2 border-[#121117] bg-white px-3.5 py-2.5 text-[15px] font-medium text-[#121117] outline-none placeholder:text-[#6a697c] focus:border-[#121117] focus:ring-4 focus:ring-[#2b6df0]/40";
 
 export const simpleLabelCls = "mb-1.5 block text-[14px] font-semibold text-[#121117]";
 
@@ -17,7 +17,7 @@ const cancelCls =
   "h-11 rounded-lg px-5 text-[15px] font-semibold text-[#121117] transition-colors hover:bg-[#f4f4f8]";
 
 const primaryCls =
-  "h-11 rounded-lg border-2 border-[#121117] bg-[#ff7aac] px-5 text-[15px] font-semibold text-[#121117] transition-colors hover:bg-[#fe9fc3]";
+  "h-11 rounded-lg border-2 border-[#121117] bg-[#2b6df0] px-5 text-[15px] font-semibold text-white transition-colors hover:bg-[#2260e4]";
 
 const dangerCls =
   "h-11 rounded-lg border-2 border-[#121117] bg-[#b3213f] px-5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90";

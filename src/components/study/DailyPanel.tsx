@@ -52,7 +52,7 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
         type="button"
         disabled={isLoading || due === 0}
         onClick={() => onReview(queue)}
-        className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-[#121117] bg-[#ff7aac] text-[15px] font-semibold text-[#121117] hover:bg-[#fe9fc3] disabled:opacity-50"
+        className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-[#121117] bg-[#2b6df0] text-[15px] font-semibold text-white hover:bg-[#2260e4] disabled:opacity-50"
       >
         <Sparkles size={16} />
         {due === 0 ? "Nothing due — nice" : "Review everything due"}
@@ -101,7 +101,7 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
               <span
                 key={f.day}
                 title={`${f.day}: ${f.cards} cards`}
-                className="flex-1 rounded-t-[3px] bg-[#ff7aac]"
+                className="flex-1 rounded-t-[3px] bg-[#2b6df0]"
                 style={{ height: `${Math.max(3, (f.cards / peak) * 100)}%` }}
               />
             ))}
@@ -145,7 +145,7 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
               }}
               className="rounded-xl px-3 py-2 text-left transition-colors"
               style={{
-                background: Math.abs(current - r.value) < 0.001 ? "#ffe5f0" : "#f4f4f8",
+                background: Math.abs(current - r.value) < 0.001 ? "#e7eefd" : "#f4f4f8",
               }}
             >
               <span className="block text-[14px] font-bold text-[#121117]">{r.label}</span>

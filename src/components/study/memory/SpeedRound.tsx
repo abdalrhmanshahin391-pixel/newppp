@@ -122,7 +122,7 @@ export function SpeedRound({
       <div className="mt-5 h-2.5 overflow-hidden rounded-full border-[1.5px] border-[#121117] bg-white">
         <div
           className="h-full rounded-full transition-[width] duration-100 ease-linear"
-          style={{ width: `${(left / LIMIT_MS) * 100}%`, background: "#ff7aac" }}
+          style={{ width: `${(left / LIMIT_MS) * 100}%`, background: "#2b6df0" }}
         />
       </div>
 

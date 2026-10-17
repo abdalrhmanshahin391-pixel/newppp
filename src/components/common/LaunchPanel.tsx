@@ -95,7 +95,7 @@ export function LaunchPanel({
               disabled={a.disabled}
               onClick={a.onClick}
               data-accent={accent}
-              className={`${base} bg-[#ff7aac] text-[#121117] hover:bg-[#fe9fc3]`}
+              className={`${base} bg-[#2b6df0] text-white hover:bg-[#2260e4]`}
             >
               {a.icon}
               {a.label}

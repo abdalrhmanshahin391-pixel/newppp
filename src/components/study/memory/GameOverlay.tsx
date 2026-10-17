@@ -110,7 +110,7 @@ export function GameOverlay({
         <button
           type="button"
           onClick={onClose}
-          className="grid h-10 w-10 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#121117] hover:bg-[#ffe5f0]"
+          className="grid h-10 w-10 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#121117] hover:bg-[#e7eefd]"
           aria-label="Close session"
         >
           <X size={18} />

@@ -64,7 +64,7 @@ function tableRows(md: string): string[][] {
 
 const TONE: Record<string, string> = {
   easy: "#2e7d32",
-  medium: "#ff7aac",
+  medium: "#2b6df0",
   hard: "#b3213f",
 };
 

@@ -27,8 +27,8 @@ export function QuestionMapRail({
             onClick={() => onJump(i)}
             className={`relative grid h-10 place-items-center rounded-lg border-2 border-[#121117] text-[14px] font-semibold transition-colors ${
               i === activeIndex
-                ? "bg-[#ff7aac] text-[#121117]"
-                : "bg-white text-[#121117] hover:bg-[#ffe5f0]"
+                ? "bg-[#2b6df0] text-white"
+                : "bg-white text-[#121117] hover:bg-[#e7eefd]"
             }`}
           >
             {item.position}

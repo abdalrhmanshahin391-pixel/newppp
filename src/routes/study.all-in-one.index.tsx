@@ -241,7 +241,7 @@ function AllInOneUpload() {
         <header className="mt-4">
           <div
             className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em]"
-            style={{ background: "#ffe5f0", color: ACCENT }}
+            style={{ background: "#e7eefd", color: ACCENT }}
           >
             <Wand2 size={13} /> All in one
           </div>
@@ -341,13 +341,13 @@ function AllInOneUpload() {
           <button
             onClick={() => void run()}
             disabled={busy}
-            className="mt-5 w-full rounded-lg border-2 border-[#121117] px-6 py-4 text-[16px] font-semibold text-[#121117] transition hover:bg-[#fe9fc3] disabled:opacity-50"
-            style={{ background: "#ff7aac" }}
+            className="mt-5 w-full rounded-lg border-2 border-[#121117] px-6 py-4 text-[16px] font-semibold text-white transition hover:bg-[#2260e4] disabled:opacity-50"
+            style={{ background: "#2b6df0" }}
           >
             {busy ? "Building…" : "Build everything"}
           </button>
 
-          <p className="mt-4 rounded-xl border-2 border-[#121117] bg-[#ffe5f0] px-4 py-3 text-[13.5px] font-medium leading-relaxed text-[#121117]">
+          <p className="mt-4 rounded-xl border-2 border-[#121117] bg-[#e7eefd] px-4 py-3 text-[13.5px] font-medium leading-relaxed text-[#121117]">
             <span className="font-black">This takes time — you don't have to wait here.</span>{" "}
             Close the page and come back whenever you like. Big books can take up to two hours, but it is
             usually finished in under 30 minutes.
@@ -379,14 +379,14 @@ function AllInOneUpload() {
                   <div className="flex items-start justify-between gap-2">
                     <span
                       className="grid h-9 w-9 place-items-center rounded-xl"
-                      style={{ background: "#ffe5f0", color: ACCENT }}
+                      style={{ background: "#e7eefd", color: ACCENT }}
                     >
                       <Wand2 size={17} />
                     </span>
                     {r.example && (
                       <span
                         className="rounded-full px-2 py-0.5 text-[9.5px] font-black uppercase tracking-[0.16em]"
-                        style={{ background: "#ffe5f0", color: ACCENT }}
+                        style={{ background: "#e7eefd", color: ACCENT }}
                       >
                         Example
                       </span>

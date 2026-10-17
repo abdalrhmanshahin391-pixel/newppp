@@ -145,7 +145,7 @@ export function QuestionPlayer({
 
       <div className="h-2 w-full bg-[#f4f4f8]">
         <div
-          className="h-full bg-[#ff7aac] transition-[width] duration-300"
+          className="h-full bg-[#2b6df0] transition-[width] duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -214,7 +214,7 @@ export function QuestionPlayer({
                           ? "border-[#2e7d32] bg-[#e8f5e9]"
                           : bad
                             ? "border-[#b3213f] bg-[#fdecef]"
-                            : "border-[#121117] bg-white hover:bg-[#ffe5f0]"
+                            : "border-[#121117] bg-white hover:bg-[#e7eefd]"
                       }`}
                     >
                       <span

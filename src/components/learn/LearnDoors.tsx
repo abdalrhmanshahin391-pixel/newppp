@@ -43,7 +43,7 @@ export function LearnDoors() {
           <path
             d="M4 15 C 70 3, 130 20, 200 11 S 330 5, 396 13"
             fill="none"
-            stroke="var(--pp-pink)"
+            stroke="var(--pp-accent)"
             strokeWidth="7"
             strokeLinecap="round"
           />

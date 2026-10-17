@@ -31,7 +31,7 @@ export function HowItWorksButton({ tool }: { tool: ToolDef }) {
           fontFamily: "Figtree, Inter, Helvetica, Arial, sans-serif",
         }}
       >
-        <Sparkles size={16} aria-hidden="true" style={{ color: "#d13d76" }} />
+        <Sparkles size={16} aria-hidden="true" style={{ color: "#2563eb" }} />
         <span>{isAr ? "كيف يعمل؟" : "How it works"}</span>
         <span
           role="button"
@@ -49,7 +49,7 @@ export function HowItWorksButton({ tool }: { tool: ToolDef }) {
             }
           }}
           className="rounded-md px-2 py-0.5 text-[12px] font-bold"
-          style={{ background: "#ffe5f0", border: "1.5px solid #121117" }}
+          style={{ background: "#e7eefd", border: "1.5px solid #121117" }}
         >
           {lang === "ar" ? "EN" : "ع"}
         </span>

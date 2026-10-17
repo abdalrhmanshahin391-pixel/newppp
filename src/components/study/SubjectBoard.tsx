@@ -3,7 +3,7 @@ import { Check, ChevronDown, ChevronUp, GripVertical, Pencil, Plus, Trash2 } fro
 import type { SampleSubject } from "@/lib/study-sample-data";
 import type { Selection } from "@/lib/use-study-subjects";
 
-const TONE_DOTS = ["#ff7aac"];
+const TONE_DOTS = ["#2b6df0"];
 
 type DragState =
   { kind: "subject"; from: number } | { kind: "sub"; si: number; from: number } | null;
@@ -22,7 +22,7 @@ export type SubjectBoardProps = {
 };
 
 const iconBtn =
-  "grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#6a697c] transition-colors hover:bg-[#ffe5f0] hover:text-[#121117]";
+  "grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#6a697c] transition-colors hover:bg-[#e7eefd] hover:text-[#121117]";
 
 function Box({
   checked,
@@ -122,7 +122,7 @@ export function SubjectBoard({
                 dropTarget ? "border-dashed border-[#121117]" : ""
               } ${
                 selected
-                  ? "border-[#121117] bg-[#ffe5f0]"
+                  ? "border-[#121117] bg-[#e7eefd]"
                   : "border-[#121117] bg-white hover:bg-[#f4f4f8]"
               }`}
             >
@@ -253,7 +253,7 @@ export function SubjectBoard({
                         subDrop ? "border-dashed border-[#121117]" : ""
                       } ${
                         subSelected
-                          ? "border-[#121117] bg-[#ffe5f0]"
+                          ? "border-[#121117] bg-[#e7eefd]"
                           : "border-[#dcdce5] bg-[#f4f4f8] hover:border-[#121117]"
                       }`}
                     >

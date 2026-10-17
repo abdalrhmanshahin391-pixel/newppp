@@ -20,7 +20,11 @@ function Node({ state }: { state: State }) {
     return (
       <span
         className={base}
-        style={{ background: "var(--pp-pink)", border: "3px solid var(--pp-ink)", ...ink }}
+        style={{
+          background: "var(--pp-accent)",
+          border: "3px solid var(--pp-ink)",
+          color: "var(--pp-on-accent)",
+        }}
       >
         <Check size={30} strokeWidth={3} aria-hidden="true" />
       </span>
@@ -30,9 +34,9 @@ function Node({ state }: { state: State }) {
       <span
         className={base}
         style={{
-          background: "var(--pp-pink-soft)",
+          background: "var(--pp-accent-soft)",
           border: "3px solid var(--pp-ink)",
-          boxShadow: "0 0 0 8px rgba(255,122,172,0.25)",
+          boxShadow: "0 0 0 8px rgba(43,109,240,0.25)",
           ...ink,
         }}
       >

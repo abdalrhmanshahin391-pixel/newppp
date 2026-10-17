@@ -131,7 +131,7 @@ export function MatchBoard({
     const isPicked = picked?.side === side && picked.id === id;
     const isWrong = wrong.includes(id);
     const isLeaving = leaving.includes(id);
-    const soft = "#ffe5f0";
+    const soft = "#e7eefd";
     const ink = "#121117";
     return (
       <button

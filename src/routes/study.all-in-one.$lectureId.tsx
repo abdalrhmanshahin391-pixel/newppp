@@ -244,7 +244,7 @@ function AllInOneWorkspace() {
         <header className="mt-4">
           <div
             className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em]"
-            style={{ background: "#ffe5f0", color: ACCENT }}
+            style={{ background: "#e7eefd", color: ACCENT }}
           >
             All in one
           </div>

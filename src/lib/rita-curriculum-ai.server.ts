@@ -358,7 +358,7 @@ export function lessonImagePrompt(scene: string) {
   return `A single square illustration for a language-learning app lesson, shown inside a round frame.
 Scene: ${scene.slice(0, 300)}
 Style: friendly flat vector cartoon, one or two characters with simple rounded shapes, thick dark ink outlines
-(#121117), soft cel shading, warm pink (#ff7aac) and soft pink (#ffe5f0) as the main colours with a few cheerful
+(#121117), soft cel shading, warm pink (#2b6df0) and soft pink (#e7eefd) as the main colours with a few cheerful
 accents, on a plain light pink background. The subject is large and centred and fills the frame. No words, no
 letters, no numbers, no logos, no border, no circle drawn around the picture.`;
 }

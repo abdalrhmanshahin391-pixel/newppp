@@ -270,7 +270,7 @@ export function ExplanationPanel({ explanation, onCapture }: Props) {
           className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border-2 border-[#121117] text-sm font-semibold transition-colors ${
             captureMode
               ? "bg-white text-[#121117] hover:bg-[#f4f4f8]"
-              : "bg-[#ff7aac] text-[#121117] hover:bg-[#fe9fc3]"
+              : "bg-[#2b6df0] text-white hover:bg-[#2260e4]"
           }`}
         >
           {captureMode ? <X className="w-4 h-4" /> : <Scissors className="w-4 h-4" />}
@@ -281,12 +281,12 @@ export function ExplanationPanel({ explanation, onCapture }: Props) {
       <div
         ref={containerRef}
         className={`relative px-5 md:px-6 py-6 text-[15px] leading-relaxed ${
-          captureMode ? "bg-[#ffe5f0] capture-active" : ""
+          captureMode ? "bg-[#e7eefd] capture-active" : ""
         }`}
       >
         <style>{`
-          .capture-active ::selection { background:#ff7aac; color:#121117; }
-          .capture-active ::-moz-selection { background:#ff7aac; color:#121117; }
+          .capture-active ::selection { background:#2b6df0; color:#ffffff; }
+          .capture-active ::-moz-selection { background:#2b6df0; color:#ffffff; }
         `}</style>
 
         {captureMode && (
@@ -310,7 +310,7 @@ export function ExplanationPanel({ explanation, onCapture }: Props) {
           onPointerDown={(e) => e.preventDefault()}
           type="button"
           style={{ position: "fixed", left: floatPos.x, top: floatPos.y, zIndex: 80 }}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border-2 border-[#121117] bg-[#ff7aac] text-[#121117] text-sm font-semibold animate-in fade-in zoom-in-95"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border-2 border-[#121117] bg-[#2b6df0] text-white text-sm font-semibold animate-in fade-in zoom-in-95"
         >
           <StickyNote className="w-4 h-4" />
           Capture
@@ -332,7 +332,7 @@ function SectionBlock({ section, showDivider }: { section: Section; showDivider:
         </h3>
       </div>
 
-      <div className="text-[#4b4a5c] [&_p]:my-2 [&_ul]:my-2 [&_ul]:pl-5 [&_ul]:list-disc [&_ol]:my-2 [&_ol]:pl-5 [&_ol]:list-decimal [&_li]:my-1 [&_strong]:font-bold [&_strong]:text-[#121117] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:bg-[#ffe5f0] [&_code]:text-[#121117] [&_code]:text-[13px]">
+      <div className="text-[#4b4a5c] [&_p]:my-2 [&_ul]:my-2 [&_ul]:pl-5 [&_ul]:list-disc [&_ol]:my-2 [&_ol]:pl-5 [&_ol]:list-decimal [&_li]:my-1 [&_strong]:font-bold [&_strong]:text-[#121117] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:bg-[#e7eefd] [&_code]:text-[#121117] [&_code]:text-[13px]">
         <ReactMarkdown
           remarkPlugins={[remarkGfm, remarkMath]}
           rehypePlugins={[[rehypeKatex, { throwOnError: false, strict: false, trust: true }]]}

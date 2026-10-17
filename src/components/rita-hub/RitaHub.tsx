@@ -22,7 +22,7 @@ function OrbPreview() {
         className="relative h-3/5 w-3/5 rounded-full shadow-[0_18px_40px_-18px_rgba(209,61,118,0.7)] transition-transform duration-300 group-hover:scale-105"
         style={{
           background:
-            "radial-gradient(circle at 36% 30%, #fff 0%, #ffd1e2 26%, #ff7aac 62%, #dc4d80 100%)",
+            "radial-gradient(circle at 36% 30%, #fff 0%, #d1e0fc 26%, #2b6df0 62%, #1f5fd6 100%)",
         }}
       />
     </div>

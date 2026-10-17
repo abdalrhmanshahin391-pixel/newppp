@@ -61,11 +61,19 @@ export function GameSetup({
               onClick={() => onMode(m.key)}
               aria-pressed={on}
               className={`min-h-16 rounded-xl border-2 border-[#121117] px-4 py-3 text-left transition-colors ${
-                on ? "bg-[#ff7aac]" : "bg-white hover:bg-[#ffe5f0]"
+                on ? "bg-[#2b6df0]" : "bg-white hover:bg-[#e7eefd]"
               }`}
             >
-              <span className="block text-[15px] font-bold text-[#121117]">{m.label}</span>
-              <span className="block text-[13px] font-medium text-[#4b4a5c]">{m.hint}</span>
+              <span
+                className={`block text-[15px] font-bold ${on ? "text-white" : "text-[#121117]"}`}
+              >
+                {m.label}
+              </span>
+              <span
+                className={`block text-[13px] font-medium ${on ? "text-white/90" : "text-[#4b4a5c]"}`}
+              >
+                {m.hint}
+              </span>
             </button>
           );
         })}
@@ -108,7 +116,7 @@ function Toggle({
       <span className="text-[14px] font-semibold text-[#121117]">{label}</span>
       <span
         className="relative h-6 w-11 rounded-full transition-colors"
-        style={{ background: checked ? "#ff7aac" : "#ffffff", border: "2px solid #121117" }}
+        style={{ background: checked ? "#2b6df0" : "#ffffff", border: "2px solid #121117" }}
       >
         <span
           className="absolute top-[1px] h-4 w-4 rounded-full bg-[#121117] transition-all"

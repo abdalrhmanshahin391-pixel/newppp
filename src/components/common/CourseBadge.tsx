@@ -1,9 +1,9 @@
 export const BADGE_PRESETS: { label: string; color: string }[] = [
-  { label: "NEW", color: "#ff7aac" },
+  { label: "NEW", color: "#2b6df0" },
   { label: "HOT OFFER", color: "#b3213f" },
-  { label: "MOST WANTED", color: "#ff7aac" },
+  { label: "MOST WANTED", color: "#2b6df0" },
   { label: "LIMITED", color: "#121117" },
-  { label: "FREE", color: "#ff7aac" },
+  { label: "FREE", color: "#2b6df0" },
 ];
 
 export function badgeIsLive(expires?: string | null) {
@@ -28,7 +28,7 @@ export function CourseBadge({
       className="course-badge absolute top-2.5 left-2.5 z-10 inline-flex items-center overflow-hidden text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full"
       style={{
         background: c,
-        color: c === "#ff7aac" ? "#121117" : "#ffffff",
+        color: "#ffffff",
         border: "2px solid #121117",
       }}
     >

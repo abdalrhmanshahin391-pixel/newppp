@@ -75,10 +75,10 @@ export function BuildProgress({
         </p>
       </div>
 
-      <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[#ffe5f0]">
+      <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[#e7eefd]">
         <div
           className="h-full rounded-full transition-[width] duration-700 ease-out"
-          style={{ width: `${pct}%`, background: "#ff7aac" }}
+          style={{ width: `${pct}%`, background: "#2b6df0" }}
         />
       </div>
 
@@ -91,8 +91,8 @@ export function BuildProgress({
               <span
                 className="grid h-6 w-6 shrink-0 place-items-center rounded-lg"
                 style={{
-                  background: isDone ? "#e8f5e9" : isNow ? "#ffe5f0" : "#f4f4f8",
-                  color: isDone ? "#ff7aac" : isNow ? "#121117" : "#6a697c",
+                  background: isDone ? "#e8f5e9" : isNow ? "#e7eefd" : "#f4f4f8",
+                  color: isDone ? "#2b6df0" : isNow ? "#121117" : "#6a697c",
                 }}
               >
                 {isDone ? <Check size={14} /> : isNow ? <Loader2 size={14} className="animate-spin" /> : null}

@@ -297,7 +297,7 @@ function NewLectureQuizPage() {
             <button
               onClick={() => setSource("pdf")}
               className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-extrabold ${
-                source === "pdf" ? "border-[#121117] bg-[#ffe5f0] text-[#121117]" : "border-[#121117]"
+                source === "pdf" ? "border-[#121117] bg-[#e7eefd] text-[#121117]" : "border-[#121117]"
               }`}
             >
               <FileUp size={15} /> PDF
@@ -305,7 +305,7 @@ function NewLectureQuizPage() {
             <button
               onClick={() => setSource("text")}
               className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-extrabold ${
-                source === "text" ? "border-[#121117] bg-[#ffe5f0] text-[#121117]" : "border-[#121117]"
+                source === "text" ? "border-[#121117] bg-[#e7eefd] text-[#121117]" : "border-[#121117]"
               }`}
             >
               <Type size={15} /> Paste text
@@ -313,7 +313,7 @@ function NewLectureQuizPage() {
           </div>
 
           {locked ? (
-            <div className="mt-4 rounded-2xl border border-[#ff7aac] bg-[#f4f4f8] px-5 py-6 text-center">
+            <div className="mt-4 rounded-2xl border border-[#2b6df0] bg-[#f4f4f8] px-5 py-6 text-center">
               <p className="text-[14px] font-extrabold text-[#b3213f]">Uploading is off for now</p>
               <p className="mt-1 text-[13px] text-[#6a697c]">{lockReason}</p>
               <Link
@@ -385,7 +385,7 @@ function NewLectureQuizPage() {
                 key={n}
                 onClick={() => setCount(n)}
                 className={`rounded-full border px-4 py-2 text-[13px] font-extrabold ${
-                  count === n ? "border-[#121117] bg-[#ffe5f0] text-[#121117]" : "border-[#121117]"
+                  count === n ? "border-[#121117] bg-[#e7eefd] text-[#121117]" : "border-[#121117]"
                 }`}
               >
                 {n}
@@ -409,7 +409,7 @@ function NewLectureQuizPage() {
                 key={d.k}
                 onClick={() => setDifficulty(d.k as typeof difficulty)}
                 className={`rounded-full border px-4 py-2 text-[13px] font-extrabold ${
-                  difficulty === d.k ? "border-[#121117] bg-[#ffe5f0] text-[#121117]" : "border-[#121117]"
+                  difficulty === d.k ? "border-[#121117] bg-[#e7eefd] text-[#121117]" : "border-[#121117]"
                 }`}
               >
                 {d.l}

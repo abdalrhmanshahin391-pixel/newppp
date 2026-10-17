@@ -26,7 +26,7 @@ export function LangSwitch({
           className="rounded-md px-3 py-1 text-[12.5px] font-bold transition-colors"
           style={
             lang === l
-              ? { background: "#ff7aac", color: "#121117" }
+              ? { background: "#2b6df0", color: "#ffffff" }
               : { background: "transparent", color: "#6a697c" }
           }
         >

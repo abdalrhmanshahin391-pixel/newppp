@@ -59,7 +59,7 @@ type Stats = Record<string, { wrong: number; flagged: number }>;
 
 const CREAM = "#ffffff";
 const INK = "#121117";
-const ACCENT = "#ff7aac";
+const ACCENT = "#2b6df0";
 
 
 function LectureLabPage() {
