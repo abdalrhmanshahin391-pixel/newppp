@@ -8,6 +8,9 @@ const VoiceBand = lazy(() => import("./VoiceBand").then((m) => ({ default: m.Voi
 const LessonPathPreview = lazy(() =>
   import("./LessonPathPreview").then((m) => ({ default: m.LessonPathPreview })),
 );
+const UnderTheHood = lazy(() =>
+  import("./UnderTheHood").then((m) => ({ default: m.UnderTheHood })),
+);
 const HomeFaq = lazy(() => import("./HomeFaq").then((m) => ({ default: m.HomeFaq })));
 const FinalCta = lazy(() => import("./FinalCta").then((m) => ({ default: m.FinalCta })));
 
@@ -30,6 +33,7 @@ export function ProHome() {
         <FeatureTrio />
         <VoiceBand />
         <LessonPathPreview />
+        <UnderTheHood />
       </Suspense>
 
       <Suspense fallback={<div className="min-h-[45vh]" aria-hidden="true" />}>

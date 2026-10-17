@@ -4773,3 +4773,10 @@ html.rita-app,
 .rita-app [class*="border-black/"] {
   border-color: var(--pp-line) !important;
 }
+
+/* Timeline bars on the home page grow once; calm motion shows them at full length. */
+@media (prefers-reduced-motion: reduce) {
+  .hood-bar {
+    transition: none !important;
+  }
+}

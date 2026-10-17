@@ -136,6 +136,16 @@ admins only for now and live in their own table (`rita_lesson_slides`), so the p
 the migration is applied. Pure rules (slide schema, next-topic suggestions) are in
 `src/lib/rita-slides.ts` with tests in `rita-slides.test.ts`.
 
+## Home "Under the hood" band
+
+`src/components/home/procreate/UnderTheHood.tsx`, after the lesson path. Speed story for Rita, told in four parts: a scripted mixed-language transcript demo, an overlap timeline, five capability cells, and a goals table.
+
+- Honest numbers only. Latency figures are goals, not results, and the table says so with a "Measuring" status. The one measured figure (about 75 ms) is the voice engine alone, with its date, region and "not end to end" stated next to it. Replace a goal with a result only when recorded calls back it.
+- Every number is defined where it appears (what is measured, from where to where).
+- The demo is labelled as a scripted example. It has a Replay button, a full-text `sr-only` version, and shows the whole text at once under reduced motion.
+- Mixed-direction text is grouped by language into `dir`/`lang` spans so Arabic never reorders neighbouring words.
+- No vendor names and no compliance claims on the page.
+
 ## Accessibility floor
 
 Contrast AA (4.5:1 text, 3:1 large text and UI), visible focus, keyboard-reachable controls,
