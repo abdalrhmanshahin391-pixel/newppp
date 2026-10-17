@@ -8,7 +8,7 @@ import { shuffle } from "@/lib/de-lab";
 import { useAuth } from "@/hooks/useAuth";
 import { Segmented, ToggleChip } from "@/components/german/LabControls";
 
-const ACCENT = "#e0774f";
+const ACCENT = "#d9506d";
 
 export const Route = createFileRoute("/german/speak")({
   head: () => ({
@@ -84,7 +84,7 @@ function SpeakPage() {
             {items.isFetching ? <Loader2 className="animate-spin" size={16} /> : <Mic size={16} />}
             Start speaking
           </button>
-          <p className="mt-2 text-center text-[12.5px] font-bold text-[#8a8175]">
+          <p className="mt-2 text-center text-[12.5px] font-bold text-[#6a697c]">
             {selected.length === 0 ? "Select at least one sub-subject." : `${pool.length} items ready`}
           </p>
         </div>

@@ -95,7 +95,7 @@ function SubjectPage() {
             }
           />
 
-          <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-[#6d665c]">
+          <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-[#54546a]">
             {list.length} card{list.length === 1 ? "" : "s"} in this subject
             {subs.length > 0 && " and its sub-subjects"}.
           </p>
@@ -122,11 +122,11 @@ function SubjectPage() {
                   style={{ background: c.dot }}
                 />
                 <p className="text-[15px] font-bold leading-snug">{card.front}</p>
-                <p className="mt-2 text-[14.5px] leading-relaxed text-[#6d665c]">{card.back}</p>
+                <p className="mt-2 text-[14.5px] leading-relaxed text-[#54546a]">{card.back}</p>
                 <button
                   type="button"
                   onClick={() => remove.mutate(card.id)}
-                  className="absolute right-3 top-3 hidden rounded-full p-1.5 text-[#c2b9aa] hover:text-[#c4664f] group-hover:block"
+                  className="absolute right-3 top-3 hidden rounded-full p-1.5 text-[#c4c4d1] hover:text-[#c4314f] group-hover:block"
                   aria-label="Delete card"
                 >
                   <Trash2 size={15} />
@@ -141,7 +141,7 @@ function SubjectPage() {
                 className="flex min-h-[7rem] flex-col items-start justify-center gap-1.5 rounded-2xl border border-dashed border-black/15 px-6 text-left"
               >
                 <span className="text-[15px] font-bold">Add your first cards</span>
-                <span className="text-[13.5px] text-[#8b8377]">
+                <span className="text-[13.5px] text-[#6a697c]">
                   One per line: question | answer
                 </span>
               </button>
@@ -195,7 +195,7 @@ function AddCards({
           <select
             value={target}
             onChange={(e) => setTarget(e.target.value)}
-            className="h-11 rounded-2xl bg-[#fbf5e9] px-4 text-[14px] font-semibold outline-none"
+            className="h-11 rounded-2xl bg-[#f4f4f8] px-4 text-[14px] font-semibold outline-none"
           >
             <option value={subjectId}>{parentName}</option>
             {subs.map((s) => (
@@ -211,16 +211,16 @@ function AddCards({
         value={front}
         onChange={(e) => setFront(e.target.value)}
         placeholder="Front — the question"
-        className="mt-5 h-12 w-full rounded-2xl bg-[#fbf5e9] px-4 text-[15px] outline-none placeholder:text-[#b3aa9c]"
+        className="mt-5 h-12 w-full rounded-2xl bg-[#f4f4f8] px-4 text-[15px] outline-none placeholder:text-[#9a9aab]"
       />
       <input
         value={back}
         onChange={(e) => setBack(e.target.value)}
         placeholder="Back — the answer"
-        className="mt-3 h-12 w-full rounded-2xl bg-[#fbf5e9] px-4 text-[15px] outline-none placeholder:text-[#b3aa9c]"
+        className="mt-3 h-12 w-full rounded-2xl bg-[#f4f4f8] px-4 text-[15px] outline-none placeholder:text-[#9a9aab]"
       />
 
-      <p className="mt-6 text-[13px] font-bold uppercase tracking-[0.15em] text-[#b3aa9c]">
+      <p className="mt-6 text-[13px] font-bold uppercase tracking-[0.15em] text-[#9a9aab]">
         Or paste many at once
       </p>
       <textarea
@@ -228,7 +228,7 @@ function AddCards({
         onChange={(e) => setBatch(e.target.value)}
         rows={4}
         placeholder={"question | answer\nquestion | answer"}
-        className="mt-2 w-full rounded-2xl bg-[#fbf5e9] p-4 text-[14.5px] leading-relaxed outline-none placeholder:text-[#b3aa9c]"
+        className="mt-2 w-full rounded-2xl bg-[#f4f4f8] p-4 text-[14.5px] leading-relaxed outline-none placeholder:text-[#9a9aab]"
       />
 
       <div className="mt-6 flex gap-3">
@@ -242,7 +242,7 @@ function AddCards({
         <button
           type="button"
           onClick={onClose}
-          className="inline-flex h-12 items-center rounded-full px-6 text-[15px] font-semibold text-[#8b8377]"
+          className="inline-flex h-12 items-center rounded-full px-6 text-[15px] font-semibold text-[#6a697c]"
         >
           Cancel
         </button>

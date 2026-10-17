@@ -393,8 +393,8 @@ function QuestionCard({
       </div>
 
       {revealed && question.explanation && (
-        <div className="mx-5 mb-7 overflow-hidden rounded-2xl border border-rose-900/15 bg-card md:mx-7">
-          <div className="border-b border-rose-900/10 bg-rose-50/60 px-5 py-3.5 text-[15px] font-bold text-rose-900">
+        <div className="mx-5 mb-7 overflow-hidden rounded-2xl border border-[#5a1020]/15 bg-card md:mx-7">
+          <div className="border-b border-[#5a1020]/10 bg-[#fdecef]/60 px-5 py-3.5 text-[15px] font-bold text-rose-900">
             Explanation
           </div>
           <div className="px-5 py-5">

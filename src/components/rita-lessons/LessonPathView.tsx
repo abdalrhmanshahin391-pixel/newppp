@@ -128,7 +128,7 @@ export function LessonPathView({
               aria-label="تقدّمك في الدروس"
             >
               <div
-                className="h-full rounded-full bg-[var(--pp-pink)] transition-[width] duration-300 motion-reduce:transition-none"
+                className="h-full rounded-full bg-[var(--pp-accent)] transition-[width] duration-300 motion-reduce:transition-none"
                 style={{ width: `${(completed / lessons.length) * 100}%` }}
               />
             </div>
@@ -147,7 +147,7 @@ export function LessonPathView({
       {reviews.length > 0 && (
         <section className="mx-auto mt-4 max-w-md px-4">
           <div className="rounded-2xl bg-[var(--pp-grey)] p-3 text-right">
-            <p className="text-xs font-bold text-[var(--pp-pink-text)]">مراجعة مقترحة</p>
+            <p className="text-xs font-bold text-[var(--pp-accent-text)]">مراجعة مقترحة</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {reviews.slice(0, 4).map((review) => (
                 <button
@@ -170,7 +170,7 @@ export function LessonPathView({
         </p>
       )}
       {!lessons && !error && (
-        <div className="grid place-items-center py-24 text-[var(--pp-pink-text)]">
+        <div className="grid place-items-center py-24 text-[var(--pp-accent-text)]">
           <Loader2 className="animate-spin" />
         </div>
       )}
@@ -222,7 +222,7 @@ export function LessonPathView({
                 <LessonStars stars={lesson.stars} />
                 <span className="relative mt-1 block" style={{ width: NODE, height: NODE }}>
                   {isCurrent && (
-                    <span className="absolute -inset-2 rounded-full bg-[var(--pp-pink)]/40 motion-safe:animate-pulse" />
+                    <span className="absolute -inset-2 rounded-full bg-[var(--pp-accent)]/40 motion-safe:animate-pulse" />
                   )}
                   {/* Solid backing so the dotted path never shows through a faded node. */}
                   <span className="absolute inset-0 rounded-full bg-white" />
@@ -239,14 +239,14 @@ export function LessonPathView({
                     </span>
                   )}
                   {lesson.state === "done" && (
-                    <span className="absolute bottom-0 left-0 grid h-8 w-8 place-items-center rounded-full border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] text-[var(--pp-ink)]">
+                    <span className="absolute bottom-0 left-0 grid h-8 w-8 place-items-center rounded-full border-2 border-[var(--pp-ink)] bg-[var(--pp-accent)] text-[var(--pp-on-accent)]">
                       <Check size={16} strokeWidth={3} />
                     </span>
                   )}
                   <span
                     className={`absolute -top-1 right-0 rounded-full px-2 py-0.5 text-[10px] font-bold text-white ${
                       lesson.kind === "vocabulary"
-                        ? "border border-[var(--pp-ink)] bg-[var(--pp-pink)] !text-[var(--pp-ink)]"
+                        ? "border border-[var(--pp-ink)] bg-[var(--pp-accent)] !text-[var(--pp-on-accent)]"
                         : "bg-[var(--pp-ink)]"
                     }`}
                   >
@@ -259,7 +259,7 @@ export function LessonPathView({
                   {lesson.title || lesson.title_ar}
                 </span>
                 {lesson.in_progress && !locked ? (
-                  <span className="mt-1 text-[12px] font-semibold text-[var(--pp-pink-text)]">
+                  <span className="mt-1 text-[12px] font-semibold text-[var(--pp-accent-text)]">
                     قيد التقدّم
                   </span>
                 ) : (

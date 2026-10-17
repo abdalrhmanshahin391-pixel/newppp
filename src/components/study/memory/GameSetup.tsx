@@ -28,26 +28,26 @@ export function GameSetup({
   scopeLabel: string | null;
 }) {
   return (
-    <div className="rounded-3xl border border-border bg-card p-6 shadow-lg shadow-foreground/5">
+    <div className="rounded-[20px] bg-white p-6" style={{ border: "2px solid #121117" }}>
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">Session</p>
+        <p className="text-[14px] font-semibold text-[#6a697c]">Session</p>
         <button
           type="button"
           onClick={() => onMuted(!muted)}
-          className="grid h-8 w-8 place-items-center rounded-lg text-[#a29a8d] hover:bg-black/[0.06]"
+          className="grid h-9 w-9 place-items-center rounded-lg text-[#6a697c] hover:bg-[#f4f4f8]"
           aria-label={muted ? "Unmute sounds" : "Mute sounds"}
         >
           {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>
       </div>
 
-      <p className="mt-3 text-[34px] font-black leading-none text-foreground">
+      <p className="mt-3 text-[38px] font-bold leading-none tracking-[-0.03em] text-[#121117]">
         {pairCount}
-        <span className="ml-1.5 text-[13px] font-bold text-[#a29a8d]">
+        <span className="ml-1.5 text-[14px] font-semibold text-[#6a697c]">
           pair{pairCount === 1 ? "" : "s"} ready
         </span>
       </p>
-      <p className="mt-1 truncate text-[12.5px] font-semibold text-[#a29a8d]">
+      <p className="mt-1 truncate text-[14px] font-medium text-[#6a697c]">
         {scopeLabel ?? "Tick a subject or sub-subject"}
       </p>
 
@@ -60,12 +60,20 @@ export function GameSetup({
               type="button"
               onClick={() => onMode(m.key)}
               aria-pressed={on}
-               className={`min-h-16 rounded-2xl border px-4 py-3 text-left transition-colors ${
-                 on ? "border-primary bg-primary/5" : "border-border bg-card hover:bg-muted"
+              className={`min-h-16 rounded-xl border-2 border-[#121117] px-4 py-3 text-left transition-colors ${
+                on ? "bg-[#2b6df0]" : "bg-white hover:bg-[#e7eefd]"
               }`}
             >
-              <span className="block text-[13.5px] font-extrabold text-[#23201d]">{m.label}</span>
-              <span className="block text-[11.5px] font-semibold text-[#a29a8d]">{m.hint}</span>
+              <span
+                className={`block text-[15px] font-bold ${on ? "text-white" : "text-[#121117]"}`}
+              >
+                {m.label}
+              </span>
+              <span
+                className={`block text-[13px] font-medium ${on ? "text-white/90" : "text-[#4b4a5c]"}`}
+              >
+                {m.hint}
+              </span>
             </button>
           );
         })}
@@ -80,7 +88,7 @@ export function GameSetup({
         type="button"
         onClick={onPlay}
         disabled={pairCount === 0}
-         className="rita-pill mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-[15px] font-extrabold disabled:opacity-40"
+        className="rita-pill mt-5 flex h-12 w-full items-center justify-center gap-2 text-[15px] font-semibold disabled:opacity-40"
       >
         <Play size={16} /> Play
       </button>
@@ -103,16 +111,16 @@ function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="flex items-center justify-between rounded-xl bg-white px-4 py-2.5"
+      className="flex items-center justify-between rounded-xl bg-[#f4f4f8] px-4 py-2.5"
     >
-      <span className="text-[13px] font-bold text-[#23201d]">{label}</span>
+      <span className="text-[14px] font-semibold text-[#121117]">{label}</span>
       <span
         className="relative h-6 w-11 rounded-full transition-colors"
-        style={{ background: checked ? "#6ab887" : "#ded6c7" }}
+        style={{ background: checked ? "#2b6df0" : "#ffffff", border: "2px solid #121117" }}
       >
         <span
-          className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all"
-          style={{ left: checked ? 22 : 2 }}
+          className="absolute top-[1px] h-4 w-4 rounded-full bg-[#121117] transition-all"
+          style={{ left: checked ? 21 : 2 }}
         />
       </span>
     </button>

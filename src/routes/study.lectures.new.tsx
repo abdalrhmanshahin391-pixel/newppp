@@ -32,8 +32,8 @@ export const Route = createFileRoute("/study/lectures/new")({
   component: NewLectureQuizPage,
 });
 
-const CREAM = "#fbf5e9";
-const INK = "#23201d";
+const CREAM = "#ffffff";
+const INK = "#121117";
 
 const QUIZ_STEPS: BuildStep[] = [
   { key: "read", label: "Reading the lecture", weight: 1 },
@@ -228,10 +228,10 @@ function NewLectureQuizPage() {
         <SiteHeader />
         <main className="mx-auto max-w-xl px-4 py-24 text-center">
           <h1 className="font-display text-3xl font-black">Lecture Lab</h1>
-          <p className="mt-3 text-[15px] text-[#4a453d]">Sign in to build a quiz from your lecture.</p>
+          <p className="mt-3 text-[15px] text-[#4b4a5c]">Sign in to build a quiz from your lecture.</p>
           <Link
             to="/login"
-            className="mt-6 inline-flex rounded-full bg-[#23201d] px-6 py-3 text-[14px] font-extrabold text-white"
+            className="mt-6 inline-flex rounded-full bg-[#121117] px-6 py-3 text-[14px] font-extrabold text-white"
           >
             Sign in
           </Link>
@@ -244,25 +244,25 @@ function NewLectureQuizPage() {
     <div className="min-h-screen" style={{ background: CREAM, color: INK }}>
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-4 py-10 md:px-8 md:py-14">
-        <Link to="/study/lectures" className="inline-flex items-center gap-2 text-[13px] font-bold text-[#6b6357]">
+        <Link to="/study/lectures" className="inline-flex items-center gap-2 text-[13px] font-bold text-[#6a697c]">
           <ArrowLeft size={15} /> Back to Lecture Lab
         </Link>
 
         <h1 className="mt-4 font-display text-[32px] font-black leading-tight tracking-tight md:text-[38px]">
           New lecture quiz
         </h1>
-        <p className="mt-2 text-[15px] text-[#4a453d]">
+        <p className="mt-2 text-[15px] text-[#4b4a5c]">
           Pick where it belongs, drop the lecture, choose the shape of the quiz.
         </p>
 
         <section className="mt-7">
           <h2 className="font-display text-[18px] font-black">1 · Where does it go?</h2>
-          <p className="mt-1 text-[13px] text-[#6b6357]">
+          <p className="mt-1 text-[13px] text-[#6a697c]">
             Open a subject and tick the sub-subject this lecture belongs to.
           </p>
           <div className="mt-3">
             <PickerBoard
-              accent="#3f2c73"
+              accent="#121117"
               groups={pickerGroups}
               selected={subtopicId ? [subtopicId] : []}
               onToggle={(id) => setSubtopicId((cur) => (cur === id ? "" : id))}
@@ -283,7 +283,7 @@ function NewLectureQuizPage() {
             {pickerGroups.length === 0 && (
               <button
                 onClick={() => void quickStart()}
-                className="mt-3 inline-flex rounded-full bg-[#3f2c73] px-5 py-2.5 text-[13px] font-extrabold text-white"
+                className="mt-3 inline-flex rounded-full bg-[#121117] px-5 py-2.5 text-[13px] font-extrabold text-white"
               >
                 Set one up for me
               </button>
@@ -291,13 +291,13 @@ function NewLectureQuizPage() {
           </div>
         </section>
 
-        <section className="mt-5 rounded-[26px] border border-black/[0.07] bg-white p-5">
+        <section className="mt-5 rounded-[26px] border-2 border-[#121117] bg-white p-5">
           <h2 className="font-display text-[18px] font-black">2 · The lecture</h2>
           <div className="mt-3 flex gap-2">
             <button
               onClick={() => setSource("pdf")}
               className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-extrabold ${
-                source === "pdf" ? "border-[#3f2c73] bg-[#f2edfb] text-[#3f2c73]" : "border-black/10"
+                source === "pdf" ? "border-[#121117] bg-[#e7eefd] text-[#121117]" : "border-[#121117]"
               }`}
             >
               <FileUp size={15} /> PDF
@@ -305,7 +305,7 @@ function NewLectureQuizPage() {
             <button
               onClick={() => setSource("text")}
               className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-extrabold ${
-                source === "text" ? "border-[#3f2c73] bg-[#f2edfb] text-[#3f2c73]" : "border-black/10"
+                source === "text" ? "border-[#121117] bg-[#e7eefd] text-[#121117]" : "border-[#121117]"
               }`}
             >
               <Type size={15} /> Paste text
@@ -313,23 +313,23 @@ function NewLectureQuizPage() {
           </div>
 
           {locked ? (
-            <div className="mt-4 rounded-2xl border border-[#e6c9a8] bg-[#fdf3e6] px-5 py-6 text-center">
-              <p className="text-[14px] font-extrabold text-[#7a4b16]">Uploading is off for now</p>
-              <p className="mt-1 text-[13px] text-[#6b6357]">{lockReason}</p>
+            <div className="mt-4 rounded-2xl border border-[#2b6df0] bg-[#f4f4f8] px-5 py-6 text-center">
+              <p className="text-[14px] font-extrabold text-[#b3213f]">Uploading is off for now</p>
+              <p className="mt-1 text-[13px] text-[#6a697c]">{lockReason}</p>
               <Link
                 to="/pricing"
-                className="mt-4 inline-flex rounded-full bg-[#23201d] px-5 py-2.5 text-[13px] font-extrabold text-white"
+                className="mt-4 inline-flex rounded-full bg-[#121117] px-5 py-2.5 text-[13px] font-extrabold text-white"
               >
                 See plans
               </Link>
             </div>
           ) : source === "pdf" ? (
-            <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-black/15 bg-[#faf6ec] px-6 py-10 text-center">
-              <FileUp size={22} className="text-[#7a4b16]" />
+            <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#121117] bg-[#f4f4f8] px-6 py-10 text-center">
+              <FileUp size={22} className="text-[#b3213f]" />
               <span className="mt-2 text-[14px] font-extrabold">
                 {file ? file.name : "Choose your lecture PDF"}
               </span>
-              <span className="mt-1 text-[12px] text-[#6b6357]">
+              <span className="mt-1 text-[12px] text-[#6a697c]">
                 Scans are fine too — the pages get read as pictures.
               </span>
               <input
@@ -359,45 +359,45 @@ function NewLectureQuizPage() {
               onChange={(e) => setPasted(e.target.value)}
               rows={8}
               placeholder="Paste the lecture text here…"
-              className="mt-4 w-full rounded-2xl border border-black/10 p-4 text-[14px] leading-relaxed"
+              className="mt-4 w-full rounded-2xl border-2 border-[#121117] p-4 text-[14px] leading-relaxed"
             />
           )}
 
 
-          <label className="mt-4 block text-[12px] font-black uppercase tracking-[0.14em] text-[#7a4b16]">
+          <label className="mt-4 block text-[13px] font-semibold text-[#121117]">
             Lecture title
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={file?.name?.replace(/\.pdf$/i, "") || "e.g. Heart failure — week 4"}
-              className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2.5 text-[14px] font-semibold normal-case tracking-normal text-[#23201d]"
+              className="mt-1 w-full rounded-xl border-2 border-[#121117] px-3 py-2.5 text-[14px] font-semibold normal-case tracking-normal text-[#121117]"
             />
           </label>
         </section>
 
-        <section className="mt-5 rounded-[26px] border border-black/[0.07] bg-white p-5">
+        <section className="mt-5 rounded-[26px] border-2 border-[#121117] bg-white p-5">
           <h2 className="font-display text-[18px] font-black">3 · Shape of the quiz</h2>
 
-          <div className="mt-3 text-[12px] font-black uppercase tracking-[0.14em] text-[#7a4b16]">Questions</div>
+          <div className="mt-3 text-[13px] font-semibold text-[#121117]">Questions</div>
           <div className="mt-2 flex flex-wrap gap-2">
             {[5, 10, 15, 20, 30].map((n) => (
               <button
                 key={n}
                 onClick={() => setCount(n)}
                 className={`rounded-full border px-4 py-2 text-[13px] font-extrabold ${
-                  count === n ? "border-[#4b9b2e] bg-[#eef7e8] text-[#2f6b1c]" : "border-black/10"
+                  count === n ? "border-[#121117] bg-[#e7eefd] text-[#121117]" : "border-[#121117]"
                 }`}
               >
                 {n}
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[12px] text-[#6b6357]">
+          <p className="mt-2 text-[12px] text-[#6a697c]">
             On the free plan you can make 10 AI questions at a time — pick 10 or fewer if you see a limit message.
           </p>
 
 
-          <div className="mt-4 text-[12px] font-black uppercase tracking-[0.14em] text-[#7a4b16]">Difficulty</div>
+          <div className="mt-4 text-[13px] font-semibold text-[#121117]">Difficulty</div>
           <div className="mt-2 flex flex-wrap gap-2">
             {[
               { k: "easy", l: "Easy" },
@@ -409,7 +409,7 @@ function NewLectureQuizPage() {
                 key={d.k}
                 onClick={() => setDifficulty(d.k as typeof difficulty)}
                 className={`rounded-full border px-4 py-2 text-[13px] font-extrabold ${
-                  difficulty === d.k ? "border-[#3f2c73] bg-[#f2edfb] text-[#3f2c73]" : "border-black/10"
+                  difficulty === d.k ? "border-[#121117] bg-[#e7eefd] text-[#121117]" : "border-[#121117]"
                 }`}
               >
                 {d.l}
@@ -422,7 +422,7 @@ function NewLectureQuizPage() {
               type="checkbox"
               checked={keyPoints}
               onChange={(e) => setKeyPoints(e.target.checked)}
-              className="h-4 w-4 accent-[#3f2c73]"
+              className="h-4 w-4 accent-[#121117]"
             />
             Add a key-points sheet for this lecture
           </label>
@@ -445,7 +445,7 @@ function NewLectureQuizPage() {
         <button
           onClick={onGenerate}
           disabled={busy || locked}
-          className="mt-6 w-full rounded-full bg-[#23201d] px-6 py-4 text-[15px] font-extrabold text-white transition hover:opacity-90 disabled:opacity-50"
+          className="mt-6 w-full rounded-full bg-[#121117] px-6 py-4 text-[15px] font-extrabold text-white transition hover:opacity-90 disabled:opacity-50"
         >
           {locked ? "Not available on your plan" : busy ? "Building your quiz…" : "Build my quiz"}
         </button>

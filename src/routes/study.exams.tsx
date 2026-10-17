@@ -28,11 +28,11 @@ function ExamSchedulePage() {
   const { user, loading } = useAuth();
 
   return (
-    <div className="min-h-screen bg-[#fbf5e9] text-[#23201d]">
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
       <main className="mx-auto max-w-[80rem] px-4 py-10 md:px-8">
         <div className="max-w-2xl">
-          <span className="inline-block rounded-full border border-black/[0.08] bg-white/70 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-[#2f6318]">
+          <span className="inline-block rounded-full border border-black/[0.08] bg-white/70 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-[#1a4ba8]">
             Exam schedule
           </span>
           <h1
@@ -41,7 +41,7 @@ function ExamSchedulePage() {
           >
             Every exam on one calendar
           </h1>
-          <p className="mt-3 text-[16px] leading-relaxed text-[#4a453d]">
+          <p className="mt-3 text-[16px] leading-relaxed text-[#2a2933]">
             Add a course with its exam date — next week or three months out — and browse month by
             month.
           </p>
@@ -55,12 +55,12 @@ function ExamSchedulePage() {
           ) : (
             <div className="rounded-[28px] border border-dashed border-black/[0.12] bg-white p-10 text-center">
               <p className="text-[15px] font-extrabold">Sign in to plan your exams</p>
-              <p className="mt-1 text-[14px] text-[#6d675e]">
+              <p className="mt-1 text-[14px] text-[#54546a]">
                 Your exam schedule is private to your account.
               </p>
               <Link
                 to="/login"
-                className="mt-5 inline-flex rounded-xl bg-[#4c9a2a] px-5 py-2.5 text-[14px] font-black text-white"
+                className="mt-5 inline-flex rounded-xl bg-[#2b6df0] px-5 py-2.5 text-[14px] font-black text-white"
               >
                 Sign in
               </Link>

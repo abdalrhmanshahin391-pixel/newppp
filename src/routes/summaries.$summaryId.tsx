@@ -55,15 +55,15 @@ function SummaryViewer() {
   });
 
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
 
       {/* Toolbar */}
-      <div className="sticky top-0 z-30 border-b border-black/[0.07] bg-[#fbf5e9]/90 backdrop-blur print:hidden">
+      <div className="sticky top-0 z-30 border-b border-black/[0.07] bg-[#f4f4f8]/90 backdrop-blur print:hidden">
         <div className="mx-auto flex max-w-[920px] items-center justify-between px-4 py-3">
           <Link
             to="/study/pdf"
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-[#4a453d] hover:text-[#23201d]"
+            className="inline-flex items-center gap-1.5 text-sm font-bold text-[#2a2933] hover:text-[#121117]"
           >
             <ArrowLeft size={14} /> All summaries
           </Link>
@@ -75,7 +75,7 @@ function SummaryViewer() {
                   navigator.clipboard.writeText(window.location.href);
                   toast.success("Link copied.");
                 }}
-                className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.08] bg-white px-4 py-2 text-xs font-bold text-[#4a453d] hover:bg-white/70"
+                className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.08] bg-white px-4 py-2 text-xs font-bold text-[#2a2933] hover:bg-white/70"
               >
                 <Share2 size={13} /> Share
               </button>
@@ -91,10 +91,10 @@ function SummaryViewer() {
         </div>
       </div>
 
-      {isLoading && <div className="py-32 text-center text-[#6d675e]">Loading…</div>}
-      {error && <div className="py-32 text-center text-[#b4485f]">Error loading summary.</div>}
+      {isLoading && <div className="py-32 text-center text-[#54546a]">Loading…</div>}
+      {error && <div className="py-32 text-center text-[#c4314f]">Error loading summary.</div>}
       {!isLoading && !data && (
-        <div className="py-32 text-center text-[#6d675e]">
+        <div className="py-32 text-center text-[#54546a]">
           Summary not found or you don't have access.
         </div>
       )}

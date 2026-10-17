@@ -243,7 +243,7 @@ function MatchGame() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F5F7FB]"><SiteHeader variant="light" />
+      <div className="min-h-screen bg-[#ffffff]"><SiteHeader variant="light" />
         <div className="pt-32 text-center text-slate-500">Loading…</div>
       </div>
     );
@@ -251,7 +251,7 @@ function MatchGame() {
 
   if (phase === "empty") {
     return (
-      <div className="min-h-screen bg-[#F5F7FB]"><SiteHeader variant="light" />
+      <div className="min-h-screen bg-[#ffffff]"><SiteHeader variant="light" />
         <main className="mx-auto max-w-md px-6 pt-28 text-center">
           <div className="text-6xl mb-3">🎯</div>
           <h2 className="text-xl font-bold mb-2">Not enough cards</h2>
@@ -263,7 +263,7 @@ function MatchGame() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F7FB] text-slate-900">
+    <div className="min-h-screen bg-[#ffffff] text-slate-900">
       <SiteHeader variant="light" />
       <main className="mx-auto max-w-3xl px-4 pt-24 pb-10">
         {/* game header */}
@@ -408,7 +408,7 @@ function Card({ text, state, enter, active, onClick }: { text: string; state: "i
 }
 
 function Confetti() {
-  const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+  const colors = ["#7ba5f5", "#2e7d32", "#d68c0a", "#d9506d", "#7ba5f5"];
   const bits = Array.from({ length: 24 });
   return (
     <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">

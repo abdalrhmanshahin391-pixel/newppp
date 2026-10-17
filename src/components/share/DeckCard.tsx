@@ -18,7 +18,7 @@ export function AuthorChip({ author, size = 28 }: { author: DeckAuthor | null; s
           name.charAt(0).toUpperCase()
         )}
       </span>
-      <span className="truncate text-[13px] font-bold text-[#4a453d]">@{name}</span>
+      <span className="truncate text-[13px] font-bold text-[#2a2933]">@{name}</span>
     </span>
   );
 }
@@ -44,16 +44,16 @@ export function DeckCard({ deck, author }: { deck: SharedDeck; author: DeckAutho
         <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full border border-purple-200 bg-white/95 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-purple-800 shadow-sm">
           🃏 Flashcards
         </span>
-        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-black text-[#23201d]">
+        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 text-[11px] font-black text-[#121117]">
           <Layers size={12} /> {deck.card_count}
         </span>
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-display text-[18px] font-black leading-snug tracking-tight text-[#23201d]">
+        <h3 className="font-display text-[18px] font-black leading-snug tracking-tight text-[#121117]">
           {deck.title}
         </h3>
         {deck.description && (
-          <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-[#6b655c]">
+          <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-[#54546a]">
             {deck.description}
           </p>
         )}
@@ -62,7 +62,7 @@ export function DeckCard({ deck, author }: { deck: SharedDeck; author: DeckAutho
             {deck.tags.slice(0, 3).map((t) => (
               <span
                 key={t}
-                className="rounded-full bg-black/[0.05] px-2.5 py-1 text-[11px] font-bold text-[#4a453d]"
+                className="rounded-full bg-black/[0.05] px-2.5 py-1 text-[11px] font-bold text-[#2a2933]"
               >
                 #{t}
               </span>
@@ -78,7 +78,7 @@ export function DeckCard({ deck, author }: { deck: SharedDeck; author: DeckAutho
                 {Number(ratingAvg).toFixed(1)}
               </span>
             )}
-            <span className="inline-flex items-center gap-1 text-[12px] font-black text-[#6b655c]">
+            <span className="inline-flex items-center gap-1 text-[12px] font-black text-[#54546a]">
               <Bookmark size={13} /> {deck.save_count}
             </span>
           </div>

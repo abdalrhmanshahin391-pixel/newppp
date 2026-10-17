@@ -1012,9 +1012,9 @@ export function RitaRealtimeV3({
               aria-hidden="true"
               className={`h-2.5 w-2.5 shrink-0 rounded-full ${
                 mood === "talking"
-                  ? "animate-pulse bg-[var(--pp-pink)]"
+                  ? "animate-pulse bg-[var(--pp-accent)]"
                   : mood === "listening"
-                    ? "bg-[var(--pp-pink-text)]"
+                    ? "bg-[var(--pp-accent-text)]"
                     : "bg-[var(--pp-line)]"
               }`}
             />
@@ -1052,7 +1052,7 @@ export function RitaRealtimeV3({
                 />
               )}
               {lesson.error && (
-                <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
+                <div className="rounded-2xl bg-[var(--pp-accent-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-accent-text)]">
                   {lesson.error}{" "}
                   <Link to="/rita-lessons" className="underline">
                     العودة إلى المسار
@@ -1064,7 +1064,7 @@ export function RitaRealtimeV3({
                   <ChatText
                     key={message.id}
                     text={message.text}
-                    className="ml-auto w-fit max-w-[80%] rounded-2xl rounded-br-md bg-[var(--pp-pink-soft)] px-4 py-2 text-[17px] leading-8"
+                    className="ml-auto w-fit max-w-[80%] rounded-2xl rounded-br-md bg-[var(--pp-accent-soft)] px-4 py-2 text-[17px] leading-8"
                   />
                 ) : (
                   <ChatText
@@ -1089,7 +1089,7 @@ export function RitaRealtimeV3({
                 />
               )}
               {error && (
-                <div className="rounded-2xl bg-[var(--pp-pink-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-pink-text)]">
+                <div className="rounded-2xl bg-[var(--pp-accent-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-accent-text)]">
                   {error}
                 </div>
               )}
@@ -1135,7 +1135,7 @@ export function RitaRealtimeV3({
                   <button
                     type="button"
                     onClick={() => void endLesson()}
-                    className="rita-btn rita-btn-secondary rita-btn-sm ml-auto gap-1.5 !text-[var(--pp-pink-text)]"
+                    className="rita-btn rita-btn-secondary rita-btn-sm ml-auto gap-1.5 !text-[var(--pp-accent-text)]"
                   >
                     <PhoneOff size={16} /> End
                   </button>

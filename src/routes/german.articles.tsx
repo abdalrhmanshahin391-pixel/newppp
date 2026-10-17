@@ -8,7 +8,7 @@ import { shuffle } from "@/lib/de-lab";
 import { useAuth } from "@/hooks/useAuth";
 import { Segmented, ToggleChip } from "@/components/german/LabControls";
 
-const ACCENT = "#2f6fd0";
+const ACCENT = "#4a82f3";
 
 export const Route = createFileRoute("/german/articles")({
   head: () => ({
@@ -51,8 +51,8 @@ function ArticleLab() {
       title="Article Lab"
       description={
         <>
-          Pick the sub-subjects you want, choose a mode and play. <b style={{ color: "#2f6fd0" }}>der</b> is
-          blue, <b style={{ color: "#d94a4a" }}>die</b> is red, <b style={{ color: "#2f9e63" }}>das</b> is
+          Pick the sub-subjects you want, choose a mode and play. <b style={{ color: "#4a82f3" }}>der</b> is
+          blue, <b style={{ color: "#c4314f" }}>die</b> is red, <b style={{ color: "#2e7d32" }}>das</b> is
           green — everywhere in the app.
         </>
       }
@@ -84,7 +84,7 @@ function ArticleLab() {
             {items.isFetching ? <Loader2 className="animate-spin" size={16} /> : <Play size={16} />}
             Start round
           </button>
-          <p className="mt-2 text-center text-[12.5px] font-bold text-[#8a8175]">
+          <p className="mt-2 text-center text-[12.5px] font-bold text-[#6a697c]">
             {selected.length === 0
               ? "Select at least one sub-subject."
               : `${nouns.length} nouns ready · ${MODES.find((m) => m.key === mode)!.hint}`}

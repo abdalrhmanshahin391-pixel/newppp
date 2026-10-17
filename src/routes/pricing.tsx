@@ -11,12 +11,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { updateSiteSettings } from "@/lib/site-settings.functions";
 import { useQueryClient } from "@tanstack/react-query";
-import { EditableImage } from "@/components/site/EditableImage";
-import monthlyArt from "@/assets/pricing-monthly-objects.jpg.asset.json";
-import packsArt from "@/assets/pricing-packs-green.jpg.asset.json";
-import packStarter from "@/assets/pack-starter-dark.jpg.asset.json";
-import packStudy from "@/assets/pack-study-dark.jpg.asset.json";
-import packExam from "@/assets/pack-exam-dark.jpg.asset.json";
 
 
 export const Route = createFileRoute("/pricing")({
@@ -82,8 +76,6 @@ function money(cents: number, currency = "USD") {
 function cap(n: number | null | undefined, unit: string) {
   return n === null || n === undefined ? `Unlimited ${unit}` : `${n.toLocaleString()} ${unit}`;
 }
-
-const PACK_ART = [packStarter.url, packStudy.url, packExam.url];
 
 function PricingPage() {
   const loaderData = Route.useLoaderData();
@@ -195,14 +187,12 @@ function PricingPage() {
           {[
             {
               k: "monthly" as const,
-               art: monthlyArt.url,
               title: "Subscription plans",
               copy: "A steady allowance for cards, summaries and AI questions. Choose 3 months or yearly. Cancel any time.",
               cta: "See plans",
             },
             {
               k: "lifetime" as const,
-               art: packsArt.url,
               title: "Credit packs — pay once",
               copy: "200 flashcards, 100 questions and more. Use them whenever you like, they never expire.",
               cta: "See packs",
@@ -212,7 +202,7 @@ function PricingPage() {
             .map((b) => (
             <article
               key={b.k}
-               className="group flex min-h-[650px] flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[#131313] text-left transition-transform hover:-translate-y-1 md:rounded-[34px]"
+               className="group flex min-h-[650px] flex-col overflow-hidden rounded-[20px] border-2 border-[#121117] bg-[#0b0b0f] text-left"
             >
                 <div className="p-8 md:p-10">
                   <p className="text-[19px] font-bold md:text-[21px]">RitaJet <span className="rita-accent font-normal">Study</span></p>
@@ -222,19 +212,6 @@ function PricingPage() {
                     {b.cta} <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                   </button>
                 </div>
-                <div className="mt-auto px-5 pb-5 md:px-7 md:pb-7">
-                  <div className="overflow-hidden rounded-[22px] md:rounded-[26px]">
-                    <EditableImage
-                      imageKey={`pricing.${b.k}`}
-                      fallback={b.art}
-                      alt={b.k === "monthly" ? "A study desk with a calendar, flashcards, a clock and a pencil" : "An organized collection of reusable RitaJet study credits"}
-                      width={1536}
-                      height={1024}
-                      loading="eager"
-                      className="aspect-[3/2] w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                    />
-                  </div>
-                </div>
              </article>
             ))}
         </section>
@@ -242,12 +219,12 @@ function PricingPage() {
 
       {!kind && isAdmin && (
         <section className="mx-auto -mt-16 max-w-[1120px] px-6 pb-16 md:px-10">
-           <div className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-white/10 bg-[#131313] p-6">
+           <div className="flex flex-wrap items-center justify-between gap-4 rounded-[20px] border-2 border-[#121117] bg-[#0b0b0f] p-6">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/35">Admin only</p>
               <p className="mt-1 text-[15px] font-bold text-white">
                 Credit packs — pay once:{" "}
-                <span className={settings.credit_packs_enabled ? "text-[#1f7a4d]" : "text-[#a4321f]"}>
+                <span className={settings.credit_packs_enabled ? "text-[#256528]" : "text-[#b3213f]"}>
                   {settings.credit_packs_enabled ? "visible to everyone" : "hidden from students"}
                 </span>
               </p>
@@ -309,8 +286,8 @@ function PricingPage() {
             return (
               <article
                 key={p.slug}
-                 className={`relative flex min-h-[610px] flex-col overflow-hidden rounded-[28px] border bg-[#131313] p-8 transition-transform hover:-translate-y-1 md:rounded-[32px] md:p-9 ${
-                   best ? "rita-accent-border" : "border-white/10"
+                 className={`relative flex min-h-[610px] flex-col overflow-hidden rounded-[20px] border-2 bg-[#0b0b0f] p-8 md:p-9 ${
+                   best ? "border-[#2b6df0]" : "border-[#121117]"
                 }`}
               >
                 <OfferRibbon label={p.ribbon_label} color={p.ribbon_color} endsAt={p.offer_ends_at} />
@@ -325,16 +302,6 @@ function PricingPage() {
                   </span>
                 )}
 
-                {lifetime && (
-                  <EditableImage
-                    imageKey={`pricing.pack${i % 3}`}
-                    fallback={PACK_ART[i % PACK_ART.length] as string}
-                    alt=""
-                    width={768}
-                    height={512}
-                    className="-mx-8 -mt-8 mb-7 h-44 w-[calc(100%+4rem)] max-w-none object-cover md:-mx-9 md:-mt-9 md:w-[calc(100%+4.5rem)]"
-                  />
-                )}
 
                  <p className={`${lifetime ? "" : "mt-2"} text-[19px] font-bold md:text-[21px]`}>RitaJet <span className="rita-accent font-normal">{p.name}</span></p>
 
@@ -437,7 +404,7 @@ function PricingPage() {
 
 
         {mine && (
-           <section className="mt-16 flex flex-wrap items-center gap-4 rounded-[28px] border border-white/10 bg-[#131313] p-8">
+           <section className="mt-16 flex flex-wrap items-center gap-4 rounded-[20px] border-2 border-[#121117] bg-[#0b0b0f] p-8">
             <div className="min-w-0">
               <h2 className="text-[18px] font-bold">You are on {mine.plan?.name}</h2>
               <p className="mt-1 text-[14px] font-medium text-white/45">

@@ -42,7 +42,7 @@ export const Route = createFileRoute("/study/all-in-one/")({
   }),
 });
 
-const ACCENT = "#3f2c73";
+const ACCENT = "#121117";
 
 const BUILD_STEPS: BuildStep[] = [
   { key: "read", label: "Reading the lecture", weight: 1 },
@@ -230,37 +230,37 @@ function AllInOneUpload() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fbf5e9] text-[#23201d]">
+    <div className="min-h-screen bg-[#ffffff] text-[#121117]">
       <SiteHeader />
       <UpgradeWall block={gate.block} onClose={gate.closeBlock} />
       <main className="mx-auto w-full max-w-[980px] px-4 pb-24 pt-8">
-        <Link to="/learn" className="inline-flex items-center gap-2 text-[13px] font-extrabold text-[#6b6357] hover:text-[#23201d]">
+        <Link to="/learn" className="inline-flex items-center gap-2 text-[13px] font-extrabold text-[#6a697c] hover:text-[#121117]">
           <ArrowLeft size={15} /> Back to Start learning
         </Link>
 
         <header className="mt-4">
           <div
             className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em]"
-            style={{ background: "#e7dcf7", color: ACCENT }}
+            style={{ background: "#e7eefd", color: ACCENT }}
           >
             <Wand2 size={13} /> All in one
           </div>
           <h1 className="mt-3 font-display text-[34px] font-black leading-[1.05] sm:text-[42px]">
             Drop the lecture. That's it.
           </h1>
-          <p className="mt-2 max-w-[54ch] text-[15px] text-[#6b6357]">
+          <p className="mt-2 max-w-[54ch] text-[15px] text-[#6a697c]">
             Study guide, summary, flashcards and questions — built from one file.
           </p>
         </header>
 
-        <section data-tour="aio-studio-box" className="mt-6 rounded-[28px] border border-black/[0.07] bg-white p-5 sm:p-6">
+        <section data-tour="aio-studio-box" className="mt-6 rounded-[28px] border-2 border-[#121117] bg-white p-5 sm:p-6">
           <div className="flex gap-2">
             {(["pdf", "text"] as const).map((s) => (
               <button
                 key={s}
                 onClick={() => setSource(s)}
                 className="inline-flex h-10 items-center gap-2 rounded-full px-4 text-[13px] font-extrabold transition"
-                style={source === s ? { background: ACCENT, color: "#fff" } : { background: "#f4efe4", color: "#6b6357" }}
+                style={source === s ? { background: ACCENT, color: "#fff" } : { background: "#f4f4f8", color: "#6a697c" }}
               >
                 {s === "pdf" ? <FileUp size={15} /> : <Type size={15} />}
                 {s === "pdf" ? "PDF" : "Paste text"}
@@ -283,11 +283,11 @@ function AllInOneUpload() {
                 const f = e.dataTransfer.files?.[0] ?? null;
                 if (f) setFile(f);
               }}
-              className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-black/10 bg-[#fbf8f2] px-4 py-14 text-center"
+              className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed border-[#121117] bg-[#ffffff] px-4 py-14 text-center"
             >
               <FileUp size={26} style={{ color: ACCENT }} />
               <span className="mt-3 text-[16px] font-black">{file ? file.name : "Drop your lecture PDF"}</span>
-              <span className="mt-1 text-[12.5px] text-[#6b6357]">Any size. Scans work too.</span>
+              <span className="mt-1 text-[12.5px] text-[#6a697c]">Any size. Scans work too.</span>
               <input
                 type="file"
                 accept="application/pdf"
@@ -307,7 +307,7 @@ function AllInOneUpload() {
               onChange={(e) => setPasted(e.target.value)}
               rows={9}
               placeholder="Paste the lecture text here…"
-              className="mt-4 w-full rounded-2xl border border-black/10 bg-[#fbf8f2] p-4 text-[14px] font-medium"
+              className="mt-4 w-full rounded-2xl border-2 border-[#121117] bg-[#ffffff] p-4 text-[14px] font-medium"
             />
           )}
 
@@ -316,7 +316,7 @@ function AllInOneUpload() {
               <span
                 key={d.name}
                 className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[12.5px] font-extrabold"
-                style={{ background: "#f4efe4", color: "#4a453d" }}
+                style={{ background: "#f4f4f8", color: "#4b4a5c" }}
               >
                 {d.icon}
                 {d.name}
@@ -341,20 +341,20 @@ function AllInOneUpload() {
           <button
             onClick={() => void run()}
             disabled={busy}
-            className="mt-5 w-full rounded-full px-6 py-4 text-[15px] font-extrabold text-white transition hover:opacity-90 disabled:opacity-50"
-            style={{ background: "#23201d" }}
+            className="mt-5 w-full rounded-lg border-2 border-[#121117] px-6 py-4 text-[16px] font-semibold text-white transition hover:bg-[#2260e4] disabled:opacity-50"
+            style={{ background: "#2b6df0" }}
           >
             {busy ? "Building…" : "Build everything"}
           </button>
 
-          <p className="mt-4 rounded-2xl border border-[#d94a3d]/25 bg-[#d94a3d]/[0.07] px-4 py-3 text-[13px] font-semibold leading-relaxed text-[#c1392b]">
+          <p className="mt-4 rounded-xl border-2 border-[#121117] bg-[#e7eefd] px-4 py-3 text-[13.5px] font-medium leading-relaxed text-[#121117]">
             <span className="font-black">This takes time — you don't have to wait here.</span>{" "}
             Close the page and come back whenever you like. Big books can take up to two hours, but it is
             usually finished in under 30 minutes.
           </p>
 
           {failed.length > 0 && (
-            <ul className="mt-3 space-y-1 rounded-2xl bg-[#f6f1e5] px-4 py-3 text-[13px] font-semibold text-[#8a3b32]">
+            <ul className="mt-3 space-y-1 rounded-2xl bg-[#ffffff] px-4 py-3 text-[13px] font-semibold text-[#b3213f]">
               {failed.map((f) => (
                 <li key={f}>{f}</li>
               ))}
@@ -365,7 +365,7 @@ function AllInOneUpload() {
         <section className="mt-9">
           <h2 className="font-display text-[20px] font-black">Your lectures</h2>
           {displayRows.length === 0 ? (
-            <p className="mt-2 text-[14px] text-[#6b6357]">Nothing yet — your first lecture will appear here.</p>
+            <p className="mt-2 text-[14px] text-[#6a697c]">Nothing yet — your first lecture will appear here.</p>
           ) : (
             <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {displayRows.map((r, i) => (
@@ -374,19 +374,19 @@ function AllInOneUpload() {
                   data-tour={r.example && i === 0 ? "aio-sample-card" : undefined}
                   to="/study/all-in-one/$lectureId"
                   params={{ lectureId: r.id }}
-                  className={`group flex aspect-square flex-col justify-between rounded-3xl border bg-white p-4 transition hover:-translate-y-1 hover:shadow-[0_20px_40px_-26px_rgba(0,0,0,0.35)] ${r.example ? "border-[#3f2c73]/25" : "border-black/[0.07]"}`}
+                  className={`group flex aspect-square flex-col justify-between rounded-3xl border bg-white p-4 transition hover:-translate-y-1 hover:shadow-[0_20px_40px_-26px_rgba(0,0,0,0.35)] ${r.example ? "border-[#121117]/25" : "border-[#121117]"}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <span
                       className="grid h-9 w-9 place-items-center rounded-xl"
-                      style={{ background: "#e7dcf7", color: ACCENT }}
+                      style={{ background: "#e7eefd", color: ACCENT }}
                     >
                       <Wand2 size={17} />
                     </span>
                     {r.example && (
                       <span
                         className="rounded-full px-2 py-0.5 text-[9.5px] font-black uppercase tracking-[0.16em]"
-                        style={{ background: "#e7dcf7", color: ACCENT }}
+                        style={{ background: "#e7eefd", color: ACCENT }}
                       >
                         Example
                       </span>
@@ -394,7 +394,7 @@ function AllInOneUpload() {
                   </div>
                   <div>
                     <div className="line-clamp-3 font-display text-[15px] font-black leading-tight">{r.title}</div>
-                    <div className="mt-1.5 text-[11.5px] font-bold text-[#8b8375]">
+                    <div className="mt-1.5 text-[11.5px] font-bold text-[#6a697c]">
                       {r.guide ? "guide" : "no guide"} · {r.cards} cards · {r.questions} questions
                     </div>
                   </div>

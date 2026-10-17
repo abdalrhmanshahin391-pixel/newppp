@@ -246,16 +246,16 @@ export function TodoBoard() {
       onClick={onClick}
       aria-current={active}
       className={`flex w-full items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left text-[14.5px] font-bold transition-colors ${
-        active ? "bg-white text-[#23201d]" : "text-[#4a453d] hover:bg-white/70"
+        active ? "bg-white text-[#121117]" : "text-[#2a2933] hover:bg-white/70"
       } ${isLocked ? "opacity-50" : ""}`}
     >
       {icon}
       <span className="flex-1 truncate">{label}</span>
       {isLocked ? (
-        <Lock size={14} className="text-[#a29a8d]" />
+        <Lock size={14} className="text-[#9a9aab]" />
       ) : (
         !!count && (
-          <span className="text-[13px] font-black tabular-nums text-[#a29a8d]">{count}</span>
+          <span className="text-[13px] font-black tabular-nums text-[#9a9aab]">{count}</span>
         )
       )}
     </button>
@@ -271,7 +271,7 @@ export function TodoBoard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fbf5e9] text-[#23201d]">
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
 
       <div data-tour="todo-header" className="border-b border-black/5">
@@ -284,7 +284,7 @@ export function TodoBoard() {
             <ListChecks size={15} /> Lists
           </button>
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9a9aab]">
               To-do list
             </p>
             <p className="truncate text-[16px] font-black leading-tight">Keep the day light</p>
@@ -302,7 +302,7 @@ export function TodoBoard() {
         <aside data-tour="todo-nav" className={`${railOpen ? "" : "hidden lg:block"} lg:sticky lg:top-6 lg:self-start`}>
           <div className="flex items-center gap-2 rounded-2xl px-3 py-2.5">
 
-            <Search size={16} className="shrink-0 text-[#a29a8d]" />
+            <Search size={16} className="shrink-0 text-[#9a9aab]" />
             <input
               id="rita-todo-search"
               value={query}
@@ -311,21 +311,21 @@ export function TodoBoard() {
                 setView(e.target.value.trim() ? { kind: "search" } : { kind: "today" });
               }}
               placeholder="Search  /"
-              className="w-full bg-transparent text-[14.5px] font-semibold text-[#23201d] outline-none placeholder:text-[#a29a8d]"
+              className="w-full bg-transparent text-[14.5px] font-semibold text-[#121117] outline-none placeholder:text-[#9a9aab]"
             />
           </div>
 
           <nav className="mt-1 space-y-0.5">
             {navItem(
               view.kind === "inbox",
-              <Inbox size={17} style={{ color: "#f0a95c" }} />,
+              <Inbox size={17} style={{ color: "#e9a21f" }} />,
               "Inbox",
               () => go({ kind: "inbox" }),
               counts.inbox,
             )}
             {navItem(
               view.kind === "today",
-              <Star size={17} style={{ color: "#6ab887" }} />,
+              <Star size={17} style={{ color: "#3a9042" }} />,
               "Today",
               () => go({ kind: "today" }),
               counts.today,
@@ -333,7 +333,7 @@ export function TodoBoard() {
             )}
             {navItem(
               view.kind === "upcoming",
-              <CalendarDays size={17} style={{ color: "#6aa9d8" }} />,
+              <CalendarDays size={17} style={{ color: "#7ba5f5" }} />,
               "Upcoming",
               () => go({ kind: "upcoming" }),
               counts.upcoming,
@@ -342,7 +342,7 @@ export function TodoBoard() {
           </nav>
 
           <div className="mt-5">
-            <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">
+            <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#9a9aab]">
               Projects
             </p>
             <div className="space-y-0.5">
@@ -365,7 +365,7 @@ export function TodoBoard() {
                   }
                   setProjectOpen(true);
                 }}
-                className="flex w-full items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left text-[13.5px] font-bold text-[#a29a8d] hover:bg-white/70 hover:text-[#4c9a2a]"
+                className="flex w-full items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left text-[13.5px] font-bold text-[#9a9aab] hover:bg-white/70 hover:text-[#2b6df0]"
               >
                 <Plus size={15} /> New project
               </button>
@@ -374,7 +374,7 @@ export function TodoBoard() {
 
           {api.labels.length > 0 && (
             <div className="mt-4">
-              <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">
+              <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#9a9aab]">
                 Labels
               </p>
               <div className="flex flex-wrap gap-1.5 px-2">
@@ -385,8 +385,8 @@ export function TodoBoard() {
                     onClick={() => go({ kind: "label", name: l })}
                     className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-extrabold transition-colors ${
                       view.kind === "label" && view.name === l
-                        ? "bg-[#23201d] text-white"
-                        : "bg-white text-[#8a7f6c] hover:bg-white/70"
+                        ? "bg-[#121117] text-white"
+                        : "bg-white text-[#6a697c] hover:bg-white/70"
                     }`}
                   >
                     <Hash size={11} />
@@ -412,7 +412,7 @@ export function TodoBoard() {
                   <button
                     type="button"
                     onClick={() => setBoardMode((b) => !b)}
-                    className="ml-auto flex items-center gap-1.5 rounded-full border border-black/[0.08] bg-white px-3 py-1.5 text-[12.5px] font-extrabold text-[#3c372f] hover:bg-[#fbf5e9]"
+                    className="ml-auto flex items-center gap-1.5 rounded-full border border-black/[0.08] bg-white px-3 py-1.5 text-[12.5px] font-extrabold text-[#2a2933] hover:bg-[#f4f4f8]"
                   >
                     {boardMode ? <ListChecks size={14} /> : <Columns3 size={14} />}
                     {boardMode ? "List view" : "Board view"}
@@ -420,16 +420,16 @@ export function TodoBoard() {
                 )}
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-3">
-                <p className="text-[13.5px] font-semibold text-[#a29a8d]">
+                <p className="text-[13.5px] font-semibold text-[#9a9aab]">
                   {openHere} task{openHere === 1 ? "" : "s"} left
                 </p>
                 {view.kind !== "done" && (
                   <button
                     type="button"
                     onClick={() => setShowDone((s) => !s)}
-                    className="flex items-center gap-1.5 rounded-full border border-black/[0.08] px-3 py-1 text-[12px] font-extrabold text-[#6d675e] hover:bg-[#fbf5e9]"
+                    className="flex items-center gap-1.5 rounded-full border border-black/[0.08] px-3 py-1 text-[12px] font-extrabold text-[#54546a] hover:bg-[#f4f4f8]"
                   >
-                    <CheckCircle2 size={13} className="text-[#4c9a2a]" />
+                    <CheckCircle2 size={13} className="text-[#2b6df0]" />
                     {showDone ? "Hide completed" : "Show completed"}
                   </button>
                 )}
@@ -463,7 +463,7 @@ export function TodoBoard() {
               {view.kind === "search" && (
                 <div className="flex flex-col">
                   {searchResults.length === 0 ? (
-                    <p className="py-10 text-center text-[15px] font-bold text-[#a29a8d]">
+                    <p className="py-10 text-center text-[15px] font-bold text-[#9a9aab]">
                       Nothing matches “{query}”.
                     </p>
                   ) : (
@@ -476,7 +476,7 @@ export function TodoBoard() {
                 <div className="flex flex-col">
                   {inboxTasks.map((t) => rowFor(t))}
                   {inboxTasks.length === 0 && (
-                    <p className="py-8 text-[15px] font-bold text-[#a29a8d]">
+                    <p className="py-8 text-[15px] font-bold text-[#9a9aab]">
                       Inbox is clear — anything without a date lands here.
                     </p>
                   )}
@@ -488,8 +488,8 @@ export function TodoBoard() {
                 <div className="flex flex-col">
                   {overdue.length > 0 && (
                     <section className="mb-5">
-                      <div className="flex items-center gap-3 border-b border-[#d1795e]/30 pb-2">
-                        <h2 className="text-[14px] font-black text-[#a8462c]">
+                      <div className="flex items-center gap-3 border-b border-[#d9506d]/30 pb-2">
+                        <h2 className="text-[14px] font-black text-[#b3213f]">
                           Overdue · {overdue.length}
                         </h2>
                         <button
@@ -501,7 +501,7 @@ export function TodoBoard() {
                             );
                             toast.success("Moved to today");
                           }}
-                          className="ml-auto rounded-full bg-[#fbeae4] px-3 py-1.5 text-[12.5px] font-extrabold text-[#a8462c]"
+                          className="ml-auto rounded-full bg-[#f4f4f8] px-3 py-1.5 text-[12.5px] font-extrabold text-[#b3213f]"
                         >
                           Move all to today
                         </button>
@@ -511,7 +511,7 @@ export function TodoBoard() {
                   )}
                   {todayTasks.map((t) => rowFor(t, true))}
                   {todayTasks.length === 0 && overdue.length === 0 && (
-                    <p className="py-8 text-[15px] font-bold text-[#a29a8d]">
+                    <p className="py-8 text-[15px] font-bold text-[#9a9aab]">
                       Nothing due today — add something below.
                     </p>
                   )}
@@ -574,7 +574,7 @@ export function TodoBoard() {
                 <div className="flex flex-col">
                   {labelTasks(view.name).map((t) => rowFor(t))}
                   {labelTasks(view.name).length === 0 && (
-                    <p className="py-8 text-[15px] font-bold text-[#a29a8d]">
+                    <p className="py-8 text-[15px] font-bold text-[#9a9aab]">
                       No tasks with @{view.name}.
                     </p>
                   )}
@@ -624,22 +624,22 @@ function SelectionBar({
   }
 
   const chip =
-    "flex items-center gap-1.5 rounded-full border border-black/[0.08] bg-white px-3 py-1.5 text-[12.5px] font-extrabold text-[#3c372f] transition-colors hover:bg-[#fbf5e9]";
+    "flex items-center gap-1.5 rounded-full border border-black/[0.08] bg-white px-3 py-1.5 text-[12.5px] font-extrabold text-[#2a2933] transition-colors hover:bg-[#f4f4f8]";
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-black/[0.07] bg-[#fbf5e9] px-3 py-2.5">
-      <span className="rounded-full bg-[#23201d] px-3 py-1.5 text-[12.5px] font-black text-white">
+    <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-black/[0.07] bg-[#f4f4f8] px-3 py-2.5">
+      <span className="rounded-full bg-[#121117] px-3 py-1.5 text-[12.5px] font-black text-white">
         {count} selected
       </span>
 
       <button type="button" onClick={onDone} className={chip}>
-        <CheckCircle2 size={14} className="text-[#4c9a2a]" /> Done
+        <CheckCircle2 size={14} className="text-[#2b6df0]" /> Done
       </button>
 
       <button type="button" onClick={() => onStar(true)} className={chip}>
-        <Star size={14} fill="#f0a95c" style={{ color: "#f0a95c" }} /> Star
+        <Star size={14} fill="#e9a21f" style={{ color: "#e9a21f" }} /> Star
       </button>
       <button type="button" onClick={() => onStar(false)} className={chip}>
-        <Star size={14} className="text-[#a29a8d]" /> Unstar
+        <Star size={14} className="text-[#9a9aab]" /> Unstar
       </button>
 
       <span className="mx-0.5 h-6 w-px bg-black/10" />
@@ -661,7 +661,7 @@ function SelectionBar({
       <span className="mx-0.5 h-6 w-px bg-black/10" />
 
       <button type="button" onClick={() => onDue(0)} className={chip}>
-        <CalendarDays size={14} className="text-[#6aa9d8]" /> Today
+        <CalendarDays size={14} className="text-[#7ba5f5]" /> Today
       </button>
       <button type="button" onClick={() => onDue(1)} className={chip}>
         Tomorrow
@@ -687,14 +687,14 @@ function SelectionBar({
       <button
         type="button"
         onClick={onDelete}
-        className="flex items-center gap-1.5 rounded-full border border-[#d1795e]/40 bg-white px-3 py-1.5 text-[12.5px] font-extrabold text-[#a8462c] transition-colors hover:bg-[#fbeae4]"
+        className="flex items-center gap-1.5 rounded-full border border-[#d9506d]/40 bg-white px-3 py-1.5 text-[12.5px] font-extrabold text-[#b3213f] transition-colors hover:bg-[#f4f4f8]"
       >
         <Trash2 size={14} /> Delete
       </button>
       <button
         type="button"
         onClick={onClear}
-        className="ml-auto flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-bold text-[#6d675e] hover:bg-white"
+        className="ml-auto flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-bold text-[#54546a] hover:bg-white"
       >
         <X size={14} /> Clear selection
       </button>

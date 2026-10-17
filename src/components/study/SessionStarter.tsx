@@ -21,25 +21,25 @@ export function SessionStarter({
   const empty = totalCards === 0;
 
   return (
-    <div className="rounded-2xl border border-black/[0.06] bg-[#fbf5e9] p-5">
-      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">Session</p>
-      <p className="mt-2 text-[26px] font-black leading-none tracking-tight text-[#23201d]">
+    <div className="rounded-[20px] bg-white p-5" style={{ border: "2px solid #121117" }}>
+      <p className="text-[14px] font-semibold text-[#6a697c]">Session</p>
+      <p className="mt-2 text-[34px] font-bold leading-none tracking-[-0.03em] text-[#121117]">
         {totalCards}
-        <span className="ml-1.5 text-[13px] font-bold text-[#a29a8d]">
+        <span className="ml-1.5 text-[14px] font-semibold text-[#6a697c]">
           card{totalCards === 1 ? "" : "s"} ready
         </span>
       </p>
-      <p className="mt-1.5 text-[12.5px] font-semibold text-[#a29a8d]">from {scopeLabel}</p>
+      <p className="mt-1.5 text-[14px] font-medium text-[#6a697c]">from {scopeLabel}</p>
 
-      <div className="mt-4 flex gap-1.5 rounded-xl bg-white p-1">
+      <div className="mt-4 flex gap-1.5 rounded-xl bg-[#f4f4f8] p-1">
         <button
           type="button"
           onClick={() => onScopeChange?.("all")}
-          className="h-8 flex-1 rounded-lg text-[12px] font-extrabold transition-colors"
+          className="h-9 flex-1 rounded-lg text-[14px] font-semibold transition-colors"
           style={
             scope === "all"
-              ? { background: "#f4eddf", color: "#23201d" }
-              : { color: "#a29a8d" }
+              ? { background: "#ffffff", color: "#121117", border: "2px solid #121117" }
+              : { color: "#6a697c", border: "2px solid transparent" }
           }
         >
           All ticked
@@ -47,11 +47,11 @@ export function SessionStarter({
         <button
           type="button"
           onClick={() => onScopeChange?.("flagged")}
-          className="inline-flex h-8 flex-1 items-center justify-center gap-1 rounded-lg text-[12px] font-extrabold transition-colors"
+          className="inline-flex h-9 flex-1 items-center justify-center gap-1 rounded-lg text-[14px] font-semibold transition-colors"
           style={
             scope === "flagged"
-              ? { background: "#f6ddd5", color: "#7d3421" }
-              : { color: "#a29a8d" }
+              ? { background: "#e7eefd", color: "#121117", border: "2px solid #121117" }
+              : { color: "#6a697c", border: "2px solid transparent" }
           }
         >
           <Flag size={12} />
@@ -59,13 +59,12 @@ export function SessionStarter({
         </button>
       </div>
 
-
       <div className="mt-5 flex flex-col gap-2.5">
         <button
           type="button"
           disabled={empty}
           onClick={() => onStudy?.(false)}
-          className="rita-pill flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[13.5px] font-extrabold disabled:opacity-40"
+          className="rita-pill flex h-12 w-full items-center justify-center gap-2 text-[15px] font-semibold disabled:opacity-40"
         >
           <GraduationCap size={16} className="opacity-80" />
           Study mode
@@ -74,7 +73,7 @@ export function SessionStarter({
           type="button"
           disabled={empty}
           onClick={() => onStudy?.(true)}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-black/10 bg-white text-[13.5px] font-extrabold text-[#23201d] transition-colors hover:bg-black/[0.03] disabled:opacity-40"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-[10px] border-2 border-[#121117] bg-white text-[15px] font-semibold text-[#121117] transition-colors hover:bg-[#f4f4f8] disabled:opacity-40"
         >
           <Shuffle size={15} className="opacity-70" />
           Shuffle and study
@@ -82,7 +81,7 @@ export function SessionStarter({
       </div>
 
       {empty && (
-        <p className="mt-4 border-t border-black/[0.06] pt-4 text-[12.5px] font-semibold text-[#b3aa9c]">
+        <p className="mt-4 border-t border-[#dcdce5] pt-4 text-[14px] font-medium text-[#6a697c]">
           Add flashcards in “Edit and adjust study view” and they show up here.
         </p>
       )}
@@ -93,9 +92,9 @@ export function SessionStarter({
 /** Placeholder panel for tools that don't run flashcard sessions yet. */
 export function EmptySessionPanel({ note }: { note: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-black/10 bg-[#fbf5e9] p-5">
-      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">Session</p>
-      <p className="mt-3 text-[13.5px] font-semibold text-[#a29a8d]">{note}</p>
+    <div className="rounded-[20px] border-2 border-dashed border-[#121117] bg-white p-5">
+      <p className="text-[14px] font-semibold text-[#6a697c]">Session</p>
+      <p className="mt-3 text-[14.5px] font-medium text-[#4b4a5c]">{note}</p>
     </div>
   );
 }

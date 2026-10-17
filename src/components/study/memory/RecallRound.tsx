@@ -102,11 +102,11 @@ export function RecallRound({
         startedAt={startedAt.current}
       />
 
-      <div className="mt-5 rounded-[24px] bg-white px-6 py-8 text-center">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b3aa9c]">
+      <div className="mt-5 rounded-[24px] border-2 border-[#121117] bg-white px-6 py-8 text-center">
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#9a9aab]">
           What belongs to
         </p>
-        <p className="mt-3 font-display text-[27px] font-black leading-tight tracking-tight text-[#23201d]">
+        <p className="mt-3 font-display text-[27px] font-black leading-tight tracking-tight text-[#121117]">
           {current.left}
         </p>
 
@@ -122,18 +122,18 @@ export function RecallRound({
               }
             }}
             placeholder="Type the answer"
-            className="h-12 w-full rounded-xl border px-4 text-[15px] font-bold text-[#23201d] outline-none"
+            className="h-12 w-full rounded-lg border-2 px-4 text-[16px] font-medium text-[#121117] outline-none"
             style={{
               borderColor:
-                verdict === "right" ? "#6ab887" : verdict === "wrong" ? "#d1795e" : "rgba(0,0,0,0.1)",
+                verdict === "right" ? "#2e7d32" : verdict === "wrong" ? "#b3213f" : "#121117",
               background:
-                verdict === "right" ? "#d8ecdd" : verdict === "wrong" ? "#fbe4e4" : "#fff",
+                verdict === "right" ? "#d2ecd4" : verdict === "wrong" ? "#f4f4f8" : "#fff",
             }}
           />
           <button
             type="button"
             onClick={check}
-            className="rita-pill grid h-12 w-12 shrink-0 place-items-center rounded-xl"
+            className="rita-pill grid h-12 w-12 shrink-0 place-items-center"
             aria-label="Check answer"
           >
             <CornerDownLeft size={18} />
@@ -142,16 +142,16 @@ export function RecallRound({
 
         {verdict === "wrong" && (
           <div className="mt-4">
-            <p className="text-[13px] font-bold text-[#d1795e]">
-              The answer is <span className="text-[#23201d]">{current.right}</span>
+            <p className="text-[13px] font-bold text-[#d9506d]">
+              The answer is <span className="text-[#121117]">{current.right}</span>
             </p>
             {current.hint && (
-              <p className="mt-1 text-[12.5px] font-semibold text-[#a29a8d]">{current.hint}</p>
+              <p className="mt-1 text-[12.5px] font-semibold text-[#9a9aab]">{current.hint}</p>
             )}
             <button
               type="button"
               onClick={() => next(correct, wrong, missedIds)}
-              className="mt-3 h-10 rounded-xl border border-black/10 bg-white px-5 text-[13px] font-extrabold text-[#23201d]"
+              className="mt-3 h-11 rounded-lg border-2 border-[#121117] bg-white px-5 text-[15px] font-semibold text-[#121117] hover:bg-[#f4f4f8]"
             >
               Next
             </button>

@@ -56,15 +56,15 @@ export const Route = createFileRoute("/admin/plans")({
 });
 
 const input =
-  "w-full rounded-xl border-2 border-black/10 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-[#8ec63f]";
-const label = "text-[11px] font-black uppercase tracking-[0.16em] text-[#a29a8d]";
+  "w-full rounded-xl border-2 border-black/10 bg-white px-3 py-2 text-sm font-semibold outline-none focus:border-[#4a82f3]";
+const label = "text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]";
 
 const RIBBONS = [
-  { text: "MOST POPULAR", color: "#8ec63f" },
-  { text: "BEST VALUE", color: "#f0a95c" },
-  { text: "NEW", color: "#6aa9d8" },
-  { text: "STUDENT DEAL", color: "#a58fd8" },
-  { text: "LIMITED TIME", color: "#d1795e" },
+  { text: "MOST POPULAR", color: "#4a82f3" },
+  { text: "BEST VALUE", color: "#e9a21f" },
+  { text: "NEW", color: "#7ba5f5" },
+  { text: "STUDENT DEAL", color: "#a9c4f9" },
+  { text: "LIMITED TIME", color: "#d9506d" },
 ];
 
 function blank(sort: number, n: number): AdminPlan {
@@ -350,14 +350,14 @@ function AdminPlansPage() {
   if (loading || !isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-[#fbf5e9] text-[#23201d]">
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
       <main className="mx-auto max-w-7xl px-4 py-10 md:px-8">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className={label}>Admin</p>
             <h1 className="mt-2 font-display text-3xl font-black">Rita Prices</h1>
-            <p className="mt-2 max-w-2xl text-[15px] text-[#5c554b]">
+            <p className="mt-2 max-w-2xl text-[15px] text-[#4b4a5c]">
               Pick a plan on the left, edit it on the right. Limits are enforced on the server
               before any AI call, and the switches lock the matching tool inside the app.
             </p>
@@ -365,30 +365,30 @@ function AdminPlansPage() {
           <button
             type="button"
             onClick={() => onNew("monthly")}
-            className="inline-flex items-center gap-2 rounded-full bg-[#23201d] px-5 py-3 text-[14px] font-black text-white"
+            className="inline-flex items-center gap-2 rounded-full bg-[#121117] px-5 py-3 text-[14px] font-black text-white"
           >
             <Plus size={16} /> New plan
           </button>
         </header>
 
         {/* Prominent Paddle Sync Center Banner */}
-        <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-2xl border-2 border-[#8ec63f]/40 bg-[#f4fbe9] p-4 sm:flex-row sm:items-center shadow-sm">
+        <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-2xl border-2 border-[#4a82f3]/40 bg-[#f4f4f8] p-4 sm:flex-row sm:items-center shadow-sm">
           <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#8ec63f] text-white">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#4a82f3] text-white">
               <Zap size={20} />
             </span>
             <div>
-              <p className="text-sm font-black text-[#23201d]">
+              <p className="text-sm font-black text-[#121117]">
                 Dedicated Paddle Catalog Sync Center
               </p>
-              <p className="text-xs font-semibold text-[#5c554b]">
+              <p className="text-xs font-semibold text-[#4b4a5c]">
                 Looking for the global 1-click sync button or need to migrate 1-month prices to 3-month subscriptions across all plans?
               </p>
             </div>
           </div>
           <Link
             to="/admin/paddle-sync"
-            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#23201d] px-5 py-2.5 text-xs font-black text-white shadow transition-all hover:bg-black hover:shadow-md active:scale-95"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#121117] px-5 py-2.5 text-xs font-black text-white shadow transition-all hover:bg-black hover:shadow-md active:scale-95"
           >
             Open Paddle Sync Center <ArrowRight size={14} />
           </Link>
@@ -413,14 +413,14 @@ function AdminPlansPage() {
                     <button
                       type="button"
                       onClick={() => onNew(group.k)}
-                      className="inline-flex items-center gap-1 rounded-full bg-[#f3efe6] px-2.5 py-1 text-[11px] font-black text-[#5c554b]"
+                      className="inline-flex items-center gap-1 rounded-full bg-[#f4f4f8] px-2.5 py-1 text-[11px] font-black text-[#4b4a5c]"
                     >
                       <Plus size={12} /> New
                     </button>
                   </div>
                   <ul className="grid gap-1.5">
                     {rows.length === 0 && (
-                      <li className="px-2 pb-2 text-[12.5px] font-semibold text-[#a29a8d]">
+                      <li className="px-2 pb-2 text-[12.5px] font-semibold text-[#9a9aab]">
                         Nothing here yet.
                       </li>
                     )}
@@ -434,7 +434,7 @@ function AdminPlansPage() {
                         <li key={p.slug}>
                           <div
                             className={`flex items-center gap-2 rounded-2xl px-3 py-2.5 transition-colors ${
-                              on ? "bg-[#23201d] text-white" : "hover:bg-[#fbf5e9]"
+                              on ? "bg-[#121117] text-white" : "hover:bg-[#f4f4f8]"
                             }`}
                           >
                             <button
@@ -445,17 +445,17 @@ function AdminPlansPage() {
                               <span className="flex items-center gap-2">
                                 <span
                                   className="h-2 w-2 shrink-0 rounded-full"
-                                  style={{ background: p.published ? "#8ec63f" : "#d8d1c5" }}
+                                  style={{ background: p.published ? "#4a82f3" : "#dcdce5" }}
                                 />
                                 <span className="truncate text-[14.5px] font-black">
                                   {p.name || p.slug}
                                 </span>
                                 {saved[p.slug] !== JSON.stringify(p) && (
-                                  <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#f0a95c]" />
+                                  <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#e9a21f]" />
                                 )}
                               </span>
                               <span
-                                className={`mt-0.5 block text-[12px] font-bold ${on ? "text-white/60" : "text-[#a29a8d]"}`}
+                                className={`mt-0.5 block text-[12px] font-bold ${on ? "text-white/60" : "text-[#9a9aab]"}`}
                               >
                                 {(p.billing_kind ?? "monthly") === "lifetime"
                                   ? `${money(p.once_cents ?? 0, p.currency)} once`
@@ -468,7 +468,7 @@ function AdminPlansPage() {
                                 type="button"
                                 aria-label="Move up"
                                 onClick={() => move(i, -1)}
-                                className={on ? "text-white/70" : "text-[#a29a8d]"}
+                                className={on ? "text-white/70" : "text-[#9a9aab]"}
                               >
                                 <ArrowUp size={13} />
                               </button>
@@ -476,7 +476,7 @@ function AdminPlansPage() {
                                 type="button"
                                 aria-label="Move down"
                                 onClick={() => move(i, 1)}
-                                className={on ? "text-white/70" : "text-[#a29a8d]"}
+                                className={on ? "text-white/70" : "text-[#9a9aab]"}
                               >
                                 <ArrowDown size={13} />
                               </button>
@@ -495,7 +495,7 @@ function AdminPlansPage() {
           {/* ------------------------------------------------ plan editor */}
           <div ref={editorRef} className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
             {!plan && (
-              <p className="rounded-[24px] border border-dashed border-black/15 bg-white/70 p-10 text-center font-bold text-[#7a736a]">
+              <p className="rounded-[24px] border border-dashed border-black/15 bg-white/70 p-10 text-center font-bold text-[#54546a]">
                 Pick a plan on the left, or create a new one.
               </p>
             )}
@@ -543,7 +543,7 @@ function AdminPlansPage() {
                   </Block>
 
                   <Block title="Price">
-                    <div className="mb-4 inline-flex rounded-full bg-[#f3efe6] p-1">
+                    <div className="mb-4 inline-flex rounded-full bg-[#f4f4f8] p-1">
                       {[
                         { k: "monthly" as const, label: "Recurring subscription (3-Month & Yearly)" },
                         { k: "lifetime" as const, label: "One-time pack" },
@@ -554,8 +554,8 @@ function AdminPlansPage() {
                           onClick={() => patch({ billing_kind: o.k })}
                           className={`rounded-full px-4 py-2 text-[13px] font-black transition-all ${
                             (plan.billing_kind ?? "monthly") === o.k
-                              ? "bg-[#23201d] text-white"
-                              : "text-[#8a8378]"
+                              ? "bg-[#121117] text-white"
+                              : "text-[#6a697c]"
                           }`}
                         >
                           {o.label}
@@ -588,7 +588,7 @@ function AdminPlansPage() {
                             </select>
                           </Field>
                         </div>
-                        <p className="text-[12.5px] font-semibold text-[#a29a8d]">
+                        <p className="text-[12.5px] font-semibold text-[#9a9aab]">
                           Students pay this once and keep the credits for good. 3-Month and
                           yearly prices are ignored for a pack.
                         </p>
@@ -632,9 +632,9 @@ function AdminPlansPage() {
                             />
                           </Field>
                         </div>
-                        <p className="text-[12.5px] font-semibold text-[#a29a8d]">
+                        <p className="text-[12.5px] font-semibold text-[#9a9aab]">
                           Type real money, e.g. 15.00 for 3 months. Yearly works out at{" "}
-                          <strong className="text-[#5c554b]">
+                          <strong className="text-[#4b4a5c]">
                             {money(Math.round((plan.yearly_cents || 0) / 4), plan.currency)}
                           </strong>{" "}
                           per 3 months.
@@ -648,7 +648,7 @@ function AdminPlansPage() {
                       const idSet = lifetime ? !!plan.paddle_price_once : !!plan.paddle_price_monthly;
                       if (!paid || idSet) return null;
                       return (
-                        <p className="rounded-2xl bg-[#fdeeea] px-4 py-3 text-[12.5px] font-bold text-[#a4423a]">
+                        <p className="rounded-2xl bg-[#f4f4f8] px-4 py-3 text-[12.5px] font-bold text-[#b3213f]">
                           This plan has a price but no checkout price id, so nobody can buy it yet.
                           Add the id above.
                         </p>
@@ -685,10 +685,10 @@ function AdminPlansPage() {
                             )
                           }
                           className={`rounded-full px-3.5 py-1.5 text-[11.5px] font-black uppercase tracking-[0.14em] transition-transform hover:-translate-y-0.5 ${
-                            plan.ribbon_label === r.text ? "text-white" : "text-[#5c554b]"
+                            plan.ribbon_label === r.text ? "text-white" : "text-[#4b4a5c]"
                           }`}
                           style={{
-                            background: plan.ribbon_label === r.text ? r.color : "#f4f1ea",
+                            background: plan.ribbon_label === r.text ? r.color : "#f4f4f8",
                           }}
                         >
                           {r.text}
@@ -704,7 +704,7 @@ function AdminPlansPage() {
                           onChange={(e) =>
                             patch({
                               ribbon_label: e.target.value.toUpperCase() || null,
-                              ribbon_color: plan.ribbon_color ?? "#8ec63f",
+                              ribbon_color: plan.ribbon_color ?? "#4a82f3",
                             })
                           }
                         />
@@ -731,7 +731,7 @@ function AdminPlansPage() {
                         />
                       </Field>
                     </div>
-                    <p className="text-[12.5px] font-semibold text-[#a29a8d]">
+                    <p className="text-[12.5px] font-semibold text-[#9a9aab]">
                       {plan.compare_cents
                         ? `Students see the old price struck through and a −${discountPercent(plan.compare_cents, plan.price_cents)}% pill.`
                         : "Set a compare-at price to show a discount pill — the percentage is worked out for you."}
@@ -759,7 +759,7 @@ function AdminPlansPage() {
                                 max_summaries: preset.l,
                               })
                             }
-                            className="rounded-full bg-[#f3efe6] px-3 py-1.5 text-[12px] font-black text-[#5c554b] hover:bg-[#e9e3d6]"
+                            className="rounded-full bg-[#f4f4f8] px-3 py-1.5 text-[12px] font-black text-[#4b4a5c] hover:bg-[#ffe6a3]"
                           >
                             {preset.n} cards
                           </button>
@@ -814,7 +814,7 @@ function AdminPlansPage() {
                         onChange={(v) => patch({ max_groups: v })}
                       />
                     </div>
-                    <p className="mt-2 text-[12px] font-semibold text-[#a29a8d]">
+                    <p className="mt-2 text-[12px] font-semibold text-[#9a9aab]">
                       Set 0 to remove a tool from this plan completely. Every allowance is checked on the
                       server before any AI runs, so a big upload is refused instead of billed.
                     </p>
@@ -841,7 +841,7 @@ function AdminPlansPage() {
                 <div className="grid h-fit gap-4 xl:sticky xl:top-6">
                   <PlanPreview plan={plan} />
                   <div className="rounded-[22px] border border-black/[0.07] bg-white p-4">
-                    <p className="text-[12.5px] font-bold text-[#a29a8d]">
+                    <p className="text-[12.5px] font-bold text-[#9a9aab]">
                       {dirty ? "Unsaved changes" : "All changes saved"}
                     </p>
                     <div className="mt-3 grid gap-2">
@@ -849,7 +849,7 @@ function AdminPlansPage() {
                         type="button"
                         disabled={busy}
                         onClick={onSave}
-                        className="inline-flex items-center justify-center gap-2 rounded-full bg-[#8ec63f] px-5 py-2.5 text-[14px] font-black text-white disabled:opacity-60"
+                        className="inline-flex items-center justify-center gap-2 rounded-full bg-[#4a82f3] px-5 py-2.5 text-[14px] font-black text-white disabled:opacity-60"
                       >
                         <Save size={15} /> {busy ? "Saving…" : "Save plan"}
                       </button>
@@ -857,7 +857,7 @@ function AdminPlansPage() {
                         type="button"
                         disabled={busy}
                         onClick={onSyncPrices}
-                        className="inline-flex items-center justify-center gap-2 rounded-full border border-black/10 px-4 py-2.5 text-[14px] font-black text-[#23201d] hover:bg-black/5 disabled:opacity-60"
+                        className="inline-flex items-center justify-center gap-2 rounded-full border border-black/10 px-4 py-2.5 text-[14px] font-black text-[#121117] hover:bg-black/5 disabled:opacity-60"
                       >
                         <RefreshCw size={14} className={busy ? "animate-spin" : ""} />
                         Sync to Paddle ({paddleInspection?.activeEnv ?? "live"})
@@ -865,7 +865,7 @@ function AdminPlansPage() {
                       <button
                         type="button"
                         onClick={onDelete}
-                        className="inline-flex items-center justify-center gap-2 rounded-full border border-black/10 px-4 py-2.5 text-[14px] font-black text-[#a4423a]"
+                        className="inline-flex items-center justify-center gap-2 rounded-full border border-black/10 px-4 py-2.5 text-[14px] font-black text-[#b3213f]"
                       >
                         <Trash2 size={15} /> Delete
                       </button>
@@ -879,10 +879,10 @@ function AdminPlansPage() {
 
         <section className="mt-10 rounded-[26px] border border-black/[0.07] bg-white p-6">
           <div className="flex items-start gap-3">
-            <ShieldCheck className="mt-1 text-[#4c9a2a]" size={22} />
+            <ShieldCheck className="mt-1 text-[#2b6df0]" size={22} />
             <div>
               <h2 className="text-[20px] font-black">Manual access</h2>
-              <p className="mt-1 text-[13.5px] font-semibold text-[#7a736a]">Give free, dated access without changing or canceling a payment.</p>
+              <p className="mt-1 text-[13.5px] font-semibold text-[#54546a]">Give free, dated access without changing or canceling a payment.</p>
             </div>
           </div>
           <div className="mt-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
@@ -895,10 +895,10 @@ function AdminPlansPage() {
               catch (e) { setGrantMatch(null); toast.error(e instanceof Error ? e.message : "Account not found"); }
             }} className="rita-btn rita-btn-secondary disabled:opacity-50"><Search size={15} /> Find account</button>
           </div>
-          {grantMatch && <div className="mt-4 rounded-2xl bg-[#f5f2eb] p-4">
+          {grantMatch && <div className="mt-4 rounded-2xl bg-[#f4f4f8] p-4">
             <p className="font-black">{grantMatch.student.full_name || grantMatch.student.username}</p>
-            <p className="text-[13px] font-semibold text-[#7a736a]">@{grantMatch.student.username} · {grantMatch.student.email}</p>
-            <p className="mt-2 text-[12.5px] font-bold text-[#7a736a]">Paid access: {grantMatch.paid?.plan_slug ?? "starter"}{grantMatch.manual ? ` · Current manual access: ${grantMatch.manual.plan_slug}` : ""}</p>
+            <p className="text-[13px] font-semibold text-[#54546a]">@{grantMatch.student.username} · {grantMatch.student.email}</p>
+            <p className="mt-2 text-[12.5px] font-bold text-[#54546a]">Paid access: {grantMatch.paid?.plan_slug ?? "starter"}{grantMatch.manual ? ` · Current manual access: ${grantMatch.manual.plan_slug}` : ""}</p>
           </div>}
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div>
@@ -915,7 +915,7 @@ function AdminPlansPage() {
             <div><p className={label}>Expires (optional)</p><input type="datetime-local" className={input} value={grantExpiry} onChange={(e) => setGrantExpiry(e.target.value)} /></div>
             <div className="sm:col-span-2"><p className={label}>Internal reason</p><input className={input} maxLength={500} value={grantReason} onChange={(e) => setGrantReason(e.target.value)} placeholder="Why this access was provided" /></div>
           </div>
-          <label className="mt-4 flex items-center gap-2 text-[13px] font-bold text-[#5c554b]"><input type="checkbox" checked={grantOverride} onChange={(e) => setGrantOverride(e.target.checked)} /> Override paid access while this grant is active</label>
+          <label className="mt-4 flex items-center gap-2 text-[13px] font-bold text-[#4b4a5c]"><input type="checkbox" checked={grantOverride} onChange={(e) => setGrantOverride(e.target.checked)} /> Override paid access while this grant is active</label>
           <div className="mt-4">
             <button
               type="button"
@@ -931,16 +931,16 @@ function AdminPlansPage() {
                 }
               }}
               disabled={!grantMatch || !whoPlan}
-              className="inline-flex items-center gap-2 rounded-full bg-[#23201d] px-5 py-3 text-[14px] font-black text-white disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-full bg-[#121117] px-5 py-3 text-[14px] font-black text-white disabled:opacity-50"
             >
               <UserPlus size={15} /> Grant access
             </button>
           </div>
           <div className="mt-8 border-t border-black/10 pt-6">
             <h3 className="text-[15px] font-black">Grant history</h3>
-            <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[720px] text-left text-[13px]"><thead className="text-[#8a8378]"><tr><th className="pb-2">Student</th><th>Plan</th><th>Status</th><th>Expires</th><th>Reason</th><th></th></tr></thead><tbody>
-              {grants.map((g) => { const now = Date.now(); const upcoming = new Date(g.starts_at).getTime() > now; const expired = !!g.expires_at && new Date(g.expires_at).getTime() <= now; const status = g.revoked_at ? "Revoked" : upcoming ? "Upcoming" : expired ? "Expired" : "Active"; return <tr key={g.id} className="border-t border-black/[0.07]"><td className="py-3 font-bold">{g.student?.username ?? g.student?.email ?? "Account"}</td><td>{g.plan_slug}</td><td>{status}</td><td>{g.expires_at ? new Date(g.expires_at).toLocaleString() : "No expiry"}</td><td className="max-w-[240px] truncate">{g.reason || "—"}</td><td className="text-right">{!g.revoked_at && !expired && <button type="button" aria-label="Revoke grant" onClick={async () => { await revokeGrant({ data: { id: g.id, reason: "Revoked by administrator" } }); await qc.invalidateQueries({ queryKey: ["admin-plan-grants"] }); toast.success("Access revoked"); }} className="inline-flex items-center gap-1 font-black text-[#a4423a]"><XCircle size={14} /> Revoke</button>}</td></tr>; })}
-              {!grants.length && <tr><td colSpan={6} className="py-6 text-center font-semibold text-[#8a8378]">No manual access grants yet.</td></tr>}
+            <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[720px] text-left text-[13px]"><thead className="text-[#6a697c]"><tr><th className="pb-2">Student</th><th>Plan</th><th>Status</th><th>Expires</th><th>Reason</th><th></th></tr></thead><tbody>
+              {grants.map((g) => { const now = Date.now(); const upcoming = new Date(g.starts_at).getTime() > now; const expired = !!g.expires_at && new Date(g.expires_at).getTime() <= now; const status = g.revoked_at ? "Revoked" : upcoming ? "Upcoming" : expired ? "Expired" : "Active"; return <tr key={g.id} className="border-t border-black/[0.07]"><td className="py-3 font-bold">{g.student?.username ?? g.student?.email ?? "Account"}</td><td>{g.plan_slug}</td><td>{status}</td><td>{g.expires_at ? new Date(g.expires_at).toLocaleString() : "No expiry"}</td><td className="max-w-[240px] truncate">{g.reason || "—"}</td><td className="text-right">{!g.revoked_at && !expired && <button type="button" aria-label="Revoke grant" onClick={async () => { await revokeGrant({ data: { id: g.id, reason: "Revoked by administrator" } }); await qc.invalidateQueries({ queryKey: ["admin-plan-grants"] }); toast.success("Access revoked"); }} className="inline-flex items-center gap-1 font-black text-[#b3213f]"><XCircle size={14} /> Revoke</button>}</td></tr>; })}
+              {!grants.length && <tr><td colSpan={6} className="py-6 text-center font-semibold text-[#6a697c]">No manual access grants yet.</td></tr>}
             </tbody></table></div>
           </div>
         </section>
@@ -954,7 +954,7 @@ function AdminPlansPage() {
 function Block({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-[24px] border border-black/[0.07] bg-white p-5 shadow-[0_24px_50px_-48px_rgba(35,32,29,0.8)]">
-      <h2 className="mb-3 text-[12px] font-black uppercase tracking-[0.18em] text-[#a29a8d]">{title}</h2>
+      <h2 className="mb-3 text-[12px] font-black uppercase tracking-[0.18em] text-[#9a9aab]">{title}</h2>
       <div className="grid gap-3">{children}</div>
     </section>
   );
@@ -1009,7 +1009,7 @@ function Limit({
 }) {
   const unlimited = value === null || value === undefined;
   return (
-    <div className="rounded-2xl bg-[#fbf5e9] p-3">
+    <div className="rounded-2xl bg-[#f4f4f8] p-3">
       <p className={label}>{text}</p>
       <input
         type="number"
@@ -1024,7 +1024,7 @@ function Limit({
         type="button"
         onClick={() => onChange(unlimited ? 100 : null)}
         className={`mt-2 w-full rounded-full px-3 py-1.5 text-[12px] font-black ${
-          unlimited ? "bg-[#e7f3d6] text-[#4d7a1f]" : "bg-white text-[#a29a8d]"
+          unlimited ? "bg-[#e7eefd] text-[#1d5fd0]" : "bg-white text-[#9a9aab]"
         }`}
       >
         {unlimited ? "✓ Unlimited" : "Make unlimited"}
@@ -1048,17 +1048,17 @@ function PerkList({ perks, onChange }: { perks: string[]; onChange: (v: string[]
       {perks.map((p, i) => (
         <div key={i} className="flex items-center gap-2">
           <input className={input} value={p} onChange={(e) => set(i, e.target.value)} />
-          <button type="button" aria-label="Move perk up" onClick={() => swap(i, i - 1)} className="text-[#a29a8d]">
+          <button type="button" aria-label="Move perk up" onClick={() => swap(i, i - 1)} className="text-[#9a9aab]">
             <ArrowUp size={15} />
           </button>
-          <button type="button" aria-label="Move perk down" onClick={() => swap(i, i + 1)} className="text-[#a29a8d]">
+          <button type="button" aria-label="Move perk down" onClick={() => swap(i, i + 1)} className="text-[#9a9aab]">
             <ArrowDown size={15} />
           </button>
           <button
             type="button"
             aria-label="Remove perk"
             onClick={() => onChange(perks.filter((_, idx) => idx !== i))}
-            className="text-[#a4423a]"
+            className="text-[#b3213f]"
           >
             <Trash2 size={15} />
           </button>
@@ -1068,7 +1068,7 @@ function PerkList({ perks, onChange }: { perks: string[]; onChange: (v: string[]
         type="button"
         disabled={perks.length >= 12}
         onClick={() => onChange([...perks, ""])}
-        className="w-fit rounded-full bg-[#f4f1ea] px-4 py-2 text-[13px] font-black text-[#5c554b] disabled:opacity-50"
+        className="w-fit rounded-full bg-[#f4f4f8] px-4 py-2 text-[13px] font-black text-[#4b4a5c] disabled:opacity-50"
       >
         <Plus size={13} className="mr-1 inline" /> Add perk
       </button>
@@ -1095,43 +1095,43 @@ function PlanPreview({ plan }: { plan: AdminPlan }) {
   );
   const off = offerLive(plan.offer_ends_at) ? discountPercent(plan.compare_cents, plan.price_cents) : 0;
   return (
-    <div className="rounded-2xl bg-[#fbf5e9] p-4">
-      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a29a8d]">Live preview</p>
+    <div className="rounded-2xl bg-[#f4f4f8] p-4">
+      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">Live preview</p>
       <div
         className={`relative mt-2 overflow-hidden rounded-[22px] bg-white p-5 ${
-          plan.highlight ? "ring-2 ring-[#4c9a2a]" : "border border-black/[0.07]"
+          plan.highlight ? "ring-2 ring-[#2b6df0]" : "border border-black/[0.07]"
         }`}
       >
         <OfferRibbon label={plan.ribbon_label} color={plan.ribbon_color} endsAt={plan.offer_ends_at} />
         <p className="mt-2 text-[19px] font-black">{plan.name || "Untitled plan"}</p>
-        {plan.tagline && <p className="text-[13.5px] font-semibold text-[#8a7f6c]">{plan.tagline}</p>}
+        {plan.tagline && <p className="text-[13.5px] font-semibold text-[#6a697c]">{plan.tagline}</p>}
         <div className="mt-3 flex items-end gap-2">
           <p className="font-display text-[30px] font-black leading-none">
             {money(plan.price_cents, plan.currency)}
           </p>
           {off > 0 && (
             <>
-              <span className="pb-1 text-[13px] font-bold text-[#b6ada0] line-through">
+              <span className="pb-1 text-[13px] font-bold text-[#9a9aab] line-through">
                 {money(plan.compare_cents ?? 0, plan.currency)}
               </span>
-              <span className="mb-0.5 rounded-full bg-[#d1795e] px-2 py-0.5 text-[11px] font-black text-white">
+              <span className="mb-0.5 rounded-full bg-[#d9506d] px-2 py-0.5 text-[11px] font-black text-white">
                 −{off}%
               </span>
             </>
           )}
         </div>
-        <p className="text-[12.5px] font-bold text-[#a29a8d]">
+        <p className="text-[12.5px] font-bold text-[#9a9aab]">
           {(plan.billing_kind ?? "monthly") === "lifetime"
             ? "one-time payment"
             : `for 3 months · or ${money(plan.yearly_cents, plan.currency)} per year`}
         </p>
-        <div className="mt-4 flex h-10 items-center justify-center rounded-full bg-[#4c9a2a] text-[13.5px] font-black text-white">
+        <div className="mt-4 flex h-10 items-center justify-center rounded-full bg-[#2b6df0] text-[13.5px] font-black text-white">
           {plan.cta_label || "Choose plan"}
         </div>
         <ul className="mt-4 space-y-1.5">
           {ticks.map((t) => (
-            <li key={t} className="flex items-start gap-2 text-[13.5px] font-semibold text-[#3c372f]">
-              <Check size={15} className="mt-0.5 shrink-0 text-[#4c9a2a]" />
+            <li key={t} className="flex items-start gap-2 text-[13.5px] font-semibold text-[#2a2933]">
+              <Check size={15} className="mt-0.5 shrink-0 text-[#2b6df0]" />
               {t}
             </li>
           ))}
@@ -1147,7 +1147,7 @@ function Toggle({ on, label: text, onClick }: { on: boolean; label: string; onCl
       type="button"
       onClick={onClick}
       className={`rounded-full px-4 py-2 text-[13px] font-black transition-colors ${
-        on ? "bg-[#e7f3d6] text-[#4d7a1f]" : "bg-[#f1eee8] text-[#a29a8d]"
+        on ? "bg-[#e7eefd] text-[#1d5fd0]" : "bg-[#f4f4f8] text-[#9a9aab]"
       }`}
     >
       {on ? "✓ " : "○ "}
@@ -1180,17 +1180,17 @@ function PaddleCoordinationPanel({
       : "https://vendors.paddle.com/prices";
 
   return (
-    <div className="mt-4 rounded-2xl border border-black/10 bg-[#fbfaf8] p-4">
+    <div className="mt-4 rounded-2xl border border-black/10 bg-[#ffffff] p-4">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/[0.06] pb-3">
         <div className="flex items-center gap-2">
-          <span className="text-[11.5px] font-black uppercase tracking-[0.16em] text-[#5c554b]">
+          <span className="text-[11.5px] font-black uppercase tracking-[0.16em] text-[#4b4a5c]">
             Paddle Catalog Coordination
           </span>
           <span
             className={`rounded-full px-2.5 py-0.5 text-[10.5px] font-extrabold uppercase tracking-wider ${
               env === "live"
                 ? "border border-[#2e7d32]/20 bg-[#e8f5e9] text-[#2e7d32]"
-                : "border border-[#e65100]/20 bg-[#fff3e0] text-[#e65100]"
+                : "border border-[#b26b00]/20 bg-[#f4f4f8] text-[#b26b00]"
             }`}
           >
             {env === "live" ? "● Live Production" : "● Sandbox"}
@@ -1202,7 +1202,7 @@ function PaddleCoordinationPanel({
             onClick={onRefresh}
             disabled={loading || busy}
             aria-label="Refresh Paddle Status"
-            className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-2.5 py-1 text-[11.5px] font-bold text-[#5c554b] hover:bg-black/5 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-2.5 py-1 text-[11.5px] font-bold text-[#4b4a5c] hover:bg-black/5 disabled:opacity-50"
           >
             <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
             Refresh
@@ -1211,7 +1211,7 @@ function PaddleCoordinationPanel({
             href={vendorDashboardUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-2.5 py-1 text-[11.5px] font-bold text-[#5c554b] hover:bg-black/5"
+            className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-2.5 py-1 text-[11.5px] font-bold text-[#4b4a5c] hover:bg-black/5"
           >
             <ExternalLink size={12} />
             Paddle Dashboard
@@ -1220,17 +1220,17 @@ function PaddleCoordinationPanel({
       </div>
 
       {loading && !inspection && (
-        <div className="py-4 text-center text-[12.5px] font-semibold text-[#8a8378]">
+        <div className="py-4 text-center text-[12.5px] font-semibold text-[#6a697c]">
           Checking Paddle catalog prices…
         </div>
       )}
 
       {inspection && inspection.overallStatus === "in_sync" && (
-        <div className="mt-3 flex items-start gap-2.5 rounded-xl bg-[#eaf5ea] p-3 text-[12.5px] font-bold text-[#2e7d32]">
+        <div className="mt-3 flex items-start gap-2.5 rounded-xl bg-[#f4f4f8] p-3 text-[12.5px] font-bold text-[#2e7d32]">
           <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-[#2e7d32]" />
           <div>
             <p>In Sync: Website and Paddle prices match perfectly ({env} mode).</p>
-            <p className="text-[11.5px] font-normal text-[#3d703e]">
+            <p className="text-[11.5px] font-normal text-[#256528]">
               Students checking out will be charged the exact prices listed on this card.
             </p>
           </div>
@@ -1238,12 +1238,12 @@ function PaddleCoordinationPanel({
       )}
 
       {inspection && inspection.overallStatus === "desynced" && (
-        <div className="mt-3 rounded-xl border border-amber-300 bg-[#fff9eb] p-3.5 text-[12.5px]">
-          <div className="flex items-start gap-2.5 text-[#92400e]">
-            <AlertTriangle size={18} className="mt-0.5 shrink-0 text-[#b45309]" />
+        <div className="mt-3 rounded-xl border border-amber-300 bg-[#f4f4f8] p-3.5 text-[12.5px]">
+          <div className="flex items-start gap-2.5 text-[#8a5200]">
+            <AlertTriangle size={18} className="mt-0.5 shrink-0 text-[#8a5200]" />
             <div>
               <p className="text-[13px] font-black">Paddle Desync / Legacy Cycle Detected!</p>
-              <p className="mt-0.5 text-[12px] font-medium text-[#78350f]">
+              <p className="mt-0.5 text-[12px] font-medium text-[#6b4000]">
                 Paddle has an outdated price or is still set to the legacy 1-month cycle. Syncing will
                 automatically create a 3-Month recurring subscription in Paddle ({money(plan.price_cents, plan.currency)}),
                 retire the old 1-month price, and update your catalog.
@@ -1255,7 +1255,7 @@ function PaddleCoordinationPanel({
               type="button"
               disabled={busy}
               onClick={onSync}
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#b45309] px-3.5 py-1.5 text-[12px] font-black text-white hover:bg-[#92400e] disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#8a5200] px-3.5 py-1.5 text-[12px] font-black text-white hover:bg-[#8a5200] disabled:opacity-60"
             >
               <Sparkles size={13} />
               Migrate to 3-Month & Sync to Live Paddle
@@ -1265,11 +1265,11 @@ function PaddleCoordinationPanel({
       )}
 
       {inspection && inspection.overallStatus === "not_found" && (
-        <div className="mt-3 flex items-start gap-2.5 rounded-xl bg-[#f0f4f8] p-3 text-[12px] font-medium text-[#334155]">
-          <AlertTriangle size={16} className="mt-0.5 shrink-0 text-[#64748b]" />
+        <div className="mt-3 flex items-start gap-2.5 rounded-xl bg-[#f4f4f8] p-3 text-[12px] font-medium text-[#1a4ba8]">
+          <AlertTriangle size={16} className="mt-0.5 shrink-0 text-[#54546a]" />
           <div>
-            <p className="font-bold text-[#1e293b]">Checkout price ID not found in Paddle catalog</p>
-            <p className="mt-0.5 text-[11.5px] text-[#64748b]">
+            <p className="font-bold text-[#153a82]">Checkout price ID not found in Paddle catalog</p>
+            <p className="mt-0.5 text-[11.5px] text-[#54546a]">
               Verify that the price ID (pri_... or external ID) exists in your Paddle{" "}
               <a
                 href={vendorDashboardUrl}
@@ -1301,11 +1301,11 @@ function PaddleCoordinationPanel({
               >
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-black text-[#23201d]">{t.label}</span>
-                    <span className="font-mono text-[11px] text-[#8a8378]">({t.configuredId})</span>
+                    <span className="font-black text-[#121117]">{t.label}</span>
+                    <span className="font-mono text-[11px] text-[#6a697c]">({t.configuredId})</span>
                   </div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px]">
-                    <span className="font-bold text-[#5c554b]">
+                    <span className="font-bold text-[#4b4a5c]">
                       Site: {money(t.expectedCents, t.currency)}
                     </span>
                     <span>→</span>
@@ -1314,8 +1314,8 @@ function PaddleCoordinationPanel({
                         t.status === "in_sync"
                           ? "text-[#2e7d32]"
                           : t.status === "desynced"
-                            ? "text-[#b45309]"
-                            : "text-[#8a8378]"
+                            ? "text-[#8a5200]"
+                            : "text-[#6a697c]"
                       }`}
                     >
                       Paddle:{" "}
@@ -1338,7 +1338,7 @@ function PaddleCoordinationPanel({
                         type="button"
                         disabled={busy}
                         onClick={onSync}
-                        className="rounded-full bg-[#23201d] px-2.5 py-1 text-[11px] font-black text-white hover:bg-black disabled:opacity-50"
+                        className="rounded-full bg-[#121117] px-2.5 py-1 text-[11px] font-black text-white hover:bg-black disabled:opacity-50"
                       >
                         Push {money(t.expectedCents, t.currency)} to Paddle
                       </button>
@@ -1347,7 +1347,7 @@ function PaddleCoordinationPanel({
                           type="button"
                           disabled={busy}
                           onClick={() => onAdoptPrice(fieldKey, t.paddleCents!)}
-                          className="rounded-full border border-black/10 bg-white px-2.5 py-1 text-[11px] font-black text-[#5c554b] hover:bg-black/5"
+                          className="rounded-full border border-black/10 bg-white px-2.5 py-1 text-[11px] font-black text-[#4b4a5c] hover:bg-black/5"
                         >
                           Use Paddle’s {money(t.paddleCents, t.paddleCurrency || t.currency)}
                         </button>
@@ -1355,7 +1355,7 @@ function PaddleCoordinationPanel({
                     </div>
                   )}
                   {t.status === "not_found" && (
-                    <span className="rounded-full bg-[#f1eee8] px-2.5 py-1 text-[11px] font-bold text-[#8a8378]">
+                    <span className="rounded-full bg-[#f4f4f8] px-2.5 py-1 text-[11px] font-bold text-[#6a697c]">
                       ID Missing
                     </span>
                   )}

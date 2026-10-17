@@ -100,7 +100,7 @@ function GoldenAgeDecor() {
     <div className="decor-layer" aria-hidden="true">
       <div
         className="decor-tessellation hidden md:block"
-        style={{ backgroundImage: starTile("#c9a227", 0.16), backgroundSize: "120px 120px" }}
+        style={{ backgroundImage: starTile("#b26b00", 0.16), backgroundSize: "120px 120px" }}
       />
       <div
         className="absolute inset-x-0 top-0"
@@ -108,11 +108,11 @@ function GoldenAgeDecor() {
       />
       <Astrolabe
         style={{ right: "-70px", top: "8vh", width: 320, height: 320, opacity: 0.18 }}
-        color="#c9a227"
+        color="#b26b00"
       />
       <Astrolabe
         style={{ left: "-90px", bottom: "6vh", width: 260, height: 260, opacity: 0.12 }}
-        color="#7fd3d8"
+        color="#7ba5f5"
       />
       {MOTES.map((m, i) => (
         <span
@@ -154,7 +154,7 @@ function IlluminatedCorner({
 }) {
   return (
     <svg className={className} style={style} viewBox="0 0 200 200" fill="none" aria-hidden="true">
-      <g stroke="#b08934" strokeWidth="1.4" fill="none" strokeLinecap="round">
+      <g stroke="#b26b00" strokeWidth="1.4" fill="none" strokeLinecap="round">
         <path d="M8 8 H120 M8 8 V120" />
         <path d="M18 18 H96 M18 18 V96" strokeOpacity="0.7" />
         <path d="M18 96 C56 96 96 56 96 18" strokeOpacity="0.75" />
@@ -163,12 +163,12 @@ function IlluminatedCorner({
         <path d="M96 18 C120 30 130 44 132 62" strokeOpacity="0.4" />
         <path d="M18 96 C30 120 44 130 62 132" strokeOpacity="0.4" />
       </g>
-      <g fill="#8c2f1f" fillOpacity="0.45">
+      <g fill="#961a34" fillOpacity="0.45">
         <circle cx="18" cy="18" r="3.2" />
         <circle cx="74" cy="30" r="2.2" />
         <circle cx="30" cy="74" r="2.2" />
       </g>
-      <g fill="#b08934" fillOpacity="0.35">
+      <g fill="#b26b00" fillOpacity="0.35">
         <circle cx="52" cy="52" r="4" />
         <circle cx="96" cy="18" r="2.4" />
         <circle cx="18" cy="96" r="2.4" />
@@ -186,7 +186,7 @@ function ParchmentDecor() {
       {/* Very faint khatam lattice, desktop only */}
       <div
         className="decor-tessellation hidden md:block"
-        style={{ backgroundImage: khatamTile("#8c6b2f", 0.16), backgroundSize: "96px 96px", opacity: 0.5 }}
+        style={{ backgroundImage: khatamTile("#8a5200", 0.16), backgroundSize: "96px 96px", opacity: 0.5 }}
       />
 
       {/* Ruled manuscript margins */}
@@ -209,22 +209,22 @@ function ParchmentDecor() {
         <path
           d="M600 40 C740 120 800 230 800 400 L400 400 C400 230 460 120 600 40 Z"
           fill="none"
-          stroke="#8c2f1f"
+          stroke="#961a34"
           strokeOpacity="0.35"
           strokeWidth="2"
         />
         <path
           d="M600 90 C710 160 760 250 760 400 L440 400 C440 250 490 160 600 90 Z"
           fill="none"
-          stroke="#b08934"
+          stroke="#b26b00"
           strokeOpacity="0.3"
           strokeWidth="1.4"
         />
       </svg>
 
       <svg className="decor-dunes" style={{ height: "26vh" }} viewBox="0 0 1200 300" preserveAspectRatio="none">
-        <path d="M0 210 C180 150 320 250 520 205 C700 165 860 235 1200 175 L1200 300 L0 300 Z" fill="#b08934" fillOpacity="0.14" />
-        <path d="M0 250 C220 205 380 285 620 245 C830 210 1000 275 1200 235 L1200 300 L0 300 Z" fill="#8c6b2f" fillOpacity="0.16" />
+        <path d="M0 210 C180 150 320 250 520 205 C700 165 860 235 1200 175 L1200 300 L0 300 Z" fill="#b26b00" fillOpacity="0.14" />
+        <path d="M0 250 C220 205 380 285 620 245 C830 210 1000 275 1200 235 L1200 300 L0 300 Z" fill="#8a5200" fillOpacity="0.16" />
       </svg>
 
       {/* Sparse ink motes drifting up the page */}
@@ -252,7 +252,7 @@ function AndalusDecor() {
     <div className="decor-layer" aria-hidden="true">
       <div
         className="decor-tessellation hidden md:block"
-        style={{ backgroundImage: starTile("#1f8a93", 0.18), backgroundSize: "100px 100px" }}
+        style={{ backgroundImage: starTile("#1d5fd0", 0.18), backgroundSize: "100px 100px" }}
       />
       <div
         className="absolute inset-x-0 bottom-0"
@@ -315,11 +315,11 @@ function EmeraldLibraryDecor() {
 /* ── Fireworks ───────────────────────────────────────────────────────── */
 
 const BURSTS = [
-  { left: "12%", color: "#ff4d6d", height: "42vh", delay: "0s", spread: 100 },
-  { left: "31%", color: "#ffd166", height: "54vh", delay: "1.4s", spread: 120 },
-  { left: "52%", color: "#8ab6ff", height: "36vh", delay: "2.6s", spread: 90 },
-  { left: "71%", color: "#c77dff", height: "50vh", delay: "0.7s", spread: 115 },
-  { left: "88%", color: "#63e6be", height: "40vh", delay: "3.6s", spread: 95 },
+  { left: "12%", color: "#d9506d", height: "42vh", delay: "0s", spread: 100 },
+  { left: "31%", color: "#f5b942", height: "54vh", delay: "1.4s", spread: 120 },
+  { left: "52%", color: "#a9c4f9", height: "36vh", delay: "2.6s", spread: 90 },
+  { left: "71%", color: "#a9c4f9", height: "50vh", delay: "0.7s", spread: 115 },
+  { left: "88%", color: "#4aa552", height: "40vh", delay: "3.6s", spread: 95 },
 ];
 
 function FireworksDecor() {
@@ -467,14 +467,14 @@ function Lantern({ cord, size }: { cord: number; size: number }) {
   const h = size * 1.5;
   return (
     <svg width={w} height={cord + h} viewBox={`0 0 ${w} ${cord + h}`} fill="none">
-      <line x1={w / 2} y1="0" x2={w / 2} y2={cord} stroke="#d8a13a" strokeWidth="1.4" opacity="0.8" />
+      <line x1={w / 2} y1="0" x2={w / 2} y2={cord} stroke="#d68c0a" strokeWidth="1.4" opacity="0.8" />
       <g transform={`translate(0 ${cord})`} opacity="0.95">
         {/* crown */}
         <path
           d={`M${w / 2} 0 l${w * 0.06} ${h * 0.05} h${-w * 0.12} z`}
-          fill="#e3b45c"
+          fill="#e9a21f"
         />
-        <rect x={w * 0.3} y={h * 0.05} width={w * 0.4} height={h * 0.07} rx={h * 0.03} fill="#d8a13a" />
+        <rect x={w * 0.3} y={h * 0.05} width={w * 0.4} height={h * 0.07} rx={h * 0.03} fill="#d68c0a" />
         {/* body cage */}
         <ellipse cx={w / 2} cy={h * 0.5} rx={w * 0.45} ry={h * 0.33} fill="rgba(216,161,58,0.16)" />
         <ellipse
@@ -482,18 +482,18 @@ function Lantern({ cord, size }: { cord: number; size: number }) {
           cy={h * 0.5}
           rx={w * 0.45}
           ry={h * 0.33}
-          stroke="#e3b45c"
+          stroke="#e9a21f"
           strokeWidth="2"
         />
-        <ellipse cx={w / 2} cy={h * 0.5} rx={w * 0.2} ry={h * 0.33} stroke="#e3b45c" strokeWidth="1.4" />
-        <line x1={w / 2} y1={h * 0.17} x2={w / 2} y2={h * 0.83} stroke="#e3b45c" strokeWidth="1.4" />
+        <ellipse cx={w / 2} cy={h * 0.5} rx={w * 0.2} ry={h * 0.33} stroke="#e9a21f" strokeWidth="1.4" />
+        <line x1={w / 2} y1={h * 0.17} x2={w / 2} y2={h * 0.83} stroke="#e9a21f" strokeWidth="1.4" />
         {/* candle glow */}
         <circle cx={w / 2} cy={h * 0.55} r={w * 0.24} fill="rgba(255,214,130,0.35)" />
-        <rect x={w * 0.42} y={h * 0.5} width={w * 0.16} height={h * 0.18} rx={2} fill="#fff6e0" />
-        <ellipse cx={w / 2} cy={h * 0.48} rx={w * 0.05} ry={h * 0.05} fill="#ffd580" />
+        <rect x={w * 0.42} y={h * 0.5} width={w * 0.16} height={h * 0.18} rx={2} fill="#f4f4f8" />
+        <ellipse cx={w / 2} cy={h * 0.48} rx={w * 0.05} ry={h * 0.05} fill="#f5b942" />
         {/* base */}
-        <rect x={w * 0.26} y={h * 0.8} width={w * 0.48} height={h * 0.07} rx={h * 0.03} fill="#d8a13a" />
-        <path d={`M${w * 0.44} ${h * 0.87} h${w * 0.12} l${-w * 0.06} ${h * 0.1} z`} fill="#e3b45c" />
+        <rect x={w * 0.26} y={h * 0.8} width={w * 0.48} height={h * 0.07} rx={h * 0.03} fill="#d68c0a" />
+        <path d={`M${w * 0.44} ${h * 0.87} h${w * 0.12} l${-w * 0.06} ${h * 0.1} z`} fill="#e9a21f" />
       </g>
     </svg>
   );
@@ -504,14 +504,14 @@ function CornerOrnament({ className }: { className?: string }) {
     <svg className={className} width="180" height="180" viewBox="0 0 180 180" fill="none" opacity="0.22">
       <path
         d="M0 60 Q0 0 60 0 L120 0 Q90 12 78 42 Q66 72 36 84 Q6 96 0 120 Z"
-        stroke="#d8a13a"
+        stroke="#d68c0a"
         strokeWidth="2"
         fill="none"
       />
-      <path d="M0 40 Q0 0 40 0 L86 0" stroke="#d8a13a" strokeWidth="1.2" fill="none" />
+      <path d="M0 40 Q0 0 40 0 L86 0" stroke="#d68c0a" strokeWidth="1.2" fill="none" />
       {Array.from({ length: 5 }).map((_, r) =>
         Array.from({ length: 5 }).map((_, c) => (
-          <circle key={`${r}-${c}`} cx={12 + c * 16} cy={12 + r * 16} r="2.4" fill="#d8a13a" opacity="0.5" />
+          <circle key={`${r}-${c}`} cx={12 + c * 16} cy={12 + r * 16} r="2.4" fill="#d68c0a" opacity="0.5" />
         )),
       )}
     </svg>
@@ -554,9 +554,9 @@ function EidDecor() {
       >
         <defs>
           <linearGradient id="eid-gold" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#f6dfa0" />
-            <stop offset="55%" stopColor="#d4af37" />
-            <stop offset="100%" stopColor="#8a6a1f" />
+            <stop offset="0%" stopColor="#ffd266" />
+            <stop offset="55%" stopColor="#d68c0a" />
+            <stop offset="100%" stopColor="#8a5200" />
           </linearGradient>
         </defs>
         <path
@@ -574,7 +574,7 @@ function EidDecor() {
         fill="none"
         opacity="0.2"
       >
-        <g fill="#d4af37">
+        <g fill="#d68c0a">
           <rect x="120" y="120" width="30" height="100" />
           <path d="M135 92 q16 14 15 28 h-30 q-1 -14 15 -28z" />
           <rect x="205" y="90" width="26" height="130" />
@@ -587,7 +587,7 @@ function EidDecor() {
           <path d="M420 96 q30 -74 60 0 q-30 -22 -60 0z" />
           <rect x="80" y="200" width="740" height="20" rx="4" />
         </g>
-        <path d="M430 220 v-58 a20 20 0 0 1 40 0 v58z" fill="#0f0c06" opacity="0.75" />
+        <path d="M430 220 v-58 a20 20 0 0 1 40 0 v58z" fill="#0b0b0f" opacity="0.75" />
       </svg>
     </div>
   );
@@ -636,21 +636,21 @@ function SantaSleigh() {
       {[0, 68, 136].map((x, i) => (
         <g key={i} transform={`translate(${x} 34)`}>
           {/* reindeer */}
-          <path d="M8 22 h34 v14 h-34z" fill="#8b5a2b" />
-          <rect x="10" y="34" width="4" height="16" fill="#8b5a2b" />
-          <rect x="22" y="34" width="4" height="16" fill="#7a4d24" />
-          <rect x="36" y="34" width="4" height="16" fill="#8b5a2b" />
-          <path d="M42 22 l12 -6 v14 l-12 4z" fill="#8b5a2b" />
-          <path d="M50 16 l-4 -12 m4 12 l6 -12" stroke="#5c3a1a" strokeWidth="2.5" strokeLinecap="round" />
-          <circle cx="55" cy="20" r="3" fill={i === 2 ? "#ff3b30" : "#5c3a1a"} />
-          <line x1="0" y1="28" x2="8" y2="28" stroke="#b45309" strokeWidth="2" />
+          <path d="M8 22 h34 v14 h-34z" fill="#8a5200" />
+          <rect x="10" y="34" width="4" height="16" fill="#8a5200" />
+          <rect x="22" y="34" width="4" height="16" fill="#8a5200" />
+          <rect x="36" y="34" width="4" height="16" fill="#8a5200" />
+          <path d="M42 22 l12 -6 v14 l-12 4z" fill="#8a5200" />
+          <path d="M50 16 l-4 -12 m4 12 l6 -12" stroke="#6b4000" strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx="55" cy="20" r="3" fill={i === 2 ? "#d9506d" : "#6b4000"} />
+          <line x1="0" y1="28" x2="8" y2="28" stroke="#8a5200" strokeWidth="2" />
         </g>
       ))}
       {/* sleigh */}
       <g transform="translate(196 40)">
-        <path d="M0 26 q0 -20 22 -20 h48 q-6 22 -22 26 h-40z" fill="#c62828" />
-        <path d="M60 6 q14 -12 28 -6 q-12 6 -14 20z" fill="#a01d1d" />
-        <path d="M-4 34 h82 q10 0 12 -10" stroke="#e3b45c" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+        <path d="M0 26 q0 -20 22 -20 h48 q-6 22 -22 26 h-40z" fill="#b3213f" />
+        <path d="M60 6 q14 -12 28 -6 q-12 6 -14 20z" fill="#961a34" />
+        <path d="M-4 34 h82 q10 0 12 -10" stroke="#e9a21f" strokeWidth="3.5" fill="none" strokeLinecap="round" />
         <circle cx="34" cy="0" r="8" fill="#2e7d32" />
         <circle cx="48" cy="-2" r="6" fill="#2e7d32" />
       </g>
@@ -661,12 +661,12 @@ function SantaSleigh() {
 /* ── Academy ─────────────────────────────────────────────────────────── */
 
 const CONFETTI = [
-  { left: "6%", top: "18%", size: 34, color: "#0e7490", shape: "pentagon", delay: "0s" },
-  { left: "18%", top: "62%", size: 20, color: "#f2994a", shape: "pentagon", delay: "2.4s" },
-  { left: "78%", top: "22%", size: 26, color: "#f5c518", shape: "spark", delay: "1.2s" },
-  { left: "88%", top: "68%", size: 18, color: "#ef6ea8", shape: "square", delay: "3.1s" },
-  { left: "44%", top: "12%", size: 16, color: "#4cae7a", shape: "square", delay: "4.2s" },
-  { left: "62%", top: "80%", size: 24, color: "#22b8cf", shape: "spark", delay: "0.8s" },
+  { left: "6%", top: "18%", size: 34, color: "#1d5fd0", shape: "pentagon", delay: "0s" },
+  { left: "18%", top: "62%", size: 20, color: "#e9a21f", shape: "pentagon", delay: "2.4s" },
+  { left: "78%", top: "22%", size: 26, color: "#d68c0a", shape: "spark", delay: "1.2s" },
+  { left: "88%", top: "68%", size: 18, color: "#a9c4f9", shape: "square", delay: "3.1s" },
+  { left: "44%", top: "12%", size: 16, color: "#3a9042", shape: "square", delay: "4.2s" },
+  { left: "62%", top: "80%", size: 24, color: "#2b6df0", shape: "spark", delay: "0.8s" },
 ] as const;
 
 function ConfettiShape({ shape, size, color }: { shape: string; size: number; color: string }) {
@@ -707,7 +707,7 @@ function AcademyDecor() {
         ))}
         <span className="decor-orbit" style={{ left: "70%", top: "40%", opacity: 0.35 }}>
           <svg width="180" height="70" viewBox="0 0 180 70" fill="none">
-            <ellipse cx="90" cy="35" rx="86" ry="30" stroke="#8fd3e8" strokeWidth="3" />
+            <ellipse cx="90" cy="35" rx="86" ry="30" stroke="#a9c4f9" strokeWidth="3" />
           </svg>
         </span>
       </div>

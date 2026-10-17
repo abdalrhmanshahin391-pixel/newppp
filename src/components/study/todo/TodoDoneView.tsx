@@ -54,44 +54,44 @@ export function TodoDoneView({
   return (
     <div className="space-y-6">
       <div className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl border border-black/[0.07] bg-[#fbf5e9] p-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">
+        <div className="rounded-2xl border border-black/[0.07] bg-[#f4f4f8] p-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9a9aab]">
             Today's goal
           </p>
           <p className="mt-2 text-[26px] font-black leading-none">
             {todayCount}
-            <span className="ml-1.5 text-[13px] font-bold text-[#a29a8d]">of {goal} done</span>
+            <span className="ml-1.5 text-[13px] font-bold text-[#9a9aab]">of {goal} done</span>
           </p>
           <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white">
             <div
-              className="h-full rounded-full bg-[#4c9a2a] transition-[width] duration-500"
+              className="h-full rounded-full bg-[#2b6df0] transition-[width] duration-500"
               style={{ width: `${pct}%` }}
             />
           </div>
           <div className="mt-3 flex items-center gap-2">
-            <span className="text-[12.5px] font-bold text-[#8a7f6c]">Daily goal</span>
+            <span className="text-[12.5px] font-bold text-[#6a697c]">Daily goal</span>
             <input
               type="range"
               min={1}
               max={20}
               value={goal}
               onChange={(e) => onGoal(Number(e.target.value))}
-              className="flex-1 accent-[#4c9a2a]"
+              className="flex-1 accent-[#2b6df0]"
             />
             <span className="w-6 text-right text-[13px] font-black tabular-nums">{goal}</span>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-black/[0.07] bg-[#fdf1e2] p-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">Streak</p>
+        <div className="rounded-2xl border border-black/[0.07] bg-[#f4f4f8] p-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9a9aab]">Streak</p>
           <p className="mt-2 flex items-baseline gap-2 text-[26px] font-black leading-none">
-            <Flame size={24} className="text-[#f0a95c]" />
+            <Flame size={24} className="text-[#e9a21f]" />
             {streak}
-            <span className="text-[13px] font-bold text-[#a29a8d]">
+            <span className="text-[13px] font-bold text-[#9a9aab]">
               day{streak === 1 ? "" : "s"} hitting the goal
             </span>
           </p>
-          <p className="mt-3 text-[13px] font-semibold text-[#8a7f6c]">
+          <p className="mt-3 text-[13px] font-semibold text-[#6a697c]">
             {todayCount >= goal
               ? "Goal reached today — Rita is proud of you."
               : `${goal - todayCount} more today keeps the streak alive.`}
@@ -100,7 +100,7 @@ export function TodoDoneView({
       </div>
 
       {byDay.length === 0 && (
-        <p className="py-8 text-[15px] font-bold text-[#a29a8d]">
+        <p className="py-8 text-[15px] font-bold text-[#9a9aab]">
           Nothing finished yet. Tick something off and it lands here.
         </p>
       )}
@@ -114,16 +114,16 @@ export function TodoDoneView({
             {list.map((t) => (
               <div
                 key={t.id}
-                className="mb-1.5 flex items-center gap-3 rounded-xl bg-[#faf8f3] px-3 py-2.5"
+                className="mb-1.5 flex items-center gap-3 rounded-xl bg-[#ffffff] px-3 py-2.5"
               >
-                <CheckCircle2 size={17} className="shrink-0 text-[#4c9a2a]" />
-                <span className="flex-1 text-[15px] font-bold text-[#8a7f6c] line-through">
+                <CheckCircle2 size={17} className="shrink-0 text-[#2b6df0]" />
+                <span className="flex-1 text-[15px] font-bold text-[#6a697c] line-through">
                   {t.title}
                 </span>
                 <button
                   type="button"
                   onClick={() => onUndo(t.id)}
-                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-extrabold text-[#6d675e] hover:bg-white"
+                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-extrabold text-[#54546a] hover:bg-white"
                 >
                   <RotateCcw size={13} /> Undo
                 </button>

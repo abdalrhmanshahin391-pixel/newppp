@@ -54,34 +54,34 @@ export function PhoneExperienceTip() {
       dir={isArabic ? "rtl" : "ltr"}
       className="fixed bottom-4 inset-x-3 z-50 mx-auto max-w-md animate-in fade-in slide-in-from-bottom-3 duration-300 md:hidden"
     >
-      <div className="relative flex items-start gap-3 rounded-2xl border border-emerald-900/15 bg-[#fdfbf6] p-3.5 text-[#2b2620] shadow-[0_16px_40px_-15px_rgba(43,38,32,0.45)] ring-1 ring-black/5">
+      <div className="relative flex items-start gap-3 rounded-2xl border-2 border-[#121117] bg-white p-3.5 text-[#121117]">
         {/* Device Icon Avatar */}
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 shadow-xs">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center text-[#121117]">
           <div className="relative">
             <Laptop size={18} />
-            <Tablet size={11} className="absolute -bottom-1 -right-1 text-emerald-900" />
+            <Tablet size={11} className="absolute -bottom-1 -right-1 text-[#121117]" />
           </div>
         </div>
 
         {/* Text Content */}
         <div className="min-w-0 flex-1 pe-5">
-          <div className="flex items-center gap-1.5 text-[13px] font-black text-emerald-900">
-            <Sparkles size={13} className="text-emerald-700 shrink-0" />
+          <div className="flex items-center gap-1.5 text-[14px] font-bold text-[#121117]">
+            <Sparkles size={13} className="text-[#2b6df0] shrink-0" />
             <span>{isArabic ? "نصيحة دراسية لتجربة أفضل" : "Friendly Study Tip"}</span>
           </div>
 
-          <p className="mt-1 text-[12px] font-semibold leading-relaxed text-[#5c554a]">
+          <p className="mt-1 text-[12px] font-semibold leading-relaxed text-[#4b4a5c]">
             {isArabic ? (
               <>
                 للحصول على أفضل وأسهل تجربة مع البطاقات التعليمية، التلخيصات وبنك الأسئلة، ننصحك بفتح{" "}
-                <span className="font-bold text-[#23201d]">ريتاجت</span> من جهاز{" "}
-                <span className="font-bold text-emerald-950">آيباد أو لابتوب</span>! 💻📱
+                <span className="font-bold text-[#121117]">ريتاجت</span> من جهاز{" "}
+                <span className="font-bold text-[#121117]">آيباد أو لابتوب</span>! 💻📱
               </>
             ) : (
               <>
                 For the best study experience with flashcards, PDF summaries & question banks, we recommend opening{" "}
-                <span className="font-bold text-[#23201d]">EdithLab</span> on an{" "}
-                <span className="font-bold text-emerald-950">iPad or laptop</span>! 💻📱
+                <span className="font-bold text-[#121117]">EdithLab</span> on an{" "}
+                <span className="font-bold text-[#121117]">iPad or laptop</span>! 💻📱
               </>
             )}
           </p>
@@ -90,7 +90,7 @@ export function PhoneExperienceTip() {
             <button
               type="button"
               onClick={dismiss}
-              className="rounded-lg bg-emerald-800 px-3 py-1 text-[11.5px] font-black text-white shadow-xs transition-colors hover:bg-emerald-900 active:scale-95"
+              className="rounded-lg border-2 border-[#121117] bg-[#2b6df0] px-3 py-1 text-[12px] font-semibold text-white transition-colors hover:bg-[#2260e4]"
             >
               {isArabic ? "حسناً، فهمت" : "Got it!"}
             </button>
@@ -102,7 +102,7 @@ export function PhoneExperienceTip() {
           type="button"
           onClick={dismiss}
           aria-label={isArabic ? "إغلاق" : "Dismiss"}
-          className="absolute top-2.5 end-2.5 rounded-full p-1 text-[#8f8677] transition-colors hover:bg-black/5 hover:text-[#2b2620]"
+          className="absolute top-2.5 end-2.5 rounded-full p-1 text-[#6a697c] transition-colors hover:bg-black/5 hover:text-[#121117]"
         >
           <X size={15} />
         </button>

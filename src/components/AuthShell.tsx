@@ -6,9 +6,9 @@ import { RitaFace } from "@/components/brand/RitaBrand";
 import { cn } from "@/lib/utils";
 
 const TRUST = [
-  { icon: Layers, tone: "#e4dcf3", ink: "#4a3877", text: "Flashcards you build once and study forever" },
-  { icon: FileText, tone: "#fbe3c8", ink: "#7a4b16", text: "PDF and photo summaries in Rita's colours" },
-  { icon: ListChecks, tone: "#d6e8f6", ink: "#1f4c6d", text: "A to-do board that keeps the semester calm" },
+  { icon: Layers, tone: "#f4f4f8", ink: "#1d5fd0", text: "Flashcards you build once and study forever" },
+  { icon: FileText, tone: "#ffe6a3", ink: "#8a5200", text: "PDF and photo summaries in Rita's colours" },
+  { icon: ListChecks, tone: "#f4f4f8", ink: "#1a4ba8", text: "A to-do board that keeps the semester calm" },
 ];
 
 /**
@@ -32,12 +32,12 @@ export function AuthShell({
   wide?: boolean;
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#fbf5e9] text-foreground">
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#f4f4f8] text-foreground">
       {/* Soft aurora background */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="auth-blob absolute -left-32 -top-40 h-[34rem] w-[34rem] rounded-full bg-[#cfe6a8] opacity-55 blur-[110px]" />
-        <div className="auth-blob auth-blob-2 absolute -right-40 top-10 h-[30rem] w-[30rem] rounded-full bg-[#f6d3a6] opacity-55 blur-[110px]" />
-        <div className="auth-blob auth-blob-3 absolute bottom-[-14rem] left-1/3 h-[32rem] w-[32rem] rounded-full bg-[#d9d2f2] opacity-50 blur-[120px]" />
+        <div className="auth-blob absolute -left-32 -top-40 h-[34rem] w-[34rem] rounded-full bg-[#cddcfb] opacity-55 blur-[110px]" />
+        <div className="auth-blob auth-blob-2 absolute -right-40 top-10 h-[30rem] w-[30rem] rounded-full bg-[#ffd266] opacity-55 blur-[110px]" />
+        <div className="auth-blob auth-blob-3 absolute bottom-[-14rem] left-1/3 h-[32rem] w-[32rem] rounded-full bg-[#e7eefd] opacity-50 blur-[120px]" />
         <div
           className="absolute inset-0 opacity-[0.35]"
           style={{
@@ -54,7 +54,7 @@ export function AuthShell({
         </Link>
         <Link
           to="/"
-          className="rounded-full bg-white/70 px-4 py-2 text-sm font-bold text-[#6b655c] backdrop-blur transition-colors hover:bg-white hover:text-foreground"
+          className="rounded-full bg-white/70 px-4 py-2 text-sm font-bold text-[#54546a] backdrop-blur transition-colors hover:bg-white hover:text-foreground"
         >
           ← back home
         </Link>
@@ -68,17 +68,17 @@ export function AuthShell({
           )}
         >
           {/* Illustrated side */}
-          <aside className="relative hidden flex-col overflow-hidden bg-gradient-to-br from-[#f3f7e6] via-[#fdf3e2] to-[#f0ecfb] lg:flex">
+          <aside className="relative hidden flex-col overflow-hidden bg-gradient-to-br from-[#f4f4f8] via-[#f4f4f8] to-[#f4f4f8] lg:flex">
             <div
               aria-hidden="true"
-              className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#8ec63f]/20 blur-3xl"
+              className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#4a82f3]/20 blur-3xl"
             />
             <div className="relative flex h-full flex-col px-9 pt-10">
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-[#5f7a2e]">
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-[#1d5fd0]">
                 <Sparkles size={13} /> {eyebrow}
               </span>
               <h2
-                className="mt-4 max-w-[15ch] font-display font-black leading-[1.03] tracking-tight text-[#23201d]"
+                className="mt-4 max-w-[15ch] font-display font-black leading-[1.03] tracking-tight text-[#121117]"
                 style={{ fontSize: "clamp(1.8rem, 2.6vw, 2.5rem)" }}
               >
                 Your whole semester, in one calm workspace.
@@ -88,7 +88,7 @@ export function AuthShell({
                 {TRUST.map((item) => (
                   <li
                     key={item.text}
-                    className="flex items-center gap-3 rounded-2xl border border-white/80 bg-white/85 px-4 py-3 text-[14px] font-bold text-[#3a352e] shadow-[0_10px_24px_-20px_rgba(35,32,29,0.8)] backdrop-blur-[2px]"
+                    className="flex items-center gap-3 rounded-2xl border border-white/80 bg-white/85 px-4 py-3 text-[14px] font-bold text-[#2a2933] shadow-[0_10px_24px_-20px_rgba(35,32,29,0.8)] backdrop-blur-[2px]"
                   >
                     <span
                       className="grid h-9 w-9 shrink-0 place-items-center rounded-xl"
@@ -123,7 +123,7 @@ export function AuthShell({
             <p className="mt-2.5 text-[15px] leading-relaxed text-muted-foreground">{subtitle}</p>
 
             <div className="mt-7">{children}</div>
-            <div className="mt-6 rounded-2xl bg-[#fbf5e9] px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+            <div className="mt-6 rounded-2xl bg-[#f4f4f8] px-4 py-3 text-center text-sm font-medium text-muted-foreground">
               {footer}
             </div>
           </div>
@@ -161,7 +161,7 @@ export function FormField({
 }) {
   return (
     <label className="mb-4 block">
-      <span className="mb-1.5 block text-[13px] font-black uppercase tracking-[0.08em] text-[#6b655c]">
+      <span className="mb-1.5 block text-[13px] font-black uppercase tracking-[0.08em] text-[#54546a]">
         {label} {required && <span className="text-destructive">*</span>}
       </span>
       {children}
@@ -170,7 +170,7 @@ export function FormField({
 }
 
 export const inputClass =
-  "w-full rounded-2xl border-2 border-black/[0.07] bg-[#fbf7ef] px-4 h-13 py-3.5 text-[15px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground outline-none transition-all focus:border-[var(--rita-green)] focus:bg-white focus:ring-4 focus:ring-[var(--rita-green-soft)]";
+  "w-full rounded-2xl border-2 border-black/[0.07] bg-[#f4f4f8] px-4 h-13 py-3.5 text-[15px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground outline-none transition-all focus:border-[var(--rita-green)] focus:bg-white focus:ring-4 focus:ring-[var(--rita-green-soft)]";
 
 export const buttonClass =
   "inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--rita-green)] px-8 py-4 text-[17px] font-black text-[color:var(--rita-green-ink)] shadow-[0_16px_30px_-16px_rgba(122,160,44,0.9)] transition-all hover:-translate-y-0.5 hover:bg-[var(--rita-green-deep)] active:translate-y-0 disabled:translate-y-0 disabled:opacity-60";

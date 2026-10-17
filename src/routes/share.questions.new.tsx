@@ -269,10 +269,10 @@ export function NewQuestionSetPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#fbf5e9]">
+      <div className="min-h-screen bg-white">
         <SiteHeader />
         <div className="mx-auto flex max-w-5xl items-center justify-center py-32">
-          <Loader2 className="h-8 w-8 animate-spin text-[#8ec63f]" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#4a82f3]" />
         </div>
       </div>
     );
@@ -280,18 +280,18 @@ export function NewQuestionSetPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#fbf5e9] text-[#23201d]">
+      <div className="min-h-screen bg-white text-[#121117]">
         <SiteHeader />
         <main className="mx-auto max-w-3xl px-4 py-20 text-center">
           <span className="text-5xl">❓</span>
           <h1 className="mt-4 font-display text-3xl font-black">Sign in to share questions</h1>
-          <p className="mx-auto mt-2 max-w-md text-sm text-[#6b655c]">
+          <p className="mx-auto mt-2 max-w-md text-sm text-[#54546a]">
             You need to be signed in to your RitaJet account to publish question sets.
           </p>
           <button
             type="button"
             onClick={() => openAuth("signin", "/share/questions/new")}
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#8ec63f] px-6 py-3 text-sm font-black text-white shadow-sm transition hover:brightness-105"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-6 py-3 text-sm font-black text-white shadow-sm transition hover:brightness-105"
           >
             Sign in
           </button>
@@ -301,10 +301,10 @@ export function NewQuestionSetPage() {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-black/[0.1] bg-white px-4 py-2.5 text-sm font-semibold outline-none transition focus:border-[#8ec63f]";
+    "w-full rounded-xl border border-black/[0.1] bg-white px-4 py-2.5 text-sm font-semibold outline-none transition focus:border-[#4a82f3]";
 
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
 
       <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
@@ -314,14 +314,14 @@ export function NewQuestionSetPage() {
             <Link
               to="/spaces/$spaceId"
               params={{ spaceId: spaceIdParam }}
-              className="inline-flex items-center gap-1.5 text-sm font-black text-[#6b655c] transition hover:text-[#23201d]"
+              className="inline-flex items-center gap-1.5 text-sm font-black text-[#54546a] transition hover:text-[#121117]"
             >
               <ArrowLeft size={15} /> Back to space
             </Link>
           ) : (
             <Link
               to="/share" search={{ type: "flashcards" }}
-              className="inline-flex items-center gap-1.5 text-sm font-black text-[#6b655c] transition hover:text-[#23201d]"
+              className="inline-flex items-center gap-1.5 text-sm font-black text-[#54546a] transition hover:text-[#121117]"
             >
               <ArrowLeft size={15} /> Back to shared resources
             </Link>
@@ -355,7 +355,7 @@ export function NewQuestionSetPage() {
             <h1 className="mt-2 font-display text-3xl font-black tracking-tight md:text-4xl">
               Share Questions & Practice Quizzes
             </h1>
-            <p className="mt-1 max-w-2xl text-[14px] text-[#6b655c]">
+            <p className="mt-1 max-w-2xl text-[14px] text-[#54546a]">
               Select questions from your Lecture Lab quizzes or curriculum Question Bank and publish a verified practice set.
             </p>
           </div>
@@ -369,7 +369,7 @@ export function NewQuestionSetPage() {
                 setSelectedSpaceId(null);
               }}
               className={`rounded-full px-4 py-2 text-xs font-black transition ${
-                destination === "public" ? "bg-[#23201d] text-white" : "text-[#6b655c] hover:bg-black/[0.04]"
+                destination === "public" ? "bg-[#121117] text-white" : "text-[#54546a] hover:bg-black/[0.04]"
               }`}
             >
               🌍 Public Community
@@ -383,7 +383,7 @@ export function NewQuestionSetPage() {
                 }
               }}
               className={`rounded-full px-4 py-2 text-xs font-black transition ${
-                destination === "space" ? "bg-[#23201d] text-white" : "text-[#6b655c] hover:bg-black/[0.04]"
+                destination === "space" ? "bg-[#121117] text-white" : "text-[#54546a] hover:bg-black/[0.04]"
               }`}
             >
               🔒 Classroom / Space
@@ -392,7 +392,7 @@ export function NewQuestionSetPage() {
         </div>
 
         {quota?.isBlocked && (
-          <div className="mt-5 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50/90 p-4 text-xs font-semibold text-red-800">
+          <div className="mt-5 flex items-start gap-3 rounded-2xl border border-red-200 bg-[#fdecef]/90 p-4 text-xs font-semibold text-red-800">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
             <div>
               <p className="font-bold">Daily sharing limit reached (5/5 items shared today)</p>
@@ -414,29 +414,29 @@ export function NewQuestionSetPage() {
             onClick={() => handleSourceChange("lecture")}
             className={`group flex items-center gap-4 rounded-2xl border p-5 text-left transition-all ${
               sourceType === "lecture"
-                ? "border-[#8ec63f] bg-white shadow-md ring-2 ring-[#8ec63f]"
+                ? "border-[#4a82f3] bg-white shadow-md ring-2 ring-[#4a82f3]"
                 : "border-black/[0.08] bg-white/70 hover:bg-white hover:border-black/20"
             }`}
           >
             <div
               className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition ${
-                sourceType === "lecture" ? "bg-[#8ec63f] text-white" : "bg-black/[0.05] text-[#23201d]"
+                sourceType === "lecture" ? "bg-[#4a82f3] text-white" : "bg-black/[0.05] text-[#121117]"
               }`}
             >
               <GraduationCap size={24} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-display text-[16px] font-black text-[#23201d]">
+                <span className="font-display text-[16px] font-black text-[#121117]">
                   Lecture Lab Quizzes
                 </span>
                 {sourceType === "lecture" && (
-                  <span className="rounded-full bg-[#8ec63f]/15 px-2 py-0.5 text-[10px] font-black text-[#3d5c14]">
+                  <span className="rounded-full bg-[#4a82f3]/15 px-2 py-0.5 text-[10px] font-black text-[#1a4ba8]">
                     Selected
                   </span>
                 )}
               </div>
-              <p className="mt-0.5 text-[12.5px] leading-snug text-[#6b655c]">
+              <p className="mt-0.5 text-[12.5px] leading-snug text-[#54546a]">
                 Quizzes and practice questions generated from your lecture summaries.
               </p>
             </div>
@@ -447,29 +447,29 @@ export function NewQuestionSetPage() {
             onClick={() => handleSourceChange("bank")}
             className={`group flex items-center gap-4 rounded-2xl border p-5 text-left transition-all ${
               sourceType === "bank"
-                ? "border-[#6366f1] bg-white shadow-md ring-2 ring-[#6366f1]"
+                ? "border-[#7ba5f5] bg-white shadow-md ring-2 ring-[#7ba5f5]"
                 : "border-black/[0.08] bg-white/70 hover:bg-white hover:border-black/20"
             }`}
           >
             <div
               className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl transition ${
-                sourceType === "bank" ? "bg-[#6366f1] text-white" : "bg-black/[0.05] text-[#23201d]"
+                sourceType === "bank" ? "bg-[#7ba5f5] text-white" : "bg-black/[0.05] text-[#121117]"
               }`}
             >
               <BookOpen size={24} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-display text-[16px] font-black text-[#23201d]">
+                <span className="font-display text-[16px] font-black text-[#121117]">
                   Question Bank
                 </span>
                 {sourceType === "bank" && (
-                  <span className="rounded-full bg-[#6366f1]/15 px-2 py-0.5 text-[10px] font-black text-[#4338ca]">
+                  <span className="rounded-full bg-[#7ba5f5]/15 px-2 py-0.5 text-[10px] font-black text-[#4a82f3]">
                     Selected
                   </span>
                 )}
               </div>
-              <p className="mt-0.5 text-[12.5px] leading-snug text-[#6b655c]">
+              <p className="mt-0.5 text-[12.5px] leading-snug text-[#54546a]">
                 Official curriculum questions categorized by medical subject.
               </p>
             </div>
@@ -482,10 +482,10 @@ export function NewQuestionSetPage() {
           <section className="rounded-[26px] border border-black/[0.07] bg-white p-6 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/[0.06] pb-4">
               <div>
-                <h2 className="font-display text-lg font-black text-[#23201d]">
+                <h2 className="font-display text-lg font-black text-[#121117]">
                   Pick Topics to Include
                 </h2>
-                <p className="mt-0.5 text-xs text-[#6b655c]">
+                <p className="mt-0.5 text-xs text-[#54546a]">
                   Tick subjects to include all questions, or expand to cherry-pick.
                 </p>
               </div>
@@ -494,7 +494,7 @@ export function NewQuestionSetPage() {
                 <button
                   type="button"
                   onClick={selectAllSubjects}
-                  className="rounded-full border border-black/[0.1] bg-black/[0.03] px-3.5 py-1.5 text-xs font-black text-[#23201d] transition hover:bg-black/[0.07]"
+                  className="rounded-full border border-black/[0.1] bg-black/[0.03] px-3.5 py-1.5 text-xs font-black text-[#121117] transition hover:bg-black/[0.07]"
                 >
                   Select All
                 </button>
@@ -502,7 +502,7 @@ export function NewQuestionSetPage() {
                   <button
                     type="button"
                     onClick={deselectAll}
-                    className="rounded-full border border-black/[0.1] px-3.5 py-1.5 text-xs font-bold text-[#8a8376] transition hover:bg-black/[0.04]"
+                    className="rounded-full border border-black/[0.1] px-3.5 py-1.5 text-xs font-bold text-[#6a697c] transition hover:bg-black/[0.04]"
                   >
                     Clear
                   </button>
@@ -511,14 +511,14 @@ export function NewQuestionSetPage() {
             </div>
 
             {sourcesQuery.isLoading ? (
-              <div className="py-20 text-center text-sm text-[#6b655c]">
-                <Loader2 size={24} className="mx-auto mb-3 animate-spin text-[#8ec63f]" />
+              <div className="py-20 text-center text-sm text-[#54546a]">
+                <Loader2 size={24} className="mx-auto mb-3 animate-spin text-[#4a82f3]" />
                 Loading questions…
               </div>
             ) : currentNodes.length === 0 ? (
-              <div className="py-20 text-center text-[#6b655c]">
+              <div className="py-20 text-center text-[#54546a]">
                 <span className="text-4xl">📭</span>
-                <p className="mt-3 font-display text-base font-black text-[#23201d]">No questions found</p>
+                <p className="mt-3 font-display text-base font-black text-[#121117]">No questions found</p>
                 <p className="mt-1 text-xs max-w-sm mx-auto">
                   {sourceType === "lecture"
                     ? "You haven't generated any Lecture Lab quizzes yet. Summarize a lecture and generate practice questions to share them!"
@@ -538,9 +538,9 @@ export function NewQuestionSetPage() {
                       key={node.id}
                       className={`overflow-hidden rounded-2xl border transition ${
                         allSelectedInNode
-                          ? "border-[#8ec63f]/60 bg-[#f8fcf5]"
+                          ? "border-[#4a82f3]/60 bg-[#ffffff]"
                           : selectedCountInNode > 0
-                            ? "border-black/[0.15] bg-[#fafaf8]"
+                            ? "border-black/[0.15] bg-[#ffffff]"
                             : "border-black/[0.07] bg-white hover:border-black/20"
                       }`}
                     >
@@ -554,9 +554,9 @@ export function NewQuestionSetPage() {
                           <span
                             className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border transition ${
                               allSelectedInNode
-                                ? "border-[#8ec63f] bg-[#8ec63f] text-white"
+                                ? "border-[#4a82f3] bg-[#4a82f3] text-white"
                                 : selectedCountInNode > 0
-                                  ? "border-[#8ec63f] bg-[#8ec63f]/20 text-[#3d5c14]"
+                                  ? "border-[#4a82f3] bg-[#4a82f3]/20 text-[#1a4ba8]"
                                   : "border-black/25 bg-white"
                             }`}
                           >
@@ -564,20 +564,20 @@ export function NewQuestionSetPage() {
                               <Check size={12} strokeWidth={3} />
                             )}
                           </span>
-                          <span className="font-display text-[14.5px] font-black text-[#23201d] truncate">
+                          <span className="font-display text-[14.5px] font-black text-[#121117] truncate">
                             {node.name}
                           </span>
                         </button>
 
                         <div className="flex items-center gap-2">
-                          <span className="rounded-full bg-black/[0.05] px-2.5 py-0.5 text-[11px] font-black text-[#6b655c]">
+                          <span className="rounded-full bg-black/[0.05] px-2.5 py-0.5 text-[11px] font-black text-[#54546a]">
                             {node.totalQuestions} Qs
                           </span>
                           {node.items.length > 1 && (
                             <button
                               type="button"
                               onClick={() => toggleExpand(node.id)}
-                              className="grid h-7 w-7 place-items-center rounded-lg text-[#8a8376] hover:bg-black/[0.05]"
+                              className="grid h-7 w-7 place-items-center rounded-lg text-[#6a697c] hover:bg-black/[0.05]"
                               aria-label="Toggle subtopics"
                             >
                               {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
@@ -602,17 +602,17 @@ export function NewQuestionSetPage() {
                                   <span
                                     className={`grid h-4 w-4 shrink-0 place-items-center rounded border transition ${
                                       isPicked
-                                        ? "border-[#8ec63f] bg-[#8ec63f] text-white"
+                                        ? "border-[#4a82f3] bg-[#4a82f3] text-white"
                                         : "border-black/20 bg-white"
                                     }`}
                                   >
                                     {isPicked && <Check size={10} strokeWidth={3} />}
                                   </span>
-                                  <span className="truncate text-[13px] font-semibold text-[#3d3832]">
+                                  <span className="truncate text-[13px] font-semibold text-[#2a2933]">
                                     {item.title}
                                   </span>
                                 </div>
-                                <span className="text-[11px] font-bold text-[#8a8376]">
+                                <span className="text-[11px] font-bold text-[#6a697c]">
                                   {item.questionCount} Qs
                                 </span>
                               </button>
@@ -635,7 +635,7 @@ export function NewQuestionSetPage() {
               style={{ background: `linear-gradient(135deg, ${c.from}, ${c.to})` }}
             >
               <div className="flex items-center justify-between">
-                <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#23201d]">
+                <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#121117]">
                   {sourceType === "lecture" ? "🎓 Lecture Quizzes" : "📚 Question Bank"}
                 </span>
                 <span className="rounded-full bg-black/25 px-2.5 py-0.5 text-[11px] font-black text-white">
@@ -645,7 +645,7 @@ export function NewQuestionSetPage() {
               <div className="grid place-items-center">
                 <span className="text-5xl drop-shadow-sm">{emoji}</span>
               </div>
-              <div className="text-center font-display text-[15px] font-black truncate text-[#23201d]">
+              <div className="text-center font-display text-[15px] font-black truncate text-[#121117]">
                 {title || (selectedNodes.length > 0 ? `${selectedNodes[0].name} Practice Set` : "Untitled Question Set")}
               </div>
             </div>
@@ -653,14 +653,14 @@ export function NewQuestionSetPage() {
             {/* Set Configuration Form */}
             <div className="space-y-4 rounded-[26px] border border-black/[0.07] bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between">
-                <h3 className="font-display text-base font-black text-[#23201d]">
+                <h3 className="font-display text-base font-black text-[#121117]">
                   Set Details
                 </h3>
                 {selectedNodes.length > 0 && (
                   <button
                     type="button"
                     onClick={autoFillTitle}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#8ec63f] hover:underline"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#4a82f3] hover:underline"
                   >
                     <Sparkles size={12} /> Auto-suggest title
                   </button>
@@ -669,7 +669,7 @@ export function NewQuestionSetPage() {
 
               {toSpace && (
                 <div>
-                  <label className="block text-[11px] font-black uppercase tracking-widest text-[#6b655c]">
+                  <label className="block text-[11px] font-black uppercase tracking-widest text-[#54546a]">
                     Target Classroom / Space
                   </label>
                   <select
@@ -693,7 +693,7 @@ export function NewQuestionSetPage() {
               )}
 
               <div>
-                <label className="block text-[11px] font-black uppercase tracking-widest text-[#6b655c]">
+                <label className="block text-[11px] font-black uppercase tracking-widest text-[#54546a]">
                   Title
                 </label>
                 <input
@@ -705,7 +705,7 @@ export function NewQuestionSetPage() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-black uppercase tracking-widest text-[#6b655c]">
+                <label className="block text-[11px] font-black uppercase tracking-widest text-[#54546a]">
                   Short Description
                 </label>
                 <textarea
@@ -719,7 +719,7 @@ export function NewQuestionSetPage() {
 
               {!toSpace && (
                 <div>
-                  <label className="block text-[11px] font-black uppercase tracking-widest text-[#6b655c]">
+                  <label className="block text-[11px] font-black uppercase tracking-widest text-[#54546a]">
                     Tags (comma separated)
                   </label>
                   <input
@@ -733,7 +733,7 @@ export function NewQuestionSetPage() {
 
               {/* Cover Color Picker */}
               <div>
-                <label className="block text-[11px] font-black uppercase tracking-widest text-[#6b655c]">
+                <label className="block text-[11px] font-black uppercase tracking-widest text-[#54546a]">
                   Cover Theme
                 </label>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -744,7 +744,7 @@ export function NewQuestionSetPage() {
                       onClick={() => setCover(key)}
                       aria-label={key}
                       className={`h-7 w-7 rounded-full transition ${
-                        cover === key ? "ring-2 ring-[#23201d] ring-offset-2" : "hover:scale-105"
+                        cover === key ? "ring-2 ring-[#121117] ring-offset-2" : "hover:scale-105"
                       }`}
                       style={{ background: `linear-gradient(135deg, ${v.from}, ${v.to})` }}
                     />
@@ -754,7 +754,7 @@ export function NewQuestionSetPage() {
 
               {/* Emoji Picker */}
               <div>
-                <label className="block text-[11px] font-black uppercase tracking-widest text-[#6b655c]">
+                <label className="block text-[11px] font-black uppercase tracking-widest text-[#54546a]">
                   Emoji Icon
                 </label>
                 <div className="mt-2 flex flex-wrap gap-1.5">
@@ -764,7 +764,7 @@ export function NewQuestionSetPage() {
                       type="button"
                       onClick={() => setEmoji(em)}
                       className={`grid h-8 w-8 place-items-center rounded-xl text-base transition ${
-                        emoji === em ? "bg-[#23201d]" : "bg-black/[0.04] hover:bg-black/[0.08]"
+                        emoji === em ? "bg-[#121117]" : "bg-black/[0.04] hover:bg-black/[0.08]"
                       }`}
                     >
                       {em}
@@ -774,7 +774,7 @@ export function NewQuestionSetPage() {
               </div>
 
               {/* Live Status Counter */}
-              <div className="rounded-2xl bg-[#fbf5e9] px-4 py-3 text-[13px] font-bold text-[#4a453d]">
+              <div className="rounded-2xl bg-[#f4f4f8] px-4 py-3 text-[13px] font-bold text-[#2a2933]">
                 {pickedItemIds.size} topics selected · {totalSelectedQuestions} questions
               </div>
 
@@ -784,7 +784,7 @@ export function NewQuestionSetPage() {
                   type="button"
                   onClick={publish}
                   disabled={saving || totalSelectedQuestions === 0 || quota?.isBlocked}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#8ec63f] px-6 py-3.5 text-[15px] font-black text-white shadow-[0_12px_24px_-12px_rgba(142,198,63,0.8)] transition hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#4a82f3] px-6 py-3.5 text-[15px] font-black text-white shadow-[0_12px_24px_-12px_rgba(142,198,63,0.8)] transition hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50"
                 >
                   {saving ? (
                     <Loader2 size={16} className="animate-spin" />

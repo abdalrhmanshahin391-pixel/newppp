@@ -7,7 +7,7 @@ export function watermarkBackground(siteName: string, opacity = 0.035) {
   const text = (siteName || "").toUpperCase();
   const svg = `
 <svg xmlns='http://www.w3.org/2000/svg' width='520' height='320' viewBox='0 0 520 320'>
-  <g transform='rotate(-24 260 160)' fill='#23201d' fill-opacity='${opacity}' font-family='Nunito, system-ui, sans-serif' font-weight='800' font-size='22' letter-spacing='6'>
+  <g transform='rotate(-24 260 160)' fill='#121117' fill-opacity='${opacity}' font-family='Nunito, system-ui, sans-serif' font-weight='800' font-size='22' letter-spacing='6'>
     <text x='16' y='110'>${text}</text>
     <text x='16' y='250'>${text}</text>
   </g>
@@ -37,7 +37,7 @@ export function CenterWatermark({ siteName }: { siteName: string }) {
           fontWeight={900}
           fontSize="120"
           letterSpacing="14"
-          fill="#23201d"
+          fill="#121117"
         >
           {text}
         </text>

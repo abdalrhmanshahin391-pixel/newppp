@@ -10,7 +10,7 @@ import { canBuild, parseBulk } from "@/lib/de-lab";
 import { createCards, createSubject as createFlashSubject, fetchSubjects } from "@/lib/flashcards";
 import { useAuth } from "@/hooks/useAuth";
 
-const ACCENT = "#2f9e63";
+const ACCENT = "#2e7d32";
 
 export const Route = createFileRoute("/german/add")({
   head: () => ({
@@ -91,16 +91,16 @@ function OnePlace() {
 
   if (!loading && !isAdmin) {
     return (
-      <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+      <div className="min-h-screen bg-white text-[#121117]">
         <SiteHeader />
         <main className="mx-auto max-w-2xl px-4 py-20 text-center">
           <h1 className="font-display text-[26px] font-black">This page is being prepared</h1>
-          <p className="mt-3 text-[15px] font-semibold text-[#6b645b]">
+          <p className="mt-3 text-[15px] font-semibold text-[#54546a]">
             One Place is not open yet. Meanwhile you can train in the Article, Pronunciation and Build labs.
           </p>
           <Link
             to="/german"
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#23201d] px-6 py-3 text-[15px] font-black text-white"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#121117] px-6 py-3 text-[15px] font-black text-white"
           >
             Back to German Lab <ArrowRight size={16} />
           </Link>
@@ -110,12 +110,12 @@ function OnePlace() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
       <main className="mx-auto max-w-[76rem] px-4 py-8 md:px-8 md:py-10">
         <WorkspaceHeader
           back={
-            <Link to="/german" className="text-[13px] font-extrabold text-[#6b645b] hover:text-[#23201d]">
+            <Link to="/german" className="text-[13px] font-extrabold text-[#54546a] hover:text-[#121117]">
               ← German Lab
             </Link>
           }
@@ -145,25 +145,25 @@ function OnePlace() {
           <div className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
             {/* LEFT — type once */}
             <section className="rounded-[26px] border border-black/[0.07] bg-white p-5 md:p-6">
-              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#b3aa9c]">Step 1 · Write it</p>
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#9a9aab]">Step 1 · Write it</p>
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 rows={9}
                 spellCheck={false}
                 placeholder={"die Nacht = the night\nGuten Morgen = good morning\nIch hätte gern einen Kaffee. = I would like a coffee."}
-                className="mt-3 w-full resize-y rounded-2xl border border-black/[0.08] bg-[#fcf8f1] p-4 text-[16px] font-semibold leading-relaxed outline-none focus:border-[#2f9e63]"
+                className="mt-3 w-full resize-y rounded-2xl border border-black/[0.08] bg-[#ffffff] p-4 text-[16px] font-semibold leading-relaxed outline-none focus:border-[#2e7d32]"
               />
-              <p className="mt-2 text-[12.5px] font-bold text-[#8a8175]">
+              <p className="mt-2 text-[12.5px] font-bold text-[#6a697c]">
                 One per line. Keep the article (der/die/das) and add the meaning after <b>=</b>.
               </p>
 
-              <p className="mt-6 text-[11px] font-black uppercase tracking-[0.18em] text-[#b3aa9c]">
+              <p className="mt-6 text-[11px] font-black uppercase tracking-[0.18em] text-[#9a9aab]">
                 Step 2 · Where it lives
               </p>
               <div className="mt-3 space-y-2">
                 {tree.subjects.length === 0 && (
-                  <p className="rounded-2xl bg-[#fcf8f1] p-4 text-[14px] font-bold text-[#8a8175]">
+                  <p className="rounded-2xl bg-[#ffffff] p-4 text-[14px] font-bold text-[#6a697c]">
                     No subjects yet — make your first one.
                   </p>
                 )}
@@ -171,15 +171,15 @@ function OnePlace() {
                   <div key={s.id} className="rounded-2xl border border-black/[0.07] p-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="w-6 text-[11px] font-black tabular-nums text-[#b3aa9c]">
+                        <span className="w-6 text-[11px] font-black tabular-nums text-[#9a9aab]">
                           {String(i + 1).padStart(2, "0")}
                         </span>
                         <span className="text-[15px] font-black">{s.name}</span>
-                        <span className="text-[12px] font-bold text-[#a89e90]">{s.items} items</span>
+                        <span className="text-[12px] font-bold text-[#9a9aab]">{s.items} items</span>
                       </div>
                       <button
                         onClick={() => setSubtopicFor(s.id)}
-                        className="inline-flex items-center gap-1 rounded-full border border-black/[0.08] px-3 py-1 text-[12px] font-extrabold text-[#6b645b] hover:bg-[#f7f2e8]"
+                        className="inline-flex items-center gap-1 rounded-full border border-black/[0.08] px-3 py-1 text-[12px] font-extrabold text-[#54546a] hover:bg-[#f4f4f8]"
                       >
                         <Plus size={13} /> Sub-subject
                       </button>
@@ -193,8 +193,8 @@ function OnePlace() {
                             onClick={() => setSubtopicId(t.id)}
                             className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13.5px] font-extrabold transition"
                             style={{
-                              background: on ? ACCENT : "#f3ece0",
-                              color: on ? "#fff" : "#5a4a2e",
+                              background: on ? ACCENT : "#f4f4f8",
+                              color: on ? "#fff" : "#6b4000",
                             }}
                           >
                             {on && <Check size={14} />}
@@ -204,14 +204,14 @@ function OnePlace() {
                         );
                       })}
                       {s.subtopics.length === 0 && (
-                        <span className="text-[13px] font-bold text-[#a89e90]">No sub-subjects yet.</span>
+                        <span className="text-[13px] font-bold text-[#9a9aab]">No sub-subjects yet.</span>
                       )}
                     </div>
                   </div>
                 ))}
                 <button
                   onClick={() => setSubjectOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.08] px-4 py-2 text-[13px] font-extrabold text-[#6b645b] hover:bg-[#f7f2e8]"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.08] px-4 py-2 text-[13px] font-extrabold text-[#54546a] hover:bg-[#f4f4f8]"
                 >
                   <Plus size={14} /> New subject
                 </button>
@@ -221,31 +221,31 @@ function OnePlace() {
             {/* RIGHT — where it goes */}
             <aside className="lg:sticky lg:top-6">
               <div className="rounded-[26px] border border-black/[0.07] bg-white p-5 shadow-[0_20px_50px_-34px_rgba(0,0,0,0.4)]">
-                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#b3aa9c]">
+                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#9a9aab]">
                   Step 3 · It lands here
                 </p>
                 <div className="mt-3 space-y-2">
-                  <Dest icon={<Shapes size={15} />} color="#2f6fd0" name="Article Lab" n={counts.articles} unit="nouns with der/die/das" />
-                  <Dest icon={<Mic size={15} />} color="#e0774f" name="Pronunciation Lab" n={counts.speak} unit="lines to speak" />
-                  <Dest icon={<Blocks size={15} />} color="#7a5cc4" name="Build Lab" n={counts.build} unit="to put in order" />
+                  <Dest icon={<Shapes size={15} />} color="#4a82f3" name="Article Lab" n={counts.articles} unit="nouns with der/die/das" />
+                  <Dest icon={<Mic size={15} />} color="#d9506d" name="Pronunciation Lab" n={counts.speak} unit="lines to speak" />
+                  <Dest icon={<Blocks size={15} />} color="#4a82f3" name="Build Lab" n={counts.build} unit="to put in order" />
                   <button
                     onClick={() => setAlsoFlash((v) => !v)}
                     className="flex w-full items-center gap-2.5 rounded-2xl border px-3.5 py-2.5 text-left transition"
                     style={{
-                      borderColor: alsoFlash ? "#7fcaa5" : "rgba(0,0,0,0.07)",
-                      background: alsoFlash ? "#e0f2ea" : "#fff",
+                      borderColor: alsoFlash ? "#4aa552" : "rgba(0,0,0,0.07)",
+                      background: alsoFlash ? "#f4f4f8" : "#fff",
                     }}
                   >
-                    <span className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: "#d9f2e3", color: "#2f9e63" }}>
+                    <span className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: "#d2ecd4", color: "#2e7d32" }}>
                       <Layers size={15} />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-[13.5px] font-black">Flashcards</span>
-                      <span className="block text-[12px] font-bold text-[#8a8175]">
+                      <span className="block text-[12px] font-bold text-[#6a697c]">
                         {alsoFlash ? `${counts.flash} cards will be made` : "Off — tap to also make cards"}
                       </span>
                     </span>
-                    {alsoFlash && <Check size={16} style={{ color: "#2f9e63" }} />}
+                    {alsoFlash && <Check size={16} style={{ color: "#2e7d32" }} />}
                   </button>
                 </div>
 
@@ -258,12 +258,12 @@ function OnePlace() {
                   {saving ? <Loader2 className="animate-spin" size={16} /> : <Sparkles size={16} />}
                   Send to every mode
                 </button>
-                <p className="mt-2 text-center text-[12.5px] font-bold text-[#8a8175]">
+                <p className="mt-2 text-center text-[12.5px] font-bold text-[#6a697c]">
                   {!subtopicId ? "Pick one home above." : `Home: ${chosen?.subject} › ${chosen?.name}`}
                 </p>
 
                 <div className="mt-4 border-t border-black/[0.06] pt-4">
-                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#b3aa9c]">Play now</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#9a9aab]">Play now</p>
                   <div className="mt-2 space-y-1.5">
                     {[
                       { to: "/german/articles", label: "der · die · das" },
@@ -273,7 +273,7 @@ function OnePlace() {
                       <Link
                         key={l.to}
                         to={l.to}
-                        className="flex items-center justify-between rounded-xl bg-[#f7f2e8] px-3.5 py-2.5 text-[13.5px] font-extrabold hover:bg-[#f0e9dc]"
+                        className="flex items-center justify-between rounded-xl bg-[#f4f4f8] px-3.5 py-2.5 text-[13.5px] font-extrabold hover:bg-[#f4f4f8]"
                       >
                         {l.label}
                         <ArrowRight size={15} />
@@ -331,7 +331,7 @@ function Dest({
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[13.5px] font-black">{name}</span>
-        <span className="block text-[12px] font-bold text-[#8a8175]">
+        <span className="block text-[12px] font-bold text-[#6a697c]">
           {n} {unit}
         </span>
       </span>

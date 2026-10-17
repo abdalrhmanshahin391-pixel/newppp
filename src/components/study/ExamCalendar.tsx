@@ -98,18 +98,18 @@ export function ExamCalendar() {
           type="button"
           aria-label="Previous month"
           onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
-          className="grid h-9 w-9 place-items-center rounded-full text-[#6d675e] hover:bg-[#fbf5e9]"
+          className="grid h-9 w-9 place-items-center rounded-full text-[#54546a] hover:bg-[#f4f4f8]"
         >
           <ChevronLeft size={20} />
         </button>
-        <h2 className="font-display text-[26px] font-black tracking-tight text-[#23201d] md:text-[30px]">
+        <h2 className="font-display text-[26px] font-black tracking-tight text-[#121117] md:text-[30px]">
           {monthLabel}
         </h2>
         <button
           type="button"
           aria-label="Next month"
           onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
-          className="grid h-9 w-9 place-items-center rounded-full text-[#6d675e] hover:bg-[#fbf5e9]"
+          className="grid h-9 w-9 place-items-center rounded-full text-[#54546a] hover:bg-[#f4f4f8]"
         >
           <ChevronRight size={20} />
         </button>
@@ -118,7 +118,7 @@ export function ExamCalendar() {
           <button
             type="button"
             onClick={() => setCursor(new Date(new Date().getFullYear(), new Date().getMonth(), 1))}
-            className="rounded-xl border border-black/[0.09] bg-white px-4 py-2 text-[13.5px] font-extrabold text-[#3c372f] hover:bg-[#fbf5e9]"
+            className="rounded-xl border border-black/[0.09] bg-white px-4 py-2 text-[13.5px] font-extrabold text-[#2a2933] hover:bg-[#f4f4f8]"
           >
             Today
           </button>
@@ -128,18 +128,18 @@ export function ExamCalendar() {
               setForm({ title: "", date: iso(new Date()) });
               setOpen(true);
             }}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#4c9a2a] px-4 py-2 text-[13.5px] font-black text-white shadow-[0_10px_24px_-14px_rgba(60,120,20,0.9)]"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#2b6df0] px-4 py-2 text-[13.5px] font-black text-white shadow-[0_10px_24px_-14px_rgba(60,120,20,0.9)]"
           >
             <Plus size={16} /> Add new exam
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 border-b border-black/[0.06] bg-[#fbf5e9]">
+      <div className="grid grid-cols-7 border-b border-black/[0.06] bg-[#f4f4f8]">
         {WEEK.map((d) => (
           <div
             key={d}
-            className="px-2 py-3 text-center text-[12.5px] font-black text-[#3c372f]"
+            className="px-2 py-3 text-center text-[12.5px] font-black text-[#2a2933]"
           >
             <span className="hidden sm:inline">{d}</span>
             <span className="sm:hidden">{d.slice(0, 3)}</span>
@@ -157,16 +157,16 @@ export function ExamCalendar() {
             <div
               key={key}
               className={`min-h-[92px] border-b border-r border-black/[0.06] p-2 md:min-h-[112px] ${
-                inMonth ? "bg-white" : "bg-[#faf8f3]"
-              } ${isToday ? "bg-[#f2f8ec]" : ""}`}
+                inMonth ? "bg-white" : "bg-[#ffffff]"
+              } ${isToday ? "bg-[#f4f4f8]" : ""}`}
             >
               <span
                 className={`inline-grid h-7 min-w-7 place-items-center rounded-full px-1.5 text-[13px] font-black tabular-nums ${
                   isToday
-                    ? "bg-[#4c9a2a] text-white"
+                    ? "bg-[#2b6df0] text-white"
                     : inMonth
-                      ? "text-[#23201d]"
-                      : "text-[#b3aa9c]"
+                      ? "text-[#121117]"
+                      : "text-[#9a9aab]"
                 }`}
               >
                 {d.getDate()}
@@ -176,7 +176,7 @@ export function ExamCalendar() {
                 {list.map((e) => (
                   <div
                     key={e.id}
-                    className="group flex items-center gap-1.5 rounded-lg bg-[#eaf4e2] px-2 py-1 text-[12px] font-extrabold text-[#2f6318]"
+                    className="group flex items-center gap-1.5 rounded-lg bg-[#e7eefd] px-2 py-1 text-[12px] font-extrabold text-[#1a4ba8]"
                   >
                     <GraduationCap size={12} className="shrink-0" />
                     <span className="min-w-0 flex-1 truncate">{e.title}</span>
@@ -208,20 +208,20 @@ export function ExamCalendar() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#eaf4e2] text-[#2f6318]">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#e7eefd] text-[#1a4ba8]">
                 <GraduationCap size={22} />
               </span>
               <div className="min-w-0 flex-1">
-                <h3 className="font-display text-[22px] font-black tracking-tight text-[#23201d]">
+                <h3 className="font-display text-[22px] font-black tracking-tight text-[#121117]">
                   Add new exam
                 </h3>
-                <p className="mt-1 text-[14px] text-[#6d675e]">Enter details for your new exam.</p>
+                <p className="mt-1 text-[14px] text-[#54546a]">Enter details for your new exam.</p>
               </div>
               <button
                 type="button"
                 aria-label="Close"
                 onClick={() => setOpen(false)}
-                className="rounded-full p-1 text-[#6d675e] hover:bg-[#fbf5e9]"
+                className="rounded-full p-1 text-[#54546a] hover:bg-[#f4f4f8]"
               >
                 <X size={20} />
               </button>
@@ -235,7 +235,7 @@ export function ExamCalendar() {
               }}
             >
               <label className="block">
-                <span className="mb-1.5 block text-[14px] font-extrabold text-[#23201d]">
+                <span className="mb-1.5 block text-[14px] font-extrabold text-[#121117]">
                   Course name
                 </span>
                 <input
@@ -244,26 +244,26 @@ export function ExamCalendar() {
                   maxLength={120}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   placeholder="e.g. Biology 101"
-                  className="w-full rounded-xl border border-black/[0.12] bg-white px-4 py-3 text-[15px] font-semibold text-[#23201d] outline-none focus:border-[#4c9a2a]"
+                  className="w-full rounded-xl border border-black/[0.12] bg-white px-4 py-3 text-[15px] font-semibold text-[#121117] outline-none focus:border-[#2b6df0]"
                 />
               </label>
 
               <label className="block">
-                <span className="mb-1.5 block text-[14px] font-extrabold text-[#23201d]">
+                <span className="mb-1.5 block text-[14px] font-extrabold text-[#121117]">
                   Exam date
                 </span>
                 <input
                   type="date"
                   value={form.date}
                   onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  className="w-full rounded-xl border border-black/[0.12] bg-white px-4 py-3 text-[15px] font-semibold text-[#23201d] outline-none focus:border-[#4c9a2a]"
+                  className="w-full rounded-xl border border-black/[0.12] bg-white px-4 py-3 text-[15px] font-semibold text-[#121117] outline-none focus:border-[#2b6df0]"
                 />
               </label>
 
               <button
                 type="submit"
                 disabled={!valid || add.isPending}
-                className="w-full rounded-xl bg-[#4c9a2a] px-5 py-3.5 text-[15px] font-black text-white disabled:opacity-50"
+                className="w-full rounded-xl bg-[#2b6df0] px-5 py-3.5 text-[15px] font-black text-white disabled:opacity-50"
               >
                 Save exam
               </button>

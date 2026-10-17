@@ -97,10 +97,10 @@ function ShareNew() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#fbf5e9]">
+      <div className="min-h-screen bg-white">
         <SiteHeader />
         <div className="mx-auto flex max-w-5xl items-center justify-center py-32">
-          <Loader2 className="h-8 w-8 animate-spin text-[#8ec63f]" />
+          <Loader2 className="h-8 w-8 animate-spin text-[#4a82f3]" />
         </div>
       </div>
     );
@@ -108,18 +108,18 @@ function ShareNew() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#fbf5e9] text-[#23201d]">
+      <div className="min-h-screen bg-white text-[#121117]">
         <SiteHeader />
         <main className="mx-auto max-w-3xl px-4 py-20 text-center">
           <span className="text-5xl">🃏</span>
           <h1 className="mt-4 font-display text-3xl font-black">Sign in to share flashcards</h1>
-          <p className="mx-auto mt-2 max-w-md text-sm text-[#6b655c]">
+          <p className="mx-auto mt-2 max-w-md text-sm text-[#54546a]">
             Rita saves your decks to your account so students across RitaJet can learn from your work.
           </p>
           <button
             type="button"
             onClick={() => openAuth("signin", "/share/new")}
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#8ec63f] px-6 py-3 text-sm font-black text-white shadow-sm transition hover:brightness-105"
+            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-6 py-3 text-sm font-black text-white shadow-sm transition hover:brightness-105"
           >
             Sign in
           </button>
@@ -183,19 +183,19 @@ function ShareNew() {
   const c = coverOf(cover);
 
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-14 md:px-8 md:py-20">
         {toSpace ? (
           <Link
             to="/spaces/$spaceId"
             params={{ spaceId: spaceId! }}
-            className="inline-flex items-center gap-1.5 text-sm font-black text-[#6b655c] hover:text-[#23201d]"
+            className="inline-flex items-center gap-1.5 text-sm font-black text-[#54546a] hover:text-[#121117]"
           >
             <ArrowLeft size={15} /> Back to your space
           </Link>
         ) : (
-          <Link to="/share" search={{ type: "flashcards" }} className="inline-flex items-center gap-1.5 text-sm font-black text-[#6b655c] hover:text-[#23201d]">
+          <Link to="/share" search={{ type: "flashcards" }} className="inline-flex items-center gap-1.5 text-sm font-black text-[#54546a] hover:text-[#121117]">
             <ArrowLeft size={15} /> Shared flashcards
           </Link>
         )}
@@ -214,7 +214,7 @@ function ShareNew() {
           </span>
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black ${
-              toSpace ? "bg-[#eef7e4] text-[#3f6a17]" : "bg-[#fdf0d8] text-[#8a6a1f]"
+              toSpace ? "bg-[#f4f4f8] text-[#1a4ba8]" : "bg-[#f4f4f8] text-[#8a5200]"
             }`}
           >
             {toSpace ? "🔒 Space members only" : "🌍 Everyone on RitaJet"}
@@ -224,14 +224,14 @@ function ShareNew() {
         <h1 className="mt-4 font-display text-4xl font-black tracking-tight">
           {toSpace ? "Share flashcard deck with your space" : "Share flashcards with everyone"}
         </h1>
-        <p className="mt-2 max-w-xl text-[#6b655c]">
+        <p className="mt-2 max-w-xl text-[#54546a]">
           {toSpace
             ? "Tick the subjects you want to include. Only members of this classroom or group will see this deck."
             : "Tick the subjects or sub-subjects you want to include. A snapshot of front & back cards becomes a deck anyone can flip and study."}
         </p>
 
         {quota?.isBlocked && (
-          <div className="mt-4 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50/90 p-4 text-xs font-semibold text-red-800">
+          <div className="mt-4 flex items-start gap-3 rounded-2xl border border-red-200 bg-[#fdecef]/90 p-4 text-xs font-semibold text-red-800">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
             <div>
               <p className="font-bold">Daily sharing limit reached (5/5 items shared today)</p>
@@ -252,14 +252,14 @@ function ShareNew() {
 
         {/* Cross-navigation switcher */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-black/[0.08] bg-white/70 p-3.5 shadow-sm">
-          <div className="flex items-center gap-2.5 text-xs text-[#6b655c]">
+          <div className="flex items-center gap-2.5 text-xs text-[#54546a]">
             <span className="text-xl">❓</span>
             <span>Looking to share Multiple-Choice Exam Questions or Quizzes instead?</span>
           </div>
           <Link
             to="/share/questions/new"
             search={{ space: spaceId, source: "lecture" }}
-            className="inline-flex items-center gap-1 text-xs font-black text-[#8ec63f] hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-black text-[#4a82f3] hover:underline"
           >
             Share Question Set →
           </Link>
@@ -269,24 +269,24 @@ function ShareNew() {
           <section className="rounded-[26px] border border-black/[0.07] bg-white p-6">
             <h2 className="font-display text-lg font-black">Pick subjects</h2>
             {board.length === 0 ? (
-              <div className="mt-4 rounded-2xl border border-dashed border-black/15 bg-[#fbf5e9] p-8 text-center">
+              <div className="mt-4 rounded-2xl border border-dashed border-black/15 bg-[#f4f4f8] p-8 text-center">
                 <span className="text-3xl">🃏</span>
-                <p className="mt-2 font-display text-base font-black text-[#23201d]">
+                <p className="mt-2 font-display text-base font-black text-[#121117]">
                   No flashcards found
                 </p>
-                <p className="mt-1 text-xs text-[#6b655c]">
+                <p className="mt-1 text-xs text-[#54546a]">
                   Create subjects and flashcards in your Study Workspace first, or share exam questions.
                 </p>
                 <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
                   <Link
                     to="/study"
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[#23201d] px-4 py-2 text-xs font-black text-white hover:bg-black"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[#121117] px-4 py-2 text-xs font-black text-white hover:bg-black"
                   >
                     Open Study Workspace
                   </Link>
                   <Link
                     to="/share/questions/new"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-4 py-2 text-xs font-black text-[#23201d] hover:bg-black/5"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-4 py-2 text-xs font-black text-[#121117] hover:bg-black/5"
                   >
                     Share Exam Questions Instead →
                   </Link>
@@ -367,7 +367,7 @@ function ShareNew() {
                       onClick={() => setCover(key)}
                       aria-label={key}
                       className={`h-9 w-9 rounded-full transition ${
-                        cover === key ? "ring-2 ring-[#23201d] ring-offset-2" : ""
+                        cover === key ? "ring-2 ring-[#121117] ring-offset-2" : ""
                       }`}
                       style={{ background: `linear-gradient(135deg, ${v.from}, ${v.to})` }}
                     />
@@ -391,14 +391,14 @@ function ShareNew() {
                 </div>
               </Field>
 
-              <div className="rounded-2xl bg-[#fbf5e9] px-4 py-3 text-[13px] font-bold text-[#4a453d]">
+              <div className="rounded-2xl bg-[#f4f4f8] px-4 py-3 text-[13px] font-bold text-[#2a2933]">
                 {picked.size} selected · {total} cards
               </div>
               <button
                 onClick={publish}
                 disabled={saving || picked.size === 0 || quota?.isBlocked}
                 className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-[15px] font-black text-white disabled:opacity-50 ${
-                  toSpace ? "bg-[#d94f3d]" : "bg-[#8ec63f]"
+                  toSpace ? "bg-[#c4314f]" : "bg-[#4a82f3]"
                 }`}
               >
                 {saving ? (
@@ -423,12 +423,12 @@ function ShareNew() {
 }
 
 const input =
-  "w-full rounded-xl border border-black/[0.1] bg-white px-3.5 py-2.5 text-sm font-semibold outline-none focus:border-[#8ec63f]";
+  "w-full rounded-xl border border-black/[0.1] bg-white px-3.5 py-2.5 text-sm font-semibold outline-none focus:border-[#4a82f3]";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1.5 block text-[11px] font-black uppercase tracking-[0.15em] text-[#a29a8d]">
+      <label className="mb-1.5 block text-[11px] font-black uppercase tracking-[0.15em] text-[#9a9aab]">
         {label}
       </label>
       {children}
@@ -461,7 +461,7 @@ function Row({
     >
       <span
         className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 transition ${
-          checked ? "border-[#8ec63f] bg-[#8ec63f] text-white" : "border-black/20"
+          checked ? "border-[#4a82f3] bg-[#4a82f3] text-white" : "border-black/20"
         }`}
       >
         {checked && <Check size={13} strokeWidth={3} />}
@@ -469,7 +469,7 @@ function Row({
       <span className={`min-w-0 flex-1 truncate text-[14px] ${bold ? "font-black" : "font-semibold"}`}>
         {label}
       </span>
-      <span className="text-[12px] font-bold text-[#a29a8d]">{count}</span>
+      <span className="text-[12px] font-bold text-[#9a9aab]">{count}</span>
     </button>
   );
 }

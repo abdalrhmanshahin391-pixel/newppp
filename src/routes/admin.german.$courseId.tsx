@@ -101,7 +101,7 @@ function AdminGermanCoursePage() {
   const lockType = course?.content_type === "words" || course?.content_type === "sentences" ? course.content_type : null;
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9] text-slate-900">
+    <div className="min-h-screen bg-[#ffffff] text-slate-900">
       <SiteHeader variant="light" />
       <main className="mx-auto max-w-6xl px-6 md:px-10 pt-24 pb-24">
         {/* Header */}
@@ -421,7 +421,7 @@ function SubjectBody({ subject, courseType }: { subject: Subject; courseType: Co
   ];
 
   return (
-    <div className="bg-slate-50/60 p-4">
+    <div className="bg-[#f8f8fb]/60 p-4">
       <div className="inline-flex items-center gap-1 bg-white rounded-lg p-0.5 border border-slate-200 mb-3">
         {TABS.filter((t) => t.visible).map((t) => {
           const Icon = t.Icon;
@@ -510,7 +510,7 @@ function WordsPanel({
         </button>
       </div>
       {showPaste && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 mt-2 space-y-2">
+        <div className="rounded-lg border border-emerald-200 bg-[#e8f5e9]/50 p-3 mt-2 space-y-2">
           <div className="text-[11px] font-semibold text-slate-600">
             One per line: <code className="bg-white px-1.5 py-0.5 rounded">Deutsch | English | Example</code>
           </div>
@@ -580,7 +580,7 @@ function SentencesPanel({
         </button>
       </div>
       {showPaste && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 mt-2 space-y-2">
+        <div className="rounded-lg border border-emerald-200 bg-[#e8f5e9]/50 p-3 mt-2 space-y-2">
           <div className="text-[11px] font-semibold text-slate-600">
             One per line: <code className="bg-white px-1.5 py-0.5 rounded">Deutsch | English | Notes</code>
           </div>

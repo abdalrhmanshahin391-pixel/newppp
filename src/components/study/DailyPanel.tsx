@@ -38,11 +38,13 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
   const current = data?.prefs.retention ?? 0.9;
 
   return (
-    <section className="rounded-[26px] border border-black/[0.06] bg-white p-5 shadow-[0_20px_50px_-40px_rgba(35,32,29,0.6)]">
-      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">Today</p>
+    <section className="rounded-[20px] bg-white p-5" style={{ border: "2px solid #121117" }}>
+      <p className="text-[14px] font-semibold text-[#6a697c]">Today</p>
 
-      <p className="mt-2 font-display text-[2.6rem] font-black leading-none text-[#23201d]">{due}</p>
-      <p className="text-sm font-bold text-[#6d6355]">
+      <p className="mt-2 font-display text-[2.8rem] font-bold leading-none tracking-[-0.03em] text-[#121117]">
+        {due}
+      </p>
+      <p className="text-[15px] font-medium text-[#6a697c]">
         cards due right now{newToday > 0 && ` · ${newToday} new mixed in`}
       </p>
 
@@ -50,26 +52,29 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
         type="button"
         disabled={isLoading || due === 0}
         onClick={() => onReview(queue)}
-        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--rita-green)] py-3 text-[15px] font-semibold text-[color:var(--rita-green-ink)] disabled:opacity-50"
+        className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-[#121117] bg-[#2b6df0] text-[15px] font-semibold text-white hover:bg-[#2260e4] disabled:opacity-50"
       >
         <Sparkles size={16} />
         {due === 0 ? "Nothing due — nice" : "Review everything due"}
       </button>
 
       <div className="mt-5">
-        <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-[0.14em] text-[#a79c8c]">
-          <span>daily goal</span>
+        <div className="flex items-center justify-between text-[14px] font-semibold text-[#4b4a5c]">
+          <span>Daily goal</span>
           <span>
             {today}/{goal}
           </span>
         </div>
-        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-black/[0.07]">
+        <div
+          className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-white"
+          style={{ border: "1.5px solid #121117" }}
+        >
           <div
             className="h-full rounded-full bg-[var(--rita-green)] transition-all"
             style={{ width: `${pct}%` }}
           />
         </div>
-        <p className="mt-2 text-xs font-semibold text-[#6d6355]">
+        <p className="mt-2 text-[13.5px] font-medium text-[#6a697c]">
           {left === 0
             ? "Goal met today — nice work."
             : `${left} more card${left === 1 ? "" : "s"} to hit today's goal.`}
@@ -82,7 +87,7 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
             key={d.day}
             title={`${d.day}: ${d.cards} cards`}
             className="h-2 flex-1 rounded-full"
-            style={{ background: d.goal_met ? "var(--rita-green)" : "rgba(0,0,0,0.08)" }}
+            style={{ background: d.goal_met ? "var(--rita-green)" : "#dcdce5" }}
           />
         ))}
       </div>
@@ -90,20 +95,18 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
       {/* What's coming — the forecast that makes the schedule visible */}
       {forecast.length > 0 && (
         <div className="mt-5">
-          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[#a79c8c]">
-            next 30 days
-          </p>
+          <p className="text-[14px] font-semibold text-[#4b4a5c]">Next 30 days</p>
           <div className="mt-2 flex h-14 items-end gap-[3px]">
             {forecast.map((f) => (
               <span
                 key={f.day}
                 title={`${f.day}: ${f.cards} cards`}
-                className="flex-1 rounded-t-[3px] bg-[#e6d9c2]"
+                className="flex-1 rounded-t-[3px] bg-[#2b6df0]"
                 style={{ height: `${Math.max(3, (f.cards / peak) * 100)}%` }}
               />
             ))}
           </div>
-          <p className="mt-1.5 text-xs font-semibold text-[#6d6355]">
+          <p className="mt-1.5 text-[13.5px] font-medium text-[#6a697c]">
             Busiest day ahead: {peak} card{peak === 1 ? "" : "s"}.
           </p>
         </div>
@@ -111,11 +114,11 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
 
       {/* True retention */}
       {retention && retention.total >= 5 && (
-        <div className="mt-4 rounded-2xl bg-[#faf6ee] p-3">
-          <p className="font-display text-[1.6rem] font-black leading-none text-[#23201d]">
+        <div className="mt-4 rounded-xl bg-[#f4f4f8] p-3">
+          <p className="font-display text-[1.7rem] font-bold leading-none text-[#121117]">
             {retention.percent}%
           </p>
-          <p className="text-xs font-semibold text-[#6d6355]">
+          <p className="text-[13.5px] font-medium text-[#6a697c]">
             of the cards that had gone to sleep came back this month.
           </p>
         </div>
@@ -124,7 +127,7 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
       <button
         type="button"
         onClick={() => setOpenSettings((v) => !v)}
-        className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#6d6355] hover:text-[#23201d]"
+        className="mt-4 inline-flex items-center gap-2 text-[15px] font-semibold text-[#121117] hover:underline"
       >
         <Target size={15} /> How tight should the schedule be?
       </button>
@@ -142,11 +145,11 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
               }}
               className="rounded-xl px-3 py-2 text-left transition-colors"
               style={{
-                background: Math.abs(current - r.value) < 0.001 ? "#e9f2ea" : "#faf6ee",
+                background: Math.abs(current - r.value) < 0.001 ? "#e7eefd" : "#f4f4f8",
               }}
             >
-              <span className="block text-[13px] font-black text-[#23201d]">{r.label}</span>
-              <span className="block text-[11px] font-semibold text-[#8a8072]">{r.hint}</span>
+              <span className="block text-[14px] font-bold text-[#121117]">{r.label}</span>
+              <span className="block text-[13px] font-medium text-[#6a697c]">{r.hint}</span>
             </button>
           ))}
         </div>
@@ -154,7 +157,7 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
 
       <Link
         to="/study/progress"
-        className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#6d6355] underline hover:text-[#23201d]"
+        className="mt-4 inline-flex items-center gap-2 text-[15px] font-semibold text-[#121117] underline underline-offset-4"
       >
         <LineChart size={15} /> See my progress
       </Link>

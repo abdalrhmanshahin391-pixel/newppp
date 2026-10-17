@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/legacy-client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { getPublicOfferMeta, claimOfferAction } from "@/lib/offer-center.functions";
-import toolkitArt from "@/assets/toolkit-girl-study.webp.asset.json";
 
 export const Route = createFileRoute("/offers")({
   head: () => ({
@@ -145,13 +144,10 @@ function OffersPage() {
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
       <main className="mx-auto max-w-5xl px-4 py-12 md:px-8 md:py-16">
-        <section className="grid items-center gap-10 md:grid-cols-[1.05fr_1fr]">
+        <section className="grid items-center gap-10">
           <div>
-            <span
-              className="inline-flex items-center gap-2 rounded-full bg-[color:var(--rita-green-soft)] px-4 py-1.5 text-[12px] font-bold uppercase tracking-[0.16em]"
-              style={{ color: SAGE }}
-            >
-              <Gift size={14} /> Free toolkit
+            <span className="inline-flex items-center gap-2 text-[15px] font-semibold text-[#6a697c]">
+              <Gift size={16} /> Free toolkit
             </span>
             <h1 className="mt-5 font-display text-4xl font-black leading-[1.06] tracking-tight md:text-5xl">
               Get free access
@@ -163,13 +159,6 @@ function OffersPage() {
               tap. No card, one per student, and it works right away in every Rita mode.
             </p>
           </div>
-          <img
-            src={toolkitArt.url}
-            alt="A student studying with flashcards, a checklist and a calendar around her"
-            width={1600}
-            height={1008}
-            className="w-full rounded-[32px] border border-black/5 bg-white object-cover shadow-[0_24px_50px_-30px_rgba(43,38,32,0.4)]"
-          />
         </section>
 
         {isLoading ? (
@@ -260,14 +249,14 @@ function OfferCard({
 
       <ul className="mt-5 space-y-2.5">
         {(offer.bullets ?? []).map((b) => (
-          <li key={b} className="flex items-start gap-2.5 text-[14px] font-semibold text-[#3a342c]">
+          <li key={b} className="flex items-start gap-2.5 text-[14px] font-semibold text-[#121117]">
             <Check size={16} strokeWidth={3} className="mt-0.5 shrink-0" style={{ color: SAGE }} />
             {b}
           </li>
         ))}
       </ul>
 
-      <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#f6f0e6] px-3.5 py-1.5 text-[12px] font-semibold text-muted-foreground">
+      <p className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#f4f4f8] px-3.5 py-1.5 text-[12px] font-semibold text-muted-foreground">
         <Timer size={13} /> Valid{" "}
         {months > 0 ? `${months} month${months > 1 ? "s" : ""}` : `${offer.duration_days} days`} from the moment
         you claim
@@ -300,7 +289,7 @@ function OfferCard({
           )}
 
           {offer.requires_code && (
-            <label className="mb-3 flex items-center gap-2 rounded-2xl border border-black/10 bg-[#fdf7ee] px-4 py-2.5 focus-within:border-emerald-600 focus-within:ring-1 focus-within:ring-emerald-600 transition-all">
+            <label className="mb-3 flex items-center gap-2 rounded-2xl border border-black/10 bg-[#f4f4f8] px-4 py-2.5 focus-within:border-emerald-600 focus-within:ring-1 focus-within:ring-emerald-600 transition-all">
               <KeyRound size={15} className="shrink-0 text-muted-foreground" />
               <input
                 value={code}
@@ -310,7 +299,7 @@ function OfferCard({
                     ? meta?.code || "YSMU"
                     : "Enter promo code"
                 }
-                className="w-full bg-transparent text-[14px] font-bold tracking-wider text-[#2b2620] placeholder:text-[#b6ada0] focus:outline-none"
+                className="w-full bg-transparent text-[14px] font-bold tracking-wider text-[#121117] placeholder:text-[#9a9aab] focus:outline-none"
               />
               {!code && hasAutoCode && (
                 <span className="shrink-0 rounded-md bg-emerald-100 px-2 py-0.5 text-[10.5px] font-black uppercase tracking-wider text-emerald-800">
@@ -341,7 +330,7 @@ function OfferCard({
                     ? meta?.code || "YSMU"
                     : "Enter promo code"
                 }
-                className="mt-2 w-full rounded-2xl border border-black/10 bg-[#fdf7ee] px-4 py-2.5 text-[14px] font-bold tracking-wider text-[#2b2620] placeholder:text-[#b6ada0] focus:outline-none"
+                className="mt-2 w-full rounded-2xl border border-black/10 bg-[#f4f4f8] px-4 py-2.5 text-[14px] font-bold tracking-wider text-[#121117] placeholder:text-[#9a9aab] focus:outline-none"
               />
             </details>
           )}

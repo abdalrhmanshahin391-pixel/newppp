@@ -44,11 +44,11 @@ export const Route = createFileRoute("/my-plan")({
 });
 
 const METERS = [
-  { key: "flashcards", cap: "max_flashcards", label: "Flashcards", tone: "#e4dcf3", bar: "#7c5fd3" },
-  { key: "summaries", cap: "max_summaries", label: "Summaries", tone: "#fbe3c8", bar: "#e08a2e" },
-  { key: "ai_questions", cap: "max_ai_questions", label: "Lecture questions", tone: "#d9ecf7", bar: "#3f8fc0" },
-  { key: "archive_questions", cap: "max_archive_questions", label: "Archive questions", tone: "#e6f0d8", bar: "#6aa62c" },
-  { key: "all_in_one_lectures", cap: "max_all_in_one_lectures", label: "All-in-One lectures", tone: "#f6ddd5", bar: "#d1795e" },
+  { key: "flashcards", cap: "max_flashcards", label: "Flashcards", tone: "#f4f4f8", bar: "#7ba5f5" },
+  { key: "summaries", cap: "max_summaries", label: "Summaries", tone: "#ffe6a3", bar: "#d68c0a" },
+  { key: "ai_questions", cap: "max_ai_questions", label: "Lecture questions", tone: "#f4f4f8", bar: "#4a82f3" },
+  { key: "archive_questions", cap: "max_archive_questions", label: "Archive questions", tone: "#e7eefd", bar: "#2b6df0" },
+  { key: "all_in_one_lectures", cap: "max_all_in_one_lectures", label: "All-in-One lectures", tone: "#fbd9e0", bar: "#d9506d" },
 ] as const;
 
 function useCountdown(iso: string | null | undefined) {
@@ -157,16 +157,16 @@ function MyPlanPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
       <main className="mx-auto max-w-4xl px-4 py-12 md:px-8 md:py-16">
-        <span className="inline-flex items-center gap-2 rounded-full bg-[#23201d] px-4 py-1.5 text-[12px] font-black uppercase tracking-[0.16em] text-white">
+        <span className="inline-flex items-center gap-2 rounded-full bg-[#121117] px-4 py-1.5 text-[12px] font-black uppercase tracking-[0.16em] text-white">
           <Gauge size={13} /> My plan
         </span>
         <h1 className="mt-5 font-display text-4xl font-black leading-tight tracking-tight md:text-5xl">
           {plan.planName}
         </h1>
-        <p className="mt-3 max-w-xl text-[16px] font-semibold text-[#6b655c]">
+        <p className="mt-3 max-w-xl text-[16px] font-semibold text-[#54546a]">
           {user
             ? "Everything you have left, at a glance. Numbers update the moment you make something."
             : "Sign in to see your allowances."}
@@ -176,7 +176,7 @@ function MyPlanPage() {
           <section
             className="mt-8 overflow-hidden rounded-[30px] p-7 text-white"
             style={{
-              background: "linear-gradient(135deg,#c62828 0%,#7d0d1c 100%)",
+              background: "linear-gradient(135deg,#b3213f 0%,#781529 100%)",
               boxShadow: "0 26px 50px -30px rgba(198,40,40,0.9)",
             }}
           >
@@ -192,7 +192,7 @@ function MyPlanPage() {
             {settings.offers_page_enabled && (
               <Link
                 to="/offers"
-                className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-[14px] font-black text-[#7d0d1c]"
+                className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-[14px] font-black text-[#781529]"
               >
                 <Timer size={15} /> Back to special offers
               </Link>
@@ -211,17 +211,17 @@ function MyPlanPage() {
             const pct = cap ? Math.min(100, Math.round((used / cap) * 100)) : 0;
             return (
               <div key={m.key} className="rounded-[26px] border border-black/[0.06] bg-white p-6">
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a29a8d]">{m.label}</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">{m.label}</p>
                 <p className="mt-2 text-[26px] font-black leading-none">
                   {cap === null ? "∞" : Math.max(0, cap - used)}
-                  <span className="ms-2 text-[13px] font-bold text-[#a29a8d]">
+                  <span className="ms-2 text-[13px] font-bold text-[#9a9aab]">
                     {cap === null ? "unlimited" : `left of ${cap}`}
                   </span>
                 </p>
                 <div className="mt-4 h-2.5 overflow-hidden rounded-full" style={{ background: m.tone }}>
                   <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: m.bar }} />
                 </div>
-                <p className="mt-2 text-[12.5px] font-bold text-[#a29a8d]">{used} used so far</p>
+                <p className="mt-2 text-[12.5px] font-bold text-[#9a9aab]">{used} used so far</p>
               </div>
             );
           })}
@@ -232,14 +232,14 @@ function MyPlanPage() {
           <section className="mt-8 overflow-hidden rounded-[26px] border border-black/[0.08] bg-white p-6 md:p-8 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-amber-500/10 text-amber-700">
+                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#d68c0a]/10 text-amber-700">
                   <CreditCard size={22} />
                 </div>
                 <div>
-                  <h2 className="text-[19px] font-black leading-tight text-[#23201d]">
+                  <h2 className="text-[19px] font-black leading-tight text-[#121117]">
                     Billing & Subscription
                   </h2>
-                  <p className="mt-0.5 text-[13.5px] font-semibold text-[#8c8275]">
+                  <p className="mt-0.5 text-[13.5px] font-semibold text-[#6a697c]">
                     {subscription?.cancel_at_period_end
                       ? "Cancelling at end of billing cycle"
                       : subscription?.status === "active"
@@ -266,10 +266,10 @@ function MyPlanPage() {
 
             <div className="mt-6 grid gap-4 border-t border-black/[0.06] pt-6 sm:grid-cols-2">
               <div>
-                <span className="text-[11.5px] font-black uppercase tracking-wider text-[#a29a8d]">
+                <span className="text-[11.5px] font-black uppercase tracking-wider text-[#9a9aab]">
                   {subscription?.cancel_at_period_end ? "Access valid until" : "Next renewal date"}
                 </span>
-                <p className="mt-1 text-[16px] font-black text-[#23201d]">
+                <p className="mt-1 text-[16px] font-black text-[#121117]">
                   {subscription?.current_period_end
                     ? new Date(subscription.current_period_end).toLocaleDateString(undefined, {
                         year: "numeric",
@@ -283,10 +283,10 @@ function MyPlanPage() {
               </div>
 
               <div>
-                <span className="text-[11.5px] font-black uppercase tracking-wider text-[#a29a8d]">
+                <span className="text-[11.5px] font-black uppercase tracking-wider text-[#9a9aab]">
                   Payment Partner
                 </span>
-                <p className="mt-1 text-[14px] font-semibold text-[#6b655c]">
+                <p className="mt-1 text-[14px] font-semibold text-[#54546a]">
                   Paddle.com (Merchant of Record)
                 </p>
               </div>
@@ -294,7 +294,7 @@ function MyPlanPage() {
 
             {/* Saved Payment Method Section */}
             <div className="mt-6 border-t border-black/[0.06] pt-6">
-              <span className="text-[11.5px] font-black uppercase tracking-wider text-[#a29a8d]">
+              <span className="text-[11.5px] font-black uppercase tracking-wider text-[#9a9aab]">
                 Saved Payment Method
               </span>
 
@@ -303,15 +303,15 @@ function MyPlanPage() {
                   {cards.map((c) => (
                     <div
                       key={c.id}
-                      className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-black/[0.08] bg-[#fbf5e9]/50 p-4 transition-all hover:bg-[#fbf5e9]"
+                      className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-black/[0.08] bg-[#f4f4f8]/50 p-4 transition-all hover:bg-[#f4f4f8]"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="grid h-11 w-11 place-items-center rounded-xl bg-white border border-black/[0.06] text-[#23201d] shadow-sm">
+                        <div className="grid h-11 w-11 place-items-center rounded-xl bg-white border border-black/[0.06] text-[#121117] shadow-sm">
                           <CreditCard size={20} className="text-amber-700" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="text-[15px] font-black capitalize text-[#23201d]">
+                            <p className="text-[15px] font-black capitalize text-[#121117]">
                               {c.card_brand} •••• {c.card_last4}
                             </p>
                             {subscription?.cancel_at_period_end ? (
@@ -324,7 +324,7 @@ function MyPlanPage() {
                               </span>
                             )}
                           </div>
-                          <p className="mt-0.5 text-[12.5px] font-semibold text-[#8c8275]">
+                          <p className="mt-0.5 text-[12.5px] font-semibold text-[#6a697c]">
                             {c.card_exp_month && c.card_exp_year
                               ? `Expires ${String(c.card_exp_month).padStart(2, "0")}/${c.card_exp_year}`
                               : "Card on file"}
@@ -347,8 +347,8 @@ function MyPlanPage() {
                   ))}
                 </div>
               ) : (
-                <div className="mt-3 rounded-2xl border border-black/[0.06] bg-[#fbf5e9]/30 p-4">
-                  <p className="text-[13.5px] font-semibold text-[#8c8275]">
+                <div className="mt-3 rounded-2xl border border-black/[0.06] bg-[#f4f4f8]/30 p-4">
+                  <p className="text-[13.5px] font-semibold text-[#6a697c]">
                     No payment cards stored on file.
                   </p>
                 </div>
@@ -357,11 +357,11 @@ function MyPlanPage() {
 
             {/* Remove Card Confirmation Dialog */}
             {cardToRemove && (
-              <div className="mt-5 rounded-2xl border border-red-200 bg-red-50/70 p-5 shadow-sm">
+              <div className="mt-5 rounded-2xl border border-red-200 bg-[#fdecef]/70 p-5 shadow-sm">
                 <p className="text-[14.5px] font-black text-red-950">
                   Remove {cardToRemove.card_brand.toUpperCase()} •••• {cardToRemove.card_last4}?
                 </p>
-                <p className="mt-1.5 text-[13.5px] font-medium leading-relaxed text-red-800/90">
+                <p className="mt-1.5 text-[13.5px] font-medium leading-relaxed text-[#781529]/90">
                   Removing this card will cancel auto-renewal so you will not be charged again. You will keep full access to your plan and allowances until your current billing period ends on{" "}
                   <strong>
                     {subscription?.current_period_end
@@ -382,7 +382,7 @@ function MyPlanPage() {
                   <button
                     type="button"
                     onClick={() => setCardToRemove(null)}
-                    className="rounded-full border border-black/10 bg-white px-4 py-2 text-[13px] font-bold text-[#23201d] hover:bg-gray-50 transition-colors"
+                    className="rounded-full border border-black/10 bg-white px-4 py-2 text-[13px] font-bold text-[#121117] hover:bg-gray-50 transition-colors"
                   >
                     Keep Card
                   </button>
@@ -391,7 +391,7 @@ function MyPlanPage() {
             )}
 
             {cancelNotice && (
-              <div className="mt-5 rounded-2xl bg-amber-50 p-4 border border-amber-200/80 text-[13.5px] font-bold text-amber-900 flex items-center gap-2">
+              <div className="mt-5 rounded-2xl bg-amber-50 p-4 border border-[#ffd266]/80 text-[13.5px] font-bold text-amber-900 flex items-center gap-2">
                 <AlertCircle size={17} className="shrink-0" />
                 <span>{cancelNotice}</span>
               </div>
@@ -402,7 +402,7 @@ function MyPlanPage() {
                 type="button"
                 onClick={handleOpenPortal}
                 disabled={portalLoading}
-                className="inline-flex items-center gap-2 rounded-full bg-[#23201d] px-5 py-2.5 text-[13.5px] font-black text-white hover:bg-black transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-full bg-[#121117] px-5 py-2.5 text-[13.5px] font-black text-white hover:bg-black transition-colors disabled:opacity-50"
               >
                 {portalLoading ? (
                   <Loader2 size={15} className="animate-spin" />
@@ -416,7 +416,7 @@ function MyPlanPage() {
                 <button
                   type="button"
                   onClick={() => setShowCancelConfirm(true)}
-                  className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50/70 px-5 py-2.5 text-[13.5px] font-bold text-red-700 hover:bg-red-100 transition-colors"
+                  className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-[#fdecef]/70 px-5 py-2.5 text-[13.5px] font-bold text-red-700 hover:bg-red-100 transition-colors"
                 >
                   <XCircle size={15} /> Cancel Subscription
                 </button>
@@ -426,7 +426,7 @@ function MyPlanPage() {
                 href="https://paddle.net"
                 target="_blank"
                 rel="noreferrer"
-                className="text-[13px] font-semibold text-[#8c8275] hover:text-[#23201d] underline ml-auto"
+                className="text-[13px] font-semibold text-[#6a697c] hover:text-[#121117] underline ml-auto"
               >
                 Look up charges on paddle.net
               </a>
@@ -434,11 +434,11 @@ function MyPlanPage() {
 
             {/* Cancel Confirmation Dialog */}
             {showCancelConfirm && (
-              <div className="mt-5 rounded-2xl border border-red-200 bg-red-50/60 p-5">
+              <div className="mt-5 rounded-2xl border border-red-200 bg-[#fdecef]/60 p-5">
                 <p className="text-[14.5px] font-black text-red-950">
                   Are you sure you want to cancel your subscription?
                 </p>
-                <p className="mt-1.5 text-[13.5px] font-medium leading-relaxed text-red-800/90">
+                <p className="mt-1.5 text-[13.5px] font-medium leading-relaxed text-[#781529]/90">
                   You will keep full access to your plan until the end of your billing cycle on{" "}
                   <strong>
                     {subscription?.current_period_end
@@ -459,7 +459,7 @@ function MyPlanPage() {
                   <button
                     type="button"
                     onClick={() => setShowCancelConfirm(false)}
-                    className="rounded-full border border-black/10 bg-white px-4 py-2 text-[13px] font-bold text-[#23201d] hover:bg-gray-50 transition-colors"
+                    className="rounded-full border border-black/10 bg-white px-4 py-2 text-[13px] font-bold text-[#121117] hover:bg-gray-50 transition-colors"
                   >
                     Keep my subscription
                   </button>
@@ -472,14 +472,14 @@ function MyPlanPage() {
         <div className="mt-10 flex flex-wrap gap-3">
           <Link
             to="/pricing"
-            className="inline-flex items-center gap-2 rounded-full bg-[#23201d] px-6 py-3.5 text-[15px] font-black text-white"
+            className="inline-flex items-center gap-2 rounded-full bg-[#121117] px-6 py-3.5 text-[15px] font-black text-white"
           >
             <Sparkles size={16} /> See plans & packs
           </Link>
           {settings.offers_page_enabled && (
             <Link
               to="/offers"
-              className="inline-flex items-center gap-2 rounded-full bg-[#c62828] px-6 py-3.5 text-[15px] font-black text-white"
+              className="inline-flex items-center gap-2 rounded-full bg-[#b3213f] px-6 py-3.5 text-[15px] font-black text-white"
             >
               <Flame size={16} /> Special offers
             </Link>

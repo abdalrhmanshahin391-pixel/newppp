@@ -156,7 +156,7 @@ export function QuestionListEditor({ subjectId }: { subjectId: string }) {
               type="button"
               onClick={() => deleteQuestions([...selected])}
               disabled={busy}
-              className="inline-flex items-center gap-2 rounded-lg border border-rose-500/50 px-3 py-2 text-xs font-bold text-rose-300 hover:bg-rose-500/10 disabled:opacity-40"
+              className="inline-flex items-center gap-2 rounded-lg border border-[#c4314f]/50 px-3 py-2 text-xs font-bold text-rose-300 hover:bg-[#c4314f]/10 disabled:opacity-40"
             >
               <Trash2 className="w-3.5 h-3.5" /> Delete selected ({selected.size})
             </button>
@@ -356,7 +356,7 @@ function EditQuestionDialog({
 
         <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
           {err && (
-            <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
+            <div className="rounded-lg border border-[#c4314f]/40 bg-[#c4314f]/10 px-3 py-2 text-xs text-rose-300">
               {err}
             </div>
           )}
@@ -385,7 +385,7 @@ function EditQuestionDialog({
                   className={`grid place-items-center h-9 w-9 shrink-0 rounded-md border text-xs font-bold transition ${
                     o.is_correct
                       ? "border-emerald-400 bg-emerald-400 text-black"
-                      : "border-white/15 bg-black/40 text-white/50 hover:border-emerald-400/50"
+                      : "border-white/15 bg-black/40 text-white/50 hover:border-[#4aa552]/50"
                   }`}
                 >
                   {LETTERS[i] ?? i + 1}

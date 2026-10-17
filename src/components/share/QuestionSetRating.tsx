@@ -50,7 +50,7 @@ export function QuestionSetRating({
 
   if (isLoading) {
     return (
-      <span className="inline-flex items-center gap-1 text-[12px] font-bold text-[#6b655c]">
+      <span className="inline-flex items-center gap-1 text-[12px] font-bold text-[#54546a]">
         <Loader2 size={12} className="animate-spin" />
       </span>
     );
@@ -73,7 +73,7 @@ export function QuestionSetRating({
             <Star
               size={compact ? 14 : 18}
               strokeWidth={2.5}
-              className={on ? "fill-amber-400 text-amber-400" : "text-[#c7c0b4]"}
+              className={on ? "fill-amber-400 text-amber-400" : "text-[#c4c4d1]"}
             />
           </button>
         );
@@ -83,11 +83,11 @@ export function QuestionSetRating({
 
   if (compact) {
     return (
-      <div className="inline-flex items-center gap-1.5 text-[12px] font-black text-[#23201d]">
+      <div className="inline-flex items-center gap-1.5 text-[12px] font-black text-[#121117]">
         <Star size={13} strokeWidth={2.5} className="fill-amber-400 text-amber-400" />
         <span>{data?.avg ? data.avg.toFixed(1) : "New"}</span>
         {data?.count ? (
-          <span className="font-semibold text-[#8a8376]">({data.count})</span>
+          <span className="font-semibold text-[#6a697c]">({data.count})</span>
         ) : null}
       </div>
     );
@@ -97,20 +97,20 @@ export function QuestionSetRating({
     <div className="rounded-2xl border border-black/[0.08] bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <span className="text-[11px] font-black uppercase tracking-wider text-[#8a8376]">
+          <span className="text-[11px] font-black uppercase tracking-wider text-[#6a697c]">
             Question Quality Rating
           </span>
           <div className="mt-0.5 flex items-center gap-2">
-            <span className="font-display text-2xl font-black text-[#23201d]">
+            <span className="font-display text-2xl font-black text-[#121117]">
               {data?.avg ? data.avg.toFixed(1) : "—"}
             </span>
-            <span className="text-xs font-bold text-[#8a8376]">
+            <span className="text-xs font-bold text-[#6a697c]">
               {data?.count ? `from ${data.count} student${data.count > 1 ? "s" : ""}` : "No ratings yet"}
             </span>
           </div>
         </div>
         <div className="flex flex-col items-end">
-          <span className="text-[11px] font-bold text-[#8a8376] mb-1">
+          <span className="text-[11px] font-bold text-[#6a697c] mb-1">
             {mine ? "Your rating:" : "Rate this set:"}
           </span>
           {stars}
@@ -121,7 +121,7 @@ export function QuestionSetRating({
         <button
           type="button"
           onClick={() => setOpenNote(true)}
-          className="mt-3 text-[11.5px] font-bold text-[#8a8376] hover:text-[#23201d] hover:underline"
+          className="mt-3 text-[11.5px] font-bold text-[#6a697c] hover:text-[#121117] hover:underline"
         >
           {data?.mine?.note ? "Edit review note" : "Add private note"}
         </button>
@@ -141,14 +141,14 @@ export function QuestionSetRating({
               type="button"
               onClick={() => handleRate(mine, note)}
               disabled={busy}
-              className="rounded-full bg-[#23201d] px-3.5 py-1 text-xs font-black text-white"
+              className="rounded-full bg-[#121117] px-3.5 py-1 text-xs font-black text-white"
             >
               Save note
             </button>
             <button
               type="button"
               onClick={() => setOpenNote(false)}
-              className="text-xs font-bold text-[#8a8376]"
+              className="text-xs font-bold text-[#6a697c]"
             >
               Cancel
             </button>

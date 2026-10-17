@@ -24,32 +24,37 @@ function ReviewFace({
   hint: string;
 }) {
   return (
-    <div className="grid h-full w-full place-items-center overflow-auto rounded-[32px] border border-black/[0.06] bg-white p-8 text-center shadow-[0_30px_70px_-50px_rgba(35,32,29,0.6)]">
+    <div className="grid h-full w-full place-items-center overflow-auto rounded-[24px] border-2 border-[#121117] bg-white p-8 text-center">
       <div className="w-full">
         {image && (
-          <img src={image} alt="" className="mx-auto mb-4 max-h-[28vh] w-auto rounded-2xl object-contain" />
+          <img
+            src={image}
+            alt=""
+            className="mx-auto mb-4 max-h-[28vh] w-auto rounded-2xl object-contain"
+          />
         )}
         <p className={scaleText(text)} style={styleToCss(cardStyle)}>
           {text}
         </p>
-        <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-[#a79c8c]">{hint}</p>
+        <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-[#9a9aab]">{hint}</p>
       </div>
     </div>
   );
 }
 
 const GRADES = [
-  { g: 0, label: "Again", key: "1", hint: "10 min", bg: "#f6ddd5", ink: "#7d3421" },
-  { g: 1, label: "Hard", key: "2", hint: "soon", bg: "#fbe3c8", ink: "#7a4b16" },
-  { g: 2, label: "Good", key: "3", hint: "on track", bg: "#d6e8f6", ink: "#1f4c6d" },
-  { g: 3, label: "Easy", key: "4", hint: "later", bg: "#d8ecdd", ink: "#215237" },
+  { g: 0, label: "Again", key: "1", hint: "10 min", bg: "#ffffff", ink: "#121117" },
+  { g: 1, label: "Hard", key: "2", hint: "soon", bg: "#ffffff", ink: "#121117" },
+  { g: 2, label: "Good", key: "3", hint: "on track", bg: "#2b6df0", ink: "#ffffff" },
+  { g: 3, label: "Easy", key: "4", hint: "later", bg: "#e7eefd", ink: "#121117" },
 ] as const;
 
 function human(days: number) {
   if (days <= 0.02) return "in 10 minutes";
   if (days < 1) return `in ${Math.max(1, Math.round(days * 24))} hours`;
   if (days < 30) return `in ${Math.round(days)} day${Math.round(days) === 1 ? "" : "s"}`;
-  if (days < 365) return `in ${Math.round(days / 30)} month${Math.round(days / 30) === 1 ? "" : "s"}`;
+  if (days < 365)
+    return `in ${Math.round(days / 30)} month${Math.round(days / 30) === 1 ? "" : "s"}`;
   return "in over a year";
 }
 
@@ -214,13 +219,13 @@ export function ReviewSession({
   const isNew = current?.row.state === "new";
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#fbf5e9]">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#f4f4f8]">
       <header className="flex items-center gap-4 px-5 py-4">
         <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#8a8072]">
+          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#6a697c]">
             {title ?? "Smart review"}
           </p>
-          <p className="truncate text-lg font-black text-[#23201d]">
+          <p className="truncate text-lg font-black text-[#121117]">
             {current ? current.row.subject || "Unsorted" : "Session complete"}
           </p>
         </div>
@@ -230,7 +235,7 @@ export function ReviewSession({
               type="button"
               onClick={() => void stepBack()}
               disabled={!canUndo || pos === 0 || busy}
-              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-3 text-sm font-bold text-[#6d6355] disabled:opacity-40"
+              className="inline-flex h-10 items-center gap-1.5 rounded-lg border-2 border-[#121117] bg-white px-3 text-sm font-bold text-[#54546a] disabled:opacity-40"
               title="Undo last answer (U)"
             >
               <Undo2 size={15} /> Undo
@@ -251,7 +256,7 @@ export function ReviewSession({
             />
           )}
           {streak !== null && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-black text-[#7a4b16]">
+            <span className="inline-flex items-center gap-1.5 rounded-lg border-2 border-[#121117] bg-white px-3 py-1.5 text-sm font-black text-[#8a5200]">
               <Flame size={16} /> {streak}
             </span>
           )}
@@ -259,14 +264,14 @@ export function ReviewSession({
             type="button"
             onClick={onClose}
             aria-label="Close review"
-            className="grid h-10 w-10 place-items-center rounded-full bg-white text-[#23201d]"
+            className="grid h-10 w-10 place-items-center rounded-full bg-white text-[#121117]"
           >
             <X size={18} />
           </button>
         </div>
       </header>
 
-      <div className="mx-5 h-1.5 overflow-hidden rounded-full bg-black/[0.07]">
+      <div className="mx-5 h-1.5 overflow-hidden rounded-full bg-[#dcdce5]">
         <div
           className="h-full rounded-full bg-[var(--rita-green)] transition-all duration-300"
           style={{ width: `${done ? 100 : progress}%` }}
@@ -277,22 +282,20 @@ export function ReviewSession({
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-5 p-5">
           {/* Memory strength for this card */}
           <div className="flex w-full max-w-3xl items-center gap-3">
-            <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a79c8c]">
+            <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">
               {isNew ? "new card" : current.row.leech ? "fighting you" : "memory"}
             </span>
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/[0.07]">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#dcdce5]">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${isNew ? 4 : strength}%`,
-                  background: current.row.leech ? "#d98b6a" : "var(--rita-green)",
+                  background: current.row.leech ? "#d9506d" : "var(--rita-green)",
                 }}
               />
             </div>
-            <span className="text-[11px] font-bold text-[#a79c8c]">
-              {isNew
-                ? "first look"
-                : `holds ${shortGap(Number(current.row.interval_days) || 0)}`}
+            <span className="text-[11px] font-bold text-[#9a9aab]">
+              {isNew ? "first look" : `holds ${shortGap(Number(current.row.interval_days) || 0)}`}
             </span>
             {current.row.leech && (
               <button
@@ -302,7 +305,7 @@ export function ReviewSession({
                   toast.success("Card paused — rewrite it when you have a minute");
                   setQueue((q) => q.filter((x) => x.row.card_id !== current.row.card_id));
                 }}
-                className="inline-flex items-center gap-1 rounded-full bg-[#f6ddd5] px-3 py-1 text-[11px] font-black text-[#7d3421]"
+                className="inline-flex items-center gap-1 rounded-md border-[1.5px] border-[#121117] bg-[#e7eefd] px-3 py-1 text-[13px] font-semibold text-[#121117]"
               >
                 <PauseCircle size={13} /> Pause it
               </button>
@@ -339,7 +342,7 @@ export function ReviewSession({
           </button>
 
           {save && (
-            <p className="rita-pop inline-flex items-center gap-2 rounded-full bg-[#d8ecdd] px-4 py-2 text-sm font-black text-[#215237]">
+            <p className="rita-pop inline-flex items-center gap-2 rounded-lg border-2 border-[#121117] bg-[#e7eefd] px-4 py-2 text-sm font-semibold text-[#121117]">
               <Sparkles size={15} /> {save}
             </p>
           )}
@@ -352,7 +355,7 @@ export function ReviewSession({
                   type="button"
                   disabled={busy}
                   onClick={() => void answer(g.g)}
-                  className="rounded-2xl px-3 py-4 text-center transition-transform active:scale-[0.97] disabled:opacity-60"
+                  className="rounded-xl border-2 border-[#121117] px-3 py-4 text-center transition-transform active:scale-[0.97] disabled:opacity-60"
                   style={{ background: g.bg, color: g.ink }}
                 >
                   <span className="block text-[17px] font-black">{g.label}</span>
@@ -366,44 +369,44 @@ export function ReviewSession({
             <button
               type="button"
               onClick={() => setFlipped(true)}
-              className="w-full max-w-3xl rounded-full bg-[var(--rita-green)] py-4 text-[17px] font-semibold text-[color:var(--rita-green-ink)]"
+              className="w-full max-w-3xl rounded-lg border-2 border-[#121117] bg-[var(--rita-green)] py-4 text-[17px] font-semibold text-[color:var(--rita-green-ink)]"
             >
               Show answer
             </button>
           )}
 
-          <p className="text-xs font-bold text-[#a79c8c]">
+          <p className="text-xs font-bold text-[#9a9aab]">
             {pos + 1} of {queue.length}
             {lastNext && ` · last card comes back ${lastNext}`}
           </p>
         </div>
       ) : (
         <div className="flex flex-1 items-center justify-center p-5">
-          <div className="w-full max-w-lg rounded-[32px] border border-black/[0.06] bg-white p-8 text-center">
+          <div className="w-full max-w-lg rounded-[24px] border-2 border-[#121117] bg-white p-8 text-center">
             <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--rita-green)] text-[color:var(--rita-green-ink)]">
               <Check size={26} />
             </span>
-            <h2 className="mt-4 font-display text-2xl font-black text-[#23201d]">
+            <h2 className="mt-4 font-display text-2xl font-black text-[#121117]">
               {queue.length} cards reviewed
             </h2>
-            <p className="mt-2 text-sm font-semibold text-[#6d6355]">
+            <p className="mt-2 text-sm font-semibold text-[#54546a]">
               {right} answered confidently
               {again.length > 0 && ` · ${again.length} still shaky, they come back soon`}
             </p>
             {tomorrow > 0 && (
-              <p className="mt-3 text-sm font-bold text-[#6d6355]">
+              <p className="mt-3 text-sm font-bold text-[#54546a]">
                 {tomorrow} of them return tomorrow — that is the schedule doing its job.
               </p>
             )}
             {streak !== null && (
-              <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#fbe3c8] px-4 py-2 text-sm font-black text-[#7a4b16]">
+              <p className="mt-4 inline-flex items-center gap-2 rounded-lg border-2 border-[#121117] bg-[#e7eefd] px-4 py-2 text-sm font-semibold text-[#121117]">
                 <Flame size={16} /> {streak} day streak · {todayCards}/{goal} today
               </p>
             )}
             <button
               type="button"
               onClick={onClose}
-              className="mt-6 w-full rounded-full bg-[var(--rita-green)] py-3.5 text-[17px] font-semibold text-[color:var(--rita-green-ink)]"
+              className="mt-6 w-full rounded-lg border-2 border-[#121117] bg-[var(--rita-green)] py-3.5 text-[17px] font-semibold text-[color:var(--rita-green-ink)]"
             >
               Back to my subjects
             </button>

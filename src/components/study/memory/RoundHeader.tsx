@@ -32,11 +32,11 @@ export function RoundHeader({
       <Stat value={`${accuracyOf(correct, wrong)}%`} label="accuracy" />
       <Stat value={formatTime(now - startedAt)} label="time" />
       <div
-        className="ml-auto inline-flex items-center gap-2 rounded-full px-4 py-2 transition-colors"
-        style={{ background: streak >= 3 ? "#fbe3c8" : "#fff" }}
+        className="ml-auto inline-flex items-center gap-2 rounded-lg border-2 border-[#121117] px-4 py-2 transition-colors"
+        style={{ background: streak >= 3 ? "#e7eefd" : "#fff" }}
       >
-        <Flame size={flame} color={streak >= 3 ? "#e0762c" : "#ccc4b6"} />
-        <span className="text-[13px] font-black text-[#23201d]">{streak}</span>
+        <Flame size={flame} color={streak >= 3 ? "#2563eb" : "#6a697c"} />
+        <span className="text-[13px] font-black text-[#121117]">{streak}</span>
       </div>
     </div>
   );
@@ -44,9 +44,9 @@ export function RoundHeader({
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="rounded-full bg-white px-4 py-2">
-      <span className="text-[13px] font-black text-[#23201d]">{value}</span>
-      <span className="ml-1.5 text-[11.5px] font-bold uppercase tracking-[0.12em] text-[#b3aa9c]">
+    <div className="rounded-lg border-2 border-[#121117] bg-white px-4 py-2">
+      <span className="text-[13px] font-black text-[#121117]">{value}</span>
+      <span className="ml-1.5 text-[11.5px] font-bold uppercase tracking-[0.12em] text-[#9a9aab]">
         {label}
       </span>
     </div>

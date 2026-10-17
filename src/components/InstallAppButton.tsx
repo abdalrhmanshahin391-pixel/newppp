@@ -123,7 +123,13 @@ function IosSheet({ onClose }: { onClose: () => void }) {
 }
 
 /** Small "Install app" button, safe to place anywhere. Renders nothing when unavailable. */
-export function InstallAppButton({ className }: { className?: string }) {
+export function InstallAppButton({
+  className,
+  iconClassName = "text-cyan-600",
+}: {
+  className?: string;
+  iconClassName?: string;
+}) {
   const { mode, install } = useInstallApp();
   const [sheet, setSheet] = useState(false);
   if (!mode) return null;
@@ -138,7 +144,7 @@ export function InstallAppButton({ className }: { className?: string }) {
           "w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
         }
       >
-        <Download size={16} className="text-cyan-600" />
+        <Download size={16} className={iconClassName} />
         Install app
       </button>
       {sheet && <IosSheet onClose={() => setSheet(false)} />}

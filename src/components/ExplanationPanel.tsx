@@ -111,7 +111,7 @@ function styleCapturedHtml(rawHtml: string): string {
 
   wrapper.querySelectorAll<HTMLElement>("*").forEach((el) => {
     const tag = el.tagName.toLowerCase();
-    el.style.color = "#0a0a0a";
+    el.style.color = "#121117";
     if (tag === "strong" || tag === "b") {
       el.style.fontWeight = "700";
     }
@@ -123,17 +123,17 @@ function styleCapturedHtml(rawHtml: string): string {
       el.style.fontSize = "14px";
     }
     if (tag === "th") {
-      el.style.background = "#0a0a0a";
+      el.style.background = "#121117";
       el.style.color = "#ffffff";
       el.style.padding = "10px 12px";
       el.style.textAlign = "left";
       el.style.fontWeight = "700";
-      el.style.border = "1px solid #0a0a0a";
+      el.style.border = "1px solid #121117";
     }
     if (tag === "td") {
       el.style.background = "#ffffff";
       el.style.padding = "10px 12px";
-      el.style.border = "1px solid #e4e4e7";
+      el.style.border = "1px solid #dcdce5";
       el.style.verticalAlign = "top";
     }
     if (tag === "p") el.style.margin = "6px 0";
@@ -148,23 +148,23 @@ function styleCapturedHtml(rawHtml: string): string {
 
 const headingStyles: Record<Section["kind"], { color: string; icon: React.ReactNode; label: string }> = {
   concept: {
-    color: "text-amber-800",
-    icon: <Lightbulb className="w-[18px] h-[18px] text-amber-600" />,
+    color: "text-[#121117]",
+    icon: <Lightbulb className="w-[18px] h-[18px] text-[#121117]" />,
     label: "Concept",
   },
   correct: {
-    color: "text-emerald-700",
-    icon: <CheckCircle2 className="w-[18px] h-[18px] text-emerald-600" />,
+    color: "text-[#2e7d32]",
+    icon: <CheckCircle2 className="w-[18px] h-[18px] text-[#2e7d32]" />,
     label: "Why the correct answer is right",
   },
   wrong: {
-    color: "text-rose-700",
-    icon: <XCircle className="w-[18px] h-[18px] text-rose-600" />,
+    color: "text-[#b3213f]",
+    icon: <XCircle className="w-[18px] h-[18px] text-[#b3213f]" />,
     label: "Why the other options are wrong",
   },
   summary: {
-    color: "text-foreground",
-    icon: <TableIcon className="w-[18px] h-[18px] text-muted-foreground" />,
+    color: "text-[#121117]",
+    icon: <TableIcon className="w-[18px] h-[18px] text-[#6a697c]" />,
     label: "Summary",
   },
 };
@@ -260,17 +260,17 @@ export function ExplanationPanel({ explanation, onCapture }: Props) {
   }
 
   return (
-    <div className="mx-6 mb-6 rounded-2xl border border-rose-900/15 bg-[hsl(30_40%_98%)] text-zinc-900 overflow-hidden shadow-sm">
-      <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-rose-900/10 bg-rose-50/60">
-        <div className="font-bold text-sm text-rose-900">Explanation</div>
+    <div className="mx-6 mb-6 rounded-[20px] border-2 border-[#121117] bg-white text-[#121117] overflow-hidden">
+      <div className="flex items-center justify-between gap-3 px-5 py-3 border-b-2 border-[#121117] bg-[#f4f4f8]">
+        <div className="font-bold text-[15px] text-[#121117]">Explanation</div>
         <button
           onClick={toggleCapture}
           type="button"
           title={captureMode ? "Cancel" : "Create a note from this explanation"}
-          className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-bold shadow-sm transition-all ${
+          className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border-2 border-[#121117] text-sm font-semibold transition-colors ${
             captureMode
-              ? "bg-card text-rose-900 ring-2 ring-rose-300 hover:bg-rose-50"
-              : "bg-gradient-to-r from-orange-500 to-rose-600 text-white hover:from-orange-400 hover:to-rose-500"
+              ? "bg-white text-[#121117] hover:bg-[#f4f4f8]"
+              : "bg-[#2b6df0] text-white hover:bg-[#2260e4]"
           }`}
         >
           {captureMode ? <X className="w-4 h-4" /> : <Scissors className="w-4 h-4" />}
@@ -281,16 +281,16 @@ export function ExplanationPanel({ explanation, onCapture }: Props) {
       <div
         ref={containerRef}
         className={`relative px-5 md:px-6 py-6 text-[15px] leading-relaxed ${
-          captureMode ? "bg-amber-50/40 ring-2 ring-inset ring-amber-300/60 capture-active" : ""
+          captureMode ? "bg-[#e7eefd] capture-active" : ""
         }`}
       >
         <style>{`
-          .capture-active ::selection { background:#fde68a; color:#0a0a0a; }
-          .capture-active ::-moz-selection { background:#fde68a; color:#0a0a0a; }
+          .capture-active ::selection { background:#2b6df0; color:#ffffff; }
+          .capture-active ::-moz-selection { background:#2b6df0; color:#ffffff; }
         `}</style>
 
         {captureMode && (
-          <div className="mb-4 text-xs text-rose-800 bg-rose-100/70 border border-rose-200 rounded-lg px-3 py-2">
+          <div className="mb-4 text-xs text-[#121117] bg-white border-2 border-[#121117] rounded-lg px-3 py-2">
             Drag to highlight any text — including the summary table — then tap
             <strong> Capture</strong>.
           </div>
@@ -310,7 +310,7 @@ export function ExplanationPanel({ explanation, onCapture }: Props) {
           onPointerDown={(e) => e.preventDefault()}
           type="button"
           style={{ position: "fixed", left: floatPos.x, top: floatPos.y, zIndex: 80 }}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-orange-500 to-rose-600 text-white text-sm font-bold shadow-xl ring-2 ring-white animate-in fade-in zoom-in-95"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border-2 border-[#121117] bg-[#2b6df0] text-white text-sm font-semibold animate-in fade-in zoom-in-95"
         >
           <StickyNote className="w-4 h-4" />
           Capture
@@ -324,15 +324,15 @@ function SectionBlock({ section, showDivider }: { section: Section; showDivider:
   const h = headingStyles[section.kind];
   return (
     <div>
-      {showDivider && <div className="border-t border-rose-900/10 mb-5" aria-hidden />}
+      {showDivider && <div className="border-t-2 border-[#dcdce5] mb-5" aria-hidden />}
       <div className="flex items-center gap-2 mb-2.5">
         {h.icon}
-        <h3 className={`font-extrabold text-[15px] md:text-[16px] tracking-tight ${h.color}`}>
+        <h3 className={`font-bold text-[15px] md:text-[16px] ${h.color}`}>
           {h.label}
         </h3>
       </div>
 
-      <div className="text-zinc-800 [&_p]:my-2 [&_ul]:my-2 [&_ul]:pl-5 [&_ul]:list-disc [&_ol]:my-2 [&_ol]:pl-5 [&_ol]:list-decimal [&_li]:my-1 [&_strong]:font-bold [&_strong]:text-zinc-900 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:bg-rose-100 [&_code]:text-rose-900 [&_code]:text-[13px]">
+      <div className="text-[#4b4a5c] [&_p]:my-2 [&_ul]:my-2 [&_ul]:pl-5 [&_ul]:list-disc [&_ol]:my-2 [&_ol]:pl-5 [&_ol]:list-decimal [&_li]:my-1 [&_strong]:font-bold [&_strong]:text-[#121117] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:bg-[#e7eefd] [&_code]:text-[#121117] [&_code]:text-[13px]">
         <ReactMarkdown
           remarkPlugins={[remarkGfm, remarkMath]}
           rehypePlugins={[[rehypeKatex, { throwOnError: false, strict: false, trust: true }]]}
@@ -341,37 +341,35 @@ function SectionBlock({ section, showDivider }: { section: Section; showDivider:
             table: ({ children }) => (
               <div
                 className="overflow-x-auto my-3 rounded-xl shadow-sm"
-                style={{ background: "#ffffff", border: "1px solid #e4e4e7" }}
+                style={{ background: "#ffffff", border: "2px solid #121117" }}
               >
                 <table
                   className="w-full border-collapse"
-                  style={{ background: "#ffffff", color: "#0a0a0a", fontSize: 14, lineHeight: 1.55 }}
+                  style={{ background: "#ffffff", color: "#121117", fontSize: 14, lineHeight: 1.55 }}
                 >
                   {children}
                 </table>
               </div>
             ),
             thead: ({ children }) => (
-              <thead style={{ background: "#0a0a0a" }}>{children}</thead>
+              <thead style={{ background: "#121117" }}>{children}</thead>
             ),
             th: ({ children }) => (
               <th
                 className="text-left"
                 style={{
                   color: "#ffffff",
-                  background: "#0a0a0a",
+                  background: "#121117",
                   padding: "12px 14px",
-                  fontSize: 12,
+                  fontSize: 14,
                   fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.1em",
                 }}
               >
                 {children}
               </th>
             ),
             tr: ({ children }) => (
-              <tr style={{ background: "#ffffff", borderTop: "1px solid #e4e4e7" }}>{children}</tr>
+              <tr style={{ background: "#ffffff", borderTop: "1px solid #dcdce5" }}>{children}</tr>
             ),
             td: ({ children }) => {
               const raw = Array.isArray(children)
@@ -381,10 +379,10 @@ function SectionBlock({ section, showDivider }: { section: Section; showDivider:
                   : "";
               const isCorrect = /✓/.test(raw);
               const isWrong = /✗|✘|×/.test(raw) && !isCorrect;
-              let color = "#0a0a0a";
+              let color = "#121117";
               let weight: number | undefined;
-              if (isCorrect) { color = "#047857"; weight = 700; }
-              else if (isWrong) { color = "#a1a1aa"; }
+              if (isCorrect) { color = "#2e7d32"; weight = 700; }
+              else if (isWrong) { color = "#6a697c"; }
               return (
                 <td
                   style={{

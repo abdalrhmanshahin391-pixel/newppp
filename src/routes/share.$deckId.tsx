@@ -66,13 +66,13 @@ function DeckPage() {
   }
 
   if (q.isLoading) {
-    return <Shell><p className="text-[#6b655c]">Loading deck…</p></Shell>;
+    return <Shell><p className="text-[#54546a]">Loading deck…</p></Shell>;
   }
   if (!q.data) {
     return (
       <Shell>
         <h1 className="font-display text-3xl font-black">Deck not found</h1>
-        <Link to="/share" search={{ type: "flashcards" }} className="mt-4 inline-block font-black text-[#8ec63f]">
+        <Link to="/share" search={{ type: "flashcards" }} className="mt-4 inline-block font-black text-[#4a82f3]">
           Back to shared flashcards
         </Link>
       </Shell>
@@ -106,7 +106,7 @@ function DeckPage() {
 
   return (
     <Shell>
-      <Link to="/share" search={{ type: "flashcards" }} className="inline-flex items-center gap-1.5 text-sm font-black text-[#6b655c] hover:text-[#23201d]">
+      <Link to="/share" search={{ type: "flashcards" }} className="inline-flex items-center gap-1.5 text-sm font-black text-[#54546a] hover:text-[#121117]">
         <ArrowLeft size={15} /> Shared flashcards
       </Link>
 
@@ -129,16 +129,16 @@ function DeckPage() {
             )}
             <div className="mt-4 flex flex-wrap items-center gap-3 rounded-full bg-white/80 px-4 py-2 w-fit">
               <AuthorChip author={q.data.author} />
-              <span className="inline-flex items-center gap-1 text-[12px] font-black text-[#4a453d]">
+              <span className="inline-flex items-center gap-1 text-[12px] font-black text-[#2a2933]">
                 <Layers size={13} /> {deck.card_count} cards
               </span>
-              <span className="text-[12px] font-black text-[#4a453d]">{deck.save_count} saves</span>
+              <span className="text-[12px] font-black text-[#2a2933]">{deck.save_count} saves</span>
             </div>
           </div>
           <button
             onClick={save}
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded-full bg-[#23201d] px-6 py-3.5 text-[15px] font-black text-white disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-full bg-[#121117] px-6 py-3.5 text-[15px] font-black text-white disabled:opacity-60"
           >
             {saving ? <Loader2 size={16} className="animate-spin" /> : <BookmarkPlus size={16} />}
             Save to my subjects
@@ -147,7 +147,7 @@ function DeckPage() {
             <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
               <button
                 onClick={unshare}
-                className="inline-flex items-center gap-1.5 rounded-full bg-white/85 px-4 py-2.5 text-[13px] font-black text-[#4a453d] hover:bg-white"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/85 px-4 py-2.5 text-[13px] font-black text-[#2a2933] hover:bg-white"
               >
                 <EyeOff size={14} /> Unshare
               </button>
@@ -165,7 +165,7 @@ function DeckPage() {
       {groups.length > 0 && (
         <div className="mt-6 flex flex-wrap gap-2">
           {groups.map((g) => (
-            <span key={g} className="rounded-full bg-white px-3.5 py-1.5 text-[12px] font-black text-[#4a453d]">
+            <span key={g} className="rounded-full bg-white px-3.5 py-1.5 text-[12px] font-black text-[#2a2933]">
               {g}
             </span>
           ))}
@@ -178,7 +178,7 @@ function DeckPage() {
             <h2 className="font-display text-lg font-black">
               <Play size={15} className="mr-1.5 inline" /> Preview
             </h2>
-            <span className="text-[13px] font-bold text-[#6b655c]">
+            <span className="text-[13px] font-bold text-[#54546a]">
               {i + 1} / {cards.length}
             </span>
           </div>
@@ -201,7 +201,7 @@ function DeckPage() {
             <Nav onClick={() => step(-1)} label="Previous card"><ChevronLeft size={18} /></Nav>
             <button
               onClick={() => setFlipped((f) => !f)}
-              className="rounded-full bg-[#8ec63f] px-6 py-3 text-sm font-black text-white"
+              className="rounded-full bg-[#4a82f3] px-6 py-3 text-sm font-black text-white"
             >
               {flipped ? "Show front" : "Show answer"}
             </button>
@@ -217,7 +217,7 @@ function DeckPage() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
       <main className="mx-auto max-w-4xl px-4 py-14 md:px-8 md:py-20">{children}</main>
     </div>
@@ -243,7 +243,7 @@ function Nav({ onClick, label, children }: { onClick: () => void; label: string;
     <button
       onClick={onClick}
       aria-label={label}
-      className="grid h-11 w-11 place-items-center rounded-full border border-black/[0.1] bg-white text-[#4a453d] hover:bg-black/[0.04]"
+      className="grid h-11 w-11 place-items-center rounded-full border border-black/[0.1] bg-white text-[#2a2933] hover:bg-black/[0.04]"
     >
       {children}
     </button>

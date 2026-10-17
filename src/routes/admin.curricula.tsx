@@ -191,13 +191,13 @@ function AdminCurricula() {
       <header className="border-b border-[var(--pp-line)] bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
           <div>
-            <p className="text-xs font-semibold text-[var(--pp-pink-text)]">لوحة الإدارة</p>
+            <p className="text-xs font-semibold text-[var(--pp-accent-text)]">لوحة الإدارة</p>
             <h2 className="text-[28px] font-bold leading-8">مناهج دروس ريتا</h2>
           </div>
           <div className="flex items-center gap-2">
             <Link
               to="/rita-lessons"
-              className="rounded-lg bg-white px-4 py-2 text-sm font-bold text-[var(--pp-pink-text)]"
+              className="rounded-lg bg-white px-4 py-2 text-sm font-bold text-[var(--pp-accent-text)]"
             >
               مسار الطالب
             </Link>
@@ -213,22 +213,22 @@ function AdminCurricula() {
 
       <div className="mx-auto max-w-6xl space-y-4 px-5 pt-6">
         {loadError && (
-          <div className="flex items-start justify-between gap-3 rounded-3xl border-2 border-[#FFD1D1] bg-[#FFF1F1] p-5">
+          <div className="flex items-start justify-between gap-3 rounded-3xl border-2 border-[#f4f4f8] bg-[#ffffff] p-5">
             <div>
-              <p className="font-bold text-[#C0392B]">فشل تحميل لوحة المناهج</p>
-              <p className="mt-1 text-sm font-bold text-[#8A4A3A]">{loadError}</p>
+              <p className="font-bold text-[#b3213f]">فشل تحميل لوحة المناهج</p>
+              <p className="mt-1 text-sm font-bold text-[#b3213f]">{loadError}</p>
             </div>
             <button
               type="button"
               onClick={() => void refresh()}
-              className="shrink-0 rounded-lg bg-[#C0392B] px-4 py-2 text-sm font-bold text-white"
+              className="shrink-0 rounded-lg bg-[#b3213f] px-4 py-2 text-sm font-bold text-white"
             >
               أعد المحاولة
             </button>
           </div>
         )}
         {overview?.needsMigration && (
-          <div className="flex items-start gap-3 rounded-3xl border-2 border-[#FFD98A] bg-[#FFF6D6] p-4 text-sm font-bold text-[#B07A00]">
+          <div className="flex items-start gap-3 rounded-3xl border-2 border-[#f5b942] bg-[#f4f4f8] p-4 text-sm font-bold text-[#8a5200]">
             <AlertTriangle size={18} className="shrink-0" />
             <p>
               بعض ميزات هذه اللوحة تحتاج تحديث قاعدة البيانات: طبّق migration ‏20261015120000
@@ -249,7 +249,7 @@ function AdminCurricula() {
             }}
           />
           {!overview && !loadError && (
-            <Loader2 className="mx-auto animate-spin text-[var(--pp-pink-text)]" />
+            <Loader2 className="mx-auto animate-spin text-[var(--pp-accent-text)]" />
           )}
           {overview?.curricula.map((book) => (
             <button
@@ -309,7 +309,7 @@ function KindBadge({ kind }: { kind: "grammar" | "vocabulary" }) {
     <span
       className={`rounded-lg px-2.5 py-0.5 text-[11px] font-bold text-white ${
         kind === "vocabulary"
-          ? "border border-[var(--pp-ink)] bg-[var(--pp-pink)] !text-[var(--pp-ink)]"
+          ? "border border-[var(--pp-ink)] bg-[var(--pp-accent)] !text-[var(--pp-on-accent)]"
           : "bg-[var(--pp-ink)]"
       }`}
     >
@@ -323,7 +323,7 @@ function CursorBars({ book }: { book: CurriculumRow }) {
     <div className="mt-3 space-y-1.5">
       <div className="h-2 overflow-hidden rounded-full bg-[var(--pp-line)]">
         <div
-          className="h-full rounded-full bg-[var(--pp-pink)]"
+          className="h-full rounded-full bg-[var(--pp-accent)]"
           style={{ width: `${percentOf(book.read_cursor, book.page_count)}%` }}
         />
       </div>
@@ -363,15 +363,15 @@ function PublishChecklist({ book, lessons }: { book: CurriculumRow; lessons: Les
         {items.map((item) => (
           <li key={item.label} className="flex items-center gap-2 text-xs font-bold">
             {item.done ? (
-              <CheckCircle2 size={14} className="text-[#2F8F55]" />
+              <CheckCircle2 size={14} className="text-[#256528]" />
             ) : (
-              <Circle size={14} className="text-[#C9A7FF]" />
+              <Circle size={14} className="text-[#cddcfb]" />
             )}
             {item.label}
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-[11px] font-bold text-[#B07A00]">
+      <p className="mt-2 text-[11px] font-bold text-[#8a5200]">
         الدرس لا يظهر للطالب إلا إذا كان الدرس والكتاب منشورين معًا.
       </p>
     </div>
@@ -451,7 +451,7 @@ function AddBookCard({
   return (
     <div className="rounded-2xl bg-[var(--pp-grey)] p-4">
       <h2 className="flex items-center gap-2 font-bold">
-        <FileUp size={18} className="text-[var(--pp-pink-text)]" /> كتاب جديد
+        <FileUp size={18} className="text-[var(--pp-accent-text)]" /> كتاب جديد
       </h2>
       <div className="mt-3 grid grid-cols-2 gap-2">
         {(["grammar", "vocabulary"] as const).map((value) => (
@@ -459,7 +459,7 @@ function AddBookCard({
             key={value}
             type="button"
             onClick={() => setKind(value)}
-            className={`rounded-xl py-2 text-sm font-bold ${kind === value ? "border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] text-[var(--pp-ink)]" : "bg-white text-[var(--pp-pink-text)]"}`}
+            className={`rounded-xl py-2 text-sm font-bold ${kind === value ? "border-2 border-[var(--pp-ink)] bg-[var(--pp-accent)] text-[var(--pp-on-accent)]" : "bg-white text-[var(--pp-accent-text)]"}`}
           >
             {value === "grammar" ? "قواعد" : "كلمات"}
           </button>
@@ -478,7 +478,7 @@ function AddBookCard({
         placeholder="اسم الكتاب بالعربية"
         className="mt-2 w-full rounded-xl border border-[var(--pp-line)] px-3 py-2 text-sm"
       />
-      <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--pp-line)] py-3 text-sm font-bold text-[var(--pp-pink-text)]">
+      <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--pp-line)] py-3 text-sm font-bold text-[var(--pp-accent-text)]">
         <Upload size={16} />
         {file ? file.name : "اختر ملف PDF"}
         <input
@@ -719,8 +719,8 @@ function BookDetail({
               }
               className={`rounded-lg px-4 py-2 text-sm font-bold ${
                 book.status === "published"
-                  ? "bg-[var(--pp-pink-soft)] text-[var(--pp-pink-text)]"
-                  : "border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] text-[var(--pp-ink)]"
+                  ? "bg-[var(--pp-accent-soft)] text-[var(--pp-accent-text)]"
+                  : "border-2 border-[var(--pp-ink)] bg-[var(--pp-accent)] text-[var(--pp-on-accent)]"
               }`}
             >
               {book.status === "published" ? "منشور ✓" : "نشر الكتاب"}
@@ -754,8 +754,8 @@ function BookDetail({
         <PublishChecklist book={book} lessons={lessons} />
         <PageStrip book={book} missingText={missingText} />
         {missingText.length > 0 && (
-          <div className="mt-3 rounded-2xl border border-[#FFD98A] bg-[#FFF6D6]/60 p-3">
-            <p className="text-xs font-bold text-[#B07A00]">
+          <div className="mt-3 rounded-2xl border border-[#f5b942] bg-[#f4f4f8]/60 p-3">
+            <p className="text-xs font-bold text-[#8a5200]">
               {missingText.length} صفحة ناقصة (بلا نص أو غير محفوظة بعد).{" "}
               {needsMigration && "(تعليم الصفحة الفارغة يحتاج تطبيق الـ migration)"}
             </p>
@@ -772,13 +772,13 @@ function BookDetail({
                       `تم تعليم ص${page} كصفحة فارغة`,
                     )
                   }
-                  className="rounded-lg border border-[#FFD98A] bg-white px-2 py-1 text-[11px] font-bold text-[#B07A00]"
+                  className="rounded-lg border border-[#f5b942] bg-white px-2 py-1 text-[11px] font-bold text-[#8a5200]"
                 >
                   ص{page} فارغة؟
                 </button>
               ))}
               {missingText.length > 40 && (
-                <span className="text-[11px] font-bold text-[#B07A00]">
+                <span className="text-[11px] font-bold text-[#8a5200]">
                   و{missingText.length - 40} أخرى
                 </span>
               )}
@@ -813,7 +813,7 @@ function BookDetail({
               type="button"
               disabled={!next || Boolean(busy) || readAll.active}
               onClick={() => void readNext()}
-              className="flex items-center gap-2 rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] px-4 py-2 text-sm font-bold text-[var(--pp-ink)] disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-accent)] px-4 py-2 text-sm font-bold text-[var(--pp-on-accent)] disabled:opacity-50"
             >
               {busy.startsWith("read") ? (
                 <Loader2 size={15} className="animate-spin" />
@@ -827,7 +827,7 @@ function BookDetail({
                 type="button"
                 disabled={Boolean(busy)}
                 onClick={() => void readAllWindows()}
-                className="rounded-lg border-2 border-[var(--pp-ink)] px-4 py-2 text-sm font-bold text-[var(--pp-pink-text)] disabled:opacity-50"
+                className="rounded-lg border-2 border-[var(--pp-ink)] px-4 py-2 text-sm font-bold text-[var(--pp-accent-text)] disabled:opacity-50"
               >
                 اقرأ الكتاب كاملاً
               </button>
@@ -838,7 +838,7 @@ function BookDetail({
                 onClick={() => {
                   cancelReadAll.current = true;
                 }}
-                className="flex items-center gap-1 rounded-lg bg-[#C0392B] px-4 py-2 text-sm font-bold text-white"
+                className="flex items-center gap-1 rounded-lg bg-[#b3213f] px-4 py-2 text-sm font-bold text-white"
               >
                 <X size={15} /> إيقاف القراءة
               </button>
@@ -846,13 +846,13 @@ function BookDetail({
           </div>
         </div>
         {readAll.active && (
-          <p className="mt-2 flex items-center gap-2 text-xs font-bold text-[var(--pp-pink-text)]">
+          <p className="mt-2 flex items-center gap-2 text-xs font-bold text-[var(--pp-accent-text)]">
             <Loader2 size={13} className="animate-spin" />
             {readAll.progress} (قراءة متتابعة — أبقِ الصفحة مفتوحة)
           </p>
         )}
         {busy.startsWith("read:") && (
-          <p className="mt-2 text-xs font-bold text-[var(--pp-pink-text)]">
+          <p className="mt-2 text-xs font-bold text-[var(--pp-accent-text)]">
             قراءة الصفحات الممسوحة {busy.slice(5)}…
           </p>
         )}
@@ -1028,7 +1028,7 @@ function SortablePathRow({ id, title, index }: { id: string; title: string; inde
       className="flex cursor-grab touch-none items-center gap-3 rounded-2xl border border-[var(--pp-line)] bg-white px-4 py-2 text-sm font-bold"
     >
       <GripVertical size={15} className="text-[var(--pp-muted)]/70" />
-      <span className="text-xs font-bold text-[var(--pp-pink-text)]">{index + 1}</span>
+      <span className="text-xs font-bold text-[var(--pp-accent-text)]">{index + 1}</span>
       {title}
     </li>
   );
@@ -1054,9 +1054,9 @@ function PageStrip({ book, missingText }: { book: CurriculumRow; missingText: nu
           page <= book.taught_cursor
             ? "bg-[var(--pp-ink)]"
             : page <= book.read_cursor
-              ? "bg-[var(--pp-pink)]"
+              ? "bg-[var(--pp-accent)]"
               : missing.has(page)
-                ? "bg-[#FFD98A]"
+                ? "bg-[#f5b942]"
                 : "bg-[var(--pp-line)]";
         return <span key={page} title={`ص${page}`} className={`h-3 w-3 rounded-[3px] ${colour}`} />;
       })}
@@ -1107,13 +1107,13 @@ function WindowSummaryView({ window }: { window: WindowRow }) {
         </div>
       ))}
       {summary.suggested_lessons.length > 0 && (
-        <p className="text-xs font-bold text-[var(--pp-pink-text)]">
+        <p className="text-xs font-bold text-[var(--pp-accent-text)]">
           دروس مقترحة:{" "}
           {summary.suggested_lessons.map((item) => item.title_ar || item.topic).join(" · ")}
         </p>
       )}
       {summary.continues_next_window && (
-        <p className="text-xs font-bold text-[var(--pp-pink-text)]">
+        <p className="text-xs font-bold text-[var(--pp-accent-text)]">
           الموضوع الأخير يكمل في الصفحات التالية.
         </p>
       )}
@@ -1285,7 +1285,7 @@ function LessonsCard({
             type="button"
             disabled={Boolean(busy)}
             onClick={() => void publishSelected()}
-            className="rounded-lg bg-[#2F8F55] px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+            className="rounded-lg bg-[#256528] px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
           >
             انشر المحدد ({selectedDrafts.size})
           </button>
@@ -1328,7 +1328,7 @@ function LessonsCard({
                       onClick={() =>
                         setForm({ topic: item.topic, from: item.from_page, to: item.to_page })
                       }
-                      className="rounded-lg bg-white px-3 py-1 text-xs font-bold text-[var(--pp-pink-text)]"
+                      className="rounded-lg bg-white px-3 py-1 text-xs font-bold text-[var(--pp-accent-text)]"
                     >
                       {item.title_ar || item.topic} · ص{item.from_page}
                     </button>
@@ -1368,7 +1368,7 @@ function LessonsCard({
                     "أُنشئ الدرس كمسودة — راجعه ثم انشره",
                   )
                 }
-                className="flex items-center gap-2 rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] px-4 py-2 text-sm font-bold text-[var(--pp-ink)] disabled:opacity-50"
+                className="flex items-center gap-2 rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-accent)] px-4 py-2 text-sm font-bold text-[var(--pp-on-accent)] disabled:opacity-50"
               >
                 {busy === "generate" ? (
                   <Loader2 size={15} className="animate-spin" />
@@ -1444,7 +1444,7 @@ function LessonsCard({
                   <span
                     className={`rounded-lg px-2.5 py-1 text-[11px] font-bold ${
                       lesson.status === "published"
-                        ? "bg-[var(--pp-pink-soft)] text-[var(--pp-pink-text)]"
+                        ? "bg-[var(--pp-accent-soft)] text-[var(--pp-accent-text)]"
                         : "bg-white text-[var(--pp-muted)]"
                     }`}
                   >
@@ -1467,7 +1467,7 @@ function LessonsCard({
                   type="button"
                   disabled={Boolean(busy)}
                   onClick={() => askPublish(lesson)}
-                  className="rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] px-3 py-1.5 text-[var(--pp-ink)] disabled:opacity-50"
+                  className="rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-accent)] px-3 py-1.5 text-[var(--pp-on-accent)] disabled:opacity-50"
                 >
                   {lesson.status === "published" ? "إلغاء النشر" : "نشر"}
                 </button>
@@ -1624,7 +1624,7 @@ function LessonsCard({
                     "نُشر الدرس والكتاب — ظهر للطلاب",
                   );
                 }}
-                className="rounded-lg bg-[#2F8F55] px-4 py-2.5 text-white disabled:opacity-50"
+                className="rounded-lg bg-[#256528] px-4 py-2.5 text-white disabled:opacity-50"
               >
                 انشر الدرس والكتاب معًا (يظهر للطلاب)
               </button>
@@ -1643,7 +1643,7 @@ function LessonsCard({
                     "نُشر الدرس — وسيبقى مخفيًا للطلاب حتى ينشر الكتاب",
                   );
                 }}
-                className="rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)] px-4 py-2.5 text-[var(--pp-ink)] disabled:opacity-50"
+                className="rounded-lg border-2 border-[var(--pp-ink)] bg-[var(--pp-accent)] px-4 py-2.5 text-[var(--pp-on-accent)] disabled:opacity-50"
               >
                 انشر الدرس فقط (يبقى مخفيًا حتى نشر الكتاب)
               </button>

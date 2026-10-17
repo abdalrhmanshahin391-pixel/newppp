@@ -181,7 +181,7 @@ function ManagePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9] text-slate-900">
+    <div className="min-h-screen bg-[#ffffff] text-slate-900">
       <SiteHeader variant="light" />
       <main className="mx-auto max-w-7xl px-4 md:px-8 pt-24 pb-24">
         {/* Hero */}
@@ -293,7 +293,7 @@ function TreeNode(props: {
     <div>
       <div
         className={`group flex items-center gap-1 rounded-lg pl-1 pr-1 py-1.5 cursor-pointer transition ${
-          isSel ? "bg-emerald-100/70 ring-1 ring-emerald-300" : "hover:bg-slate-100"
+          isSel ? "bg-[#d2ecd4]/70 ring-1 ring-emerald-300" : "hover:bg-slate-100"
         }`}
         style={{ paddingLeft: 6 + depth * 14 }}
         onClick={() => setSelectedId(node.id)}
@@ -678,7 +678,7 @@ function WordsPanel({ words, onAdd, onSave, onDelete, onPaste }: {
         </button>
       </div>
       {showPaste && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 mt-2 space-y-2">
+        <div className="rounded-lg border border-emerald-200 bg-[#e8f5e9]/50 p-3 mt-2 space-y-2">
           <div className="text-[11px] font-semibold text-slate-600">
             One per line: <code className="bg-white px-1.5 py-0.5 rounded">Deutsch | English | Example</code>
           </div>
@@ -734,7 +734,7 @@ function SentencesPanel({ sentences, onAdd, onSave, onDelete, onPaste }: {
         </button>
       </div>
       {showPaste && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 mt-2 space-y-2">
+        <div className="rounded-lg border border-emerald-200 bg-[#e8f5e9]/50 p-3 mt-2 space-y-2">
           <div className="text-[11px] font-semibold text-slate-600">
             One per line: <code className="bg-white px-1.5 py-0.5 rounded">Deutsch | English | Notes</code>
           </div>
@@ -769,7 +769,7 @@ function QuizPanel({ questions, options, onAdd, onSavePrompt, onSaveOption, onSe
   const NewBtn = (
     <button
       onClick={onAdd}
-      className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-emerald-500/30 transition hover:shadow-emerald-500/50 hover:scale-[1.02]"
+      className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-[#3a9042]/30 transition hover:shadow-[#3a9042]/50 hover:scale-[1.02]"
     >
       <span className="grid place-items-center w-6 h-6 rounded-full bg-white/20">
         <Plus className="w-4 h-4" />
@@ -795,7 +795,7 @@ function QuizPanel({ questions, options, onAdd, onSavePrompt, onSaveOption, onSe
       </div>
 
       {showPaste && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 space-y-2">
+        <div className="rounded-xl border border-emerald-200 bg-[#e8f5e9]/50 p-3 space-y-2">
           <div className="text-[11px] font-semibold text-slate-600">
             One per line: <code className="bg-white px-1.5 py-0.5 rounded">Question | A | B | C | D | correct_letter</code>
           </div>
@@ -822,7 +822,7 @@ function QuizPanel({ questions, options, onAdd, onSavePrompt, onSaveOption, onSe
         <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-12 text-center">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.15),transparent_60%)]" />
           <div className="relative">
-            <div className="mx-auto w-14 h-14 rounded-2xl bg-emerald-500/20 grid place-items-center mb-4 ring-1 ring-emerald-400/30">
+            <div className="mx-auto w-14 h-14 rounded-2xl bg-[#3a9042]/20 grid place-items-center mb-4 ring-1 ring-[#4aa552]/30">
               <ListChecks className="w-7 h-7 text-emerald-300" />
             </div>
             <div className="text-white text-xl font-black mb-1">Create your first question</div>
@@ -870,8 +870,8 @@ function QuizCard({
   const padded: (QuizOpt | null)[] = [0, 1, 2, 3].map((i) => options[i] ?? null);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 shadow-xl ring-1 ring-emerald-500/10">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
+    <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 shadow-xl ring-1 ring-[#3a9042]/10">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#4aa552]/40 to-transparent" />
 
       <div className="flex items-center gap-2 mb-3">
         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">
@@ -886,7 +886,7 @@ function QuizCard({
           )}
           <button
             onClick={() => onDelete(question.id)}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10"
+            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-[#c4314f]/10"
             title="Delete question"
           >
             <Trash2 className="w-4 h-4" />
@@ -898,7 +898,7 @@ function QuizCard({
         defaultValue={question.prompt}
         onBlur={(e) => { onSavePrompt(question.id, e.target.value); flashSaved(); }}
         placeholder="Type the German prompt…"
-        className="w-full bg-transparent text-3xl md:text-4xl font-black text-white placeholder:text-slate-600 outline-none mb-5 pb-2 border-b border-slate-800 focus:border-emerald-500/60 transition"
+        className="w-full bg-transparent text-3xl md:text-4xl font-black text-white placeholder:text-slate-600 outline-none mb-5 pb-2 border-b border-slate-800 focus:border-[#3a9042]/60 transition"
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -906,8 +906,8 @@ function QuizCard({
           const letter = String.fromCharCode(65 + oi);
           if (!o) {
             return (
-              <div key={oi} className="flex items-center gap-3 rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 px-4 py-3.5 text-slate-600 text-sm">
-                <span className="font-black text-emerald-400/60">{letter}.</span>
+              <div key={oi} className="flex items-center gap-3 rounded-2xl border border-dashed border-slate-700 bg-[#121117]/40 px-4 py-3.5 text-slate-600 text-sm">
+                <span className="font-black text-[#4aa552]/60">{letter}.</span>
                 <span className="italic">slot pending…</span>
               </div>
             );
@@ -918,8 +918,8 @@ function QuizCard({
               key={o.id}
               className={`group flex items-center gap-3 rounded-2xl border px-4 py-3 transition ${
                 isCorrect
-                  ? "border-emerald-400/70 bg-emerald-500/10 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]"
-                  : "border-slate-800 bg-slate-900/60 hover:border-slate-700"
+                  ? "border-[#4aa552]/70 bg-[#3a9042]/10 shadow-[0_0_0_3px_rgba(16,185,129,0.12)]"
+                  : "border-slate-800 bg-[#121117]/60 hover:border-slate-700"
               }`}
             >
               <button
@@ -927,7 +927,7 @@ function QuizCard({
                 title={isCorrect ? "Correct answer" : "Mark as correct"}
                 className={`shrink-0 w-9 h-9 rounded-xl grid place-items-center font-black text-sm transition ${
                   isCorrect
-                    ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/40"
+                    ? "bg-emerald-500 text-white shadow-md shadow-[#3a9042]/40"
                     : "bg-slate-800 text-emerald-300 group-hover:bg-slate-700"
                 }`}
               >

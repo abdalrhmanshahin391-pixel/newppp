@@ -119,16 +119,18 @@ export function SpeedRound({
         startedAt={startedAt.current}
       />
 
-      <div className="mt-5 h-2 overflow-hidden rounded-full bg-white">
+      <div className="mt-5 h-2.5 overflow-hidden rounded-full border-[1.5px] border-[#121117] bg-white">
         <div
           className="h-full rounded-full transition-[width] duration-100 ease-linear"
-          style={{ width: `${(left / LIMIT_MS) * 100}%`, background: "#f0a95c" }}
+          style={{ width: `${(left / LIMIT_MS) * 100}%`, background: "#2b6df0" }}
         />
       </div>
 
-      <div className="mt-5 rounded-[24px] bg-white px-6 py-8 text-center">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b3aa9c]">Which one?</p>
-        <p className="mt-3 font-display text-[26px] font-black leading-tight tracking-tight text-[#23201d]">
+      <div className="mt-5 rounded-[24px] border-2 border-[#121117] bg-white px-6 py-8 text-center">
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#9a9aab]">
+          Which one?
+        </p>
+        <p className="mt-3 font-display text-[26px] font-black leading-tight tracking-tight text-[#121117]">
           {current.left}
         </p>
       </div>
@@ -142,13 +144,13 @@ export function SpeedRound({
               key={o.id}
               type="button"
               onClick={() => pick(o.id)}
-              className={`min-h-[4rem] rounded-2xl border px-4 py-3 text-left text-[14px] font-extrabold transition-all ${
+              className={`min-h-[4rem] rounded-xl border-2 px-4 py-3 text-left text-[15px] font-semibold transition-all ${
                 isWrongPick ? "animate-[rita-shake_0.4s_ease]" : ""
               }`}
               style={{
-                background: isRight ? "#d8ecdd" : isWrongPick ? "#fbe4e4" : "#fff",
-                borderColor: isRight ? "#6ab887" : isWrongPick ? "#d1795e" : "rgba(0,0,0,0.07)",
-                color: "#23201d",
+                background: isRight ? "#d2ecd4" : isWrongPick ? "#f4f4f8" : "#fff",
+                borderColor: isRight ? "#2e7d32" : isWrongPick ? "#b3213f" : "#121117",
+                color: "#121117",
               }}
             >
               {o.right}

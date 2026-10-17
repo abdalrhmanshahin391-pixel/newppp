@@ -84,15 +84,15 @@ export function SaveNoteDialog({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div
         className="w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden"
-        style={{ background: "#ffffff", color: "#0a0a0a" }}
+        style={{ background: "#ffffff", color: "#0b0b0f" }}
       >
         <div
           className="px-6 py-5 flex items-start justify-between gap-4"
-          style={{ background: "#1e293b", color: "#ffffff" }}
+          style={{ background: "#153a82", color: "#ffffff" }}
         >
           <div>
             <div className="flex items-center gap-2 text-lg font-bold">
-              <Save className="w-5 h-5" style={{ color: "#fbbf24" }} />
+              <Save className="w-5 h-5" style={{ color: "#d68c0a" }} />
               {editingId ? "Edit Note" : "Save to My Notes"}
             </div>
             <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.72)" }}>
@@ -112,12 +112,12 @@ export function SaveNoteDialog({
 
         <div
           className="p-6 space-y-5 max-h-[70vh] overflow-y-auto"
-          style={{ background: "#ffffff", color: "#0a0a0a" }}
+          style={{ background: "#ffffff", color: "#0b0b0f" }}
         >
           <div>
             <div
               className="text-xs font-bold tracking-widest uppercase mb-2"
-              style={{ color: "#52525b" }}
+              style={{ color: "#4b4a5c" }}
             >
               Selected snippet
             </div>
@@ -125,13 +125,13 @@ export function SaveNoteDialog({
               className="rounded-xl p-5 max-h-80 overflow-y-auto text-sm leading-relaxed"
               style={{
                 background: "#ffffff",
-                color: "#0a0a0a",
-                border: "1px solid #e4e4e7",
+                color: "#0b0b0f",
+                border: "1px solid #f4f4f8",
               }}
             >
               <div
-                style={{ color: "#0a0a0a" }}
-                className="[&_*]:!text-[#0a0a0a] [&_strong]:!font-bold [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-zinc-200 [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-zinc-300 [&_th]:px-3 [&_th]:py-2 [&_th]:bg-zinc-900 [&_th]:!text-white"
+                style={{ color: "#0b0b0f" }}
+                className="[&_*]:!text-[#0b0b0f] [&_strong]:!font-bold [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-zinc-200 [&_td]:px-3 [&_td]:py-2 [&_th]:border [&_th]:border-zinc-300 [&_th]:px-3 [&_th]:py-2 [&_th]:bg-zinc-900 [&_th]:!text-white"
                 dangerouslySetInnerHTML={{ __html: snippetHtml }}
               />
             </div>
@@ -140,7 +140,7 @@ export function SaveNoteDialog({
           <div>
             <div
               className="text-xs font-bold tracking-widest uppercase mb-2"
-              style={{ color: "#52525b" }}
+              style={{ color: "#4b4a5c" }}
             >
               Your note
             </div>
@@ -151,8 +151,8 @@ export function SaveNoteDialog({
               className="w-full min-h-28 rounded-xl px-4 py-3 text-sm outline-none focus:border-amber-400"
               style={{
                 background: "#ffffff",
-                color: "#0a0a0a",
-                border: "1px solid #d4d4d8",
+                color: "#0b0b0f",
+                border: "1px solid #dcdce5",
               }}
             />
           </div>
@@ -161,9 +161,9 @@ export function SaveNoteDialog({
             <div
               className="rounded-lg text-sm px-3 py-2"
               style={{
-                background: "#fef2f2",
-                color: "#b91c1c",
-                border: "1px solid #fecaca",
+                background: "#ffffff",
+                color: "#b3213f",
+                border: "1px solid #fbd9e0",
               }}
             >
               {error}
@@ -173,7 +173,7 @@ export function SaveNoteDialog({
 
         <div
           className="px-6 py-4 flex items-center justify-end gap-3"
-          style={{ background: "#ffffff", borderTop: "1px solid #e4e4e7" }}
+          style={{ background: "#ffffff", borderTop: "1px solid #f4f4f8" }}
         >
           <button
             onClick={onClose}
@@ -181,8 +181,8 @@ export function SaveNoteDialog({
             className="px-5 py-2.5 rounded-full text-sm font-semibold"
             style={{
               background: "#ffffff",
-              color: "#0a0a0a",
-              border: "1px solid #d4d4d8",
+              color: "#0b0b0f",
+              border: "1px solid #dcdce5",
             }}
           >
             Cancel
@@ -192,7 +192,7 @@ export function SaveNoteDialog({
             disabled={saving}
             type="button"
             className="px-6 py-2.5 rounded-full text-sm font-bold disabled:opacity-50"
-            style={{ background: "#fbbf24", color: "#0a0a0a" }}
+            style={{ background: "#d68c0a", color: "#0b0b0f" }}
           >
             {saving ? "Saving…" : editingId ? "Save Changes" : "Save Note"}
           </button>

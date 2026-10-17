@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { studyDashboard, type Dashboard } from "@/lib/review.functions";
 import { useAuth } from "@/hooks/useAuth";
-import { useTutorialLang, type TutorialLang } from "@/components/tutorials/ToolTutorial";
+import { useTutorialLang, type TutorialLang } from "@/components/tutorials/tutorial-lang";
 
 export const Route = createFileRoute("/study/progress")({
   head: () => ({
@@ -68,18 +68,18 @@ function MetricCard({
       <div className="flex items-center justify-between">
         <span
           className="grid h-10 w-10 place-items-center rounded-2xl shadow-xs"
-          style={{ background: tone, color: textColor ?? "#23201d" }}
+          style={{ background: tone, color: textColor ?? "#121117" }}
         >
           {icon}
         </span>
       </div>
       <div className="mt-4">
-        <p className="font-display text-[2.2rem] font-black leading-none tracking-tight text-[#23201d]">
+        <p className="font-display text-[2.2rem] font-black leading-none tracking-tight text-[#121117]">
           {value}
         </p>
-        <p className="mt-1.5 text-[13.5px] font-bold text-[#4a453d]">{label}</p>
+        <p className="mt-1.5 text-[13.5px] font-bold text-[#2a2933]">{label}</p>
         {subtext && (
-          <p className="mt-0.5 text-[11px] font-semibold text-[#8a8070]">{subtext}</p>
+          <p className="mt-0.5 text-[11px] font-semibold text-[#6a697c]">{subtext}</p>
         )}
       </div>
     </div>
@@ -114,7 +114,7 @@ function ProgressPage() {
 
   return (
     <div
-      className="min-h-screen bg-[#fbf5e9] px-4 py-8 md:px-8"
+      className="min-h-screen bg-white px-4 py-8 md:px-8"
       dir={isAr ? "rtl" : "ltr"}
     >
       <div className="mx-auto w-full max-w-[76rem]">
@@ -122,7 +122,7 @@ function ProgressPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link
             to="/study"
-            className="inline-flex items-center gap-2 text-sm font-black text-[#6d6355] transition-colors hover:text-[#23201d]"
+            className="inline-flex items-center gap-2 text-sm font-black text-[#54546a] transition-colors hover:text-[#121117]"
           >
             <ArrowLeft size={16} className={isAr ? "rotate-180" : ""} />
             {isAr ? "الرجوع إلى موادي وبطاقاتي" : "back to my subjects"}
@@ -138,8 +138,8 @@ function ProgressPage() {
               onClick={() => setLang("en")}
               className={`rounded-full px-3 py-1 text-[12px] font-black uppercase transition-all ${
                 lang === "en"
-                  ? "bg-[#23201d] text-white shadow-xs"
-                  : "text-[#6b655c] hover:text-[#23201d]"
+                  ? "bg-[#121117] text-white shadow-xs"
+                  : "text-[#54546a] hover:text-[#121117]"
               }`}
             >
               English
@@ -149,8 +149,8 @@ function ProgressPage() {
               onClick={() => setLang("ar")}
               className={`rounded-full px-3 py-1 text-[12px] font-black transition-all ${
                 lang === "ar"
-                  ? "bg-[#23201d] text-white shadow-xs"
-                  : "text-[#6b655c] hover:text-[#23201d]"
+                  ? "bg-[#121117] text-white shadow-xs"
+                  : "text-[#54546a] hover:text-[#121117]"
               }`}
             >
               العربية
@@ -160,10 +160,10 @@ function ProgressPage() {
 
         {/* Header Title */}
         <div className="mt-5">
-          <h1 className="font-display text-[2.4rem] md:text-[2.8rem] font-black leading-tight tracking-tight text-[#23201d]">
+          <h1 className="font-display text-[2.4rem] md:text-[2.8rem] font-black leading-tight tracking-tight text-[#121117]">
             {isAr ? "تحليلات تقدمي الدراسي والذاكرة" : "My Progress & Memory Analytics"}
           </h1>
-          <p className="mt-1 text-[15px] md:text-[16px] font-semibold text-[#6d6355]">
+          <p className="mt-1 text-[15px] md:text-[16px] font-semibold text-[#54546a]">
             {isAr
               ? "تشخيص دقيق لخوارزمية SuperMemo SM-2، توزيع الصعوبة، والبطاقات الصعبة والمستعصية."
               : "Advanced SuperMemo SM-2 diagnostics, difficulty curves, hard cards, and retention metrics."}
@@ -172,7 +172,7 @@ function ProgressPage() {
 
         {!user && (
           <div className="mt-8 rounded-[28px] border border-black/[0.08] bg-white p-8 text-center">
-            <p className="text-base font-bold text-[#6d6355]">
+            <p className="text-base font-bold text-[#54546a]">
               {isAr ? "يرجى تسجيل الدخول لعرض إحصائياتك الكاملة." : "Sign in to see your full progress."}
             </p>
           </div>
@@ -180,7 +180,7 @@ function ProgressPage() {
 
         {user && isLoading && (
           <div className="mt-8 rounded-[28px] border border-black/[0.08] bg-white p-8 text-center">
-            <p className="text-base font-bold text-[#6d6355] animate-pulse">
+            <p className="text-base font-bold text-[#54546a] animate-pulse">
               {isAr ? "جارٍ تجميع بياناتك وحساب فترات SM-2..." : "Adding up your reviews & SM-2 stability metrics…"}
             </p>
           </div>
@@ -195,8 +195,8 @@ function ProgressPage() {
                 label={isAr ? "بطاقات متقنة" : "Cards Mastered"}
                 value={data.totals.mastered}
                 subtext={isAr ? "الفاصل > 21 يوماً" : "Interval > 21 days"}
-                tone="#d8ecdd"
-                textColor="#215237"
+                tone="#d2ecd4"
+                textColor="#1d4f20"
               />
 
               <MetricCard
@@ -204,8 +204,8 @@ function ProgressPage() {
                 label={isAr ? "قيد التعلم النشط" : "Still Learning"}
                 value={data.totals.learning}
                 subtext={isAr ? "تكرار متباعد منتظم" : "In active repetition"}
-                tone="#d6e8f6"
-                textColor="#1f4c6d"
+                tone="#f4f4f8"
+                textColor="#1a4ba8"
               />
 
               <MetricCard
@@ -213,8 +213,8 @@ function ProgressPage() {
                 label={isAr ? "بطاقات صعبة" : "Hard Cards"}
                 value={data.totals.hard}
                 subtext={isAr ? "تحتاج جهداً إضافياً" : "Struggling or Hard rated"}
-                tone="#fef3c7"
-                textColor="#92400e"
+                tone="#ffe6a3"
+                textColor="#8a5200"
               />
 
               <MetricCard
@@ -222,8 +222,8 @@ function ProgressPage() {
                 label={isAr ? "أخطاء ومستعصية (Leeches)" : "Wrong / Lapsed"}
                 value={data.totals.wrong}
                 subtext={isAr ? "فشل متكرر يستوجب الإعادة" : "Repeated failures"}
-                tone="#fee2e2"
-                textColor="#991b1b"
+                tone="#f4f4f8"
+                textColor="#961a34"
               />
 
               <MetricCard
@@ -231,14 +231,14 @@ function ProgressPage() {
                 label={isAr ? "غير مبدوءة (جديدة)" : "Not Started"}
                 value={data.totals.new}
                 subtext={isAr ? "في قائمة الانتظار" : "Awaiting first review"}
-                tone="#e4dcf3"
-                textColor="#4a3877"
+                tone="#f4f4f8"
+                textColor="#1d5fd0"
               />
             </div>
 
             {/* 2. ACTIONABLE REMEDIATION BANNER */}
             {(data.totals.wrong > 0 || data.totals.hard > 0) && (
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-amber-300/80 bg-amber-50/70 p-5">
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-[#f5b942]/80 bg-[#fff4d6]/70 p-5">
                 <div className="flex items-center gap-3">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-amber-200 text-amber-900 font-black">
                     ⚡
@@ -247,7 +247,7 @@ function ProgressPage() {
                     <h4 className="text-sm font-black text-amber-950">
                       {isAr ? "جلسة استدراك موجهة للبطاقات المتعثرة" : "Targeted Remediation Available"}
                     </h4>
-                    <p className="text-xs text-amber-900/80">
+                    <p className="text-xs text-[#4d2d00]/80">
                       {isAr
                         ? `لديك ${data.totals.wrong} بطاقة مستعصية و ${data.totals.hard} بطاقة صعبة تحتاج تثبيتاً قبل الامتحانات.`
                         : `You have ${data.totals.wrong} lapsed cards and ${data.totals.hard} hard cards that benefit from focused reinforcement.`}
@@ -271,16 +271,16 @@ function ProgressPage() {
             <div className="mt-6 rounded-[26px] border border-black/[0.06] bg-white p-6 shadow-xs">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/[0.06] pb-4">
                 <div>
-                  <h2 className="font-display text-xl font-black text-[#23201d]">
+                  <h2 className="font-display text-xl font-black text-[#121117]">
                     {isAr ? "توزيع تقييمات خوارزمية SM-2" : "SuperMemo SM-2 Grade Distribution"}
                   </h2>
-                  <p className="text-sm font-semibold text-[#6d6355]">
+                  <p className="text-sm font-semibold text-[#54546a]">
                     {isAr
                       ? "نسب اختياراتك للأزرار الأربعة أثناء جلسات المذاكرة السابقة."
                       : "How you rated your recall across all completed review events."}
                   </p>
                 </div>
-                <span className="text-xs font-black text-[#8a8070]">
+                <span className="text-xs font-black text-[#6a697c]">
                   {data.grades.total} {isAr ? "تقييماً مسجلاً" : "total reviews recorded"}
                 </span>
               </div>
@@ -291,71 +291,71 @@ function ProgressPage() {
                   <div className="flex h-4 overflow-hidden rounded-full bg-black/[0.06]">
                     <div
                       title={`Again: ${data.grades.again} (${againPct}%)`}
-                      className="bg-[#ef4444] transition-all"
+                      className="bg-[#d9506d] transition-all"
                       style={{ width: `${againPct}%` }}
                     />
                     <div
                       title={`Hard: ${data.grades.hard} (${hardPct}%)`}
-                      className="bg-[#f59e0b] transition-all"
+                      className="bg-[#d68c0a] transition-all"
                       style={{ width: `${hardPct}%` }}
                     />
                     <div
                       title={`Good: ${data.grades.good} (${goodPct}%)`}
-                      className="bg-[#10b981] transition-all"
+                      className="bg-[#2e7d32] transition-all"
                       style={{ width: `${goodPct}%` }}
                     />
                     <div
                       title={`Easy: ${data.grades.easy} (${easyPct}%)`}
-                      className="bg-[#0ea5e9] transition-all"
+                      className="bg-[#4a82f3] transition-all"
                       style={{ width: `${easyPct}%` }}
                     />
                   </div>
 
                   {/* The 4 Grade Legend Cards */}
                   <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <div className="rounded-2xl border border-red-200/70 bg-red-50/60 p-3.5 text-center">
+                    <div className="rounded-2xl border border-[#f5b3c0]/70 bg-[#fdecef]/60 p-3.5 text-center">
                       <div className="text-[11px] font-black uppercase tracking-wider text-red-700">
                         {isAr ? "أعد (10 دقائق)" : "Again (10 min)"}
                       </div>
                       <div className="mt-1 font-display text-[22px] font-black text-red-900">
                         {data.grades.again}
                       </div>
-                      <div className="text-[11px] font-bold text-red-700/80">{againPct}% {isAr ? "من التقييمات" : "of ratings"}</div>
+                      <div className="text-[11px] font-bold text-[#961a34]/80">{againPct}% {isAr ? "من التقييمات" : "of ratings"}</div>
                     </div>
 
-                    <div className="rounded-2xl border border-amber-200/70 bg-amber-50/60 p-3.5 text-center">
+                    <div className="rounded-2xl border border-[#ffd266]/70 bg-[#fff4d6]/60 p-3.5 text-center">
                       <div className="text-[11px] font-black uppercase tracking-wider text-amber-700">
                         {isAr ? "صعب (1 يوم)" : "Hard (1 day)"}
                       </div>
                       <div className="mt-1 font-display text-[22px] font-black text-amber-900">
                         {data.grades.hard}
                       </div>
-                      <div className="text-[11px] font-bold text-amber-700/80">{hardPct}% {isAr ? "من التقييمات" : "of ratings"}</div>
+                      <div className="text-[11px] font-bold text-[#8a5200]/80">{hardPct}% {isAr ? "من التقييمات" : "of ratings"}</div>
                     </div>
 
-                    <div className="rounded-2xl border border-emerald-200/70 bg-emerald-50/60 p-3.5 text-center">
+                    <div className="rounded-2xl border border-[#a8d8ac]/70 bg-[#e8f5e9]/60 p-3.5 text-center">
                       <div className="text-[11px] font-black uppercase tracking-wider text-emerald-700">
                         {isAr ? "جيد (6 أيام)" : "Good (6 days)"}
                       </div>
                       <div className="mt-1 font-display text-[22px] font-black text-emerald-900">
                         {data.grades.good}
                       </div>
-                      <div className="text-[11px] font-bold text-emerald-700/80">{goodPct}% {isAr ? "من التقييمات" : "of ratings"}</div>
+                      <div className="text-[11px] font-bold text-[#256528]/80">{goodPct}% {isAr ? "من التقييمات" : "of ratings"}</div>
                     </div>
 
-                    <div className="rounded-2xl border border-sky-200/70 bg-sky-50/60 p-3.5 text-center">
+                    <div className="rounded-2xl border border-[#cddcfb]/70 bg-[#eef3fe]/60 p-3.5 text-center">
                       <div className="text-[11px] font-black uppercase tracking-wider text-sky-700">
                         {isAr ? "سهل (8+ أيام)" : "Easy (8+ days)"}
                       </div>
                       <div className="mt-1 font-display text-[22px] font-black text-sky-900">
                         {data.grades.easy}
                       </div>
-                      <div className="text-[11px] font-bold text-sky-700/80">{easyPct}% {isAr ? "من التقييمات" : "of ratings"}</div>
+                      <div className="text-[11px] font-bold text-[#1d5fd0]/80">{easyPct}% {isAr ? "من التقييمات" : "of ratings"}</div>
                     </div>
                   </div>
                 </div>
               ) : (
-                <p className="mt-4 text-sm font-semibold text-[#8a8070]">
+                <p className="mt-4 text-sm font-semibold text-[#6a697c]">
                   {isAr
                     ? "لم تقم بتقييم بطاقات بعد. ابدأ جلسة مراجعة ذكية لرؤية توزيع الأزرار."
                     : "No reviews rated yet. Complete a smart review session to see your grade distribution."}
@@ -368,14 +368,14 @@ function ProgressPage() {
               {/* True Recall */}
               <div className="rounded-[26px] border border-black/[0.06] bg-white p-6 shadow-xs flex flex-col justify-between">
                 <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a79c8c]">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">
                     {isAr ? "دقة الاسترجاع الحقيقي" : "True Recall Accuracy"}
                   </p>
-                  <p className="mt-2 font-display text-[3.2rem] font-black leading-none text-[#23201d]">
+                  <p className="mt-2 font-display text-[3.2rem] font-black leading-none text-[#121117]">
                     {data.retention.total >= 5 ? `${data.retention.percent}%` : "—"}
                   </p>
                 </div>
-                <p className="mt-3 text-sm font-semibold text-[#6d6355] leading-relaxed">
+                <p className="mt-3 text-sm font-semibold text-[#54546a] leading-relaxed">
                   {data.retention.total >= 5
                     ? isAr
                       ? `تم استرجاع ${data.retention.recalled} بطاقة بنجاح من أصل ${data.retention.total} بطاقة بعد نوم الذاكرة.`
@@ -389,21 +389,21 @@ function ProgressPage() {
               {/* Average Ease Factor */}
               <div className="rounded-[26px] border border-black/[0.06] bg-white p-6 shadow-xs flex flex-col justify-between">
                 <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a79c8c]">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">
                     {isAr ? "متوسط معامل السهولة (SM-2 Ease)" : "Average Ease Factor (EF)"}
                   </p>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <p className="font-display text-[3.2rem] font-black leading-none text-[#23201d]">
+                    <p className="font-display text-[3.2rem] font-black leading-none text-[#121117]">
                       {data.stats.avgEase}
                     </p>
-                    <span className="text-xs font-bold text-[#8a8070]">
+                    <span className="text-xs font-bold text-[#6a697c]">
                       {data.stats.avgEase >= 2.4
                         ? isAr ? "استقرار مثالي" : "Healthy retention"
                         : isAr ? "مفاهيم مكثفة" : "Dense concepts"}
                     </span>
                   </div>
                 </div>
-                <p className="mt-3 text-sm font-semibold text-[#6d6355] leading-relaxed">
+                <p className="mt-3 text-sm font-semibold text-[#54546a] leading-relaxed">
                   {isAr
                     ? "المعدل الطبيعي هو 2.50. المعدلات الأقل تشير إلى محتوى طبي دقيق يتطلب تكراراً أسرع لتثبيته."
                     : "Standard baseline is 2.50. Lower values indicate challenging clinical concepts requiring tighter revision cycles."}
@@ -413,18 +413,18 @@ function ProgressPage() {
               {/* Total Revision Time & Streak */}
               <div className="rounded-[26px] border border-black/[0.06] bg-white p-6 shadow-xs flex flex-col justify-between">
                 <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a79c8c]">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">
                     {isAr ? "وقت المذاكرة والالتزام" : "Revision Time & Consistency"}
                   </p>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <p className="font-display text-[3.2rem] font-black leading-none text-[#23201d]">
+                    <p className="font-display text-[3.2rem] font-black leading-none text-[#121117]">
                       {data.stats.totalHours}
                     </p>
-                    <span className="text-xs font-bold text-[#8a8070]">{isAr ? "ساعة مذاكرة" : "hours studied"}</span>
+                    <span className="text-xs font-bold text-[#6a697c]">{isAr ? "ساعة مذاكرة" : "hours studied"}</span>
                   </div>
                 </div>
-                <div className="mt-3 flex items-center justify-between text-sm font-semibold text-[#6d6355]">
-                  <span className="flex items-center gap-1.5 font-bold text-[#7a4b16]">
+                <div className="mt-3 flex items-center justify-between text-sm font-semibold text-[#54546a]">
+                  <span className="flex items-center gap-1.5 font-bold text-[#8a5200]">
                     <Flame size={15} className="text-orange-500 fill-orange-500" />
                     {data.streak} {isAr ? "أيام متتالية" : "day streak"}
                   </span>
@@ -439,10 +439,10 @@ function ProgressPage() {
             <div className="mt-6 rounded-[26px] border border-black/[0.06] bg-white p-6 shadow-xs">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <h2 className="font-display text-xl font-black text-[#23201d]">
+                  <h2 className="font-display text-xl font-black text-[#121117]">
                     {isAr ? "العبء المتوقع — الـ 30 يوماً القادمة" : "Workload Forecast — Next 30 Days"}
                   </h2>
-                  <p className="text-sm font-semibold text-[#6d6355]">
+                  <p className="text-sm font-semibold text-[#54546a]">
                     {isAr
                       ? "توزيع البطاقات المستحقة قادماً حتى لا تتراكم عليك المراجعة فجأة."
                       : "Your projected repetition queue so nothing piles up by surprise."}
@@ -458,7 +458,7 @@ function ProgressPage() {
                       key={f.day}
                       title={`${f.day}: ${f.cards} cards`}
                       className={`flex-1 rounded-t-[4px] transition-colors ${
-                        isHigh ? "bg-[#2f7d55]" : "bg-[#e6d9c2] hover:bg-[#d8c7ac]"
+                        isHigh ? "bg-[#256528]" : "bg-[#ffd266] hover:bg-[#f5b942]"
                       }`}
                       style={{ height: `${Math.max(4, (f.cards / peak) * 100)}%` }}
                     />
@@ -469,16 +469,16 @@ function ProgressPage() {
 
             {/* 6. DAILY ACTIVITY: LAST 30 DAYS */}
             <section className="mt-6 rounded-[26px] border border-black/[0.06] bg-white p-6 shadow-xs">
-              <h2 className="font-display text-xl font-black text-[#23201d]">
+              <h2 className="font-display text-xl font-black text-[#121117]">
                 {isAr ? "نشاطك الفعلي في آخر 30 يوماً" : "Daily Activity — Last 30 Days"}
               </h2>
-              <p className="text-sm font-semibold text-[#6d6355]">
+              <p className="text-sm font-semibold text-[#54546a]">
                 {isAr
                   ? "عدد البطاقات التي تمت مراجعتها كل يوم والدقائق المستغرقة فيها."
                   : "Cards reviewed each day and the minutes dedicated to them."}
               </p>
               {data.daily.length === 0 ? (
-                <p className="mt-6 text-sm font-bold text-[#a79c8c]">
+                <p className="mt-6 text-sm font-bold text-[#9a9aab]">
                   {isAr
                     ? "لا توجد مراجعات مسجلة في هذا الشهر. ابدأ جلسة اليوم لتسجيل نشاطك."
                     : "No reviews yet — start a session today to begin logging activity."}
@@ -501,11 +501,11 @@ function ProgressPage() {
             {/* 7. SUBJECT ACCURACY & WEAKEST SUBJECTS */}
             <div className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
               <section className="rounded-[26px] border border-black/[0.06] bg-white p-6 shadow-xs">
-                <h2 className="font-display text-xl font-black text-[#23201d]">
+                <h2 className="font-display text-xl font-black text-[#121117]">
                   {isAr ? "نسبة الدقة والإتقان لكل مادة" : "Accuracy per Subject"}
                 </h2>
                 {data.subjects.length === 0 ? (
-                  <p className="mt-4 text-sm font-bold text-[#a79c8c]">
+                  <p className="mt-4 text-sm font-bold text-[#9a9aab]">
                     {isAr ? "لم تُقيّم بطاقات في المواد بعد." : "Nothing graded yet."}
                   </p>
                 ) : (
@@ -513,8 +513,8 @@ function ProgressPage() {
                     {data.subjects.map((s) => (
                       <li key={s.subject}>
                         <div className="flex items-baseline justify-between gap-3 text-sm">
-                          <span className="truncate font-black text-[#23201d]">{s.subject}</span>
-                          <span className="shrink-0 font-bold text-[#6d6355]">
+                          <span className="truncate font-black text-[#121117]">{s.subject}</span>
+                          <span className="shrink-0 font-bold text-[#54546a]">
                             {s.accuracy}% · {s.reviews} {isAr ? "مراجعة" : "reviews"} ({s.mastered} {isAr ? "متقنة" : "mastered"})
                           </span>
                         </div>
@@ -527,8 +527,8 @@ function ProgressPage() {
                                 s.accuracy >= 80
                                   ? "var(--rita-green)"
                                   : s.accuracy >= 60
-                                    ? "#f0a95c"
-                                    : "#d1795e",
+                                    ? "#e9a21f"
+                                    : "#d9506d",
                             }}
                           />
                         </div>
@@ -541,15 +541,15 @@ function ProgressPage() {
               <section className="rounded-[26px] border border-black/[0.06] bg-white p-6 shadow-xs flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="grid h-8 w-8 place-items-center rounded-xl bg-[#f6ddd5] text-[#7d3421]">
+                    <span className="grid h-8 w-8 place-items-center rounded-xl bg-[#fbd9e0] text-[#961a34]">
                       <TrendingDown size={16} />
                     </span>
-                    <h2 className="font-display text-xl font-black text-[#23201d]">
+                    <h2 className="font-display text-xl font-black text-[#121117]">
                       {isAr ? "أضعف 3 موضوعات" : "Weakest Three Topics"}
                     </h2>
                   </div>
                   {weakest.length === 0 ? (
-                    <p className="mt-4 text-sm font-bold text-[#a79c8c]">
+                    <p className="mt-4 text-sm font-bold text-[#9a9aab]">
                       {isAr
                         ? "راجع بضع بطاقات أخرى وستحدد لك ريتا المواد ذات التذكر المتذبذب."
                         : "Review a few more cards and Rita will identify topics with fluctuating recall."}
@@ -559,12 +559,12 @@ function ProgressPage() {
                       {weakest.map((s) => (
                         <li
                           key={s.subject}
-                          className="flex items-center justify-between gap-3 rounded-2xl bg-[#fbf5e9] px-4 py-3"
+                          className="flex items-center justify-between gap-3 rounded-2xl bg-[#f4f4f8] px-4 py-3"
                         >
-                          <span className="truncate text-sm font-black text-[#23201d]">
+                          <span className="truncate text-sm font-black text-[#121117]">
                             {s.subject}
                           </span>
-                          <span className="shrink-0 text-sm font-black text-[#7d3421]">
+                          <span className="shrink-0 text-sm font-black text-[#961a34]">
                             {s.accuracy}%
                           </span>
                         </li>

@@ -59,7 +59,7 @@ function Confetti({ accent }: { accent: string }) {
             top: "-12%",
             width: b.size,
             height: b.size * 0.5,
-            background: i % 3 === 0 ? accent : i % 3 === 1 ? "#8ec63f" : "#f7c26b",
+            background: i % 3 === 0 ? accent : i % 3 === 1 ? "#4a82f3" : "#f5b942",
             borderRadius: 2,
             transform: `rotate(${b.rot}deg)`,
             animationDelay: `${b.delay}s`,

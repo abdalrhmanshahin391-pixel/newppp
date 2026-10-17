@@ -84,7 +84,7 @@ export function ReferenceBookCard({ saved, onSave, disabled }: Props) {
           </div>
 
           {saved ? (
-            <div className="flex flex-wrap items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+            <div className="flex flex-wrap items-center gap-2 rounded-xl bg-[#3a9042]/10 px-3 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-400">
               <Check size={14} /> Answers will follow: {saved}
               <button
                 type="button"

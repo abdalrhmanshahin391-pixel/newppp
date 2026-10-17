@@ -470,7 +470,7 @@ function CourseDetailPage() {
           </p>
           <Link
             to="/courses"
-            className="mt-6 inline-flex rounded-full bg-foreground px-6 py-3 text-[14px] font-extrabold text-background"
+            className="mt-6 inline-flex rounded-full bg-[#2b6df0] border-2 border-[#121117] px-6 py-3 text-[14px] font-semibold text-white"
           >
             Browse question banks
           </Link>
@@ -493,15 +493,15 @@ function CourseDetailPage() {
       className="min-h-screen bg-background text-foreground"
       style={
         {
-          "--background": "oklch(0.968 0.019 85)",
-          "--card": "oklch(1 0 0)",
-          "--card-foreground": "oklch(0.24 0.012 60)",
-          "--foreground": "oklch(0.24 0.012 60)",
-          "--muted": "oklch(0.945 0.017 85)",
-          "--muted-foreground": "oklch(0.66 0.018 75)",
-          "--border": "oklch(0.9 0.015 80)",
-          "--accent": "oklch(0.74 0.22 130)",
-          "--accent-foreground": "oklch(1 0 0)",
+          "--background": "#ffffff",
+          "--card": "#ffffff",
+          "--card-foreground": "#121117",
+          "--foreground": "#121117",
+          "--muted": "#f4f4f8",
+          "--muted-foreground": "#6a697c",
+          "--border": "#dcdce5",
+          "--accent": "#e7eefd",
+          "--accent-foreground": "#121117",
         } as React.CSSProperties
       }
     >

@@ -151,7 +151,7 @@ function AdminContentProtection() {
   const totals = overview.data?.totals;
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9] text-slate-900">
+    <div className="min-h-screen bg-[#ffffff] text-slate-900">
       <SiteHeader />
       <div className="max-w-6xl mx-auto px-5 md:px-6 pt-28 pb-24">
         <Link to="/admin" className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-600 hover:text-indigo-600">

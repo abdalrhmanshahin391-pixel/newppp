@@ -112,7 +112,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "google-site-verification", content: "U9UIGln2ZVhjR6-rfab8T6y0XwmD0zLbLQqcwmBL1Lg" },
       { name: "google-site-verification", content: "5x31hbQQtmr14Jhd9AbkN5YlijfbfFTulNvcHMs1Y_8" },
       { name: "application-name", content: "RitaJet" },
-      { name: "theme-color", content: "#8ec63f" },
+      { name: "theme-color", content: "#4a82f3" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "RitaJet" },
@@ -202,6 +202,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   // as a plain component, so the cast only satisfies the declaration.
   errorComponent: ErrorComponent as unknown as ErrorRouteComponent,
 });
+
+/**
+ * Every page except the ones built directly on the home design shares one look (see DESIGN.md,
+ * "App pages"): the old tool pages take it through the `.rita-app` scope class.
+ */
+const HOME_LOOK_PREFIXES = ["/rita", "/rita-lessons", "/rita-live", "/learn"];
+
+function AppScope({ children }: { children: ReactNode }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const inApp =
+    pathname !== "/" &&
+    !HOME_LOOK_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  // Dialogs and menus render outside this wrapper, so the document carries the scope too.
+  useEffect(() => {
+    document.documentElement.classList.toggle("rita-app", inApp);
+    return () => document.documentElement.classList.remove("rita-app");
+  }, [inApp]);
+  return (
+    <div className={inApp ? "rita-app" : undefined} style={{ display: "contents" }}>
+      {children}
+    </div>
+  );
+}
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
@@ -321,7 +344,9 @@ function RootComponent() {
           <OnboardingGate />
           <AnnouncementBar />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
+          <AppScope>
+            <Outlet />
+          </AppScope>
           <GlobalFooter />
           <DeferredOverlays />
         </LanguageProvider>

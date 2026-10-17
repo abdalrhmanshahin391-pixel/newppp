@@ -62,11 +62,11 @@ export async function removeAvatar(path: string | null) {
 /** Deterministic swirl gradient used as an avatar fallback. */
 export function avatarTone(seed: string) {
   const palettes = [
-    ["#f0a95c", "#d1795e"],
-    ["#7cb8e8", "#b39ddb"],
-    ["#7fcaa5", "#8ec63f"],
-    ["#b39ddb", "#ef9a7f"],
-    ["#f6b352", "#7fcaa5"],
+    ["#2b6df0", "#1d5fd0"],
+    ["#4a82f3", "#2b6df0"],
+    ["#121117", "#2a2933"],
+    ["#54546a", "#2a2933"],
+    ["#1a4ba8", "#153a82"],
   ];
   let h = 0;
   for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) % 997;

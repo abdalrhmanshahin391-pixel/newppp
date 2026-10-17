@@ -83,10 +83,10 @@ export function FlashCardCreator({
     return (
       <div className="flex h-full flex-col gap-3 rounded-[26px] border border-black/[0.07] bg-white p-6">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">
+          <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9a9aab]">
             {which === "front" ? "Front — question" : "Back — answer"}
           </span>
-          <span className="text-[11px] font-semibold text-[#b3aa9c]">
+          <span className="text-[11px] font-semibold text-[#9a9aab]">
             {value.length} / {CARD_LIMIT}
           </span>
         </div>
@@ -105,7 +105,7 @@ export function FlashCardCreator({
             else save();
           }}
           placeholder={which === "front" ? "Type the question, then press Enter" : "Type the answer, then press Enter to save"}
-          className={`min-h-[9rem] flex-1 resize-none rounded-2xl bg-[#fbf5e9] px-4 py-3 outline-none placeholder:text-[15px] placeholder:font-semibold placeholder:text-[#c3bbad] ${scaleText(value)}`}
+          className={`min-h-[9rem] flex-1 resize-none rounded-2xl bg-[#f4f4f8] px-4 py-3 outline-none placeholder:text-[15px] placeholder:font-semibold placeholder:text-[#c4c4d1] ${scaleText(value)}`}
         />
 
         {image && (
@@ -122,7 +122,7 @@ export function FlashCardCreator({
           </div>
         )}
 
-        <label className="flex w-fit cursor-pointer items-center gap-2 rounded-full border border-black/10 bg-white px-3.5 py-2 text-[12.5px] font-bold text-[#7a4b16]">
+        <label className="flex w-fit cursor-pointer items-center gap-2 rounded-full border border-black/10 bg-white px-3.5 py-2 text-[12.5px] font-bold text-[#8a5200]">
           <ImagePlus size={15} />
           {image ? "Replace image" : "Add image"}
           <input type="file" accept="image/*" className="hidden" onChange={pickImage(which)} />
@@ -135,7 +135,7 @@ export function FlashCardCreator({
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9a9aab]">
             {editing ? "Editing card" : "Fast creator"}
           </p>
           <h2 className="truncate text-[20px] font-black">{topicLabel}</h2>
@@ -187,7 +187,7 @@ export function FlashCardCreator({
         </div>
       </div>
 
-      <p className="text-[12.5px] font-semibold text-[#a29a8d]">
+      <p className="text-[12.5px] font-semibold text-[#9a9aab]">
         Enter flips to the back, Enter again saves and clears for the next card. Shift + Enter adds a new line.
       </p>
     </div>

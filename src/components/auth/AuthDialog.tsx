@@ -11,7 +11,6 @@ import {
   saveRememberedLogin,
   clearRememberedLogin,
 } from "@/lib/remember-login";
-import { RitaFace } from "@/components/brand/RitaBrand";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 
 import {
@@ -26,10 +25,10 @@ import {
 /* ── shared bits ────────────────────────────────────────────────────────── */
 
 const field =
-  "w-full rounded-2xl border-2 border-black/[0.07] bg-[#fbf7ef] px-4 py-3.5 text-[15px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground outline-none transition-all focus:border-[var(--rita-green)] focus:bg-white focus:ring-4 focus:ring-[var(--rita-green-soft)]";
+  "w-full rounded-lg border-2 border-[#121117] bg-white px-4 py-3 text-[15px] font-medium text-[#121117] placeholder:font-normal placeholder:text-[#6a697c] outline-none transition-colors focus:ring-4 focus:ring-[#e7eefd]";
 
 const primaryBtn =
-  "inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--rita-green)] px-8 py-4 text-[16px] font-black text-[color:var(--rita-green-ink)] shadow-[0_16px_30px_-16px_rgba(122,160,44,0.9)] transition-all hover:-translate-y-0.5 hover:bg-[var(--rita-green-deep)] active:translate-y-0 disabled:translate-y-0 disabled:opacity-60";
+  "inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-[#121117] bg-[#2b6df0] px-8 text-[16px] font-semibold text-white transition-colors hover:bg-[#2260e4] disabled:opacity-60";
 
 function Err({ message }: { message: string }) {
   return (
@@ -62,9 +61,9 @@ function ProblemNote({
       role="alert"
       className="mb-4 rounded-2xl border border-destructive/25 bg-destructive/[0.07] px-4 py-3.5"
     >
-      <p className="text-[14px] font-black text-destructive">{problem.title}</p>
+      <p className="text-[14px] font-bold text-destructive">{problem.title}</p>
       {problem.hint && (
-        <p className="mt-1 text-[13px] font-medium leading-relaxed text-[#6b655c]">{problem.hint}</p>
+        <p className="mt-1 text-[13px] font-medium leading-relaxed text-[#6a697c]">{problem.hint}</p>
       )}
       {!!problem.suggestions?.length && (
         <div className="mt-2.5 flex flex-wrap gap-2">
@@ -73,7 +72,7 @@ function ProblemNote({
               key={s}
               type="button"
               onClick={() => onPick?.(s)}
-              className="rounded-full border border-black/[0.08] bg-white px-3 py-1.5 text-[13px] font-black text-foreground transition hover:-translate-y-0.5"
+              className="rounded-lg border-2 border-[#121117] bg-white px-3 py-1.5 text-[13px] font-bold text-foreground transition hover:bg-[#f4f4f8]"
             >
               {s}
             </button>
@@ -84,7 +83,7 @@ function ProblemNote({
         <button
           type="button"
           onClick={() => setAuthMode(problem.action === "reset" ? "forgot" : "signin")}
-          className="mt-2.5 text-[13px] font-black text-[var(--rita-green-deep)] underline underline-offset-2"
+          className="mt-2.5 text-[13px] font-bold text-[#2563eb] underline underline-offset-2"
         >
           {problem.action === "reset" ? "Reset your password" : "Sign in instead"}
         </button>
@@ -95,7 +94,7 @@ function ProblemNote({
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mb-1.5 block text-[12px] font-black uppercase tracking-[0.08em] text-[#6b655c]">
+    <span className="mb-1.5 block text-[13px] font-semibold text-[#121117]">
       {children}
     </span>
   );
@@ -149,7 +148,7 @@ function AuthWindow({ mode, next }: { mode: AuthMode; next?: string }) {
 
   return (
     <div
-      className="fixed inset-0 z-[120] grid place-items-center overflow-y-auto bg-black/45 p-4 backdrop-blur-[2px]"
+      className="rita-app fixed inset-0 z-[120] grid place-items-center overflow-y-auto bg-[#121117]/55 p-4"
       onMouseDown={(e) => {
         if (!cardRef.current?.contains(e.target as Node)) closeAuth();
       }}
@@ -159,27 +158,31 @@ function AuthWindow({ mode, next }: { mode: AuthMode; next?: string }) {
         role="dialog"
         aria-modal="true"
         aria-label="Sign in to RitaJet"
-        className="rita-dialog-pop relative w-full max-w-[27rem] rounded-[30px] border border-black/[0.06] bg-[#fdfaf3] p-6 shadow-[0_60px_120px_-45px_rgba(35,32,29,0.8)] sm:p-9"
+        className="rita-dialog-pop relative w-full max-w-[27rem] rounded-[20px] border-2 border-[#121117] bg-white p-6 sm:p-9"
       >
         <button
           type="button"
           onClick={closeAuth}
           aria-label="Close"
-          className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full text-[#6b655c] transition-colors hover:bg-black/[0.05] hover:text-foreground"
+          className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-lg text-[#6a697c] transition-colors hover:bg-[#f4f4f8] hover:text-[#121117]"
         >
           <X size={18} />
         </button>
 
         <div className="mb-6 flex flex-col items-center text-center">
-          <RitaFace size={68} />
-          <h2 className="mt-3 font-display text-[24px] font-black leading-tight tracking-tight text-foreground">
+          <span
+            aria-hidden="true"
+            className="block h-14 w-14 rounded-full"
+            style={{ background: "radial-gradient(circle at 35% 30%, #ffffff 0%, #e7eefd 40%, #a9c4f9 75%, #2b6df0 100%)" }}
+          />
+          <h2 className="mt-3 font-display text-[24px] font-bold leading-tight tracking-tight text-[#121117]">
             {mode === "signup"
               ? "Create your RitaJet account"
               : mode === "forgot"
                 ? "Reset your password"
                 : "Welcome back"}
           </h2>
-          <p className="mt-1.5 max-w-[19rem] text-[14px] leading-relaxed text-[#6b655c]">
+          <p className="mt-1.5 max-w-[19rem] text-[14px] leading-relaxed text-[#6a697c]">
             {mode === "signup"
               ? "Your flashcards, summaries and to-dos, saved to one account."
               : mode === "forgot"
@@ -310,7 +313,7 @@ function SignInPanel({ next }: { next?: string }) {
   if (blocked) {
     return (
       <div className="text-center">
-        <h3 className="text-lg font-black text-foreground">
+        <h3 className="text-lg font-bold text-foreground">
           {blocked.kind === "suspend"
             ? "Your account is temporarily stopped"
             : "Your account has been blocked"}
@@ -335,8 +338,8 @@ function SignInPanel({ next }: { next?: string }) {
       {error && <Err message={error} />}
 
       <GoogleButton label="Continue with Google" onClick={handleGoogle} disabled={loading} />
-      <div className="my-5 flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.08em] text-[#8a847a]">
-        <span className="h-px flex-1 bg-black/[0.08]" /> or <span className="h-px flex-1 bg-black/[0.08]" />
+      <div className="my-5 flex items-center gap-3 text-[13px] font-medium text-[#6a697c]">
+        <span className="h-px flex-1 bg-[#dcdce5]" /> or <span className="h-px flex-1 bg-[#dcdce5]" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -385,7 +388,7 @@ function SignInPanel({ next }: { next?: string }) {
                   setRemember(e.target.checked);
                   if (!e.target.checked) clearRememberedLogin();
                 }}
-                className="h-4 w-4 rounded border-2 border-border accent-[var(--rita-green)]"
+                className="h-4 w-4 rounded border-2 border-border accent-[#2b6df0]"
               />
               keep me signed in
             </label>
@@ -406,12 +409,12 @@ function SignInPanel({ next }: { next?: string }) {
 
 
 
-      <p className="mt-6 border-t border-black/[0.07] pt-4 text-center text-sm font-medium text-muted-foreground">
+      <p className="mt-6 border-t-2 border-[#dcdce5] pt-4 text-center text-sm font-medium text-muted-foreground">
         New to Rita?{" "}
         <button
           type="button"
           onClick={() => setAuthMode("signup")}
-          className="font-black text-[color:var(--rita-green-deep)] underline"
+          className="font-bold text-[#2563eb] underline"
         >
           Create account
         </button>
@@ -582,7 +585,7 @@ function SignUpPanel() {
     return (
       <div className="space-y-4 text-center">
         {error && <Err message={error} />}
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--rita-green)] text-[color:var(--rita-green-ink)]">
+        <span className="mx-auto grid h-14 w-14 place-items-center rounded-lg border-2 border-[#121117] bg-[#2b6df0] text-white">
           <MailCheck size={26} />
         </span>
         <p className="text-sm font-bold text-foreground">
@@ -640,8 +643,8 @@ function SignUpPanel() {
         <Link to="/privacy-policy" className="underline">Privacy Policy</Link> and{" "}
         <Link to="/refund-policy" className="underline">Refund Policy</Link>.
       </p>
-      <div className="my-5 flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.08em] text-[#8a847a]">
-        <span className="h-px flex-1 bg-black/[0.08]" /> or <span className="h-px flex-1 bg-black/[0.08]" />
+      <div className="my-5 flex items-center gap-3 text-[13px] font-medium text-[#6a697c]">
+        <span className="h-px flex-1 bg-[#dcdce5]" /> or <span className="h-px flex-1 bg-[#dcdce5]" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3.5">
@@ -713,12 +716,12 @@ function SignUpPanel() {
             </div>
           </label>
 
-          <label className="flex cursor-pointer select-none items-start gap-2 rounded-2xl bg-[#f6f1e5] p-3 text-xs font-bold text-foreground">
+          <label className="flex cursor-pointer select-none items-start gap-2 rounded-lg border-2 border-[#121117] bg-[#f4f4f8] p-3 text-xs font-medium text-foreground">
             <input
               type="checkbox"
               checked={accepted}
               onChange={(e) => setAccepted(e.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 rounded border-2 border-border accent-[var(--rita-green)]"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-2 border-border accent-[#2b6df0]"
             />
             <span>
               I agree to RitaJet's <Link to="/terms" className="underline">Terms</Link>,{" "}
@@ -734,12 +737,12 @@ function SignUpPanel() {
 
 
 
-      <p className="mt-6 border-t border-black/[0.07] pt-4 text-center text-sm font-medium text-muted-foreground">
+      <p className="mt-6 border-t-2 border-[#dcdce5] pt-4 text-center text-sm font-medium text-muted-foreground">
         Already have an account?{" "}
         <button
           type="button"
           onClick={() => setAuthMode("signin")}
-          className="font-black text-[color:var(--rita-green-deep)] underline"
+          className="font-bold text-[#2563eb] underline"
         >
           Sign in
         </button>
@@ -784,7 +787,7 @@ function ForgotPanel() {
     <div>
       {sent ? (
         <div className="space-y-4 text-center">
-          <MailCheck className="mx-auto text-[color:var(--rita-green-deep)]" size={28} />
+          <MailCheck className="mx-auto text-[#2563eb]" size={28} />
           <p className="text-sm text-muted-foreground">
             If an account exists for <span className="font-bold">{email}</span>, a reset link is on
             its way.

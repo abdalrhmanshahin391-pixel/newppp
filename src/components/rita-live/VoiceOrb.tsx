@@ -14,8 +14,8 @@ type Props = {
 
 const FALLBACK_STYLE = {
   background:
-    "radial-gradient(circle at 38% 30%, #ffffff 0%, #ffe5f0 42%, #ffb3cf 78%, #ff7aac 100%)",
-  boxShadow: "0 0 90px 10px rgba(255, 122, 172, 0.26)",
+    "radial-gradient(circle at 38% 30%, #ffffff 0%, #e7eefd 42%, #b3cdfa 78%, #2b6df0 100%)",
+  boxShadow: "0 0 90px 10px rgba(43, 109, 240, 0.26)",
 } as const;
 
 function compile(gl: WebGL2RenderingContext, type: number, source: string) {

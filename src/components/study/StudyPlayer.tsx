@@ -23,7 +23,9 @@ function blip(kind: "flip" | "next" | "done", muted: boolean) {
   if (muted || typeof window === "undefined") return;
   setTimeout(() => {
     try {
-      const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AC =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       ctx = ctx ?? new AC();
       if (ctx.state === "suspended") void ctx.resume();
       const now = ctx.currentTime;
@@ -79,17 +81,14 @@ export function StudyPlayer({
     }
   }, []);
 
-  const reset = useCallback(
-    (list: FlashCardItem[]) => {
-      setQueue(list);
-      setPos(0);
-      setFlipped(false);
-      setKnown([]);
-      setMissed([]);
-      setDone(false);
-    },
-    [],
-  );
+  const reset = useCallback((list: FlashCardItem[]) => {
+    setQueue(list);
+    setPos(0);
+    setFlipped(false);
+    setKnown([]);
+    setMissed([]);
+    setDone(false);
+  }, []);
 
   useEffect(() => {
     if (open) reset(cards);
@@ -191,29 +190,29 @@ export function StudyPlayer({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#fbf5e9]">
+    <div className="fixed inset-0 z-50 flex flex-col bg-white">
       {/* top bar */}
       <div className="flex items-center gap-3 px-4 pt-4 md:px-8 md:pt-6">
         <button
           type="button"
           onClick={onClose}
-          className="grid h-10 w-10 place-items-center rounded-full border border-black/10 bg-white text-[#5c554b] transition-all duration-100 hover:bg-black/[0.04] active:scale-95 touch-manipulation select-none"
+          className="grid h-10 w-10 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#4b4a5c] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none"
           aria-label="Close study session"
         >
           <X size={18} />
         </button>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[12.5px] font-bold uppercase tracking-[0.16em] text-[#b3aa9c]">
+          <p className="truncate text-[12.5px] font-bold uppercase tracking-[0.16em] text-[#9a9aab]">
             {title}
           </p>
-          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/[0.07]">
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#dcdce5]">
             <div
-              className="h-full rounded-full bg-[#4c9a2a] transition-[width] duration-500 ease-out"
+              className="h-full rounded-full bg-[#2b6df0] transition-[width] duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
-        <span className="shrink-0 text-[13px] font-black tabular-nums text-[#7a736a]">
+        <span className="shrink-0 text-[13px] font-black tabular-nums text-[#54546a]">
           {Math.min(pos + 1, total)} / {total}
         </span>
         {card && (
@@ -234,7 +233,7 @@ export function StudyPlayer({
         <button
           type="button"
           onClick={toggleMute}
-          className="grid h-10 w-10 place-items-center rounded-full border border-black/10 bg-white text-[#5c554b] transition-all duration-100 hover:bg-black/[0.04] active:scale-95 touch-manipulation select-none"
+          className="grid h-10 w-10 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#4b4a5c] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none"
           aria-label={muted ? "Turn sound on" : "Turn sound off"}
         >
           {muted ? <VolumeX size={17} /> : <Volume2 size={17} />}
@@ -246,7 +245,7 @@ export function StudyPlayer({
             reset([...queue].sort(() => Math.random() - 0.5));
             setAnim((a) => a + 1);
           }}
-          className="hidden h-10 items-center gap-2 rounded-full border border-black/10 bg-white px-4 text-[13px] font-extrabold text-[#5c554b] transition-all duration-100 hover:bg-black/[0.04] active:scale-95 touch-manipulation select-none sm:flex"
+          className="hidden h-10 items-center gap-2 rounded-lg border-2 border-[#121117] bg-white px-4 text-[13px] font-extrabold text-[#4b4a5c] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none sm:flex"
         >
           <Shuffle size={15} /> Shuffle
         </button>
@@ -255,15 +254,15 @@ export function StudyPlayer({
       {/* card stage */}
       <div className="flex flex-1 items-center justify-center px-4 py-6 md:px-8">
         {done || !card ? (
-          <div className="w-full max-w-lg animate-[rita-pop_.35s_ease-out] rounded-[28px] border border-black/[0.06] bg-white p-8 text-center">
-            <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">
+          <div className="w-full max-w-lg animate-[rita-pop_.35s_ease-out] rounded-[24px] border-2 border-[#121117] bg-white p-8 text-center">
+            <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#9a9aab]">
               Session finished
             </p>
-            <p className="mt-3 font-display text-[44px] font-black leading-none text-[#23201d]">
+            <p className="mt-3 font-display text-[44px] font-black leading-none text-[#121117]">
               {known.length}
-              <span className="text-[20px] text-[#a29a8d]"> / {total} known</span>
+              <span className="text-[20px] text-[#9a9aab]"> / {total} known</span>
             </p>
-            <p className="mt-2 text-[14px] font-semibold text-[#7a736a]">
+            <p className="mt-2 text-[14px] font-semibold text-[#54546a]">
               {missed.length === 0
                 ? "Clean run — every card landed."
                 : `${missed.length} card${missed.length === 1 ? "" : "s"} need another look.`}
@@ -276,7 +275,7 @@ export function StudyPlayer({
                     const ids = new Set(missed);
                     reset(cards.filter((c) => ids.has(c.id)));
                   }}
-                  className="rita-pill h-12 rounded-2xl text-[14px] font-extrabold"
+                  className="rita-pill h-12 text-[15px] font-semibold"
                 >
                   Study the ones I missed
                 </button>
@@ -284,14 +283,14 @@ export function StudyPlayer({
               <button
                 type="button"
                 onClick={() => reset(cards)}
-                className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-black/10 bg-white text-[14px] font-extrabold text-[#23201d] transition-colors hover:bg-black/[0.03]"
+                className="flex h-12 items-center justify-center gap-2 rounded-lg border-2 border-[#121117] bg-white text-[14px] font-extrabold text-[#121117] transition-colors hover:bg-black/[0.03]"
               >
                 <RotateCcw size={16} /> Start again
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="h-11 rounded-2xl text-[13.5px] font-bold text-[#a29a8d] transition-colors hover:bg-black/[0.04]"
+                className="h-11 rounded-2xl text-[13.5px] font-bold text-[#9a9aab] transition-colors hover:bg-[#f4f4f8]"
               >
                 Back to my subjects
               </button>
@@ -353,7 +352,7 @@ export function StudyPlayer({
               />
             </div>
 
-            <p className="mt-4 text-center text-[12.5px] font-bold text-[#b3aa9c]">
+            <p className="mt-4 text-center text-[12.5px] font-bold text-[#9a9aab]">
               Tap the card or press Space to flip · ← → to move
             </p>
           </div>
@@ -366,7 +365,7 @@ export function StudyPlayer({
           <button
             type="button"
             onClick={() => step(-1)}
-            className="grid h-12 w-12 place-items-center rounded-2xl border border-black/10 bg-white text-[#5c554b] transition-all duration-100 hover:bg-black/[0.04] active:scale-95 touch-manipulation select-none"
+            className="grid h-12 w-12 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#4b4a5c] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none"
             aria-label="Previous card"
           >
             <ArrowLeft size={18} />
@@ -377,14 +376,14 @@ export function StudyPlayer({
               <button
                 type="button"
                 onClick={() => grade(false)}
-                className="flex h-12 items-center gap-2 rounded-2xl bg-[#d1795e] px-6 text-[14px] font-extrabold text-white transition-all duration-100 hover:opacity-90 active:scale-95 touch-manipulation select-none"
+                className="flex h-12 items-center gap-2 rounded-lg border-2 border-[#121117] bg-[#b3213f] px-6 text-[15px] font-semibold text-white transition-all duration-100 hover:opacity-90 active:scale-95 touch-manipulation select-none"
               >
                 <RotateCcw size={16} /> Again
               </button>
               <button
                 type="button"
                 onClick={() => grade(true)}
-                className="rita-pill flex h-12 items-center gap-2 rounded-2xl px-7 text-[14px] font-extrabold transition-all duration-100 active:scale-95 touch-manipulation select-none"
+                className="rita-pill flex h-12 items-center gap-2 px-7 text-[15px] font-semibold transition-all duration-100 active:scale-95 touch-manipulation select-none"
               >
                 <Check size={17} /> Got it
               </button>
@@ -393,7 +392,7 @@ export function StudyPlayer({
             <button
               type="button"
               onClick={flip}
-              className="rita-pill flex h-12 items-center gap-2 rounded-2xl px-8 text-[14px] font-extrabold transition-all duration-100 active:scale-95 touch-manipulation select-none"
+              className="rita-pill flex h-12 items-center gap-2 px-8 text-[15px] font-semibold transition-all duration-100 active:scale-95 touch-manipulation select-none"
             >
               Show answer
             </button>
@@ -402,7 +401,7 @@ export function StudyPlayer({
           <button
             type="button"
             onClick={() => step(1)}
-            className="grid h-12 w-12 place-items-center rounded-2xl border border-black/10 bg-white text-[#5c554b] transition-all duration-100 hover:bg-black/[0.04] active:scale-95 touch-manipulation select-none"
+            className="grid h-12 w-12 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#4b4a5c] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none"
             aria-label="Next card"
           >
             <ArrowRight size={18} />
@@ -428,9 +427,9 @@ function Face({
 }) {
   return (
     <div
-      className={`h-full w-full flex flex-col items-center justify-center gap-4 rounded-[28px] border border-black/[0.06] bg-white px-8 py-10 text-center shadow-[0_20px_50px_-30px_rgba(35,32,29,0.45)] select-none ${className}`}
+      className={`h-full w-full flex flex-col items-center justify-center gap-4 rounded-[24px] border-2 border-[#121117] bg-white px-8 py-10 text-center select-none ${className}`}
     >
-      <span className="absolute left-6 top-5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#c8c0b2]">
+      <span className="absolute left-6 top-5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#c4c4d1]">
         {side}
       </span>
       {image && (
@@ -441,7 +440,7 @@ function Face({
         />
       )}
       <p
-        className={`max-w-[46rem] whitespace-pre-wrap px-2 text-[#23201d] select-none ${style ? "" : scaleText(text)}`}
+        className={`max-w-[46rem] whitespace-pre-wrap px-2 text-[#121117] select-none ${style ? "" : scaleText(text)}`}
         style={styleToCss(style)}
       >
         {text}

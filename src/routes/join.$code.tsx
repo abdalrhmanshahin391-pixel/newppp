@@ -67,21 +67,21 @@ function JoinPage() {
   const p = preview.data;
 
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
       <main className="mx-auto grid max-w-xl place-items-center px-4 py-20">
         <div className="w-full overflow-hidden rounded-[28px] border border-black/[0.07] bg-white">
           {preview.isLoading ? (
-            <p className="p-10 text-center text-[#6b655c]">Checking your invite…</p>
+            <p className="p-10 text-center text-[#54546a]">Checking your invite…</p>
           ) : !p?.valid ? (
             <div className="p-10 text-center">
               <h1 className="font-display text-2xl font-black">This invite doesn't work</h1>
-              <p className="mt-2 text-[15px] text-[#6b655c]">
+              <p className="mt-2 text-[15px] text-[#54546a]">
                 It may have expired or been replaced. Ask the owner for a fresh link.
               </p>
               <Link
                 to="/spaces"
-                className="mt-6 inline-flex rounded-full bg-[#23201d] px-6 py-3 text-sm font-black text-white"
+                className="mt-6 inline-flex rounded-full bg-[#121117] px-6 py-3 text-sm font-black text-white"
               >
                 My spaces
               </Link>
@@ -96,14 +96,14 @@ function JoinPage() {
                   {KIND_LABEL[p.kind ?? "group"]}
                 </span>
                 <h1 className="mt-4 font-display text-3xl font-black">{p.name}</h1>
-                <p className="mt-2 text-[15px] text-[#6b655c]">
+                <p className="mt-2 text-[15px] text-[#54546a]">
                   {p.description || "Shared flashcard decks, members and announcements."}
                 </p>
-                <p className="mt-2 text-[13px] font-bold text-[#a29a8d]">{p.members} members</p>
+                <p className="mt-2 text-[13px] font-bold text-[#9a9aab]">{p.members} members</p>
                 <button
                   onClick={join}
                   disabled={joining}
-                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#8ec63f] px-7 py-3.5 text-[15px] font-black text-white disabled:opacity-50"
+                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-7 py-3.5 text-[15px] font-black text-white disabled:opacity-50"
                 >
                   {joining ? <Loader2 size={16} className="animate-spin" /> : <LogIn size={16} />}
                   {p.already ? "Open it" : "Join now"}

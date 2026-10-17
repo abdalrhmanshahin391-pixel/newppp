@@ -114,22 +114,22 @@ export function QuestionPlayer({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#fbf5e9]">
-      <header className="flex items-center gap-3 border-b border-black/5 px-4 py-3 md:px-8">
+    <div className="fixed inset-0 z-50 flex flex-col bg-white">
+      <header className="flex items-center gap-3 border-b-2 border-[#121117] px-4 py-3 md:px-8">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">
+          <p className="text-[13px] font-semibold text-[#6a697c]">
             Question round
           </p>
-          <p className="truncate text-[15px] font-black text-[#23201d]">{title}</p>
+          <p className="truncate text-[16px] font-bold text-[#121117]">{title}</p>
         </div>
-        <span className="rounded-full bg-white px-3 py-1 text-[12px] font-extrabold text-[#6d675e]">
+        <span className="rounded-lg border-2 border-[#121117] bg-white px-3 py-1 text-[13px] font-bold text-[#121117]">
           {Math.min(pos + (done ? 0 : 1), queue.length)} / {queue.length}
         </span>
         <button
           type="button"
           onClick={toggleMute}
           aria-label={muted ? "Unmute" : "Mute"}
-          className="grid h-9 w-9 place-items-center rounded-xl text-[#a29a8d] transition-colors hover:bg-black/[0.05]"
+          className="grid h-9 w-9 place-items-center rounded-lg text-[#6a697c] transition-colors hover:bg-[#f4f4f8]"
         >
           {muted ? <VolumeX size={17} /> : <Volume2 size={17} />}
         </button>
@@ -137,15 +137,15 @@ export function QuestionPlayer({
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="grid h-9 w-9 place-items-center rounded-xl text-[#a29a8d] transition-colors hover:bg-black/[0.05]"
+          className="grid h-9 w-9 place-items-center rounded-lg text-[#6a697c] transition-colors hover:bg-[#f4f4f8]"
         >
           <X size={18} />
         </button>
       </header>
 
-      <div className="h-1.5 w-full bg-black/[0.06]">
+      <div className="h-2 w-full bg-[#f4f4f8]">
         <div
-          className="h-full rounded-r-full bg-[var(--rita-green,#2f6f4e)] transition-[width] duration-300"
+          className="h-full bg-[#2b6df0] transition-[width] duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -153,21 +153,21 @@ export function QuestionPlayer({
       <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
         <div className="mx-auto w-full max-w-3xl">
           {queue.length === 0 && (
-            <p className="mt-20 text-center text-[15px] font-bold text-[#a29a8d]">
+            <p className="mt-20 text-center text-[15px] font-semibold text-[#6a697c]">
               No questions here yet.
             </p>
           )}
 
           {done && queue.length > 0 && (
-            <div className="mt-10 rounded-3xl border border-black/[0.06] bg-white p-8 text-center">
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">
+            <div className="mt-10 rounded-[24px] border-2 border-[#121117] bg-white p-8 text-center">
+              <p className="text-[13px] font-semibold text-[#6a697c]">
                 Round finished
               </p>
-              <p className="mt-3 text-[46px] font-black leading-none text-[#23201d]">
+              <p className="mt-3 text-[46px] font-bold leading-none text-[#121117]">
                 {score}
-                <span className="text-[20px] text-[#a29a8d]">/{queue.length}</span>
+                <span className="text-[20px] text-[#6a697c]">/{queue.length}</span>
               </p>
-              <p className="mt-2 text-[13.5px] font-semibold text-[#a29a8d]">
+              <p className="mt-2 text-[14px] font-medium text-[#6a697c]">
                 {score === queue.length
                   ? "Perfect round. Rita is impressed."
                   : "Every miss is a topic worth another look."}
@@ -176,14 +176,14 @@ export function QuestionPlayer({
                 <button
                   type="button"
                   onClick={restart}
-                  className="rita-pill flex h-11 items-center justify-center gap-2 rounded-xl px-6 text-[13.5px] font-extrabold"
+                  className="rita-pill flex h-11 items-center justify-center gap-2 px-6 text-[14px] font-semibold"
                 >
                   <RotateCcw size={16} /> Go again
                 </button>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex h-11 items-center justify-center rounded-xl border border-black/10 bg-white px-6 text-[13.5px] font-extrabold text-[#23201d] hover:bg-black/[0.03]"
+                  className="flex h-11 items-center justify-center rounded-lg border-2 border-[#121117] bg-white px-6 text-[14px] font-semibold text-[#121117] hover:bg-[#f4f4f8]"
                 >
                   Back to my subjects
                 </button>
@@ -192,8 +192,8 @@ export function QuestionPlayer({
           )}
 
           {!done && current && (
-            <div className="rounded-3xl border border-black/[0.06] bg-white p-6 shadow-[0_18px_40px_-32px_rgba(0,0,0,0.5)] md:p-8">
-              <p className="text-[18px] font-black leading-snug text-[#23201d] md:text-[21px]">
+            <div className="rounded-[24px] border-2 border-[#121117] bg-white p-6 md:p-8">
+              <p className="text-[18px] font-bold leading-snug text-[#121117] md:text-[21px]">
                 {current.stem}
               </p>
 
@@ -209,26 +209,26 @@ export function QuestionPlayer({
                       type="button"
                       disabled={revealed}
                       onClick={() => choose(o.letter, o.is_correct)}
-                      className={`flex items-start gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all ${
+                      className={`flex items-start gap-3 rounded-xl border-2 px-4 py-3.5 text-left transition-colors ${
                         good
-                          ? "border-[#6ab887] bg-[#eaf6ee]"
+                          ? "border-[#2e7d32] bg-[#e8f5e9]"
                           : bad
-                            ? "border-[#d1795e] bg-[#fbeae4]"
-                            : "border-black/10 bg-white hover:-translate-y-0.5 hover:border-black/20"
+                            ? "border-[#b3213f] bg-[#fdecef]"
+                            : "border-[#121117] bg-white hover:bg-[#e7eefd]"
                       }`}
                     >
                       <span
-                        className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[12.5px] font-black ${
+                        className={`grid h-7 w-7 shrink-0 place-items-center rounded-md border-2 border-current text-[13px] font-bold ${
                           good
-                            ? "bg-[#6ab887] text-white"
+                            ? "bg-[#2e7d32] text-white"
                             : bad
-                              ? "bg-[#d1795e] text-white"
-                              : "bg-[#f2ece0] text-[#6d675e]"
+                              ? "bg-[#b3213f] text-white"
+                              : "bg-white text-[#121117]"
                         }`}
                       >
                         {good ? <Check size={15} strokeWidth={3} /> : o.letter}
                       </span>
-                      <span className="pt-0.5 text-[14.5px] font-semibold leading-snug text-[#23201d]">
+                      <span className="pt-0.5 text-[15px] font-medium leading-snug text-[#121117]">
                         {o.body}
                       </span>
                     </button>
@@ -237,29 +237,29 @@ export function QuestionPlayer({
               </div>
 
               {picked !== null && (
-                <div className="mt-6 rounded-2xl border border-black/[0.06] bg-[#fbf5e9] p-5">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#b3aa9c]">
+                <div className="mt-6 rounded-xl border-2 border-[#121117] bg-[#f4f4f8] p-5">
+                  <p className="text-[14px] font-semibold text-[#6a697c]">
                     Why
                   </p>
-                  <p className="mt-2 text-[14px] font-semibold leading-relaxed text-[#3c3730]">
+                  <p className="mt-2 text-[15px] font-medium leading-relaxed text-[#4b4a5c]">
                     {current.correct_explanation || "No explanation was saved for this one."}
                   </p>
                   {current.options
                     .filter((o) => !o.is_correct && o.wrong_reason)
                     .map((o) => (
-                      <p key={o.letter} className="mt-2 text-[13px] font-medium text-[#6d675e]">
-                        <span className="font-black">{o.letter}.</span> {o.wrong_reason}
+                      <p key={o.letter} className="mt-2 text-[14px] font-medium text-[#6a697c]">
+                        <span className="font-bold">{o.letter}.</span> {o.wrong_reason}
                       </p>
                     ))}
                   {current.reference_note && (
-                    <p className="mt-3 border-t border-black/[0.06] pt-3 text-[12px] font-semibold text-[#a29a8d]">
+                    <p className="mt-3 border-t-2 border-[#dcdce5] pt-3 text-[13px] font-medium text-[#6a697c]">
                       {current.reference_note}
                     </p>
                   )}
                   <button
                     type="button"
                     onClick={next}
-                    className="rita-pill mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl text-[13.5px] font-extrabold"
+                    className="rita-pill mt-5 flex h-11 w-full items-center justify-center gap-2 text-[14px] font-semibold"
                   >
                     {pos + 1 >= queue.length ? "See my score" : "Next question"}
                     <ArrowRight size={16} />

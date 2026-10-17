@@ -199,10 +199,10 @@ export function FlashCardOverlay({
     return (
       <div className="grid h-full grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-3 overflow-hidden rounded-[30px] border border-black/[0.07] bg-white p-5 shadow-[0_24px_60px_-40px_rgba(35,32,29,0.5)] md:p-6">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#c0b7a8]">
+          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#c4c4d1]">
             {which === "front" ? "Front — question" : "Back — answer"}
           </span>
-          <span className="text-[11px] font-bold text-[#c0b7a8]">
+          <span className="text-[11px] font-bold text-[#c4c4d1]">
             {value.length} / {CARD_LIMIT}
           </span>
         </div>
@@ -216,7 +216,7 @@ export function FlashCardOverlay({
         <div className="flex min-h-0 flex-col gap-3">
           {image && (
             <div className="flex max-h-[42%] shrink-0 flex-col items-center gap-2">
-              <div className="grid min-h-0 w-full flex-1 place-items-center overflow-hidden rounded-2xl bg-[#fbf5e9]">
+              <div className="grid min-h-0 w-full flex-1 place-items-center overflow-hidden rounded-2xl bg-[#f4f4f8]">
                 <img src={image} alt="" className="max-h-full max-w-full object-contain" />
               </div>
               <button
@@ -224,7 +224,7 @@ export function FlashCardOverlay({
                 onClick={() =>
                   set(which === "front" ? { frontImage: undefined } : { backImage: undefined })
                 }
-                className="flex shrink-0 items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1 text-[12px] font-bold text-[#7d3421]"
+                className="flex shrink-0 items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1 text-[12px] font-bold text-[#961a34]"
               >
                 <X size={12} /> Remove image
               </button>
@@ -249,7 +249,7 @@ export function FlashCardOverlay({
                 ? "Type the question, then press Enter"
                 : "Type the answer, then press Enter to save"
             }
-            className={`min-h-0 flex-1 resize-none overflow-y-auto rounded-2xl bg-white px-3 py-2 outline-none placeholder:text-[16px] placeholder:font-semibold placeholder:text-[#cfc7b9] ${
+            className={`min-h-0 flex-1 resize-none overflow-y-auto rounded-2xl bg-white px-3 py-2 outline-none placeholder:text-[16px] placeholder:font-semibold placeholder:text-[#c4c4d1] ${
               rich ? "" : `text-center ${scaleText(value)}`
             }`}
             style={
@@ -259,7 +259,7 @@ export function FlashCardOverlay({
         </div>
 
         <div className="flex items-center justify-center">
-          <label className="flex cursor-pointer items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-[13px] font-bold text-[#5c554b] hover:bg-[#fbf5e9]">
+          <label className="flex cursor-pointer items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-[13px] font-bold text-[#4b4a5c] hover:bg-[#f4f4f8]">
             <ImagePlus size={15} />
             {image ? "Replace image" : "Add image"}
             <input type="file" accept="image/*" className="hidden" onChange={pickImage(which)} />
@@ -271,19 +271,19 @@ export function FlashCardOverlay({
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#23201d]/55 p-4 backdrop-blur-sm md:p-8">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#121117]/55 p-4 backdrop-blur-sm md:p-8">
       <div className="w-full max-w-5xl rounded-[34px] bg-white p-5 md:p-8">
         {/* header */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#c0b7a8]">
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#c4c4d1]">
               {view === "create" ? (editingId ? "Editing card" : "Fast creator") : "Card gallery"}
             </p>
             <h2 className="truncate text-[22px] font-black">{topicLabel}</h2>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {view === "create" && (
-              <div className="flex rounded-full bg-[#fbf5e9] p-1">
+              <div className="flex rounded-full bg-[#f4f4f8] p-1">
                 {(["simple", "rich"] as const).map((m) => (
                   <button
                     key={m}
@@ -297,8 +297,8 @@ export function FlashCardOverlay({
                     }}
                     className={`rounded-full px-5 py-2 text-[13px] font-black transition-all ${
                       creator === m
-                        ? "bg-white text-[#23201d] shadow-[0_6px_16px_-10px_rgba(35,32,29,0.6)]"
-                        : "text-[#a29a8d]"
+                        ? "bg-white text-[#121117] shadow-[0_6px_16px_-10px_rgba(35,32,29,0.6)]"
+                        : "text-[#9a9aab]"
                     }`}
                   >
                     {m === "rich" && !plan.richCards ? (
@@ -321,7 +321,7 @@ export function FlashCardOverlay({
                   type="button"
                   onClick={() => setView(v)}
                   className={`rounded-full px-4 py-1.5 text-[13px] font-extrabold ${
-                    view === v ? "bg-[#23201d] text-white" : "text-[#7a736a]"
+                    view === v ? "bg-[#121117] text-white" : "text-[#54546a]"
                   }`}
                 >
                   {v === "create" ? "Create" : `Cards (${cards.length})`}
@@ -331,7 +331,7 @@ export function FlashCardOverlay({
             <button
               type="button"
               onClick={onClose}
-              className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-[13px] font-extrabold hover:bg-[#fbf5e9]"
+              className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-[13px] font-extrabold hover:bg-[#f4f4f8]"
             >
               <X size={15} /> Done
             </button>
@@ -361,7 +361,7 @@ export function FlashCardOverlay({
             </div>
 
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[12.5px] font-semibold text-[#a29a8d]">
+              <p className="text-[12.5px] font-semibold text-[#9a9aab]">
                 Enter flips · Enter again saves and opens a fresh card · Shift + Enter for a new line
                 · Esc closes
               </p>
@@ -369,7 +369,7 @@ export function FlashCardOverlay({
                 <button
                   type="button"
                   onClick={() => setFlipped((f) => !f)}
-                  className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2.5 text-[13.5px] font-extrabold hover:bg-[#fbf5e9]"
+                  className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2.5 text-[13.5px] font-extrabold hover:bg-[#f4f4f8]"
                 >
                   <RotateCw size={15} /> Flip
                 </button>
@@ -397,7 +397,7 @@ export function FlashCardOverlay({
             </div>
 
             <div className="mt-5 border-t border-black/[0.06] pt-4">
-              <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#c0b7a8]">
+              <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#c4c4d1]">
                 {added} added this session · {cards.length} cards in this topic
               </p>
               {cards.length > 0 && (
@@ -412,7 +412,7 @@ export function FlashCardOverlay({
                         type="button"
                         onClick={() => startEdit(c)}
                         title="Click to edit"
-                        className="h-16 w-40 shrink-0 overflow-hidden rounded-xl border border-black/[0.08] bg-white px-3 py-2 text-left text-[12px] font-bold leading-snug text-[#5c554b] hover:bg-[#fbf5e9]"
+                        className="h-16 w-40 shrink-0 overflow-hidden rounded-xl border border-black/[0.08] bg-white px-3 py-2 text-left text-[12px] font-bold leading-snug text-[#4b4a5c] hover:bg-[#f4f4f8]"
                       >
                         {c.front}
                       </button>
@@ -424,17 +424,17 @@ export function FlashCardOverlay({
         ) : (
           <div className="mt-5">
             <div className="flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2.5">
-              <Search size={16} className="text-[#c0b7a8]" />
+              <Search size={16} className="text-[#c4c4d1]" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search your cards"
-                className="w-full bg-transparent text-[14px] font-semibold outline-none placeholder:text-[#c0b7a8]"
+                className="w-full bg-transparent text-[14px] font-semibold outline-none placeholder:text-[#c4c4d1]"
               />
             </div>
 
             {filtered.length === 0 ? (
-              <p className="py-16 text-center text-[14px] font-bold text-[#a29a8d]">
+              <p className="py-16 text-center text-[14px] font-bold text-[#9a9aab]">
                 No cards here yet — switch to Create and add your first one.
               </p>
             ) : (
@@ -453,7 +453,7 @@ export function FlashCardOverlay({
                         }
                         className="flex-1 text-left"
                       >
-                        <span className="block text-[10.5px] font-black uppercase tracking-[0.2em] text-[#c0b7a8]">
+                        <span className="block text-[10.5px] font-black uppercase tracking-[0.2em] text-[#c4c4d1]">
                           {isFlipped ? "Back" : "Front"}
                         </span>
                         {(isFlipped ? c.backImage : c.frontImage) && (
@@ -464,7 +464,7 @@ export function FlashCardOverlay({
                           />
                         )}
                         <span
-                          className="mt-1.5 block text-[14.5px] font-bold leading-snug text-[#23201d]"
+                          className="mt-1.5 block text-[14.5px] font-bold leading-snug text-[#121117]"
                           style={styleToCss(isFlipped ? c.backStyle : c.frontStyle)}
                         >
                           {isFlipped ? c.back : c.front}
@@ -474,7 +474,7 @@ export function FlashCardOverlay({
                         <button
                           type="button"
                           onClick={() => setFlippedCards((s) => ({ ...s, [c.id]: !isFlipped }))}
-                          className="grid h-8 w-8 place-items-center rounded-lg text-[#a29a8d] hover:bg-black/[0.05]"
+                          className="grid h-8 w-8 place-items-center rounded-lg text-[#9a9aab] hover:bg-black/[0.05]"
                           aria-label="Flip card"
                         >
                           <RotateCw size={14} />
@@ -482,7 +482,7 @@ export function FlashCardOverlay({
                         <button
                           type="button"
                           onClick={() => startEdit(c)}
-                          className="grid h-8 w-8 place-items-center rounded-lg text-[#a29a8d] hover:bg-black/[0.05]"
+                          className="grid h-8 w-8 place-items-center rounded-lg text-[#9a9aab] hover:bg-black/[0.05]"
                           aria-label="Edit card"
                         >
                           <Pencil size={14} />
@@ -493,7 +493,7 @@ export function FlashCardOverlay({
                             onDelete(c.id);
                             toast.success("Card deleted");
                           }}
-                          className="grid h-8 w-8 place-items-center rounded-lg text-[#a29a8d] hover:bg-black/[0.05]"
+                          className="grid h-8 w-8 place-items-center rounded-lg text-[#9a9aab] hover:bg-black/[0.05]"
                           aria-label="Delete card"
                         >
                           <Trash2 size={14} />
@@ -520,10 +520,10 @@ function RichBar({
 }) {
   const btn = (active: boolean) =>
     `grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[13px] font-black transition-colors ${
-      active ? "bg-[#23201d] text-white" : "bg-[#fbf5e9] text-[#5c554b] hover:bg-[#f2e9d8]"
+      active ? "bg-[#121117] text-white" : "bg-[#f4f4f8] text-[#4b4a5c] hover:bg-[#ffe6a3]"
     }`;
   return (
-    <div className="flex shrink-0 flex-nowrap items-center gap-1.5 overflow-x-auto rounded-2xl border border-black/[0.06] bg-[#fffdf8] p-1.5 [scrollbar-width:thin]">
+    <div className="flex shrink-0 flex-nowrap items-center gap-1.5 overflow-x-auto rounded-2xl border border-black/[0.06] bg-[#ffffff] p-1.5 [scrollbar-width:thin]">
 
       <button type="button" className={btn(!!style.bold)} onClick={() => onChange({ bold: !style.bold })} aria-label="Bold">
         B
@@ -582,7 +582,7 @@ function RichBar({
           onClick={() => onChange({ color: c.value })}
           aria-label={`Text colour ${c.key}`}
           className={`h-7 w-7 shrink-0 rounded-full border-2 ${
-            (style.color ?? "#23201d") === c.value ? "border-[#23201d]" : "border-transparent"
+            (style.color ?? "#121117") === c.value ? "border-[#121117]" : "border-transparent"
           }`}
           style={{ background: c.value }}
         />
@@ -597,11 +597,11 @@ function RichBar({
           onClick={() => onChange({ highlight: c.value })}
           aria-label={`Highlight ${c.key}`}
           className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg border ${
-            (style.highlight ?? "") === c.value ? "border-[#23201d]" : "border-black/10"
+            (style.highlight ?? "") === c.value ? "border-[#121117]" : "border-black/10"
           }`}
           style={{ background: c.value || "#ffffff" }}
         >
-          {c.value ? "" : <X size={12} className="text-[#a29a8d]" />}
+          {c.value ? "" : <X size={12} className="text-[#9a9aab]" />}
         </button>
       ))}
     </div>

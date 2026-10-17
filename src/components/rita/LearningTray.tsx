@@ -74,7 +74,7 @@ function WordRow({ tray, entry }: { tray: Tray; entry: Tray["entries"][number] }
         {entry.meaning}
       </span>
       <span className="flex items-center gap-1">
-        <span className="me-2 text-xs font-bold uppercase text-[var(--pp-pink-text)]">
+        <span className="me-2 text-xs font-bold uppercase text-[var(--pp-accent-text)]">
           {entry.language}
         </span>
         <button
@@ -127,7 +127,7 @@ function CreateRow({
         type="button"
         disabled={disabled}
         onClick={() => setOpen(true)}
-        className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-[var(--pp-pink-text)] disabled:opacity-40"
+        className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-[var(--pp-accent-text)] disabled:opacity-40"
       >
         <Plus size={14} /> {label}
       </button>
@@ -210,7 +210,7 @@ export function LearningTray({ tray }: { tray: Tray }) {
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-bold text-[var(--pp-pink-text)]">Words I asked about</p>
+            <p className="text-sm font-bold text-[var(--pp-accent-text)]">Words I asked about</p>
             <h2 className="text-2xl font-extrabold">
               {entries.length} word{entries.length === 1 ? "" : "s"}
             </h2>
@@ -258,7 +258,7 @@ export function LearningTray({ tray }: { tray: Tray }) {
                       tray.setTarget(kind);
                       void tray.loadDestinations().catch(() => undefined);
                     }}
-                    className={`rounded-lg px-4 py-2 text-sm font-bold ${target === kind ? "border-2 border-[var(--pp-ink)] bg-[var(--pp-pink)]" : "border-2 border-transparent bg-white"}`}
+                    className={`rounded-lg px-4 py-2 text-sm font-bold ${target === kind ? "border-2 border-[var(--pp-ink)] bg-[var(--pp-accent)] text-[var(--pp-on-accent)]" : "border-2 border-transparent bg-white"}`}
                   >
                     <Icon className="mr-1 inline" size={15} />
                     {label}

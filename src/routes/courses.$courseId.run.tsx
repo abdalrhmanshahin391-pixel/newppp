@@ -926,12 +926,12 @@ function ScoreRing({ value, pass }: { value: number; pass: boolean }) {
         />
         <defs>
           <linearGradient id="ringGood" x1="0" x2="1">
-            <stop offset="0" stopColor="#10b981" />
-            <stop offset="1" stopColor="#06b6d4" />
+            <stop offset="0" stopColor="#2e7d32" />
+            <stop offset="1" stopColor="#2b6df0" />
           </linearGradient>
           <linearGradient id="ringBad" x1="0" x2="1">
-            <stop offset="0" stopColor="#FF5C8A" />
-            <stop offset="1" stopColor="#FF8A3D" />
+            <stop offset="0" stopColor="#2b6df0" />
+            <stop offset="1" stopColor="#2b6df0" />
           </linearGradient>
         </defs>
       </svg>

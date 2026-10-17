@@ -123,7 +123,7 @@ function SuccessPage() {
             : "Thank you — a receipt is on its way to your email from Paddle, our payment partner."}
         </p>
 
-        <div className="mt-9 rounded-[28px] border border-white/10 bg-[#131313] p-7 text-left">
+        <div className="mt-9 rounded-[28px] border border-white/10 bg-[#0b0b0f] p-7 text-left">
           {polling && !granted ? (
             <p className="flex items-center gap-3 text-[15px] font-semibold text-white/50">
               <Loader2 className="h-4 w-4 animate-spin" /> Activating your plan…

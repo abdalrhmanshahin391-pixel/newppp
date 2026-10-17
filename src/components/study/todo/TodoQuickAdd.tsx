@@ -38,7 +38,7 @@ export function QuickAdd({
         type="button"
         id={id}
         onClick={() => setOpen(true)}
-        className="mt-2 flex items-center gap-2 rounded-xl py-2 text-left text-[14px] font-bold text-[#a29a8d] transition-colors hover:text-[#4c9a2a]"
+        className="mt-2 flex items-center gap-2 rounded-xl py-2 text-left text-[14px] font-bold text-[#9a9aab] transition-colors hover:text-[#2b6df0]"
       >
         <Plus size={16} /> Add task
       </button>
@@ -57,21 +57,21 @@ export function QuickAdd({
           if (e.key === "Escape") setOpen(false);
         }}
         placeholder={placeholder}
-        className="w-full bg-transparent text-[15px] font-bold text-[#23201d] outline-none placeholder:text-[#b3aa9c]"
+        className="w-full bg-transparent text-[15px] font-bold text-[#121117] outline-none placeholder:text-[#9a9aab]"
       />
 
       {chips.length > 0 && (
         <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          <Sparkles size={13} className="text-[#4c9a2a]" />
+          <Sparkles size={13} className="text-[#2b6df0]" />
           {chips.map((c) => (
             <span
               key={c}
-              className="rounded-full bg-[#eef6e9] px-2.5 py-1 text-[12px] font-extrabold text-[#3f7c26]"
+              className="rounded-full bg-[#f4f4f8] px-2.5 py-1 text-[12px] font-extrabold text-[#1d5fd0]"
             >
               {c}
             </span>
           ))}
-          <span className="text-[12px] font-bold text-[#b3aa9c]">read from what you typed</span>
+          <span className="text-[12px] font-bold text-[#9a9aab]">read from what you typed</span>
         </div>
       )}
 
@@ -87,7 +87,7 @@ export function QuickAdd({
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-[13px] font-bold text-[#6d675e] hover:bg-black/[0.04]"
+          className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-[13px] font-bold text-[#54546a] hover:bg-black/[0.04]"
         >
           <X size={14} /> Cancel
         </button>

@@ -29,7 +29,7 @@ export function VoiceBand() {
             >
               Say it badly first.
               <br />
-              <span style={{ color: "var(--pp-pink)" }}>Say it better next time.</span>
+              <span style={{ color: "var(--pp-accent)" }}>Say it better next time.</span>
             </h2>
             <p
               className="mt-6 max-w-[30rem] text-[17px] leading-[1.65] md:text-[19px]"
@@ -48,18 +48,18 @@ export function VoiceBand() {
           <div className="relative mx-auto h-[300px] w-full max-w-[420px]" aria-hidden="true">
             <span
               className="rh-ring absolute left-1/2 top-1/2 h-[130px] w-[130px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{ border: "2px solid var(--pp-pink)" }}
+              style={{ border: "2px solid var(--pp-accent)" }}
             />
             <span
               className="rh-ring absolute left-1/2 top-1/2 h-[130px] w-[130px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{ ...d(1800), border: "2px solid var(--pp-pink)" }}
+              style={{ ...d(1800), border: "2px solid var(--pp-accent)" }}
             />
             <span
               className="absolute left-1/2 top-1/2 grid h-[130px] w-[130px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full"
               style={{
                 background:
-                  "radial-gradient(circle at 35% 30%, #ffa9c9, var(--pp-pink) 55%, #e8588f)",
-                boxShadow: "0 30px 60px -20px rgba(255,122,172,0.55)",
+                  "radial-gradient(circle at 35% 30%, #9bbcf8, var(--pp-accent) 55%, #1f5fd6)",
+                boxShadow: "0 30px 60px -20px rgba(43,109,240,0.55)",
               }}
             >
               <span className="flex h-10 items-center gap-1.5">

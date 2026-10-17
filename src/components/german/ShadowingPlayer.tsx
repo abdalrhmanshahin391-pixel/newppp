@@ -146,7 +146,7 @@ export function ShadowingPlayer({
 
       {/* Card */}
       <div className="max-w-3xl mx-auto rounded-3xl bg-slate-900 shadow-2xl overflow-hidden">
-        <div className="bg-slate-200/90 px-5 py-3 flex items-center gap-3">
+        <div className="bg-[#dcdce5]/90 px-5 py-3 flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-white grid place-items-center text-base">🧑‍🏫</div>
           <span className="font-extrabold text-blue-600">Repeat after me</span>
         </div>

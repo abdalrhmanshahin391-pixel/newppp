@@ -58,14 +58,14 @@ body {
 
 /* Rita green — the one brand action colour */
 :root {
-  --rita-green: oklch(0.74 0.22 130);
-  --rita-green-deep: oklch(0.62 0.19 130);
-  --rita-green-ink: oklch(1 0 0);
-  --rita-green-soft: oklch(0.95 0.06 130);
-  /* Cream editorial surface used by the home, pricing, header and footer */
-  --pro-page: #fbf5e9;
-  --pro-card: #fffdf7;
-  --pro-ink: #2b2721;
+  --rita-green: #2b6df0;
+  --rita-green-deep: #2563eb;
+  --rita-green-ink: #ffffff;
+  --rita-green-soft: #e7eefd;
+  /* White editorial surface used by the home, pricing, header and footer */
+  --pro-page: #ffffff;
+  --pro-card: #f4f4f8;
+  --pro-ink: #121117;
   --german-der: oklch(0.58 0.17 255);
   --ipad-edge: oklch(0.46 0.01 255);
   --ipad-edge-highlight: oklch(0.74 0.015 255);
@@ -73,7 +73,7 @@ body {
   --ipad-edge-deep: oklch(0.13 0.008 255);
   --ipad-camera-lens: oklch(0.48 0.1 250);
   --ipad-camera-sensor: oklch(0.35 0.02 255);
-  --pro-muted: oklch(0.5 0.02 75);
+  --pro-muted: #6a697c;
 }
 
 /* Rita pill button — solid green */
@@ -169,7 +169,8 @@ body {
 .rita-cream.bg-\[\#121212\],
 .rita-cream .bg-\[\#121212\],
 .rita-cream.bg-\[\#131313\],
-.rita-cream .bg-\[\#131313\] {
+.rita-cream .bg-\[\#131313\],
+.rita-cream .bg-\[\#0b0b0f\] {
   background-color: var(--pro-card) !important;
 }
 .rita-cream.text-white,
@@ -369,37 +370,37 @@ text-primary).
   --card-foreground: oklch(0.32 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.32 0 0);
-  --primary: oklch(0.74 0.22 130); /* #58cc02 Duolingo green */
-  --primary-foreground: oklch(1 0 0);
-  --primary-soft: oklch(0.95 0.06 130);
-  --primary-deep: oklch(0.62 0.19 130); /* #58a700 — 3D button ledge */
-  --secondary: oklch(0.72 0.15 230); /* #1cb0f6 Duolingo blue */
-  --secondary-foreground: oklch(1 0 0);
+  --primary: #2b6df0;
+  --primary-foreground: #ffffff;
+  --primary-soft: #e7eefd;
+  --primary-deep: #2260e4;
+  --secondary: #f4f4f8;
+  --secondary-foreground: #121117;
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.52 0 0);
-  --accent: oklch(0.74 0.22 130);
-  --accent-foreground: oklch(1 0 0);
+  --accent: #e7eefd;
+  --accent-foreground: #121117;
   --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.9 0 0);
   --input: oklch(0.9 0 0);
-  --ring: oklch(0.74 0.22 130);
-  --chart-1: oklch(0.74 0.22 130);
+  --ring: #121117;
+  --chart-1: #2b6df0;
   --chart-2: oklch(0.72 0.15 230);
   --chart-3: oklch(0.78 0.15 80);
   --chart-4: oklch(0.65 0.2 25);
   --chart-5: oklch(0.6 0.18 290);
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.32 0 0);
-  --sidebar-primary: oklch(0.74 0.22 130);
+  --sidebar-primary: #2b6df0;
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.32 0 0);
   --sidebar-border: oklch(0.9 0 0);
-  --sidebar-ring: oklch(0.74 0.22 130);
+  --sidebar-ring: #121117;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.05), 0 8px 24px -16px rgba(0, 0, 0, 0.12);
-  --shadow-brand: 0 12px 32px -12px rgba(88, 204, 2, 0.35);
-  --gradient-brand: linear-gradient(135deg, #58cc02 0%, #89e219 100%);
+  --shadow-brand: none;
+  --gradient-brand: linear-gradient(135deg, #2b6df0 0%, #4a82f3 100%);
 } /*
  * Golden accounts — cosmetic gold accent applied to <html> by GoldenTheme.
  * Only re-points the semantic tokens,
@@ -2665,41 +2666,6 @@ hairline borders and generous radii.
   background-color: color-mix(in oklab, var(--pro-ink) 6%, transparent) !important;
 }
 
-/* Quiet header controls: no pill, just words that light up on hover. */
-.rita-ghost {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding-inline: 10px;
-  border-radius: 9999px;
-  background-color: transparent;
-  border: 0;
-  transition:
-    background-color 0.16s ease,
-    opacity 0.16s ease;
-}
-.rita-ghost:hover,
-.rita-ghost[data-open="true"] {
-  background-color: rgba(255, 255, 255, 0.14);
-}
-.rita-ghost:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 2px;
-}
-.rita-ghost-solid:hover,
-.rita-ghost-solid[data-open="true"] {
-  background-color: color-mix(in oklab, var(--pro-ink) 7%, transparent);
-}
-.rita-ghost-solid:focus-visible {
-  outline-color: var(--rita-green-deep);
-}
-@media (prefers-reduced-motion: reduce) {
-  .rita-ghost {
-    transition: none;
-  }
-}
-
 /* Gentle fade-up used by the home feature cards when they scroll into view. */
 .rita-reveal {
   opacity: 0;
@@ -3130,7 +3096,7 @@ hairline borders and generous radii.
    Home page theme (scope: .edith-premium, used only by the home route).
    Typography, colour, buttons and surfaces follow the reference design
    (values read from its computed styles): white page, ink #121117, pink
-   action buttons #ff7aac with a 2px ink border and 8px corners, 16px cards,
+   action buttons #2b6df0 with a 2px ink border and 8px corners, 16px cards,
    a dark #121117 top bar. Layout, copy, device shells and behaviour are
    untouched. Layered on .edith-light, so the cream remapping (white-on-dark
    utilities -> ink on page) flips the whole page automatically.
@@ -3141,20 +3107,21 @@ hairline borders and generous radii.
   --pp-muted: #6a697c;
   --pp-line: #dcdce5;
   --pp-grey: #f4f4f8;
-  --pp-pink: #ff7aac;
-  --pp-pink-hover: #fe9fc3;
-  --pp-pink-text: #d13d76;
-  --pp-pink-soft: #ffe5f0;
+  --pp-accent: #2b6df0;
+  --pp-accent-hover: #2260e4;
+  --pp-on-accent: #ffffff;
+  --pp-accent-text: #2563eb;
+  --pp-accent-soft: #e7eefd;
   --pp-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --pp-display: "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
   --pro-page: #ffffff;
   --pro-card: #f4f4f8;
   --pro-ink: #121117;
   --pro-muted: #6a697c;
-  --rita-green: #ff7aac;
-  --rita-green-deep: #d13d76; /* accent words: darker pink so they stay readable on white */
+  --rita-green: #2b6df0;
+  --rita-green-deep: #2563eb; /* accent words: darker pink so they stay readable on white */
   --rita-green-ink: #121117;
-  --rita-green-soft: #ffe5f0;
+  --rita-green-soft: #e7eefd;
   --font-grotesk: "Figtree", Helvetica, Arial, sans-serif;
   --font-display: "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
   --font-sans: "Figtree", Helvetica, Arial, sans-serif;
@@ -3171,8 +3138,8 @@ hairline borders and generous radii.
   -moz-osx-font-smoothing: grayscale;
 }
 .edith-premium ::selection {
-  background: var(--pp-pink);
-  color: var(--pp-ink);
+  background: var(--pp-accent);
+  color: var(--pp-on-accent);
 }
 
 /* Type: tight bold display voice for headlines (64/68 -> 48/52 on phones). */
@@ -3231,11 +3198,11 @@ hairline borders and generous radii.
   }
 }
 .edith-premium .rita-btn-primary {
-  background-color: var(--pp-pink);
-  color: var(--pp-ink);
+  background-color: var(--pp-accent);
+  color: var(--pp-on-accent);
 }
 .edith-premium .rita-btn-primary:hover {
-  background-color: var(--pp-pink-hover);
+  background-color: var(--pp-accent-hover);
 }
 .edith-premium .rita-btn-primary:active {
   background-color: var(--pp-ink);
@@ -3271,64 +3238,6 @@ hairline borders and generous radii.
   background-color: var(--pp-grey) !important;
   border-color: transparent !important;
   border-radius: 16px !important;
-}
-
-/* Header: solid #121117 bar, Figtree 16/600 white links, outlined ghost button. */
-.edith-premium .edith-header.edith-header-light::before {
-  background: #121117;
-  box-shadow: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  opacity: 1;
-  animation: none;
-}
-.edith-premium .edith-header {
-  --pro-ink: #ffffff;
-  color: #fff;
-}
-.edith-premium .edith-header .rita-ink-soft {
-  color: #fff !important;
-}
-.edith-premium .edith-header .rita-panel {
-  --pro-ink: #121117;
-  --pro-card: #ffffff;
-}
-.edith-premium .edith-header nav a,
-.edith-premium .edith-header a[href="/pricing"] {
-  font-family: "Figtree", Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 24px;
-  padding: 8px;
-  border-radius: 8px;
-}
-.edith-premium .edith-header-light a[class*="bg-black/"],
-.edith-premium .edith-header button[class*="rounded-full"][class*="h-10"] {
-  height: 48px;
-  padding-inline: 12px;
-  border: 2px solid #fff;
-  border-radius: 8px;
-  background-color: transparent;
-  color: #fff !important;
-  font-family: "Figtree", Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-}
-.edith-premium .edith-header button[class*="rounded-full"][class*="h-10"]:hover {
-  background-color: rgb(255 255 255 / 0.12);
-}
-.edith-premium .edith-header .rita-btn {
-  height: 48px;
-}
-/* Mobile header action: keep it compact, same pink + ink border. */
-.edith-premium .edith-header .rita-btn.\!h-9 {
-  height: 40px !important;
-  padding-inline: 14px !important;
-  font-size: 15px !important;
-}
-.edith-premium .edith-header .rita-ghost:hover,
-.edith-premium .edith-header .rita-ghost[data-open="true"] {
-  background-color: rgb(255 255 255 / 0.14);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3544,7 +3453,8 @@ hairline borders and generous radii.
   outline-offset: 3px;
 }
 .edith-premium .rh-chip-on {
-  background: var(--pp-pink);
+  background: var(--pp-accent);
+  color: var(--pp-on-accent);
   transform: rotate(0deg) translateY(-2px);
 }
 .edith-premium .rh-ping {
@@ -3554,7 +3464,7 @@ hairline borders and generous radii.
   width: 14px;
   height: 14px;
   border-radius: 999px;
-  background: var(--pp-pink);
+  background: var(--pp-accent);
   border: 2px solid var(--pp-ink);
 }
 .edith-premium .rh-ping::after {
@@ -3562,7 +3472,7 @@ hairline borders and generous radii.
   position: absolute;
   inset: -2px;
   border-radius: inherit;
-  border: 2px solid var(--pp-pink);
+  border: 2px solid var(--pp-accent);
   animation: rh-ring 2200ms ease-out infinite;
 }
 .edith-premium .rh-draw {
@@ -3588,4 +3498,1278 @@ hairline borders and generous radii.
   .edith-premium .rh-chip:active {
     transition: none;
   }
+}
+
+
+/* ===========================================================================
+   Top bar and menus (every page). The bar is dark ink; the menus are the white card with
+   an ink border from the home page. Colours are explicit so the cream remap cannot touch them.
+   =========================================================================== */
+.rh-bar {
+  --rh-ink: #121117;
+  --rh-muted: #6a697c;
+  --rh-line: #dcdce5;
+  --rh-accent: #2b6df0;
+  --rh-accent-soft: #e7eefd;
+  --rh-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  background: #121117;
+  color: #fff;
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  font-family: "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+}
+.rh-bar-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  height: 64px;
+  max-width: 1120px;
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+@media (min-width: 768px) {
+  .rh-bar-inner {
+    padding-inline: 40px;
+  }
+}
+.rh-nav {
+  flex: 1;
+  align-items: center;
+  gap: 28px;
+  padding-inline-start: 12px;
+}
+.rh-actions {
+  align-items: center;
+  gap: 12px;
+}
+
+.rh-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 2px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: rgb(255 255 255 / 0.78);
+  font: 600 16px/24px "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  text-decoration: none;
+  transition:
+    color 160ms ease,
+    transform 160ms var(--rh-ease);
+}
+.rh-link:hover,
+.rh-link[aria-current="page"] {
+  color: #fff;
+}
+.rh-link:hover {
+  transform: translateY(-1px);
+}
+.rh-link:focus-visible,
+.rh-avatar-btn:focus-visible,
+.rh-credits-chip:focus-visible,
+.rh-burger:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.rh-logo {
+  --wordmark-prefix: #fff;
+  --wordmark-suffix: rgb(255 255 255 / 0.82);
+}
+/* Pink action button, the same on every page (cream pages use another primary colour). */
+.rh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding-inline: 16px;
+  border: 2px solid #121117;
+  border-radius: 8px;
+  background: #2b6df0;
+  color: #ffffff;
+  cursor: pointer;
+  font: 600 15px/1 "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color 160ms ease,
+    transform 120ms var(--rh-ease);
+}
+.rh-btn:hover {
+  background: #2260e4;
+}
+.rh-btn:active {
+  transform: scale(0.97);
+}
+.rh-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.rh-card .rh-btn:focus-visible {
+  outline-color: #121117;
+}
+
+/* The hand-drawn line from the home headline, drawn once under the current page. */
+.rh-squiggle {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 6px;
+  width: 100%;
+  height: 7px;
+  overflow: visible;
+  pointer-events: none;
+  clip-path: inset(0 0 0 0);
+  animation: rh-bar-wipe 520ms var(--rh-ease) backwards;
+}
+.rh-squiggle path {
+  fill: none;
+  stroke: #2b6df0;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+@keyframes rh-bar-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+@keyframes rh-bar-wipe-rtl {
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+}
+[dir="rtl"] .rh-squiggle {
+  animation-name: rh-bar-wipe-rtl;
+}
+
+/* Credits chip: Rita's little orb and what is left. */
+.rh-credits-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding-inline: 10px 12px;
+  border: 1.5px solid rgb(255 255 255 / 0.28);
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font: 600 14px/1 "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+.rh-credits-chip:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+.rh-credits-chip[data-open="true"] {
+  border-color: #fff;
+  background: rgb(255 255 255 / 0.1);
+}
+.rh-chip-val {
+  color: rgb(255 255 255 / 0.78);
+  font-variant-numeric: tabular-nums;
+}
+.rh-chip-val[data-level="low"] {
+  color: #ffd37a;
+}
+.rh-chip-val[data-level="out"] {
+  color: #ff9a9a;
+}
+.rh-orb {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #fff 0 7%, #c9dbfb 22%, #2b6df0 62%, #2563eb 100%);
+  box-shadow: 0 0 0 2px rgb(255 122 172 / 0.35);
+}
+.rh-orb[data-level="low"] {
+  box-shadow: 0 0 0 2px #f5b942;
+}
+.rh-orb[data-level="out"] {
+  box-shadow: 0 0 0 2px #ff6b6b;
+}
+
+.rh-avatar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 44px;
+  padding-inline: 4px 8px;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: rgb(255 255 255 / 0.8);
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+.rh-avatar-btn:hover,
+.rh-avatar-btn[data-open="true"] {
+  background: rgb(255 255 255 / 0.1);
+}
+.rh-chevron {
+  transition: transform 180ms var(--rh-ease);
+}
+.rh-avatar-btn[data-open="true"] .rh-chevron {
+  transform: rotate(180deg);
+}
+.rh-avatar {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 0 0 2px #2b6df0;
+}
+.rh-burger {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+.rh-burger:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+
+/* The menu card: the same white card with an ink border as the home page. */
+.rh-card {
+  position: absolute;
+  inset-inline-end: 0;
+  top: calc(100% + 20px);
+  z-index: 60;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 96px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 8px;
+  border: 2px solid #121117;
+  border-radius: 16px;
+  background: #fff;
+  color: #121117;
+  font-family: "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  transform-origin: top right;
+  animation: rh-menu-in 160ms var(--rh-ease);
+}
+[dir="rtl"] .rh-card {
+  transform-origin: top left;
+}
+.rh-account {
+  width: 288px;
+}
+.rh-credits {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+.rh-card-inline {
+  position: static;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  margin: 4px 0 8px;
+  border-width: 1.5px;
+  animation: none;
+}
+@keyframes rh-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+}
+.rh-card-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.rh-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding-inline: 8px;
+  border: 1.5px solid #121117;
+  border-radius: 6px;
+  background: #e7eefd;
+  color: #121117;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+.rh-who .rh-badge {
+  text-transform: capitalize;
+}
+.rh-offer {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #e7eefd;
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+.rh-offer p {
+  margin: 0;
+}
+.rh-note {
+  margin: 0;
+  color: #6a697c;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.rh-meters {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rh-meter-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.rh-meter-val {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #6a697c;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.rh-meter-val[data-level="low"] {
+  color: #8a5200;
+}
+.rh-meter-val[data-level="out"] {
+  color: #b3213f;
+}
+.rh-track {
+  height: 10px;
+  margin-top: 6px;
+  overflow: hidden;
+  border: 1.5px solid #121117;
+  border-radius: 9999px;
+  background: #fff;
+}
+.rh-fill {
+  height: 100%;
+  background: #2b6df0;
+  transition: width 300ms var(--rh-ease);
+}
+.rh-fill[data-level="low"] {
+  background: #f5b942;
+}
+.rh-fill[data-level="out"] {
+  background: #e5484d;
+}
+.rh-wide {
+  width: 100%;
+  height: 48px;
+  font-size: 16px;
+}
+
+.rh-who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px 6px;
+}
+.rh-who-name {
+  margin: 0 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.rh-rule {
+  height: 1px;
+  margin: 6px 4px;
+  background: #dcdce5;
+}
+.rh-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #121117;
+  cursor: pointer;
+  font: 600 15px/1.2 "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  text-align: start;
+  text-decoration: none;
+  transition: background-color 140ms ease;
+}
+.rh-item:hover,
+.rh-item:focus-visible {
+  background: #e7eefd;
+}
+.rh-item:focus-visible {
+  outline: 2px solid #121117;
+  outline-offset: -2px;
+}
+.rh-item svg,
+.rh-item-icon {
+  flex: none;
+  color: #121117;
+}
+.rh-item-dim {
+  color: #6a697c;
+  font-weight: 500;
+}
+.rh-item-danger,
+.rh-item-danger svg {
+  color: #b3213f;
+}
+
+/* Phone: the bar opens one card under it. */
+.rh-sheet-wrap {
+  padding: 0 16px 12px;
+}
+.rh-sheet {
+  position: static;
+  width: auto;
+  max-width: none;
+  max-height: calc(100dvh - 88px);
+  margin-top: 4px;
+}
+.rh-sheet-links {
+  display: grid;
+}
+.rh-sheet-links .rh-link {
+  min-height: 48px;
+  padding-inline: 12px;
+  border-radius: 8px;
+  color: #121117;
+  font-size: 16px;
+}
+.rh-sheet-links .rh-link:hover {
+  background: #e7eefd;
+  transform: none;
+}
+.rh-sheet-links .rh-squiggle {
+  inset-inline: 12px auto;
+  bottom: 8px;
+  width: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rh-card,
+  .rh-squiggle {
+    animation: none;
+  }
+  .rh-link,
+  .rh-chevron,
+  .rh-fill,
+  .rh-credits-chip,
+  .rh-avatar-btn,
+  .rh-btn,
+  .rh-item {
+    transition: none;
+  }
+  .rh-link:hover {
+    transform: none;
+  }
+}
+
+/* ===========================================================================
+   Study rooms (/learn and the room pages): the same ink, pink and sticker borders as the home
+   page. Rooms and tools are links, so every one has hover, press, focus and a locked state.
+   =========================================================================== */
+.edith-premium .rh-room,
+.edith-premium .rh-tool {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--pp-ink);
+  color: var(--pp-ink);
+  text-decoration: none;
+  transition:
+    transform 200ms var(--pp-ease),
+    background-color 160ms ease;
+}
+.edith-premium .rh-room {
+  min-height: 340px;
+  padding: 1.75rem;
+  border-radius: 24px;
+}
+.edith-premium .rh-room-dark {
+  background: #121117;
+  color: #ffffff;
+}
+.edith-premium .rh-room-grey {
+  background: var(--pp-grey);
+}
+.edith-premium .rh-room-white {
+  background: #ffffff;
+  min-height: 0;
+}
+.edith-premium .rh-room-text {
+  color: var(--pp-muted);
+}
+.edith-premium .rh-room-dark .rh-room-text {
+  color: rgba(255, 255, 255, 0.74);
+}
+.edith-premium .rh-room:hover,
+.edith-premium .rh-tool:hover {
+  transform: translateY(-4px);
+}
+.edith-premium .rh-room:active,
+.edith-premium .rh-tool:active {
+  transform: scale(0.99);
+}
+.edith-premium .rh-room:focus-visible,
+.edith-premium .rh-tool:focus-visible,
+.edith-premium .rh-back:focus-visible {
+  outline: 3px solid var(--pp-ink);
+  outline-offset: 3px;
+}
+.edith-premium .rh-room-dark:focus-visible {
+  outline-color: var(--pp-accent);
+}
+.edith-premium .rh-room-off,
+.edith-premium .rh-tool-locked {
+  cursor: default;
+  border-style: dashed;
+  opacity: 0.6;
+}
+.edith-premium .rh-room-off:hover,
+.edith-premium .rh-tool-locked:hover {
+  transform: none;
+}
+
+.edith-premium .rh-minichip {
+  padding: 0.3rem 0.7rem;
+  border: 1.5px solid var(--pp-ink);
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--pp-ink);
+}
+.edith-premium .rh-room-grey .rh-minichip {
+  background: #ffffff;
+}
+.edith-premium .rh-room-dark .rh-minichip {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+.edith-premium .rh-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 0.6rem 1rem;
+  border: 2px solid var(--pp-ink);
+  border-radius: 8px;
+  background: var(--pp-accent);
+  color: var(--pp-on-accent);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+}
+.edith-premium .rh-room-off .rh-open {
+  background: transparent;
+  border-style: dashed;
+}
+
+.edith-premium .rh-flag {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding-inline: 8px;
+  border: 1.5px solid var(--pp-ink);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--pp-ink);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1;
+}
+.edith-premium .rh-flag-soft {
+  background: var(--pp-accent-soft);
+}
+.edith-premium .rh-flag-pink {
+  background: var(--pp-accent);
+  color: var(--pp-on-accent);
+}
+
+.edith-premium .rh-tool {
+  height: 100%;
+  padding: 1.25rem;
+  border-radius: 16px;
+  background: #ffffff;
+}
+.edith-premium .rh-tool:hover {
+  background: #fffafc;
+}
+.edith-premium .rh-tool-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.edith-premium .rh-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pp-ink);
+  text-decoration: none;
+}
+.edith-premium .rh-back:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edith-premium .rh-room,
+  .edith-premium .rh-tool {
+    transition: none;
+  }
+  .edith-premium .rh-room:hover,
+  .edith-premium .rh-tool:hover {
+    transform: none;
+  }
+}
+
+/* ===========================================================================
+   App pages (/study, /courses, /german, /spaces, /share, /notes): the home page's ink, pink,
+   fonts and buttons. These tool pages were written with fixed warm hex colours; the block below
+   maps each of those utility classes onto the new palette. Delete this block to go back to the
+   old look. The scope class is added in __root.tsx.
+   =========================================================================== */
+.rita-app {
+  --pp-ink: #121117;
+  --pp-body: #4b4a5c;
+  --pp-muted: #6a697c;
+  --pp-line: #dcdce5;
+  --pp-grey: #f4f4f8;
+  --pp-accent: #2b6df0;
+  --pp-accent-hover: #2260e4;
+  --pp-on-accent: #ffffff;
+  --pp-accent-text: #2563eb;
+  --pp-accent-soft: #e7eefd;
+  --pp-danger: #b3213f;
+  --pp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --pro-page: #ffffff;
+  --pro-card: #f4f4f8;
+  --pro-ink: #121117;
+  --pro-muted: #6a697c;
+  --rita-green: #2b6df0;
+  --rita-green-deep: #2563eb;
+  --rita-green-ink: #121117;
+  --rita-green-soft: #e7eefd;
+  --font-grotesk: "Figtree", Helvetica, Arial, sans-serif;
+  --font-display: "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
+  --font-sans: "Figtree", Helvetica, Arial, sans-serif;
+  font-family: "Figtree", Helvetica, Arial, sans-serif;
+}
+.rita-app h1,
+.rita-app h2,
+.rita-app h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+/* Heavy 800/900 weights become 700, and small tracked capital labels become plain words. */
+.rita-app .font-black,
+.rita-app .font-extrabold {
+  font-weight: 700;
+}
+.rita-app .uppercase {
+  text-transform: none;
+}
+.rita-app [class*="tracking-["] {
+  letter-spacing: 0;
+}
+
+/* Buttons: 8px corners, 2px ink border, pink fill (same as the home page). */
+.rita-app .rita-btn {
+  height: 48px;
+  padding-inline: 22px;
+  border: 2px solid var(--pp-ink);
+  border-radius: 8px;
+  font-family: "Figtree", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: none;
+}
+.rita-app .rita-btn-primary {
+  background-color: var(--pp-accent);
+  color: var(--pp-on-accent);
+}
+.rita-app .rita-btn-primary:hover {
+  background-color: var(--pp-accent-hover);
+}
+.rita-app .rita-btn-secondary {
+  background-color: #ffffff;
+  color: var(--pp-ink);
+}
+.rita-app .rita-btn-secondary:hover {
+  background-color: var(--pp-grey);
+}
+.rita-app .rita-btn:focus-visible,
+.rita-app .rita-pill:focus-visible {
+  outline: 2px solid var(--pp-ink);
+  outline-offset: 3px;
+}
+.rita-app .rita-btn.rita-btn-sm {
+  height: 40px;
+  padding-inline: 16px;
+  font-size: 15px;
+}
+.rita-app .rita-pill {
+  background-color: var(--pp-accent);
+  color: var(--pp-on-accent);
+  border: 2px solid var(--pp-ink);
+  border-radius: 10px;
+  box-shadow: none;
+}
+.rita-app .rita-pill:hover {
+  background-color: var(--pp-accent-hover);
+}
+.rita-app .rita-tile {
+  box-shadow: none;
+}
+.rita-app .rita-tile:hover {
+  box-shadow: none;
+}
+
+/* Legacy colours, by role. */
+.rita-app :is([class~="text-[#23201d]"], [class~="text-[#3c372f]"], [class~="text-[#3d3832]"], [class~="text-[#3a352e]"], [class~="text-[#7a4b16]"], [class~="text-[#3d5c14]"], [class~="text-[#2f6318]"], [class~="text-[#215237]"], [class~="text-[#3f2c73]"], [class~="text-[#7d3421]"], [class~="text-[#a8462c]"], [class~="text-[#5a4a2e]"]) { color: var(--pp-ink) !important; }
+.rita-app :is([class~="text-[#4a453d]"], [class~="text-[#57524a]"], [class~="text-[#5c554b]"]) { color: var(--pp-body) !important; }
+.rita-app :is([class~="text-[#6b655c]"], [class~="text-[#6b645b]"], [class~="text-[#6d6355]"], [class~="text-[#6b6357]"], [class~="text-[#6d675e]"], [class~="text-[#6d665c]"], [class~="text-[#7a736a]"], [class~="text-[#8a8175]"], [class~="text-[#8a8376]"], [class~="text-[#8a7f6c]"], [class~="text-[#8a8070]"], [class~="text-[#8c8375]"], [class~="text-[#8b8378]"], [class~="text-[#8b8377]"], [class~="text-[#a29a8d]"], [class~="text-[#a89e90]"], [class~="text-[#a79c8c]"], [class~="text-[#b3aa9c]"], [class~="text-[#b0a696]"]) { color: var(--pp-muted) !important; }
+.rita-app :is([class~="text-[#c0b7a8]"], [class~="text-[#c7c0b4]"], [class~="text-[#ccc4b6]"], [class~="text-[#d8d0c2]"]) { color: #9a99ab !important; }
+.rita-app :is([class~="text-[#8ec63f]"], [class~="text-[#4c9a2a]"]) { color: var(--pp-accent-text) !important; }
+.rita-app :is([class~="text-[#b13636]"], [class~="text-[#d1795e]"]) { color: var(--pp-danger) !important; }
+.rita-app :is([class~="bg-[#fbf5e9]"], [class~="bg-[#faf6ee]"], [class~="bg-[#fbf8f2]"], [class~="bg-[#f7f2e8]"], [class~="bg-[#fdfaf3]"], [class~="bg-[#fafaf9]"], [class~="bg-[#f5f7fb]"], [class~="bg-[#f3ece0]"], [class~="bg-[#e9dfcd]"], [class~="bg-[#f2edfb]"]) { background-color: var(--pp-grey) !important; }
+.rita-app :is([class~="bg-[#23201d]"]) { background-color: var(--pp-ink) !important; }
+.rita-app :is([class~="bg-[#8ec63f]"], [class~="bg-[#4c9a2a]"], [class~="bg-[#6ab887]"]) { background-color: var(--pp-accent) !important; color: var(--pp-on-accent); }
+.rita-app :is([class~="bg-[#e6f4d8]"], [class~="bg-[#eaf4e2]"], [class~="bg-[#eef6e9]"], [class~="bg-[#eaf6ee]"], [class~="bg-[#fbeae4]"], [class~="bg-[#f6ddd5]"]) { background-color: var(--pp-accent-soft) !important; }
+.rita-app :is([class~="bg-[#d1795e]"]) { background-color: var(--pp-accent-soft) !important; }
+.rita-app :is([class~="border-[#8ec63f]"], [class~="border-[#f0a95c]"]) { border-color: var(--pp-ink) !important; }
+.rita-app :is([class~="border-[#3f2c73]"]) { border-color: var(--pp-ink) !important; }
+/* A page whose root was painted cream becomes white; panels inside it stay grey. */
+.rita-app :is([class~="min-h-screen"][class~="bg-[#fbf5e9]"]) { background-color: #ffffff !important; }
+/* Translucent pink (was translucent green). */
+.rita-app :is([class~="bg-[#8ec63f]/20"], [class~="bg-[#4c9a2a]/20"], [class~="bg-[#6ab887]/20"]) { background-color: rgb(255 122 172 / 0.2) !important; }
+/* Inline styles written as hex or as the rgb() the browser writes back. */
+.rita-app :is([style*="#fbf5e9"], [style*="rgb(251, 245, 233)"]) { background-color: #ffffff !important; }
+.rita-app :is([style*="#23201d"], [style*="rgb(35, 32, 29)"]) { color: var(--pp-ink) !important; }
+@media (prefers-reduced-motion: reduce) {
+  .rita-app .rita-btn,
+  .rita-app .rita-pill {
+    transition: none;
+  }
+}
+
+/* Study workspace frame: mode tabs and the action column. Same white card, 2px ink border and
+   pink "on" state as the home page; icons are bare ink, not tinted circles. */
+.rita-app .rh-modetab,
+.rita-app .rh-rail {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  border: 2px solid var(--pp-ink);
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--pp-ink);
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 180ms var(--pp-ease),
+    background-color 160ms ease;
+}
+.rita-app .rh-modetab {
+  min-height: 4rem;
+  padding: 0.75rem 1.1rem;
+}
+.rita-app .rh-modetab[aria-pressed="true"] {
+  background: var(--pp-accent);
+  color: var(--pp-on-accent);
+}
+.rita-app .rh-modetab[aria-pressed="true"] span span:last-child {
+  color: var(--pp-on-accent);
+}
+.rita-app .rh-rail {
+  min-height: 4.5rem;
+  padding: 0.9rem 1.1rem;
+}
+.rita-app .rh-rail:hover,
+.rita-app .rh-modetab:hover {
+  transform: translateY(-2px);
+}
+.rita-app .rh-rail:hover {
+  background: var(--pp-accent-soft);
+}
+.rita-app .rh-rail:active,
+.rita-app .rh-modetab:active {
+  transform: scale(0.98);
+}
+.rita-app .rh-rail:focus-visible,
+.rita-app .rh-modetab:focus-visible {
+  outline: 3px solid var(--pp-ink);
+  outline-offset: 3px;
+}
+.rita-app .rh-rail-danger {
+  color: var(--pp-danger);
+}
+.rita-app .rh-rail[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rita-app .rh-rail,
+  .rita-app .rh-modetab {
+    transition: none;
+  }
+  .rita-app .rh-rail:hover,
+  .rita-app .rh-modetab:hover {
+    transform: none;
+  }
+}
+
+/* Legacy colours found later (generated from the remaining hex utility classes, by role). */
+.rita-app [class~="bg-[#0ea5e9]"] { background-color: var(--pp-accent) !important; color: var(--pp-on-accent); }
+.rita-app [class~="bg-[#10b981]"] { background-color: var(--pp-accent) !important; color: var(--pp-on-accent); }
+.rita-app [class~="bg-[#121117]"] { background-color: var(--pp-ink) !important; }
+.rita-app [class~="bg-[#23201d]/50"] { background-color: rgb(18 17 23 / 0.5) !important; }
+.rita-app [class~="bg-[#23201d]/55"] { background-color: rgb(18 17 23 / 0.55) !important; }
+.rita-app [class~="bg-[#2f7d55]"] { background-color: var(--pp-ink) !important; }
+.rita-app [class~="bg-[#3f2c73]"] { background-color: var(--pp-ink) !important; }
+.rita-app [class~="bg-[#6366f1]"] { background-color: var(--pp-accent) !important; color: var(--pp-on-accent); }
+.rita-app [class~="bg-[#6366f1]/15"] { background-color: rgb(255 122 172 / 0.15) !important; }
+.rita-app [class~="bg-[#8ec63f]/15"] { background-color: rgb(255 122 172 / 0.15) !important; }
+.rita-app [class~="bg-[#b3213f]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#d94a3d]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#d94a4a]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#d94f3d]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#dcdce5]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#e6d9c2]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#eef7e4]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#eef7e8]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#ef4444]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#efe7d8]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f0e9dc]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f0ebe1]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f0f0ec]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f2ece0]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f2f8ec]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#f4eddf]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#f4f4f8]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f4f7f2]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#f4faec]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#f59e0b]"] { background-color: var(--pp-accent) !important; color: var(--pp-on-accent); }
+.rita-app [class~="bg-[#f6f1e5]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#f6f1e6]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#f6f1e8]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f7e2d8]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#f8fcf5]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#faf6ec]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#faf8f3]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#faf8f5]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#fafaf8]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#fbdcdc]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#fbf5e9]/70"] { background-color: rgb(255 229 240 / 0.7) !important; }
+.rita-app [class~="bg-[#fbf7ef]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#fcf8f1]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#fdebc9]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#fdf0d8]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#fdf1e2]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#fdf3e6]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#2b6df0]"] { background-color: var(--pp-accent) !important; color: var(--pp-on-accent); }
+.rita-app [class~="bg-[#e7eefd]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#fffdf8]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="border-[#121117]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#23201d]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#3f2c73]/25"] { border-color: rgb(18 17 23 / 0.25) !important; }
+.rita-app [class~="border-[#4b9b2e]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#4c9a2a]/40"] { border-color: rgb(18 17 23 / 0.4) !important; }
+.rita-app [class~="border-[#4c9a2a]/50"] { border-color: rgb(18 17 23 / 0.5) !important; }
+.rita-app [class~="border-[#6366f1]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#6ab887]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#8ec63f]/60"] { border-color: rgb(18 17 23 / 0.6) !important; }
+.rita-app [class~="border-[#d1795e]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#d1795e]/30"] { border-color: rgb(18 17 23 / 0.3) !important; }
+.rita-app [class~="border-[#d1795e]/40"] { border-color: rgb(18 17 23 / 0.4) !important; }
+.rita-app [class~="border-[#d94a3d]/25"] { border-color: rgb(18 17 23 / 0.25) !important; }
+.rita-app [class~="border-[#dcdce5]"] { border-color: var(--pp-line) !important; }
+.rita-app [class~="border-[#e6c9a8]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="ring-[#23201d]"] { --tw-ring-color: var(--pp-accent) !important; }
+.rita-app [class~="ring-[#4c9a2a]/30"] { --tw-ring-color: var(--pp-accent) !important; }
+.rita-app [class~="ring-[#6366f1]"] { --tw-ring-color: var(--pp-accent) !important; }
+.rita-app [class~="ring-[#6ab887]"] { --tw-ring-color: var(--pp-accent) !important; }
+.rita-app [class~="ring-[#8ec63f]"] { --tw-ring-color: var(--pp-accent) !important; }
+.rita-app [class~="text-[#0a0a0a]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#121117]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#1e3a8a]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#1f4c6d]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#231f1a]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#2c480e]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#2f6b1c]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3b3730]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3c3730]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3d3833]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3f6a17]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3f7c26]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3f9a63]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#4338ca]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#4a3877]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#4b4a5c]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#4b7a33]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#4e7a1f]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#5d574e]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#6a697c]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#6aa9d8]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#6b6459]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#7a6f5e]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#7a7164]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#8a3b32]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#8a5b12]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#8a6a1f]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#8a8072]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#8a8378]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#8b8375]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#8d8578]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#8f2323]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#a15b47]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#a49a8b]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#b4485f]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#b8b0a4]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#c0392b]/80"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#c1392b]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#c2b9aa]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#c6bfb4]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#c8bfae]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#c8c0b2]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#f0a95c]"] { color: var(--pp-ink) !important; }
+
+/* Primary actions that were dark pills become the pink button; round chips get 10px corners. */
+.rita-app :is(button, a)[class~="bg-[#23201d]"],
+.rita-app :is(button, a)[class~="bg-[#23201d]"] *,
+.rita-app :is(button, a)[class~="bg-[#121117]"][class~="text-white"],
+.rita-app :is(button, a)[class~="bg-[#121117]"][class~="text-white"] * {
+  color: var(--pp-on-accent) !important;
+}
+.rita-app :is(button, a)[class~="bg-[#23201d]"],
+.rita-app :is(button, a)[class~="bg-[#121117]"][class~="text-white"] {
+  background-color: var(--pp-accent) !important;
+  border: 2px solid var(--pp-ink);
+}
+.rita-app :is(button, a)[class~="bg-[#23201d]"]:hover:not(:disabled),
+.rita-app :is(button, a)[class~="bg-[#121117]"][class~="text-white"]:hover:not(:disabled) {
+  background-color: var(--pp-accent-hover) !important;
+}
+.rita-app :is(button, a, label)[class*="rounded-full"]:not([role="switch"]) {
+  border-radius: 10px;
+}
+
+/* Theme tokens used by token-based classes (bg-primary, bg-cream, border-border, ...). */
+.rita-app {
+  --radius: 0.625rem;
+  --background: #ffffff;
+  --foreground: #121117;
+  --cream: #f4f4f8;
+  --cream-deep: #ececf2;
+  --ink: #121117;
+  --card: #ffffff;
+  --card-foreground: #121117;
+  --popover: #ffffff;
+  --popover-foreground: #121117;
+  --primary: #2b6df0;
+  --primary-foreground: #ffffff;
+  --primary-soft: #e7eefd;
+  --primary-deep: #2563eb;
+  --secondary: #f4f4f8;
+  --secondary-foreground: #121117;
+  --muted: #f4f4f8;
+  --muted-foreground: #6a697c;
+  --accent: #e7eefd;
+  --accent-foreground: #121117;
+  --destructive: #b3213f;
+  --destructive-foreground: #ffffff;
+  --border: #dcdce5;
+  --input: #dcdce5;
+  --ring: #121117;
+  --shadow-card: none;
+  --shadow-brand: none;
+}
+
+/* Tailwind palette classes (bg-emerald-600, text-rose-700 ...) take the site palette: greys stay grey,
+   red and green only mean wrong / right, warm tones mean caution, every other hue becomes the blue accent. */
+html.rita-app,
+.rita-app {
+  --color-slate-50: #f8f8fb;
+  --color-slate-100: #f4f4f8;
+  --color-slate-200: #dcdce5;
+  --color-slate-300: #c4c4d1;
+  --color-slate-400: #9a9aab;
+  --color-slate-500: #6a697c;
+  --color-slate-600: #54546a;
+  --color-slate-700: #4b4a5c;
+  --color-slate-800: #2a2933;
+  --color-slate-900: #121117;
+  --color-slate-950: #0b0b0f;
+  --color-gray-50: #f8f8fb;
+  --color-gray-100: #f4f4f8;
+  --color-gray-200: #dcdce5;
+  --color-gray-300: #c4c4d1;
+  --color-gray-400: #9a9aab;
+  --color-gray-500: #6a697c;
+  --color-gray-600: #54546a;
+  --color-gray-700: #4b4a5c;
+  --color-gray-800: #2a2933;
+  --color-gray-900: #121117;
+  --color-gray-950: #0b0b0f;
+  --color-zinc-50: #f8f8fb;
+  --color-zinc-100: #f4f4f8;
+  --color-zinc-200: #dcdce5;
+  --color-zinc-300: #c4c4d1;
+  --color-zinc-400: #9a9aab;
+  --color-zinc-500: #6a697c;
+  --color-zinc-600: #54546a;
+  --color-zinc-700: #4b4a5c;
+  --color-zinc-800: #2a2933;
+  --color-zinc-900: #121117;
+  --color-zinc-950: #0b0b0f;
+  --color-neutral-50: #f8f8fb;
+  --color-neutral-100: #f4f4f8;
+  --color-neutral-200: #dcdce5;
+  --color-neutral-300: #c4c4d1;
+  --color-neutral-400: #9a9aab;
+  --color-neutral-500: #6a697c;
+  --color-neutral-600: #54546a;
+  --color-neutral-700: #4b4a5c;
+  --color-neutral-800: #2a2933;
+  --color-neutral-900: #121117;
+  --color-neutral-950: #0b0b0f;
+  --color-stone-50: #f8f8fb;
+  --color-stone-100: #f4f4f8;
+  --color-stone-200: #dcdce5;
+  --color-stone-300: #c4c4d1;
+  --color-stone-400: #9a9aab;
+  --color-stone-500: #6a697c;
+  --color-stone-600: #54546a;
+  --color-stone-700: #4b4a5c;
+  --color-stone-800: #2a2933;
+  --color-stone-900: #121117;
+  --color-stone-950: #0b0b0f;
+  --color-red-50: #fdecef;
+  --color-red-100: #fbd9e0;
+  --color-red-200: #f5b3c0;
+  --color-red-300: #ec8498;
+  --color-red-400: #d9506d;
+  --color-red-500: #c4314f;
+  --color-red-600: #b3213f;
+  --color-red-700: #961a34;
+  --color-red-800: #781529;
+  --color-red-900: #5a1020;
+  --color-red-950: #3d0b16;
+  --color-rose-50: #fdecef;
+  --color-rose-100: #fbd9e0;
+  --color-rose-200: #f5b3c0;
+  --color-rose-300: #ec8498;
+  --color-rose-400: #d9506d;
+  --color-rose-500: #c4314f;
+  --color-rose-600: #b3213f;
+  --color-rose-700: #961a34;
+  --color-rose-800: #781529;
+  --color-rose-900: #5a1020;
+  --color-rose-950: #3d0b16;
+  --color-green-50: #e8f5e9;
+  --color-green-100: #d2ecd4;
+  --color-green-200: #a8d8ac;
+  --color-green-300: #7bc280;
+  --color-green-400: #4aa552;
+  --color-green-500: #3a9042;
+  --color-green-600: #2e7d32;
+  --color-green-700: #256528;
+  --color-green-800: #1d4f20;
+  --color-green-900: #163b18;
+  --color-green-950: #0e2610;
+  --color-emerald-50: #e8f5e9;
+  --color-emerald-100: #d2ecd4;
+  --color-emerald-200: #a8d8ac;
+  --color-emerald-300: #7bc280;
+  --color-emerald-400: #4aa552;
+  --color-emerald-500: #3a9042;
+  --color-emerald-600: #2e7d32;
+  --color-emerald-700: #256528;
+  --color-emerald-800: #1d4f20;
+  --color-emerald-900: #163b18;
+  --color-emerald-950: #0e2610;
+  --color-amber-50: #fff4d6;
+  --color-amber-100: #ffe6a3;
+  --color-amber-200: #ffd266;
+  --color-amber-300: #f5b942;
+  --color-amber-400: #e9a21f;
+  --color-amber-500: #d68c0a;
+  --color-amber-600: #b26b00;
+  --color-amber-700: #8a5200;
+  --color-amber-800: #6b4000;
+  --color-amber-900: #4d2d00;
+  --color-amber-950: #331e00;
+  --color-yellow-50: #fff4d6;
+  --color-yellow-100: #ffe6a3;
+  --color-yellow-200: #ffd266;
+  --color-yellow-300: #f5b942;
+  --color-yellow-400: #e9a21f;
+  --color-yellow-500: #d68c0a;
+  --color-yellow-600: #b26b00;
+  --color-yellow-700: #8a5200;
+  --color-yellow-800: #6b4000;
+  --color-yellow-900: #4d2d00;
+  --color-yellow-950: #331e00;
+  --color-orange-50: #fff4d6;
+  --color-orange-100: #ffe6a3;
+  --color-orange-200: #ffd266;
+  --color-orange-300: #f5b942;
+  --color-orange-400: #e9a21f;
+  --color-orange-500: #d68c0a;
+  --color-orange-600: #b26b00;
+  --color-orange-700: #8a5200;
+  --color-orange-800: #6b4000;
+  --color-orange-900: #4d2d00;
+  --color-orange-950: #331e00;
+  --color-lime-50: #eef3fe;
+  --color-lime-100: #e7eefd;
+  --color-lime-200: #cddcfb;
+  --color-lime-300: #a9c4f9;
+  --color-lime-400: #7ba5f5;
+  --color-lime-500: #4a82f3;
+  --color-lime-600: #2b6df0;
+  --color-lime-700: #1d5fd0;
+  --color-lime-800: #1a4ba8;
+  --color-lime-900: #153a82;
+  --color-lime-950: #0f2a5e;
+  --color-teal-50: #eef3fe;
+  --color-teal-100: #e7eefd;
+  --color-teal-200: #cddcfb;
+  --color-teal-300: #a9c4f9;
+  --color-teal-400: #7ba5f5;
+  --color-teal-500: #4a82f3;
+  --color-teal-600: #2b6df0;
+  --color-teal-700: #1d5fd0;
+  --color-teal-800: #1a4ba8;
+  --color-teal-900: #153a82;
+  --color-teal-950: #0f2a5e;
+  --color-cyan-50: #eef3fe;
+  --color-cyan-100: #e7eefd;
+  --color-cyan-200: #cddcfb;
+  --color-cyan-300: #a9c4f9;
+  --color-cyan-400: #7ba5f5;
+  --color-cyan-500: #4a82f3;
+  --color-cyan-600: #2b6df0;
+  --color-cyan-700: #1d5fd0;
+  --color-cyan-800: #1a4ba8;
+  --color-cyan-900: #153a82;
+  --color-cyan-950: #0f2a5e;
+  --color-sky-50: #eef3fe;
+  --color-sky-100: #e7eefd;
+  --color-sky-200: #cddcfb;
+  --color-sky-300: #a9c4f9;
+  --color-sky-400: #7ba5f5;
+  --color-sky-500: #4a82f3;
+  --color-sky-600: #2b6df0;
+  --color-sky-700: #1d5fd0;
+  --color-sky-800: #1a4ba8;
+  --color-sky-900: #153a82;
+  --color-sky-950: #0f2a5e;
+  --color-blue-50: #eef3fe;
+  --color-blue-100: #e7eefd;
+  --color-blue-200: #cddcfb;
+  --color-blue-300: #a9c4f9;
+  --color-blue-400: #7ba5f5;
+  --color-blue-500: #4a82f3;
+  --color-blue-600: #2b6df0;
+  --color-blue-700: #1d5fd0;
+  --color-blue-800: #1a4ba8;
+  --color-blue-900: #153a82;
+  --color-blue-950: #0f2a5e;
+  --color-indigo-50: #eef3fe;
+  --color-indigo-100: #e7eefd;
+  --color-indigo-200: #cddcfb;
+  --color-indigo-300: #a9c4f9;
+  --color-indigo-400: #7ba5f5;
+  --color-indigo-500: #4a82f3;
+  --color-indigo-600: #2b6df0;
+  --color-indigo-700: #1d5fd0;
+  --color-indigo-800: #1a4ba8;
+  --color-indigo-900: #153a82;
+  --color-indigo-950: #0f2a5e;
+  --color-violet-50: #eef3fe;
+  --color-violet-100: #e7eefd;
+  --color-violet-200: #cddcfb;
+  --color-violet-300: #a9c4f9;
+  --color-violet-400: #7ba5f5;
+  --color-violet-500: #4a82f3;
+  --color-violet-600: #2b6df0;
+  --color-violet-700: #1d5fd0;
+  --color-violet-800: #1a4ba8;
+  --color-violet-900: #153a82;
+  --color-violet-950: #0f2a5e;
+  --color-purple-50: #eef3fe;
+  --color-purple-100: #e7eefd;
+  --color-purple-200: #cddcfb;
+  --color-purple-300: #a9c4f9;
+  --color-purple-400: #7ba5f5;
+  --color-purple-500: #4a82f3;
+  --color-purple-600: #2b6df0;
+  --color-purple-700: #1d5fd0;
+  --color-purple-800: #1a4ba8;
+  --color-purple-900: #153a82;
+  --color-purple-950: #0f2a5e;
+  --color-fuchsia-50: #eef3fe;
+  --color-fuchsia-100: #e7eefd;
+  --color-fuchsia-200: #cddcfb;
+  --color-fuchsia-300: #a9c4f9;
+  --color-fuchsia-400: #7ba5f5;
+  --color-fuchsia-500: #4a82f3;
+  --color-fuchsia-600: #2b6df0;
+  --color-fuchsia-700: #1d5fd0;
+  --color-fuchsia-800: #1a4ba8;
+  --color-fuchsia-900: #153a82;
+  --color-fuchsia-950: #0f2a5e;
+  --color-pink-50: #eef3fe;
+  --color-pink-100: #e7eefd;
+  --color-pink-200: #cddcfb;
+  --color-pink-300: #a9c4f9;
+  --color-pink-400: #7ba5f5;
+  --color-pink-500: #4a82f3;
+  --color-pink-600: #2b6df0;
+  --color-pink-700: #1d5fd0;
+  --color-pink-800: #1a4ba8;
+  --color-pink-900: #153a82;
+  --color-pink-950: #0f2a5e;
+}
+
+/* Faint card outlines (border-black/5 and friends) read as the palette line colour. */
+.rita-app [class*="border-black/"] {
+  border-color: var(--pp-line) !important;
 }

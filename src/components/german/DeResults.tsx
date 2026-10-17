@@ -23,18 +23,18 @@ export function DeResults({
   const avg = rows.length ? Math.round(rows.reduce((n, r) => n + r.score, 0) / rows.length) : 0;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#fbf5e9] p-4 md:p-10">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#f4f4f8] p-4 md:p-10">
       <div className="mx-auto max-w-3xl">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="font-display text-[30px] font-black leading-tight text-[#23201d]">
+            <h2 className="font-display text-[30px] font-black leading-tight text-[#121117]">
               {missed.length === 0 ? "Perfect round" : `${rows.length - missed.length} / ${rows.length} right`}
             </h2>
-            <p className="mt-1 text-[15px] font-semibold text-[#6b645b]">
+            <p className="mt-1 text-[15px] font-semibold text-[#54546a]">
               {showScores ? `Average pronunciation ${avg}/100` : "Everything you missed is listed below with the correct answer."}
             </p>
           </div>
-          <button onClick={onClose} className="rounded-full bg-white p-2.5 text-[#6b645b] shadow-sm">
+          <button onClick={onClose} className="rounded-full bg-white p-2.5 text-[#54546a] shadow-sm">
             <X size={18} />
           </button>
         </div>
@@ -48,17 +48,17 @@ export function DeResults({
               <div
                 key={item.id}
                 className="flex items-center gap-3 rounded-2xl border border-black/[0.06] bg-white px-4 py-3"
-                style={{ borderLeft: `6px solid ${correct ? "#2f9e63" : "#d94a4a"}` }}
+                style={{ borderLeft: `6px solid ${correct ? "#2e7d32" : "#c4314f"}` }}
               >
                 <button
                   onClick={() => void speakGerman(art ? `${art} ${item.german}` : item.german)}
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#f3ece0] text-[#5a4a2e] transition hover:brightness-95"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#f4f4f8] text-[#6b4000] transition hover:brightness-95"
                   aria-label="Play German audio"
                 >
                   <Volume2 size={17} />
                 </button>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[16px] font-black text-[#23201d]">
+                  <div className="truncate text-[16px] font-black text-[#121117]">
                     {art && (
                       <span className="mr-1.5 rounded-md px-1.5 py-0.5 text-[14px] text-white" style={{ background: c!.bg }}>
                         {art}
@@ -66,7 +66,7 @@ export function DeResults({
                     )}
                     {item.german}
                   </div>
-                  {item.english && <div className="truncate text-[13px] text-[#6b645b]">{item.english}</div>}
+                  {item.english && <div className="truncate text-[13px] text-[#54546a]">{item.english}</div>}
                 </div>
                 {showScores && (
                   <span className="shrink-0 text-[13px] font-black" style={{ color: b.color }}>
@@ -76,10 +76,10 @@ export function DeResults({
                 <button
                   onClick={() => void flag.mutateAsync({ itemId: item.id, on: !item.flagged })}
                   className="shrink-0 rounded-full p-2 transition"
-                  style={{ color: item.flagged ? "#d94a4a" : "#c3bcb1" }}
+                  style={{ color: item.flagged ? "#c4314f" : "#c4c4d1" }}
                   aria-label="Red flag this item"
                 >
-                  <Flag size={17} fill={item.flagged ? "#d94a4a" : "none"} />
+                  <Flag size={17} fill={item.flagged ? "#c4314f" : "none"} />
                 </button>
               </div>
             );
@@ -98,7 +98,7 @@ export function DeResults({
           )}
           <button
             onClick={onClose}
-            className="rounded-full border border-black/10 bg-white px-6 py-3 text-[15px] font-extrabold text-[#23201d]"
+            className="rounded-full border border-black/10 bg-white px-6 py-3 text-[15px] font-extrabold text-[#121117]"
           >
             Back to subjects
           </button>

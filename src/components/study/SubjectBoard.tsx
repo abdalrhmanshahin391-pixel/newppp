@@ -3,12 +3,10 @@ import { Check, ChevronDown, ChevronUp, GripVertical, Pencil, Plus, Trash2 } fro
 import type { SampleSubject } from "@/lib/study-sample-data";
 import type { Selection } from "@/lib/use-study-subjects";
 
-const TONE_DOTS = ["#f0a95c", "#6aa9d8", "#9b83d1", "#d1795e", "#6ab887"];
+const TONE_DOTS = ["#2b6df0"];
 
 type DragState =
-  | { kind: "subject"; from: number }
-  | { kind: "sub"; si: number; from: number }
-  | null;
+  { kind: "subject"; from: number } | { kind: "sub"; si: number; from: number } | null;
 
 export type SubjectBoardProps = {
   subjects: SampleSubject[];
@@ -24,7 +22,7 @@ export type SubjectBoardProps = {
 };
 
 const iconBtn =
-  "grid h-8 w-8 shrink-0 place-items-center rounded-xl text-[#a29a8d] transition-colors hover:bg-black/[0.06] hover:text-[#23201d]";
+  "grid h-9 w-9 shrink-0 place-items-center rounded-lg text-[#6a697c] transition-colors hover:bg-[#e7eefd] hover:text-[#121117]";
 
 function Box({
   checked,
@@ -46,15 +44,15 @@ function Box({
         e.stopPropagation();
         onToggle();
       }}
-      className="grid shrink-0 place-items-center rounded-[8px] border-2 transition-colors"
+      className="grid shrink-0 place-items-center rounded-[6px] border-2 transition-colors"
       style={{
         width: size,
         height: size,
-        borderColor: checked ? tone : "#ded6c7",
+        borderColor: "#121117",
         background: checked ? tone : "#fff",
       }}
     >
-      {checked && <Check size={size - 10} strokeWidth={3.5} color="#fff" />}
+      {checked && <Check size={size - 10} strokeWidth={3.5} color="#121117" />}
     </button>
   );
 }
@@ -78,8 +76,8 @@ export function SubjectBoard({
 
   if (subjects.length === 0) {
     return (
-      <div className="grid min-h-[40vh] place-items-center rounded-2xl border border-dashed border-black/10 bg-[#fbf5e9] text-center">
-        <p className="px-6 text-[15px] font-bold text-[#a29a8d]">
+      <div className="grid min-h-[40vh] place-items-center rounded-2xl border-2 border-dashed border-[#dcdce5] bg-[#f4f4f8] text-center">
+        <p className="px-6 text-[16px] font-medium text-[#6a697c]">
           No subjects yet — use “Add subject” on the left to start your board.
         </p>
       </div>
@@ -93,9 +91,7 @@ export function SubjectBoard({
         const selected = selection?.kind === "subject" && selection.si === i;
         const dot = TONE_DOTS[i % TONE_DOTS.length];
         const dropTarget = drag?.kind === "subject" && overSubject === i && drag.from !== i;
-        const total = countFor
-          ? subject.subs.reduce((n, _s, j) => n + countFor(i, j), 0)
-          : 0;
+        const total = countFor ? subject.subs.reduce((n, _s, j) => n + countFor(i, j), 0) : 0;
 
         return (
           <div key={`${subject.name}-${i}`}>
@@ -122,20 +118,14 @@ export function SubjectBoard({
                 setOverSubject(null);
               }}
               onClick={() => setOpen(expanded ? null : i)}
-              className={`group relative flex min-h-20 w-full cursor-pointer items-center gap-3.5 overflow-hidden rounded-2xl border pl-4 pr-3.5 text-left transition-all ${
-                dropTarget ? "border-dashed border-[#f0a95c]" : ""
+              className={`group relative flex min-h-20 w-full cursor-pointer items-center gap-3.5 overflow-hidden rounded-[14px] border-2 pl-4 pr-3.5 text-left transition-all ${
+                dropTarget ? "border-dashed border-[#121117]" : ""
               } ${
                 selected
-                  ? "border-transparent bg-[#fdf3e4] shadow-[0_10px_24px_-20px_rgba(35,32,29,0.6)]"
-                  : "border-black/[0.06] bg-white hover:bg-[#fdfaf3]"
+                  ? "border-[#121117] bg-[#e7eefd]"
+                  : "border-[#121117] bg-white hover:bg-[#f4f4f8]"
               }`}
             >
-              {selected && (
-                <span
-                  className="absolute inset-y-0 left-0 w-[5px] rounded-r-full"
-                  style={{ background: dot }}
-                />
-              )}
               <Box
                 checked={selected}
                 tone={dot}
@@ -143,16 +133,16 @@ export function SubjectBoard({
               />
               <GripVertical
                 size={16}
-                className="shrink-0 cursor-grab text-[#d8d0c2] active:cursor-grabbing"
+                className="shrink-0 cursor-grab text-[#ffd266] active:cursor-grabbing"
               />
-              <span className="w-7 shrink-0 text-[13px] font-black tabular-nums text-[#c0b7a8]">
+              <span className="w-7 shrink-0 text-[13px] font-black tabular-nums text-[#c4c4d1]">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[17px] font-black leading-tight text-[#23201d]">
+                <span className="block truncate text-[17px] font-black leading-tight text-[#121117]">
                   {subject.name}
                 </span>
-                <span className="mt-0.5 block text-[12.5px] font-semibold text-[#a29a8d]">
+                <span className="mt-0.5 block text-[12.5px] font-semibold text-[#9a9aab]">
                   {subject.subs.length} sub-topic{subject.subs.length === 1 ? "" : "s"}
                   {countFor && total > 0 ? ` · ${total} card${total === 1 ? "" : "s"}` : ""}
                 </span>
@@ -216,10 +206,7 @@ export function SubjectBoard({
                 </button>
               </span>
 
-              <span
-                className={iconBtn}
-                aria-hidden
-              >
+              <span className={iconBtn} aria-hidden>
                 <ChevronDown
                   size={18}
                   className={`transition-transform ${expanded ? "rotate-180" : ""}`}
@@ -262,20 +249,14 @@ export function SubjectBoard({
                         setOverSub(null);
                       }}
                       onClick={() => onSelect(subSelected ? null : { kind: "sub", si: i, sj: j })}
-                       className={`group relative flex min-h-20 cursor-pointer items-center gap-3 overflow-hidden rounded-2xl border pl-4 pr-3 transition-all ${
-                        subDrop ? "border-dashed border-[#f0a95c]" : ""
+                      className={`group relative flex min-h-20 cursor-pointer items-center gap-3 overflow-hidden rounded-[12px] border-2 pl-4 pr-3 transition-all ${
+                        subDrop ? "border-dashed border-[#121117]" : ""
                       } ${
                         subSelected
-                          ? "border-transparent bg-[#fdf3e4]"
-                          : "border-transparent bg-[#fbf5e9] hover:bg-[#f7efe0]"
+                          ? "border-[#121117] bg-[#e7eefd]"
+                          : "border-[#dcdce5] bg-[#f4f4f8] hover:border-[#121117]"
                       }`}
                     >
-                      {subSelected && (
-                        <span
-                          className="absolute inset-y-0 left-0 w-[4px] rounded-r-full"
-                          style={{ background: dot }}
-                        />
-                      )}
                       <Box
                         size={20}
                         checked={subSelected}
@@ -286,12 +267,12 @@ export function SubjectBoard({
                       />
                       <GripVertical
                         size={14}
-                        className="shrink-0 cursor-grab text-[#d8d0c2] active:cursor-grabbing"
+                        className="shrink-0 cursor-grab text-[#ffd266] active:cursor-grabbing"
                       />
-                      <span className="w-6 shrink-0 text-[12px] font-bold tabular-nums text-[#c0b7a8]">
+                      <span className="w-6 shrink-0 text-[12px] font-bold tabular-nums text-[#c4c4d1]">
                         {String(j + 1).padStart(2, "0")}
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-[15px] font-bold text-[#3d3833]">
+                      <span className="min-w-0 flex-1 truncate text-[15px] font-bold text-[#2a2933]">
                         {sub.name}
                       </span>
                       <span className="flex shrink-0 items-center gap-0.5 opacity-60 transition-opacity group-hover:opacity-100">
@@ -341,7 +322,7 @@ export function SubjectBoard({
                         </button>
                       </span>
                       {countFor && countFor(i, j) > 0 && (
-                        <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[12px] font-bold tabular-nums text-[#7a736a]">
+                        <span className="shrink-0 rounded-md border-[1.5px] border-[#121117] bg-white px-2.5 py-1 text-[13px] font-semibold tabular-nums text-[#121117]">
                           {countFor(i, j)} cards
                         </span>
                       )}
@@ -355,7 +336,7 @@ export function SubjectBoard({
                       e.stopPropagation();
                       onAddSub(i);
                     }}
-                    className="flex h-12 items-center gap-2 rounded-xl border border-dashed border-black/10 px-3.5 text-[13.5px] font-bold text-[#a29a8d] hover:bg-[#fbf5e9]"
+                    className="flex h-12 items-center gap-2 rounded-xl border-2 border-dashed border-[#dcdce5] px-3.5 text-[14.5px] font-semibold text-[#6a697c] hover:bg-[#f4f4f8]"
                   >
                     <Plus size={14} /> Add a sub-subject
                   </button>

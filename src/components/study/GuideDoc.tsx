@@ -12,16 +12,16 @@ import { useMemo } from "react";
 type Tone = { kicker: string; rule: string; chip: string; dot: string };
 
 const TONES: Tone[] = [
-  { kicker: "#3f7a29", rule: "#d6ead0", chip: "#eef7ea", dot: "#58a700" },
-  { kicker: "#4a3877", rule: "#ded5f1", chip: "#f5f1fd", dot: "#6f57b8" },
-  { kicker: "#7a4b16", rule: "#f0dcc0", chip: "#fdf5ea", dot: "#c98a34" },
-  { kicker: "#75283a", rule: "#f0d3d9", chip: "#fdf0f3", dot: "#bb5a72" },
-  { kicker: "#1f4c6d", rule: "#cfe1ef", chip: "#eff7fd", dot: "#4a8ab5" },
+  { kicker: "#2b6df0", rule: "#e8f5e9", chip: "#e8f5e9", dot: "#2b6df0" },
+  { kicker: "#121117", rule: "#e7eefd", chip: "#e7eefd", dot: "#121117" },
+  { kicker: "#121117", rule: "#f4f4f8", chip: "#f4f4f8", dot: "#2b6df0" },
+  { kicker: "#121117", rule: "#e7eefd", chip: "#e7eefd", dot: "#b3213f" },
+  { kicker: "#121117", rule: "#dcdce5", chip: "#f4f4f8", dot: "#121117" },
 ];
 
-const INK = "#231f1a";
-const BODY = "#3d3833";
-const MUTED = "#6b6357";
+const INK = "#121117";
+const BODY = "#4b4a5c";
+const MUTED = "#6a697c";
 
 type Node =
   | { kind: "heading"; text: string }

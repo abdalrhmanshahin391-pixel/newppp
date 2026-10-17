@@ -215,8 +215,8 @@ function MemoryWorkspace() {
           )}
 
           {mode === "edit" && (!scope.subject || !scope.subtopic) && (
-            <div className="mt-6 rounded-2xl border border-dashed border-black/10 bg-[#fbf5e9] px-5 py-8 text-center">
-              <p className="text-[14px] font-bold text-[#a29a8d]">
+            <div className="mt-6 rounded-2xl border border-dashed border-black/10 bg-[#f4f4f8] px-5 py-8 text-center">
+              <p className="text-[14px] font-bold text-[#9a9aab]">
                 Tick a sub-subject to start building pairs — a left side and the fact that belongs
                 to it.
               </p>

@@ -171,10 +171,10 @@ export function QuestionSetDetailPage() {
 
   if (setQuery.isLoading) {
     return (
-      <div className="min-h-screen" style={{ background: "#fbf5e9" }}>
+      <div className="min-h-screen" style={{ background: "#f4f4f8" }}>
         <SiteHeader />
-        <div className="mx-auto max-w-5xl px-4 py-24 text-center text-sm text-[#6b655c]">
-          <Loader2 size={24} className="mx-auto mb-3 animate-spin text-[#8ec63f]" />
+        <div className="mx-auto max-w-5xl px-4 py-24 text-center text-sm text-[#54546a]">
+          <Loader2 size={24} className="mx-auto mb-3 animate-spin text-[#4a82f3]" />
           Loading question set…
         </div>
       </div>
@@ -183,17 +183,17 @@ export function QuestionSetDetailPage() {
 
   if (!set) {
     return (
-      <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+      <div className="min-h-screen bg-white text-[#121117]">
         <SiteHeader />
         <div className="mx-auto max-w-xl px-4 py-24 text-center">
           <span className="text-4xl">❓</span>
           <h1 className="mt-4 font-display text-2xl font-black">Question set not found</h1>
-          <p className="mt-2 text-sm text-[#6b655c]">
+          <p className="mt-2 text-sm text-[#54546a]">
             This set may have been removed or you may not have access to it.
           </p>
           <Link
             to="/share" search={{ type: "flashcards" }}
-            className="mt-6 inline-flex rounded-full bg-[#23201d] px-6 py-2.5 text-sm font-black text-white"
+            className="mt-6 inline-flex rounded-full bg-[#121117] px-6 py-2.5 text-sm font-black text-white"
           >
             Browse shared materials
           </Link>
@@ -203,7 +203,7 @@ export function QuestionSetDetailPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
 
       <main className="mx-auto max-w-5xl px-4 py-10 md:px-8 md:py-14">
@@ -211,7 +211,7 @@ export function QuestionSetDetailPage() {
         <div className="mb-6 flex items-center justify-between">
           <Link
             to="/share" search={{ type: "flashcards" }}
-            className="inline-flex items-center gap-1.5 text-sm font-black text-[#6b655c] transition hover:text-[#23201d]"
+            className="inline-flex items-center gap-1.5 text-sm font-black text-[#54546a] transition hover:text-[#121117]"
           >
             <ArrowLeft size={15} /> All shared materials
           </Link>
@@ -220,7 +220,7 @@ export function QuestionSetDetailPage() {
             <button
               type="button"
               onClick={handleCopyLink}
-              className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.08] bg-white px-3.5 py-1.5 text-xs font-black text-[#6b655c] transition hover:bg-black/[0.03]"
+              className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.08] bg-white px-3.5 py-1.5 text-xs font-black text-[#54546a] transition hover:bg-black/[0.03]"
             >
               <Share2 size={13} /> Copy link
             </button>
@@ -229,7 +229,7 @@ export function QuestionSetDetailPage() {
                 <button
                   type="button"
                   onClick={() => handleAudienceChange(set.audience === "public" ? "space" : "public")}
-                  className="inline-flex items-center gap-1 rounded-full border border-black/[0.08] bg-white px-3 py-1.5 text-xs font-black text-[#6b655c] transition hover:bg-black/[0.04]"
+                  className="inline-flex items-center gap-1 rounded-full border border-black/[0.08] bg-white px-3 py-1.5 text-xs font-black text-[#54546a] transition hover:bg-black/[0.04]"
                   title={set.audience === "public" ? "Restrict to space only" : "Make publicly available"}
                 >
                   {set.audience === "public" ? <Lock size={13} /> : <Globe size={13} />}
@@ -238,7 +238,7 @@ export function QuestionSetDetailPage() {
                 <button
                   type="button"
                   onClick={handleTogglePublish}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-black/[0.08] bg-white text-[#6b655c] transition hover:bg-black/[0.04]"
+                  className="grid h-8 w-8 place-items-center rounded-full border border-black/[0.08] bg-white text-[#54546a] transition hover:bg-black/[0.04]"
                   title={set.published ? "Make hidden" : "Make public"}
                 >
                   {set.published ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -277,14 +277,14 @@ export function QuestionSetDetailPage() {
                     {sourceMeta.icon} {sourceMeta.label}
                   </span>
                   {set.subject && (
-                    <span className="rounded-full bg-black/15 px-2.5 py-0.5 text-[11px] font-black text-[#23201d]">
+                    <span className="rounded-full bg-black/15 px-2.5 py-0.5 text-[11px] font-black text-[#121117]">
                       {set.subject}
                     </span>
                   )}
-                  <span className="rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] font-black text-[#23201d]">
+                  <span className="rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] font-black text-[#121117]">
                     {set.question_count} Questions
                   </span>
-                  <span className="rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] font-black text-[#23201d]">
+                  <span className="rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] font-black text-[#121117]">
                     {set.save_count} saves
                   </span>
                   {(set.rating_count ?? 0) > 0 ? (
@@ -293,20 +293,20 @@ export function QuestionSetDetailPage() {
                       {(set.rating_avg ?? 0).toFixed(1)} ({set.rating_count ?? 0})
                     </span>
                   ) : (
-                    <span className="rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] font-black text-[#23201d]">
+                    <span className="rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] font-black text-[#121117]">
                       No ratings yet
                     </span>
                   )}
-                  <span className="inline-flex items-center gap-1 rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] font-black text-[#23201d]">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-black/10 px-2.5 py-0.5 text-[11px] font-black text-[#121117]">
                     {set.audience === "public" ? <Globe size={11} /> : <Lock size={11} />}
                     {set.audience === "public" ? "Public" : "Space only"}
                   </span>
                 </div>
-                <h1 className="mt-2 font-display text-2xl font-black tracking-tight text-[#23201d] md:text-3xl">
+                <h1 className="mt-2 font-display text-2xl font-black tracking-tight text-[#121117] md:text-3xl">
                   {set.title}
                 </h1>
                 {set.description && (
-                  <p className="mt-1.5 max-w-2xl text-[14.5px] leading-relaxed text-[#3d3832]">
+                  <p className="mt-1.5 max-w-2xl text-[14.5px] leading-relaxed text-[#2a2933]">
                     {set.description}
                   </p>
                 )}
@@ -321,7 +321,7 @@ export function QuestionSetDetailPage() {
               <button
                 type="button"
                 onClick={() => setPracticeMode(!practiceMode)}
-                className="inline-flex items-center gap-2 rounded-full bg-[#23201d] px-5 py-3 text-[14px] font-black text-white shadow-md transition hover:bg-black"
+                className="inline-flex items-center gap-2 rounded-full bg-[#121117] px-5 py-3 text-[14px] font-black text-white shadow-md transition hover:bg-black"
               >
                 <Play size={15} fill="white" />
                 {practiceMode ? "Exit Practice" : "Practice Mode"}
@@ -334,7 +334,7 @@ export function QuestionSetDetailPage() {
                 className={`inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-[13px] font-black transition ${
                   savedQuery.data
                     ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                    : "border-black/[0.1] bg-white text-[#23201d] hover:bg-white/80"
+                    : "border-black/[0.1] bg-white text-[#121117] hover:bg-white/80"
                 }`}
               >
                 {savedQuery.data ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
@@ -359,23 +359,23 @@ export function QuestionSetDetailPage() {
         {!practiceMode && (
           <section className="mt-8 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-xl font-black text-[#23201d]">
+              <h2 className="font-display text-xl font-black text-[#121117]">
                 Questions Overview ({set.question_count})
               </h2>
               {totalPages > 1 && (
-                <span className="text-xs font-bold text-[#6b655c]">
+                <span className="text-xs font-bold text-[#54546a]">
                   Page {page + 1} of {totalPages}
                 </span>
               )}
             </div>
 
             {pageQuery.isLoading ? (
-              <div className="py-16 text-center text-sm text-[#6b655c]">
-                <Loader2 size={18} className="mx-auto mb-2 animate-spin text-[#8ec63f]" />
+              <div className="py-16 text-center text-sm text-[#54546a]">
+                <Loader2 size={18} className="mx-auto mb-2 animate-spin text-[#4a82f3]" />
                 Loading questions…
               </div>
             ) : (pageQuery.data?.length ?? 0) === 0 ? (
-              <div className="rounded-2xl border border-dashed border-black/15 bg-white/50 p-8 text-center text-sm text-[#6b655c]">
+              <div className="rounded-2xl border border-dashed border-black/15 bg-white/50 p-8 text-center text-sm text-[#54546a]">
                 No questions found in this set.
               </div>
             ) : (
@@ -399,7 +399,7 @@ export function QuestionSetDetailPage() {
                 >
                   <ChevronLeft size={14} /> Previous
                 </button>
-                <span className="text-xs font-bold text-[#6b655c]">
+                <span className="text-xs font-bold text-[#54546a]">
                   Page {page + 1} of {totalPages}
                 </span>
                 <button
@@ -431,17 +431,17 @@ function QuestionCard({ question, index }: { question: SharedQuestionItem; index
   return (
     <article className="overflow-hidden rounded-[24px] border border-black/[0.07] bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-black uppercase tracking-widest text-[#8a8376]">
+        <span className="text-[11px] font-black uppercase tracking-widest text-[#6a697c]">
           Question {index}
         </span>
         {question.subtopic && (
-          <span className="rounded-full bg-black/[0.04] px-2.5 py-0.5 text-[10.5px] font-bold text-[#6b655c]">
+          <span className="rounded-full bg-black/[0.04] px-2.5 py-0.5 text-[10.5px] font-bold text-[#54546a]">
             {question.subtopic}
           </span>
         )}
       </div>
 
-      <h3 className="mt-2.5 font-display text-[17.5px] font-black leading-snug text-[#23201d]">
+      <h3 className="mt-2.5 font-display text-[17.5px] font-black leading-snug text-[#121117]">
         {question.stem}
       </h3>
 
@@ -454,20 +454,20 @@ function QuestionCard({ question, index }: { question: SharedQuestionItem; index
               key={i}
               className={`flex items-start gap-3 rounded-xl border px-4 py-2.5 text-[14px] font-medium transition ${
                 isCorrect
-                  ? "border-[#8ec63f] bg-[#f4faec] text-[#2c480e]"
-                  : "border-black/[0.06] bg-[#faf8f5] text-[#3d3832]"
+                  ? "border-[#4a82f3] bg-[#f4f4f8] text-[#153a82]"
+                  : "border-black/[0.06] bg-[#ffffff] text-[#2a2933]"
               }`}
             >
               <span
                 className={`grid h-5 w-5 shrink-0 place-items-center rounded text-xs font-black ${
-                  isCorrect ? "bg-[#8ec63f] text-white" : "bg-black/[0.06] text-[#6b655c]"
+                  isCorrect ? "bg-[#4a82f3] text-white" : "bg-black/[0.06] text-[#54546a]"
                 }`}
               >
                 {letter}
               </span>
               <span className="flex-1">{opt.text || opt.body || String(opt)}</span>
               {isCorrect && (
-                <span className="inline-flex items-center gap-1 rounded bg-[#8ec63f]/20 px-2 py-0.5 text-[11px] font-black text-[#3d5c14]">
+                <span className="inline-flex items-center gap-1 rounded bg-[#4a82f3]/20 px-2 py-0.5 text-[11px] font-black text-[#1a4ba8]">
                   <Check size={12} strokeWidth={3} /> Correct
                 </span>
               )}
@@ -481,15 +481,15 @@ function QuestionCard({ question, index }: { question: SharedQuestionItem; index
           <button
             type="button"
             onClick={() => setShowExplanation(!showExplanation)}
-            className="inline-flex items-center gap-1.5 text-xs font-black text-[#6b655c] transition hover:text-[#23201d]"
+            className="inline-flex items-center gap-1.5 text-xs font-black text-[#54546a] transition hover:text-[#121117]"
           >
             <HelpCircle size={13} />
             {showExplanation ? "Hide explanation" : "View explanation"}
           </button>
 
           {showExplanation && (
-            <div className="mt-2 rounded-xl border border-black/[0.06] bg-[#fbf5e9]/70 p-4 text-[13.5px] leading-relaxed text-[#4a453d]">
-              <p className="font-bold text-[11px] uppercase tracking-wider text-[#8a8376] mb-1">
+            <div className="mt-2 rounded-xl border border-black/[0.06] bg-[#f4f4f8]/70 p-4 text-[13.5px] leading-relaxed text-[#2a2933]">
+              <p className="font-bold text-[11px] uppercase tracking-wider text-[#6a697c] mb-1">
                 Explanation
               </p>
               {question.explanation}
@@ -519,8 +519,8 @@ function InteractivePracticeSession({
 
   if (loading) {
     return (
-      <div className="rounded-[26px] border border-black/[0.07] bg-white p-12 text-center text-sm text-[#6b655c]">
-        <Loader2 size={24} className="mx-auto mb-2 animate-spin text-[#8ec63f]" />
+      <div className="rounded-[26px] border border-black/[0.07] bg-white p-12 text-center text-sm text-[#54546a]">
+        <Loader2 size={24} className="mx-auto mb-2 animate-spin text-[#4a82f3]" />
         Preparing questions for practice mode…
       </div>
     );
@@ -533,7 +533,7 @@ function InteractivePracticeSession({
         <button
           type="button"
           onClick={onClose}
-          className="mt-4 rounded-full bg-[#23201d] px-5 py-2 text-xs font-black text-white"
+          className="mt-4 rounded-full bg-[#121117] px-5 py-2 text-xs font-black text-white"
         >
           Exit
         </button>
@@ -572,11 +572,11 @@ function InteractivePracticeSession({
       {/* Top Header & Progress */}
       <div className="flex items-center justify-between border-b border-black/[0.06] pb-4">
         <div>
-          <span className="text-xs font-black uppercase tracking-wider text-[#8a8376]">
+          <span className="text-xs font-black uppercase tracking-wider text-[#6a697c]">
             Practice Session · Question {currentIdx + 1} of {questions.length}
           </span>
           <div className="mt-1 flex items-center gap-3">
-            <span className="font-display text-sm font-black text-[#23201d]">
+            <span className="font-display text-sm font-black text-[#121117]">
               Score: {score} / {answeredCount} correct
             </span>
           </div>
@@ -585,7 +585,7 @@ function InteractivePracticeSession({
         <button
           type="button"
           onClick={onClose}
-          className="grid h-8 w-8 place-items-center rounded-full text-[#6b655c] transition hover:bg-black/[0.05]"
+          className="grid h-8 w-8 place-items-center rounded-full text-[#54546a] transition hover:bg-black/[0.05]"
           title="Exit Practice"
         >
           <X size={18} />
@@ -595,14 +595,14 @@ function InteractivePracticeSession({
       {/* Progress Bar */}
       <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-black/[0.06]">
         <div
-          className="h-full bg-[#8ec63f] transition-all duration-300"
+          className="h-full bg-[#4a82f3] transition-all duration-300"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
 
       {/* Question Stem */}
       <div className="mt-6">
-        <h3 className="font-display text-xl font-black leading-snug text-[#23201d] md:text-2xl">
+        <h3 className="font-display text-xl font-black leading-snug text-[#121117] md:text-2xl">
           {q.stem}
         </h3>
       </div>
@@ -614,10 +614,10 @@ function InteractivePracticeSession({
           const isSelected = pickedAnswer === i;
           const letter = opt.letter || String.fromCharCode(65 + i);
 
-          let optionStyle = "border-black/[0.08] bg-white hover:border-black/20 text-[#23201d]";
+          let optionStyle = "border-black/[0.08] bg-white hover:border-black/20 text-[#121117]";
           if (hasAnswered) {
             if (isCorrect) {
-              optionStyle = "border-[#8ec63f] bg-[#f4faec] text-[#2c480e] ring-1 ring-[#8ec63f]";
+              optionStyle = "border-[#4a82f3] bg-[#f4f4f8] text-[#153a82] ring-1 ring-[#4a82f3]";
             } else if (isSelected) {
               optionStyle = "border-red-400 bg-red-50 text-red-800 ring-1 ring-red-300";
             } else {
@@ -636,17 +636,17 @@ function InteractivePracticeSession({
               <span
                 className={`grid h-6 w-6 shrink-0 place-items-center rounded-lg text-xs font-black ${
                   hasAnswered && isCorrect
-                    ? "bg-[#8ec63f] text-white"
+                    ? "bg-[#4a82f3] text-white"
                     : hasAnswered && isSelected
                       ? "bg-red-500 text-white"
-                      : "bg-black/[0.06] text-[#6b655c]"
+                      : "bg-black/[0.06] text-[#54546a]"
                 }`}
               >
                 {letter}
               </span>
               <span className="flex-1">{opt.text || opt.body || String(opt)}</span>
               {hasAnswered && isCorrect && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#8ec63f]/20 px-2 py-0.5 text-xs font-black text-[#3d5c14]">
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#4a82f3]/20 px-2 py-0.5 text-xs font-black text-[#1a4ba8]">
                   <Check size={13} strokeWidth={3} /> Correct
                 </span>
               )}
@@ -657,11 +657,11 @@ function InteractivePracticeSession({
 
       {/* Explanation Banner when answered */}
       {hasAnswered && q.explanation && (
-        <div className="mt-6 rounded-2xl border border-black/[0.06] bg-[#fbf5e9] p-5">
-          <span className="font-bold text-xs uppercase tracking-wider text-[#8a8376]">
+        <div className="mt-6 rounded-2xl border border-black/[0.06] bg-[#f4f4f8] p-5">
+          <span className="font-bold text-xs uppercase tracking-wider text-[#6a697c]">
             Explanation
           </span>
-          <p className="mt-1.5 text-sm leading-relaxed text-[#4a453d]">
+          <p className="mt-1.5 text-sm leading-relaxed text-[#2a2933]">
             {q.explanation}
           </p>
         </div>
@@ -673,7 +673,7 @@ function InteractivePracticeSession({
           type="button"
           disabled={currentIdx === 0}
           onClick={handlePrev}
-          className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.08] px-4 py-2 text-xs font-black text-[#6b655c] transition hover:bg-black/[0.03] disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.08] px-4 py-2 text-xs font-black text-[#54546a] transition hover:bg-black/[0.03] disabled:opacity-40"
         >
           <ChevronLeft size={15} /> Previous
         </button>
@@ -682,7 +682,7 @@ function InteractivePracticeSession({
           <button
             type="button"
             onClick={handleNext}
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#23201d] px-5 py-2 text-xs font-black text-white transition hover:bg-black"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#121117] px-5 py-2 text-xs font-black text-white transition hover:bg-black"
           >
             Next Question <ChevronRight size={15} />
           </button>
@@ -690,7 +690,7 @@ function InteractivePracticeSession({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#8ec63f] px-5 py-2 text-xs font-black text-white transition hover:brightness-105"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#4a82f3] px-5 py-2 text-xs font-black text-white transition hover:brightness-105"
           >
             Finish Practice <Check size={14} />
           </button>

@@ -63,7 +63,7 @@ function PairDialog({
           <DialogTitle className="font-display text-[22px] font-black tracking-tight">
             {editing ? "Edit pair" : "Add pair"}
           </DialogTitle>
-          <DialogDescription className="text-[13px] font-semibold text-[#a29a8d]">
+          <DialogDescription className="text-[13px] font-semibold text-[#9a9aab]">
             Left = the thing. Right = what belongs to it.
           </DialogDescription>
         </DialogHeader>
@@ -114,7 +114,7 @@ function PairDialog({
         <DialogFooter className="gap-2 sm:gap-2">
           <button
             type="button"
-            className="h-11 rounded-xl px-5 text-[13.5px] font-bold text-[#a29a8d] hover:bg-black/[0.05]"
+            className="h-11 rounded-xl px-5 text-[13.5px] font-bold text-[#9a9aab] hover:bg-black/[0.05]"
             onClick={() => onOpenChange(false)}
           >
             Cancel
@@ -147,7 +147,7 @@ function PasteDialog({
       <DialogContent className={simpleContentCls}>
         <DialogHeader>
           <DialogTitle className="font-display text-[22px] font-black tracking-tight">Paste a list</DialogTitle>
-          <DialogDescription className="text-[13px] font-semibold text-[#a29a8d]">
+          <DialogDescription className="text-[13px] font-semibold text-[#9a9aab]">
             One pair per line, the two sides split by a | sign.
           </DialogDescription>
         </DialogHeader>
@@ -162,7 +162,7 @@ function PasteDialog({
         <DialogFooter className="gap-2 sm:gap-2">
           <button
             type="button"
-            className="h-11 rounded-xl px-5 text-[13.5px] font-bold text-[#a29a8d] hover:bg-black/[0.05]"
+            className="h-11 rounded-xl px-5 text-[13.5px] font-bold text-[#9a9aab] hover:bg-black/[0.05]"
             onClick={() => onOpenChange(false)}
           >
             Cancel
@@ -223,11 +223,11 @@ export function PairCreator({ subject, subtopic }: { subject: string; subtopic: 
 
   return (
     <div className="rounded-2xl border border-black/[0.06] bg-white p-5">
-      <div className="flex items-start gap-3 rounded-xl bg-[#fbf5e9] px-4 py-3">
-        <Info size={16} className="mt-0.5 shrink-0 text-[#b3aa9c]" />
-        <p className="text-[12.5px] font-semibold leading-relaxed text-[#6b6459]">
+      <div className="flex items-start gap-3 rounded-xl bg-[#f4f4f8] px-4 py-3">
+        <Info size={16} className="mt-0.5 shrink-0 text-[#9a9aab]" />
+        <p className="text-[12.5px] font-semibold leading-relaxed text-[#54546a]">
           A pair is two halves of one fact. Left is the thing, right is what belongs to it — for example{" "}
-          <span className="text-[#23201d]">Paracetamol</span> → <span className="text-[#23201d]">1 g q6h</span>. Build a
+          <span className="text-[#121117]">Paracetamol</span> → <span className="text-[#121117]">1 g q6h</span>. Build a
           handful, then press Play.
         </p>
       </div>
@@ -246,17 +246,17 @@ export function PairCreator({ subject, subtopic }: { subject: string; subtopic: 
         <button
           type="button"
           onClick={() => setPasteOpen(true)}
-          className="inline-flex h-11 items-center gap-2 rounded-xl border border-black/10 bg-white px-4 text-[13px] font-bold text-[#23201d] hover:bg-black/[0.03]"
+          className="inline-flex h-11 items-center gap-2 rounded-xl border border-black/10 bg-white px-4 text-[13px] font-bold text-[#121117] hover:bg-black/[0.03]"
         >
           <ClipboardPaste size={16} /> Paste a list
         </button>
-        <span className="ml-auto text-[12.5px] font-bold text-[#a29a8d]">
+        <span className="ml-auto text-[12.5px] font-bold text-[#9a9aab]">
           {store.pairs.length} pair{store.pairs.length === 1 ? "" : "s"}
         </span>
       </div>
 
       {store.pairs.length === 0 ? (
-        <p className="mt-5 rounded-xl bg-[#fbf5e9] px-4 py-5 text-center text-[13px] font-semibold text-[#8d8578]">
+        <p className="mt-5 rounded-xl bg-[#f4f4f8] px-4 py-5 text-center text-[13px] font-semibold text-[#6a697c]">
           No pairs yet. Press “Add pair” to make your first one.
         </p>
       ) : (
@@ -264,15 +264,15 @@ export function PairCreator({ subject, subtopic }: { subject: string; subtopic: 
           {store.pairs.map((p) => (
             <li
               key={p.id}
-              className="flex items-center gap-3 rounded-xl border border-black/[0.06] bg-[#fbf5e9] px-3.5 py-2.5"
+              className="flex items-center gap-3 rounded-xl border border-black/[0.06] bg-[#f4f4f8] px-3.5 py-2.5"
             >
-              <span className="min-w-0 flex-1 truncate text-[13.5px] font-extrabold text-[#7a4b16]">{p.left}</span>
-              <span className="text-[#ccc4b6]">→</span>
-              <span className="min-w-0 flex-1 truncate text-[13.5px] font-bold text-[#1f4c6d]">{p.right}</span>
+              <span className="min-w-0 flex-1 truncate text-[13.5px] font-extrabold text-[#8a5200]">{p.left}</span>
+              <span className="text-[#c4c4d1]">→</span>
+              <span className="min-w-0 flex-1 truncate text-[13.5px] font-bold text-[#1a4ba8]">{p.right}</span>
               {(p.misses ?? 0) > 0 && (
                 <span
                   title={`${p.misses} miss${p.misses === 1 ? "" : "es"}`}
-                  className="h-2 w-2 shrink-0 rounded-full bg-[#d1795e]"
+                  className="h-2 w-2 shrink-0 rounded-full bg-[#d9506d]"
                 />
               )}
               <button
@@ -281,7 +281,7 @@ export function PairCreator({ subject, subtopic }: { subject: string; subtopic: 
                   setEditing(p);
                   setDialogOpen(true);
                 }}
-                className="grid h-8 w-8 place-items-center rounded-lg text-[#a29a8d] hover:bg-black/[0.06] hover:text-[#23201d]"
+                className="grid h-8 w-8 place-items-center rounded-lg text-[#9a9aab] hover:bg-black/[0.06] hover:text-[#121117]"
                 aria-label="Edit pair"
               >
                 <Pencil size={15} />
@@ -289,7 +289,7 @@ export function PairCreator({ subject, subtopic }: { subject: string; subtopic: 
               <button
                 type="button"
                 onClick={() => setPendingDelete(p)}
-                className="grid h-8 w-8 place-items-center rounded-lg text-[#a29a8d] hover:bg-black/[0.06] hover:text-[#d1795e]"
+                className="grid h-8 w-8 place-items-center rounded-lg text-[#9a9aab] hover:bg-black/[0.06] hover:text-[#d9506d]"
                 aria-label="Delete pair"
               >
                 <Trash2 size={15} />

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   ChevronDown,
   Gauge,
@@ -17,356 +17,290 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { CreditsMeter } from "@/components/CreditsMeter";
 import { InstallAppButton } from "@/components/InstallAppButton";
+import { useDismiss } from "@/components/header/useDismiss";
 import { avatarTone, useAvatarUrl } from "@/lib/avatars";
 import { EdithWordmark } from "@/components/brand/EdithWordmark";
 import { StartLearningLink } from "@/components/StartLearningLink";
 
 const SIMPLE_LINKS: { to: string; label: string }[] = [
   { to: "/rita", label: "Talk to Rita" },
-  { to: "/tutorial", label: "Tutorial" },
+  { to: "/pricing", label: "Pricing" },
 ];
 
+type OpenMenu = "credits" | "account" | null;
+
+/** The hand-drawn accent line from the home headline, drawn once under the current page. */
+function Squiggle() {
+  return (
+    <svg aria-hidden="true" className="rh-squiggle" viewBox="0 0 60 10" preserveAspectRatio="none">
+      <path pathLength={1} d="M2 5 C 8 1, 14 9, 20 5 S 32 1, 40 5 S 52 9, 58 5" />
+    </svg>
+  );
+}
+
+function isHere(pathname: string, to: string) {
+  return pathname === to || pathname.startsWith(`${to}/`);
+}
+
+function Avatar({
+  src,
+  initial,
+  tone,
+  size,
+}: {
+  src: string | null | undefined;
+  initial: string;
+  tone: string;
+  size: number;
+}) {
+  return (
+    <span
+      className="rh-avatar"
+      style={{ background: tone, width: size, height: size, fontSize: size * 0.42 }}
+    >
+      {src ? <img src={src} alt="" className="h-full w-full object-cover" /> : initial}
+    </span>
+  );
+}
+
 /**
- * Frosted bar: floats over the home page, sticky on every other page.
- * tone "dark" is the black bar; tone "light" is the white bar used on the home page.
+ * One top bar for the whole site: the dark ink bar, links on the left, the account on the
+ * right. Home floats it over the page, every other page keeps it sticky. The menus are the
+ * same white card with an ink border used on the home page.
  */
 export function ProHeader({
   variant = "transparent",
-  tone: headerTone = "dark",
 }: { variant?: "transparent" | "solid"; tone?: "dark" | "light" } = {}) {
   const { t } = useTranslation();
-  const { user, profile, isAdmin, isRealAdmin, isGolden, loading: authLoading } = useAuth();
+  const { user, profile, isAdmin, isGolden, loading: authLoading } = useAuth();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   const navigate = useNavigate();
-  const [accountOpen, setAccountOpen] = useState(false);
+  const [menu, setMenu] = useState<OpenMenu>(null);
   const [sheet, setSheet] = useState(false);
   const solid = variant === "solid";
-  const light = headerTone === "light";
+  const accountBox = useRef<HTMLDivElement>(null);
+  const accountId = useId();
 
   const displayName = profile?.username ?? user?.email ?? "";
-  const avatar = useAvatarUrl((profile as any)?.avatar_url ?? null);
+  const avatar = useAvatarUrl(
+    (profile as { avatar_url?: string | null } | null)?.avatar_url ?? null,
+  );
   const tone = avatarTone(user?.id ?? displayName ?? "rita");
   const initial = (profile?.full_name || profile?.username || user?.email || "?")
     .charAt(0)
     .toUpperCase();
+  const name = profile?.full_name || displayName;
+  const role = isAdmin
+    ? t("cms.header.roleAdmin")
+    : isGolden
+      ? "Golden member"
+      : t("cms.header.roleUser");
 
+  const closeAccount = useCallback(() => setMenu((m) => (m === "account" ? null : m)), []);
+  useDismiss(menu === "account", closeAccount, accountBox);
+
+  // A new page always starts with every menu shut.
   useEffect(() => {
-    function onClick(e: MouseEvent) {
-      const target = e.target as HTMLElement | null;
-      if (target?.closest("[data-pro-account]")) return;
-      setAccountOpen(false);
-    }
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, []);
+    setMenu(null);
+    setSheet(false);
+  }, [pathname]);
 
   async function handleLogout() {
-    setAccountOpen(false);
+    setMenu(null);
     setSheet(false);
     await supabase.auth.signOut();
     navigate({ to: "/" });
   }
 
-  const menuLink =
-    "rita-ink flex items-center gap-3 border-t border-white/10 px-5 py-3 text-[14px] font-semibold transition-opacity hover:opacity-65";
-  const headerText = light ? "rita-ink" : "text-white";
-  const headerTextSoft = light ? "rita-ink-soft" : "text-white/80";
+  const nav = (onOpen?: () => void) => (
+    <>
+      {user && (
+        <StartLearningLink onOpen={onOpen} className="rh-link">
+          <LinkLabel here={isHere(pathname, "/learn")}>Start learning</LinkLabel>
+        </StartLearningLink>
+      )}
+      {SIMPLE_LINKS.map((l) => (
+        <Link
+          key={l.to}
+          to={l.to as never}
+          onClick={onOpen}
+          className="rh-link"
+          aria-current={isHere(pathname, l.to) ? "page" : undefined}
+        >
+          <LinkLabel here={isHere(pathname, l.to)}>{l.label}</LinkLabel>
+        </Link>
+      ))}
+    </>
+  );
 
   return (
-    <header
-      className={
-        light
-          ? solid
-            ? "edith-header edith-header-light sticky top-0 z-50"
-            : "edith-header edith-header-light fixed inset-x-0 top-0 z-50"
-          : solid
-            ? "edith-dark edith-header sticky top-0 z-50 border-b border-white/10"
-            : "edith-dark edith-header edith-header-fx fixed inset-x-0 top-0 z-50"
-      }
-      style={{ fontFamily: "var(--font-grotesk)" }}
-    >
-      <div
-        className={`${light ? "" : "rita-onart"} relative mx-auto flex h-[72px] max-w-[1120px] items-center justify-between gap-4 px-6 md:px-10`}
-      >
-        <Link to="/" aria-label="EdithLab home" className="shrink-0">
-          <EdithWordmark size={26} tone={headerTone} />
+    <header className={`rh-bar ${solid ? "sticky" : "fixed inset-x-0"} top-0 z-50`}>
+      <div className="rh-bar-inner">
+        <Link to="/" aria-label="EdithLab home" className="rh-logo shrink-0">
+          <EdithWordmark size={26} tone="light" />
         </Link>
 
-        <nav className="hidden items-center gap-8 lg:flex">
-          <StartLearningLink
-            className={`text-[16px] font-semibold transition-opacity hover:opacity-75 ${headerText}`}
-          >
-            Start learning
-          </StartLearningLink>
-
-          {SIMPLE_LINKS.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to as never}
-              className={`text-[16px] font-semibold transition-opacity hover:opacity-75 ${headerText}`}
-              style={{ fontFamily: "var(--font-grotesk)" }}
-            >
-              {l.label}
-            </Link>
-          ))}
+        <nav aria-label="Main" className="rh-nav hidden lg:flex">
+          {nav()}
         </nav>
 
-        {/* Each action stands alone so the header stays light and easy to scan. */}
-        <div className="hidden items-center gap-2.5 lg:flex">
-          <Link
-            to="/pricing"
-            className={`px-2 py-2 text-[14px] font-semibold transition-opacity hover:opacity-70 ${headerTextSoft}`}
-            style={{ fontFamily: "var(--font-grotesk)" }}
-          >
-            Pricing
-          </Link>
-          {user && <CreditsMeter dark={!light} />}
-
+        <div className="rh-actions hidden lg:flex">
           {authLoading ? (
             <div aria-hidden="true" className="h-9 w-9 animate-pulse rounded-full bg-white/10" />
           ) : !user ? (
-            <button
-              type="button"
-              onClick={() => openAuth("signin")}
-              className={`inline-flex h-10 items-center rounded-full px-5 text-[14px] font-semibold transition-colors ${
-                light
-                  ? "rita-ink border border-black/[0.08] bg-black/[0.03] hover:bg-black/[0.07]"
-                  : "border border-white/15 bg-white/[0.06] text-white/90 hover:bg-white/[0.12] hover:text-white"
-              }`}
-              style={{ fontFamily: "var(--font-grotesk)" }}
-            >
-              Sign in
-            </button>
-          ) : (
-            <div className="relative" data-pro-account>
-              <button
-                type="button"
-                onClick={() => setAccountOpen((v) => !v)}
-                aria-label="Account menu"
-                aria-expanded={accountOpen}
-                data-open={accountOpen ? "true" : "false"}
-                className={`rita-ghost ps-1 pe-2 ${light ? "rita-ghost-solid" : ""}`}
-              >
-                <span
-                  className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full text-sm font-black text-white ring-2 ring-white/35"
-                  style={{ background: tone }}
-                >
-                  {avatar ? (
-                    <img src={avatar} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    initial
-                  )}
-                </span>
-                {isRealAdmin && (
-                  <span
-                    className={`text-[11px] font-black uppercase tracking-[0.14em] ${light ? "rita-accent" : "text-white/85"}`}
-                  >
-                    Admin
-                  </span>
-                )}
-                <ChevronDown size={14} className={light ? "rita-ink-soft" : "text-white/70"} />
+            <>
+              <button type="button" onClick={() => openAuth("signin")} className="rh-link">
+                Sign in
               </button>
+              <StartLearningLink className="rh-btn">Start learning</StartLearningLink>
+            </>
+          ) : (
+            <>
+              <CreditsMeter
+                open={menu === "credits"}
+                onOpenChange={(open) => setMenu(open ? "credits" : null)}
+              />
+              <div className="relative" ref={accountBox}>
+                <button
+                  type="button"
+                  data-rh-trigger
+                  onClick={() => setMenu((m) => (m === "account" ? null : "account"))}
+                  aria-label="Account menu"
+                  aria-expanded={menu === "account"}
+                  aria-controls={accountId}
+                  data-open={menu === "account" ? "true" : "false"}
+                  className="rh-avatar-btn"
+                >
+                  <Avatar src={avatar} initial={initial} tone={tone} size={36} />
+                  <ChevronDown size={16} aria-hidden="true" className="rh-chevron" />
+                </button>
 
-              {accountOpen && (
-                <div className="rita-panel absolute right-0 z-50 mt-3 flex max-h-[calc(100vh-8rem)] w-72 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-[22px] border border-white/10 shadow-[0_28px_70px_-30px_rgba(0,0,0,0.8)]">
-                  <div className="shrink-0 px-4 pb-3 pt-4">
-                    <div className="flex items-center gap-3 px-1 py-1">
-                      <span
-                        className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full text-[16px] font-black text-white"
-                        style={{ background: tone }}
-                      >
-                        {avatar ? (
-                          <img src={avatar} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          initial
-                        )}
-                      </span>
+                {menu === "account" && (
+                  <div id={accountId} className="rh-card rh-account" aria-label="Account">
+                    <div className="rh-who">
+                      <Avatar src={avatar} initial={initial} tone={tone} size={44} />
                       <div className="min-w-0">
-                        <p className="rita-ink truncate text-[14.5px] font-extrabold">
-                          {profile?.full_name || displayName}
-                        </p>
-                        <p className="rita-ink-soft mt-0.5 text-[10.5px] font-bold uppercase tracking-[0.14em]">
-                          {isAdmin
-                            ? t("cms.header.roleAdmin")
-                            : isGolden
-                              ? "Golden member"
-                              : t("cms.header.roleUser")}
-                        </p>
+                        <p className="rh-who-name">{name}</p>
+                        <span className="rh-badge">{role}</span>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-                    <Link to="/profile" onClick={() => setAccountOpen(false)} className={menuLink}>
-                      <Settings size={16} className="text-white/50" />
+                    <div className="rh-rule" />
+                    <Link to="/profile" className="rh-item">
+                      <Settings size={18} aria-hidden="true" />
                       {t("cms.header.profileSettings")}
                     </Link>
-                    <Link to="/my-plan" onClick={() => setAccountOpen(false)} className={menuLink}>
-                      <Gauge size={16} className="text-white/50" />
+                    <Link to="/my-plan" className="rh-item">
+                      <Gauge size={18} aria-hidden="true" />
                       My plan
                     </Link>
-                    <Link to="/pricing" onClick={() => setAccountOpen(false)} className={menuLink}>
-                      <ReceiptText size={16} className="text-white/50" />
+                    <Link to="/pricing" className="rh-item">
+                      <ReceiptText size={18} aria-hidden="true" />
                       Plans & pricing
                     </Link>
-                    <InstallAppButton className={menuLink} />
+                    <InstallAppButton className="rh-item" iconClassName="rh-item-icon" />
                     {isAdmin && (
                       <>
-                        <Link
-                          to="/admin"
-                          onClick={() => setAccountOpen(false)}
-                          className={menuLink}
-                        >
-                          <LayoutGrid size={16} className="text-white/50" />
+                        <div className="rh-rule" />
+                        <Link to="/admin" className="rh-item">
+                          <LayoutGrid size={18} aria-hidden="true" />
                           Admin
                         </Link>
                       </>
                     )}
-                  </div>
-
-                  <div className="shrink-0 border-t border-white/10">
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="flex w-full items-center gap-3 px-5 py-3.5 text-[14px] font-bold text-rose-600 transition-colors hover:text-rose-700"
-                    >
-                      <LogOut size={16} />
+                    <div className="rh-rule" />
+                    <button type="button" onClick={handleLogout} className="rh-item rh-item-danger">
+                      <LogOut size={18} aria-hidden="true" />
                       {t("cms.header.logout")}
                     </button>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            </>
           )}
         </div>
 
-        <div className="flex items-center gap-2.5 lg:hidden">
-          <StartLearningLink className="rita-btn rita-btn-primary !h-9 !px-3.5 !text-[13px] font-bold shadow-xs">
-            Start learning
-          </StartLearningLink>
-
+        <div className="rh-actions flex lg:hidden">
+          {!user && !authLoading && (
+            <StartLearningLink className="rh-btn">Start learning</StartLearningLink>
+          )}
           <button
             type="button"
-            aria-label="Menu"
+            aria-label={sheet ? "Close menu" : "Open menu"}
+            aria-expanded={sheet}
             onClick={() => setSheet((s) => !s)}
-            className={`${headerText} p-1`}
+            className="rh-burger"
           >
-            {sheet ? <X size={22} /> : <Menu size={22} />}
+            {sheet ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
 
       {sheet && (
-        <div className="rita-panel relative mx-4 max-h-[80vh] overflow-y-auto rounded-2xl border border-white/10 p-3 shadow-[0_28px_70px_-30px_rgba(0,0,0,0.8)] lg:hidden">
-          <div className="pb-2 pt-1">
-            <StartLearningLink
-              onOpen={() => setSheet(false)}
-              className="rita-btn rita-btn-primary !w-full justify-center !py-3 !text-[15px] font-bold shadow-xs"
-            >
-              Start learning
-            </StartLearningLink>
-          </div>
-
-          {SIMPLE_LINKS.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to as never}
-              onClick={() => setSheet(false)}
-              className="rita-ink block border-b border-white/10 px-3 py-3 text-[16px]"
-              style={{ fontFamily: "var(--font-grotesk)" }}
-            >
-              {l.label}
-            </Link>
-          ))}
-          <div className="mx-1 my-2 border-t border-white/10" />
-          <Link
-            to="/pricing"
-            onClick={() => setSheet(false)}
-            className="rita-ink block border-b border-white/10 px-3 py-3 text-[16px]"
-            style={{ fontFamily: "var(--font-grotesk)" }}
-          >
-            Pricing
-          </Link>
-          {user && (
-            <div className="px-1 py-2">
-              <CreditsMeter dark compact />
-            </div>
-          )}
-          {user ? (
-            <>
-              <div className="mx-1 my-2 border-t border-white/10" />
-              <div className="flex items-center gap-3 px-3 py-2">
-                <span
-                  className="grid h-9 w-9 place-items-center overflow-hidden rounded-full text-sm font-black text-white"
-                  style={{ background: tone }}
-                >
-                  {avatar ? (
-                    <img src={avatar} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    initial
-                  )}
-                </span>
-                <div className="min-w-0">
-                  <p className="rita-ink truncate text-[14px] font-bold">
-                    {profile?.full_name || displayName}
-                  </p>
-                  <p className="rita-ink-soft text-[11px] font-semibold uppercase tracking-wider">
-                    {isAdmin ? "Admin" : isGolden ? "Golden member" : "Student"}
-                  </p>
+        <div className="rh-sheet-wrap lg:hidden">
+          <div className="rh-card rh-sheet" aria-label="Menu">
+            <div className="rh-sheet-links">{nav(() => setSheet(false))}</div>
+            {user ? (
+              <>
+                <div className="rh-rule" />
+                <div className="rh-who">
+                  <Avatar src={avatar} initial={initial} tone={tone} size={40} />
+                  <div className="min-w-0">
+                    <p className="rh-who-name">{name}</p>
+                    <span className="rh-badge">{role}</span>
+                  </div>
                 </div>
-              </div>
-              <Link
-                to="/profile"
-                onClick={() => setSheet(false)}
-                className="rita-ink block border-t border-white/10 px-3 py-3 text-[16px]"
-                style={{ fontFamily: "var(--font-grotesk)" }}
-              >
-                Profile settings
-              </Link>
-              <Link
-                to="/my-plan"
-                onClick={() => setSheet(false)}
-                className="rita-ink block border-t border-white/10 px-3 py-3 text-[16px]"
-                style={{ fontFamily: "var(--font-grotesk)" }}
-              >
-                My plan
-              </Link>
-              {isAdmin && (
-                <Link
-                  to="/admin"
-                  onClick={() => setSheet(false)}
-                  className="block border-t border-white/10 px-3 py-3 text-[16px] font-bold text-white"
-                  style={{ fontFamily: "var(--font-grotesk)" }}
-                >
-                  Admin panel
+                <CreditsMeter inline />
+                <Link to="/profile" className="rh-item">
+                  <Settings size={18} aria-hidden="true" />
+                  {t("cms.header.profileSettings")}
                 </Link>
-              )}
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="block w-full border-t border-white/10 px-3 py-3 text-left text-[16px] font-bold text-rose-600"
-                style={{ fontFamily: "var(--font-grotesk)" }}
-              >
-                {t("cms.header.logout")}
-              </button>
-            </>
-          ) : (
-            !authLoading && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSheet(false);
-                  openAuth("signin");
-                }}
-                className="rita-ink block w-full px-3 py-3 text-left text-[16px]"
-                style={{ fontFamily: "var(--font-grotesk)" }}
-              >
-                Sign in
-              </button>
-            )
-          )}
+                <Link to="/my-plan" className="rh-item">
+                  <Gauge size={18} aria-hidden="true" />
+                  My plan
+                </Link>
+                <InstallAppButton className="rh-item" iconClassName="rh-item-icon" />
+                {isAdmin && (
+                  <Link to="/admin" className="rh-item">
+                    <LayoutGrid size={18} aria-hidden="true" />
+                    Admin
+                  </Link>
+                )}
+                <div className="rh-rule" />
+                <button type="button" onClick={handleLogout} className="rh-item rh-item-danger">
+                  <LogOut size={18} aria-hidden="true" />
+                  {t("cms.header.logout")}
+                </button>
+              </>
+            ) : (
+              !authLoading && (
+                <>
+                  <div className="rh-rule" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSheet(false);
+                      openAuth("signin");
+                    }}
+                    className="rh-item"
+                  >
+                    Sign in
+                  </button>
+                </>
+              )
+            )}
+          </div>
         </div>
       )}
     </header>
+  );
+}
+
+function LinkLabel({ here, children }: { here: boolean; children: ReactNode }) {
+  return (
+    <>
+      {children}
+      {here && <Squiggle />}
+    </>
   );
 }

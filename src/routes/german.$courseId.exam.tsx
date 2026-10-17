@@ -158,11 +158,11 @@ function ExamPage() {
   }
 
   if (stage === "loading") {
-    return <div className="min-h-screen bg-[#F5F7FB]"><SiteHeader variant="light" /><div className="pt-32 text-center text-slate-500">Loading exam…</div></div>;
+    return <div className="min-h-screen bg-[#ffffff]"><SiteHeader variant="light" /><div className="pt-32 text-center text-slate-500">Loading exam…</div></div>;
   }
   if (stage === "empty") {
     return (
-      <div className="min-h-screen bg-[#F5F7FB]"><SiteHeader variant="light" />
+      <div className="min-h-screen bg-[#ffffff]"><SiteHeader variant="light" />
         <main className="mx-auto max-w-md px-6 pt-28 text-center">
           <div className="text-6xl mb-3">📚</div>
           <h2 className="text-xl font-bold mb-2">Nothing to test yet</h2>
@@ -175,7 +175,7 @@ function ExamPage() {
 
   if (stage === "intro") {
     return (
-      <div className="min-h-screen bg-[#F5F7FB]">
+      <div className="min-h-screen bg-[#ffffff]">
         <SiteHeader variant="light" />
         <main className="mx-auto max-w-2xl px-5 pt-24 pb-32 text-center">
           <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-rose-500 to-orange-500 grid place-items-center text-white shadow-xl">
@@ -190,7 +190,7 @@ function ExamPage() {
           </div>
           <button
             onClick={() => setStage("shadow")}
-            className="mt-8 inline-flex items-center gap-2 h-14 px-8 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold text-lg shadow-xl shadow-rose-500/40"
+            className="mt-8 inline-flex items-center gap-2 h-14 px-8 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold text-lg shadow-xl shadow-[#c4314f]/40"
           >
             Start exam <ChevronRight className="w-5 h-5" />
           </button>
@@ -251,7 +251,7 @@ function ExamPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F7FB]">
+    <div className="min-h-screen bg-[#ffffff]">
       <SiteHeader variant="light" />
       <main className="mx-auto max-w-2xl px-4 pt-24 pb-16">
         <div className="rounded-3xl bg-white shadow-sm p-6 text-center">
@@ -434,7 +434,7 @@ function MatchStage({ items, onFinish }: { items: Entry[]; onFinish: (r: Result[
   }, [resolved, left.length, right.length]);
 
   return (
-    <div className="min-h-screen bg-[#F5F7FB]">
+    <div className="min-h-screen bg-[#ffffff]">
       <SiteHeader variant="light" />
       <main className="mx-auto max-w-2xl px-4 pt-24 pb-10">
         <div className="text-center mb-4">

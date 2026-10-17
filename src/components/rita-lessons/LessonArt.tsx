@@ -31,7 +31,7 @@ export function LessonStars({ stars, size = 22 }: { stars: number; size?: number
 function PlaceholderArt() {
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
-      <rect width="100" height="100" fill="var(--pp-pink-soft, #ffe5f0)" />
+      <rect width="100" height="100" fill="var(--pp-accent-soft, #e7eefd)" />
       <path
         d="M50 36c-6-4-14-5-22-4v32c8-1 16 0 22 4 6-4 14-5 22-4V32c-8-1-16 0-22 4z"
         fill="#fff"
@@ -42,7 +42,7 @@ function PlaceholderArt() {
       <path d="M50 36v32" stroke="var(--pp-ink, #121117)" strokeWidth="3" strokeLinecap="round" />
       <path
         d="M35 44h9M35 52h9M56 44h9M56 52h9"
-        stroke="var(--pp-pink, #ff7aac)"
+        stroke="var(--pp-accent, #2b6df0)"
         strokeWidth="3"
         strokeLinecap="round"
       />
@@ -61,7 +61,7 @@ export function LessonImage({
 }) {
   const [broken, setBroken] = useState(false);
   return (
-    <div className={`overflow-hidden rounded-full bg-[var(--pp-pink-soft,#ffe5f0)] ${className}`}>
+    <div className={`overflow-hidden rounded-full bg-[var(--pp-accent-soft,#e7eefd)] ${className}`}>
       {src && !broken ? (
         <img
           src={src}

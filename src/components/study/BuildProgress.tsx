@@ -60,25 +60,25 @@ export function BuildProgress({
   const left = Math.max(0, estimateSeconds - elapsed);
 
   return (
-    <div className="rounded-3xl border border-black/[0.08] bg-white p-5 md:p-6">
+    <div className="rounded-3xl border-2 border-[#121117] bg-white p-5 md:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#6b6357]">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#6a697c]">
             Building your lecture
           </p>
-          <p className="font-display text-[26px] font-black leading-none text-[#231f1a]">
+          <p className="font-display text-[26px] font-black leading-none text-[#121117]">
             {clock(elapsed)}
           </p>
         </div>
-        <p className="text-[13px] font-bold text-[#6b6357]">
+        <p className="text-[13px] font-bold text-[#6a697c]">
           {over ? "Almost there — a long lecture takes longer." : `About ${clock(left)} left`}
         </p>
       </div>
 
-      <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[#f0ebe1]">
+      <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[#e7eefd]">
         <div
           className="h-full rounded-full transition-[width] duration-700 ease-out"
-          style={{ width: `${pct}%`, background: "#58a700" }}
+          style={{ width: `${pct}%`, background: "#2b6df0" }}
         />
       </div>
 
@@ -91,14 +91,14 @@ export function BuildProgress({
               <span
                 className="grid h-6 w-6 shrink-0 place-items-center rounded-lg"
                 style={{
-                  background: isDone ? "#e6f3dd" : isNow ? "#f1ecfb" : "#f5f1e8",
-                  color: isDone ? "#3f7a29" : isNow ? "#4a3877" : "#a49a8b",
+                  background: isDone ? "#e8f5e9" : isNow ? "#e7eefd" : "#f4f4f8",
+                  color: isDone ? "#2b6df0" : isNow ? "#121117" : "#6a697c",
                 }}
               >
                 {isDone ? <Check size={14} /> : isNow ? <Loader2 size={14} className="animate-spin" /> : null}
               </span>
               <span
-                className={isDone || isNow ? "font-bold text-[#231f1a]" : "text-[#a49a8b]"}
+                className={isDone || isNow ? "font-bold text-[#121117]" : "text-[#6a697c]"}
               >
                 {s.label}
               </span>
@@ -107,8 +107,8 @@ export function BuildProgress({
         })}
       </ul>
 
-      {detail && <p className="mt-3 text-[13px] text-[#6b6357]">{detail}</p>}
-      <p className="mt-2 text-[12px] text-[#a49a8b]">
+      {detail && <p className="mt-3 text-[13px] text-[#6a697c]">{detail}</p>}
+      <p className="mt-2 text-[12px] text-[#6a697c]">
         You can leave this page open — longer lectures simply take a bit more time.
       </p>
     </div>

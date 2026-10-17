@@ -340,7 +340,7 @@ function AiKeysPage() {
         </Link>
 
         <div className="flex items-center gap-3 mb-2">
-          <div className="grid place-items-center w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/30">
+          <div className="grid place-items-center w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 shadow-lg shadow-[#4a82f3]/30">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -360,7 +360,7 @@ function AiKeysPage() {
             dedicated control room at /admin/rita-voice. Keep this page for non-voice AI only. */}
         {false && <>
         <section
-          className="mb-6 rounded-3xl border-[3px] border-red-500 bg-red-950/70 p-5 shadow-[0_0_48px_-15px_rgba(239,68,68,.8)] md:p-7"
+          className="mb-6 rounded-3xl border-[3px] border-red-500 bg-[#3d0b16]/70 p-5 shadow-[0_0_48px_-15px_rgba(239,68,68,.8)] md:p-7"
           aria-label="Rita Economic v2 status"
         >
           <p className="text-xs font-black uppercase tracking-[.2em] text-red-200">
@@ -369,7 +369,7 @@ function AiKeysPage() {
           <h2 className="mt-2 text-2xl font-black text-white">
             Deepgram Nova-3 → GPT-4o mini → OpenAI Mini TTS
           </h2>
-          <p className="mt-2 text-sm text-red-100/85">
+          <p className="mt-2 text-sm text-[#fbd9e0]/85">
             اختر النظام بوضوح. لن يغيّر الموقع النظام تلقائيًا عند حدوث خطأ.
           </p>
           <div className="mt-5 grid gap-3 rounded-2xl border-2 border-white bg-white p-4 text-red-950 md:grid-cols-2">
@@ -428,17 +428,17 @@ function AiKeysPage() {
               Test Economic v2 on admins only
             </label>
           </div>
-          <p className="mt-2 text-xs text-red-100/80">
+          <p className="mt-2 text-xs text-[#fbd9e0]/80">
             هذا الشهر، التكلفة المقدّرة من بيانات الردود:{" "}
             <b>${ritaMetrics.estimatedCost.toFixed(2)}</b> لـ {ritaMetrics.turns} ردود. الرقم
             تقديري؛ فواتير OpenAI هي المرجع النهائي، وقد لا تصل بيانات الرد إذا انقطع الاتصال.
           </p>
         </section>
 
-        <section className="mb-5 overflow-hidden rounded-3xl border-2 border-emerald-400/70 bg-gradient-to-br from-emerald-400/[0.16] via-teal-400/[0.08] to-black p-6 shadow-[0_0_55px_-25px_rgba(52,211,153,.8)] md:p-8">
+        <section className="mb-5 overflow-hidden rounded-3xl border-2 border-[#4aa552]/70 bg-gradient-to-br from-[#4aa552]/[0.16] via-[#7ba5f5]/[0.08] to-black p-6 shadow-[0_0_55px_-25px_rgba(52,211,153,.8)] md:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-start gap-3">
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-emerald-400 text-emerald-950 shadow-lg shadow-emerald-400/20">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-emerald-400 text-emerald-950 shadow-lg shadow-[#4aa552]/20">
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <div>
@@ -457,7 +457,7 @@ function AiKeysPage() {
               className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-black ${
                 singleStatus.openai
                   ? "bg-emerald-400 text-emerald-950"
-                  : "border border-amber-300/35 bg-amber-300/10 text-amber-200"
+                  : "border border-[#f5b942]/35 bg-[#f5b942]/10 text-amber-200"
               }`}
             >
               <span
@@ -483,7 +483,7 @@ function AiKeysPage() {
                     ? "A key is saved — paste here only to replace it"
                     : "Paste the new sk-… key"
                 }
-                className="w-full rounded-2xl border border-emerald-300/35 bg-black/55 px-4 py-4 pr-14 font-mono text-sm text-white outline-none placeholder:font-sans placeholder:text-white/35 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-300/20"
+                className="w-full rounded-2xl border border-[#7bc280]/35 bg-black/55 px-4 py-4 pr-14 font-mono text-sm text-white outline-none placeholder:font-sans placeholder:text-white/35 focus:border-emerald-300 focus:ring-2 focus:ring-[#7bc280]/20"
               />
               <button
                 type="button"
@@ -501,7 +501,7 @@ function AiKeysPage() {
               type="button"
               onClick={saveAndTestRitaKey}
               disabled={busy === "rita-key" || (!singleDraft.openai.trim() && !singleStatus.openai)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-black text-emerald-950 shadow-[0_4px_0_#14845f] hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-45"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-black text-emerald-950 shadow-[0_4px_0_#256528] hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-45"
             >
               {busy === "rita-key" ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -524,7 +524,7 @@ function AiKeysPage() {
               href="https://platform.openai.com/api-keys"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-300/25 bg-black/20 px-4 py-3 text-sm font-bold text-emerald-200 hover:bg-black/35"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#7bc280]/25 bg-black/20 px-4 py-3 text-sm font-bold text-emerald-200 hover:bg-black/35"
             >
               Create a new OpenAI key <ExternalLink className="h-4 w-4" />
             </a>
@@ -546,7 +546,7 @@ function AiKeysPage() {
 
         <AiEnginePanel />
 
-        <section className="mb-5 rounded-3xl border border-emerald-400/25 bg-gradient-to-br from-emerald-400/[0.08] to-orange-400/[0.04] p-6 backdrop-blur md:p-7">
+        <section className="mb-5 rounded-3xl border border-[#4aa552]/25 bg-gradient-to-br from-[#4aa552]/[0.08] to-[#e9a21f]/[0.04] p-6 backdrop-blur md:p-7">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[.22em] text-emerald-300">
@@ -650,14 +650,14 @@ function AiKeysPage() {
 
         <Link
           to="/admin/rita-voice"
-          className="mb-6 flex items-center justify-between rounded-3xl border-2 border-violet-400/60 bg-violet-500/10 p-5 text-violet-100 hover:bg-violet-500/15"
+          className="mb-6 flex items-center justify-between rounded-3xl border-2 border-[#7ba5f5]/60 bg-[#4a82f3]/10 p-5 text-violet-100 hover:bg-[#4a82f3]/15"
         >
           <span><strong className="block text-lg">Rita Realtime Voice v3</strong><span className="text-sm text-white/60">Soniox, Groq, Gemini TTS and Pipecat keys are managed in the new clean voice panel.</span></span>
           <ExternalLink className="h-5 w-5" />
         </Link>
 
         {/* ────── Gemini multi-key card ────── */}
-        <div className="rounded-3xl border border-sky-500/30 bg-gradient-to-br from-sky-500/[0.05] to-indigo-500/[0.05] backdrop-blur p-6 md:p-7 mb-5">
+        <div className="rounded-3xl border border-[#4a82f3]/30 bg-gradient-to-br from-[#4a82f3]/[0.05] to-[#4a82f3]/[0.05] backdrop-blur p-6 md:p-7 mb-5">
           <div className="flex items-start justify-between gap-4 mb-5">
             <div className="flex items-center gap-3">
               <div className="grid place-items-center w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-400 to-indigo-500">
@@ -666,7 +666,7 @@ function AiKeysPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="font-bold text-base">Google Gemini</h3>
-                  <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300">
+                  <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#3a9042]/15 text-emerald-300">
                     Free · Pool of 5
                   </span>
                 </div>
@@ -680,8 +680,8 @@ function AiKeysPage() {
           </div>
 
           {/* Model is locked to Flash-Lite — no selector needed */}
-          <div className="mb-5 rounded-2xl border border-emerald-400/20 bg-emerald-500/[0.04] p-3">
-            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-emerald-300/90">
+          <div className="mb-5 rounded-2xl border border-[#4aa552]/20 bg-[#3a9042]/[0.04] p-3">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[#7bc280]/90">
               <Zap className="w-3 h-3" /> Model locked
             </div>
             <p className="text-xs text-white/70 mt-1">
@@ -715,7 +715,7 @@ function AiKeysPage() {
                   />
                   <span
                     className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-full ${
-                      isSet ? "bg-emerald-500/15 text-emerald-300" : "bg-white/5 text-white/40"
+                      isSet ? "bg-[#3a9042]/15 text-emerald-300" : "bg-white/5 text-white/40"
                     }`}
                   >
                     <span
@@ -820,7 +820,7 @@ function AiKeysPage() {
                   </div>
                   <span
                     className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full ${
-                      isSet ? "bg-emerald-500/15 text-emerald-300" : "bg-white/5 text-white/40"
+                      isSet ? "bg-[#3a9042]/15 text-emerald-300" : "bg-white/5 text-white/40"
                     }`}
                   >
                     <span
@@ -977,7 +977,7 @@ function ModelLimitsEditor() {
   }
 
   return (
-    <div className="mt-8 rounded-3xl border border-amber-400/20 bg-amber-500/[0.03] backdrop-blur p-6 md:p-7">
+    <div className="mt-8 rounded-3xl border border-[#e9a21f]/20 bg-[#d68c0a]/[0.03] backdrop-blur p-6 md:p-7">
       <div className="flex items-center gap-3 mb-4">
         <div className="grid place-items-center w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500">
           <Sliders className="w-5 h-5 text-black" />
@@ -1025,13 +1025,13 @@ function ModelLimitsEditor() {
                     {r.supports_vision ? "" : " · text-only"}
                   </div>
                   {savedAt[r.model_id] && (
-                    <div className="mt-1 text-[10px] text-emerald-300/90">
+                    <div className="mt-1 text-[10px] text-[#7bc280]/90">
                       ✓ Saved {Math.max(1, Math.round((Date.now() - savedAt[r.model_id]) / 1000))}s
                       ago — live
                     </div>
                   )}
                   {r.last_error && (
-                    <div className="mt-1 text-[10px] text-rose-300/90 max-w-[260px] break-words">
+                    <div className="mt-1 text-[10px] text-[#ec8498]/90 max-w-[260px] break-words">
                       ⚠ {r.last_error.slice(0, 160)}
                     </div>
                   )}
@@ -1139,7 +1139,7 @@ function ModelLimitsEditor() {
       </div>
 
       <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4">
-        <p className="text-[11px] font-bold tracking-[0.28em] text-amber-200/80 uppercase mb-3">
+        <p className="text-[11px] font-bold tracking-[0.28em] text-[#ffd266]/80 uppercase mb-3">
           What each column means (plain English)
         </p>
         <ul className="space-y-2 text-[12px] text-white/75 leading-relaxed">

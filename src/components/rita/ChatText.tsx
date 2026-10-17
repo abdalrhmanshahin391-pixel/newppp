@@ -36,16 +36,16 @@ export function ChatText({
                     dir="ltr"
                     onClick={() => onPhrase(segment.value)}
                     aria-label={`${segment.value}: translation and pronunciation`}
-                    className="mx-0.5 inline-flex items-center gap-1 rounded-md bg-[var(--pp-pink-soft)] px-2 py-px align-baseline font-semibold leading-7 text-[var(--pp-ink)] transition-colors hover:bg-[#ffd3e5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--pp-ink)]"
+                    className="mx-0.5 inline-flex items-center gap-1 rounded-md bg-[var(--pp-accent-soft)] px-2 py-px align-baseline font-semibold leading-7 text-[var(--pp-ink)] transition-colors hover:bg-[#f4f4f8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--pp-ink)]"
                   >
                     {segment.value}
-                    <Volume2 size={12} aria-hidden="true" className="text-[var(--pp-pink-text)]" />
+                    <Volume2 size={12} aria-hidden="true" className="text-[var(--pp-accent-text)]" />
                   </button>
                 ) : (
                   <bdi
                     key={index}
                     dir="ltr"
-                    className="inline-block rounded-md bg-[var(--pp-pink-soft)] px-1.5 font-semibold leading-7 text-[var(--pp-ink)]"
+                    className="inline-block rounded-md bg-[var(--pp-accent-soft)] px-1.5 font-semibold leading-7 text-[var(--pp-ink)]"
                   >
                     {segment.value}
                   </bdi>
@@ -56,10 +56,10 @@ export function ChatText({
                   type="button"
                   onClick={() => onPhrase(segment.value)}
                   aria-label={`${segment.value}: translation and pronunciation`}
-                  className="mx-0.5 inline-flex items-center gap-1 rounded-md bg-[var(--pp-pink-soft)] px-2 py-px align-baseline font-bold hover:bg-[#ffd3e5]"
+                  className="mx-0.5 inline-flex items-center gap-1 rounded-md bg-[var(--pp-accent-soft)] px-2 py-px align-baseline font-bold hover:bg-[#f4f4f8]"
                 >
                   {segment.value}
-                  <Volume2 size={12} aria-hidden="true" className="text-[var(--pp-pink-text)]" />
+                  <Volume2 size={12} aria-hidden="true" className="text-[var(--pp-accent-text)]" />
                 </button>
               ) : segment.kind === "bold" ? (
                 <strong key={index} className="font-bold">

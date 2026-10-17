@@ -244,7 +244,7 @@ function ProfilePage() {
   }
 
   if (loading || !user) {
-    return <div className="min-h-screen" style={{ background: "#fbf5e9" }} />;
+    return <div className="min-h-screen" style={{ background: "#f4f4f8" }} />;
   }
 
   
@@ -260,7 +260,7 @@ function ProfilePage() {
             : { label: "Good", tone: "text-emerald-600", bar: "w-3/4 bg-emerald-500" };
 
   return (
-    <div className="min-h-screen" style={{ background: "#fbf5e9", color: "#23201d" }}>
+    <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
       <main className="mx-auto max-w-3xl px-6 pt-28 pb-24">
         <ProfileHero
@@ -289,16 +289,16 @@ function ProfilePage() {
           to="/share" search={{ type: "flashcards" }}
           className="mb-8 flex items-center gap-3 rounded-3xl border border-black/[0.07] bg-white px-6 py-5 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-28px_rgba(0,0,0,0.5)]"
         >
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#e6f4d8] text-[#3d5c14]">
+          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#f4f4f8] text-[#1d4f20]">
             <Share2 size={20} />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block font-display text-[17px] font-black">Shared flashcards</span>
-            <span className="block text-sm text-[#6b655c]">
+            <span className="block text-sm text-[#54546a]">
               Publish your subjects as a deck, or manage the ones you already shared.
             </span>
           </span>
-          <span className="text-sm font-black text-[#8ec63f]">Open →</span>
+          <span className="text-sm font-black text-[#3a9042]">Open →</span>
         </Link>
 
         {/* Personal Information */}
@@ -448,17 +448,16 @@ function ProfileHero({
   const seed = username || fullName || email || "rita";
   const initial = seed.trim().charAt(0).toUpperCase();
   return (
-    <header className="mb-8 overflow-hidden rounded-[30px] border border-black/[0.07] bg-white">
-      <div className="h-24" style={{ background: avatarTone(seed) }} />
-      <div className="flex flex-wrap items-end gap-5 px-6 pb-6 md:px-8">
-        <div className="-mt-12 relative">
+    <header className="mb-8 overflow-hidden rounded-[20px] border-2 border-[#121117] bg-white">
+      <div className="flex flex-wrap items-end gap-5 px-6 py-6 md:px-8">
+        <div className="relative">
           <span
-            className="grid h-24 w-24 place-items-center overflow-hidden rounded-3xl text-3xl font-black text-white ring-4 ring-white"
+            className="grid h-24 w-24 place-items-center overflow-hidden rounded-2xl border-2 border-[#121117] text-3xl font-bold text-white"
             style={{ background: avatarTone(seed) }}
           >
             {url ? <img src={url} alt="" className="h-full w-full object-cover" /> : initial}
           </span>
-          <label className="absolute -bottom-2 -right-2 grid h-9 w-9 cursor-pointer place-items-center rounded-full bg-[#23201d] text-white shadow-lg">
+          <label className="absolute -bottom-2 -right-2 grid h-9 w-9 cursor-pointer place-items-center rounded-lg border-2 border-white bg-[#121117] text-white">
             {uploading ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
             <input
               type="file"
@@ -474,23 +473,23 @@ function ProfileHero({
         </div>
         <div className="min-w-0 flex-1 pt-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="truncate font-display text-2xl font-black tracking-tight">
+            <h1 className="truncate font-display text-2xl font-bold tracking-[-0.02em]">
               {fullName || username || "Student"}
             </h1>
             {badge}
           </div>
-          <p className="mt-0.5 truncate text-sm font-bold text-[#6b655c]">
+          <p className="mt-0.5 truncate text-sm font-bold text-[#54546a]">
             {username ? `@${username}` : ""}
             {username && email ? " · " : ""}
             {email}
           </p>
-          {bio && <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-[#4a453d]">{bio}</p>}
+          {bio && <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-[#2a2933]">{bio}</p>}
         </div>
         {avatarPath && (
           <button
             type="button"
             onClick={onClear}
-            className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.1] px-4 py-2 text-[13px] font-black text-[#6b655c] hover:text-red-600"
+            className="inline-flex items-center gap-1.5 rounded-lg border-2 border-[#121117] px-4 py-2 text-[14px] font-semibold text-[#121117] hover:bg-[#f4f4f8]"
           >
             <Trash2 size={14} /> Remove photo
           </button>
@@ -501,7 +500,7 @@ function ProfileHero({
 }
 
 const inputCls =
-  "w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10";
+  "w-full rounded-lg border-2 border-[#121117] bg-white px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10";
 
 function SectionCard({
   icon,
@@ -513,9 +512,9 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mb-8 rounded-2xl border border-border bg-card p-6 md:p-8 shadow-sm">
+    <section className="mb-8 rounded-[20px] border-2 border-[#121117] bg-white p-6 md:p-8">
       <div className="mb-6 flex items-center gap-3">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+        <span className="grid h-9 w-9 place-items-center text-[#121117]">
           {icon}
         </span>
         <h2 className="text-lg font-bold">{title}</h2>
