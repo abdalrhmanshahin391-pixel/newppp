@@ -57,9 +57,9 @@ type Lecture = {
 };
 type Stats = Record<string, { wrong: number; flagged: number }>;
 
-const CREAM = "#fbf5e9";
-const INK = "#23201d";
-const ACCENT = "#4b9b2e";
+const CREAM = "#ffffff";
+const INK = "#121117";
+const ACCENT = "#ff7aac";
 
 
 function LectureLabPage() {
@@ -252,10 +252,10 @@ function LectureLabPage() {
         <SiteHeader />
         <main className="mx-auto max-w-xl px-4 py-24 text-center">
           <h1 className="font-display text-3xl font-black">Lecture Lab</h1>
-          <p className="mt-3 text-[15px] text-[#4a453d]">Sign in to build quizzes from your lectures.</p>
+          <p className="mt-3 text-[15px] text-[#4b4a5c]">Sign in to build quizzes from your lectures.</p>
           <Link
             to="/login"
-            className="mt-6 inline-flex rounded-full bg-[#23201d] px-6 py-3 text-[14px] font-extrabold text-white"
+            className="mt-6 inline-flex rounded-full bg-[#121117] px-6 py-3 text-[14px] font-extrabold text-white"
           >
             Sign in
           </Link>
@@ -268,7 +268,7 @@ function LectureLabPage() {
     <div className="min-h-screen" style={{ background: CREAM, color: INK }}>
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
-        <Link to="/learn" className="inline-flex items-center gap-2 text-[13px] font-bold text-[#6b6357]">
+        <Link to="/learn" className="inline-flex items-center gap-2 text-[13px] font-bold text-[#6a697c]">
           <ArrowLeft size={15} /> Back to study modes
         </Link>
 
@@ -288,7 +288,7 @@ function LectureLabPage() {
         <div className="mt-4 flex justify-end">
           <Link
             to="/study/lectures/new"
-            className="inline-flex items-center gap-2 rounded-full bg-[#23201d] px-6 py-3 text-[14px] font-extrabold text-white transition hover:opacity-90"
+            className="inline-flex items-center gap-2 rounded-full bg-[#121117] px-6 py-3 text-[14px] font-extrabold text-white transition hover:opacity-90"
           >
             <Upload size={16} /> New lecture quiz
           </Link>
@@ -297,8 +297,8 @@ function LectureLabPage() {
         <div className="mt-6 grid items-start gap-6 lg:grid-cols-[1fr_22rem]">
           <div>
             {!busy && !subjects.length ? (
-              <div className="rounded-[26px] border border-black/[0.07] bg-white p-6">
-                <p className="text-[14px] font-extrabold text-[#23201d]">Three steps to your first quiz</p>
+              <div className="rounded-[26px] border-2 border-[#121117] bg-white p-6">
+                <p className="text-[14px] font-extrabold text-[#121117]">Three steps to your first quiz</p>
                 <ol className="mt-4 space-y-3">
                   {[
                     "Add a subject — the big area, like Physiology.",
@@ -306,16 +306,16 @@ function LectureLabPage() {
                     "Upload the lecture PDF and we write the questions.",
                   ].map((step, i) => (
                     <li key={step} className="flex items-start gap-3">
-                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#23201d] text-[12px] font-black text-white">
+                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#121117] text-[12px] font-black text-white">
                         {i + 1}
                       </span>
-                      <span className="text-[13.5px] leading-relaxed text-[#4a453d]">{step}</span>
+                      <span className="text-[13.5px] leading-relaxed text-[#4b4a5c]">{step}</span>
                     </li>
                   ))}
                 </ol>
                 <button
                   onClick={() => setSubjectOpen(true)}
-                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#23201d] px-5 py-2.5 text-[13px] font-extrabold text-white hover:opacity-90"
+                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#121117] px-5 py-2.5 text-[13px] font-extrabold text-white hover:opacity-90"
                 >
                   <Plus size={15} /> Start with a subject
                 </button>
@@ -366,10 +366,10 @@ function LectureLabPage() {
               ]}
               footnote={selectedCount ? undefined : "Tick at least one lecture on the left."}
             >
-              <div className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a89e90]">
+              <div className="text-[11px] font-black uppercase tracking-[0.16em] text-[#6a697c]">
                 Question pool
               </div>
-              <div className="mt-2 flex gap-1.5 rounded-xl bg-[#faf6ee] p-1">
+              <div className="mt-2 flex gap-1.5 rounded-xl bg-[#ffffff] p-1">
                 {[
                   { key: "all", label: "All" },
                   { key: "wrong", label: "Weak spots" },
@@ -381,15 +381,15 @@ function LectureLabPage() {
                     className="h-8 flex-1 rounded-lg text-[12px] font-extrabold transition"
                     style={
                       pool === p.key
-                        ? { background: "#fff", color: "#23201d" }
-                        : { color: "#a29a8d" }
+                        ? { background: "#fff", color: "#121117" }
+                        : { color: "#6a697c" }
                     }
                   >
                     {p.label}
                   </button>
                 ))}
               </div>
-              <label className="mt-3 block text-[12px] font-extrabold text-[#6b645b]">
+              <label className="mt-3 block text-[12px] font-extrabold text-[#6a697c]">
                 Exam minutes
                 <input
                   type="number"
@@ -397,7 +397,7 @@ function LectureLabPage() {
                   max={240}
                   value={minutes}
                   onChange={(e) => setMinutes(Math.max(1, Math.min(240, Number(e.target.value) || 1)))}
-                  className="mt-1 h-10 w-full rounded-xl border border-black/10 bg-[#fbf8f2] px-3 text-[14px] font-semibold"
+                  className="mt-1 h-10 w-full rounded-xl border-2 border-[#121117] bg-[#ffffff] px-3 text-[14px] font-semibold"
                 />
               </label>
             </LaunchPanel>

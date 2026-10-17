@@ -15,9 +15,9 @@ export function QuestionMapRail({
   title: string;
 }) {
   return (
-    <aside className="rounded-3xl border border-black/[0.06] bg-white p-5">
-      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#b3aa9c]">Question map</p>
-      <p className="mt-1 text-[15px] font-black text-[#23201d]">{title}</p>
+    <aside className="rounded-[20px] border-2 border-[#121117] bg-white p-5">
+      <p className="text-[14px] font-semibold text-[#6a697c]">Question map</p>
+      <p className="mt-1 text-[17px] font-bold text-[#121117]">{title}</p>
 
       <div className="mt-4 grid grid-cols-5 gap-2">
         {items.map((item, i) => (
@@ -25,17 +25,17 @@ export function QuestionMapRail({
             key={item.id}
             type="button"
             onClick={() => onJump(i)}
-            className={`relative grid h-10 place-items-center rounded-xl text-[13px] font-black transition-colors ${
+            className={`relative grid h-10 place-items-center rounded-lg border-2 border-[#121117] text-[14px] font-semibold transition-colors ${
               i === activeIndex
-                ? "bg-[#6ab887] text-white"
-                : "bg-[#faf6ee] text-[#57524a] hover:bg-[#f1ead9]"
+                ? "bg-[#ff7aac] text-[#121117]"
+                : "bg-white text-[#121117] hover:bg-[#ffe5f0]"
             }`}
           >
             {item.position}
             {item.flagged && (
               <Flag
                 size={9}
-                className={`absolute right-1 top-1 ${i === activeIndex ? "text-white" : "text-[#d1795e]"}`}
+                className={`absolute right-1 top-1 ${i === activeIndex ? "text-[#121117]" : "text-[#b3213f]"}`}
               />
             )}
           </button>
@@ -46,7 +46,7 @@ export function QuestionMapRail({
         <button
           type="button"
           onClick={onExit}
-          className="mt-5 h-11 w-full rounded-xl border border-black/10 text-[13.5px] font-extrabold text-[#57524a] transition-colors hover:bg-black/[0.04]"
+          className="mt-5 h-11 w-full rounded-lg border-2 border-[#121117] text-[15px] font-semibold text-[#121117] transition-colors hover:bg-[#f4f4f8]"
         >
           Exit reader
         </button>

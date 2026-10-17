@@ -27,17 +27,17 @@ export function AddQuestionsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-3xl border border-black/[0.07] bg-[#fbf5e9] text-[#23201d] sm:max-w-2xl">
+      <DialogContent className="rounded-3xl border-2 border-[#121117] bg-[#ffffff] text-[#121117] sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="font-display text-[22px] font-black tracking-tight">
             Add questions
           </DialogTitle>
-          <DialogDescription className="text-[13px] font-semibold text-[#a29a8d]">
+          <DialogDescription className="text-[13px] font-semibold text-[#6a697c]">
             Into “{subjectName}”. One question per block, a blank line between them.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="rounded-2xl border border-black/[0.06] bg-white/70 px-3.5 py-2.5 text-[12px] font-semibold leading-relaxed text-[#6b645b]">
+        <div className="rounded-2xl border-2 border-[#121117] bg-white/70 px-3.5 py-2.5 text-[12px] font-semibold leading-relaxed text-[#6a697c]">
           Start with the question. Put each answer on its own line with <b>-</b>, and mark the right
           one with <b>*</b>. A line starting with <b>&gt;</b> is the explanation.
         </div>
@@ -48,17 +48,17 @@ export function AddQuestionsDialog({
           onChange={(e) => setText(e.target.value)}
           rows={12}
           placeholder={SAMPLE}
-          className="w-full rounded-2xl border border-black/10 bg-white px-3.5 py-3 font-mono text-[13px] leading-relaxed text-[#23201d] outline-none focus:border-[#f0a95c] focus:ring-2 focus:ring-[#f0a95c]/25"
+          className="w-full rounded-2xl border-2 border-[#121117] bg-white px-3.5 py-3 font-mono text-[13px] leading-relaxed text-[#121117] outline-none focus:border-[#ff7aac] focus:ring-2 focus:ring-[#ff7aac]/25"
         />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-[13px] font-extrabold text-[#6b645b]">
+          <p className="text-[13px] font-extrabold text-[#6a697c]">
             {parsed.length} question{parsed.length === 1 ? "" : "s"} ready
           </p>
           <div className="flex items-center gap-2">
             <button
               onClick={() => onOpenChange(false)}
-              className="h-11 rounded-xl px-5 text-[13.5px] font-bold text-[#a29a8d] hover:bg-black/[0.05]"
+              className="h-11 rounded-xl px-5 text-[13.5px] font-bold text-[#6a697c] hover:bg-black/[0.05]"
             >
               Cancel
             </button>
@@ -68,7 +68,7 @@ export function AddQuestionsDialog({
                 onSave(parsed);
                 setText("");
               }}
-              className="h-11 rounded-xl bg-[#23201d] px-5 text-[13.5px] font-extrabold text-white disabled:opacity-40"
+              className="h-11 rounded-xl bg-[#121117] px-5 text-[13.5px] font-extrabold text-white disabled:opacity-40"
             >
               {busy ? "Saving…" : `Save ${parsed.length || ""}`.trim()}
             </button>

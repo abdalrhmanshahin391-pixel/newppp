@@ -63,9 +63,9 @@ function tableRows(md: string): string[][] {
 }
 
 const TONE: Record<string, string> = {
-  easy: "#6ab887",
-  medium: "#e0a35c",
-  hard: "#d1795e",
+  easy: "#2e7d32",
+  medium: "#ff7aac",
+  hard: "#b3213f",
 };
 
 export function SolvedQuestionView({
@@ -85,15 +85,15 @@ export function SolvedQuestionView({
   const body = rows.slice(1);
 
   return (
-    <article className="overflow-hidden rounded-3xl border border-black/[0.06] bg-white">
-      <header className="flex items-center gap-3 border-b border-black/[0.06] bg-[#fbf5e9] px-5 py-3.5">
-        <span className="rounded-full bg-white px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-[#a29a8d]">
+    <article className="overflow-hidden rounded-3xl border-2 border-[#121117] bg-white">
+      <header className="flex items-center gap-3 border-b-2 border-[#dcdce5] bg-[#ffffff] px-5 py-3.5">
+        <span className="rounded-full bg-white px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-[#6a697c]">
           Q{question.position} / {total}
         </span>
         {question.concept && (
           <span
             className="rounded-full px-3 py-1 text-[11px] font-black text-white"
-            style={{ background: TONE[question.difficulty] ?? "#6ab887" }}
+            style={{ background: TONE[question.difficulty] ?? "#2e7d32" }}
           >
             {question.concept}
           </span>
@@ -105,7 +105,7 @@ export function SolvedQuestionView({
               onClick={onFlag}
               aria-label="Flag question"
               className={`grid h-9 w-9 place-items-center rounded-xl transition-colors ${
-                question.flagged ? "bg-[#f7e2d8] text-[#d1795e]" : "text-[#a29a8d] hover:bg-black/[0.05]"
+                question.flagged ? "bg-[#fdecef] text-[#b3213f]" : "text-[#6a697c] hover:bg-black/[0.05]"
               }`}
             >
               <Flag size={15} />
@@ -116,7 +116,7 @@ export function SolvedQuestionView({
               type="button"
               onClick={onDelete}
               aria-label="Delete question"
-              className="grid h-9 w-9 place-items-center rounded-xl text-[#a29a8d] transition-colors hover:bg-black/[0.05] hover:text-[#d1795e]"
+              className="grid h-9 w-9 place-items-center rounded-xl text-[#6a697c] transition-colors hover:bg-black/[0.05] hover:text-[#b3213f]"
             >
               <Trash2 size={15} />
             </button>
@@ -125,7 +125,7 @@ export function SolvedQuestionView({
       </header>
 
       <div className="px-5 py-5 sm:px-7">
-        <h2 className="text-[19px] font-black leading-snug text-[#23201d]">{question.stem}</h2>
+        <h2 className="text-[19px] font-black leading-snug text-[#121117]">{question.stem}</h2>
 
         <ul className="mt-4 flex flex-col gap-2">
           {question.options.map((o) => (
@@ -133,13 +133,13 @@ export function SolvedQuestionView({
               key={o.letter}
               className={`flex items-start gap-3 rounded-2xl px-4 py-3 text-[14.5px] font-bold ${
                 o.is_correct
-                  ? "bg-[#eaf6ee] text-[#215237] ring-1 ring-[#6ab887]"
-                  : "bg-[#faf6ee] text-[#57524a]"
+                  ? "bg-[#f4f4f8] text-[#2e7d32] ring-1 ring-[#2e7d32]"
+                  : "bg-[#ffffff] text-[#4b4a5c]"
               }`}
             >
               <span
                 className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-black ${
-                  o.is_correct ? "bg-[#6ab887] text-white" : "bg-white text-[#a29a8d]"
+                  o.is_correct ? "bg-[#2e7d32] text-white" : "bg-white text-[#6a697c]"
                 }`}
               >
                 {o.is_correct ? <Check size={13} strokeWidth={3.5} /> : o.letter}
@@ -150,16 +150,16 @@ export function SolvedQuestionView({
         </ul>
 
         {blocks.length > 0 && (
-          <div className="mt-6 rounded-2xl bg-[#fbf5e9] p-5">
-            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#b3aa9c]">
+          <div className="mt-6 rounded-2xl bg-[#ffffff] p-5">
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6a697c]">
               Explanation
             </p>
             {blocks.map((b, i) => (
               <section key={i} className="mt-4 first:mt-3">
-                <p className="text-[14px] font-black text-[#23201d]">{b.title}</p>
+                <p className="text-[14px] font-black text-[#121117]">{b.title}</p>
                 <ul className="mt-1.5 flex flex-col gap-1.5">
                   {b.lines.map((line, j) => (
-                    <li key={j} className="text-[13.5px] font-medium leading-relaxed text-[#57524a]">
+                    <li key={j} className="text-[13.5px] font-medium leading-relaxed text-[#4b4a5c]">
                       {inline(line)}
                     </li>
                   ))}
@@ -170,10 +170,10 @@ export function SolvedQuestionView({
         )}
 
         {body.length > 0 && head && (
-          <div className="mt-5 overflow-hidden rounded-2xl border border-black/[0.06]">
+          <div className="mt-5 overflow-hidden rounded-2xl border-2 border-[#121117]">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="bg-[#23201d] text-white">
+                <tr className="bg-[#121117] text-white">
                   {head.map((h, i) => (
                     <th key={i} className="px-4 py-2.5 text-[11px] font-black uppercase tracking-[0.14em]">
                       {h}
@@ -183,13 +183,13 @@ export function SolvedQuestionView({
               </thead>
               <tbody>
                 {body.map((r, i) => (
-                  <tr key={i} className="border-t border-black/[0.06]">
+                  <tr key={i} className="border-t-2 border-[#dcdce5]">
                     {r.map((c, j) => (
-                      <td key={j} className="px-4 py-3 align-top text-[13.5px] font-semibold text-[#57524a]">
+                      <td key={j} className="px-4 py-3 align-top text-[13.5px] font-semibold text-[#4b4a5c]">
                         {c === "✓" ? (
-                          <Check size={16} className="text-[#3f9a63]" strokeWidth={3} />
+                          <Check size={16} className="text-[#2e7d32]" strokeWidth={3} />
                         ) : c === "✗" || c === "x" ? (
-                          <X size={16} className="text-[#d1795e]" strokeWidth={3} />
+                          <X size={16} className="text-[#b3213f]" strokeWidth={3} />
                         ) : (
                           c
                         )}

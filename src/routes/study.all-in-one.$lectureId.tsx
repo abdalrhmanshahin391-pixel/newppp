@@ -42,7 +42,7 @@ export const Route = createFileRoute("/study/all-in-one/$lectureId")({
   }),
 });
 
-const ACCENT = "#3f2c73";
+const ACCENT = "#121117";
 type Tab = "guide" | "summary" | "cards" | "questions";
 
 const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
@@ -67,13 +67,13 @@ function SaveSheet({
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4 print:hidden">
-      <div className="w-full max-w-[460px] rounded-[24px] border border-black/[0.07] bg-[#fbf8f2] p-6">
-        <h2 className="font-display text-[22px] font-black text-[#23201d]">{title}</h2>
+      <div className="w-full max-w-[460px] rounded-[24px] border-2 border-[#121117] bg-[#ffffff] p-6">
+        <h2 className="font-display text-[22px] font-black text-[#121117]">{title}</h2>
         <div className="mt-4 grid gap-3">{children}</div>
         <button
           type="button"
           onClick={onClose}
-          className="mt-4 text-[13px] font-extrabold text-[#a29a8d] hover:text-[#23201d]"
+          className="mt-4 text-[13px] font-extrabold text-[#6a697c] hover:text-[#121117]"
         >
           Cancel
         </button>
@@ -83,7 +83,7 @@ function SaveSheet({
 }
 
 const FIELD =
-  "h-12 w-full rounded-xl border border-black/10 bg-white px-4 text-[14.5px] font-semibold text-[#23201d]";
+  "h-12 w-full rounded-xl border-2 border-[#121117] bg-white px-4 text-[14.5px] font-semibold text-[#121117]";
 
 
 
@@ -205,9 +205,9 @@ function AllInOneWorkspace() {
 
   if (busy) {
     return (
-      <div className="min-h-screen bg-[#fbf5e9]">
+      <div className="min-h-screen bg-[#ffffff]">
         <SiteHeader />
-        <div className="grid place-items-center py-32 text-[#6b6357]">
+        <div className="grid place-items-center py-32 text-[#6a697c]">
           <Loader2 className="animate-spin" />
         </div>
       </div>
@@ -216,11 +216,11 @@ function AllInOneWorkspace() {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-[#fbf5e9]">
+      <div className="min-h-screen bg-[#ffffff]">
         <SiteHeader />
         <div className="mx-auto max-w-[700px] px-4 py-24 text-center">
           <p className="text-[16px] font-bold">We could not open that lecture.</p>
-          <Link to="/study/all-in-one" className="mt-4 inline-block rounded-full bg-[#23201d] px-5 py-3 text-[14px] font-extrabold text-white">
+          <Link to="/study/all-in-one" className="mt-4 inline-block rounded-full bg-[#121117] px-5 py-3 text-[14px] font-extrabold text-white">
             Upload another one
           </Link>
         </div>
@@ -231,12 +231,12 @@ function AllInOneWorkspace() {
   const points: string[] = data.lecture?.key_points ?? [];
 
   return (
-    <div className="min-h-screen bg-[#fbf5e9] text-[#23201d]">
+    <div className="min-h-screen bg-[#ffffff] text-[#121117]">
       <SiteHeader />
       <main className="mx-auto w-full max-w-[1080px] px-4 pb-24 pt-8">
         <Link
           to="/study/all-in-one"
-          className="inline-flex items-center gap-2 text-[13px] font-extrabold text-[#6b6357] hover:text-[#23201d]"
+          className="inline-flex items-center gap-2 text-[13px] font-extrabold text-[#6a697c] hover:text-[#121117]"
         >
           <ArrowLeft size={15} /> New all-in-one lecture
         </Link>
@@ -244,7 +244,7 @@ function AllInOneWorkspace() {
         <header className="mt-4">
           <div
             className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em]"
-            style={{ background: "#e7dcf7", color: ACCENT }}
+            style={{ background: "#ffe5f0", color: ACCENT }}
           >
             All in one
           </div>
@@ -257,7 +257,7 @@ function AllInOneWorkspace() {
             ].map((s) => (
               <span
                 key={s.l}
-                className="rounded-full border border-black/[0.08] bg-[#fbf8f2] px-3 py-1.5 text-[12px] font-extrabold text-[#6b6357]"
+                className="rounded-full border-2 border-[#121117] bg-[#ffffff] px-3 py-1.5 text-[12px] font-extrabold text-[#6a697c]"
               >
                 {s.v} {s.l.toLowerCase()}
               </span>
@@ -277,7 +277,7 @@ function AllInOneWorkspace() {
                   style={
                     on
                       ? { background: ACCENT, color: "#fff", borderColor: "transparent", boxShadow: `0 14px 30px -18px ${ACCENT}` }
-                      : { background: "#fff", color: "#3d3833", borderColor: "rgba(0,0,0,0.08)" }
+                      : { background: "#fff", color: "#4b4a5c", borderColor: "rgba(0,0,0,0.08)" }
                   }
                 >
                   {t.icon}
@@ -291,14 +291,14 @@ function AllInOneWorkspace() {
             className={
               tab === "guide" || tab === "summary"
                 ? ""
-                : "rounded-[26px] border border-black/[0.07] bg-white p-5 sm:p-7"
+                : "rounded-[26px] border-2 border-[#121117] bg-white p-5 sm:p-7"
             }
           >
             {tab === "guide" &&
               (data.guide ? (
                 <GuideDoc text={data.guide} />
               ) : (
-                <p className="text-[15px] text-[#6b6357]">No study guide was written for this lecture.</p>
+                <p className="text-[15px] text-[#6a697c]">No study guide was written for this lecture.</p>
               ))}
 
             {tab === "summary" && (
@@ -321,7 +321,7 @@ function AllInOneWorkspace() {
                         Open full summary
                       </Link>
                     </div>
-                    <div className="mt-4 overflow-hidden rounded-[26px] bg-[#fbf5e9]">
+                    <div className="mt-4 overflow-hidden rounded-[26px] bg-[#ffffff]">
                       <SummaryView
                         content={data.sheet.content}
                         siteName="Rita"
@@ -333,11 +333,11 @@ function AllInOneWorkspace() {
                 ) : data.short ? (
                   <GuideDoc text={data.short} />
                 ) : (
-                  <p className="text-[15px] text-[#6b6357]">No summary yet.</p>
+                  <p className="text-[15px] text-[#6a697c]">No summary yet.</p>
                 )}
                 {points.length > 0 && (
-                  <div className="mt-6 rounded-2xl bg-[#faf6ee] p-4 print:hidden">
-                    <div className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a89e90]">Key points</div>
+                  <div className="mt-6 rounded-2xl bg-[#ffffff] p-4 print:hidden">
+                    <div className="text-[11px] font-black uppercase tracking-[0.16em] text-[#6a697c]">Key points</div>
                     <ul className="mt-2 space-y-1.5">
                       {points.map((p: string, i: number) => (
                         <li key={i} className="flex gap-2 text-[14.5px] leading-[1.6]">
@@ -369,14 +369,14 @@ function AllInOneWorkspace() {
                         <button
                           key={c.id}
                           onClick={() => setFlip((f) => ({ ...f, [c.id]: !f[c.id] }))}
-                          className="min-h-[132px] rounded-2xl border border-black/[0.08] p-4 text-left transition hover:-translate-y-0.5"
-                          style={{ background: on ? "#faf6ee" : "#fff" }}
+                          className="min-h-[132px] rounded-2xl border-2 border-[#121117] p-4 text-left transition hover:-translate-y-0.5"
+                          style={{ background: on ? "#f4f4f8" : "#fff" }}
                         >
-                          <div className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a89e90]">
+                          <div className="text-[11px] font-black uppercase tracking-[0.16em] text-[#6a697c]">
                             {on ? "Answer" : "Card"}
                           </div>
                           <div className="mt-2 text-[15px] font-bold leading-[1.5]">{on ? c.back : c.front}</div>
-                          <div className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-extrabold text-[#a29a8d]">
+                          <div className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-extrabold text-[#6a697c]">
                             <RotateCcw size={13} /> Tap to flip
                           </div>
                         </button>
@@ -385,12 +385,12 @@ function AllInOneWorkspace() {
                   </div>
                 </div>
               ) : (
-                <p className="text-[15px] text-[#6b6357]">No flashcards for this lecture.</p>
+                <p className="text-[15px] text-[#6a697c]">No flashcards for this lecture.</p>
               ))}
 
             {tab === "questions" && (
               <div>
-                <p className="text-[15px] text-[#6b6357]">
+                <p className="text-[15px] text-[#6a697c]">
                   {data.questions.length} question{data.questions.length === 1 ? "" : "s"} are ready with full
                   explanations.
                 </p>
@@ -408,10 +408,10 @@ function AllInOneWorkspace() {
                       className="rounded-full px-5 py-3 text-[14px] font-extrabold transition disabled:opacity-40"
                       style={
                         m === "exam"
-                          ? { background: "#23201d", color: "#fff" }
+                          ? { background: "#121117", color: "#fff" }
                           : m === "session"
                             ? { background: ACCENT, color: "#fff" }
-                            : { background: "#fff", color: "#23201d", border: "1px solid rgba(0,0,0,0.1)" }
+                            : { background: "#fff", color: "#121117", border: "1px solid rgba(0,0,0,0.1)" }
                       }
                     >
                       {m === "study" ? "Study mode" : m === "session" ? "Session mode" : "Timed exam"}
@@ -430,8 +430,8 @@ function AllInOneWorkspace() {
                 </div>
                 <div className="mt-6 space-y-3">
                   {data.questions.slice(0, 5).map((qq: any, i: number) => (
-                    <div key={qq.id} className="rounded-2xl bg-[#faf6ee] p-4">
-                      <div className="text-[11px] font-black uppercase tracking-[0.16em] text-[#a89e90]">
+                    <div key={qq.id} className="rounded-2xl bg-[#ffffff] p-4">
+                      <div className="text-[11px] font-black uppercase tracking-[0.16em] text-[#6a697c]">
                         Preview {i + 1}
                       </div>
                       <div className="mt-1 text-[15px] font-bold leading-[1.5]">{qq.stem}</div>
@@ -455,7 +455,7 @@ function AllInOneWorkspace() {
       <SaveSheet open={saveCards} title="Save these flashcards" onClose={() => setSaveCards(false)}>
         {boardSubjects.length > 0 && (
           <label className="grid gap-1.5">
-            <span className="text-[12px] font-black uppercase tracking-[0.14em] text-[#a89e90]">Subject</span>
+            <span className="text-[12px] font-black uppercase tracking-[0.14em] text-[#6a697c]">Subject</span>
             <select value={cardSubject} onChange={(e) => setCardSubject(e.target.value)} className={FIELD}>
               {boardSubjects.map((s) => (
                 <option key={s.name} value={s.name}>
@@ -466,7 +466,7 @@ function AllInOneWorkspace() {
           </label>
         )}
         <label className="grid gap-1.5">
-          <span className="text-[12px] font-black uppercase tracking-[0.14em] text-[#a89e90]">
+          <span className="text-[12px] font-black uppercase tracking-[0.14em] text-[#6a697c]">
             {boardSubjects.length ? "…or a new subject" : "New subject"}
           </span>
           <input
@@ -477,7 +477,7 @@ function AllInOneWorkspace() {
           />
         </label>
         <label className="grid gap-1.5">
-          <span className="text-[12px] font-black uppercase tracking-[0.14em] text-[#a89e90]">Sub-subject</span>
+          <span className="text-[12px] font-black uppercase tracking-[0.14em] text-[#6a697c]">Sub-subject</span>
           <input value={cardSub} onChange={(e) => setCardSub(e.target.value)} className={FIELD} />
         </label>
         <button type="button" onClick={doSaveCards} className="rita-btn rita-btn-primary !w-full">
@@ -487,14 +487,14 @@ function AllInOneWorkspace() {
 
       <SaveSheet open={saveQs} title="Save these questions" onClose={() => setSaveQs(false)}>
         {!lqData ? (
-          <div className="flex items-center gap-2 text-[14px] font-bold text-[#a29a8d]">
+          <div className="flex items-center gap-2 text-[14px] font-bold text-[#6a697c]">
             <Loader2 size={15} className="animate-spin" /> Loading your subjects…
           </div>
         ) : (
           <>
             {(lqData.subjects ?? []).filter((s: any) => !s.is_example).length > 0 && (
               <label className="grid gap-1.5">
-                <span className="text-[12px] font-black uppercase tracking-[0.14em] text-[#a89e90]">Subject</span>
+                <span className="text-[12px] font-black uppercase tracking-[0.14em] text-[#6a697c]">Subject</span>
                 <select value={qSubject} onChange={(e) => setQSubject(e.target.value)} className={FIELD}>
                   {(lqData.subjects ?? [])
                     .filter((s: any) => !s.is_example)
@@ -507,7 +507,7 @@ function AllInOneWorkspace() {
               </label>
             )}
             <label className="grid gap-1.5">
-              <span className="text-[12px] font-black uppercase tracking-[0.14em] text-[#a89e90]">
+              <span className="text-[12px] font-black uppercase tracking-[0.14em] text-[#6a697c]">
                 …or a new subject
               </span>
               <input
@@ -518,7 +518,7 @@ function AllInOneWorkspace() {
               />
             </label>
             <label className="grid gap-1.5">
-              <span className="text-[12px] font-black uppercase tracking-[0.14em] text-[#a89e90]">Sub-subject</span>
+              <span className="text-[12px] font-black uppercase tracking-[0.14em] text-[#6a697c]">Sub-subject</span>
               <input value={qSub} onChange={(e) => setQSub(e.target.value)} className={FIELD} />
             </label>
             <button

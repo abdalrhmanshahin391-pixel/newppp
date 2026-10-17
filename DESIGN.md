@@ -118,6 +118,8 @@ bar, sticker mode tabs, ink-border action cards with bare icons), `LaunchPanel`,
 `SessionStarter`, `DailyPanel`, the dialogs and the Memory Lab rounds. Rules: white page, grey
 panels, 2px ink borders on anything you press, pink only for the action and the "on" state,
 green/red only as right/wrong feedback, no tinted icon circles, no capital-letter labels.
+Question bank, Lecture Lab and All in one follow the same rules: the question player, map rail,
+explanation panel and subject picker are ink-bordered cards with pink for the action.
 
 ## Accessibility floor
 

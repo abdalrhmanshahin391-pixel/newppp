@@ -1,9 +1,9 @@
 export const BADGE_PRESETS: { label: string; color: string }[] = [
-  { label: "NEW", color: "#58cc02" },
-  { label: "HOT OFFER", color: "#f43f5e" },
-  { label: "MOST WANTED", color: "#f59e0b" },
-  { label: "LIMITED", color: "#8b5cf6" },
-  { label: "FREE", color: "#1cb0f6" },
+  { label: "NEW", color: "#ff7aac" },
+  { label: "HOT OFFER", color: "#b3213f" },
+  { label: "MOST WANTED", color: "#ff7aac" },
+  { label: "LIMITED", color: "#121117" },
+  { label: "FREE", color: "#ff7aac" },
 ];
 
 export function badgeIsLive(expires?: string | null) {
@@ -22,11 +22,15 @@ export function CourseBadge({
   expiresAt?: string | null;
 }) {
   if (!label || !badgeIsLive(expiresAt)) return null;
-  const c = color || "#f43f5e";
+  const c = color || "#b3213f";
   return (
     <span
-      className="course-badge absolute top-2.5 left-2.5 z-10 inline-flex items-center overflow-hidden text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full text-white"
-      style={{ background: c, boxShadow: `0 2px 0 color-mix(in oklab, ${c} 70%, black)` }}
+      className="course-badge absolute top-2.5 left-2.5 z-10 inline-flex items-center overflow-hidden text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full"
+      style={{
+        background: c,
+        color: c === "#ff7aac" ? "#121117" : "#ffffff",
+        border: "2px solid #121117",
+      }}
     >
       {label}
     </span>

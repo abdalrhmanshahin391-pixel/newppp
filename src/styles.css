@@ -4348,3 +4348,169 @@ hairline borders and generous radii.
     transform: none;
   }
 }
+
+/* Legacy colours found later (generated from the remaining hex utility classes, by role). */
+.rita-app [class~="bg-[#0ea5e9]"] { background-color: var(--pp-pink) !important; color: var(--pp-ink); }
+.rita-app [class~="bg-[#10b981]"] { background-color: var(--pp-pink) !important; color: var(--pp-ink); }
+.rita-app [class~="bg-[#121117]"] { background-color: var(--pp-ink) !important; }
+.rita-app [class~="bg-[#23201d]/50"] { background-color: rgb(18 17 23 / 0.5) !important; }
+.rita-app [class~="bg-[#23201d]/55"] { background-color: rgb(18 17 23 / 0.55) !important; }
+.rita-app [class~="bg-[#2f7d55]"] { background-color: var(--pp-ink) !important; }
+.rita-app [class~="bg-[#3f2c73]"] { background-color: var(--pp-ink) !important; }
+.rita-app [class~="bg-[#6366f1]"] { background-color: var(--pp-pink) !important; color: var(--pp-ink); }
+.rita-app [class~="bg-[#6366f1]/15"] { background-color: rgb(255 122 172 / 0.15) !important; }
+.rita-app [class~="bg-[#8ec63f]/15"] { background-color: rgb(255 122 172 / 0.15) !important; }
+.rita-app [class~="bg-[#b3213f]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#d94a3d]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#d94a4a]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#d94f3d]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#dcdce5]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#e6d9c2]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#eef7e4]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#eef7e8]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#ef4444]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#efe7d8]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f0e9dc]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f0ebe1]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f0f0ec]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f2ece0]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f2f8ec]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#f4eddf]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#f4f4f8]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f4f7f2]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#f4faec]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#f59e0b]"] { background-color: var(--pp-pink) !important; color: var(--pp-ink); }
+.rita-app [class~="bg-[#f6f1e5]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#f6f1e6]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#f6f1e8]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f7e2d8]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#f8fcf5]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#faf6ec]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#faf8f3]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#faf8f5]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#fafaf8]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#fbdcdc]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#fbf5e9]/70"] { background-color: rgb(255 229 240 / 0.7) !important; }
+.rita-app [class~="bg-[#fbf7ef]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#fcf8f1]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#fdebc9]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#fdf0d8]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#fdf1e2]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#fdf3e6]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="bg-[#ff7aac]"] { background-color: var(--pp-pink) !important; color: var(--pp-ink); }
+.rita-app [class~="bg-[#ffe5f0]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#fffdf8]"] { background-color: var(--pp-pink-soft) !important; }
+.rita-app [class~="border-[#121117]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#23201d]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#3f2c73]/25"] { border-color: rgb(18 17 23 / 0.25) !important; }
+.rita-app [class~="border-[#4b9b2e]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#4c9a2a]/40"] { border-color: rgb(18 17 23 / 0.4) !important; }
+.rita-app [class~="border-[#4c9a2a]/50"] { border-color: rgb(18 17 23 / 0.5) !important; }
+.rita-app [class~="border-[#6366f1]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#6ab887]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#8ec63f]/60"] { border-color: rgb(18 17 23 / 0.6) !important; }
+.rita-app [class~="border-[#d1795e]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#d1795e]/30"] { border-color: rgb(18 17 23 / 0.3) !important; }
+.rita-app [class~="border-[#d1795e]/40"] { border-color: rgb(18 17 23 / 0.4) !important; }
+.rita-app [class~="border-[#d94a3d]/25"] { border-color: rgb(18 17 23 / 0.25) !important; }
+.rita-app [class~="border-[#dcdce5]"] { border-color: var(--pp-line) !important; }
+.rita-app [class~="border-[#e6c9a8]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="ring-[#23201d]"] { --tw-ring-color: var(--pp-pink) !important; }
+.rita-app [class~="ring-[#4c9a2a]/30"] { --tw-ring-color: var(--pp-pink) !important; }
+.rita-app [class~="ring-[#6366f1]"] { --tw-ring-color: var(--pp-pink) !important; }
+.rita-app [class~="ring-[#6ab887]"] { --tw-ring-color: var(--pp-pink) !important; }
+.rita-app [class~="ring-[#8ec63f]"] { --tw-ring-color: var(--pp-pink) !important; }
+.rita-app [class~="text-[#0a0a0a]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#121117]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#1e3a8a]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#1f4c6d]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#231f1a]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#2c480e]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#2f6b1c]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3b3730]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3c3730]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3d3833]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3f6a17]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3f7c26]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3f9a63]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#4338ca]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#4a3877]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#4b4a5c]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#4b7a33]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#4e7a1f]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#5d574e]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#6a697c]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#6aa9d8]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#6b6459]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#7a6f5e]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#7a7164]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#8a3b32]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#8a5b12]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#8a6a1f]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#8a8072]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#8a8378]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#8b8375]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#8d8578]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#8f2323]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#a15b47]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#a49a8b]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#b4485f]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#b8b0a4]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#c0392b]/80"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#c1392b]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#c2b9aa]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#c6bfb4]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#c8bfae]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#c8c0b2]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#f0a95c]"] { color: var(--pp-ink) !important; }
+
+/* Primary actions that were dark pills become the pink button; round chips get 10px corners. */
+.rita-app :is(button, a)[class~="bg-[#23201d]"],
+.rita-app :is(button, a)[class~="bg-[#23201d]"] *,
+.rita-app :is(button, a)[class~="bg-[#121117]"][class~="text-white"],
+.rita-app :is(button, a)[class~="bg-[#121117]"][class~="text-white"] * {
+  color: var(--pp-ink) !important;
+}
+.rita-app :is(button, a)[class~="bg-[#23201d]"],
+.rita-app :is(button, a)[class~="bg-[#121117]"][class~="text-white"] {
+  background-color: var(--pp-pink) !important;
+  border: 2px solid var(--pp-ink);
+}
+.rita-app :is(button, a)[class~="bg-[#23201d]"]:hover:not(:disabled),
+.rita-app :is(button, a)[class~="bg-[#121117]"][class~="text-white"]:hover:not(:disabled) {
+  background-color: var(--pp-pink-hover) !important;
+}
+.rita-app :is(button, a, label)[class*="rounded-full"]:not([role="switch"]) {
+  border-radius: 10px;
+}
+
+/* Theme tokens used by token-based classes (bg-primary, bg-cream, border-border, ...). */
+.rita-app {
+  --radius: 0.625rem;
+  --background: #ffffff;
+  --foreground: #121117;
+  --cream: #f4f4f8;
+  --cream-deep: #ececf2;
+  --ink: #121117;
+  --card: #ffffff;
+  --card-foreground: #121117;
+  --popover: #ffffff;
+  --popover-foreground: #121117;
+  --primary: #ff7aac;
+  --primary-foreground: #121117;
+  --primary-soft: #ffe5f0;
+  --primary-deep: #d13d76;
+  --secondary: #f4f4f8;
+  --secondary-foreground: #121117;
+  --muted: #f4f4f8;
+  --muted-foreground: #6a697c;
+  --accent: #ffe5f0;
+  --accent-foreground: #121117;
+  --destructive: #b3213f;
+  --destructive-foreground: #ffffff;
+  --border: #dcdce5;
+  --input: #dcdce5;
+  --ring: #121117;
+  --shadow-card: none;
+  --shadow-brand: none;
+}

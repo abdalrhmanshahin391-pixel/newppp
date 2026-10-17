@@ -470,7 +470,7 @@ function CourseDetailPage() {
           </p>
           <Link
             to="/courses"
-            className="mt-6 inline-flex rounded-full bg-foreground px-6 py-3 text-[14px] font-extrabold text-background"
+            className="mt-6 inline-flex rounded-full bg-[#ff7aac] border-2 border-[#121117] px-6 py-3 text-[14px] font-semibold text-[#121117]"
           >
             Browse question banks
           </Link>
