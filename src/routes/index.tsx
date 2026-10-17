@@ -2,7 +2,6 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { ProHome } from "@/components/home/procreate/ProHome";
 import { InstallAppBanner } from "@/components/InstallAppButton";
-import heroArt from "@/assets/home-hero-students.webp";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -35,7 +34,6 @@ export const Route = createFileRoute("/")({
     ],
     links: [
       { rel: "canonical", href: "https://ritajet.com/" },
-      { rel: "preload", as: "image", href: heroArt, fetchPriority: "high" },
       { rel: "prefetch", href: "/pricing" },
     ],
   }),
