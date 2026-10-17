@@ -9,22 +9,21 @@ import {
 } from "@/components/ui/dialog";
 
 export const simpleInputCls =
-  "w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-[14px] font-semibold text-[#23201d] outline-none focus:border-[#f0a95c] focus:ring-2 focus:ring-[#f0a95c]/25";
+  "w-full rounded-lg border-2 border-[#121117] bg-white px-3.5 py-2.5 text-[15px] font-medium text-[#121117] outline-none placeholder:text-[#6a697c] focus:border-[#121117] focus:ring-4 focus:ring-[#ff7aac]/40";
 
-export const simpleLabelCls =
-  "mb-1.5 block text-[11px] font-bold uppercase tracking-[0.16em] text-[#b3aa9c]";
+export const simpleLabelCls = "mb-1.5 block text-[14px] font-semibold text-[#121117]";
 
 const cancelCls =
-  "h-11 rounded-xl px-5 text-[13.5px] font-bold text-[#a29a8d] transition-colors hover:bg-black/[0.05]";
+  "h-11 rounded-lg px-5 text-[15px] font-semibold text-[#121117] transition-colors hover:bg-[#f4f4f8]";
 
 const primaryCls =
-  "h-11 rounded-xl bg-[#23201d] px-5 text-[13.5px] font-extrabold text-white transition-opacity hover:opacity-90";
+  "h-11 rounded-lg border-2 border-[#121117] bg-[#ff7aac] px-5 text-[15px] font-semibold text-[#121117] transition-colors hover:bg-[#fe9fc3]";
 
 const dangerCls =
-  "h-11 rounded-xl bg-[#d1795e] px-5 text-[13.5px] font-extrabold text-white transition-opacity hover:opacity-90";
+  "h-11 rounded-lg border-2 border-[#121117] bg-[#b3213f] px-5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90";
 
 export const simpleContentCls =
-  "rounded-3xl border border-black/[0.07] bg-[#fbf5e9] text-[#23201d] sm:max-w-md";
+  "rounded-[20px] border-2 border-[#121117] bg-white text-[#121117] sm:max-w-md";
 
 /** One-field name box — replaces window.prompt(). */
 export function PromptDialog({
@@ -71,11 +70,11 @@ export function PromptDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={simpleContentCls}>
         <DialogHeader>
-          <DialogTitle className="font-display text-[22px] font-black tracking-tight">
+          <DialogTitle className="font-display text-[24px] font-bold tracking-[-0.02em]">
             {title}
           </DialogTitle>
           {description ? (
-            <DialogDescription className="text-[13px] font-semibold text-[#a29a8d]">
+            <DialogDescription className="text-[15px] font-medium text-[#6a697c]">
               {description}
             </DialogDescription>
           ) : null}
@@ -93,10 +92,20 @@ export function PromptDialog({
           />
         </div>
         <DialogFooter className="gap-2 sm:gap-2">
-          <button type="button" disabled={submitting} className={cancelCls} onClick={() => onOpenChange(false)}>
+          <button
+            type="button"
+            disabled={submitting}
+            className={cancelCls}
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </button>
-          <button type="button" disabled={submitting} className={`${primaryCls} disabled:opacity-50`} onClick={() => void submit()}>
+          <button
+            type="button"
+            disabled={submitting}
+            className={`${primaryCls} disabled:opacity-50`}
+            onClick={() => void submit()}
+          >
             {submitting ? "Saving…" : confirmLabel}
           </button>
         </DialogFooter>
@@ -125,11 +134,11 @@ export function ConfirmDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={simpleContentCls}>
         <DialogHeader>
-          <DialogTitle className="font-display text-[22px] font-black tracking-tight">
+          <DialogTitle className="font-display text-[24px] font-bold tracking-[-0.02em]">
             {title}
           </DialogTitle>
           {description ? (
-            <DialogDescription className="text-[13.5px] font-semibold text-[#5c554b]">
+            <DialogDescription className="text-[15px] font-medium text-[#4b4a5c]">
               {description}
             </DialogDescription>
           ) : null}

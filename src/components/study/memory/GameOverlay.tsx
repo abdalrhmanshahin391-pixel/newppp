@@ -92,7 +92,7 @@ export function GameOverlay({
           : SequenceRound;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#fbf5e9] px-4 py-5 md:px-8 md:py-8">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-white px-4 py-5 md:px-8 md:py-8">
       <div className="mx-auto flex max-w-4xl items-center gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#b3aa9c]">
@@ -103,14 +103,14 @@ export function GameOverlay({
           </h2>
         </div>
         {timed && !stats && !timeUp && (
-          <span className="rounded-full bg-white px-4 py-2 text-[13px] font-black text-[#23201d]">
+          <span className="rounded-lg border-2 border-[#121117] bg-white px-4 py-2 text-[14px] font-bold text-[#121117]">
             {formatTime(left)}
           </span>
         )}
         <button
           type="button"
           onClick={onClose}
-          className="grid h-10 w-10 place-items-center rounded-xl bg-white text-[#a29a8d] hover:text-[#23201d]"
+          className="grid h-10 w-10 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#121117] hover:bg-[#ffe5f0]"
           aria-label="Close session"
         >
           <X size={18} />
@@ -126,7 +126,7 @@ export function GameOverlay({
             onClose={onClose}
           />
         ) : timeUp ? (
-          <div className="mx-auto w-full max-w-lg rounded-[28px] bg-white p-8 text-center">
+          <div className="mx-auto w-full max-w-lg rounded-[24px] border-2 border-[#121117] bg-white p-8 text-center">
             <h3 className="font-display text-[26px] font-black tracking-tight text-[#23201d]">
               Time is up
             </h3>
@@ -136,14 +136,14 @@ export function GameOverlay({
             <button
               type="button"
               onClick={() => restart()}
-              className="rita-pill mt-5 h-12 w-full rounded-2xl text-[14px] font-extrabold"
+              className="rita-pill mt-5 h-12 w-full text-[15px] font-semibold"
             >
               Play again
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="mt-2 h-11 w-full rounded-2xl text-[13.5px] font-bold text-[#a29a8d] hover:bg-black/[0.05]"
+              className="mt-2 h-11 w-full rounded-lg text-[15px] font-semibold text-[#121117] hover:bg-[#f4f4f8]"
             >
               Back to the board
             </button>

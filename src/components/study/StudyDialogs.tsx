@@ -10,20 +10,20 @@ import {
 import type { SampleSubject } from "@/lib/study-sample-data";
 
 const inputCls =
-  "w-full rounded-xl border border-black/10 bg-white px-3.5 py-2.5 text-[14px] font-semibold text-[#23201d] outline-none focus:border-[#f0a95c] focus:ring-2 focus:ring-[#f0a95c]/25";
+  "w-full rounded-lg border-2 border-[#121117] bg-white px-3.5 py-2.5 text-[15px] font-medium text-[#121117] outline-none placeholder:text-[#6a697c] focus:border-[#121117] focus:ring-4 focus:ring-[#ff7aac]/40";
 
-const labelCls = "mb-1.5 block text-[11px] font-bold uppercase tracking-[0.16em] text-[#b3aa9c]";
+const labelCls = "mb-1.5 block text-[14px] font-semibold text-[#121117]";
 
 const cancelCls =
-  "h-11 rounded-xl px-5 text-[13.5px] font-bold text-[#a29a8d] transition-colors hover:bg-black/[0.05]";
+  "h-11 rounded-lg px-5 text-[15px] font-semibold text-[#121117] transition-colors hover:bg-[#f4f4f8]";
 
-const primaryCls = "rita-pill h-11 rounded-xl px-5 text-[13.5px] font-extrabold";
+const primaryCls =
+  "h-11 rounded-lg border-2 border-[#121117] bg-[#ff7aac] px-5 text-[15px] font-semibold text-[#121117] transition-colors hover:bg-[#fe9fc3]";
 
 const dangerCls =
-  "h-11 rounded-xl bg-[#d1795e] px-5 text-[13.5px] font-extrabold text-white transition-opacity hover:opacity-90";
+  "h-11 rounded-lg border-2 border-[#121117] bg-[#b3213f] px-5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90";
 
-const contentCls =
-  "rounded-3xl border border-black/[0.07] bg-[#fbf5e9] text-[#23201d] sm:max-w-md";
+const contentCls = "rounded-[20px] border-2 border-[#121117] bg-white text-[#121117] sm:max-w-md";
 
 export function AddSubjectDialog({
   open,
@@ -50,10 +50,10 @@ export function AddSubjectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={contentCls}>
         <DialogHeader>
-          <DialogTitle className="font-display text-[22px] font-black tracking-tight">
+          <DialogTitle className="font-display text-[24px] font-bold tracking-[-0.02em]">
             Add Subject
           </DialogTitle>
-          <DialogDescription className="text-[13px] font-semibold text-[#a29a8d]">
+          <DialogDescription className="text-[15px] font-medium text-[#6a697c]">
             Create a new subject for your study board.
           </DialogDescription>
         </DialogHeader>
@@ -118,10 +118,10 @@ export function AddSubSubjectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={contentCls}>
         <DialogHeader>
-          <DialogTitle className="font-display text-[22px] font-black tracking-tight">
+          <DialogTitle className="font-display text-[24px] font-bold tracking-[-0.02em]">
             Add Sub-Subject
           </DialogTitle>
-          <DialogDescription className="text-[13px] font-semibold text-[#a29a8d]">
+          <DialogDescription className="text-[15px] font-medium text-[#6a697c]">
             Nest a topic under one of your subjects.
           </DialogDescription>
         </DialogHeader>
@@ -203,10 +203,10 @@ export function EditItemDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={contentCls}>
         <DialogHeader>
-          <DialogTitle className="font-display text-[22px] font-black tracking-tight">
+          <DialogTitle className="font-display text-[24px] font-bold tracking-[-0.02em]">
             {isSub ? "Edit Sub-Subject" : "Edit Subject"}
           </DialogTitle>
-          <DialogDescription className="text-[13px] font-semibold text-[#a29a8d]">
+          <DialogDescription className="text-[15px] font-medium text-[#6a697c]">
             Give it a clearer name.
           </DialogDescription>
         </DialogHeader>
@@ -257,10 +257,10 @@ export function RemoveDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={contentCls}>
         <DialogHeader>
-          <DialogTitle className="font-display text-[22px] font-black tracking-tight">
+          <DialogTitle className="font-display text-[24px] font-bold tracking-[-0.02em]">
             {isSub ? "Remove Sub-Subject" : "Remove Subject"}
           </DialogTitle>
-          <DialogDescription className="text-[13.5px] font-semibold text-[#5c554b]">
+          <DialogDescription className="text-[15px] font-medium text-[#4b4a5c]">
             Are you sure you want to remove &ldquo;{name}&rdquo;?
             {!isSub && " All of its sub-subjects will be removed too."}
           </DialogDescription>

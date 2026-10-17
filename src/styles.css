@@ -4152,3 +4152,199 @@ hairline borders and generous radii.
     transform: none;
   }
 }
+
+/* ===========================================================================
+   App pages (/study, /courses, /german, /spaces, /share, /notes): the home page's ink, pink,
+   fonts and buttons. These tool pages were written with fixed warm hex colours; the block below
+   maps each of those utility classes onto the new palette. Delete this block to go back to the
+   old look. The scope class is added in __root.tsx.
+   =========================================================================== */
+.rita-app {
+  --pp-ink: #121117;
+  --pp-body: #4b4a5c;
+  --pp-muted: #6a697c;
+  --pp-line: #dcdce5;
+  --pp-grey: #f4f4f8;
+  --pp-pink: #ff7aac;
+  --pp-pink-hover: #fe9fc3;
+  --pp-pink-text: #d13d76;
+  --pp-pink-soft: #ffe5f0;
+  --pp-danger: #b3213f;
+  --pp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --pro-page: #ffffff;
+  --pro-card: #f4f4f8;
+  --pro-ink: #121117;
+  --pro-muted: #6a697c;
+  --rita-green: #ff7aac;
+  --rita-green-deep: #d13d76;
+  --rita-green-ink: #121117;
+  --rita-green-soft: #ffe5f0;
+  --font-grotesk: "Figtree", Helvetica, Arial, sans-serif;
+  --font-display: "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
+  --font-sans: "Figtree", Helvetica, Arial, sans-serif;
+  font-family: "Figtree", Helvetica, Arial, sans-serif;
+}
+.rita-app h1,
+.rita-app h2,
+.rita-app h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+/* Heavy 800/900 weights become 700, and small tracked capital labels become plain words. */
+.rita-app .font-black,
+.rita-app .font-extrabold {
+  font-weight: 700;
+}
+.rita-app .uppercase {
+  text-transform: none;
+}
+.rita-app [class*="tracking-["] {
+  letter-spacing: 0;
+}
+
+/* Buttons: 8px corners, 2px ink border, pink fill (same as the home page). */
+.rita-app .rita-btn {
+  height: 48px;
+  padding-inline: 22px;
+  border: 2px solid var(--pp-ink);
+  border-radius: 8px;
+  font-family: "Figtree", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: none;
+}
+.rita-app .rita-btn-primary {
+  background-color: var(--pp-pink);
+  color: var(--pp-ink);
+}
+.rita-app .rita-btn-primary:hover {
+  background-color: var(--pp-pink-hover);
+}
+.rita-app .rita-btn-secondary {
+  background-color: #ffffff;
+  color: var(--pp-ink);
+}
+.rita-app .rita-btn-secondary:hover {
+  background-color: var(--pp-grey);
+}
+.rita-app .rita-btn:focus-visible,
+.rita-app .rita-pill:focus-visible {
+  outline: 2px solid var(--pp-ink);
+  outline-offset: 3px;
+}
+.rita-app .rita-btn.rita-btn-sm {
+  height: 40px;
+  padding-inline: 16px;
+  font-size: 15px;
+}
+.rita-app .rita-pill {
+  background-color: var(--pp-pink);
+  color: var(--pp-ink);
+  border: 2px solid var(--pp-ink);
+  border-radius: 10px;
+  box-shadow: none;
+}
+.rita-app .rita-pill:hover {
+  background-color: var(--pp-pink-hover);
+}
+.rita-app .rita-tile {
+  box-shadow: none;
+}
+.rita-app .rita-tile:hover {
+  box-shadow: none;
+}
+
+/* Legacy colours, by role. */
+.rita-app :is([class~="text-[#23201d]"], [class~="text-[#3c372f]"], [class~="text-[#3d3832]"], [class~="text-[#3a352e]"], [class~="text-[#7a4b16]"], [class~="text-[#3d5c14]"], [class~="text-[#2f6318]"], [class~="text-[#215237]"], [class~="text-[#3f2c73]"], [class~="text-[#7d3421]"], [class~="text-[#a8462c]"], [class~="text-[#5a4a2e]"]) { color: var(--pp-ink) !important; }
+.rita-app :is([class~="text-[#4a453d]"], [class~="text-[#57524a]"], [class~="text-[#5c554b]"]) { color: var(--pp-body) !important; }
+.rita-app :is([class~="text-[#6b655c]"], [class~="text-[#6b645b]"], [class~="text-[#6d6355]"], [class~="text-[#6b6357]"], [class~="text-[#6d675e]"], [class~="text-[#6d665c]"], [class~="text-[#7a736a]"], [class~="text-[#8a8175]"], [class~="text-[#8a8376]"], [class~="text-[#8a7f6c]"], [class~="text-[#8a8070]"], [class~="text-[#8c8375]"], [class~="text-[#8b8378]"], [class~="text-[#8b8377]"], [class~="text-[#a29a8d]"], [class~="text-[#a89e90]"], [class~="text-[#a79c8c]"], [class~="text-[#b3aa9c]"], [class~="text-[#b0a696]"]) { color: var(--pp-muted) !important; }
+.rita-app :is([class~="text-[#c0b7a8]"], [class~="text-[#c7c0b4]"], [class~="text-[#ccc4b6]"], [class~="text-[#d8d0c2]"]) { color: #9a99ab !important; }
+.rita-app :is([class~="text-[#8ec63f]"], [class~="text-[#4c9a2a]"]) { color: var(--pp-pink-text) !important; }
+.rita-app :is([class~="text-[#b13636]"], [class~="text-[#d1795e]"]) { color: var(--pp-danger) !important; }
+.rita-app :is([class~="bg-[#fbf5e9]"], [class~="bg-[#faf6ee]"], [class~="bg-[#fbf8f2]"], [class~="bg-[#f7f2e8]"], [class~="bg-[#fdfaf3]"], [class~="bg-[#fafaf9]"], [class~="bg-[#f5f7fb]"], [class~="bg-[#f3ece0]"], [class~="bg-[#e9dfcd]"], [class~="bg-[#f2edfb]"]) { background-color: var(--pp-grey) !important; }
+.rita-app :is([class~="bg-[#23201d]"]) { background-color: var(--pp-ink) !important; }
+.rita-app :is([class~="bg-[#8ec63f]"], [class~="bg-[#4c9a2a]"], [class~="bg-[#6ab887]"]) { background-color: var(--pp-pink) !important; color: var(--pp-ink); }
+.rita-app :is([class~="bg-[#e6f4d8]"], [class~="bg-[#eaf4e2]"], [class~="bg-[#eef6e9]"], [class~="bg-[#eaf6ee]"], [class~="bg-[#fbeae4]"], [class~="bg-[#f6ddd5]"]) { background-color: var(--pp-pink-soft) !important; }
+.rita-app :is([class~="bg-[#d1795e]"]) { background-color: var(--pp-pink-soft) !important; }
+.rita-app :is([class~="border-[#8ec63f]"], [class~="border-[#f0a95c]"]) { border-color: var(--pp-ink) !important; }
+.rita-app :is([class~="border-[#3f2c73]"]) { border-color: var(--pp-ink) !important; }
+/* A page whose root was painted cream becomes white; panels inside it stay grey. */
+.rita-app :is([class~="min-h-screen"][class~="bg-[#fbf5e9]"]) { background-color: #ffffff !important; }
+/* Translucent pink (was translucent green). */
+.rita-app :is([class~="bg-[#8ec63f]/20"], [class~="bg-[#4c9a2a]/20"], [class~="bg-[#6ab887]/20"]) { background-color: rgb(255 122 172 / 0.2) !important; }
+/* Inline styles written as hex or as the rgb() the browser writes back. */
+.rita-app :is([style*="#fbf5e9"], [style*="rgb(251, 245, 233)"]) { background-color: #ffffff !important; }
+.rita-app :is([style*="#23201d"], [style*="rgb(35, 32, 29)"]) { color: var(--pp-ink) !important; }
+@media (prefers-reduced-motion: reduce) {
+  .rita-app .rita-btn,
+  .rita-app .rita-pill {
+    transition: none;
+  }
+}
+
+/* Study workspace frame: mode tabs and the action column. Same white card, 2px ink border and
+   pink "on" state as the home page; icons are bare ink, not tinted circles. */
+.rita-app .rh-modetab,
+.rita-app .rh-rail {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  border: 2px solid var(--pp-ink);
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--pp-ink);
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 180ms var(--pp-ease),
+    background-color 160ms ease;
+}
+.rita-app .rh-modetab {
+  min-height: 4rem;
+  padding: 0.75rem 1.1rem;
+}
+.rita-app .rh-modetab[aria-pressed="true"] {
+  background: var(--pp-pink);
+}
+.rita-app .rh-modetab[aria-pressed="true"] span span:last-child {
+  color: var(--pp-ink);
+}
+.rita-app .rh-rail {
+  min-height: 4.5rem;
+  padding: 0.9rem 1.1rem;
+}
+.rita-app .rh-rail:hover,
+.rita-app .rh-modetab:hover {
+  transform: translateY(-2px);
+}
+.rita-app .rh-rail:hover {
+  background: var(--pp-pink-soft);
+}
+.rita-app .rh-rail:active,
+.rita-app .rh-modetab:active {
+  transform: scale(0.98);
+}
+.rita-app .rh-rail:focus-visible,
+.rita-app .rh-modetab:focus-visible {
+  outline: 3px solid var(--pp-ink);
+  outline-offset: 3px;
+}
+.rita-app .rh-rail-danger {
+  color: var(--pp-danger);
+}
+.rita-app .rh-rail[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rita-app .rh-rail,
+  .rita-app .rh-modetab {
+    transition: none;
+  }
+  .rita-app .rh-rail:hover,
+  .rita-app .rh-modetab:hover {
+    transform: none;
+  }
+}

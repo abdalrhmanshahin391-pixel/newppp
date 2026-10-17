@@ -131,19 +131,19 @@ export function MatchBoard({
     const isPicked = picked?.side === side && picked.id === id;
     const isWrong = wrong.includes(id);
     const isLeaving = leaving.includes(id);
-    const soft = side === "left" ? "#fbe3c8" : "#d6e8f6";
-    const ink = side === "left" ? "#7a4b16" : "#1f4c6d";
+    const soft = "#ffe5f0";
+    const ink = "#121117";
     return (
       <button
         key={id}
         type="button"
         onClick={() => tap(side, id)}
-        className={`min-h-[4.5rem] rounded-2xl border px-4 py-3 text-left transition-all duration-300 ${
+        className={`min-h-[4.5rem] rounded-xl border-2 px-4 py-3 text-left transition-all duration-300 ${
           isLeaving ? "scale-90 opacity-0" : "opacity-100"
         } ${isWrong ? "animate-[rita-shake_0.4s_ease]" : ""}`}
         style={{
           background: isWrong ? "#fbe4e4" : isPicked ? soft : "#fff",
-          borderColor: isWrong ? "#d1795e" : isPicked ? ink : "rgba(0,0,0,0.07)",
+          borderColor: isWrong ? "#b3213f" : "#121117",
           boxShadow: isPicked ? `0 10px 22px -16px ${ink}` : undefined,
         }}
       >

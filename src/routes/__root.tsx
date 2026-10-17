@@ -203,6 +203,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent as unknown as ErrorRouteComponent,
 });
 
+/** The study, course, German, class and share pages share one look (see DESIGN.md, "App pages"). */
+const APP_PREFIXES = ["/study", "/courses", "/german", "/spaces", "/share", "/notes"];
+
+function AppScope({ children }: { children: ReactNode }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const inApp = APP_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  // Dialogs and menus render outside this wrapper, so the document carries the scope too.
+  useEffect(() => {
+    document.documentElement.classList.toggle("rita-app", inApp);
+    return () => document.documentElement.classList.remove("rita-app");
+  }, [inApp]);
+  return (
+    <div className={inApp ? "rita-app" : undefined} style={{ display: "contents" }}>
+      {children}
+    </div>
+  );
+}
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
@@ -321,7 +339,9 @@ function RootComponent() {
           <OnboardingGate />
           <AnnouncementBar />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
+          <AppScope>
+            <Outlet />
+          </AppScope>
           <GlobalFooter />
           <DeferredOverlays />
         </LanguageProvider>

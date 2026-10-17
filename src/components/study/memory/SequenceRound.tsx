@@ -43,7 +43,7 @@ export function SequenceRound({
 
   if (!target) {
     return (
-      <div className="mx-auto w-full max-w-lg rounded-[24px] bg-white p-8 text-center">
+      <div className="mx-auto w-full max-w-lg rounded-[24px] border-2 border-[#121117] bg-white p-8 text-center">
         <p className="text-[14px] font-bold text-[#a29a8d]">
           Sequence needs at least two pairs in a topic. Add a few more and try again.
         </p>
@@ -112,11 +112,10 @@ export function SequenceRound({
                 if (dragFrom !== null) setItems((l) => move(l, dragFrom, i));
                 setDragFrom(null);
               }}
-              className="flex items-center gap-3 rounded-2xl border px-4 py-3"
+              className="flex items-center gap-3 rounded-xl border-2 px-4 py-3"
               style={{
                 background: flag === true ? "#d8ecdd" : flag === false ? "#fbe4e4" : "#fff",
-                borderColor:
-                  flag === true ? "#6ab887" : flag === false ? "#d1795e" : "rgba(0,0,0,0.07)",
+                borderColor: flag === true ? "#2e7d32" : flag === false ? "#b3213f" : "#121117",
               }}
             >
               <GripVertical size={16} className="shrink-0 cursor-grab text-[#ccc4b6]" />
@@ -134,7 +133,7 @@ export function SequenceRound({
               <button
                 type="button"
                 onClick={() => setItems((l) => move(l, i, i - 1))}
-                className="grid h-8 w-8 place-items-center rounded-lg text-[#a29a8d] hover:bg-black/[0.06]"
+                className="grid h-9 w-9 place-items-center rounded-lg text-[#121117] hover:bg-[#ffe5f0]"
                 aria-label="Move up"
               >
                 <ChevronUp size={16} />
@@ -142,7 +141,7 @@ export function SequenceRound({
               <button
                 type="button"
                 onClick={() => setItems((l) => move(l, i, i + 1))}
-                className="grid h-8 w-8 place-items-center rounded-lg text-[#a29a8d] hover:bg-black/[0.06]"
+                className="grid h-9 w-9 place-items-center rounded-lg text-[#121117] hover:bg-[#ffe5f0]"
                 aria-label="Move down"
               >
                 <ChevronDown size={16} />
@@ -156,7 +155,7 @@ export function SequenceRound({
         type="button"
         onClick={check}
         disabled={!!checked}
-        className="rita-pill mt-5 h-12 w-full rounded-2xl text-[14px] font-extrabold disabled:opacity-50"
+        className="rita-pill mt-5 h-12 w-full text-[15px] font-semibold disabled:opacity-50"
       >
         Check order
       </button>

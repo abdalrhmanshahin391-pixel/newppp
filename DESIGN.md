@@ -107,6 +107,18 @@ photos or illustrations, no coloured strips, no labels above titles. Locked tool
 dashed and say "Coming soon". The Tutorial page was removed (`/tutorial` and `/tour` redirect
 to the home page); the in-page "How it works" tours stay.
 
+## App pages (/study, /courses, /german, /spaces, /share, /notes)
+
+These tool pages were written with fixed warm colours. They take the home look through a scope
+class, `.rita-app` (set in `__root.tsx`, also on `<html>` so dialogs inherit it): the tokens, the
+Figtree / Inter Tight fonts, the pink 8px/2px-ink buttons, and a block in `styles.css` that
+maps each old hex utility class (`text-[#23201d]`, `bg-[#8ec63f]`, ...) onto the palette by role.
+Delete that block to go back to the old look. Shared frames are hand-built: `StudyLayout` (site
+bar, sticker mode tabs, ink-border action cards with bare icons), `LaunchPanel`, `SubjectBoard`,
+`SessionStarter`, `DailyPanel`, the dialogs and the Memory Lab rounds. Rules: white page, grey
+panels, 2px ink borders on anything you press, pink only for the action and the "on" state,
+green/red only as right/wrong feedback, no tinted icon circles, no capital-letter labels.
+
 ## Accessibility floor
 
 Contrast AA (4.5:1 text, 3:1 large text and UI), visible focus, keyboard-reachable controls,
