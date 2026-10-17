@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Check, Loader2, RotateCcw } from "lucide-react";
+import { Check, ExternalLink, FileText, Link2, Loader2, RotateCcw, Video } from "lucide-react";
+import { KIND_LABEL_AR, formatBytes, type ResourceKind } from "@/lib/rita-resources";
 import type { ObjectiveState } from "@/lib/rita-curriculum";
 import type { LessonSession } from "@/lib/rita-curriculum.functions";
 import { LessonImage, LessonStars } from "./LessonArt";
@@ -158,5 +159,74 @@ export function LessonResultCard({
         </div>
       </section>
     </div>
+  );
+}
+
+const RESOURCE_ICON: Record<ResourceKind, typeof FileText> = {
+  pdf: FileText,
+  link: Link2,
+  video: Video,
+};
+
+/** Study material the teacher attached to the lesson. Optional: the lesson never waits for it. */
+export function LessonResourcesPanel({ session }: { session: LessonSession }) {
+  const resources = session.resources ?? [];
+  if (resources.length === 0) return null;
+  return (
+    <section
+      dir="rtl"
+      aria-labelledby="lesson-resources-heading"
+      className="rounded-2xl bg-[var(--pp-grey)] p-4"
+    >
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 id="lesson-resources-heading" className="text-base font-bold">
+          مراجع الدرس
+        </h2>
+        <p className="text-xs font-semibold text-[var(--pp-muted)]">
+          اختيارية — تفتح في صفحة جديدة
+        </p>
+      </div>
+      <ul className="mt-3 space-y-2">
+        {resources.map((resource) => {
+          const Icon = RESOURCE_ICON[resource.kind];
+          const meta =
+            resource.kind === "pdf" && resource.size
+              ? `${KIND_LABEL_AR.pdf} · ${formatBytes(resource.size)}`
+              : `${KIND_LABEL_AR[resource.kind]}${resource.host ? ` · ${resource.host}` : ""}`;
+          return (
+            <li key={resource.id}>
+              <a
+                href={resource.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex min-h-[56px] items-center gap-3 rounded-2xl border-2 border-[var(--pp-ink)] bg-white px-3 py-2.5 text-[var(--pp-ink)] hover:bg-[var(--pp-accent-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pp-ink)]"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border-2 border-[var(--pp-ink)] bg-white">
+                  <Icon size={20} aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block [overflow-wrap:anywhere] text-[15px] font-bold leading-snug">
+                    {resource.title}
+                  </span>
+                  {resource.note && (
+                    <span className="mt-0.5 block [overflow-wrap:anywhere] text-[13px] text-[var(--pp-muted)]">
+                      {resource.note}
+                    </span>
+                  )}
+                  <span
+                    className="mt-0.5 block text-xs font-semibold text-[var(--pp-muted)]"
+                    dir="auto"
+                  >
+                    {meta}
+                  </span>
+                </span>
+                <ExternalLink size={16} aria-hidden="true" className="shrink-0" />
+                <span className="sr-only">(يفتح في تبويب جديد)</span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
