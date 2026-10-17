@@ -136,6 +136,15 @@ admins only for now and live in their own table (`rita_lesson_slides`), so the p
 the migration is applied. Pure rules (slide schema, next-topic suggestions) are in
 `src/lib/rita-slides.ts` with tests in `rita-slides.test.ts`.
 
+## Home app window
+
+`AppWindow.tsx` replaces the old lesson-path strip. A window built from real markup (no screenshots) that starts tilted (desktop only) and flattens as it scrolls to the middle of the screen, then plays a short story once: the path fills, the lesson in progress shows, two words are saved, Rita listens.
+
+- Only `transform` is written on scroll (one rAF, no state); the story uses transitions. The wave on Rita's bar runs four times, then stops (the orb stays the only continuous motion).
+- Calm motion and no-JS show the finished window flat. Replay is a 44px button.
+- Content is sample content and says so ("Sample screen", "Sample lessons and words"). No counts, no users, no testimonials.
+- Decorative for assistive tech: `aria-hidden` plus a one-paragraph `sr-only` description.
+
 ## Home "Under the hood" band
 
 `src/components/home/procreate/UnderTheHood.tsx`, after the lesson path. Speed story for Rita, told in four parts: a scripted mixed-language transcript demo, an overlap timeline, five capability cells, and a goals table.

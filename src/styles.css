@@ -4780,3 +4780,22 @@ html.rita-app,
     transition: none !important;
   }
 }
+
+/* Rita's bars on the home app window: a short burst, then still. */
+@keyframes window-wave {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.window-wave {
+  animation: window-wave 700ms ease-in-out 4;
+}
+@media (prefers-reduced-motion: reduce) {
+  .window-wave {
+    animation: none;
+  }
+}
