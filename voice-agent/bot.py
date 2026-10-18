@@ -64,7 +64,7 @@ LLM_MODEL = "openai/gpt-oss-120b"
 # The reply and the model's short reasoning share this budget. Keep enough headroom
 # for reasoning without encouraging the tutor to continue offering examples after
 # the learner's question has already been answered.
-LLM_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_MAX_COMPLETION_TOKENS", "280"))
+LLM_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_MAX_COMPLETION_TOKENS", "300"))
 TTS_PROVIDER = os.getenv("RITA_TTS_PROVIDER", "cartesia").strip().casefold()
 TTS_MODEL = "sonic-3.6"
 # Layan is the explicitly selected Cartesia library voice. Voice IDs are not
