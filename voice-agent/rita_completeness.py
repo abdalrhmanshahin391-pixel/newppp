@@ -82,3 +82,21 @@ def ends_on_hesitation(text: str) -> bool:
 
     words = _WORD.findall((text or "").strip())
     return bool(words) and words[-1].casefold() in HESITATION_WORDS
+
+
+def looks_complete_unpunctuated(text: str) -> bool:
+    """A final transcript with no closing mark that still reads as a finished sentence.
+
+    Speech recognisers often leave the mark off short Arabic turns. Those turns used to wait for
+    the 1.5 s safety net. This is stricter than `looks_complete`: at least three words, nothing
+    trailing off, and not ending on a connective or a thinking sound.
+    """
+
+    cleaned = (text or "").strip()
+    if len(cleaned) < 8 or cleaned.endswith(TRAILING_OFF) or cleaned.endswith(TERMINAL_MARKS):
+        return False
+    words = _WORD.findall(cleaned)
+    if len(words) < 3:
+        return False
+    last = words[-1].casefold()
+    return last not in HESITATION_WORDS and last not in CONTINUATION_WORDS

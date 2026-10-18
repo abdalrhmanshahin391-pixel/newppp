@@ -49,13 +49,21 @@ from rita_dialect import DIALECT_PROMPT, RitaSpeechCleaner
 from rita_interruption import RitaUserTurnStartStrategy, gate_mode
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
 from rita_state import RitaSessionState
-from rita_turn_policy import RitaBoundedTurnStopStrategy, bounded_commit_secs
+from rita_turn_policy import (
+    RitaBoundedTurnStopStrategy,
+    bounded_commit_secs,
+    unpunctuated_commit_secs,
+)
 from rita_turn_router import RitaTurnRouter, RouterMode, router_mode
+from rita_word_joiner import RitaWordJoiner
 
 load_dotenv(override=False)
 
 STT_MODEL = "stt-rt-v5"
 LLM_MODEL = "openai/gpt-oss-120b"
+# The reply and the model's short reasoning share this budget. 240 left too little room and could
+# cut a reply off mid-sentence; the prompt already keeps replies to one to three sentences.
+LLM_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_MAX_COMPLETION_TOKENS", "360"))
 TTS_PROVIDER = os.getenv("RITA_TTS_PROVIDER", "cartesia").strip().casefold()
 TTS_MODEL = "sonic-3.6"
 # Layan is the explicitly selected Cartesia library voice. Voice IDs are not
@@ -133,7 +141,6 @@ def build_prompt(body: dict[str, Any], state: RitaSessionState, *, dialogue: boo
 Delivery: {PERSONALITIES.get(personality, PERSONALITIES['kind'])}
 Profile language: {profile_language}. Stable Arabic dialect: {remembered_dialect}.
 Lesson mode: {mode}.
-Structured session state: {state.prompt_state(dialogue=dialogue)}.
 
 VOICE CONTRACT
 - Speak for the ear, never for a page. Start with the useful answer; never restate the question.
@@ -190,7 +197,10 @@ HUMAN TONE
 - Praise only what is really good, and say what. Never lecture.
 - Do not guess the learner's gender. Avoid gendered commands and adjectives aimed at them
   (خدي/خد، خبريني/خبرني، جاهز/جاهزة); use neutral wording such as "خلّينا نكمل" and "لما يناسبك".
-{lesson_section(body)}"""
+{lesson_section(body)}
+SESSION STATE (changes every turn; read it last)
+Structured session state: {state.prompt_state(dialogue=dialogue)}.
+"""
 
 
 async def bot(args: DailyRunnerArguments):
@@ -284,7 +294,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             model=LLM_MODEL,
             temperature=0.45,
             top_p=0.9,
-            max_completion_tokens=240,
+            max_completion_tokens=LLM_MAX_COMPLETION_TOKENS,
             extra={"reasoning_effort": "low"},
         ),
     )
@@ -319,6 +329,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
                     RitaBoundedTurnStopStrategy(
                         turn_analyzer=LocalSmartTurnAnalyzerV3(),
                         bounded_secs=bounded_commit_secs(body),
+                        unpunctuated_secs=unpunctuated_commit_secs(body),
                     )
                 ]
             ),
@@ -378,6 +389,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             user_aggregator,
             router,
             llm,
+            RitaWordJoiner(),
             RitaSpeechCleaner(),
             tts,
             transport.output(),
