@@ -237,5 +237,12 @@ class RitaTurnRouter(FrameProcessor):
                 )
             )
         if decision.say:
+            # TTSSpeakFrame bypasses the LLM text callbacks. Tell the page the
+            # exact intended line so audio and chat remain one atomic response.
+            await self.push_frame(
+                RTVIServerMessageFrame(
+                    data={"type": "rita-spoken-text", "text": decision.say}
+                )
+            )
             await self.push_frame(TTSSpeakFrame(decision.say, append_to_context=True))
         # STOP, HOLD, SPEAK and UI never reach the model.

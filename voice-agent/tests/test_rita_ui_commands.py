@@ -98,7 +98,11 @@ class PipelineTests(unittest.TestCase):
             return down
 
         down = asyncio.run(go())
-        messages = [f for f in down if isinstance(f, RTVIServerMessageFrame)]
+        messages = [
+            f
+            for f in down
+            if isinstance(f, RTVIServerMessageFrame) and f.data.get("type") == "rita-ui"
+        ]
         self.assertEqual(len(messages), 1)
         self.assertEqual(
             messages[0].data,

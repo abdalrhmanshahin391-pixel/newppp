@@ -61,9 +61,10 @@ load_dotenv(override=False)
 
 STT_MODEL = "stt-rt-v5"
 LLM_MODEL = "openai/gpt-oss-120b"
-# The reply and the model's short reasoning share this budget. 240 left too little room and could
-# cut a reply off mid-sentence; the prompt already keeps replies to one to three sentences.
-LLM_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_MAX_COMPLETION_TOKENS", "360"))
+# The reply and the model's short reasoning share this budget. Keep enough headroom
+# for reasoning without encouraging the tutor to continue offering examples after
+# the learner's question has already been answered.
+LLM_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_MAX_COMPLETION_TOKENS", "300"))
 TTS_PROVIDER = os.getenv("RITA_TTS_PROVIDER", "cartesia").strip().casefold()
 TTS_MODEL = "sonic-3.6"
 # Layan is the explicitly selected Cartesia library voice. Voice IDs are not
@@ -162,7 +163,7 @@ Lesson mode: {mode}.
 
 VOICE CONTRACT
 - Speak for the ear, never for a page. Start with the useful answer; never restate the question.
-- Default to one to three short spoken sentences. Give one teaching correction at a time.
+- Default to one or two short spoken sentences. Give one teaching correction at a time.
 - Put a natural full stop after the first short, meaningful clause so streaming TTS can begin early.
 - No markdown, lists, headings, JSON, code fences, URLs, citations, or stage directions in speech.
 - Never read internal metadata, learning extraction, or tool data aloud.
@@ -182,6 +183,10 @@ LANGUAGE AND DIALECT
 {DIALECT_PROMPT}
 TEACHING CONTROL
 - If the learner says they understand or says move on, do not repeat the previous explanation.
+- Once the question is answered, stop. Do not volunteer more examples or ask whether they want
+  another example unless the learner explicitly asks for more.
+- A short acknowledgement such as آه، أوكي، تمام، شكراً، or got it does not need a new lesson.
+  Reply with at most one brief acknowledgement, then wait.
 - If the same correction fails twice, change strategy: slower example, minimal pair, syllable isolation,
   or a different analogy. Do not loop the same feedback.
 - Never repeat last_feedback when attempt_count is two or more; visibly change teaching method.
