@@ -19,7 +19,7 @@ import { hasRitaLanguageLearningIntent } from "@/lib/rita-learning-intent";
 import { stripModelNotes } from "@/lib/rita-model-notes";
 import { matchSubject, subjectOptions } from "@/lib/rita-learning-tree";
 import {
-  committedRitaReply,
+  RitaReplyAccumulator,
   settleDraftReply,
   upsertDraftReply,
   wasRitaInterrupted,
@@ -98,8 +98,8 @@ export function RitaRealtimeV3({
   const traceId = useRef("");
   const pendingMetrics = useRef<PendingMetric[]>([]);
   const lastUserText = useRef("");
-  const generatedBuffer = useRef("");
-  const heardBuffer = useRef("");
+  const replyAccumulator = useRef(new RitaReplyAccumulator());
+  const pendingScriptedReply = useRef("");
   const botSpeaking = useRef(false);
   const speechEndedAt = useRef(0);
   const sessionStartedAt = useRef(0);
@@ -130,9 +130,9 @@ export function RitaRealtimeV3({
   // Rita's voice arrives as a remote WebRTC track that the page itself must play.
   const botAudio = useRef<HTMLAudioElement | null>(null);
   const botAudioPlaying = useRef(false);
-  const draftReplyId = useRef<string | null>(null);
   const [soundBlocked, setSoundBlocked] = useState(false);
   const [active, setActive] = useState(false);
+  const [readyForSpeech, setReadyForSpeech] = useState(false);
   const [starting, setStarting] = useState(false);
   const [muted, setMuted] = useState(false);
   const [error, setError] = useState("");
@@ -166,7 +166,8 @@ export function RitaRealtimeV3({
       }
     } else if (phraseMuted.current) {
       phraseMuted.current = false;
-      if (activeRef.current && !mutedRef.current) client.current?.enableMic(true);
+      if (activeRef.current && botReady.current && !mutedRef.current)
+        client.current?.enableMic(true);
     }
   }, []);
   useEffect(() => {
@@ -434,11 +435,14 @@ export function RitaRealtimeV3({
       audio.srcObject = null;
     }
     botAudioPlaying.current = false;
-    draftReplyId.current = null;
+    replyAccumulator.current.clear();
+    pendingScriptedReply.current = "";
     setSoundBlocked(false);
     activeRef.current = false;
     mutedRef.current = false;
+    botReady.current = false;
     setActive(false);
+    setReadyForSpeech(false);
     setMuted(false);
     setMood("ready");
     setStatus("Lesson ended");
@@ -560,7 +564,8 @@ export function RitaRealtimeV3({
     traceId.current = crypto.randomUUID();
     pendingMetrics.current = [];
     botAudioPlaying.current = false;
-    draftReplyId.current = null;
+    replyAccumulator.current.clear();
+    pendingScriptedReply.current = "";
     setSoundBlocked(false);
     setStarting(true);
     setError("");
@@ -571,8 +576,7 @@ export function RitaRealtimeV3({
         import("@pipecat-ai/daily-transport"),
       ]);
       void metric("imports_ready", performance.now() - sessionStartedAt.current);
-      generatedBuffer.current = "";
-      heardBuffer.current = "";
+      replyAccumulator.current.clear();
       botSpeaking.current = false;
       sessionId.current = "";
       providerSessionId.current = "";
@@ -584,20 +588,12 @@ export function RitaRealtimeV3({
       void metric("start_clicked");
       const commitHeardReply = (interrupted = false) => {
         // Generated/TTS text is not evidence that interrupted audio was heard.
-        const reply = stripModelNotes(
-          committedRitaReply({
-            reportedSpokenText: heardBuffer.current,
-            generatedText: generatedBuffer.current,
-            interrupted,
-          }),
-        ).trim();
-        heardBuffer.current = "";
-        const draftId = draftReplyId.current;
-        draftReplyId.current = null;
+        const settled = replyAccumulator.current.settle(interrupted);
+        const reply = stripModelNotes(settled.reply).trim();
         setMessages((current) =>
           settleDraftReply(
             current,
-            draftId,
+            settled.draftId,
             reply,
             reply ? { id: crypto.randomUUID(), role: "rita", text: reply } : null,
           ),
@@ -611,6 +607,18 @@ export function RitaRealtimeV3({
         // command to the list itself ("open the list", "turn them into flashcards") does not.
         if (!wasCommand) void runExtraction(asked || lastUserText.current, reply);
         if (interrupted) void metric("interrupted");
+      };
+      const beginScriptedReply = (text: string) => {
+        const clean = stripModelNotes(text).trim();
+        if (!clean) return;
+        replyAccumulator.current.clear();
+        replyAccumulator.current.beginTts();
+        // Intended text is safe to show, but only botOutput is recorded as heard.
+        // If playback is interrupted, settle() will keep spoken progress only.
+        replyAccumulator.current.appendGenerated(clean);
+        const id = crypto.randomUUID();
+        replyAccumulator.current.draftId = id;
+        setMessages((current) => upsertDraftReply(current, { id, role: "rita", text: clean }));
       };
       const transport = new DailyTransport({
         bufferLocalAudioUntilBotReady: true,
@@ -665,6 +673,11 @@ export function RitaRealtimeV3({
           onConnected: () => {
             transportConnectedAt.current = performance.now();
             activeRef.current = true;
+            botReady.current = false;
+            setReadyForSpeech(false);
+            // Safari receives microphone permission from the Start tap, then we close
+            // the gate until the worker explicitly says it is ready for real speech.
+            client.current?.enableMic(false);
             setActive(true);
             setStatus("Audio connected; waiting for Rita…");
             setMood("ready");
@@ -700,6 +713,8 @@ export function RitaRealtimeV3({
           onBotReady: () => {
             botReady.current = true;
             botReadyAt.current = performance.now();
+            setReadyForSpeech(true);
+            if (!mutedRef.current && !phraseMuted.current) client.current?.enableMic(true);
             setStatus("Rita is listening");
             setMood("listening");
             if (!botReadyMetricRecorded.current) {
@@ -709,6 +724,8 @@ export function RitaRealtimeV3({
           },
           onDisconnected: () => {
             activeRef.current = false;
+            botReady.current = false;
+            setReadyForSpeech(false);
             setActive(false);
             setMood("ready");
             setStatus("Disconnected");
@@ -743,7 +760,15 @@ export function RitaRealtimeV3({
               action?: string;
               target?: SaveTarget;
               hint?: string;
+              text?: string;
             } | null;
+            if (message?.type === "rita-spoken-text") {
+              const text = String(message.text ?? "").trim();
+              if (!text) return;
+              if (botSpeaking.current) pendingScriptedReply.current = text;
+              else beginScriptedReply(text);
+              return;
+            }
             if (message?.type !== "rita-ui") return;
             skipExtraction.current = true;
             if (message.action === "open_list") void trayRef.current.openTray();
@@ -780,9 +805,8 @@ export function RitaRealtimeV3({
             void metric("transcript_final");
           },
           onBotLlmStarted: () => {
-            generatedBuffer.current = "";
-            heardBuffer.current = "";
-            draftReplyId.current = null;
+            pendingScriptedReply.current = "";
+            replyAccumulator.current.beginLlm();
             llmStartedAt.current = performance.now();
             firstLlmTokenRecorded.current = false;
             firstRemoteAudioRecorded.current = false;
@@ -795,21 +819,33 @@ export function RitaRealtimeV3({
               firstLlmTokenRecorded.current = true;
               void metric("llm_first_token", performance.now() - llmStartedAt.current);
             }
-            generatedBuffer.current += text;
+            replyAccumulator.current.appendGenerated(text);
             // Show the reply as it streams; playback accounting settles it later.
-            const draftText = stripModelNotes(generatedBuffer.current).trim();
+            const draftText = stripModelNotes(replyAccumulator.current.visibleText()).trim();
             if (draftText) {
-              const id = draftReplyId.current ?? crypto.randomUUID();
-              draftReplyId.current = id;
+              const id = replyAccumulator.current.draftId ?? crypto.randomUUID();
+              replyAccumulator.current.draftId = id;
               setMessages((current) =>
                 upsertDraftReply(current, { id, role: "rita", text: draftText }),
               );
             }
           },
           onBotOutput: (data) => {
-            if (data.will_be_spoken === false || data.spoken_status === "new") return;
+            if (data.will_be_spoken === false) return;
+            replyAccumulator.current.beginTts();
+            if (data.spoken_status === "new") return;
             const audible = data.spoken_progress?.accumulated_text?.trim();
-            if (audible) heardBuffer.current = audible;
+            if (!audible) return;
+            replyAccumulator.current.reportSpoken(audible);
+            // Router replies such as "تمام." use TTSSpeakFrame and emit no LLM
+            // text. Spoken progress is therefore the authoritative chat source.
+            const draftText = stripModelNotes(replyAccumulator.current.visibleText()).trim();
+            if (!draftText) return;
+            const id = replyAccumulator.current.draftId ?? crypto.randomUUID();
+            replyAccumulator.current.draftId = id;
+            setMessages((current) =>
+              upsertDraftReply(current, { id, role: "rita", text: draftText }),
+            );
           },
           onBotStartedSpeaking: () => {
             cancelFiller();
@@ -848,7 +884,7 @@ export function RitaRealtimeV3({
             if (speechEndedAt.current) {
               void metric("first_remote_audio_level", performance.now() - speechEndedAt.current, {
                 measurement: "remote_audio_level_proxy",
-                generatedCharacters: generatedBuffer.current.length,
+                generatedCharacters: replyAccumulator.current.generatedText.length,
               });
               snapshotNetwork("first_remote_audio_level");
               speechEndedAt.current = 0;
@@ -858,15 +894,31 @@ export function RitaRealtimeV3({
             botSpeaking.current = false;
             const interrupted = wasRitaInterrupted(interruptCandidateAt.current, performance.now());
             commitHeardReply(interrupted);
+            const scripted = pendingScriptedReply.current;
+            pendingScriptedReply.current = "";
+            if (scripted) beginScriptedReply(scripted);
             interruptCandidateAt.current = 0;
             void metric("playback_stop");
           },
           onBotTtsStarted: () => {
+            if (!botSpeaking.current && pendingScriptedReply.current) {
+              const scripted = pendingScriptedReply.current;
+              pendingScriptedReply.current = "";
+              beginScriptedReply(scripted);
+            }
+            replyAccumulator.current.beginTts();
             void metric("tts_start");
           },
           onBotTtsStopped: () => {
-            setStatus(muted ? "Microphone muted" : "Rita is listening");
-            setMood(muted ? "ready" : "listening");
+            const microphoneMuted = mutedRef.current || !botReady.current;
+            setStatus(
+              !botReady.current
+                ? "Rita is getting ready…"
+                : microphoneMuted
+                  ? "Microphone muted"
+                  : "Rita is listening",
+            );
+            setMood(microphoneMuted ? "ready" : "listening");
           },
           onMetrics: (data) => {
             void metric("provider_metrics", undefined, {
@@ -915,6 +967,8 @@ export function RitaRealtimeV3({
       client.current = null;
       if (pending) await pending.disconnect().catch(() => undefined);
       activeRef.current = false;
+      botReady.current = false;
+      setReadyForSpeech(false);
       setActive(false);
       setMood("ready");
       setStatus("Rita could not connect");
@@ -939,6 +993,7 @@ export function RitaRealtimeV3({
   }
 
   function toggleMute() {
+    if (!readyForSpeech) return;
     const next = !muted;
     client.current?.enableMic(!next);
     mutedRef.current = next;
@@ -951,7 +1006,7 @@ export function RitaRealtimeV3({
   async function sendText(event: FormEvent) {
     event.preventDefault();
     const text = draft.trim();
-    if (!text || !client.current?.connected) return;
+    if (!text || !readyForSpeech || !client.current?.connected) return;
     setDraft("");
     lastUserText.current = text;
     setMessages((current) => [...current, { id: crypto.randomUUID(), role: "you", text }]);
@@ -1125,7 +1180,8 @@ export function RitaRealtimeV3({
                   <button
                     type="button"
                     onClick={toggleMute}
-                    className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5"
+                    disabled={!readyForSpeech}
+                    className="rita-btn rita-btn-secondary rita-btn-sm gap-1.5 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {muted ? <MicOff size={16} /> : <Mic size={16} />}
                     {muted ? "Unmute" : "Mute"}
@@ -1147,7 +1203,8 @@ export function RitaRealtimeV3({
                   <button
                     type="submit"
                     aria-label="Send"
-                    className="rita-btn rita-btn-primary rita-btn-sm !w-10 !px-0"
+                    disabled={!readyForSpeech}
+                    className="rita-btn rita-btn-primary rita-btn-sm !w-10 !px-0 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Send size={16} />
                   </button>

@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "src/components/rita/RitaRealtimeV3.tsx"
+      - "src/lib/rita-v3-heard*"
       - "src/routes/api/rita-v3/session/**"
       - "src/lib/rita-v3-startup*"
       - "src/lib/rita-curriculum*"
@@ -32,6 +33,7 @@ jobs:
         run: |
           node --test src/lib/rita-v3-startup.test.mjs
           node --test src/lib/rita-v3-diagnostics-trace.test.mjs
+          node --test src/lib/rita-v3-heard.test.ts
           node --test src/lib/rita-curriculum.test.ts
           node --test src/lib/rita-slides.test.ts
           node --test src/lib/rita-resources.test.ts

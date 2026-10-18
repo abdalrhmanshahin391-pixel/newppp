@@ -29,6 +29,13 @@ def test_the_prompt_teaches_stop_hesitation_choices_and_one_question():
         assert needle in body, needle
 
 
+def test_the_prompt_stops_after_answering_instead_of_piling_on_examples():
+    text = prompt()
+    assert "Default to one or two short spoken sentences" in text
+    assert "Once the question is answered, stop" in text
+    assert "does not need a new lesson" in text
+
+
 def test_the_prompt_asks_for_a_human_neutral_tone():
     body = section(prompt(), "HUMAN TONE")
     assert "warm friend" in body
