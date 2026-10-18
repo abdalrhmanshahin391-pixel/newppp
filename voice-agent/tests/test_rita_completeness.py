@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from rita_completeness import ends_on_hesitation, looks_complete  # noqa: E402
+from rita_completeness import ends_on_hesitation, looks_complete
 
 
 class LooksCompleteTests(unittest.TestCase):
@@ -79,4 +79,24 @@ class UnpunctuatedTurnTests(unittest.TestCase):
         from rita_completeness import looks_complete_unpunctuated as f
 
         for text in ("شو يعني", "بدي أروح على", "أنا بدي يعني", "كيف بدي أحكي،", "كيف بدي أحكي…", "كيف الحال؟", "أمم"):
+            self.assertFalse(f(text), text)
+
+    def test_short_first_turn_greetings_commit_without_punctuation(self):
+        from rita_completeness import looks_complete_short_unpunctuated as f
+
+        for text in (
+            "ألو مرحبا",
+            "كيف حالك",
+            "صباح الخير",
+            "Hello",
+            "How are you",
+            "Guten Morgen",
+            "Wie gehts",
+        ):
+            self.assertTrue(f(text), text)
+
+    def test_short_fragments_and_hesitations_do_not_commit_early(self):
+        from rita_completeness import looks_complete_short_unpunctuated as f
+
+        for text in ("بدي أروح", "شو يعني", "أنا بدي", "ألو يعني", "أمم", "because I"):
             self.assertFalse(f(text), text)

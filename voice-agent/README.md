@@ -12,10 +12,13 @@ message immediately when the learner interrupts. There is no runtime fallback to
 Deepgram, Gemini, OpenAI TTS, or a slower TTS model.
 
 The Modal production worker is pinned to broad `eu` and uses
-`RITA_CARTESIA_MAX_BUFFER_DELAY_MS=0` by default. A bounded warm-WebSocket benchmark on
+`RITA_CARTESIA_MAX_BUFFER_DELAY_MS=50` by default. This small server-side buffer prevents
+token-sized Arabic/German fragments from sounding like separated syllables while keeping
+sub-sentence streaming and interruption responsive. A bounded warm-WebSocket benchmark on
 2026-10-11 measured median first PCM at roughly 74 ms for Arabic and 75 ms for German in EU;
 US-East was slower. This is Cartesia-only TTFA, not end-of-user-speech to audible-device latency.
-Set the buffer to `50` if the real-call quality check finds token-boundary pauses objectionable.
+If a real-call quality check still finds token-boundary pauses objectionable, test `100` before
+changing token aggregation or the selected voice.
 
 ## Local verification
 
