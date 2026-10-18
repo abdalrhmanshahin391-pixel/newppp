@@ -49,6 +49,37 @@ HESITATION_WORDS = frozenset(
     }
 )
 
+# Short, self-contained spoken turns which STT providers commonly finalize without
+# punctuation. Keep this deliberately finite: arbitrary two-word fragments must
+# still fall through to Smart Turn / the controller safety timeout.
+SHORT_COMPLETE_PHRASES = frozenset(
+    {
+        "مرحبا",
+        "أهلا",
+        "اهلا",
+        "ألو",
+        "الو",
+        "ألو مرحبا",
+        "الو مرحبا",
+        "كيف حالك",
+        "شو الأخبار",
+        "شو الاخبار",
+        "صباح الخير",
+        "مساء الخير",
+        "hi",
+        "hello",
+        "hey",
+        "hi there",
+        "hello there",
+        "how are you",
+        "hallo",
+        "guten morgen",
+        "guten tag",
+        "wie gehts",
+        "wie geht es",
+    }
+)
+
 
 def looks_complete(text: str) -> bool:
     """True when the transcript is long enough, punctuated as finished, and not mid-clause."""
@@ -100,3 +131,18 @@ def looks_complete_unpunctuated(text: str) -> bool:
         return False
     last = words[-1].casefold()
     return last not in HESITATION_WORDS and last not in CONTINUATION_WORDS
+
+
+def looks_complete_short_unpunctuated(text: str) -> bool:
+    """True only for a small allow-list of complete greetings and check-ins.
+
+    These are especially common as the first learner turn. Soniox may finalize
+    them without punctuation, and waiting for the generic 1.5 s safety timeout
+    makes the first response feel broken. An allow-list avoids prematurely
+    committing ordinary two-word fragments such as ``بدي أروح``.
+    """
+
+    cleaned = " ".join(_WORD.findall((text or "").strip())).casefold()
+    if not cleaned:
+        return False
+    return cleaned in {phrase.casefold() for phrase in SHORT_COMPLETE_PHRASES}

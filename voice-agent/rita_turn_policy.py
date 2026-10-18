@@ -18,9 +18,13 @@ from loguru import logger
 from pipecat.frames.frames import TranscriptionFrame, VADUserStartedSpeakingFrame
 from pipecat.turns.user_stop import TurnAnalyzerUserTurnStopStrategy
 
-from rita_completeness import looks_complete, looks_complete_unpunctuated
+from rita_completeness import (
+    looks_complete,
+    looks_complete_short_unpunctuated,
+    looks_complete_unpunctuated,
+)
 
-DEFAULT_BOUNDED_COMMIT_SECS = 0.6
+DEFAULT_BOUNDED_COMMIT_SECS = 0.3
 MIN_BOUNDED_COMMIT_SECS = 0.3
 MAX_BOUNDED_COMMIT_SECS = 1.2
 DEFAULT_UNPUNCTUATED_COMMIT_SECS = 0.9
@@ -95,6 +99,20 @@ class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
             and not self._vad_user_speaking
             and looks_complete(frame.text)
         ):
+            await self._cancel_bounded()
+            self._bounded_task = self.task_manager.create_task(
+                self._bounded_commit(frame.text), f"{self}::_bounded_commit"
+            )
+        elif (
+            self._bounded_secs > 0
+            and frame.finalized
+            and not self._turn_complete
+            and not self._vad_user_speaking
+            and looks_complete_short_unpunctuated(frame.text)
+        ):
+            # Greetings such as "ألو مرحبا" are complete turns even when the
+            # recogniser omits punctuation. Commit through the same cancellable
+            # path so resumed speech still wins safely.
             await self._cancel_bounded()
             self._bounded_task = self.task_manager.create_task(
                 self._bounded_commit(frame.text), f"{self}::_bounded_commit"

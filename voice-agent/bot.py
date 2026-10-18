@@ -71,7 +71,25 @@ TTS_MODEL = "sonic-3.6"
 TTS_VOICE_ID = os.getenv(
     "RITA_CARTESIA_VOICE_ID", "64a941ac-07ac-462c-a81c-008e353dd83e"
 ).strip()
-TTS_MAX_BUFFER_DELAY_MS = int(os.getenv("RITA_CARTESIA_MAX_BUFFER_DELAY_MS", "0"))
+
+
+# A zero delay makes Cartesia eligible to synthesize every tiny streamed fragment
+# immediately.  With Groq token streaming that sounded like separated syllables on
+# real iPads.  A small managed buffer keeps whole words together while preserving
+# sub-sentence streaming and interruption.
+def _cartesia_buffer_delay_ms() -> int:
+    """Return a production-safe Cartesia buffer even with a stale Modal secret."""
+
+    try:
+        configured = int(os.getenv("RITA_CARTESIA_MAX_BUFFER_DELAY_MS", "50"))
+    except ValueError:
+        configured = 50
+    # Zero reproduced syllable-sized playback. Keep production tuning intentionally
+    # narrow so a stale Modal value cannot silently restore that regression.
+    return min(200, max(50, configured))
+
+
+TTS_MAX_BUFFER_DELAY_MS = _cartesia_buffer_delay_ms()
 TTS_TRIM_LEADING_SILENCE = os.getenv(
     # Enabled for every production session after the Arabic/German/English
     # safety corpus and Soniox first-token checks passed. Operators retain an

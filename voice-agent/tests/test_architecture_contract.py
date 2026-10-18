@@ -59,13 +59,16 @@ def test_modal_worker_is_warm_snapshotted_and_shares_the_bot_entrypoint():
 
 def test_cartesia_keeps_token_streaming_and_context_cancellation_contract():
     source = (ROOT / "rita_cartesia_tts.py").read_text(encoding="utf-8")
+    bot = (ROOT / "bot.py").read_text(encoding="utf-8")
     assert "class RitaCartesiaTTSService(CartesiaTTSService)" in source
     assert "text_aggregation_mode=TextAggregationMode.TOKEN" in source
     assert 'cartesia_version="2026-08-14"' in source
     assert "def set_turn_language" in source
     assert 'message["language"] = self._rita_language' in source
     assert 'message["max_buffer_delay_ms"] = self._rita_max_buffer_delay_ms' in source
-    assert "max_buffer_delay_ms: int | None = 0" in source
+    assert "max_buffer_delay_ms: int | None = 50" in source
+    assert 'os.getenv("RITA_CARTESIA_MAX_BUFFER_DELAY_MS", "50")' in bot
+    assert "max(50, configured)" in bot
     assert '"cartesia_context_cancelled"' in source
     assert "LeadingSilenceTrimmer" in source
     assert '"cartesia_trim_cancelled"' in source
@@ -113,10 +116,18 @@ def test_every_local_worker_module_is_shipped_to_modal():
     modal_source = (ROOT / "modal_app.py").read_text(encoding="utf-8")
     shipped = set(re.findall(r'"(\w+)"', modal_source.split("add_local_python_source(")[1].split(")")[0]))
     imported = set(
-        re.findall(r"^from (rita_\w+) import", (ROOT / "bot.py").read_text(encoding="utf-8"), re.M)
+        re.findall(
+            r"^from (rita_\w+) import",
+            (ROOT / "bot.py").read_text(encoding="utf-8"),
+            re.MULTILINE,
+        )
     )
     imported |= set(
-        re.findall(r"^from (rita_\w+) import", (ROOT / "rita_turn_policy.py").read_text(encoding="utf-8"), re.M)
+        re.findall(
+            r"^from (rita_\w+) import",
+            (ROOT / "rita_turn_policy.py").read_text(encoding="utf-8"),
+            re.MULTILINE,
+        )
     )
     assert imported <= shipped, f"modal_app.py does not ship: {sorted(imported - shipped)}"
 
