@@ -100,6 +100,14 @@ const ERROR_HINTS: [RegExp, string][] = [
     /did not match the expected format/i,
     "رد الذكاء الاصطناعي لم يطابق الشكل المطلوب — أعد المحاولة، وإذا تكرر جرّب صياغة أبسط.",
   ],
+  [
+    /insufficient_quota|exceeded your current quota|billing/i,
+    "رصيد OpenAI غير كافٍ أو الفوترة متوقفة — تحقق من حساب OpenAI.",
+  ],
+  [
+    /OpenAI 401|Incorrect API key/i,
+    "مفتاح OpenAI مرفوض (401) — أعد حفظه من صفحة مفاتيح الذكاء الاصطناعي.",
+  ],
   [/429|rate limit/i, "تجاوزت حد الاستخدام مؤقتًا — انتظر قليلًا ثم أعد المحاولة."],
   [/Forbidden: admin only/i, "هذا الإجراء يتطلب صلاحيات مشرف."],
   [/has not been read yet/i, "لا يمكن إنشاء الدرس قبل قراءة هذه الصفحات — اقرأ النافذة أولًا."],
@@ -558,6 +566,8 @@ function BookDetail({
   const savePagesFn = useServerFn(adminSaveCurriculumPages);
   const reorderFn = useServerFn(adminReorderLessons);
   const [busy, setBusy] = useState("");
+  // The last failure stays on screen (a toast vanishes before it can be read).
+  const [lastError, setLastError] = useState<{ hint: string; raw: string } | null>(null);
   const [openWindow, setOpenWindow] = useState<string | null>(
     windows[windows.length - 1]?.id ?? null,
   );
@@ -578,14 +588,22 @@ function BookDetail({
     missingRef.current = missingText;
   }, [missingText]);
 
+  function reportError(error: unknown) {
+    const raw = error instanceof Error ? error.message : String(error ?? "");
+    const hint = errorText(error);
+    setLastError({ hint, raw: raw === hint ? "" : raw.slice(0, 400) });
+    toast.error(hint);
+  }
+
   async function run(label: string, task: () => Promise<unknown>, done?: string) {
     setBusy(label);
+    setLastError(null);
     try {
       await task();
       if (done) toast.success(done);
       await onChanged();
     } catch (error) {
-      toast.error(errorText(error));
+      reportError(error);
     } finally {
       setBusy("");
     }
@@ -598,20 +616,21 @@ function BookDetail({
     if (scanned.length) {
       const { loadPdfForRender, renderPageToJpegBase64 } = await import("@/lib/pdf-page-render");
       const doc = await loadPdfForRender(await pdfFileFor(bookNow, pdfCache));
-      for (let index = 0; index < scanned.length; index += 3) {
-        const group = scanned.slice(index, index + 3);
-        setBusy(`read:${group.join(",")}`);
-        const pages = [];
-        for (const page of group) {
-          pages.push({
-            page_no: page,
-            jpegBase64: await renderPageToJpegBase64(doc, page, {
-              targetWidth: 1200,
-              quality: 0.72,
-            }),
-          });
-        }
-        await transcribeFn({ data: { curriculumId: bookNow.id, pages } });
+      const stuck: string[] = [];
+      for (const page of scanned) {
+        setBusy(`read:${page}`);
+        const jpegBase64 = await renderPageToJpegBase64(doc, page, {
+          targetWidth: 1200,
+          quality: 0.72,
+        });
+        const outcome = await transcribeFn({
+          data: { curriculumId: bookNow.id, pages: [{ page_no: page, jpegBase64 }] },
+        });
+        if (outcome.stillMissing.length)
+          stuck.push(...(outcome.failures.length ? outcome.failures : [`p${page}`]));
+      }
+      if (stuck.length) {
+        throw new Error(`تعذّرت قراءة بعض الصفحات الممسوحة: ${stuck.join(" | ")}`);
       }
     }
     setBusy("read");
@@ -635,6 +654,7 @@ function BookDetail({
   async function readAllWindows() {
     setReadAll({ active: true, progress: "بدء القراءة…" });
     cancelReadAll.current = false;
+    setLastError(null);
     let windowsRead = 0;
     try {
       let cursor = bookRef.current.read_cursor;
@@ -655,7 +675,7 @@ function BookDetail({
       else if (windowsRead) toast.success(`قُرئت ${windowsRead} نافذة — تم تحديث الكتاب`);
       else toast.info("الكتاب مقروء كاملًا");
     } catch (error) {
-      toast.error(errorText(error));
+      reportError(error);
     } finally {
       setReadAll({ active: false, progress: "" });
       setBusy("");
@@ -781,6 +801,28 @@ function BookDetail({
             value={`${lessons.filter((lesson) => lesson.status === "published").length} منشور · ${lessons.length} الكل`}
           />
         </div>
+        {lastError && (
+          <div
+            role="alert"
+            className="mt-3 rounded-2xl border border-[#e0a2a2] bg-[#fbeeee] p-3 text-sm text-[#7a1f1f]"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <p className="font-bold">{lastError.hint}</p>
+              <button
+                type="button"
+                onClick={() => setLastError(null)}
+                className="shrink-0 text-xs font-bold underline"
+              >
+                إغلاق
+              </button>
+            </div>
+            {lastError.raw && (
+              <p className="mt-1 break-words text-xs" dir="ltr">
+                {lastError.raw}
+              </p>
+            )}
+          </div>
+        )}
         <PublishChecklist book={book} lessons={lessons} />
         <PageStrip book={book} missingText={missingText} />
         {missingText.length > 0 && (

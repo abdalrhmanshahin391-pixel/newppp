@@ -60,6 +60,34 @@ async function assertAdmin(ctx: AuthContext) {
     _role: "admin",
   });
   if (error || !data) throw new Error("Forbidden: admin only");
+  await primeSavedOpenAiKey(ctx);
+}
+
+/**
+ * Lets the curriculum AI use the key saved on the AI keys page even where the
+ * service-role reader is unavailable: the admin's own session can read it too.
+ */
+async function primeSavedOpenAiKey(ctx: AuthContext) {
+  try {
+    const { hasPrimedOpenAiKey, primeOpenAiKey } = await ai();
+    if (hasPrimedOpenAiKey()) return;
+    for (const purpose of ["rita", "shared"]) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (ctx.supabase.from as any)("admin_ai_keys")
+        .select("api_key")
+        .eq("provider", "openai")
+        .eq("purpose", purpose)
+        .eq("slot", 1)
+        .maybeSingle();
+      const saved = String(data?.api_key ?? "").trim();
+      if (saved.length > 20) {
+        primeOpenAiKey(saved);
+        return;
+      }
+    }
+  } catch {
+    /* the AI call itself reports a missing key */
+  }
 }
 
 /**
@@ -484,9 +512,15 @@ export const adminTranscribeCurriculumPages = createServerFn({ method: "POST" })
           page_no: page.page_no,
           text: page.text,
           has_text_layer: false,
-          // An attempted transcription is provenance, not readiness: a page whose
-          // read came back empty stays missing until re-read or confirmed blank.
-          ...(gaps ? { transcribed_at: new Date().toISOString() } : {}),
+          // A page the AI looked at and found (almost) empty is a cover, a divider
+          // or a picture: it is blank, not a gap that blocks the whole window.
+          // A page the AI never answered for stays missing.
+          ...(gaps
+            ? {
+                transcribed_at: new Date().toISOString(),
+                blank_confirmed: page.text.trim().length < 20,
+              }
+            : {}),
         })),
         { onConflict: "curriculum_id,page_no" },
       );
@@ -498,6 +532,7 @@ export const adminTranscribeCurriculumPages = createServerFn({ method: "POST" })
       stillMissing: data.pages
         .map((page) => page.page_no)
         .filter((pageNo) => !transcribed.includes(pageNo)),
+      failures: result.failures,
     };
   });
 
