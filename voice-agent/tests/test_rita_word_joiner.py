@@ -81,5 +81,19 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual("".join(asyncio.run(go())), "هلا جديد")
 
 
+class TelemetryTests(unittest.TestCase):
+    def test_it_counts_the_words_that_arrived_in_pieces(self):
+        joiner = RitaWordJoiner()
+
+        async def go():
+            await run_test(
+                Pipeline([joiner]),
+                frames_to_send=frames_for(["ها", "لا", " كي", "ف", " الحال", "؟"]),
+            )
+
+        asyncio.run(go())
+        self.assertEqual(joiner.repaired_splits, 2)  # هلا and كيف
+
+
 if __name__ == "__main__":
     unittest.main()

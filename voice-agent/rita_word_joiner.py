@@ -47,6 +47,8 @@ class RitaWordJoiner(FrameProcessor):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._held = ""
+        #: Words that arrived in two or more pieces in the last reply (counts only, never text).
+        self.repaired_splits = 0
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
@@ -54,7 +56,11 @@ class RitaWordJoiner(FrameProcessor):
             try:
                 if isinstance(frame, LLMFullResponseStartFrame | InterruptionFrame):
                     self._held = ""
+                    if isinstance(frame, LLMFullResponseStartFrame):
+                        self.repaired_splits = 0
                 elif isinstance(frame, LLMTextFrame):
+                    if self._held and frame.text and not (frame.text[0].isspace() or frame.text[0] in _WORD_ENDS):
+                        self.repaired_splits += 1  # this piece continues the word held from before
                     emit, self._held = split_at_word_boundary(self._held + frame.text)
                     if not emit:
                         return  # only the start of a word so far; wait for the next piece
@@ -62,6 +68,8 @@ class RitaWordJoiner(FrameProcessor):
                 elif isinstance(frame, LLMFullResponseEndFrame) and self._held:
                     tail, self._held = self._held, ""
                     await self.push_frame(LLMTextFrame(tail), direction)
+                if isinstance(frame, LLMFullResponseEndFrame) and self.repaired_splits:
+                    logger.bind(repaired_splits=self.repaired_splits).info("Rita word joiner repaired split words")
             except Exception as error:  # noqa: BLE001  joining must never silence Rita
                 logger.bind(error=repr(error)).warning("Rita word joiner failed")
                 self._held = ""
