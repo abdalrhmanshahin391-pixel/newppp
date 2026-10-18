@@ -33,14 +33,30 @@ export class CurriculumAiError extends Error {
   }
 }
 
+// The key the signed-in admin can read with their own session. The service-role
+// reader below is unavailable on some hosts, which used to make a key that is
+// saved on the AI keys page look missing here.
+const PRIMED_KEY_TTL_MS = 10 * 60 * 1000;
+let primedKey: { key: string; at: number } | null = null;
+
+export function hasPrimedOpenAiKey() {
+  return Boolean(primedKey && Date.now() - primedKey.at < PRIMED_KEY_TTL_MS);
+}
+
+export function primeOpenAiKey(key: string) {
+  const trimmed = key.trim();
+  if (trimmed.length > 20) primedKey = { key: trimmed, at: Date.now() };
+}
+
 async function apiKey() {
   const fromEnv = await getServerRuntimeSecret("OPENAI_API_KEY");
   if (fromEnv.length > 20) return fromEnv;
   const saved = await resolveRitaOpenAiKey();
   if (saved) return saved;
+  if (primedKey && hasPrimedOpenAiKey()) return primedKey.key;
   throw new CurriculumAiError(
     503,
-    "Add OPENAI_API_KEY to the server secrets to use the curriculum AI.",
+    "No OpenAI key found: save one on the AI keys page (OpenAI) or add OPENAI_API_KEY to the server secrets.",
   );
 }
 
@@ -187,51 +203,81 @@ ${SUMMARY_SHAPE}`;
   return { summary: value, model };
 }
 
-const TranscriptionSchema = z.object({
-  pages: z
-    .array(z.object({ page_no: z.number().int().min(1), text: z.string().max(12_000) }))
-    .max(10),
-});
-
 /** Reads scanned pages (no text layer) so the rest of the flow can work with text. */
 export async function transcribePages(
   pages: { page_no: number; jpegBase64: string }[],
-): Promise<{ pages: { page_no: number; text: string }[]; model: string }> {
+): Promise<{ pages: { page_no: number; text: string }[]; model: string; failures: string[] }> {
   const key = await apiKey();
   const model = await curriculumTextModel();
-  const content: unknown[] = [
-    {
-      type: "text",
-      text: `Transcribe each page image of an English course book exactly, keeping line breaks and table rows.
-Pages in order: ${pages.map((page) => page.page_no).join(", ")}.
-Reply with JSON: {"pages":[{"page_no":N,"text":"..."}]}`,
-    },
-  ];
-  for (const page of pages) {
-    content.push({
-      type: "image_url",
-      image_url: { url: `data:image/jpeg;base64,${page.jpegBase64}`, detail: "high" },
-    });
+  // One request per page: a single slow or malformed page can no longer sink its
+  // neighbours, and each request stays well inside the host's time limit.
+  const settled = await Promise.allSettled(
+    pages.map((page) => transcribeOnePage(key, model, page)),
+  );
+  const done: { page_no: number; text: string }[] = [];
+  const failures: string[] = [];
+  settled.forEach((result, index) => {
+    if (result.status === "fulfilled") done.push(result.value);
+    else {
+      const reason = result.reason instanceof Error ? result.reason.message : String(result.reason);
+      failures.push(`p${pages[index].page_no}: ${reason}`);
+    }
+  });
+  if (!done.length && failures.length) {
+    const first = settled.find((result) => result.status === "rejected") as PromiseRejectedResult;
+    throw first.reason instanceof Error ? first.reason : new CurriculumAiError(502, failures[0]);
   }
-  const json = await postJson(
-    CHAT_URL,
-    key,
-    {
-      model,
-      messages: [{ role: "user", content }],
-      response_format: { type: "json_object" },
-      temperature: 0,
-      max_completion_tokens: 8_000,
-    },
-    120_000,
-  );
-  const parsed = TranscriptionSchema.safeParse(
-    parseJsonObject(String(json?.choices?.[0]?.message?.content ?? "")),
-  );
-  if (!parsed.success)
-    throw new CurriculumAiError(502, "The AI could not read those scanned pages.");
-  const wanted = new Set(pages.map((page) => page.page_no));
-  return { pages: parsed.data.pages.filter((page) => wanted.has(page.page_no)), model };
+  return { pages: done, model, failures };
+}
+
+const SinglePageSchema = z.object({ text: z.string().max(12_000) });
+
+async function transcribeOnePage(
+  key: string,
+  model: string,
+  page: { page_no: number; jpegBase64: string },
+): Promise<{ page_no: number; text: string }> {
+  const body = {
+    model,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: `Transcribe this page of an English course book exactly, keeping line breaks and table rows.
+If the page has no readable text (a cover picture, a blank page), reply with an empty string.
+Reply with JSON: {"text":"..."}`,
+          },
+          {
+            type: "image_url",
+            image_url: { url: `data:image/jpeg;base64,${page.jpegBase64}`, detail: "high" },
+          },
+        ],
+      },
+    ],
+    response_format: { type: "json_object" },
+    temperature: 0,
+    max_completion_tokens: 4_000,
+  };
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const json = await postJson(CHAT_URL, key, body, 100_000);
+      const parsed = SinglePageSchema.safeParse(
+        parseJsonObject(String(json?.choices?.[0]?.message?.content ?? "")),
+      );
+      if (!parsed.success) throw new CurriculumAiError(502, "The AI could not read that page.");
+      return { page_no: page.page_no, text: parsed.data.text };
+    } catch (error) {
+      lastError = error;
+      const retryable =
+        error instanceof CurriculumAiError ? error.status === 429 || error.status >= 500 : true;
+      if (!retryable || attempt === 2) break;
+      await new Promise((resolve) => setTimeout(resolve, 1_500 * (attempt + 1)));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new CurriculumAiError(502, "Page read failed.");
 }
 
 const LESSON_SHAPE = `{

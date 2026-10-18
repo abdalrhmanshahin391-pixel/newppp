@@ -40,7 +40,7 @@ class RitaCartesiaTTSService(CartesiaTTSService):
         api_key: str,
         voice_id: str,
         latency_recorder: RitaLatencyRecorder | None = None,
-        max_buffer_delay_ms: int | None = 0,
+        max_buffer_delay_ms: int | None = 50,
         trim_leading_silence: bool = False,
         trim_preroll_ms: int = 40,
         trim_max_hold_ms: int = 250,
