@@ -66,3 +66,17 @@ class ShortCommandsAndThinkingSoundsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class UnpunctuatedTurnTests(unittest.TestCase):
+    def test_a_finished_looking_turn_without_a_mark(self):
+        from rita_completeness import looks_complete_unpunctuated as f
+
+        self.assertTrue(f("كيف بدي أحكي صباح الخير بالألماني"))
+        self.assertTrue(f("ich möchte einen Shawarma bitte"))
+
+    def test_unfinished_or_too_short_turns_keep_the_long_wait(self):
+        from rita_completeness import looks_complete_unpunctuated as f
+
+        for text in ("شو يعني", "بدي أروح على", "أنا بدي يعني", "كيف بدي أحكي،", "كيف بدي أحكي…", "كيف الحال؟", "أمم"):
+            self.assertFalse(f(text), text)

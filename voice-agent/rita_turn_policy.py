@@ -18,11 +18,14 @@ from loguru import logger
 from pipecat.frames.frames import TranscriptionFrame, VADUserStartedSpeakingFrame
 from pipecat.turns.user_stop import TurnAnalyzerUserTurnStopStrategy
 
-from rita_completeness import looks_complete
+from rita_completeness import looks_complete, looks_complete_unpunctuated
 
 DEFAULT_BOUNDED_COMMIT_SECS = 0.6
 MIN_BOUNDED_COMMIT_SECS = 0.3
 MAX_BOUNDED_COMMIT_SECS = 1.2
+DEFAULT_UNPUNCTUATED_COMMIT_SECS = 0.9
+MIN_UNPUNCTUATED_COMMIT_SECS = 0.6
+MAX_UNPUNCTUATED_COMMIT_SECS = 1.4
 
 
 def bounded_commit_secs(body: dict[str, Any]) -> float:
@@ -38,12 +41,26 @@ def bounded_commit_secs(body: dict[str, Any]) -> float:
     return min(MAX_BOUNDED_COMMIT_SECS, max(MIN_BOUNDED_COMMIT_SECS, value))
 
 
+def unpunctuated_commit_secs(body: dict[str, Any]) -> float:
+    """Seconds to wait before committing a finished-looking turn that has no closing mark; 0 disables."""
+
+    raw = body.get("unpunctuatedCommitSecs", os.getenv("RITA_UNPUNCTUATED_COMMIT_SECS"))
+    try:
+        value = float(raw) if raw not in (None, "") else DEFAULT_UNPUNCTUATED_COMMIT_SECS
+    except (TypeError, ValueError):
+        return DEFAULT_UNPUNCTUATED_COMMIT_SECS
+    if value <= 0:
+        return 0.0
+    return min(MAX_UNPUNCTUATED_COMMIT_SECS, max(MIN_UNPUNCTUATED_COMMIT_SECS, value))
+
+
 class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
     """Smart Turn plus a short, cancellable commit for complete-looking final transcripts."""
 
-    def __init__(self, *, turn_analyzer, bounded_secs: float, **kwargs):
+    def __init__(self, *, turn_analyzer, bounded_secs: float, unpunctuated_secs: float = 0.0, **kwargs):
         super().__init__(turn_analyzer=turn_analyzer, **kwargs)
         self._bounded_secs = bounded_secs
+        self._unpunctuated_secs = unpunctuated_secs
         self._bounded_task: asyncio.Task | None = None
         self._bounded_fired = False
         #: smart_complete | bounded_complete_commit (a controller timeout never reaches this class)
@@ -82,10 +99,23 @@ class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
             self._bounded_task = self.task_manager.create_task(
                 self._bounded_commit(frame.text), f"{self}::_bounded_commit"
             )
+        elif (
+            self._unpunctuated_secs > 0
+            and frame.finalized
+            and not self._turn_complete
+            and not self._vad_user_speaking
+            and looks_complete_unpunctuated(frame.text)
+        ):
+            # No closing mark, but it reads as a finished sentence: wait a little less than the 1.5 s net.
+            await self._cancel_bounded()
+            self._bounded_task = self.task_manager.create_task(
+                self._bounded_commit(frame.text, self._unpunctuated_secs),
+                f"{self}::_bounded_commit",
+            )
 
-    async def _bounded_commit(self, text: str) -> None:
+    async def _bounded_commit(self, text: str, secs: float | None = None) -> None:
         try:
-            await asyncio.sleep(self._bounded_secs)
+            await asyncio.sleep(self._bounded_secs if secs is None else secs)
         except asyncio.CancelledError:
             return
         self._bounded_task = None
