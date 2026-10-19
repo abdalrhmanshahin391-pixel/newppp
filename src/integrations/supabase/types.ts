@@ -3616,105 +3616,6 @@ export type Database = {
         }
         Relationships: []
       }
-      rita_free_conversation_messages: {
-        Row: {
-          client_message_id: string
-          content: string
-          conversation_id: string
-          created_at: string
-          delivery_status: string
-          generated_content: string | null
-          id: number
-          role: string
-          session_id: string | null
-          source: string
-          spoken_content: string | null
-          user_id: string
-        }
-        Insert: {
-          client_message_id: string
-          content: string
-          conversation_id: string
-          created_at?: string
-          delivery_status?: string
-          generated_content?: string | null
-          id?: number
-          role: string
-          session_id?: string | null
-          source?: string
-          spoken_content?: string | null
-          user_id: string
-        }
-        Update: {
-          client_message_id?: string
-          content?: string
-          conversation_id?: string
-          created_at?: string
-          delivery_status?: string
-          generated_content?: string | null
-          id?: number
-          role?: string
-          session_id?: string | null
-          source?: string
-          spoken_content?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "rita_free_conversation_messages_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "rita_free_conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "rita_free_conversation_messages_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "rita_v3_sessions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      rita_free_conversations: {
-        Row: {
-          archived_at: string | null
-          created_at: string
-          dialect_preference: string
-          id: string
-          language_preference: string
-          last_message_at: string | null
-          message_count: number
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          archived_at?: string | null
-          created_at?: string
-          dialect_preference?: string
-          id?: string
-          language_preference?: string
-          last_message_at?: string | null
-          message_count?: number
-          title?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          archived_at?: string | null
-          created_at?: string
-          dialect_preference?: string
-          id?: string
-          language_preference?: string
-          last_message_at?: string | null
-          message_count?: number
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       rita_v3_events: {
         Row: {
           created_at: string
@@ -3803,7 +3704,6 @@ export type Database = {
       rita_v3_sessions: {
         Row: {
           connected_at: string | null
-          conversation_id: string | null
           diagnostic_trace_id: string | null
           dialect_preference: string
           ended_at: string | null
@@ -3820,7 +3720,6 @@ export type Database = {
         }
         Insert: {
           connected_at?: string | null
-          conversation_id?: string | null
           diagnostic_trace_id?: string | null
           dialect_preference?: string
           ended_at?: string | null
@@ -3837,7 +3736,6 @@ export type Database = {
         }
         Update: {
           connected_at?: string | null
-          conversation_id?: string | null
           diagnostic_trace_id?: string | null
           dialect_preference?: string
           ended_at?: string | null
@@ -3852,15 +3750,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "rita_v3_sessions_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "rita_free_conversations"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       rita_voice_sessions: {
         Row: {
@@ -6644,8 +6534,10 @@ export type Tables<
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -6654,7 +6546,8 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -6678,7 +6571,8 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -6702,7 +6596,8 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -6718,7 +6613,8 @@ export type Enums<
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    keyof DefaultSchema["CompositeTypes"] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
