@@ -93,18 +93,21 @@ export function upsertDraftReply<T extends { id: string; text: string }>(
  * while Rita speaks; afterwards it is trimmed to what was actually heard if the
  * reply was interrupted, and removed if nothing was heard.
  */
-export function settleDraftReply<T extends { id: string; text: string }>(
+export function settleDraftReply<
+  T extends { id: string; text: string; interruptedAt?: number | null },
+>(
   messages: T[],
   draftId: string | null,
-  committed: string,
+  visible: string,
   newMessage: T | null,
+  interruptedAt: number | null = null,
 ): T[] {
   if (draftId && messages.some((message) => message.id === draftId)) {
-    return committed
+    return visible
       ? messages.map((message) =>
-          message.id === draftId ? { ...message, text: committed } : message,
+          message.id === draftId ? { ...message, text: visible, interruptedAt } : message,
         )
       : messages.filter((message) => message.id !== draftId);
   }
-  return committed && newMessage ? [...messages, newMessage] : messages;
+  return visible && newMessage ? [...messages, { ...newMessage, interruptedAt }] : messages;
 }

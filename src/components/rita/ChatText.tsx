@@ -11,12 +11,27 @@ export function ChatText({
   text,
   className = "",
   onPhrase,
+  interruptedAt,
 }: {
   text: string;
   className?: string;
   /** When given, foreign words become small buttons that open the word window. */
   onPhrase?: (phrase: string) => void;
+  interruptedAt?: number | null;
 }) {
+  if (interruptedAt !== null && interruptedAt !== undefined && interruptedAt < text.length) {
+    const heard = text.slice(0, Math.max(0, interruptedAt));
+    const unheard = text.slice(Math.max(0, interruptedAt));
+    return (
+      <div className={className}>
+        {heard && <ChatText text={heard} onPhrase={onPhrase} />}
+        <div className="mt-1 border-l-2 border-[var(--pp-line)] pl-3 opacity-45">
+          <span className="mb-1 block text-xs font-semibold">توقفت هنا</span>
+          <ChatText text={unheard} onPhrase={onPhrase} />
+        </div>
+      </div>
+    );
+  }
   const direction = textDirection(text);
   const paragraphs = splitParagraphs(text);
   return (
@@ -39,7 +54,11 @@ export function ChatText({
                     className="mx-0.5 inline-flex items-center gap-1 rounded-md bg-[var(--pp-accent-soft)] px-2 py-px align-baseline font-semibold leading-7 text-[var(--pp-ink)] transition-colors hover:bg-[#f4f4f8] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--pp-ink)]"
                   >
                     {segment.value}
-                    <Volume2 size={12} aria-hidden="true" className="text-[var(--pp-accent-text)]" />
+                    <Volume2
+                      size={12}
+                      aria-hidden="true"
+                      className="text-[var(--pp-accent-text)]"
+                    />
                   </button>
                 ) : (
                   <bdi

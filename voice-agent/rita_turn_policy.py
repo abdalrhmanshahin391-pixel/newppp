@@ -32,6 +32,17 @@ MIN_UNPUNCTUATED_COMMIT_SECS = 0.6
 MAX_UNPUNCTUATED_COMMIT_SECS = 1.4
 
 
+def adaptive_unpunctuated_secs(text: str, configured: float) -> float:
+    """Keep short complete turns fast; give only long clauses extra continuation room."""
+
+    word_count = len((text or "").split())
+    if word_count <= 5:
+        return min(configured, 0.45)
+    if word_count <= 10:
+        return min(configured, 0.65)
+    return min(configured, 0.85)
+
+
 def bounded_commit_secs(body: dict[str, Any]) -> float:
     """Seconds to wait before committing a complete-looking turn; 0 disables the bounded commit."""
 
@@ -127,7 +138,10 @@ class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
             # No closing mark, but it reads as a finished sentence: wait a little less than the 1.5 s net.
             await self._cancel_bounded()
             self._bounded_task = self.task_manager.create_task(
-                self._bounded_commit(frame.text, self._unpunctuated_secs),
+                self._bounded_commit(
+                    frame.text,
+                    adaptive_unpunctuated_secs(frame.text, self._unpunctuated_secs),
+                ),
                 f"{self}::_bounded_commit",
             )
 
@@ -151,6 +165,8 @@ class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
                 "bounded_complete_commit" if self._bounded_fired else "smart_complete"
             )
             logger.bind(stop_reason=self.last_stop_reason).info(
-                "Rita turn stop reason={}", self.last_stop_reason
+                "Rita turn stop reason={} word_count={}",
+                self.last_stop_reason,
+                len(self._text.split()),
             )
         await super()._maybe_trigger_user_turn_stopped()

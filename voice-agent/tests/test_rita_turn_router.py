@@ -34,13 +34,13 @@ class DecisionTests(unittest.TestCase):
         self.assertIn(decide("stop", RitaSessionState(), language="en").say, ("Okay.", "Sure.", "Got it."))
         self.assertIn(decide("stopp", RitaSessionState(), language="de").say, ("Alles klar.", "Okay.", "Gut."))
 
-    def test_the_ack_rotates_so_rita_does_not_sound_canned(self):
+    def test_repeated_stop_keeps_one_neutral_ack(self):
         state = RitaSessionState()
         seen = set()
         for _ in range(3):
             state.observe_user_turn("خلص")
             seen.add(decide("خلص", state, language="ar").say)
-        self.assertEqual(len(seen), 3)
+        self.assertEqual(seen, {"تمام."})
 
     def test_thinking_sounds_are_held(self):
         for text in ("أمم", "يعني...", "استنى", "um"):
