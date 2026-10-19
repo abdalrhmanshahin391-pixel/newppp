@@ -95,6 +95,7 @@ import { Route as AdminGermanIndexRouteImport } from './routes/admin.german.inde
 import { Route as AdminGermanCourseIdRouteImport } from './routes/admin.german.$courseId'
 import { Route as AdminSpacesIndexRouteImport } from './routes/admin.spaces.index'
 import { Route as AdminSpacesSpaceIdRouteImport } from './routes/admin.spaces.$spaceId'
+import { Route as ApiAdminGenerateImageRouteImport } from './routes/api/admin/generate-image'
 import { Route as ApiGermanScoreRouteImport } from './routes/api/german/score'
 import { Route as ApiGermanTtsRouteImport } from './routes/api/german/tts'
 import { Route as ApiPublicArchiveSolverRouteImport } from './routes/api/public/archive-solver'
@@ -565,6 +566,11 @@ const AdminSpacesSpaceIdRoute = AdminSpacesSpaceIdRouteImport.update({
   path: '/admin/spaces/$spaceId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminGenerateImageRoute = ApiAdminGenerateImageRouteImport.update({
+  id: '/api/admin/generate-image',
+  path: '/api/admin/generate-image',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGermanScoreRoute = ApiGermanScoreRouteImport.update({
   id: '/api/german/score',
   path: '/api/german/score',
@@ -835,6 +841,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/german/$courseId': typeof AdminGermanCourseIdRouteWithChildren
   '/admin/spaces/$spaceId': typeof AdminSpacesSpaceIdRoute
+  '/api/admin/generate-image': typeof ApiAdminGenerateImageRoute
   '/api/german/score': typeof ApiGermanScoreRoute
   '/api/german/tts': typeof ApiGermanTtsRoute
   '/api/public/archive-solver': typeof ApiPublicArchiveSolverRoute
@@ -955,6 +962,7 @@ export interface FileRoutesByTo {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/german/$courseId': typeof AdminGermanCourseIdRouteWithChildren
   '/admin/spaces/$spaceId': typeof AdminSpacesSpaceIdRoute
+  '/api/admin/generate-image': typeof ApiAdminGenerateImageRoute
   '/api/german/score': typeof ApiGermanScoreRoute
   '/api/german/tts': typeof ApiGermanTtsRoute
   '/api/public/archive-solver': typeof ApiPublicArchiveSolverRoute
@@ -1079,6 +1087,7 @@ export interface FileRoutesById {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/german/$courseId': typeof AdminGermanCourseIdRouteWithChildren
   '/admin/spaces/$spaceId': typeof AdminSpacesSpaceIdRoute
+  '/api/admin/generate-image': typeof ApiAdminGenerateImageRoute
   '/api/german/score': typeof ApiGermanScoreRoute
   '/api/german/tts': typeof ApiGermanTtsRoute
   '/api/public/archive-solver': typeof ApiPublicArchiveSolverRoute
@@ -1205,6 +1214,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/admin/german/$courseId'
     | '/admin/spaces/$spaceId'
+    | '/api/admin/generate-image'
     | '/api/german/score'
     | '/api/german/tts'
     | '/api/public/archive-solver'
@@ -1325,6 +1335,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/admin/german/$courseId'
     | '/admin/spaces/$spaceId'
+    | '/api/admin/generate-image'
     | '/api/german/score'
     | '/api/german/tts'
     | '/api/public/archive-solver'
@@ -1448,6 +1459,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/admin/german/$courseId'
     | '/admin/spaces/$spaceId'
+    | '/api/admin/generate-image'
     | '/api/german/score'
     | '/api/german/tts'
     | '/api/public/archive-solver'
@@ -1558,6 +1570,7 @@ export interface RootRouteChildren {
   SummariesIndexRoute: typeof SummariesIndexRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   AdminSpacesSpaceIdRoute: typeof AdminSpacesSpaceIdRoute
+  ApiAdminGenerateImageRoute: typeof ApiAdminGenerateImageRoute
   ApiGermanScoreRoute: typeof ApiGermanScoreRoute
   ApiGermanTtsRoute: typeof ApiGermanTtsRoute
   ApiPublicArchiveSolverRoute: typeof ApiPublicArchiveSolverRoute
@@ -2183,6 +2196,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSpacesSpaceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/generate-image': {
+      id: '/api/admin/generate-image'
+      path: '/api/admin/generate-image'
+      fullPath: '/api/admin/generate-image'
+      preLoaderRoute: typeof ApiAdminGenerateImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/german/score': {
       id: '/api/german/score'
       path: '/api/german/score'
@@ -2641,6 +2661,7 @@ const rootRouteChildren: RootRouteChildren = {
   SummariesIndexRoute: SummariesIndexRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   AdminSpacesSpaceIdRoute: AdminSpacesSpaceIdRoute,
+  ApiAdminGenerateImageRoute: ApiAdminGenerateImageRoute,
   ApiGermanScoreRoute: ApiGermanScoreRoute,
   ApiGermanTtsRoute: ApiGermanTtsRoute,
   ApiPublicArchiveSolverRoute: ApiPublicArchiveSolverRoute,

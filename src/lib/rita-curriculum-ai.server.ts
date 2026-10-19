@@ -461,6 +461,40 @@ accents, on a plain light blue background. The subject is large and centred and 
 letters, no numbers, no logos, no border, no circle drawn around the picture.`;
 }
 
+/**
+ * One picture from a free prompt, for the private image endpoint. "lesson" wraps the prompt in the
+ * house cartoon style used for lesson covers; "raw" sends the prompt as written.
+ */
+export async function generateImageFromPrompt(input: {
+  prompt: string;
+  size: "1024x1024" | "1536x1024" | "1024x1536";
+  quality: "medium" | "high";
+  style: "raw" | "lesson";
+}): Promise<{ bytes: Uint8Array; model: string; contentType: string }> {
+  const key = await apiKey();
+  const model = (await getServerRuntimeSecret("RITA_IMAGE_MODEL")) || DEFAULT_IMAGE_MODEL;
+  const json = await postJson(
+    IMAGE_URL,
+    key,
+    {
+      model,
+      prompt: input.style === "lesson" ? lessonImagePrompt(input.prompt) : input.prompt,
+      size: input.size,
+      quality: input.quality,
+      output_format: "webp",
+      output_compression: 85,
+      n: 1,
+    },
+    110_000,
+  );
+  const encoded = String(json?.data?.[0]?.b64_json ?? "");
+  if (!encoded) throw new CurriculumAiError(502, "The image model returned no picture.");
+  const binary = atob(encoded);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return { bytes, model, contentType: "image/webp" };
+}
+
 export async function generateLessonImage(
   scene: string,
 ): Promise<{ bytes: Uint8Array; model: string; contentType: string }> {
