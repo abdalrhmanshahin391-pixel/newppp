@@ -5,7 +5,9 @@ Pipecat Cloud worker. The website calls `start_session`; it creates the Daily ro
 spawns the bot in the background and returns the room credentials immediately, so the
 learner joins the room while Rita is still connecting.
 
-Deploy: `modal deploy voice-agent/modal_app.py` (from the repository root).
+Deploy: `modal deploy voice-agent/modal_app.py` (from the repository root), or let
+`.github/workflows/rita-modal-deploy.yml` do it when the code reaches main.
+Every module in this folder is shipped automatically (see WORKER_MODULES).
 Secret `ritajet-voice` must contain SONIOX_API_KEY, GROQ_API_KEY, CARTESIA_API_KEY,
 DAILY_API_KEY and RITA_MODAL_TOKEN (shared with the website as MODAL_START_TOKEN).
 """
@@ -17,9 +19,19 @@ import json
 import os
 import time
 import uuid
+from pathlib import Path
 from typing import Any
 
 import modal
+
+# Every top-level module in this folder ships to Modal, so a new file can never be
+# forgotten. Only the deploy script itself stays behind.
+_HERE = Path(__file__).resolve().parent
+WORKER_MODULES = sorted(
+    path.stem
+    for path in _HERE.glob("*.py")
+    if path.stem != "modal_app" and not path.stem.startswith("_")
+)
 
 APP_NAME = "ritajet-voice"
 SECRET_NAME = "ritajet-voice"
@@ -34,24 +46,7 @@ image = (
         "python-dotenv>=1.1.0,<2",
         "fastapi[standard]",
     )
-    .add_local_python_source(
-        "bot",
-        "rita_cartesia_benchmark",
-        "rita_cartesia_tts",
-        "rita_dialect",
-        "rita_completeness",
-        "rita_dialogue_acts",
-        "rita_gemini_auth",
-        "rita_gemini_tts",
-        "rita_interruption",
-        "rita_latency",
-        "rita_leading_silence",
-        "rita_state",
-        "rita_turn_policy",
-        "rita_turn_router",
-        "rita_word_joiner",
-        "rita_ui_commands",
-    )
+    .add_local_python_source(*WORKER_MODULES)
 )
 
 app = modal.App(APP_NAME, image=image)
