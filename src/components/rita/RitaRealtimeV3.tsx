@@ -267,22 +267,21 @@ export function RitaRealtimeV3({
           throw conversationResult.error ?? new Error("This conversation is not available.");
         }
         if (messageResult.error) throw messageResult.error;
-        const restored = (messageResult.data ?? []).map(
-          (message: {
-            client_message_id: string;
-            role: "user" | "assistant";
-            content: string;
-            spoken_content: string | null;
-            delivery_status: RitaConversationDelivery;
-          }) => ({
-            id: message.client_message_id,
-            role: message.role === "user" ? ("you" as const) : ("rita" as const),
-            text:
-              message.role === "assistant" && message.delivery_status === "interrupted"
-                ? message.spoken_content || message.content
-                : message.content,
-          }),
-        );
+        const savedMessages = (messageResult.data ?? []) as Array<{
+          client_message_id: string;
+          role: "user" | "assistant";
+          content: string;
+          spoken_content: string | null;
+          delivery_status: RitaConversationDelivery;
+        }>;
+        const restored = savedMessages.map((message) => ({
+          id: message.client_message_id,
+          role: message.role === "user" ? ("you" as const) : ("rita" as const),
+          text:
+            message.role === "assistant" && message.delivery_status === "interrupted"
+              ? message.spoken_content || message.content
+              : message.content,
+        }));
         setMessages(
           restored.length
             ? restored
