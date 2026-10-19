@@ -64,11 +64,11 @@ def stop_ack_enabled() -> bool:
     return os.getenv("RITA_STOP_ACK", "say").strip().casefold() != "silent"
 
 
-# A few natural ways to say "okay, I stopped", rotated so Rita does not sound canned.
+# One neutral acknowledgement: repeated stop commands must not restart or elaborate.
 ACKS = {
-    "ar": ("تمام.", "حاضر.", "ماشي."),
-    "en": ("Okay.", "Sure.", "Got it."),
-    "de": ("Alles klar.", "Okay.", "Gut."),
+    "ar": ("تمام.",),
+    "en": ("Okay.",),
+    "de": ("Okay.",),
 }
 
 # After this many unanswered "which one?" questions, stop asking and let the model pick.
@@ -167,6 +167,9 @@ class RitaTurnRouter(FrameProcessor):
         language_of_turn: Callable[[], str],
         mode: RouterMode | None = None,
         ack: bool | None = None,
+        session_id: str = "",
+        trace_id: str = "",
+        turn_id: Callable[[], int] | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -175,6 +178,9 @@ class RitaTurnRouter(FrameProcessor):
         self._language_of_turn = language_of_turn
         self.mode = mode or router_mode()
         self._ack = stop_ack_enabled() if ack is None else ack
+        self._session_id = session_id
+        self._trace_id = trace_id
+        self._turn_id = turn_id or (lambda: 0)
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
@@ -210,12 +216,33 @@ class RitaTurnRouter(FrameProcessor):
             return
 
         logger.bind(
+            session_id=self._session_id or None,
+            trace_id=self._trace_id or None,
+            turn_id=self._turn_id() or None,
             mode=self.mode.value,
             action=decision.action.value,
             reading=str(decision.reading),
             awaiting=self._state.awaiting.value,
-            text=text[:80],
+            word_count=len(text.split()),
+            character_count=len(text),
         ).info("Rita router decision")
+
+        if self.mode == RouterMode.ON and decision.reading.act in {
+            Act.COMPLAINT,
+            Act.SIMPLIFY,
+            Act.CORRECTION,
+        }:
+            # Privacy-safe product evidence: classification only, never transcript text.
+            await self.push_frame(
+                RTVIServerMessageFrame(
+                    data={
+                        "type": "rita-dialogue-act",
+                        "act": decision.reading.act.value,
+                        "action": decision.action.value,
+                        "wordCount": len(text.split()),
+                    }
+                )
+            )
 
         if self.mode == RouterMode.SHADOW or decision.action == Action.PASS:
             await self.push_frame(frame, direction)

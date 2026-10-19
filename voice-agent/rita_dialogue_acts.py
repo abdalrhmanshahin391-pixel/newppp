@@ -33,6 +33,8 @@ class Act(StrEnum):
     CONTINUE = "continue"  # "كمّل"
     REPEAT = "repeat"  # "عيدي", "شو؟", "again"
     UNDERSTOOD = "understood"  # "فهمت", "got it"
+    COMPLAINT = "complaint"  # a product/conversation failure reported by the learner
+    SIMPLIFY = "simplify"  # explain the same idea more simply
     UNCLEAR = "unclear"  # an answer that does not fit the question just asked
     OTHER = "other"  # everything else: a real request or sentence
 
@@ -90,12 +92,19 @@ def _phrases(*phrases: str) -> frozenset[str]:
 
 STOP_TOKENS = _set(
     "خلص", "خلاص", "كفاية", "بكفي", "يكفي", "كفى", "وقف", "وقفي", "اوقف", "اوقفي", "ستوب",
-    "استوب", "بس",
+    "استوب", "بس", "اسكتي", "اسكت", "انسي", "انسى", "بلاش", "خلصنا",
     "stop", "enough", "halt", "stopp", "genug",
 )
 STOP_PHRASES = _phrases(
     "مش لازم تكمل", "مش لازم تكملي", "بكفي هيك", "كفاية هيك", "خلص هيك", "that's enough",
-    "that is enough", "hör auf", "hor auf", "ok enough", "stop it",
+    "that is enough", "hör auf", "hor auf", "ok enough", "stop it", "مش محتاج", "مو محتاج",
+)
+
+# Words which may accompany a real stop command without turning it into a new request.
+# This deliberately does not include request verbs such as "قولي" or question words.
+STOP_COMPANIONS = _set("لا", "لاء", "لأ", "مش", "مو", "ما", "محتاج", "لازم", "بعد", "please")
+REQUEST_OR_QUESTION = _set(
+    "قولي", "احكي", "اشرحي", "اشرح", "كيف", "ليش", "شو", "ماذا", "why", "how", "what"
 )
 
 # "wait / one moment": a pause request while Rita speaks, plain hesitation when idle.
@@ -137,8 +146,21 @@ DONT_KNOW_PHRASES = _phrases(
 )
 
 CORRECTION_STARTS = _phrases(
-    "لا قصدي", "قصدي", "مش هيك", "لا مش هيك", "ما قصدت", "مش قصدي", "غلط قصدي", "i meant",
+    "لا قصدي", "لا اقصد", "قصدي", "اقصد", "مش هيك", "لا مش هيك", "ما قصدت", "مش قصدي", "غلط قصدي", "i meant", "i mean",
     "no i meant", "ich meinte", "nein ich meinte", "not that", "no not that",
+)
+
+COMPLAINT_PHRASES = _phrases(
+    "الصوت مقطع", "الصوت بقطع", "الصوت بطيء", "الرد بطيء", "ما عم ترد", "ما عم برد",
+    "ما بترد", "بتخبصي", "بتخبص", "الرد مش منطقي", "الجواب مش منطقي", "مش فاهمتني",
+    "انت مش فاهمه", "انتي مش فاهمه", "you are not making sense", "audio is choppy",
+    "the sound is choppy", "you are not responding", "das audio stockt",
+)
+
+SIMPLIFY_PHRASES = _phrases(
+    "اشرح ابسط", "اشرحي ابسط", "بطريقه ابسط", "بشكل ابسط", "ابسط", "بسطها", "بسطيها",
+    "مش فاهم الشرح", "مو فاهم الشرح", "لشخص مبتدئ", "يعني لمبتدئ", "explain simply",
+    "make it simpler", "simpler please", "einfacher erklaren", "einfacher erklären",
 )
 
 CONTINUE_TOKENS = _set("كمل", "كمل", "كملي", "اكمل", "اكملي", "تابع", "تابعي", "continue",
@@ -193,7 +215,7 @@ def _contains_phrase(joined: str, phrases: frozenset[str]) -> bool:
     return any(f" {phrase} " in padded for phrase in phrases)
 
 
-MAX_SHORT_TOKENS = 4  # longer utterances are real content and are never an act
+MAX_SHORT_TOKENS = 6  # commands may include natural fillers/refusals; content still wins below
 
 
 def classify(
@@ -211,16 +233,30 @@ def classify(
     joined = " ".join(words)
     long_utterance = len(words) > MAX_SHORT_TOKENS
 
+    if len(words) <= 12 and _contains_phrase(joined, COMPLAINT_PHRASES):
+        return Reading(Act.COMPLAINT, "complaint cue")
+    if len(words) <= 12 and _contains_phrase(joined, SIMPLIFY_PHRASES):
+        return Reading(Act.SIMPLIFY, "simplify cue")
+
     # Corrections and "I don't know" may be a little longer than the other commands.
     if len(words) <= 8:
-        if any(joined == cue or joined.startswith(cue + " ") for cue in CORRECTION_STARTS):
-            return Reading(Act.CORRECTION, "correction cue")
         if _contains_phrase(joined, DONT_KNOW_PHRASES) and len(words) <= 5:
             return Reading(Act.DONT_KNOW, "dont-know phrase")
+        if any(joined == cue or joined.startswith(cue + " ") for cue in CORRECTION_STARTS):
+            return Reading(Act.CORRECTION, "correction cue")
+        # "مش باي" / "not X" corrects a specific interpretation. Broader negative
+        # sentences remain ordinary content, and known complaints/don't-know cues won above.
+        if len(words) <= 4 and words[0] in _set("مش", "مو", "not"):
+            return Reading(Act.CORRECTION, "short rejected interpretation")
     if long_utterance:
         return Reading(Act.OTHER, "long utterance")
 
-    if _contains_phrase(joined, STOP_PHRASES) and len(words) <= 4:
+    # A question containing "خلصنا؟" asks for status; it is not a stop command.
+    has_question = (text or "").rstrip().endswith(("?", "؟")) or any(
+        word in REQUEST_OR_QUESTION for word in words
+    )
+    negated_finished = joined.startswith(("ما خلصنا", "مش خلصنا", "مو خلصنا"))
+    if _contains_phrase(joined, STOP_PHRASES) and len(words) <= 6 and not has_question:
         return Reading(Act.STOP, "stop phrase")
     negated = any(word in NEGATION_TOKENS for word in words)
     if _contains_phrase(joined, UNDERSTOOD_PHRASES) and len(words) <= 3 and not negated:
@@ -248,9 +284,12 @@ def classify(
         return _backchannel_or_answer(words, bot_speaking, awaiting)
 
     if _all_in(core_no_hesitation, STOP_TOKENS):
-        return Reading(Act.STOP, "stop word")
+        if not has_question and not negated_finished:
+            return Reading(Act.STOP, "stop word")
     # "لا خلص" / "no, stop": a refusal plus a stop word is a stop.
-    if _all_in(core_no_hesitation, STOP_TOKENS | NO_TOKENS | WAIT_TOKENS) and any(
+    if not has_question and not negated_finished and _all_in(
+        core_no_hesitation, STOP_TOKENS | NO_TOKENS | WAIT_TOKENS | STOP_COMPANIONS
+    ) and any(
         word in STOP_TOKENS for word in core_no_hesitation
     ):
         return Reading(Act.STOP, "stop word with refusal")
@@ -330,7 +369,6 @@ def interrupts_speaking_bot(text: str, *, final: bool = True) -> tuple[bool, Rea
 
 # ------------------------------------------------------------ Rita's own last question
 
-_QUESTION_SPAN = re.compile(r"[^.!?؟\n]*[?؟]")
 _CHOICE_SPLIT = re.compile(r"\s*(?:[،,]|\bولا\b|\bأو\b|\bاو\b|\bor\b|\boder\b)\s*", re.IGNORECASE)
 _WH_WORDS = _set(
     "شو", "ايش", "ليش", "كيف", "متى", "وين", "مين", "كم", "اي", "لماذا", "ماذا", "what", "why",
@@ -354,12 +392,13 @@ def parse_last_question(assistant_text: str) -> Question:
     questions, NONE when she did not ask anything.
     """
 
-    spans = [span.strip() for span in _QUESTION_SPAN.findall(assistant_text or "")]
+    spans = _question_spans(assistant_text or "")
     spans = [span for span in spans if span]
     if not spans:
         return Question("", Awaiting.NONE)
     question = spans[-1]
     body = question.rstrip("?؟").strip()
+    structural_body = _without_quoted_text(body)
     # "حابب نكمل؟ أو في شي تاني؟": a second question that starts with "or" is one choice.
     if len(spans) >= 2 and re.match(r"^(?:ولا|أو|او|or|oder)\b", body, re.IGNORECASE):
         previous = spans[-2].rstrip("?؟").strip()
@@ -368,7 +407,7 @@ def parse_last_question(assistant_text: str) -> Question:
         if len(options) == 2:
             return Question(f"{previous}؟ {body}؟"[:200], Awaiting.CHOICE, options)
 
-    parts = [part.strip() for part in _CHOICE_SPLIT.split(body) if part.strip()]
+    parts = [part.strip() for part in _CHOICE_SPLIT.split(structural_body) if part.strip()]
     first_word = tokens(body)[:1]
     asks_what = bool(first_word) and first_word[0] in _WH_WORDS
     if asks_what and len(parts) >= 3:
@@ -384,6 +423,51 @@ def parse_last_question(assistant_text: str) -> Question:
     if first and first[0] in _WH_WORDS:
         return Question(question[:160], Awaiting.OPEN)
     return Question(question[:160], Awaiting.YES_NO)
+
+
+_QUOTE_PAIRS = {'"': '"', "“": "”", "‘": "’", "«": "»"}
+
+
+def _question_spans(text: str) -> list[str]:
+    """Split questions while ignoring question marks inside quoted examples."""
+
+    spans: list[str] = []
+    start = 0
+    closing: str | None = None
+    for index, char in enumerate(text):
+        if closing is not None:
+            if char == closing:
+                closing = None
+            continue
+        if char in _QUOTE_PAIRS:
+            closing = _QUOTE_PAIRS[char]
+            continue
+        if char in "?؟":
+            span = text[start : index + 1].strip()
+            if span:
+                spans.append(span)
+            start = index + 1
+        elif char in ".!\n":
+            start = index + 1
+    return spans
+
+
+def _without_quoted_text(text: str) -> str:
+    """Remove quoted teaching examples before looking for choice separators."""
+
+    output: list[str] = []
+    closing: str | None = None
+    for char in text:
+        if closing is not None:
+            if char == closing:
+                closing = None
+            continue
+        if char in _QUOTE_PAIRS:
+            closing = _QUOTE_PAIRS[char]
+            output.append(" ")
+        else:
+            output.append(char)
+    return "".join(output)
 
 
 _OPTION_LEADS = re.compile(

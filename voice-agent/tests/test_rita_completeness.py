@@ -81,6 +81,13 @@ class UnpunctuatedTurnTests(unittest.TestCase):
         for text in ("شو يعني", "بدي أروح على", "أنا بدي يعني", "كيف بدي أحكي،", "كيف بدي أحكي…", "كيف الحال؟", "أمم"):
             self.assertFalse(f(text), text)
 
+    def test_real_arabic_continuations_are_not_committed_early(self):
+        from rita_completeness import looks_complete_unpunctuated as f
+
+        for text in ("أنا ما", "المشكلة مش", "بدي أشرح لأنه", "صار معي لما", "هو كأنه", "أنا بدي"):
+            with self.subTest(text=text):
+                self.assertFalse(f(text))
+
     def test_short_first_turn_greetings_commit_without_punctuation(self):
         from rita_completeness import looks_complete_short_unpunctuated as f
 

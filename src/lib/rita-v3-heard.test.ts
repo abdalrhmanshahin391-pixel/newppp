@@ -68,17 +68,17 @@ test("streamed replies appear immediately and update in place", () => {
   ]);
 });
 
-test("an interrupted reply is trimmed to what was heard, or removed when nothing was", () => {
+test("an interrupted reply keeps generated text and marks the heard boundary", () => {
   const list = [{ id: "d", text: "Hello there, how are you today" }];
-  assert.deepEqual(settleDraftReply(list, "d", "Hello there", null), [
-    { id: "d", text: "Hello there" },
+  assert.deepEqual(settleDraftReply(list, "d", "Hello there, how are you today", null, 11), [
+    { id: "d", text: "Hello there, how are you today", interruptedAt: 11 },
   ]);
   assert.deepEqual(settleDraftReply(list, "d", "", null), []);
 });
 
 test("without a draft the committed reply is appended once", () => {
   const added = settleDraftReply([], null, "Hi", { id: "n", text: "Hi" });
-  assert.deepEqual(added, [{ id: "n", text: "Hi" }]);
+  assert.deepEqual(added, [{ id: "n", text: "Hi", interruptedAt: null }]);
   assert.deepEqual(settleDraftReply([], null, "", { id: "n", text: "" }), []);
 });
 
