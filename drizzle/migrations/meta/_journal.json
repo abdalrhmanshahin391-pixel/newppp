@@ -36,6 +36,13 @@
       "when": 1792065527442,
       "tag": "0004_rita_lesson_progress_own_writes",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792413833244,
+      "tag": "0005_rita_free_conversations",
+      "breakpoints": true
     }
   ]
 }

@@ -61,9 +61,10 @@ load_dotenv(override=False)
 
 STT_MODEL = "stt-rt-v5"
 LLM_MODEL = "openai/gpt-oss-120b"
-# The reply and the model's short reasoning share this budget. 240 left too little room and could
-# cut a reply off mid-sentence; the prompt already keeps replies to one to three sentences.
-LLM_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_MAX_COMPLETION_TOKENS", "360"))
+# The reply and the model's short reasoning share this budget. Keep enough headroom
+# for reasoning without encouraging the tutor to continue offering examples after
+# the learner's question has already been answered.
+LLM_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_MAX_COMPLETION_TOKENS", "300"))
 TTS_PROVIDER = os.getenv("RITA_TTS_PROVIDER", "cartesia").strip().casefold()
 TTS_MODEL = "sonic-3.6"
 # Layan is the explicitly selected Cartesia library voice. Voice IDs are not
@@ -160,9 +161,14 @@ Delivery: {PERSONALITIES.get(personality, PERSONALITIES['kind'])}
 Profile language: {profile_language}. Stable Arabic dialect: {remembered_dialect}.
 Lesson mode: {mode}.
 
+CONVERSATION CONTINUITY
+- Saved messages from an earlier call may appear after this system message. Treat only those messages as
+  prior context. Continue naturally without greeting again or claiming to remember anything not shown.
+- The saved history is deliberately bounded. If an older detail is missing, ask instead of inventing it.
+
 VOICE CONTRACT
 - Speak for the ear, never for a page. Start with the useful answer; never restate the question.
-- Default to one to three short spoken sentences. Give one teaching correction at a time.
+- Default to one or two short spoken sentences. Give one teaching correction at a time.
 - Put a natural full stop after the first short, meaningful clause so streaming TTS can begin early.
 - No markdown, lists, headings, JSON, code fences, URLs, citations, or stage directions in speech.
 - Never read internal metadata, learning extraction, or tool data aloud.
@@ -182,6 +188,10 @@ LANGUAGE AND DIALECT
 {DIALECT_PROMPT}
 TEACHING CONTROL
 - If the learner says they understand or says move on, do not repeat the previous explanation.
+- Once the question is answered, stop. Do not volunteer more examples or ask whether they want
+  another example unless the learner explicitly asks for more.
+- A short acknowledgement such as آه، أوكي، تمام، شكراً، or got it does not need a new lesson.
+  Reply with at most one brief acknowledgement, then wait.
 - If the same correction fails twice, change strategy: slower example, minimal pair, syllable isolation,
   or a different analogy. Do not loop the same feedback.
 - Never repeat last_feedback when attempt_count is two or more; visibly change teaching method.
@@ -219,6 +229,33 @@ HUMAN TONE
 SESSION STATE (changes every turn; read it last)
 Structured session state: {state.prompt_state(dialogue=dialogue)}.
 """
+
+
+def saved_conversation_history(body: dict[str, Any]) -> list[dict[str, str]]:
+    """Return a small, untrusted transcript tail safe for the realtime context."""
+    raw = body.get("conversationHistory")
+    if not isinstance(raw, list):
+        return []
+    selected_newest_first: list[dict[str, str]] = []
+    characters = 0
+    # Budget from newest to oldest so a long conversation never pushes the
+    # immediately preceding turn out of Rita's active context.
+    for item in reversed(raw[-24:]):
+        if not isinstance(item, dict):
+            continue
+        role = str(item.get("role", ""))
+        if role not in {"user", "assistant"}:
+            continue
+        content = str(item.get("content", "")).strip()[:4000]
+        if not content:
+            continue
+        remaining = 12000 - characters
+        if remaining <= 0:
+            break
+        content = content[:remaining]
+        selected_newest_first.append({"role": role, "content": content})
+        characters += len(content)
+    return list(reversed(selected_newest_first))
 
 
 async def bot(args: DailyRunnerArguments):
@@ -328,15 +365,19 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         trim_peak_floor=TTS_TRIM_PEAK_FLOOR,
     )
 
-    context = LLMContext(
-        [
-            {
-                "role": "system",
-                "content": build_prompt(body, state, dialogue=router_state == RouterMode.ON),
-            },
-            {"role": "assistant", "content": "Hi, I’m Rita. What would you like to practise?"},
-        ]
-    )
+    saved_history = saved_conversation_history(body)
+    initial_messages = [
+        {
+            "role": "system",
+            "content": build_prompt(body, state, dialogue=router_state == RouterMode.ON),
+        },
+        *saved_history,
+    ]
+    if not saved_history:
+        initial_messages.append(
+            {"role": "assistant", "content": "Hi, I’m Rita. What would you like to practise?"}
+        )
+    context = LLMContext(initial_messages)
     vad = SileroVADAnalyzer(params=VADParams(stop_secs=0.2))
     user_aggregator, assistant_aggregator = LLMContextAggregatorPair(
         context,

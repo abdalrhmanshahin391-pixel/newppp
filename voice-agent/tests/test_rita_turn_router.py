@@ -7,6 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from pipecat.frames.frames import LLMContextFrame, TTSSpeakFrame  # noqa: E402
 from pipecat.processors.aggregators.llm_context import LLMContext  # noqa: E402
+from pipecat.processors.frameworks.rtvi import RTVIServerMessageFrame  # noqa: E402
 from pipecat.tests.utils import run_test  # noqa: E402
 
 from rita_state import RitaSessionState  # noqa: E402
@@ -99,9 +100,11 @@ async def route(mode, user_text, assistant_text=TWO_OPTIONS, ack=True):
 class RouterProcessorTests(unittest.TestCase):
     def test_stop_never_reaches_the_model(self):
         names, down, prepared, state = asyncio.run(route(RouterMode.ON, "خلص"))
-        self.assertEqual(names, ["TTSSpeakFrame"])
-        self.assertIsInstance(down[0], TTSSpeakFrame)
-        self.assertTrue(down[0].append_to_context)
+        self.assertEqual(names, ["RTVIServerMessageFrame", "TTSSpeakFrame"])
+        self.assertIsInstance(down[0], RTVIServerMessageFrame)
+        self.assertEqual(down[0].data["type"], "rita-spoken-text")
+        self.assertIsInstance(down[1], TTSSpeakFrame)
+        self.assertTrue(down[1].append_to_context)
         self.assertEqual(prepared, ["خلص"])
         self.assertTrue(state.topic_paused)
 
@@ -115,8 +118,8 @@ class RouterProcessorTests(unittest.TestCase):
 
     def test_bare_yes_asks_which_one_and_counts_it(self):
         names, down, _, state = asyncio.run(route(RouterMode.ON, "إيه"))
-        self.assertEqual(names, ["TTSSpeakFrame"])
-        self.assertEqual(down[0].text, "أي واحد: نكمل ولا نغيّر الموضوع؟")
+        self.assertEqual(names, ["RTVIServerMessageFrame", "TTSSpeakFrame"])
+        self.assertEqual(down[1].text, "أي واحد: نكمل ولا نغيّر الموضوع؟")
         self.assertEqual(state.clarification_count, 1)
 
     def test_a_real_request_passes_through_and_the_state_is_prepared_once(self):
