@@ -4,8 +4,16 @@ on:
   pull_request:
     paths:
       - "src/components/rita/RitaRealtimeV3.tsx"
+      - "src/components/rita-hub/RitaHub.tsx"
+      - "src/lib/rita-conversation*"
       - "src/lib/rita-v3-heard*"
       - "src/routes/api/rita-v3/session/**"
+      - "src/routes/rita-conversations.tsx"
+      - "src/routes/rita-live.tsx"
+      - "src/integrations/supabase/types.ts"
+      - "supabase/migrations/20261019120000_rita_free_conversations.sql"
+      - "voice-agent/bot.py"
+      - "voice-agent/tests/test_rita_conversation_history.py"
       - "src/lib/rita-v3-startup*"
       - "src/lib/rita-curriculum*"
       - "src/components/rita-lessons/**"
@@ -34,6 +42,7 @@ jobs:
           node --test src/lib/rita-v3-startup.test.mjs
           node --test src/lib/rita-v3-diagnostics-trace.test.mjs
           node --test src/lib/rita-v3-heard.test.ts
+          node --test src/lib/rita-conversation.test.ts
           node --test src/lib/rita-curriculum.test.ts
           node --test src/lib/rita-slides.test.ts
           node --test src/lib/rita-resources.test.ts

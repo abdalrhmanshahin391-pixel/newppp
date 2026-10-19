@@ -41,10 +41,21 @@ import {
   LessonResourcesPanel,
   LessonResultCard,
 } from "@/components/rita-lessons/LessonPanels";
+import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rita-conversation";
 
 type Persona = "kind" | "direct" | "playful" | "strict";
 type LessonMode = "free_conversation" | "guided_lesson" | "pronunciation_drill";
 type Message = { id: string; role: "you" | "rita"; text: string };
+type ConversationWrite = {
+  client_message_id: string;
+  role: "user" | "assistant";
+  content: string;
+  generated_content: string | null;
+  spoken_content: string | null;
+  source: RitaConversationSource;
+  delivery_status: RitaConversationDelivery;
+  created_at: string;
+};
 type ClientHandle = {
   disconnect(): Promise<void>;
   enableMic(enabled: boolean): void;
@@ -83,8 +94,9 @@ function humanError(error: unknown) {
 
 export function RitaRealtimeV3({
   lessonId,
+  conversationId,
   preview,
-}: { lessonId?: string; preview?: boolean } = {}) {
+}: { lessonId?: string; conversationId?: string; preview?: boolean } = {}) {
   const navigate = useNavigate();
   const lesson = useRitaLesson(lessonId, preview);
   const lastCheckedMessage = useRef("");
@@ -95,6 +107,9 @@ export function RitaRealtimeV3({
   const mutedRef = useRef(false);
   const sessionId = useRef("");
   const providerSessionId = useRef("");
+  const activeConversationId = useRef(conversationId ?? "");
+  const pendingWrites = useRef(new Set<Promise<void>>());
+  const failedWrites = useRef(new Map<string, ConversationWrite>());
   const traceId = useRef("");
   const pendingMetrics = useRef<PendingMetric[]>([]);
   const lastUserText = useRef("");
@@ -121,7 +136,10 @@ export function RitaRealtimeV3({
   const fillerSequence = useRef(0);
   const currentTurnHasFinalTranscript = useRef(false);
   const turnSpoken = useRef("");
+  const currentUserMessageId = useRef("");
+  const currentUserMessageCreatedAt = useRef("");
   const skipExtraction = useRef(false);
+  const currentReplySource = useRef<RitaConversationSource>("voice");
 
   const [status, setStatus] = useState("Ready to start");
   const [mood, setMood] = useState<RitaMood>("ready");
@@ -138,6 +156,8 @@ export function RitaRealtimeV3({
   const [error, setError] = useState("");
   const [caption, setCaption] = useState("");
   const [draft, setDraft] = useState("");
+  const [historyLoading, setHistoryLoading] = useState(Boolean(conversationId && !lessonId));
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -178,6 +198,114 @@ export function RitaRealtimeV3({
   useEffect(() => {
     if (!loading && !user) void navigate({ to: "/login" });
   }, [loading, navigate, user]);
+
+  const persistConversationMessage = useCallback(
+    (write: ConversationWrite) => {
+      if (lessonId || !user || !activeConversationId.current) return Promise.resolve();
+      setSaveState("saving");
+      const task = (async () => {
+        const { error: saveError } = await supabase.from("rita_free_conversation_messages").upsert(
+          {
+            ...write,
+            conversation_id: activeConversationId.current,
+            user_id: user.id,
+            session_id: sessionId.current || null,
+          },
+          { onConflict: "client_message_id" },
+        );
+        if (saveError) throw saveError;
+        failedWrites.current.delete(write.client_message_id);
+      })().catch(() => {
+        failedWrites.current.set(write.client_message_id, write);
+      });
+      pendingWrites.current.add(task);
+      void task.finally(() => {
+        pendingWrites.current.delete(task);
+        if (pendingWrites.current.size) return;
+        setSaveState(failedWrites.current.size ? "failed" : "saved");
+      });
+      return task;
+    },
+    [lessonId, user],
+  );
+
+  const retryFailedWrites = useCallback(async () => {
+    const writes = [...failedWrites.current.values()];
+    if (!writes.length) return;
+    failedWrites.current.clear();
+    await Promise.all(writes.map((write) => persistConversationMessage(write)));
+  }, [persistConversationMessage]);
+
+  useEffect(() => {
+    activeConversationId.current = conversationId ?? "";
+    if (lessonId || !conversationId || !user) {
+      setHistoryLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setHistoryLoading(true);
+    setError("");
+    void Promise.all([
+      supabase
+        .from("rita_free_conversations")
+        .select("id")
+        .eq("id", conversationId)
+        .eq("user_id", user.id)
+        .is("archived_at", null)
+        .maybeSingle(),
+      supabase
+        .from("rita_free_conversation_messages")
+        .select("id,client_message_id,role,content,spoken_content,delivery_status,created_at")
+        .eq("conversation_id", conversationId)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true }),
+    ])
+      .then(([conversationResult, messageResult]) => {
+        if (cancelled) return;
+        if (conversationResult.error || !conversationResult.data) {
+          throw conversationResult.error ?? new Error("This conversation is not available.");
+        }
+        if (messageResult.error) throw messageResult.error;
+        const restored = (messageResult.data ?? []).map(
+          (message: {
+            client_message_id: string;
+            role: "user" | "assistant";
+            content: string;
+            spoken_content: string | null;
+            delivery_status: RitaConversationDelivery;
+          }) => ({
+            id: message.client_message_id,
+            role: message.role === "user" ? ("you" as const) : ("rita" as const),
+            text:
+              message.role === "assistant" && message.delivery_status === "interrupted"
+                ? message.spoken_content || message.content
+                : message.content,
+          }),
+        );
+        setMessages(
+          restored.length
+            ? restored
+            : [
+                {
+                  id: "welcome",
+                  role: "rita",
+                  text: "Hi, I’m Rita. What would you like to practise?",
+                },
+              ],
+        );
+      })
+      .catch((cause) => {
+        if (!cancelled)
+          setError(cause instanceof Error ? cause.message : "Could not load this conversation.");
+      })
+      .finally(() => {
+        if (!cancelled) setHistoryLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [conversationId, lessonId, user]);
 
   // Curriculum lessons: after each learner turn, check the lesson objectives.
   const { enabled: lessonEnabled, checkTurns } = lesson;
@@ -407,8 +535,38 @@ export function RitaRealtimeV3({
     }, 675);
   }, [cancelFiller, dialect, language, metric]);
 
+  const ensureFreeConversation = useCallback(async () => {
+    if (lessonId) return "";
+    if (activeConversationId.current) return activeConversationId.current;
+    if (!user) throw new Error("Please sign in before starting Rita.");
+    const { data, error: createError } = await supabase
+      .from("rita_free_conversations")
+      .insert({ user_id: user.id, title: "New conversation" })
+      .select("id")
+      .single();
+    if (createError || !data?.id)
+      throw new Error(createError?.message ?? "Could not create the conversation.");
+    activeConversationId.current = String(data.id);
+    return activeConversationId.current;
+  }, [lessonId, user]);
+
   const endLesson = useCallback(async () => {
     cancelFiller();
+    const unfinishedGenerated = replyAccumulator.current.generatedText.trim();
+    const unfinishedSpoken = replyAccumulator.current.spokenText.trim();
+    const unfinishedId = replyAccumulator.current.draftId;
+    if (unfinishedId && (unfinishedGenerated || unfinishedSpoken)) {
+      void persistConversationMessage({
+        client_message_id: unfinishedId,
+        role: "assistant",
+        content: unfinishedSpoken || unfinishedGenerated,
+        generated_content: unfinishedGenerated || null,
+        spoken_content: unfinishedSpoken || null,
+        source: currentReplySource.current,
+        delivery_status: "incomplete",
+        created_at: new Date().toISOString(),
+      });
+    }
     const current = client.current;
     client.current = null;
     if (current) await current.disconnect().catch(() => undefined);
@@ -447,18 +605,25 @@ export function RitaRealtimeV3({
     setMood("ready");
     setStatus("Lesson ended");
     setCaption("");
-    // Chat and unsaved vocabulary are session-only by design.
-    setMessages([
-      {
-        id: crypto.randomUUID(),
-        role: "rita",
-        text: "Hi, I’m Rita. What would you like to practise?",
-      },
-    ]);
+    if (!activeConversationId.current) {
+      setMessages([
+        {
+          id: crypto.randomUUID(),
+          role: "rita",
+          text: "Hi, I’m Rita. What would you like to practise?",
+        },
+      ]);
+    }
     turnSpoken.current = "";
     skipExtraction.current = false;
     trayRef.current.closeTray();
-  }, [cancelFiller]);
+    await Promise.allSettled([...pendingWrites.current]);
+  }, [cancelFiller, persistConversationMessage]);
+
+  const finishConversation = useCallback(async () => {
+    await endLesson();
+    if (!lessonId) void navigate({ to: "/rita-conversations" });
+  }, [endLesson, lessonId, navigate]);
 
   useEffect(() => () => void endLesson(), [endLesson]);
 
@@ -571,6 +736,7 @@ export function RitaRealtimeV3({
     setError("");
     setStatus("Connecting Rita v3…");
     try {
+      const currentConversationId = await ensureFreeConversation();
       const [{ PipecatClient }, { DailyTransport }] = await Promise.all([
         import("@pipecat-ai/client-js"),
         import("@pipecat-ai/daily-transport"),
@@ -588,14 +754,17 @@ export function RitaRealtimeV3({
       void metric("start_clicked");
       const commitHeardReply = (interrupted = false) => {
         // Generated/TTS text is not evidence that interrupted audio was heard.
+        const generated = stripModelNotes(replyAccumulator.current.generatedText).trim();
+        const spoken = stripModelNotes(replyAccumulator.current.spokenText).trim();
         const settled = replyAccumulator.current.settle(interrupted);
         const reply = stripModelNotes(settled.reply).trim();
+        const replyId = settled.draftId ?? crypto.randomUUID();
         setMessages((current) =>
           settleDraftReply(
             current,
             settled.draftId,
             reply,
-            reply ? { id: crypto.randomUUID(), role: "rita", text: reply } : null,
+            reply ? { id: replyId, role: "rita", text: reply } : null,
           ),
         );
         const asked = turnSpoken.current;
@@ -603,6 +772,16 @@ export function RitaRealtimeV3({
         const wasCommand = skipExtraction.current;
         skipExtraction.current = false;
         if (!reply) return;
+        void persistConversationMessage({
+          client_message_id: replyId,
+          role: "assistant",
+          content: reply,
+          generated_content: generated || null,
+          spoken_content: spoken || reply,
+          source: currentReplySource.current,
+          delivery_status: interrupted ? "interrupted" : "completed",
+          created_at: new Date().toISOString(),
+        });
         // A word the learner asked about counts even if they cut Rita off; only a spoken
         // command to the list itself ("open the list", "turn them into flashcards") does not.
         if (!wasCommand) void runExtraction(asked || lastUserText.current, reply);
@@ -611,6 +790,7 @@ export function RitaRealtimeV3({
       const beginScriptedReply = (text: string) => {
         const clean = stripModelNotes(text).trim();
         if (!clean) return;
+        currentReplySource.current = "scripted";
         replyAccumulator.current.clear();
         replyAccumulator.current.beginTts();
         // Intended text is safe to show, but only botOutput is recorded as heard.
@@ -746,6 +926,8 @@ export function RitaRealtimeV3({
             cancelFiller();
             currentTurnHasFinalTranscript.current = false;
             firstPartialRecorded.current = false;
+            currentUserMessageId.current = crypto.randomUUID();
+            currentUserMessageCreatedAt.current = new Date().toISOString();
             if (botSpeaking.current) interruptCandidateAt.current = performance.now();
             turnId.current = crypto.randomUUID();
             if (!botSpeaking.current) {
@@ -798,13 +980,29 @@ export function RitaRealtimeV3({
             turnSpoken.current = `${turnSpoken.current} ${data.text.trim()}`.trim().slice(-500);
             skipExtraction.current = false;
             currentTurnHasFinalTranscript.current = true;
-            setMessages((current) => [
-              ...current,
-              { id: crypto.randomUUID(), role: "you", text: data.text.trim() },
-            ]);
+            const message = {
+              id: currentUserMessageId.current || crypto.randomUUID(),
+              role: "you" as const,
+              text: turnSpoken.current,
+            };
+            currentUserMessageId.current = message.id;
+            const createdAt = currentUserMessageCreatedAt.current || new Date().toISOString();
+            currentUserMessageCreatedAt.current = createdAt;
+            setMessages((current) => upsertDraftReply(current, message));
+            void persistConversationMessage({
+              client_message_id: message.id,
+              role: "user",
+              content: message.text,
+              generated_content: null,
+              spoken_content: null,
+              source: "voice",
+              delivery_status: "completed",
+              created_at: createdAt,
+            });
             void metric("transcript_final");
           },
           onBotLlmStarted: () => {
+            currentReplySource.current = "voice";
             pendingScriptedReply.current = "";
             replyAccumulator.current.beginLlm();
             llmStartedAt.current = performance.now();
@@ -941,6 +1139,7 @@ export function RitaRealtimeV3({
           dialect,
           mode: lessonId ? "guided_lesson" : mode,
           traceId: traceId.current,
+          ...(currentConversationId ? { conversationId: currentConversationId } : {}),
           ...(lessonId ? { lessonId } : {}),
           // Preview mode: the worker's brief is built fresh, and nothing is saved.
           ...(lessonId && preview ? { preview: true } : {}),
@@ -1009,7 +1208,18 @@ export function RitaRealtimeV3({
     if (!text || !readyForSpeech || !client.current?.connected) return;
     setDraft("");
     lastUserText.current = text;
-    setMessages((current) => [...current, { id: crypto.randomUUID(), role: "you", text }]);
+    const message = { id: crypto.randomUUID(), role: "you" as const, text };
+    setMessages((current) => [...current, message]);
+    void persistConversationMessage({
+      client_message_id: message.id,
+      role: "user",
+      content: text,
+      generated_content: null,
+      spoken_content: null,
+      source: "text",
+      delivery_status: "completed",
+      created_at: new Date().toISOString(),
+    });
     await client.current.sendText(text);
   }
 
@@ -1046,7 +1256,7 @@ export function RitaRealtimeV3({
       <div className="mx-auto flex w-full max-w-2xl flex-col px-5 sm:px-8">
         <div className="pt-6">
           <Link
-            to={lessonId ? "/rita-lessons" : "/rita"}
+            to={lessonId ? "/rita-lessons" : "/rita-conversations"}
             className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
           >
             <ArrowLeft size={16} />
@@ -1079,6 +1289,24 @@ export function RitaRealtimeV3({
             />
             {status}
           </p>
+          {!lessonId && saveState !== "idle" ? (
+            <p
+              role="status"
+              className={`mt-1 text-xs font-semibold ${saveState === "failed" ? "text-red-600" : "text-[var(--pp-muted)]"}`}
+            >
+              {saveState === "saving" ? "Saving conversation…" : null}
+              {saveState === "saved" ? "Conversation saved" : null}
+              {saveState === "failed" ? (
+                <button
+                  type="button"
+                  className="underline"
+                  onClick={() => void retryFailedWrites()}
+                >
+                  Not saved — retry
+                </button>
+              ) : null}
+            </p>
+          ) : null}
           {active && mood === "talking" && (
             <button
               type="button"
@@ -1161,11 +1389,19 @@ export function RitaRealtimeV3({
               <div className="flex justify-center">
                 <button
                   onClick={startLesson}
-                  disabled={starting || (Boolean(lessonId) && !lesson.session)}
+                  disabled={historyLoading || starting || (Boolean(lessonId) && !lesson.session)}
                   className="rita-btn rita-btn-primary gap-2 disabled:opacity-60"
                 >
-                  {starting ? <Loader2 className="animate-spin" size={18} /> : <Mic size={18} />}{" "}
-                  {lessonId ? "ابدأ الدرس مع ريتا" : "Start talking"}
+                  {historyLoading || starting ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    <Mic size={18} />
+                  )}{" "}
+                  {historyLoading
+                    ? "Loading conversation…"
+                    : lessonId
+                      ? "ابدأ الدرس مع ريتا"
+                      : "Start talking"}
                 </button>
               </div>
             ) : (
@@ -1195,7 +1431,7 @@ export function RitaRealtimeV3({
                   </button>
                   <button
                     type="button"
-                    onClick={() => void endLesson()}
+                    onClick={() => void finishConversation()}
                     className="rita-btn rita-btn-secondary rita-btn-sm ml-auto gap-1.5 !text-[var(--pp-accent-text)]"
                   >
                     <PhoneOff size={16} /> End

@@ -3,6 +3,7 @@ import { requireRitaUser, getRitaAllowance, getRitaSettings } from "@/lib/rita-v
 import { classifyPipecatStartFailure, sanitizePipecatDiagnostic } from "@/lib/rita-v3-diagnostics";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabasePublicConfig } from "@/integrations/supabase/config";
+import { boundedRitaHistory, type RitaConversationMessage } from "@/lib/rita-conversation";
 
 export const RITA_V3_MODELS = {
   transport: "Daily WebRTC 1:1 voice",
@@ -490,6 +491,7 @@ export async function persistRitaV3Session(args: {
   language: string;
   dialect: string;
   traceId?: string;
+  conversationId?: string;
 }) {
   const { data, error } = await (ritaV3UserClient(args.accessToken).from as any)("rita_v3_sessions")
     .insert({
@@ -498,6 +500,7 @@ export async function persistRitaV3Session(args: {
       language_preference: args.language,
       dialect_preference: args.dialect,
       status: "starting",
+      conversation_id: args.conversationId ?? null,
       diagnostic_trace_id: args.traceId ?? null,
       model_proof: {
         ...RITA_V3_MODELS,
@@ -508,6 +511,43 @@ export async function persistRitaV3Session(args: {
     .single();
   if (error || !data?.id) throw new Error(error?.message || "Could not create Rita v3 session");
   return String(data.id);
+}
+
+export async function loadOwnedRitaConversation(args: {
+  conversationId: string;
+  userId: string;
+  accessToken: string;
+}) {
+  const client = ritaV3UserClient(args.accessToken);
+  const { data: conversation, error: conversationError } = await (client.from as any)(
+    "rita_free_conversations",
+  )
+    .select(
+      "id,title,language_preference,dialect_preference,message_count,last_message_at,archived_at,created_at,updated_at",
+    )
+    .eq("id", args.conversationId)
+    .eq("user_id", args.userId)
+    .is("archived_at", null)
+    .maybeSingle();
+  if (conversationError) throw conversationError;
+  if (!conversation) return null;
+
+  const { data: newest, error: messageError } = await (client.from as any)(
+    "rita_free_conversation_messages",
+  )
+    .select(
+      "id,client_message_id,conversation_id,session_id,role,content,generated_content,spoken_content,source,delivery_status,created_at",
+    )
+    .eq("conversation_id", args.conversationId)
+    .eq("user_id", args.userId)
+    .order("id", { ascending: false })
+    .limit(80);
+  if (messageError) throw messageError;
+  const ordered = ((newest ?? []) as RitaConversationMessage[]).reverse();
+  return {
+    conversation,
+    history: boundedRitaHistory(ordered),
+  };
 }
 
 export async function updateRitaV3Session(
@@ -531,12 +571,14 @@ export async function recordRitaV3Event(args: {
   valueMs?: number;
   metadata?: Record<string, unknown>;
 }) {
-  const { error } = await (ritaV3UserClient(args.accessToken).from as any)("rita_v3_events").insert({
-    session_id: args.sessionId,
-    user_id: args.userId,
-    event_name: args.name,
-    value_ms: args.valueMs === undefined ? null : Math.round(args.valueMs),
-    metadata: args.metadata ?? {},
-  });
+  const { error } = await (ritaV3UserClient(args.accessToken).from as any)("rita_v3_events").insert(
+    {
+      session_id: args.sessionId,
+      user_id: args.userId,
+      event_name: args.name,
+      value_ms: args.valueMs === undefined ? null : Math.round(args.valueMs),
+      metadata: args.metadata ?? {},
+    },
+  );
   if (error) throw error;
 }

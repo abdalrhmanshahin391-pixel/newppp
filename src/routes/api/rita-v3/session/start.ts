@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   RITA_V3_MODELS,
   persistRitaV3Session,
+  loadOwnedRitaConversation,
   recordRitaV3Event,
   requireRitaV3Access,
   updateRitaV3Session,
@@ -32,7 +33,12 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
         const requestedLessonId = typeof body.lessonId === "string" ? body.lessonId : "";
         const lessonPreview = body.preview === true;
         const lesson = requestedLessonId
-          ? await loadVoiceLesson(access.auth.token, access.auth.userId, requestedLessonId, lessonPreview).catch((error) => {
+          ? await loadVoiceLesson(
+              access.auth.token,
+              access.auth.userId,
+              requestedLessonId,
+              lessonPreview,
+            ).catch((error) => {
               console.warn("Rita lesson could not be loaded", error);
               return null;
             })
@@ -50,6 +56,37 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
               )
             ? String(body.mode)
             : "free_conversation";
+        const rawConversationId = String(body.conversationId ?? "").trim();
+        const conversationId =
+          mode === "free_conversation" && /^[0-9a-f-]{36}$/i.test(rawConversationId)
+            ? rawConversationId
+            : "";
+        if (mode === "free_conversation" && rawConversationId && !conversationId) {
+          return Response.json(
+            { ok: false, code: "invalid_conversation", message: "Invalid conversation id." },
+            { status: 400 },
+          );
+        }
+        const savedConversation = conversationId
+          ? await loadOwnedRitaConversation({
+              conversationId,
+              userId: access.auth.userId,
+              accessToken: access.auth.token,
+            }).catch((error) => {
+              console.warn("Rita conversation history could not be loaded", error);
+              return null;
+            })
+          : null;
+        if (conversationId && !savedConversation) {
+          return Response.json(
+            {
+              ok: false,
+              code: "conversation_unavailable",
+              message: "This conversation is not available.",
+            },
+            { status: 404 },
+          );
+        }
         const traceId = normalizeRitaDiagnosticTraceId(body.traceId);
         const modalUrl =
           (await getServerRuntimeSecret("MODAL_START_URL")) || DEFAULT_MODAL_START_URL;
@@ -82,6 +119,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             language,
             dialect,
             traceId,
+            ...(conversationId ? { conversationId } : {}),
           });
         } catch (error) {
           console.error("Rita v3 session persistence failed", error);
@@ -104,6 +142,10 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           dialect,
           mode,
           userId: access.auth.userId,
+          ...(conversationId ? { conversationId } : {}),
+          ...(savedConversation?.history?.length
+            ? { conversationHistory: savedConversation.history }
+            : {}),
           ...(lesson ? { lesson } : {}),
         };
         const diagnosticBase = {
@@ -194,6 +236,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
               sessionId,
               providerSessionId: payload.sessionId ?? payload.id ?? null,
               traceId,
+              conversationId: conversationId || null,
               models: RITA_V3_MODELS,
             },
             { headers: { "Cache-Control": "no-store" } },

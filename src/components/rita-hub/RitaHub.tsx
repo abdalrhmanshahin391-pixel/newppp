@@ -63,7 +63,7 @@ function Card({
   detail,
   action,
 }: {
-  to: "/rita-live" | "/rita-lessons";
+  to: "/rita-conversations" | "/rita-lessons";
   search?: { lesson?: string };
   visual: React.ReactNode;
   eyebrow: string;
@@ -156,13 +156,13 @@ export function RitaHub() {
 
         <div className="mt-8 grid gap-6 md:grid-cols-2">
           <Card
-            to="/rita-live"
+            to="/rita-conversations"
             visual={<OrbPreview />}
             eyebrow="Open practice"
             title="Free conversation"
             titleAr="محادثة حرة"
             text="Talk to Rita about anything. She listens, answers out loud and gently corrects you as you go."
-            action="Start talking"
+            action="Your conversations"
           />
           <Card
             to="/rita-lessons"
