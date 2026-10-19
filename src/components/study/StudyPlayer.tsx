@@ -183,7 +183,7 @@ export function StudyPlayer({
   }, [open, flip, step, onClose]);
 
   const progress = useMemo(
-    () => (total === 0 ? 0 : Math.round(((pos + (done ? 1 : 0)) / total) * 100)),
+    () => (total === 0 ? 0 : Math.round(((done ? total : pos + 1) / total) * 100)),
     [pos, total, done],
   );
 
@@ -196,23 +196,21 @@ export function StudyPlayer({
         <button
           type="button"
           onClick={onClose}
-          className="grid h-10 w-10 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#4b4a5c] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#121117] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none"
           aria-label="Close study session"
         >
           <X size={18} />
         </button>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[12.5px] font-bold uppercase tracking-[0.16em] text-[#9a9aab]">
-            {title}
-          </p>
-          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#dcdce5]">
+          <p className="truncate text-[14px] font-semibold text-[#4b4a5c]">{title}</p>
+          <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-[#dcdce5]">
             <div
               className="h-full rounded-full bg-[#2b6df0] transition-[width] duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
-        <span className="shrink-0 text-[13px] font-black tabular-nums text-[#54546a]">
+        <span className="shrink-0 text-[15px] font-bold tabular-nums text-[#121117]">
           {Math.min(pos + 1, total)} / {total}
         </span>
         {card && (
@@ -233,7 +231,7 @@ export function StudyPlayer({
         <button
           type="button"
           onClick={toggleMute}
-          className="grid h-10 w-10 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#4b4a5c] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#121117] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none"
           aria-label={muted ? "Turn sound on" : "Turn sound off"}
         >
           {muted ? <VolumeX size={17} /> : <Volume2 size={17} />}
@@ -245,7 +243,7 @@ export function StudyPlayer({
             reset([...queue].sort(() => Math.random() - 0.5));
             setAnim((a) => a + 1);
           }}
-          className="hidden h-10 items-center gap-2 rounded-lg border-2 border-[#121117] bg-white px-4 text-[13px] font-extrabold text-[#4b4a5c] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none sm:flex"
+          className="hidden h-11 items-center gap-2 rounded-lg border-2 border-[#121117] bg-white px-4 text-[13px] font-extrabold text-[#4b4a5c] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none sm:flex"
         >
           <Shuffle size={15} /> Shuffle
         </button>
@@ -330,7 +328,7 @@ export function StudyPlayer({
             >
               <FlipCard
                 flipped={flipped}
-                className="h-[52vh] min-h-[320px] w-full"
+                className="h-[56vh] min-h-[340px] w-full"
                 front={
                   <Face
                     side="Question"
@@ -352,8 +350,13 @@ export function StudyPlayer({
               />
             </div>
 
-            <p className="mt-4 text-center text-[12.5px] font-bold text-[#9a9aab]">
-              Tap the card or press Space to flip · ← → to move
+            <p className="mt-4 text-center text-[14px] font-medium text-[#4b4a5c]">
+              <span className="[@media(pointer:fine)]:hidden">
+                Tap the card to flip · swipe to move
+              </span>
+              <span className="hidden [@media(pointer:fine)]:inline">
+                Click the card or press Space to flip · ← → to move
+              </span>
             </p>
           </div>
         )}
@@ -365,7 +368,7 @@ export function StudyPlayer({
           <button
             type="button"
             onClick={() => step(-1)}
-            className="grid h-12 w-12 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#4b4a5c] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none"
+            className="grid h-14 w-14 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#121117] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none"
             aria-label="Previous card"
           >
             <ArrowLeft size={18} />
@@ -376,14 +379,14 @@ export function StudyPlayer({
               <button
                 type="button"
                 onClick={() => grade(false)}
-                className="flex h-12 items-center gap-2 rounded-lg border-2 border-[#121117] bg-[#b3213f] px-6 text-[15px] font-semibold text-white transition-all duration-100 hover:opacity-90 active:scale-95 touch-manipulation select-none"
+                className="flex h-14 items-center gap-2 rounded-lg border-2 border-[#121117] bg-[#b3213f] px-6 text-[15px] font-semibold text-white transition-all duration-100 hover:opacity-90 active:scale-95 touch-manipulation select-none"
               >
                 <RotateCcw size={16} /> Again
               </button>
               <button
                 type="button"
                 onClick={() => grade(true)}
-                className="rita-pill flex h-12 items-center gap-2 px-7 text-[15px] font-semibold transition-all duration-100 active:scale-95 touch-manipulation select-none"
+                className="rita-pill flex h-14 items-center gap-2 px-7 text-[15px] font-semibold transition-all duration-100 active:scale-95 touch-manipulation select-none"
               >
                 <Check size={17} /> Got it
               </button>
@@ -392,7 +395,7 @@ export function StudyPlayer({
             <button
               type="button"
               onClick={flip}
-              className="rita-pill flex h-12 items-center gap-2 px-8 text-[15px] font-semibold transition-all duration-100 active:scale-95 touch-manipulation select-none"
+              className="rita-pill flex h-14 items-center gap-2 px-8 text-[15px] font-semibold transition-all duration-100 active:scale-95 touch-manipulation select-none"
             >
               Show answer
             </button>
@@ -401,7 +404,7 @@ export function StudyPlayer({
           <button
             type="button"
             onClick={() => step(1)}
-            className="grid h-12 w-12 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#4b4a5c] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none"
+            className="grid h-14 w-14 place-items-center rounded-lg border-2 border-[#121117] bg-white text-[#121117] transition-all duration-100 hover:bg-[#f4f4f8] active:scale-95 touch-manipulation select-none"
             aria-label="Next card"
           >
             <ArrowRight size={18} />
@@ -429,7 +432,7 @@ function Face({
     <div
       className={`h-full w-full flex flex-col items-center justify-center gap-4 rounded-[24px] border-2 border-[#121117] bg-white px-8 py-10 text-center select-none ${className}`}
     >
-      <span className="absolute left-6 top-5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#c4c4d1]">
+      <span className="absolute left-6 top-5 rounded-md bg-[#f4f4f8] px-2.5 py-1 text-[13px] font-semibold text-[#4b4a5c]">
         {side}
       </span>
       {image && (

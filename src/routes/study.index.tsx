@@ -94,9 +94,10 @@ function StudyBoard() {
   const [cardsMode, setCardsMode] = useState<"create" | "gallery">("create");
   const [playing, setPlaying] = useState<{ title: string; cards: FlashCardItem[] } | null>(null);
   const review = useReviewQueue();
-  const [reviewItems, setReviewItems] = useState<ReturnType<typeof useReviewQueue>["queue"] | null>(null);
+  const [reviewItems, setReviewItems] = useState<ReturnType<typeof useReviewQueue>["queue"] | null>(
+    null,
+  );
   const [reviewTitle, setReviewTitle] = useState("Smart review");
-
 
   /** Everything that is ticked, resolved to real names. */
   const picked = useMemo(() => {
@@ -199,12 +200,13 @@ function StudyBoard() {
       );
       return;
     }
-    setReviewTitle(picked.length === 0 ? "Smart review · everything" : `Smart review · ${scope.label}`);
+    setReviewTitle(
+      picked.length === 0 ? "Smart review · everything" : `Smart review · ${scope.label}`,
+    );
     setReviewItems(scopedQueue);
   };
 
   const startSession = (shuffle: boolean) => {
-
     if (sessionCards.length === 0) {
       toast.info(
         sessionScope === "flagged"
@@ -338,6 +340,7 @@ function StudyBoard() {
 
   return (
     <StudyLayout
+      framed={false}
       rail={mode === "study" ? studyRail : editRail}
       activeMode={mode}
       onModeChange={(m) => setMode(m)}
@@ -345,6 +348,7 @@ function StudyBoard() {
       <div className="grid min-h-[62vh] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div data-tour="subject-shelf" className="min-w-0">
           <PickerBoard
+            framed={false}
             accent={ACCENT}
             groups={groups}
             selected={selected}
@@ -382,58 +386,100 @@ function StudyBoard() {
                 { label: "Due now", value: String(scopedQueue.length) },
                 { label: "Flagged", value: String(flaggedCards.length) },
               ]}
-              actions={[
-                {
-                  label: "Study mode",
-                  icon: <GraduationCap size={16} />,
-                  onClick: () => startSession(false),
-                  disabled: sessionCards.length === 0,
-                  tone: "outline",
-                },
-                {
-                  label: "Shuffle and study",
-                  icon: <Shuffle size={15} />,
-                  onClick: () => startSession(true),
-                  disabled: sessionCards.length === 0,
-                  tone: "outline",
-                },
-                {
-                  label: `Smart review${scopedQueue.length ? ` · ${scopedQueue.length}` : ""}`,
-                  icon: <Sparkles size={16} />,
-                  onClick: startSmartReview,
-                  disabled: review.isLoading,
-                  tone: "solid",
-                },
-              ]}
+              actions={
+                scopedQueue.length > 0 || sessionCards.length === 0
+                  ? [
+                      {
+                        label: `Smart review${scopedQueue.length ? ` · ${scopedQueue.length}` : ""}`,
+                        icon: <Sparkles size={16} />,
+                        hint: scopedQueue.length
+                          ? "The cards due now, on schedule"
+                          : "Nothing due right now",
+                        onClick: startSmartReview,
+                        disabled: review.isLoading,
+                        tone: "solid",
+                      },
+                      {
+                        label: "Study mode",
+                        icon: <GraduationCap size={16} />,
+                        onClick: () => startSession(false),
+                        disabled: sessionCards.length === 0,
+                        tone: "outline",
+                        compact: true,
+                      },
+                      {
+                        label: "Shuffle and study",
+                        icon: <Shuffle size={15} />,
+                        onClick: () => startSession(true),
+                        disabled: sessionCards.length === 0,
+                        tone: "outline",
+                        compact: true,
+                      },
+                    ]
+                  : [
+                      // Nothing is due: the useful main action is a free run through the cards.
+                      {
+                        label: "Study mode",
+                        icon: <GraduationCap size={16} />,
+                        hint: `Go through all ${sessionCards.length} card${sessionCards.length === 1 ? "" : "s"}`,
+                        onClick: () => startSession(false),
+                        tone: "solid",
+                      },
+                      {
+                        label: "Shuffle and study",
+                        icon: <Shuffle size={15} />,
+                        onClick: () => startSession(true),
+                        tone: "outline",
+                        compact: true,
+                      },
+                      {
+                        label: "Smart review",
+                        icon: <Sparkles size={16} />,
+                        onClick: startSmartReview,
+                        disabled: review.isLoading,
+                        tone: "outline",
+                        compact: true,
+                      },
+                    ]
+              }
               footnote={
                 picked.length === 0
-                  ? "Smart review uses the schedule; Study mode is a free practice run."
-                  : "Tick as many sub-subjects as you like — Smart review only shows what is due in them."
+                  ? "Using your whole board. Tick sub-subjects to use only those. Study mode is free practice."
+                  : "Smart review shows only what is due in what you ticked. Study mode is free practice."
               }
             >
-              <div className="flex gap-1.5 rounded-xl bg-[#f4f4f8] p-1">
-                <button
-                  type="button"
-                  onClick={() => setSessionScope("all")}
-                  className="h-8 flex-1 rounded-lg text-[12px] font-extrabold transition-colors"
-                  style={
-                    sessionScope === "all" ? { background: "#fff", color: "#121117" } : { color: "#9a9aab" }
-                  }
-                >
-                  All ticked
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSessionScope("flagged")}
-                  className="inline-flex h-8 flex-1 items-center justify-center gap-1 rounded-lg text-[12px] font-extrabold transition-colors"
-                  style={
-                    sessionScope === "flagged"
-                      ? { background: "#fbd9e0", color: "#961a34" }
-                      : { color: "#9a9aab" }
-                  }
-                >
-                  <Flag size={12} /> Flagged {flaggedCards.length > 0 ? flaggedCards.length : ""}
-                </button>
+              <div
+                className="flex gap-1.5 rounded-xl bg-white p-1"
+                role="group"
+                aria-label="Which cards"
+              >
+                {(["all", "flagged"] as const).map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={sessionScope === key}
+                    onClick={() => setSessionScope(key)}
+                    className="inline-flex h-11 flex-1 touch-manipulation items-center justify-center gap-1.5 rounded-lg border-2 text-[14px] font-semibold transition-colors duration-150"
+                    style={
+                      sessionScope === key
+                        ? { background: "#e7eefd", color: "#121117", borderColor: "#121117" }
+                        : { color: "#4b4a5c", borderColor: "transparent" }
+                    }
+                  >
+                    {key === "all" ? (
+                      picked.length > 0 ? (
+                        "All ticked"
+                      ) : (
+                        "All cards"
+                      )
+                    ) : (
+                      <>
+                        <Flag size={13} /> Flagged
+                        {flaggedCards.length > 0 ? ` ${flaggedCards.length}` : ""}
+                      </>
+                    )}
+                  </button>
+                ))}
               </div>
 
               {picked.length > 0 && (
@@ -443,7 +489,7 @@ function StudyBoard() {
                       <button
                         key={p.key}
                         onClick={() => toggle(p.key)}
-                        className="inline-flex items-center gap-1 rounded-full bg-[#f4f4f8] px-2.5 py-1 text-[12px] font-extrabold text-[#6b4000] hover:bg-[#ffd266]"
+                        className="inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-lg border-2 border-[#121117] bg-white px-3 text-[13.5px] font-semibold text-[#121117] hover:bg-[#e7eefd]"
                       >
                         {p.sub} <X size={12} />
                       </button>
@@ -451,7 +497,7 @@ function StudyBoard() {
                   </div>
                   <button
                     onClick={() => setSelected([])}
-                    className="mt-2 text-[12px] font-extrabold text-[#9a9aab] hover:text-[#b3213f]"
+                    className="mt-1 min-h-11 text-[14px] font-semibold text-[#4b4a5c] hover:text-[#b3213f]"
                   >
                     Clear selection
                   </button>
@@ -461,7 +507,10 @@ function StudyBoard() {
           </div>
 
           <div data-tour="daily-schedule">
-            <DailyPanel onReview={(items) => setReviewItems(items)} />
+            <DailyPanel
+              onReview={(items) => setReviewItems(items)}
+              showReview={picked.length > 0}
+            />
           </div>
         </div>
       </div>

@@ -27,41 +27,54 @@ export function GameSetup({
   onPlay: () => void;
   scopeLabel: string | null;
 }) {
+  const current = GAME_MODES.find((m) => m.key === mode);
   return (
-    <div className="rounded-[20px] bg-white p-6" style={{ border: "2px solid #121117" }}>
-      <div className="flex items-center justify-between">
-        <p className="text-[14px] font-semibold text-[#6a697c]">Session</p>
+    <div className="rounded-[20px] bg-[#f4f4f8] p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[34px] font-bold leading-none tracking-[-0.03em] text-[#121117]">
+            {pairCount}
+            <span className="ml-1.5 text-[14px] font-semibold text-[#4b4a5c]">
+              pair{pairCount === 1 ? "" : "s"} ready
+            </span>
+          </p>
+          <p className="mt-1.5 text-[14px] font-medium text-[#4b4a5c]">
+            {scopeLabel ?? "Tick a subject or sub-subject to choose what to play"}
+          </p>
+        </div>
         <button
           type="button"
           onClick={() => onMuted(!muted)}
-          className="grid h-9 w-9 place-items-center rounded-lg text-[#6a697c] hover:bg-[#f4f4f8]"
+          className="-mr-1 -mt-1 grid h-11 w-11 shrink-0 touch-manipulation place-items-center rounded-lg text-[#4b4a5c] hover:bg-white"
           aria-label={muted ? "Unmute sounds" : "Mute sounds"}
         >
-          {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
         </button>
       </div>
 
-      <p className="mt-3 text-[38px] font-bold leading-none tracking-[-0.03em] text-[#121117]">
-        {pairCount}
-        <span className="ml-1.5 text-[14px] font-semibold text-[#6a697c]">
-          pair{pairCount === 1 ? "" : "s"} ready
-        </span>
-      </p>
-      <p className="mt-1 truncate text-[14px] font-medium text-[#6a697c]">
-        {scopeLabel ?? "Tick a subject or sub-subject"}
-      </p>
+      <button
+        type="button"
+        onClick={onPlay}
+        disabled={pairCount === 0}
+        className="rita-pill mt-4 flex h-12 w-full touch-manipulation items-center justify-center gap-2 text-[15px] font-semibold active:scale-[0.98] disabled:opacity-40"
+      >
+        <Play size={16} /> Play {current?.label ?? ""}
+      </button>
 
-      <div className="mt-4 grid gap-2">
+      <div role="radiogroup" aria-label="Game" className="mt-4 grid grid-cols-2 gap-2">
         {GAME_MODES.map((m) => {
           const on = mode === m.key;
           return (
             <button
               key={m.key}
               type="button"
+              role="radio"
+              aria-checked={on}
               onClick={() => onMode(m.key)}
-              aria-pressed={on}
-              className={`min-h-16 rounded-xl border-2 border-[#121117] px-4 py-3 text-left transition-colors ${
-                on ? "bg-[#2b6df0]" : "bg-white hover:bg-[#e7eefd]"
+              className={`min-h-[72px] touch-manipulation rounded-xl border-2 px-3 py-2.5 text-left transition-colors duration-150 ${
+                on
+                  ? "border-[#121117] bg-[#2b6df0]"
+                  : "border-[#dcdce5] bg-white hover:border-[#121117]"
               }`}
             >
               <span
@@ -70,7 +83,7 @@ export function GameSetup({
                 {m.label}
               </span>
               <span
-                className={`block text-[13px] font-medium ${on ? "text-white/90" : "text-[#4b4a5c]"}`}
+                className={`mt-0.5 block text-[12.5px] font-medium leading-snug ${on ? "text-white" : "text-[#4b4a5c]"}`}
               >
                 {m.hint}
               </span>
@@ -80,28 +93,26 @@ export function GameSetup({
       </div>
 
       <div className="mt-4 grid gap-2">
-        <Toggle label="Sudden death" checked={suddenDeath} onChange={onSuddenDeath} />
-        <Toggle label="Timed challenge" checked={timed} onChange={onTimed} />
+        <Toggle
+          label="Sudden death"
+          note="One mistake ends the round"
+          checked={suddenDeath}
+          onChange={onSuddenDeath}
+        />
+        <Toggle label="Timed challenge" note="Race the clock" checked={timed} onChange={onTimed} />
       </div>
-
-      <button
-        type="button"
-        onClick={onPlay}
-        disabled={pairCount === 0}
-        className="rita-pill mt-5 flex h-12 w-full items-center justify-center gap-2 text-[15px] font-semibold disabled:opacity-40"
-      >
-        <Play size={16} /> Play
-      </button>
     </div>
   );
 }
 
 function Toggle({
   label,
+  note,
   checked,
   onChange,
 }: {
   label: string;
+  note: string;
   checked: boolean;
   onChange: (v: boolean) => void;
 }) {
@@ -111,16 +122,19 @@ function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="flex items-center justify-between rounded-xl bg-[#f4f4f8] px-4 py-2.5"
+      className="flex min-h-14 touch-manipulation items-center justify-between gap-3 rounded-xl bg-white px-4 py-2 text-left"
     >
-      <span className="text-[14px] font-semibold text-[#121117]">{label}</span>
+      <span className="min-w-0">
+        <span className="block text-[14.5px] font-semibold text-[#121117]">{label}</span>
+        <span className="block text-[12.5px] font-medium text-[#4b4a5c]">{note}</span>
+      </span>
       <span
-        className="relative h-6 w-11 rounded-full transition-colors"
+        className="relative h-6 w-11 shrink-0 rounded-full transition-colors"
         style={{ background: checked ? "#2b6df0" : "#ffffff", border: "2px solid #121117" }}
       >
         <span
-          className="absolute top-[1px] h-4 w-4 rounded-full bg-[#121117] transition-all"
-          style={{ left: checked ? 21 : 2 }}
+          className="absolute top-[1px] h-4 w-4 rounded-full transition-all duration-150"
+          style={{ left: checked ? 21 : 2, background: checked ? "#ffffff" : "#121117" }}
         />
       </span>
     </button>

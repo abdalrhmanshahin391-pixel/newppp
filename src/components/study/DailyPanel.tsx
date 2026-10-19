@@ -17,7 +17,14 @@ const RETENTION_CHOICES = [
  * Due today, the daily goal, what is coming this month and how much you are
  * actually holding on to — the reason to open Rita every morning.
  */
-export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => void }) {
+export function DailyPanel({
+  onReview,
+  showReview = true,
+}: {
+  onReview: (items: QueueItem[]) => void;
+  /** Hide the button when the page already offers the same review above. */
+  showReview?: boolean;
+}) {
   const { user } = useAuth();
   const { data } = useStudyOverview();
   const { queue, dueCount, newToday, isLoading } = useReviewQueue();
@@ -38,7 +45,7 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
   const current = data?.prefs.retention ?? 0.9;
 
   return (
-    <section className="rounded-[20px] bg-white p-5" style={{ border: "2px solid #121117" }}>
+    <section className="rounded-[20px] bg-[#f4f4f8] p-5">
       <p className="text-[14px] font-semibold text-[#6a697c]">Today</p>
 
       <p className="mt-2 font-display text-[2.8rem] font-bold leading-none tracking-[-0.03em] text-[#121117]">
@@ -48,15 +55,17 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
         cards due right now{newToday > 0 && ` · ${newToday} new mixed in`}
       </p>
 
-      <button
-        type="button"
-        disabled={isLoading || due === 0}
-        onClick={() => onReview(queue)}
-        className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-[#121117] bg-[#2b6df0] text-[15px] font-semibold text-white hover:bg-[#2260e4] disabled:opacity-50"
-      >
-        <Sparkles size={16} />
-        {due === 0 ? "Nothing due — nice" : "Review everything due"}
-      </button>
+      {showReview && (
+        <button
+          type="button"
+          disabled={isLoading || due === 0}
+          onClick={() => onReview(queue)}
+          className="mt-4 inline-flex h-12 w-full touch-manipulation items-center justify-center gap-2 rounded-lg border-2 border-[#121117] bg-white text-[15px] font-semibold text-[#121117] transition-colors duration-150 hover:bg-[#e7eefd] active:scale-[0.98] disabled:opacity-50"
+        >
+          <Sparkles size={16} />
+          {due === 0 ? "Nothing due — nice" : "Review everything due"}
+        </button>
+      )}
 
       <div className="mt-5">
         <div className="flex items-center justify-between text-[14px] font-semibold text-[#4b4a5c]">
@@ -74,7 +83,7 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
             style={{ width: `${pct}%` }}
           />
         </div>
-        <p className="mt-2 text-[13.5px] font-medium text-[#6a697c]">
+        <p className="mt-2 text-[13.5px] font-medium text-[#4b4a5c]">
           {left === 0
             ? "Goal met today — nice work."
             : `${left} more card${left === 1 ? "" : "s"} to hit today's goal.`}
@@ -106,7 +115,7 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
               />
             ))}
           </div>
-          <p className="mt-1.5 text-[13.5px] font-medium text-[#6a697c]">
+          <p className="mt-1.5 text-[13.5px] font-medium text-[#4b4a5c]">
             Busiest day ahead: {peak} card{peak === 1 ? "" : "s"}.
           </p>
         </div>
@@ -114,11 +123,11 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
 
       {/* True retention */}
       {retention && retention.total >= 5 && (
-        <div className="mt-4 rounded-xl bg-[#f4f4f8] p-3">
+        <div className="mt-4 rounded-xl bg-white p-3">
           <p className="font-display text-[1.7rem] font-bold leading-none text-[#121117]">
             {retention.percent}%
           </p>
-          <p className="text-[13.5px] font-medium text-[#6a697c]">
+          <p className="text-[13.5px] font-medium text-[#4b4a5c]">
             of the cards that had gone to sleep came back this month.
           </p>
         </div>
@@ -127,7 +136,7 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
       <button
         type="button"
         onClick={() => setOpenSettings((v) => !v)}
-        className="mt-4 inline-flex items-center gap-2 text-[15px] font-semibold text-[#121117] hover:underline"
+        className="mt-4 inline-flex min-h-11 items-center gap-2 text-[15px] font-semibold text-[#121117] hover:underline"
       >
         <Target size={15} /> How tight should the schedule be?
       </button>
@@ -143,9 +152,9 @@ export function DailyPanel({ onReview }: { onReview: (items: QueueItem[]) => voi
                 void qc.invalidateQueries({ queryKey: ["study-overview"] });
                 void qc.invalidateQueries({ queryKey: ["review-sync"] });
               }}
-              className="rounded-xl px-3 py-2 text-left transition-colors"
+              className="min-h-12 touch-manipulation rounded-xl px-3 py-2 text-left transition-colors"
               style={{
-                background: Math.abs(current - r.value) < 0.001 ? "#e7eefd" : "#f4f4f8",
+                background: Math.abs(current - r.value) < 0.001 ? "#e7eefd" : "#ffffff",
               }}
             >
               <span className="block text-[14px] font-bold text-[#121117]">{r.label}</span>

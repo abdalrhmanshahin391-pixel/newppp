@@ -52,7 +52,7 @@ export function PhoneExperienceTip() {
       role="status"
       aria-live="polite"
       dir={isArabic ? "rtl" : "ltr"}
-      className="fixed bottom-4 inset-x-3 z-50 mx-auto max-w-md animate-in fade-in slide-in-from-bottom-3 duration-300 md:hidden"
+      className="fixed bottom-4 inset-x-3 z-40 mx-auto max-w-md animate-in fade-in slide-in-from-bottom-3 duration-300 md:hidden"
     >
       <div className="relative flex items-start gap-3 rounded-2xl border-2 border-[#121117] bg-white p-3.5 text-[#121117]">
         {/* Device Icon Avatar */}
@@ -64,7 +64,7 @@ export function PhoneExperienceTip() {
         </div>
 
         {/* Text Content */}
-        <div className="min-w-0 flex-1 pe-5">
+        <div className="min-w-0 flex-1 pe-8">
           <div className="flex items-center gap-1.5 text-[14px] font-bold text-[#121117]">
             <Sparkles size={13} className="text-[#2b6df0] shrink-0" />
             <span>{isArabic ? "نصيحة دراسية لتجربة أفضل" : "Friendly Study Tip"}</span>
@@ -90,7 +90,7 @@ export function PhoneExperienceTip() {
             <button
               type="button"
               onClick={dismiss}
-              className="rounded-lg border-2 border-[#121117] bg-[#2b6df0] px-3 py-1 text-[12px] font-semibold text-white transition-colors hover:bg-[#2260e4]"
+              className="min-h-11 rounded-lg border-2 border-[#121117] bg-[#2b6df0] px-4 text-[14px] font-semibold text-white transition-colors hover:bg-[#2260e4]"
             >
               {isArabic ? "حسناً، فهمت" : "Got it!"}
             </button>
@@ -102,7 +102,7 @@ export function PhoneExperienceTip() {
           type="button"
           onClick={dismiss}
           aria-label={isArabic ? "إغلاق" : "Dismiss"}
-          className="absolute top-2.5 end-2.5 rounded-full p-1 text-[#6a697c] transition-colors hover:bg-black/5 hover:text-[#121117]"
+          className="absolute end-1 top-1 grid h-11 w-11 place-items-center rounded-full text-[#4b4a5c] transition-colors hover:bg-black/5 hover:text-[#121117]"
         >
           <X size={15} />
         </button>

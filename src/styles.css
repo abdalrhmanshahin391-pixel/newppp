@@ -4344,6 +4344,32 @@ hairline borders and generous radii.
 .rita-app .rh-rail[aria-disabled="true"] {
   cursor: not-allowed;
 }
+/* Below desktop the action column becomes one short scrolling strip, so the learner's own
+   subjects are on screen instead of five big tiles; hints stay for desktop. */
+@media (max-width: 1023px) {
+  .rita-app .rh-rail {
+    width: auto;
+    flex: 0 0 auto;
+    min-height: 2.75rem;
+    padding: 0.4rem 0.9rem;
+    gap: 0.5rem;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+  .rita-app .rh-rail .rh-hint {
+    display: none;
+  }
+}
+@media (max-width: 639px) {
+  .rita-app .rh-modetab {
+    min-height: 3.25rem;
+    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+  }
+  .rita-app .rh-modetab .rh-hint {
+    display: none;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .rita-app .rh-rail,
   .rita-app .rh-modetab {
