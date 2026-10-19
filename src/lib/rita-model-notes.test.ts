@@ -29,3 +29,8 @@ test("text without Latin letters is returned as is", () => {
   const text = "أهلين! كيف الحال؟";
   assert.equal(stripModelNotes(text), text);
 });
+
+test("page-oriented markdown is removed from live speech text", () => {
+  assert.equal(stripModelNotes("## جواب\n- **Guten Morgen**"), "جواب\nGuten Morgen");
+  assert.equal(stripModelNotes("`مرحبا`"), "مرحبا");
+});

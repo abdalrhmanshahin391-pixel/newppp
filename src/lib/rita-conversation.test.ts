@@ -81,3 +81,17 @@ test("resume history is bounded and ignores incomplete assistant drafts", () => 
   assert.equal(history[0].role, "user");
   assert.equal(history[0].content.length, 30);
 });
+
+test("resume history uses only the spoken part of an interrupted Rita reply", () => {
+  const history = boundedRitaHistory([
+    messages[0],
+    {
+      ...messages[1],
+      content: "الجزء المسموع. الجزء الذي لم يسمعه المستخدم.",
+      generated_content: "الجزء المسموع. الجزء الذي لم يسمعه المستخدم.",
+      spoken_content: "الجزء المسموع.",
+      delivery_status: "interrupted",
+    },
+  ]);
+  assert.equal(history.at(-1)?.content, "الجزء المسموع.");
+});

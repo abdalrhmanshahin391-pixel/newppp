@@ -39,3 +39,28 @@ def test_understood_resets_teaching_loop():
     assert state.understood is True
     assert state.attempt_count == 0
     assert state.last_feedback_signature == ""
+
+
+def test_rejected_interpretations_are_bounded_and_enter_the_directive():
+    state = RitaSessionState()
+    for item in ("باي", "هاي", "بيت", "سيارة", "قهوة", "شاي"):
+        state.observe_user_turn(f"مش {item}")
+    assert state.rejected_interpretations == ["هاي", "بيت", "سيارة", "قهوة", "شاي"]
+    assert "do not return" in state.turn_directive()
+
+
+def test_repeated_simplify_request_changes_method():
+    state = RitaSessionState()
+    state.observe_user_turn("اشرحي أبسط")
+    assert state.response_type == ResponseType.SIMPLIFY
+    assert state.attempt_count == 1
+    state.observe_user_turn("يعني لشخص مبتدئ")
+    assert state.attempt_count == 2
+    assert "change method completely" in state.turn_directive()
+
+
+def test_complaint_never_gets_a_made_up_diagnosis_directive():
+    state = RitaSessionState()
+    state.observe_user_turn("الصوت مقطع")
+    assert state.response_type == ResponseType.COMPLAINT
+    assert "do not invent a technical cause" in state.turn_directive()

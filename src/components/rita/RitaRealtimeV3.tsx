@@ -45,7 +45,12 @@ import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rit
 
 type Persona = "kind" | "direct" | "playful" | "strict";
 type LessonMode = "free_conversation" | "guided_lesson" | "pronunciation_drill";
-type Message = { id: string; role: "you" | "rita"; text: string };
+type Message = {
+  id: string;
+  role: "you" | "rita";
+  text: string;
+  interruptedAt?: number | null;
+};
 type ConversationWrite = {
   client_message_id: string;
   role: "user" | "assistant";
@@ -255,7 +260,9 @@ export function RitaRealtimeV3({
         .maybeSingle(),
       supabase
         .from("rita_free_conversation_messages")
-        .select("id,client_message_id,role,content,spoken_content,delivery_status,created_at")
+        .select(
+          "id,client_message_id,role,content,generated_content,spoken_content,delivery_status,created_at",
+        )
         .eq("conversation_id", conversationId)
         .eq("user_id", user.id)
         .order("created_at", { ascending: true })
@@ -271,6 +278,7 @@ export function RitaRealtimeV3({
           client_message_id: string;
           role: "user" | "assistant";
           content: string;
+          generated_content: string | null;
           spoken_content: string | null;
           delivery_status: RitaConversationDelivery;
         }>;
@@ -279,8 +287,12 @@ export function RitaRealtimeV3({
           role: message.role === "user" ? ("you" as const) : ("rita" as const),
           text:
             message.role === "assistant" && message.delivery_status === "interrupted"
-              ? message.spoken_content || message.content
+              ? message.generated_content || message.content
               : message.content,
+          interruptedAt:
+            message.role === "assistant" && message.delivery_status === "interrupted"
+              ? (message.spoken_content ?? "").length
+              : null,
         }));
         setMessages(
           restored.length
@@ -757,33 +769,36 @@ export function RitaRealtimeV3({
         const spoken = stripModelNotes(replyAccumulator.current.spokenText).trim();
         const settled = replyAccumulator.current.settle(interrupted);
         const reply = stripModelNotes(settled.reply).trim();
+        const visibleReply = interrupted ? generated || spoken : reply;
+        const interruptedAt = interrupted ? spoken.length : null;
         const replyId = settled.draftId ?? crypto.randomUUID();
         setMessages((current) =>
           settleDraftReply(
             current,
             settled.draftId,
-            reply,
-            reply ? { id: replyId, role: "rita", text: reply } : null,
+            visibleReply,
+            visibleReply ? { id: replyId, role: "rita", text: visibleReply } : null,
+            interruptedAt,
           ),
         );
         const asked = turnSpoken.current;
         turnSpoken.current = "";
         const wasCommand = skipExtraction.current;
         skipExtraction.current = false;
-        if (!reply) return;
+        if (!visibleReply) return;
         void persistConversationMessage({
           client_message_id: replyId,
           role: "assistant",
-          content: reply,
+          content: generated || reply,
           generated_content: generated || null,
-          spoken_content: spoken || reply,
+          spoken_content: spoken || (interrupted ? null : reply),
           source: currentReplySource.current,
           delivery_status: interrupted ? "interrupted" : "completed",
           created_at: new Date().toISOString(),
         });
         // A word the learner asked about counts even if they cut Rita off; only a spoken
         // command to the list itself ("open the list", "turn them into flashcards") does not.
-        if (!wasCommand) void runExtraction(asked || lastUserText.current, reply);
+        if (!wasCommand && reply) void runExtraction(asked || lastUserText.current, reply);
         if (interrupted) void metric("interrupted");
       };
       const beginScriptedReply = (text: string) => {
@@ -942,12 +957,21 @@ export function RitaRealtimeV3({
               target?: SaveTarget;
               hint?: string;
               text?: string;
+              act?: string;
+              wordCount?: number;
             } | null;
             if (message?.type === "rita-spoken-text") {
               const text = String(message.text ?? "").trim();
               if (!text) return;
               if (botSpeaking.current) pendingScriptedReply.current = text;
               else beginScriptedReply(text);
+              return;
+            }
+            if (message?.type === "rita-dialogue-act") {
+              void metric("dialogue_act", undefined, {
+                act: String(message.act ?? "unknown").slice(0, 32),
+                wordCount: Math.max(0, Math.min(Number(message.wordCount ?? 0), 100)),
+              });
               return;
             }
             if (message?.type !== "rita-ui") return;
@@ -1358,6 +1382,7 @@ export function RitaRealtimeV3({
                     key={message.id}
                     text={message.text}
                     onPhrase={openPhrase}
+                    interruptedAt={message.interruptedAt}
                     className={
                       !active && messages.length === 1
                         ? "mx-auto text-center text-[20px] leading-8"

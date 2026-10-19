@@ -18,6 +18,8 @@ class ResponseType(StrEnum):
     PRONUNCIATION_DRILL = "pronunciation_drill"
     TOOL_ACTION = "tool_action"
     EMPATHY = "empathy_social"
+    COMPLAINT = "complaint"
+    SIMPLIFY = "simplify"
 
 
 class LanguageSource(StrEnum):
@@ -86,6 +88,8 @@ class RitaSessionState:
     # Rita has already spoken (or been greeted by the scripted hello).
     assistant_turns: int = 0
     greeted: bool = False
+    # Interpretations explicitly rejected by the learner. Keep this tiny and bounded.
+    rejected_interpretations: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if self.active_language in {"ar", "en", "de"}:
@@ -140,7 +144,7 @@ class RitaSessionState:
         )
         self.frustration_signal = bool(
             re.search(
-                r"(?:مش فاهم|مو فاهم|صعب|غلط مرة ثانية|i don'?t get it|confused|verstehe nicht)",
+                r"(?:مش فاهم|مو فاهم|صعب|معقد|مبتدئ|ابسط|أبسط|بسط|غلط مرة ثانية|i don'?t get it|confused|simpler|verstehe nicht)",
                 lowered,
             )
         )
@@ -151,10 +155,14 @@ class RitaSessionState:
         if self.understood:
             self.attempt_count = 0
             self.last_feedback_signature = ""
-        elif pronunciation or correction_retry:
+        elif pronunciation or correction_retry or self.last_act == Act.SIMPLIFY:
             self.attempt_count += 1
 
-        if pronunciation:
+        if self.last_act == Act.COMPLAINT:
+            self.response_type = ResponseType.COMPLAINT
+        elif self.last_act == Act.SIMPLIFY:
+            self.response_type = ResponseType.SIMPLIFY
+        elif pronunciation:
             self.response_type = ResponseType.PRONUNCIATION_DRILL
         elif re.search(r"(?:اشرح|ليش|why|explain|warum)", lowered):
             self.response_type = ResponseType.EXPLAIN
@@ -170,6 +178,10 @@ class RitaSessionState:
     def _observe_act(self, clean: str) -> None:
         reading = classify(clean, awaiting=self.awaiting)
         self.last_act = reading.act
+        if reading.act == Act.CORRECTION:
+            rejected = self._rejected_interpretation(clean)
+            if rejected and rejected not in self.rejected_interpretations:
+                self.rejected_interpretations = (self.rejected_interpretations + [rejected])[-5:]
         if reading.act == Act.STOP:
             self.topic_paused = True
             self.stop_count += 1
@@ -179,6 +191,15 @@ class RitaSessionState:
             self.topic = " ".join(clean.split()[:12])
         if not (reading.act == Act.YES and self.awaiting == Awaiting.CHOICE):
             self.clarification_count = 0
+
+    @staticmethod
+    def _rejected_interpretation(text: str) -> str:
+        """Extract only an explicit rejected interpretation, never invent one."""
+
+        match = re.match(r"^\s*(?:مش|مو|not)\s+(.+?)\s*[.!؟?]*$", text, re.IGNORECASE)
+        if match:
+            return re.sub(r"\s+", " ", match.group(1)).strip()[:80]
+        return ""
 
     def observe_assistant_turn(self, text: str) -> None:
         self.assistant_turns += 1
@@ -206,7 +227,14 @@ class RitaSessionState:
         if act == Act.DONT_KNOW:
             return "the learner does not know; pick the simplest option yourself in one short sentence and continue; do not ask again"
         if act == Act.CORRECTION:
-            return "the learner is correcting you; drop your last assumption and say in one sentence what you understood now"
+            rejected = ", ".join(self.rejected_interpretations[-5:]) or "the last assumption"
+            return f"the learner is correcting you; do not return to these rejected interpretations: {rejected}; ask one short clarification if the replacement is not explicit"
+        if act == Act.COMPLAINT:
+            return "acknowledge the reported problem in one short sentence; do not invent a technical cause, teach, or defend yourself; ask one short follow-up only if needed"
+        if act == Act.SIMPLIFY:
+            if self.attempt_count >= 2:
+                return "the learner still needs a simpler explanation; change method completely and use one concrete everyday example; do not repeat the previous wording"
+            return "explain the same idea in plain words with one concrete example; do not add a second concept"
         if act == Act.UNDERSTOOD:
             return "the learner understood; do not re-explain; take one small next step"
         if act == Act.CONTINUE:
@@ -229,6 +257,9 @@ class RitaSessionState:
             f'topic="{self.topic.replace(chr(34), chr(39))[:90]}"' if self.topic else "topic=none",
             f"topic_paused={self.topic_paused}",
             f"learner_act={self.last_act.value}",
+            f'rejected="{"|".join(self.rejected_interpretations[-5:])[:160]}"'
+            if self.rejected_interpretations
+            else "rejected=none",
         ]
         directive = self.turn_directive()
         if directive:

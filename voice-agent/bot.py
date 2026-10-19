@@ -30,7 +30,6 @@ from pipecat.processors.aggregators.llm_response_universal import (
     LLMUserAggregatorParams,
 )
 from pipecat.runner.types import DailyRunnerArguments
-from pipecat.services.groq.llm import GroqLLMService
 from pipecat.services.soniox.stt import (
     SonioxContextGeneralItem,
     SonioxContextObject,
@@ -47,6 +46,7 @@ from pipecat.utils.context.llm_context_summarization import (
 from rita_cartesia_tts import RitaCartesiaTTSService
 from rita_dialect import DIALECT_PROMPT, RitaSpeechCleaner
 from rita_interruption import RitaUserTurnStartStrategy, gate_mode
+from rita_groq_llm import RitaGroqLLMService
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
 from rita_state import RitaSessionState
 from rita_turn_policy import (
@@ -64,7 +64,7 @@ LLM_MODEL = "openai/gpt-oss-120b"
 # The reply and the model's short reasoning share this budget. Keep enough headroom
 # for reasoning without encouraging the tutor to continue offering examples after
 # the learner's question has already been answered.
-LLM_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_MAX_COMPLETION_TOKENS", "300"))
+LLM_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_MAX_COMPLETION_TOKENS", "450"))
 TTS_PROVIDER = os.getenv("RITA_TTS_PROVIDER", "cartesia").strip().casefold()
 TTS_MODEL = "sonic-3.6"
 # Layan is the explicitly selected Cartesia library voice. Voice IDs are not
@@ -195,8 +195,11 @@ TEACHING CONTROL
 - If the same correction fails twice, change strategy: slower example, minimal pair, syllable isolation,
   or a different analogy. Do not loop the same feedback.
 - Never repeat last_feedback when attempt_count is two or more; visibly change teaching method.
-- Ordinary conversation is not a pronunciation score. In a pronunciation drill, state uncertainty when
-  audio is noisy and correct only the highest-impact issue.
+- You receive a text transcript, not the learner's acoustic signal. Never praise, score, or correct
+  pronunciation from transcript spelling alone. In an explicit pronunciation drill, state that limitation
+  and correct only an issue supported by actual audio evidence supplied by the system.
+- Never mention a letter, sound, word, or meaning that is absent from the learner's exact target.
+  Preserve the exact concept they asked about; if it is ambiguous, ask one short clarification.
 - Never turn a general-knowledge answer into vocabulary or flashcards.
 - Never claim Flashcards or German Lab were saved; the website confirms only after a real transaction.
 - If unsure what was heard, ask one short clarification in the same stable language.
@@ -210,6 +213,10 @@ TURN-TAKING AND SHORT REPLIES
   إيه or نعم is not a choice: ask "أي واحد: A ولا B؟" and nothing more.
 - For "مش عارف", choose the simplest option yourself in one short sentence and continue.
 - For "لا قصدي" or "مش هيك", drop your last assumption and say in one sentence what you understood now.
+- Never return to anything listed in rejected interpretations unless the learner explicitly restores it.
+- For a complaint, briefly acknowledge it. Never invent a technical cause, defend yourself, or teach. Ask one
+  short follow-up only if needed.
+- To simplify, keep the exact concept and use one concrete example. If asked again, change method.
 - Ask at most one question per reply. Never join two questions with "أو" or "ولا".
 - Never explain a word or phrase the learner did not ask about.
 - General-knowledge questions: at most two short sentences, then ask only "بدك أكمل؟".
@@ -343,8 +350,9 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         ),
     )
 
-    llm = GroqLLMService(
+    llm = RitaGroqLLMService(
         api_key=require_secret("GROQ_API_KEY"),
+        latency_recorder=latency,
         settings=GroqLLMService.Settings(
             model=LLM_MODEL,
             temperature=0.45,
@@ -439,6 +447,9 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         prepare_turn=prepare_turn,
         language_of_turn=lambda: turn_language() if turn_language() in {"ar", "de", "en"} else "ar",
         mode=router_state,
+        session_id=session_id,
+        trace_id=latency.trace_id,
+        turn_id=lambda: latency.turn,
     )
 
     pipeline = Pipeline(
@@ -537,6 +548,12 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             # With the router on, it prepares the turn itself before the model reads it.
             prepare_turn(message.content)
         logger.bind(
+            session_id=session_id,
+            trace_id=latency.trace_id or None,
+            turn_id=latency.turn,
+            stop_reason=stop_reason,
+            word_count=len(message.content.split()),
+            character_count=len(message.content),
             response_type=state.response_type,
             language=state.active_language,
             dialect=state.active_dialect,
@@ -545,7 +562,13 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
     @assistant_aggregator.event_handler("on_assistant_turn_stopped")
     async def on_assistant_turn_stopped(aggregator, message):
         state.observe_assistant_turn(message.content)
-        logger.bind(heard_characters=len(message.content)).info("Rita assistant turn committed")
+        logger.bind(
+            session_id=session_id,
+            trace_id=latency.trace_id or None,
+            turn_id=latency.turn,
+            spoken_characters=len(message.content),
+            interrupted=False,
+        ).info("Rita assistant turn committed")
 
     @transport.event_handler("on_first_participant_joined")
     async def on_first_participant_joined(transport, participant):

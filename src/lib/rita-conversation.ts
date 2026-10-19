@@ -45,7 +45,10 @@ export type RitaHistoryMessage = { role: RitaConversationRole; content: string }
  * for export, but never grows the realtime Groq request without a bound.
  */
 export function boundedRitaHistory(
-  messages: Pick<RitaConversationMessage, "role" | "content" | "delivery_status">[],
+  messages: Pick<
+    RitaConversationMessage,
+    "role" | "content" | "spoken_content" | "delivery_status"
+  >[],
   maxMessages = 24,
   maxCharacters = 12_000,
 ): RitaHistoryMessage[] {
@@ -53,7 +56,13 @@ export function boundedRitaHistory(
   let characters = 0;
   for (let index = messages.length - 1; index >= 0 && selected.length < maxMessages; index -= 1) {
     const message = messages[index];
-    const content = message.content.trim().slice(0, 4_000);
+    // The model may have generated more than the learner heard before an interruption.
+    // Resume only from shared conversational ground.
+    const source =
+      message.role === "assistant" && message.delivery_status === "interrupted"
+        ? (message.spoken_content ?? "")
+        : message.content;
+    const content = source.trim().slice(0, 4_000);
     if (!content || message.delivery_status === "incomplete") continue;
     const remaining = maxCharacters - characters;
     if (remaining <= 0) break;

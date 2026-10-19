@@ -28,7 +28,10 @@ class NormalizeTests(unittest.TestCase):
 
 class StopTests(unittest.TestCase):
     def test_the_words_from_the_real_session(self):
-        for text in ("خلص، خلص.", "خلص، وقفي.", "خلص", "وقفي", "كفاية", "ستوب", "stop", "enough"):
+        for text in (
+            "خلص، خلص.", "خلص، وقفي.", "خلص", "وقفي", "كفاية", "ستوب", "stop", "enough",
+            "لا، لا، خلص اسكتي", "خلص، انسي، مش محتاج", "بلاش", "خلصنا",
+        ):
             with self.subTest(text=text):
                 self.assertEqual(classify(text).act, Act.STOP)
 
@@ -89,9 +92,20 @@ class AnswerTests(unittest.TestCase):
                 self.assertEqual(classify(text).act, Act.DONT_KNOW)
 
     def test_correction(self):
-        for text in ("لا قصدي الخميس", "مش هيك", "قصدي الثلاثاء", "I meant Tuesday"):
+        for text in (
+            "لا قصدي الخميس", "لا أقصد الخميس", "مش هيك", "قصدي الثلاثاء",
+            "مش باي", "I meant Tuesday", "i mean Tuesday",
+        ):
             with self.subTest(text=text):
                 self.assertEqual(classify(text).act, Act.CORRECTION)
+
+    def test_complaint_and_simplify_are_explicit_acts(self):
+        for text in ("الصوت مقطع", "الرد مش منطقي", "بتخبصي", "you are not responding"):
+            with self.subTest(text=text):
+                self.assertEqual(classify(text).act, Act.COMPLAINT)
+        for text in ("اشرحي أبسط", "بطريقة أبسط", "يعني لشخص مبتدئ", "make it simpler"):
+            with self.subTest(text=text):
+                self.assertEqual(classify(text).act, Act.SIMPLIFY)
 
     def test_continue_repeat_understood(self):
         self.assertEqual(classify("كمّل").act, Act.CONTINUE)
@@ -159,6 +173,13 @@ class QuestionTests(unittest.TestCase):
         self.assertEqual(parse_last_question("Are you ready?").awaiting, Awaiting.YES_NO)
         self.assertEqual(parse_last_question("تمام، خلصنا هون.").awaiting, Awaiting.NONE)
         self.assertEqual(parse_last_question("").awaiting, Awaiting.NONE)
+
+    def test_question_marks_and_or_words_inside_quotes_do_not_create_fake_options(self):
+        q = parse_last_question('هل العبارة "So I have to go to the bathroom?" صحيحة؟')
+        self.assertEqual(q.awaiting, Awaiting.YES_NO)
+        self.assertEqual(q.options, ())
+        q = parse_last_question('هل تقول "Excuse me?" أو تشرح المعنى؟')
+        self.assertNotEqual(q.options, ('"Excuse me', '"'))
 
     def test_clarification_follows_the_language(self):
         q = parse_last_question("Tea or coffee?")

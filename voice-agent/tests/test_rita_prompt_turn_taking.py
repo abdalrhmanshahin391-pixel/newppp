@@ -48,7 +48,15 @@ def test_the_new_sections_stay_short_for_a_low_effort_model():
     words = len(section(text, "TURN-TAKING AND SHORT REPLIES").split()) + len(
         section(text, "HUMAN TONE").split()
     )
-    assert words <= 330
+    assert words <= 400
+
+
+def test_prompt_forbids_text_only_pronunciation_judgments_and_invented_targets():
+    text = prompt()
+    assert "text transcript" in text
+    assert "Never mention a letter, sound, word, or meaning" in text
+    assert "rejected interpretations" in text
+    assert "Never invent a technical" in text
 
 
 def test_dialogue_state_is_only_added_when_the_router_is_on():
