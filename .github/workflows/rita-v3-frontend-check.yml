@@ -46,6 +46,7 @@ jobs:
           node --test src/lib/rita-curriculum.test.ts
           node --test src/lib/rita-slides.test.ts
           node --test src/lib/rita-resources.test.ts
+          node --test src/lib/rita-image-request.test.ts
           bunx tsc --noEmit
       - name: Build site
         run: bun run build
