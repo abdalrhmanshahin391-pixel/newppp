@@ -57,6 +57,7 @@ export function PickerBoard({
   chips,
   onSelectAll,
   onClearGroup,
+  framed = true,
 }: {
   accent: string;
   groups: PickerGroup[];
@@ -82,6 +83,8 @@ export function PickerBoard({
   chips?: ReactNode;
   onSelectAll?: (group: PickerGroup) => void;
   onClearGroup?: (group: PickerGroup) => void;
+  /** Draw the outer ink frame. Off when the page already sits on a board. */
+  framed?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState<string | null>(null);
@@ -99,7 +102,7 @@ export function PickerBoard({
   }, [groups, q]);
 
   return (
-    <div className="rounded-[24px] border-2 border-[#121117] bg-card p-3 sm:p-5">
+    <div className={framed ? "rounded-[24px] border-2 border-[#121117] bg-card p-3 sm:p-5" : ""}>
       <div
         data-tour="subject-shelf-header"
         className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 pb-3"
@@ -148,16 +151,12 @@ export function PickerBoard({
                   className="flex min-h-20 cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-cream"
                   onClick={() => setOpen(open === g.id ? null : g.id)}
                 >
-                  <span
-                    className="h-13 w-1.5 shrink-0 rounded-full"
-                    style={{ background: "#121117" }}
-                  />
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-cream text-muted-foreground">
-                    <BookOpen size={20} />
-                  </span>
+                  <BookOpen size={20} className="shrink-0 text-[#4b4a5c]" aria-hidden />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-[18px] font-black text-foreground">{g.name}</div>
-                    <div className="mt-0.5 text-[13px] font-semibold text-muted-foreground">
+                    <div className="line-clamp-2 break-words text-[18px] font-bold leading-snug text-foreground">
+                      {g.name}
+                    </div>
+                    <div className="mt-0.5 text-[13.5px] font-medium text-[#4b4a5c]">
                       {picked} of {g.items.length} {itemNoun}
                       {g.items.length === 1 ? "" : "s"} selected
                       {typeof g.count === "number" && (
@@ -184,7 +183,7 @@ export function PickerBoard({
                                 }}
                               />
                             </span>
-                            <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                            <span className="text-[12px] font-bold tracking-wide text-[#4b4a5c]">
                               {b.label}
                             </span>
                           </span>
@@ -193,12 +192,12 @@ export function PickerBoard({
                     )}
                   </div>
                   {g.badge && (
-                    <span className="hidden shrink-0 rounded-full bg-[#e8f5e9] px-2.5 py-0.5 text-[10.5px] font-black text-[#2e7d32] sm:inline">
+                    <span className="hidden shrink-0 rounded-full bg-[#e8f5e9] px-2.5 py-0.5 text-[12px] font-bold text-[#2e7d32] sm:inline">
                       {g.badge}
                     </span>
                   )}
                   {!!g.flags && (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#fdecef] px-2 py-0.5 text-[11.5px] font-black text-[#b3213f]">
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#fdecef] px-2 py-0.5 text-[12.5px] font-bold text-[#b3213f]">
                       <Flag size={11} /> {g.flags}
                     </span>
                   )}
@@ -208,7 +207,7 @@ export function PickerBoard({
                         e.stopPropagation();
                         onNewItem(g);
                       }}
-                      className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#121117] bg-card px-3 py-1.5 text-[11.5px] font-extrabold text-foreground transition hover:bg-cream"
+                      className="inline-flex min-h-11 shrink-0 touch-manipulation items-center gap-1.5 rounded-lg border-2 border-[#121117] bg-card px-3 text-[13.5px] font-semibold text-foreground transition hover:bg-[#e7eefd] active:scale-[0.98]"
                     >
                       <Plus size={12} /> {newItemLabel ?? itemNoun}
                     </button>
@@ -219,7 +218,7 @@ export function PickerBoard({
                         e.stopPropagation();
                         onAddToGroup(g);
                       }}
-                      className="inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[11.5px] font-extrabold text-white transition hover:brightness-110"
+                      className="inline-flex min-h-11 shrink-0 touch-manipulation items-center gap-1.5 rounded-lg px-3 text-[13.5px] font-semibold text-white transition hover:brightness-110 active:scale-[0.98]"
                       style={{ background: "#2b6df0" }}
                     >
                       <Plus size={12} /> {addLabel}
@@ -227,7 +226,7 @@ export function PickerBoard({
                   )}
 
                   {g.sample && (
-                    <span className="shrink-0 rounded-full bg-[#e8f5e9] px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-[#2e7d32]">
+                    <span className="shrink-0 rounded-full bg-[#e8f5e9] px-2 py-0.5 text-[12px] font-bold text-[#2e7d32]">
                       sample
                     </span>
                   )}
@@ -268,11 +267,11 @@ export function PickerBoard({
                           onKeyDown={(e) => {
                             if (e.key === "Enter" || e.key === " ") pick();
                           }}
-                          className={`flex min-h-20 items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 transition-all duration-150 ${
-                            t.disabled ? "opacity-55" : "hover:-translate-y-0.5 hover:shadow-sm"
-                          }`}
+                          className={`flex min-h-[72px] items-center gap-2.5 rounded-2xl border border-border bg-card py-2 pl-4 pr-2 transition-colors duration-150 ${
+                            t.disabled ? "opacity-55" : "cursor-pointer hover:border-[#121117]"
+                          } ${on ? "border-[#121117] bg-[#e7eefd]" : ""}`}
                         >
-                          <span className="w-7 shrink-0 text-[12px] font-black tabular-nums text-muted-foreground">
+                          <span className="w-6 shrink-0 text-[12.5px] font-bold tabular-nums text-[#4b4a5c]">
                             {String(ti + 1).padStart(2, "0")}
                           </span>
                           <button
@@ -281,20 +280,16 @@ export function PickerBoard({
                               pick();
                             }}
                             aria-pressed={on}
+                            aria-label={`Select ${t.name}`}
                             disabled={t.disabled}
-                            className="grid h-7 w-7 shrink-0 place-items-center rounded-lg border-2 transition-colors duration-150"
-                            style={{
-                              borderColor: "#121117",
-                              background: on ? "#2b6df0" : "#ffffff",
-                            }}
+                            className="-ml-1 grid h-11 w-11 shrink-0 touch-manipulation place-items-center"
                           >
-                            {on && (
-                              <Check
-                                size={15}
-                                className="text-primary-foreground"
-                                strokeWidth={3.5}
-                              />
-                            )}
+                            <span
+                              className="grid h-6 w-6 place-items-center rounded-md border-2 border-[#121117] transition-colors duration-150"
+                              style={{ background: on ? "#2b6df0" : "#ffffff" }}
+                            >
+                              {on && <Check size={14} className="text-white" strokeWidth={3.5} />}
+                            </span>
                           </button>
                           <button
                             onClick={(e) => {
@@ -303,17 +298,17 @@ export function PickerBoard({
                             }}
                             className="min-w-0 flex-1 text-left"
                           >
-                            <span className="block truncate text-[16px] font-extrabold text-foreground">
+                            <span className="line-clamp-2 break-words text-[16px] font-bold leading-snug text-foreground">
                               {t.name}
                             </span>
-                            <span className="mt-1 block text-[13px] font-semibold text-muted-foreground">
+                            <span className="mt-0.5 block text-[13.5px] font-medium text-[#4b4a5c]">
                               {t.countLabel ?? `${t.count ?? 0} ${unitNoun}`}
                               {!!t.flags && (
                                 <span className="text-[#b3213f]"> · {t.flags} flagged</span>
                               )}
                             </span>
                             {t.note && (
-                              <span className="mt-1 block text-[12px] font-bold text-[#6a697c]">
+                              <span className="mt-1 block text-[13px] font-medium text-[#4b4a5c]">
                                 {t.note}
                               </span>
                             )}
@@ -324,7 +319,7 @@ export function PickerBoard({
                                 e.stopPropagation();
                                 onAddContent(t, g);
                               }}
-                              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#e7eefd] px-3 py-1.5 text-[11.5px] font-extrabold text-[#b3213f] transition hover:bg-[#e7eefd]"
+                              className="inline-flex min-h-11 shrink-0 touch-manipulation items-center gap-1.5 rounded-lg border-2 border-[#121117] bg-white px-3 text-[13.5px] font-semibold text-[#121117] transition hover:bg-[#e7eefd] active:scale-[0.98]"
                             >
                               <Plus size={12} /> {addLabel}
                             </button>
@@ -333,9 +328,9 @@ export function PickerBoard({
                             <button
                               onClick={() => onDeleteItem(t, g)}
                               aria-label={`Delete ${t.name}`}
-                              className="shrink-0 text-[#6a697c] transition hover:text-[#b3213f]"
+                              className="grid h-11 w-11 shrink-0 touch-manipulation place-items-center rounded-lg text-[#4b4a5c] transition hover:bg-[#fdecef] hover:text-[#b3213f]"
                             >
-                              <Trash2 size={15} />
+                              <Trash2 size={17} />
                             </button>
                           )}
                         </div>
@@ -346,7 +341,7 @@ export function PickerBoard({
                       {onNewItem && !g.locked && (
                         <button
                           onClick={() => onNewItem(g)}
-                          className="inline-flex items-center gap-1.5 text-[12.5px] font-extrabold text-[#6a697c] hover:text-[#121117]"
+                          className="inline-flex min-h-11 items-center gap-1.5 text-[14px] font-semibold text-[#4b4a5c] hover:text-[#121117]"
                         >
                           <Plus size={13} /> {itemNoun}
                         </button>
@@ -354,7 +349,7 @@ export function PickerBoard({
                       {onSelectAll && g.items.some((t) => !t.disabled) && (
                         <button
                           onClick={() => onSelectAll(g)}
-                          className="text-[12.5px] font-extrabold text-[#6a697c] hover:text-[#121117]"
+                          className="min-h-11 text-[14px] font-semibold text-[#4b4a5c] hover:text-[#121117]"
                         >
                           Select all
                         </button>
@@ -362,7 +357,7 @@ export function PickerBoard({
                       {onClearGroup && g.items.some((t) => selected.includes(t.id)) && (
                         <button
                           onClick={() => onClearGroup(g)}
-                          className="text-[12.5px] font-extrabold text-[#6a697c] hover:text-[#121117]"
+                          className="min-h-11 text-[14px] font-semibold text-[#4b4a5c] hover:text-[#121117]"
                         >
                           Clear
                         </button>
@@ -370,7 +365,7 @@ export function PickerBoard({
                       {onDeleteGroup && !g.sample && !g.locked && (
                         <button
                           onClick={() => onDeleteGroup(g)}
-                          className="ml-auto text-[11.5px] font-bold text-[#6a697c] hover:text-[#b3213f]"
+                          className="ml-auto min-h-11 text-[13.5px] font-semibold text-[#4b4a5c] hover:text-[#b3213f]"
                         >
                           Delete subject
                         </button>

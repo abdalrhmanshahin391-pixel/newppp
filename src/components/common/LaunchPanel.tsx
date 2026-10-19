@@ -11,6 +11,10 @@ export type LaunchAction = {
   onClick: () => void;
   disabled?: boolean;
   tone?: "solid" | "outline" | "dark";
+  /** One short line under the label, so the buttons explain themselves. */
+  hint?: string;
+  /** Sits beside the next compact action instead of taking a full row. */
+  compact?: boolean;
 };
 
 export function LaunchPanel({
@@ -33,10 +37,7 @@ export function LaunchPanel({
   footnote?: ReactNode;
 }) {
   return (
-    <div
-      className="rounded-[20px] bg-white p-6"
-      style={{ border: "2px solid var(--pp-ink, #121117)" }}
-    >
+    <div className="rounded-[20px] bg-[#f4f4f8] p-5 md:p-6">
       <p className="text-[14px] font-semibold text-[#6a697c]">{eyebrow}</p>
 
       {stat !== undefined && (
@@ -61,51 +62,44 @@ export function LaunchPanel({
 
       {children && <div className="mt-4 border-t border-[#dcdce5] pt-4">{children}</div>}
 
-      <div className="mt-5 flex flex-col gap-2.5">
+      <div className="mt-5 grid grid-cols-2 gap-2.5">
         {actions.map((a) => {
-          const base =
-            "inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-[#121117] text-[15px] font-semibold transition active:scale-[0.98] disabled:opacity-40";
-          if (a.tone === "dark")
-            return (
-              <button
-                key={a.label}
-                disabled={a.disabled}
-                onClick={a.onClick}
-                className={`${base} bg-[#121117] text-white hover:bg-[#2a2933]`}
-              >
-                {a.icon}
-                {a.label}
-              </button>
-            );
-          if (a.tone === "outline")
-            return (
-              <button
-                key={a.label}
-                disabled={a.disabled}
-                onClick={a.onClick}
-                className={`${base} bg-white text-[#121117] hover:bg-[#f4f4f8]`}
-              >
-                {a.icon}
-                {a.label}
-              </button>
-            );
+          const hinted = Boolean(a.hint);
+          const base = `inline-flex w-full touch-manipulation items-center justify-center gap-2 rounded-lg border-2 border-[#121117] text-[15px] font-semibold transition-colors duration-150 active:scale-[0.98] disabled:opacity-40 ${
+            a.compact ? "min-h-12 px-2" : "min-h-12 col-span-2"
+          } ${hinted && !a.compact ? "flex-col py-2.5 gap-0" : "h-12"}`;
+          const tone =
+            a.tone === "dark"
+              ? "bg-[#121117] text-white hover:bg-[#2a2933]"
+              : a.tone === "outline"
+                ? "bg-white text-[#121117] hover:bg-[#e7eefd]"
+                : "bg-[#2b6df0] text-white hover:bg-[#2260e4]";
           return (
             <button
               key={a.label}
               disabled={a.disabled}
               onClick={a.onClick}
-              data-accent={accent}
-              className={`${base} bg-[#2b6df0] text-white hover:bg-[#2260e4]`}
+              data-accent={a.tone === "solid" || !a.tone ? accent : undefined}
+              className={`${base} ${tone}`}
             >
-              {a.icon}
-              {a.label}
+              <span className="inline-flex items-center gap-2">
+                {a.icon}
+                {a.label}
+              </span>
+              {hinted && !a.compact && (
+                <span
+                  className={`text-[12.5px] font-medium ${a.tone === "outline" ? "text-[#4b4a5c]" : "text-white"}`}
+                >
+                  {a.hint}
+                </span>
+              )}
             </button>
           );
         })}
       </div>
 
       {footnote && (
-        <p className="mt-3 text-center text-[13.5px] font-medium text-[#6a697c]">{footnote}</p>
+        <p className="mt-3 text-center text-[13.5px] font-medium text-[#4b4a5c]">{footnote}</p>
       )}
     </div>
   );

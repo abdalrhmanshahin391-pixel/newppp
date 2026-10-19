@@ -17,10 +17,17 @@ export type RailItem = {
 };
 
 const MODES = [
-  { key: "study", label: "Study view", hint: "Go through your cards", icon: BookOpen },
+  {
+    key: "study",
+    label: "Study view",
+    short: "Study",
+    hint: "Go through your cards",
+    icon: BookOpen,
+  },
   {
     key: "edit",
     label: "Edit and adjust study view",
+    short: "Edit",
     hint: "Build and rearrange your subjects",
     icon: SlidersHorizontal,
   },
@@ -34,12 +41,15 @@ export function StudyLayout({
   rail,
   children,
   board = true,
+  framed = true,
   activeMode,
   onModeChange,
 }: {
   rail: RailItem[];
   children?: ReactNode;
   board?: boolean;
+  /** Ink frame around the board. Off for screens built from grey panels and rows. */
+  framed?: boolean;
   activeMode?: "study" | "edit";
   onModeChange?: (mode: "study" | "edit") => void;
 }) {
@@ -55,7 +65,7 @@ export function StudyLayout({
       <SiteHeader />
 
       <div className="mx-auto max-w-[96rem] px-4 pt-6 md:px-8 md:pt-8">
-        <div data-tour="mode-switch" className="grid gap-3 sm:grid-cols-2 md:max-w-[46rem]">
+        <div data-tour="mode-switch" className="grid grid-cols-2 gap-2 sm:gap-3 md:max-w-[46rem]">
           {MODES.map((m) => {
             const on = mode === m.key;
             const Icon = m.icon;
@@ -70,9 +80,10 @@ export function StudyLayout({
                 <Icon size={22} strokeWidth={2} className="shrink-0" aria-hidden="true" />
                 <span className="min-w-0">
                   <span className="block truncate text-[16px] font-bold leading-tight">
-                    {m.label}
+                    <span className="sm:hidden">{m.short}</span>
+                    <span className="hidden sm:inline">{m.label}</span>
                   </span>
-                  <span className="block truncate text-[13.5px] font-medium text-[var(--pp-muted)]">
+                  <span className="rh-hint block truncate text-[13.5px] font-medium text-[var(--pp-muted)]">
                     {m.hint}
                   </span>
                 </span>
@@ -82,10 +93,10 @@ export function StudyLayout({
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-[96rem] gap-6 px-4 py-6 md:px-8 md:py-8 lg:grid-cols-[17rem_minmax(0,1fr)]">
+      <div className="mx-auto grid max-w-[96rem] gap-6 px-4 pb-28 pt-6 md:px-8 md:pb-24 md:pt-8 lg:grid-cols-[17rem_minmax(0,1fr)]">
         <aside
           data-tour="study-rail"
-          className="grid content-start gap-3 sm:grid-cols-2 lg:grid-cols-1"
+          className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:-mx-8 md:px-8 lg:mx-0 lg:grid lg:content-start lg:gap-3 lg:overflow-visible lg:px-0 lg:pb-0"
         >
           {rail.map((item) => (
             <RailTile key={item.label} item={item} />
@@ -95,8 +106,12 @@ export function StudyLayout({
         <main className="min-w-0">
           {board ? (
             <div
-              className="min-h-[82vh] rounded-[24px] p-5 md:p-8"
-              style={{ border: "2px solid var(--pp-ink)", background: "#ffffff" }}
+              className={
+                framed ? "min-h-[82vh] rounded-[24px] p-5 md:p-8" : "min-h-[82vh] bg-white md:p-1"
+              }
+              style={
+                framed ? { border: "2px solid var(--pp-ink)", background: "#ffffff" } : undefined
+              }
             >
               {children}
             </div>
@@ -118,7 +133,7 @@ function RailTile({ item }: { item: RailItem }) {
       <span className="min-w-0">
         <span className="block truncate text-[16px] font-bold leading-tight">{item.label}</span>
         {item.hint && (
-          <span className="block truncate text-[13.5px] font-medium text-[var(--pp-muted)]">
+          <span className="rh-hint block truncate text-[13.5px] font-medium text-[var(--pp-muted)]">
             {item.hint}
           </span>
         )}

@@ -108,6 +108,28 @@ photos or illustrations, no coloured strips, no labels above titles. Locked tool
 dashed and say "Coming soon". The Tutorial page was removed (`/tutorial` and `/tour` redirect
 to the home page); the in-page "How it works" tours stay.
 
+## Flashcards workspace (`/study`, `/study/match`, the card player)
+
+One main action per panel, hierarchy by weight instead of by frame:
+
+- **Panels are grey** (`#f4f4f8`, no border): the session panel (`LaunchPanel`, `GameSetup`) and the daily panel.
+  Ink borders (2px) are for things you press: buttons, mode tabs, subject rows, menus. The page board itself has no frame
+  (`StudyLayout framed={false}`); other study pages keep the framed board.
+- **Session panel:** one solid blue button on top ("Smart review · N" when cards are due, "Study mode" when nothing is due),
+  with a one-line hint under it, then two compact outline buttons side by side. The daily panel only shows its own
+  "Review everything due" button when something is ticked, so the same action is never offered twice.
+- **Subject rows** (`SubjectBoard`, `PickerBoard`): tick box 24px drawn, 44px hit area; the name may wrap to two lines (never
+  cut to a few letters); count under the name; one "..." menu per row (rename, add sub-subject, move up/down, remove...).
+  Move up/down is the touch way to reorder (native drag does nothing on iPad); the drag handle only shows with a mouse.
+  Remove always opens the confirmation dialog.
+- **Action column** (`Add subject`, `Edit`, ...): big tiles from 1024px; below that one short scrolling strip of 44px chips so
+  the learner's subjects are on screen first. Mode tabs are "Study / Edit" on phones.
+- **Memory Lab:** Play is directly under the pair count and says which game it will start ("Play Match"); the four games
+  are a 2x2 choice; the two switches say what they do in one line.
+- **Card player:** progress bar and "1 / 6" at the top, the side label ("Question" / "Answer") is a readable chip, the hint
+  text follows the device ("Tap the card to flip, swipe to move" on touch; Space and arrows with a mouse), 56px controls.
+- Every control is at least 44px, every text at least 12px and 4.5:1 (muted text is `#4b4a5c`, not the old light greys).
+
 ## App pages (every page except the home design pages)
 
 Every page outside `/`, `/rita*` and `/learn*` was written with fixed warm colours. They take the

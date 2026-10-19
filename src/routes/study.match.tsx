@@ -188,7 +188,7 @@ function MemoryWorkspace() {
   ];
 
   return (
-    <StudyLayout rail={rail} activeMode={mode} onModeChange={setMode}>
+    <StudyLayout framed={false} rail={rail} activeMode={mode} onModeChange={setMode}>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div data-tour="ml-subjects" className="max-h-[74vh] min-w-0 overflow-y-auto pr-1">
           <SubjectBoard
