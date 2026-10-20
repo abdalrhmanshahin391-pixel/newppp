@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { LANGUAGE_CHANGED_EVENT, langKey, useActiveLanguage } from "@/lib/language-scope";
 
 export type MemoryPair = {
   id: string;
@@ -11,7 +12,7 @@ export type MemoryPair = {
 
 export function memoryKey(subject: string, subtopic: string) {
   const slug = (s: string) => s.trim().toLowerCase().replace(/\s+/g, "-");
-  return `rita_mem_${slug(subject)}_${slug(subtopic)}`;
+  return langKey(`rita_mem_${slug(subject)}_${slug(subtopic)}`);
 }
 
 function newId() {
@@ -25,6 +26,11 @@ const listeners = new Set<() => void>();
 function emit() {
   version += 1;
   listeners.forEach((l) => l());
+}
+
+// Another language's pairs are a different set: lists that cached counts must read again.
+if (typeof window !== "undefined") {
+  window.addEventListener(LANGUAGE_CHANGED_EVENT, () => emit());
 }
 
 function subscribe(cb: () => void) {
@@ -96,25 +102,27 @@ export function parsePairList(text: string): { left: string; right: string }[] {
 
 /** Memory pairs for one sub-subject topic, persisted in the browser. */
 export function useMemoryPairs(subject: string, subtopic: string) {
+  // The key includes the active language, so switching language switches the set of pairs.
+  useActiveLanguage();
   const key = memoryKey(subject, subtopic);
   const [pairs, setPairs] = useState<MemoryPair[]>([]);
-  const [hydrated, setHydrated] = useState(false);
+  // The key the current `pairs` were read from; nothing is saved until it matches the key in use.
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
 
   useEffect(() => {
-    setHydrated(false);
     setPairs(readPairs(subject, subtopic));
-    setHydrated(true);
-  }, [subject, subtopic]);
+    setLoadedKey(key);
+  }, [key, subject, subtopic]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (loadedKey !== key) return;
     try {
       window.localStorage.setItem(key, JSON.stringify(pairs));
       emit();
     } catch {
       /* ignore */
     }
-  }, [pairs, hydrated, key]);
+  }, [pairs, loadedKey, key]);
 
   const addPair = useCallback((left: string, right: string, hint?: string, group?: string) => {
     setPairs((p) => [...p, { id: newId(), left, right, hint, group, misses: 0 }]);

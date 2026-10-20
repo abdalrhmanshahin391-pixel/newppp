@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/legacy-client";
+import { dbLanguage, getLegacyLanguage } from "@/lib/language-scope";
+import { languageFilter } from "@/lib/learning-language";
 
 export type FlashSubject = {
   id: string;
@@ -8,6 +10,8 @@ export type FlashSubject = {
   color: string;
   emoji: string | null;
   sort: number;
+  /** The language this subject belongs to; empty on rows made before languages existed. */
+  language?: string | null;
   created_at: string;
 };
 
@@ -40,10 +44,15 @@ export function colorOf(key: string) {
 }
 
 export async function fetchSubjects(): Promise<FlashSubject[]> {
-  const { data, error } = await db("flash_subjects")
+  let query = db("flash_subjects")
     .select("*")
     .order("sort", { ascending: true })
     .order("created_at", { ascending: true });
+  // Only the active language's subjects. The legacy language is known only on a migrated
+  // database, so an unmigrated one keeps showing everything.
+  const active = dbLanguage();
+  if (active) query = query.or(languageFilter(active, getLegacyLanguage()));
+  const { data, error } = await query;
   if (error) throw error;
   return (data ?? []) as FlashSubject[];
 }
@@ -78,7 +87,13 @@ export async function createSubject(input: {
   const { data: auth } = await supabase.auth.getUser();
   const uid = auth.user?.id;
   if (!uid) throw new Error("Not signed in");
-  const { error } = await db("flash_subjects").insert({ ...input, user_id: uid });
+  // Stamp the active language, but only where the column exists (a migrated database).
+  const language = dbLanguage();
+  const { error } = await db("flash_subjects").insert({
+    ...input,
+    user_id: uid,
+    ...(language ? { language } : {}),
+  });
   if (error) throw error;
 }
 

@@ -2,6 +2,8 @@ import { Link } from "@tanstack/react-router";
 
 import { useLang } from "@/components/LanguageProvider";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useLearningLanguage } from "@/hooks/useLearningLanguage";
+import { showsGermanLab } from "@/lib/learning-language";
 import { SUPPORT_EMAIL } from "@/lib/legal-content";
 import { EdithWordmark } from "@/components/brand/EdithWordmark";
 import { BRAND_NAME } from "@/lib/brand";
@@ -16,6 +18,7 @@ export function SiteFooter() {
   const { lang } = useLang();
   const ar = lang === "ar";
   const settings = useSiteSettings();
+  const learning = useLearningLanguage();
 
   const columns: Col[] = [
     {
@@ -24,7 +27,9 @@ export function SiteFooter() {
         { label: ar ? "تحدّث مع ريتا" : "Talk to Rita", to: "/rita" },
         { label: ar ? "محادثة حيّة" : "Live conversation", to: "/rita-live" },
         { label: ar ? "دروس ريتا" : "Rita's lessons", to: "/rita-lessons" },
-        { label: ar ? "الألمانية" : "German Lab", to: "/german" },
+        ...(showsGermanLab(learning.code)
+          ? [{ label: ar ? "الألمانية" : "German Lab", to: "/german" }]
+          : []),
       ],
     },
     {

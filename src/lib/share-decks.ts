@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/legacy-client";
+import { dbLanguage } from "@/lib/language-scope";
 
 const db = (t: string) => (supabase.from as any)(t);
 
@@ -126,6 +127,9 @@ export async function fetchFeed(opts: {
 }) {
   const page = Math.max(0, opts.page ?? 0);
   let q = db("shared_decks").select("*").eq("published", true).eq("audience", "public");
+  // Only decks shared in the language the learner is learning.
+  const language = dbLanguage();
+  if (language) q = q.eq("language", language);
 
   if (opts.search?.trim()) q = q.ilike("title", `%${opts.search.trim()}%`);
   if (opts.tag) q = q.contains("tags", [opts.tag]);
@@ -266,6 +270,7 @@ export async function publishDeck(input: {
       card_count: total,
       audience: toSpace ? "space" : "public",
       published: !toSpace,
+      ...(dbLanguage() ? { language: dbLanguage() } : {}),
     })
     .select("id")
     .single();

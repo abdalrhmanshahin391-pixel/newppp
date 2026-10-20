@@ -34,6 +34,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import { useLanguageRegistry } from "@/hooks/useLearningLanguage";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { useAuth } from "@/hooks/useAuth";
@@ -58,6 +59,7 @@ import {
   adminMoveLesson,
   adminReadCurriculumWindow,
   adminReorderLessons,
+  adminSetCurriculumLanguage,
   adminRegenerateObjective,
   adminSaveCurriculumPages,
   adminSaveSlides,
@@ -282,7 +284,15 @@ function AdminCurricula() {
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="font-bold">{book.title_ar || book.title}</span>
-                <KindBadge kind={book.kind} />
+                <span className="flex items-center gap-1.5">
+                  <span
+                    dir="ltr"
+                    className="rounded-md bg-[var(--pp-grey)] px-1.5 py-0.5 text-[11px] font-bold uppercase text-[var(--pp-muted)]"
+                  >
+                    {book.target_language}
+                  </span>
+                  <KindBadge kind={book.kind} />
+                </span>
               </div>
               <CursorBars book={book} />
               <p className="mt-2 text-xs font-bold text-[var(--pp-muted)]">{cursorLabelAr(book)}</p>
@@ -414,6 +424,8 @@ function AddBookCard({
   const createFn = useServerFn(adminCreateCurriculum);
   const savePagesFn = useServerFn(adminSaveCurriculumPages);
   const [kind, setKind] = useState<"grammar" | "vocabulary">("grammar");
+  const registry = useLanguageRegistry();
+  const [language, setLanguage] = useState("en");
   const [title, setTitle] = useState("");
   const [titleAr, setTitleAr] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -447,6 +459,7 @@ function AddBookCard({
           kind,
           title: title.trim(),
           title_ar: titleAr.trim(),
+          target_language: language,
           page_count: pageCount,
           pdf_path: path,
         },
@@ -491,6 +504,21 @@ function AddBookCard({
           </button>
         ))}
       </div>
+      <label className="mt-2 block text-xs font-bold text-[var(--pp-muted)]">
+        لغة الكتاب (الدروس بتظهر لمتعلّمي هاللغة فقط)
+        <select
+          value={language}
+          onChange={(event) => setLanguage(event.target.value)}
+          className="rita-select mt-1"
+        >
+          {registry.all.map((item) => (
+            <option key={item.code} value={item.code}>
+              {item.name_ar} · {item.name_native}
+              {item.enabled ? "" : " (معطّلة)"}
+            </option>
+          ))}
+        </select>
+      </label>
       <input
         value={title}
         onChange={(event) => setTitle(event.target.value)}
@@ -559,6 +587,8 @@ function BookDetail({
   onChanged: () => Promise<void>;
 }) {
   const statusFn = useServerFn(adminSetCurriculumStatus);
+  const languageFn = useServerFn(adminSetCurriculumLanguage);
+  const languages = useLanguageRegistry();
   const readFn = useServerFn(adminReadCurriculumWindow);
   const transcribeFn = useServerFn(adminTranscribeCurriculumPages);
   const importWindowFn = useServerFn(adminImportCurriculumWindow);
@@ -750,6 +780,31 @@ function BookDetail({
             <p className="text-sm font-semibold text-[var(--pp-muted)]" dir="ltr">
               {book.title} · {book.page_count} pages
             </p>
+            <label className="mt-2 flex items-center gap-2 text-sm font-bold">
+              لغة الكتاب
+              <select
+                value={book.target_language}
+                disabled={Boolean(busy)}
+                onChange={(event) =>
+                  void run(
+                    "language",
+                    () =>
+                      languageFn({
+                        data: { curriculumId: book.id, language: event.target.value },
+                      }),
+                    "تم تغيير لغة الكتاب",
+                  )
+                }
+                className="rita-select !w-auto"
+              >
+                {languages.all.map((item) => (
+                  <option key={item.code} value={item.code}>
+                    {item.name_ar} · {item.name_native}
+                    {item.enabled ? "" : " (معطّلة)"}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
           <div className="flex gap-2">
             <button

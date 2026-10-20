@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { SAMPLE_SUBJECTS, type SampleSubject } from "@/lib/study-sample-data";
 import { ensureSampleFlashcards } from "@/lib/demo-seed";
+import { isSampleLanguage, useActiveLanguage } from "@/lib/language-scope";
+import { scopedKey } from "@/lib/learning-language";
 
 export const FLASHCARD_SUBJECTS_KEY = "rita_study_subjects";
 export const QUESTION_SUBJECTS_KEY = "rita_question_subjects";
@@ -10,15 +12,19 @@ export type Selection =
   | { kind: "sub"; si: number; sj: number }
   | null;
 
-function load(storageKey: string): SampleSubject[] {
+/** `baseKey` is the kit's key; the copy for `language` (when one is chosen) is what is read. */
+function load(baseKey: string, language: string | null): SampleSubject[] {
   if (typeof window === "undefined") return [];
+  const storageKey = scopedKey(baseKey, language);
+  // The cardiology sample belongs to the learner's first space only.
+  const sample = baseKey === FLASHCARD_SUBJECTS_KEY && isSampleLanguage();
   try {
     let raw = window.localStorage.getItem(storageKey);
-    if (!raw && storageKey === FLASHCARD_SUBJECTS_KEY) {
+    if (!raw && sample) {
       ensureSampleFlashcards();
       raw = window.localStorage.getItem(storageKey);
     }
-    if (!raw) return storageKey === FLASHCARD_SUBJECTS_KEY ? SAMPLE_SUBJECTS : [];
+    if (!raw) return sample ? SAMPLE_SUBJECTS : [];
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
       return (parsed as SampleSubject[]).map((s) => ({
@@ -26,14 +32,14 @@ function load(storageKey: string): SampleSubject[] {
         subs: (s.subs ?? []).map((x) => ({ name: x.name })),
       }));
     }
-    if (storageKey === FLASHCARD_SUBJECTS_KEY) {
+    if (sample) {
       ensureSampleFlashcards();
       return SAMPLE_SUBJECTS;
     }
   } catch {
     /* ignore */
   }
-  return storageKey === FLASHCARD_SUBJECTS_KEY ? SAMPLE_SUBJECTS : [];
+  return sample ? SAMPLE_SUBJECTS : [];
 }
 
 function move<T>(list: T[], from: number, to: number): T[] {
@@ -44,24 +50,28 @@ function move<T>(list: T[], from: number, to: number): T[] {
   return next;
 }
 
-export function useStudySubjects(storageKey: string = FLASHCARD_SUBJECTS_KEY) {
+export function useStudySubjects(baseKey: string = FLASHCARD_SUBJECTS_KEY) {
+  // Each language has its own copy of the board; switching language swaps which one is shown.
+  const language = useActiveLanguage();
+  const storageKey = scopedKey(baseKey, language);
   const [subjects, setSubjects] = useState<SampleSubject[]>([]);
-  const [hydrated, setHydrated] = useState(false);
+  // The key the current `subjects` were read from. Nothing is written until it matches the key in
+  // use, so a language switch can never save one language's board under another's key.
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
 
   useEffect(() => {
-    setHydrated(false);
-    setSubjects(load(storageKey));
-    setHydrated(true);
-  }, [storageKey]);
+    setSubjects(load(baseKey, language));
+    setLoadedKey(storageKey);
+  }, [baseKey, language, storageKey]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (loadedKey !== storageKey) return;
     try {
       window.localStorage.setItem(storageKey, JSON.stringify(subjects));
     } catch {
       /* ignore */
     }
-  }, [subjects, hydrated, storageKey]);
+  }, [subjects, loadedKey, storageKey]);
 
   const addSubject = useCallback((name: string) => {
     setSubjects((s) => [...s, { name, subs: [] }]);

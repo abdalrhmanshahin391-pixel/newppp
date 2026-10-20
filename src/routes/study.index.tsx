@@ -1,3 +1,4 @@
+import { LanguageGate } from "@/components/language/LanguageGate";
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -62,7 +63,11 @@ export const Route = createFileRoute("/study/")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: StudyBoard,
+  component: () => (
+    <LanguageGate>
+      <StudyBoard />
+    </LanguageGate>
+  ),
 });
 
 /** Keys look like "2:0" — subject index, sub-subject index. */

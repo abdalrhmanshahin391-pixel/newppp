@@ -9,6 +9,7 @@ import { topicKey, type FlashCardItem } from "@/lib/use-flashcards";
 import { questionKey, type StudyQuestion } from "@/lib/use-study-questions";
 import { memoryKey, type MemoryPair } from "@/lib/use-memory-pairs";
 import { FLASHCARD_SUBJECTS_KEY, QUESTION_SUBJECTS_KEY } from "@/lib/use-study-subjects";
+import { isSampleLanguage, langKey } from "@/lib/language-scope";
 
 export const DEMO_FLAG = "rita_demo_seeded_v2";
 export const MEMORY_SUBJECTS_KEY = "rita_memory_subjects";
@@ -162,8 +163,10 @@ export const ALL_SAMPLE_CARDS: FlashCardItem[] = [...toCards(CARDS_A), ...toCard
 /** Ensures the sample cardiology flashcards and subject exist in localStorage if the user has 0 subjects. */
 export function ensureSampleFlashcards() {
   if (typeof window === "undefined") return;
+  // The sample belongs to the learner's first language only; a language added later starts empty.
+  if (!isSampleLanguage()) return;
   try {
-    const raw = window.localStorage.getItem(FLASHCARD_SUBJECTS_KEY);
+    const raw = window.localStorage.getItem(langKey(FLASHCARD_SUBJECTS_KEY));
     let hasValidSubjects = false;
     if (raw) {
       const parsed = JSON.parse(raw);
@@ -174,7 +177,7 @@ export function ensureSampleFlashcards() {
       const board = [
         { name: SAMPLE_SUBJECT, subs: [{ name: SAMPLE_SUB_A }, { name: SAMPLE_SUB_B }] },
       ];
-      put(FLASHCARD_SUBJECTS_KEY, board);
+      put(langKey(FLASHCARD_SUBJECTS_KEY), board);
       put(topicKey(SAMPLE_SUBJECT, SAMPLE_SUB_A), toCards(CARDS_A));
       put(topicKey(SAMPLE_SUBJECT, SAMPLE_SUB_B), toCards(CARDS_B));
     }
@@ -197,13 +200,13 @@ export function seedDemoContent() {
       { name: SAMPLE_SUBJECT, subs: [{ name: SAMPLE_SUB_A }, { name: SAMPLE_SUB_B }] },
     ];
 
-    if (empty(QUESTION_SUBJECTS_KEY)) {
-      put(QUESTION_SUBJECTS_KEY, board);
+    if (isSampleLanguage() && empty(langKey(QUESTION_SUBJECTS_KEY))) {
+      put(langKey(QUESTION_SUBJECTS_KEY), board);
       put(questionKey(SAMPLE_SUBJECT, SAMPLE_SUB_A), QUESTIONS);
     }
 
-    if (empty(MEMORY_SUBJECTS_KEY)) {
-      put(MEMORY_SUBJECTS_KEY, board);
+    if (isSampleLanguage() && empty(langKey(MEMORY_SUBJECTS_KEY))) {
+      put(langKey(MEMORY_SUBJECTS_KEY), board);
       const pairs: MemoryPair[] = PAIRS.map(([left, right], i) => ({
         id: id(200 + i),
         left,

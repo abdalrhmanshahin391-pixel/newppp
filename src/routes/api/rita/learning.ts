@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireRitaUser } from "@/lib/rita-voice.server";
 import { flashcardFaces, isGermanItem, learningKey, termWithoutArticle } from "@/lib/rita-learning";
 import type { LearningItem } from "@/lib/rita-learning";
+import { languageFilter } from "@/lib/learning-language";
 
 const uuid = z.string().uuid();
 const itemSchema = z.object({
@@ -37,6 +38,23 @@ const createSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
+/** The learner's active and legacy languages; both null on a database that is not migrated yet. */
+async function learnerLanguages(
+  table: (name: string) => any,
+  userId: string,
+): Promise<{ active: string | null; legacy: string | null }> {
+  try {
+    const { data, error } = await table("profiles")
+      .select("learning_language, legacy_language")
+      .eq("id", userId)
+      .maybeSingle();
+    if (error || !data) return { active: null, legacy: null };
+    return { active: data.learning_language ?? null, legacy: data.legacy_language ?? null };
+  } catch {
+    return { active: null, legacy: null };
+  }
+}
+
 function failure(message: string, status: number) {
   return Response.json({ error: message }, { status, headers: { "Cache-Control": "no-store" } });
 }
@@ -50,11 +68,15 @@ export const Route = createFileRoute("/api/rita/learning")({
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const table = (name: string) => (supabaseAdmin.from as any)(name);
+          const { active, legacy } = await learnerLanguages(table, auth.userId);
+          let flashQuery = table("flash_subjects")
+            .select("id, parent_id, name")
+            .eq("user_id", auth.userId)
+            .order("sort");
+          // Only the active language's subjects are offered as a place to save words.
+          if (active && legacy) flashQuery = flashQuery.or(languageFilter(active, legacy));
           const [flash, german, subtopics] = await Promise.all([
-            table("flash_subjects")
-              .select("id, parent_id, name")
-              .eq("user_id", auth.userId)
-              .order("sort"),
+            flashQuery,
             table("de_subjects")
               .select("id, name")
               .eq("user_id", auth.userId)
@@ -102,6 +124,7 @@ export const Route = createFileRoute("/api/rita/learning")({
                 .maybeSingle();
               if (!parent) return failure("That parent subject is not yours.", 403);
             }
+            const { active, legacy } = await learnerLanguages(table, auth.userId);
             const { data: created, error } = await table("flash_subjects")
               .insert({
                 user_id: auth.userId,
@@ -109,6 +132,7 @@ export const Route = createFileRoute("/api/rita/learning")({
                 name: data.name,
                 color: "lilac",
                 emoji: null,
+                ...(active && legacy ? { language: active } : {}),
               })
               .select("id")
               .single();

@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { FLASHCARD_SUBJECTS_KEY } from "@/lib/use-study-subjects";
+import { langKey } from "@/lib/language-scope";
 import { readCards, useCardsVersion, type FlashCardItem } from "@/lib/use-flashcards";
 import {
   studyOverview,
@@ -21,7 +22,7 @@ export function collectAllCards(): { refs: CardRef[]; byId: Map<string, FlashCar
   const byId = new Map<string, FlashCardItem>();
   if (typeof window === "undefined") return { refs, byId };
   try {
-    const raw = window.localStorage.getItem(FLASHCARD_SUBJECTS_KEY);
+    const raw = window.localStorage.getItem(langKey(FLASHCARD_SUBJECTS_KEY));
     const subjects: { name: string; subs?: { name: string }[] }[] = raw ? JSON.parse(raw) : [];
     for (const subject of subjects ?? []) {
       for (const sub of subject.subs ?? []) {

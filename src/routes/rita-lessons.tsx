@@ -1,3 +1,5 @@
+import { LanguageGate } from "@/components/language/LanguageGate";
+import { useActiveLanguage } from "@/lib/language-scope";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
@@ -20,7 +22,11 @@ export const Route = createFileRoute("/rita-lessons")({
   head: () => ({
     meta: [{ title: "دروس ريتا — RitaJet" }, { name: "robots", content: "noindex" }],
   }),
-  component: RitaLessonsPage,
+  component: () => (
+    <LanguageGate>
+      <RitaLessonsPage />
+    </LanguageGate>
+  ),
 });
 
 function RitaLessonsPage() {
@@ -29,6 +35,7 @@ function RitaLessonsPage() {
   const pushed = useRef(false);
   const { user, loading } = useAuth();
   const pathFn = useServerFn(getLessonPath);
+  const language = useActiveLanguage();
   const [lessons, setLessons] = useState<PathLesson[] | null>(null);
   const [reviews, setReviews] = useState<ReviewSuggestion[]>([]);
   const [error, setError] = useState("");
@@ -39,13 +46,13 @@ function RitaLessonsPage() {
 
   useEffect(() => {
     if (!user) return;
-    pathFn()
+    pathFn({ data: { language } })
       .then((result) => {
         setLessons(result.lessons);
         setReviews(result.reviews);
       })
       .catch((cause) => setError(cause instanceof Error ? cause.message : "تعذّر تحميل الدروس."));
-  }, [pathFn, user]);
+  }, [pathFn, user, language]);
 
   const sheetLesson = lessons?.find((lesson) => lesson.id === openId) ?? null;
 

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/legacy-client";
+import { dbLanguage } from "@/lib/language-scope";
 import { fetchAuthors, type DeckAuthor, DECK_COVERS, coverOf, getDailyShareQuota, type DailyShareQuota } from "@/lib/share-decks";
 
 const db = (t: string) => (supabase.from as any)(t);
@@ -100,6 +101,9 @@ export async function fetchQuestionFeed(opts: {
     .select("*")
     .eq("published", true)
     .eq("audience", "public");
+  // Only sets shared in the language the learner is learning.
+  const language = dbLanguage();
+  if (language) q = q.eq("language", language);
 
   if (opts.search?.trim()) {
     q = q.ilike("title", `%${opts.search.trim()}%`);
@@ -219,6 +223,7 @@ export async function publishQuestionSet(input: {
       question_count: input.questions.length,
       audience: toSpace ? "space" : "public",
       published: !toSpace,
+      ...(dbLanguage() ? { language: dbLanguage() } : {}),
     })
     .select("id")
     .single();
