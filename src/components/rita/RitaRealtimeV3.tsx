@@ -134,6 +134,7 @@ export function RitaRealtimeV3({
   const firstRemoteAudioRecorded = useRef(false);
   const interruptCandidateAt = useRef(0);
   const turnId = useRef("");
+  const botReadyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fillerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fillerAbort = useRef<AbortController | null>(null);
   const fillerSource = useRef<AudioBufferSourceNode | null>(null);
@@ -563,6 +564,10 @@ export function RitaRealtimeV3({
 
   const endLesson = useCallback(async () => {
     cancelFiller();
+    if (botReadyTimer.current) {
+      clearTimeout(botReadyTimer.current);
+      botReadyTimer.current = null;
+    }
     const unfinishedGenerated = replyAccumulator.current.generatedText.trim();
     const unfinishedSpoken = replyAccumulator.current.spokenText.trim();
     const unfinishedId = replyAccumulator.current.draftId;
@@ -875,6 +880,16 @@ export function RitaRealtimeV3({
             setActive(true);
             setStatus("Audio connected; waiting for Rita…");
             setMood("ready");
+            if (botReadyTimer.current) clearTimeout(botReadyTimer.current);
+            botReadyTimer.current = setTimeout(() => {
+              botReadyTimer.current = null;
+              if (botReady.current || !client.current?.connected) return;
+              setReadyForSpeech(false);
+              setStatus("Rita could not get ready");
+              setError("Rita’s voice worker did not become ready. End this session and try again.");
+              void metric("bot_ready_timeout", 90_000);
+              snapshotNetwork("bot_ready_timeout");
+            }, 90_000);
             snapshotNetwork("transport_connected");
             if (!transportMetricRecorded.current) {
               transportMetricRecorded.current = true;
@@ -905,6 +920,10 @@ export function RitaRealtimeV3({
             }
           },
           onBotReady: () => {
+            if (botReadyTimer.current) {
+              clearTimeout(botReadyTimer.current);
+              botReadyTimer.current = null;
+            }
             botReady.current = true;
             botReadyAt.current = performance.now();
             setReadyForSpeech(true);
@@ -917,6 +936,10 @@ export function RitaRealtimeV3({
             }
           },
           onDisconnected: () => {
+            if (botReadyTimer.current) {
+              clearTimeout(botReadyTimer.current);
+              botReadyTimer.current = null;
+            }
             activeRef.current = false;
             botReady.current = false;
             setReadyForSpeech(false);
@@ -1185,6 +1208,10 @@ export function RitaRealtimeV3({
       activeRef.current = true;
       if (!botReady.current) setStatus("Connected; waiting for Rita…");
     } catch (cause) {
+      if (botReadyTimer.current) {
+        clearTimeout(botReadyTimer.current);
+        botReadyTimer.current = null;
+      }
       const pending = client.current;
       client.current = null;
       if (pending) await pending.disconnect().catch(() => undefined);

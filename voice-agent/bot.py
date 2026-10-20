@@ -30,6 +30,7 @@ from pipecat.processors.aggregators.llm_response_universal import (
     LLMUserAggregatorParams,
 )
 from pipecat.runner.types import DailyRunnerArguments
+from pipecat.services.groq.llm import GroqLLMService
 from pipecat.services.soniox.stt import (
     SonioxContextGeneralItem,
     SonioxContextObject,
