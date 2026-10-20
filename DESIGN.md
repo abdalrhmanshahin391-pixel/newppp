@@ -98,6 +98,27 @@ the words "Used up"). Only one menu is open at a time; Escape and a press outsid
 focus returns to the button. Opening is 160ms, `scale(.96)` from the button, off with reduced
 motion.
 
+## Learning home (`/learn`)
+
+One working screen for Rita and every study tool (the three room pages still exist at `/learn/study-space`, `/learn/study-room`
+and `/learn/german`, but nothing on the home links to them). Structure follows a familiar app home, in this site's own look:
+
+- **Top:** the title (greeting with the first name, a calm 28 to 40px, class `rh-app-title`) and one grey "Next up" panel with
+  one blue button. The suggestion follows a fixed order (`src/lib/learn-home.ts`): a lesson already started, cards due,
+  the next lesson, a talk with Rita; guests are asked to sign in. Nothing here is invented: no number or streak is shown unless it came from the account.
+- **Three columns from 1024px:** a section list (anchors with the current one highlighted, plus Progress), the sections, and the
+  "Today" panel (due cards, daily goal bar, streak, lessons done; loading, error with retry, empty and guest states).
+  Below 1024px the list becomes a scrolling strip of 44px chips and "Today" sits above the sections.
+- **Sections** are plain titles (no small capital labels) over a list of wide rows: Talk to Rita, Study with your own material,
+  Plan your time, Study together, German. A row is one link with a 2px ink border (it is pressed), the picture slot on the
+  inline-start side, the name, one line of text, an "AI" tag where the tool uses AI, and a live chip when there is real
+  state ("10 due", "3 of 12 done").
+- **Picture slots** (`ImageSlot`) are 128px squares (88px on phones). With no picture they are a dashed, labelled "Image here"
+  square, so the gap is obvious. Pictures are added in `src/lib/learn-images.ts` by tool key; nothing else changes. One
+  illustration family for all of them: flat vector with thick ink outlines and the site blue, like the lesson covers.
+- Direction follows the language (logical padding, mirrored arrows). Every control is at least 44px. Motion is only
+  press feedback (`scale(.99)`) and colour changes under 200ms.
+
 ## Study rooms (/learn and the room pages)
 
 Same system as the home page, inside `.edith-premium`: white page, Inter Tight titles, one
