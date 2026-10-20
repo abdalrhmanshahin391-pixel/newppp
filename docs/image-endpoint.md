@@ -27,6 +27,6 @@ Errors are `{ "error": "..." }`: 400 bad input, 401 wrong token, 413 body too la
 (`Retry-After` is set), 502 OpenAI refused or failed (its own reason is passed on), 503 log table missing.
 
 ## Limits (fail closed)
-20 pictures per hour, 100 per day, 2 at the same time. Counted from `rita_image_generations`; if that table is
+20 pictures per hour, 100 per day, 2 at a time. Counted from `rita_image_generations`; if that table is
 missing the endpoint refuses instead of running without a cap. The log keeps a 120-character preview of the
 prompt, never the whole prompt or the token. Rules and tests: `src/lib/rita-image-request.ts`.

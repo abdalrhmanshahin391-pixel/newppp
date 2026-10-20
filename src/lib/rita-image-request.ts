@@ -22,6 +22,9 @@ export const MIN_TOKEN_LENGTH = 32;
 export const MAX_PROMPT_CHARS = 1000;
 export const MIN_PROMPT_CHARS = 3;
 
+// A private operator endpoint, guarded by a bearer secret and a usage log.
+// The defaults support normal image work while still limiting accidental or
+// leaked-token use. `medium` remains the request default; `high` is explicit.
 export const IMAGE_LIMITS = { perHour: 20, perDay: 100, concurrent: 2 } as const;
 
 /** The token from "Authorization: Bearer …"; empty when the header is missing or malformed. */
