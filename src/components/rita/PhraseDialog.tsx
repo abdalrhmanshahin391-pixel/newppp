@@ -10,7 +10,14 @@ import {
   rememberExplanation,
   stopPhraseAudio,
 } from "@/lib/phrase-cache";
-import { cleanPhrase, type PhraseExplanation, type PronounceStyle } from "@/lib/rita-phrase";
+import {
+  cleanPhrase,
+  explainFailureText,
+  guessPhraseLang,
+  type PhraseExplanation,
+  type PronounceStyle,
+} from "@/lib/rita-phrase";
+import type { LearningItem } from "@/lib/rita-learning";
 
 const STYLE_LABEL: Record<PronounceStyle, { label: string; hint: string }> = {
   fast: { label: "Fast", hint: "Natural speed" },
@@ -33,10 +40,13 @@ export function PhraseDialog({
   phrase,
   onClose,
   onPlayingChange,
+  onWord,
 }: {
   phrase: string;
   onClose: () => void;
   onPlayingChange?: (playing: boolean) => void;
+  /** Called once per phrase with the word and its meaning, so it lands in the learner's Words list. */
+  onWord?: (item: LearningItem) => void;
 }) {
   const explainFn = useServerFn(explainPhrase);
   const text = cleanPhrase(phrase);
@@ -45,6 +55,8 @@ export function PhraseDialog({
   );
   const [loading, setLoading] = useState(!cachedExplanation(text));
   const [failed, setFailed] = useState(false);
+  const [failReason, setFailReason] = useState("");
+  const [saved, setSaved] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [busy, setBusy] = useState<PronounceStyle | null>(null);
   const [playing, setPlaying] = useState<PronounceStyle | null>(null);
@@ -89,6 +101,7 @@ export function PhraseDialog({
           rememberExplanation(text, result.explanation);
           setExplanation(result.explanation);
         } else {
+          setFailReason(result.reason);
           setFailed(true);
         }
       })
@@ -99,7 +112,30 @@ export function PhraseDialog({
     };
   }, [explainFn, text, attempt]);
 
-  const lang = explanation?.lang === "en" ? "en" : explanation?.lang === "de" ? "de" : null;
+  const lang =
+    explanation?.lang === "en"
+      ? "en"
+      : explanation?.lang === "de"
+        ? "de"
+        : !explanation && failed
+          ? (guessPhraseLang(text) as "de" | "en" | null)
+          : null;
+
+  // Every phrase the learner taps goes into their Words list, ready to become a flashcard.
+  const savedFor = useRef("");
+  useEffect(() => {
+    if (!explanation || !lang || !onWord || savedFor.current === text) return;
+    savedFor.current = text;
+    onWord({
+      term: text,
+      meaning: explanation.translation_ar,
+      language: lang,
+      kind: text.split(/\s+/).length > 2 ? "sentence" : "word",
+      article: null,
+      plural: null,
+    });
+    setSaved(true);
+  }, [explanation, lang, onWord, text]);
 
   const play = useCallback(
     async (style: PronounceStyle) => {
@@ -177,7 +213,7 @@ export function PhraseDialog({
           )}
           {!loading && failed && (
             <p className="text-[16px] text-[var(--pp-accent-text)]">
-              تعذّر تحميل الترجمة.{" "}
+              {explainFailureText(failReason)}{" "}
               <button
                 type="button"
                 className="font-bold underline"
@@ -196,6 +232,11 @@ export function PhraseDialog({
                   <span className="font-semibold text-[var(--pp-ink)]">
                     {explanation.pronunciation_ar}
                   </span>
+                </p>
+              )}
+              {saved && (
+                <p className="text-[14px] font-semibold text-[var(--pp-ink)]">
+                  أُضيفت إلى كلماتك، وتقدر تحوّلها لبطاقة.
                 </p>
               )}
               {explanation.tip_ar && (

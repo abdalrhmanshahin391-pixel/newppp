@@ -1508,7 +1508,12 @@ export function RitaRealtimeV3({
       </div>
 
       {phrase && (
-        <PhraseDialog phrase={phrase} onClose={closePhrase} onPlayingChange={phrasePlaying} />
+        <PhraseDialog
+          phrase={phrase}
+          onClose={closePhrase}
+          onPlayingChange={phrasePlaying}
+          onWord={(item) => tray.add([item], item.term)}
+        />
       )}
 
       {lesson.result && !resultDismissed && (

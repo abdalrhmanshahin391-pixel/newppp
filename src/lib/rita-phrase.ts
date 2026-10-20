@@ -116,3 +116,26 @@ export function allowRequest(
   hits.set(key, recent);
   return true;
 }
+
+/** Best guess of a phrase's language when the explanation could not be loaded, so it can still be heard. */
+export function guessPhraseLang(text: string): PhraseLang | null {
+  const t = text.trim();
+  if (!t || /[؀-ۿ]/.test(t)) return null;
+  if (/[äöüß]/i.test(t) || /\b(der|die|das|ich|ist|und|nicht|ein|eine|habe|bin|du|wir)\b/i.test(t))
+    return "de";
+  if (/\b(the|is|are|and|to|of|you|my|have|this)\b/i.test(t)) return "en";
+  return "de";
+}
+
+/** Short Arabic reason shown when the explanation could not be loaded. */
+export function explainFailureText(reason: string | undefined): string {
+  const r = String(reason ?? "");
+  if (r === "rate_limited" || r === "gateway_429")
+    return "طلبات كثيرة الآن. انتظر دقيقة ثم حاول مجددًا.";
+  if (r === "no_key" || r === "unavailable")
+    return "خدمة الشرح غير مفعّلة على الخادم (المفتاح غير ظاهر له).";
+  if (r === "gateway_401" || r === "gateway_403") return "المفتاح مرفوض من خدمة الشرح.";
+  if (r === "gateway_402") return "رصيد خدمة الشرح انتهى.";
+  if (r === "bad_reply") return "ردّ خدمة الشرح غير مفهوم.";
+  return "تعذّر تحميل الترجمة.";
+}

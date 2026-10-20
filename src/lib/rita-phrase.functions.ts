@@ -40,33 +40,68 @@ export const explainPhrase = createServerFn({ method: "POST" })
       if (!allowRequest(hits, context.userId, Date.now(), LIMIT, WINDOW_MS)) {
         return { ok: false, reason: "rate_limited" };
       }
-      const key = process.env.LOVABLE_API_KEY;
-      if (!key) return { ok: false, reason: "unavailable" };
-      try {
-        const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Lovable-API-Key": key },
-          body: JSON.stringify({
-            model: "google/gemini-3-flash-preview",
-            messages: [
-              { role: "system", content: SYSTEM },
-              { role: "user", content: phrase },
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.2,
-          }),
-          signal: AbortSignal.timeout(20_000),
+      const { lovableAiKey } = await import("@/lib/lovable-ai-key.server");
+      const providers: {
+        name: string;
+        url: string;
+        headers: Record<string, string>;
+        model: string;
+      }[] = [];
+      const lovableKey = await lovableAiKey();
+      if (lovableKey) {
+        providers.push({
+          name: "gateway",
+          url: "https://ai.gateway.lovable.dev/v1/chat/completions",
+          headers: { "Content-Type": "application/json", "Lovable-API-Key": lovableKey },
+          model: "google/gemini-3-flash-preview",
         });
-        if (!response.ok) {
-          console.warn("Phrase explanation failed", response.status);
-          return { ok: false, reason: response.status === 429 ? "rate_limited" : "failed" };
-        }
-        const json = await response.json();
-        const explanation = parseExplanation(json?.choices?.[0]?.message?.content);
-        return explanation ? { ok: true, explanation } : { ok: false, reason: "failed" };
-      } catch (cause) {
-        console.warn("Phrase explanation error", cause);
-        return { ok: false, reason: "failed" };
       }
+      try {
+        const { resolveRitaOpenAiKey } = await import("@/lib/rita-voice.server");
+        const openAiKey = await resolveRitaOpenAiKey();
+        if (openAiKey) {
+          providers.push({
+            name: "openai",
+            url: "https://api.openai.com/v1/chat/completions",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${openAiKey}` },
+            model: "gpt-4.1-mini",
+          });
+        }
+      } catch {
+        /* no second provider */
+      }
+      if (!providers.length) return { ok: false, reason: "no_key" };
+      let reason = "failed";
+      for (const provider of providers) {
+        try {
+          const response = await fetch(provider.url, {
+            method: "POST",
+            headers: provider.headers,
+            body: JSON.stringify({
+              model: provider.model,
+              messages: [
+                { role: "system", content: SYSTEM },
+                { role: "user", content: phrase },
+              ],
+              response_format: { type: "json_object" },
+              temperature: 0.2,
+            }),
+            signal: AbortSignal.timeout(20_000),
+          });
+          if (!response.ok) {
+            console.warn("Phrase explanation failed", provider.name, response.status);
+            reason = `${provider.name === "gateway" ? "gateway" : "openai"}_${response.status}`;
+            continue;
+          }
+          const json = await response.json();
+          const explanation = parseExplanation(json?.choices?.[0]?.message?.content);
+          if (explanation) return { ok: true, explanation };
+          reason = "bad_reply";
+        } catch (cause) {
+          console.warn("Phrase explanation error", provider.name, cause);
+          reason = "failed";
+        }
+      }
+      return { ok: false, reason };
     },
   );
