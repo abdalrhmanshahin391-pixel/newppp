@@ -41,6 +41,7 @@ import {
   LessonResourcesPanel,
   LessonResultCard,
 } from "@/components/rita-lessons/LessonPanels";
+import { dbLanguage, setVoiceSessionActive } from "@/lib/language-scope";
 import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rita-conversation";
 
 type Persona = "kind" | "direct" | "playful" | "strict";
@@ -156,6 +157,12 @@ export function RitaRealtimeV3({
   const botAudioPlaying = useRef(false);
   const [soundBlocked, setSoundBlocked] = useState(false);
   const [active, setActive] = useState(false);
+
+  // Tell the language switcher a conversation is running, so it waits until it is over.
+  useEffect(() => {
+    setVoiceSessionActive(active);
+    return () => setVoiceSessionActive(false);
+  }, [active]);
   const [readyForSpeech, setReadyForSpeech] = useState(false);
   const [starting, setStarting] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -553,7 +560,12 @@ export function RitaRealtimeV3({
     if (!user) throw new Error("Please sign in before starting Rita.");
     const { data, error: createError } = await supabase
       .from("rita_free_conversations")
-      .insert({ user_id: user.id, title: "New conversation" })
+      .insert({
+        user_id: user.id,
+        title: "New conversation",
+        // The conversation belongs to the language being learned now (on a migrated database).
+        ...(dbLanguage() ? { learning_language: dbLanguage() } : {}),
+      })
       .select("id")
       .single();
     if (createError || !data?.id)

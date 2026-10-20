@@ -3,6 +3,7 @@ import {
   RITA_V3_MODELS,
   persistRitaV3Session,
   loadOwnedRitaConversation,
+  loadTargetLanguage,
   recordRitaV3Event,
   requireRitaV3Access,
   updateRitaV3Session,
@@ -87,6 +88,22 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             { status: 404 },
           );
         }
+        // The language Rita teaches: the conversation's own, else the learner's active language.
+        const target = await loadTargetLanguage({
+          userId: access.auth.userId,
+          accessToken: access.auth.token,
+          conversationId: conversationId || null,
+        });
+        if (target && !target.voiceEnabled) {
+          return Response.json(
+            {
+              ok: false,
+              code: "voice_not_available_for_language",
+              message: `Rita's voice is not available for ${target.name} yet.`,
+            },
+            { status: 409 },
+          );
+        }
         const traceId = normalizeRitaDiagnosticTraceId(body.traceId);
         const modalUrl =
           (await getServerRuntimeSecret("MODAL_START_URL")) || DEFAULT_MODAL_START_URL;
@@ -142,6 +159,15 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           dialect,
           mode,
           userId: access.auth.userId,
+          ...(target
+            ? {
+                targetLanguage: {
+                  code: target.code,
+                  name: target.name,
+                  speechCode: target.speechCode,
+                },
+              }
+            : {}),
           ...(conversationId ? { conversationId } : {}),
           ...(savedConversation?.history?.length
             ? { conversationHistory: savedConversation.history }

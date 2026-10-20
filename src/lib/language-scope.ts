@@ -112,3 +112,15 @@ export function useLanguageResolved(): boolean {
     () => false,
   );
 }
+
+// A live voice conversation belongs to one language; switching in the middle would leave Rita and the
+// page disagreeing, so the switcher asks the learner to end it first.
+let voiceSessionActive = false;
+
+export function setVoiceSessionActive(value: boolean) {
+  voiceSessionActive = value;
+}
+
+export function isVoiceSessionActive(): boolean {
+  return voiceSessionActive;
+}

@@ -4,6 +4,11 @@ import { classifyPipecatStartFailure, sanitizePipecatDiagnostic } from "@/lib/ri
 import { createClient } from "@supabase/supabase-js";
 import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 import { boundedRitaHistory, type RitaConversationMessage } from "@/lib/rita-conversation";
+import {
+  resolveTargetLanguage,
+  type RegistryLanguage,
+  type TargetLanguage,
+} from "@/lib/rita-target-language";
 
 export const RITA_V3_MODELS = {
   transport: "Daily WebRTC 1:1 voice",
@@ -548,6 +553,45 @@ export async function loadOwnedRitaConversation(args: {
     conversation,
     history: boundedRitaHistory(ordered),
   };
+}
+
+/**
+ * The language Rita should teach in this session, or null when there is none (no language chosen
+ * yet, or a database that has not been migrated): then the session behaves as it always did.
+ */
+export async function loadTargetLanguage(args: {
+  userId: string;
+  accessToken: string;
+  conversationId?: string | null;
+}): Promise<TargetLanguage | null> {
+  try {
+    const client = ritaV3UserClient(args.accessToken);
+    const [profile, conversation, registry] = await Promise.all([
+      (client.from as any)("profiles")
+        .select("learning_language")
+        .eq("id", args.userId)
+        .maybeSingle(),
+      args.conversationId
+        ? (client.from as any)("rita_free_conversations")
+            .select("learning_language")
+            .eq("id", args.conversationId)
+            .eq("user_id", args.userId)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      (client.from as any)("learning_languages").select(
+        "code,name_en,speech_code,voice_enabled,enabled",
+      ),
+    ]);
+    if (registry.error || profile.error) return null;
+    return resolveTargetLanguage({
+      conversationLanguage: conversation.error ? null : conversation.data?.learning_language,
+      profileLanguage: profile.data?.learning_language,
+      registry: (registry.data ?? []) as RegistryLanguage[],
+    });
+  } catch (error) {
+    console.warn("Rita target language could not be loaded", error);
+    return null;
+  }
 }
 
 export async function updateRitaV3Session(

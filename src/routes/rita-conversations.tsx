@@ -13,6 +13,14 @@ import {
 } from "lucide-react";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { useAuth } from "@/hooks/useAuth";
+import { LanguageGate } from "@/components/language/LanguageGate";
+import {
+  dbLanguage,
+  getLegacyLanguage,
+  useDbLanguage,
+  useLanguageResolved,
+} from "@/lib/language-scope";
+import { languageFilter } from "@/lib/learning-language";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ritaConversationDiagnostic,
@@ -28,7 +36,11 @@ export const Route = createFileRoute("/rita-conversations")({
   head: () => ({
     meta: [{ title: "Rita conversations — RitaJet" }, { name: "robots", content: "noindex" }],
   }),
-  component: RitaConversationsPage,
+  component: () => (
+    <LanguageGate>
+      <RitaConversationsPage />
+    </LanguageGate>
+  ),
 });
 
 type Bundle = {
@@ -122,11 +134,15 @@ function RitaConversationsPage() {
   const [selected, setSelected] = useState<Bundle | null>(null);
   const [opening, setOpening] = useState("");
 
+  // Each language has its own conversations; wait until the learner's language is known.
+  const language = useDbLanguage();
+  const resolved = useLanguageResolved();
+
   const refresh = useCallback(async () => {
-    if (!user) return;
+    if (!user || !resolved) return;
     setBusy(true);
     setError("");
-    const { data, error: queryError } = await supabase
+    let query = supabase
       .from("rita_free_conversations")
       .select(
         "id,title,language_preference,dialect_preference,message_count,last_message_at,archived_at,created_at,updated_at",
@@ -135,10 +151,14 @@ function RitaConversationsPage() {
       .is("archived_at", null)
       .order("last_message_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false });
+    if (language) {
+      query = query.or(languageFilter(language, getLegacyLanguage(), "learning_language"));
+    }
+    const { data, error: queryError } = await query;
     if (queryError) setError(queryError.message);
     else setConversations((data ?? []) as RitaConversation[]);
     setBusy(false);
-  }, [user]);
+  }, [user, resolved, language]);
 
   useEffect(() => {
     if (!loading && !user) void navigate({ to: "/login" });
@@ -156,7 +176,11 @@ function RitaConversationsPage() {
     setError("");
     const { data, error: insertError } = await supabase
       .from("rita_free_conversations")
-      .insert({ user_id: user.id, title: "New conversation" })
+      .insert({
+        user_id: user.id,
+        title: "New conversation",
+        ...(dbLanguage() ? { learning_language: dbLanguage() } : {}),
+      })
       .select("id")
       .single();
     setCreating(false);
