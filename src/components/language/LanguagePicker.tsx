@@ -1,31 +1,21 @@
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { Check, Loader2 } from "lucide-react";
+import { LanguageFlag } from "@/components/language/LanguageFlag";
+import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { VOICE_SESSION_ERROR, useLearningLanguage } from "@/hooks/useLearningLanguage";
 import { languageLabel } from "@/lib/learning-language";
 
 type Ui = "en" | "ar";
 
-function useUi(): Ui {
-  const { i18n } = useTranslation();
-  return (i18n.language ?? "").startsWith("ar") ? "ar" : "en";
-}
-
 const text = (ui: Ui, en: string, ar: string) => (ui === "ar" ? ar : en);
 
 /**
- * The learner's language choice. `list` is the full radio list (settings, first-time chooser);
- * `chips` is the compact row for menus. Both change the language through the same hook, so
- * the whole site follows.
+ * The learner's language choice as a radio list (Settings and the first-time chooser). The top
+ * bar has its own compact switcher (`LanguageMenu`); both change the language through the same
+ * hook, so the whole site follows.
  */
-export function LanguagePicker({
-  variant = "list",
-  onChosen,
-}: {
-  variant?: "list" | "chips";
-  onChosen?: (code: string) => void;
-}) {
-  const ui = useUi();
+export function LanguagePicker({ onChosen }: { onChosen?: (code: string) => void }) {
+  const ui = useUiLanguage();
   const { code, languages, ready, pending, error, setLanguage } = useLearningLanguage();
   const [announce, setAnnounce] = useState("");
 
@@ -58,85 +48,49 @@ export function LanguagePicker({
     );
   }
 
-  const group = {
-    role: "radiogroup" as const,
-    "aria-label": text(ui, "Learning language", "لغة التعلّم"),
-  };
-
   return (
     <div>
-      {variant === "chips" ? (
-        <div {...group} className="flex flex-wrap gap-2">
-          {languages.map((language) => {
-            const selected = language.code === code;
-            return (
-              <button
-                key={language.code}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                disabled={pending !== null}
-                onClick={() => void choose(language.code)}
-                className={`inline-flex min-h-11 items-center gap-1.5 rounded-lg border-2 px-3 text-[15px] font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40 ${
-                  selected
-                    ? "border-[var(--pp-accent)] bg-[var(--pp-accent-soft)] text-[var(--pp-ink)]"
-                    : "border-[var(--pp-ink)] bg-white text-[var(--pp-ink)] hover:bg-[var(--pp-accent-soft)]"
-                }`}
-              >
+      <div
+        role="radiogroup"
+        aria-label={text(ui, "Learning language", "لغة التعلّم")}
+        className="grid max-w-xl gap-3"
+      >
+        {languages.map((language) => {
+          const selected = language.code === code;
+          return (
+            <button
+              key={language.code}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              disabled={pending !== null}
+              onClick={() => void choose(language.code)}
+              className={`flex min-h-14 w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40 ${
+                selected
+                  ? "border-[var(--pp-accent)] bg-[var(--pp-accent-soft)]"
+                  : "border-[var(--pp-ink)] bg-white hover:bg-[var(--pp-accent-soft)]"
+              }`}
+            >
+              <LanguageFlag language={language} size={32} />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[18px] font-bold leading-tight">
+                  <bdi lang={language.code}>{language.name_native}</bdi>
+                </span>
+                <span className="mt-0.5 block truncate text-[14px] text-[var(--pp-muted)]">
+                  {languageLabel(language, ui)}
+                </span>
+              </span>
+              <span className="grid size-6 place-items-center" aria-hidden="true">
                 {pending === language.code ? (
-                  <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+                  <Loader2 size={18} className="animate-spin" />
                 ) : selected ? (
-                  <Check size={16} aria-hidden="true" />
+                  <Check size={20} className="text-[var(--pp-accent-text)]" />
                 ) : null}
-                <bdi lang={language.code}>{language.name_native}</bdi>
-              </button>
-            );
-          })}
-        </div>
-      ) : (
-        <div {...group} className="grid max-w-xl gap-3">
-          {languages.map((language) => {
-            const selected = language.code === code;
-            return (
-              <button
-                key={language.code}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                disabled={pending !== null}
-                onClick={() => void choose(language.code)}
-                className={`flex min-h-14 w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40 ${
-                  selected
-                    ? "border-[var(--pp-accent)] bg-[var(--pp-accent-soft)]"
-                    : "border-[var(--pp-ink)] bg-white hover:bg-[var(--pp-accent-soft)]"
-                }`}
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[18px] font-bold leading-tight">
-                    <bdi lang={language.code}>{language.name_native}</bdi>
-                  </span>
-                  <span className="mt-0.5 block truncate text-[14px] text-[var(--pp-muted)]">
-                    {languageLabel(language, ui)}
-                  </span>
-                </span>
-                <span
-                  dir="ltr"
-                  className="rounded-md bg-[var(--pp-grey)] px-2 py-0.5 text-[12px] font-semibold uppercase tracking-wide text-[var(--pp-muted)]"
-                >
-                  {language.code}
-                </span>
-                <span className="grid size-6 place-items-center" aria-hidden="true">
-                  {pending === language.code ? (
-                    <Loader2 size={18} className="animate-spin" />
-                  ) : selected ? (
-                    <Check size={20} className="text-[var(--pp-accent-text)]" />
-                  ) : null}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+              </span>
+            </button>
+          );
+        })}
+      </div>
       <p
         role="status"
         aria-live="polite"
@@ -165,7 +119,7 @@ export function LanguagePicker({
 
 /** First-time chooser, shown in place of a learning page until a language is picked. */
 export function LanguageChooserCard() {
-  const ui = useUi();
+  const ui = useUiLanguage();
   return (
     <section
       aria-labelledby="language-chooser-title"

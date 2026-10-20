@@ -114,6 +114,22 @@ test("languages sort by their order, then by name", () => {
   );
 });
 
+test("a new language may carry a flag country from the offered list, nothing else", () => {
+  const base = {
+    code: "fr",
+    name_en: "French",
+    name_native: "Français",
+    name_ar: "الفرنسية",
+    direction: "ltr" as const,
+  };
+  const ok = validateNewLanguage({ ...base, flag_country: " FR " }, []);
+  assert.equal(ok.ok && ok.value.flag_country, "fr");
+  const none = validateNewLanguage(base, []);
+  assert.equal(none.ok && none.value.flag_country, null);
+  assert.equal(validateNewLanguage({ ...base, flag_country: "zz" }, []).ok, false);
+  assert.equal(validateNewLanguage({ ...base, flag_country: "../x" }, []).ok, false);
+});
+
 test("a new language: code is normalised and checked, names are required", () => {
   const ok = validateNewLanguage(
     {

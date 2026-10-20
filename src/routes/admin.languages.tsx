@@ -5,7 +5,9 @@ import { AlertTriangle, ArrowLeft, ArrowDown, ArrowUp, Loader2, Plus } from "luc
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { useAuth } from "@/hooks/useAuth";
+import { LanguageFlag } from "@/components/language/LanguageFlag";
 import { LANGUAGES_QUERY_KEY, useLanguageRegistry } from "@/hooks/useLearningLanguage";
+import { FLAG_COUNTRIES, countryName, flagCountryFor } from "@/lib/language-flags";
 import { guardRedirect } from "@/lib/guard-redirect";
 import {
   sortLanguages,
@@ -34,7 +36,41 @@ const EMPTY: NewLanguageInput = {
   name_ar: "",
   direction: "ltr",
   speech_code: "",
+  flag_country: "",
 };
+
+/** Countries offered for a flag, sorted by their Arabic name. */
+const COUNTRY_OPTIONS = [...FLAG_COUNTRIES]
+  .map((country) => ({ country, name: countryName(country, "ar") }))
+  .sort((a, b) => a.name.localeCompare(b.name, "ar"));
+
+function CountrySelect({
+  value,
+  onChange,
+  disabled,
+  className,
+}: {
+  value: string;
+  onChange: (country: string) => void;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <select
+      value={value}
+      disabled={disabled}
+      onChange={(event) => onChange(event.target.value)}
+      className={className ?? "rita-select"}
+    >
+      <option value="">بدون علم (يظهر رمز اللغة)</option>
+      {COUNTRY_OPTIONS.map((option) => (
+        <option key={option.country} value={option.country}>
+          {option.name}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 type Counts = Record<string, { learners: number | null; books: number | null }>;
 
@@ -155,9 +191,15 @@ function AdminLanguages() {
     }
     setSaving(true);
     const sort = Math.max(0, ...registry.all.map((l) => l.sort)) + 10;
-    const { error } = await supabase
-      .from("learning_languages")
-      .insert({ ...result.value, sort, voice_enabled: false, enabled: true });
+    // The flag column comes from a later migration; leave it out when no flag was chosen.
+    const { flag_country, ...rest } = result.value;
+    const { error } = await supabase.from("learning_languages").insert({
+      ...rest,
+      ...(flag_country ? { flag_country } : {}),
+      sort,
+      voice_enabled: false,
+      enabled: true,
+    });
     setSaving(false);
     if (error) {
       setFormError(error.message);
@@ -217,6 +259,16 @@ function AdminLanguages() {
           </div>
         )}
 
+        {registry.fromDb && !registry.all.some((l) => "flag_country" in l) && (
+          <div className="flex items-start gap-3 rounded-2xl border-2 border-[#f5b942] bg-[#f4f4f8] p-4 text-sm font-bold text-[#8a5200]">
+            <AlertTriangle size={18} className="mt-0.5 shrink-0" />
+            <p>
+              اختيار العلم يحتاج migration ‏20261020220000 (‏language_flags) في Lovable Cloud. حتى
+              ذلك الحين تظهر أعلام الإنجليزية والألمانية الافتراضية فقط.
+            </p>
+          </div>
+        )}
+
         <section aria-label="اللغات الحالية" className="grid gap-3">
           {registry.isLoading && (
             <div role="status" className="h-24 animate-pulse rounded-2xl bg-[var(--pp-grey)]" />
@@ -234,6 +286,7 @@ function AdminLanguages() {
                 }`}
               >
                 <div className="flex flex-wrap items-center gap-3">
+                  <LanguageFlag language={language} size={36} />
                   <span
                     dir="ltr"
                     className="rounded-md bg-[var(--pp-grey)] px-2 py-0.5 text-[12px] font-bold uppercase text-[var(--pp-muted)]"
@@ -293,6 +346,17 @@ function AdminLanguages() {
                       }
                     />
                     محادثة ريتا الصوتية
+                  </label>
+                  <label className="flex min-h-11 items-center gap-2 font-semibold">
+                    العلم
+                    <CountrySelect
+                      value={flagCountryFor(language) ?? ""}
+                      disabled={!registry.fromDb || busy}
+                      onChange={(country) =>
+                        void patch(language.code, { flag_country: country || null })
+                      }
+                      className="rita-select !w-auto"
+                    />
                   </label>
                   <span className="text-[14px] text-[var(--pp-muted)]">
                     {count
@@ -376,6 +440,20 @@ function AdminLanguages() {
                 <option value="ltr">من اليسار لليمين</option>
                 <option value="rtl">من اليمين لليسار</option>
               </select>
+            </label>
+            <label className="grid gap-1.5 text-sm font-semibold sm:col-span-2">
+              علم اللغة (اللغة مو دولة: اختر الدولة اللي علمها يمثلها)
+              <span className="flex items-center gap-3">
+                <LanguageFlag
+                  language={{ code: form.code || "??", flag_country: form.flag_country }}
+                  size={36}
+                />
+                <CountrySelect
+                  value={form.flag_country ?? ""}
+                  onChange={(country) => setForm({ ...form, flag_country: country })}
+                  className="rita-select"
+                />
+              </span>
             </label>
             <div className="sm:col-span-2">
               {formError && (
