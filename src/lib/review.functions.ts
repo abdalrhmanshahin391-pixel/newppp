@@ -36,6 +36,10 @@ export type Overview = {
   due: number;
   new: number;
   streak: number;
+  /** Days in a row with any learning activity (a card, a lesson or a talk with Rita). */
+  activeStreak: number;
+  /** Whether anything was done today. */
+  activeToday: boolean;
   goal: number;
   today: { cards: number; correct: number; minutes: number; goal_met: boolean };
   week: { day: string; cards: number; goal_met: boolean }[];
@@ -438,10 +442,45 @@ export const studyOverview = createServerFn({ method: "POST" })
       .map((d: any) => ({ day: d.day, cards: d.cards, goal_met: d.goal_met }))
       .reverse();
 
+    // Any learning activity counts for "days in a row": a reviewed card, lesson work, or a Rita
+    // talk. Each source is optional: if one cannot be read the others still count.
+    const activityStamps: unknown[] = (days ?? [])
+      .filter((d: any) => Number(d.cards) > 0)
+      .map((d: any) => d.day);
+    try {
+      const longAgo = new Date(Date.now() - 400 * 86_400_000).toISOString();
+      const [progress, sessions] = await Promise.all([
+        supabase
+          .from("rita_lesson_progress")
+          .select("started_at, updated_at, completed_at")
+          .eq("user_id", userId)
+          .gte("updated_at", longAgo)
+          .limit(1000),
+        supabase
+          .from("rita_v3_sessions")
+          .select("started_at")
+          .eq("user_id", userId)
+          .neq("status", "failed")
+          .gte("started_at", longAgo)
+          .order("started_at", { ascending: false })
+          .limit(1000),
+      ]);
+      for (const row of (progress.data ?? []) as any[]) {
+        activityStamps.push(row.started_at, row.updated_at, row.completed_at);
+      }
+      for (const row of (sessions.data ?? []) as any[]) activityStamps.push(row.started_at);
+    } catch {
+      /* the card days above still count */
+    }
+    const { activeDays, activitySummary } = await import("@/lib/activity-streak");
+    const activity = activitySummary(activeDays(activityStamps));
+
     return {
       due,
       new: fresh,
       streak: streakFrom(days ?? []),
+      activeStreak: activity.streak,
+      activeToday: activity.activeToday,
       goal: prefs.daily_goal,
       today: {
         cards: today?.cards ?? 0,

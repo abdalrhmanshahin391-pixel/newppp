@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -131,6 +131,9 @@ const RAIL: { id: (typeof SECTION_IDS)[number]; label: Bi; icon: typeof Layers }
 /** Which section is under the top of the screen, for the highlight in the side list. */
 function useActiveSection(ids: readonly string[]) {
   const [active, setActive] = useState<string>(ids[0] ?? "");
+  // After a tap the page is still gliding to the section; do not let the scroll watcher
+  // highlight the sections it passes on the way (or the last one, near the page end).
+  const heldUntil = useRef(0);
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
     const elements = ids
@@ -144,6 +147,7 @@ function useActiveSection(ids: readonly string[]) {
           if (entry.isIntersecting) visible.add(entry.target.id);
           else visible.delete(entry.target.id);
         }
+        if (Date.now() < heldUntil.current) return;
         const first = ids.find((id) => visible.has(id));
         if (first) setActive(first);
       },
@@ -152,17 +156,35 @@ function useActiveSection(ids: readonly string[]) {
     elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, [ids]);
-  return active;
+  const choose = (id: string) => {
+    heldUntil.current = Date.now() + 1200;
+    setActive(id);
+  };
+  return [active, choose] as const;
+}
+
+/** Scrolls to a section and keeps the address in step, without going through the router. */
+function jumpTo(event: MouseEvent<HTMLAnchorElement>, id: string) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  event.preventDefault();
+  const calm = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  target.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
+  try {
+    window.history.replaceState(window.history.state, "", `#${id}`);
+  } catch {
+    /* the scroll already happened */
+  }
 }
 
 function SideList({ lang }: { lang: Lang }) {
-  const active = useActiveSection(SECTION_IDS);
+  const [active, choose] = useActiveSection(SECTION_IDS);
   const item =
     "inline-flex min-h-11 shrink-0 touch-manipulation items-center gap-2.5 rounded-lg border-2 px-3.5 text-[15px] font-semibold transition-colors duration-150 active:scale-[0.98] whitespace-nowrap lg:w-full";
   return (
     <nav
       aria-label={lang === "ar" ? "أقسام التعلم" : "Learning sections"}
-      className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:-mx-8 md:px-8 lg:sticky lg:top-6 lg:mx-0 lg:flex-col lg:self-start lg:overflow-visible lg:px-0 lg:pb-0"
+      className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:-mx-8 md:px-8 lg:sticky lg:top-24 lg:mx-0 lg:flex-col lg:self-start lg:overflow-visible lg:px-0 lg:pb-0"
     >
       {RAIL.map(({ id, label, icon: Icon }) => {
         const on = active === id;
@@ -170,6 +192,10 @@ function SideList({ lang }: { lang: Lang }) {
           <a
             key={id}
             href={`#${id}`}
+            onClick={(event) => {
+              choose(id);
+              jumpTo(event, id);
+            }}
             aria-current={on ? "location" : undefined}
             className={`${item} ${
               on
@@ -275,7 +301,7 @@ function NextUp({
   let title = "";
   let detail = "";
   let cta = "";
-  let to = "/rita";
+  let to = "/rita-conversations";
   let search: Record<string, string> | undefined;
   switch (choice.kind) {
     case "signin":
@@ -316,7 +342,7 @@ function NextUp({
         "قل أي شيء بصوتك. ترد عليك وتصحح لك بلطف.",
       );
       cta = t("Talk to Rita", "تحدث مع ريتا");
-      to = "/rita";
+      to = "/rita-conversations";
   }
   return (
     <section
@@ -410,7 +436,7 @@ function TodayPanel({
     );
   }
 
-  const { due, streak, goal, today } = overview.data;
+  const { due, goal, today, activeStreak: streak, activeToday } = overview.data;
   const percent = goalPercent(today.cards, goal);
   const path = lessonsDone(lessons.lessons);
   const fresh = due === 0 && today.cards === 0 && streak === 0;
@@ -443,13 +469,16 @@ function TodayPanel({
             style={{ width: `${percent}%` }}
           />
         </div>
+        <p className="mt-2 text-[13.5px] leading-snug text-[#4b4a5c]">
+          {t("Cards you review in Smart review today.", "بطاقات تراجعها اليوم في المراجعة الذكية.")}
+        </p>
       </div>
 
       <dl className="mt-5 grid gap-2 text-[15px]">
         <div className="flex items-center justify-between gap-3">
           <dt className="inline-flex items-center gap-2 text-[#4b4a5c]">
             <Flame size={18} aria-hidden="true" />
-            {t("Streak", "سلسلة الأيام")}
+            {t("Days in a row", "أيام متتالية")}
           </dt>
           <dd className="font-semibold tabular-nums">
             {streak} {streak === 1 ? t("day", "يوم") : t("days", "أيام")}
@@ -464,6 +493,14 @@ function TodayPanel({
           </div>
         ) : null}
       </dl>
+      {streak > 0 && !activeToday ? (
+        <p className="mt-3 text-[13.5px] leading-snug text-[#4b4a5c]">
+          {t(
+            "Do any study today to keep your days going.",
+            "ادرس أي شيء اليوم لتستمر أيامك المتتالية.",
+          )}
+        </p>
+      ) : null}
 
       {fresh ? (
         <p className="mt-4 border-t border-[var(--pp-line)] pt-4 text-[14.5px] leading-[1.45] text-[#4b4a5c]">
@@ -529,7 +566,7 @@ export function LearnHome() {
 
   return (
     <div
-      className="edith-premium min-h-screen bg-white text-[var(--pp-ink)]"
+      className="edith-premium rh-learn-home min-h-screen bg-white text-[var(--pp-ink)]"
       style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <SiteHeader />
@@ -543,7 +580,7 @@ export function LearnHome() {
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[12.5rem_minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
           <SideList lang={lang} />
-          <div className="lg:sticky lg:top-6 lg:col-start-3 lg:row-start-1 lg:self-start">
+          <div className="lg:sticky lg:top-24 lg:col-start-3 lg:row-start-1 lg:self-start">
             <TodayPanel lang={lang} signedIn={signedIn} overview={overview} lessons={lessons} />
           </div>
           <div className="min-w-0 space-y-10 lg:col-start-2 lg:row-start-1">

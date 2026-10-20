@@ -3161,6 +3161,13 @@ hairline borders and generous radii.
     line-height: 68px !important;
   }
 }
+/* The learning home keeps its section list and Today panel pinned (position: sticky). Clipping
+   (not hiding) the overflow still stops the page from growing sideways, but does not turn the
+   body into a scroll container, which is what made sticky and in-page links fail. */
+html:has(.rh-learn-home),
+body:has(.rh-learn-home) {
+  overflow-x: clip;
+}
 /* Working screens (learning home) use a calmer page title than the 64px marketing headline. */
 .edith-premium h1.rh-app-title {
   font-size: clamp(1.75rem, 3.4vw, 2.5rem) !important;
