@@ -3168,6 +3168,45 @@ export type Database = {
         }
         Relationships: []
       }
+      rita_image_generations: {
+        Row: {
+          bytes: number | null
+          created_at: string
+          error: string | null
+          id: string
+          prompt_preview: string
+          quality: string
+          size: string
+          status: string
+          storage_path: string | null
+          style: string
+        }
+        Insert: {
+          bytes?: number | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          prompt_preview?: string
+          quality: string
+          size: string
+          status?: string
+          storage_path?: string | null
+          style: string
+        }
+        Update: {
+          bytes?: number | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          prompt_preview?: string
+          quality?: string
+          size?: string
+          status?: string
+          storage_path?: string | null
+          style?: string
+        }
+        Relationships: []
+      }
       rita_lesson_progress: {
         Row: {
           attempts: number
