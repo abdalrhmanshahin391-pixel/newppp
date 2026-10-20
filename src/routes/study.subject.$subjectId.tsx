@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDbLanguage, useLanguageResolved } from "@/lib/language-scope";
 import { ArrowLeft, Play, Plus, Trash2 } from "lucide-react";
 import { StudyLayout, StudyHeading } from "@/components/study/StudyLayout";
 import { SignedOutPanel } from "@/components/study/SignedOutPanel";
@@ -34,8 +35,14 @@ function SubjectPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [adding, setAdding] = useState(false);
+  const language = useDbLanguage();
+  const resolved = useLanguageResolved();
 
-  const subjects = useQuery({ queryKey: ["flash-subjects"], queryFn: fetchSubjects, enabled: !!user });
+  const subjects = useQuery({
+    queryKey: ["flash-subjects", language],
+    queryFn: fetchSubjects,
+    enabled: !!user && resolved,
+  });
   const subject = (subjects.data ?? []).find((s) => s.id === subjectId);
   const subs = (subjects.data ?? []).filter((s) => s.parent_id === subjectId);
   const ids = [subjectId, ...subs.map((s) => s.id)];

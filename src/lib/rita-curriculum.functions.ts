@@ -190,6 +190,12 @@ function fail(error: { message?: string } | null, label: string): asserts error 
 }
 
 const uuid = z.string().uuid();
+/** A learning-language code (see the learning_languages table), e.g. "en", "de", "pt-br". */
+const languageCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^[a-z]{2,3}(-[a-z0-9]{2,8})?$/);
+
 const kindSchema = z.enum(["grammar", "vocabulary"]);
 const imageUrlSchema = z
   .string()
@@ -213,6 +219,8 @@ export type CurriculumRow = {
   kind: "grammar" | "vocabulary";
   title: string;
   title_ar: string | null;
+  /** The language this book teaches (a learning_languages code). */
+  target_language: string;
   level: string;
   pdf_path: string | null;
   page_count: number;
@@ -259,7 +267,7 @@ export type LessonRow = {
 const RESOURCE_COLUMNS =
   "id, lesson_id, kind, title, note, url, file_path, file_name, file_size, position";
 const CURRICULUM_COLUMNS =
-  "id, kind, title, title_ar, level, pdf_path, page_count, read_cursor, taught_cursor, image_url, status, created_at";
+  "id, kind, title, title_ar, target_language, level, pdf_path, page_count, read_cursor, taught_cursor, image_url, status, created_at";
 const LESSON_COLUMNS =
   "id, curriculum_id, lesson_no, path_order, title, title_ar, topic, source_from_page, source_to_page, objectives, plan, vocabulary, image_url, image_prompt, status, version, source, model, updated_at";
 
@@ -421,6 +429,7 @@ export const adminCreateCurriculum = createServerFn({ method: "POST" })
         kind: kindSchema,
         title: z.string().trim().min(1).max(160),
         title_ar: z.string().trim().max(160).default(""),
+        target_language: languageCodeSchema.default("en"),
         page_count: z.number().int().min(1).max(5_000),
         pdf_path: z.string().trim().max(400).nullable().default(null),
       }),
@@ -437,6 +446,22 @@ export const adminCreateCurriculum = createServerFn({ method: "POST" })
       .single();
     fail(error, "create book");
     return row as CurriculumRow;
+  });
+
+/** Which language a book teaches. Its lessons then show only to learners of that language. */
+export const adminSetCurriculumLanguage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ curriculumId: uuid, language: languageCodeSchema }), data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { error } = await context.supabase
+      .from("rita_curricula")
+      .update({ target_language: data.language })
+      .eq("id", data.curriculumId);
+    fail(error, "set book language");
+    return { ok: true };
   });
 
 export const adminSaveCurriculumPages = createServerFn({ method: "POST" })
@@ -1559,16 +1584,29 @@ export type ReviewSuggestion = {
 
 export const getLessonPath = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    // RLS limits this to published lessons of published books.
-    const { data: lessons, error } = await context.supabase
+  .inputValidator((data: unknown) =>
+    parseWith(
+      z
+        .object({ language: languageCodeSchema.nullable().default(null) })
+        .default({ language: null }),
+      data,
+    ),
+  )
+  .handler(async ({ data, context }) => {
+    // RLS limits this to published lessons of published books. With a language, only the books
+    // that teach it (each language has its own path); with none, as before.
+    let query = context.supabase
       .from("rita_lessons")
       .select(
         "id, title, title_ar, topic, image_url, objectives, path_order, curriculum:rita_curricula!inner(kind, status)",
       )
       .eq("status", "published")
-      .eq("curriculum.status", "published")
-      .order("path_order", { ascending: true, nullsFirst: false });
+      .eq("curriculum.status", "published");
+    if (data.language) query = query.eq("curriculum.target_language", data.language);
+    const { data: lessons, error } = await query.order("path_order", {
+      ascending: true,
+      nullsFirst: false,
+    });
     fail(error, "lessons");
     // Before the 20261015120000 migration is applied, last_completed_at does not
     // exist yet and must not be requested (completed_at still backs the logic).

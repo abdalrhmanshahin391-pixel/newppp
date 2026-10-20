@@ -76,6 +76,14 @@ export function resolveActiveLanguage(
   return languages.some((l) => l.code === chosen && l.enabled) ? chosen : null;
 }
 
+/**
+ * The German Lab is a German-only course. Learners of another language do not see it; a learner who
+ * has not chosen yet sees everything.
+ */
+export function showsGermanLab(code: string | null | undefined): boolean {
+  return !code || code === "de";
+}
+
 /* ---------------------------------------------------------------------------------------- *
  * Device storage. The study kit lives in `rita_*` localStorage keys that are mirrored to the
  * account. A language's copy of a key is `rita_@<code>_<rest>`: it still starts with `rita_`
@@ -125,6 +133,32 @@ export function isLanguageKey(key: string): boolean {
  */
 export function legacyKeysToMove(existing: readonly string[]): string[] {
   return existing.filter((key) => isLanguageKey(key) && splitScopedKey(key).language === null);
+}
+
+export type StorageLike = Pick<Storage, "length" | "key" | "getItem" | "setItem" | "removeItem">;
+
+/**
+ * Moves study-kit values saved before languages existed under the learner's legacy language.
+ * A language's own copy is never overwritten: when it already exists the old value stays where
+ * it was, so nothing is lost. Safe to run any number of times. Returns how many values moved.
+ */
+export function moveLegacyKeys(storage: StorageLike, language: string): number {
+  const keys: string[] = [];
+  for (let i = 0; i < storage.length; i += 1) {
+    const key = storage.key(i);
+    if (key) keys.push(key);
+  }
+  let moved = 0;
+  for (const key of legacyKeysToMove(keys)) {
+    const target = scopedKey(key, language);
+    if (storage.getItem(target) !== null) continue;
+    const value = storage.getItem(key);
+    if (value === null) continue;
+    storage.setItem(target, value);
+    storage.removeItem(key);
+    moved += 1;
+  }
+  return moved;
 }
 
 /* ---------------------------------------------------------------------------------------- *

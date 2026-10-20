@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
+import { LANGUAGE_CHANGED_EVENT, langKey, useActiveLanguage } from "@/lib/language-scope";
 
 export type CardStyle = {
   bold?: boolean;
@@ -90,7 +91,7 @@ export function useCreatorMode(): [CreatorMode, (m: CreatorMode) => void] {
 
 export function topicKey(subject: string, subtopic: string) {
   const slug = (s: string) => s.trim().toLowerCase().replace(/\s+/g, "-");
-  return `rita_fc_${slug(subject)}_${slug(subtopic)}`;
+  return langKey(`rita_fc_${slug(subject)}_${slug(subtopic)}`);
 }
 
 function newId() {
@@ -106,6 +107,11 @@ const listeners = new Set<() => void>();
 function emitCardsChanged() {
   version += 1;
   listeners.forEach((l) => l());
+}
+
+// Another language's cards are a different set: lists that cached counts must read again.
+if (typeof window !== "undefined") {
+  window.addEventListener(LANGUAGE_CHANGED_EVENT, () => emitCardsChanged());
 }
 
 function subscribeCards(cb: () => void) {
@@ -156,25 +162,28 @@ export function writeCards(subject: string, subtopic: string, cards: FlashCardIt
 /** Flashcards for one sub-subject topic, persisted in the browser. */
 
 export function useFlashcards(subject: string, subtopic: string) {
+  // The key includes the active language, so switching language switches the set of cards.
+  useActiveLanguage();
   const key = topicKey(subject, subtopic);
   const [cards, setCards] = useState<FlashCardItem[]>([]);
-  const [hydrated, setHydrated] = useState(false);
+  // The key the current `cards` were read from; nothing is saved until it matches the key in use,
+  // so a language switch can never write one language's cards under another's key.
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
 
   useEffect(() => {
-    setHydrated(false);
     setCards(readCards(subject, subtopic));
-    setHydrated(true);
-  }, [subject, subtopic]);
+    setLoadedKey(key);
+  }, [key, subject, subtopic]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (loadedKey !== key) return;
     try {
       window.localStorage.setItem(key, JSON.stringify(cards));
       emitCardsChanged();
     } catch {
       /* ignore */
     }
-  }, [cards, hydrated, key]);
+  }, [cards, loadedKey, key]);
 
   const addCard = useCallback(
     (

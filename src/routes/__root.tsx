@@ -19,6 +19,7 @@ import { usePresence } from "@/hooks/usePresence";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { GoldenTheme } from "@/components/GoldenTheme";
+import { LearningLanguageScope } from "@/components/language/LearningLanguageScope";
 import { SiteFooter } from "@/components/SiteFooter";
 import { useAuth } from "@/hooks/useAuth";
 import { needsOnboarding } from "@/lib/onboarding";
@@ -340,6 +341,7 @@ function RootComponent() {
         <LanguageProvider>
           <GoldenTheme />
           <PresenceTracker />
+          <LearningLanguageScope />
           <DeviceTracker />
           <OnboardingGate />
           <AnnouncementBar />

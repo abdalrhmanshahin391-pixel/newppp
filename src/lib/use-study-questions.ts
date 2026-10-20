@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { LANGUAGE_CHANGED_EVENT, langKey, useActiveLanguage } from "@/lib/language-scope";
 
 export type StudyOption = {
   letter: string;
@@ -17,7 +18,7 @@ export type StudyQuestion = {
 
 export function questionKey(subject: string, subtopic: string) {
   const slug = (s: string) => s.trim().toLowerCase().replace(/\s+/g, "-");
-  return `rita_q_${slug(subject)}_${slug(subtopic)}`;
+  return langKey(`rita_q_${slug(subject)}_${slug(subtopic)}`);
 }
 
 function newId() {
@@ -30,6 +31,11 @@ const listeners = new Set<() => void>();
 function emitChanged() {
   version += 1;
   listeners.forEach((l) => l());
+}
+
+// Another language's questions are a different set: lists that cached counts must read again.
+if (typeof window !== "undefined") {
+  window.addEventListener(LANGUAGE_CHANGED_EVENT, () => emitChanged());
 }
 
 export function useQuestionsVersion() {
@@ -83,19 +89,21 @@ export function appendQuestions(
 
 /** Questions for one sub-subject, persisted in the browser. */
 export function useStudyQuestions(subject: string, subtopic: string) {
+  // The key includes the active language, so switching language switches the set of questions.
+  useActiveLanguage();
   const key = questionKey(subject, subtopic);
   const [questions, setQuestions] = useState<StudyQuestion[]>([]);
-  const [hydrated, setHydrated] = useState(false);
+  // The key the current `questions` were read from; nothing is saved until it matches the key in use.
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const v = useQuestionsVersion();
 
   useEffect(() => {
-    setHydrated(false);
     setQuestions(readQuestions(subject, subtopic));
-    setHydrated(true);
-  }, [subject, subtopic, v]);
+    setLoadedKey(key);
+  }, [key, subject, subtopic, v]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (loadedKey !== key) return;
     try {
       const current = window.localStorage.getItem(key);
       const next = JSON.stringify(questions);
@@ -106,7 +114,7 @@ export function useStudyQuestions(subject: string, subtopic: string) {
     } catch {
       /* ignore */
     }
-  }, [questions, hydrated, key]);
+  }, [questions, loadedKey, key]);
 
   const updateQuestion = useCallback((id: string, patch: Partial<Omit<StudyQuestion, "id">>) => {
     setQuestions((qs) => qs.map((q) => (q.id === id ? { ...q, ...patch } : q)));

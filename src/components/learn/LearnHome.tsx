@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -17,6 +17,7 @@ import { useLessonPath } from "@/components/learn/useLessonPath";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearningLanguage } from "@/hooks/useLearningLanguage";
 import { LanguageChooserCard } from "@/components/language/LanguagePicker";
+import { showsGermanLab } from "@/lib/learning-language";
 import { useStudyOverview } from "@/lib/use-review";
 import { TOOLS, type ToolDef } from "@/lib/site-tools";
 import {
@@ -179,8 +180,13 @@ function jumpTo(event: MouseEvent<HTMLAnchorElement>, id: string) {
   }
 }
 
-function SideList({ lang }: { lang: Lang }) {
-  const [active, choose] = useActiveSection(SECTION_IDS);
+function SideList({ lang, showGerman }: { lang: Lang; showGerman: boolean }) {
+  const rail = useMemo(
+    () => (showGerman ? RAIL : RAIL.filter((entry) => entry.id !== "german")),
+    [showGerman],
+  );
+  const railIds = useMemo(() => rail.map((entry) => entry.id), [rail]);
+  const [active, choose] = useActiveSection(railIds);
   const item =
     "inline-flex min-h-11 shrink-0 touch-manipulation items-center gap-2.5 rounded-lg border-2 px-3.5 text-[15px] font-semibold transition-colors duration-150 active:scale-[0.98] whitespace-nowrap lg:w-full";
   return (
@@ -188,7 +194,7 @@ function SideList({ lang }: { lang: Lang }) {
       aria-label={lang === "ar" ? "أقسام التعلم" : "Learning sections"}
       className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:-mx-8 md:px-8 lg:sticky lg:top-24 lg:mx-0 lg:flex-col lg:self-start lg:overflow-visible lg:px-0 lg:pb-0"
     >
-      {RAIL.map(({ id, label, icon: Icon }) => {
+      {rail.map(({ id, label, icon: Icon }) => {
         const on = active === id;
         return (
           <a
@@ -556,6 +562,7 @@ export function LearnHome() {
   });
 
   const path = lessonsDone(lessons.lessons);
+  const showGerman = showsGermanLab(learning.code);
   const sections = buildSections({
     flashcards:
       overview.data && overview.data.due > 0
@@ -605,14 +612,16 @@ export function LearnHome() {
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[12.5rem_minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
-          <SideList lang={lang} />
+          <SideList lang={lang} showGerman={showGerman} />
           <div className="lg:sticky lg:top-24 lg:col-start-3 lg:row-start-1 lg:self-start">
             <TodayPanel lang={lang} signedIn={signedIn} overview={overview} lessons={lessons} />
           </div>
           <div className="min-w-0 space-y-10 lg:col-start-2 lg:row-start-1">
-            {sections.map((section) => (
-              <Section key={section.id} section={section} lang={lang} />
-            ))}
+            {sections
+              .filter((section) => showGerman || section.id !== "german")
+              .map((section) => (
+                <Section key={section.id} section={section} lang={lang} />
+              ))}
           </div>
         </div>
       </main>

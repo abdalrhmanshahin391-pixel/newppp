@@ -1,3 +1,4 @@
+import { LanguageGate } from "@/components/language/LanguageGate";
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Brain, FolderPlus, ListPlus, Pencil, Trash2 } from "lucide-react";
@@ -44,7 +45,11 @@ export const Route = createFileRoute("/study/match")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: MemoryWorkspace,
+  component: () => (
+    <LanguageGate>
+      <MemoryWorkspace />
+    </LanguageGate>
+  ),
 });
 
 function MemoryWorkspace() {

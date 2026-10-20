@@ -1,3 +1,5 @@
+import { LanguageGate } from "@/components/language/LanguageGate";
+import { useDbLanguage, useLanguageResolved } from "@/lib/language-scope";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -50,12 +52,18 @@ export const Route = createFileRoute("/share/")({
       { property: "og:type", content: "website" },
     ],
   }),
-  component: SharePage,
+  component: () => (
+    <LanguageGate>
+      <SharePage />
+    </LanguageGate>
+  ),
 });
 
 function SharePage() {
   const { type: initialType } = Route.useSearch();
   const { user } = useAuth();
+  const language = useDbLanguage();
+  const resolved = useLanguageResolved();
   const qc = useQueryClient();
 
   const [mode, setMode] = useState<"flashcards" | "questions">(initialType || "flashcards");
@@ -74,9 +82,9 @@ function SharePage() {
 
   // Decks queries
   const deckFeed = useQuery({
-    queryKey: ["share-feed", search, sort],
+    queryKey: ["share-feed", search, sort, language],
     queryFn: () => fetchFeed({ search, sort }),
-    enabled: mode === "flashcards",
+    enabled: mode === "flashcards" && resolved,
   });
   const deckMine = useQuery({
     queryKey: ["share-mine", user?.id],
@@ -86,9 +94,9 @@ function SharePage() {
 
   // Questions queries
   const questionFeed = useQuery({
-    queryKey: ["qset-feed", search, sort, sourceFilter, page],
+    queryKey: ["qset-feed", search, sort, sourceFilter, page, language],
     queryFn: () => fetchQuestionFeed({ search, sort, sourceType: sourceFilter, page }),
-    enabled: mode === "questions",
+    enabled: mode === "questions" && resolved,
   });
   const questionMine = useQuery({
     queryKey: ["qset-mine", user?.id],

@@ -5,8 +5,10 @@ import {
   isLanguageKey,
   languageFilter,
   legacyKeysToMove,
+  moveLegacyKeys,
   resolveActiveLanguage,
   scopedKey,
+  showsGermanLab,
   sortLanguages,
   splitScopedKey,
   validateNewLanguage,
@@ -155,4 +157,64 @@ test("a new language: code is normalised and checked, names are required", () =>
     [],
   );
   assert.equal(rtl.ok && rtl.value.speech_code, "fa");
+});
+
+function fakeStorage(initial: Record<string, string>) {
+  const data = new Map(Object.entries(initial));
+  return {
+    data,
+    get length() {
+      return data.size;
+    },
+    key: (i: number) => [...data.keys()][i] ?? null,
+    getItem: (k: string) => data.get(k) ?? null,
+    setItem: (k: string, v: string) => void data.set(k, v),
+    removeItem: (k: string) => void data.delete(k),
+  };
+}
+
+test("moving legacy keys copies them under the language, removes the old ones, leaves the rest", () => {
+  const store = fakeStorage({
+    rita_study_subjects: '[{"name":"A","subs":[]}]',
+    rita_fc_a_b: "[1]",
+    rita_todo_tasks: "[]",
+    rita_study_muted: "1",
+    unrelated: "x",
+  });
+  assert.equal(moveLegacyKeys(store, "de"), 2);
+  assert.equal(store.getItem("rita_@de_study_subjects"), '[{"name":"A","subs":[]}]');
+  assert.equal(store.getItem("rita_@de_fc_a_b"), "[1]");
+  assert.equal(store.getItem("rita_study_subjects"), null);
+  assert.equal(store.getItem("rita_fc_a_b"), null);
+  for (const kept of ["rita_todo_tasks", "rita_study_muted", "unrelated"]) {
+    assert.notEqual(store.getItem(kept), null, kept);
+  }
+});
+
+test("moving legacy keys never overwrites a language's own copy and can be repeated", () => {
+  const store = fakeStorage({
+    rita_study_subjects: "old",
+    "rita_@de_study_subjects": "already here",
+    rita_fc_a_b: "cards",
+  });
+  assert.equal(moveLegacyKeys(store, "de"), 1);
+  assert.equal(store.getItem("rita_@de_study_subjects"), "already here");
+  assert.equal(store.getItem("rita_study_subjects"), "old", "kept: nothing is lost");
+  assert.equal(moveLegacyKeys(store, "de"), 0, "second run changes nothing");
+  assert.equal(store.getItem("rita_@de_fc_a_b"), "cards");
+});
+
+test("a second language never receives the first language's keys", () => {
+  const store = fakeStorage({ rita_fc_a_b: "cards" });
+  moveLegacyKeys(store, "de");
+  assert.equal(moveLegacyKeys(store, "en"), 0);
+  assert.equal(store.getItem("rita_@en_fc_a_b"), null);
+});
+
+test("the German Lab shows for German learners and for learners who have not chosen", () => {
+  assert.equal(showsGermanLab("de"), true);
+  assert.equal(showsGermanLab(null), true);
+  assert.equal(showsGermanLab(undefined), true);
+  assert.equal(showsGermanLab("en"), false);
+  assert.equal(showsGermanLab("fr"), false);
 });

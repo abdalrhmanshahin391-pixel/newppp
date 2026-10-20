@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useDbLanguage, useLanguageResolved } from "@/lib/language-scope";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, RotateCcw, Sparkles } from "lucide-react";
 import { StudyLayout, StudyHeading } from "@/components/study/StudyLayout";
@@ -70,9 +71,15 @@ export const Route = createFileRoute("/study/session")({
 function SessionPage() {
   const { ids } = Route.useSearch();
   const { user } = useAuth();
+  const language = useDbLanguage();
+  const resolved = useLanguageResolved();
   const subjectIds = useMemo(() => ids.split(",").filter(Boolean), [ids]);
 
-  const subjects = useQuery({ queryKey: ["flash-subjects"], queryFn: fetchSubjects, enabled: !!user });
+  const subjects = useQuery({
+    queryKey: ["flash-subjects", language],
+    queryFn: fetchSubjects,
+    enabled: !!user && resolved,
+  });
   const cards = useQuery({
     queryKey: ["flash-cards", ids],
     queryFn: () => fetchCards(subjectIds),

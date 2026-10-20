@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { getLessonPath, type PathLesson } from "@/lib/rita-curriculum.functions";
+import { useActiveLanguage } from "@/lib/language-scope";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { LessonImage } from "@/components/rita-lessons/LessonArt";
 
@@ -111,6 +112,7 @@ export function RitaHub() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const pathFn = useServerFn(getLessonPath);
+  const language = useActiveLanguage();
   const [lessons, setLessons] = useState<PathLesson[] | null | "none">(null);
 
   useEffect(() => {
@@ -120,10 +122,10 @@ export function RitaHub() {
   useEffect(() => {
     if (!user) return;
     // Progress is a nicety: if the lessons are not set up yet the card simply has no progress line.
-    pathFn()
+    pathFn({ data: { language } })
       .then((result) => setLessons(result.lessons))
       .catch(() => setLessons("none"));
-  }, [pathFn, user]);
+  }, [pathFn, user, language]);
 
   const list = Array.isArray(lessons) ? lessons : [];
   const done = list.filter((lesson) => lesson.state === "done").length;

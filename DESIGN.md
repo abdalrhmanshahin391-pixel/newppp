@@ -138,6 +138,12 @@ free conversation, shared decks). Do not call it "language" on its own: the site
   saved." Errors say what failed in plain words and keep the previous language.
 - **`/learn`** shows "Learning Deutsch · Change" under the greeting (Change links to the Settings card).
 - **Never** hide a language's content by deleting it: switching only changes what is shown.
+- **Gates** (`LanguageGate`, `GermanOnlyGate`): a signed-in learner who has not chosen a language sees the
+  chooser card in place of flashcards, Memory Lab, lessons and shared decks. A learner of another
+  language who opens the German Lab sees a short notice with "Switch to Deutsch" and "Back to learning"
+  (title in `rh-app-title`, grey panel, no dead end). Guests see the pages as before. The German section
+  and its side-list item on `/learn`, and the footer link, only show for German learners (or before a
+  choice).
 - **Admin** (`/admin/languages`, Arabic, RTL): one card per language with "visible to learners" and
   "Rita voice" switches, up/down order, counts, and an add form. A language that has content is
   disabled, not deleted.

@@ -1,6 +1,7 @@
 import { readCards, writeCards, type FlashCardItem } from "@/lib/use-flashcards";
 import { FLASHCARD_SUBJECTS_KEY } from "@/lib/use-study-subjects";
 import { ensureSampleFlashcards } from "@/lib/demo-seed";
+import { langKey } from "@/lib/language-scope";
 
 export type BoardSubject = { name: string; subs: { name: string }[] };
 
@@ -8,11 +9,11 @@ export type BoardSubject = { name: string; subs: { name: string }[] };
 export function readBoard(): BoardSubject[] {
   if (typeof window === "undefined") return [];
   try {
-    let raw = window.localStorage.getItem(FLASHCARD_SUBJECTS_KEY);
+    let raw = window.localStorage.getItem(langKey(FLASHCARD_SUBJECTS_KEY));
     let parsed = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(parsed) || parsed.length === 0) {
       ensureSampleFlashcards();
-      raw = window.localStorage.getItem(FLASHCARD_SUBJECTS_KEY);
+      raw = window.localStorage.getItem(langKey(FLASHCARD_SUBJECTS_KEY));
       parsed = raw ? JSON.parse(raw) : [];
     }
     if (!Array.isArray(parsed)) return [];
@@ -28,7 +29,7 @@ export function readBoard(): BoardSubject[] {
 export function writeBoard(list: BoardSubject[]) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(FLASHCARD_SUBJECTS_KEY, JSON.stringify(list));
+    window.localStorage.setItem(langKey(FLASHCARD_SUBJECTS_KEY), JSON.stringify(list));
   } catch {
     /* ignore */
   }
