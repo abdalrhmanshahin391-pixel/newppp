@@ -1,13 +1,14 @@
-import { Image as ImageIcon } from "lucide-react";
 import { LEARN_IMAGES } from "@/lib/learn-images";
 
 /**
- * The picture on a learning-home card. With no picture for `slot` it is a dashed, labelled empty
- * square so it is obvious where an image goes; add the picture in `learn-images.ts` and it fills in.
+ * The picture on a learning-home card. The known card catalogue is fully mapped
+ * in `learn-images.ts`; the quiet fallback only protects future cards while they
+ * are being designed.
  */
-export function ImageSlot({ slot, lang }: { slot: string; lang: "en" | "ar" }) {
+export function ImageSlot({ slot }: { slot: string; lang: "en" | "ar" }) {
   const src = LEARN_IMAGES[slot];
-  const size = "m-2 h-[88px] w-[88px] shrink-0 rounded-xl sm:h-[128px] sm:w-[128px]";
+  const size =
+    "m-2 h-[88px] w-[88px] shrink-0 overflow-hidden rounded-[14px] bg-[#f1edf8] ring-1 ring-black/[0.07] sm:h-[128px] sm:w-[128px]";
   if (src) {
     return (
       <img
@@ -17,7 +18,7 @@ export function ImageSlot({ slot, lang }: { slot: string; lang: "en" | "ar" }) {
         height={128}
         loading="lazy"
         decoding="async"
-        className={`${size} object-cover`}
+        className={`${size} object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]`}
       />
     );
   }
@@ -25,12 +26,7 @@ export function ImageSlot({ slot, lang }: { slot: string; lang: "en" | "ar" }) {
     <div
       aria-hidden="true"
       data-image-slot={slot}
-      className={`${size} grid place-items-center border-2 border-dashed border-[#8b8a9c] bg-[#f4f4f8] text-[#4b4a5c]`}
-    >
-      <span className="grid justify-items-center gap-1 text-[12px] font-semibold leading-tight">
-        <ImageIcon size={24} strokeWidth={1.75} />
-        {lang === "ar" ? "مكان الصورة" : "Image here"}
-      </span>
-    </div>
+      className={`${size} bg-[radial-gradient(circle_at_35%_30%,#fff8e8,transparent_38%),radial-gradient(circle_at_72%_70%,#d9cef5,transparent_48%),#f1edf8]`}
+    />
   );
 }
