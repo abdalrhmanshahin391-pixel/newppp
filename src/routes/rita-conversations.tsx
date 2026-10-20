@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Download,
   FileJson,
+  FileText,
   Loader2,
   MessageCircle,
   Plus,
@@ -17,6 +18,7 @@ import {
   ritaConversationDiagnostic,
   ritaConversationFileStem,
   ritaConversationMarkdown,
+  ritaConversationPrintHtml,
   type RitaConversation,
   type RitaConversationMessage,
   type RitaConversationSession,
@@ -95,6 +97,21 @@ async function saveFile(name: string, contents: string, type: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
 }
 
+// Printed from a bare document, so none of the app's print rules (which hide
+// or recolour the page) can touch the transcript.
+function printInFrame(html: string) {
+  const frame = document.createElement("iframe");
+  frame.setAttribute("aria-hidden", "true");
+  frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+  frame.srcdoc = html;
+  frame.onload = () => {
+    frame.contentWindow?.focus();
+    frame.contentWindow?.print();
+    window.setTimeout(() => frame.remove(), 60_000);
+  };
+  document.body.appendChild(frame);
+}
+
 function RitaConversationsPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
@@ -162,13 +179,31 @@ function RitaConversationsPage() {
     }
   }
 
-  async function download(conversation: RitaConversation, format: "md" | "json") {
+  async function download(conversation: RitaConversation, format: "md" | "json" | "pdf") {
+    // The print tab must open inside the tap, before the messages are fetched,
+    // or mobile browsers block it as a pop-up.
+    const printTab = format === "pdf" ? window.open("", "_blank") : null;
     setOpening(conversation.id);
     setError("");
     try {
       const bundle = await loadBundle(conversation);
       const stem = ritaConversationFileStem(conversation);
-      if (format === "md") {
+      if (format === "pdf") {
+        const html = ritaConversationPrintHtml(
+          bundle.conversation,
+          bundle.messages,
+          bundle.sessions,
+        );
+        if (printTab) {
+          printTab.document.open();
+          printTab.document.write(html);
+          printTab.document.close();
+          printTab.focus();
+          window.setTimeout(() => printTab.print(), 400);
+        } else {
+          printInFrame(html);
+        }
+      } else if (format === "md") {
         await saveFile(
           `${stem}.md`,
           ritaConversationMarkdown(bundle.conversation, bundle.messages, bundle.sessions),
@@ -186,6 +221,7 @@ function RitaConversationsPage() {
         );
       }
     } catch (cause) {
+      printTab?.close();
       setError(cause instanceof Error ? cause.message : "Could not download this conversation.");
     } finally {
       setOpening("");
@@ -310,6 +346,14 @@ function RitaConversationsPage() {
                       <Download size={16} />
                     )}
                     AI file
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void download(conversation, "pdf")}
+                    className="rita-btn rita-btn-secondary gap-2"
+                    aria-label="Download as PDF"
+                  >
+                    <FileText size={16} /> PDF
                   </button>
                   <button
                     type="button"
