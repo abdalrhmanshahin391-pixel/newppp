@@ -39,7 +39,7 @@ type Row = {
   params?: Record<string, string>;
   search?: Record<string, string>;
   ai?: boolean;
-  chip?: string | null;
+  chip?: Bi | null;
 };
 
 type SectionDef = { id: string; title: Bi; rows: Row[] };
@@ -61,7 +61,7 @@ function rowOf(tool: ToolDef): Row {
 const tool = (key: string) => TOOLS.find((t) => t.key === key)!;
 
 /** Every destination in one list: Rita first, then the study tools, grouped by what they are for. */
-function buildSections(chips: { flashcards: string | null; lessons: string | null }): SectionDef[] {
+function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): SectionDef[] {
   return [
     {
       id: "rita",
@@ -200,7 +200,7 @@ function ToolRow({ row, lang }: { row: Row; lang: Lang }) {
       params={row.params as never}
       search={row.search as never}
       data-learn-row={row.key}
-      className="group flex min-h-[104px] touch-manipulation items-stretch rounded-2xl border-2 border-[var(--pp-ink)] bg-white outline-none transition-[background-color,transform] duration-150 hover:bg-[var(--pp-grey)] focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-[var(--pp-ink)] active:scale-[0.99]"
+      className="group flex min-h-[104px] touch-manipulation items-stretch rounded-2xl border-2 border-[var(--pp-ink)] bg-white transition-[background-color,transform] duration-150 hover:bg-[var(--pp-grey)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-[3px] focus-visible:outline-[var(--pp-ink)] active:scale-[0.99]"
     >
       <ImageSlot slot={row.slot} lang={lang} />
       <span className="flex min-w-0 flex-1 flex-col justify-center gap-1 py-3 pe-2 ps-1 sm:ps-3">
@@ -215,7 +215,7 @@ function ToolRow({ row, lang }: { row: Row; lang: Lang }) {
           ) : null}
           {row.chip ? (
             <span className="rounded-md bg-[var(--pp-accent-soft)] px-2 text-[13.5px] font-semibold leading-6">
-              {row.chip}
+              {row.chip[lang]}
             </span>
           ) : null}
         </span>
@@ -237,7 +237,7 @@ function Section({ section, lang }: { section: SectionDef; lang: Lang }) {
     <section id={section.id} aria-labelledby={`${section.id}-title`} className="scroll-mt-24">
       <h2
         id={`${section.id}-title`}
-        className="text-[22px] font-bold leading-tight tracking-[-0.02em]"
+        className="rh-app-h2 text-[22px] font-bold leading-tight tracking-[-0.02em]"
       >
         {section.title[lang]}
       </h2>
@@ -327,7 +327,7 @@ function NextUp({
         <p className="text-[14px] font-semibold text-[#4b4a5c]">{t("Next up", "خطوتك التالية")}</p>
         <h2
           id="next-up-title"
-          className="mt-1 text-[24px] font-bold leading-tight tracking-[-0.02em] break-words"
+          className="rh-app-h2 mt-1 line-clamp-3 text-[24px] font-bold leading-tight tracking-[-0.02em] break-words"
         >
           {title}
         </h2>
@@ -359,7 +359,7 @@ function TodayPanel({
   const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
   const shell = "rounded-[20px] bg-[var(--pp-grey)] p-5";
   const heading = (
-    <h2 className="text-[18px] font-bold tracking-[-0.01em]">{t("Today", "اليوم")}</h2>
+    <h2 className="rh-app-h2 text-[18px] font-bold tracking-[-0.01em]">{t("Today", "اليوم")}</h2>
   );
 
   if (!signedIn) {
@@ -517,8 +517,14 @@ export function LearnHome() {
 
   const path = lessonsDone(lessons.lessons);
   const sections = buildSections({
-    flashcards: overview.data && overview.data.due > 0 ? `${overview.data.due} due` : null,
-    lessons: path.total > 0 ? `${path.done} of ${path.total} done` : null,
+    flashcards:
+      overview.data && overview.data.due > 0
+        ? { en: `${overview.data.due} due`, ar: `${overview.data.due} مستحقة` }
+        : null,
+    lessons:
+      path.total > 0
+        ? { en: `${path.done} of ${path.total} done`, ar: `${path.done} من ${path.total} منجزة` }
+        : null,
   });
 
   return (

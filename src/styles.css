@@ -3166,6 +3166,9 @@ hairline borders and generous radii.
   font-size: clamp(1.75rem, 3.4vw, 2.5rem) !important;
   line-height: 1.12 !important;
 }
+.edith-premium h2.rh-app-h2 {
+  letter-spacing: -0.012em;
+}
 .edith-premium h2 {
   line-height: 1.08;
 }
