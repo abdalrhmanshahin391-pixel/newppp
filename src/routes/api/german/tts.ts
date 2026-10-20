@@ -36,8 +36,25 @@ export const Route = createFileRoute("/api/german/tts")({
           .slice(0, MAX_TTS_CHARS);
         if (!text) return new Response("Text required", { status: 400 });
 
-        const key = process.env.LOVABLE_API_KEY;
-        if (!key) return new Response("High-quality voice is unavailable", { status: 503 });
+        const { lovableAiKey } = await import("@/lib/lovable-ai-key.server");
+        const providers: { url: string; key: string }[] = [];
+        const lovableKey = await lovableAiKey();
+        if (lovableKey) {
+          providers.push({
+            url: "https://ai.gateway.lovable.dev/v1/audio/speech",
+            key: lovableKey,
+          });
+        }
+        try {
+          const { resolveRitaOpenAiKey } = await import("@/lib/rita-voice.server");
+          const openAiKey = await resolveRitaOpenAiKey();
+          if (openAiKey)
+            providers.push({ url: "https://api.openai.com/v1/audio/speech", key: openAiKey });
+        } catch {
+          /* no second provider */
+        }
+        if (!providers.length)
+          return new Response("High-quality voice is unavailable", { status: 503 });
 
         // The "tap a word" window asks for a language and a style (fast, slow,
         // precise); older callers send only a rate and keep the German voice.
@@ -55,36 +72,41 @@ export const Route = createFileRoute("/api/german/tts")({
           "Speak as a calm native German woman from Germany. Clear standard Hochdeutsch accent, warm classroom tone, crisp consonants, natural short pauses, no English accent.";
 
         try {
-          const response = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${key}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "openai/gpt-4o-mini-tts",
-              input: spoken,
-              voice: "coral",
-              response_format: "mp3",
-              stream_format: "audio",
-              speed,
-              instructions,
-            }),
-            signal: request.signal,
-          });
+          let lastStatus = 502;
+          for (const provider of providers) {
+            const response = await fetch(provider.url, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${provider.key}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model: provider.url.includes("api.openai.com")
+                  ? "gpt-4o-mini-tts"
+                  : "openai/gpt-4o-mini-tts",
+                input: spoken,
+                voice: "coral",
+                response_format: "mp3",
+                stream_format: "audio",
+                speed,
+                instructions,
+              }),
+              signal: request.signal,
+            });
 
-          if (!response.ok) {
+            if (response.ok) {
+              return new Response(response.body, {
+                headers: {
+                  "Content-Type": "audio/mpeg",
+                  "Cache-Control": "private, max-age=86400",
+                },
+              });
+            }
             const body = await response.text().catch(() => "");
-            console.error("German TTS failed", response.status, body.slice(0, 300));
-            return new Response("High-quality voice failed", { status: response.status });
+            console.error("German TTS failed", provider.url, response.status, body.slice(0, 300));
+            lastStatus = response.status;
           }
-
-          return new Response(response.body, {
-            headers: {
-              "Content-Type": "audio/mpeg",
-              "Cache-Control": "private, max-age=86400",
-            },
-          });
+          return new Response("High-quality voice failed", { status: lastStatus });
         } catch (err) {
           if (request.signal.aborted) return new Response(null, { status: 499 });
           console.error("German TTS error", err);

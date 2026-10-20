@@ -53,3 +53,23 @@ test("the limiter allows a burst then blocks until the window passes", () => {
   assert.equal(allowRequest(hits, "other", 2000, 3, 60_000), true);
   assert.equal(allowRequest(hits, "u", 70_000, 3, 60_000), true);
 });
+
+test("guessPhraseLang lets a phrase be heard even when its explanation failed", async () => {
+  const { guessPhraseLang } = await import("./rita-phrase.ts");
+  assert.equal(guessPhraseLang("Ich habe Hunger"), "de");
+  assert.equal(guessPhraseLang("Hier ist eine kleine Sammlung"), "de");
+  assert.equal(guessPhraseLang("Schön"), "de");
+  assert.equal(guessPhraseLang("this is my book"), "en");
+  assert.equal(guessPhraseLang("مرحبا"), null);
+  assert.equal(guessPhraseLang("   "), null);
+});
+
+test("explainFailureText names the real cause in Arabic", async () => {
+  const { explainFailureText } = await import("./rita-phrase.ts");
+  assert.match(explainFailureText("no_key"), /غير مفعّلة/);
+  assert.match(explainFailureText("rate_limited"), /انتظر/);
+  assert.match(explainFailureText("gateway_401"), /مرفوض/);
+  assert.match(explainFailureText("gateway_402"), /رصيد/);
+  assert.match(explainFailureText("bad_reply"), /غير مفهوم/);
+  assert.match(explainFailureText(undefined), /تعذّر تحميل الترجمة/);
+});
