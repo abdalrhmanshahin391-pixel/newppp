@@ -22,10 +22,7 @@ import { avatarTone, useAvatarUrl } from "@/lib/avatars";
 import { EdithWordmark } from "@/components/brand/EdithWordmark";
 import { StartLearningLink } from "@/components/StartLearningLink";
 
-const SIMPLE_LINKS: { to: string; label: string }[] = [
-  { to: "/rita", label: "Talk to Rita" },
-  { to: "/pricing", label: "Pricing" },
-];
+const SIMPLE_LINKS: { to: string; label: string }[] = [{ to: "/pricing", label: "Pricing" }];
 
 type OpenMenu = "credits" | "account" | null;
 
