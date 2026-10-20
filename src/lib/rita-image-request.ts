@@ -22,7 +22,12 @@ export const MIN_TOKEN_LENGTH = 32;
 export const MAX_PROMPT_CHARS = 1000;
 export const MIN_PROMPT_CHARS = 3;
 
-export const IMAGE_LIMITS = { perHour: 20, perDay: 100, concurrent: 2 } as const;
+// Deliberately conservative while this private endpoint is first enabled.
+// The bearer token is an operator integration secret, not a public user
+// feature: three normal-quality requests are enough to validate the flow
+// without turning a leaked or misconfigured caller into an OpenAI bill.
+// Raise these only after reviewing the generation log.
+export const IMAGE_LIMITS = { perHour: 3, perDay: 10, concurrent: 1 } as const;
 
 /** The token from "Authorization: Bearer …"; empty when the header is missing or malformed. */
 export function bearerToken(header: string | null | undefined): string {

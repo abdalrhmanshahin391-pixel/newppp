@@ -90,7 +90,7 @@ test("Arabic prompts are measured in characters, not bytes", () => {
 
 test("checkUsage allows normal use and stops at each cap", () => {
   assert.deepEqual(checkUsage({ hour: 0, day: 0, running: 0 }), { allowed: true });
-  assert.deepEqual(checkUsage({ hour: IMAGE_LIMITS.perHour - 1, day: 5, running: 1 }), {
+  assert.deepEqual(checkUsage({ hour: IMAGE_LIMITS.perHour - 1, day: 5, running: 0 }), {
     allowed: true,
   });
   const hour = checkUsage({ hour: IMAGE_LIMITS.perHour, day: 5, running: 0 });
