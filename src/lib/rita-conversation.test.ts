@@ -4,6 +4,7 @@ import {
   boundedRitaHistory,
   ritaConversationDiagnostic,
   ritaConversationMarkdown,
+  ritaConversationPrintHtml,
   type RitaConversation,
   type RitaConversationMessage,
 } from "./rita-conversation.ts";
@@ -94,4 +95,52 @@ test("resume history uses only the spoken part of an interrupted Rita reply", ()
     },
   ]);
   assert.equal(history.at(-1)?.content, "الجزء المسموع.");
+});
+
+test("print document keeps both speakers, in order, with a role label for each", () => {
+  const html = ritaConversationPrintHtml(conversation, messages);
+  assert.ok(html.indexOf('class="m user"') < html.indexOf('class="m rita"'));
+  assert.match(html, /<p class="who">You /);
+  assert.match(html, /<p class="who">Rita /);
+  assert.match(html, /كيف أحكي بدي أروح على الحمام/);
+  assert.match(html, /I need to go to the bathroom/);
+  assert.match(html, /<title>rita-Bathroom-English-12345678<\/title>/);
+});
+
+test("print document sets dir=auto per message, marks roles by border, hides its button when printing", () => {
+  const html = ritaConversationPrintHtml(conversation, messages);
+  assert.equal((html.match(/class="text" dir="auto"/g) ?? []).length, 2);
+  assert.match(html, /\.m \{[^}]*border-left: 4px solid/);
+  assert.doesNotMatch(html, /\.m(\.user)? \{[^}]*background/);
+  assert.match(html, /@media print \{ \.bar \{ display: none; \}/);
+});
+
+test("print document escapes message text and the title", () => {
+  const html = ritaConversationPrintHtml(
+    { ...conversation, title: "<img src=x onerror=alert(1)>" },
+    [{ ...messages[0], content: "<script>alert('x')</script> & \"quoted\"" }],
+  );
+  assert.doesNotMatch(html, /<script>alert/);
+  assert.doesNotMatch(html, /<img src=x/);
+  assert.match(html, /&lt;script&gt;alert\(&#39;x&#39;\)&lt;\/script&gt; &amp; &quot;quoted&quot;/);
+});
+
+test("print document flags interrupted turns and shows what the learner heard", () => {
+  const html = ritaConversationPrintHtml(conversation, [
+    {
+      ...messages[1],
+      content: "Full answer that was cut off.",
+      spoken_content: "Full answer",
+      delivery_status: "interrupted",
+    },
+  ]);
+  assert.match(html, /interrupted/);
+  assert.match(html, /Heard by the learner: Full answer/);
+});
+
+test("print document starts a new section per voice session and handles an empty chat", () => {
+  const second = { ...messages[1], session_id: "20000000-0000-4000-8000-000000000002" };
+  const html = ritaConversationPrintHtml(conversation, [messages[0], second]);
+  assert.match(html, /<h2>Session 1<\/h2>[\s\S]*<h2>Session 2<\/h2>/);
+  assert.match(ritaConversationPrintHtml(conversation, []), /No messages were saved/);
 });
