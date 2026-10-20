@@ -119,6 +119,29 @@ and `/learn/german`, but nothing on the home links to them). Structure follows a
 - Direction follows the language (logical padding, mirrored arrows). Every control is at least 44px. Motion is only
   press feedback (`scale(.99)`) and colour changes under 200ms.
 
+## Learning language (chooser and switcher)
+
+The learner is learning one language at a time; the whole site follows it (flashcards, lessons,
+free conversation, shared decks). Do not call it "language" on its own: the site's own language
+(English / Arabic) is a different setting.
+
+- **One component, three places** (`LanguagePicker`): the list in Settings (`/profile`, first card,
+  `#learning-language`), the first-time card on `/learn` (`LanguageChooserCard`, shown in place of
+  nothing: the page stays usable below it), and a row of chips in the account menu.
+- **List rows** are pressable, so 2px ink border, 16px radius, 56px minimum: the language's own
+  name (18px bold: "Deutsch"), then its name in the site's language, a small code chip (EN, DE) and a
+  check. Selected = blue border, `--pp-accent-soft` fill and the check; no gradients, no flags,
+  no icons in circles. The own-language name is wrapped in `<bdi lang>` so it follows the row's
+  direction in Arabic and still renders in its own script. Rows are at most 36rem wide.
+- **Chips** (menu): 44px, same selected treatment, own-language name only.
+- **After a change** a polite status line says "Now learning Deutsch. Your other languages stay
+  saved." Errors say what failed in plain words and keep the previous language.
+- **`/learn`** shows "Learning Deutsch · Change" under the greeting (Change links to the Settings card).
+- **Never** hide a language's content by deleting it: switching only changes what is shown.
+- **Admin** (`/admin/languages`, Arabic, RTL): one card per language with "visible to learners" and
+  "Rita voice" switches, up/down order, counts, and an add form. A language that has content is
+  disabled, not deleted.
+
 ## Study rooms (/learn and the room pages)
 
 Same system as the home page, inside `.edith-premium`: white page, Inter Tight titles, one

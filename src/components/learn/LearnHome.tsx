@@ -15,6 +15,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { ImageSlot } from "@/components/learn/ImageSlot";
 import { useLessonPath } from "@/components/learn/useLessonPath";
 import { useAuth } from "@/hooks/useAuth";
+import { useLearningLanguage } from "@/hooks/useLearningLanguage";
+import { LanguageChooserCard } from "@/components/language/LanguagePicker";
 import { useStudyOverview } from "@/lib/use-review";
 import { TOOLS, type ToolDef } from "@/lib/site-tools";
 import {
@@ -522,6 +524,7 @@ export function LearnHome() {
   const signedIn = Boolean(user);
   const overview = useStudyOverview();
   const lessons = useLessonPath(signedIn);
+  const learning = useLearningLanguage();
 
   // The greeting needs the learner's own clock, so it is set after the page has loaded.
   const [hour, setHour] = useState<number | null>(null);
@@ -573,6 +576,29 @@ export function LearnHome() {
 
       <main className="mx-auto max-w-[1280px] px-4 pb-28 pt-8 md:px-8 md:pt-10">
         <h1 className="rh-app-title max-w-[24ch] font-bold tracking-[-0.03em]">{hello}</h1>
+
+        {signedIn && learning.ready && learning.language ? (
+          <p className="mt-2 flex flex-wrap items-center gap-x-2 text-[15px] text-[#4b4a5c]">
+            <span>
+              {lang === "ar"
+                ? `تتعلّم ${learning.language.name_ar}`
+                : `Learning ${learning.language.name_native}`}
+            </span>
+            <span aria-hidden="true">·</span>
+            <Link
+              to="/profile"
+              hash="learning-language"
+              className="inline-flex min-h-11 items-center font-semibold text-[var(--pp-accent-text)] underline underline-offset-4"
+            >
+              {lang === "ar" ? "غيّر" : "Change"}
+            </Link>
+          </p>
+        ) : null}
+        {signedIn && learning.ready && learning.code === null ? (
+          <div className="mt-6">
+            <LanguageChooserCard />
+          </div>
+        ) : null}
 
         <div className="mt-6">
           <NextUp choice={choice} loading={waiting} lang={lang} />

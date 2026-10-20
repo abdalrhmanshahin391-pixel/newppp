@@ -19,6 +19,11 @@ on:
       - "src/components/rita-lessons/**"
       - "src/routes/rita-lessons.tsx"
       - "src/routes/admin.curricula.tsx"
+      - "src/lib/learning-language*"
+      - "src/hooks/useLearningLanguage.ts"
+      - "src/components/language/**"
+      - "src/routes/admin.languages.tsx"
+      - "supabase/migrations/20261020180000_learning_languages.sql"
       - "docs/curriculum-samples/**"
       - ".github/workflows/rita-v3-frontend-check.yml"
   workflow_dispatch:
@@ -50,6 +55,7 @@ jobs:
           node --test src/lib/learn-home.test.ts
           node --test src/lib/rita-phrase.test.ts
           node --test src/lib/activity-streak.test.ts
+          node --test src/lib/learning-language.test.ts
           bunx tsc --noEmit
       - name: Build site
         run: bun run build
