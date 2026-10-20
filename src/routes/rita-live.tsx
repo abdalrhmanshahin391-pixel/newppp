@@ -1,3 +1,4 @@
+import { LanguageGate } from "@/components/language/LanguageGate";
 import { createFileRoute } from "@tanstack/react-router";
 import { RitaRealtimeV3 } from "@/components/rita/RitaRealtimeV3";
 
@@ -18,7 +19,11 @@ export const Route = createFileRoute("/rita-live")({
       ...(preview ? { preview: true } : {}),
     };
   },
-  component: RitaLivePage,
+  component: () => (
+    <LanguageGate>
+      <RitaLivePage />
+    </LanguageGate>
+  ),
 });
 
 function RitaLivePage() {

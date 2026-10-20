@@ -50,6 +50,11 @@ from rita_interruption import RitaUserTurnStartStrategy, gate_mode
 from rita_groq_llm import RitaGroqLLMService
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
 from rita_state import RitaSessionState
+from rita_target_language import (
+    parse_target_language,
+    stt_language_codes,
+    target_language_prompt,
+)
 from rita_turn_policy import (
     RitaBoundedTurnStopStrategy,
     bounded_commit_secs,
@@ -156,11 +161,12 @@ def build_prompt(body: dict[str, Any], state: RitaSessionState, *, dialogue: boo
     profile_language = str(body.get("language", "automatic"))
     remembered_dialect = str(body.get("dialect", "ar-JO"))
     mode = str(body.get("mode", "free_conversation"))
+    target_block = target_language_prompt(parse_target_language(body))
     return f"""You are Rita, RitaJet's realtime language tutor.
 
 Delivery: {PERSONALITIES.get(personality, PERSONALITIES['kind'])}
 Profile language: {profile_language}. Stable Arabic dialect: {remembered_dialect}.
-Lesson mode: {mode}.
+Lesson mode: {mode}.{target_block}
 
 CONVERSATION CONTINUITY
 - Saved messages from an earlier call may appear after this system message. Treat only those messages as
@@ -276,6 +282,19 @@ async def bot(args: DailyRunnerArguments):
     )
 
 
+def stt_language_hints(body: dict[str, Any]) -> list[Language]:
+    """Speech-recognition hints for this session: Arabic, the learner's target language, English."""
+    hints: list[Language] = []
+    for code in stt_language_codes(parse_target_language(body)):
+        try:
+            hint = Language(code)
+        except ValueError:
+            continue  # a language the recogniser does not know is simply not hinted
+        if hint not in hints:
+            hints.append(hint)
+    return hints or [Language.AR, Language.DE, Language.EN]
+
+
 async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str, Any]):
     if TTS_PROVIDER != "cartesia":
         raise RuntimeError("Rita v3 production is configured only for Cartesia TTS")
@@ -311,7 +330,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         vad_force_turn_endpoint=True,
         settings=SonioxSTTService.Settings(
             model=STT_MODEL,
-            language_hints=[Language.AR, Language.DE, Language.EN],
+            language_hints=stt_language_hints(body),
             language_hints_strict=False,
             enable_language_identification=True,
             enable_speaker_diarization=False,

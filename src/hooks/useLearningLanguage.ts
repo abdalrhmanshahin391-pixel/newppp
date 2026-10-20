@@ -2,6 +2,7 @@ import { useCallback, useState, useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { refreshAuthProfile, useAuth } from "@/hooks/useAuth";
+import { isVoiceSessionActive } from "@/lib/language-scope";
 import {
   BUILT_IN_LANGUAGES,
   resolveActiveLanguage,
@@ -10,6 +11,9 @@ import {
 } from "@/lib/learning-language";
 
 export const LANGUAGES_QUERY_KEY = ["learning-languages"] as const;
+
+/** `error` while a live conversation blocks switching (the picker words it for the learner). */
+export const VOICE_SESSION_ERROR = "voice-session-active";
 
 async function fetchLanguages(): Promise<LearningLanguage[]> {
   const { data, error } = await supabase.from("learning_languages").select("*").order("sort");
@@ -114,6 +118,10 @@ export function useLearningLanguage(): LearningLanguageState {
   const setLanguage = useCallback(
     async (next: string) => {
       if (!uid || pending || next === code) return false;
+      if (isVoiceSessionActive()) {
+        setError(VOICE_SESSION_ERROR);
+        return false;
+      }
       setPending(next);
       setError(null);
       try {

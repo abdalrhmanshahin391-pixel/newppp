@@ -20,6 +20,7 @@ on:
       - "src/routes/rita-lessons.tsx"
       - "src/routes/admin.curricula.tsx"
       - "src/lib/learning-language*"
+      - "src/lib/rita-target-language*"
       - "src/lib/language-scope.ts"
       - "src/hooks/useLearningLanguage.ts"
       - "src/components/language/**"
@@ -57,6 +58,8 @@ jobs:
           node --test src/lib/rita-phrase.test.ts
           node --test src/lib/activity-streak.test.ts
           node --test src/lib/learning-language.test.ts
+          node --test src/lib/rita-target-language.test.ts
+          node --test src/routes/api/rita-v3/session/start.source.test.mjs
           bunx tsc --noEmit
       - name: Build site
         run: bun run build

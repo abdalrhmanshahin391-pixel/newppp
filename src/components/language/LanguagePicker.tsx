@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, Loader2 } from "lucide-react";
-import { useLearningLanguage } from "@/hooks/useLearningLanguage";
+import { VOICE_SESSION_ERROR, useLearningLanguage } from "@/hooks/useLearningLanguage";
 import { languageLabel } from "@/lib/learning-language";
 
 type Ui = "en" | "ar";
@@ -146,11 +146,17 @@ export function LanguagePicker({
       </p>
       {error ? (
         <p role="alert" className="mt-3 text-[14px] text-red-700">
-          {text(
-            ui,
-            "Could not change the language. Try again.",
-            "تعذّر تغيير اللغة. حاول مرة أخرى.",
-          )}
+          {error === VOICE_SESSION_ERROR
+            ? text(
+                ui,
+                "End your conversation with Rita first, then switch language.",
+                "أنهِ محادثتك مع ريتا أولاً، ثم بدّل اللغة.",
+              )
+            : text(
+                ui,
+                "Could not change the language. Try again.",
+                "تعذّر تغيير اللغة. حاول مرة أخرى.",
+              )}
         </p>
       ) : null}
     </div>
