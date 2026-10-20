@@ -49,6 +49,7 @@ import { Route as AdminCurriculaRouteImport } from './routes/admin.curricula'
 import { Route as AdminDevicesRouteImport } from './routes/admin.devices'
 import { Route as AdminGermanRouteImport } from './routes/admin.german'
 import { Route as AdminGroupsRouteImport } from './routes/admin.groups'
+import { Route as AdminLanguagesRouteImport } from './routes/admin.languages'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminOffersRouteImport } from './routes/admin.offers'
 import { Route as AdminPaddleSyncRouteImport } from './routes/admin.paddle-sync'
@@ -333,6 +334,11 @@ const AdminGermanRoute = AdminGermanRouteImport.update({
 const AdminGroupsRoute = AdminGroupsRouteImport.update({
   id: '/admin/groups',
   path: '/admin/groups',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLanguagesRoute = AdminLanguagesRouteImport.update({
+  id: '/admin/languages',
+  path: '/admin/languages',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
@@ -796,6 +802,7 @@ export interface FileRoutesByFullPath {
   '/admin/devices': typeof AdminDevicesRoute
   '/admin/german': typeof AdminGermanRouteWithChildren
   '/admin/groups': typeof AdminGroupsRoute
+  '/admin/languages': typeof AdminLanguagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/offers': typeof AdminOffersRoute
   '/admin/paddle-sync': typeof AdminPaddleSyncRoute
@@ -918,6 +925,7 @@ export interface FileRoutesByTo {
   '/admin/curricula': typeof AdminCurriculaRoute
   '/admin/devices': typeof AdminDevicesRoute
   '/admin/groups': typeof AdminGroupsRoute
+  '/admin/languages': typeof AdminLanguagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/offers': typeof AdminOffersRoute
   '/admin/paddle-sync': typeof AdminPaddleSyncRoute
@@ -1042,6 +1050,7 @@ export interface FileRoutesById {
   '/admin/devices': typeof AdminDevicesRoute
   '/admin/german': typeof AdminGermanRouteWithChildren
   '/admin/groups': typeof AdminGroupsRoute
+  '/admin/languages': typeof AdminLanguagesRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/offers': typeof AdminOffersRoute
   '/admin/paddle-sync': typeof AdminPaddleSyncRoute
@@ -1169,6 +1178,7 @@ export interface FileRouteTypes {
     | '/admin/devices'
     | '/admin/german'
     | '/admin/groups'
+    | '/admin/languages'
     | '/admin/notifications'
     | '/admin/offers'
     | '/admin/paddle-sync'
@@ -1291,6 +1301,7 @@ export interface FileRouteTypes {
     | '/admin/curricula'
     | '/admin/devices'
     | '/admin/groups'
+    | '/admin/languages'
     | '/admin/notifications'
     | '/admin/offers'
     | '/admin/paddle-sync'
@@ -1414,6 +1425,7 @@ export interface FileRouteTypes {
     | '/admin/devices'
     | '/admin/german'
     | '/admin/groups'
+    | '/admin/languages'
     | '/admin/notifications'
     | '/admin/offers'
     | '/admin/paddle-sync'
@@ -1540,6 +1552,7 @@ export interface RootRouteChildren {
   AdminDevicesRoute: typeof AdminDevicesRoute
   AdminGermanRoute: typeof AdminGermanRouteWithChildren
   AdminGroupsRoute: typeof AdminGroupsRoute
+  AdminLanguagesRoute: typeof AdminLanguagesRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminOffersRoute: typeof AdminOffersRoute
   AdminPaddleSyncRoute: typeof AdminPaddleSyncRoute
@@ -1872,6 +1885,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/groups'
       fullPath: '/admin/groups'
       preLoaderRoute: typeof AdminGroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/languages': {
+      id: '/admin/languages'
+      path: '/admin/languages'
+      fullPath: '/admin/languages'
+      preLoaderRoute: typeof AdminLanguagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/notifications': {
@@ -2631,6 +2651,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminDevicesRoute: AdminDevicesRoute,
   AdminGermanRoute: AdminGermanRouteWithChildren,
   AdminGroupsRoute: AdminGroupsRoute,
+  AdminLanguagesRoute: AdminLanguagesRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminOffersRoute: AdminOffersRoute,
   AdminPaddleSyncRoute: AdminPaddleSyncRoute,

@@ -98,6 +98,13 @@ export const DEFAULT_LAYOUT: HubLayout = {
           labelAr: "مناهج دروس ريتا",
           icon: "GraduationCap",
         },
+        {
+          id: "/admin/languages",
+          to: "/admin/languages",
+          label: "Learning languages",
+          labelAr: "لغات التعلّم",
+          icon: "Languages",
+        },
         t("/admin/ai-keys", "General AI keys", "KeyRound"),
       ],
     },

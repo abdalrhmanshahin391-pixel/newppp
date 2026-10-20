@@ -21,6 +21,7 @@ import { useDismiss } from "@/components/header/useDismiss";
 import { avatarTone, useAvatarUrl } from "@/lib/avatars";
 import { EdithWordmark } from "@/components/brand/EdithWordmark";
 import { StartLearningLink } from "@/components/StartLearningLink";
+import { LanguagePicker } from "@/components/language/LanguagePicker";
 
 const SIMPLE_LINKS: { to: string; label: string }[] = [{ to: "/pricing", label: "Pricing" }];
 
@@ -183,6 +184,13 @@ export function ProHeader({
                       </div>
                     </div>
                     <div className="rh-rule" />
+                    <div className="px-3 pb-2 pt-1">
+                      <p className="mb-2 text-[13px] font-semibold text-[var(--pp-muted)]">
+                        Learning language
+                      </p>
+                      <LanguagePicker variant="chips" />
+                    </div>
+                    <div className="rh-rule" />
                     <Link to="/profile" className="rh-item">
                       <Settings size={18} aria-hidden="true" />
                       {t("cms.header.profileSettings")}
@@ -248,6 +256,12 @@ export function ProHeader({
                   </div>
                 </div>
                 <CreditsMeter inline />
+                <div className="px-3 pb-2 pt-1">
+                  <p className="mb-2 text-[13px] font-semibold text-[var(--pp-muted)]">
+                    Learning language
+                  </p>
+                  <LanguagePicker variant="chips" />
+                </div>
                 <Link to="/profile" className="rh-item">
                   <Settings size={18} aria-hidden="true" />
                   {t("cms.header.profileSettings")}

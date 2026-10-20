@@ -7,6 +7,10 @@ export type Profile = {
   username: string;
   email: string;
   phone: string | null;
+  /** The language being learned; null until chosen. Absent on a database without the column. */
+  learning_language?: string | null;
+  /** The language that received the learner's content from before languages existed. */
+  legacy_language?: string | null;
 };
 
 export type AuthSnapshot = {
