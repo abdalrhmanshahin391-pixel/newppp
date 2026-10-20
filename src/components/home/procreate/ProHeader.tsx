@@ -21,11 +21,13 @@ import { useDismiss } from "@/components/header/useDismiss";
 import { avatarTone, useAvatarUrl } from "@/lib/avatars";
 import { EdithWordmark } from "@/components/brand/EdithWordmark";
 import { StartLearningLink } from "@/components/StartLearningLink";
-import { LanguagePicker } from "@/components/language/LanguagePicker";
+import { LanguageMenu } from "@/components/language/LanguageMenu";
 
 const SIMPLE_LINKS: { to: string; label: string }[] = [{ to: "/pricing", label: "Pricing" }];
 
-type OpenMenu = "credits" | "account" | null;
+// The language switcher is rendered once for wide screens and once for phones; each has its own
+// state, so the hidden copy never reacts to presses inside the visible one.
+type OpenMenu = "credits" | "account" | "language" | "language-phone" | null;
 
 /** The hand-drawn accent line from the home headline, drawn once under the current page. */
 function Squiggle() {
@@ -159,6 +161,10 @@ export function ProHeader({
                 open={menu === "credits"}
                 onOpenChange={(open) => setMenu(open ? "credits" : null)}
               />
+              <LanguageMenu
+                open={menu === "language"}
+                onOpenChange={(open) => setMenu(open ? "language" : null)}
+              />
               <div className="relative" ref={accountBox}>
                 <button
                   type="button"
@@ -182,13 +188,6 @@ export function ProHeader({
                         <p className="rh-who-name">{name}</p>
                         <span className="rh-badge">{role}</span>
                       </div>
-                    </div>
-                    <div className="rh-rule" />
-                    <div className="px-3 pb-2 pt-1">
-                      <p className="mb-2 text-[13px] font-semibold text-[var(--pp-muted)]">
-                        Learning language
-                      </p>
-                      <LanguagePicker variant="chips" />
                     </div>
                     <div className="rh-rule" />
                     <Link to="/profile" className="rh-item">
@@ -229,11 +228,23 @@ export function ProHeader({
           {!user && !authLoading && (
             <StartLearningLink className="rh-btn">Start learning</StartLearningLink>
           )}
+          {user && !authLoading && (
+            <LanguageMenu
+              open={menu === "language-phone"}
+              onOpenChange={(open) => {
+                setMenu(open ? "language-phone" : null);
+                if (open) setSheet(false);
+              }}
+            />
+          )}
           <button
             type="button"
             aria-label={sheet ? "Close menu" : "Open menu"}
             aria-expanded={sheet}
-            onClick={() => setSheet((s) => !s)}
+            onClick={() => {
+              setMenu(null);
+              setSheet((s) => !s);
+            }}
             className="rh-burger"
           >
             {sheet ? <X size={24} /> : <Menu size={24} />}
@@ -256,12 +267,6 @@ export function ProHeader({
                   </div>
                 </div>
                 <CreditsMeter inline />
-                <div className="px-3 pb-2 pt-1">
-                  <p className="mb-2 text-[13px] font-semibold text-[var(--pp-muted)]">
-                    Learning language
-                  </p>
-                  <LanguagePicker variant="chips" />
-                </div>
                 <Link to="/profile" className="rh-item">
                   <Settings size={18} aria-hidden="true" />
                   {t("cms.header.profileSettings")}

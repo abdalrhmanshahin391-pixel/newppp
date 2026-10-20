@@ -3733,6 +3733,81 @@ body:has(.rh-learn-home) {
 .rh-avatar-btn[data-open="true"] .rh-chevron {
   transform: rotate(180deg);
 }
+/* Language switcher (flag + menu) in the top bar. */
+.rh-lang-choose {
+  gap: 8px;
+  padding-inline: 12px 8px;
+  border: 1.5px solid rgb(255 255 255 / 0.55);
+  color: #fff;
+  font: 600 14px/1 "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+}
+.rh-lang-choose-text {
+  display: none;
+}
+@media (min-width: 420px) {
+  .rh-lang-choose-text {
+    display: inline;
+  }
+}
+/* (Doubled class names: these must beat .rh-card and .rh-item, which are defined further down.) */
+.rh-card.rh-lang-card {
+  width: 288px;
+}
+/* On phones the card spans the screen under the bar instead of hanging off the small button. */
+@media (max-width: 1023.98px) {
+  .rh-card.rh-lang-card {
+    position: fixed;
+    top: 72px;
+    inset-inline: 16px;
+    width: auto;
+    max-width: none;
+    transform-origin: top center;
+  }
+}
+.rh-lang-title {
+  margin: 4px 12px 6px;
+  color: #6a697c;
+  font-size: 13px;
+  font-weight: 600;
+}
+.rh-item.rh-lang-row {
+  min-height: 52px;
+}
+.rh-item.rh-lang-row[aria-checked="true"] {
+  background: #e7eefd;
+}
+.rh-lang-names {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  text-align: start;
+}
+.rh-lang-native {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rh-lang-sub {
+  overflow: hidden;
+  color: #6a697c;
+  font-size: 13px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rh-lang-mark {
+  display: grid;
+  width: 24px;
+  place-items: center;
+  color: #2563eb;
+}
+.rh-lang-error {
+  margin: 8px 12px 6px;
+  color: #b3213f;
+  font-size: 14px;
+}
 .rh-avatar {
   display: inline-grid;
   flex: none;

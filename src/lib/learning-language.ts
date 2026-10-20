@@ -6,6 +6,8 @@
  * database that has not been migrated yet.
  */
 
+import { isFlagCountry } from "./language-flags.ts";
+
 export type LearningLanguage = {
   code: string;
   name_en: string;
@@ -13,6 +15,8 @@ export type LearningLanguage = {
   name_ar: string;
   direction: "ltr" | "rtl";
   speech_code: string;
+  /** Country whose flag represents the language (a language is not a country); see language-flags. */
+  flag_country?: string | null;
   voice_enabled: boolean;
   enabled: boolean;
   sort: number;
@@ -26,6 +30,7 @@ export const BUILT_IN_LANGUAGES: LearningLanguage[] = [
     name_ar: "الإنجليزية",
     direction: "ltr",
     speech_code: "en",
+    flag_country: "gb",
     voice_enabled: true,
     enabled: true,
     sort: 10,
@@ -37,6 +42,7 @@ export const BUILT_IN_LANGUAGES: LearningLanguage[] = [
     name_ar: "الألمانية",
     direction: "ltr",
     speech_code: "de",
+    flag_country: "de",
     voice_enabled: true,
     enabled: true,
     sort: 20,
@@ -194,6 +200,7 @@ export type NewLanguageInput = {
   name_ar: string;
   direction: "ltr" | "rtl";
   speech_code?: string;
+  flag_country?: string | null;
 };
 
 export type LanguageValidation =
@@ -226,8 +233,20 @@ export function validateNewLanguage(
   if (speech.length < 2 || speech.length > 12) {
     return { ok: false, error: "The speech code must be 2 to 12 characters." };
   }
+  const flag = (input.flag_country ?? "").trim().toLowerCase() || null;
+  if (flag && !isFlagCountry(flag)) {
+    return { ok: false, error: "Pick a country from the list for the flag." };
+  }
   return {
     ok: true,
-    value: { code, name_en, name_native, name_ar, direction: input.direction, speech_code: speech },
+    value: {
+      code,
+      name_en,
+      name_native,
+      name_ar,
+      direction: input.direction,
+      speech_code: speech,
+      flag_country: flag,
+    },
   };
 }

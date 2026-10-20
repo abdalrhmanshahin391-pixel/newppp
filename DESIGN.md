@@ -125,15 +125,27 @@ The learner is learning one language at a time; the whole site follows it (flash
 free conversation, shared decks). Do not call it "language" on its own: the site's own language
 (English / Arabic) is a different setting.
 
-- **One component, three places** (`LanguagePicker`): the list in Settings (`/profile`, first card,
-  `#learning-language`), the first-time card on `/learn` (`LanguageChooserCard`, shown in place of
-  nothing: the page stays usable below it), and a row of chips in the account menu.
-- **List rows** are pressable, so 2px ink border, 16px radius, 56px minimum: the language's own
-  name (18px bold: "Deutsch"), then its name in the site's language, a small code chip (EN, DE) and a
-  check. Selected = blue border, `--pp-accent-soft` fill and the check; no gradients, no flags,
-  no icons in circles. The own-language name is wrapped in `<bdi lang>` so it follows the row's
-  direction in Arabic and still renders in its own script. Rows are at most 36rem wide.
-- **Chips** (menu): 44px, same selected treatment, own-language name only.
+- **Top bar switcher** (`LanguageMenu`, signed-in learners only): on the dark bar, just before the avatar
+  (on phones, just before the menu button), a 44px button with the flag of the language being learned
+  and a chevron. With no language chosen it is an outlined pill with a globe and "Choose language"
+  (icon only under 420px). It opens the same white menu card as the account menu (2px ink border,
+  16px radius, 160ms): a small "Learning language" title, one 52px row per language (flag, own name in
+  bold, name in the site's language, check on the chosen one, blue-soft fill). On phones the card spans
+  the screen with 16px margins under the bar. One menu open at a time; Escape or a press outside closes
+  it and focus returns to the button; choosing closes it and says "Now learning Deutsch" politely. The
+  wide-screen and phone copies keep separate open states.
+- **Flags** are decoration, never the only signal: a 4:3 picture, 4px radius, hairline ring (light on the
+  dark bar), no text alternative because the name is always beside it. A language is not a country, so an
+  admin picks the country (English: the UK by default). Pictures are self-hosted SVGs in `public/flags`
+  (MIT, `flag-icons`); a language without a country, or a picture that fails to load, shows its code in a
+  small grey tile. Only flags in `FLAG_COUNTRIES` are ever requested.
+- **Settings and the first-time card** (`LanguagePicker`, `LanguageChooserCard`): the full list in Settings
+  (`/profile`, first card, `#learning-language`) and a card on `/learn` that does not block the page.
+- **List rows** are pressable, so 2px ink border, 16px radius, 56px minimum: the flag (32px), the
+  language's own name (18px bold: "Deutsch"), its name in the site's language and a check. Selected =
+  blue border, `--pp-accent-soft` fill and the check; no gradients, no icons in circles. The own-language
+  name is wrapped in `<bdi lang>` so it follows the row's direction in Arabic and still renders in its own
+  script. Rows are at most 36rem wide.
 - **After a change** a polite status line says "Now learning Deutsch. Your other languages stay
   saved." Errors say what failed in plain words and keep the previous language.
 - **`/learn`** shows "Learning Deutsch · Change" under the greeting (Change links to the Settings card).
@@ -144,8 +156,9 @@ free conversation, shared decks). Do not call it "language" on its own: the site
   (title in `rh-app-title`, grey panel, no dead end). Guests see the pages as before. The German section
   and its side-list item on `/learn`, and the footer link, only show for German learners (or before a
   choice).
-- **Admin** (`/admin/languages`, Arabic, RTL): one card per language with "visible to learners" and
-  "Rita voice" switches, up/down order, counts, and an add form. A language that has content is
+- **Admin** (`/admin/languages`, Arabic, RTL): one card per language with its flag, "visible to learners",
+  "Rita voice" and a country menu for the flag (names from `Intl.DisplayNames`), up/down order, counts,
+  and an add form with a live flag preview. A language that has content is
   disabled, not deleted.
 
 ## Study rooms (/learn and the room pages)
