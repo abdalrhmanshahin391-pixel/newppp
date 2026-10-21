@@ -3136,7 +3136,6 @@ export type Database = {
           dialect_preference: string
           id: string
           language_preference: string
-          learning_language: string | null
           last_message_at: string | null
           message_count: number
           title: string
@@ -3149,7 +3148,6 @@ export type Database = {
           dialect_preference?: string
           id?: string
           language_preference?: string
-          learning_language?: string | null
           last_message_at?: string | null
           message_count?: number
           title?: string
@@ -3162,7 +3160,6 @@ export type Database = {
           dialect_preference?: string
           id?: string
           language_preference?: string
-          learning_language?: string | null
           last_message_at?: string | null
           message_count?: number
           title?: string
