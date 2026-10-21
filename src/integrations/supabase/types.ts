@@ -545,6 +545,7 @@ export type Database = {
           card_id: string
           created_at: string
           id: string
+          language: string | null
           note: string
           sub_subject: string
           subject: string
@@ -555,6 +556,7 @@ export type Database = {
           card_id: string
           created_at?: string
           id?: string
+          language?: string | null
           note?: string
           sub_subject?: string
           subject?: string
@@ -565,13 +567,22 @@ export type Database = {
           card_id?: string
           created_at?: string
           id?: string
+          language?: string | null
           note?: string
           sub_subject?: string
           subject?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "card_flags_language_fkey"
+            columns: ["language"]
+            isOneToOne: false
+            referencedRelation: "learning_languages"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       card_reviews: {
         Row: {
@@ -582,6 +593,7 @@ export type Database = {
           ease: number
           id: string
           interval_days: number
+          language: string | null
           lapses: number
           last_grade: number | null
           last_review_at: string | null
@@ -604,6 +616,7 @@ export type Database = {
           ease?: number
           id?: string
           interval_days?: number
+          language?: string | null
           lapses?: number
           last_grade?: number | null
           last_review_at?: string | null
@@ -626,6 +639,7 @@ export type Database = {
           ease?: number
           id?: string
           interval_days?: number
+          language?: string | null
           lapses?: number
           last_grade?: number | null
           last_review_at?: string | null
@@ -640,7 +654,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "card_reviews_language_fkey"
+            columns: ["language"]
+            isOneToOne: false
+            referencedRelation: "learning_languages"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       content_consents: {
         Row: {
@@ -1201,6 +1223,7 @@ export type Database = {
           created_at: string
           emoji: string | null
           id: string
+          language: string | null
           name: string
           parent_id: string | null
           sort: number
@@ -1212,6 +1235,7 @@ export type Database = {
           created_at?: string
           emoji?: string | null
           id?: string
+          language?: string | null
           name: string
           parent_id?: string | null
           sort?: number
@@ -1223,6 +1247,7 @@ export type Database = {
           created_at?: string
           emoji?: string | null
           id?: string
+          language?: string | null
           name?: string
           parent_id?: string | null
           sort?: number
@@ -1230,6 +1255,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "flash_subjects_language_fkey"
+            columns: ["language"]
+            isOneToOne: false
+            referencedRelation: "learning_languages"
+            referencedColumns: ["code"]
+          },
           {
             foreignKeyName: "flash_subjects_parent_id_fkey"
             columns: ["parent_id"]
@@ -1709,6 +1741,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      learning_languages: {
+        Row: {
+          code: string
+          created_at: string
+          direction: string
+          enabled: boolean
+          name_ar: string
+          name_en: string
+          name_native: string
+          sort: number
+          speech_code: string
+          updated_at: string
+          voice_enabled: boolean
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          direction?: string
+          enabled?: boolean
+          name_ar: string
+          name_en: string
+          name_native: string
+          sort?: number
+          speech_code: string
+          updated_at?: string
+          voice_enabled?: boolean
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          direction?: string
+          enabled?: boolean
+          name_ar?: string
+          name_en?: string
+          name_native?: string
+          sort?: number
+          speech_code?: string
+          updated_at?: string
+          voice_enabled?: boolean
+        }
+        Relationships: []
       }
       lq_attempts: {
         Row: {
@@ -2317,6 +2391,8 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          learning_language: string | null
+          legacy_language: string | null
           lock_kind: string | null
           lock_message: string | null
           lock_reason: string | null
@@ -2336,6 +2412,8 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          learning_language?: string | null
+          legacy_language?: string | null
           lock_kind?: string | null
           lock_message?: string | null
           lock_reason?: string | null
@@ -2355,6 +2433,8 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          learning_language?: string | null
+          legacy_language?: string | null
           lock_kind?: string | null
           lock_message?: string | null
           lock_reason?: string | null
@@ -2365,7 +2445,22 @@ export type Database = {
           updated_at?: string
           username?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_learning_language_fkey"
+            columns: ["learning_language"]
+            isOneToOne: false
+            referencedRelation: "learning_languages"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "profiles_legacy_language_fkey"
+            columns: ["legacy_language"]
+            isOneToOne: false
+            referencedRelation: "learning_languages"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       promo_code_redemptions: {
         Row: {
@@ -2779,6 +2874,7 @@ export type Database = {
           elapsed_days: number | null
           grade: number
           id: string
+          language: string | null
           ms: number
           prev: Json | null
           sub_subject: string
@@ -2791,6 +2887,7 @@ export type Database = {
           elapsed_days?: number | null
           grade: number
           id?: string
+          language?: string | null
           ms?: number
           prev?: Json | null
           sub_subject?: string
@@ -2803,13 +2900,22 @@ export type Database = {
           elapsed_days?: number | null
           grade?: number
           id?: string
+          language?: string | null
           ms?: number
           prev?: Json | null
           sub_subject?: string
           subject?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "review_events_language_fkey"
+            columns: ["language"]
+            isOneToOne: false
+            referencedRelation: "learning_languages"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       rita_ai_chunks: {
         Row: {
@@ -2985,7 +3091,15 @@ export type Database = {
           title_ar?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "rita_curricula_target_language_fkey"
+            columns: ["target_language"]
+            isOneToOne: false
+            referencedRelation: "learning_languages"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       rita_curriculum_pages: {
         Row: {
@@ -3136,8 +3250,8 @@ export type Database = {
           dialect_preference: string
           id: string
           language_preference: string
-          learning_language: string | null
           last_message_at: string | null
+          learning_language: string | null
           message_count: number
           title: string
           updated_at: string
@@ -3149,8 +3263,8 @@ export type Database = {
           dialect_preference?: string
           id?: string
           language_preference?: string
-          learning_language?: string | null
           last_message_at?: string | null
+          learning_language?: string | null
           message_count?: number
           title?: string
           updated_at?: string
@@ -3162,14 +3276,22 @@ export type Database = {
           dialect_preference?: string
           id?: string
           language_preference?: string
-          learning_language?: string | null
           last_message_at?: string | null
+          learning_language?: string | null
           message_count?: number
           title?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "rita_free_conversations_learning_language_fkey"
+            columns: ["learning_language"]
+            isOneToOne: false
+            referencedRelation: "learning_languages"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       rita_image_generations: {
         Row: {
@@ -4168,6 +4290,7 @@ export type Database = {
           description: string | null
           emoji: string | null
           id: string
+          language: string | null
           owner_id: string
           published: boolean
           rating_avg: number
@@ -4185,6 +4308,7 @@ export type Database = {
           description?: string | null
           emoji?: string | null
           id?: string
+          language?: string | null
           owner_id: string
           published?: boolean
           rating_avg?: number
@@ -4202,6 +4326,7 @@ export type Database = {
           description?: string | null
           emoji?: string | null
           id?: string
+          language?: string | null
           owner_id?: string
           published?: boolean
           rating_avg?: number
@@ -4211,7 +4336,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shared_decks_language_fkey"
+            columns: ["language"]
+            isOneToOne: false
+            referencedRelation: "learning_languages"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       shared_question_items: {
         Row: {
@@ -4297,6 +4430,7 @@ export type Database = {
           description: string | null
           emoji: string | null
           id: string
+          language: string | null
           owner_id: string
           published: boolean
           question_count: number
@@ -4316,6 +4450,7 @@ export type Database = {
           description?: string | null
           emoji?: string | null
           id?: string
+          language?: string | null
           owner_id: string
           published?: boolean
           question_count?: number
@@ -4335,6 +4470,7 @@ export type Database = {
           description?: string | null
           emoji?: string | null
           id?: string
+          language?: string | null
           owner_id?: string
           published?: boolean
           question_count?: number
@@ -4347,7 +4483,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shared_question_sets_language_fkey"
+            columns: ["language"]
+            isOneToOne: false
+            referencedRelation: "learning_languages"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       site_announcements: {
         Row: {
@@ -6608,6 +6752,7 @@ export type Database = {
           username: string
         }[]
       }
+      set_learning_language: { Args: { p_code: string }; Returns: Json }
       space_can_add_decks: {
         Args: { _space_id: string; _user_id: string }
         Returns: boolean
