@@ -43,6 +43,13 @@
       "when": 1792413833244,
       "tag": "0005_rita_free_conversations",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792597163465,
+      "tag": "0006_learning_languages",
+      "breakpoints": true
     }
   ]
 }
