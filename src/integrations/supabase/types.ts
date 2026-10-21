@@ -1748,6 +1748,7 @@ export type Database = {
           created_at: string
           direction: string
           enabled: boolean
+          flag_country: string | null
           name_ar: string
           name_en: string
           name_native: string
@@ -1761,6 +1762,7 @@ export type Database = {
           created_at?: string
           direction?: string
           enabled?: boolean
+          flag_country?: string | null
           name_ar: string
           name_en: string
           name_native: string
@@ -1774,6 +1776,7 @@ export type Database = {
           created_at?: string
           direction?: string
           enabled?: boolean
+          flag_country?: string | null
           name_ar?: string
           name_en?: string
           name_native?: string
