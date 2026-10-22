@@ -162,7 +162,8 @@ def build_prompt(body: dict[str, Any], state: RitaSessionState, *, dialogue: boo
     profile_language = str(body.get("language", "automatic"))
     remembered_dialect = str(body.get("dialect", "ar-JO"))
     mode = str(body.get("mode", "free_conversation"))
-    target_block = target_language_prompt(parse_target_language(body))
+    target = parse_target_language(body)
+    target_block = target_language_prompt(target)
     return f"""You are Rita, RitaJet's realtime language tutor.
 
 Delivery: {PERSONALITIES.get(personality, PERSONALITIES['kind'])}
@@ -243,6 +244,7 @@ HUMAN TONE
 {lesson_section(body)}
 SESSION STATE (changes every turn; read it last)
 Structured session state: {state.prompt_state(dialogue=dialogue)}.
+{state.reply_language_line(target["name"] if target else None)}
 """
 
 

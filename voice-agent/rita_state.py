@@ -6,8 +6,9 @@ import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from rita_dialect import HOW_TO_SAY_DIRECTIVE, asks_how_to_say
+from rita_dialect import LANGUAGE_NAMES, asks_how_to_say, how_to_say_directive
 from rita_dialogue_acts import Act, Awaiting, classify, parse_last_question, tokens
+from rita_language_commands import detect_language_command
 
 
 class ResponseType(StrEnum):
@@ -30,11 +31,14 @@ class LanguageSource(StrEnum):
 
 _ARABIC = re.compile(r"[\u0600-\u06ff]")
 _LATIN = re.compile(r"[A-Za-zÄÖÜäöüß]")
+# "was" and "die" are ordinary English words ("I was there"), so they are not German evidence.
 _GERMAN_MARKERS = re.compile(
-    r"\b(?:ich|du|der|die|das|nicht|bitte|danke|guten|morgen|wie|was|warum|deutsch|"
+    r"\b(?:ich|du|der|das|nicht|bitte|danke|guten|morgen|wie|warum|deutsch|und|habe|mein|aber|"
     r"sprechen|möchte|kann|können|ist|sind|hallo)\b|[ÄÖÜäöüß]",
     re.IGNORECASE,
 )
+# Thinking sounds are not words of any language: "Äh. You are so confused" is English.
+_THINKING_SOUNDS = re.compile(r"\b(?:äh+m?|ähm|uh+m?|hmm+)\b", re.IGNORECASE)
 _ARABIC_LEARNING_REQUEST = re.compile(
     r"(?:شو|ما|إيش|ايش)\s+معنى|(?:ترجم|ترجمة|يعني|معنى|كلمة|كلمات|بالألماني|بالالماني|بالإنجليزي|بالانجليزي)"
 )
@@ -43,6 +47,7 @@ _ARABIC_LEARNING_REQUEST = re.compile(
 def infer_turn_language(text: str) -> str:
     """Return a conservative language guess without treating one loanword as a switch."""
 
+    text = _THINKING_SOUNDS.sub(" ", text)
     arabic = len(_ARABIC.findall(text))
     latin = len(_LATIN.findall(text))
     # Arabic function words wrapped around a German/English learning target are
@@ -95,26 +100,18 @@ class RitaSessionState:
         if self.active_language in {"ar", "en", "de"}:
             self.language_source = LanguageSource.PROFILE
 
-    def _apply_explicit_language(self, lowered: str) -> bool:
-        commands = (
-            (r"(?:احكي|تكلم|جاوب).{0,25}(?:أردني|اردني|لهجة أردنية|لهجة اردنية)", "ar", "ar-JO"),
-            (r"(?:احكي|تكلم|جاوب).{0,25}(?:فصحى|عربي فصيح)", "ar", "standard"),
-            (r"(?:speak|answer|talk).{0,20}(?:english)", "en", "en-GB"),
-            (r"(?:speak|answer|talk).{0,20}(?:german|deutsch)|(?:sprich|antworte).{0,20}deutsch", "de", "standard"),
-            (r"(?:احكي|تكلم|جاوب).{0,25}(?:انجليزي|إنجليزي)", "en", "en-GB"),
-            (r"(?:احكي|تكلم|جاوب).{0,25}(?:ألماني|الماني)", "de", "standard"),
-        )
-        if asks_how_to_say(lowered):
+    def _apply_explicit_language(self, text: str) -> bool:
+        """Lock the reply language on an order such as "احكي معي بالإنجليزي"; see rita_language_commands."""
+
+        command = detect_language_command(text, how_to_say=asks_how_to_say(text))
+        if command is None:
             return False
-        for pattern, language, dialect in commands:
-            if re.search(pattern, lowered, re.IGNORECASE):
-                self.active_language = language
-                self.active_dialect = dialect
-                self.language_source = LanguageSource.EXPLICIT
-                self.candidate_language = language
-                self.consecutive_evidence = 2
-                return True
-        return False
+        self.active_language = command.language
+        self.active_dialect = command.dialect
+        self.language_source = LanguageSource.EXPLICIT
+        self.candidate_language = command.language
+        self.consecutive_evidence = 2
+        return True
 
     def _update_stable_language(self, inferred: str) -> None:
         if inferred == "unknown" or self.language_source == LanguageSource.EXPLICIT:
@@ -136,7 +133,7 @@ class RitaSessionState:
         self._observe_act(clean)
         self.asked_how_to_say = asks_how_to_say(clean)
         self.current_turn_language = infer_turn_language(clean)
-        if not self._apply_explicit_language(lowered):
+        if not self._apply_explicit_language(clean):
             self._update_stable_language(self.current_turn_language)
 
         self.understood = bool(
@@ -214,7 +211,7 @@ class RitaSessionState:
         """One instruction for the model about the learner's last short turn, or empty."""
 
         if self.asked_how_to_say:
-            return HOW_TO_SAY_DIRECTIVE
+            return how_to_say_directive(self.reply_language())
         act, awaiting = self.last_act, self.awaiting
         if act == Act.YES and awaiting == Awaiting.YES_NO:
             return "the learner answered YES to last_question"
@@ -246,6 +243,29 @@ class RitaSessionState:
         if act == Act.BACKCHANNEL:
             return "the learner only acknowledged; answer in one short sentence or continue naturally"
         return ""
+
+    def reply_language(self) -> str | None:
+        """The language Rita writes explanations in this turn, or None when it is not known yet."""
+
+        if self.active_language in LANGUAGE_NAMES:
+            return self.active_language
+        if self.current_turn_language in LANGUAGE_NAMES:
+            return self.current_turn_language
+        return None
+
+    def reply_language_line(self, target_name: str | None = None) -> str:
+        """One plain sentence for the end of the prompt, instead of a symbol the model has to decode."""
+
+        language = self.reply_language()
+        if language is None:
+            line = "REPLY LANGUAGE: the language of the learner's last turn."
+        else:
+            line = f"REPLY LANGUAGE: {LANGUAGE_NAMES[language].upper()}. Write every explanation in {LANGUAGE_NAMES[language]}."
+            if self.language_source == LanguageSource.EXPLICIT:
+                line += " The learner asked for this; keep it until they ask for another language."
+        if target_name:
+            line += f" EXAMPLES AND TARGET PHRASES IN: {target_name.upper()}; do not translate them unless asked."
+        return line
 
     def dialogue_state(self) -> str:
         question = self.last_question.replace('"', "'")[:120]

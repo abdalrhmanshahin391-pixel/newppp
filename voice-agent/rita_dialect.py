@@ -39,9 +39,11 @@ DIALECT_PROMPT = """JORDANIAN SPEECH (when speaking Arabic)
   بدي (not أريد)، ما بعرف (not لا أعرف)، هاد/هاي (not هذا/هذه)، بنقولها (not يمكنك أن تقول).
 - Never write "كيف فيك" (it means "how can you"); greet with "كيف الحال؟". Never ask "شو حابب/حابة"; ask
   "عن شو بدنا نحكي؟" so the sentence fits any gender.
-- When the learner asks in Arabic how to say something in English or German ("كيف أحكي X بالإنجليزي"،
-  "شو بنقول Y بالألماني"), the answer is in ARABIC: one short Arabic sentence, the target phrase once
-  in quotes, then one short usage tip in Arabic. Never answer fully in English or German.
+- When the learner asks how to say something in English or German ("كيف أحكي X بالإنجليزي"،
+  "شو بنقول Y بالألماني"), write the short explanation in the REPLY LANGUAGE named at the end of this
+  prompt: one short sentence, the target phrase once in quotes, then one short usage tip. If the
+  REPLY LANGUAGE is English, the explanation is English and only the quoted phrase is German; never
+  switch to Arabic because the question was about translation.
   Put no extra full stop after a closing quote.
 - Never use * or # or markdown marks; the voice would read them.
 
@@ -56,14 +58,30 @@ Learner: مش فاهم الفرق
 Rita: عادي، هاي بتلخبط الكل. خلّينا نشوف مثال واحد بس.
 """
 
-HOW_TO_SAY_DIRECTIVE = (
-    "the learner asks how to say something in another language; answer in the learner's own "
-    "language (not the target language): one short sentence, the target phrase once in quotes, "
-    "then one short usage tip"
-)
+LANGUAGE_NAMES = {"ar": "Arabic", "en": "English", "de": "German"}
 
+
+def how_to_say_directive(reply_language: str | None) -> str:
+    """Turn note for "how do I say X in Y": the explanation follows the reply language, the quoted
+    phrase follows the language asked about. Never "the learner's own language", which the model
+    read as Arabic even when the learner had asked for English."""
+
+    name = LANGUAGE_NAMES.get(reply_language or "")
+    where = f"in {name}" if name else "in the language of the learner's question"
+    return (
+        f"the learner asks how to say something in another language; write the explanation {where} "
+        "(see REPLY LANGUAGE): one short sentence, the phrase in the language they asked about once "
+        f"in quotes, then one short usage tip {where}"
+    )
+
+
+_TALK_VERB = r"(?:ا?حكي|ا?قول|بحكي|بقول|بنحكي|بنقول|نحكي|نقول|انطق|اكتب)"
 _HOW_TO_SAY = re.compile(
-    r"(?:(?:كيف|شلون|شو)\s+(?:(?:بدي|بقدر|ممكن|نقدر|بنقدر)\s+)?(?:ا?حكي|ا?قول|بحكي|بقول|بنحكي|بنقول|نحكي|نقول|انطق|اكتب))"
+    # "كيف أحكي X" / "شو بنقول Y". "شو نحكي هلق؟" means "what shall we talk about", so with شو a
+    # talking verb only counts when a language is named after it ("شو أحكي بالإنجليزي").
+    rf"(?:(?:كيف|شلون)\s+(?:(?:بدي|بقدر|ممكن|نقدر|بنقدر)\s+)?{_TALK_VERB})"
+    r"|(?:شو\s+(?:(?:بدي|بقدر|ممكن|نقدر|بنقدر)\s+)?(?:ا?قول|بقول|بنقول|نقول|انطق|اكتب))"
+    r"|(?:شو\s+(?:(?:بدي|بقدر|ممكن|نقدر|بنقدر)\s+)?(?:ا?حكي|بحكي|بنحكي|نحكي)\b(?=.*\bب(?:ال)?(?:ال)?(?:انجليز|انكليز|ماني|عرب)))"
     r"|(?:how\s+(?:do|can|would|should)\s+(?:i|you|we)\s+(?:say|write|tell)|how\s+to\s+say|how\s+do\s+you\s+say)"
     r"|(?:what\s+(?:is|s)\s+.{1,60}\s+in\s+(?:english|german|arabic))"
     r"|(?:wie\s+(?:sagt\s+man|heisst))"
