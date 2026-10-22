@@ -48,7 +48,7 @@ class HowToSayTests(unittest.TestCase):
         state = RitaSessionState(active_language="ar")
         state.observe_user_turn("كيف احكي بدي اروح على الحمام بالانجليزي")
         self.assertEqual(state.active_language, "ar")
-        self.assertIn("answer in the learner's own language", state.turn_directive())
+        self.assertIn("write the explanation in Arabic", state.turn_directive())
 
     def test_a_real_language_command_still_works(self):
         state = RitaSessionState()
@@ -92,7 +92,7 @@ class PromptTests(unittest.TestCase):
         prompt = build_prompt({}, RitaSessionState(), dialogue=True)
         self.assertIn("JORDANIAN SPEECH", prompt)
         self.assertIn("هيك (not هكذا)", prompt)
-        self.assertIn("answer is in ARABIC", prompt)
+        self.assertIn("REPLY LANGUAGE", prompt)
         self.assertIn("I need to go to the bathroom", prompt)
 
 

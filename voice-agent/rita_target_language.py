@@ -57,8 +57,8 @@ def target_language_prompt(target: TargetLanguage | None) -> str:
         "\n\nLEARNING TARGET\n"
         f"- This learner is learning {name} ({target['code']}). Teach words, sentences and "
         f"corrections in {name}.\n"
-        "- Explain in the learner's Arabic dialect. Do not teach another language unless the "
+        "- Explanations follow the REPLY LANGUAGE line at the end of this prompt (Jordanian Arabic "
+        "unless the learner asked for another language). Do not teach another language unless the "
         "learner asks.\n"
-        f"- If the learner speaks another language, answer in that language and bring the "
-        f"example back to {name}."
+        f"- Whatever the reply language is, the example and the phrase being practised stay in {name}."
     )
