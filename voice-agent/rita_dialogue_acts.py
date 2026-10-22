@@ -265,7 +265,8 @@ def classify(
     joined = " ".join(words)
     long_utterance = len(words) > MAX_SHORT_TOKENS
 
-    if len(words) <= 12 and _contains_phrase(joined, COMPLAINT_PHRASES):
+    # The complaint cues are specific ("something wrong with you"), so a longer turn may carry one.
+    if len(words) <= 20 and _contains_phrase(joined, COMPLAINT_PHRASES):
         return Reading(Act.COMPLAINT, "complaint cue")
     if len(words) <= 12 and _contains_phrase(joined, SIMPLIFY_PHRASES):
         return Reading(Act.SIMPLIFY, "simplify cue")
