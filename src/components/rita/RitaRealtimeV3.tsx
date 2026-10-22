@@ -147,6 +147,10 @@ export function RitaRealtimeV3({
   const fillerSequence = useRef(0);
   const currentTurnHasFinalTranscript = useRef(false);
   const learnerTurn = useRef(new LearnerTurn());
+  // Counts the events of one conversation in the order the page saw them. Timestamps alone cannot
+  // say which of two events that arrive in the same millisecond came first, and that order is what
+  // shows whether a late piece of an old reply was glued onto a new one.
+  const metricSeq = useRef(0);
   const skipExtraction = useRef(false);
   const currentReplySource = useRef<RitaConversationSource>("voice");
 
@@ -390,6 +394,7 @@ export function RitaRealtimeV3({
           ...metadata,
           traceId: traceId.current || undefined,
           turnId: turnId.current || undefined,
+          seq: (metricSeq.current += 1),
           source: "browser",
           device: /ipad|iphone/i.test(navigator.userAgent)
             ? "ios"
@@ -779,6 +784,7 @@ export function RitaRealtimeV3({
       replyAccumulator.current.clear();
       botSpeaking.current = false;
       sessionId.current = "";
+      metricSeq.current = 0;
       providerSessionId.current = "";
       transportConnectedAt.current = 0;
       transportMetricRecorded.current = false;

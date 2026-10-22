@@ -193,6 +193,9 @@ NOT_UNDERSTOOD_PHRASES = _phrases(
     "ما بفهم", "i don t understand", "i didn t understand", "i do not understand",
     "i don t get it", "i didn t get it", "ich verstehe nicht", "ich verstehe das nicht",
     "ich versteh nicht", "keine ahnung was das heisst",
+    # "I don't know how it works": a concept the learner is missing, not "how do I say X".
+    "ما بعرف كيف حاله", "ما بعرف كيف قاعده", "ما بعرف كيف تشتغل", "ما بعرف كيف يشتغل",
+    "ما بعرف كيف استخدم", "ما بعرف شو يعني", "ما بفهم كيف",
 )
 
 CONTINUE_TOKENS = _set("كمل", "كمل", "كملي", "اكمل", "اكملي", "تابع", "تابعي", "continue",

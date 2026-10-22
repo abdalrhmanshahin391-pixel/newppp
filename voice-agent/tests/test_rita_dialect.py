@@ -203,6 +203,19 @@ class CleanerInAPipelineTests(unittest.TestCase):
 
         self.assertEqual(asyncio.run(go()), "ممتاز!جربي مرة ثانية.")
 
+    def test_a_gendered_tell_me_is_neutral_by_the_time_it_reaches_the_voice(self):
+        async def go():
+            frames = [
+                LLMFullResponseStartFrame(),
+                LLMTextFrame("حلو! خبريني "),
+                LLMTextFrame("أكثر."),
+                LLMFullResponseEndFrame(),
+            ]
+            down, _ = await run_test(RitaSpeechCleaner(), frames_to_send=frames)
+            return "".join(f.text for f in down if isinstance(f, LLMTextFrame))
+
+        self.assertEqual(asyncio.run(go()), "حلو! احكيلي أكثر.")
+
 
 if __name__ == "__main__":
     unittest.main()
@@ -263,3 +276,23 @@ class PromptWithoutContradictionsTests(unittest.TestCase):
 
     def test_examples_do_not_all_open_with_the_same_word(self):
         self.assertEqual(self.prompt.count("بنقولها"), 1)
+
+
+class NeutralWordingTests(unittest.TestCase):
+    def test_the_gendered_tell_me_becomes_a_neutral_one(self):
+        from rita_dialect import neutral_wording
+
+        self.assertEqual(neutral_wording("أوكي، خبريني عن يومك"), "أوكي، احكيلي عن يومك")
+        self.assertEqual(neutral_wording("خبرني شو صار"), "احكيلي شو صار")
+
+    def test_other_words_are_left_alone(self):
+        from rita_dialect import neutral_wording
+
+        for text in ("خبر مهم", "الأخبار حلوة", "مخبريني", "Hello there"):
+            self.assertEqual(neutral_wording(text), text)
+
+    def test_the_speech_cleaner_applies_it_on_the_way_to_the_voice(self):
+        speech = SpeechTextFilter()
+        from rita_dialect import neutral_wording
+
+        self.assertEqual(neutral_wording(speech.feed("حلو، خبريني أكثر. ")), "حلو، احكيلي أكثر. ")

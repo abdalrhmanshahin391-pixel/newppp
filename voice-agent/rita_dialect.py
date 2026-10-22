@@ -151,6 +151,16 @@ KNOWN_WRONG = (
 )
 
 
+# Commands Rita should not aim at one gender. "احكيلي" is the same for everyone.
+_GENDERED_TELL_ME = re.compile(r"(?<![\w\u0600-\u06ff])(?:خبريني|خبرني)(?![\w\u0600-\u06ff])")
+
+
+def neutral_wording(text: str) -> str:
+    """Swap the gendered "tell me" for a neutral one; the model still writes it now and then."""
+
+    return _GENDERED_TELL_ME.sub("احكيلي", text)
+
+
 def scan_dialect(text: str) -> list[str]:
     return [label for pattern, label in KNOWN_WRONG if pattern.search(text)]
 
@@ -317,7 +327,7 @@ class RitaSpeechCleaner(FrameProcessor):
                 self._raw = []
             elif isinstance(frame, LLMTextFrame):
                 self._raw.append(frame.text)
-                frame.text = self._filter.feed(frame.text)
+                frame.text = neutral_wording(self._filter.feed(frame.text))
                 if not frame.text:
                     return  # everything in it is being held back or dropped
             elif isinstance(frame, LLMFullResponseEndFrame):

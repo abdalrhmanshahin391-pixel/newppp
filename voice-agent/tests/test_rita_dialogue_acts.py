@@ -251,3 +251,15 @@ class LongerComplaintTests(unittest.TestCase):
     def test_a_long_ordinary_turn_is_not(self):
         text = "I want to practise ordering food in a restaurant tonight because I travel to Berlin next week with my family"
         self.assertEqual(classify(text).act, Act.OTHER)
+
+
+class MissingConceptTests(unittest.TestCase):
+    def test_i_do_not_know_how_it_works_asks_for_a_simpler_explanation(self):
+        for text in ("أنا ما بعرف كيف حالة الداتيف.", "ما بعرف كيف تشتغل هاي القاعدة", "ما بعرف شو يعني هاد"):
+            with self.subTest(text=text):
+                self.assertEqual(classify(text).act, Act.SIMPLIFY)
+
+    def test_how_do_i_say_is_not_confused_with_it(self):
+        for text in ("مش عارف كيف احكي هاي", "ما بعرف كيف بقولها بالألماني"):
+            with self.subTest(text=text):
+                self.assertNotEqual(classify(text).act, Act.SIMPLIFY)
