@@ -24,6 +24,13 @@ def test_the_known_wrong_german_rules_are_caught():
     assert check_reply(case("dative-rule-en"), good) == []
     assert check_reply(case("hoffen-vs-helfen"), "Hoffen takes the dative, helfen takes the accusative.")
     assert check_reply(case("hoffen-vs-helfen"), "Helfen takes the dative. Hoffen goes with auf and the accusative.") == []
+    assert (
+        check_reply(
+            case("hoffen-vs-helfen"),
+            "Hoffen does not take the dative. Use auf with the accusative instead.",
+        )
+        == []
+    )
 
 
 def test_a_numbered_list_or_a_forced_follow_up_is_caught():

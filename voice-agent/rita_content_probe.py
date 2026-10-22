@@ -64,8 +64,11 @@ CASES: tuple[Case, ...] = (
         "hoffen-vs-helfen",
         "Is it 'ich hoffe dir' or 'ich helfe dir'? Why?",
         site_language="en",
-        forbid=(r"(?i)hoffen[^.]{0,50}\bdative\b", r"(?i)hoffe[^.]{0,50}\bdative\b"),
-        require=(r"(?i)\bauf\b",),
+        forbid=(
+            r"(?i)\bhoffen\b\s+(?:always\s+)?(?:takes?|governs?|requires?|uses?)\s+(?:the\s+)?dative\b",
+            r"(?i)\bhoffe\b\s+(?:always\s+)?(?:takes?|governs?|requires?|uses?)\s+(?:the\s+)?dative\b",
+        ),
+        require=(r"(?i)\bauf\b", r"(?i)\baccusative\b"),
         notes="helfen takes the dative; hoffen takes auf + accusative.",
     ),
     Case(
