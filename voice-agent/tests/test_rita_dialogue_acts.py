@@ -241,3 +241,13 @@ class RealTurnsFromTheLongConversation(unittest.TestCase):
         ):
             with self.subTest(text=text):
                 self.assertAct(text, Act.OTHER)
+
+
+class LongerComplaintTests(unittest.TestCase):
+    def test_a_complaint_inside_a_longer_turn_is_still_a_complaint(self):
+        text = "There's something wrong. With you, like you don't understand what I say, so you answer something else"
+        self.assertEqual(classify(text).act, Act.COMPLAINT)
+
+    def test_a_long_ordinary_turn_is_not(self):
+        text = "I want to practise ordering food in a restaurant tonight because I travel to Berlin next week with my family"
+        self.assertEqual(classify(text).act, Act.OTHER)
