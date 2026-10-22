@@ -148,6 +148,10 @@ DONT_KNOW_PHRASES = _phrases(
 CORRECTION_STARTS = _phrases(
     "لا قصدي", "لا اقصد", "قصدي", "اقصد", "مش هيك", "لا مش هيك", "ما قصدت", "مش قصدي", "غلط قصدي", "i meant", "i mean",
     "no i meant", "ich meinte", "nein ich meinte", "not that", "no not that",
+    # "No, I told you ..." / "I wasn't talking about P": the learner is repeating what they said.
+    "لا انا قلت", "انا قلت لك", "قلت لك", "ما قلت", "مش هاد اللي", "no i told you", "i told you",
+    "i wasn t talking about", "i was not talking about", "i didn t say", "i did not say",
+    "that s not what i said", "that is not what i said", "not what i said",
 )
 
 COMPLAINT_PHRASES = _phrases(
@@ -155,12 +159,40 @@ COMPLAINT_PHRASES = _phrases(
     "ما بترد", "بتخبصي", "بتخبص", "الرد مش منطقي", "الجواب مش منطقي", "مش فاهمتني",
     "انت مش فاهمه", "انتي مش فاهمه", "you are not making sense", "audio is choppy",
     "the sound is choppy", "you are not responding", "das audio stockt",
+    # Rita does not understand, or answers something that was not asked.
+    "you don t understand", "you do not understand", "you are confused", "you are so confused",
+    "you re confused", "you misunderstood", "you didn t understand", "something wrong with you",
+    "something is wrong with you", "there s something wrong", "there is something wrong",
+    "that s not what i asked", "that is not what i asked", "i didn t ask that", "du verstehst nicht",
+    "du verstehst mich nicht", "ما بتفهم", "ما بتفهميني", "ما بتفهمني", "مش فاهمتني", "ما فهمتيني",
+    "ما فهمتني", "كلامك غلط", "جوابك غلط", "الجواب غلط", "مش هاد اللي سالت عنه", "ما سالتك عن هاد",
+    # Audio problems.
+    "صوتك مقطع", "الصوت مش واضح", "صوتك مش واضح", "ما بسمعك", "ما عم بسمعك", "i can t hear you",
+    "i cannot hear you", "you keep cutting", "the audio is cutting",
+    # Rita talks over the learner.
+    "بتقاطعيني", "بتقاطعني", "ما تقاطعيني", "لا تقاطعيني", "لا تقاطعني", "you keep interrupting",
+    "you interrupted me", "don t interrupt", "do not interrupt", "stop interrupting",
+    "let me finish", "خليني اخلص",
 )
 
 SIMPLIFY_PHRASES = _phrases(
     "اشرح ابسط", "اشرحي ابسط", "بطريقه ابسط", "بشكل ابسط", "ابسط", "بسطها", "بسطيها",
     "مش فاهم الشرح", "مو فاهم الشرح", "لشخص مبتدئ", "يعني لمبتدئ", "explain simply",
     "make it simpler", "simpler please", "einfacher erklaren", "einfacher erklären",
+    "بدون مصطلحات", "بدون تعقيد", "بكلمات بسيطه", "بكلمات اسهل", "اشرح اسهل", "اشرحي اسهل",
+    "شرح بسيط", "ببساطه", "بسطلي", "بسطي", "in simple words", "in simple terms", "simple words",
+    "easier please", "explain it easier", "dumb it down", "einfacher", "ich bin anfanger",
+    "kein experte", "i am a beginner", "i m a beginner", "i am not an expert", "i m not an expert",
+    "مو خبير", "مش خبير", "مش خبيره", "مو خبيره", "كاني خبير",
+)
+
+# "I did not understand": a request for the same idea in other words. Checked after the
+# repeat phrases, because "ما فهمت شو قلتي" only asks to hear it again.
+NOT_UNDERSTOOD_PHRASES = _phrases(
+    "ما فهمت", "ما فهمت ولا كلمه", "ما فهمت عليك", "مو فاهم", "مش فاهم", "مش فاهمه", "مو فاهمه",
+    "ما بفهم", "i don t understand", "i didn t understand", "i do not understand",
+    "i don t get it", "i didn t get it", "ich verstehe nicht", "ich verstehe das nicht",
+    "ich versteh nicht", "keine ahnung was das heisst",
 )
 
 CONTINUE_TOKENS = _set("كمل", "كمل", "كملي", "اكمل", "اكملي", "تابع", "تابعي", "continue",
@@ -237,6 +269,12 @@ def classify(
         return Reading(Act.COMPLAINT, "complaint cue")
     if len(words) <= 12 and _contains_phrase(joined, SIMPLIFY_PHRASES):
         return Reading(Act.SIMPLIFY, "simplify cue")
+    if (
+        len(words) <= 12
+        and _contains_phrase(joined, NOT_UNDERSTOOD_PHRASES)
+        and not _contains_phrase(joined, REPEAT_PHRASES)
+    ):
+        return Reading(Act.SIMPLIFY, "not-understood cue")
 
     # Corrections and "I don't know" may be a little longer than the other commands.
     if len(words) <= 8:
