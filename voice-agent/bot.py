@@ -58,6 +58,7 @@ from rita_target_language import (
 from rita_turn_policy import (
     RitaBoundedTurnStopStrategy,
     bounded_commit_secs,
+    period_commit_secs,
     unpunctuated_commit_secs,
 )
 from rita_turn_router import RitaTurnRouter, RouterMode, router_mode
@@ -417,6 +418,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
                         turn_analyzer=LocalSmartTurnAnalyzerV3(),
                         bounded_secs=bounded_commit_secs(body),
                         unpunctuated_secs=unpunctuated_commit_secs(body),
+                        period_secs=period_commit_secs(body),
                     )
                 ]
             ),

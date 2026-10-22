@@ -26,11 +26,18 @@ CONTINUATION_WORDS = frozenset(
         # Arabic
         "و", "لكن", "بس", "او", "أو", "ثم", "يعني", "انو", "إنو", "أنو", "لأن", "لانو", "لأنه",
         "لما", "عشان", "كأنه", "زي", "بدي", "ما", "مش", "مو", "اللي", "الي", "في", "على", "مع",
-        "عن", "من", "الى", "إلى",
+        "عن", "من", "الى", "إلى", "إنه", "انه", "أنه", "إذا", "اذا", "لو", "حتى", "عند", "بين",
         # German
         "und", "aber", "oder", "dass", "weil", "also", "wenn", "der", "die", "das", "ein",
         "eine", "mit", "für", "äh", "ähm",
     }
+)
+
+# Words a spoken sentence rarely ends on, but that can close a question ("What are you talking
+# about?"). They block a turn only when it ends with a full stop or nothing: Soniox puts a stop at
+# every breath, so "Things that happen in." is a pause, not an end.
+STOP_ONLY_CONTINUATION_WORDS = frozenset(
+    {"in", "about", "at", "from", "into", "than", "as", "by", "my", "your", "our", "their", "some", "any"}
 )
 
 _WORD = re.compile(r"[\w']+", re.UNICODE)
@@ -48,6 +55,12 @@ HESITATION_WORDS = frozenset(
         "أمم", "امم", "اممم", "إمم", "يعني", "استنى", "استني", "لحظة", "ثانية", "هم", "مم",
         "um", "uh", "er", "erm", "hmm", "hm", "äh", "ähm", "moment",
     }
+)
+
+# Sounds that show the learner is still searching for words. A session with several of them waits
+# longer before a turn is committed (LiveKit's "dynamic" and OpenAI's eagerness=low idea).
+THINKING_SOUNDS = frozenset(
+    {"أمم", "امم", "اممم", "إمم", "هم", "مم", "um", "uh", "er", "erm", "hmm", "hm", "äh", "ähm"}
 )
 
 # Short, self-contained spoken turns which STT providers commonly finalize without
@@ -103,7 +116,15 @@ def looks_complete(text: str) -> bool:
     last = words[-1].casefold()
     if last in HESITATION_WORDS or all(word.casefold() in HESITATION_WORDS for word in words):
         return False
-    return last not in CONTINUATION_WORDS
+    if last in CONTINUATION_WORDS:
+        return False
+    return not (last in STOP_ONLY_CONTINUATION_WORDS and not cleaned.endswith(QUESTION_MARKS + ("!",)))
+
+
+def thinking_sound_count(text: str) -> int:
+    """How many thinking sounds ("um", "äh", "أمم") the transcript contains."""
+
+    return sum(1 for word in _WORD.findall(text or "") if word.casefold() in THINKING_SOUNDS)
 
 
 def ends_on_hesitation(text: str) -> bool:
@@ -131,7 +152,11 @@ def looks_complete_unpunctuated(text: str) -> bool:
     if len(words) < 3:
         return False
     last = words[-1].casefold()
-    return last not in HESITATION_WORDS and last not in CONTINUATION_WORDS
+    return (
+        last not in HESITATION_WORDS
+        and last not in CONTINUATION_WORDS
+        and last not in STOP_ONLY_CONTINUATION_WORDS
+    )
 
 
 def looks_complete_short_unpunctuated(text: str) -> bool:

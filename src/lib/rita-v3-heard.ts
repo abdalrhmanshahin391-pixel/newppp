@@ -111,3 +111,70 @@ export function settleDraftReply<
   }
   return visible && newMessage ? [...messages, { ...newMessage, interruptedAt }] : messages;
 }
+
+/**
+ * The learner's side of one exchange. Soniox ends a segment at every breath, so one question can
+ * arrive as several finished pieces and the learner can start speaking again before Rita has
+ * answered. Until Rita starts to answer (or the exchange is settled) every piece belongs to the
+ * same bubble: one id, one start time, the words in order and each word once. After that the next
+ * words open a fresh turn that starts from nothing.
+ */
+export class LearnerTurn {
+  private words = "";
+  private bubbleId = "";
+  private startedAt = "";
+  private open = false;
+  /** An id was handed out for the turn that has not been closed yet. */
+  private assigned = false;
+
+  get text() {
+    return this.words;
+  }
+
+  get id() {
+    return this.bubbleId;
+  }
+
+  get createdAt() {
+    return this.startedAt;
+  }
+
+  /** The learner began to speak (a new piece of the turn, or the first one). */
+  speechStarted(newId: string, nowIso: string) {
+    if (this.open || this.assigned) return;
+    this.bubbleId = newId;
+    this.startedAt = nowIso;
+    this.assigned = true;
+  }
+
+  /** A finished piece of speech; returns the whole turn so far. */
+  addFinal(text: string, newId: string, nowIso: string, maxLength = 500) {
+    const piece = text.trim();
+    if (!this.open) {
+      this.words = "";
+      if (!this.assigned) {
+        this.bubbleId = newId;
+        this.startedAt = nowIso;
+      }
+    }
+    this.open = true;
+    this.assigned = true;
+    this.words = `${this.words} ${piece}`.trim().slice(-maxLength);
+    return this.words;
+  }
+
+  /** Rita started to answer: whatever the learner says next is a new turn. */
+  replyStarted() {
+    this.open = false;
+    this.assigned = false;
+  }
+
+  /** The words of the turn, handed over once; the turn is closed afterwards. */
+  take() {
+    const taken = this.words;
+    this.words = "";
+    this.open = false;
+    this.assigned = false;
+    return taken;
+  }
+}

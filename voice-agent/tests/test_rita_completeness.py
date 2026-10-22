@@ -4,7 +4,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from rita_completeness import ends_on_hesitation, looks_complete
+from rita_completeness import (
+    ends_on_hesitation,
+    looks_complete,
+    looks_complete_unpunctuated,
+    thinking_sound_count,
+)
 
 
 class LooksCompleteTests(unittest.TestCase):
@@ -43,6 +48,34 @@ class LooksCompleteTests(unittest.TestCase):
         for text in ("So what I wanted to say…", "Let me think...", "Because:"):
             with self.subTest(text=text):
                 self.assertFalse(looks_complete(text))
+
+
+class RealTurnsFromTheLongConversationTests(unittest.TestCase):
+    """Turns that Soniox ended with a stop although the learner was only breathing."""
+
+    def test_sentences_cut_on_a_connective_are_not_complete(self):
+        for text in (
+            "المفروض إنه.",
+            "Äh. What do you know about the— Things that happen in.",
+            "Tell me about.",
+            "I was looking at.",
+            "ما بعرف إذا.",
+        ):
+            with self.subTest(text=text):
+                self.assertFalse(looks_complete(text))
+
+    def test_a_question_may_end_on_a_preposition(self):
+        for text in ("What are you talking about?", "Where is it from?"):
+            with self.subTest(text=text):
+                self.assertTrue(looks_complete(text))
+
+    def test_unpunctuated_text_ending_on_a_preposition_is_unfinished(self):
+        self.assertFalse(looks_complete_unpunctuated("things that happen in"))
+        self.assertTrue(looks_complete_unpunctuated("things that happen today"))
+
+    def test_thinking_sounds_are_counted(self):
+        self.assertEqual(thinking_sound_count("Äh. I want, um, to go"), 2)
+        self.assertEqual(thinking_sound_count("يعني أنا حاب نحكي"), 0)
 
 
 class ShortCommandsAndThinkingSoundsTests(unittest.TestCase):
