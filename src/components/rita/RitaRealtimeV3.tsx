@@ -19,6 +19,7 @@ import { hasRitaLanguageLearningIntent } from "@/lib/rita-learning-intent";
 import { stripModelNotes } from "@/lib/rita-model-notes";
 import { matchSubject, subjectOptions } from "@/lib/rita-learning-tree";
 import {
+  LearnerTurn,
   RitaReplyAccumulator,
   settleDraftReply,
   upsertDraftReply,
@@ -142,9 +143,7 @@ export function RitaRealtimeV3({
   const fillerAudioContext = useRef<AudioContext | null>(null);
   const fillerSequence = useRef(0);
   const currentTurnHasFinalTranscript = useRef(false);
-  const turnSpoken = useRef("");
-  const currentUserMessageId = useRef("");
-  const currentUserMessageCreatedAt = useRef("");
+  const learnerTurn = useRef(new LearnerTurn());
   const skipExtraction = useRef(false);
   const currentReplySource = useRef<RitaConversationSource>("voice");
 
@@ -642,7 +641,7 @@ export function RitaRealtimeV3({
         },
       ]);
     }
-    turnSpoken.current = "";
+    learnerTurn.current = new LearnerTurn();
     skipExtraction.current = false;
     trayRef.current.closeTray();
     await Promise.allSettled([...pendingWrites.current]);
@@ -798,8 +797,7 @@ export function RitaRealtimeV3({
             interruptedAt,
           ),
         );
-        const asked = turnSpoken.current;
-        turnSpoken.current = "";
+        const asked = learnerTurn.current.take();
         const wasCommand = skipExtraction.current;
         skipExtraction.current = false;
         if (!visibleReply) return;
@@ -822,6 +820,7 @@ export function RitaRealtimeV3({
         const clean = stripModelNotes(text).trim();
         if (!clean) return;
         currentReplySource.current = "scripted";
+        learnerTurn.current.replyStarted();
         replyAccumulator.current.clear();
         replyAccumulator.current.beginTts();
         // Intended text is safe to show, but only botOutput is recorded as heard.
@@ -975,8 +974,7 @@ export function RitaRealtimeV3({
             cancelFiller();
             currentTurnHasFinalTranscript.current = false;
             firstPartialRecorded.current = false;
-            currentUserMessageId.current = crypto.randomUUID();
-            currentUserMessageCreatedAt.current = new Date().toISOString();
+            learnerTurn.current.speechStarted(crypto.randomUUID(), new Date().toISOString());
             if (botSpeaking.current) interruptCandidateAt.current = performance.now();
             turnId.current = crypto.randomUUID();
             if (!botSpeaking.current) {
@@ -1034,18 +1032,17 @@ export function RitaRealtimeV3({
             }
             if (!data.final || !data.text.trim()) return;
             lastUserText.current = data.text.trim();
-            // A request can arrive in several finished pieces; keep the whole turn.
-            turnSpoken.current = `${turnSpoken.current} ${data.text.trim()}`.trim().slice(-500);
+            // A request can arrive in several finished pieces; keep the whole turn, once.
+            const turn = learnerTurn.current;
+            const turnText = turn.addFinal(
+              data.text,
+              crypto.randomUUID(),
+              new Date().toISOString(),
+            );
             skipExtraction.current = false;
             currentTurnHasFinalTranscript.current = true;
-            const message = {
-              id: currentUserMessageId.current || crypto.randomUUID(),
-              role: "you" as const,
-              text: turnSpoken.current,
-            };
-            currentUserMessageId.current = message.id;
-            const createdAt = currentUserMessageCreatedAt.current || new Date().toISOString();
-            currentUserMessageCreatedAt.current = createdAt;
+            const message = { id: turn.id, role: "you" as const, text: turnText };
+            const createdAt = turn.createdAt;
             setMessages((current) => upsertDraftReply(current, message));
             void persistConversationMessage({
               client_message_id: message.id,
@@ -1061,6 +1058,7 @@ export function RitaRealtimeV3({
           },
           onBotLlmStarted: () => {
             currentReplySource.current = "voice";
+            learnerTurn.current.replyStarted();
             pendingScriptedReply.current = "";
             replyAccumulator.current.beginLlm();
             llmStartedAt.current = performance.now();

@@ -22,11 +22,20 @@ from rita_completeness import (
     looks_complete,
     looks_complete_short_unpunctuated,
     looks_complete_unpunctuated,
+    thinking_sound_count,
 )
 
 DEFAULT_BOUNDED_COMMIT_SECS = 0.3
 MIN_BOUNDED_COMMIT_SECS = 0.3
 MAX_BOUNDED_COMMIT_SECS = 1.2
+# A turn that ends on a plain full stop is often only a breath (Soniox stops at every pause), so it
+# waits longer than a question or an exclamation. 0 restores the old single short wait.
+DEFAULT_PERIOD_COMMIT_SECS = 0.9
+MIN_PERIOD_COMMIT_SECS = 0.5
+MAX_PERIOD_COMMIT_SECS = 1.4
+# Extra wait once the learner has shown they search for words ("um", "äh", "أمم").
+SLOW_SPEAKER_EXTRA_SECS = 0.3
+SLOW_SPEAKER_THINKING_SOUNDS = 2
 DEFAULT_UNPUNCTUATED_COMMIT_SECS = 0.9
 MIN_UNPUNCTUATED_COMMIT_SECS = 0.6
 MAX_UNPUNCTUATED_COMMIT_SECS = 1.4
@@ -41,6 +50,38 @@ def adaptive_unpunctuated_secs(text: str, configured: float) -> float:
     if word_count <= 10:
         return min(configured, 0.65)
     return min(configured, 0.85)
+
+
+def bounded_wait_secs(text: str, quick_secs: float, period_secs: float, thinking_sounds: int = 0) -> float:
+    """How long to wait before committing a complete-looking turn.
+
+    Questions, exclamations and one-word commands ("وقفي.", "Stop.") keep the quick wait. A turn
+    that ends on a plain full stop waits `period_secs`, and a little longer for a learner who has
+    shown that they search for words. `period_secs` <= 0 means the quick wait for everything.
+    """
+
+    cleaned = (text or "").strip()
+    if period_secs <= 0 or cleaned.endswith(("?", "؟", "!")):
+        return quick_secs
+    if len(cleaned.split()) < 2:
+        return quick_secs
+    wait = max(quick_secs, period_secs)
+    if thinking_sounds >= SLOW_SPEAKER_THINKING_SOUNDS:
+        wait += SLOW_SPEAKER_EXTRA_SECS
+    return wait
+
+
+def period_commit_secs(body: dict[str, Any]) -> float:
+    """Seconds a turn ending on a plain full stop waits before it is committed; 0 disables."""
+
+    raw = body.get("periodCommitSecs", os.getenv("RITA_PERIOD_COMMIT_SECS"))
+    try:
+        value = float(raw) if raw not in (None, "") else DEFAULT_PERIOD_COMMIT_SECS
+    except (TypeError, ValueError):
+        return DEFAULT_PERIOD_COMMIT_SECS
+    if value <= 0:
+        return 0.0
+    return min(MAX_PERIOD_COMMIT_SECS, max(MIN_PERIOD_COMMIT_SECS, value))
 
 
 def bounded_commit_secs(body: dict[str, Any]) -> float:
@@ -72,10 +113,21 @@ def unpunctuated_commit_secs(body: dict[str, Any]) -> float:
 class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
     """Smart Turn plus a short, cancellable commit for complete-looking final transcripts."""
 
-    def __init__(self, *, turn_analyzer, bounded_secs: float, unpunctuated_secs: float = 0.0, **kwargs):
+    def __init__(
+        self,
+        *,
+        turn_analyzer,
+        bounded_secs: float,
+        unpunctuated_secs: float = 0.0,
+        period_secs: float = 0.0,
+        **kwargs,
+    ):
         super().__init__(turn_analyzer=turn_analyzer, **kwargs)
         self._bounded_secs = bounded_secs
         self._unpunctuated_secs = unpunctuated_secs
+        self._period_secs = period_secs
+        #: thinking sounds heard in this session; a slow speaker gets a longer wait
+        self._thinking_sounds = 0
         self._bounded_task: asyncio.Task | None = None
         self._bounded_fired = False
         #: smart_complete | bounded_complete_commit (a controller timeout never reaches this class)
@@ -103,6 +155,8 @@ class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
 
     async def _handle_transcription(self, frame: TranscriptionFrame):
         await super()._handle_transcription(frame)
+        if frame.finalized:
+            self._thinking_sounds += thinking_sound_count(frame.text)
         if (
             self._bounded_secs > 0
             and frame.finalized
@@ -112,7 +166,13 @@ class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
         ):
             await self._cancel_bounded()
             self._bounded_task = self.task_manager.create_task(
-                self._bounded_commit(frame.text), f"{self}::_bounded_commit"
+                self._bounded_commit(
+                    frame.text,
+                    bounded_wait_secs(
+                        frame.text, self._bounded_secs, self._period_secs, self._thinking_sounds
+                    ),
+                ),
+                f"{self}::_bounded_commit",
             )
         elif (
             self._bounded_secs > 0
