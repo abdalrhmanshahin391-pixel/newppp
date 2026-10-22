@@ -206,3 +206,60 @@ class CleanerInAPipelineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SpokenListTests(unittest.TestCase):
+    """The voice must never say "one dot": a numbered list is turned into plain sentences."""
+
+    @staticmethod
+    def spoken(text, step=None):
+        speech = SpeechTextFilter()
+        step = step or len(text)
+        out = "".join(speech.feed(text[i : i + step]) for i in range(0, len(text), step))
+        return out + speech.pending
+
+    def test_numbers_that_open_and_continue_a_list_are_dropped(self):
+        for step in (None, 1, 3):
+            with self.subTest(step=step):
+                self.assertEqual(self.spoken("1. أولاً الفعل. 2. ثانياً الاسم.", step), "أولاً الفعل. ثانياً الاسم.")
+                self.assertEqual(self.spoken("1) eins\n2) zwei\n3) drei", step), "eins\nzwei\ndrei")
+
+    def test_ordinary_numbers_are_left_alone(self):
+        for text in ("Das ist 2024. Und weiter.", "12. Mai ist toll", "I have 3.5 cats", "1990. It was long.", "شو 2"):
+            with self.subTest(text=text):
+                self.assertEqual(self.spoken(text), text)
+                self.assertEqual(self.spoken(text, 1), text)
+
+    def test_a_number_at_the_very_end_of_a_reply_is_not_lost(self):
+        self.assertEqual(self.spoken("بدي 2"), "بدي 2")
+        speech = SpeechTextFilter()
+        speech.feed("ok. 2")
+        self.assertEqual(speech.pending, "2")
+
+
+class PromptWithoutContradictionsTests(unittest.TestCase):
+    def setUp(self):
+        self.prompt = build_prompt({}, RitaSessionState(), dialogue=True)
+
+    def test_no_more_forced_follow_up_question(self):
+        self.assertNotIn("بدنا نكمل", self.prompt)
+        self.assertNotIn('then ask only "بدك أكمل؟"', self.prompt)
+
+    def test_the_language_comes_from_one_place(self):
+        self.assertNotIn("answer in turn_language", self.prompt)
+        self.assertNotIn("Never answer fully in English", self.prompt)
+        self.assertIn("Write in the REPLY LANGUAGE named on the last line", self.prompt)
+
+    def test_it_says_which_rule_wins(self):
+        self.assertIn("PRIORITY WHEN RULES CLASH", self.prompt)
+        self.assertIn("a TURN NOTE may allow more", self.prompt)
+
+    def test_the_gendered_word_is_not_planted_as_an_example(self):
+        self.assertNotIn("خبريني", self.prompt)
+
+    def test_german_cases_are_stated_correctly(self):
+        self.assertIn("do not all take the dative", self.prompt)
+        self.assertIn("hoffen takes auf + accusative", self.prompt)
+
+    def test_examples_do_not_all_open_with_the_same_word(self):
+        self.assertEqual(self.prompt.count("بنقولها"), 1)

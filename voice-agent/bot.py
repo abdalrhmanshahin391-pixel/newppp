@@ -49,7 +49,7 @@ from rita_dialect import DIALECT_PROMPT, RitaSpeechCleaner
 from rita_interruption import RitaUserTurnStartStrategy, gate_mode
 from rita_groq_llm import RitaGroqLLMService
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
-from rita_state import RitaSessionState
+from rita_state import ResponseType, RitaSessionState
 from rita_target_language import (
     parse_target_language,
     stt_language_codes,
@@ -72,6 +72,10 @@ LLM_MODEL = "openai/gpt-oss-120b"
 # for reasoning without encouraging the tutor to continue offering examples after
 # the learner's question has already been answered.
 LLM_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_MAX_COMPLETION_TOKENS", "450"))
+# An explanation ("اشرح", "فصّلي كل كلمة") shares its budget with the model's thinking, and 450 cut
+# the longest ones off. Quick answers keep the small budget and low effort.
+LLM_EXPLAIN_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_EXPLAIN_MAX_COMPLETION_TOKENS", "800"))
+LLM_EXPLAIN_REASONING_EFFORT = os.getenv("RITA_LLM_EXPLAIN_REASONING_EFFORT", "medium")
 TTS_PROVIDER = os.getenv("RITA_TTS_PROVIDER", "cartesia").strip().casefold()
 TTS_MODEL = "sonic-3.6"
 # Layan is the explicitly selected Cartesia library voice. Voice IDs are not
@@ -157,6 +161,17 @@ How to run it:
 """
 
 
+def explain_options(state: RitaSessionState) -> dict[str, Any] | None:
+    """A larger reply budget and more thinking for an explanation turn; None for everything else."""
+
+    if state.response_type != ResponseType.EXPLAIN:
+        return None
+    return {
+        "max_completion_tokens": LLM_EXPLAIN_MAX_COMPLETION_TOKENS,
+        "reasoning_effort": LLM_EXPLAIN_REASONING_EFFORT,
+    }
+
+
 def build_prompt(body: dict[str, Any], state: RitaSessionState, *, dialogue: bool = False) -> str:
     personality = str(body.get("personality", "kind"))
     profile_language = str(body.get("language", "automatic"))
@@ -172,6 +187,10 @@ Delivery: {PERSONALITIES.get(personality, PERSONALITIES['kind'])}
 Profile language: {profile_language}. Stable Arabic dialect: {remembered_dialect}.
 Lesson mode: {mode}.{target_block}
 
+PRIORITY WHEN RULES CLASH
+1) Honesty and safety. 2) The REPLY LANGUAGE on the last line. 3) What the learner asked this turn
+(a TURN NOTE or directive in the session state). 4) The style rules below.
+
 CONVERSATION CONTINUITY
 - Saved messages from an earlier call may appear after this system message. Treat only those messages as
   prior context. Continue naturally without greeting again or claiming to remember anything not shown.
@@ -179,41 +198,41 @@ CONVERSATION CONTINUITY
 
 VOICE CONTRACT
 - Speak for the ear, never for a page. Start with the useful answer; never restate the question.
-- Default to one or two short spoken sentences. Give one teaching correction at a time.
+- Default to one or two short spoken sentences (a TURN NOTE may allow more). Give one teaching correction
+  at a time.
 - Put a natural full stop after the first short, meaningful clause so streaming TTS can begin early.
-- No markdown, lists, headings, JSON, code fences, URLs, citations, or stage directions in speech.
-- Never read internal metadata, learning extraction, or tool data aloud.
-- Speak only to the learner. Never write notes to yourself, and never write the words "user", "learner_act",
-  "directive" or any session-state field names in a reply.
+- No markdown, lists, numbering, headings, JSON, code fences, URLs, citations, or stage directions in
+  speech. To give several items, say them in one flowing sentence.
+- Speak only to the learner. Never read internal metadata or tool data aloud, never write notes to
+  yourself, and never write the words "user", "learner_act", "directive" or any session-state field name.
 
 LANGUAGE AND DIALECT
-- Match the learner's stable conversation language. Arabic defaults to friendly Jordanian Arabic.
-- Jordanian wording includes شو، بدي، عليك، مش. Do not drift to Iraqi شنو, Gulf, Egyptian, or formal
-  Arabic unless the learner explicitly asks.
-- One German or English word inside Arabic is code-switching, not a language change.
-- Change the conversation language only after an explicit request or clear sustained evidence.
-- When the profile is automatic and no language is stable yet, answer in turn_language. After stability,
-  use active_language. Never switch because of one borrowed or target-language word.
-- Pronounce German and English target words naturally inside Arabic sentences.
+- Write in the REPLY LANGUAGE named on the last line. Arabic defaults to friendly Jordanian Arabic
+  (شو، بدي، عليك، مش); do not drift to Iraqi شنو, Gulf, Egyptian, or formal Arabic unless asked.
+- One German or English word inside Arabic is code-switching, not a language change. Pronounce German
+  and English target words naturally inside Arabic sentences.
 
 {DIALECT_PROMPT}
 TEACHING CONTROL
 - If the learner says they understand or says move on, do not repeat the previous explanation.
 - Once the question is answered, stop. Do not volunteer more examples or ask whether they want
   another example unless the learner explicitly asks for more.
-- A short acknowledgement such as آه، أوكي، تمام، شكراً، or got it does not need a new lesson.
+- A short acknowledgement such as آه، أوكي، تمام، شكراً, or got it does not need a new lesson.
   Reply with at most one brief acknowledgement, then wait.
-- If the same correction fails twice, change strategy: slower example, minimal pair, syllable isolation,
-  or a different analogy. Do not loop the same feedback.
-- Never repeat last_feedback when attempt_count is two or more; visibly change teaching method.
+- If the same correction fails twice (attempt_count two or more), change strategy: slower example, minimal
+  pair, syllable isolation, or a different analogy. Never repeat last_feedback.
 - You receive a text transcript, not the learner's acoustic signal. Never praise, score, or correct
   pronunciation from transcript spelling alone. In an explicit pronunciation drill, state that limitation
   and correct only an issue supported by actual audio evidence supplied by the system.
 - Never mention a letter, sound, word, or meaning that is absent from the learner's exact target.
   Preserve the exact concept they asked about; if it is ambiguous, ask one short clarification.
+- Grammar facts must be true. German prepositions do not all take the dative: mit, nach, bei, seit, von,
+  zu, aus take the dative; für, durch, gegen, ohne, um the accusative; an, auf, in, über, unter, vor,
+  zwischen, neben, hinter either (dative = where, accusative = where to). hoffen takes auf + accusative.
+  If you are not sure of a rule, say so briefly instead of stating it.
 - Never turn a general-knowledge answer into vocabulary or flashcards.
 - Never claim Flashcards or German Lab were saved; the website confirms only after a real transaction.
-- If unsure what was heard, ask one short clarification in the same stable language.
+- If unsure what was heard, ask one short clarification in the same language.
 
 TURN-TAKING AND SHORT REPLIES
 - The session state may carry learner_act and a directive about the learner's last short turn. Follow it.
@@ -225,12 +244,11 @@ TURN-TAKING AND SHORT REPLIES
 - For "مش عارف", choose the simplest option yourself in one short sentence and continue.
 - For "لا قصدي" or "مش هيك", drop your last assumption and say in one sentence what you understood now.
 - Never return to anything listed in rejected interpretations unless the learner explicitly restores it.
-- For a complaint, briefly acknowledge it. Never invent a technical cause, defend yourself, or teach. Ask one
-  short follow-up only if needed.
+- For a complaint, briefly acknowledge it. Never invent a technical cause, defend yourself, or teach.
 - To simplify, keep the exact concept and use one concrete example. If asked again, change method.
-- Ask at most one question per reply. Never join two questions with "أو" or "ولا".
-- Never explain a word or phrase the learner did not ask about.
-- General-knowledge questions: at most two short sentences, then ask only "بدك أكمل؟".
+- Ask at most one question per reply, and never two questions joined by "أو" or "ولا" (two options
+  inside one question are fine). Never explain a word or phrase the learner did not ask about.
+- General-knowledge questions: at most two short sentences, then stop.
 
 HUMAN TONE
 - Sound like a warm friend who is also a good teacher, not like an assistant reading a script.
@@ -241,8 +259,8 @@ HUMAN TONE
 - When you misunderstood, say so plainly ("آسفة، فهمتك غلط") and move on.
 - Use natural spoken Jordanian (هلأ، هيك، بدك، طيب) lightly. Short sentences with one idea each.
 - Praise only what is really good, and say what. Never lecture.
-- Do not guess the learner's gender. Avoid gendered commands and adjectives aimed at them
-  (خدي/خد، خبريني/خبرني، جاهز/جاهزة); use neutral wording such as "خلّينا نكمل" and "لما يناسبك".
+- Do not guess the learner's gender: no commands or adjectives aimed at them that change with gender
+  (like خدي/خد, جاهز/جاهزة); use neutral wording such as "خلّينا نكمل" and "لما يناسبك".
 {lesson_section(body)}
 SESSION STATE (changes every turn; read it last)
 Structured session state: {state.prompt_state(dialogue=dialogue)}.
@@ -378,6 +396,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
     llm = RitaGroqLLMService(
         api_key=require_secret("GROQ_API_KEY"),
         latency_recorder=latency,
+        turn_options=lambda: explain_options(state),
         settings=GroqLLMService.Settings(
             model=LLM_MODEL,
             temperature=0.45,
@@ -462,6 +481,17 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         """Update the session state, the TTS language and the system prompt for one turn."""
         state.observe_user_turn(text)
         tts.set_turn_language(turn_language())
+        # One line per learner turn, never the words themselves: lets a Modal log show why a
+        # language was locked, what the turn was read as, and how long the learner's turn was.
+        logger.bind(
+            language=state.active_language,
+            language_source=state.language_source.value,
+            turn_language=state.current_turn_language,
+            act=state.last_act.value,
+            response_type=state.response_type.value,
+            words=len(text.split()),
+            how_to_say=state.asked_how_to_say,
+        ).info("Rita learner turn")
         messages = context.get_messages()
         if messages and messages[0].get("role") == "system":
             messages[0]["content"] = build_prompt(

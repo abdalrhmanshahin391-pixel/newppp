@@ -34,7 +34,7 @@ from rita_dialogue_acts import normalize, tokens
 
 DIALECT_PROMPT = """JORDANIAN SPEECH (when speaking Arabic)
 - Natural phrases to use and vary: أهلين، هلا والله، كيف الحال؟، شو الأخبار؟، آه فهمت، حلو، تمام، ماشي،
-  أكيد، بالضبط، قربت، هيك أحسن، كمان مرة وبتضبط، عادي هاي صعبة عند الكل، من وين نبدأ؟، بدنا نكمل؟
+  أكيد، بالضبط، قربت، هيك أحسن، كمان مرة وبتضبط، عادي هاي صعبة عند الكل، من وين نبدأ؟
 - Say this, not that: هيك (not هكذا)، هلأ (not الآن)، شو (not ماذا)، ليش (not لماذا)، وين (not أين)،
   بدي (not أريد)، ما بعرف (not لا أعرف)، هاد/هاي (not هذا/هذه)، بنقولها (not يمكنك أن تقول).
 - Never write "كيف فيك" (it means "how can you"); greet with "كيف الحال؟". Never ask "شو حابب/حابة"; ask
@@ -47,11 +47,13 @@ DIALECT_PROMPT = """JORDANIAN SPEECH (when speaking Arabic)
   Put no extra full stop after a closing quote.
 - Never use * or # or markdown marks; the voice would read them.
 
-Examples of the right shape:
+Examples of the right shape (vary how you introduce a phrase; do not open every answer the same way):
 Learner: كيف أحكي بدي أروح على الحمام بالإنجليزي
-Rita: بنقولها "I need to go to the bathroom". وبالحكي السريع بنقول "I'm going to the bathroom".
+Rita: "I need to go to the bathroom". وبالحكي السريع بتقول "I'm going to the bathroom".
 Learner: صباح الخير بالألماني
-Rita: بنقول "Guten Morgen". وبنستخدمها لحد الساعة عشرة تقريباً.
+Rita: "Guten Morgen". بتستخدمها لحد الساعة عشرة تقريباً.
+Learner: شو بنقول جوعان بالألماني
+Rita: "Ich habe Hunger". حرفياً يعني "عندي جوع".
 Learner: شو معنى borrow
 Rita: "Borrow" يعني تاخد شي مؤقت وبترجعه. مثلاً "Can I borrow your pen?"
 Learner: مش فاهم الفرق
@@ -198,13 +200,17 @@ class SpeechTextFilter:
         self._probe = ""  # Latin text held while it might be a leaked note
         self._dropping = False  # inside a leaked note, until its sentence ends
         self._skip_space = False  # swallow the space that follows a dropped note
+        self._num = ""  # up to two digits at the start of a sentence, held while they might be "1."
+        self._num_mark = ""  # the "." or ")" that followed them
+        self._list_next: int | None = None  # the number a spoken list would continue with
 
     @property
     def pending(self) -> str:
         """Held-back text that turned out not to be a leak (call at the end of a reply)."""
 
         held, self._probe = self._probe, ""
-        return held if held and _probe(held) != "leak" else ""
+        digits, self._num, self._num_mark = self._num + self._num_mark, "", ""
+        return digits + held if held and _probe(held) != "leak" else digits
 
     def _emit(self, out: list[str], text: str) -> None:
         for ch in text:
@@ -222,6 +228,33 @@ class SpeechTextFilter:
                 pass  # a closing quote right after a stop still ends the same sentence
             elif not ch.isspace():
                 self._at_start = False
+
+    def _take_number(self, ch: str, out: list[str]) -> bool:
+        """Hold "1." / "2)" at the start of a sentence and drop it when it numbers a list.
+
+        The voice would read "1." as "one dot". Only the start of the reply or of a line can open a
+        list with "1"; after that the next number in order continues it, so "12. Mai" or "2024."
+        in ordinary speech are left alone. Returns True when `ch` was used up here.
+        """
+
+        if not self._num_mark:
+            if ch.isdigit() and len(self._num) < 2:
+                self._num += ch
+                return True
+            if ch in ".)" and self._num:
+                self._num_mark = ch
+                return True
+        elif ch.isspace():
+            number = int(self._num)
+            opens = number == 1 and self._list_next is None and (not self._tail or self._tail[-1:] == "\n")
+            if opens or number == self._list_next:
+                self._list_next = number + 1
+                self._num = self._num_mark = ""
+                self._skip_space = True
+                return True
+        held, self._num, self._num_mark = self._num + self._num_mark, "", ""
+        self._emit(out, held)
+        return False
 
     def feed(self, text: str) -> str:
         out: list[str] = []
@@ -241,6 +274,12 @@ class SpeechTextFilter:
                 if ch.isspace():
                     continue
                 self._skip_space = False
+            if self._num or self._num_mark:
+                if self._take_number(ch, out):
+                    continue
+            elif self._at_start and ch.isdigit() and not self._probe:
+                self._num = ch
+                continue
             if self._probe:
                 self._probe += ch
                 verdict = _probe(self._probe)
