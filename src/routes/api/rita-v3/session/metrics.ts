@@ -32,6 +32,7 @@ const ALLOWED_EVENTS = new Set([
   "network_snapshot",
   "network_stats_unavailable",
   "dialogue_act",
+  "explanation_language",
 ]);
 
 export const Route = createFileRoute("/api/rita-v3/session/metrics")({

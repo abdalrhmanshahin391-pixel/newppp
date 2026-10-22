@@ -50,6 +50,10 @@ Page `#fff`; dark device screen `linear-gradient(162deg, #26252e, #121117)`.
 - Radius: buttons and inputs 8px, cards 16px, sheets 24px (top corners on phones).
 - Buttons: 2px ink border, blue fill, white text, `.rita-btn` / `.rita-btn-primary` /
   `.rita-btn-secondary`, small `.rita-btn-sm` (40px). Selects: `.rita-select` (48px).
+- Small choice of two to four options (the live page's "Rita explains in"): `.rita-choice`, radio
+  buttons in one row, 44px high, 8px radius, hairline border; the chosen one has a 2px
+  `--pp-accent` border, `--pp-accent-soft` fill and `--pp-accent-text`. Arrow keys move the
+  choice. Use it instead of a select when every option should stay visible.
 - Spacing on a 4px scale; sections breathe (24–48px), controls inside a card 8–16px.
 - Windows: one level only (a sheet from the bottom on phones, centred on wider screens,
   max 672px). No window inside a window.

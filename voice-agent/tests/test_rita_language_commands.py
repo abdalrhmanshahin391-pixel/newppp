@@ -156,3 +156,89 @@ class ReplyLanguageLine(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SiteChosenExplanationLanguage(unittest.TestCase):
+    """"Rita explains in" on the website: sent at the start, changeable during the conversation."""
+
+    def test_a_site_choice_is_not_flipped_by_what_the_learner_speaks(self):
+        state = RitaSessionState(active_language="ar")
+        self.assertEqual(state.language_source, LanguageSource.SITE)
+        for text in ("Ich habe Hunger und möchte essen", "Wie geht es dir heute", "Guten Morgen Rita"):
+            state.observe_user_turn(text)
+        self.assertEqual(state.active_language, "ar")
+        self.assertEqual(state.language_source, LanguageSource.SITE)
+
+    def test_automatic_still_follows_the_learner(self):
+        state = RitaSessionState(active_language="automatic")
+        state.observe_user_turn("Ich habe Hunger und möchte essen")
+        state.observe_user_turn("Wie geht es dir heute")
+        self.assertEqual(state.active_language, "de")
+        self.assertEqual(state.language_source, LanguageSource.STABLE_AUTO)
+
+    def test_an_order_in_the_conversation_overrides_the_site_choice_and_is_confirmed_once(self):
+        state = RitaSessionState(active_language="ar")
+        state.observe_user_turn("اشرحلي بالإنجليزي")
+        self.assertEqual(state.active_language, "en")
+        self.assertEqual(state.language_source, LanguageSource.EXPLICIT)
+        self.assertIn("The reply language just changed", state.reply_language_line())
+        state.observe_user_turn("ok and then?")
+        self.assertNotIn("just changed", state.reply_language_line())
+
+    def test_an_order_for_the_language_already_chosen_is_not_announced(self):
+        state = RitaSessionState(active_language="en")
+        state.observe_user_turn("احكي معي بالإنجليزي")
+        self.assertNotIn("just changed", state.reply_language_line())
+
+    def test_a_live_site_change_applies_from_the_next_answer_and_is_announced_once(self):
+        state = RitaSessionState(active_language="ar")
+        self.assertTrue(state.set_site_language("en"))
+        self.assertEqual(state.reply_language(), "en")
+        state.observe_user_turn("what does dative mean")
+        line = state.reply_language_line("German")
+        self.assertIn("REPLY LANGUAGE: ENGLISH", line)
+        self.assertIn("chose this on the website", line)
+        self.assertIn("first say so in one short sentence in English", line)
+        state.observe_user_turn("and accusative?")
+        self.assertNotIn("just changed", state.reply_language_line())
+
+    def test_the_site_choice_replaces_an_order_given_earlier(self):
+        state = RitaSessionState(active_language="automatic")
+        state.observe_user_turn("احكي معي بالإنجليزي")
+        self.assertEqual(state.language_source, LanguageSource.EXPLICIT)
+        state.set_site_language("ar")
+        self.assertEqual(state.language_source, LanguageSource.SITE)
+        self.assertEqual(state.reply_language(), "ar")
+        self.assertEqual(state.active_dialect, "ar-JO")
+
+    def test_going_back_to_automatic_gives_the_choice_back_to_the_learner(self):
+        state = RitaSessionState(active_language="ar", active_dialect="ar-JO")
+        self.assertTrue(state.set_site_language("automatic"))
+        self.assertEqual(state.active_language, "automatic")
+        self.assertEqual(state.language_source, LanguageSource.PROFILE)
+        state.observe_user_turn("Ich habe Hunger und möchte essen")
+        state.observe_user_turn("Wie geht es dir heute")
+        self.assertEqual(state.active_language, "de")
+
+    def test_unknown_values_change_nothing(self):
+        state = RitaSessionState(active_language="ar")
+        for value in ("fr", "", None, 3, "AR"):
+            self.assertFalse(state.set_site_language(value))
+        self.assertEqual(state.active_language, "ar")
+        self.assertEqual(state.language_source, LanguageSource.SITE)
+
+    def test_the_same_choice_twice_is_not_a_change(self):
+        state = RitaSessionState(active_language="ar")
+        state.set_site_language("ar")
+        state.observe_user_turn("شو معنى صباح الخير")
+        self.assertNotIn("just changed", state.reply_language_line())
+
+    def test_the_tts_and_scripted_lines_follow_the_same_language(self):
+        import bot
+
+        state = RitaSessionState(active_language="ar")
+        state.set_site_language("en")
+        state.observe_user_turn("Guten Morgen")
+        self.assertEqual(state.reply_language(), "en")
+        prompt = bot.build_prompt({}, state, dialogue=True)
+        self.assertIn("REPLY LANGUAGE: ENGLISH", prompt)

@@ -43,6 +43,9 @@ import {
   LessonResultCard,
 } from "@/components/rita-lessons/LessonPanels";
 import { dbLanguage, setVoiceSessionActive } from "@/lib/language-scope";
+import { useExplanationLanguage } from "@/hooks/useExplanationLanguage";
+import type { ExplanationLanguage } from "@/lib/explanation-language";
+import { ExplanationLanguageControl } from "@/components/rita/ExplanationLanguageControl";
 import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rita-conversation";
 
 type Persona = "kind" | "direct" | "playful" | "strict";
@@ -182,7 +185,11 @@ export function RitaRealtimeV3({
   // The natural defaults. The page no longer asks the learner to pick these.
   const personality: Persona = "kind";
   const mode: LessonMode = "free_conversation";
-  const language: string = "automatic";
+  // How Rita is asked to explain (Arabic, English or like the learner speaks); a ref, so a change
+  // during a conversation never rebuilds the callbacks that talk to the call.
+  const explanation = useExplanationLanguage();
+  const languageRef = useRef<string>(explanation.value);
+  languageRef.current = explanation.value;
   const dialect: string = "ar-JO";
   // The "tap a word" window. While one of its clips plays, the microphone is
   // muted so the clip is not heard as the learner's own speech.
@@ -393,7 +400,7 @@ export function RitaRealtimeV3({
           networkRttMs: connection.connection?.rtt,
           networkDownlinkMbps: connection.connection?.downlink,
           networkSaveData: connection.connection?.saveData,
-          language,
+          language: languageRef.current,
           dialect,
           mode,
         },
@@ -407,7 +414,7 @@ export function RitaRealtimeV3({
       }
       await sendMetric(currentSessionId, event);
     },
-    [dialect, language, mode, sendMetric],
+    [dialect, mode, sendMetric],
   );
 
   const flushPendingMetrics = useCallback(
@@ -510,8 +517,8 @@ export function RitaRealtimeV3({
         ? "ar"
         : /[äöüß]|\b(?:ich|du|der|die|das|nicht|bitte|danke|guten|morgen)\b/iu.test(spoken)
           ? "de"
-          : language === "de" || language === "en"
-            ? language
+          : languageRef.current === "en" || languageRef.current === "ar"
+            ? languageRef.current
             : dialect.startsWith("ar")
               ? "ar"
               : "en";
@@ -551,7 +558,7 @@ export function RitaRealtimeV3({
         }
       }
     }, 675);
-  }, [cancelFiller, dialect, language, metric]);
+  }, [cancelFiller, dialect, metric]);
 
   const ensureFreeConversation = useCallback(async () => {
     if (lessonId) return "";
@@ -1191,7 +1198,7 @@ export function RitaRealtimeV3({
         // be correlated with browser events before a Daily bot response exists.
         requestData: {
           personality,
-          language,
+          language: languageRef.current,
           dialect,
           mode: lessonId ? "guided_lesson" : mode,
           traceId: traceId.current,
@@ -1241,6 +1248,21 @@ export function RitaRealtimeV3({
   }
 
   // A sure way to interrupt: it does not depend on the microphone or on what was heard.
+  // The learner changed "Rita explains in" while talking: tell the worker, which applies it from
+  // Rita's next answer. Before a conversation starts the value is simply sent with the start.
+  const explanationChanged = useCallback(
+    (value: ExplanationLanguage) => {
+      if (!activeRef.current) return;
+      try {
+        client.current?.sendClientMessage("rita-settings", { explanationLanguage: value });
+      } catch {
+        // The next conversation starts with the new choice anyway.
+      }
+      void metric("explanation_language", undefined, { value });
+    },
+    [metric],
+  );
+
   function stopRita() {
     cancelFiller();
     try {
@@ -1367,6 +1389,7 @@ export function RitaRealtimeV3({
               ) : null}
             </p>
           ) : null}
+          <ExplanationLanguageControl live={active} onChange={explanationChanged} />
           {active && mood === "talking" && (
             <button
               type="button"

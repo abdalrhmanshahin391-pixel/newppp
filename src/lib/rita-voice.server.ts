@@ -303,10 +303,8 @@ export function normalizePersonality(value: unknown): RitaPersonality {
   return RITA_PERSONALITIES.includes(requested) ? requested : "kind";
 }
 
+/** The language Rita explains in: what the website sent, or "automatic" for anything else. */
 export function cleanLanguage(value: unknown) {
-  return (
-    String(value ?? "automatic")
-      .trim()
-      .slice(0, 64) || "automatic"
-  );
+  const requested = String(value ?? "automatic").trim();
+  return requested === "ar" || requested === "en" || requested === "de" ? requested : "automatic";
 }

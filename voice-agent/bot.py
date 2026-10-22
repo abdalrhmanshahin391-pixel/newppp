@@ -585,6 +585,14 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             except (TypeError, ValueError, AttributeError):
                 state.learning_count = None
             return
+        if getattr(msg, "type", "") == "rita-settings":
+            # "Rita explains in" was changed on the website during the conversation.
+            value = (getattr(msg, "data", None) or {}).get("explanationLanguage")
+            if state.set_site_language(value):
+                logger.bind(language=state.active_language, source=state.language_source.value).info(
+                    "Rita explanation language changed on the website"
+                )
+            return
         if getattr(msg, "type", "") == "rita-stop":
             logger.info("Rita stopped by the learner's button")
             state.topic_paused = True
