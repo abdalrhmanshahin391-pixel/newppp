@@ -483,15 +483,18 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         tts.set_turn_language(turn_language())
         # One line per learner turn, never the words themselves: lets a Modal log show why a
         # language was locked, what the turn was read as, and how long the learner's turn was.
-        logger.bind(
-            language=state.active_language,
-            language_source=state.language_source.value,
-            turn_language=state.current_turn_language,
-            act=state.last_act.value,
-            response_type=state.response_type.value,
-            words=len(text.split()),
-            how_to_say=state.asked_how_to_say,
-        ).info("Rita learner turn")
+        # The fields are in the message itself: Modal's log lines do not show bound extras.
+        logger.info(
+            "Rita learner turn language={} language_source={} turn_language={} act={} "
+            "response_type={} words={} how_to_say={}",
+            state.active_language,
+            state.language_source.value,
+            state.current_turn_language,
+            state.last_act.value,
+            state.response_type.value,
+            len(text.split()),
+            state.asked_how_to_say,
+        )
         messages = context.get_messages()
         if messages and messages[0].get("role") == "system":
             messages[0]["content"] = build_prompt(
@@ -589,8 +592,10 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             # "Rita explains in" was changed on the website during the conversation.
             value = (getattr(msg, "data", None) or {}).get("explanationLanguage")
             if state.set_site_language(value):
-                logger.bind(language=state.active_language, source=state.language_source.value).info(
-                    "Rita explanation language changed on the website"
+                logger.info(
+                    "Rita explanation language changed on the website language={} source={}",
+                    state.active_language,
+                    state.language_source.value,
                 )
             return
         if getattr(msg, "type", "") == "rita-stop":
