@@ -116,3 +116,44 @@ def test_i_did_not_understand_is_not_understood():
         assert state.understood is False, text
     state.observe_user_turn("فهمت، شكراً")
     assert state.understood is True
+
+
+def test_continue_after_a_word_by_word_request_continues_that_task():
+    state = RitaSessionState()
+    state.observe_user_turn("فصّلي كل كلمة في الجمل")
+    assert state.current_task == "break the phrase down word by word"
+    state.observe_assistant_turn("Ich habe Hunger: ich يعني أنا، habe يعني عندي.")
+    state.observe_user_turn("كمّل")
+    assert state.current_task
+    directive = state.turn_directive()
+    assert "continue the task you were doing" in directive and "word by word" in directive
+    assert "suggest a new topic" in directive
+
+
+def test_the_task_survives_short_follow_ups_and_ends_on_stop_or_a_new_topic():
+    state = RitaSessionState()
+    state.observe_user_turn("فصّلي كل كلمة في الجمل")
+    for text in ("مرة ثانية", "مش فاهم", "أمم"):
+        state.observe_user_turn(text)
+        assert state.current_task, text
+    state.observe_user_turn("خلص")
+    assert state.current_task == ""
+    state.observe_user_turn("translate this for me")
+    assert state.current_task == "translate what the learner asks"
+    state.observe_user_turn("Let's talk about my weekend in the mountains")
+    assert state.current_task == ""
+
+
+def test_the_last_quoted_foreign_phrase_is_remembered_for_the_state():
+    state = RitaSessionState()
+    state.observe_assistant_turn('بنقول "Ich habe Hunger". وبالعامية "عندي جوع".')
+    assert state.current_phrase == "Ich habe Hunger"
+    state.observe_assistant_turn("حلو، كمان مرة؟")
+    assert state.current_phrase == "Ich habe Hunger"
+    assert 'phrase="Ich habe Hunger"' in state.dialogue_state()
+
+
+def test_no_task_means_the_plain_continue_directive():
+    state = RitaSessionState()
+    state.observe_user_turn("كمّل")
+    assert state.turn_directive() == "continue the topic from where you stopped; do not restart or summarise"

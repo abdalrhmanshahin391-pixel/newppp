@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 
 from rita_dialect import LANGUAGE_NAMES, asks_how_to_say, how_to_say_directive
-from rita_dialogue_acts import Act, Awaiting, classify, parse_last_question, tokens
+from rita_dialogue_acts import Act, Awaiting, classify, normalize, parse_last_question, tokens
 from rita_language_commands import detect_language_command
 
 
@@ -39,6 +39,21 @@ _GERMAN_MARKERS = re.compile(
 )
 # Thinking sounds are not words of any language: "Äh. You are so confused" is English.
 _THINKING_SOUNDS = re.compile(r"\b(?:äh+m?|ähm|uh+m?|hmm+)\b", re.IGNORECASE)
+# What the learner asked Rita to do, kept across short follow-ups ("كمّل", "مرة ثانية") so that
+# "continue" after "فصّلي كل كلمة" continues the breakdown instead of opening a new topic.
+_TASK_REQUESTS = (
+    (
+        re.compile(r"فصل|تفصيل|كل كلمه|word by word|in detail|break (?:it )?down|aufschl"),
+        "break the phrase down word by word",
+    ),
+    (re.compile(r"ترجم|translate|ubersetz|übersetz"), "translate what the learner asks"),
+)
+# Short acts that carry the task along; anything else either ends it or replaces it.
+_TASK_SURVIVES = frozenset(
+    {Act.CONTINUE, Act.REPEAT, Act.SIMPLIFY, Act.COMPLAINT, Act.CORRECTION, Act.BACKCHANNEL,
+     Act.WAIT, Act.HESITATION, Act.UNCLEAR}
+)
+_QUOTED = re.compile(r"[\"“«]([^\"”»“«]{3,80})[\"”»]")
 _ARABIC_LEARNING_REQUEST = re.compile(
     r"(?:شو|ما|إيش|ايش)\s+معنى|(?:ترجم|ترجمة|يعني|معنى|كلمة|كلمات|بالألماني|بالالماني|بالإنجليزي|بالانجليزي)"
 )
@@ -95,6 +110,9 @@ class RitaSessionState:
     greeted: bool = False
     # Interpretations explicitly rejected by the learner. Keep this tiny and bounded.
     rejected_interpretations: list[str] = field(default_factory=list)
+    # The request Rita is working on and the phrase she last quoted (for "كمّل", "مرة ثانية").
+    current_task: str = ""
+    current_phrase: str = ""
 
     def __post_init__(self) -> None:
         if self.active_language in {"ar", "en", "de"}:
@@ -191,10 +209,22 @@ class RitaSessionState:
             self.stop_count += 1
         elif reading.act in (Act.OTHER, Act.CONTINUE):
             self.topic_paused = False
+        self._observe_task(clean, reading.act)
         if reading.act == Act.OTHER and len(tokens(clean)) >= 3:
             self.topic = " ".join(clean.split()[:12])
         if not (reading.act == Act.YES and self.awaiting == Awaiting.CHOICE):
             self.clarification_count = 0
+
+    def _observe_task(self, clean: str, act: Act) -> None:
+        """A new request replaces the task; a short follow-up keeps it; stop, understood or a new topic end it."""
+
+        said = normalize(clean)
+        for pattern, task in _TASK_REQUESTS:
+            if pattern.search(said):
+                self.current_task = task
+                return
+        if act not in _TASK_SURVIVES:
+            self.current_task = ""
 
     @staticmethod
     def _rejected_interpretation(text: str) -> str:
@@ -211,6 +241,9 @@ class RitaSessionState:
         self.assistant_turns += 1
         normalized = re.sub(r"[^\w\u0600-\u06ff]+", " ", text.casefold()).strip()
         self.last_feedback_signature = " ".join(normalized.split()[:16])
+        quoted = [q.strip() for q in _QUOTED.findall(text) if _LATIN.search(q)]
+        if quoted:
+            self.current_phrase = quoted[-1].replace('"', "'")
         question = parse_last_question(text)
         self.last_question = question.text
         self.awaiting = question.awaiting
@@ -244,6 +277,11 @@ class RitaSessionState:
         if act == Act.UNDERSTOOD:
             return "the learner understood; do not re-explain; take one small next step"
         if act == Act.CONTINUE:
+            if self.current_task:
+                return (
+                    f"continue the task you were doing ({self.current_task}) from where you stopped; "
+                    "do not restart, summarise or suggest a new topic"
+                )
             return "continue the topic from where you stopped; do not restart or summarise"
         if act == Act.REPEAT:
             return "repeat your last reply, shorter and simpler"
@@ -321,6 +359,8 @@ class RitaSessionState:
             f'options="{options}"' if options else "options=none",
             f'topic="{self.topic.replace(chr(34), chr(39))[:90]}"' if self.topic else "topic=none",
             f"topic_paused={self.topic_paused}",
+            f'task="{self.current_task}"' if self.current_task else "task=none",
+            f'phrase="{self.current_phrase[:80]}"' if self.current_phrase else "phrase=none",
             f"learner_act={self.last_act.value}",
             f'rejected="{"|".join(self.rejected_interpretations[-5:])[:160]}"'
             if self.rejected_interpretations
