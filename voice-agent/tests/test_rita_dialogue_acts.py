@@ -189,3 +189,55 @@ class QuestionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RealTurnsFromTheLongConversation(unittest.TestCase):
+    """Turns the old lexicons read as plain content, so Rita answered them as if nothing was wrong."""
+
+    def assertAct(self, text, act):
+        self.assertEqual(classify(text).act, act, text)
+
+    def test_complaints_that_rita_does_not_understand(self):
+        for text in (
+            "You are so confused. You don't understand what I say.",
+            "There's something wrong. With you…",
+            "انتي ما بتفهميني",
+            "That's not what I asked.",
+        ):
+            with self.subTest(text=text):
+                self.assertAct(text, Act.COMPLAINT)
+
+    def test_complaints_about_being_interrupted(self):
+        for text in ("بتقاطعيني", "You keep interrupting me", "Let me finish"):
+            with self.subTest(text=text):
+                self.assertAct(text, Act.COMPLAINT)
+
+    def test_i_did_not_understand_asks_for_a_simpler_explanation(self):
+        for text in (
+            "ما فهمت ولا كلمة",
+            "مش فاهم",
+            "I don't understand",
+            "Ich verstehe nicht",
+            "شرحت الموضوع كأني خبير… بس أنا مو خبير",
+            "اشرح بكلمات بسيطة",
+        ):
+            with self.subTest(text=text):
+                self.assertAct(text, Act.SIMPLIFY)
+
+    def test_i_did_not_hear_what_you_said_is_still_a_repeat(self):
+        self.assertAct("ما فهمت شو قلتي", Act.REPEAT)
+
+    def test_repeating_what_was_said_is_a_correction(self):
+        for text in ("I wasn't talking about P", "لا، أنا قلت لك. تفصلي كل كلمة", "No, I told you."):
+            with self.subTest(text=text):
+                self.assertAct(text, Act.CORRECTION)
+
+    def test_ordinary_turns_stay_ordinary(self):
+        for text in (
+            "خليني احكي عن عائلتي",
+            "I want to practise ordering food",
+            "شو معنى صباح الخير بالألماني",
+            "Hey, how are you?",
+        ):
+            with self.subTest(text=text):
+                self.assertAct(text, Act.OTHER)

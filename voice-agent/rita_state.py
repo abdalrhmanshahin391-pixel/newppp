@@ -136,7 +136,11 @@ class RitaSessionState:
         if not self._apply_explicit_language(clean):
             self._update_stable_language(self.current_turn_language)
 
-        self.understood = bool(
+        # "ما فهمت ولا كلمة" contains "فهمت" and means the opposite.
+        negated = bool(
+            re.search(r"(?:(?<!\S)(?:ما|مش|مو|لا|not|nicht|nie)|n['’]t)\s*(?:\S+\s+)?(?:فهمت|understand|get it|verstan)", lowered)
+        )
+        self.understood = not negated and self.last_act not in (Act.SIMPLIFY, Act.COMPLAINT) and bool(
             re.search(r"(?:فهمت|تمام فهمت|خلص فهمت|got it|i understand|verstanden|weiter)", lowered)
         )
         self.frustration_signal = bool(
@@ -161,7 +165,10 @@ class RitaSessionState:
             self.response_type = ResponseType.SIMPLIFY
         elif pronunciation:
             self.response_type = ResponseType.PRONUNCIATION_DRILL
-        elif re.search(r"(?:اشرح|ليش|why|explain|warum)", lowered):
+        elif re.search(
+            r"(?:اشرح|ليش|لماذا|فصل|تفصيل|كل كلمه|كل كلمة|وضح|why|explain|warum|in detail|word by word|break (?:it )?down)",
+            lowered,
+        ):
             self.response_type = ResponseType.EXPLAIN
         elif re.search(r"(?:احفظ|حط|ضيف|flashcard|german lab)", lowered):
             self.response_type = ResponseType.TOOL_ACTION
@@ -193,7 +200,9 @@ class RitaSessionState:
     def _rejected_interpretation(text: str) -> str:
         """Extract only an explicit rejected interpretation, never invent one."""
 
-        match = re.match(r"^\s*(?:مش|مو|not)\s+(.+?)\s*[.!؟?]*$", text, re.IGNORECASE)
+        match = re.match(r"^\s*(?:مش|مو|not)\s+(.+?)\s*[.!؟?]*$", text, re.IGNORECASE) or re.match(
+            r"^\s*i\s+(?:was\s*not|wasn['’]?t)\s+talking\s+about\s+(.+?)\s*[.!؟?]*$", text, re.IGNORECASE
+        )
         if match:
             return re.sub(r"\s+", " ", match.group(1)).strip()[:80]
         return ""
@@ -242,6 +251,42 @@ class RitaSessionState:
             return "the answer does not fit last_question; ask one short clarification of at most eight words"
         if act == Act.BACKCHANNEL:
             return "the learner only acknowledged; answer in one short sentence or continue naturally"
+        return ""
+
+    def turn_note(self, *, dialogue: bool = False) -> str:
+        """The response type as a plain sentence, for types that change how Rita should answer.
+
+        Empty when the dialogue directive already says it (router on), so the model never reads
+        the same instruction twice.
+        """
+
+        if dialogue and self.turn_directive():
+            return ""
+        if self.response_type == ResponseType.COMPLAINT:
+            return (
+                "TURN NOTE: THE LEARNER IS REPORTING A PROBLEM. Acknowledge it in one short sentence. "
+                "Do not defend yourself, do not invent a technical cause, do not teach."
+            )
+        if self.response_type == ResponseType.SIMPLIFY:
+            if self.attempt_count >= 2:
+                return (
+                    "TURN NOTE: THE LEARNER IS STILL CONFUSED. Change method completely: one concrete "
+                    "everyday example, no grammar terms, none of your previous wording."
+                )
+            return (
+                "TURN NOTE: THE LEARNER IS CONFUSED. Explain the same idea again in plain words with "
+                "ONE concrete everyday example. No grammar terms. Do not repeat your previous wording."
+            )
+        if self.response_type == ResponseType.EXPLAIN:
+            return (
+                "TURN NOTE: THE LEARNER ASKED FOR AN EXPLANATION. This overrides the usual length: up to "
+                "five short spoken sentences, still no lists. Cover exactly what they asked, nothing more."
+            )
+        if self.response_type == ResponseType.EMPATHY:
+            return (
+                "TURN NOTE: THE LEARNER SOUNDS DISCOURAGED. Say one human sentence about it first, "
+                "then offer one small, easy next step."
+            )
         return ""
 
     def reply_language(self) -> str | None:

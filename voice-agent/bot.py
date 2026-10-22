@@ -164,6 +164,8 @@ def build_prompt(body: dict[str, Any], state: RitaSessionState, *, dialogue: boo
     mode = str(body.get("mode", "free_conversation"))
     target = parse_target_language(body)
     target_block = target_language_prompt(target)
+    note = state.turn_note(dialogue=dialogue)
+    turn_note = f"{note}\n" if note else ""
     return f"""You are Rita, RitaJet's realtime language tutor.
 
 Delivery: {PERSONALITIES.get(personality, PERSONALITIES['kind'])}
@@ -244,7 +246,7 @@ HUMAN TONE
 {lesson_section(body)}
 SESSION STATE (changes every turn; read it last)
 Structured session state: {state.prompt_state(dialogue=dialogue)}.
-{state.reply_language_line(target["name"] if target else None)}
+{turn_note}{state.reply_language_line(target["name"] if target else None)}
 """
 
 

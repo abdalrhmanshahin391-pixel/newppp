@@ -64,3 +64,55 @@ def test_complaint_never_gets_a_made_up_diagnosis_directive():
     state.observe_user_turn("الصوت مقطع")
     assert state.response_type == ResponseType.COMPLAINT
     assert "do not invent a technical cause" in state.turn_directive()
+
+
+def test_a_confused_turn_becomes_a_plain_sentence_for_the_model():
+    state = RitaSessionState()
+    state.observe_user_turn("ما فهمت ولا كلمة")
+    assert state.response_type == ResponseType.SIMPLIFY
+    note = state.turn_note()
+    assert "THE LEARNER IS CONFUSED" in note and "ONE concrete" in note
+
+
+def test_the_second_confused_turn_changes_method():
+    state = RitaSessionState()
+    state.observe_user_turn("ما فهمت ولا كلمة")
+    state.observe_user_turn("مش فاهم")
+    assert "Change method completely" in state.turn_note()
+
+
+def test_a_complaint_is_acknowledged_not_defended():
+    state = RitaSessionState()
+    state.observe_user_turn("You are so confused. You don't understand what I say.")
+    assert state.response_type == ResponseType.COMPLAINT
+    assert "Do not defend yourself" in state.turn_note()
+
+
+def test_asking_for_every_word_is_an_explain_request_with_room_to_answer():
+    state = RitaSessionState()
+    state.observe_user_turn("فصّلي كل كلمة في الجمل")
+    assert state.response_type == ResponseType.EXPLAIN
+    assert "up to five short spoken sentences" in state.turn_note()
+
+
+def test_the_note_is_left_out_when_the_dialogue_directive_already_says_it():
+    state = RitaSessionState()
+    state.observe_user_turn("ما فهمت ولا كلمة")
+    assert state.turn_directive()
+    assert state.turn_note(dialogue=True) == ""
+
+
+def test_not_talking_about_a_letter_is_remembered_as_a_rejected_meaning():
+    state = RitaSessionState()
+    state.observe_user_turn("I wasn't talking about P")
+    assert state.rejected_interpretations == ["P"]
+    assert "P" in state.turn_directive()
+
+
+def test_i_did_not_understand_is_not_understood():
+    state = RitaSessionState()
+    for text in ("ما فهمت ولا كلمة", "I don't understand", "ich verstehe nicht"):
+        state.observe_user_turn(text)
+        assert state.understood is False, text
+    state.observe_user_turn("فهمت، شكراً")
+    assert state.understood is True
