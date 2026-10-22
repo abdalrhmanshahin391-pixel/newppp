@@ -190,31 +190,75 @@ async def ask(client, case: Case) -> str:
     return (response.choices[0].message.content or "").strip()
 
 
-async def main() -> int:
+async def run_probe() -> dict[str, object]:
+    """Run every fixed case and return a serializable, secret-free report."""
+
     key = os.getenv("GROQ_API_KEY", "").strip()
     if not key:
-        print("GROQ_API_KEY is not set", file=sys.stderr)
-        return 1
+        return {
+            "outcome": "secret_missing",
+            "passed": 0,
+            "failed": len(CASES),
+            "total": len(CASES),
+            "cases": [],
+        }
     from openai import AsyncOpenAI
 
     client = AsyncOpenAI(api_key=key, base_url="https://api.groq.com/openai/v1")
-    failed = 0
+    results: list[dict[str, object]] = []
     for case in CASES:
         try:
             reply = await ask(client, case)
         except Exception as error:  # a network or quota problem is a failure of the run, not a pass
-            print(f"ERROR {case.id}: {type(error).__name__}")
-            failed += 1
+            results.append(
+                {
+                    "id": case.id,
+                    "passed": False,
+                    "problems": [f"request error: {type(error).__name__}"],
+                }
+            )
             continue
         problems = check_reply(case, reply)
-        print(f"{'FAIL' if problems else 'PASS'} {case.id}")
+        result: dict[str, object] = {
+            "id": case.id,
+            "passed": not problems,
+            "problems": problems,
+        }
         if problems:
-            failed += 1
-            for problem in problems:
-                print(f"     - {problem}")
-            print(f"     reply: {reply[:240]!r}")
-    print(f"\n{len(CASES) - failed} of {len(CASES)} cases passed")
-    return failed
+            # These probes use only the fixed synthetic prompts above. A short preview
+            # makes failures actionable without sending real learner content to CI.
+            result["reply_preview"] = reply[:240]
+        results.append(result)
+
+    failed = sum(not bool(result["passed"]) for result in results)
+    return {
+        "outcome": "ok" if failed == 0 else "failed",
+        "passed": len(CASES) - failed,
+        "failed": failed,
+        "total": len(CASES),
+        "cases": results,
+    }
+
+
+def print_result(result: dict[str, object]) -> int:
+    """Print the stable human-readable report and return its failure count."""
+
+    if result.get("outcome") == "secret_missing":
+        print("GROQ_API_KEY is not set in the Modal secret", file=sys.stderr)
+        return int(result.get("failed", 1))
+    for item in result.get("cases", []):
+        case = dict(item)
+        print(f"{'PASS' if case.get('passed') else 'FAIL'} {case.get('id')}")
+        for problem in case.get("problems", []):
+            print(f"     - {problem}")
+        if case.get("reply_preview"):
+            print(f"     reply: {case['reply_preview']!r}")
+    print(f"\n{result.get('passed', 0)} of {result.get('total', len(CASES))} cases passed")
+    return int(result.get("failed", 1))
+
+
+async def main() -> int:
+    return print_result(await run_probe())
 
 
 if __name__ == "__main__":

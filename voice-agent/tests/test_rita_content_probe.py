@@ -3,7 +3,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from rita_content_probe import CASES, Case, case_prompt_and_options, check_reply, count_sentences
+from rita_content_probe import (
+    CASES,
+    Case,
+    case_prompt_and_options,
+    check_reply,
+    count_sentences,
+    print_result,
+)
 
 
 def case(case_id):
@@ -57,3 +64,28 @@ def test_case_ids_are_unique():
     ids = [item.id for item in CASES]
     assert len(ids) == len(set(ids))
     assert all(isinstance(item, Case) for item in CASES)
+
+
+def test_structured_probe_result_prints_without_exposing_secret(capsys):
+    failed = print_result(
+        {
+            "outcome": "failed",
+            "passed": 1,
+            "failed": 1,
+            "total": 2,
+            "cases": [
+                {"id": "good", "passed": True, "problems": []},
+                {
+                    "id": "bad",
+                    "passed": False,
+                    "problems": ["wrong language"],
+                    "reply_preview": "synthetic reply",
+                },
+            ],
+        }
+    )
+    output = capsys.readouterr().out
+    assert failed == 1
+    assert "PASS good" in output
+    assert "FAIL bad" in output
+    assert "1 of 2 cases passed" in output
