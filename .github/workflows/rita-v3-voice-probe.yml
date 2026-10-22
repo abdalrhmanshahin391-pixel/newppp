@@ -9,7 +9,10 @@ permissions:
 jobs:
   voice-probe:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    # The apt and Daily wheels can take several minutes on a cold GitHub runner.
+    # Keep the actual session probe bounded in voice_probe.py instead of letting
+    # dependency installation consume the whole job timeout.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
