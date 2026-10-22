@@ -24,9 +24,13 @@ class ResponseType(StrEnum):
 
 
 class LanguageSource(StrEnum):
+    #: the learner ordered it in the conversation ("احكي معي بالإنجليزي")
     EXPLICIT = "explicit"
     STABLE_AUTO = "stable-auto"
+    #: nothing chosen yet; Rita follows the language the learner speaks
     PROFILE = "profile"
+    #: chosen on the website ("Rita explains in"); only an order or a new choice changes it
+    SITE = "site"
 
 
 _ARABIC = re.compile(r"[\u0600-\u06ff]")
@@ -108,6 +112,12 @@ class RitaSessionState:
     # Rita has already spoken (or been greeted by the scripted hello).
     assistant_turns: int = 0
     greeted: bool = False
+    # The Arabic dialect of the learner's profile, restored when the site choice goes back to automatic.
+    site_dialect: str = ""
+    # The reply language changed since Rita last answered (a live site choice or an order): she says
+    # so in one short sentence, in the new language.
+    language_changed: bool = False
+    _change_pending: bool = False
     # Interpretations explicitly rejected by the learner. Keep this tiny and bounded.
     rejected_interpretations: list[str] = field(default_factory=list)
     # The request Rita is working on and the phrase she last quoted (for "كمّل", "مرة ثانية").
@@ -115,8 +125,42 @@ class RitaSessionState:
     current_phrase: str = ""
 
     def __post_init__(self) -> None:
+        self.site_dialect = self.site_dialect or self.active_dialect
         if self.active_language in {"ar", "en", "de"}:
+            self.language_source = LanguageSource.SITE
+            self.candidate_language = self.active_language
+            self.consecutive_evidence = 2
+
+    def set_site_language(self, value: object) -> bool:
+        """The learner changed "Rita explains in" on the website, possibly mid-conversation.
+
+        It replaces whatever the conversation had set, takes effect from Rita's next answer, and
+        asks her to say so once. "automatic" gives the choice back to the language the learner speaks.
+        Returns False for a value the worker does not know.
+        """
+
+        if value not in {"automatic", "ar", "en", "de"}:
+            return False
+        before = self.reply_language()
+        if value == "automatic":
+            self.active_language = "automatic"
+            self.active_dialect = self.site_dialect or "ar-JO"
             self.language_source = LanguageSource.PROFILE
+            self.candidate_language = "unknown"
+            self.consecutive_evidence = 0
+        else:
+            self.active_language = str(value)
+            self.active_dialect = (
+                (self.site_dialect if self.site_dialect.startswith("ar") else "ar-JO")
+                if value == "ar"
+                else "en-GB" if value == "en" else "standard"
+            )
+            self.language_source = LanguageSource.SITE
+            self.candidate_language = str(value)
+            self.consecutive_evidence = 2
+        if self.reply_language() != before:
+            self._change_pending = True
+        return True
 
     def _apply_explicit_language(self, text: str) -> bool:
         """Lock the reply language on an order such as "احكي معي بالإنجليزي"; see rita_language_commands."""
@@ -124,6 +168,8 @@ class RitaSessionState:
         command = detect_language_command(text, how_to_say=asks_how_to_say(text))
         if command is None:
             return False
+        if command.language != self.reply_language():
+            self.language_changed = True
         self.active_language = command.language
         self.active_dialect = command.dialect
         self.language_source = LanguageSource.EXPLICIT
@@ -132,7 +178,10 @@ class RitaSessionState:
         return True
 
     def _update_stable_language(self, inferred: str) -> None:
-        if inferred == "unknown" or self.language_source == LanguageSource.EXPLICIT:
+        if inferred == "unknown" or self.language_source in (
+            LanguageSource.EXPLICIT,
+            LanguageSource.SITE,
+        ):
             return
         if inferred == self.candidate_language:
             self.consecutive_evidence += 1
@@ -147,6 +196,8 @@ class RitaSessionState:
     def observe_user_turn(self, text: str) -> None:
         clean = re.sub(r"\s+", " ", text).strip()
         lowered = clean.casefold()
+        # A live site choice made since the last turn is announced on this one.
+        self.language_changed, self._change_pending = self._change_pending, False
         self.recent_user_turns = (self.recent_user_turns + [clean])[-8:]
         self._observe_act(clean)
         self.asked_how_to_say = asks_how_to_say(clean)
@@ -346,6 +397,13 @@ class RitaSessionState:
             line = f"REPLY LANGUAGE: {LANGUAGE_NAMES[language].upper()}. Write every explanation in {LANGUAGE_NAMES[language]}."
             if self.language_source == LanguageSource.EXPLICIT:
                 line += " The learner asked for this; keep it until they ask for another language."
+            elif self.language_source == LanguageSource.SITE:
+                line += " The learner chose this on the website; keep it unless they ask for another language."
+            if self.language_changed:
+                line += (
+                    f" The reply language just changed: first say so in one short sentence in "
+                    f"{LANGUAGE_NAMES[language]}, then answer."
+                )
         if target_name:
             line += f" EXAMPLES AND TARGET PHRASES IN: {target_name.upper()}; do not translate them unless asked."
         return line

@@ -3289,6 +3289,52 @@ body:has(.rh-learn-home) {
   border-width: 1.5px;
 }
 
+/* A small choice of two to four options (the live page's "Rita explains in"). Radio buttons in a
+   row; the chosen one carries the accent, the others stay quiet. 44px high for touch. */
+.edith-premium .rita-choice {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 6px;
+}
+.edith-premium .rita-choice > button {
+  min-height: 44px;
+  padding-inline: 10px;
+  border: 1px solid var(--pp-line);
+  border-radius: 8px;
+  background: var(--pp-grey);
+  color: var(--pp-ink);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  transition:
+    background-color 150ms var(--pp-ease),
+    border-color 150ms var(--pp-ease),
+    transform 100ms var(--pp-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .edith-premium .rita-choice > button[aria-checked="false"]:hover {
+    background: var(--pp-accent-soft);
+  }
+}
+.edith-premium .rita-choice > button[aria-checked="true"] {
+  border: 2px solid var(--pp-accent);
+  background: var(--pp-accent-soft);
+  color: var(--pp-accent-text);
+}
+.edith-premium .rita-choice > button:active {
+  transform: scale(0.98);
+}
+.edith-premium .rita-choice > button:focus-visible {
+  outline: 2px solid var(--pp-ink);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .edith-premium .rita-choice > button {
+    transition: none;
+  }
+}
+
 /* ===========================================================================
    Home page: live demo, topic strip, voice band, lesson path, FAQ.
    Scope: .edith-premium. Motion budget: one authored sequence in the hero,
