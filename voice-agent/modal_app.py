@@ -112,6 +112,15 @@ async def diagnose_gemini_latency() -> dict[str, Any]:
     return result.public_dict()
 
 
+@app.function(secrets=secrets, timeout=300, region="eu")
+async def diagnose_content_probe() -> dict[str, Any]:
+    """Ask the production LLM the fixed content corpus using Modal's private secret."""
+
+    from rita_content_probe import run_probe
+
+    return await run_probe()
+
+
 @app.function(secrets=secrets, timeout=45)
 async def diagnose_cartesia_tts() -> dict[str, Any]:
     """Privately verify Layan produces Arabic and German PCM; never return audio or secrets."""
@@ -274,6 +283,17 @@ def latency_probe() -> None:
     """Run one paid, four-request diagnostic and print only its safe timing result."""
 
     print(json.dumps(diagnose_gemini_latency.remote(), ensure_ascii=False, indent=2))
+
+
+@app.local_entrypoint()
+def content_probe() -> None:
+    """Run the content corpus in Modal and fail the command when any case fails."""
+
+    from rita_content_probe import print_result
+
+    failed = print_result(diagnose_content_probe.remote())
+    if failed:
+        raise SystemExit(min(failed, 125))
 
 
 @app.local_entrypoint()

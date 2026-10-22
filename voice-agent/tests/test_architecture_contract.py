@@ -110,6 +110,21 @@ def test_gemini_sdk_version_is_reproducible_and_private_probe_is_not_public_endp
     assert "min_containers" not in latency_probe_decorator
 
 
+def test_content_probe_uses_the_private_modal_secret_and_has_no_public_endpoint():
+    modal_app = (ROOT / "modal_app.py").read_text(encoding="utf-8")
+    workflow = (ROOT.parent / ".github" / "workflows" / "rita-content-probe.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "async def diagnose_content_probe()" in modal_app
+    decorator = modal_app.split("async def diagnose_content_probe()", 1)[0].rsplit(
+        "@app.function", 1
+    )[-1]
+    assert "secrets=secrets" in decorator
+    assert "fastapi_endpoint" not in decorator
+    assert "modal run modal_app.py::content_probe" in workflow
+    assert "secrets.GROQ_API_KEY" not in workflow
+
+
 def test_every_local_worker_module_is_shipped_to_modal():
     import modal_app
 
