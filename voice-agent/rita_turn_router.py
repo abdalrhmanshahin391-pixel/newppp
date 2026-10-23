@@ -181,6 +181,11 @@ class RitaTurnRouter(FrameProcessor):
         self._session_id = session_id
         self._trace_id = trace_id
         self._turn_id = turn_id or (lambda: 0)
+        # The user aggregator normally sends every committed context here once. A
+        # confirmed interruption can race the final transcript in Pipecat 0.0.105;
+        # bot.py uses this monotonic marker to retry only a context that never
+        # reached the router, without duplicating an ordinary model call.
+        self.last_routed_context_size = 0
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
@@ -198,6 +203,7 @@ class RitaTurnRouter(FrameProcessor):
             if text is None:
                 await self.push_frame(frame, direction)
                 return
+            self.last_routed_context_size = len(frame.context.get_messages())
             if self.mode == RouterMode.ON:
                 # One place updates the state and the system prompt, before the model reads it.
                 self._prepare_turn(text)

@@ -616,6 +616,23 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         if router_state != RouterMode.ON:
             # With the router on, it prepares the turn itself before the model reads it.
             prepare_turn(message.content)
+        elif (
+            message.content.strip()
+            and router.last_routed_context_size < len(context.get_messages())
+        ):
+            # Pipecat 0.0.105 can broadcast a confirmed interruption while the
+            # final transcript is still closing the turn. In that race the user
+            # message is committed, but its first context frame is cancelled before
+            # reaching the router, leaving Rita silent. Retry exactly that committed
+            # context once; normal turns already advanced the router marker and do
+            # not enter this branch.
+            logger.warning(
+                "Rita recovering committed turn that missed the router "
+                "context_size={} last_routed_context_size={}",
+                len(context.get_messages()),
+                router.last_routed_context_size,
+            )
+            await aggregator.push_context_frame()
         logger.bind(
             session_id=session_id,
             trace_id=latency.trace_id or None,

@@ -127,6 +127,18 @@ class RouterProcessorTests(unittest.TestCase):
         self.assertEqual(names, ["LLMContextFrame"])
         self.assertEqual(prepared, ["شو معنى صباح الخير بالألماني؟"])
 
+    def test_router_records_the_exact_context_size_it_processed(self):
+        state = RitaSessionState()
+        context = context_with("استني، مش فاهم.")
+        router = RitaTurnRouter(
+            state=state,
+            prepare_turn=lambda text: state.observe_user_turn(text),
+            language_of_turn=lambda: "ar",
+            mode=RouterMode.ON,
+        )
+        asyncio.run(run_test(router, frames_to_send=[LLMContextFrame(context=context)]))
+        self.assertEqual(router.last_routed_context_size, len(context.get_messages()))
+
     def test_shadow_mode_decides_but_changes_nothing(self):
         for text in ("خلص", "أمم", "إيه"):
             with self.subTest(text=text):
