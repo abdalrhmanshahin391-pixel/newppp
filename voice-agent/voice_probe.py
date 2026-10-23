@@ -341,11 +341,14 @@ def run(
                 if speech_end_offset_ms is not None
                 else end
             )
-            # espeak WAVs can carry a long silent tail. Rita may correctly answer
-            # during that tail; measure from the last spoken sample instead of
-            # discarding that fast answer as if it preceded the learner's speech.
+            # The remote speaker only contains Rita's audio. Since the prior
+            # answer has already gone quiet and `baseline` was captured before
+            # this upload, any fresh onset after the input begins belongs to this
+            # turn, even when the provider finalizes before the WAV stream drains.
+            # That is common with the synthetic espeak tail and must not be
+            # discarded as a false negative.
             first = wait_for_onset(
-                capture, baseline, speech_end, min(deadline, speech_end + 12)
+                capture, baseline, stream_started, min(deadline, end + 12)
             )
             turns.append({
                 "prompt_file": name,
@@ -357,8 +360,9 @@ def run(
                 "input_started_utc": input_started_utc,
                 "input_ended_utc": input_ended_utc,
                 "first_candidate_audio_after_input_ms": (
-                    round((first - speech_end) * 1000) if first else None
+                    round((first - stream_started) * 1000) if first else None
                 ),
+                "response_started_before_input_stream_finished": bool(first and first < end),
                 "candidate_audio": first is not None,
             })
             if first is None:
@@ -403,7 +407,7 @@ def run(
         "notes": [
             "Synthetic voice; not a dialect-quality or iPad speaker measurement.",
             "First non-silent received PCM is not proof that a person heard the sound.",
-            "Response onset is measured after the last audible input sample, not after WAV tail silence.",
+            "Response onset is measured from input start; a fresh remote onset may arrive before the synthetic WAV stream drains.",
             "An audio onset after input ends is not proof of a response to that input; correlate with worker turn IDs.",
             "No retry; a failed/empty turn remains visible as a failure.",
             "The bot must join Daily before any test speech is transmitted.",
