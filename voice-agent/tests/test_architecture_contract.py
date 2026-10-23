@@ -160,3 +160,11 @@ def test_bounded_end_of_turn_commit_is_wired_and_cancellable():
     policy = (ROOT / "rita_turn_policy.py").read_text(encoding="utf-8")
     assert "_handle_vad_user_started_speaking" in policy  # new speech must cancel a pending commit
     assert "MAX_BOUNDED_COMMIT_SECS" in policy
+
+
+def test_a_committed_interruption_is_retried_only_when_it_missed_the_router():
+    bot = (ROOT / "bot.py").read_text(encoding="utf-8")
+    router = (ROOT / "rita_turn_router.py").read_text(encoding="utf-8")
+    assert "last_routed_context_size" in router
+    assert "router.last_routed_context_size < len(context.get_messages())" in bot
+    assert "await aggregator.push_context_frame()" in bot
