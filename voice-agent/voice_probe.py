@@ -73,7 +73,11 @@ def utc_now() -> str:
 
 
 def start_session(
-    key: str, agent: str, modal_start_url: str = "", modal_start_token: str = ""
+    key: str,
+    agent: str,
+    modal_start_url: str = "",
+    modal_start_token: str = "",
+    use_modal_rpc: bool = False,
 ) -> tuple[str, str, str, float, str, str]:
     """Start exactly one probe through the selected production entry point.
 
@@ -94,6 +98,22 @@ def start_session(
         # Normal production sessions remain controlled by the Modal env flag.
         "trimLeadingSilence": True,
     }
+    if use_modal_rpc:
+        from modal import Function
+
+        started = time.monotonic()
+        data = Function.from_name("ritajet-voice", "prepare_voice_probe").remote()
+        if not data.get("dailyRoom") or not data.get("dailyToken"):
+            raise RuntimeError("Modal voice probe omitted Daily room or token")
+        diagnostics = data.get("diagnostics") if isinstance(data.get("diagnostics"), dict) else {}
+        return (
+            data["dailyRoom"],
+            data["dailyToken"],
+            str(data.get("sessionId", "")),
+            time.monotonic() - started,
+            "modal-rpc",
+            str(diagnostics.get("traceId") or trace_id),
+        )
     use_modal = bool(modal_start_url and modal_start_token)
     address = modal_start_url if use_modal else f"https://api.pipecat.daily.co/v1/public/{agent}/start"
     body = json.dumps(
@@ -205,6 +225,7 @@ def run(
     agent: str,
     modal_start_url: str = "",
     modal_start_token: str = "",
+    use_modal_rpc: bool = False,
 ) -> dict:
     from daily import CallClient, Daily, EventHandler
 
@@ -213,7 +234,7 @@ def run(
     session_started_utc = utc_now()
     session_started_at = time.monotonic()
     room, token, session_id, start_seconds, start_backend, trace_id = start_session(
-        key, agent, modal_start_url, modal_start_token
+        key, agent, modal_start_url, modal_start_token, use_modal_rpc
     )
     Daily.init()
     mic = Daily.create_microphone_device("rita-qa-mic", sample_rate=SAMPLE_RATE, channels=1)
@@ -365,9 +386,16 @@ def main():
     key = os.environ.get("PIPECAT_PUBLIC_API_KEY", "").strip()
     modal_start_url = os.environ.get("RITA_PROBE_START_URL", "").strip()
     modal_start_token = os.environ.get("RITA_PROBE_START_TOKEN", "").strip()
-    if not key and not (modal_start_url and modal_start_token):
+    use_modal_rpc = os.environ.get("RITA_PROBE_USE_MODAL_RPC", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+    if not key and not use_modal_rpc and not (modal_start_url and modal_start_token):
         raise SystemExit(
-            "Set PIPECAT_PUBLIC_API_KEY, or set both RITA_PROBE_START_URL and RITA_PROBE_START_TOKEN."
+            "Set PIPECAT_PUBLIC_API_KEY, enable RITA_PROBE_USE_MODAL_RPC, or set both "
+            "RITA_PROBE_START_URL and RITA_PROBE_START_TOKEN."
         )
     result = run(
         args.input_dir,
@@ -376,6 +404,7 @@ def main():
         args.agent,
         modal_start_url,
         modal_start_token,
+        use_modal_rpc,
     )
     (args.output_dir / "metrics.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(json.dumps(result, indent=2))
