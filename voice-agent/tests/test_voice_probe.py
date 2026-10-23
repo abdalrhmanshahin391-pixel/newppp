@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from voice_probe import (
     first_non_silent_offset_ms,
     is_remote_participant,
+    last_non_silent_end_offset_ms,
     probe_succeeded,
     wait_for_onset,
     wait_for_quiet,
@@ -18,6 +19,11 @@ class VoiceProbeTest(unittest.TestCase):
 
     def test_rejects_silence(self):
         self.assertIsNone(first_non_silent_offset_ms(b"\x00\x00" * 160, 16000))
+
+    def test_detects_speech_end_before_file_tail_silence(self):
+        audio = b"\x00\x00" * 80 + b"\xe8\x03" * 160 + b"\x00\x00" * 320
+        self.assertEqual(last_non_silent_end_offset_ms(audio, 16000), 15)
+        self.assertIsNone(last_non_silent_end_offset_ms(b"\x00\x00" * 160, 16000))
 
     def test_ready_only_for_remote_participant(self):
         self.assertTrue(is_remote_participant({"id": "bot-id", "info": {"isLocal": False}}))
