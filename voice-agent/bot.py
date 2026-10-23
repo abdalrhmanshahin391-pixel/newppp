@@ -9,6 +9,7 @@ an incomplete experiment can never be mistaken for the approved architecture.
 
 from __future__ import annotations
 
+import asyncio
 import os
 from typing import Any
 
@@ -616,23 +617,26 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         if router_state != RouterMode.ON:
             # With the router on, it prepares the turn itself before the model reads it.
             prepare_turn(message.content)
-        elif (
-            message.content.strip()
-            and router.last_routed_context_size < len(context.get_messages())
-        ):
-            # Pipecat 0.0.105 can broadcast a confirmed interruption while the
-            # final transcript is still closing the turn. In that race the user
-            # message is committed, but its first context frame is cancelled before
-            # reaching the router, leaving Rita silent. Retry exactly that committed
-            # context once; normal turns already advanced the router marker and do
-            # not enter this branch.
-            logger.warning(
-                "Rita recovering committed turn that missed the router "
-                "context_size={} last_routed_context_size={}",
-                len(context.get_messages()),
-                router.last_routed_context_size,
-            )
-            await aggregator.push_context_frame()
+        elif message.content.strip():
+            committed_context_size = len(context.get_messages())
+
+            async def recover_if_still_unrouted() -> None:
+                # This event fires before the already-queued context frame reaches
+                # the downstream router. Yield long enough for that normal path to
+                # run, then retry only if its monotonic marker is still behind.
+                # Running the check inline duplicated every healthy model call.
+                await asyncio.sleep(0.15)
+                if router.last_routed_context_size >= committed_context_size:
+                    return
+                logger.warning(
+                    "Rita recovering committed turn that missed the router "
+                    "context_size={} last_routed_context_size={}",
+                    committed_context_size,
+                    router.last_routed_context_size,
+                )
+                await aggregator.push_context_frame()
+
+            asyncio.create_task(recover_if_still_unrouted())
         logger.bind(
             session_id=session_id,
             trace_id=latency.trace_id or None,

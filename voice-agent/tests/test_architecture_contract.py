@@ -166,5 +166,8 @@ def test_a_committed_interruption_is_retried_only_when_it_missed_the_router():
     bot = (ROOT / "bot.py").read_text(encoding="utf-8")
     router = (ROOT / "rita_turn_router.py").read_text(encoding="utf-8")
     assert "last_routed_context_size" in router
-    assert "router.last_routed_context_size < len(context.get_messages())" in bot
+    assert "committed_context_size = len(context.get_messages())" in bot
+    assert "await asyncio.sleep(0.15)" in bot
+    assert "router.last_routed_context_size >= committed_context_size" in bot
+    assert "asyncio.create_task(recover_if_still_unrouted())" in bot
     assert "await aggregator.push_context_frame()" in bot
