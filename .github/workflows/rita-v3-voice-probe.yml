@@ -22,7 +22,7 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq espeak-ng ffmpeg
-          python -m pip install --disable-pip-version-check daily-python==0.33.0
+          python -m pip install --disable-pip-version-check daily-python==0.33.0 modal
       - name: Synthesize bounded test prompts
         shell: bash
         run: |
@@ -37,20 +37,17 @@ jobs:
           ffmpeg -v error -i /tmp/interrupt.wav -ar 16000 -ac 1 -sample_fmt s16 voice-probe-input/04-interrupt.wav
       - name: Show which probe settings are present (names only, never values)
         env:
-          PIPECAT_PUBLIC_API_KEY: ${{ secrets.PIPECAT_PUBLIC_API_KEY }}
-          RITA_PROBE_START_URL: ${{ secrets.RITA_PROBE_START_URL }}
-          RITA_PROBE_START_TOKEN: ${{ secrets.RITA_PROBE_START_TOKEN }}
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
         run: |
-          for name in PIPECAT_PUBLIC_API_KEY RITA_PROBE_START_URL RITA_PROBE_START_TOKEN; do
+          for name in MODAL_TOKEN_ID MODAL_TOKEN_SECRET; do
             if [ -n "${!name}" ]; then echo "$name: set"; else echo "$name: MISSING"; fi
           done
-      - name: Probe one Pipecat session (120s readiness plus 60s voice, no retry)
+      - name: Probe one deployed Modal session (120s readiness plus 60s voice, no retry)
         env:
-          PIPECAT_PUBLIC_API_KEY: ${{ secrets.PIPECAT_PUBLIC_API_KEY }}
-          # When these two optional repository secrets are set, the probe uses
-          # the same Modal start endpoint as production rather than Pipecat Cloud.
-          RITA_PROBE_START_URL: ${{ secrets.RITA_PROBE_START_URL }}
-          RITA_PROBE_START_TOKEN: ${{ secrets.RITA_PROBE_START_TOKEN }}
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+          RITA_PROBE_USE_MODAL_RPC: "1"
         run: python voice-agent/voice_probe.py --input-dir voice-probe-input --output-dir voice-probe-output
       - name: Retain synthetic recording and measurements for review
         if: always()

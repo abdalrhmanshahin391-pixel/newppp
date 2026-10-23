@@ -125,6 +125,24 @@ def test_content_probe_uses_the_private_modal_secret_and_has_no_public_endpoint(
     assert "secrets.GROQ_API_KEY" not in workflow
 
 
+def test_voice_probe_uses_authenticated_modal_rpc_instead_of_a_shared_start_token():
+    modal_app = (ROOT / "modal_app.py").read_text(encoding="utf-8")
+    probe = (ROOT / "voice_probe.py").read_text(encoding="utf-8")
+    workflow = (ROOT.parent / ".github" / "workflows" / "rita-v3-voice-probe.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "async def prepare_voice_probe()" in modal_app
+    decorator = modal_app.split("async def prepare_voice_probe()", 1)[0].rsplit(
+        "@app.function", 1
+    )[-1]
+    assert "secrets=secrets" in decorator
+    assert "fastapi_endpoint" not in decorator
+    assert 'Function.from_name("ritajet-voice", "prepare_voice_probe").remote()' in probe
+    assert 'RITA_PROBE_USE_MODAL_RPC: "1"' in workflow
+    assert "secrets.RITA_PROBE_START_TOKEN" not in workflow
+    assert "secrets.RITA_PROBE_START_URL" not in workflow
+
+
 def test_every_local_worker_module_is_shipped_to_modal():
     import modal_app
 

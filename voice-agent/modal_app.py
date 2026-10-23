@@ -439,19 +439,10 @@ async def _daily_post(session, path: str, payload: dict[str, Any]) -> dict[str, 
         return data
 
 
-@app.function(secrets=secrets, min_containers=1, scaledown_window=300)
-@modal.fastapi_endpoint(method="POST", docs=False)
-async def start_session(payload: dict[str, Any]):
-    """Create a Daily room, start Rita in the background and return the learner's token."""
+async def _create_session(body: dict[str, Any]) -> dict[str, Any]:
+    """Create one production-equivalent Daily room and start the deployed worker."""
     import aiohttp
-    from fastapi import HTTPException
 
-    expected = os.environ.get("RITA_MODAL_TOKEN", "").strip()
-    supplied = str(payload.get("token") or "").strip()
-    if not expected or not hmac.compare_digest(expected, supplied):
-        raise HTTPException(status_code=401, detail="unauthorized")
-
-    body = payload.get("body") if isinstance(payload.get("body"), dict) else {}
     session_id = str(body.get("appSessionId") or uuid.uuid4())
     trace_id = str(body.get("traceId") or "")[:64]
     expires = int(time.time()) + ROOM_LIFETIME_SECS
@@ -501,3 +492,34 @@ async def start_session(payload: dict[str, Any]):
             "modalTotalMs": round((time.perf_counter() - started_at) * 1000, 2),
         },
     }
+
+
+@app.function(secrets=secrets, timeout=30)
+async def prepare_voice_probe() -> dict[str, Any]:
+    """Start the fixed synthetic canary through authenticated Modal RPC."""
+    return await _create_session(
+        {
+            "appSessionId": str(uuid.uuid4()),
+            "traceId": str(uuid.uuid4()),
+            "language": "automatic",
+            "dialect": "ar-JO",
+            "mode": "free_conversation",
+            "personality": "kind",
+            "trimLeadingSilence": True,
+        }
+    )
+
+
+@app.function(secrets=secrets, min_containers=1, scaledown_window=300)
+@modal.fastapi_endpoint(method="POST", docs=False)
+async def start_session(payload: dict[str, Any]):
+    """Create a Daily room, start Rita in the background and return the learner's token."""
+    from fastapi import HTTPException
+
+    expected = os.environ.get("RITA_MODAL_TOKEN", "").strip()
+    supplied = str(payload.get("token") or "").strip()
+    if not expected or not hmac.compare_digest(expected, supplied):
+        raise HTTPException(status_code=401, detail="unauthorized")
+
+    body = payload.get("body") if isinstance(payload.get("body"), dict) else {}
+    return await _create_session(body)
