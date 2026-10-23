@@ -42,6 +42,21 @@ def first_non_silent_offset_ms(audio: bytes, sample_rate: int, threshold: int = 
     return None
 
 
+def last_non_silent_end_offset_ms(
+    audio: bytes, sample_rate: int, threshold: int = 500
+) -> float | None:
+    """Return the end of the last audible PCM16 sample, excluding file-tail silence."""
+
+    if sample_rate <= 0 or len(audio) < 2:
+        return None
+    samples = array("h")
+    samples.frombytes(audio[: len(audio) - len(audio) % 2])
+    for index in range(len(samples) - 1, -1, -1):
+        if abs(samples[index]) >= threshold:
+            return (index + 1) * 1000 / sample_rate
+    return None
+
+
 def read_wav(path: Path) -> bytes:
     with wave.open(str(path), "rb") as source:
         if (source.getnchannels(), source.getsampwidth(), source.getframerate()) != (1, 2, SAMPLE_RATE):
@@ -316,16 +331,34 @@ def run(
                 if not interrupt_sent_during_audio:
                     raise RuntimeError("Interruption was not sent during bot audio")
             input_started_utc = utc_now()
+            stream_started = time.monotonic()
             send_wav(mic, wav, deadline)
             end = time.monotonic()
             input_ended_utc = utc_now()
-            first = wait_for_onset(capture, baseline, end, min(deadline, end + 12))
+            speech_end_offset_ms = last_non_silent_end_offset_ms(wav, SAMPLE_RATE)
+            speech_end = (
+                min(end, stream_started + speech_end_offset_ms / 1000)
+                if speech_end_offset_ms is not None
+                else end
+            )
+            # espeak WAVs can carry a long silent tail. Rita may correctly answer
+            # during that tail; measure from the last spoken sample instead of
+            # discarding that fast answer as if it preceded the learner's speech.
+            first = wait_for_onset(
+                capture, baseline, speech_end, min(deadline, speech_end + 12)
+            )
             turns.append({
                 "prompt_file": name,
                 "input_duration_ms": round(len(wav) / 2 / SAMPLE_RATE * 1000),
+                "input_speech_duration_ms": (
+                    round(speech_end_offset_ms) if speech_end_offset_ms is not None else None
+                ),
+                "trailing_silence_ms": round(max(0, (end - speech_end) * 1000)),
                 "input_started_utc": input_started_utc,
                 "input_ended_utc": input_ended_utc,
-                "first_candidate_audio_after_input_ms": round((first - end) * 1000) if first else None,
+                "first_candidate_audio_after_input_ms": (
+                    round((first - speech_end) * 1000) if first else None
+                ),
                 "candidate_audio": first is not None,
             })
             if first is None:
@@ -370,6 +403,7 @@ def run(
         "notes": [
             "Synthetic voice; not a dialect-quality or iPad speaker measurement.",
             "First non-silent received PCM is not proof that a person heard the sound.",
+            "Response onset is measured after the last audible input sample, not after WAV tail silence.",
             "An audio onset after input ends is not proof of a response to that input; correlate with worker turn IDs.",
             "No retry; a failed/empty turn remains visible as a failure.",
             "The bot must join Daily before any test speech is transmitted.",
