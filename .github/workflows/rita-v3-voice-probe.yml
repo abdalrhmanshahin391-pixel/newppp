@@ -22,16 +22,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if command -v espeak-ng >/dev/null 2>&1; then
-            echo "RITA_ESPEAK=$(command -v espeak-ng)" >> "$GITHUB_ENV"
-          elif command -v espeak >/dev/null 2>&1; then
-            echo "RITA_ESPEAK=$(command -v espeak)" >> "$GITHUB_ENV"
-          else
-            sudo timeout 120s apt-get update
-            sudo timeout 120s apt-get install -y espeak-ng
-            echo "RITA_ESPEAK=$(command -v espeak-ng)" >> "$GITHUB_ENV"
+          packages=()
+          if ! command -v espeak-ng >/dev/null 2>&1 && ! command -v espeak >/dev/null 2>&1; then
+            packages+=(espeak-ng)
           fi
-          command -v ffmpeg >/dev/null 2>&1
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            packages+=(ffmpeg)
+          fi
+          if ((${#packages[@]})); then
+            sudo timeout 120s apt-get update
+            sudo timeout 180s apt-get install -y "${packages[@]}"
+          fi
+          espeak_path="$(command -v espeak-ng || command -v espeak)"
+          ffmpeg_path="$(command -v ffmpeg)"
+          test -n "$espeak_path" && test -n "$ffmpeg_path"
+          echo "RITA_ESPEAK=$espeak_path" >> "$GITHUB_ENV"
       - name: Install pinned Daily and Modal clients
         run: timeout 480s python -m pip install --disable-pip-version-check --progress-bar off daily-python==0.33.0 modal==1.6.2
       - name: Synthesize bounded test prompts
