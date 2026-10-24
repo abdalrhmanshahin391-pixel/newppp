@@ -92,6 +92,13 @@ export const DEFAULT_LAYOUT: HubLayout = {
           icon: "KeyRound",
         },
         {
+          id: "/admin/rita-quality",
+          to: "/admin/rita-quality",
+          label: "Rita quality",
+          labelAr: "جودة ريتا",
+          icon: "ListChecks",
+        },
+        {
           id: "/admin/curricula",
           to: "/admin/curricula",
           label: "Rita lessons & curriculum",

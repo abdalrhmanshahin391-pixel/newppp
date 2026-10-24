@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -9,7 +10,7 @@ type Ui = "on" | "off";
  * off, nothing is sent to OpenAI. Only admins can read or change the setting, so for everybody else
  * this renders nothing.
  */
-export function ReviewSwitch() {
+export function ReviewSwitch({ showQualityLink = false }: { showQualityLink?: boolean }) {
   const [state, setState] = useState<Ui | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -88,6 +89,14 @@ export function ReviewSwitch() {
           </span>
         </span>
       </button>
+      {showQualityLink ? (
+        <Link
+          to="/admin/rita-quality"
+          className="mt-2 inline-flex min-h-[44px] items-center text-[15px] font-semibold text-[var(--pp-accent-text)] underline-offset-4 hover:underline"
+        >
+          See what to fix next
+        </Link>
+      ) : null}
       {error ? (
         <p role="alert" className="mt-2 text-[14px] font-semibold text-[var(--pp-accent-text)]">
           {error}
