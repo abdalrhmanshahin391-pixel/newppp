@@ -32,6 +32,7 @@ import {
   type RitaConversationMessage,
   type RitaConversationSession,
 } from "@/lib/rita-conversation";
+import { ReviewSwitch } from "@/components/rita/ReviewSwitch";
 import { ritaRepairFile, ritaRepairFileName } from "@/lib/rita-issue-report";
 
 export const Route = createFileRoute("/rita-conversations")({
@@ -121,7 +122,37 @@ async function loadRepairData(bundle: Bundle) {
     .select("id,reply_message_id,turn_ref,category,note,build,ledger,created_at")
     .eq("conversation_id", bundle.conversation.id)
     .order("created_at", { ascending: true });
-  return { events, reports: reportsError ? [] : (reports ?? []) };
+  // Only admins can read the reviews; for everybody else this is empty.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: reviews, error: reviewsError } = await (supabase as any)
+    .from("rita_turn_reviews")
+    .select(
+      "id,reply_message_id,turn_ref,trigger,status,verdict,severity,category,cause,evidence,suggestion,confidence,model,reviewed_at",
+    )
+    .eq("conversation_id", bundle.conversation.id)
+    .order("created_at", { ascending: true });
+  return {
+    events,
+    reports: reportsError ? [] : (reports ?? []),
+    reviews: reviewsError ? [] : (reviews ?? []),
+  };
+}
+
+// An admin gets the review of the conversation made right now, so the file is complete. Best
+// effort: anybody else, the switch being off or a failure just means the file is made without it.
+async function askForReview(conversationId: string) {
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return;
+    await fetch("/api/rita-v3/review", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ conversationId }),
+    });
+  } catch {
+    /* the file is still made */
+  }
 }
 
 async function saveFile(name: string, contents: string, type: string) {
@@ -274,7 +305,8 @@ function RitaConversationsPage() {
           "text/markdown;charset=utf-8",
         );
       } else if (format === "repair") {
-        const { events, reports } = await loadRepairData(bundle);
+        await askForReview(conversation.id);
+        const { events, reports, reviews } = await loadRepairData(bundle);
         await saveFile(
           ritaRepairFileName(conversation.title, conversation.id),
           `${JSON.stringify(
@@ -284,6 +316,7 @@ function RitaConversationsPage() {
               sessions: bundle.sessions,
               events,
               reports,
+              reviews,
             }),
             null,
             2,
@@ -366,6 +399,8 @@ function RitaConversationsPage() {
             New conversation
           </button>
         </div>
+
+        <ReviewSwitch />
 
         {error ? (
           <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
