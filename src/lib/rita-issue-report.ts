@@ -72,6 +72,23 @@ type ReportRow = {
   created_at: string;
 };
 
+type TurnReviewRow = {
+  id: string;
+  reply_message_id: string | null;
+  turn_ref: string | null;
+  trigger: string;
+  status: string;
+  verdict: string | null;
+  severity: number | null;
+  category: string | null;
+  cause: string | null;
+  evidence: string | null;
+  suggestion: string | null;
+  confidence: number | null;
+  model: string | null;
+  reviewed_at: string | null;
+};
+
 type MessageRow = {
   client_message_id: string;
   session_id: string | null;
@@ -83,6 +100,22 @@ type MessageRow = {
   delivery_status: string;
   created_at: string;
 };
+
+function reviewFields(review: TurnReviewRow) {
+  return {
+    trigger: review.trigger,
+    verdict: review.verdict,
+    severity: review.severity,
+    category: review.category,
+    cause: review.cause,
+    evidence: review.evidence,
+    suggestion: review.suggestion,
+    confidence: review.confidence,
+    model: review.model,
+    reviewedAt: review.reviewed_at,
+    turnRef: review.turn_ref,
+  };
+}
 
 /**
  * One file for fixing one conversation: every message with the turn record and the reports that
@@ -100,7 +133,17 @@ export function ritaRepairFile(args: {
   sessions: { id: string; status: string; started_at: string; model_proof: unknown }[];
   events: EventRow[];
   reports: ReportRow[];
+  /** The second model's review of each turn (only admins can read these). */
+  reviews?: TurnReviewRow[];
 }) {
+  const reviews = args.reviews ?? [];
+  const reviewByReply = new Map<string, TurnReviewRow>();
+  for (const review of reviews) {
+    if (review.reply_message_id && review.status === "done") {
+      reviewByReply.set(review.reply_message_id, review);
+    }
+  }
+  const usedReviews = new Set<string>();
   const ledgers = args.events
     .filter((event) => event.event_name === "turn_ledger" && event.metadata)
     .map((event) => ({ at: event.created_at, sessionId: event.session_id, ...event.metadata }));
@@ -128,6 +171,8 @@ export function ritaRepairFile(args: {
     if (ledger) usedLedgers.add(ledger);
     const reports = reportsByReply.get(message.client_message_id) ?? [];
     for (const report of reports) usedReports.add(report.id);
+    const review = reviewByReply.get(message.client_message_id) ?? null;
+    if (review) usedReviews.add(review.id);
     return {
       id: message.client_message_id,
       sessionId: message.session_id,
@@ -139,6 +184,7 @@ export function ritaRepairFile(args: {
       deliveryStatus: message.delivery_status,
       createdAt: message.created_at,
       turnRecord: ledger,
+      review: review && reviewFields(review),
       reports: reports.map((report) => ({
         id: report.id,
         category: report.category,
@@ -173,6 +219,8 @@ export function ritaRepairFile(args: {
       messages: args.messages.length,
       turnRecords: ledgers.length,
       reports: args.reports.length,
+      reviewedTurns: reviews.filter((review) => review.status === "done").length,
+      problemsFoundByReview: reviews.filter((review) => review.verdict === "problem").length,
       interruptedReplies: ledgers.filter(
         (ledger) => (ledger as Record<string, unknown>).interrupted === true,
       ).length,
@@ -182,6 +230,9 @@ export function ritaRepairFile(args: {
       }, {}),
     },
     messages,
+    unmatchedReviews: reviews
+      .filter((review) => review.status === "done" && !usedReviews.has(review.id))
+      .map(reviewFields),
     unmatchedTurnRecords: ledgers.filter((ledger) => !usedLedgers.has(ledger)),
     unmatchedReports: args.reports
       .filter((report) => !usedReports.has(report.id))

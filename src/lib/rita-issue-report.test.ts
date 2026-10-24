@@ -175,3 +175,63 @@ test("the file never carries audio or credentials and names itself safely", () =
     "rita-repair-conversation-12345678.json",
   );
 });
+
+test("the repair file carries each turn's review next to its reply", () => {
+  const file = ritaRepairFile({
+    conversation: { id: "c1", title: "T", created_at: "2026-10-24T10:00:00Z" },
+    messages: [
+      {
+        client_message_id: "r1",
+        session_id: "s1",
+        role: "assistant",
+        content: "Hallo",
+        generated_content: null,
+        spoken_content: null,
+        source: "voice",
+        delivery_status: "completed",
+        created_at: "2026-10-24T10:00:01Z",
+      },
+    ],
+    sessions: [],
+    events: [],
+    reports: [],
+    reviews: [
+      {
+        id: "v1",
+        reply_message_id: "r1",
+        turn_ref: "s1-t-1",
+        trigger: "flag",
+        status: "done",
+        verdict: "problem",
+        severity: 2,
+        category: "interrupted",
+        cause: "turn_taking",
+        evidence: "x",
+        suggestion: "y",
+        confidence: 0.9,
+        model: "m",
+        reviewed_at: "2026-10-24T10:05:00Z",
+      },
+      {
+        id: "v2",
+        reply_message_id: "gone",
+        turn_ref: null,
+        trigger: "report",
+        status: "done",
+        verdict: "ok",
+        severity: 0,
+        category: "ok",
+        cause: "unknown",
+        evidence: "",
+        suggestion: "",
+        confidence: 0.5,
+        model: "m",
+        reviewed_at: null,
+      },
+    ],
+  });
+  assert.equal(file.messages[0].review?.cause, "turn_taking");
+  assert.equal(file.summary.reviewedTurns, 2);
+  assert.equal(file.summary.problemsFoundByReview, 1);
+  assert.equal(file.unmatchedReviews.length, 1);
+});

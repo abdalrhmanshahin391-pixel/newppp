@@ -123,7 +123,7 @@ OpenTelemetry الكامل، الجداول الـ11، مهمة PDF خلفية �
 - [ ] المرحلة 0 — بانتظار مكالمة صاحب المشروع
 - [x] المرحلة 1 — اندمجت (#70): دفتر الدور، `turn_ref`، `RITA_GIT_SHA`، المقاطعة الحقيقية، حدث `turn_ledger` بالصفحة
 - [x] المرحلة 2 — اندمجت (#71): طابور محدود + دفعات + `metrics_dropped`، بدون migration
-- [~] المرحلة 3 — فرع `claude/rita-issue-reports`: زر «في مشكلة بهذا الرد» + جدول `rita_issue_reports` (migration `20261024120000`) + زر «Repair file» لكل محادثة
-- [ ] المرحلة 4
+- [x] المرحلة 3 — اندمجت (#72): زر «في مشكلة بهذا الرد» + جدول `rita_issue_reports` (migration `20261024120000`) + زر «Repair file» لكل محادثة
+- [~] المرحلة 4 — فرع `claude/rita-turn-review`: محلل OpenAI لكل دور (بدون سقف تكلفة/توكنز بطلب صاحب المشروع)، مفتاح تشغيل/إيقاف واحد لكل المحادثات (`rita_review_settings`)، جدول `rita_turn_reviews`، cron كل 5 دقائق، التحليل داخل Repair file
 - [ ] المرحلة 5
 - [ ] المرحلة 6
