@@ -4,7 +4,7 @@ import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 import { requireRitaUser } from "@/lib/rita-voice.server";
 
 /** The "Repair file" button asks for the review of one conversation right now (admin only). */
-const BUDGET_MS = 40_000;
+const BUDGET_MS = 80_000;
 
 export const Route = createFileRoute("/api/rita-v3/review")({
   server: {

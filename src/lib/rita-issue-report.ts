@@ -84,8 +84,28 @@ type TurnReviewRow = {
   cause: string | null;
   evidence: string | null;
   suggestion: string | null;
-  confidence: number | null;
+  confidence?: number | null;
   model: string | null;
+  reviewed_at: string | null;
+  rubric_version?: number | null;
+  explanation?: string | null;
+  reference_reply?: string | null;
+  reference_why?: string | null;
+  winner?: string | null;
+  scores?: { ritaAverage?: number; referenceAverage?: number } | null;
+  facts?: unknown;
+  dialect?: unknown;
+  timing?: unknown;
+  fix?: unknown;
+};
+
+type ConversationReviewRow = {
+  status: string;
+  rubric_version: number | null;
+  turns_reviewed: number;
+  model: string | null;
+  stats: unknown;
+  data: unknown;
   reviewed_at: string | null;
 };
 
@@ -108,10 +128,19 @@ function reviewFields(review: TurnReviewRow) {
     severity: review.severity,
     category: review.category,
     cause: review.cause,
+    explanation: review.explanation ?? null,
     evidence: review.evidence,
-    suggestion: review.suggestion,
-    confidence: review.confidence,
+    fix: review.fix ?? (review.suggestion ? { change: review.suggestion } : null),
+    // The comparison: Rita's own reply is the message this sits under.
+    winner: review.winner ?? null,
+    referenceReply: review.reference_reply ?? null,
+    referenceWhy: review.reference_why ?? null,
+    scores: review.scores ?? null,
+    facts: review.facts ?? null,
+    dialect: review.dialect ?? null,
+    timing: review.timing ?? null,
     model: review.model,
+    rubricVersion: review.rubric_version ?? null,
     reviewedAt: review.reviewed_at,
     turnRef: review.turn_ref,
   };
@@ -135,6 +164,8 @@ export function ritaRepairFile(args: {
   reports: ReportRow[];
   /** The second model's review of each turn (only admins can read these). */
   reviews?: TurnReviewRow[];
+  /** One review of the whole conversation (admins only). */
+  conversationReview?: ConversationReviewRow | null;
 }) {
   const reviews = args.reviews ?? [];
   const reviewByReply = new Map<string, TurnReviewRow>();
@@ -194,10 +225,57 @@ export function ritaRepairFile(args: {
       })),
     };
   });
+  const done = reviews.filter((review) => review.status === "done");
+  const count = (rows: TurnReviewRow[], pick: (row: TurnReviewRow) => string | null | undefined) =>
+    rows.reduce<Record<string, number>>((counts, row) => {
+      const key = pick(row);
+      if (key) counts[key] = (counts[key] ?? 0) + 1;
+      return counts;
+    }, {});
+  const average = (pick: (row: TurnReviewRow) => number | undefined) => {
+    const values = done.map(pick).filter((value): value is number => typeof value === "number");
+    return values.length
+      ? Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10
+      : null;
+  };
+  const problems = done.filter((review) => review.verdict === "problem");
+  const conversationReview = args.conversationReview;
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     purpose: "Rita conversation repair file",
     privacy: { rawAudioIncluded: false, credentialsIncluded: false },
+    // Read this first: the counts, then conversationReview, then every message with its review.
+    summary: {
+      messages: args.messages.length,
+      turnRecords: ledgers.length,
+      reports: args.reports.length,
+      reviewedTurns: done.length,
+      problemsFoundByReview: problems.length,
+      referenceWon: done.filter((review) => review.winner === "reference").length,
+      ritaWon: done.filter((review) => review.winner === "rita").length,
+      ties: done.filter((review) => review.winner === "tie").length,
+      averageScoreRita: average((review) => review.scores?.ritaAverage),
+      averageScoreReference: average((review) => review.scores?.referenceAverage),
+      problemsByCategory: count(problems, (review) => review.category),
+      problemsByCause: count(problems, (review) => review.cause),
+      interruptedReplies: ledgers.filter(
+        (ledger) => (ledger as Record<string, unknown>).interrupted === true,
+      ).length,
+      reportsByCategory: args.reports.reduce<Record<string, number>>((counts, report) => {
+        counts[report.category] = (counts[report.category] ?? 0) + 1;
+        return counts;
+      }, {}),
+    },
+    conversationReview: conversationReview
+      ? {
+          review: conversationReview.data,
+          stats: conversationReview.stats,
+          turnsReviewed: conversationReview.turns_reviewed,
+          model: conversationReview.model,
+          rubricVersion: conversationReview.rubric_version,
+          reviewedAt: conversationReview.reviewed_at,
+        }
+      : null,
     conversation: {
       id: args.conversation.id,
       title: args.conversation.title,
@@ -215,20 +293,6 @@ export function ritaRepairFile(args: {
       startedAt: session.started_at,
       models: session.model_proof,
     })),
-    summary: {
-      messages: args.messages.length,
-      turnRecords: ledgers.length,
-      reports: args.reports.length,
-      reviewedTurns: reviews.filter((review) => review.status === "done").length,
-      problemsFoundByReview: reviews.filter((review) => review.verdict === "problem").length,
-      interruptedReplies: ledgers.filter(
-        (ledger) => (ledger as Record<string, unknown>).interrupted === true,
-      ).length,
-      reportsByCategory: args.reports.reduce<Record<string, number>>((counts, report) => {
-        counts[report.category] = (counts[report.category] ?? 0) + 1;
-        return counts;
-      }, {}),
-    },
     messages,
     unmatchedReviews: reviews
       .filter((review) => review.status === "done" && !usedReviews.has(review.id))

@@ -127,31 +127,45 @@ async function loadRepairData(bundle: Bundle) {
   const { data: reviews, error: reviewsError } = await (supabase as any)
     .from("rita_turn_reviews")
     .select(
-      "id,reply_message_id,turn_ref,trigger,status,verdict,severity,category,cause,evidence,suggestion,confidence,model,reviewed_at",
+      "id,reply_message_id,turn_ref,trigger,status,verdict,severity,category,cause,evidence,suggestion,model,reviewed_at,rubric_version,explanation,reference_reply,reference_why,winner,scores,facts,dialect,timing,fix",
     )
     .eq("conversation_id", bundle.conversation.id)
     .order("created_at", { ascending: true });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: conversationReview } = await (supabase as any)
+    .from("rita_conversation_reviews")
+    .select("status,rubric_version,turns_reviewed,model,stats,data,reviewed_at")
+    .eq("conversation_id", bundle.conversation.id)
+    .maybeSingle();
   return {
     events,
     reports: reportsError ? [] : (reports ?? []),
     reviews: reviewsError ? [] : (reviews ?? []),
+    conversationReview: conversationReview?.status === "done" ? conversationReview : null,
   };
 }
 
 // An admin gets the review of the conversation made right now, so the file is complete. Best
 // effort: anybody else, the switch being off or a failure just means the file is made without it.
-async function askForReview(conversationId: string) {
+async function askForReview(conversationId: string): Promise<{
+  enabled?: boolean;
+  waiting?: number;
+  stopped?: string;
+  error?: string;
+} | null> {
   try {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
-    if (!token) return;
-    await fetch("/api/rita-v3/review", {
+    if (!token) return null;
+    const response = await fetch("/api/rita-v3/review", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ conversationId }),
     });
+    return response.ok || response.status >= 500 ? await response.json().catch(() => null) : null;
   } catch {
     /* the file is still made */
+    return null;
   }
 }
 
@@ -199,6 +213,9 @@ function RitaConversationsPage() {
   const [busy, setBusy] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+  // Said once after a repair file whose review was not finished (still running, or stopped).
+  const [notice, setNotice] = useState("");
+  const [busyFormat, setBusyFormat] = useState("");
   const [selected, setSelected] = useState<Bundle | null>(null);
   const [opening, setOpening] = useState("");
 
@@ -279,6 +296,7 @@ function RitaConversationsPage() {
     // or mobile browsers block it as a pop-up.
     const printTab = format === "pdf" ? window.open("", "_blank") : null;
     setOpening(conversation.id);
+    setBusyFormat(format);
     setError("");
     try {
       const bundle = await loadBundle(conversation);
@@ -305,8 +323,18 @@ function RitaConversationsPage() {
           "text/markdown;charset=utf-8",
         );
       } else if (format === "repair") {
-        await askForReview(conversation.id);
-        const { events, reports, reviews } = await loadRepairData(bundle);
+        setNotice("");
+        const review = await askForReview(conversation.id);
+        if (review?.stopped || review?.error) {
+          setNotice(
+            `The AI review stopped: ${review.stopped ?? review.error}. The file has what was finished; download again later for the rest.`,
+          );
+        } else if (review?.waiting) {
+          setNotice(
+            `The AI review is still running for ${review.waiting} more ${review.waiting === 1 ? "reply" : "replies"}. Download the file again in a few minutes for the full review.`,
+          );
+        }
+        const { events, reports, reviews, conversationReview } = await loadRepairData(bundle);
         await saveFile(
           ritaRepairFileName(conversation.title, conversation.id),
           `${JSON.stringify(
@@ -317,6 +345,7 @@ function RitaConversationsPage() {
               events,
               reports,
               reviews,
+              conversationReview,
             }),
             null,
             2,
@@ -339,6 +368,7 @@ function RitaConversationsPage() {
       setError(cause instanceof Error ? cause.message : "Could not download this conversation.");
     } finally {
       setOpening("");
+      setBusyFormat("");
     }
   }
 
@@ -402,6 +432,16 @@ function RitaConversationsPage() {
 
         <ReviewSwitch />
 
+        {notice ? (
+          <p
+            role="status"
+            aria-live="polite"
+            className="mt-4 rounded-2xl bg-[var(--pp-grey)] px-5 py-3 text-[15px] leading-[1.45] text-[var(--pp-ink)]"
+          >
+            {notice}
+          </p>
+        ) : null}
+
         {error ? (
           <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
@@ -453,10 +493,27 @@ function RitaConversationsPage() {
                   </Link>
                   <button
                     type="button"
+                    onClick={() => void download(conversation, "repair")}
+                    disabled={opening === conversation.id}
+                    aria-busy={opening === conversation.id && busyFormat === "repair"}
+                    className="rita-btn rita-btn-secondary gap-2 disabled:opacity-60"
+                    aria-label="Download repair file"
+                  >
+                    {opening === conversation.id && busyFormat === "repair" ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Wrench size={16} />
+                    )}
+                    {opening === conversation.id && busyFormat === "repair"
+                      ? "Reviewing…"
+                      : "Repair file"}
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => void download(conversation, "md")}
                     className="rita-btn rita-btn-secondary gap-2"
                   >
-                    {opening === conversation.id ? (
+                    {opening === conversation.id && busyFormat === "md" ? (
                       <Loader2 size={16} className="animate-spin" />
                     ) : (
                       <Download size={16} />
@@ -478,14 +535,6 @@ function RitaConversationsPage() {
                     aria-label="Download diagnostic JSON"
                   >
                     <FileJson size={16} /> JSON
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void download(conversation, "repair")}
-                    className="rita-btn rita-btn-secondary gap-2"
-                    aria-label="Download repair file"
-                  >
-                    <Wrench size={16} /> Repair file
                   </button>
                   <button
                     type="button"
