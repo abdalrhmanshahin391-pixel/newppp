@@ -46,6 +46,10 @@ image = (
         "python-dotenv>=1.1.0,<2",
         "fastapi[standard]",
     )
+    # The deploy workflow sets RITA_GIT_SHA; the worker puts it in every turn record, so a
+    # conversation can be tied to the exact build that handled it. Set before the local files so
+    # the (slow) pip layer stays cached.
+    .env({"RITA_GIT_SHA": os.environ.get("RITA_GIT_SHA", "")})
     .add_local_python_source(*WORKER_MODULES)
 )
 

@@ -186,6 +186,8 @@ class RitaTurnRouter(FrameProcessor):
         # bot.py uses this monotonic marker to retry only a context that never
         # reached the router, without duplicating an ordinary model call.
         self.last_routed_context_size = 0
+        #: what the router did with the last committed turn (pass, speak, stop, hold, ui)
+        self.last_action: str | None = None
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
@@ -211,6 +213,7 @@ class RitaTurnRouter(FrameProcessor):
             decision = decide(
                 text, self._state, language=self._language_of_turn(), ack=self._ack
             )
+            self.last_action = decision.action.value
         except Exception as error:  # a router bug must never silence Rita
             logger.bind(error=repr(error)).warning("Rita router failed; passing the turn through")
             if self.mode == RouterMode.ON and text is not None and not prepared:

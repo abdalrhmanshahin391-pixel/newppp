@@ -45,6 +45,7 @@ import {
 import { dbLanguage, setVoiceSessionActive } from "@/lib/language-scope";
 import { useExplanationLanguage } from "@/hooks/useExplanationLanguage";
 import type { ExplanationLanguage } from "@/lib/explanation-language";
+import { ledgerMetadata } from "@/lib/rita-turn-ledger";
 import { ExplanationLanguageControl } from "@/components/rita/ExplanationLanguageControl";
 import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rita-conversation";
 
@@ -123,6 +124,10 @@ export function RitaRealtimeV3({
   const traceId = useRef("");
   const pendingMetrics = useRef<PendingMetric[]>([]);
   const lastUserText = useRef("");
+  // The learner message Rita is answering and her latest reply, so a turn record from the worker
+  // can be tied to the two bubbles it belongs to (best effort; the turn reference is the real key).
+  const answeredUserMessageId = useRef("");
+  const lastReplyMessageId = useRef("");
   const replyAccumulator = useRef(new RitaReplyAccumulator());
   const pendingScriptedReply = useRef("");
   const botSpeaking = useRef(false);
@@ -801,6 +806,7 @@ export function RitaRealtimeV3({
         const visibleReply = interrupted ? generated || spoken : reply;
         const interruptedAt = interrupted ? spoken.length : null;
         const replyId = settled.draftId ?? crypto.randomUUID();
+        lastReplyMessageId.current = replyId;
         setMessages((current) =>
           settleDraftReply(
             current,
@@ -833,6 +839,7 @@ export function RitaRealtimeV3({
         const clean = stripModelNotes(text).trim();
         if (!clean) return;
         currentReplySource.current = "scripted";
+        answeredUserMessageId.current = learnerTurn.current.id;
         learnerTurn.current.replyStarted();
         replyAccumulator.current.clear();
         replyAccumulator.current.beginTts();
@@ -1013,6 +1020,15 @@ export function RitaRealtimeV3({
               else beginScriptedReply(text);
               return;
             }
+            if (message?.type === "rita-turn-ledger") {
+              const metadata = ledgerMetadata(message, {
+                conversationId: activeConversationId.current,
+                userMessageId: answeredUserMessageId.current,
+                replyMessageId: replyAccumulator.current.draftId || lastReplyMessageId.current,
+              });
+              if (metadata) void metric("turn_ledger", undefined, metadata);
+              return;
+            }
             if (message?.type === "rita-dialogue-act") {
               void metric("dialogue_act", undefined, {
                 act: String(message.act ?? "unknown").slice(0, 32),
@@ -1071,6 +1087,7 @@ export function RitaRealtimeV3({
           },
           onBotLlmStarted: () => {
             currentReplySource.current = "voice";
+            answeredUserMessageId.current = learnerTurn.current.id;
             learnerTurn.current.replyStarted();
             pendingScriptedReply.current = "";
             replyAccumulator.current.beginLlm();
