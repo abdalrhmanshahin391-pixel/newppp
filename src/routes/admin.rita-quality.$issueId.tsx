@@ -1,7 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Download, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, Loader2, MoreHorizontal } from "lucide-react";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
+import * as Menu from "@radix-ui/react-dropdown-menu";
+import { AdminGuide, GuideButton } from "@/components/rita-quality/AdminGuide";
+import { useGuideOpen } from "@/hooks/useGuideOpen";
 import { ExampleCard } from "@/components/rita-quality/ExampleCard";
 import { ReplaySection } from "@/components/rita-quality/ReplaySection";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +12,7 @@ import { useRitaQuality } from "@/hooks/useRitaQuality";
 import { guardRedirect } from "@/lib/guard-redirect";
 import { supabase } from "@/integrations/supabase/client";
 import { latestRuns, type ReplayRun } from "@/lib/rita-replay";
+import { STAGES, issueStage } from "@/lib/rita-quality-next";
 import { saveFile } from "@/lib/save-file";
 import {
   FIX_WHERE_LABEL,
@@ -67,6 +71,7 @@ function IssuePage() {
   const [examplesState, setExamplesState] = useState<"loading" | "ready" | "error">("loading");
   const [ratings, setRatings] = useState<Record<string, boolean>>({});
   const [shown, setShown] = useState(10);
+  const [guide, setGuide] = useGuideOpen();
   const [panel, setPanel] = useState<"" | "fixed" | "merge">("");
   const [prUrl, setPrUrl] = useState("");
   const [mergeTarget, setMergeTarget] = useState("");
@@ -283,19 +288,45 @@ function IssuePage() {
 
   const issue = row?.issue;
   const derived = row?.derived;
+  const stage = derived ? issueStage(derived.status) : null;
+  const canMarkFixed =
+    issue?.status === "open" ||
+    derived?.status === "regressed" ||
+    derived?.status === "failing" ||
+    derived?.status === "resolved";
+
+  const downloadButton = (className: string) => (
+    <button
+      type="button"
+      onClick={() => void download()}
+      disabled={examplesState !== "ready" || busy === "download"}
+      className={`rita-btn rita-btn-primary gap-2 disabled:opacity-60 ${className}`}
+    >
+      {busy === "download" ? (
+        <Loader2 size={18} className="animate-spin" />
+      ) : (
+        <Download size={18} />
+      )}
+      Download fix file
+    </button>
+  );
 
   return (
-    <main className="edith-premium min-h-screen bg-white text-[var(--pp-ink)]">
+    <main className="edith-premium min-h-screen bg-white pb-28 text-[var(--pp-ink)] sm:pb-0">
       <div className="rita-cream edith-light edith-premium">
         <ProHeader variant="solid" tone="light" />
       </div>
-      <section className="mx-auto w-full max-w-4xl px-5 pb-24 pt-8 sm:px-8 sm:pt-12">
-        <Link
-          to="/admin/rita-quality"
-          className="inline-flex min-h-[44px] items-center gap-2 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
-        >
-          <ArrowLeft size={17} /> Rita quality
-        </Link>
+      <section className="mx-auto w-full max-w-4xl px-5 pb-24 pt-6 sm:px-8 sm:pt-10">
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            to="/admin/rita-quality"
+            className="inline-flex min-h-[44px] items-center gap-2 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
+          >
+            <ArrowLeft size={17} aria-hidden="true" /> Rita quality
+          </Link>
+          <GuideButton open={guide} onToggle={() => setGuide(!guide)} />
+        </div>
+        <AdminGuide open={guide} scope="issue" />
 
         {data.state === "loading" ? (
           <div className="grid min-h-56 place-items-center" role="status" aria-label="Loading">
@@ -316,41 +347,58 @@ function IssuePage() {
           </p>
         ) : null}
 
-        {issue && derived ? (
+        {issue && derived && stage ? (
           <>
-            <h1 dir="auto" className="mt-2 text-[32px] leading-[1.2] sm:text-[42px]">
+            <h1 dir="auto" className="rh-app-title mt-3">
               {issue.title}
             </h1>
-            <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[15px] text-[var(--pp-muted)]">
-              <span className="font-semibold text-[var(--pp-ink)]">
-                {STATUS_LABEL[derived.status]}
-                {derived.status === "watching"
-                  ? ` (${derived.checked} of ${derived.needed} replies checked)`
-                  : ""}
-              </span>
-              <span>
-                {row?.reviews.length ?? 0} {row?.reviews.length === 1 ? "example" : "examples"}
-              </span>
-              <span>Fix in: {FIX_WHERE_LABEL[issue.fix_where] ?? issue.fix_where}</span>
-            </p>
             {issue.description ? (
-              <p dir="auto" className="mt-4 max-w-2xl text-[17px] leading-[1.6]">
+              <p dir="auto" className="mt-3 max-w-2xl text-[17px] leading-[1.6]">
                 {issue.description}
               </p>
             ) : null}
-            {derived.status === "regressed" ? (
+            <p className="mt-2 text-[14px] text-[var(--pp-muted)]">
+              {row?.reviews.length ?? 0} {row?.reviews.length === 1 ? "example" : "examples"} · Fix
+              in: {FIX_WHERE_LABEL[issue.fix_where] ?? issue.fix_where}
+            </p>
+
+            {stage.index !== null ? (
+              <ol aria-label="Progress" className="rita-stepper mt-6">
+                {STAGES.map((name, index) => (
+                  <li
+                    key={name}
+                    className="rita-step"
+                    data-done={index < (stage.index as number)}
+                    aria-current={index === stage.index ? "step" : undefined}
+                  >
+                    {name}
+                    {index === 2 && derived.status === "watching"
+                      ? ` ${derived.checked}/${derived.needed}`
+                      : ""}
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="mt-6 rounded-xl bg-[var(--pp-grey)] px-4 py-3 text-[15px]">
+                {STATUS_LABEL[derived.status]}.
+                {issue.status === "merged"
+                  ? " Its examples moved to another problem."
+                  : " It is hidden from the lists."}
+              </p>
+            )}
+            {stage.alert === "regressed" ? (
               <p
                 role="status"
-                className="mt-4 rounded-xl bg-[var(--pp-accent-soft)] px-4 py-3 text-[15px]"
+                className="mt-3 rounded-xl bg-[var(--pp-accent-soft)] px-4 py-3 text-[15px]"
               >
                 This came back: {derived.newProblems} new{" "}
                 {derived.newProblems === 1 ? "example" : "examples"} since the fix.
               </p>
             ) : null}
-            {derived.status === "failing" ? (
+            {stage.alert === "failing" ? (
               <p
                 role="status"
-                className="mt-4 rounded-xl bg-[var(--pp-accent-soft)] px-4 py-3 text-[15px]"
+                className="mt-3 rounded-xl bg-[var(--pp-accent-soft)] px-4 py-3 text-[15px]"
               >
                 The last test on a newer version still fails on some turns. See the test results
                 below.
@@ -359,17 +407,17 @@ function IssuePage() {
             {derived.status === "resolved" ? (
               <p
                 role="status"
-                className="mt-4 rounded-xl bg-[var(--pp-grey)] px-4 py-3 text-[15px]"
+                className="mt-3 rounded-xl bg-[var(--pp-grey)] px-4 py-3 text-[15px]"
               >
                 {derived.checked} replies were reviewed after the fix and none had this problem.
               </p>
             ) : null}
             {suggested ? (
-              <div className="mt-4 rounded-xl bg-[var(--pp-grey)] px-4 py-3 text-[15px]">
+              <div className="mt-3 rounded-xl bg-[var(--pp-grey)] px-4 py-3 text-[15px]">
                 <p dir="auto">Maybe the same problem as: {suggested.issue.title}</p>
                 <button
                   type="button"
-                  className="rita-btn rita-btn-secondary rita-btn-sm mt-2"
+                  className="rita-btn rita-btn-soft rita-btn-sm mt-2"
                   onClick={() => {
                     setMergeTarget(suggested.issue.id);
                     setPanel("merge");
@@ -380,71 +428,80 @@ function IssuePage() {
               </div>
             ) : null}
 
-            <div className="mt-6 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => void download()}
-                disabled={examplesState !== "ready" || busy === "download"}
-                className="rita-btn rita-btn-primary gap-2 disabled:opacity-60"
-              >
-                {busy === "download" ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <Download size={18} />
-                )}
-                Download fix file
-              </button>
-              {issue.status === "open" ? (
-                <button
-                  type="button"
-                  onClick={() => setPanel(panel === "fixed" ? "" : "fixed")}
-                  className="rita-btn rita-btn-secondary"
-                >
-                  I fixed this
-                </button>
-              ) : null}
-              {issue.status === "fixing" ? (
-                <button
-                  type="button"
-                  disabled={busy === "reopen"}
-                  onClick={() =>
-                    void run("reopen", () =>
-                      update({ status: "open", fix_marked_at: null, fix_baseline_build: null }),
-                    )
-                  }
-                  className="rita-btn rita-btn-secondary"
-                >
-                  Reopen
-                </button>
-              ) : null}
-              {issue.status === "not_an_issue" ? (
-                <button
-                  type="button"
-                  disabled={busy === "reopen"}
-                  onClick={() => void run("reopen", () => update({ status: "open" }))}
-                  className="rita-btn rita-btn-secondary"
-                >
-                  Reopen
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled={busy === "dismiss"}
-                  onClick={() => void run("dismiss", () => update({ status: "not_an_issue" }))}
-                  className="rita-btn rita-btn-secondary"
-                >
-                  Not a problem
-                </button>
-              )}
-              {others.length ? (
-                <button
-                  type="button"
-                  onClick={() => setPanel(panel === "merge" ? "" : "merge")}
-                  className="rita-btn rita-btn-secondary"
-                >
-                  Merge into another
-                </button>
-              ) : null}
+            <div className="mt-6">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="hidden sm:block">{downloadButton("")}</div>
+                {canMarkFixed ? (
+                  <button
+                    type="button"
+                    onClick={() => setPanel(panel === "fixed" ? "" : "fixed")}
+                    aria-expanded={panel === "fixed"}
+                    className="rita-btn rita-btn-soft"
+                  >
+                    I fixed this
+                  </button>
+                ) : null}
+                <Menu.Root>
+                  <Menu.Trigger asChild>
+                    <button
+                      type="button"
+                      aria-label="More actions"
+                      className="rita-btn rita-btn-soft rita-btn-icon"
+                    >
+                      <MoreHorizontal size={20} aria-hidden="true" />
+                    </button>
+                  </Menu.Trigger>
+                  <Menu.Portal>
+                    <Menu.Content align="start" sideOffset={6} className="edith-premium rita-menu">
+                      {issue.status === "fixing" ? (
+                        <Menu.Item
+                          className="rita-menu-item"
+                          onSelect={() =>
+                            void run("reopen", () =>
+                              update({
+                                status: "open",
+                                fix_marked_at: null,
+                                fix_baseline_build: null,
+                              }),
+                            )
+                          }
+                        >
+                          Reopen
+                          <small>Forget the fix and start counting again.</small>
+                        </Menu.Item>
+                      ) : null}
+                      {issue.status === "not_an_issue" ? (
+                        <Menu.Item
+                          className="rita-menu-item"
+                          onSelect={() => void run("reopen", () => update({ status: "open" }))}
+                        >
+                          Reopen
+                          <small>Put it back in the list.</small>
+                        </Menu.Item>
+                      ) : (
+                        <Menu.Item
+                          className="rita-menu-item"
+                          onSelect={() =>
+                            void run("dismiss", () => update({ status: "not_an_issue" }))
+                          }
+                        >
+                          Not a problem
+                          <small>Hide it from the lists.</small>
+                        </Menu.Item>
+                      )}
+                      {others.length ? (
+                        <Menu.Item className="rita-menu-item" onSelect={() => setPanel("merge")}>
+                          Merge into another
+                          <small>Join two cards that are the same problem.</small>
+                        </Menu.Item>
+                      ) : null}
+                    </Menu.Content>
+                  </Menu.Portal>
+                </Menu.Root>
+              </div>
+              <p className="mt-2 max-w-xl text-[14px] text-[var(--pp-muted)]">
+                The fix file has everything Claude needs to fix this problem. Send it to Claude.
+              </p>
             </div>
 
             {panel === "fixed" ? (
@@ -463,7 +520,7 @@ function IssuePage() {
                   className="mt-1 w-full rounded-lg border border-[var(--pp-line)] bg-white px-3 py-2 text-[16px]"
                 />
                 <p className="mt-2 text-[14px] text-[var(--pp-muted)]">
-                  From now on, replies reviewed on a newer build count as checks of this fix.
+                  From now on, replies reviewed on a newer version count as checks of this fix.
                 </p>
                 <div className="mt-3 flex gap-2">
                   <button
@@ -490,7 +547,7 @@ function IssuePage() {
                   <button
                     type="button"
                     onClick={() => setPanel("")}
-                    className="rita-btn rita-btn-secondary rita-btn-sm"
+                    className="rita-btn rita-btn-soft rita-btn-sm"
                   >
                     Cancel
                   </button>
@@ -560,7 +617,7 @@ function IssuePage() {
                   <button
                     type="button"
                     onClick={() => setPanel("")}
-                    className="rita-btn rita-btn-secondary rita-btn-sm"
+                    className="rita-btn rita-btn-soft rita-btn-sm"
                   >
                     Cancel
                   </button>
@@ -577,37 +634,8 @@ function IssuePage() {
               </p>
             ) : null}
 
-            {byBuild.length > 1 ? (
-              <section aria-labelledby="by-build" className="mt-10">
-                <h2 id="by-build" className="text-[22px] font-semibold">
-                  Problems per build
-                </h2>
-                <ul className="mt-3 grid gap-2">
-                  {[...byBuild].reverse().map((entry) => (
-                    <li
-                      key={entry.build}
-                      className="flex items-baseline justify-between gap-3 border-t border-[var(--pp-line)] py-2 text-[15px]"
-                    >
-                      <span className="font-mono text-[14px]">{entry.build.slice(0, 7)}</span>
-                      <span>
-                        {entry.problems} of {entry.reviewed} replies
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
-
-            <ReplaySection
-              run={fullRun}
-              busy={testing}
-              error={testError}
-              canTest={examples.length > 0}
-              onTest={() => void testNow()}
-            />
-
             <section aria-labelledby="examples-title" className="mt-10">
-              <h2 id="examples-title" className="text-[22px] font-semibold">
+              <h2 id="examples-title" className="text-[20px] font-semibold">
                 Examples
               </h2>
               {examplesState === "loading" ? (
@@ -643,15 +671,50 @@ function IssuePage() {
                 <button
                   type="button"
                   onClick={() => setShown((n) => n + 10)}
-                  className="rita-btn rita-btn-secondary rita-btn-sm mt-4"
+                  className="rita-btn rita-btn-soft rita-btn-sm mt-4"
                 >
                   Show 10 more
                 </button>
               ) : null}
             </section>
+
+            <ReplaySection
+              run={fullRun}
+              busy={testing}
+              error={testError}
+              canTest={examples.length > 0}
+              onTest={() => void testNow()}
+            />
+
+            {byBuild.length > 1 ? (
+              <section aria-labelledby="by-build" className="mt-10">
+                <h2 id="by-build" className="text-[20px] font-semibold">
+                  Problems per version
+                </h2>
+                <ul className="mt-3 grid gap-2">
+                  {[...byBuild].reverse().map((entry) => (
+                    <li
+                      key={entry.build}
+                      className="flex items-baseline justify-between gap-3 border-t border-[var(--pp-line)] py-2 text-[15px]"
+                    >
+                      <span className="font-mono text-[14px]">{entry.build.slice(0, 7)}</span>
+                      <span>
+                        {entry.problems} of {entry.reviewed} replies
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
           </>
         ) : null}
       </section>
+
+      {issue && derived ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--pp-line)] bg-white px-5 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 sm:hidden">
+          {downloadButton("w-full")}
+        </div>
+      ) : null}
     </main>
   );
 }

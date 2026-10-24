@@ -2,7 +2,7 @@ import { Check, X } from "lucide-react";
 import type { FixFileExample } from "@/lib/rita-quality";
 
 const WINNER: Record<string, string> = {
-  reference: "The reference reply was better",
+  reference: "A good tutor's reply was better",
   rita: "Rita's reply was better",
   tie: "About equal",
 };
@@ -63,7 +63,7 @@ export function ExampleCard({
       ) : null}
       <p className="mt-2 text-[13px] text-[var(--pp-muted)]">
         {example.winner ? (WINNER[example.winner] ?? example.winner) : "No comparison"}
-        {example.build ? ` · build ${example.build.slice(0, 7)}` : ""}
+        {example.build ? ` · version ${example.build.slice(0, 7)}` : ""}
       </p>
       <div
         role="group"
@@ -74,7 +74,7 @@ export function ExampleCard({
           type="button"
           aria-pressed={agree === true}
           onClick={() => onRate(true)}
-          className={`rita-btn rita-btn-sm gap-2 ${agree === true ? "rita-btn-primary" : "rita-btn-secondary"}`}
+          className={`rita-btn rita-btn-sm gap-2 ${agree === true ? "rita-btn-primary" : "rita-btn-soft"}`}
         >
           <Check size={16} aria-hidden="true" /> Reviewer is right
         </button>
@@ -82,7 +82,7 @@ export function ExampleCard({
           type="button"
           aria-pressed={agree === false}
           onClick={() => onRate(false)}
-          className={`rita-btn rita-btn-sm gap-2 ${agree === false ? "rita-btn-primary" : "rita-btn-secondary"}`}
+          className={`rita-btn rita-btn-sm gap-2 ${agree === false ? "rita-btn-primary" : "rita-btn-soft"}`}
         >
           <X size={16} aria-hidden="true" /> Reviewer is wrong
         </button>

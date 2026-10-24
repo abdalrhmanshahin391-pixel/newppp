@@ -17,7 +17,7 @@ const when = (iso: string | null) =>
 
 /**
  * "Test on the current version": the turns behind the issue answered again by the version running
- * now, and judged against the reference replies. A turn counts only when both of its answers are
+ * now, and judged against what a good tutor would say. A turn counts only when both of its answers are
  * good, so a lucky answer is not mistaken for a fix.
  */
 export function ReplaySection({
@@ -40,15 +40,15 @@ export function ReplaySection({
       </h2>
       <p className="mt-2 max-w-2xl text-[16px] leading-[1.5] text-[var(--pp-muted)]">
         Rita answers this problem&apos;s old turns again with the version running now, and the
-        answers are judged against the reference replies. Each turn is answered twice and counts
-        only if both answers are good.
+        answers are judged against what a good tutor would say. Each turn is answered twice and
+        counts only if both answers are good.
       </p>
       <button
         type="button"
         onClick={onTest}
         disabled={busy || !canTest}
         aria-busy={busy}
-        className="rita-btn rita-btn-secondary mt-4 gap-2 disabled:opacity-60"
+        className="rita-btn rita-btn-soft mt-4 gap-2 disabled:opacity-60"
       >
         {busy ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : null}
         {busy ? "Testing…" : "Test on current version"}
@@ -74,7 +74,7 @@ export function ReplaySection({
           <p className="text-[18px] font-semibold">{runHeadline(run)}</p>
           <p className="mt-1 text-[14px] text-[var(--pp-muted)]">
             {run.trigger === "auto" ? "Ran automatically after a new version" : "Run by you"}
-            {run.worker_build ? ` · build ${run.worker_build.slice(0, 7)}` : ""}
+            {run.worker_build ? ` · version ${run.worker_build.slice(0, 7)}` : ""}
             {run.finished_at ? ` · ${when(run.finished_at)}` : ""}
           </p>
           {run.prompt_changed === false ? (
@@ -110,7 +110,7 @@ export function ReplaySection({
                 ))}
                 {item.referenceReply ? (
                   <p dir="auto" className="mt-2 text-[14px] text-[var(--pp-accent-text)]">
-                    Reference: {item.referenceReply}
+                    Good tutor: {item.referenceReply}
                   </p>
                 ) : null}
               </li>

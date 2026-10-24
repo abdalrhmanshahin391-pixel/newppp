@@ -10,7 +10,7 @@ const when = (iso: string | null) =>
     : "";
 
 /**
- * Is the reviewer right? Two answers: how often the owner agreed with its judgements, and how it
+ * Can I trust the AI reviewer? Two answers: how often the owner agreed with its judgements, and how it
  * did on a fixed set of replies whose right answer is known. A reviewer that misses a wrong fact or
  * flags a good reply makes every number on this page doubtful, so a failed check is shown first.
  */
@@ -34,9 +34,9 @@ export function ReviewerCheckSection({
   );
   const failures = latest?.results.filter((item) => item.pass === false) ?? [];
   return (
-    <section aria-labelledby="reviewer-title" className="mt-10">
-      <h2 id="reviewer-title" className="text-[22px] font-semibold">
-        Is the reviewer right?
+    <section aria-labelledby="reviewer-title" className="mt-0">
+      <h2 id="reviewer-title" className="text-[20px] font-semibold">
+        Can I trust the AI reviewer?
       </h2>
       <p className="mt-2 max-w-2xl text-[16px] leading-[1.5] text-[var(--pp-muted)]">
         {agreement
@@ -96,7 +96,7 @@ export function ReviewerCheckSection({
         onClick={onRun}
         disabled={busy}
         aria-busy={busy}
-        className="rita-btn rita-btn-secondary mt-4 gap-2 disabled:opacity-60"
+        className="rita-btn rita-btn-soft mt-4 gap-2 disabled:opacity-60"
       >
         {busy ? <Loader2 size={18} className="animate-spin" aria-hidden="true" /> : null}
         {busy ? "Checking…" : "Check the reviewer"}

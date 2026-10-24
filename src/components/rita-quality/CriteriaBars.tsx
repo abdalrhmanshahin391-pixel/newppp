@@ -18,12 +18,12 @@ export function CriteriaBars({ health }: { health: BuildHealth }) {
   ).sort((a, b) => a.rita - a.reference - (b.rita - b.reference));
   if (!rows.length) return null;
   return (
-    <section aria-labelledby="criteria-title" className="mt-10">
-      <h2 id="criteria-title" className="text-[22px] font-semibold">
-        Where she is weakest
+    <section aria-labelledby="criteria-title" className="mt-8">
+      <h2 id="criteria-title" className="text-[20px] font-semibold">
+        Weak spots
       </h2>
       <p className="mt-1 text-[14px] text-[var(--pp-muted)]">
-        Score out of 5 on this build: Rita (blue) next to the reference reply (grey).
+        Score out of 5: Rita (blue) next to what a good tutor would say (grey).
       </p>
       <ul className="mt-4 grid gap-4 lg:grid-cols-2">
         {rows.map((row) => (
@@ -31,7 +31,7 @@ export function CriteriaBars({ health }: { health: BuildHealth }) {
             <p className="flex items-baseline justify-between gap-3 text-[15px] font-semibold">
               <span>{LABEL[row.id] ?? row.id}</span>
               <span className="text-[14px] font-normal text-[var(--pp-muted)]">
-                Rita {row.rita} · reference {row.reference}
+                Rita {row.rita} · good tutor {row.reference}
               </span>
             </p>
             <div className="mt-2 grid gap-1" aria-hidden="true">
