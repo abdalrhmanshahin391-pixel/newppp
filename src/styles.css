@@ -3329,6 +3329,175 @@ body:has(.rh-learn-home) {
   outline: 2px solid var(--pp-ink);
   outline-offset: 2px;
 }
+/* Admin tool screens (Rita quality, the admin bar): one blue primary action per view, everything
+   else quiet. "soft" is a hairline outline, "quiet" has no outline until it is hovered. */
+.edith-premium .rita-btn.rita-btn-soft {
+  border-color: var(--pp-line);
+  background-color: #fff;
+  color: var(--pp-ink);
+}
+.edith-premium .rita-btn.rita-btn-soft:hover {
+  border-color: var(--pp-ink);
+  background-color: var(--pp-grey);
+}
+.edith-premium .rita-btn.rita-btn-soft:active {
+  background-color: var(--pp-line);
+  color: var(--pp-ink);
+}
+.edith-premium .rita-btn.rita-btn-quiet {
+  border-color: transparent;
+  background-color: transparent;
+  color: var(--pp-ink);
+}
+.edith-premium .rita-btn.rita-btn-quiet:hover {
+  background-color: var(--pp-grey);
+}
+.edith-premium .rita-btn.rita-btn-quiet:active {
+  background-color: var(--pp-line);
+  color: var(--pp-ink);
+}
+.edith-premium .rita-btn.rita-btn-icon {
+  width: 44px;
+  padding-inline: 0;
+}
+
+/* Tabs: an underline row, 44px high, scrolls sideways before it ever wraps. */
+.edith-premium .rita-tabs-list {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--pp-line);
+}
+.edith-premium .rita-tab {
+  min-height: 44px;
+  padding-inline: 14px;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  color: var(--pp-muted);
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    color 150ms var(--pp-ease),
+    border-color 150ms var(--pp-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .edith-premium .rita-tab:hover {
+    color: var(--pp-ink);
+  }
+}
+.edith-premium .rita-tab[data-state="active"] {
+  border-bottom-color: var(--pp-accent);
+  color: var(--pp-ink);
+}
+.edith-premium .rita-tab:focus-visible {
+  outline: 2px solid var(--pp-ink);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+.edith-premium .rita-tab-panel:focus-visible {
+  outline: 2px solid var(--pp-ink);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+/* A menu that opens from its button (the "More" menu): 12px radius, 44px rows, a hairline. */
+.edith-premium.rita-menu,
+.rita-menu.edith-premium {
+  z-index: 60;
+  min-width: 240px;
+  max-width: min(320px, calc(100vw - 24px));
+  padding: 6px;
+  border: 1px solid var(--pp-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--pp-ink);
+  box-shadow: 0 8px 28px rgb(18 17 23 / 0.12);
+  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+  animation: rita-menu-in 160ms var(--pp-ease);
+}
+@keyframes rita-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+.rita-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  cursor: pointer;
+  outline: none;
+}
+.rita-menu-item small {
+  color: var(--pp-muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.35;
+}
+.rita-menu-item[data-highlighted] {
+  background: var(--pp-grey);
+}
+.rita-menu-item[data-disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.rita-menu-item-danger {
+  color: #b42318;
+}
+.rita-menu-sep {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--pp-line);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rita-menu {
+    animation: none;
+  }
+  .edith-premium .rita-tab {
+    transition: none;
+  }
+}
+
+/* The path of a problem: Found, Fixing, Watching, Solved. */
+.edith-premium .rita-stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.edith-premium .rita-step {
+  padding-top: 10px;
+  border-top: 4px solid var(--pp-line);
+  color: var(--pp-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+.edith-premium .rita-step[data-done="true"] {
+  border-top-color: var(--pp-accent);
+  color: var(--pp-ink);
+}
+.edith-premium .rita-step[aria-current="step"] {
+  border-top-color: var(--pp-accent);
+  color: var(--pp-accent-text);
+}
+
+/* The admin-only strip: dashed, so nobody mistakes it for part of the learner's page. */
+.edith-premium .rita-admin-bar {
+  border: 1.5px dashed var(--pp-line);
+  border-radius: 12px;
+}
+
 /* The same group stacked, for longer labels (the "Report a problem" reasons). */
 .edith-premium .rita-choice.rita-choice-stack {
   grid-auto-flow: row;

@@ -1,14 +1,11 @@
 import type { BuildHealth } from "@/lib/rita-quality";
 
-/** Every build side by side, newest first: the quickest way to see whether a release helped. */
+/**  */
 export function BuildTable({ builds }: { builds: BuildHealth[] }) {
   if (builds.length < 2) return null;
   const rows = [...builds].reverse();
   return (
-    <section aria-labelledby="builds-title" className="mt-10">
-      <h2 id="builds-title" className="text-[22px] font-semibold">
-        Build by build
-      </h2>
+    <section aria-label="Compare versions" className="mt-2">
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[420px] text-start text-[15px]">
           <thead>

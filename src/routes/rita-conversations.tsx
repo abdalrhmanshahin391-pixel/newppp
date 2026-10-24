@@ -1,17 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  ArrowLeft,
-  Download,
-  FileJson,
-  FileText,
-  Wrench,
-  Loader2,
-  MessageCircle,
-  Plus,
-  Trash2,
-  X,
-} from "lucide-react";
+import { ArrowLeft, Loader2, MessageCircle, Plus, X } from "lucide-react";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageGate } from "@/components/language/LanguageGate";
@@ -33,7 +22,9 @@ import {
   type RitaConversationSession,
 } from "@/lib/rita-conversation";
 import { saveFile } from "@/lib/save-file";
-import { ReviewSwitch } from "@/components/rita/ReviewSwitch";
+import { AdminBar } from "@/components/rita-quality/AdminBar";
+import { ConversationMenu } from "@/components/rita/ConversationMenu";
+import { reviewCounts, reviewMark } from "@/lib/rita-quality-next";
 import { ritaRepairFile, ritaRepairFileName } from "@/lib/rita-issue-report";
 
 export const Route = createFileRoute("/rita-conversations")({
@@ -187,7 +178,7 @@ function printInFrame(html: string) {
 
 function RitaConversationsPage() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
   const [conversations, setConversations] = useState<RitaConversation[]>([]);
   const [busy, setBusy] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -231,6 +222,38 @@ function RitaConversationsPage() {
   useEffect(() => {
     if (user) void refresh();
   }, [refresh, user]);
+
+  // The admin sees, on each card, how many replies were reviewed and how many had a problem.
+  const [marks, setMarks] = useState(
+    () => new Map<string, { reviewed: number; problems: number }>(),
+  );
+  useEffect(() => {
+    if (!isAdmin || !conversations.length) return;
+    let cancelled = false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    void (supabase as any)
+      .from("rita_turn_reviews")
+      .select("conversation_id,verdict")
+      .eq("status", "done")
+      .in(
+        "conversation_id",
+        conversations.map((conversation) => conversation.id),
+      )
+      .then(
+        ({
+          data,
+          error: markError,
+        }: {
+          data: { conversation_id: string; verdict: string | null }[] | null;
+          error: unknown;
+        }) => {
+          if (!cancelled && !markError) setMarks(reviewCounts(data ?? []));
+        },
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [conversations, isAdmin]);
 
   const empty = useMemo(() => !busy && conversations.length === 0, [busy, conversations.length]);
 
@@ -409,7 +432,7 @@ function RitaConversationsPage() {
           </button>
         </div>
 
-        <ReviewSwitch showQualityLink />
+        <AdminBar />
 
         {notice ? (
           <p
@@ -461,8 +484,13 @@ function RitaConversationsPage() {
                     {conversation.message_count}{" "}
                     {conversation.message_count === 1 ? "message" : "messages"}
                   </p>
+                  {isAdmin ? (
+                    <p className="mt-1 text-[14px] text-[var(--pp-muted)]">
+                      {reviewMark(marks.get(conversation.id))}
+                    </p>
+                  ) : null}
                 </button>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex items-center gap-2">
                   <Link
                     to="/rita-live"
                     search={{ conversation: conversation.id }}
@@ -470,61 +498,23 @@ function RitaConversationsPage() {
                   >
                     Continue
                   </Link>
-                  <button
-                    type="button"
-                    onClick={() => void download(conversation, "repair")}
-                    disabled={opening === conversation.id}
-                    aria-busy={opening === conversation.id && busyFormat === "repair"}
-                    className="rita-btn rita-btn-secondary gap-2 disabled:opacity-60"
-                    aria-label="Download repair file"
-                  >
-                    {opening === conversation.id && busyFormat === "repair" ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Wrench size={16} />
-                    )}
-                    {opening === conversation.id && busyFormat === "repair"
-                      ? "Reviewing…"
-                      : "Repair file"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void download(conversation, "md")}
-                    className="rita-btn rita-btn-secondary gap-2"
-                  >
-                    {opening === conversation.id && busyFormat === "md" ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      <Download size={16} />
-                    )}
-                    AI file
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void download(conversation, "pdf")}
-                    className="rita-btn rita-btn-secondary gap-2"
-                    aria-label="Download as PDF"
-                  >
-                    <FileText size={16} /> PDF
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void download(conversation, "json")}
-                    className="rita-btn rita-btn-secondary gap-2"
-                    aria-label="Download diagnostic JSON"
-                  >
-                    <FileJson size={16} /> JSON
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void removeConversation(conversation)}
-                    className="rita-btn rita-btn-secondary text-red-600"
-                    aria-label={`Delete ${conversation.title}`}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <ConversationMenu
+                    title={conversation.title}
+                    isAdmin={isAdmin}
+                    busy={opening === conversation.id}
+                    onAction={(action) =>
+                      action === "delete"
+                        ? void removeConversation(conversation)
+                        : void download(conversation, action === "md" ? "md" : action)
+                    }
+                  />
                 </div>
               </div>
+              {opening === conversation.id && busyFormat === "repair" ? (
+                <p role="status" className="mt-3 text-[14px] text-[var(--pp-muted)]">
+                  Preparing the repair file. The AI review can take a minute or two.
+                </p>
+              ) : null}
             </article>
           ))}
         </div>
