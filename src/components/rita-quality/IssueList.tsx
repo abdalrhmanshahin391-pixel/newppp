@@ -20,7 +20,7 @@ function Row({ row, titleOf }: { row: IssueRow; titleOf: (id: string) => string 
         <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[14px] text-[var(--pp-muted)]">
           <span
             className={
-              derived.status === "regressed"
+              derived.status === "regressed" || derived.status === "failing"
                 ? "font-semibold text-[var(--pp-ink)]"
                 : derived.status === "open"
                   ? "font-semibold text-[var(--pp-accent-text)]"

@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRitaQuality } from "@/hooks/useRitaQuality";
 import { guardRedirect } from "@/lib/guard-redirect";
 import { agreementRate, buildIssueRows, healthByBuild } from "@/lib/rita-quality";
+import { latestRuns } from "@/lib/rita-replay";
 
 export const Route = createFileRoute("/admin/rita-quality/")({
   head: () => ({
@@ -29,9 +30,10 @@ function RitaQualityPage() {
   }, [isAdmin, loading, navigate, user]);
 
   const builds = useMemo(() => healthByBuild(data.reviews), [data.reviews]);
+  const replays = useMemo(() => latestRuns(data.runs), [data.runs]);
   const rows = useMemo(
-    () => buildIssueRows(data.issues, data.reviews),
-    [data.issues, data.reviews],
+    () => buildIssueRows(data.issues, data.reviews, Date.now(), replays),
+    [data.issues, data.reviews, replays],
   );
   const agreement = useMemo(() => agreementRate(data.feedback), [data.feedback]);
 

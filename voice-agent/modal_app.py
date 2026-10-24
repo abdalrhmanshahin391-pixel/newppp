@@ -527,3 +527,20 @@ async def start_session(payload: dict[str, Any]):
 
     body = payload.get("body") if isinstance(payload.get("body"), dict) else {}
     return await _create_session(body)
+
+
+@app.function(secrets=secrets, timeout=240, region="eu")
+@modal.fastapi_endpoint(method="POST", docs=False)
+async def replay_turns(payload: dict[str, Any]):
+    """Answer past learner turns with the current build (used to test a fix). Text only, no audio."""
+    from fastapi import HTTPException
+
+    expected = os.environ.get("RITA_MODAL_TOKEN", "").strip()
+    supplied = str(payload.get("token") or "").strip()
+    if not expected or not hmac.compare_digest(expected, supplied):
+        raise HTTPException(status_code=401, detail="unauthorized")
+
+    from rita_replay import run_replay
+
+    return await run_replay(payload)
+

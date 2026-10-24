@@ -163,7 +163,7 @@ async function post(
   }
 }
 
-type Ask = <T>(args: {
+export type Ask = <T>(args: {
   name: string;
   system: string;
   user: string;
@@ -195,8 +195,13 @@ function makeAsk(key: string): Ask {
   };
 }
 
+/** One structured-question function with the account's key (for the replay judges). */
+export async function createAsk(): Promise<Ask> {
+  return makeAsk(await openAiKey());
+}
+
 /** A problem that is the account's or the service's, not the turn's: stop and keep the turn for later. */
-function isServiceProblem(error: unknown) {
+export function isServiceProblem(error: unknown) {
   return error instanceof ReviewError && [401, 403, 429, 500, 502, 503, 504].includes(error.status);
 }
 

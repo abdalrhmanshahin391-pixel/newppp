@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Issue, QualityReview } from "@/lib/rita-quality";
+import type { ReplayRun } from "@/lib/rita-replay";
 
 export type QualityState = "loading" | "ready" | "missing" | "error";
 
@@ -10,6 +11,8 @@ export type QualityData = {
   issues: Issue[];
   reviews: QualityReview[];
   feedback: { review_id: string; agree: boolean }[];
+  /** Replay test runs, without their per-turn details (those load on the issue page). */
+  runs: ReplayRun[];
   reload: () => Promise<void>;
 };
 
@@ -38,11 +41,12 @@ export function useRitaQuality(enabled: boolean): QualityData {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [reviews, setReviews] = useState<QualityReview[]>([]);
   const [feedback, setFeedback] = useState<{ review_id: string; agree: boolean }[]>([]);
+  const [runs, setRuns] = useState<ReplayRun[]>([]);
 
   const reload = useCallback(async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
-    const [issueResult, reviewResult, feedbackResult] = await Promise.all([
+    const [issueResult, reviewResult, feedbackResult, runResult] = await Promise.all([
       db.from("rita_issues").select("*").order("updated_at", { ascending: false }).limit(500),
       db
         .from("rita_turn_reviews")
@@ -53,6 +57,14 @@ export function useRitaQuality(enabled: boolean): QualityData {
         .order("reviewed_at", { ascending: false })
         .limit(REVIEW_LIMIT),
       db.from("rita_review_feedback").select("review_id,agree"),
+      // Arrives with a later migration: the page works without it.
+      db
+        .from("rita_replay_runs")
+        .select(
+          "id,issue_id,trigger,worker_build,prompt_changed,status,total,passed,flaky,failed,error,started_at,finished_at",
+        )
+        .order("started_at", { ascending: false })
+        .limit(300),
     ]);
     const failed = [issueResult, reviewResult, feedbackResult].find((result) => result.error);
     if (failed) {
@@ -77,6 +89,14 @@ export function useRitaQuality(enabled: boolean): QualityData {
       ),
     );
     setFeedback((feedbackResult.data ?? []) as { review_id: string; agree: boolean }[]);
+    setRuns(
+      runResult.error
+        ? []
+        : ((runResult.data ?? []) as Omit<ReplayRun, "cases">[]).map((run) => ({
+            ...run,
+            cases: [],
+          })),
+    );
     setError("");
     setState("ready");
   }, []);
@@ -85,5 +105,5 @@ export function useRitaQuality(enabled: boolean): QualityData {
     if (enabled) void reload();
   }, [enabled, reload]);
 
-  return { state, error, issues, reviews, feedback, reload };
+  return { state, error, issues, reviews, feedback, runs, reload };
 }
