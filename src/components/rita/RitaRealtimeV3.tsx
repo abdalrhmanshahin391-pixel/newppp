@@ -46,6 +46,7 @@ import { dbLanguage, setVoiceSessionActive } from "@/lib/language-scope";
 import { useExplanationLanguage } from "@/hooks/useExplanationLanguage";
 import type { ExplanationLanguage } from "@/lib/explanation-language";
 import { ledgerMetadata } from "@/lib/rita-turn-ledger";
+import { MetricQueue } from "@/lib/metric-queue";
 import { ExplanationLanguageControl } from "@/components/rita/ExplanationLanguageControl";
 import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rita-conversation";
 
@@ -365,22 +366,92 @@ export function RitaRealtimeV3({
     );
   }, [checkTurns, lessonEnabled, messages]);
 
-  const sendMetric = useCallback(async (currentSessionId: string, event: PendingMetric) => {
+  // Diagnostic events wait in a bounded queue and leave in batches (every 5 s, or as soon as a batch
+  // is ready, or when the page is hidden), instead of one request per event during a conversation.
+  const metricQueue = useRef(new MetricQueue());
+  const metricAuth = useRef<HeadersInit | null>(null);
+  const metricSession = useRef("");
+  const metricFlushing = useRef(false);
+
+  const flushMetrics = useCallback(async (options: { keepalive?: boolean } = {}) => {
+    if (metricFlushing.current) return;
+    metricFlushing.current = true;
     try {
-      await fetch("/api/rita-v3/session/metrics", {
-        method: "POST",
-        headers: await authHeaders(),
-        body: JSON.stringify({
+      const queue = metricQueue.current;
+      // Events lost to a full queue or to repeated failures are reported, never silent.
+      const lost = queue.takeDroppedCount();
+      if (lost > 0 && metricSession.current) {
+        queue.push(
+          { sessionId: metricSession.current, name: "metrics_dropped", metadata: { count: lost } },
+          crypto.randomUUID(),
+        );
+      }
+      for (let guard = 0; guard < 20; guard += 1) {
+        const batch = queue.takeBatch();
+        if (batch.length === 0) break;
+        try {
+          // The page is closing: use the headers already fetched, there is no time to ask again.
+          const headers =
+            options.keepalive && metricAuth.current ? metricAuth.current : await authHeaders();
+          metricAuth.current = headers;
+          const response = await fetch("/api/rita-v3/session/metrics-batch", {
+            method: "POST",
+            headers,
+            keepalive: true,
+            body: JSON.stringify({
+              sessionId: batch[0].sessionId,
+              events: batch.map((item) => ({
+                eventId: item.eventId,
+                name: item.name,
+                valueMs: item.valueMs,
+                metadata: item.metadata,
+              })),
+            }),
+          });
+          if (!response.ok) throw new Error("metric batch rejected");
+        } catch {
+          // Metrics never interrupt a lesson; the batch is tried again later.
+          queue.requeue(batch);
+          break;
+        }
+      }
+    } finally {
+      metricFlushing.current = false;
+    }
+  }, []);
+
+  const sendMetric = useCallback(
+    async (currentSessionId: string, event: PendingMetric) => {
+      metricSession.current = currentSessionId;
+      metricQueue.current.push(
+        {
           sessionId: currentSessionId,
           name: event.name,
           valueMs: event.valueMs,
           metadata: event.metadata,
-        }),
-      });
-    } catch {
-      // Metrics never interrupt a lesson.
-    }
-  }, []);
+        },
+        crypto.randomUUID(),
+      );
+      if (metricQueue.current.full) void flushMetrics();
+    },
+    [flushMetrics],
+  );
+
+  useEffect(() => {
+    const timer = window.setInterval(() => void flushMetrics(), 5000);
+    const onHide = () => {
+      if (document.visibilityState === "hidden") void flushMetrics({ keepalive: true });
+    };
+    const onPageHide = () => void flushMetrics({ keepalive: true });
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", onPageHide);
+      void flushMetrics({ keepalive: true });
+    };
+  }, [flushMetrics]);
 
   const metric = useCallback(
     async (name: string, valueMs?: number, metadata?: Record<string, unknown>) => {
@@ -627,6 +698,7 @@ export function RitaRealtimeV3({
         keepalive: true,
       }).catch(() => undefined);
     }
+    void flushMetrics({ keepalive: true });
     sessionId.current = "";
     providerSessionId.current = "";
     traceId.current = "";
@@ -662,7 +734,7 @@ export function RitaRealtimeV3({
     skipExtraction.current = false;
     trayRef.current.closeTray();
     await Promise.allSettled([...pendingWrites.current]);
-  }, [cancelFiller, persistConversationMessage]);
+  }, [cancelFiller, flushMetrics, persistConversationMessage]);
 
   const finishConversation = useCallback(async () => {
     await endLesson();

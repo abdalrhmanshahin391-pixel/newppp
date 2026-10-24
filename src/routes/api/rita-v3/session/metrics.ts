@@ -1,40 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { requireRitaUser } from "@/lib/rita-voice.server";
 import { recordRitaV3Event } from "@/lib/rita-v3.server";
-
-const ALLOWED_EVENTS = new Set([
-  "speech_start",
-  "speech_end",
-  "start_clicked",
-  "transcript_partial",
-  "transcript_final",
-  "llm_start",
-  "llm_first_token",
-  "tts_start",
-  "bot_speaking_signal",
-  "first_remote_audio",
-  "first_remote_audio_level",
-  "session_ready",
-  "interrupted",
-  "provider_error",
-  "session_connected",
-  "transport_connected",
-  "bot_ready",
-  "start_call_returned",
-  "provider_metrics",
-  "playback_stop",
-  "turn_commit",
-  "backchannel",
-  "stop_button",
-  "false_interruption",
-  "microphone_permission_error",
-  "client_connection_error",
-  "network_snapshot",
-  "network_stats_unavailable",
-  "dialogue_act",
-  "explanation_language",
-  "turn_ledger",
-]);
+import { cleanMetricEvent } from "@/lib/rita-v3-metrics";
 
 export const Route = createFileRoute("/api/rita-v3/session/metrics")({
   server: {
@@ -44,26 +11,18 @@ export const Route = createFileRoute("/api/rita-v3/session/metrics")({
         if (!auth) return new Response("Unauthorized", { status: 401 });
         const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
         const sessionId = String(body.sessionId ?? "");
-        const name = String(body.name ?? "");
-        if (!/^[0-9a-f-]{36}$/i.test(sessionId) || !ALLOWED_EVENTS.has(name)) {
+        const event = cleanMetricEvent(body);
+        if (!/^[0-9a-f-]{36}$/i.test(sessionId) || !event) {
           return Response.json({ ok: false }, { status: 400 });
         }
-        const rawMetadata =
-          body.metadata && typeof body.metadata === "object" ? JSON.stringify(body.metadata) : "{}";
-        const metadata =
-          rawMetadata.length <= 12_000
-            ? (JSON.parse(rawMetadata) as Record<string, unknown>)
-            : { truncated: true, preview: rawMetadata.slice(0, 11_500) };
         try {
           await recordRitaV3Event({
             sessionId,
             userId: auth.userId,
             accessToken: auth.token,
-            name,
-            valueMs: Number.isFinite(Number(body.valueMs))
-              ? Math.max(0, Number(body.valueMs))
-              : undefined,
-            metadata,
+            name: event.name,
+            valueMs: event.valueMs,
+            metadata: event.metadata,
           });
         } catch (error) {
           console.error("Rita v3 metric storage failed", error);
