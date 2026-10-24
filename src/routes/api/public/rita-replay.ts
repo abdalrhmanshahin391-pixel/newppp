@@ -15,7 +15,14 @@ export const Route = createFileRoute("/api/public/rita-replay")({
         const { autoReplay } = await import("@/lib/rita-replay.server");
         const { ReviewError } = await import("@/lib/rita-review.server");
         try {
-          return Response.json(await autoReplay(supabaseAdmin));
+          const replay = await autoReplay(supabaseAdmin);
+          // Nothing left to replay: use the quiet time to check the reviewer after its rules changed.
+          const { autoReviewerCheck } = await import("@/lib/rita-golden.server");
+          const check =
+            replay.enabled && "tested" in replay && replay.tested === 0
+              ? await autoReviewerCheck(supabaseAdmin)
+              : { ran: false as const };
+          return Response.json({ ...replay, reviewerCheck: check });
         } catch (error) {
           const status = error instanceof ReviewError ? error.status : 500;
           console.error("Rita replay run failed", error);

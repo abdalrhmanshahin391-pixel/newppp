@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { ReviewSwitch } from "@/components/rita/ReviewSwitch";
@@ -7,9 +7,11 @@ import { BuildTable } from "@/components/rita-quality/BuildTable";
 import { CriteriaBars } from "@/components/rita-quality/CriteriaBars";
 import { HealthStrip } from "@/components/rita-quality/HealthStrip";
 import { IssueList } from "@/components/rita-quality/IssueList";
+import { ReviewerCheckSection } from "@/components/rita-quality/ReviewerCheckSection";
 import { useAuth } from "@/hooks/useAuth";
 import { useRitaQuality } from "@/hooks/useRitaQuality";
 import { guardRedirect } from "@/lib/guard-redirect";
+import { supabase } from "@/integrations/supabase/client";
 import { agreementRate, buildIssueRows, healthByBuild } from "@/lib/rita-quality";
 import { latestRuns } from "@/lib/rita-replay";
 
@@ -24,6 +26,31 @@ function RitaQualityPage() {
   const { user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
   const data = useRitaQuality(Boolean(user) && isAdmin);
+  const [checking, setChecking] = useState(false);
+  const [checkError, setCheckError] = useState("");
+
+  async function runCheck() {
+    setChecking(true);
+    setCheckError("");
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token;
+      if (!token) throw new Error("Please sign in again.");
+      const response = await fetch("/api/rita-v3/reviewer-check", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const result = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (!response.ok || result.ok === false) {
+        setCheckError(result.error ?? "The check could not run. Try again in a minute.");
+      }
+      await data.reload();
+    } catch (error) {
+      setCheckError(error instanceof Error ? error.message : "The check could not run.");
+    } finally {
+      setChecking(false);
+    }
+  }
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) guardRedirect(navigate);
@@ -102,16 +129,13 @@ function RitaQualityPage() {
               <CriteriaBars health={builds.at(-1) as (typeof builds)[number]} />
             ) : null}
             <BuildTable builds={builds} />
-            <section aria-labelledby="reviewer-title" className="mt-10">
-              <h2 id="reviewer-title" className="text-[22px] font-semibold">
-                Is the reviewer right?
-              </h2>
-              <p className="mt-2 max-w-2xl text-[16px] leading-[1.5] text-[var(--pp-muted)]">
-                {agreement
-                  ? `You agreed with ${agreement.rate}% of the ${agreement.total} judgements you rated.`
-                  : "Open a problem and mark a few of its examples as right or wrong. The share you agree with is shown here, and the ones you disagree with go into the fix file."}
-              </p>
-            </section>
+            <ReviewerCheckSection
+              checks={data.checks}
+              agreement={agreement}
+              busy={checking}
+              error={checkError}
+              onRun={() => void runCheck()}
+            />
           </>
         ) : null}
       </section>

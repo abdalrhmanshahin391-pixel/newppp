@@ -49,6 +49,7 @@ import {
   timingFromLedger,
   type Ledger,
   type OpenIssue,
+  type ReviewMessage,
 } from "@/lib/rita-review";
 import { RUBRIC_VERSION } from "@/lib/rita-tutor-contract";
 
@@ -100,6 +101,11 @@ async function modelCandidates() {
 }
 
 let resolvedModel: string | null = null;
+
+/** The model that answered the last question (null before the first one). */
+export function usedModel() {
+  return resolvedModel;
+}
 
 /** The account has no such model (not found, or no access): try the next one. */
 function modelUnavailable(error: unknown) {
@@ -244,7 +250,7 @@ const empty = (): ReviewSummary => ({
 });
 
 type TurnInput = {
-  messages: MessageRow[];
+  messages: ReviewMessage[];
   replyIndex: number;
   ledger: Ledger | undefined;
   report: { category: string; note: string | null } | undefined;

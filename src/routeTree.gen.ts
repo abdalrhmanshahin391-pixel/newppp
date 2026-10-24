@@ -110,6 +110,7 @@ import { Route as ApiPublicRitaWorkerRouteImport } from './routes/api/public/rit
 import { Route as ApiRitaV3FillerRouteImport } from './routes/api/rita-v3/filler'
 import { Route as ApiRitaV3ReplayRouteImport } from './routes/api/rita-v3/replay'
 import { Route as ApiRitaV3ReviewRouteImport } from './routes/api/rita-v3/review'
+import { Route as ApiRitaV3ReviewerCheckRouteImport } from './routes/api/rita-v3/reviewer-check'
 import { Route as ApiRitaExtractRouteImport } from './routes/api/rita/extract'
 import { Route as ApiRitaLearningRouteImport } from './routes/api/rita/learning'
 import { Route as CoursesCourseIdIndexRouteImport } from './routes/courses.$courseId.index'
@@ -649,6 +650,11 @@ const ApiRitaV3ReviewRoute = ApiRitaV3ReviewRouteImport.update({
   path: '/api/rita-v3/review',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRitaV3ReviewerCheckRoute = ApiRitaV3ReviewerCheckRouteImport.update({
+  id: '/api/rita-v3/reviewer-check',
+  path: '/api/rita-v3/reviewer-check',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRitaExtractRoute = ApiRitaExtractRouteImport.update({
   id: '/api/rita/extract',
   path: '/api/rita/extract',
@@ -904,6 +910,7 @@ export interface FileRoutesByFullPath {
   '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
   '/api/rita-v3/replay': typeof ApiRitaV3ReplayRoute
   '/api/rita-v3/review': typeof ApiRitaV3ReviewRoute
+  '/api/rita-v3/reviewer-check': typeof ApiRitaV3ReviewerCheckRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
@@ -1033,6 +1040,7 @@ export interface FileRoutesByTo {
   '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
   '/api/rita-v3/replay': typeof ApiRitaV3ReplayRoute
   '/api/rita-v3/review': typeof ApiRitaV3ReviewRoute
+  '/api/rita-v3/reviewer-check': typeof ApiRitaV3ReviewerCheckRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
@@ -1166,6 +1174,7 @@ export interface FileRoutesById {
   '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
   '/api/rita-v3/replay': typeof ApiRitaV3ReplayRoute
   '/api/rita-v3/review': typeof ApiRitaV3ReviewRoute
+  '/api/rita-v3/reviewer-check': typeof ApiRitaV3ReviewerCheckRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
@@ -1301,6 +1310,7 @@ export interface FileRouteTypes {
     | '/api/rita-v3/filler'
     | '/api/rita-v3/replay'
     | '/api/rita-v3/review'
+    | '/api/rita-v3/reviewer-check'
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/courses/$courseId/add-questions'
@@ -1430,6 +1440,7 @@ export interface FileRouteTypes {
     | '/api/rita-v3/filler'
     | '/api/rita-v3/replay'
     | '/api/rita-v3/review'
+    | '/api/rita-v3/reviewer-check'
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/courses/$courseId/add-questions'
@@ -1562,6 +1573,7 @@ export interface FileRouteTypes {
     | '/api/rita-v3/filler'
     | '/api/rita-v3/replay'
     | '/api/rita-v3/review'
+    | '/api/rita-v3/reviewer-check'
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/courses/$courseId/add-questions'
@@ -1681,6 +1693,7 @@ export interface RootRouteChildren {
   ApiRitaV3FillerRoute: typeof ApiRitaV3FillerRoute
   ApiRitaV3ReplayRoute: typeof ApiRitaV3ReplayRoute
   ApiRitaV3ReviewRoute: typeof ApiRitaV3ReviewRoute
+  ApiRitaV3ReviewerCheckRoute: typeof ApiRitaV3ReviewerCheckRoute
   ApiRitaExtractRoute: typeof ApiRitaExtractRoute
   ApiRitaLearningRoute: typeof ApiRitaLearningRoute
   ShareQuestionsSetIdRoute: typeof ShareQuestionsSetIdRoute
@@ -2406,6 +2419,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRitaV3ReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/rita-v3/reviewer-check': {
+      id: '/api/rita-v3/reviewer-check'
+      path: '/api/rita-v3/reviewer-check'
+      fullPath: '/api/rita-v3/reviewer-check'
+      preLoaderRoute: typeof ApiRitaV3ReviewerCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/rita/extract': {
       id: '/api/rita/extract'
       path: '/api/rita/extract'
@@ -2836,6 +2856,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRitaV3FillerRoute: ApiRitaV3FillerRoute,
   ApiRitaV3ReplayRoute: ApiRitaV3ReplayRoute,
   ApiRitaV3ReviewRoute: ApiRitaV3ReviewRoute,
+  ApiRitaV3ReviewerCheckRoute: ApiRitaV3ReviewerCheckRoute,
   ApiRitaExtractRoute: ApiRitaExtractRoute,
   ApiRitaLearningRoute: ApiRitaLearningRoute,
   ShareQuestionsSetIdRoute: ShareQuestionsSetIdRoute,
