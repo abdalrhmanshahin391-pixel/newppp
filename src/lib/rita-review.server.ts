@@ -1,31 +1,60 @@
 /**
- * The review job: finds the turns of finished conversations that have no review yet, sends each one
- * (with the conversation so far and the voice system's turn record) to OpenAI, and stores the
- * answer in rita_turn_reviews. The pure rules live in rita-review.ts.
+ * The review job: finds the turns of finished conversations that have no current review, runs the
+ * six questions of rita-review.ts on each (reference reply, fact check, dialect check, the judge in
+ * both orders, the diagnosis) through OpenAI, and stores the result in rita_turn_reviews. When a
+ * conversation has no turns left to review it also writes one review of the whole conversation.
  *
  * It never runs during a call. A single switch (rita_review_settings.enabled) stops all of it.
+ * Nothing here limits cost or tokens: quality is the point.
  */
 import { getServerRuntimeSecret } from "@/lib/config.server";
 import { resolveRitaOpenAiKey } from "@/lib/rita-voice.server";
 import {
-  REVIEW_JSON_SCHEMA,
-  REVIEW_SYSTEM_PROMPT,
-  parseReview,
+  CONVERSATION_SCHEMA,
+  CONVERSATION_SYSTEM,
+  DIAGNOSE_SCHEMA,
+  DIAGNOSE_SYSTEM,
+  DIALECT_SCHEMA,
+  DIALECT_SYSTEM,
+  FACTS_SCHEMA,
+  FACTS_SYSTEM,
+  JUDGE_SCHEMA,
+  JUDGE_SYSTEM,
+  REFERENCE_SCHEMA,
+  REFERENCE_SYSTEM,
+  conversationPrompt,
+  conversationStats,
+  diagnosePrompt,
+  dialectPrompt,
+  factsPrompt,
+  finalizeReview,
+  judgePrompt,
+  mergeJudgements,
+  parseConversationReview,
+  parseDiagnosis,
+  parseDialect,
+  parseFacts,
+  parseJudgement,
+  parseReference,
   pickCandidates,
-  reviewPrompt,
-  type Review,
+  referencePrompt,
+  timingFromLedger,
+  type Ledger,
 } from "@/lib/rita-review";
+import { RUBRIC_VERSION } from "@/lib/rita-tutor-contract";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ReviewDb = { from: (table: string) => any };
 
 const CHAT_URL = "https://api.openai.com/v1/chat/completions";
-const DEFAULT_MODEL = "gpt-4.1-mini";
-/** Tries for a turn whose answer could not be read; sign-in and rate problems do not count. */
+/** The strongest model first; the next one is used only when the account has no access to it. */
+const MODEL_PREFERENCE = ["gpt-5", "gpt-4.1"];
+/** Tries for a turn whose answers could not be read; sign-in and rate problems do not count. */
 const MAX_ATTEMPTS = 3;
-const STALE_PENDING_MS = 5 * 60 * 1000;
-const REQUEST_TIMEOUT_MS = 90_000;
-const PARALLEL = 4;
+/** A review claimed this long ago and never finished (the run died) is taken again. */
+const STALE_PENDING_MS = 10 * 60 * 1000;
+const REQUEST_TIMEOUT_MS = 5 * 60 * 1000;
+const PARALLEL_TURNS = 4;
 
 export class ReviewError extends Error {
   status: number;
@@ -56,11 +85,36 @@ async function openAiKey() {
   );
 }
 
-export async function reviewModel() {
-  return (await getServerRuntimeSecret("RITA_REVIEW_MODEL")) || DEFAULT_MODEL;
+async function modelCandidates() {
+  const configured = await getServerRuntimeSecret("RITA_REVIEW_MODEL");
+  return [...new Set([configured, ...MODEL_PREFERENCE].filter(Boolean))];
 }
 
-async function askModel(key: string, model: string, prompt: string): Promise<Review | null> {
+let resolvedModel: string | null = null;
+
+/** The account has no such model (not found, or no access): try the next one. */
+function modelUnavailable(error: unknown) {
+  if (!(error instanceof ReviewError)) return false;
+  if (error.status === 404) return true;
+  return (
+    [400, 403].includes(error.status) &&
+    /model/i.test(error.message) &&
+    /(does not exist|not found|do(es)? not have access|no access|not supported)/i.test(
+      error.message,
+    )
+  );
+}
+
+const isReasoningModel = (model: string) => /^(gpt-5|o\d)/.test(model);
+
+async function post(
+  key: string,
+  model: string,
+  system: string,
+  user: string,
+  name: string,
+  schema: unknown,
+) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
@@ -70,14 +124,12 @@ async function askModel(key: string, model: string, prompt: string): Promise<Rev
       body: JSON.stringify({
         model,
         store: false,
+        ...(isReasoningModel(model) ? { reasoning_effort: "high" } : {}),
         messages: [
-          { role: "system", content: REVIEW_SYSTEM_PROMPT },
-          { role: "user", content: prompt },
+          { role: "system", content: system },
+          { role: "user", content: user },
         ],
-        response_format: {
-          type: "json_schema",
-          json_schema: { name: "rita_turn_review", strict: true, schema: REVIEW_JSON_SCHEMA },
-        },
+        response_format: { type: "json_schema", json_schema: { name, strict: true, schema } },
       }),
       signal: controller.signal,
     });
@@ -91,8 +143,7 @@ async function askModel(key: string, model: string, prompt: string): Promise<Rev
       }
       throw new ReviewError(response.status, `OpenAI ${response.status}: ${message}`);
     }
-    const content = JSON.parse(raw)?.choices?.[0]?.message?.content;
-    return parseReview(content);
+    return JSON.parse(raw)?.choices?.[0]?.message?.content as unknown;
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
       throw new ReviewError(504, "OpenAI took too long to answer.");
@@ -101,6 +152,38 @@ async function askModel(key: string, model: string, prompt: string): Promise<Rev
   } finally {
     clearTimeout(timer);
   }
+}
+
+type Ask = <T>(args: {
+  name: string;
+  system: string;
+  user: string;
+  schema: unknown;
+  parse: (raw: unknown) => T | null;
+}) => Promise<T>;
+
+/** One structured question. An answer that does not parse is asked once more. */
+function makeAsk(key: string): Ask {
+  return async ({ name, system, user, schema, parse }) => {
+    const models = resolvedModel ? [resolvedModel] : await modelCandidates();
+    let lastError: unknown;
+    for (const model of models) {
+      try {
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          const value = parse(await post(key, model, system, user, name, schema));
+          if (value !== null) {
+            resolvedModel = model;
+            return value;
+          }
+        }
+        throw new ReviewError(422, `The ${name} answer did not match its format.`);
+      } catch (error) {
+        lastError = error;
+        if (!modelUnavailable(error)) throw error;
+      }
+    }
+    throw lastError;
+  };
 }
 
 /** A problem that is the account's or the service's, not the turn's: stop and keep the turn for later. */
@@ -120,6 +203,7 @@ type ReviewRow = {
   status: string;
   attempts: number;
   created_at: string;
+  rubric_version: number | null;
 };
 
 export type ReviewSummary = {
@@ -129,12 +213,93 @@ export type ReviewSummary = {
   noText: number;
   /** Turns that were due but not reached before the deadline. */
   waiting: number;
+  conversationReviewed: boolean;
   stopped?: string;
 };
 
-const empty = (): ReviewSummary => ({ reviewed: 0, problems: 0, failed: 0, noText: 0, waiting: 0 });
+const empty = (): ReviewSummary => ({
+  reviewed: 0,
+  problems: 0,
+  failed: 0,
+  noText: 0,
+  waiting: 0,
+  conversationReviewed: false,
+});
 
-/** Reviews the turns of one conversation that have no review yet. */
+type TurnInput = {
+  messages: MessageRow[];
+  replyIndex: number;
+  ledger: Ledger | undefined;
+  report: { category: string; note: string | null } | undefined;
+};
+
+/** The six questions for one turn, and the finished review. */
+export async function reviewTurn(ask: Ask, input: TurnInput) {
+  const { messages, replyIndex, ledger, report } = input;
+  const reply = messages[replyIndex].content;
+  const [reference, facts, dialect] = await Promise.all([
+    ask({
+      name: "rita_reference_reply",
+      system: REFERENCE_SYSTEM,
+      user: referencePrompt({ messages, replyIndex, ledger }),
+      schema: REFERENCE_SCHEMA,
+      parse: parseReference,
+    }),
+    ask({
+      name: "rita_fact_check",
+      system: FACTS_SYSTEM,
+      user: factsPrompt({ messages, replyIndex }),
+      schema: FACTS_SCHEMA,
+      parse: parseFacts,
+    }),
+    ask({
+      name: "rita_dialect_check",
+      system: DIALECT_SYSTEM,
+      user: dialectPrompt({ messages, replyIndex, ledger }),
+      schema: DIALECT_SCHEMA,
+      parse: parseDialect,
+    }),
+  ]);
+  const judge = (a: string, b: string) =>
+    ask({
+      name: "rita_reply_comparison",
+      system: JUDGE_SYSTEM,
+      user: judgePrompt({ messages, replyIndex, ledger, a, b }),
+      schema: JUDGE_SCHEMA,
+      parse: parseJudgement,
+    });
+  // Both orders, so the model's pull towards the first reply cancels out.
+  const [ritaFirst, ritaSecond] = await Promise.all([
+    judge(reply, reference.reply),
+    judge(reference.reply, reply),
+  ]);
+  const merged = mergeJudgements([
+    { ritaIs: "a", result: ritaFirst },
+    { ritaIs: "b", result: ritaSecond },
+  ]);
+  const timing = timingFromLedger(ledger);
+  const diagnosis = await ask({
+    name: "rita_diagnosis",
+    system: DIAGNOSE_SYSTEM,
+    user: diagnosePrompt({
+      messages,
+      replyIndex,
+      ledger,
+      reference,
+      merged,
+      facts,
+      dialect,
+      timing,
+      report,
+    }),
+    schema: DIAGNOSE_SCHEMA,
+    parse: parseDiagnosis,
+  });
+  const final = finalizeReview({ diagnosis, merged, facts, dialect, timing });
+  return { reference, facts, dialect, merged, timing, final };
+}
+
+/** Reviews the turns of one conversation that have no current review, then the conversation. */
 export async function reviewConversation(
   db: ReviewDb,
   args: {
@@ -166,7 +331,7 @@ export async function reviewConversation(
     .select("id")
     .eq("conversation_id", args.conversationId);
   const sessionIds = ((sessionData ?? []) as { id: string }[]).map((row) => row.id);
-  const ledgers: Record<string, unknown>[] = [];
+  const ledgers: Ledger[] = [];
   if (sessionIds.length) {
     const { data: eventData } = await db
       .from("rita_v3_events")
@@ -174,10 +339,7 @@ export async function reviewConversation(
       .in("session_id", sessionIds)
       .eq("event_name", "turn_ledger")
       .order("created_at", { ascending: true });
-    for (const event of (eventData ?? []) as {
-      session_id: string;
-      metadata: Record<string, unknown> | null;
-    }[]) {
+    for (const event of (eventData ?? []) as { session_id: string; metadata: Ledger | null }[]) {
       if (event.metadata) ledgers.push({ ...event.metadata, sessionId: event.session_id });
     }
   }
@@ -201,15 +363,18 @@ export async function reviewConversation(
 
   const { data: reviewData } = await db
     .from("rita_turn_reviews")
-    .select("id,turn_key,status,attempts,created_at")
+    .select("id,turn_key,status,attempts,created_at,rubric_version")
     .eq("conversation_id", args.conversationId);
   const blocked = new Set<string>();
   const retryable = new Map<string, ReviewRow>();
   for (const row of (reviewData ?? []) as ReviewRow[]) {
     const stale = Date.now() - new Date(row.created_at).getTime() > STALE_PENDING_MS;
-    if (row.status === "done" || row.status === "no_text") blocked.add(row.turn_key);
-    else if (row.status === "failed" && row.attempts >= MAX_ATTEMPTS) blocked.add(row.turn_key);
-    else if (row.status === "pending" && !stale) blocked.add(row.turn_key);
+    const current = (row.rubric_version ?? 1) === RUBRIC_VERSION;
+    if (row.status === "no_text") blocked.add(row.turn_key);
+    else if (row.status === "done" && current) blocked.add(row.turn_key);
+    else if (row.status === "failed" && row.attempts >= MAX_ATTEMPTS && current)
+      blocked.add(row.turn_key);
+    else if (row.status === "pending" && !stale && current) blocked.add(row.turn_key);
     else retryable.set(row.turn_key, row);
   }
 
@@ -220,28 +385,32 @@ export async function reviewConversation(
     all: args.all ?? true,
     reportsOnly: args.reportsOnly,
   });
-  if (!due.length) return summary;
 
-  const key = await openAiKey();
-  const model = await reviewModel();
+  let ask: Ask | null = null;
+  const prepare = async () => {
+    if (!ask) ask = makeAsk(await openAiKey());
+    return ask;
+  };
+
   const queue = [...due];
   let stop: string | undefined;
 
   const handle = async (candidate: (typeof due)[number]) => {
     const now = new Date().toISOString();
     let rowId: string | null = null;
+    let attempts = 0;
     const retry = retryable.get(candidate.turnKey);
     if (retry) {
+      attempts = (retry.rubric_version ?? 1) === RUBRIC_VERSION ? retry.attempts : 0;
       const { data } = await db
         .from("rita_turn_reviews")
-        .update({ status: "pending", created_at: now })
+        .update({ status: "pending", created_at: now, attempts, rubric_version: RUBRIC_VERSION })
         .eq("id", retry.id)
         .eq("status", retry.status)
         .select("id");
       rowId = data?.[0]?.id ?? null;
     } else {
-      const ledger = ledgers.find((item) => item.replyMessageId === candidate.replyMessageId) as
-        Record<string, unknown> | undefined;
+      const ledger = ledgers.find((item) => item.replyMessageId === candidate.replyMessageId);
       const { data, error } = await db
         .from("rita_turn_reviews")
         .insert({
@@ -254,6 +423,7 @@ export async function reviewConversation(
           trigger: candidate.trigger,
           reasons: candidate.reasons,
           build: typeof ledger?.build === "string" ? ledger.build : null,
+          rubric_version: RUBRIC_VERSION,
           status: "pending",
         })
         .select("id");
@@ -276,36 +446,43 @@ export async function reviewConversation(
     const ledger = ledgers.find((item) => item.replyMessageId === candidate.replyMessageId);
     const report = reports.find((item) => item.replyMessageId === candidate.replyMessageId);
     try {
-      const review = await askModel(
-        key,
-        model,
-        reviewPrompt({
-          messages,
-          replyIndex,
-          ledger,
-          report,
-          reasons: candidate.reasons,
-        }),
-      );
-      if (!review) throw new ReviewError(422, "The answer did not match the review format.");
+      const turnAsk = await prepare();
+      const result = await reviewTurn(turnAsk, { messages, replyIndex, ledger, report });
       await db
         .from("rita_turn_reviews")
         .update({
           status: "done",
-          model,
-          verdict: review.verdict,
-          severity: review.severity,
-          category: review.category,
-          cause: review.cause,
-          evidence: review.evidence,
-          suggestion: review.suggestion,
-          confidence: review.confidence,
+          model: resolvedModel,
+          rubric_version: RUBRIC_VERSION,
+          verdict: result.final.verdict,
+          severity: result.final.severity,
+          category: result.final.category,
+          cause: result.final.cause,
+          evidence: result.final.evidence,
+          suggestion: result.final.fix.change,
+          explanation: result.final.explanation,
+          fix: result.final.fix,
+          reference_reply: result.reference.reply,
+          reference_why: result.reference.why,
+          winner: result.merged?.winner ?? null,
+          scores: result.merged
+            ? {
+                criteria: result.merged.criteria,
+                ritaAverage: result.merged.ritaAverage,
+                referenceAverage: result.merged.referenceAverage,
+                bothOrdersAgree: result.merged.agree,
+                comparison: result.merged.comparison,
+              }
+            : null,
+          facts: result.facts,
+          dialect: result.dialect,
+          timing: result.timing,
           error: null,
           reviewed_at: new Date().toISOString(),
         })
         .eq("id", rowId);
       summary.reviewed += 1;
-      if (review.verdict === "problem") summary.problems += 1;
+      if (result.final.verdict === "problem") summary.problems += 1;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const service = isServiceProblem(error);
@@ -314,7 +491,7 @@ export async function reviewConversation(
         .update({
           status: "failed",
           error: message.slice(0, 300),
-          attempts: (retry?.attempts ?? 0) + (service ? 0 : 1),
+          attempts: attempts + (service ? 0 : 1),
         })
         .eq("id", rowId);
       summary.failed += 1;
@@ -328,14 +505,110 @@ export async function reviewConversation(
       if (next) await handle(next);
     }
   };
-  await Promise.all(Array.from({ length: PARALLEL }, worker));
+  await Promise.all(Array.from({ length: PARALLEL_TURNS }, worker));
   summary.waiting = queue.length;
   if (stop) summary.stopped = stop;
+
+  if (!stop && !queue.length) {
+    try {
+      summary.conversationReviewed = await reviewWholeConversation(db, {
+        conversationId: args.conversationId,
+        userId: conversation.user_id,
+        messages,
+        prepare,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (isServiceProblem(error)) summary.stopped = message;
+      console.error("Rita conversation review failed", error);
+    }
+  }
   return summary;
 }
 
+/** One review of the whole conversation, once all its turns have a current review. */
+async function reviewWholeConversation(
+  db: ReviewDb,
+  args: {
+    conversationId: string;
+    userId: string;
+    messages: MessageRow[];
+    prepare: () => Promise<Ask>;
+  },
+) {
+  const { data: rows } = await db
+    .from("rita_turn_reviews")
+    .select(
+      "turn_key,status,rubric_version,reply_message_id,winner,severity,category,explanation,reviewed_at",
+    )
+    .eq("conversation_id", args.conversationId);
+  const done = (
+    (rows ?? []) as {
+      status: string;
+      rubric_version: number | null;
+      reply_message_id: string | null;
+      winner: string | null;
+      severity: number | null;
+      category: string | null;
+      explanation: string | null;
+    }[]
+  ).filter((row) => row.status === "done" && (row.rubric_version ?? 1) === RUBRIC_VERSION);
+  if (!done.length) return false;
+
+  const { data: existing } = await db
+    .from("rita_conversation_reviews")
+    .select("conversation_id,status,rubric_version,turns_reviewed")
+    .eq("conversation_id", args.conversationId)
+    .maybeSingle();
+  if (
+    existing?.status === "done" &&
+    existing.rubric_version === RUBRIC_VERSION &&
+    existing.turns_reviewed === done.length
+  ) {
+    return false;
+  }
+
+  const stats = conversationStats(args.messages);
+  const turns = done.map((row) => ({
+    index: args.messages.findIndex((message) => message.client_message_id === row.reply_message_id),
+    winner: row.winner,
+    severity: row.severity,
+    category: row.category,
+    explanation: row.explanation,
+  }));
+  const ask = await args.prepare();
+  const review = await ask({
+    name: "rita_conversation_review",
+    system: CONVERSATION_SYSTEM,
+    user: conversationPrompt({ messages: args.messages, stats, turns }),
+    schema: CONVERSATION_SCHEMA,
+    parse: parseConversationReview,
+  });
+  const row = {
+    conversation_id: args.conversationId,
+    user_id: args.userId,
+    status: "done",
+    rubric_version: RUBRIC_VERSION,
+    turns_reviewed: done.length,
+    model: resolvedModel,
+    stats,
+    data: review,
+    error: null,
+    reviewed_at: new Date().toISOString(),
+  };
+  if (existing) {
+    await db
+      .from("rita_conversation_reviews")
+      .update(row)
+      .eq("conversation_id", args.conversationId);
+  } else {
+    await db.from("rita_conversation_reviews").insert(row);
+  }
+  return true;
+}
+
 /** The scheduled run: recent finished conversations, newest first, until the time is used. */
-export async function runScheduledReview(db: ReviewDb, budgetMs = 45_000) {
+export async function runScheduledReview(db: ReviewDb, budgetMs = 75_000) {
   if (!(await reviewEnabled(db))) return { enabled: false as const };
   const deadlineAt = Date.now() + budgetMs;
   const now = Date.now();
@@ -355,6 +628,7 @@ export async function runScheduledReview(db: ReviewDb, budgetMs = 45_000) {
     total.failed += summary.failed;
     total.noText += summary.noText;
     total.waiting += summary.waiting;
+    if (summary.conversationReviewed) total.conversationReviewed = true;
     if (summary.stopped) total.stopped = summary.stopped;
   }
   return { enabled: true as const, ...total };

@@ -235,3 +235,75 @@ test("the repair file carries each turn's review next to its reply", () => {
   assert.equal(file.summary.problemsFoundByReview, 1);
   assert.equal(file.unmatchedReviews.length, 1);
 });
+
+test("the repair file puts the summary first and carries the comparison for each reply", () => {
+  const file = ritaRepairFile({
+    conversation: { id: "c1", title: "T", created_at: "2026-10-24T10:00:00Z" },
+    messages: [
+      {
+        client_message_id: "r1",
+        session_id: "s1",
+        role: "assistant",
+        content: "شو حابب نتعلم؟",
+        generated_content: null,
+        spoken_content: null,
+        source: "voice",
+        delivery_status: "completed",
+        created_at: "2026-10-24T10:00:01Z",
+      },
+    ],
+    sessions: [],
+    events: [],
+    reports: [],
+    reviews: [
+      {
+        id: "v1",
+        reply_message_id: "r1",
+        turn_ref: "s1-t-1",
+        trigger: "manual",
+        status: "done",
+        verdict: "problem",
+        severity: 2,
+        category: "wrong_dialect",
+        cause: "language_choice",
+        evidence: "شو حابب",
+        suggestion: "use neutral wording",
+        model: "gpt-5",
+        reviewed_at: "2026-10-24T10:05:00Z",
+        rubric_version: 2,
+        explanation: "She guessed the learner's gender.",
+        reference_reply: "عن شو بدنا نحكي؟",
+        reference_why: "neutral",
+        winner: "reference",
+        scores: { ritaAverage: 2.5, referenceAverage: 4.5 },
+        fix: { where: "prompt", change: "forbid شو حابب" },
+      },
+    ],
+    conversationReview: {
+      status: "done",
+      rubric_version: 2,
+      turns_reviewed: 1,
+      model: "gpt-5",
+      stats: { talkRatio: 3 },
+      data: { overall: 2 },
+      reviewed_at: "2026-10-24T10:06:00Z",
+    },
+  });
+  assert.deepEqual(Object.keys(file).slice(0, 4), [
+    "schemaVersion",
+    "purpose",
+    "privacy",
+    "summary",
+  ]);
+  assert.equal(Object.keys(file)[4], "conversationReview");
+  assert.equal(file.summary.referenceWon, 1);
+  assert.equal(file.summary.averageScoreRita, 2.5);
+  assert.equal(file.summary.averageScoreReference, 4.5);
+  assert.deepEqual(file.summary.problemsByCategory, { wrong_dialect: 1 });
+  assert.deepEqual(file.summary.problemsByCause, { language_choice: 1 });
+  const review = file.messages[0].review;
+  assert.equal(review?.referenceReply, "عن شو بدنا نحكي؟");
+  assert.equal(review?.winner, "reference");
+  assert.deepEqual(review?.fix, { where: "prompt", change: "forbid شو حابب" });
+  assert.equal(file.conversationReview?.turnsReviewed, 1);
+});

@@ -188,3 +188,22 @@ def test_the_deployed_commit_reaches_the_worker():
     workflow = (ROOT.parent / ".github" / "workflows" / "rita-modal-deploy.yml").read_text(encoding="utf-8")
     assert '.env({"RITA_GIT_SHA"' in modal_source
     assert "RITA_GIT_SHA: ${{ github.sha }}" in workflow
+
+
+def test_the_reviewer_knows_the_dialect_rules_the_worker_uses():
+    """The AI review judges replies against src/lib/rita-tutor-contract.ts. When Rita's dialect
+    prompt changes, update that file (and raise RUBRIC_VERSION), then the hash there."""
+
+    import hashlib
+    import re
+
+    from rita_dialect import DIALECT_PROMPT
+
+    contract = (ROOT.parent / "src" / "lib" / "rita-tutor-contract.ts").read_text(encoding="utf-8")
+    match = re.search(r'DIALECT_PROMPT_HASH = "([0-9a-f]{12})"', contract)
+    assert match, "rita-tutor-contract.ts must state DIALECT_PROMPT_HASH"
+    actual = hashlib.sha256(DIALECT_PROMPT.encode("utf-8")).hexdigest()[:12]
+    assert match.group(1) == actual, (
+        "rita_dialect.DIALECT_PROMPT changed: update the tutor contract in "
+        f"src/lib/rita-tutor-contract.ts, raise RUBRIC_VERSION and set DIALECT_PROMPT_HASH to {actual}"
+    )
