@@ -128,6 +128,7 @@ import { Route as AdminGermanCourseIdManageRouteImport } from './routes/admin.ge
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiRitaV3SessionEndRouteImport } from './routes/api/rita-v3/session/end'
 import { Route as ApiRitaV3SessionMetricsRouteImport } from './routes/api/rita-v3/session/metrics'
+import { Route as ApiRitaV3SessionMetricsBatchRouteImport } from './routes/api/rita-v3/session/metrics-batch'
 import { Route as ApiRitaV3SessionStartRouteImport } from './routes/api/rita-v3/session/start'
 import { Route as GermanCourseIdReviewIndexRouteImport } from './routes/german.$courseId.review.index'
 import { Route as GermanCourseIdReviewRunRouteImport } from './routes/german.$courseId.review.run'
@@ -735,6 +736,12 @@ const ApiRitaV3SessionMetricsRoute = ApiRitaV3SessionMetricsRouteImport.update({
   path: '/api/rita-v3/session/metrics',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRitaV3SessionMetricsBatchRoute =
+  ApiRitaV3SessionMetricsBatchRouteImport.update({
+    id: '/api/rita-v3/session/metrics-batch',
+    path: '/api/rita-v3/session/metrics-batch',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiRitaV3SessionStartRoute = ApiRitaV3SessionStartRouteImport.update({
   id: '/api/rita-v3/session/start',
   path: '/api/rita-v3/session/start',
@@ -882,6 +889,7 @@ export interface FileRoutesByFullPath {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/rita-v3/session/end': typeof ApiRitaV3SessionEndRoute
   '/api/rita-v3/session/metrics': typeof ApiRitaV3SessionMetricsRoute
+  '/api/rita-v3/session/metrics-batch': typeof ApiRitaV3SessionMetricsBatchRoute
   '/api/rita-v3/session/start': typeof ApiRitaV3SessionStartRoute
   '/german/$courseId/review/run': typeof GermanCourseIdReviewRunRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -1003,6 +1011,7 @@ export interface FileRoutesByTo {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/rita-v3/session/end': typeof ApiRitaV3SessionEndRoute
   '/api/rita-v3/session/metrics': typeof ApiRitaV3SessionMetricsRoute
+  '/api/rita-v3/session/metrics-batch': typeof ApiRitaV3SessionMetricsBatchRoute
   '/api/rita-v3/session/start': typeof ApiRitaV3SessionStartRoute
   '/german/$courseId/review/run': typeof GermanCourseIdReviewRunRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -1130,6 +1139,7 @@ export interface FileRoutesById {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/rita-v3/session/end': typeof ApiRitaV3SessionEndRoute
   '/api/rita-v3/session/metrics': typeof ApiRitaV3SessionMetricsRoute
+  '/api/rita-v3/session/metrics-batch': typeof ApiRitaV3SessionMetricsBatchRoute
   '/api/rita-v3/session/start': typeof ApiRitaV3SessionStartRoute
   '/german/$courseId/review/run': typeof GermanCourseIdReviewRunRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -1258,6 +1268,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/rita-v3/session/end'
     | '/api/rita-v3/session/metrics'
+    | '/api/rita-v3/session/metrics-batch'
     | '/api/rita-v3/session/start'
     | '/german/$courseId/review/run'
     | '/lovable/email/auth/preview'
@@ -1379,6 +1390,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/rita-v3/session/end'
     | '/api/rita-v3/session/metrics'
+    | '/api/rita-v3/session/metrics-batch'
     | '/api/rita-v3/session/start'
     | '/german/$courseId/review/run'
     | '/lovable/email/auth/preview'
@@ -1505,6 +1517,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/rita-v3/session/end'
     | '/api/rita-v3/session/metrics'
+    | '/api/rita-v3/session/metrics-batch'
     | '/api/rita-v3/session/start'
     | '/german/$courseId/review/run'
     | '/lovable/email/auth/preview'
@@ -1600,6 +1613,7 @@ export interface RootRouteChildren {
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiRitaV3SessionEndRoute: typeof ApiRitaV3SessionEndRoute
   ApiRitaV3SessionMetricsRoute: typeof ApiRitaV3SessionMetricsRoute
+  ApiRitaV3SessionMetricsBatchRoute: typeof ApiRitaV3SessionMetricsBatchRoute
   ApiRitaV3SessionStartRoute: typeof ApiRitaV3SessionStartRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -2440,6 +2454,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRitaV3SessionMetricsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/rita-v3/session/metrics-batch': {
+      id: '/api/rita-v3/session/metrics-batch'
+      path: '/api/rita-v3/session/metrics-batch'
+      fullPath: '/api/rita-v3/session/metrics-batch'
+      preLoaderRoute: typeof ApiRitaV3SessionMetricsBatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/rita-v3/session/start': {
       id: '/api/rita-v3/session/start'
       path: '/api/rita-v3/session/start'
@@ -2699,6 +2720,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiRitaV3SessionEndRoute: ApiRitaV3SessionEndRoute,
   ApiRitaV3SessionMetricsRoute: ApiRitaV3SessionMetricsRoute,
+  ApiRitaV3SessionMetricsBatchRoute: ApiRitaV3SessionMetricsBatchRoute,
   ApiRitaV3SessionStartRoute: ApiRitaV3SessionStartRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,

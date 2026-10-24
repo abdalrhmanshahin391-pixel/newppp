@@ -607,6 +607,26 @@ export async function updateRitaV3Session(
   if (error) throw error;
 }
 
+/** Stores a batch of events for one session with a single insert. */
+export async function recordRitaV3Events(args: {
+  sessionId: string;
+  userId: string;
+  accessToken: string;
+  events: { name: string; valueMs?: number; metadata?: Record<string, unknown> }[];
+}) {
+  if (args.events.length === 0) return;
+  const { error } = await (ritaV3UserClient(args.accessToken).from as any)("rita_v3_events").insert(
+    args.events.map((event) => ({
+      session_id: args.sessionId,
+      user_id: args.userId,
+      event_name: event.name,
+      value_ms: event.valueMs === undefined ? null : Math.round(event.valueMs),
+      metadata: event.metadata ?? {},
+    })),
+  );
+  if (error) throw error;
+}
+
 export async function recordRitaV3Event(args: {
   sessionId: string;
   userId: string;
