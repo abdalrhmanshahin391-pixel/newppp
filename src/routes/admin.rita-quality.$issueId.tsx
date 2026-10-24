@@ -3,10 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Download, Loader2 } from "lucide-react";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { ExampleCard } from "@/components/rita-quality/ExampleCard";
+import { ReplaySection } from "@/components/rita-quality/ReplaySection";
 import { useAuth } from "@/hooks/useAuth";
 import { useRitaQuality } from "@/hooks/useRitaQuality";
 import { guardRedirect } from "@/lib/guard-redirect";
 import { supabase } from "@/integrations/supabase/client";
+import { latestRuns, type ReplayRun } from "@/lib/rita-replay";
 import { saveFile } from "@/lib/save-file";
 import {
   FIX_WHERE_LABEL,
@@ -70,6 +72,9 @@ function IssuePage() {
   const [mergeTarget, setMergeTarget] = useState("");
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
+  const [fullRun, setFullRun] = useState<ReplayRun | null>(null);
+  const [testing, setTesting] = useState(false);
+  const [testError, setTestError] = useState("");
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) guardRedirect(navigate);
@@ -151,9 +156,55 @@ function IssuePage() {
     setRatings(Object.fromEntries(data.feedback.map((item) => [item.review_id, item.agree])));
   }, [data.feedback]);
 
+  const replays = useMemo(() => latestRuns(data.runs), [data.runs]);
+  const latestRunId = replays.get(issueId)?.id;
+
+  useEffect(() => {
+    if (!latestRunId) {
+      setFullRun(null);
+      return;
+    }
+    let cancelled = false;
+    void db()
+      .from("rita_replay_runs")
+      .select("*")
+      .eq("id", latestRunId)
+      .maybeSingle()
+      .then(({ data: run }: { data: ReplayRun | null }) => {
+        if (!cancelled) setFullRun(run);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [latestRunId]);
+
+  async function testNow() {
+    setTesting(true);
+    setTestError("");
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token;
+      if (!token) throw new Error("Please sign in again.");
+      const response = await fetch("/api/rita-v3/replay", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ issueId }),
+      });
+      const result = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (!response.ok || result.ok === false) {
+        setTestError(result.error ?? "The test could not run. Try again in a minute.");
+      }
+      await data.reload();
+    } catch (error) {
+      setTestError(error instanceof Error ? error.message : "The test could not run.");
+    } finally {
+      setTesting(false);
+    }
+  }
+
   const rows = useMemo(
-    () => buildIssueRows(data.issues, data.reviews),
-    [data.issues, data.reviews],
+    () => buildIssueRows(data.issues, data.reviews, Date.now(), replays),
+    [data.issues, data.reviews, replays],
   );
   const row = rows.find((item) => item.issue.id === issueId);
   const builds = useMemo(() => healthByBuild(data.reviews), [data.reviews]);
@@ -214,6 +265,7 @@ function IssuePage() {
         issue: row.issue,
         derived: row.derived,
         byBuild,
+        replay: fullRun,
         examples: examples.map((example) => ({
           ...example,
           ownerAgrees: ratings[example.reviewId] ?? null,
@@ -293,6 +345,15 @@ function IssuePage() {
               >
                 This came back: {derived.newProblems} new{" "}
                 {derived.newProblems === 1 ? "example" : "examples"} since the fix.
+              </p>
+            ) : null}
+            {derived.status === "failing" ? (
+              <p
+                role="status"
+                className="mt-4 rounded-xl bg-[var(--pp-accent-soft)] px-4 py-3 text-[15px]"
+              >
+                The last test on a newer version still fails on some turns. See the test results
+                below.
               </p>
             ) : null}
             {derived.status === "resolved" ? (
@@ -536,6 +597,14 @@ function IssuePage() {
                 </ul>
               </section>
             ) : null}
+
+            <ReplaySection
+              run={fullRun}
+              busy={testing}
+              error={testError}
+              canTest={examples.length > 0}
+              onTest={() => void testNow()}
+            />
 
             <section aria-labelledby="examples-title" className="mt-10">
               <h2 id="examples-title" className="text-[22px] font-semibold">

@@ -104,9 +104,11 @@ import { Route as ApiGermanTtsRouteImport } from './routes/api/german/tts'
 import { Route as ApiPublicArchiveSolverRouteImport } from './routes/api/public/archive-solver'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push-dispatch'
+import { Route as ApiPublicRitaReplayRouteImport } from './routes/api/public/rita-replay'
 import { Route as ApiPublicRitaReviewRouteImport } from './routes/api/public/rita-review'
 import { Route as ApiPublicRitaWorkerRouteImport } from './routes/api/public/rita-worker'
 import { Route as ApiRitaV3FillerRouteImport } from './routes/api/rita-v3/filler'
+import { Route as ApiRitaV3ReplayRouteImport } from './routes/api/rita-v3/replay'
 import { Route as ApiRitaV3ReviewRouteImport } from './routes/api/rita-v3/review'
 import { Route as ApiRitaExtractRouteImport } from './routes/api/rita/extract'
 import { Route as ApiRitaLearningRouteImport } from './routes/api/rita/learning'
@@ -617,6 +619,11 @@ const ApiPublicPushDispatchRoute = ApiPublicPushDispatchRouteImport.update({
   path: '/api/public/push-dispatch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicRitaReplayRoute = ApiPublicRitaReplayRouteImport.update({
+  id: '/api/public/rita-replay',
+  path: '/api/public/rita-replay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicRitaReviewRoute = ApiPublicRitaReviewRouteImport.update({
   id: '/api/public/rita-review',
   path: '/api/public/rita-review',
@@ -630,6 +637,11 @@ const ApiPublicRitaWorkerRoute = ApiPublicRitaWorkerRouteImport.update({
 const ApiRitaV3FillerRoute = ApiRitaV3FillerRouteImport.update({
   id: '/api/rita-v3/filler',
   path: '/api/rita-v3/filler',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaV3ReplayRoute = ApiRitaV3ReplayRouteImport.update({
+  id: '/api/rita-v3/replay',
+  path: '/api/rita-v3/replay',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiRitaV3ReviewRoute = ApiRitaV3ReviewRouteImport.update({
@@ -886,9 +898,11 @@ export interface FileRoutesByFullPath {
   '/api/public/archive-solver': typeof ApiPublicArchiveSolverRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
+  '/api/public/rita-replay': typeof ApiPublicRitaReplayRoute
   '/api/public/rita-review': typeof ApiPublicRitaReviewRoute
   '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
   '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
+  '/api/rita-v3/replay': typeof ApiRitaV3ReplayRoute
   '/api/rita-v3/review': typeof ApiRitaV3ReviewRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
@@ -1013,9 +1027,11 @@ export interface FileRoutesByTo {
   '/api/public/archive-solver': typeof ApiPublicArchiveSolverRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
+  '/api/public/rita-replay': typeof ApiPublicRitaReplayRoute
   '/api/public/rita-review': typeof ApiPublicRitaReviewRoute
   '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
   '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
+  '/api/rita-v3/replay': typeof ApiRitaV3ReplayRoute
   '/api/rita-v3/review': typeof ApiRitaV3ReviewRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
@@ -1144,9 +1160,11 @@ export interface FileRoutesById {
   '/api/public/archive-solver': typeof ApiPublicArchiveSolverRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
+  '/api/public/rita-replay': typeof ApiPublicRitaReplayRoute
   '/api/public/rita-review': typeof ApiPublicRitaReviewRoute
   '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
   '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
+  '/api/rita-v3/replay': typeof ApiRitaV3ReplayRoute
   '/api/rita-v3/review': typeof ApiRitaV3ReviewRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
@@ -1277,9 +1295,11 @@ export interface FileRouteTypes {
     | '/api/public/archive-solver'
     | '/api/public/health'
     | '/api/public/push-dispatch'
+    | '/api/public/rita-replay'
     | '/api/public/rita-review'
     | '/api/public/rita-worker'
     | '/api/rita-v3/filler'
+    | '/api/rita-v3/replay'
     | '/api/rita-v3/review'
     | '/api/rita/extract'
     | '/api/rita/learning'
@@ -1404,9 +1424,11 @@ export interface FileRouteTypes {
     | '/api/public/archive-solver'
     | '/api/public/health'
     | '/api/public/push-dispatch'
+    | '/api/public/rita-replay'
     | '/api/public/rita-review'
     | '/api/public/rita-worker'
     | '/api/rita-v3/filler'
+    | '/api/rita-v3/replay'
     | '/api/rita-v3/review'
     | '/api/rita/extract'
     | '/api/rita/learning'
@@ -1534,9 +1556,11 @@ export interface FileRouteTypes {
     | '/api/public/archive-solver'
     | '/api/public/health'
     | '/api/public/push-dispatch'
+    | '/api/public/rita-replay'
     | '/api/public/rita-review'
     | '/api/public/rita-worker'
     | '/api/rita-v3/filler'
+    | '/api/rita-v3/replay'
     | '/api/rita-v3/review'
     | '/api/rita/extract'
     | '/api/rita/learning'
@@ -1651,9 +1675,11 @@ export interface RootRouteChildren {
   ApiPublicArchiveSolverRoute: typeof ApiPublicArchiveSolverRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
+  ApiPublicRitaReplayRoute: typeof ApiPublicRitaReplayRoute
   ApiPublicRitaReviewRoute: typeof ApiPublicRitaReviewRoute
   ApiPublicRitaWorkerRoute: typeof ApiPublicRitaWorkerRoute
   ApiRitaV3FillerRoute: typeof ApiRitaV3FillerRoute
+  ApiRitaV3ReplayRoute: typeof ApiRitaV3ReplayRoute
   ApiRitaV3ReviewRoute: typeof ApiRitaV3ReviewRoute
   ApiRitaExtractRoute: typeof ApiRitaExtractRoute
   ApiRitaLearningRoute: typeof ApiRitaLearningRoute
@@ -2338,6 +2364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPushDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/rita-replay': {
+      id: '/api/public/rita-replay'
+      path: '/api/public/rita-replay'
+      fullPath: '/api/public/rita-replay'
+      preLoaderRoute: typeof ApiPublicRitaReplayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/rita-review': {
       id: '/api/public/rita-review'
       path: '/api/public/rita-review'
@@ -2357,6 +2390,13 @@ declare module '@tanstack/react-router' {
       path: '/api/rita-v3/filler'
       fullPath: '/api/rita-v3/filler'
       preLoaderRoute: typeof ApiRitaV3FillerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita-v3/replay': {
+      id: '/api/rita-v3/replay'
+      path: '/api/rita-v3/replay'
+      fullPath: '/api/rita-v3/replay'
+      preLoaderRoute: typeof ApiRitaV3ReplayRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/rita-v3/review': {
@@ -2790,9 +2830,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicArchiveSolverRoute: ApiPublicArchiveSolverRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
+  ApiPublicRitaReplayRoute: ApiPublicRitaReplayRoute,
   ApiPublicRitaReviewRoute: ApiPublicRitaReviewRoute,
   ApiPublicRitaWorkerRoute: ApiPublicRitaWorkerRoute,
   ApiRitaV3FillerRoute: ApiRitaV3FillerRoute,
+  ApiRitaV3ReplayRoute: ApiRitaV3ReplayRoute,
   ApiRitaV3ReviewRoute: ApiRitaV3ReviewRoute,
   ApiRitaExtractRoute: ApiRitaExtractRoute,
   ApiRitaLearningRoute: ApiRitaLearningRoute,

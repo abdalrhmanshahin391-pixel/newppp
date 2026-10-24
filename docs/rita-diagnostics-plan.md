@@ -126,7 +126,7 @@ OpenTelemetry الكامل، الجداول الـ11، مهمة PDF خلفية �
 - [x] المرحلة 3 — اندمجت (#72): زر «في مشكلة بهذا الرد» + جدول `rita_issue_reports` (migration `20261024120000`) + زر «Repair file» لكل محادثة
 - [x] المرحلة 4 — اندمجت (#73): محلل OpenAI لكل دور (بدون سقف تكلفة/توكنز بطلب صاحب المشروع)، مفتاح تشغيل/إيقاف واحد لكل المحادثات (`rita_review_settings`)، جدول `rita_turn_reviews`، cron كل 5 دقائق، التحليل داخل Repair file
 - [~] المرحلة 4ب — فرع `claude/rita-review-compare`: مراجعة v2 — رد مرجعي بدون رؤية رد ريتا، فحص معلومات ولهجة، حكم بالترتيبين، تشخيص، تقييم عام للمحادثة، النتائج داخل Repair file (migration `20261024140000`)
-- [~] المرحلة 5أ — فرع `claude/rita-quality-page`: تجميع المشاكل في بطاقات (`rita_issues`)، صفحة `/admin/rita-quality` (صحة النسخ، Fix next، المعايير، 👍/👎)، ملف إصلاح لكل مشكلة، دمج، حالة محسوبة (watching/resolved/regressed). migration `20261024150000`
-- [ ] المرحلة 5ب — اختبار الإعادة على الـworker
+- [x] المرحلة 5أ — اندمجت (#75): تجميع المشاكل في بطاقات (`rita_issues`)، صفحة `/admin/rita-quality` (صحة النسخ، Fix next، المعايير، 👍/👎)، ملف إصلاح لكل مشكلة، دمج، حالة محسوبة (watching/resolved/regressed). migration `20261024150000`
+- [~] المرحلة 5ب — فرع `claude/rita-replay`: اختبار الإعادة (`rita_replay.py` + نقطة Modal `replay_turns`، حكم جديد بالمراجع، تشغيل تلقائي بعد كل نشر للـworker، حالة «Test still fails»). migration `20261024160000`
 - [ ] المرحلة 5ج — فحص المحلل بحالات ذهبية
 - [ ] المرحلة 6

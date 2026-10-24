@@ -7,6 +7,7 @@
  * "resolved" and "regressed" are never stored: they are worked out from the reviews that came after
  * the fix, so they cannot go stale.
  */
+import type { ReplayRun } from "./rita-replay.ts";
 import { CRITERIA, CRITERION_IDS } from "./rita-tutor-contract.ts";
 
 /** A build with fewer reviewed replies than this is shown with a "small sample" warning. */
@@ -17,7 +18,7 @@ export const RESOLVE_AFTER = 30;
 export const IMPACT_HALF_LIFE_DAYS = 14;
 
 export type StoredIssueStatus = "open" | "fixing" | "not_an_issue" | "merged";
-export type IssueStatus = StoredIssueStatus | "watching" | "resolved" | "regressed";
+export type IssueStatus = StoredIssueStatus | "watching" | "resolved" | "regressed" | "failing";
 
 export type CriteriaScores = Record<string, { rita: number; reference: number }>;
 
@@ -206,6 +207,10 @@ export function deriveIssueStatus(
   issue: Pick<Issue, "status" | "fix_marked_at" | "fix_baseline_build">,
   allReviews: QualityReview[],
   issueReviews: QualityReview[],
+  latestReplay?: Pick<
+    ReplayRun,
+    "started_at" | "worker_build" | "total" | "failed" | "flaky"
+  > | null,
 ): DerivedStatus {
   const base = { checked: 0, needed: RESOLVE_AFTER, newProblems: 0 };
   if (issue.status !== "fixing" || !issue.fix_marked_at) return { status: issue.status, ...base };
@@ -218,11 +223,26 @@ export function deriveIssueStatus(
   const newProblems = done(issueReviews).filter(
     (review) => review.verdict === "problem" && after(review),
   ).length;
-  if (newProblems > 0) return { status: "regressed", checked, needed: RESOLVE_AFTER, newProblems };
-  if (checked === 0) return { status: "fixing", checked, needed: RESOLVE_AFTER, newProblems };
-  if (checked >= RESOLVE_AFTER)
-    return { status: "resolved", checked, needed: RESOLVE_AFTER, newProblems };
-  return { status: "watching", checked, needed: RESOLVE_AFTER, newProblems };
+  const result = (status: IssueStatus): DerivedStatus => ({
+    status,
+    checked,
+    needed: RESOLVE_AFTER,
+    newProblems,
+  });
+  if (newProblems > 0) return result("regressed");
+  // A replay of the old turns on a build after the fix that still fails means the fix does not hold.
+  const replayAfterFix =
+    latestReplay &&
+    latestReplay.total > 0 &&
+    new Date(latestReplay.started_at).getTime() > since &&
+    (!issue.fix_baseline_build ||
+      !latestReplay.worker_build ||
+      latestReplay.worker_build !== issue.fix_baseline_build);
+  if (replayAfterFix && (latestReplay.failed > 0 || latestReplay.flaky > 0))
+    return result("failing");
+  if (checked === 0) return result("fixing");
+  if (checked >= RESOLVE_AFTER) return result("resolved");
+  return result("watching");
 }
 
 /** Where a developer should change something, in plain words. */
@@ -244,6 +264,7 @@ export const STATUS_LABEL: Record<IssueStatus, string> = {
   watching: "Watching",
   resolved: "Solved",
   regressed: "Came back",
+  failing: "Test still fails",
   not_an_issue: "Not a problem",
   merged: "Merged",
 };
@@ -251,12 +272,13 @@ export const STATUS_LABEL: Record<IssueStatus, string> = {
 /** Order for the "Fix next" list: came back, then open, then fix on its way, then the rest. */
 const STATUS_ORDER: Record<IssueStatus, number> = {
   regressed: 0,
-  open: 1,
-  fixing: 2,
-  watching: 3,
-  resolved: 4,
-  not_an_issue: 5,
-  merged: 6,
+  failing: 1,
+  open: 2,
+  fixing: 3,
+  watching: 4,
+  resolved: 5,
+  not_an_issue: 6,
+  merged: 7,
 };
 
 export type IssueRow = {
@@ -272,6 +294,7 @@ export function buildIssueRows(
   issues: Issue[],
   reviews: QualityReview[],
   now = Date.now(),
+  replays: Map<string, ReplayRun> = new Map(),
 ): IssueRow[] {
   const byIssue = new Map<string, QualityReview[]>();
   for (const review of done(reviews)) {
@@ -287,7 +310,7 @@ export function buildIssueRows(
         .sort();
       return {
         issue,
-        derived: deriveIssueStatus(issue, reviews, own),
+        derived: deriveIssueStatus(issue, reviews, own, replays.get(issue.id)),
         reviews: own,
         impact: issueImpact(own, now),
         firstSeen: times[0] ?? null,
