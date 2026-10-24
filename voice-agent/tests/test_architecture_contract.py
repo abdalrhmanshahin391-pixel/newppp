@@ -171,3 +171,20 @@ def test_a_committed_interruption_is_retried_only_when_it_missed_the_router():
     assert "router.last_routed_context_size >= committed_context_size" in bot
     assert "asyncio.create_task(recover_if_still_unrouted())" in bot
     assert "await aggregator.push_context_frame()" in bot
+
+
+def test_every_turn_is_recorded_without_work_on_the_audio_path():
+    source = (ROOT / "bot.py").read_text(encoding="utf-8")
+    assert "TurnLedger(" in source and "send_server_message(record)" in source
+    # The record goes out from a background task, never awaited inside a frame handler's hot path.
+    assert "asyncio.create_task(send_ledger(record))" in source
+    assert "asyncio.create_task(finish_ledger(" in source
+    # The old hard-coded claim that no reply was ever interrupted is gone.
+    assert "interrupted=False" not in source
+
+
+def test_the_deployed_commit_reaches_the_worker():
+    modal_source = (ROOT / "modal_app.py").read_text(encoding="utf-8")
+    workflow = (ROOT.parent / ".github" / "workflows" / "rita-modal-deploy.yml").read_text(encoding="utf-8")
+    assert '.env({"RITA_GIT_SHA"' in modal_source
+    assert "RITA_GIT_SHA: ${{ github.sha }}" in workflow

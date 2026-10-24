@@ -10,6 +10,7 @@ an incomplete experiment can never be mistaken for the approved architecture.
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 from typing import Any
 
@@ -51,6 +52,7 @@ from rita_interruption import RitaUserTurnStartStrategy, gate_mode
 from rita_groq_llm import RitaGroqLLMService
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
 from rita_state import ResponseType, RitaSessionState
+from rita_turn_ledger import TurnLedger, build_id, fixed_prompt_hash
 from rita_target_language import (
     parse_target_language,
     stt_language_codes,
@@ -330,7 +332,10 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         active_language=str(body.get("language", "automatic")),
         active_dialect=str(body.get("dialect", "ar-JO")),
     )
-    logger.bind(session_id=session_id).info("Starting Rita v3 session")
+    target = parse_target_language(body)
+    ledger = TurnLedger(session_id, learn_language=target["code"] if target else None)
+    ledger_meta = {"prompt_hash": ""}
+    logger.bind(session_id=session_id).info("Starting Rita v3 session build={}", build_id())
     router_state = router_mode()
     logger.bind(router=router_state.value, interrupt_gate=gate_mode()).info(
         "Rita turn-taking configuration"
@@ -501,6 +506,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             messages[0]["content"] = build_prompt(
                 body, state, dialogue=router_state == RouterMode.ON
             )
+            ledger_meta["prompt_hash"] = fixed_prompt_hash(messages[0]["content"])
 
     router = RitaTurnRouter(
         state=state,
@@ -604,9 +610,47 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             state.topic_paused = True
             await rtvi.interrupt_bot()
 
+    def ledger_state() -> dict[str, object]:
+        """What Rita had read from the learner's turn, copied from state that already exists."""
+
+        return {
+            "lang": state.active_language,
+            "lang_src": state.language_source.value,
+            "explain_lang": state.reply_language(),
+            "act": state.last_act.value,
+            "resp": state.response_type.value,
+            "task": state.current_task or None,
+            "how_to_say": True if state.asked_how_to_say else None,
+            "prompt": ledger_meta["prompt_hash"] or None,
+        }
+
+    async def send_ledger(record: dict[str, object]) -> None:
+        """One realtime message and one log line per turn; never on the audio path."""
+
+        logger.info("Rita turn ledger {}", json.dumps(record, ensure_ascii=False, separators=(",", ":")))
+        try:
+            await task.rtvi.send_server_message(record)
+        except Exception as error:  # diagnostics must never disturb the conversation
+            logger.warning("Rita turn ledger could not be sent error={}", type(error).__name__)
+
     @user_aggregator.event_handler("on_user_turn_stopped")
     async def on_user_turn_stopped(aggregator, strategy, message):
         latency.mark("turn_committed")
+        for record in ledger.unanswered_before(latency.turn, ledger_state()):
+            asyncio.create_task(send_ledger(record))
+        ledger.user_turn_committed(
+            latency.turn,
+            {
+                "stop": getattr(strategy, "last_stop_path", None)
+                if strategy is not None
+                else "timeout",
+                "wait_ms": getattr(strategy, "last_wait_ms", None) if strategy is not None else None,
+                "resumed": (getattr(strategy, "last_resume_count", 0) or None)
+                if strategy is not None
+                else None,
+                "words": len(message.content.split()),
+            },
+        )
         # No strategy means the controller's inactivity timer ended the turn.
         stop_reason = (
             getattr(strategy, "last_stop_reason", None)
@@ -652,12 +696,40 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
     @assistant_aggregator.event_handler("on_assistant_turn_stopped")
     async def on_assistant_turn_stopped(aggregator, message):
         state.observe_assistant_turn(message.content)
+        answered_turn = (
+            latency.reply_turn if ledger.has_open(latency.reply_turn) else ledger.newest_open_turn()
+        )
+        if answered_turn:
+
+            async def finish_ledger(turn: int, spoken_chars: int) -> None:
+                # The interruption frame reaches the observer a moment after this handler.
+                await asyncio.sleep(0.25)
+                cut = latency.interrupted_after_ms(turn)
+                record = ledger.assistant_turn_stopped(
+                    turn,
+                    {
+                        **ledger_state(),
+                        "route": router.last_action,
+                        "interrupted": cut is not None,
+                        "cut_after_ms": cut,
+                        "chars": spoken_chars,
+                        "finish": latency.detail(turn, "groq_finish_reason", "finish_reason"),
+                        "commit_ms": latency.offset_ms(turn, "turn_committed"),
+                        "stt_final_ms": latency.offset_ms(turn, "stt_first_final"),
+                        "llm_first_ms": latency.offset_ms(turn, "llm_first_answer_text"),
+                        "tts_bytes_ms": latency.offset_ms(turn, "tts_first_bytes"),
+                        "first_audio_ms": latency.offset_ms(turn, "worker_first_audio_frame"),
+                    },
+                )
+                if record is not None:
+                    await send_ledger(record)
+
+            asyncio.create_task(finish_ledger(answered_turn, len(message.content)))
         logger.bind(
             session_id=session_id,
             trace_id=latency.trace_id or None,
             turn_id=latency.turn,
             spoken_characters=len(message.content),
-            interrupted=False,
         ).info("Rita assistant turn committed")
 
     @transport.event_handler("on_first_participant_joined")

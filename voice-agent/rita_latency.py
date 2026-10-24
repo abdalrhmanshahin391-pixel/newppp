@@ -8,8 +8,11 @@ from array import array
 from loguru import logger
 from pipecat.frames.frames import (
     BotStartedSpeakingFrame,
+    BotStoppedSpeakingFrame,
     ErrorFrame,
     InterimTranscriptionFrame,
+    InterruptionFrame,
+    LLMFullResponseStartFrame,
     LLMTextFrame,
     TranscriptionFrame,
     TTSAudioRawFrame,
@@ -43,6 +46,16 @@ class RitaLatencyRecorder:
         self._marks: dict[int, dict[str, int]] = {}
         self._contexts: dict[str, int] = {}
         self._last_start_frame_id: str | None = None
+        # Details given with a milestone (for example the model's finish reason), per turn.
+        self._details: dict[int, dict[str, dict[str, object]]] = {}
+        # Which learner turn Rita is answering, and whether the learner cut her off.
+        self.reply_turn = 0
+        self.reply_active = False
+        self.bot_speaking = False
+        self._reply_started_ns: int | None = None
+        self._bot_started_ns: int | None = None
+        self._interrupted_after_ms: dict[int, int] = {}
+        self._seen_frame_ids: dict[str, None] = {}
 
     def start_turn(self, frame_id: str) -> None:
         if frame_id == self._last_start_frame_id:
@@ -60,6 +73,8 @@ class RitaLatencyRecorder:
             return
         now_ns = time.perf_counter_ns()
         marks[event] = now_ns
+        if details:
+            self._details.setdefault(turn, {})[event] = dict(details)
         speech_end = marks.get("speech_end")
         monotonic_ms = round((now_ns - self.started_ns) / 1_000_000, 2)
         after_speech_end_ms = (
@@ -81,6 +96,65 @@ class RitaLatencyRecorder:
             monotonic_ms,
             after_speech_end_ms,
         )
+
+    def _first_time(self, frame_id: str) -> bool:
+        """Observers see one frame at every hop; act on each frame once."""
+
+        if frame_id in self._seen_frame_ids:
+            return False
+        self._seen_frame_ids[frame_id] = None
+        if len(self._seen_frame_ids) > 256:
+            self._seen_frame_ids.pop(next(iter(self._seen_frame_ids)))
+        return True
+
+    def reply_started(self, frame_id: str) -> None:
+        if not self._first_time(frame_id):
+            return
+        self.reply_turn = self.turn
+        self.reply_active = True
+        self._reply_started_ns = time.perf_counter_ns()
+        self._bot_started_ns = None
+
+    def bot_started_speaking(self) -> None:
+        if not self.reply_active:
+            # A scripted line (greeting, stop acknowledgement) has no model response of its own.
+            self.reply_turn = self.turn
+            self.reply_active = True
+            self._reply_started_ns = time.perf_counter_ns()
+        self.bot_speaking = True
+        if self._bot_started_ns is None:
+            self._bot_started_ns = time.perf_counter_ns()
+
+    def bot_stopped_speaking(self) -> None:
+        self.bot_speaking = False
+        self.reply_active = False
+
+    def interruption(self, frame_id: str) -> None:
+        """The learner (or the stop button) cut off a reply that was being generated or spoken."""
+
+        if not self._first_time(frame_id):
+            return
+        if not (self.reply_active or self.bot_speaking) or self.reply_turn <= 0:
+            return
+        if self.reply_turn in self._interrupted_after_ms:
+            return
+        started = self._bot_started_ns or self._reply_started_ns or time.perf_counter_ns()
+        self._interrupted_after_ms[self.reply_turn] = round((time.perf_counter_ns() - started) / 1_000_000)
+        self.reply_active = False
+
+    def interrupted_after_ms(self, turn: int) -> int | None:
+        return self._interrupted_after_ms.get(turn)
+
+    def detail(self, turn: int, event: str, key: str) -> object | None:
+        return self._details.get(turn, {}).get(event, {}).get(key)
+
+    def offset_ms(self, turn: int, event: str, since: str = "speech_end") -> int | None:
+        """Milliseconds from one milestone of a turn to another, or None if either is missing."""
+
+        marks = self._marks.get(turn, {})
+        if event not in marks or since not in marks:
+            return None
+        return round((marks[event] - marks[since]) / 1_000_000)
 
     def session_mark(self, event: str, **details: object) -> None:
         """Log startup/transport evidence that occurs before the first user turn."""
@@ -190,6 +264,12 @@ class RitaLatencyObserver(BaseObserver):
         frame = data.frame
         if isinstance(frame, UserStartedSpeakingFrame):
             self.recorder.start_turn(frame.id)
+        elif isinstance(frame, LLMFullResponseStartFrame):
+            self.recorder.reply_started(str(frame.id))
+        elif isinstance(frame, InterruptionFrame):
+            self.recorder.interruption(str(frame.id))
+        elif isinstance(frame, BotStoppedSpeakingFrame):
+            self.recorder.bot_stopped_speaking()
         elif isinstance(frame, UserStoppedSpeakingFrame):
             self.recorder.mark("speech_end")
         elif isinstance(frame, InterimTranscriptionFrame) and frame.text.strip():
@@ -200,6 +280,7 @@ class RitaLatencyObserver(BaseObserver):
             self.recorder.mark("llm_first_answer_text")
         elif isinstance(frame, BotStartedSpeakingFrame):
             self.recorder.mark("bot_speaking_signal")
+            self.recorder.bot_started_speaking()
         elif isinstance(frame, TTSAudioRawFrame):
             self.recorder.mark("worker_first_audio_frame")
             self.recorder.tts_audio_received(

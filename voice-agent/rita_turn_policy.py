@@ -132,6 +132,15 @@ class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
         self._bounded_fired = False
         #: smart_complete | bounded_complete_commit (a controller timeout never reaches this class)
         self.last_stop_reason: str | None = None
+        #: which path decided the last turn: smart | quick | period | short_phrase | unpunctuated
+        self.last_stop_path: str | None = None
+        #: how long that path waited, in ms (None for the audio-only Smart Turn decision)
+        self.last_wait_ms: int | None = None
+        #: how many times the learner resumed speaking while a commit was pending, for the last turn
+        self.last_resume_count: int = 0
+        self._resume_count = 0
+        self._fired_path: str | None = None
+        self._fired_wait_ms: int | None = None
 
     async def _cancel_bounded(self) -> None:
         task, self._bounded_task = self._bounded_task, None
@@ -149,6 +158,8 @@ class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
 
     async def _handle_vad_user_started_speaking(self, frame: VADUserStartedSpeakingFrame):
         # The learner kept talking: whatever was about to be committed is no longer the end.
+        if self._bounded_task is not None:
+            self._resume_count += 1
         await self._cancel_bounded()
         self._bounded_fired = False
         await super()._handle_vad_user_started_speaking(frame)
@@ -165,12 +176,12 @@ class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
             and looks_complete(frame.text)
         ):
             await self._cancel_bounded()
+            wait = bounded_wait_secs(
+                frame.text, self._bounded_secs, self._period_secs, self._thinking_sounds
+            )
             self._bounded_task = self.task_manager.create_task(
                 self._bounded_commit(
-                    frame.text,
-                    bounded_wait_secs(
-                        frame.text, self._bounded_secs, self._period_secs, self._thinking_sounds
-                    ),
+                    frame.text, wait, "period" if wait > self._bounded_secs else "quick"
                 ),
                 f"{self}::_bounded_commit",
             )
@@ -186,7 +197,8 @@ class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
             # path so resumed speech still wins safely.
             await self._cancel_bounded()
             self._bounded_task = self.task_manager.create_task(
-                self._bounded_commit(frame.text), f"{self}::_bounded_commit"
+                self._bounded_commit(frame.text, None, "short_phrase"),
+                f"{self}::_bounded_commit",
             )
         elif (
             self._unpunctuated_secs > 0
@@ -201,13 +213,17 @@ class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
                 self._bounded_commit(
                     frame.text,
                     adaptive_unpunctuated_secs(frame.text, self._unpunctuated_secs),
+                    "unpunctuated",
                 ),
                 f"{self}::_bounded_commit",
             )
 
-    async def _bounded_commit(self, text: str, secs: float | None = None) -> None:
+    async def _bounded_commit(
+        self, text: str, secs: float | None = None, path: str = "quick"
+    ) -> None:
+        wait = self._bounded_secs if secs is None else secs
         try:
-            await asyncio.sleep(self._bounded_secs if secs is None else secs)
+            await asyncio.sleep(wait)
         except asyncio.CancelledError:
             return
         self._bounded_task = None
@@ -215,6 +231,8 @@ class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
             return
         self._turn_complete = True
         self._bounded_fired = True
+        self._fired_path = path
+        self._fired_wait_ms = round(wait * 1000)
         await self._maybe_trigger_user_turn_stopped()
 
     async def _maybe_trigger_user_turn_stopped(self):
@@ -224,9 +242,16 @@ class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
             self.last_stop_reason = (
                 "bounded_complete_commit" if self._bounded_fired else "smart_complete"
             )
+            self.last_stop_path = self._fired_path if self._bounded_fired else "smart"
+            self.last_wait_ms = self._fired_wait_ms if self._bounded_fired else None
+            self.last_resume_count, self._resume_count = self._resume_count, 0
+            self._fired_path = self._fired_wait_ms = None
             logger.bind(stop_reason=self.last_stop_reason).info(
-                "Rita turn stop reason={} word_count={}",
+                "Rita turn stop reason={} path={} wait_ms={} resumed={} word_count={}",
                 self.last_stop_reason,
+                self.last_stop_path,
+                self.last_wait_ms,
+                self.last_resume_count,
                 len(self._text.split()),
             )
         await super()._maybe_trigger_user_turn_stopped()
