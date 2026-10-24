@@ -46,6 +46,8 @@ import { dbLanguage, setVoiceSessionActive } from "@/lib/language-scope";
 import { useExplanationLanguage } from "@/hooks/useExplanationLanguage";
 import type { ExplanationLanguage } from "@/lib/explanation-language";
 import { ledgerMetadata } from "@/lib/rita-turn-ledger";
+import { issueReportRow, type IssueCategory } from "@/lib/rita-issue-report";
+import { ReplyReport } from "@/components/rita/ReplyReport";
 import { MetricQueue } from "@/lib/metric-queue";
 import { ExplanationLanguageControl } from "@/components/rita/ExplanationLanguageControl";
 import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rita-conversation";
@@ -129,6 +131,9 @@ export function RitaRealtimeV3({
   // can be tied to the two bubbles it belongs to (best effort; the turn reference is the real key).
   const answeredUserMessageId = useRef("");
   const lastReplyMessageId = useRef("");
+  // The worker's turn record for each reply, kept so a report carries it (newest ~60 replies).
+  const ledgerByReply = useRef(new Map<string, Record<string, unknown>>());
+  const [ledgerReplies, setLedgerReplies] = useState<ReadonlySet<string>>(new Set());
   const replyAccumulator = useRef(new RitaReplyAccumulator());
   const pendingScriptedReply = useRef("");
   const botSpeaking = useRef(false);
@@ -496,6 +501,27 @@ export function RitaRealtimeV3({
       await sendMetric(currentSessionId, event);
     },
     [dialect, mode, sendMetric],
+  );
+
+  const reportReply = useCallback(
+    async (replyMessageId: string, category: IssueCategory, note: string) => {
+      const row = issueReportRow({
+        userId: user?.id ?? "",
+        conversationId: activeConversationId.current,
+        sessionId: sessionId.current,
+        replyMessageId,
+        category,
+        note,
+        ledger: ledgerByReply.current.get(replyMessageId),
+      });
+      if (!row) throw new Error("Report is not valid");
+      // The table arrives with a migration; it is not in the generated types yet.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: saveError } = await (supabase as any).from("rita_issue_reports").insert(row);
+      if (saveError) throw saveError;
+      void metric("issue_report", undefined, { category, hasNote: Boolean(row.note) });
+    },
+    [metric, user],
   );
 
   const flushPendingMetrics = useCallback(
@@ -1098,7 +1124,17 @@ export function RitaRealtimeV3({
                 userMessageId: answeredUserMessageId.current,
                 replyMessageId: replyAccumulator.current.draftId || lastReplyMessageId.current,
               });
-              if (metadata) void metric("turn_ledger", undefined, metadata);
+              if (metadata) {
+                void metric("turn_ledger", undefined, metadata);
+                const replyId =
+                  typeof metadata.replyMessageId === "string" ? metadata.replyMessageId : "";
+                if (replyId) {
+                  const kept = ledgerByReply.current;
+                  kept.set(replyId, metadata);
+                  while (kept.size > 60) kept.delete(kept.keys().next().value as string);
+                  setLedgerReplies(new Set(kept.keys()));
+                }
+              }
               return;
             }
             if (message?.type === "rita-dialogue-act") {
@@ -1408,6 +1444,14 @@ export function RitaRealtimeV3({
     );
   }
 
+  // Not on the welcome line; and not on the newest reply while she is still talking (her turn
+  // record arrives when the answer ends).
+  const newestReplyId = [...messages].reverse().find((m) => m.role === "rita")?.id;
+  const canReport = (message: Message) =>
+    message.role === "rita" &&
+    message.id !== "welcome" &&
+    (!active || message.id !== newestReplyId || ledgerReplies.has(message.id));
+
   return (
     <main
       className="edith-premium min-h-screen bg-white text-[var(--pp-ink)]"
@@ -1533,17 +1577,23 @@ export function RitaRealtimeV3({
                     className="ml-auto w-fit max-w-[80%] rounded-2xl rounded-br-md bg-[var(--pp-accent-soft)] px-4 py-2 text-[17px] leading-8"
                   />
                 ) : (
-                  <ChatText
-                    key={message.id}
-                    text={message.text}
-                    onPhrase={openPhrase}
-                    interruptedAt={message.interruptedAt}
-                    className={
-                      !active && messages.length === 1
-                        ? "mx-auto text-center text-[20px] leading-8"
-                        : "max-w-[94%] text-[18px] leading-9"
-                    }
-                  />
+                  <div key={message.id}>
+                    <ChatText
+                      text={message.text}
+                      onPhrase={openPhrase}
+                      interruptedAt={message.interruptedAt}
+                      className={
+                        !active && messages.length === 1
+                          ? "mx-auto text-center text-[20px] leading-8"
+                          : "max-w-[94%] text-[18px] leading-9"
+                      }
+                    />
+                    {canReport(message) && (
+                      <ReplyReport
+                        onSubmit={(category, note) => reportReply(message.id, category, note)}
+                      />
+                    )}
+                  </div>
                 ),
               )}
               {showCaption(

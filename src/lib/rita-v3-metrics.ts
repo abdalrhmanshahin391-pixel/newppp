@@ -32,6 +32,7 @@ export const ALLOWED_EVENTS = new Set([
   "dialogue_act",
   "explanation_language",
   "turn_ledger",
+  "issue_report",
   "metrics_dropped",
 ]);
 

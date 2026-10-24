@@ -54,6 +54,8 @@ Page `#fff`; dark device screen `linear-gradient(162deg, #26252e, #121117)`.
   buttons in one row, 44px high, 8px radius, hairline border; the chosen one has a 2px
   `--pp-accent` border, `--pp-accent-soft` fill and `--pp-accent-text`. Arrow keys move the
   choice. Use it instead of a select when every option should stay visible.
+  `.rita-choice-stack` stacks the same group in one column for longer labels (the "Report a
+  problem" reasons under a Rita reply, which expand inline, never as a window).
 - Spacing on a 4px scale; sections breathe (24–48px), controls inside a card 8–16px.
 - Windows: one level only (a sheet from the bottom on phones, centred on wider screens,
   max 672px). No window inside a window.
