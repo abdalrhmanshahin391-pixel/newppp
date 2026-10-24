@@ -122,8 +122,8 @@ OpenTelemetry الكامل، الجداول الـ11، مهمة PDF خلفية �
 ## 9. الحالة
 - [ ] المرحلة 0 — بانتظار مكالمة صاحب المشروع
 - [x] المرحلة 1 — اندمجت (#70): دفتر الدور، `turn_ref`، `RITA_GIT_SHA`، المقاطعة الحقيقية، حدث `turn_ledger` بالصفحة
-- [~] المرحلة 2 — فرع `claude/rita-metric-batches` (طابور محدود + دفعات + `metrics_dropped`، بدون migration)
-- [ ] المرحلة 3
+- [x] المرحلة 2 — اندمجت (#71): طابور محدود + دفعات + `metrics_dropped`، بدون migration
+- [~] المرحلة 3 — فرع `claude/rita-issue-reports`: زر «في مشكلة بهذا الرد» + جدول `rita_issue_reports` (migration `20261024120000`) + زر «Repair file» لكل محادثة
 - [ ] المرحلة 4
 - [ ] المرحلة 5
 - [ ] المرحلة 6

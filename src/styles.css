@@ -3329,6 +3329,15 @@ body:has(.rh-learn-home) {
   outline: 2px solid var(--pp-ink);
   outline-offset: 2px;
 }
+/* The same group stacked, for longer labels (the "Report a problem" reasons). */
+.edith-premium .rita-choice.rita-choice-stack {
+  grid-auto-flow: row;
+  grid-auto-columns: auto;
+}
+.edith-premium .rita-choice.rita-choice-stack > button {
+  text-align: start;
+  padding-block: 10px;
+}
 @media (prefers-reduced-motion: reduce) {
   .edith-premium .rita-choice > button {
     transition: none;

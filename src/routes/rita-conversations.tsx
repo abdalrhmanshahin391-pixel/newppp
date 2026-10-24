@@ -5,6 +5,7 @@ import {
   Download,
   FileJson,
   FileText,
+  Wrench,
   Loader2,
   MessageCircle,
   Plus,
@@ -31,6 +32,7 @@ import {
   type RitaConversationMessage,
   type RitaConversationSession,
 } from "@/lib/rita-conversation";
+import { ritaRepairFile, ritaRepairFileName } from "@/lib/rita-issue-report";
 
 export const Route = createFileRoute("/rita-conversations")({
   head: () => ({
@@ -85,6 +87,41 @@ async function loadBundle(conversation: RitaConversation): Promise<Bundle> {
     messages,
     sessions: (sessions ?? []) as RitaConversationSession[],
   };
+}
+
+// The worker's turn records and the learner's reports for one conversation. The reports table
+// comes with a migration; until it is applied the file is still made, without reports.
+async function loadRepairData(bundle: Bundle) {
+  const sessionIds = bundle.sessions.map((session) => session.id);
+  const events: {
+    session_id: string;
+    event_name: string;
+    value_ms: number | null;
+    metadata: Record<string, unknown> | null;
+    created_at: string;
+  }[] = [];
+  if (sessionIds.length) {
+    const pageSize = 1000;
+    for (let from = 0; ; from += pageSize) {
+      const { data, error } = await supabase
+        .from("rita_v3_events")
+        .select("session_id,event_name,value_ms,metadata,created_at")
+        .in("session_id", sessionIds)
+        .eq("event_name", "turn_ledger")
+        .order("created_at", { ascending: true })
+        .range(from, from + pageSize - 1);
+      if (error) throw error;
+      events.push(...((data ?? []) as unknown as typeof events));
+      if ((data?.length ?? 0) < pageSize) break;
+    }
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: reports, error: reportsError } = await (supabase as any)
+    .from("rita_issue_reports")
+    .select("id,reply_message_id,turn_ref,category,note,build,ledger,created_at")
+    .eq("conversation_id", bundle.conversation.id)
+    .order("created_at", { ascending: true });
+  return { events, reports: reportsError ? [] : (reports ?? []) };
 }
 
 async function saveFile(name: string, contents: string, type: string) {
@@ -203,7 +240,10 @@ function RitaConversationsPage() {
     }
   }
 
-  async function download(conversation: RitaConversation, format: "md" | "json" | "pdf") {
+  async function download(
+    conversation: RitaConversation,
+    format: "md" | "json" | "pdf" | "repair",
+  ) {
     // The print tab must open inside the tap, before the messages are fetched,
     // or mobile browsers block it as a pop-up.
     const printTab = format === "pdf" ? window.open("", "_blank") : null;
@@ -232,6 +272,23 @@ function RitaConversationsPage() {
           `${stem}.md`,
           ritaConversationMarkdown(bundle.conversation, bundle.messages, bundle.sessions),
           "text/markdown;charset=utf-8",
+        );
+      } else if (format === "repair") {
+        const { events, reports } = await loadRepairData(bundle);
+        await saveFile(
+          ritaRepairFileName(conversation.title, conversation.id),
+          `${JSON.stringify(
+            ritaRepairFile({
+              conversation,
+              messages: bundle.messages,
+              sessions: bundle.sessions,
+              events,
+              reports,
+            }),
+            null,
+            2,
+          )}\n`,
+          "application/json;charset=utf-8",
         );
       } else {
         await saveFile(
@@ -386,6 +443,14 @@ function RitaConversationsPage() {
                     aria-label="Download diagnostic JSON"
                   >
                     <FileJson size={16} /> JSON
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void download(conversation, "repair")}
+                    className="rita-btn rita-btn-secondary gap-2"
+                    aria-label="Download repair file"
+                  >
+                    <Wrench size={16} /> Repair file
                   </button>
                   <button
                     type="button"
