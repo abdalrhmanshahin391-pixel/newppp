@@ -56,6 +56,11 @@ Page `#fff`; dark device screen `linear-gradient(162deg, #26252e, #121117)`.
   choice. Use it instead of a select when every option should stay visible.
   `.rita-choice-stack` stacks the same group in one column for longer labels (the "Report a
   problem" reasons under a Rita reply, which expand inline, never as a window).
+- Admin quality screens (`/admin/rita-quality`): a row of four number cards (`--pp-grey`, 16px
+  radius, value 34px/600, a muted note, and a change line that says "Better by"/"Worse by" in
+  words, never colour alone), a list of problem cards (hairline border, title first, one meta
+  line), and Rita's reply beside the reference reply (grey card next to `--pp-accent-soft` card,
+  stacked on phones). Small samples are said out loud, not hidden.
 - Spacing on a 4px scale; sections breathe (24–48px), controls inside a card 8–16px.
 - Windows: one level only (a sheet from the bottom on phones, centred on wider screens,
   max 672px). No window inside a window.

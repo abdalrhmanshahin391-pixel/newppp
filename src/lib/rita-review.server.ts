@@ -10,9 +10,13 @@
 import { getServerRuntimeSecret } from "@/lib/config.server";
 import { resolveRitaOpenAiKey } from "@/lib/rita-voice.server";
 import {
+  ASSIGN_SCHEMA,
+  ASSIGN_SYSTEM,
   CONVERSATION_SCHEMA,
   CONVERSATION_SYSTEM,
   DIAGNOSE_SCHEMA,
+  DUPLICATES_SCHEMA,
+  DUPLICATES_SYSTEM,
   DIAGNOSE_SYSTEM,
   DIALECT_SCHEMA,
   DIALECT_SYSTEM,
@@ -22,17 +26,21 @@ import {
   JUDGE_SYSTEM,
   REFERENCE_SCHEMA,
   REFERENCE_SYSTEM,
+  assignPrompt,
   conversationPrompt,
   conversationStats,
   diagnosePrompt,
+  duplicatesPrompt,
   dialectPrompt,
   factsPrompt,
   finalizeReview,
   judgePrompt,
   mergeJudgements,
+  parseAssignment,
   parseConversationReview,
   parseDiagnosis,
   parseDialect,
+  parseDuplicates,
   parseFacts,
   parseJudgement,
   parseReference,
@@ -40,6 +48,7 @@ import {
   referencePrompt,
   timingFromLedger,
   type Ledger,
+  type OpenIssue,
 } from "@/lib/rita-review";
 import { RUBRIC_VERSION } from "@/lib/rita-tutor-contract";
 
@@ -214,6 +223,8 @@ export type ReviewSummary = {
   /** Turns that were due but not reached before the deadline. */
   waiting: number;
   conversationReviewed: boolean;
+  /** Problems filed under an issue (new or existing) in this run. */
+  grouped: number;
   stopped?: string;
 };
 
@@ -224,6 +235,7 @@ const empty = (): ReviewSummary => ({
   noText: 0,
   waiting: 0,
   conversationReviewed: false,
+  grouped: 0,
 });
 
 type TurnInput = {
@@ -509,6 +521,23 @@ export async function reviewConversation(
   summary.waiting = queue.length;
   if (stop) summary.stopped = stop;
 
+  if (!stop) {
+    try {
+      summary.grouped = await assignProblems(db, {
+        conversationId: args.conversationId,
+        messages,
+        prepare,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (isServiceProblem(error)) {
+        summary.stopped = message;
+        stop = message;
+      }
+      console.error("Rita issue grouping failed", error);
+    }
+  }
+
   if (!stop && !queue.length) {
     try {
       summary.conversationReviewed = await reviewWholeConversation(db, {
@@ -607,6 +636,199 @@ async function reviewWholeConversation(
   return true;
 }
 
+const LOCK_MS = 3 * 60 * 1000;
+
+/** Only one run at a time decides which issue a problem belongs to. */
+async function takeAssignLock(db: ReviewDb) {
+  const { data } = await db
+    .from("rita_review_settings")
+    .select("assign_lock_until")
+    .eq("id", true)
+    .maybeSingle();
+  const current: string | null = data?.assign_lock_until ?? null;
+  if (current && new Date(current).getTime() > Date.now()) return false;
+  const query = db
+    .from("rita_review_settings")
+    .update({ assign_lock_until: new Date(Date.now() + LOCK_MS).toISOString() })
+    .eq("id", true);
+  const { data: got } = await (
+    current ? query.eq("assign_lock_until", current) : query.is("assign_lock_until", null)
+  ).select("id");
+  return Boolean(got?.length);
+}
+
+async function releaseAssignLock(db: ReviewDb) {
+  await db.from("rita_review_settings").update({ assign_lock_until: null }).eq("id", true);
+}
+
+async function openIssues(db: ReviewDb): Promise<OpenIssue[]> {
+  // "Fixing" issues stay in the list: a problem that comes back belongs to the card of its fix.
+  const { data } = await db
+    .from("rita_issues")
+    .select("id,title,description,fix_where")
+    .in("status", ["open", "fixing"])
+    .order("created_at", { ascending: true })
+    .limit(300);
+  return (
+    (data ?? []) as { id: string; title: string; description: string; fix_where: string }[]
+  ).map((row) => ({
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    fixWhere: row.fix_where,
+  }));
+}
+
+/** Files each problem of a conversation that has no issue yet under an existing or a new issue. */
+async function assignProblems(
+  db: ReviewDb,
+  args: { conversationId: string; messages: MessageRow[]; prepare: () => Promise<Ask> },
+) {
+  const { data } = await db
+    .from("rita_turn_reviews")
+    .select("id,reply_message_id,category,cause,explanation,evidence,fix,facts,dialect,timing")
+    .eq("conversation_id", args.conversationId)
+    .eq("status", "done")
+    .eq("verdict", "problem")
+    .is("issue_id", null)
+    .order("created_at", { ascending: true });
+  const rows = (data ?? []) as {
+    id: string;
+    reply_message_id: string | null;
+    category: string | null;
+    cause: string | null;
+    explanation: string | null;
+    evidence: string | null;
+    fix: unknown;
+    facts: unknown;
+    dialect: unknown;
+    timing: unknown;
+  }[];
+  if (!rows.length) return 0;
+  if (!(await takeAssignLock(db))) return 0;
+  let grouped = 0;
+  try {
+    const ask = await args.prepare();
+    for (const row of rows) {
+      try {
+        const open = await openIssues(db);
+        const ids = new Set(open.map((issue) => issue.id));
+        const reply =
+          args.messages.find((message) => message.client_message_id === row.reply_message_id)
+            ?.content ?? "";
+        const assignment = await ask({
+          name: "rita_issue_assignment",
+          system: ASSIGN_SYSTEM,
+          user: assignPrompt({
+            open,
+            problem: {
+              category: row.category,
+              cause: row.cause,
+              explanation: row.explanation,
+              evidence: row.evidence,
+              fix: row.fix,
+              ritaReply: reply,
+              facts: row.facts,
+              dialect: row.dialect,
+              timing: row.timing,
+            },
+          }),
+          schema: ASSIGN_SCHEMA,
+          parse: (raw) => parseAssignment(raw, ids),
+        });
+        let issueId = assignment.issueId;
+        if (!issueId) {
+          const { data: created } = await db
+            .from("rita_issues")
+            .insert({
+              title: assignment.title,
+              description: assignment.description,
+              fix_where: assignment.fixWhere,
+              category: row.category,
+              cause: row.cause,
+            })
+            .select("id");
+          issueId = created?.[0]?.id ?? null;
+        } else {
+          await db
+            .from("rita_issues")
+            .update({ updated_at: new Date().toISOString() })
+            .eq("id", issueId);
+        }
+        if (!issueId) continue;
+        await db.from("rita_turn_reviews").update({ issue_id: issueId }).eq("id", row.id);
+        grouped += 1;
+      } catch (error) {
+        // A service problem stops the run; one unreadable answer only leaves this problem for later.
+        if (isServiceProblem(error)) throw error;
+        console.error("Rita issue grouping skipped a problem", error);
+      }
+    }
+  } finally {
+    await releaseAssignLock(db);
+  }
+  return grouped;
+}
+
+const MERGE_PASS_EVERY_MS = 24 * 60 * 60 * 1000;
+
+/** Once a day: propose merges for open issues that are really the same problem. */
+export async function proposeMerges(db: ReviewDb) {
+  const { data: settings } = await db
+    .from("rita_review_settings")
+    .select("last_merge_pass_at")
+    .eq("id", true)
+    .maybeSingle();
+  const last = settings?.last_merge_pass_at ? new Date(settings.last_merge_pass_at).getTime() : 0;
+  if (Date.now() - last < MERGE_PASS_EVERY_MS) return 0;
+  const open = await openIssues(db);
+  const stamp = () =>
+    db
+      .from("rita_review_settings")
+      .update({ last_merge_pass_at: new Date().toISOString() })
+      .eq("id", true);
+  if (open.length < 2) {
+    await stamp();
+    return 0;
+  }
+  if (!(await takeAssignLock(db))) return 0;
+  try {
+    const ask = makeAsk(await openAiKey());
+    const { data: counted } = await db
+      .from("rita_turn_reviews")
+      .select("issue_id")
+      .not("issue_id", "is", null);
+    const counts = new Map<string, number>();
+    for (const row of (counted ?? []) as { issue_id: string }[]) {
+      counts.set(row.issue_id, (counts.get(row.issue_id) ?? 0) + 1);
+    }
+    const ids = new Set(open.map((issue) => issue.id));
+    const groups = await ask({
+      name: "rita_duplicate_issues",
+      system: DUPLICATES_SYSTEM,
+      user: duplicatesPrompt(
+        open.map((issue) => ({ ...issue, examples: counts.get(issue.id) ?? 0 })),
+      ),
+      schema: DUPLICATES_SCHEMA,
+      parse: (raw) => parseDuplicates(raw, ids),
+    });
+    await db
+      .from("rita_issues")
+      .update({ suggested_merge_into: null })
+      .in("id", [...ids]);
+    for (const group of groups) {
+      await db
+        .from("rita_issues")
+        .update({ suggested_merge_into: group.keepId })
+        .in("id", group.mergeIds);
+    }
+    await stamp();
+    return groups.length;
+  } finally {
+    await releaseAssignLock(db);
+  }
+}
+
 /** The scheduled run: recent finished conversations, newest first, until the time is used. */
 export async function runScheduledReview(db: ReviewDb, budgetMs = 75_000) {
   if (!(await reviewEnabled(db))) return { enabled: false as const };
@@ -628,8 +850,16 @@ export async function runScheduledReview(db: ReviewDb, budgetMs = 75_000) {
     total.failed += summary.failed;
     total.noText += summary.noText;
     total.waiting += summary.waiting;
+    total.grouped += summary.grouped;
     if (summary.conversationReviewed) total.conversationReviewed = true;
     if (summary.stopped) total.stopped = summary.stopped;
+  }
+  if (!total.stopped) {
+    try {
+      await proposeMerges(db);
+    } catch (error) {
+      console.error("Rita merge proposals failed", error);
+    }
   }
   return { enabled: true as const, ...total };
 }

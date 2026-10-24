@@ -94,6 +94,8 @@ import { Route as SummariesNewRouteImport } from './routes/summaries.new'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AdminGermanIndexRouteImport } from './routes/admin.german.index'
 import { Route as AdminGermanCourseIdRouteImport } from './routes/admin.german.$courseId'
+import { Route as AdminRitaQualityIndexRouteImport } from './routes/admin.rita-quality.index'
+import { Route as AdminRitaQualityIssueIdRouteImport } from './routes/admin.rita-quality.$issueId'
 import { Route as AdminSpacesIndexRouteImport } from './routes/admin.spaces.index'
 import { Route as AdminSpacesSpaceIdRouteImport } from './routes/admin.spaces.$spaceId'
 import { Route as ApiAdminGenerateImageRouteImport } from './routes/api/admin/generate-image'
@@ -565,6 +567,16 @@ const AdminGermanCourseIdRoute = AdminGermanCourseIdRouteImport.update({
   path: '/$courseId',
   getParentRoute: () => AdminGermanRoute,
 } as any)
+const AdminRitaQualityIndexRoute = AdminRitaQualityIndexRouteImport.update({
+  id: '/admin/rita-quality/',
+  path: '/admin/rita-quality/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRitaQualityIssueIdRoute = AdminRitaQualityIssueIdRouteImport.update({
+  id: '/admin/rita-quality/$issueId',
+  path: '/admin/rita-quality/$issueId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminSpacesIndexRoute = AdminSpacesIndexRouteImport.update({
   id: '/admin/spaces/',
   path: '/admin/spaces/',
@@ -866,6 +878,7 @@ export interface FileRoutesByFullPath {
   '/summaries/': typeof SummariesIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/german/$courseId': typeof AdminGermanCourseIdRouteWithChildren
+  '/admin/rita-quality/$issueId': typeof AdminRitaQualityIssueIdRoute
   '/admin/spaces/$spaceId': typeof AdminSpacesSpaceIdRoute
   '/api/admin/generate-image': typeof ApiAdminGenerateImageRoute
   '/api/german/score': typeof ApiGermanScoreRoute
@@ -893,6 +906,7 @@ export interface FileRoutesByFullPath {
   '/study/lectures/run': typeof StudyLecturesRunRoute
   '/study/subject/$subjectId': typeof StudySubjectSubjectIdRoute
   '/admin/german/': typeof AdminGermanIndexRoute
+  '/admin/rita-quality/': typeof AdminRitaQualityIndexRoute
   '/admin/spaces/': typeof AdminSpacesIndexRoute
   '/courses/$courseId/': typeof CoursesCourseIdIndexRoute
   '/german/$courseId/': typeof GermanCourseIdIndexRoute
@@ -991,6 +1005,7 @@ export interface FileRoutesByTo {
   '/summaries': typeof SummariesIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/german/$courseId': typeof AdminGermanCourseIdRouteWithChildren
+  '/admin/rita-quality/$issueId': typeof AdminRitaQualityIssueIdRoute
   '/admin/spaces/$spaceId': typeof AdminSpacesSpaceIdRoute
   '/api/admin/generate-image': typeof ApiAdminGenerateImageRoute
   '/api/german/score': typeof ApiGermanScoreRoute
@@ -1017,6 +1032,7 @@ export interface FileRoutesByTo {
   '/study/lectures/run': typeof StudyLecturesRunRoute
   '/study/subject/$subjectId': typeof StudySubjectSubjectIdRoute
   '/admin/german': typeof AdminGermanIndexRoute
+  '/admin/rita-quality': typeof AdminRitaQualityIndexRoute
   '/admin/spaces': typeof AdminSpacesIndexRoute
   '/courses/$courseId': typeof CoursesCourseIdIndexRoute
   '/german/$courseId': typeof GermanCourseIdIndexRoute
@@ -1120,6 +1136,7 @@ export interface FileRoutesById {
   '/summaries/': typeof SummariesIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/german/$courseId': typeof AdminGermanCourseIdRouteWithChildren
+  '/admin/rita-quality/$issueId': typeof AdminRitaQualityIssueIdRoute
   '/admin/spaces/$spaceId': typeof AdminSpacesSpaceIdRoute
   '/api/admin/generate-image': typeof ApiAdminGenerateImageRoute
   '/api/german/score': typeof ApiGermanScoreRoute
@@ -1147,6 +1164,7 @@ export interface FileRoutesById {
   '/study/lectures/run': typeof StudyLecturesRunRoute
   '/study/subject/$subjectId': typeof StudySubjectSubjectIdRoute
   '/admin/german/': typeof AdminGermanIndexRoute
+  '/admin/rita-quality/': typeof AdminRitaQualityIndexRoute
   '/admin/spaces/': typeof AdminSpacesIndexRoute
   '/courses/$courseId/': typeof CoursesCourseIdIndexRoute
   '/german/$courseId/': typeof GermanCourseIdIndexRoute
@@ -1251,6 +1269,7 @@ export interface FileRouteTypes {
     | '/summaries/'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/german/$courseId'
+    | '/admin/rita-quality/$issueId'
     | '/admin/spaces/$spaceId'
     | '/api/admin/generate-image'
     | '/api/german/score'
@@ -1278,6 +1297,7 @@ export interface FileRouteTypes {
     | '/study/lectures/run'
     | '/study/subject/$subjectId'
     | '/admin/german/'
+    | '/admin/rita-quality/'
     | '/admin/spaces/'
     | '/courses/$courseId/'
     | '/german/$courseId/'
@@ -1376,6 +1396,7 @@ export interface FileRouteTypes {
     | '/summaries'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/german/$courseId'
+    | '/admin/rita-quality/$issueId'
     | '/admin/spaces/$spaceId'
     | '/api/admin/generate-image'
     | '/api/german/score'
@@ -1402,6 +1423,7 @@ export interface FileRouteTypes {
     | '/study/lectures/run'
     | '/study/subject/$subjectId'
     | '/admin/german'
+    | '/admin/rita-quality'
     | '/admin/spaces'
     | '/courses/$courseId'
     | '/german/$courseId'
@@ -1504,6 +1526,7 @@ export interface FileRouteTypes {
     | '/summaries/'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/german/$courseId'
+    | '/admin/rita-quality/$issueId'
     | '/admin/spaces/$spaceId'
     | '/api/admin/generate-image'
     | '/api/german/score'
@@ -1531,6 +1554,7 @@ export interface FileRouteTypes {
     | '/study/lectures/run'
     | '/study/subject/$subjectId'
     | '/admin/german/'
+    | '/admin/rita-quality/'
     | '/admin/spaces/'
     | '/courses/$courseId/'
     | '/german/$courseId/'
@@ -1619,6 +1643,7 @@ export interface RootRouteChildren {
   SpacesIndexRoute: typeof SpacesIndexRoute
   SummariesIndexRoute: typeof SummariesIndexRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  AdminRitaQualityIssueIdRoute: typeof AdminRitaQualityIssueIdRoute
   AdminSpacesSpaceIdRoute: typeof AdminSpacesSpaceIdRoute
   ApiAdminGenerateImageRoute: typeof ApiAdminGenerateImageRoute
   ApiGermanScoreRoute: typeof ApiGermanScoreRoute
@@ -1634,6 +1659,7 @@ export interface RootRouteChildren {
   ApiRitaLearningRoute: typeof ApiRitaLearningRoute
   ShareQuestionsSetIdRoute: typeof ShareQuestionsSetIdRoute
   ShareQuestionsNewRoute: typeof ShareQuestionsNewRoute
+  AdminRitaQualityIndexRoute: typeof AdminRitaQualityIndexRoute
   AdminSpacesIndexRoute: typeof AdminSpacesIndexRoute
   ShareQuestionsIndexRoute: typeof ShareQuestionsIndexRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -2242,6 +2268,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGermanCourseIdRouteImport
       parentRoute: typeof AdminGermanRoute
     }
+    '/admin/rita-quality/': {
+      id: '/admin/rita-quality/'
+      path: '/admin/rita-quality'
+      fullPath: '/admin/rita-quality/'
+      preLoaderRoute: typeof AdminRitaQualityIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/rita-quality/$issueId': {
+      id: '/admin/rita-quality/$issueId'
+      path: '/admin/rita-quality/$issueId'
+      fullPath: '/admin/rita-quality/$issueId'
+      preLoaderRoute: typeof AdminRitaQualityIssueIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/spaces/': {
       id: '/admin/spaces/'
       path: '/admin/spaces'
@@ -2742,6 +2782,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpacesIndexRoute: SpacesIndexRoute,
   SummariesIndexRoute: SummariesIndexRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  AdminRitaQualityIssueIdRoute: AdminRitaQualityIssueIdRoute,
   AdminSpacesSpaceIdRoute: AdminSpacesSpaceIdRoute,
   ApiAdminGenerateImageRoute: ApiAdminGenerateImageRoute,
   ApiGermanScoreRoute: ApiGermanScoreRoute,
@@ -2757,6 +2798,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRitaLearningRoute: ApiRitaLearningRoute,
   ShareQuestionsSetIdRoute: ShareQuestionsSetIdRoute,
   ShareQuestionsNewRoute: ShareQuestionsNewRoute,
+  AdminRitaQualityIndexRoute: AdminRitaQualityIndexRoute,
   AdminSpacesIndexRoute: AdminSpacesIndexRoute,
   ShareQuestionsIndexRoute: ShareQuestionsIndexRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
