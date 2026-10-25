@@ -53,6 +53,13 @@ import { ExplanationLanguageControl } from "@/components/rita/ExplanationLanguag
 import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rita-conversation";
 
 type Persona = "kind" | "direct" | "playful" | "strict";
+/** In a lesson Rita opens the lesson herself as soon as the call starts, so nobody has to say hello. */
+function welcomeText(lessonId: string | undefined) {
+  return lessonId
+    ? "Hi, I’m Rita. Press start and I’ll open today’s lesson."
+    : "Hi, I’m Rita. What would you like to practise?";
+}
+
 type LessonMode = "free_conversation" | "guided_lesson" | "pronunciation_drill";
 type Message = {
   id: string;
@@ -192,9 +199,7 @@ export function RitaRealtimeV3({
     {
       id: "welcome",
       role: "rita",
-      text: lessonId
-        ? "Hi, I’m Rita. Press start and say hello when you are ready for today’s lesson."
-        : "Hi, I’m Rita. What would you like to practise?",
+      text: welcomeText(lessonId),
     },
   ]);
   // The natural defaults. The page no longer asks the learner to pick these.
@@ -752,7 +757,7 @@ export function RitaRealtimeV3({
         {
           id: crypto.randomUUID(),
           role: "rita",
-          text: "Hi, I’m Rita. What would you like to practise?",
+          text: welcomeText(lessonId),
         },
       ]);
     }
@@ -760,7 +765,7 @@ export function RitaRealtimeV3({
     skipExtraction.current = false;
     trayRef.current.closeTray();
     await Promise.allSettled([...pendingWrites.current]);
-  }, [cancelFiller, flushMetrics, persistConversationMessage]);
+  }, [cancelFiller, flushMetrics, lessonId, persistConversationMessage]);
 
   const finishConversation = useCallback(async () => {
     await endLesson();
