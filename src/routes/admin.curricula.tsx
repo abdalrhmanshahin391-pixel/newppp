@@ -255,6 +255,26 @@ function AdminCurricula() {
             </button>
           </div>
         )}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-dashed border-[var(--pp-line)] px-4 py-3 text-sm">
+          <span className="font-bold">دروس التمارين (تجريبي، للأدمن فقط):</span>
+          <Link
+            to="/rita-live"
+            search={{ sample: "to_be" }}
+            className="font-bold text-[var(--pp-accent-text)] underline"
+          >
+            am / is / are
+          </Link>
+          <Link
+            to="/rita-live"
+            search={{ sample: "property" }}
+            className="font-bold text-[var(--pp-accent-text)] underline"
+          >
+            كلمات البيت (property)
+          </Link>
+          <span className="text-[var(--pp-muted)]">
+            تفتح الدرس الجديد بنافذة التمارين. ما بتنحفظ بتقدّم أي طالب.
+          </span>
+        </div>
         {overview?.needsMigration && (
           <div className="flex items-start gap-3 rounded-3xl border-2 border-[#f5b942] bg-[#f4f4f8] p-4 text-sm font-bold text-[#8a5200]">
             <AlertTriangle size={18} className="shrink-0" />

@@ -154,6 +154,7 @@ export type RunView = {
   title: string;
   title_ar: string;
   estimated_minutes: number;
+  section_count: number;
   intro_ar: string;
   intro_en: string;
   language: string;

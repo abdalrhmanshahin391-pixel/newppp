@@ -267,6 +267,29 @@ lower right of the circle. Slides are AI drafts, so an admin switches "show to l
 lesson; regenerating switches it off. The card is a modal: Esc and back close it, focus is kept
 inside and returned, the page behind is locked, motion stops under reduced motion.
 
+## Lesson exercise window
+
+Lessons with exercises (content version 2, `src/lib/rita-lesson-*`) run on the lesson engine. The
+explanation of each part is a card in the conversation (`LessonFlow`): rule in Arabic, a two-column
+table, examples, and "فهمت، يلا نتمرن" / "عندي سؤال". The questions open in a window over the page
+(`ExerciseWindow`), never in the chat:
+
+- Phone: a sheet from the bottom (24px top corners, up to 88% of the height). From 640px: a centred
+  window, max 672px. Radix Dialog: focus moves into the window (to the window itself, so Enter
+  cannot pick an answer by accident), Esc and the back button pause the lesson, never cancel it.
+- Header: "الجزء 1 من 2 · تمرين", the part title, a thin progress bar and "سؤال 2 من 5", and a
+  "إيقاف مؤقت" button. Paused, the window becomes a bar at the bottom ("التمرين متوقف · سؤال 2 من 5
+  · كمّل") that reopens the same question.
+- Choices: full-width rows (56px, 12px radius) with a number key 1–4; number keys answer. Tiles
+  (word order, syllables): tap to place, tap a placed tile to send it back; no dragging needed.
+- After an answer the question stays; a line under it says right or wrong with an icon and words
+  (green `#1d6b3a` / red `#b3213f` on soft fills, never colour alone). A finished question stays
+  1.6 s (or until "التالي") before the next one. The right answer is shown only once the question
+  is finished, and the server never sends it earlier. A spelling item shows a clue, not the word.
+- End of a part: "4 من 5", "صح من أول مرة، بدون مساعدة", one sentence and one button.
+- Motion: 200–240ms rise (phone) or 220ms scale from 0.97 (wide), fade only under reduced motion.
+- Arabic text with English words uses `ChatText`, so the words get the same chips as in the chat.
+
 ## Home app window
 
 `AppWindow.tsx` replaces the old lesson-path strip. A window built from real markup (no screenshots) that starts tilted (desktop only) and flattens as it scrolls to the middle of the screen, then plays a short story once: the path fills, the lesson in progress shows, two words are saved, Rita listens.

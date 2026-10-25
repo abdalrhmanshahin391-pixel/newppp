@@ -17,8 +17,10 @@ export type PublicItem = {
   options: string[];
   /** word_order and syllable_tiles */
   tiles: PublicTile[];
-  /** meaning_choice and syllable_tiles: the word the question is about */
+  /** meaning_choice: the word whose meaning is asked. Empty for spelling, where it is the answer. */
   word: string;
+  /** syllable_tiles: the clue shown instead of the word. */
+  clue_ar: string;
   /** Whether a spoken answer can be checked (tiles that make a spelling cannot). */
   voice: boolean;
 };
@@ -96,7 +98,8 @@ export function publicItem(item: LessonItem, seed: string): PublicItem {
     spoken_prompt: item.spoken_prompt || item.prompt.replace(GAP, "blank"),
     options,
     tiles: shuffledTiles(item, seed),
-    word: item.template === "meaning_choice" || item.template === "syllable_tiles" ? item.word : "",
+    word: item.template === "meaning_choice" ? item.word : "",
+    clue_ar: item.template === "syllable_tiles" ? item.clue_ar : "",
     voice: item.template !== "syllable_tiles",
   };
 }

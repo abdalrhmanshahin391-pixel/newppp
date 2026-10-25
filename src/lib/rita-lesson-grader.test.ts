@@ -74,9 +74,12 @@ test("tile ids are positions on screen and say nothing about the right order", (
 });
 
 test("spelling tiles can only be answered by tapping", () => {
-  const item = findItem(SAMPLE_PROPERTY, "s_property")!.item;
+  const item = findItem(SAMPLE_PROPERTY, "spell_1")!.item;
   const shown = publicItem(item, "s");
   assert.equal(shown.voice, false);
+  assert.equal(shown.word, "", "the word to spell is the answer and is never shown");
+  assert.ok(!JSON.stringify(shown).includes("property"));
+  assert.equal(shown.clue_ar, "ملكية، عقار");
   const grade = gradeItem(item, { kind: "spoken", text: "property" }, "s");
   assert.equal(grade.status, "unclear");
   const order = ["prop", "er", "ty"].map(

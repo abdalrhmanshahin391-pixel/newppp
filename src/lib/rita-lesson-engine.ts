@@ -158,7 +158,16 @@ export function initialState(content: LessonContent, seed: string): RunState {
 export function allowedEvents(state: RunState): EventType[] {
   if (state.phase === "done") return [];
   if (state.paused) return ["resume", "question", "repeat", "off_topic", "end", "timeout"];
-  const always: EventType[] = ["question", "repeat", "off_topic", "pause", "end", "timeout"];
+  // "resume" outside a pause is how the learner answers "continue the lesson?" after drifting.
+  const always: EventType[] = [
+    "question",
+    "repeat",
+    "off_topic",
+    "pause",
+    "resume",
+    "end",
+    "timeout",
+  ];
   if (ITEM_PHASES.includes(state.phase)) {
     const events: EventType[] = ["graded", "hint", ...always];
     if ((state.current?.tries ?? 0) >= 1) events.push("reveal");

@@ -29,6 +29,7 @@ const itemId = z
   .regex(/^[a-z0-9][a-z0-9_-]{0,47}$/, "ids are lowercase letters, digits, dashes and underscores");
 
 const itemBase = {
+  /** Sent to the page with the question, so it must not give the answer away ("q3", not "q_is"). */
   id: itemId,
   /** The small skill the item checks, e.g. "be.he_she_it". Remediation follows it. */
   skill_tag: text(60).min(1),
@@ -78,7 +79,10 @@ const WordOrderSchema = z.object({
 const SyllableTilesSchema = z.object({
   ...itemBase,
   template: z.literal("syllable_tiles"),
+  /** The word to build. Never shown before the answer: the learner hears it or reads the clue. */
   word: text(40).min(1),
+  /** What the learner sees instead of the word, e.g. its meaning ("ملكية، عقار"). */
+  clue_ar: text(120).default(""),
   /** The pieces in the right order; joined they make the word. The count depends on the word. */
   answer: z.array(text(20).min(1)).min(2).max(8),
 });
