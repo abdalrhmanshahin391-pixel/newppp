@@ -64,6 +64,23 @@ export async function curriculumTextModel() {
   return (await getServerRuntimeSecret("RITA_CURRICULUM_MODEL")) || DEFAULT_TEXT_MODEL;
 }
 
+/**
+ * A deliberately tiny, schema-checked request used before a longer book read.
+ * It proves that the server can obtain and use its OpenAI key without ever
+ * returning that key to the browser.  Keeping this separate from OCR makes a
+ * bad key fail in seconds instead of after the PDF has been rendered.
+ */
+export async function preflightCurriculumAi(): Promise<{ model: string }> {
+  const ReadySchema = z.object({ ok: z.literal(true) });
+  const { model } = await chatJson(
+    ReadySchema,
+    "You are a service health check. Reply only with the JSON object {\"ok\":true}.",
+    "Run the health check.",
+    { maxTokens: 16, timeoutMs: 20_000, temperature: 0 },
+  );
+  return { model };
+}
+
 async function postJson(url: string, key: string, body: unknown, timeoutMs: number) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
