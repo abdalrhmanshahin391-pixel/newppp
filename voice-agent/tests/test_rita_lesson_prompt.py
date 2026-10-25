@@ -37,3 +37,35 @@ def test_lesson_brief_is_capped():
 def test_build_prompt_includes_lesson_section():
     source = (ROOT / "bot.py").read_text(encoding="utf-8")
     assert "{lesson_section(body)}" in source
+
+
+def load_opening():
+    tree = ast.parse((ROOT / "bot.py").read_text(encoding="utf-8"))
+    names = {"lesson_section", "opens_lesson", "opening_message"}
+    nodes = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in names]
+    namespace: dict[str, Any] = {"Any": Any}
+    exec(compile(ast.Module(body=nodes, type_ignores=[]), "bot.py", "exec"), namespace)
+    return namespace["opening_message"], namespace["lesson_section"]
+
+
+def test_a_lesson_does_not_open_with_the_free_conversation_question():
+    opening_message, _ = load_opening()
+    message = opening_message({"lesson": {"brief": "Lesson: The verb to be"}})
+    assert message["role"] == "system"
+    assert "practise" not in message["content"]
+
+
+def test_free_conversation_keeps_its_opener():
+    opening_message, _ = load_opening()
+    message = opening_message({})
+    assert message == {"role": "assistant", "content": "Hi, I’m Rita. What would you like to practise?"}
+
+
+def test_rita_speaks_first_in_a_lesson():
+    _, lesson_section = load_opening()
+    text = lesson_section({"lesson": {"brief": "Lesson: The verb to be"}})
+    assert "You speak first" in text
+    assert "On the learner's first turn" not in text
+    source = (ROOT / "bot.py").read_text(encoding="utf-8")
+    assert '@task.rtvi.event_handler("on_client_ready")' in source
+    assert "LLMRunFrame()" in source

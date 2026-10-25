@@ -1820,6 +1820,17 @@ function currentState(objectives: Objective[], stored: unknown): ObjectiveState 
 }
 
 /**
+ * Lesson progress is written with the server key, never the learner's. The live database only lets
+ * learners read their rows (the write policies were never added to its migrations), so a write
+ * through the learner's client was refused or, for an update, silently changed nothing. Every
+ * write below is scoped to the signed-in user by hand.
+ */
+async function progressWriter() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
+  return supabaseAdmin;
+}
+
+/**
  * Opens a lesson for the learner. A finished lesson starts a fresh attempt
  * (best score kept); an unfinished one resumes with the objectives already met.
  */
@@ -1891,7 +1902,8 @@ export const startLessonAttempt = createServerFn({ method: "POST" })
       completed_at: null,
     };
     if (!row) {
-      const { data: created, error: insertError } = await db
+      const writer = await progressWriter();
+      const { data: created, error: insertError } = await writer
         .from("rita_lesson_progress")
         .upsert(
           { user_id: context.userId, lesson_id: lesson.id, ...fresh },
@@ -1902,10 +1914,12 @@ export const startLessonAttempt = createServerFn({ method: "POST" })
       fail(insertError, "start lesson");
       row = created;
     } else if (row.status === "completed" || data.restart) {
-      const { data: updated, error: updateError } = await db
+      const writer = await progressWriter();
+      const { data: updated, error: updateError } = await writer
         .from("rita_lesson_progress")
         .update({ ...fresh, attempts: row.attempts + 1 })
         .eq("id", row.id)
+        .eq("user_id", context.userId)
         .select("id, status, objectives, score, stars, attempts")
         .single();
       fail(updateError, "restart lesson");
@@ -2082,10 +2096,12 @@ export const evaluateLessonTurn = createServerFn({ method: "POST" })
       if (gaps) patch.last_completed_at = patch.completed_at;
     }
     // Guard on in_progress so two overlapping calls cannot complete twice.
-    const { error: updateError } = await db
+    const writer = await progressWriter();
+    const { error: updateError } = await writer
       .from("rita_lesson_progress")
       .update(patch)
       .eq("id", row.id)
+      .eq("user_id", context.userId)
       .eq("status", "in_progress");
     fail(updateError, "save progress");
     return { objectives: merged.state, newlyMet: merged.newlyMet, score, stars, completed };
