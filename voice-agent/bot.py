@@ -19,6 +19,7 @@ from loguru import logger
 from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
+from pipecat.frames.frames import LLMRunFrame
 from pipecat.observers.loggers.metrics_log_observer import MetricsLogObserver
 from pipecat.observers.startup_timing_observer import StartupTimingObserver
 from pipecat.observers.user_bot_latency_observer import UserBotLatencyObserver
@@ -153,7 +154,8 @@ CURRICULUM LESSON
 You are teaching this lesson now. The notes are for you only; never read them aloud.
 {brief}
 How to run it:
-- On the learner's first turn, greet them briefly, name today's topic in one sentence, then start.
+- You speak first: greet the learner in one short sentence, name today's topic in one sentence,
+  then start the first point. Never ask what they would like to practise; the lesson decides.
 - Follow the plan in order. Teach one small point, give one example, then ask the learner to say
   their own sentence. Keep the learner talking more than you.
 - Work through the objectives one at a time. For each one, ask one of its questions and wait.
@@ -162,6 +164,22 @@ How to run it:
 - Stay on this lesson. If the learner drifts, answer in one sentence and bring them back.
 - When every objective has been practised, praise the learner and wrap up in two sentences.
 """
+
+
+def opens_lesson(body: dict[str, Any]) -> bool:
+    """True when this call is a curriculum lesson, which Rita opens herself."""
+    return bool(lesson_section(body))
+
+
+def opening_message(body: dict[str, Any]) -> dict[str, str]:
+    """The context's first message. In a lesson it is a note to Rita, not a question to the learner:
+    the free-conversation opener made her act as if the learner should choose the topic."""
+    if opens_lesson(body):
+        return {
+            "role": "system",
+            "content": "The call has started. Open the lesson now, as the lesson notes say.",
+        }
+    return {"role": "assistant", "content": "Hi, I’m Rita. What would you like to practise?"}
 
 
 def explain_options(state: RitaSessionState) -> dict[str, Any] | None:
@@ -432,9 +450,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         *saved_history,
     ]
     if not saved_history:
-        initial_messages.append(
-            {"role": "assistant", "content": "Hi, I’m Rita. What would you like to practise?"}
-        )
+        initial_messages.append(opening_message(body))
     context = LLMContext(initial_messages)
     vad = SileroVADAnalyzer(params=VADParams(stop_secs=0.2))
     user_aggregator, assistant_aggregator = LLMContextAggregatorPair(
@@ -582,6 +598,13 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             user_bot_observer,
         ],
     )
+
+    @task.rtvi.event_handler("on_client_ready")
+    async def on_client_ready(rtvi):
+        # In a lesson Rita speaks first; in a free conversation she waits for the learner.
+        if opens_lesson(body) and not saved_history:
+            logger.info("Rita opens the lesson")
+            await task.queue_frames([LLMRunFrame()])
 
     @task.rtvi.event_handler("on_client_message")
     async def on_client_message(rtvi, msg):
