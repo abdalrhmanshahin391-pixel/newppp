@@ -3039,6 +3039,53 @@ export type Database = {
         }
         Relationships: []
       }
+      rita_conversation_reviews: {
+        Row: {
+          conversation_id: string
+          data: Json | null
+          error: string | null
+          model: string | null
+          reviewed_at: string
+          rubric_version: number
+          stats: Json | null
+          status: string
+          turns_reviewed: number
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          data?: Json | null
+          error?: string | null
+          model?: string | null
+          reviewed_at?: string
+          rubric_version: number
+          stats?: Json | null
+          status?: string
+          turns_reviewed: number
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          data?: Json | null
+          error?: string | null
+          model?: string | null
+          reviewed_at?: string
+          rubric_version?: number
+          stats?: Json | null
+          status?: string
+          turns_reviewed?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_conversation_reviews_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: true
+            referencedRelation: "rita_free_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rita_curricula: {
         Row: {
           created_at: string
@@ -3335,6 +3382,229 @@ export type Database = {
         }
         Relationships: []
       }
+      rita_issue_reports: {
+        Row: {
+          build: string | null
+          category: string
+          conversation_id: string | null
+          created_at: string
+          id: string
+          ledger: Json
+          note: string | null
+          reply_message_id: string | null
+          session_id: string | null
+          turn_ref: string | null
+          user_id: string
+        }
+        Insert: {
+          build?: string | null
+          category: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          ledger?: Json
+          note?: string | null
+          reply_message_id?: string | null
+          session_id?: string | null
+          turn_ref?: string | null
+          user_id: string
+        }
+        Update: {
+          build?: string | null
+          category?: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          ledger?: Json
+          note?: string | null
+          reply_message_id?: string | null
+          session_id?: string | null
+          turn_ref?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_issue_reports_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "rita_free_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rita_issue_reports_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "rita_v3_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rita_issues: {
+        Row: {
+          category: string | null
+          cause: string | null
+          created_at: string
+          description: string
+          fix_baseline_build: string | null
+          fix_marked_at: string | null
+          fix_where: string
+          id: string
+          merged_into: string | null
+          note: string | null
+          pr_url: string | null
+          status: string
+          suggested_merge_into: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          cause?: string | null
+          created_at?: string
+          description?: string
+          fix_baseline_build?: string | null
+          fix_marked_at?: string | null
+          fix_where?: string
+          id?: string
+          merged_into?: string | null
+          note?: string | null
+          pr_url?: string | null
+          status?: string
+          suggested_merge_into?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          cause?: string | null
+          created_at?: string
+          description?: string
+          fix_baseline_build?: string | null
+          fix_marked_at?: string | null
+          fix_where?: string
+          id?: string
+          merged_into?: string | null
+          note?: string | null
+          pr_url?: string | null
+          status?: string
+          suggested_merge_into?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_issues_merged_into_fkey"
+            columns: ["merged_into"]
+            isOneToOne: false
+            referencedRelation: "rita_issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rita_issues_suggested_merge_into_fkey"
+            columns: ["suggested_merge_into"]
+            isOneToOne: false
+            referencedRelation: "rita_issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rita_lesson_contents: {
+        Row: {
+          content: Json
+          content_schema: number
+          lesson_id: string
+          status: string
+          updated_at: string
+          version: number
+          warnings: Json
+        }
+        Insert: {
+          content: Json
+          content_schema?: number
+          lesson_id: string
+          status?: string
+          updated_at?: string
+          version?: number
+          warnings?: Json
+        }
+        Update: {
+          content?: Json
+          content_schema?: number
+          lesson_id?: string
+          status?: string
+          updated_at?: string
+          version?: number
+          warnings?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_lesson_contents_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: true
+            referencedRelation: "rita_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rita_lesson_item_results: {
+        Row: {
+          channel: string
+          created_at: string
+          given: string
+          hint_used: boolean
+          id: string
+          independent: boolean
+          item_id: string
+          phase: string
+          revision: number
+          run_id: string
+          skill_tag: string
+          status: string
+          stt_suspect: boolean
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          given?: string
+          hint_used?: boolean
+          id?: string
+          independent?: boolean
+          item_id: string
+          phase: string
+          revision: number
+          run_id: string
+          skill_tag?: string
+          status: string
+          stt_suspect?: boolean
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          given?: string
+          hint_used?: boolean
+          id?: string
+          independent?: boolean
+          item_id?: string
+          phase?: string
+          revision?: number
+          run_id?: string
+          skill_tag?: string
+          status?: string
+          stt_suspect?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_lesson_item_results_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "rita_lesson_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rita_lesson_progress: {
         Row: {
           attempts: number
@@ -3449,6 +3719,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "rita_lesson_resources_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "rita_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rita_lesson_runs: {
+        Row: {
+          completed_at: string | null
+          content: Json
+          content_version: number
+          id: string
+          lesson_id: string | null
+          preview: boolean
+          revision: number
+          sample: string | null
+          started_at: string
+          state: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          content: Json
+          content_version?: number
+          id?: string
+          lesson_id?: string | null
+          preview?: boolean
+          revision?: number
+          sample?: string | null
+          started_at?: string
+          state: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          content?: Json
+          content_version?: number
+          id?: string
+          lesson_id?: string | null
+          preview?: boolean
+          revision?: number
+          sample?: string | null
+          started_at?: string
+          state?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_lesson_runs_lesson_id_fkey"
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "rita_lessons"
@@ -3582,6 +3908,169 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rita_replay_runs: {
+        Row: {
+          cases: Json
+          error: string | null
+          failed: number
+          finished_at: string | null
+          flaky: number
+          id: string
+          issue_id: string
+          passed: number
+          prompt_changed: boolean | null
+          started_at: string
+          status: string
+          total: number
+          trigger: string
+          worker_build: string | null
+        }
+        Insert: {
+          cases?: Json
+          error?: string | null
+          failed?: number
+          finished_at?: string | null
+          flaky?: number
+          id?: string
+          issue_id: string
+          passed?: number
+          prompt_changed?: boolean | null
+          started_at?: string
+          status?: string
+          total?: number
+          trigger: string
+          worker_build?: string | null
+        }
+        Update: {
+          cases?: Json
+          error?: string | null
+          failed?: number
+          finished_at?: string | null
+          flaky?: number
+          id?: string
+          issue_id?: string
+          passed?: number
+          prompt_changed?: boolean | null
+          started_at?: string
+          status?: string
+          total?: number
+          trigger?: string
+          worker_build?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_replay_runs_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "rita_issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rita_review_feedback: {
+        Row: {
+          agree: boolean
+          created_at: string
+          note: string | null
+          review_id: string
+          user_id: string
+        }
+        Insert: {
+          agree: boolean
+          created_at?: string
+          note?: string | null
+          review_id: string
+          user_id: string
+        }
+        Update: {
+          agree?: boolean
+          created_at?: string
+          note?: string | null
+          review_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_review_feedback_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: true
+            referencedRelation: "rita_turn_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rita_review_settings: {
+        Row: {
+          assign_lock_until: string | null
+          enabled: boolean
+          id: boolean
+          last_merge_pass_at: string | null
+          last_replay_build: string | null
+          updated_at: string
+        }
+        Insert: {
+          assign_lock_until?: string | null
+          enabled?: boolean
+          id?: boolean
+          last_merge_pass_at?: string | null
+          last_replay_build?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assign_lock_until?: string | null
+          enabled?: boolean
+          id?: boolean
+          last_merge_pass_at?: string | null
+          last_replay_build?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rita_reviewer_checks: {
+        Row: {
+          error: string | null
+          failed: number
+          finished_at: string | null
+          id: string
+          model: string | null
+          passed: number
+          results: Json
+          rubric_version: number
+          started_at: string
+          status: string
+          total: number
+          trigger: string
+        }
+        Insert: {
+          error?: string | null
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          model?: string | null
+          passed?: number
+          results?: Json
+          rubric_version: number
+          started_at?: string
+          status?: string
+          total?: number
+          trigger?: string
+        }
+        Update: {
+          error?: string | null
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          model?: string | null
+          passed?: number
+          results?: Json
+          rubric_version?: number
+          started_at?: string
+          status?: string
+          total?: number
+          trigger?: string
+        }
+        Relationships: []
       }
       rita_turn_metrics: {
         Row: {
@@ -3782,6 +4271,139 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "rita_voice_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rita_turn_reviews: {
+        Row: {
+          attempts: number
+          build: string | null
+          category: string | null
+          cause: string | null
+          confidence: number | null
+          conversation_id: string
+          created_at: string
+          dialect: Json | null
+          error: string | null
+          evidence: string | null
+          explanation: string | null
+          facts: Json | null
+          fix: Json | null
+          id: string
+          issue_id: string | null
+          model: string | null
+          reasons: string[]
+          reference_reply: string | null
+          reference_why: string | null
+          reply_message_id: string | null
+          reviewed_at: string | null
+          rubric_version: number
+          scores: Json | null
+          session_id: string | null
+          severity: number | null
+          status: string
+          suggestion: string | null
+          timing: Json | null
+          trigger: string
+          turn_key: string
+          turn_ref: string | null
+          user_id: string
+          verdict: string | null
+          winner: string | null
+        }
+        Insert: {
+          attempts?: number
+          build?: string | null
+          category?: string | null
+          cause?: string | null
+          confidence?: number | null
+          conversation_id: string
+          created_at?: string
+          dialect?: Json | null
+          error?: string | null
+          evidence?: string | null
+          explanation?: string | null
+          facts?: Json | null
+          fix?: Json | null
+          id?: string
+          issue_id?: string | null
+          model?: string | null
+          reasons?: string[]
+          reference_reply?: string | null
+          reference_why?: string | null
+          reply_message_id?: string | null
+          reviewed_at?: string | null
+          rubric_version?: number
+          scores?: Json | null
+          session_id?: string | null
+          severity?: number | null
+          status?: string
+          suggestion?: string | null
+          timing?: Json | null
+          trigger: string
+          turn_key: string
+          turn_ref?: string | null
+          user_id: string
+          verdict?: string | null
+          winner?: string | null
+        }
+        Update: {
+          attempts?: number
+          build?: string | null
+          category?: string | null
+          cause?: string | null
+          confidence?: number | null
+          conversation_id?: string
+          created_at?: string
+          dialect?: Json | null
+          error?: string | null
+          evidence?: string | null
+          explanation?: string | null
+          facts?: Json | null
+          fix?: Json | null
+          id?: string
+          issue_id?: string | null
+          model?: string | null
+          reasons?: string[]
+          reference_reply?: string | null
+          reference_why?: string | null
+          reply_message_id?: string | null
+          reviewed_at?: string | null
+          rubric_version?: number
+          scores?: Json | null
+          session_id?: string | null
+          severity?: number | null
+          status?: string
+          suggestion?: string | null
+          timing?: Json | null
+          trigger?: string
+          turn_key?: string
+          turn_ref?: string | null
+          user_id?: string
+          verdict?: string | null
+          winner?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_turn_reviews_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "rita_free_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rita_turn_reviews_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "rita_issues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rita_turn_reviews_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "rita_v3_sessions"
             referencedColumns: ["id"]
           },
         ]
