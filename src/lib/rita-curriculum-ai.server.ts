@@ -6,6 +6,14 @@ import { getServerRuntimeSecret } from "@/lib/config.server";
 import { resolveRitaOpenAiKey } from "@/lib/rita-voice.server";
 import { GeneratedDeckSchema, finalizeSlides, type Slide } from "@/lib/rita-slides";
 import {
+  LessonItemSchema,
+  generatedContentSchema,
+  itemProblems,
+  type LessonContent,
+  type LessonItem,
+  type LessonSection,
+} from "@/lib/rita-lesson-content";
+import {
   EvaluationSchema,
   LessonDraftSchema,
   WindowSummarySchema,
@@ -384,6 +392,182 @@ ${input.pageText}`;
     temperature: 0.4,
   });
   return { slides: finalizeSlides(value.slides, { from: input.from, to: input.to }), model };
+}
+
+const EXERCISE_ITEM_SHAPE = `one of:
+  { "template": "choice_fill", "id": "x", "skill_tag": "be.he_she_it", "prompt": "She ___ a teacher.",
+    "instruction_ar": "اختر الكلمة المناسبة", "options": ["am","is","are"], "keep_option_order": true,
+    "answer": "is", "hint_ar": "...", "explain_ar": "...", "explain_en": "...", "source_page": 12 }
+  { "template": "meaning_choice", "id": "x", "skill_tag": "word.rent", "prompt": "What does it mean?",
+    "instruction_ar": "اختر المعنى الصحيح", "word": "rent", "options": ["إيجار","باب","شارع"], "answer": "إيجار", ... }
+  { "template": "word_order", "id": "x", "skill_tag": "be.question_order", "prompt": "Make a question.",
+    "instruction_ar": "رتّب الكلمات لتعمل سؤال", "answer": ["Are","you","ready?"], "accepted": [], ... }
+  { "template": "syllable_tiles", "id": "x", "skill_tag": "spell.property", "prompt": "Build the word.",
+    "instruction_ar": "ركّب الكلمة", "word": "property", "clue_ar": "ملكية، عقار", "answer": ["prop","er","ty"], ... }`;
+
+const LESSON_CONTENT_SHAPE = `{
+  "schema": 2, "language": "en", "estimated_minutes": 12,
+  "intro_ar": "one short sentence: what we learn today", "intro_en": "...",
+  "sections": [{
+    "id": "x", "title": "short English title", "title_ar": "short Arabic title", "source_pages": [12],
+    "explain": {
+      "rule_ar": "the rule in simple Jordanian Arabic, 1-3 short sentences",
+      "rule_en": "the rule in one simple English sentence",
+      "table": [{ "left": "I", "right": "am" }],
+      "examples": [{ "text": "an example sentence from the pages", "note_ar": "short note" }]
+    },
+    "guided": [ITEM],
+    "practice": [ITEM, ITEM, ITEM, ITEM, ITEM, ITEM, ITEM],
+    "remediation": [ITEM, ITEM, ITEM],
+    "mastery": { "required": 5, "min_correct": 4 }
+  }],
+  "wrap": { "summary_ar": "2 short sentences", "summary_en": "..." }
+}
+ITEM is ${EXERCISE_ITEM_SHAPE}`;
+
+const EXERCISE_RULES = `Exercise rules (the website checks each answer in code, so every item must have exactly one right answer):
+- choice_fill: the prompt has exactly one "___"; 2-4 options; the answer is one of the options and the ONLY
+  option that fits the sentence's grammar and meaning. Distractors are real, plausible mistakes for an Arabic
+  speaker, never silly. Set keep_option_order true only for a closed set the learner learns in order
+  (am / is / are), otherwise false.
+- meaning_choice: "word" is the English word; the answer and 2-3 distractors are short Arabic meanings; the
+  meaning is the one the pages teach (choose the right sense for words with several meanings).
+- word_order: "answer" is the sentence's words in order (keep punctuation on the last word); 3-8 words; list
+  other correct orders in "accepted" (most items have none).
+- syllable_tiles: for spelling words from the pages; "answer" pieces joined make "word" exactly; split into
+  natural spelling chunks (2-5 pieces; not always 4); "clue_ar" is the Arabic meaning (never the word).
+- Sentences are A1, short, and use only words from the pages or very common words.
+- hint_ar points to the reason without giving the answer; explain_ar says why the answer is right in one short
+  sentence. Simple Jordanian Arabic, wording that fits any gender (no خد/خدي, جاهز/جاهزة).
+- skill_tag names the small skill (e.g. "be.plural", "word.owner", "spell.owner"); remediation items train the
+  skills that practice items test.
+- source_page is the page the sentence or word comes from.`;
+
+/** A lesson with exercises (content version 2), written only from the lesson's pages. */
+export async function generateLessonContent(input: {
+  kind: CurriculumKind;
+  bookTitle: string;
+  lessonTitle: string;
+  topic: string;
+  objectives: Objective[];
+  vocabulary: { word: string; meaning_ar: string }[];
+  from: number;
+  to: number;
+  pageText: string;
+}): Promise<{ content: LessonContent; model: string }> {
+  const system = `You turn one lesson of a language course book into a short interactive lesson with exercises
+for an Arabic-speaking A1 adult. Rita, a voice tutor, explains each part; then the learner answers short
+exercises in a window on the screen.
+Lesson rules:
+- Use only content from the given pages (${input.from}-${input.to}); never invent rules or words.
+- 2 to 4 parts in the book's order. Each part is one small goal (e.g. "he/she/it is", "the question",
+  "the negative", or a group of 5-8 words). Cover every lesson objective.
+- Each part: an explanation (rule, a small table when it helps, 1-3 examples from the pages), 1 guided item,
+  7 practice items (5 are asked, 2 are spares) and 3 remediation items.
+- Grammar parts mostly use choice_fill and word_order; word parts use meaning_choice, choice_fill (the word
+  that fits the sentence's meaning) and syllable_tiles for spelling.
+- About 12 minutes in total.
+${EXERCISE_RULES}
+Reply with one JSON object shaped like:
+${LESSON_CONTENT_SHAPE}`;
+  const objectives = input.objectives.map((objective) => `- ${objective.text}`).join("\n");
+  const words = input.vocabulary
+    .slice(0, 20)
+    .map((item) => `${item.word} = ${item.meaning_ar}`)
+    .join("; ");
+  const user = `Book: ${input.bookTitle} (${input.kind})
+Lesson: ${input.lessonTitle} (topic: ${input.topic})
+Objectives:
+${objectives}
+Words in this lesson: ${words || "none listed"}
+
+Page text ${input.from}-${input.to}:
+${input.pageText}`;
+  const { value, model } = await chatJson(
+    generatedContentSchema({ from: input.from, to: input.to }),
+    system,
+    user,
+    { maxTokens: 12_000, timeoutMs: 150_000, temperature: 0.4 },
+  );
+  return { content: value as LessonContent, model };
+}
+
+const ReviewSchema = z.object({
+  warnings: z
+    .array(
+      z.object({
+        item_id: z.string().trim().max(48).default(""),
+        problem: z.string().trim().min(1).max(300),
+      }),
+    )
+    .max(30),
+});
+export type ContentWarning = z.infer<typeof ReviewSchema>["warnings"][number];
+
+/**
+ * A second, separate check before any learner sees the exercises: items with two right answers,
+ * explanations that contradict the pages, wrong meanings. Runs once, never during a lesson.
+ */
+export async function reviewLessonContent(input: {
+  content: LessonContent;
+  pageText: string;
+}): Promise<{ warnings: ContentWarning[]; model: string }> {
+  const system = `You check exercises written for Arabic-speaking A1 learners before they are published.
+For each problem you find, give the item id and one sentence. Look for:
+- a question where more than one option is correct, or where the marked answer is wrong;
+- an explanation, hint or rule that is false or contradicts the book pages;
+- a meaning that is not the sense the pages use; a spelling split that is wrong;
+- English that is not natural or not A1; Arabic that is not simple Jordanian or assumes the learner's gender.
+Do not report style preferences. If everything is fine, return an empty list.
+Reply with one JSON object: { "warnings": [{ "item_id": "p1-3", "problem": "..." }] }`;
+  const user = `Exercises (JSON):
+${JSON.stringify(input.content).slice(0, 40_000)}
+
+Book pages:
+${input.pageText.slice(0, 20_000)}`;
+  const { value, model } = await chatJson(ReviewSchema, system, user, {
+    maxTokens: 3_000,
+    timeoutMs: 120_000,
+    temperature: 0,
+  });
+  return { warnings: value.warnings, model };
+}
+
+/** One new item in place of an old one: same kind, same skill, a different question. */
+export async function regenerateExerciseItem(input: {
+  section: LessonSection;
+  item: LessonItem;
+  pageText: string;
+}): Promise<{ item: LessonItem; model: string }> {
+  const others = [...input.section.guided, ...input.section.practice, ...input.section.remediation]
+    .map((item) => item.prompt + ("word" in item ? ` ${item.word}` : ""))
+    .join(" | ");
+  const system = `You write one replacement exercise item for an Arabic-speaking A1 learner.
+Keep the same template ("${input.item.template}") and skill_tag ("${input.item.skill_tag}"); write a different
+question that does not repeat any existing one.
+${EXERCISE_RULES}
+Reply with one JSON object, the item only, shaped like ${EXERCISE_ITEM_SHAPE}`;
+  const user = `Part: ${input.section.title} — ${input.section.explain.rule_en || input.section.explain.rule_ar}
+Item to replace: ${JSON.stringify(input.item)}
+Existing questions: ${others.slice(0, 4_000)}
+
+Book pages:
+${input.pageText.slice(0, 20_000)}`;
+  const schema = LessonItemSchema.superRefine((item, ctx) => {
+    if (item.template !== input.item.template) {
+      ctx.addIssue({ code: "custom", message: `template must be ${input.item.template}` });
+    }
+    for (const problem of itemProblems(item)) ctx.addIssue({ code: "custom", message: problem });
+  });
+  const { value, model } = await chatJson(schema, system, user, {
+    maxTokens: 1_500,
+    timeoutMs: 60_000,
+    temperature: 0.7,
+  });
+  return {
+    item: { ...value, id: input.item.id, skill_tag: input.item.skill_tag } as LessonItem,
+    model,
+  };
 }
 
 export async function evaluateTurns(input: {

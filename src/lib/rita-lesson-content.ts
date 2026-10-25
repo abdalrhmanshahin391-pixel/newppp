@@ -244,3 +244,58 @@ export function parseLessonContent(raw: unknown): LessonContent | null {
   const parsed = LessonContentSchema.safeParse(raw);
   return parsed.success ? parsed.data : null;
 }
+
+/**
+ * Makes generated content safe to store: ids become neutral ("p1-3": part 1, practice 3) so they
+ * never give an answer away, source pages stay inside the lesson's pages, and each part asks at
+ * least its mastery number of questions (the rule is lowered, never faked, when the model wrote
+ * fewer).
+ */
+export function finalizeContent(
+  content: LessonContent,
+  range: { from: number; to: number },
+): LessonContent {
+  const clamp = (page: number | null) =>
+    page === null ? null : Math.max(range.from, Math.min(page, range.to));
+  const bankLetter = { guided: "g", practice: "p", remediation: "r" } as const;
+  const sections = content.sections.map((section, sectionIndex) => {
+    const part = sectionIndex + 1;
+    const renumber = (bank: keyof typeof bankLetter) =>
+      section[bank].map((item, index) => ({
+        ...item,
+        id: `${bankLetter[bank]}${part}-${index + 1}`,
+        source_page: clamp(item.source_page),
+      }));
+    const practice = renumber("practice");
+    const required = Math.min(section.mastery.required, practice.length);
+    return {
+      ...section,
+      id: `part${part}`,
+      source_pages: section.source_pages.map((page) => clamp(page) as number),
+      guided: renumber("guided"),
+      practice,
+      remediation: renumber("remediation"),
+      mastery: { required, min_correct: Math.min(section.mastery.min_correct, required) },
+    };
+  });
+  return { ...content, sections };
+}
+
+/** Content as the model writes it: checked by the same code rules before it can be saved. */
+export function generatedContentSchema(range: { from: number; to: number }) {
+  return LessonContentSchema.transform((content) => finalizeContent(content, range)).superRefine(
+    (content, ctx) => {
+      for (const problem of contentProblems(content)) {
+        ctx.addIssue({ code: "custom", message: problem });
+      }
+      for (const section of content.sections) {
+        if (section.practice.length < 4) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Part "${section.title}" needs at least 4 practice questions (has ${section.practice.length}).`,
+          });
+        }
+      }
+    },
+  );
+}

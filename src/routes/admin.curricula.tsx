@@ -78,6 +78,7 @@ import { LessonImage } from "@/components/rita-lessons/LessonArt";
 import { LessonForm } from "@/components/rita-lessons/LessonForm";
 import { NextLessonPicker } from "@/components/rita-lessons/admin/NextLessonPicker";
 import { SlidesPanel } from "@/components/rita-lessons/admin/SlidesPanel";
+import { ExercisesPanel } from "@/components/rita-lessons/admin/ExercisesPanel";
 import { ResourcesPanel } from "@/components/rita-lessons/admin/ResourcesPanel";
 import type { Resource } from "@/lib/rita-resources";
 import { suggestNextTopics, type Slide } from "@/lib/rita-slides";
@@ -1375,7 +1376,9 @@ function LessonsCard({
   const [lessonJson, setLessonJson] = useState("");
   const [generatingKey, setGeneratingKey] = useState("");
   const [activeId, setActiveId] = useState("");
-  const [tab, setTab] = useState<"overview" | "slides" | "resources" | "edit">("overview");
+  const [tab, setTab] = useState<"overview" | "slides" | "exercises" | "resources" | "edit">(
+    "overview",
+  );
   const [deckEpoch, setDeckEpoch] = useState<Record<string, number>>({});
   const [editing, setEditing] = useState<{ id: string; draft: LessonDraft } | null>(null);
   const [selectedDrafts, setSelectedDrafts] = useState<Set<string>>(new Set());
@@ -1664,6 +1667,7 @@ function LessonsCard({
                   [
                     ["overview", "نظرة عامة"],
                     ["slides", "السلايدات"],
+                    ["exercises", "التمارين"],
                     [
                       "resources",
                       `المراجع${resourcesReady ? ` (${resources[active.id]?.length ?? 0})` : ""}`,
@@ -1866,6 +1870,12 @@ function LessonsCard({
                       }
                     }}
                   />
+                </div>
+              )}
+
+              {tab === "exercises" && (
+                <div className="rounded-2xl border-2 border-[var(--pp-line)] bg-white p-4">
+                  <ExercisesPanel key={active.id} lessonId={active.id} />
                 </div>
               )}
 
