@@ -85,7 +85,7 @@ type ConversationWrite = {
 type ClientHandle = {
   disconnect(): Promise<void>;
   enableMic(enabled: boolean): void;
-  sendText(text: string): Promise<void>;
+  sendText(text: string): Promise<unknown>;
   sendClientMessage(msgType: string, data?: unknown): void;
   readonly connected: boolean;
 };
