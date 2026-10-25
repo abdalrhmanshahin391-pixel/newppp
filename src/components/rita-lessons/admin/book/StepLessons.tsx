@@ -12,10 +12,18 @@ import {
 } from "@/lib/rita-curriculum.functions";
 import { NextLessonPicker } from "@/components/rita-lessons/admin/NextLessonPicker";
 import type { TopicSuggestion } from "@/lib/rita-slides";
-import { errorText, pagesLabel } from "./book-utils";
+import { errorDetail, errorText, pagesLabel } from "./book-utils";
 import { BidiText } from "./BookBits";
 
-type ItemState = { state: "waiting" | "lesson" | "exercises" | "done" | "failed"; error?: string };
+type ItemState = {
+  state: "waiting" | "lesson" | "exercises" | "done" | "failed";
+  error?: string;
+  /** The server's own words, shown small under the hint. */
+  detail?: string;
+  /** The lesson was made but its exercises were not: it leaves the suggestions, so it is listed apart. */
+  partial?: boolean;
+  title?: string;
+};
 
 const keyOf = (item: TopicSuggestion) => `${item.topic}:${item.from_page}-${item.to_page}`;
 
@@ -70,6 +78,8 @@ export function StepLessons({
         if (cancel.current) break;
         const key = keyOf(item);
         const set = (state: ItemState) => setProgress((current) => ({ ...current, [key]: state }));
+        // Which step failed decides what the admin does next.
+        let stage: "lesson" | "exercises" = "lesson";
         try {
           set({ state: "lesson" });
           const row = await lessonFn({
@@ -81,13 +91,23 @@ export function StepLessons({
             },
           });
           if (exercisesReady) {
+            stage = "exercises";
             set({ state: "exercises" });
             await exercisesFn({ data: { lessonId: row.id } });
           }
           set({ state: "done" });
           made += 1;
         } catch (error) {
-          set({ state: "failed", error: errorText(error) });
+          set({
+            state: "failed",
+            error:
+              stage === "exercises"
+                ? `التمارين ما انكتبت: ${errorText(error)}`
+                : `ما انكتب الدرس: ${errorText(error)}`,
+            detail: errorDetail(error),
+            partial: stage === "exercises",
+            title: item.title_ar || item.topic,
+          });
         }
       }
       if (made) toast.success(`انصنع ${made} درس`);
@@ -99,7 +119,12 @@ export function StepLessons({
 
   // Lessons made in this run stay listed with their result until the page is reloaded.
   const finished = Object.entries(progress).filter(([, value]) => value.state === "done").length;
-  const failures = Object.entries(progress).filter(([, value]) => value.state === "failed");
+  const failures = Object.entries(progress).filter(
+    ([, value]) => value.state === "failed" && !value.partial,
+  );
+  const partials = Object.values(progress).filter(
+    (value) => value.state === "failed" && value.partial,
+  );
 
   return (
     <section className="space-y-5" aria-labelledby="step-lessons-title">
@@ -197,7 +222,14 @@ export function StepLessons({
                       )}
                     </div>
                     {state?.state === "failed" && (
-                      <p className="mt-1 text-[14px] font-semibold text-[#8c1a31]">{state.error}</p>
+                      <div className="mt-1 space-y-1">
+                        <p className="text-[14px] font-semibold text-[#8c1a31]">{state.error}</p>
+                        {state.detail && (
+                          <p className="break-words text-[12.5px] text-[var(--pp-muted)]" dir="ltr">
+                            {state.detail}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                   <ItemStatus state={state} />
@@ -240,6 +272,28 @@ export function StepLessons({
             <p role="status" className="text-[14px] text-[var(--pp-muted)]">
               كل درس بياخد دقيقة لدقيقتين. خلّي الصفحة مفتوحة.
             </p>
+          )}
+          {!running && partials.length > 0 && (
+            <div className="space-y-2 rounded-xl bg-[#fff6e5] p-3 text-[14px] text-[#6b4100]">
+              <p className="font-semibold">
+                {partials.length} درس انصنع بدون تمارين. افتحه من «المراجعة» (الدرس ← التمارين)
+                واضغط «اصنع التمارين».
+              </p>
+              <ul className="space-y-2">
+                {partials.map((partial) => (
+                  <li key={partial.title}>
+                    <p>
+                      <BidiText text={partial.title ?? ""} /> · {partial.error}
+                    </p>
+                    {partial.detail && (
+                      <p className="break-words text-[12.5px]" dir="ltr">
+                        {partial.detail}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           {!running && failures.length > 0 && (
             <p className="text-[14px] text-[#8c1a31]">

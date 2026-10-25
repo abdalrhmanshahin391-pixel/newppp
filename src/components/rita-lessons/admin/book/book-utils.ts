@@ -54,6 +54,16 @@ export function errorText(error: unknown) {
   return message || "صار خطأ";
 }
 
+/**
+ * The server's own words for an error, when the Arabic hint above would hide them: the reason a
+ * reply was refused, a status code. Empty when the hint already says everything.
+ */
+export function errorDetail(error: unknown) {
+  const message = (error instanceof Error ? error.message : String(error ?? "")).trim();
+  if (!message || message === errorText(error)) return "";
+  return message.slice(0, 400);
+}
+
 /** The book's PDF: the one just uploaded in this tab, or the saved copy. */
 export async function pdfFileFor(book: CurriculumRow, cache: Map<string, File>) {
   const cached = cache.get(book.id);
