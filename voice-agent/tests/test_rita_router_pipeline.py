@@ -14,6 +14,9 @@ from pipecat.processors.aggregators.llm_response_universal import LLMContextAggr
 from pipecat.services.tts_service import TTSService  # noqa: E402
 from pipecat.tests.utils import run_test  # noqa: E402
 
+from pipecat.processors.frameworks.rtvi import RTVIServerMessageFrame  # noqa: E402
+
+from rita_lesson_voice import LessonVoice  # noqa: E402
 from rita_state import RitaSessionState  # noqa: E402
 from rita_turn_router import RitaTurnRouter, RouterMode  # noqa: E402
 
@@ -58,7 +61,49 @@ async def run(user_text, assistant_text, *, ack=True):
     return [m["content"] for m in context.get_messages() if m["role"] == "assistant"], down
 
 
+async def run_lesson(user_text, phase="practice"):
+    state = RitaSessionState()
+    lesson = LessonVoice()
+    lesson.set_step(
+        {
+            "revision": 7,
+            "phase": phase,
+            "item": {"id": "p1", "prompt": "She ___ a teacher.", "options": ["am", "is", "are"]},
+        }
+    )
+    context = LLMContext(
+        [{"role": "system", "content": "You are Rita."}, {"role": "user", "content": user_text}]
+    )
+    router = RitaTurnRouter(
+        state=state,
+        prepare_turn=state.observe_user_turn,
+        language_of_turn=lambda: "ar",
+        mode=RouterMode.ON,
+        lesson=lesson,
+    )
+    down, _ = await run_test(
+        Pipeline([router]), frames_to_send=[LLMContextFrame(context=context)]
+    )
+    signals = [
+        frame.data
+        for frame in down
+        if isinstance(frame, RTVIServerMessageFrame) and frame.data.get("type") == "rita-lesson-signal"
+    ]
+    reached_model = any(isinstance(frame, LLMContextFrame) for frame in down)
+    return signals, reached_model
+
+
 class RouterInsideAPipelineTests(unittest.TestCase):
+    def test_a_spoken_answer_goes_to_the_website_and_never_to_the_model(self):
+        signals, reached_model = asyncio.run(run_lesson("is"))
+        self.assertEqual(signals, [{"type": "rita-lesson-signal", "revision": 7, "signal": "answer", "value": "is"}])
+        self.assertFalse(reached_model)
+
+    def test_a_question_during_an_exercise_reaches_the_model_and_the_website(self):
+        signals, reached_model = asyncio.run(run_lesson("ليش is؟"))
+        self.assertEqual([s["signal"] for s in signals], ["question"])
+        self.assertTrue(reached_model)
+
     def test_stop_ack_is_spoken_once_and_recorded_once(self):
         assistant_texts, down = asyncio.run(run("خلص", "الثورة الفرنسية صارت 1789."))
         self.assertEqual(assistant_texts[-1], "تمام.")

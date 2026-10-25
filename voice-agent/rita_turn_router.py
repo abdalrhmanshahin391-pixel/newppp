@@ -33,6 +33,7 @@ from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 from pipecat.processors.frameworks.rtvi import RTVIServerMessageFrame
 
 from rita_dialogue_acts import Act, Awaiting, Question, Reading, classify, clarify_choice
+from rita_lesson_voice import LessonVoice
 from rita_dialect import greeting_for, is_greeting
 from rita_state import RitaSessionState
 from rita_ui_commands import UiAction, UiCommand, read_ui_command
@@ -170,6 +171,7 @@ class RitaTurnRouter(FrameProcessor):
         session_id: str = "",
         trace_id: str = "",
         turn_id: Callable[[], int] | None = None,
+        lesson: LessonVoice | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -181,6 +183,8 @@ class RitaTurnRouter(FrameProcessor):
         self._session_id = session_id
         self._trace_id = trace_id
         self._turn_id = turn_id or (lambda: 0)
+        # A lesson with exercises: turns are read against the website's current step first.
+        self._lesson = lesson
         # The user aggregator normally sends every committed context here once. A
         # confirmed interruption can race the final transcript in Pipecat 0.0.105;
         # bot.py uses this monotonic marker to retry only a context that never
@@ -188,6 +192,26 @@ class RitaTurnRouter(FrameProcessor):
         self.last_routed_context_size = 0
         #: what the router did with the last committed turn (pass, speak, stop, hold, ui)
         self.last_action: str | None = None
+
+    async def _send_lesson_signal(self, route, text: str) -> None:
+        """Tells the website what the turn meant for the lesson; the website's engine decides."""
+        logger.bind(
+            session_id=self._session_id or None,
+            turn_id=self._turn_id() or None,
+            signal=route.signal,
+            to_model=route.to_model,
+            word_count=len(text.split()),
+        ).info("Rita lesson signal")
+        await self.push_frame(
+            RTVIServerMessageFrame(
+                data={
+                    "type": "rita-lesson-signal",
+                    "revision": self._lesson.step.get("revision") if self._lesson else None,
+                    "signal": route.signal,
+                    "value": route.value,
+                }
+            )
+        )
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
@@ -210,6 +234,16 @@ class RitaTurnRouter(FrameProcessor):
                 # One place updates the state and the system prompt, before the model reads it.
                 self._prepare_turn(text)
                 prepared = True
+            route = (
+                self._lesson.route(text)
+                if self._lesson is not None and self.mode == RouterMode.ON
+                else None
+            )
+            if route is not None:
+                await self._send_lesson_signal(route, text)
+                if route.to_model:
+                    await self.push_frame(frame, direction)
+                return
             decision = decide(
                 text, self._state, language=self._language_of_turn(), ack=self._ack
             )

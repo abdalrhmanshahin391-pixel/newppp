@@ -40,6 +40,7 @@ import { useRitaLesson } from "@/components/rita-lessons/useRitaLesson";
 import { useLessonRun } from "@/components/rita-lessons/useLessonRun";
 import { LessonFlow } from "@/components/rita-lessons/LessonFlow";
 import { ExerciseWindow } from "@/components/rita-lessons/ExerciseWindow";
+import { useLessonVoice, type LessonSignal } from "@/components/rita-lessons/useLessonVoice";
 import type { SampleKey } from "@/lib/rita-lesson-run";
 import {
   LessonObjectivesPanel,
@@ -203,6 +204,8 @@ export function RitaRealtimeV3({
     return () => setVoiceSessionActive(false);
   }, [active]);
   const [readyForSpeech, setReadyForSpeech] = useState(false);
+  // Goes up each time the learner starts speaking (a lesson's silence nudges start again).
+  const [learnerActivity, setLearnerActivity] = useState(0);
   const [starting, setStarting] = useState(false);
   const [muted, setMuted] = useState(false);
   const [error, setError] = useState("");
@@ -223,6 +226,21 @@ export function RitaRealtimeV3({
   // How Rita is asked to explain (Arabic, English or like the learner speaks); a ref, so a change
   // during a conversation never rebuilds the callbacks that talk to the call.
   const explanation = useExplanationLanguage();
+  // A lesson with exercises during a call: steps go to Rita, and what she hears comes back as
+  // lesson signals (answers are graded by the server, never by her).
+  const sendToRita = useCallback((type: string, data?: unknown) => {
+    client.current?.sendClientMessage(type, data);
+  }, []);
+  const lessonVoice = useLessonVoice({
+    run: lessonRun,
+    connected: exercises && active && readyForSpeech,
+    send: sendToRita,
+    language: explanation.value === "en" ? "en" : "ar",
+    ritaTalking: mood === "talking",
+    learnerActivity,
+  });
+  const lessonSignal = useRef(lessonVoice.onSignal);
+  lessonSignal.current = lessonVoice.onSignal;
   const languageRef = useRef<string>(explanation.value);
   languageRef.current = explanation.value;
   const dialect: string = "ar-JO";
@@ -1110,6 +1128,7 @@ export function RitaRealtimeV3({
             void metric("microphone_permission_error");
           },
           onUserStartedSpeaking: () => {
+            setLearnerActivity((count) => count + 1);
             cancelFiller();
             currentTurnHasFinalTranscript.current = false;
             firstPartialRecorded.current = false;
@@ -1137,6 +1156,10 @@ export function RitaRealtimeV3({
               if (!text) return;
               if (botSpeaking.current) pendingScriptedReply.current = text;
               else beginScriptedReply(text);
+              return;
+            }
+            if (message?.type === "rita-lesson-signal") {
+              lessonSignal.current(message as LessonSignal);
               return;
             }
             if (message?.type === "rita-turn-ledger") {
@@ -1356,6 +1379,9 @@ export function RitaRealtimeV3({
           traceId: traceId.current,
           ...(currentConversationId ? { conversationId: currentConversationId } : {}),
           ...(lessonId ? { lessonId } : {}),
+          // A lesson with exercises: the worker follows the lesson engine's steps.
+          ...(exercises ? { lessonEngine: true } : {}),
+          ...(exercises && sample ? { sample } : {}),
           // Preview mode: the worker's brief is built fresh, and nothing is saved.
           ...(lessonId && preview ? { preview: true } : {}),
         },
