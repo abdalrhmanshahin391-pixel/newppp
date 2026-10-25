@@ -290,6 +290,12 @@ table, examples, and "فهمت، يلا نتمرن" / "عندي سؤال". The q
 - Motion: 200–240ms rise (phone) or 220ms scale from 0.97 (wide), fade only under reduced motion.
 - Arabic text with English words uses `ChatText`, so the words get the same chips as in the chat.
 
+Admins make the exercises on `/admin/curricula` → lesson → "التمارين" (`ExercisesPanel`): one button
+writes them from the lesson's pages, a second review lists warnings (amber, with the question id),
+code checks list what blocks publishing (red), each question can be edited (JSON), replaced or
+deleted, "معاينة كطالب" opens the lesson in preview, and "نشر للطلاب" publishes. Any edit returns
+the exercises to a draft.
+
 ## Home app window
 
 `AppWindow.tsx` replaces the old lesson-path strip. A window built from real markup (no screenshots) that starts tilted (desktop only) and flattens as it scrolls to the middle of the screen, then plays a short story once: the path fills, the lesson in progress shows, two words are saved, Rita listens.

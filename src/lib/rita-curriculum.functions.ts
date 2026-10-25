@@ -35,6 +35,13 @@ import {
 
 import { SlideDeckSchema, type Slide } from "@/lib/rita-slides";
 import {
+  LessonContentSchema,
+  contentProblems,
+  findItem,
+  parseLessonContent,
+  type LessonContent,
+} from "@/lib/rita-lesson-content";
+import {
   MAX_RESOURCES,
   NewResourceSchema,
   RESOURCES_BUCKET,
@@ -2105,4 +2112,261 @@ export const evaluateLessonTurn = createServerFn({ method: "POST" })
       .eq("status", "in_progress");
     fail(updateError, "save progress");
     return { objectives: merged.state, newlyMet: merged.newlyMet, score, stars, completed };
+  });
+
+// ---------- admin: lesson exercises (content version 2) ----------
+
+export type ExercisesView = {
+  /** False until the lessons v2 migration is applied. */
+  ready: boolean;
+  status: "none" | "draft" | "published";
+  version: number;
+  content: LessonContent | null;
+  /** From the offline review: things for the admin to look at. */
+  warnings: string[];
+  /** From the code checks: these block publishing. */
+  problems: string[];
+  updated_at: string | null;
+};
+
+/** The content table holds answers, so it is read and written with the server key only. */
+async function contentsDb() {
+  const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return supabaseAdmin as unknown as SupabaseClient<any, "public", any>;
+}
+
+async function readExercises(lessonId: string): Promise<ExercisesView> {
+  const db = await contentsDb();
+  const { data, error } = await db
+    .from("rita_lesson_contents")
+    .select("content, version, status, warnings, updated_at")
+    .eq("lesson_id", lessonId)
+    .maybeSingle();
+  if (error) {
+    if (isMissingSchemaError(error)) {
+      return {
+        ready: false,
+        status: "none",
+        version: 0,
+        content: null,
+        warnings: [],
+        problems: [],
+        updated_at: null,
+      };
+    }
+    fail(error, "exercises");
+  }
+  if (!data) {
+    return {
+      ready: true,
+      status: "none",
+      version: 0,
+      content: null,
+      warnings: [],
+      problems: [],
+      updated_at: null,
+    };
+  }
+  const content = parseLessonContent(data.content);
+  return {
+    ready: true,
+    status: data.status === "published" ? "published" : "draft",
+    version: Number(data.version) || 1,
+    content,
+    warnings: Array.isArray(data.warnings) ? data.warnings.map(String).slice(0, 40) : [],
+    problems: content ? contentProblems(content) : ["The saved exercises could not be read."],
+    updated_at: data.updated_at ? String(data.updated_at) : null,
+  };
+}
+
+async function writeExercises(
+  lessonId: string,
+  patch: {
+    content?: LessonContent;
+    status?: "draft" | "published";
+    warnings?: string[];
+    version?: number;
+  },
+) {
+  const db = await contentsDb();
+  const { data: existing } = await db
+    .from("rita_lesson_contents")
+    .select("lesson_id, version")
+    .eq("lesson_id", lessonId)
+    .maybeSingle();
+  if (existing) {
+    const { error } = await db.from("rita_lesson_contents").update(patch).eq("lesson_id", lessonId);
+    fail(error, "save exercises");
+  } else {
+    if (!patch.content) throw new Error("Generate the exercises first.");
+    const { error } = await db.from("rita_lesson_contents").insert({
+      lesson_id: lessonId,
+      content: patch.content,
+      status: patch.status ?? "draft",
+      warnings: patch.warnings ?? [],
+      version: patch.version ?? 1,
+    });
+    fail(error, "save exercises");
+  }
+}
+
+/** The lesson, its book and its page text, as the exercise generator needs them. */
+async function lessonWithPages(ctx: AuthContext, lessonId: string) {
+  const db = ctx.supabase;
+  const { data: lesson, error } = await db
+    .from("rita_lessons")
+    .select(LESSON_COLUMNS)
+    .eq("id", lessonId)
+    .single();
+  fail(error, "lesson");
+  const row = lesson as unknown as LessonRow;
+  const book = await loadBook(db, row.curriculum_id);
+  const pageProblem = checkLessonPages(book, row.source_from_page, row.source_to_page);
+  if (pageProblem) throw new Error(pageProblem);
+  const { text, missing } = await pageText(db, book.id, row.source_from_page, row.source_to_page);
+  if (missing.length > 0) {
+    throw new Error(
+      `These pages have no text yet: ${missing.join(", ")}. Read the scanned pages first.`,
+    );
+  }
+  return { row, book, text };
+}
+
+export const adminLessonExercises = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => parseWith(z.object({ lessonId: uuid }), data))
+  .handler(async ({ data, context }): Promise<ExercisesView> => {
+    await assertAdmin(context);
+    return readExercises(data.lessonId);
+  });
+
+/**
+ * Writes the exercises for a lesson from its pages, then has them checked a second time by a
+ * separate review. The result is a draft: nothing reaches learners until an admin publishes it.
+ */
+export const adminGenerateExercises = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => parseWith(z.object({ lessonId: uuid }), data))
+  .handler(async ({ data, context }): Promise<ExercisesView> => {
+    await assertAdmin(context);
+    const current = await readExercises(data.lessonId);
+    if (!current.ready) {
+      throw new Error("Apply migration 20261025100000_rita_lessons_v2 in Lovable Cloud first.");
+    }
+    const { row, book, text } = await lessonWithPages(context, data.lessonId);
+    const { generateLessonContent, reviewLessonContent } = await ai();
+    const { content } = await generateLessonContent({
+      kind: book.kind,
+      bookTitle: book.title,
+      lessonTitle: row.title,
+      topic: row.topic,
+      objectives: row.objectives,
+      vocabulary: (row.vocabulary ?? []).map((item) => ({
+        word: item.word,
+        meaning_ar: item.meaning_ar,
+      })),
+      from: row.source_from_page,
+      to: row.source_to_page,
+      pageText: text,
+    });
+    let warnings: string[];
+    try {
+      const review = await reviewLessonContent({ content, pageText: text });
+      warnings = review.warnings.map((warning) =>
+        warning.item_id ? `${warning.item_id}: ${warning.problem}` : warning.problem,
+      );
+    } catch (error) {
+      warnings = [
+        `The second review could not run (${error instanceof Error ? error.message : "error"}). Check the questions yourself.`,
+      ];
+    }
+    await writeExercises(data.lessonId, {
+      content,
+      status: "draft",
+      warnings,
+      version: current.version || 1,
+    });
+    return readExercises(data.lessonId);
+  });
+
+/** Saves hand edits as a draft. Content that fails the code checks is refused with the reasons. */
+export const adminSaveExercises = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ lessonId: uuid, content: z.unknown() }), data),
+  )
+  .handler(async ({ data, context }): Promise<ExercisesView> => {
+    await assertAdmin(context);
+    const parsed = LessonContentSchema.safeParse(data.content);
+    if (!parsed.success) throw new Error(describeSchemaError(parsed.error));
+    const problems = contentProblems(parsed.data);
+    if (problems.length) throw new Error(problems.slice(0, 5).join(" "));
+    await writeExercises(data.lessonId, { content: parsed.data, status: "draft" });
+    return readExercises(data.lessonId);
+  });
+
+/** One new question in place of one item (same kind and skill), saved as a draft. */
+export const adminRegenerateExercise = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ lessonId: uuid, itemId: z.string().max(48) }), data),
+  )
+  .handler(async ({ data, context }): Promise<ExercisesView> => {
+    await assertAdmin(context);
+    const current = await readExercises(data.lessonId);
+    if (!current.content) throw new Error("Generate the exercises first.");
+    const found = findItem(current.content, data.itemId);
+    if (!found) throw new Error("That question was not found.");
+    const { text } = await lessonWithPages(context, data.lessonId);
+    const { regenerateExerciseItem } = await ai();
+    const { item } = await regenerateExerciseItem({
+      section: found.section,
+      item: found.item,
+      pageText: text,
+    });
+    const content: LessonContent = {
+      ...current.content,
+      sections: current.content.sections.map((section) =>
+        section.id !== found.section.id
+          ? section
+          : {
+              ...section,
+              [found.bank]: section[found.bank].map((old) => (old.id === item.id ? item : old)),
+            },
+      ),
+    };
+    await writeExercises(data.lessonId, {
+      content,
+      status: "draft",
+      warnings: current.warnings.filter((warning) => !warning.startsWith(`${item.id}:`)),
+    });
+    return readExercises(data.lessonId);
+  });
+
+/**
+ * Publishes the exercises (learners get them on their next attempt; an attempt in progress keeps
+ * its own copy) or takes them back to a draft (learners get the spoken lesson again).
+ */
+export const adminPublishExercises = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ lessonId: uuid, publish: z.boolean() }), data),
+  )
+  .handler(async ({ data, context }): Promise<ExercisesView> => {
+    await assertAdmin(context);
+    const current = await readExercises(data.lessonId);
+    if (!current.content) throw new Error("Generate the exercises first.");
+    if (data.publish) {
+      if (current.problems.length) {
+        throw new Error(`Fix these first: ${current.problems.slice(0, 3).join(" ")}`);
+      }
+      await writeExercises(data.lessonId, {
+        status: "published",
+        version: current.status === "published" ? current.version : current.version + 1,
+      });
+    } else {
+      await writeExercises(data.lessonId, { status: "draft" });
+    }
+    return readExercises(data.lessonId);
   });

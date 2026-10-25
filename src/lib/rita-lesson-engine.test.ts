@@ -349,3 +349,100 @@ test("continuing after the offer to end clears it without moving the lesson", ()
   assert.equal(state.offer_end, false);
   assert.equal(stepOf(SAMPLE_TO_BE, state).item!.id, id);
 });
+
+test("generated content gets neutral ids and pages inside the lesson", async () => {
+  const { finalizeContent, generatedContentSchema } = await import("./rita-lesson-content.ts");
+  const raw = {
+    ...SAMPLE_TO_BE,
+    sections: SAMPLE_TO_BE.sections.map((section) => ({
+      ...section,
+      source_pages: [1, 99],
+      practice: section.practice.map((item) => ({ ...item, source_page: 99 })),
+    })),
+  };
+  const done = finalizeContent(raw, { from: 10, to: 12 });
+  assert.equal(done.sections[0].id, "part1");
+  assert.deepEqual(
+    done.sections[0].practice.map((item) => item.id),
+    ["p1-1", "p1-2", "p1-3", "p1-4", "p1-5", "p1-6"],
+  );
+  assert.equal(done.sections[0].practice[0].source_page, 12);
+  assert.deepEqual(done.sections[0].source_pages, [10, 12]);
+  assert.ok(generatedContentSchema({ from: 10, to: 12 }).safeParse(raw).success);
+  const broken = {
+    ...raw,
+    sections: [
+      { ...raw.sections[0], practice: [{ ...raw.sections[0].practice[0], answer: "be" }] },
+    ],
+  };
+  const result = generatedContentSchema({ from: 10, to: 12 }).safeParse(broken);
+  assert.equal(result.success, false);
+  assert.match(JSON.stringify(result.error?.issues), /must be exactly one of the options/);
+  assert.match(JSON.stringify(result.error?.issues), /at least 4 practice questions/);
+});
+
+test("a third, different lesson runs with no new code (there is / there are)", () => {
+  const thereIs = LessonContentSchema.parse({
+    schema: 2,
+    language: "en",
+    intro_ar: "اليوم: there is و there are.",
+    sections: [
+      {
+        id: "part1",
+        title: "There is / there are",
+        title_ar: "يوجد",
+        explain: {
+          rule_ar: "مع شي واحد نقول there is، ومع أكثر من شي نقول there are.",
+          table: [
+            { left: "one thing", right: "there is" },
+            { left: "many things", right: "there are" },
+          ],
+        },
+        mastery: { required: 4, min_correct: 3 },
+        practice: [
+          {
+            id: "q1",
+            template: "choice_fill",
+            skill_tag: "there.one",
+            prompt: "There ___ a book on the desk.",
+            options: ["is", "are"],
+            answer: "is",
+          },
+          {
+            id: "q2",
+            template: "choice_fill",
+            skill_tag: "there.many",
+            prompt: "There ___ two chairs.",
+            options: ["is", "are"],
+            answer: "are",
+          },
+          {
+            id: "q3",
+            template: "word_order",
+            skill_tag: "there.order",
+            prompt: "Make a sentence.",
+            answer: ["There", "is", "a", "cat."],
+          },
+          {
+            id: "q4",
+            template: "choice_fill",
+            skill_tag: "there.many",
+            prompt: "There ___ three windows.",
+            options: ["is", "are"],
+            answer: "are",
+          },
+        ],
+      },
+    ],
+    wrap: { summary_ar: "شي واحد: there is. أكثر: there are." },
+  });
+  assert.deepEqual(contentProblems(thereIs), []);
+  let state = initialState(thereIs, "seed");
+  state = send(thereIs, state, { type: "ready" });
+  state = send(thereIs, state, { type: "no_question" });
+  while (state.phase === "practice") state = answer(thereIs, state, true);
+  assert.equal(state.tallies[0].outcome, "passed");
+  state = send(thereIs, state, { type: "ready" });
+  state = send(thereIs, state, { type: "ready" });
+  assert.equal(lessonStars(state), 3);
+});
