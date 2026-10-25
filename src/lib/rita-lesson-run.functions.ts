@@ -69,6 +69,7 @@ function viewOf(row: RunRow, content: LessonContent, meta: LessonMeta): RunView 
     title: meta.title,
     title_ar: meta.title_ar,
     estimated_minutes: content.estimated_minutes,
+    section_count: content.sections.length,
     intro_ar: content.intro_ar,
     intro_en: content.intro_en,
     language: content.language,

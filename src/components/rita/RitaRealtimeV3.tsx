@@ -37,6 +37,10 @@ import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { VoiceOrb } from "@/components/rita-live/VoiceOrb";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
 import { useRitaLesson } from "@/components/rita-lessons/useRitaLesson";
+import { useLessonRun } from "@/components/rita-lessons/useLessonRun";
+import { LessonFlow } from "@/components/rita-lessons/LessonFlow";
+import { ExerciseWindow } from "@/components/rita-lessons/ExerciseWindow";
+import type { SampleKey } from "@/lib/rita-lesson-run";
 import {
   LessonObjectivesPanel,
   LessonResourcesPanel,
@@ -117,9 +121,20 @@ export function RitaRealtimeV3({
   lessonId,
   conversationId,
   preview,
-}: { lessonId?: string; conversationId?: string; preview?: boolean } = {}) {
+  sample,
+}: {
+  lessonId?: string;
+  conversationId?: string;
+  preview?: boolean;
+  /** Admin preview of a built-in lesson with exercises. */
+  sample?: SampleKey;
+} = {}) {
   const navigate = useNavigate();
   const lesson = useRitaLesson(lessonId, preview);
+  // A lesson with exercises (content version 2) runs on the lesson engine; without it the spoken
+  // lesson below carries on exactly as before.
+  const lessonRun = useLessonRun({ lessonId, sample, preview }, Boolean(lessonId || sample));
+  const exercises = lessonRun.available === true;
   const lastCheckedMessage = useRef("");
   const [resultDismissed, setResultDismissed] = useState(false);
   const { user, loading } = useAuth();
@@ -355,7 +370,8 @@ export function RitaRealtimeV3({
   // Curriculum lessons: after each learner turn, check the lesson objectives.
   const { enabled: lessonEnabled, checkTurns } = lesson;
   useEffect(() => {
-    if (!lessonEnabled) return;
+    // Lessons with exercises are checked by the lesson engine, not by reading the conversation.
+    if (!lessonEnabled || lessonRun.available !== false) return;
     let lastYou = -1;
     for (let index = messages.length - 1; index >= 0; index -= 1) {
       if (messages[index].role === "you") {
@@ -374,7 +390,7 @@ export function RitaRealtimeV3({
           text: message.text,
         })),
     );
-  }, [checkTurns, lessonEnabled, messages]);
+  }, [checkTurns, lessonEnabled, lessonRun.available, messages]);
 
   // Diagnostic events wait in a bounded queue and leave in batches (every 5 s, or as soon as a batch
   // is ready, or when the page is hidden), instead of one request per event during a conversation.
@@ -1498,9 +1514,11 @@ export function RitaRealtimeV3({
             className="h-[min(70vw,360px)] w-[min(70vw,360px)]"
           />
           <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
-            {lessonId
-              ? lesson.session?.lesson.title || lesson.session?.lesson.title_ar || "Lesson"
-              : "Talk with Rita"}
+            {exercises && lessonRun.view
+              ? lessonRun.view.title_ar || lessonRun.view.title
+              : lessonId
+                ? lesson.session?.lesson.title || lesson.session?.lesson.title_ar || "Lesson"
+                : "Talk with Rita"}
           </h2>
           <p className="mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]">
             <span
@@ -1556,7 +1574,22 @@ export function RitaRealtimeV3({
 
           <div className="flex-1 py-6">
             <div className="space-y-6">
-              {lesson.session && (
+              {exercises && (
+                <LessonFlow
+                  run={lessonRun}
+                  callActive={active}
+                  nextLessonId={lesson.session?.nextLessonId ?? null}
+                />
+              )}
+              {sample && lessonRun.error && (
+                <div
+                  role="alert"
+                  className="rounded-2xl bg-[var(--pp-accent-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-accent-text)]"
+                >
+                  {lessonRun.error}
+                </div>
+              )}
+              {lesson.session && lessonRun.available === false && (
                 <LessonObjectivesPanel
                   session={lesson.session}
                   objectives={lesson.objectives}
@@ -1689,6 +1722,8 @@ export function RitaRealtimeV3({
           </div>
         </section>
       </div>
+
+      {exercises && <ExerciseWindow run={lessonRun} />}
 
       {phrase && (
         <PhraseDialog

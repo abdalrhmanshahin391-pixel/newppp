@@ -320,7 +320,7 @@ test("the public step never carries the answer of an open item", () => {
 });
 
 test("the same seed shows the same order after a reload", () => {
-  const item = findItem(SAMPLE_PROPERTY, "s_apartment")!.item;
+  const item = findItem(SAMPLE_PROPERTY, "spell_3")!.item;
   assert.deepEqual(publicItem(item, "abc").tiles, publicItem(item, "abc").tiles);
   const tiles = publicItem(item, "abc").tiles.map((tile) => tile.text);
   assert.notDeepEqual(tiles, ["a", "part", "ment"], "tiles are shown out of order");
@@ -337,4 +337,15 @@ test("a words lesson with spelling runs on the same engine", () => {
   }
   state = send(SAMPLE_PROPERTY, state, { type: "ready" });
   assert.equal(lessonStars(state), 3);
+});
+
+test("continuing after the offer to end clears it without moving the lesson", () => {
+  let state = toPractice(SAMPLE_TO_BE);
+  const id = stepOf(SAMPLE_TO_BE, state).item!.id;
+  state = send(SAMPLE_TO_BE, state, { type: "off_topic" });
+  state = send(SAMPLE_TO_BE, state, { type: "off_topic" });
+  assert.equal(state.offer_end, true);
+  state = send(SAMPLE_TO_BE, state, { type: "resume" });
+  assert.equal(state.offer_end, false);
+  assert.equal(stepOf(SAMPLE_TO_BE, state).item!.id, id);
 });
