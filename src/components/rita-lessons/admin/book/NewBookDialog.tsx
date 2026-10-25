@@ -53,7 +53,7 @@ export function NewBookDialog({
     }
     try {
       setProgress("قراءة الملف…");
-      const { loadPdfForText, getPageText } = await import("@/lib/pdf-page-render");
+      const { loadPdfForText, getPageTextDetailed } = await import("@/lib/pdf-page-render");
       const doc = await loadPdfForText(file);
       const pageCount = Number(doc.numPages || 0);
       if (!pageCount) throw new Error("الملف ما فيه صفحات.");
@@ -75,9 +75,16 @@ export function NewBookDialog({
       });
       pdfCache.set(book.id, file);
       let batch: { page_no: number; text: string; has_text_layer: boolean }[] = [];
+      let textErrors = 0;
+      let firstTextError = "";
       for (let page = 1; page <= pageCount; page += 1) {
         setProgress(`أخذ النص من الصفحات: ${page} من ${pageCount}`);
-        const text = (await getPageText(doc, page)).slice(0, 20_000);
+        const result = await getPageTextDetailed(doc, page);
+        if (result.error) {
+          textErrors += 1;
+          firstTextError ||= result.error;
+        }
+        const text = result.text.slice(0, 20_000);
         batch.push({ page_no: page, text, has_text_layer: text.trim().length >= 20 });
         if (batch.length === 20 || page === pageCount) {
           await savePagesFn({ data: { curriculumId: book.id, pages: batch } });
@@ -85,6 +92,13 @@ export function NewBookDialog({
         }
       }
       toast.success("انضاف الكتاب");
+      if (textErrors) {
+        // Not silent: the pages without text will be read by the AI, and the cause is shown here.
+        toast.warning(
+          `ما قدرنا ناخد النص من ${textErrors} صفحة داخل الملف (${firstTextError}). بنقراها بالذكاء الاصطناعي.`,
+          { duration: 12_000 },
+        );
+      }
       setTitle("");
       setTitleAr("");
       setFile(null);

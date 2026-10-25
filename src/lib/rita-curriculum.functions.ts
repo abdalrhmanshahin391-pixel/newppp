@@ -565,6 +565,7 @@ export const adminTranscribeCurriculumPages = createServerFn({ method: "POST" })
         .map((page) => page.page_no)
         .filter((pageNo) => !transcribed.includes(pageNo)),
       failures: result.failures,
+      notes: result.notes,
     };
   });
 

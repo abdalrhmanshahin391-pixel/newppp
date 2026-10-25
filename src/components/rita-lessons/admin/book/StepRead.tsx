@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { adminConfirmBlankPage, type CurriculumRow } from "@/lib/rita-curriculum.functions";
 import { errorText } from "./book-utils";
 import { ErrorBox, ProgressBar } from "./BookBits";
+import { UnreadablePages } from "./UnreadablePages";
 import type { useBookReader } from "./useBookReader";
 
 /**
@@ -27,6 +28,9 @@ export function StepRead({
   const blankFn = useServerFn(adminConfirmBlankPage);
   const done = book.read_cursor >= book.page_count;
   const started = book.read_cursor > 0;
+  const textReady = Math.max(0, book.page_count - missingText.length);
+  const blankPages = reader.remarks.filter((item) => item.kind === "blank");
+  const cutPages = reader.remarks.filter((item) => item.kind === "cut");
   const stuck = missingText.filter((page) => page <= book.read_cursor || done);
 
   async function markBlank(page: number) {
@@ -59,6 +63,10 @@ export function StepRead({
             {book.page_count ? Math.round((book.read_cursor / book.page_count) * 100) : 0}%
           </p>
         </div>
+        <p className="text-[14px] text-[var(--pp-muted)]">
+          نص جاهز لـ {textReady} من {book.page_count} صفحة
+          {missingText.length > 0 ? ` · ${missingText.length} لسا بلا نص` : ""}
+        </p>
         <ProgressBar value={book.read_cursor} max={book.page_count} label="الصفحات المقروءة" />
       </div>
 
@@ -99,7 +107,41 @@ export function StepRead({
         <ErrorBox hint={reader.error.hint} raw={reader.error.raw} onClose={reader.clearError} />
       )}
 
-      {stuck.length > 0 && !reader.running && (
+      <UnreadablePages
+        book={book}
+        problems={reader.problems}
+        reader={reader}
+        onChanged={onChanged}
+      />
+
+      {reader.textNote && !reader.running && (
+        <p className="rounded-xl bg-[var(--pp-grey)] p-3 text-[14px]">
+          ما قدرنا ناخد النص من {reader.textNote.count} صفحة داخل الملف على هالجهاز (
+          <bdi dir="ltr">{reader.textNote.cause}</bdi>). بنقراها بالذكاء الاصطناعي بدالها.
+        </p>
+      )}
+
+      {!reader.running && (blankPages.length > 0 || cutPages.length > 0) && (
+        <div className="rounded-xl bg-[var(--pp-grey)] p-3 text-[15px]">
+          <p className="font-semibold">صفحات انقرأت بملاحظة:</p>
+          <ul className="mt-1 list-disc space-y-1 ps-5">
+            {blankPages.length > 0 && (
+              <li>
+                {blankPages.map((item) => `ص${item.page_no}`).join("، ")}: الذكاء الاصطناعي قال ما
+                فيها نص (غلاف أو صفحة فاضية)، فانعلّمت فارغة.
+              </li>
+            )}
+            {cutPages.length > 0 && (
+              <li>
+                {cutPages.map((item) => `ص${item.page_no}`).join("، ")}: صفحة طويلة كثير وانقطع نصها
+                بالآخر.
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
+
+      {stuck.length > 0 && !reader.running && reader.problems.length === 0 && (
         <div className="rounded-xl bg-[#fff6e5] p-3 text-[15px] text-[#6b4100]">
           <p className="font-semibold">
             {stuck.length} صفحة لسا بلا نص. «كمّل القراءة» بيجرّبها مرة ثانية، وإذا كانت غلاف أو
