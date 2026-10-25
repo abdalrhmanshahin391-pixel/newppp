@@ -296,6 +296,22 @@ code checks list what blocks publishing (red), each question can be edited (JSON
 deleted, "معاينة كطالب" opens the lesson in preview, and "نشر للطلاب" publishes. Any edit returns
 the exercises to a draft.
 
+## Curriculum admin (`/admin/curricula`)
+
+A list of books, each a card with four steps under it (قراءة · دروس · مراجعة · نشر, `.rita-stepper`)
+and one button for its next step. A book opens one step at a time (the step is in the address):
+1. Read: one "اقرأ الكتاب كامل" button and a progress bar; page detail is folded away; a problem
+   shows as one sentence with what to do.
+2. Lessons: the suggested lessons with checkboxes (topic editable with the pencil); one button makes
+   each lesson with its exercises, with progress per lesson; can be stopped and resumed.
+3. Review: one row per lesson with a state chip (جاهز / فيه ملاحظات / فيه مشكلة / بدون تمارين /
+   منشور); a row opens the lesson in a side window (`.rita-drawer`: full screen on phones, a panel
+   from the left edge from 640px) with tabs for exercises, plan, slides and resources.
+4. Publish: one button publishes the book and every ready lesson; lessons with problems are named
+   and left out; the learner path order is folded below.
+Rarely needed tools (language, chosen page range, summaries, JSON import) sit in a dashed, folded
+"أدوات متقدمة". Mixed Arabic/English titles use `BidiText` so English punctuation stays in place.
+
 ## Home app window
 
 `AppWindow.tsx` replaces the old lesson-path strip. A window built from real markup (no screenshots) that starts tilted (desktop only) and flattens as it scrolls to the middle of the screen, then plays a short story once: the path fills, the lesson in progress shows, two words are saved, Rita listens.
