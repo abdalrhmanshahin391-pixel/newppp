@@ -561,6 +561,15 @@ export const adminTranscribeCurriculumPages = createServerFn({ method: "POST" })
     };
   });
 
+/** "Can the AI read pages right now?" before a long run, so a bad key shows up in seconds. */
+export const adminCheckVisionKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { checkVisionKey } = await ai();
+    return checkVisionKey();
+  });
+
 export const adminSetCurriculumStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
