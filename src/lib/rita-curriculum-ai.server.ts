@@ -1,6 +1,7 @@
 // OpenAI calls for Rita's curriculum: summarise a ten-page window, write a
 // lesson, judge a learner's answers against the lesson objectives, and draw the
 // lesson picture. Every reply is strict JSON checked against the zod schemas.
+import { normalizeLessonContentReply, normalizeLessonDraftReply } from "./model-reply-normalize";
 import { interpretTranscript, type TranscriptOutcome } from "./page-transcript";
 import { isImageRejection, VISION_CHECK_JPEG_BASE64 } from "./vision-check-image";
 import { z } from "zod";
@@ -114,7 +115,13 @@ async function chatJson<S extends z.ZodTypeAny>(
   schema: S,
   system: string,
   user: string,
-  options: { maxTokens: number; timeoutMs: number; temperature?: number },
+  options: {
+    maxTokens: number;
+    timeoutMs: number;
+    temperature?: number;
+    /** Tidies the parsed reply (cosmetic limits only) before it is checked. */
+    normalize?: (raw: unknown) => unknown;
+  },
 ): Promise<{ value: z.infer<S>; model: string }> {
   const key = await apiKey();
   const model = await curriculumTextModel();
@@ -153,7 +160,7 @@ async function chatJson<S extends z.ZodTypeAny>(
       lastProblem = "The reply was not valid JSON.";
     }
     if (parsed !== undefined) {
-      const result = schema.safeParse(parsed);
+      const result = schema.safeParse(options.normalize ? options.normalize(parsed) : parsed);
       if (result.success) return { value: result.data, model };
       lastProblem = describeSchemaError(result.error);
     }
@@ -400,6 +407,7 @@ ${input.pageText}`;
     maxTokens: 4_000,
     timeoutMs: 90_000,
     temperature: 0.5,
+    normalize: normalizeLessonDraftReply,
   });
   return { lesson: value, model };
 }
@@ -548,7 +556,12 @@ ${input.pageText}`;
     generatedContentSchema({ from: input.from, to: input.to }),
     system,
     user,
-    { maxTokens: 12_000, timeoutMs: 150_000, temperature: 0.4 },
+    {
+      maxTokens: 12_000,
+      timeoutMs: 150_000,
+      temperature: 0.4,
+      normalize: normalizeLessonContentReply,
+    },
   );
   return { content: value as LessonContent, model };
 }
