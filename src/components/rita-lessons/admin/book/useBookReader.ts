@@ -103,7 +103,8 @@ export function useBookReader({
       const scanned = missingRef.current.filter((page) => page >= from && page <= to);
       if (scanned.length) {
         const keyCheck = await checkKeyFn();
-        if (!keyCheck.ok) {
+        // A refused test picture says nothing about the key: go on and let the real pages decide.
+        if (!keyCheck.ok && !keyCheck.imageProblem) {
           throw new Error(
             `مفتاح OpenAI ما بيقرأ الصور هلأ (النموذج ${keyCheck.model}): ${keyCheck.error ?? "سبب غير معروف"}`,
           );

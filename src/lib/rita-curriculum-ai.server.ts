@@ -1,6 +1,7 @@
 // OpenAI calls for Rita's curriculum: summarise a ten-page window, write a
 // lesson, judge a learner's answers against the lesson objectives, and draw the
 // lesson picture. Every reply is strict JSON checked against the zod schemas.
+import { isImageRejection, VISION_CHECK_JPEG_BASE64 } from "./vision-check-image";
 import { z } from "zod";
 import { getServerRuntimeSecret } from "@/lib/config.server";
 import { resolveRitaOpenAiKey } from "@/lib/rita-voice.server";
@@ -707,12 +708,14 @@ export async function generateLessonImage(
   return { bytes, model, contentType: "image/webp" };
 }
 
-// A 1x1 white JPEG: enough to prove the key can send an image to the model.
-const TINY_JPEG =
-  "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=";
-
 /** Before a long read: can this key read an image with the chosen model right now? */
-export async function checkVisionKey(): Promise<{ ok: boolean; model: string; error?: string }> {
+export async function checkVisionKey(): Promise<{
+  ok: boolean;
+  model: string;
+  error?: string;
+  /** OpenAI refused the test picture itself: the key, model and quota are not to blame. */
+  imageProblem?: boolean;
+}> {
   const model = await curriculumTextModel();
   try {
     const key = await apiKey();
@@ -726,7 +729,10 @@ export async function checkVisionKey(): Promise<{ ok: boolean; model: string; er
             role: "user",
             content: [
               { type: "text", text: "Reply with the word ok." },
-              { type: "image_url", image_url: { url: `data:image/jpeg;base64,${TINY_JPEG}` } },
+              {
+                type: "image_url",
+                image_url: { url: `data:image/jpeg;base64,${VISION_CHECK_JPEG_BASE64}` },
+              },
             ],
           },
         ],
@@ -736,6 +742,7 @@ export async function checkVisionKey(): Promise<{ ok: boolean; model: string; er
     );
     return { ok: true, model };
   } catch (error) {
-    return { ok: false, model, error: error instanceof Error ? error.message : String(error) };
+    const message = error instanceof Error ? error.message : String(error);
+    return { ok: false, model, error: message, imageProblem: isImageRejection(message) };
   }
 }
