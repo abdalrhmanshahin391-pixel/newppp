@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { failureSummary, readPages } from "@/lib/page-reading";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -67,6 +68,7 @@ import {
   adminSetCurriculumStatus,
   adminSetLessonStatus,
   adminTranscribeCurriculumPages,
+  adminCheckVisionKey,
   adminUpdateLesson,
   type CurriculumRow,
   type LessonRow,
@@ -591,6 +593,7 @@ function BookDetail({
   const languages = useLanguageRegistry();
   const readFn = useServerFn(adminReadCurriculumWindow);
   const transcribeFn = useServerFn(adminTranscribeCurriculumPages);
+  const checkKeyFn = useServerFn(adminCheckVisionKey);
   const importWindowFn = useServerFn(adminImportCurriculumWindow);
   const blankFn = useServerFn(adminConfirmBlankPage);
   const savePagesFn = useServerFn(adminSaveCurriculumPages);
@@ -606,7 +609,36 @@ function BookDetail({
   const [range, setRange] = useState({ from: next?.from ?? 1, to: next?.to ?? 1 });
   const [summaryJson, setSummaryJson] = useState("");
   const [readAll, setReadAll] = useState({ active: false, progress: "" });
+  // Which scanned page is being read right now, and which try.
+  const [pageProgress, setPageProgress] = useState("");
   const cancelReadAll = useRef(false);
+  const reading = readAll.active || busy.startsWith("read");
+
+  // A sleeping iPad pauses the tab and the reading stalls: keep the screen on while it runs.
+  useEffect(() => {
+    if (!reading || typeof navigator === "undefined" || !("wakeLock" in navigator)) return;
+    let lock: WakeLockSentinel | null = null;
+    let released = false;
+    const acquire = () => {
+      navigator.wakeLock
+        .request("screen")
+        .then((sentinel) => {
+          if (released) void sentinel.release();
+          else lock = sentinel;
+        })
+        .catch(() => {});
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") acquire();
+    };
+    acquire();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      released = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      void lock?.release().catch(() => {});
+    };
+  }, [reading]);
 
   // The async read-all loop needs the freshest book and gaps, not the render-time props.
   const bookRef = useRef(book);
@@ -636,6 +668,7 @@ function BookDetail({
       reportError(error);
     } finally {
       setBusy("");
+      setPageProgress("");
     }
   }
 
@@ -644,23 +677,45 @@ function BookDetail({
     const bookNow = bookRef.current;
     const scanned = missingRef.current.filter((page) => page >= from && page <= to);
     if (scanned.length) {
+      // Fail in seconds, with the reason, if the key cannot read images (no credit, wrong model).
+      const keyCheck = await checkKeyFn();
+      if (!keyCheck.ok) {
+        throw new Error(
+          `مفتاح OpenAI لا يقرأ الصور الآن (النموذج ${keyCheck.model}): ${keyCheck.error ?? "سبب غير معروف"}`,
+        );
+      }
       const { loadPdfForRender, renderPageToJpegBase64 } = await import("@/lib/pdf-page-render");
       const doc = await loadPdfForRender(await pdfFileFor(bookNow, pdfCache));
-      const stuck: string[] = [];
-      for (const page of scanned) {
-        setBusy(`read:${page}`);
-        const jpegBase64 = await renderPageToJpegBase64(doc, page, {
-          targetWidth: 1200,
-          quality: 0.72,
-        });
-        const outcome = await transcribeFn({
-          data: { curriculumId: bookNow.id, pages: [{ page_no: page, jpegBase64 }] },
-        });
-        if (outcome.stillMissing.length)
-          stuck.push(...(outcome.failures.length ? outcome.failures : [`p${page}`]));
-      }
-      if (stuck.length) {
-        throw new Error(`تعذّرت قراءة بعض الصفحات الممسوحة: ${stuck.join(" | ")}`);
+      const outcomes = await readPages(
+        scanned,
+        async (page) => {
+          const jpegBase64 = await renderPageToJpegBase64(doc, page, {
+            targetWidth: 1200,
+            quality: 0.72,
+          });
+          const outcome = await transcribeFn({
+            data: { curriculumId: bookNow.id, pages: [{ page_no: page, jpegBase64 }] },
+          });
+          return outcome.stillMissing.length
+            ? { ok: false, reason: outcome.failures[0] ?? "The AI returned nothing for this page." }
+            : { ok: true };
+        },
+        {
+          timeoutMs: 90_000,
+          retries: 1,
+          shouldStop: () => cancelReadAll.current,
+          onProgress: ({ page, index, total, attempt }) => {
+            setBusy(`read:${page}`);
+            setPageProgress(
+              `الصفحة ${page} (${index + 1} من ${total})${attempt > 1 ? ` · محاولة ${attempt}` : ""}`,
+            );
+          },
+        },
+      );
+      setPageProgress("");
+      const failed = outcomes.filter((outcome) => !outcome.ok);
+      if (failed.length) {
+        throw new Error(`تعذّرت قراءة ${failed.length} صفحة: ${failureSummary(outcomes)}`);
       }
     }
     setBusy("read");
@@ -980,7 +1035,8 @@ function BookDetail({
         )}
         {busy.startsWith("read:") && (
           <p className="mt-2 text-xs font-bold text-[var(--pp-accent-text)]">
-            قراءة الصفحات الممسوحة {busy.slice(5)}…
+            قراءة الصفحات الممسوحة: {pageProgress || `الصفحة ${busy.slice(5)}`}… لا تقفل الشاشة ولا
+            تغادر هذه الصفحة.
           </p>
         )}
         {importOpen && (
