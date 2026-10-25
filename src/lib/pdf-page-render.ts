@@ -317,10 +317,15 @@ export async function renderPageToJpegBase64(
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D context unavailable");
 
+  // Transparent areas would turn black in a JPEG: paint the page on white first.
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   await page.render({ canvasContext: ctx, viewport, canvas }).promise;
 
   const dataUrl = canvas.toDataURL("image/jpeg", quality);
-  // strip "data:image/jpeg;base64,"
-  const i = dataUrl.indexOf(",");
-  return i >= 0 ? dataUrl.slice(i + 1) : dataUrl;
+  // A browser that cannot make a JPEG answers with a PNG (or "data:,"): never send that on as JPEG.
+  if (!dataUrl.startsWith("data:image/jpeg;base64,") || dataUrl.length < 200) {
+    throw new Error(`Page ${pageNumber} could not be turned into a picture on this device.`);
+  }
+  return dataUrl.slice(dataUrl.indexOf(",") + 1);
 }
