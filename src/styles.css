@@ -3400,6 +3400,46 @@ body:has(.rh-learn-home) {
   from { opacity: 0; transform: translateY(-50%) scale(0.97); }
   to { opacity: 1; transform: translateY(-50%) scale(1); }
 }
+/* A side window for one item of a list (a lesson in the admin review): full screen on phones,
+   a tall panel from the left edge (the end of a right-to-left page) from 640px. */
+.edith-premium.rita-drawer {
+  position: fixed;
+  z-index: 61;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: var(--pp-ink);
+  outline: none;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@media (min-width: 640px) {
+  .edith-premium.rita-drawer {
+    inset: 0 auto 0 0;
+    width: min(820px, calc(100vw - 48px));
+    box-shadow: 24px 0 64px rgb(18 17 23 / 0.18);
+  }
+}
+.edith-premium.rita-drawer .rita-ex-body {
+  flex: 1;
+  min-height: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .edith-premium.rita-drawer[data-state="open"] {
+    animation: rita-drawer-in 240ms var(--pp-ease);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .edith-premium.rita-drawer[data-state="open"] {
+    animation: rita-ex-fade 150ms linear;
+  }
+}
+@keyframes rita-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
 .edith-premium .rita-ex-header {
   padding: 18px 20px 14px;
   border-bottom: 1px solid var(--pp-line);

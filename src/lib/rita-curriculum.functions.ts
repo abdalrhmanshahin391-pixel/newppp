@@ -2370,3 +2370,45 @@ export const adminPublishExercises = createServerFn({ method: "POST" })
     }
     return readExercises(data.lessonId);
   });
+
+export type ExercisesSummary = {
+  ready: boolean;
+  byLesson: Record<
+    string,
+    { status: "none" | "draft" | "published"; warnings: number; problems: number }
+  >;
+};
+
+/** Every lesson's exercise status for one book, in one request (the review list needs it). */
+export const adminExercisesSummary = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => parseWith(z.object({ curriculumId: uuid }), data))
+  .handler(async ({ data, context }): Promise<ExercisesSummary> => {
+    await assertAdmin(context);
+    const { data: lessons, error } = await context.supabase
+      .from("rita_lessons")
+      .select("id")
+      .eq("curriculum_id", data.curriculumId);
+    fail(error, "lessons");
+    const ids = (lessons ?? []).map((row) => String(row.id));
+    if (!ids.length) return { ready: true, byLesson: {} };
+    const db = await contentsDb();
+    const { data: rows, error: contentError } = await db
+      .from("rita_lesson_contents")
+      .select("lesson_id, content, status, warnings")
+      .in("lesson_id", ids);
+    if (contentError) {
+      if (isMissingSchemaError(contentError)) return { ready: false, byLesson: {} };
+      fail(contentError, "exercises");
+    }
+    const byLesson: ExercisesSummary["byLesson"] = {};
+    for (const row of rows ?? []) {
+      const content = parseLessonContent(row.content);
+      byLesson[String(row.lesson_id)] = {
+        status: row.status === "published" ? "published" : "draft",
+        warnings: Array.isArray(row.warnings) ? row.warnings.length : 0,
+        problems: content ? contentProblems(content).length : 1,
+      };
+    }
+    return { ready: true, byLesson };
+  });
