@@ -19,7 +19,8 @@ from loguru import logger
 from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
-from pipecat.frames.frames import LLMRunFrame
+from pipecat.frames.frames import LLMRunFrame, TTSSpeakFrame
+from pipecat.processors.frameworks.rtvi import RTVIServerMessageFrame
 from pipecat.observers.loggers.metrics_log_observer import MetricsLogObserver
 from pipecat.observers.startup_timing_observer import StartupTimingObserver
 from pipecat.observers.user_bot_latency_observer import UserBotLatencyObserver
@@ -52,6 +53,7 @@ from rita_dialect import DIALECT_PROMPT, RitaSpeechCleaner
 from rita_interruption import RitaUserTurnStartStrategy, gate_mode
 from rita_groq_llm import RitaGroqLLMService
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
+from rita_lesson_voice import LessonVoice, clean_say, lesson_engine_enabled, lesson_engine_section
 from rita_state import ResponseType, RitaSessionState
 from rita_turn_ledger import TurnLedger, build_id, fixed_prompt_hash
 from rita_target_language import (
@@ -174,6 +176,12 @@ def opens_lesson(body: dict[str, Any]) -> bool:
 def opening_message(body: dict[str, Any]) -> dict[str, str]:
     """The context's first message. In a lesson it is a note to Rita, not a question to the learner:
     the free-conversation opener made her act as if the learner should choose the topic."""
+    if lesson_engine_enabled(body):
+        # The website sends the first step as soon as the call is ready; Rita opens the lesson then.
+        return {
+            "role": "system",
+            "content": "The call has started. Wait for the website's lesson step, then follow it.",
+        }
     if opens_lesson(body):
         return {
             "role": "system",
@@ -193,7 +201,13 @@ def explain_options(state: RitaSessionState) -> dict[str, Any] | None:
     }
 
 
-def build_prompt(body: dict[str, Any], state: RitaSessionState, *, dialogue: bool = False) -> str:
+def build_prompt(
+    body: dict[str, Any],
+    state: RitaSessionState,
+    *,
+    dialogue: bool = False,
+    lesson_voice: LessonVoice | None = None,
+) -> str:
     personality = str(body.get("personality", "kind"))
     profile_language = str(body.get("language", "automatic"))
     remembered_dialect = str(body.get("dialect", "ar-JO"))
@@ -282,7 +296,7 @@ HUMAN TONE
 - Praise only what is really good, and say what. Never lecture.
 - Do not guess the learner's gender: no commands or adjectives aimed at them that change with gender
   (like خدي/خد, جاهز/جاهزة); use neutral wording such as "خلّينا نكمل" and "لما يناسبك".
-{lesson_section(body)}
+{lesson_engine_section(body, lesson_voice) or lesson_section(body)}
 SESSION STATE (changes every turn; read it last)
 Structured session state: {state.prompt_state(dialogue=dialogue)}.
 {turn_note}{state.reply_language_line(target["name"] if target else None)}
@@ -442,10 +456,14 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
     )
 
     saved_history = saved_conversation_history(body)
+    # A lesson with exercises: the website's engine sends the steps; Rita follows them.
+    lesson_voice = LessonVoice() if lesson_engine_enabled(body) else None
     initial_messages = [
         {
             "role": "system",
-            "content": build_prompt(body, state, dialogue=router_state == RouterMode.ON),
+            "content": build_prompt(
+                body, state, dialogue=router_state == RouterMode.ON, lesson_voice=lesson_voice
+            ),
         },
         *saved_history,
     ]
@@ -520,7 +538,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         messages = context.get_messages()
         if messages and messages[0].get("role") == "system":
             messages[0]["content"] = build_prompt(
-                body, state, dialogue=router_state == RouterMode.ON
+                body, state, dialogue=router_state == RouterMode.ON, lesson_voice=lesson_voice
             )
             ledger_meta["prompt_hash"] = fixed_prompt_hash(messages[0]["content"])
 
@@ -532,7 +550,28 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         session_id=session_id,
         trace_id=latency.trace_id,
         turn_id=lambda: latency.turn,
+        lesson=lesson_voice,
     )
+
+    def refresh_prompt() -> None:
+        """Rebuilds the system prompt now (a new lesson step arrived between turns)."""
+        messages = context.get_messages()
+        if messages and messages[0].get("role") == "system":
+            messages[0]["content"] = build_prompt(
+                body, state, dialogue=router_state == RouterMode.ON, lesson_voice=lesson_voice
+            )
+
+    async def say_line(text: str) -> None:
+        """Speaks one exact line from the website and shows the same text in the chat."""
+        line = clean_say(text)
+        if not line:
+            return
+        await task.queue_frames(
+            [
+                RTVIServerMessageFrame(data={"type": "rita-spoken-text", "text": line}),
+                TTSSpeakFrame(line, append_to_context=True),
+            ]
+        )
 
     pipeline = Pipeline(
         [
@@ -627,6 +666,28 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
                     state.active_language,
                     state.language_source.value,
                 )
+            return
+        if getattr(msg, "type", "") == "rita-lesson-step":
+            # The website's lesson engine moved: keep the step, then say its line or let the
+            # model teach it ("model" for the intro and the explanation of a part).
+            data = getattr(msg, "data", None) or {}
+            if lesson_voice is None or not lesson_voice.set_step(data):
+                return
+            refresh_prompt()
+            logger.info(
+                "Rita lesson step phase={} revision={} action={}",
+                lesson_voice.phase,
+                data.get("revision"),
+                data.get("action"),
+            )
+            if data.get("say"):
+                await say_line(data.get("say"))
+            if data.get("action") == "model":
+                await task.queue_frames([LLMRunFrame()])
+            return
+        if getattr(msg, "type", "") == "rita-lesson-say":
+            if lesson_voice is not None:
+                await say_line((getattr(msg, "data", None) or {}).get("text"))
             return
         if getattr(msg, "type", "") == "rita-stop":
             logger.info("Rita stopped by the learner's button")

@@ -50,13 +50,30 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             { status: 404 },
           );
         }
-        const mode = lesson
-          ? "guided_lesson"
-          : ["free_conversation", "guided_lesson", "pronunciation_drill"].includes(
-                String(body.mode),
-              )
-            ? String(body.mode)
-            : "free_conversation";
+        // A lesson with exercises: the page's lesson engine sends the steps during the call, so the
+        // worker gets the lesson's name and the engine flag instead of the spoken-lesson brief.
+        const sampleTitle =
+          body.sample === "to_be"
+            ? "Sample: am / is / are"
+            : body.sample === "property"
+              ? "Sample: property"
+              : "";
+        const engineLesson =
+          body.lessonEngine === true && (lesson || sampleTitle)
+            ? {
+                engine: true,
+                id: lesson?.id ?? `sample:${String(body.sample)}`,
+                title: lesson?.title ?? sampleTitle,
+              }
+            : null;
+        const mode =
+          lesson || engineLesson
+            ? "guided_lesson"
+            : ["free_conversation", "guided_lesson", "pronunciation_drill"].includes(
+                  String(body.mode),
+                )
+              ? String(body.mode)
+              : "free_conversation";
         const rawConversationId = String(body.conversationId ?? "").trim();
         const conversationId =
           mode === "free_conversation" && /^[0-9a-f-]{36}$/i.test(rawConversationId)
@@ -172,7 +189,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           ...(savedConversation?.history?.length
             ? { conversationHistory: savedConversation.history }
             : {}),
-          ...(lesson ? { lesson } : {}),
+          ...(engineLesson ? { lesson: engineLesson } : lesson ? { lesson } : {}),
         };
         const diagnosticBase = {
           traceId,
