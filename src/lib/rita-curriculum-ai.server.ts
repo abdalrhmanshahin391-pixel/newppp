@@ -1,6 +1,7 @@
 // OpenAI calls for Rita's curriculum: summarise a ten-page window, write a
 // lesson, judge a learner's answers against the lesson objectives, and draw the
 // lesson picture. Every reply is strict JSON checked against the zod schemas.
+import { interpretTranscript, type TranscriptOutcome } from "./page-transcript";
 import { isImageRejection, VISION_CHECK_JPEG_BASE64 } from "./vision-check-image";
 import { z } from "zod";
 import { getServerRuntimeSecret } from "@/lib/config.server";
@@ -212,10 +213,16 @@ ${SUMMARY_SHAPE}`;
   return { summary: value, model };
 }
 
+/** A page that gave no saved text, with the reason, so nothing is skipped without the admin seeing it. */
+export type PageNote = { page_no: number; kind: "blank" | "refused" | "cut"; reason: string };
+
 /** Reads scanned pages (no text layer) so the rest of the flow can work with text. */
-export async function transcribePages(
-  pages: { page_no: number; jpegBase64: string }[],
-): Promise<{ pages: { page_no: number; text: string }[]; model: string; failures: string[] }> {
+export async function transcribePages(pages: { page_no: number; jpegBase64: string }[]): Promise<{
+  pages: { page_no: number; text: string }[];
+  model: string;
+  failures: string[];
+  notes: PageNote[];
+}> {
   const key = await apiKey();
   const model = await curriculumTextModel();
   // One request per page: a single slow or malformed page can no longer sink its
@@ -224,60 +231,84 @@ export async function transcribePages(
     pages.map((page) => transcribeOnePage(key, model, page)),
   );
   const done: { page_no: number; text: string }[] = [];
+  const notes: PageNote[] = [];
   const failures: string[] = [];
   settled.forEach((result, index) => {
-    if (result.status === "fulfilled") done.push(result.value);
-    else {
+    if (result.status === "fulfilled") {
+      // A refused page is not saved: it stays missing and is shown to the admin to settle.
+      if (result.value.text !== null)
+        done.push({ page_no: result.value.page_no, text: result.value.text });
+      if (result.value.note) notes.push(result.value.note);
+    } else {
       const reason = result.reason instanceof Error ? result.reason.message : String(result.reason);
       failures.push(`p${pages[index].page_no}: ${reason}`);
     }
   });
-  if (!done.length && failures.length) {
+  if (!done.length && !notes.length && failures.length) {
     const first = settled.find((result) => result.status === "rejected") as PromiseRejectedResult;
     throw first.reason instanceof Error ? first.reason : new CurriculumAiError(502, failures[0]);
   }
-  return { pages: done, model, failures };
+  return { pages: done, model, failures, notes };
 }
 
-const SinglePageSchema = z.object({ text: z.string().max(12_000) });
+const TRANSCRIBE_PROMPT = `Transcribe the printed text on this scanned book page exactly, keeping line breaks and table rows.
+Copy every printed word, even small text next to pictures, captions, page numbers and tables. Ignore the pictures themselves.
+Reply with the page text only, no comments. If the page has no readable text at all (a blank page, a cover picture), reply with exactly: NO_TEXT`;
+
+// Second try after a refusal: say what the page is, since the first reply may have been a misfire
+// on a photo or a diagram.
+const TRANSCRIBE_RETRY_PROMPT = `This is a page from a study book, scanned for a learning app. Copy only the printed words; ignore photos, diagrams and people in the pictures.
+Reply with the page text only. If there are no printed words, reply with exactly: NO_TEXT`;
 
 async function transcribeOnePage(
   key: string,
   model: string,
   page: { page_no: number; jpegBase64: string },
-): Promise<{ page_no: number; text: string }> {
-  const body = {
-    model,
-    messages: [
+): Promise<{ page_no: number; text: string | null; note?: PageNote }> {
+  const imageKb = Math.round((page.jpegBase64.length * 3) / 4 / 1024);
+  const ask = async (prompt: string) => {
+    const json = await postJson(
+      CHAT_URL,
+      key,
       {
-        role: "user",
-        content: [
+        model,
+        messages: [
           {
-            type: "text",
-            text: `Transcribe this page of an English course book exactly, keeping line breaks and table rows.
-If the page has no readable text (a cover picture, a blank page), reply with an empty string.
-Reply with JSON: {"text":"..."}`,
-          },
-          {
-            type: "image_url",
-            image_url: { url: `data:image/jpeg;base64,${page.jpegBase64}`, detail: "high" },
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              {
+                type: "image_url",
+                image_url: { url: `data:image/jpeg;base64,${page.jpegBase64}`, detail: "high" },
+              },
+            ],
           },
         ],
+        temperature: 0,
+        max_completion_tokens: 6_000,
       },
-    ],
-    response_format: { type: "json_object" },
-    temperature: 0,
-    max_completion_tokens: 4_000,
+      60_000,
+    );
+    const choice = json?.choices?.[0];
+    const content = typeof choice?.message?.content === "string" ? choice.message.content : "";
+    const outcome = interpretTranscript(
+      content,
+      choice?.finish_reason,
+      typeof choice?.message?.refusal === "string" ? choice.message.refusal : "",
+    );
+    // What the AI really answered, kept with every problem so the cause is never a guess.
+    const meta = `[${model}, finish: ${choice?.finish_reason ?? "none"}, reply: ${content.length} chars, image: ${imageKb} KB]`;
+    return { outcome, meta };
   };
+
+  let result: { outcome: TranscriptOutcome; meta: string } | null = null;
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      const json = await postJson(CHAT_URL, key, body, 60_000);
-      const parsed = SinglePageSchema.safeParse(
-        parseJsonObject(String(json?.choices?.[0]?.message?.content ?? "")),
-      );
-      if (!parsed.success) throw new CurriculumAiError(502, "The AI could not read that page.");
-      return { page_no: page.page_no, text: parsed.data.text };
+      result = await ask(attempt === 0 ? TRANSCRIBE_PROMPT : TRANSCRIBE_RETRY_PROMPT);
+      lastError = undefined;
+      // Only a refusal is worth a second, differently worded try.
+      if (result.outcome.kind !== "refused") break;
     } catch (error) {
       lastError = error;
       const retryable =
@@ -286,7 +317,36 @@ Reply with JSON: {"text":"..."}`,
       await new Promise((resolve) => setTimeout(resolve, 1_500 * (attempt + 1)));
     }
   }
-  throw lastError instanceof Error ? lastError : new CurriculumAiError(502, "Page read failed.");
+  if (!result) {
+    throw lastError instanceof Error ? lastError : new CurriculumAiError(502, "Page read failed.");
+  }
+  const { outcome, meta } = result;
+  if (outcome.kind === "refused") {
+    return {
+      page_no: page.page_no,
+      text: null,
+      note: { page_no: page.page_no, kind: "refused", reason: `${outcome.reason} ${meta}` },
+    };
+  }
+  if (outcome.kind === "blank") {
+    return {
+      page_no: page.page_no,
+      text: "",
+      note: { page_no: page.page_no, kind: "blank", reason: `${outcome.reason} ${meta}` },
+    };
+  }
+  if (outcome.kind === "cut") {
+    return {
+      page_no: page.page_no,
+      text: outcome.text.slice(0, 12_000),
+      note: {
+        page_no: page.page_no,
+        kind: "cut",
+        reason: `The page is very long: its text was cut at the limit. ${meta}`,
+      },
+    };
+  }
+  return { page_no: page.page_no, text: outcome.text.slice(0, 12_000) };
 }
 
 const LESSON_SHAPE = `{

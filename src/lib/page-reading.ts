@@ -86,3 +86,8 @@ export function failureSummary(outcomes: PageOutcome[]) {
     .map((outcome) => `p${outcome.page}: ${outcome.reason}`)
     .join(" | ");
 }
+
+/** The pages of a window that are still unread: the window cannot be summarised until they are settled. */
+export function unresolvedIn(unresolved: number[], from: number, to: number): number[] {
+  return unresolved.filter((page) => page >= from && page <= to).sort((a, b) => a - b);
+}

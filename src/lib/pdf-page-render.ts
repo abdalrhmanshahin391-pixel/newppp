@@ -243,8 +243,11 @@ export function clearPdfRenderCache() {
   cachedDoc = null;
 }
 
-/** Extract the plain text of a single page via pdfjs (no OCR). Returns "" on failure. */
-export async function getPageText(doc: any, pageNumber: number): Promise<string> {
+/** Same as getPageText but says why a page gave nothing, instead of hiding the error. */
+export async function getPageTextDetailed(
+  doc: any,
+  pageNumber: number,
+): Promise<{ text: string; error: string }> {
   try {
     const page = await doc.getPage(pageNumber);
     const tc = await page.getTextContent({ includeMarkedContent: false, disableNormalization: false });
@@ -258,7 +261,7 @@ export async function getPageText(doc: any, pageNumber: number): Promise<string>
         y: Number(it.transform?.[5] ?? 0),
       }))
       .filter((it) => it.str.trim());
-    if (!items.length) return "";
+    if (!items.length) return { text: "", error: "" };
     const lines: { y: number; items: typeof items }[] = [];
     for (const it of items) {
       let line = lines.find((l) => Math.abs(l.y - it.y) <= 3);
@@ -269,14 +272,23 @@ export async function getPageText(doc: any, pageNumber: number): Promise<string>
       line.items.push(it);
       line.y = (line.y + it.y) / 2;
     }
-    return lines
+    const text = lines
       .sort((a, b) => b.y - a.y)
       .map((line) => line.items.sort((a, b) => a.x - b.x).map((it) => it.str).join(" ").replace(/\s+/g, " ").trim())
       .filter(Boolean)
       .join("\n");
-  } catch {
-    return "";
+    return { text, error: "" };
+  } catch (error) {
+    return {
+      text: "",
+      error: (error instanceof Error ? error.message : String(error ?? "")).slice(0, 200),
+    };
   }
+}
+
+/** Extract the plain text of a single page via pdfjs (no OCR). Returns "" on failure. */
+export async function getPageText(doc: any, pageNumber: number): Promise<string> {
+  return (await getPageTextDetailed(doc, pageNumber)).text;
 }
 
 /** Rough estimate of how many MCQs are on a page using text markers.
@@ -296,14 +308,19 @@ export function estimateQuestionsInText(text: string): { expected: number; scann
   return { expected, scanned: false };
 }
 
-/** Render a single page (1-indexed) to a JPEG base64 string (no data: prefix). */
+/**
+ * Render a single page (1-indexed) to a JPEG base64 string (no data: prefix).
+ * With `maxChars` the picture is also checked before it is sent (the book reader): painted on
+ * white, a real JPEG, and small enough for the server. Without it the behaviour is unchanged.
+ */
 export async function renderPageToJpegBase64(
   doc: any,
   pageNumber: number,
-  opts: { targetWidth?: number; quality?: number } = {},
+  opts: { targetWidth?: number; quality?: number; maxChars?: number } = {},
 ): Promise<string> {
   const targetWidth = opts.targetWidth ?? 1100;
   const quality = opts.quality ?? 0.7;
+  const maxChars = opts.maxChars;
 
 
   const page = await doc.getPage(pageNumber);
@@ -317,15 +334,28 @@ export async function renderPageToJpegBase64(
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D context unavailable");
 
-  // Transparent areas would turn black in a JPEG: paint the page on white first.
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  if (maxChars !== undefined) {
+    // Transparent areas would turn black in a JPEG: paint the page on white first.
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
   await page.render({ canvasContext: ctx, viewport, canvas }).promise;
 
-  const dataUrl = canvas.toDataURL("image/jpeg", quality);
-  // A browser that cannot make a JPEG answers with a PNG (or "data:,"): never send that on as JPEG.
-  if (!dataUrl.startsWith("data:image/jpeg;base64,") || dataUrl.length < 200) {
-    throw new Error(`Page ${pageNumber} could not be turned into a picture on this device.`);
+  if (maxChars === undefined) {
+    const dataUrl = canvas.toDataURL("image/jpeg", quality);
+    // strip "data:image/jpeg;base64,"
+    const i = dataUrl.indexOf(",");
+    return i >= 0 ? dataUrl.slice(i + 1) : dataUrl;
   }
-  return dataUrl.slice(dataUrl.indexOf(",") + 1);
+
+  // A heavy page (a big photo) is saved again at lower quality until it fits.
+  for (const q of [quality, 0.55, 0.4, 0.28]) {
+    const dataUrl = canvas.toDataURL("image/jpeg", Math.min(q, quality));
+    // A browser that cannot make a JPEG answers with a PNG (or "data:,"): never send that on as JPEG.
+    if (!dataUrl.startsWith("data:image/jpeg;base64,") || dataUrl.length < 200) {
+      throw new Error(`Page ${pageNumber} could not be turned into a picture on this device.`);
+    }
+    if (dataUrl.length <= maxChars) return dataUrl.slice(dataUrl.indexOf(",") + 1);
+  }
+  throw new Error(`Page ${pageNumber} makes a picture that is too big to send.`);
 }

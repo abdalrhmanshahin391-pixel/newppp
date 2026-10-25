@@ -65,6 +65,8 @@ jobs:
           node --test src/lib/language-flags.test.ts
           node --test src/lib/rita-target-language.test.ts
           node --test src/lib/vision-check-image.test.ts
+          node --test src/lib/page-transcript.test.ts
+          node --test src/lib/page-reading.test.ts
           node --test src/routes/api/rita-v3/session/start.source.test.mjs
           bunx tsc --noEmit
       - name: Build site

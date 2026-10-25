@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { failureSummary, isFatalReason, readPages, withTimeout } from "./page-reading.ts";
+import {
+  failureSummary,
+  isFatalReason,
+  readPages,
+  unresolvedIn,
+  withTimeout,
+} from "./page-reading.ts";
 
 const noSleep = async () => {};
 const base = { timeoutMs: 50, retries: 2, sleep: noSleep };
@@ -96,4 +102,10 @@ test("the failure summary and the timeout helper", async () => {
   );
   await assert.rejects(withTimeout(new Promise(() => {}), 10, "Thing"), /Thing took longer/);
   assert.equal(await withTimeout(Promise.resolve(7), 50, "ok"), 7);
+});
+
+test("unresolvedIn lists only the unsettled pages inside a window, in order", () => {
+  assert.deepEqual(unresolvedIn([25, 2, 11, 7], 1, 10), [2, 7]);
+  assert.deepEqual(unresolvedIn([25, 2, 11, 7], 11, 20), [11]);
+  assert.deepEqual(unresolvedIn([], 1, 10), []);
 });

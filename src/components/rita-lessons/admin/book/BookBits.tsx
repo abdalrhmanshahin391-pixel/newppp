@@ -1,4 +1,5 @@
 import type React from "react";
+import { useState } from "react";
 import { Check } from "lucide-react";
 import {
   BOOK_STEPS,
@@ -64,6 +65,28 @@ export function ReadinessChip({ state, count }: { state: LessonReadiness; count?
 }
 
 /** A failure that stays on screen until closed (a toast vanishes before it can be read). */
+/** One tap puts the error text on the clipboard, so it can be pasted to whoever fixes it. */
+function CopyDetails({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        void navigator.clipboard
+          ?.writeText(text)
+          .then(() => {
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 2000);
+          })
+          .catch(() => {});
+      }}
+      className="mt-1 text-[13px] font-semibold underline"
+    >
+      {copied ? "اننسخ" : "انسخ التفاصيل"}
+    </button>
+  );
+}
+
 export function ErrorBox({
   hint,
   raw,
@@ -95,6 +118,7 @@ export function ErrorBox({
           {raw}
         </p>
       )}
+      <CopyDetails text={raw ? `${hint}\n${raw}` : hint} />
     </div>
   );
 }
