@@ -7,6 +7,7 @@ import {
   FACTS_SCHEMA,
   JUDGE_SCHEMA,
   REFERENCE_SCHEMA,
+  assignPrompt,
   conversationStats,
   diagnosePrompt,
   dialectPrompt,
@@ -14,7 +15,9 @@ import {
   finalizeReview,
   judgePrompt,
   mergeJudgements,
+  parseAssignment,
   parseConversationReview,
+  parseDuplicates,
   parseDiagnosis,
   parseDialect,
   parseFacts,
@@ -430,5 +433,79 @@ test("a report without a record still gets a turn; reports-only skips the rest",
   assert.deepEqual(
     picked.map((c) => c.turnKey),
     ["reply-old"],
+  );
+});
+
+// ------------------------------------------------------------------------------ issues
+
+test("an assignment either joins an offered pattern or describes a new one", () => {
+  const ids = new Set(["i1", "i2"]);
+  assert.deepEqual(
+    parseAssignment({ issue_id: "i1", title: "", description: "", fix_where: "prompt" }, ids),
+    { issueId: "i1", title: "", description: "", fixWhere: "prompt" },
+  );
+  assert.equal(
+    parseAssignment(
+      { issue_id: "invented", title: "x", description: "", fix_where: "prompt" },
+      ids,
+    ),
+    null,
+  );
+  const fresh = parseAssignment(
+    { issue_id: "", title: "فيك تتعلم", description: "Lebanese phrase", fix_where: "dialect_list" },
+    ids,
+  );
+  assert.equal(fresh?.issueId, null);
+  assert.equal(fresh?.title, "فيك تتعلم");
+  assert.equal(
+    parseAssignment({ issue_id: "", title: "  ", description: "", fix_where: "prompt" }, ids),
+    null,
+  );
+  assert.equal(
+    parseAssignment({ issue_id: "", title: "t", description: "", fix_where: "moon" }, ids),
+    null,
+  );
+});
+
+test("duplicate groups only use offered ids and never merge a pattern twice", () => {
+  const ids = new Set(["a", "b", "c", "d"]);
+  const groups = parseDuplicates(
+    {
+      groups: [
+        { keep_id: "a", merge_ids: ["b", "a", "zzz"], why: "same" },
+        { keep_id: "c", merge_ids: ["b", "d"], why: "b is taken" },
+        { keep_id: "ghost", merge_ids: ["d"], why: "unknown keep" },
+        { keep_id: "d", merge_ids: [], why: "nothing" },
+      ],
+    },
+    ids,
+  );
+  assert.deepEqual(groups, [
+    { keepId: "a", mergeIds: ["b"], why: "same" },
+    { keepId: "c", mergeIds: ["d"], why: "b is taken" },
+  ]);
+  assert.equal(parseDuplicates({ groups: "no" }, ids), null);
+  assert.deepEqual(parseDuplicates({ groups: [] }, ids), []);
+});
+
+test("the assignment prompt lists the open patterns and carries the problem", () => {
+  const prompt = assignPrompt({
+    open: [{ id: "i1", title: "فيك تتعلم", description: "d", fixWhere: "dialect_list" }],
+    problem: {
+      category: "wrong_dialect",
+      cause: "language_choice",
+      explanation: "e",
+      evidence: "q",
+      fix: null,
+      ritaReply: "رد",
+      facts: [],
+      dialect: [],
+      timing: null,
+    },
+  });
+  assert.ok(
+    prompt.includes("<open_patterns>") &&
+      prompt.includes('"id":"i1"') &&
+      prompt.includes("<problem>"),
   );
 });

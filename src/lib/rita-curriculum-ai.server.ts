@@ -64,23 +64,6 @@ export async function curriculumTextModel() {
   return (await getServerRuntimeSecret("RITA_CURRICULUM_MODEL")) || DEFAULT_TEXT_MODEL;
 }
 
-/**
- * A deliberately tiny, schema-checked request used before a longer book read.
- * It proves that the server can obtain and use its OpenAI key without ever
- * returning that key to the browser.  Keeping this separate from OCR makes a
- * bad key fail in seconds instead of after the PDF has been rendered.
- */
-export async function preflightCurriculumAi(): Promise<{ model: string }> {
-  const ReadySchema = z.object({ ok: z.literal(true) });
-  const { model } = await chatJson(
-    ReadySchema,
-    "You are a service health check. Reply only with the JSON object {\"ok\":true}.",
-    "Run the health check.",
-    { maxTokens: 16, timeoutMs: 20_000, temperature: 0 },
-  );
-  return { model };
-}
-
 async function postJson(url: string, key: string, body: unknown, timeoutMs: number) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -278,9 +261,9 @@ Reply with JSON: {"text":"..."}`,
     max_completion_tokens: 4_000,
   };
   let lastError: unknown;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      const json = await postJson(CHAT_URL, key, body, 100_000);
+      const json = await postJson(CHAT_URL, key, body, 60_000);
       const parsed = SinglePageSchema.safeParse(
         parseJsonObject(String(json?.choices?.[0]?.message?.content ?? "")),
       );
@@ -290,7 +273,7 @@ Reply with JSON: {"text":"..."}`,
       lastError = error;
       const retryable =
         error instanceof CurriculumAiError ? error.status === 429 || error.status >= 500 : true;
-      if (!retryable || attempt === 2) break;
+      if (!retryable || attempt === 1) break;
       await new Promise((resolve) => setTimeout(resolve, 1_500 * (attempt + 1)));
     }
   }
@@ -538,4 +521,37 @@ export async function generateLessonImage(
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
   return { bytes, model, contentType: "image/webp" };
+}
+
+// A 1x1 white JPEG: enough to prove the key can send an image to the model.
+const TINY_JPEG =
+  "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=";
+
+/** Before a long read: can this key read an image with the chosen model right now? */
+export async function checkVisionKey(): Promise<{ ok: boolean; model: string; error?: string }> {
+  const model = await curriculumTextModel();
+  try {
+    const key = await apiKey();
+    await postJson(
+      CHAT_URL,
+      key,
+      {
+        model,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Reply with the word ok." },
+              { type: "image_url", image_url: { url: `data:image/jpeg;base64,${TINY_JPEG}` } },
+            ],
+          },
+        ],
+        max_completion_tokens: 16,
+      },
+      20_000,
+    );
+    return { ok: true, model };
+  } catch (error) {
+    return { ok: false, model, error: error instanceof Error ? error.message : String(error) };
+  }
 }

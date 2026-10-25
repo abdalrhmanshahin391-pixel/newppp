@@ -56,6 +56,19 @@ Page `#fff`; dark device screen `linear-gradient(162deg, #26252e, #121117)`.
   choice. Use it instead of a select when every option should stay visible.
   `.rita-choice-stack` stacks the same group in one column for longer labels (the "Report a
   problem" reasons under a Rita reply, which expand inline, never as a window).
+- Admin quality screens (`/admin/rita-quality`): a row of four number cards (`--pp-grey`, 16px
+  radius, value 34px/600, a muted note, and a change line that says "Better by"/"Worse by" in
+  words, never colour alone), a list of problem cards (hairline border, title first, one meta
+  line), and Rita's reply beside the reference reply (grey card next to `--pp-accent-soft` card,
+  stacked on phones). Small samples are said out loud, not hidden.
+- Admin tool screens (Rita quality and the admin strip): one blue primary action per view; everything
+  else is `.rita-btn-soft` (hairline outline) or `.rita-btn-quiet` (no outline until hovered); icon
+  buttons use `.rita-btn-icon` (44px square). Several secondary actions go into a menu (Radix
+  DropdownMenu with the `rita-menu` look: 12px radius, 44px rows, a small grey line under each
+  label) instead of a row of buttons. Sections are told apart by space and a hairline, not by
+  different boxes. Tabs are an underline row (`.rita-tabs-list` / `.rita-tab`, 44px). A path of
+  steps uses `.rita-stepper`. The strip only an admin sees is dashed (`.rita-admin-bar`) and says
+  "Admin only". A row whose title is Arabic gets `dir="auto"` so the whole row reads right to left.
 - Spacing on a 4px scale; sections breathe (24–48px), controls inside a card 8–16px.
 - Windows: one level only (a sheet from the bottom on phones, centred on wider screens,
   max 672px). No window inside a window.

@@ -504,15 +504,6 @@ export const adminSaveCurriculumPages = createServerFn({ method: "POST" })
     return { saved: data.pages.length };
   });
 
-/** Checks the configured key with one tiny request before OCR or lesson work. */
-export const adminCheckCurriculumAi = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    await assertAdmin(context);
-    const { preflightCurriculumAi } = await ai();
-    return preflightCurriculumAi();
-  });
-
 /** Scanned pages: the browser renders them to JPEG and the AI transcribes them. */
 export const adminTranscribeCurriculumPages = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -568,6 +559,15 @@ export const adminTranscribeCurriculumPages = createServerFn({ method: "POST" })
         .filter((pageNo) => !transcribed.includes(pageNo)),
       failures: result.failures,
     };
+  });
+
+/** "Can the AI read pages right now?" before a long run, so a bad key shows up in seconds. */
+export const adminCheckVisionKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { checkVisionKey } = await ai();
+    return checkVisionKey();
   });
 
 export const adminSetCurriculumStatus = createServerFn({ method: "POST" })

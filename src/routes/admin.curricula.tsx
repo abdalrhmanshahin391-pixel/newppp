@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { failureSummary, readPages } from "@/lib/page-reading";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -49,7 +50,6 @@ import {
 } from "@/lib/rita-curriculum";
 import {
   adminConfirmBlankPage,
-  adminCheckCurriculumAi,
   adminCreateCurriculum,
   adminCurriculumOverview,
   adminGenerateLesson,
@@ -68,6 +68,7 @@ import {
   adminSetCurriculumStatus,
   adminSetLessonStatus,
   adminTranscribeCurriculumPages,
+  adminCheckVisionKey,
   adminUpdateLesson,
   type CurriculumRow,
   type LessonRow,
@@ -595,8 +596,8 @@ function BookDetail({
   const languageFn = useServerFn(adminSetCurriculumLanguage);
   const languages = useLanguageRegistry();
   const readFn = useServerFn(adminReadCurriculumWindow);
-  const checkAiFn = useServerFn(adminCheckCurriculumAi);
   const transcribeFn = useServerFn(adminTranscribeCurriculumPages);
+  const checkKeyFn = useServerFn(adminCheckVisionKey);
   const importWindowFn = useServerFn(adminImportCurriculumWindow);
   const blankFn = useServerFn(adminConfirmBlankPage);
   const savePagesFn = useServerFn(adminSaveCurriculumPages);
@@ -612,9 +613,36 @@ function BookDetail({
   const [range, setRange] = useState({ from: next?.from ?? 1, to: next?.to ?? 1 });
   const [summaryJson, setSummaryJson] = useState("");
   const [readAll, setReadAll] = useState({ active: false, progress: "" });
+  // Which scanned page is being read right now, and which try.
+  const [pageProgress, setPageProgress] = useState("");
   const cancelReadAll = useRef(false);
-  const aiReadyUntil = useRef(0);
-  const [readingProgress, setReadingProgress] = useState("");
+  const reading = readAll.active || busy.startsWith("read");
+
+  // A sleeping iPad pauses the tab and the reading stalls: keep the screen on while it runs.
+  useEffect(() => {
+    if (!reading || typeof navigator === "undefined" || !("wakeLock" in navigator)) return;
+    let lock: WakeLockSentinel | null = null;
+    let released = false;
+    const acquire = () => {
+      navigator.wakeLock
+        .request("screen")
+        .then((sentinel) => {
+          if (released) void sentinel.release();
+          else lock = sentinel;
+        })
+        .catch(() => {});
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") acquire();
+    };
+    acquire();
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      released = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      void lock?.release().catch(() => {});
+    };
+  }, [reading]);
 
   // The async read-all loop needs the freshest book and gaps, not the render-time props.
   const bookRef = useRef(book);
@@ -644,68 +672,58 @@ function BookDetail({
       reportError(error);
     } finally {
       setBusy("");
-      if (label === "read") setReadingProgress("");
-    }
-  }
-
-  /** Avoid spending a health-check request for every page in one reading run. */
-  async function ensureCurriculumAiReady() {
-    if (Date.now() < aiReadyUntil.current) return;
-    setReadingProgress("فحص اتصال OpenAI…");
-    const result = await checkAiFn({ data: {} });
-    aiReadyUntil.current = Date.now() + 5 * 60 * 1_000;
-    setReadingProgress(`اتصال OpenAI جاهز (${result.model})`);
-  }
-
-  /** Keep iPad/phone browsers from suspending a long, foreground book read. */
-  async function whileKeepingScreenAwake<T>(task: () => Promise<T>): Promise<T> {
-    type WakeLock = { release: () => Promise<void> };
-    const navigatorWithWakeLock = navigator as Navigator & {
-      wakeLock?: { request: (kind: "screen") => Promise<WakeLock> };
-    };
-    let lock: WakeLock | null = null;
-    try {
-      lock = await navigatorWithWakeLock.wakeLock?.request("screen");
-    } catch {
-      // Wake Lock is optional and commonly unavailable in embedded previews.
-    }
-    try {
-      return await task();
-    } finally {
-      if (lock) await lock.release().catch(() => undefined);
+      setPageProgress("");
     }
   }
 
   /** Reads one window: transcribes its missing pages first, then summarizes. */
   async function readWindow(from: number, to: number): Promise<number> {
     const bookNow = bookRef.current;
-    await ensureCurriculumAiReady();
     const scanned = missingRef.current.filter((page) => page >= from && page <= to);
     if (scanned.length) {
+      // Fail in seconds, with the reason, if the key cannot read images (no credit, wrong model).
+      const keyCheck = await checkKeyFn();
+      if (!keyCheck.ok) {
+        throw new Error(
+          `مفتاح OpenAI لا يقرأ الصور الآن (النموذج ${keyCheck.model}): ${keyCheck.error ?? "سبب غير معروف"}`,
+        );
+      }
       const { loadPdfForRender, renderPageToJpegBase64 } = await import("@/lib/pdf-page-render");
       const doc = await loadPdfForRender(await pdfFileFor(bookNow, pdfCache));
-      const stuck: string[] = [];
-      for (const page of scanned) {
-        setBusy(`read:${page}`);
-        setReadingProgress(`تجهيز الصفحة ${page} من ${to}…`);
-        const jpegBase64 = await renderPageToJpegBase64(doc, page, {
-          targetWidth: 1200,
-          quality: 0.72,
-        });
-        const outcome = await transcribeFn({
-          data: { curriculumId: bookNow.id, pages: [{ page_no: page, jpegBase64 }] },
-        });
-        if (outcome.stillMissing.length)
-          stuck.push(...(outcome.failures.length ? outcome.failures : [`p${page}`]));
-      }
-      if (stuck.length) {
-        throw new Error(`تعذّرت قراءة بعض الصفحات الممسوحة: ${stuck.join(" | ")}`);
+      const outcomes = await readPages(
+        scanned,
+        async (page) => {
+          const jpegBase64 = await renderPageToJpegBase64(doc, page, {
+            targetWidth: 1200,
+            quality: 0.72,
+          });
+          const outcome = await transcribeFn({
+            data: { curriculumId: bookNow.id, pages: [{ page_no: page, jpegBase64 }] },
+          });
+          return outcome.stillMissing.length
+            ? { ok: false, reason: outcome.failures[0] ?? "The AI returned nothing for this page." }
+            : { ok: true };
+        },
+        {
+          timeoutMs: 90_000,
+          retries: 1,
+          shouldStop: () => cancelReadAll.current,
+          onProgress: ({ page, index, total, attempt }) => {
+            setBusy(`read:${page}`);
+            setPageProgress(
+              `الصفحة ${page} (${index + 1} من ${total})${attempt > 1 ? ` · محاولة ${attempt}` : ""}`,
+            );
+          },
+        },
+      );
+      setPageProgress("");
+      const failed = outcomes.filter((outcome) => !outcome.ok);
+      if (failed.length) {
+        throw new Error(`تعذّرت قراءة ${failed.length} صفحة: ${failureSummary(outcomes)}`);
       }
     }
     setBusy("read");
-    setReadingProgress(`تلخيص الصفحات ${from}–${to}…`);
     const result = await readFn({ data: { curriculumId: bookNow.id, from, to } });
-    setReadingProgress("");
     return result.readCursor;
   }
 
@@ -713,7 +731,7 @@ function BookDetail({
     if (!next) return;
     await run(
       "read",
-      () => whileKeepingScreenAwake(() => readWindow(next.from, next.to)),
+      () => readWindow(next.from, next.to),
       `تمت قراءة الصفحات ${next.from}–${next.to}`,
     );
   }
@@ -738,7 +756,7 @@ function BookDetail({
           active: true,
           progress: `قراءة الصفحات ${window.from}–${window.to} من ${total}…`,
         });
-        const advanced = await whileKeepingScreenAwake(() => readWindow(window.from, window.to));
+        const advanced = await readWindow(window.from, window.to);
         if (advanced <= cursor) break; // safety: the cursor did not move
         cursor = advanced;
       }
@@ -749,7 +767,6 @@ function BookDetail({
       reportError(error);
     } finally {
       setReadAll({ active: false, progress: "" });
-      setReadingProgress("");
       setBusy("");
       await onChanged();
     }
@@ -1022,13 +1039,8 @@ function BookDetail({
         )}
         {busy.startsWith("read:") && (
           <p className="mt-2 text-xs font-bold text-[var(--pp-accent-text)]">
-            قراءة الصفحات الممسوحة {busy.slice(5)}…
-          </p>
-        )}
-        {readingProgress && !readAll.active && (
-          <p className="mt-2 flex items-center gap-2 text-xs font-bold text-[var(--pp-accent-text)]">
-            <Loader2 size={13} className="animate-spin" />
-            {readingProgress}
+            قراءة الصفحات الممسوحة: {pageProgress || `الصفحة ${busy.slice(5)}`}… لا تقفل الشاشة ولا
+            تغادر هذه الصفحة.
           </p>
         )}
         {importOpen && (

@@ -1,4 +1,5 @@
 import { useEffect, useId, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -9,7 +10,14 @@ type Ui = "on" | "off";
  * off, nothing is sent to OpenAI. Only admins can read or change the setting, so for everybody else
  * this renders nothing.
  */
-export function ReviewSwitch() {
+export function ReviewSwitch({
+  showQualityLink = false,
+  compact = false,
+}: {
+  showQualityLink?: boolean;
+  /** A single line for the admin strip: the label, a short state and the switch. */
+  compact?: boolean;
+}) {
   const [state, setState] = useState<Ui | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -53,6 +61,48 @@ export function ReviewSwitch() {
     setSaving(false);
   }
 
+  if (compact) {
+    return (
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          aria-describedby={noteId}
+          aria-label="AI analysis of conversations"
+          onClick={() => void toggle()}
+          className="flex min-h-[44px] items-center gap-3 rounded-lg pe-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pp-ink)]"
+        >
+          <span aria-hidden="true" className="text-[15px] font-semibold">
+            AI analysis
+          </span>
+          <span
+            aria-hidden="true"
+            className="relative h-7 w-12 shrink-0 rounded-full transition-colors duration-150"
+            style={{ background: on ? "var(--pp-accent)" : "var(--pp-line)" }}
+          >
+            <span
+              className="absolute top-1 grid h-5 w-5 place-items-center rounded-full bg-white shadow-sm transition-transform duration-150"
+              style={{ insetInlineStart: 4, transform: `translateX(${on ? 20 : 0}px)` }}
+            >
+              {saving ? (
+                <Loader2 size={12} className="animate-spin text-[var(--pp-muted)]" />
+              ) : null}
+            </span>
+          </span>
+        </button>
+        <span id={noteId} className="text-[14px] text-[var(--pp-muted)]">
+          {on ? "On: every finished conversation is reviewed" : "Off: nothing is sent for review"}
+        </span>
+        {error ? (
+          <span role="alert" className="text-[14px] font-semibold text-[var(--pp-accent-text)]">
+            {error}
+          </span>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className="mt-6">
       <button
@@ -88,6 +138,14 @@ export function ReviewSwitch() {
           </span>
         </span>
       </button>
+      {showQualityLink ? (
+        <Link
+          to="/admin/rita-quality"
+          className="mt-2 inline-flex min-h-[44px] items-center text-[15px] font-semibold text-[var(--pp-accent-text)] underline-offset-4 hover:underline"
+        >
+          See what to fix next
+        </Link>
+      ) : null}
       {error ? (
         <p role="alert" className="mt-2 text-[14px] font-semibold text-[var(--pp-accent-text)]">
           {error}

@@ -207,3 +207,14 @@ def test_the_reviewer_knows_the_dialect_rules_the_worker_uses():
         "rita_dialect.DIALECT_PROMPT changed: update the tutor contract in "
         f"src/lib/rita-tutor-contract.ts, raise RUBRIC_VERSION and set DIALECT_PROMPT_HASH to {actual}"
     )
+
+
+def test_the_replay_endpoint_is_private_and_text_only():
+    source = (ROOT / "modal_app.py").read_text(encoding="utf-8")
+    block = source.split("async def replay_turns", 1)[1]
+    assert "hmac.compare_digest(expected, supplied)" in block
+    assert 'status_code=401' in block
+    assert "run_replay" in block
+    replay = (ROOT / "rita_replay.py").read_text(encoding="utf-8")
+    assert "GROQ_API_KEY" in replay and "print(" not in replay
+    assert "audio" not in replay.casefold().replace("no audio", "")

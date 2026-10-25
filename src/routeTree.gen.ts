@@ -94,6 +94,8 @@ import { Route as SummariesNewRouteImport } from './routes/summaries.new'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AdminGermanIndexRouteImport } from './routes/admin.german.index'
 import { Route as AdminGermanCourseIdRouteImport } from './routes/admin.german.$courseId'
+import { Route as AdminRitaQualityIndexRouteImport } from './routes/admin.rita-quality.index'
+import { Route as AdminRitaQualityIssueIdRouteImport } from './routes/admin.rita-quality.$issueId'
 import { Route as AdminSpacesIndexRouteImport } from './routes/admin.spaces.index'
 import { Route as AdminSpacesSpaceIdRouteImport } from './routes/admin.spaces.$spaceId'
 import { Route as ApiAdminGenerateImageRouteImport } from './routes/api/admin/generate-image'
@@ -102,10 +104,13 @@ import { Route as ApiGermanTtsRouteImport } from './routes/api/german/tts'
 import { Route as ApiPublicArchiveSolverRouteImport } from './routes/api/public/archive-solver'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push-dispatch'
+import { Route as ApiPublicRitaReplayRouteImport } from './routes/api/public/rita-replay'
 import { Route as ApiPublicRitaReviewRouteImport } from './routes/api/public/rita-review'
 import { Route as ApiPublicRitaWorkerRouteImport } from './routes/api/public/rita-worker'
 import { Route as ApiRitaV3FillerRouteImport } from './routes/api/rita-v3/filler'
+import { Route as ApiRitaV3ReplayRouteImport } from './routes/api/rita-v3/replay'
 import { Route as ApiRitaV3ReviewRouteImport } from './routes/api/rita-v3/review'
+import { Route as ApiRitaV3ReviewerCheckRouteImport } from './routes/api/rita-v3/reviewer-check'
 import { Route as ApiRitaExtractRouteImport } from './routes/api/rita/extract'
 import { Route as ApiRitaLearningRouteImport } from './routes/api/rita/learning'
 import { Route as CoursesCourseIdIndexRouteImport } from './routes/courses.$courseId.index'
@@ -565,6 +570,16 @@ const AdminGermanCourseIdRoute = AdminGermanCourseIdRouteImport.update({
   path: '/$courseId',
   getParentRoute: () => AdminGermanRoute,
 } as any)
+const AdminRitaQualityIndexRoute = AdminRitaQualityIndexRouteImport.update({
+  id: '/admin/rita-quality/',
+  path: '/admin/rita-quality/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRitaQualityIssueIdRoute = AdminRitaQualityIssueIdRouteImport.update({
+  id: '/admin/rita-quality/$issueId',
+  path: '/admin/rita-quality/$issueId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminSpacesIndexRoute = AdminSpacesIndexRouteImport.update({
   id: '/admin/spaces/',
   path: '/admin/spaces/',
@@ -605,6 +620,11 @@ const ApiPublicPushDispatchRoute = ApiPublicPushDispatchRouteImport.update({
   path: '/api/public/push-dispatch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicRitaReplayRoute = ApiPublicRitaReplayRouteImport.update({
+  id: '/api/public/rita-replay',
+  path: '/api/public/rita-replay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicRitaReviewRoute = ApiPublicRitaReviewRouteImport.update({
   id: '/api/public/rita-review',
   path: '/api/public/rita-review',
@@ -620,9 +640,19 @@ const ApiRitaV3FillerRoute = ApiRitaV3FillerRouteImport.update({
   path: '/api/rita-v3/filler',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRitaV3ReplayRoute = ApiRitaV3ReplayRouteImport.update({
+  id: '/api/rita-v3/replay',
+  path: '/api/rita-v3/replay',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRitaV3ReviewRoute = ApiRitaV3ReviewRouteImport.update({
   id: '/api/rita-v3/review',
   path: '/api/rita-v3/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRitaV3ReviewerCheckRoute = ApiRitaV3ReviewerCheckRouteImport.update({
+  id: '/api/rita-v3/reviewer-check',
+  path: '/api/rita-v3/reviewer-check',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiRitaExtractRoute = ApiRitaExtractRouteImport.update({
@@ -866,6 +896,7 @@ export interface FileRoutesByFullPath {
   '/summaries/': typeof SummariesIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/german/$courseId': typeof AdminGermanCourseIdRouteWithChildren
+  '/admin/rita-quality/$issueId': typeof AdminRitaQualityIssueIdRoute
   '/admin/spaces/$spaceId': typeof AdminSpacesSpaceIdRoute
   '/api/admin/generate-image': typeof ApiAdminGenerateImageRoute
   '/api/german/score': typeof ApiGermanScoreRoute
@@ -873,10 +904,13 @@ export interface FileRoutesByFullPath {
   '/api/public/archive-solver': typeof ApiPublicArchiveSolverRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
+  '/api/public/rita-replay': typeof ApiPublicRitaReplayRoute
   '/api/public/rita-review': typeof ApiPublicRitaReviewRoute
   '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
   '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
+  '/api/rita-v3/replay': typeof ApiRitaV3ReplayRoute
   '/api/rita-v3/review': typeof ApiRitaV3ReviewRoute
+  '/api/rita-v3/reviewer-check': typeof ApiRitaV3ReviewerCheckRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
@@ -893,6 +927,7 @@ export interface FileRoutesByFullPath {
   '/study/lectures/run': typeof StudyLecturesRunRoute
   '/study/subject/$subjectId': typeof StudySubjectSubjectIdRoute
   '/admin/german/': typeof AdminGermanIndexRoute
+  '/admin/rita-quality/': typeof AdminRitaQualityIndexRoute
   '/admin/spaces/': typeof AdminSpacesIndexRoute
   '/courses/$courseId/': typeof CoursesCourseIdIndexRoute
   '/german/$courseId/': typeof GermanCourseIdIndexRoute
@@ -991,6 +1026,7 @@ export interface FileRoutesByTo {
   '/summaries': typeof SummariesIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/german/$courseId': typeof AdminGermanCourseIdRouteWithChildren
+  '/admin/rita-quality/$issueId': typeof AdminRitaQualityIssueIdRoute
   '/admin/spaces/$spaceId': typeof AdminSpacesSpaceIdRoute
   '/api/admin/generate-image': typeof ApiAdminGenerateImageRoute
   '/api/german/score': typeof ApiGermanScoreRoute
@@ -998,10 +1034,13 @@ export interface FileRoutesByTo {
   '/api/public/archive-solver': typeof ApiPublicArchiveSolverRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
+  '/api/public/rita-replay': typeof ApiPublicRitaReplayRoute
   '/api/public/rita-review': typeof ApiPublicRitaReviewRoute
   '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
   '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
+  '/api/rita-v3/replay': typeof ApiRitaV3ReplayRoute
   '/api/rita-v3/review': typeof ApiRitaV3ReviewRoute
+  '/api/rita-v3/reviewer-check': typeof ApiRitaV3ReviewerCheckRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
@@ -1017,6 +1056,7 @@ export interface FileRoutesByTo {
   '/study/lectures/run': typeof StudyLecturesRunRoute
   '/study/subject/$subjectId': typeof StudySubjectSubjectIdRoute
   '/admin/german': typeof AdminGermanIndexRoute
+  '/admin/rita-quality': typeof AdminRitaQualityIndexRoute
   '/admin/spaces': typeof AdminSpacesIndexRoute
   '/courses/$courseId': typeof CoursesCourseIdIndexRoute
   '/german/$courseId': typeof GermanCourseIdIndexRoute
@@ -1120,6 +1160,7 @@ export interface FileRoutesById {
   '/summaries/': typeof SummariesIndexRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/german/$courseId': typeof AdminGermanCourseIdRouteWithChildren
+  '/admin/rita-quality/$issueId': typeof AdminRitaQualityIssueIdRoute
   '/admin/spaces/$spaceId': typeof AdminSpacesSpaceIdRoute
   '/api/admin/generate-image': typeof ApiAdminGenerateImageRoute
   '/api/german/score': typeof ApiGermanScoreRoute
@@ -1127,10 +1168,13 @@ export interface FileRoutesById {
   '/api/public/archive-solver': typeof ApiPublicArchiveSolverRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/push-dispatch': typeof ApiPublicPushDispatchRoute
+  '/api/public/rita-replay': typeof ApiPublicRitaReplayRoute
   '/api/public/rita-review': typeof ApiPublicRitaReviewRoute
   '/api/public/rita-worker': typeof ApiPublicRitaWorkerRoute
   '/api/rita-v3/filler': typeof ApiRitaV3FillerRoute
+  '/api/rita-v3/replay': typeof ApiRitaV3ReplayRoute
   '/api/rita-v3/review': typeof ApiRitaV3ReviewRoute
+  '/api/rita-v3/reviewer-check': typeof ApiRitaV3ReviewerCheckRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
@@ -1147,6 +1191,7 @@ export interface FileRoutesById {
   '/study/lectures/run': typeof StudyLecturesRunRoute
   '/study/subject/$subjectId': typeof StudySubjectSubjectIdRoute
   '/admin/german/': typeof AdminGermanIndexRoute
+  '/admin/rita-quality/': typeof AdminRitaQualityIndexRoute
   '/admin/spaces/': typeof AdminSpacesIndexRoute
   '/courses/$courseId/': typeof CoursesCourseIdIndexRoute
   '/german/$courseId/': typeof GermanCourseIdIndexRoute
@@ -1251,6 +1296,7 @@ export interface FileRouteTypes {
     | '/summaries/'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/german/$courseId'
+    | '/admin/rita-quality/$issueId'
     | '/admin/spaces/$spaceId'
     | '/api/admin/generate-image'
     | '/api/german/score'
@@ -1258,10 +1304,13 @@ export interface FileRouteTypes {
     | '/api/public/archive-solver'
     | '/api/public/health'
     | '/api/public/push-dispatch'
+    | '/api/public/rita-replay'
     | '/api/public/rita-review'
     | '/api/public/rita-worker'
     | '/api/rita-v3/filler'
+    | '/api/rita-v3/replay'
     | '/api/rita-v3/review'
+    | '/api/rita-v3/reviewer-check'
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/courses/$courseId/add-questions'
@@ -1278,6 +1327,7 @@ export interface FileRouteTypes {
     | '/study/lectures/run'
     | '/study/subject/$subjectId'
     | '/admin/german/'
+    | '/admin/rita-quality/'
     | '/admin/spaces/'
     | '/courses/$courseId/'
     | '/german/$courseId/'
@@ -1376,6 +1426,7 @@ export interface FileRouteTypes {
     | '/summaries'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/german/$courseId'
+    | '/admin/rita-quality/$issueId'
     | '/admin/spaces/$spaceId'
     | '/api/admin/generate-image'
     | '/api/german/score'
@@ -1383,10 +1434,13 @@ export interface FileRouteTypes {
     | '/api/public/archive-solver'
     | '/api/public/health'
     | '/api/public/push-dispatch'
+    | '/api/public/rita-replay'
     | '/api/public/rita-review'
     | '/api/public/rita-worker'
     | '/api/rita-v3/filler'
+    | '/api/rita-v3/replay'
     | '/api/rita-v3/review'
+    | '/api/rita-v3/reviewer-check'
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/courses/$courseId/add-questions'
@@ -1402,6 +1456,7 @@ export interface FileRouteTypes {
     | '/study/lectures/run'
     | '/study/subject/$subjectId'
     | '/admin/german'
+    | '/admin/rita-quality'
     | '/admin/spaces'
     | '/courses/$courseId'
     | '/german/$courseId'
@@ -1504,6 +1559,7 @@ export interface FileRouteTypes {
     | '/summaries/'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/german/$courseId'
+    | '/admin/rita-quality/$issueId'
     | '/admin/spaces/$spaceId'
     | '/api/admin/generate-image'
     | '/api/german/score'
@@ -1511,10 +1567,13 @@ export interface FileRouteTypes {
     | '/api/public/archive-solver'
     | '/api/public/health'
     | '/api/public/push-dispatch'
+    | '/api/public/rita-replay'
     | '/api/public/rita-review'
     | '/api/public/rita-worker'
     | '/api/rita-v3/filler'
+    | '/api/rita-v3/replay'
     | '/api/rita-v3/review'
+    | '/api/rita-v3/reviewer-check'
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/courses/$courseId/add-questions'
@@ -1531,6 +1590,7 @@ export interface FileRouteTypes {
     | '/study/lectures/run'
     | '/study/subject/$subjectId'
     | '/admin/german/'
+    | '/admin/rita-quality/'
     | '/admin/spaces/'
     | '/courses/$courseId/'
     | '/german/$courseId/'
@@ -1619,6 +1679,7 @@ export interface RootRouteChildren {
   SpacesIndexRoute: typeof SpacesIndexRoute
   SummariesIndexRoute: typeof SummariesIndexRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
+  AdminRitaQualityIssueIdRoute: typeof AdminRitaQualityIssueIdRoute
   AdminSpacesSpaceIdRoute: typeof AdminSpacesSpaceIdRoute
   ApiAdminGenerateImageRoute: typeof ApiAdminGenerateImageRoute
   ApiGermanScoreRoute: typeof ApiGermanScoreRoute
@@ -1626,14 +1687,18 @@ export interface RootRouteChildren {
   ApiPublicArchiveSolverRoute: typeof ApiPublicArchiveSolverRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
+  ApiPublicRitaReplayRoute: typeof ApiPublicRitaReplayRoute
   ApiPublicRitaReviewRoute: typeof ApiPublicRitaReviewRoute
   ApiPublicRitaWorkerRoute: typeof ApiPublicRitaWorkerRoute
   ApiRitaV3FillerRoute: typeof ApiRitaV3FillerRoute
+  ApiRitaV3ReplayRoute: typeof ApiRitaV3ReplayRoute
   ApiRitaV3ReviewRoute: typeof ApiRitaV3ReviewRoute
+  ApiRitaV3ReviewerCheckRoute: typeof ApiRitaV3ReviewerCheckRoute
   ApiRitaExtractRoute: typeof ApiRitaExtractRoute
   ApiRitaLearningRoute: typeof ApiRitaLearningRoute
   ShareQuestionsSetIdRoute: typeof ShareQuestionsSetIdRoute
   ShareQuestionsNewRoute: typeof ShareQuestionsNewRoute
+  AdminRitaQualityIndexRoute: typeof AdminRitaQualityIndexRoute
   AdminSpacesIndexRoute: typeof AdminSpacesIndexRoute
   ShareQuestionsIndexRoute: typeof ShareQuestionsIndexRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -2242,6 +2307,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminGermanCourseIdRouteImport
       parentRoute: typeof AdminGermanRoute
     }
+    '/admin/rita-quality/': {
+      id: '/admin/rita-quality/'
+      path: '/admin/rita-quality'
+      fullPath: '/admin/rita-quality/'
+      preLoaderRoute: typeof AdminRitaQualityIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/rita-quality/$issueId': {
+      id: '/admin/rita-quality/$issueId'
+      path: '/admin/rita-quality/$issueId'
+      fullPath: '/admin/rita-quality/$issueId'
+      preLoaderRoute: typeof AdminRitaQualityIssueIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/spaces/': {
       id: '/admin/spaces/'
       path: '/admin/spaces'
@@ -2298,6 +2377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPushDispatchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/rita-replay': {
+      id: '/api/public/rita-replay'
+      path: '/api/public/rita-replay'
+      fullPath: '/api/public/rita-replay'
+      preLoaderRoute: typeof ApiPublicRitaReplayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/rita-review': {
       id: '/api/public/rita-review'
       path: '/api/public/rita-review'
@@ -2319,11 +2405,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRitaV3FillerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/rita-v3/replay': {
+      id: '/api/rita-v3/replay'
+      path: '/api/rita-v3/replay'
+      fullPath: '/api/rita-v3/replay'
+      preLoaderRoute: typeof ApiRitaV3ReplayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/rita-v3/review': {
       id: '/api/rita-v3/review'
       path: '/api/rita-v3/review'
       fullPath: '/api/rita-v3/review'
       preLoaderRoute: typeof ApiRitaV3ReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rita-v3/reviewer-check': {
+      id: '/api/rita-v3/reviewer-check'
+      path: '/api/rita-v3/reviewer-check'
+      fullPath: '/api/rita-v3/reviewer-check'
+      preLoaderRoute: typeof ApiRitaV3ReviewerCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/rita/extract': {
@@ -2742,6 +2842,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpacesIndexRoute: SpacesIndexRoute,
   SummariesIndexRoute: SummariesIndexRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
+  AdminRitaQualityIssueIdRoute: AdminRitaQualityIssueIdRoute,
   AdminSpacesSpaceIdRoute: AdminSpacesSpaceIdRoute,
   ApiAdminGenerateImageRoute: ApiAdminGenerateImageRoute,
   ApiGermanScoreRoute: ApiGermanScoreRoute,
@@ -2749,14 +2850,18 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicArchiveSolverRoute: ApiPublicArchiveSolverRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
+  ApiPublicRitaReplayRoute: ApiPublicRitaReplayRoute,
   ApiPublicRitaReviewRoute: ApiPublicRitaReviewRoute,
   ApiPublicRitaWorkerRoute: ApiPublicRitaWorkerRoute,
   ApiRitaV3FillerRoute: ApiRitaV3FillerRoute,
+  ApiRitaV3ReplayRoute: ApiRitaV3ReplayRoute,
   ApiRitaV3ReviewRoute: ApiRitaV3ReviewRoute,
+  ApiRitaV3ReviewerCheckRoute: ApiRitaV3ReviewerCheckRoute,
   ApiRitaExtractRoute: ApiRitaExtractRoute,
   ApiRitaLearningRoute: ApiRitaLearningRoute,
   ShareQuestionsSetIdRoute: ShareQuestionsSetIdRoute,
   ShareQuestionsNewRoute: ShareQuestionsNewRoute,
+  AdminRitaQualityIndexRoute: AdminRitaQualityIndexRoute,
   AdminSpacesIndexRoute: AdminSpacesIndexRoute,
   ShareQuestionsIndexRoute: ShareQuestionsIndexRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
