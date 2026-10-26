@@ -5549,3 +5549,169 @@ html.rita-app,
     animation: none;
   }
 }
+
+/* ===========================================================================
+   Uzyra home: pure black and white (scope .uz-mono, the home page only).
+   Same layout, shapes and copy as before; only colour, type weight and borders change.
+   Rules taken from the DaVinci reference: a true black page, white text with one quiet grey,
+   regular-weight headlines, hairline borders, no colour at all. The tokens below replace the
+   --pp-* values inside this scope, so the home components flip without touching the rest of
+   the site (lessons, admin and Rita keep their own blue palette).
+   =========================================================================== */
+.uz-mono {
+  --pp-ink: #ffffff;
+  --pp-muted: #a3a3a3;
+  --pp-line: rgb(255 255 255 / 0.16);
+  --pp-grey: #0b0b0b;
+  --pp-accent: #ffffff;
+  --pp-accent-hover: #e6e6e6;
+  --pp-on-accent: #000000;
+  --pp-accent-text: #ffffff;
+  --pp-accent-soft: #1a1a1a;
+  --pro-page: #000000;
+  --pro-card: #0b0b0b;
+  --pro-ink: #ffffff;
+  --pro-muted: #a3a3a3;
+  --rita-green: #ffffff;
+  --rita-green-deep: #ffffff;
+  --rita-green-ink: #000000;
+  --rita-green-soft: #1a1a1a;
+  --edith-screen: linear-gradient(162deg, #1a1a1a 0%, #000000 100%);
+  /* Used by the home components (each has a colour fallback for any other page). */
+  --uz-paper: #0b0b0b;
+  --uz-band: #0b0b0b;
+  --uz-on-ink: #000000;
+  --uz-on-ink-muted: rgb(0 0 0 / 0.66);
+  --uz-ring: rgb(255 255 255 / 0.22);
+  --uz-track: rgb(255 255 255 / 0.2);
+  --uz-orb-1: #ffffff;
+  --uz-orb-2: #5a5a5a;
+  --uz-orb-glow: rgb(255 255 255 / 0.28);
+  --uz-secondary-bg: transparent;
+  background: #000000;
+  color: #ffffff;
+  color-scheme: dark;
+}
+.uz-mono ::selection {
+  background: #ffffff;
+  color: #000000;
+}
+/* No colour anywhere: pictures, the voice orb and the product shots are shown in greys. */
+.uz-mono img,
+.uz-mono canvas,
+.uz-mono video {
+  filter: grayscale(1);
+}
+
+/* Type: regular-weight display, tighter than before, like the reference headline. */
+.uz-mono h1,
+.uz-mono h2,
+.uz-mono h3 {
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+.uz-mono h1 .rita-accent {
+  color: #ffffff;
+}
+.uz-mono p.rita-accent {
+  color: var(--pp-muted) !important;
+}
+
+/* Buttons: white fill with black text; the second action is a hairline outline. */
+.uz-mono .rita-btn {
+  border-width: 1.5px;
+  border-color: #ffffff;
+  font-weight: 600;
+}
+.uz-mono .rita-btn-primary {
+  background-color: #ffffff;
+  color: #000000;
+}
+.uz-mono .rita-btn-primary:hover {
+  background-color: #e6e6e6;
+}
+.uz-mono .rita-btn-primary:active {
+  background-color: #cfcfcf;
+  color: #000000;
+}
+.uz-mono .rita-btn-secondary {
+  background-color: transparent;
+  border-color: rgb(255 255 255 / 0.5);
+  color: #ffffff;
+}
+.uz-mono .rita-btn-secondary:hover {
+  background-color: rgb(255 255 255 / 0.1);
+  border-color: #ffffff;
+}
+.uz-mono .rita-btn-secondary:active {
+  background-color: rgb(255 255 255 / 0.18);
+  color: #ffffff;
+}
+.uz-mono .rita-btn:focus-visible,
+.uz-mono .rh-chip:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+}
+
+/* Hairlines instead of 2px ink borders. */
+.uz-mono [style*="solid var(--pp-ink)"] {
+  border-width: 1px !important;
+  border-color: rgb(255 255 255 / 0.28) !important;
+}
+.uz-mono .rh-chip {
+  border-width: 1px;
+  border-color: rgb(255 255 255 / 0.3);
+  background: #0b0b0b;
+  box-shadow: none;
+}
+.uz-mono .rh-chip:hover {
+  box-shadow: none;
+  border-color: #ffffff;
+}
+.uz-mono .rh-chip-on {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+.uz-mono .rh-ping {
+  background: #ffffff;
+  border: 2px solid #000000;
+}
+
+/* Top bar: true black with a hairline, a white action. */
+.uz-mono .rh-bar {
+  background: #000000;
+  border-bottom: 1px solid rgb(255 255 255 / 0.14);
+}
+.uz-mono .rh-btn {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #000000;
+}
+.uz-mono .rh-btn:hover {
+  background: #e6e6e6;
+}
+.uz-mono .rh-squiggle path {
+  stroke: #ffffff;
+}
+.uz-mono .rh-orb {
+  background: radial-gradient(circle at 34% 30%, #fff 0 7%, #d9d9d9 24%, #6e6e6e 66%, #3a3a3a 100%);
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.3);
+}
+
+/* FAQ: hairline rows, white plus. */
+.uz-mono details.rh-faq {
+  border-color: rgb(255 255 255 / 0.14);
+}
+
+/* The wordmark in the footer and the bar uses the same Outfit voice on every page. */
+.rh-logo,
+.rf-wordmark {
+  color: #ffffff;
+}
+/* The sample app's title bar is a quiet dark strip, not a white block. */
+.uz-mono .uz-bar {
+  background: #141414 !important;
+  color: #ffffff !important;
+  border-bottom: 1px solid rgb(255 255 255 / 0.14);
+}

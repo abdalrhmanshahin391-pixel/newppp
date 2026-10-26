@@ -66,7 +66,7 @@ export function PhoneExperienceTip() {
         {/* Text Content */}
         <div className="min-w-0 flex-1 pe-8">
           <div className="flex items-center gap-1.5 text-[14px] font-bold text-[#121117]">
-            <Sparkles size={13} className="text-[#2b6df0] shrink-0" />
+            <Sparkles size={13} className="shrink-0 text-[#121117]" />
             <span>{isArabic ? "نصيحة دراسية لتجربة أفضل" : "Friendly Study Tip"}</span>
           </div>
 
@@ -80,7 +80,7 @@ export function PhoneExperienceTip() {
             ) : (
               <>
                 For the best study experience with flashcards, PDF summaries & question banks, we recommend opening{" "}
-                <span className="font-bold text-[#121117]">EdithLab</span> on an{" "}
+                <span className="font-bold text-[#121117]">Uzyra</span> on an{" "}
                 <span className="font-bold text-[#121117]">iPad or laptop</span>! 💻📱
               </>
             )}
@@ -90,7 +90,7 @@ export function PhoneExperienceTip() {
             <button
               type="button"
               onClick={dismiss}
-              className="min-h-11 rounded-lg border-2 border-[#121117] bg-[#2b6df0] px-4 text-[14px] font-semibold text-white transition-colors hover:bg-[#2260e4]"
+              className="min-h-11 rounded-lg border-2 border-[#121117] bg-[#121117] px-4 text-[14px] font-semibold text-white transition-colors hover:bg-black"
             >
               {isArabic ? "حسناً، فهمت" : "Got it!"}
             </button>

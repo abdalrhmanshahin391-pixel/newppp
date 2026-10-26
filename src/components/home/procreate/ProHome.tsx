@@ -12,11 +12,11 @@ const UnderTheHood = lazy(() =>
 const HomeFaq = lazy(() => import("./HomeFaq").then((m) => ({ default: m.HomeFaq })));
 const FinalCta = lazy(() => import("./FinalCta").then((m) => ({ default: m.FinalCta })));
 
-/** Home page: white surface, ink text, blue actions. Rita first, then the story bands and the questions. */
+/** Home page: pure black and white (scope .uz-mono). Rita first, then the story bands and the questions. */
 export function ProHome() {
   return (
     <main
-      className="rita-cream edith-light edith-premium relative min-h-screen overflow-hidden bg-black text-white"
+      className="rita-cream edith-light edith-premium uz-mono relative min-h-screen overflow-hidden bg-black text-white"
       style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <noscript>

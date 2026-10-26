@@ -1,4 +1,4 @@
-# DESIGN.md — the visual system of EdithLab / Rita
+# DESIGN.md — the visual system of Uzyra (formerly EdithLab) / Rita
 
 This is the source of truth for every visual change. It was written from the code that is
 already shipped (`src/styles.css`, section "Home page theme", and the Rita components), not
@@ -341,3 +341,28 @@ at least 40px, nothing relying on colour alone, RTL checked on any new text layo
 
 Phone 390×844, tablet 768, desktop 1280; Arabic (RTL) and English content; empty, one item,
 many items and very long text; loading and error states.
+
+## Uzyra home (`/`, pure black and white)
+
+The public home page is black and white only. The rest of the site (lessons, admin, Rita, pricing, study)
+keeps the blue palette above until the owner asks to move it.
+
+- **Scope:** class `.uz-mono` (on the home route's wrappers). It redefines the `--pp-*` tokens inside
+  itself (ink `#fff`, muted `#a3a3a3`, line `rgb(255 255 255 / .16)`, surfaces `#0b0b0b`, accent `#fff`,
+  on-accent `#000`) plus a few `--uz-*` tokens the home components read with a colour fallback
+  (`--uz-paper`, `--uz-band`, `--uz-on-ink`, `--uz-ring`, `--uz-track`, `--uz-orb-*`). Never use these
+  outside the home.
+- **Page:** true `#000`. Cards and bands `#0b0b0b` with a hairline. No gradients, no colour. Pictures, canvas
+  and the voice orb are shown in greys (`filter: grayscale(1)`).
+- **Type:** headlines 500 weight, letter-spacing `-0.04em`; body regular; one muted grey for secondary text.
+- **Buttons:** primary white fill with black text; secondary a hairline outline. The "ink" blocks of the sample
+  screens (a chat bubble, a tag, the listening bar) are white with black text, the one place white is a fill
+  for emphasis. 2px ink borders become 1px `rgb(255 255 255 / .28)` hairlines.
+- **Name:** Uzyra. The wordmark is `UzyraWordmark`: the symbol (`UzyraMark`, five shapes traced from the
+  owner's logo, one colour) and UZYRA in capitals, Outfit 600, letter-spacing `0.2em`, with an A drawn
+  without its crossbar. It takes the surrounding text colour. Reference for the style: the DaVinci wordmark;
+  the symbol and the letters are not copied from it.
+- **Icons:** `public/favicon.svg` and the PNG/ICO sizes are white symbol on black; the manifest is black.
+- **Reference rules taken (not copied):** true black, white type with one grey, regular-weight display type,
+  wide-tracked capital wordmark, lots of empty space.
+

@@ -210,7 +210,7 @@ export function HeroTapWord() {
           <div
             key={active}
             className="rh-pop flex flex-col items-center gap-3 rounded-[20px] px-5 py-4 md:flex-row md:justify-between md:gap-6"
-            style={{ background: "#ffffff", border: "2px solid var(--pp-ink)" }}
+            style={{ background: "var(--uz-paper, #ffffff)", border: "2px solid var(--pp-ink)" }}
           >
             <div className="text-center md:text-start">
               <p className="text-[24px] font-bold leading-tight" style={{ color: "var(--pp-ink)" }}>
