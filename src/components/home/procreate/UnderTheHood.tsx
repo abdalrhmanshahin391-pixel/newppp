@@ -5,7 +5,10 @@ import { useReveal } from "@/hooks/useReveal";
 
 const ink = { color: "var(--pp-ink)" } as const;
 const muted = { color: "var(--pp-muted)" } as const;
-const ringed: CSSProperties = { border: "2px solid var(--pp-ink)", background: "#ffffff" };
+const ringed: CSSProperties = {
+  border: "2px solid var(--pp-ink)",
+  background: "var(--uz-paper, #ffffff)",
+};
 
 function prefersCalm() {
   return (
@@ -133,7 +136,7 @@ function LiveTranscript() {
         <div className="flex flex-wrap items-center gap-2">
           <span
             className="rounded-md px-2 py-0.5 text-[13px] font-semibold"
-            style={{ background: "var(--pp-ink)", color: "#ffffff" }}
+            style={{ background: "var(--pp-ink)", color: "var(--uz-on-ink, #ffffff)" }}
           >
             Demo
           </span>
@@ -149,7 +152,7 @@ function LiveTranscript() {
               className="rounded-lg px-2.5 py-1 text-[13px] font-semibold transition-colors"
               style={{
                 border: "2px solid var(--pp-ink)",
-                background: current === l.id ? "var(--pp-accent)" : "#ffffff",
+                background: current === l.id ? "var(--pp-accent)" : "var(--uz-paper, #ffffff)",
                 color: current === l.id ? "var(--pp-on-accent)" : "var(--pp-ink)",
               }}
             >
@@ -196,7 +199,7 @@ function LiveTranscript() {
           className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-[14px] font-semibold"
           style={{
             border: "2px solid var(--pp-ink)",
-            background: "#ffffff",
+            background: "var(--uz-paper, #ffffff)",
             color: "var(--pp-ink)",
           }}
         >
@@ -352,10 +355,13 @@ function SpecGrid() {
       </Spec>
       <li
         className="rounded-2xl p-5"
-        style={{ background: "var(--pp-ink)", color: "#ffffff" }}
+        style={{ background: "var(--pp-ink)", color: "var(--uz-on-ink, #ffffff)" }}
         aria-label="Measured: about 75 milliseconds to first sound from the voice engine"
       >
-        <p className="text-[14px] font-semibold" style={{ color: "rgba(255,255,255,0.72)" }}>
+        <p
+          className="text-[14px] font-semibold"
+          style={{ color: "var(--uz-on-ink-muted, rgba(255,255,255,0.72))" }}
+        >
           Measured
         </p>
         <p
@@ -364,7 +370,10 @@ function SpecGrid() {
         >
           ≈75<span className="ms-1 text-[20px] font-semibold">ms</span>
         </p>
-        <p className="mt-3 text-[14.5px] leading-[1.55]" style={{ color: "rgba(255,255,255,0.8)" }}>
+        <p
+          className="mt-3 text-[14.5px] leading-[1.55]"
+          style={{ color: "var(--uz-on-ink-muted, rgba(255,255,255,0.8))" }}
+        >
           Median time for the voice engine alone to produce its first sound, in Arabic and German,
           on 11 October 2026 (Europe). It is not the delay you hear end to end.
         </p>

@@ -19,7 +19,7 @@ import { CreditsMeter } from "@/components/CreditsMeter";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { useDismiss } from "@/components/header/useDismiss";
 import { avatarTone, useAvatarUrl } from "@/lib/avatars";
-import { EdithWordmark } from "@/components/brand/EdithWordmark";
+import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
 import { StartLearningLink } from "@/components/StartLearningLink";
 import { LanguageMenu } from "@/components/language/LanguageMenu";
 
@@ -137,8 +137,8 @@ export function ProHeader({
   return (
     <header className={`rh-bar ${solid ? "sticky" : "fixed inset-x-0"} top-0 z-50`}>
       <div className="rh-bar-inner">
-        <Link to="/" aria-label="EdithLab home" className="rh-logo shrink-0">
-          <EdithWordmark size={26} tone="light" />
+        <Link to="/" aria-label="Uzyra home" className="rh-logo shrink-0">
+          <UzyraWordmark size={20} />
         </Link>
 
         <nav aria-label="Main" className="rh-nav hidden lg:flex">

@@ -9,7 +9,7 @@ function Panel({ children }: { children: React.ReactNode }) {
     <div
       aria-hidden="true"
       className="flex min-h-[210px] flex-col justify-center gap-2.5 rounded-2xl p-4"
-      style={{ background: "#ffffff", border: "1px solid var(--pp-line)" }}
+      style={{ background: "var(--uz-paper, #ffffff)", border: "1px solid var(--pp-line)" }}
     >
       {children}
     </div>
@@ -23,7 +23,7 @@ function TalkPanel() {
         dir="rtl"
         lang="ar"
         className="self-end rounded-2xl rounded-br-md px-3.5 py-2 text-[13.5px] font-semibold"
-        style={{ background: "var(--pp-ink)", color: "#ffffff" }}
+        style={{ background: "var(--pp-ink)", color: "var(--uz-on-ink, #ffffff)" }}
       >
         كيف أحكي بدي ماي بالألماني؟
       </span>
@@ -112,7 +112,7 @@ function StudyPanel() {
           />
           <span
             className="absolute inset-x-0 top-0 flex h-[70px] flex-col justify-center rounded-xl px-3"
-            style={{ background: "#ffffff", border: "1.5px solid var(--pp-ink)" }}
+            style={{ background: "var(--uz-paper, #ffffff)", border: "1.5px solid var(--pp-ink)" }}
           >
             <span className="text-[11px] font-semibold" style={muted}>
               Question

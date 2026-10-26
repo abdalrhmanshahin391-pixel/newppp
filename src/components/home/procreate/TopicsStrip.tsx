@@ -22,7 +22,7 @@ export function TopicsStrip() {
             key={topic.label}
             className="rounded-full px-5 py-2 text-[15px] font-bold"
             style={{
-              background: "#ffffff",
+              background: "var(--uz-paper, #ffffff)",
               border: "1.5px solid var(--pp-ink)",
               color: "var(--pp-ink)",
               transform: `rotate(${topic.rot}deg)`,

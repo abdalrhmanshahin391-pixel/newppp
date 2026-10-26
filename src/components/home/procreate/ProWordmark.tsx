@@ -1,6 +1,6 @@
-import { EdithWordmark } from "@/components/brand/EdithWordmark";
+import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
 
-/** Kept for older imports; renders the EdithLab wordmark. */
+/** Kept for older imports; renders the Uzyra wordmark. */
 export function ProWordmark({ size = 30 }: { size?: number }) {
-  return <EdithWordmark size={size} />;
+  return <UzyraWordmark size={size} />;
 }

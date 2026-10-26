@@ -19,7 +19,7 @@ export function VoiceBand() {
       <div
         ref={ref}
         className={`rita-reveal relative overflow-hidden rounded-[28px] px-7 py-14 md:rounded-[36px] md:px-14 md:py-20 ${shown ? "rita-reveal-in" : ""}`}
-        style={{ background: "#121117" }}
+        style={{ background: "var(--uz-band, #121117)" }}
       >
         <div className="relative z-10 grid items-center gap-12 md:grid-cols-[1fr_0.9fr]">
           <div>
@@ -58,8 +58,8 @@ export function VoiceBand() {
               className="absolute left-1/2 top-1/2 grid h-[130px] w-[130px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full"
               style={{
                 background:
-                  "radial-gradient(circle at 35% 30%, #9bbcf8, var(--pp-accent) 55%, #1f5fd6)",
-                boxShadow: "0 30px 60px -20px rgba(43,109,240,0.55)",
+                  "radial-gradient(circle at 35% 30%, var(--uz-orb-1, #9bbcf8), var(--pp-accent) 55%, var(--uz-orb-2, #1f5fd6))",
+                boxShadow: "0 30px 60px -20px var(--uz-orb-glow, rgba(43,109,240,0.55))",
               }}
             >
               <span className="flex h-10 items-center gap-1.5">
@@ -67,7 +67,7 @@ export function VoiceBand() {
                   <span
                     key={i}
                     className="rh-wave block h-10 w-[5px] rounded-full"
-                    style={{ ...d(delay), background: "#121117" }}
+                    style={{ ...d(delay), background: "var(--uz-band, #121117)" }}
                   />
                 ))}
               </span>

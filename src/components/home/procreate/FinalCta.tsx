@@ -7,7 +7,7 @@ export function FinalCta() {
     <section className="mx-auto w-full max-w-[1240px] px-5 pb-24 md:px-8 md:pb-32">
       <div
         className="rounded-[28px] px-7 py-14 text-center md:rounded-[36px] md:px-14 md:py-20"
-        style={{ background: "#121117" }}
+        style={{ background: "var(--uz-band, #121117)" }}
       >
         <h2
           className="mx-auto max-w-[36rem] text-[34px] font-bold leading-[1.08] md:text-[52px]"
@@ -28,7 +28,7 @@ export function FinalCta() {
           <Link
             to="/rita"
             className="rita-btn rita-btn-secondary"
-            style={{ background: "#ffffff" }}
+            style={{ background: "var(--uz-secondary-bg, #ffffff)" }}
           >
             Talk to Rita
           </Link>

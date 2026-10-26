@@ -55,7 +55,7 @@ function PathNode({ index, step }: { index: number; step: number }) {
             ? "var(--pp-accent-soft)"
             : "var(--pp-grey)",
         border: `3px solid ${finished || current ? "var(--pp-ink)" : "var(--pp-line)"}`,
-        boxShadow: current ? "0 0 0 5px rgba(43,109,240,0.25)" : "none",
+        boxShadow: current ? "0 0 0 5px var(--uz-ring, rgba(43,109,240,0.25))" : "none",
         color: finished ? "var(--pp-on-accent)" : "var(--pp-muted)",
       }}
     >
@@ -202,15 +202,15 @@ export function AppWindow() {
           className="overflow-hidden rounded-[20px] will-change-transform"
           style={{
             border: "2px solid var(--pp-ink)",
-            background: "#ffffff",
+            background: "var(--uz-paper, #ffffff)",
             transformOrigin: "50% 0%",
           }}
         >
           <div
-            className="flex items-center justify-between px-4 py-2.5"
-            style={{ background: "var(--pp-ink)", color: "#ffffff" }}
+            className="uz-bar flex items-center justify-between px-4 py-2.5"
+            style={{ background: "var(--pp-ink)", color: "var(--uz-on-ink, #ffffff)" }}
           >
-            <span className="text-[14px] font-bold">EdithLab</span>
+            <span className="text-[14px] font-bold">Uzyra</span>
             <span className="text-[12.5px] font-medium" style={{ opacity: 0.75 }}>
               Sample screen
             </span>
@@ -227,7 +227,11 @@ export function AppWindow() {
                   className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[14.5px] font-semibold"
                   style={
                     on
-                      ? { background: "#ffffff", border: "2px solid var(--pp-ink)", ...ink }
+                      ? {
+                          background: "var(--uz-paper, #ffffff)",
+                          border: "2px solid var(--pp-ink)",
+                          ...ink,
+                        }
                       : { border: "2px solid transparent", ...muted }
                   }
                 >
@@ -242,7 +246,7 @@ export function AppWindow() {
                 className="rounded-[14px] p-4"
                 style={{
                   border: "2px solid var(--pp-ink)",
-                  background: step >= 2 ? "var(--pp-accent-soft)" : "#ffffff",
+                  background: step >= 2 ? "var(--pp-accent-soft)" : "var(--uz-paper, #ffffff)",
                   transition: "background-color 300ms var(--pp-ease, ease)",
                 }}
               >
@@ -255,7 +259,10 @@ export function AppWindow() {
                 <div className="mt-3 flex items-center gap-3">
                   <div
                     className="h-2.5 flex-1 overflow-hidden rounded-md"
-                    style={{ border: "2px solid var(--pp-ink)", background: "#ffffff" }}
+                    style={{
+                      border: "2px solid var(--pp-ink)",
+                      background: "var(--uz-paper, #ffffff)",
+                    }}
                   >
                     <div
                       className="h-full"
@@ -302,7 +309,7 @@ export function AppWindow() {
                       className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-[14px] font-semibold"
                       style={{
                         border: "2px solid var(--pp-ink)",
-                        background: "#ffffff",
+                        background: "var(--uz-paper, #ffffff)",
                         opacity: step >= 3 ? 1 : 0,
                         transform: step >= 3 ? "translateY(0)" : "translateY(-10px)",
                         transition: `opacity 250ms var(--pp-ease, ease) ${index * 160}ms, transform 250ms var(--pp-ease, ease) ${index * 160}ms`,
@@ -325,7 +332,7 @@ export function AppWindow() {
 
               <div
                 className="mt-1 flex items-center gap-3 rounded-[14px] px-4 py-3"
-                style={{ background: "var(--pp-ink)", color: "#ffffff" }}
+                style={{ background: "var(--pp-ink)", color: "var(--uz-on-ink, #ffffff)" }}
               >
                 <span
                   className="grid h-9 w-9 shrink-0 place-items-center rounded-lg"
@@ -346,7 +353,8 @@ export function AppWindow() {
                         width: 4,
                         height: step >= 4 ? 22 : 6,
                         borderRadius: 2,
-                        background: step >= 4 ? "var(--pp-accent)" : "rgba(255,255,255,0.5)",
+                        background:
+                          step >= 4 ? "var(--pp-accent)" : "var(--uz-track, rgba(255,255,255,0.5))",
                         animationDelay: `${bar * 120}ms`,
                         transformOrigin: "50% 50%",
                         transition: "height 200ms var(--pp-ease, ease)",
@@ -370,7 +378,7 @@ export function AppWindow() {
           className="inline-flex min-h-[44px] items-center gap-2 rounded-lg px-3.5 py-2 text-[14px] font-semibold"
           style={{
             border: "2px solid var(--pp-ink)",
-            background: "#ffffff",
+            background: "var(--uz-paper, #ffffff)",
             color: "var(--pp-ink)",
           }}
         >

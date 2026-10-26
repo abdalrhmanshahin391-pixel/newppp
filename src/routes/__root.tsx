@@ -113,7 +113,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "google-site-verification", content: "U9UIGln2ZVhjR6-rfab8T6y0XwmD0zLbLQqcwmBL1Lg" },
       { name: "google-site-verification", content: "5x31hbQQtmr14Jhd9AbkN5YlijfbfFTulNvcHMs1Y_8" },
       { name: "application-name", content: "RitaJet" },
-      { name: "theme-color", content: "#4a82f3" },
+      { name: "theme-color", content: "#000000" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "RitaJet" },
@@ -147,13 +147,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "preload",
         as: "style",
-        href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@600&display=swap",
       },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@600&display=swap",
       },
 
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
       { rel: "icon", type: "image/png", sizes: "96x96", href: "/favicon.png" },
       { rel: "icon", type: "image/png", sizes: "512x512", href: "/favicon-512.png" },
@@ -237,7 +238,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <noscript>
           <link
             rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@600&display=swap"
           />
         </noscript>
       </head>
