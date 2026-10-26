@@ -33,6 +33,20 @@ async function serverDb(): Promise<Db> {
   return supabaseAdmin as unknown as Db;
 }
 
+/**
+ * Exercise content is intentionally server-only because it contains answer keys. Some Lovable
+ * deployments do not provide the service-role connection used by this legacy server function.
+ * In that case the lesson page must keep its normal spoken-lesson path instead of presenting the
+ * learner with an implementation error. Do not broaden this catch: real database failures should
+ * remain visible to us.
+ */
+function lessonBackendIsUnavailable(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    error.message.includes("Missing server-only Lovable Cloud secret: SUPABASE_SERVICE_ROLE_KEY")
+  );
+}
+
 async function isAdmin(ctx: AuthContext): Promise<boolean> {
   const { data, error } = await ctx.supabase.rpc("has_role", {
     _user_id: ctx.userId,
@@ -132,7 +146,15 @@ export const startLessonRun = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<StartRunResult> => {
     const ctx = context as AuthContext;
-    const db = await serverDb();
+    let db: Db;
+    try {
+      db = await serverDb();
+    } catch (error) {
+      // The exercise backend is optional until it has a secure server runtime. Returning this
+      // keeps Rita's spoken lesson usable while preserving the protected content and its RLS.
+      if (lessonBackendIsUnavailable(error)) return { available: false };
+      throw error;
+    }
     const preview = data.preview || Boolean(data.sample);
     if (preview && !(await isAdmin(ctx))) throw new Error("Forbidden: admin only");
 
