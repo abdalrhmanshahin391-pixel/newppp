@@ -42,11 +42,11 @@ test("a lesson that is still a draft is named before the exercises", () => {
   assert.match(result.reason, /الدرس لسا مسودة/);
 });
 
-test("a missing server key is explained as a server problem, with the other steps still green", () => {
+test("an exercise service that is not running is explained, with the other steps still green", () => {
   const result = explainEngine({ ...good, serverKey: "missing" });
   assert.equal(result.verdict, "spoken");
   assert.equal(result.steps.filter((step) => step.state === "fail").length, 1);
-  assert.match(result.reason, /مفتاح الوصول الكامل/);
+  assert.match(result.reason, /rita-lesson-run/);
 });
 
 test("another server error shows its own message", () => {

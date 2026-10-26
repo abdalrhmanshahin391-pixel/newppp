@@ -21,3 +21,12 @@ For any visual or UI change, follow `docs/design-workflow.md` (three rounds: Des
 build, hard review) and the system in `DESIGN.md`. Use the skills in `.claude/skills/` listed
 there. The Mandatory Planning Protocol above still applies: the Design Brief is the plan, and
 it ends with the approval phrase.
+
+## Backend: one documented exception to "no Edge Functions"
+The project rule is to use in-app server functions, not Edge Functions. The published site's server has no
+service-role key, and lessons with exercises must read protected content (it holds the answer keys), so
+**one** Edge Function exists: `supabase/functions/rita-lesson-run`. Lovable Cloud gives it the key
+automatically. The app's server functions in `src/lib/rita-lesson-run.functions.ts` only forward the
+learner's token to it. The engine files it uses are copied into `supabase/functions/_shared` by
+`node scripts/sync-lesson-edge.mjs`; a test fails when a copy drifts. Do not add other Edge Functions
+without asking the owner.

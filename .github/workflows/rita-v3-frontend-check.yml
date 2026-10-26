@@ -31,6 +31,10 @@ on:
       - "src/routes/admin.languages.tsx"
       - "supabase/migrations/20261020180000_learning_languages.sql"
       - "docs/curriculum-samples/**"
+      - "src/lib/rita-lesson-*"
+      - "supabase/functions/**"
+      - "supabase/config.toml"
+      - "scripts/sync-lesson-edge.mjs"
       - ".github/workflows/rita-v3-frontend-check.yml"
   workflow_dispatch:
 
@@ -69,6 +73,11 @@ jobs:
           node --test src/lib/page-reading.test.ts
           node --test src/lib/model-reply-normalize.test.ts
           node --test src/lib/rita-engine-check.test.ts
+          node --test src/lib/rita-lesson-engine.test.ts
+          node --test src/lib/rita-lesson-grader.test.ts
+          node --test src/lib/rita-lesson-run.test.ts
+          node --test src/lib/rita-lesson-run.core.test.ts
+          node --test src/lib/rita-lesson-edge-sync.test.ts
           node --test src/routes/api/rita-v3/session/start.source.test.mjs
           bunx tsc --noEmit
       - name: Build site

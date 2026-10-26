@@ -1,1 +1,4 @@
 project_id = "aeawoexywnyankbeqkmz"
+
+[functions.rita-lesson-run]
+verify_jwt = false
