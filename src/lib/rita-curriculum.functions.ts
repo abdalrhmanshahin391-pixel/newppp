@@ -2130,15 +2130,15 @@ export type ExercisesView = {
   updated_at: string | null;
 };
 
-/** The content table holds answers, so it is read and written with the server key only. */
-async function contentsDb() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return supabaseAdmin as unknown as SupabaseClient<any, "public", any>;
-}
-
-async function readExercises(lessonId: string): Promise<ExercisesView> {
-  const db = await contentsDb();
+/**
+ * The editor always runs in an authenticated admin request. Lovable Cloud's
+ * RLS policy is the second guard: no client or non-admin can read this table,
+ * which contains answer keys.
+ */
+async function readExercises(
+  db: AuthContext["supabase"],
+  lessonId: string,
+): Promise<ExercisesView> {
   const { data, error } = await db
     .from("rita_lesson_contents")
     .select("content, version, status, warnings, updated_at")
@@ -2182,6 +2182,7 @@ async function readExercises(lessonId: string): Promise<ExercisesView> {
 }
 
 async function writeExercises(
+  db: AuthContext["supabase"],
   lessonId: string,
   patch: {
     content?: LessonContent;
@@ -2190,7 +2191,6 @@ async function writeExercises(
     version?: number;
   },
 ) {
-  const db = await contentsDb();
   const { data: existing } = await db
     .from("rita_lesson_contents")
     .select("lesson_id, version")
@@ -2239,7 +2239,7 @@ export const adminLessonExercises = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => parseWith(z.object({ lessonId: uuid }), data))
   .handler(async ({ data, context }): Promise<ExercisesView> => {
     await assertAdmin(context);
-    return readExercises(data.lessonId);
+    return readExercises(context.supabase, data.lessonId);
   });
 
 /**
@@ -2251,7 +2251,7 @@ export const adminGenerateExercises = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => parseWith(z.object({ lessonId: uuid }), data))
   .handler(async ({ data, context }): Promise<ExercisesView> => {
     await assertAdmin(context);
-    const current = await readExercises(data.lessonId);
+    const current = await readExercises(context.supabase, data.lessonId);
     if (!current.ready) {
       throw new Error("Apply migration 20261025100000_rita_lessons_v2 in Lovable Cloud first.");
     }
@@ -2282,13 +2282,13 @@ export const adminGenerateExercises = createServerFn({ method: "POST" })
         `The second review could not run (${error instanceof Error ? error.message : "error"}). Check the questions yourself.`,
       ];
     }
-    await writeExercises(data.lessonId, {
+    await writeExercises(context.supabase, data.lessonId, {
       content,
       status: "draft",
       warnings,
       version: current.version || 1,
     });
-    return readExercises(data.lessonId);
+    return readExercises(context.supabase, data.lessonId);
   });
 
 /** Saves hand edits as a draft. Content that fails the code checks is refused with the reasons. */
@@ -2303,8 +2303,11 @@ export const adminSaveExercises = createServerFn({ method: "POST" })
     if (!parsed.success) throw new Error(describeSchemaError(parsed.error));
     const problems = contentProblems(parsed.data);
     if (problems.length) throw new Error(problems.slice(0, 5).join(" "));
-    await writeExercises(data.lessonId, { content: parsed.data, status: "draft" });
-    return readExercises(data.lessonId);
+    await writeExercises(context.supabase, data.lessonId, {
+      content: parsed.data,
+      status: "draft",
+    });
+    return readExercises(context.supabase, data.lessonId);
   });
 
 /** One new question in place of one item (same kind and skill), saved as a draft. */
@@ -2315,7 +2318,7 @@ export const adminRegenerateExercise = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<ExercisesView> => {
     await assertAdmin(context);
-    const current = await readExercises(data.lessonId);
+    const current = await readExercises(context.supabase, data.lessonId);
     if (!current.content) throw new Error("Generate the exercises first.");
     const found = findItem(current.content, data.itemId);
     if (!found) throw new Error("That question was not found.");
@@ -2337,12 +2340,12 @@ export const adminRegenerateExercise = createServerFn({ method: "POST" })
             },
       ),
     };
-    await writeExercises(data.lessonId, {
+    await writeExercises(context.supabase, data.lessonId, {
       content,
       status: "draft",
       warnings: current.warnings.filter((warning) => !warning.startsWith(`${item.id}:`)),
     });
-    return readExercises(data.lessonId);
+    return readExercises(context.supabase, data.lessonId);
   });
 
 /**
@@ -2356,20 +2359,20 @@ export const adminPublishExercises = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<ExercisesView> => {
     await assertAdmin(context);
-    const current = await readExercises(data.lessonId);
+    const current = await readExercises(context.supabase, data.lessonId);
     if (!current.content) throw new Error("Generate the exercises first.");
     if (data.publish) {
       if (current.problems.length) {
         throw new Error(`Fix these first: ${current.problems.slice(0, 3).join(" ")}`);
       }
-      await writeExercises(data.lessonId, {
+      await writeExercises(context.supabase, data.lessonId, {
         status: "published",
         version: current.status === "published" ? current.version : current.version + 1,
       });
     } else {
-      await writeExercises(data.lessonId, { status: "draft" });
+      await writeExercises(context.supabase, data.lessonId, { status: "draft" });
     }
-    return readExercises(data.lessonId);
+    return readExercises(context.supabase, data.lessonId);
   });
 
 export type ExercisesSummary = {
@@ -2393,7 +2396,7 @@ export const adminExercisesSummary = createServerFn({ method: "GET" })
     fail(error, "lessons");
     const ids = (lessons ?? []).map((row) => String(row.id));
     if (!ids.length) return { ready: true, byLesson: {} };
-    const db = await contentsDb();
+    const db = context.supabase;
     const { data: rows, error: contentError } = await db
       .from("rita_lesson_contents")
       .select("lesson_id, content, status, warnings")
