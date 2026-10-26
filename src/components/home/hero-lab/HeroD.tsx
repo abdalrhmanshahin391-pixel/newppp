@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { StartLearningLink } from "@/components/StartLearningLink";
+import { HOME_IMAGES } from "@/lib/home-images";
 import { StudyPanel } from "@/components/home/procreate/FeatureTrio";
 import { DISPLAY } from "./HeroA";
 import { TapAnswer, TapStage, type ChipSpot } from "./TapStage";
@@ -29,9 +30,24 @@ function TalkBody({ tap }: { tap: TapState }) {
   );
 }
 
+function Banner({ image, className = "" }: { image: (typeof HOME_IMAGES)[keyof typeof HOME_IMAGES]; className?: string }) {
+  return (
+    <img
+      src={image.src}
+      width={image.width}
+      height={image.height}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      className={`w-full rounded-2xl object-cover ${className}`}
+    />
+  );
+}
+
 function WordsBody({ tap }: { tap: TapState }) {
   return (
     <div className="flex h-full flex-col gap-3">
+      <Banner image={HOME_IMAGES.words} className="h-[120px]" />
       <p className="text-[15px]" style={{ color: "var(--pp-muted)" }}>
         Words you add collect here and turn into flashcards.
       </p>
@@ -46,8 +62,10 @@ function WordsBody({ tap }: { tap: TapState }) {
             >
               <div className="min-w-0">
                 <p className="text-[18px] font-semibold text-white">{w.term}</p>
-                <p dir="rtl" lang="ar" className="text-start text-[15px]" style={{ color: "var(--pp-muted)" }}>
-                  {w.meaning}
+                <p className="text-[15px]" style={{ color: "var(--pp-muted)" }}>
+                  <bdi dir="rtl" lang="ar">
+                    {w.meaning}
+                  </bdi>
                 </p>
               </div>
               <button
@@ -73,7 +91,8 @@ function WordsBody({ tap }: { tap: TapState }) {
 
 function StudyBody() {
   return (
-    <div className="flex h-full flex-col justify-center gap-5">
+    <div className="flex h-full flex-col justify-center gap-4">
+      <Banner image={HOME_IMAGES.study} className="h-[150px]" />
       <StudyPanel />
       <p className="max-w-[26rem] text-[16px] leading-[1.5]" style={{ color: "var(--pp-muted)" }}>
         Upload lecture notes or a PDF. Get flashcards, summaries and practice questions from what
@@ -105,6 +124,20 @@ export function HeroD() {
 
   return (
     <section className="relative isolate overflow-hidden">
+      <img
+        src={HOME_IMAGES.hero.src}
+        width={HOME_IMAGES.hero.width}
+        height={HOME_IMAGES.hero.height}
+        alt=""
+        fetchPriority="high"
+        decoding="async"
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 right-0 -z-10 h-full w-full object-cover opacity-40 lg:w-[68%]"
+        style={{
+          WebkitMaskImage: "linear-gradient(to left, #000 40%, transparent 95%)",
+          maskImage: "linear-gradient(to left, #000 40%, transparent 95%)",
+        }}
+      />
       <div
         className="mx-auto grid w-full max-w-[1320px] items-center gap-10 px-5 pb-12 pt-[104px] md:px-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-14 lg:pt-[88px]"
         style={{ minHeight: "100dvh" }}
@@ -156,7 +189,8 @@ export function HeroD() {
                     "--ty": `${(2 - rank) * TAB}px`,
                     "--sx": 1 - rank * 0.035,
                     zIndex: 3 - rank,
-                    background: open ? "#050505" : "#0b0b0b",
+                    background: open ? "rgb(5 5 5 / 0.92)" : "rgb(11 11 11 / 0.78)",
+                    backdropFilter: "blur(14px)",
                     border: `1px solid ${open ? "rgb(255 255 255 / 0.3)" : "rgb(255 255 255 / 0.16)"}`,
                     transitionTimingFunction: EASE,
                   } as React.CSSProperties

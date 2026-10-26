@@ -3,6 +3,7 @@ import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { HeroA } from "@/components/home/hero-lab/HeroA";
 import { HeroB } from "@/components/home/hero-lab/HeroB";
 import { HeroC } from "@/components/home/hero-lab/HeroC";
+import { HeroD } from "@/components/home/hero-lab/HeroD";
 
 export const Route = createFileRoute("/zz-hero")({
   validateSearch: (s: Record<string, unknown>) => ({ c: String(s.c ?? "a") }),
@@ -17,6 +18,7 @@ function Lab() {
       {c === "a" && <HeroA />}
       {c === "b" && <HeroB />}
       {c === "c" && <HeroC />}
+      {c === "d" && <HeroD />}
     </div>
   );
 }
