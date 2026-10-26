@@ -30,7 +30,7 @@ export const Route = createFileRoute("/pricing")({
         content:
           "Pick the Rita plan that matches your semester: a free start, an everyday study plan, or the exam-season plan with the biggest AI allowance.",
       },
-      { property: "og:title", content: "Choose your smart study plan — RitaJet" },
+      { property: "og:title", content: "Choose your smart study plan — Uzyra" },
       {
         property: "og:description",
         content:
@@ -141,7 +141,7 @@ function PricingPage() {
 
        <section className="relative pt-24 md:pt-28">
          <div className="relative mx-auto flex max-w-[1120px] flex-col items-center px-6 pt-6 text-center md:px-10 md:pt-8">
-          <h1 className="sr-only">RitaJet study plans and pricing</h1>
+          <h1 className="sr-only">Uzyra study plans and pricing</h1>
           {kind && (
             <button
               type="button"
@@ -205,7 +205,7 @@ function PricingPage() {
                className="group flex min-h-[650px] flex-col overflow-hidden rounded-[20px] border-2 border-[#121117] bg-[#0b0b0f] text-left"
             >
                 <div className="p-8 md:p-10">
-                  <p className="text-[19px] font-bold md:text-[21px]">RitaJet <span className="rita-accent font-normal">Study</span></p>
+                  <p className="text-[19px] font-bold md:text-[21px]">Uzyra <span className="rita-accent font-normal">Study</span></p>
                   <h2 className="mt-5 max-w-[25rem] text-[34px] font-bold leading-[1.06] md:text-[43px]">{b.title}</h2>
                   <p className="mt-5 max-w-[28rem] text-[16px] leading-[1.6] text-white/50 md:text-[17px]">{b.copy}</p>
                   <button type="button" onClick={() => setKind(b.k)} className="rita-btn rita-btn-primary mt-7 gap-2">
@@ -303,7 +303,7 @@ function PricingPage() {
                 )}
 
 
-                 <p className={`${lifetime ? "" : "mt-2"} text-[19px] font-bold md:text-[21px]`}>RitaJet <span className="rita-accent font-normal">{p.name}</span></p>
+                 <p className={`${lifetime ? "" : "mt-2"} text-[19px] font-bold md:text-[21px]`}>Uzyra <span className="rita-accent font-normal">{p.name}</span></p>
 
                 {p.tagline && (
                     <p className="mt-5 min-h-12 text-[16px] font-medium leading-[1.5] text-white/50">

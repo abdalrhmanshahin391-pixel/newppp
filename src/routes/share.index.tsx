@@ -38,13 +38,13 @@ export const Route = createFileRoute("/share/")({
   }),
   head: () => ({
     meta: [
-      { title: "Shared study materials — flashcards and questions | RitaJet" },
+      { title: "Shared study materials — flashcards and questions | Uzyra" },
       {
         name: "description",
         content:
           "Browse flashcard decks and question sets shared by students, study them and test your knowledge.",
       },
-      { property: "og:title", content: "Shared study materials on RitaJet" },
+      { property: "og:title", content: "Shared study materials on Uzyra" },
       {
         property: "og:description",
         content: "Community flashcards and practice question sets you can study anytime.",
@@ -646,7 +646,7 @@ function EmptyQuestions({ mine }: { mine?: boolean }) {
         {mine ? "You haven't shared a question set yet" : "No shared question sets yet"}
       </h2>
       <p className="mx-auto mt-2 max-w-md text-[15px] text-[#54546a]">
-        Select questions from Question Bank or Lecture Lab and share them with the RitaJet community.
+        Select questions from Question Bank or Lecture Lab and share them with the Uzyra community.
       </p>
       <Link
         to="/share/questions/new"

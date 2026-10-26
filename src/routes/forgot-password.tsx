@@ -6,12 +6,12 @@ export const Route = createFileRoute("/forgot-password")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Reset your password — RitaJet" },
+      { title: "Reset your password — Uzyra" },
       {
         name: "description",
-        content: "Send yourself a password reset link for your RitaJet account.",
+        content: "Send yourself a password reset link for your Uzyra account.",
       },
-      { property: "og:title", content: "Reset your password — RitaJet" },
+      { property: "og:title", content: "Reset your password — Uzyra" },
       { property: "og:description", content: "Get a reset link by email and set a new password." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

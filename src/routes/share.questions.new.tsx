@@ -41,7 +41,7 @@ export const Route = createFileRoute("/share/questions/new")({
   },
   head: () => ({
     meta: [
-      { title: "Share Exam Questions | RitaJet" },
+      { title: "Share Exam Questions | Uzyra" },
       {
         name: "description",
         content: "Publish question sets from Lecture Lab or Question Bank for fellow students.",
@@ -286,7 +286,7 @@ export function NewQuestionSetPage() {
           <span className="text-5xl">❓</span>
           <h1 className="mt-4 font-display text-3xl font-black">Sign in to share questions</h1>
           <p className="mx-auto mt-2 max-w-md text-sm text-[#54546a]">
-            You need to be signed in to your RitaJet account to publish question sets.
+            You need to be signed in to your Uzyra account to publish question sets.
           </p>
           <button
             type="button"

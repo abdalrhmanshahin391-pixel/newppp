@@ -30,14 +30,14 @@ import {
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "Your profile — RitaJet" },
+      { title: "Your profile — Uzyra" },
       {
         name: "description",
         content:
-          "Update your photo, name, bio and password, and manage the flashcard decks you share on RitaJet.",
+          "Update your photo, name, bio and password, and manage the flashcard decks you share on Uzyra.",
       },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Your profile — RitaJet" },
+      { property: "og:title", content: "Your profile — Uzyra" },
       { property: "og:description", content: "Manage your account details and security." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -31,7 +31,7 @@ export const Route = createFileRoute("/study/lectures/")({
         content:
           "Drop today's lecture PDF into Lecture Lab and get multiple-choice questions with short explanations, a key-points sheet and study, session or timed exam mode.",
       },
-      { property: "og:title", content: "Lecture Lab — RitaJet" },
+      { property: "og:title", content: "Lecture Lab — Uzyra" },
       {
         property: "og:description",
         content: "One lecture in, a study-ready quiz out — with two-line explanations and a weak-spot retry.",

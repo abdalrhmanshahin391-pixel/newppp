@@ -8,10 +8,10 @@ const projectRef =
 
 export default defineMcp({
   name: "ritajet-mcp",
-  title: "RitaJet",
+  title: "Uzyra",
   version: "0.1.0",
   instructions:
-    "Tools for RitaJet. Use `whoami` to verify the signed-in user, and `list_my_courses` to see the user's enrolled courses.",
+    "Tools for Uzyra. Use `whoami` to verify the signed-in user, and `list_my_courses` to see the user's enrolled courses.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",

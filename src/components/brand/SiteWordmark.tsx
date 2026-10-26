@@ -55,7 +55,7 @@ export function SiteWordmark({
   className?: string;
 }) {
   const settings = useSiteSettings();
-  const name = nameOverride || settings.site_name || "RitaJet";
+  const name = nameOverride || settings.site_name || "Uzyra";
   const variant = (styleOverride ?? (settings.brand_style as BrandStyle)) || "aqua-flow";
   const [head, accent, tail] = splitName(name);
   const mono = !!color;

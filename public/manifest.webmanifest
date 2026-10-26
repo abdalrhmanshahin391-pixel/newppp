@@ -1,13 +1,13 @@
 {
-  "name": "RitaJet — study tools",
-  "short_name": "RitaJet",
-  "description": "Flashcards, PDF summaries, AI practice questions and a study planner.",
+  "name": "Uzyra",
+  "short_name": "Uzyra",
+  "description": "Talk with Rita and study from your own material: flashcards, summaries and practice questions.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#fbf5e9",
-  "theme_color": "#8ec63f",
+  "background_color": "#121117",
+  "theme_color": "#121117",
   "icons": [
     {
       "src": "/favicon.png",

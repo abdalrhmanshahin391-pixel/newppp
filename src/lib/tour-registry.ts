@@ -166,12 +166,12 @@ export const TOURS: Record<string, PageTourDef> = {
         },
         bullets: {
           en: [
-            "1. RitaJet Brand: Quick return to the home workspace and tools overview.",
+            "1. Uzyra Brand: Quick return to the home workspace and tools overview.",
             "2. Study View ('Go through your cards'): Minimalist, calm interface engineered to maximize focus and eliminate cognitive clutter during high-intensity revision.",
             "3. Edit & Adjust View ('Build and rearrange your subjects'): Unlocks comprehensive authoring tools to create parent subjects, nest sub-topics, import external Anki/CSV decks, and compose rich-text clinical cards.",
           ],
           ar: [
-            "١. شعار RitaJet: للعودة السريعة للواجهة الرئيسية وقائمة الأدوات.",
+            "١. شعار Uzyra: للعودة السريعة للواجهة الرئيسية وقائمة الأدوات.",
             "٢. وضع المذاكرة (Study view - الأخضر): واجهة انسيابية هادئة خالية من أي مشتتات لضمان أعلى مستويات التركيز أثناء الحفظ النشط.",
             "٣. وضع التعديل والإضافة (Edit and adjust): يفتح أدوات التحرير المتقدمة لإنشاء المواد، وتفريع المحاضرات، واستيراد ملفات Anki/CSV، وكتابة البطاقات الطبية.",
           ],
@@ -441,7 +441,7 @@ export const TOURS: Record<string, PageTourDef> = {
           ar: "التعليلات الطبية المفصلة وتحليل الخيارات الخاطئة",
         },
         description: {
-          en: "RitaJet explanations don't just state the right choice — they dissect the diagnostic reasoning, Jones criteria, clinical algorithms, and explain exactly why each distractor is clinically invalid.",
+          en: "Uzyra explanations don't just state the right choice — they dissect the diagnostic reasoning, Jones criteria, clinical algorithms, and explain exactly why each distractor is clinically invalid.",
           ar: "شروحات ريتاجت لا تكتفي بذكر الجواب الصحيح، بل تحلل المسار التشخيصي كاملاً، وتوضح معايير التشخيص المعتمدة، وتعلل سبب استبعاد كل خيار خاطئ بدقة متناهية.",
         },
         bullets: {
@@ -693,11 +693,11 @@ export const TOURS: Record<string, PageTourDef> = {
         targetSelector: '[data-tour="todo-header"]',
         fallbackSelector: "header, .border-b",
         title: {
-          en: "Keep the Day Light: RitaJet Philosophy",
+          en: "Keep the Day Light: Uzyra Philosophy",
           ar: "اجعل يومك خفيفاً: فلسفة ريتاجت في تنظيم المذاكرة",
         },
         description: {
-          en: "RitaJet's to-do planner is built on cognitive pacing: set realistic daily targets (3-5 high-yield tasks) to prevent burnout and maintain long-term momentum.",
+          en: "Uzyra's to-do planner is built on cognitive pacing: set realistic daily targets (3-5 high-yield tasks) to prevent burnout and maintain long-term momentum.",
           ar: "مخطط مهام ريتاجت مبني على التوازن الذهني؛ حدد أهدافاً واقعية ومركزة (3 إلى 5 مهام نوعية يومياً) لمنع الإرهاق والحفاظ على الاستمرارية الطويلة.",
         },
         bullets: {
@@ -855,7 +855,7 @@ export const TOURS: Record<string, PageTourDef> = {
           ar: "المربع الأول: الإطار المنهجي — إنهاء تخمين أدوات التعريف der, die, das",
         },
         description: {
-          en: "German articles are the foundation of grammar, case declensions (Nominativ, Akkusativ, Dativ, Genitiv), and clinical precision. RitaJet replaces arbitrary memorization with an instinctive, visual, and audio-backed retention loop.",
+          en: "German articles are the foundation of grammar, case declensions (Nominativ, Akkusativ, Dativ, Genitiv), and clinical precision. Uzyra replaces arbitrary memorization with an instinctive, visual, and audio-backed retention loop.",
           ar: "أدوات التعريف الألمانية هي حجر الأساس في القواعد، والإعراب (Nominativ, Akkusativ, Dativ, Genitiv)، والدقة الطبية. يستبدل ريتاجت الحفظ العشوائي بنظام بصري وصوتي يرسخ الأداة في الذاكرة فوراً.",
         },
         bullets: {

@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 export const Route = createFileRoute("/german/")({
   head: () => ({
     meta: [
-      { title: "German Lab — der/die/das + pronunciation | RitaJet" },
+      { title: "German Lab — der/die/das + pronunciation | Uzyra" },
       {
         name: "description",
         content:

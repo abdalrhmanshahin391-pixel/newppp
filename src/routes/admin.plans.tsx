@@ -45,11 +45,11 @@ import { OfferRibbon, discountPercent, offerLive } from "@/components/pricing/of
 export const Route = createFileRoute("/admin/plans")({
   head: () => ({
     meta: [
-      { title: "Rita Prices — RitaJet admin" },
+      { title: "Rita Prices — Uzyra admin" },
       { name: "description", content: "Create plans, set their limits and switch features on or off." },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Rita Prices — RitaJet admin" },
-      { property: "og:description", content: "Manage RitaJet pricing cards, limits, offers and features." },
+      { property: "og:title", content: "Rita Prices — Uzyra admin" },
+      { property: "og:description", content: "Manage Uzyra pricing cards, limits, offers and features." },
     ],
   }),
   component: AdminPlansPage,

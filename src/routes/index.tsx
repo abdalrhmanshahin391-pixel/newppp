@@ -6,13 +6,13 @@ import { InstallAppBanner } from "@/components/InstallAppButton";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "EdithLab: Learn. Recall. Pass." },
+      { title: "Uzyra: Learn. Recall. Pass." },
       {
         name: "description",
         content:
-          "EdithLab turns your notes and lecture PDFs into smart flashcards, clean one-page summaries and AI-written practice questions.",
+          "Uzyra turns your notes and lecture PDFs into smart flashcards, clean one-page summaries and AI-written practice questions.",
       },
-      { property: "og:title", content: "EdithLab: Learn. Recall. Pass." },
+      { property: "og:title", content: "Uzyra: Learn. Recall. Pass." },
       {
         property: "og:description",
         content:

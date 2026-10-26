@@ -210,7 +210,7 @@ export function AppWindow() {
             className="flex items-center justify-between px-4 py-2.5"
             style={{ background: "var(--pp-ink)", color: "#ffffff" }}
           >
-            <span className="text-[14px] font-bold">EdithLab</span>
+            <span className="text-[14px] font-bold">Uzyra</span>
             <span className="text-[12.5px] font-medium" style={{ opacity: 0.75 }}>
               Sample screen
             </span>

@@ -20,7 +20,7 @@ export const Route = createFileRoute("/rita-lessons")({
     return UUID.test(lesson) ? { lesson } : {};
   },
   head: () => ({
-    meta: [{ title: "دروس ريتا — RitaJet" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "دروس ريتا — Uzyra" }, { name: "robots", content: "noindex" }],
   }),
   component: () => (
     <LanguageGate>

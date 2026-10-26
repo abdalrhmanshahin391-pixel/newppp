@@ -15,7 +15,7 @@ const ACCENT = "#2e7d32";
 export const Route = createFileRoute("/german/add")({
   head: () => ({
     meta: [
-      { title: "One Place — add German words once, play every mode | RitaJet" },
+      { title: "One Place — add German words once, play every mode | Uzyra" },
       {
         name: "description",
         content:

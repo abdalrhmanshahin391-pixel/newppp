@@ -31,7 +31,7 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: "Can I study my own notes and PDFs?",
-    a: "Yes. Add lecture notes or PDFs and EdithLab builds flashcards, summaries and practice questions from them.",
+    a: "Yes. Add lecture notes or PDFs and Uzyra builds flashcards, summaries and practice questions from them.",
   },
   {
     q: "What if it is not for me?",

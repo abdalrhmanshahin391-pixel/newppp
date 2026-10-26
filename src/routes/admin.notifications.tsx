@@ -266,7 +266,7 @@ function AdminNotifications() {
             <div className="rounded-2xl border border-border bg-card p-5">
               <p className="mb-3 text-xs font-bold text-muted-foreground">Preview</p>
               <div className="rounded-xl border border-border bg-background p-3 shadow-sm">
-                <p className="text-sm font-bold">{titleEn || "RitaJet"}</p>
+                <p className="text-sm font-bold">{titleEn || "Uzyra"}</p>
                 <p className="text-xs text-muted-foreground">{bodyEn || "Your English message appears here."}</p>
               </div>
               <div className="mt-3 rounded-xl border border-border bg-background p-3 shadow-sm" dir="rtl">

@@ -5,13 +5,13 @@ import { RequireAuth } from "@/components/study/RequireAuth";
 export const Route = createFileRoute("/learn/study-space")({
   head: () => ({
     meta: [
-      { title: "My Study Space — RitaJet" },
+      { title: "My Study Space — Uzyra" },
       {
         name: "description",
         content:
           "Your own flashcards, memory lab, PDF summaries, to-do list, exam schedule and AI study tools.",
       },
-      { property: "og:title", content: "My Study Space — RitaJet" },
+      { property: "og:title", content: "My Study Space — Uzyra" },
       {
         property: "og:description",
         content: "Flashcards, summaries, planner and AI study tools that belong only to you.",

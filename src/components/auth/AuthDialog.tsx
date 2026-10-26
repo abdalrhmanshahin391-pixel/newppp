@@ -157,7 +157,7 @@ function AuthWindow({ mode, next }: { mode: AuthMode; next?: string }) {
         ref={cardRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Sign in to RitaJet"
+        aria-label="Sign in to Uzyra"
         className="rita-dialog-pop relative w-full max-w-[27rem] rounded-[20px] border-2 border-[#121117] bg-white p-6 sm:p-9"
       >
         <button
@@ -177,7 +177,7 @@ function AuthWindow({ mode, next }: { mode: AuthMode; next?: string }) {
           />
           <h2 className="mt-3 font-display text-[24px] font-bold leading-tight tracking-tight text-[#121117]">
             {mode === "signup"
-              ? "Create your RitaJet account"
+              ? "Create your Uzyra account"
               : mode === "forgot"
                 ? "Reset your password"
                 : "Welcome back"}
@@ -237,7 +237,7 @@ function SignInPanel({ next }: { next?: string }) {
         const msg = (signInError.message ?? "").toLowerCase();
         setError(
           msg.includes("fetch") || msg.includes("network")
-            ? "RitaJet cannot reach its account service right now. Your password was not rejected; please try again after the database connection is restored."
+            ? "Uzyra cannot reach its account service right now. Your password was not rejected; please try again after the database connection is restored."
             : msg.includes("confirm") || msg.includes("verif")
             ? "Your email isn't verified yet. Open the verification link we sent you, then sign in again — check your spam folder too."
             : "That email and password don't match.",
@@ -500,7 +500,7 @@ function SignUpPanel() {
       if (taken?.username) {
         setProblem({
           title: "That username is already in use",
-          hint: "Usernames are unique on RitaJet. Here are a few that are free right now:",
+          hint: "Usernames are unique on Uzyra. Here are a few that are free right now:",
           suggestions: usernameIdeas(data.username),
         });
         setLoading(false);
@@ -638,7 +638,7 @@ function SignUpPanel() {
 
       <GoogleButton label="Sign up with Google" onClick={() => void googleSignUp()} disabled={loading} />
       <p className="mt-2 text-center text-xs font-medium text-muted-foreground">
-        By continuing with Google you agree to RitaJet's{" "}
+        By continuing with Google you agree to Uzyra's{" "}
         <Link to="/terms" className="underline">Terms</Link>,{" "}
         <Link to="/privacy-policy" className="underline">Privacy Policy</Link> and{" "}
         <Link to="/refund-policy" className="underline">Refund Policy</Link>.
@@ -724,7 +724,7 @@ function SignUpPanel() {
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-2 border-border accent-[#2b6df0]"
             />
             <span>
-              I agree to RitaJet's <Link to="/terms" className="underline">Terms</Link>,{" "}
+              I agree to Uzyra's <Link to="/terms" className="underline">Terms</Link>,{" "}
               <Link to="/privacy-policy" className="underline">Privacy Policy</Link> and{" "}
               <Link to="/refund-policy" className="underline">Refund Policy</Link>.
             </span>
@@ -775,7 +775,7 @@ function ForgotPanel() {
       const message = (err.message ?? "").toLowerCase();
       setError(
         message.includes("fetch") || message.includes("network")
-          ? "RitaJet cannot reach its account service right now. No reset email was sent; please try again after the database connection is restored."
+          ? "Uzyra cannot reach its account service right now. No reset email was sent; please try again after the database connection is restored."
           : err.message,
       );
       return;

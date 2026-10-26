@@ -12,13 +12,13 @@ import { getPublicOfferMeta, claimOfferAction } from "@/lib/offer-center.functio
 export const Route = createFileRoute("/offers")({
   head: () => ({
     meta: [
-      { title: "Get your free study toolkit | RitaJet" },
+      { title: "Get your free study toolkit | Uzyra" },
       {
         name: "description",
         content:
-          "Get free access to the RitaJet toolkit: flashcards, summaries and practice questions dropped straight into your account.",
+          "Get free access to the Uzyra toolkit: flashcards, summaries and practice questions dropped straight into your account.",
       },
-      { property: "og:title", content: "Get your free RitaJet toolkit" },
+      { property: "og:title", content: "Get your free Uzyra toolkit" },
       {
         property: "og:description",
         content: "One tap adds a study pack to your account. Free for three months, one per student.",

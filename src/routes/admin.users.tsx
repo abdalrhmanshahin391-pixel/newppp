@@ -41,7 +41,7 @@ import { UsersPlanDirectory } from "@/components/admin/UsersPlanDirectory";
 export const Route = createFileRoute("/admin/users")({
   head: () => ({
     meta: [
-      { title: "Users & Roles — RitaJet" },
+      { title: "Users & Roles — Uzyra" },
       {
         name: "description",
         content:

@@ -3,7 +3,7 @@ import { dbLanguage } from "@/lib/language-scope";
 
 const db = (t: string) => (supabase.from as any)(t);
 
-/** Who a shared deck is for: one classroom/group, or everyone on RitaJet. */
+/** Who a shared deck is for: one classroom/group, or everyone on Uzyra. */
 export type DeckAudience = "space" | "public";
 
 export type SharedDeck = {
@@ -113,9 +113,9 @@ export const SAMPLE_PUBLIC_DECK: SharedDeck = {
 export const SAMPLE_DECK_AUTHOR: DeckAuthor = {
   id: "ritajet-official",
   username: "ritajet",
-  full_name: "RitaJet Medical",
+  full_name: "Uzyra Medical",
   avatar_url: null,
-  bio: "Official RitaJet sample clinical study deck",
+  bio: "Official Uzyra sample clinical study deck",
 };
 
 /** Public feed of shared decks with range pagination and flexible sorting. */
@@ -232,7 +232,7 @@ export async function fetchMyDecks(userId: string) {
  *
  * With `spaceId` the deck belongs to that classroom or study group only: it is
  * never listed publicly and is added straight into the space. Without it the
- * deck is shared with everyone on RitaJet.
+ * deck is shared with everyone on Uzyra.
  */
 export async function publishDeck(input: {
   title: string;

@@ -36,7 +36,7 @@ export const Route = createFileRoute("/courses/$courseId/run")({
   }),
   head: () => ({
     meta: [
-      { title: "Study session — RitaJet question bank" },
+      { title: "Study session — Uzyra question bank" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

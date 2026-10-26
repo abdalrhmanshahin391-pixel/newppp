@@ -18,9 +18,9 @@ import {
 export const Route = createFileRoute("/support")({
   head: () => ({
     meta: [
-      { title: "Support — RitaJet" },
+      { title: "Support — Uzyra" },
       { name: "description", content: "Get help with payments, course access, or anything technical. Reach our team by message, email, or chat." },
-      { property: "og:title", content: "Support — RitaJet" },
+      { property: "og:title", content: "Support — Uzyra" },
       { property: "og:description", content: "Get help with payments, course access, or anything technical." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -11,13 +11,13 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/study/pdf")({
   head: () => ({
     meta: [
-      { title: "PDF Summaries — RitaJet" },
+      { title: "PDF Summaries — Uzyra" },
       {
         name: "description",
         content:
           "Turn any lecture PDF, photo or note into a clean, printable Rita summary sheet.",
       },
-      { property: "og:title", content: "PDF Summaries — RitaJet" },
+      { property: "og:title", content: "PDF Summaries — Uzyra" },
       {
         property: "og:description",
         content: "Turn any lecture PDF, photo or note into a clean printable summary sheet.",
@@ -112,7 +112,7 @@ function PdfSummaries() {
               Turn a long lecture into one page you actually read
             </h1>
             <p className="mt-4 text-lg leading-relaxed text-[#2a2933]">
-              Upload a PDF, snap photos of your book or paste your notes — RitaJet writes a clean,
+              Upload a PDF, snap photos of your book or paste your notes — Uzyra writes a clean,
               printable summary sheet in your own course wording.
             </p>
           </div>

@@ -52,14 +52,14 @@ export const CONTENT_GROUPS: ContentGroup[] = [
         key: "cms.home.hero.title",
         label: "Headline",
         kind: "multiline",
-        en: "RitaJet — your study tools, all in one place.",
-        ar: "RitaJet — أدوات دراستك في مكان واحد.",
+        en: "Uzyra — your study tools, all in one place.",
+        ar: "Uzyra — أدوات دراستك في مكان واحد.",
       },
       {
         key: "cms.home.hero.subtitle",
         label: "Subtitle",
         kind: "multiline",
-        en: "RitaJet brings flashcards, summaries, practice questions, planning and collaborative study into one organized workspace.",
+        en: "Uzyra brings flashcards, summaries, practice questions, planning and collaborative study into one organized workspace.",
         ar: "بنوك الأسئلة، أسئلة الامتحانات السابقة، محاضرات مرئية وملاحظات اللجنة — مرتّبة حسب السنة والمادة.",
       },
 

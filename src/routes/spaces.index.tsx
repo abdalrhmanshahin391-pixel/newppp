@@ -18,13 +18,13 @@ import {
 export const Route = createFileRoute("/spaces/")({
   head: () => ({
     meta: [
-      { title: "Classrooms & study groups | RitaJet" },
+      { title: "Classrooms & study groups | Uzyra" },
       {
         name: "description",
         content:
           "Join classrooms and study groups, share flashcard decks with your classmates and keep everything organised in folders.",
       },
-      { property: "og:title", content: "Classrooms & study groups on RitaJet" },
+      { property: "og:title", content: "Classrooms & study groups on Uzyra" },
       {
         property: "og:description",
         content: "Study together: shared decks, members, announcements and optional chat.",

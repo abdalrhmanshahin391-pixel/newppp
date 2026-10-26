@@ -21,13 +21,13 @@ import {
 export const Route = createFileRoute("/courses/$courseId/add-questions")({
   head: () => ({
     meta: [
-      { title: "Add questions to your bank — RitaJet" },
+      { title: "Add questions to your bank — Uzyra" },
       {
         name: "description",
         content:
-          "Upload a PDF or photograph a real exam paper and RitaJet writes every question out with the concept, the right answer and why the others are wrong.",
+          "Upload a PDF or photograph a real exam paper and Uzyra writes every question out with the concept, the right answer and why the others are wrong.",
       },
-      { property: "og:title", content: "Add questions — RitaJet" },
+      { property: "og:title", content: "Add questions — Uzyra" },
       {
         property: "og:description",
         content: "Turn any paper into fully explained archive questions inside your own sub-subject.",
@@ -288,7 +288,7 @@ function AddQuestionsPage() {
             Any paper. Fully explained questions.
           </h1>
           <p className="mt-4 text-base md:text-lg text-muted-foreground">
-            Upload a PDF, or take pictures of a real exam paper. RitaJet reads it, cuts out every
+            Upload a PDF, or take pictures of a real exam paper. Uzyra reads it, cuts out every
             question on its own, then writes the concept, why the right answer is right and why each
             other answer is wrong — straight into the sub-subject you choose.
           </p>

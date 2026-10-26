@@ -28,16 +28,16 @@ import { SUPPORT_EMAIL } from "@/lib/legal-content";
 export const Route = createFileRoute("/checkout/")({
   head: () => ({
     meta: [
-      { title: "Secure checkout — RitaJet" },
+      { title: "Secure checkout — Uzyra" },
       {
         name: "description",
         content:
-          "Finish your RitaJet purchase on a secure page: see exactly what your plan or credit pack includes before you pay.",
+          "Finish your Uzyra purchase on a secure page: see exactly what your plan or credit pack includes before you pay.",
       },
-      { property: "og:title", content: "Secure checkout — RitaJet" },
+      { property: "og:title", content: "Secure checkout — Uzyra" },
       {
         property: "og:description",
-        content: "Pay securely for your RitaJet plan or one-time credit pack.",
+        content: "Pay securely for your Uzyra plan or one-time credit pack.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -332,7 +332,7 @@ function CheckoutPage() {
               <div className="mt-5 rounded-[14px] border border-border bg-muted/60 px-5 py-5">
                 <p className="text-[15px] font-semibold">Sign in to pay</p>
                 <p className="mt-1 text-[14px] text-muted-foreground">
-                  Your plan is added to your RitaJet account, so we need to know who you are before
+                  Your plan is added to your Uzyra account, so we need to know who you are before
                   the card form opens.
                 </p>
                 <button type="button" onClick={goSignIn} className="rita-btn rita-btn-primary mt-4">

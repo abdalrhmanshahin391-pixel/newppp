@@ -29,7 +29,7 @@ import { ritaRepairFile, ritaRepairFileName } from "@/lib/rita-issue-report";
 
 export const Route = createFileRoute("/rita-conversations")({
   head: () => ({
-    meta: [{ title: "Rita conversations — RitaJet" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Rita conversations — Uzyra" }, { name: "robots", content: "noindex" }],
   }),
   component: () => (
     <LanguageGate>

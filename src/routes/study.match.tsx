@@ -30,13 +30,13 @@ const MEMORY_SUBJECTS_KEY = "rita_memory_subjects";
 export const Route = createFileRoute("/study/match")({
   head: () => ({
     meta: [
-      { title: "Memory Lab — RitaJet matching games" },
+      { title: "Memory Lab — Uzyra matching games" },
       {
         name: "description",
         content:
           "Beat the facts that will not stick: build pairs like drug and dose, then play matching, speed, recall and sequence rounds.",
       },
-      { property: "og:title", content: "Memory Lab — RitaJet matching games" },
+      { property: "og:title", content: "Memory Lab — Uzyra matching games" },
       {
         property: "og:description",
         content: "Turn hard facts into fast matching games and drill the ones you keep missing.",

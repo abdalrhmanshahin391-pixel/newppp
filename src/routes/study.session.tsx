@@ -57,9 +57,9 @@ export const Route = createFileRoute("/study/session")({
   }),
   head: () => ({
     meta: [
-      { title: "Study session — RitaJet flashcards" },
+      { title: "Study session — Uzyra flashcards" },
       { name: "description", content: "SM-2 spaced repetition flashcard session." },
-      { property: "og:title", content: "Study session — RitaJet flashcards" },
+      { property: "og:title", content: "Study session — Uzyra flashcards" },
       { property: "og:description", content: "SuperMemo SM-2 spaced repetition study session." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

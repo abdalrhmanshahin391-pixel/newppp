@@ -1,7 +1,7 @@
 /**
  * Legal documents shipped with the app.
  *
- * These are the published defaults for RitaJet (ritajet.com). An admin can
+ * These are the published defaults for Uzyra (ritajet.com). An admin can
  * override any of them from /admin/legal; when the override is empty the text
  * below is what the public sees. They are written to satisfy a Merchant of
  * Record review (Paddle): a named seller, a clear description of the digital
@@ -14,7 +14,7 @@ export const SELLER_NAME = "Abdlarhman Omar Ahmad Shaheen";
 export const SELLER_COUNTRY = "Jordan";
 export const SELLER_CITY = "Amman, Jordan";
 export const SUPPORT_EMAIL = "ritajetnetwork@outlook.com";
-export const SITE_NAME = "RitaJet";
+export const SITE_NAME = "Uzyra";
 export const SITE_DOMAIN = "ritajet.com";
 export const LEGAL_UPDATED = "9 August 2026";
 

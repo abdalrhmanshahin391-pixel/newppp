@@ -38,12 +38,12 @@ export const Route = createFileRoute("/study/lectures/run")({
   }),
   head: () => ({
     meta: [
-      { title: "Lecture quiz — RitaJet Lecture Lab" },
+      { title: "Lecture quiz — Uzyra Lecture Lab" },
       {
         name: "description",
         content: "Study lecture questions in practice, session, or timed exam mode.",
       },
-      { property: "og:title", content: "Lecture quiz — RitaJet Lecture Lab" },
+      { property: "og:title", content: "Lecture quiz — Uzyra Lecture Lab" },
       {
         property: "og:description",
         content: "Practice lecture questions with answers, explanations, and progress tracking.",

@@ -6,12 +6,12 @@ export const Route = createFileRoute("/login")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Sign in — RitaJet study tools" },
+      { title: "Sign in — Uzyra study tools" },
       {
         name: "description",
         content: "Sign in to Rita and pick up your flashcards, summaries and quizzes.",
       },
-      { property: "og:title", content: "Sign in — RitaJet study tools" },
+      { property: "og:title", content: "Sign in — Uzyra study tools" },
       { property: "og:description", content: "Sign in to Rita and pick up where you left off." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

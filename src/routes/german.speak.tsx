@@ -13,7 +13,7 @@ const ACCENT = "#d9506d";
 export const Route = createFileRoute("/german/speak")({
   head: () => ({
     meta: [
-      { title: "Pronunciation Lab — speak German and get scored | RitaJet" },
+      { title: "Pronunciation Lab — speak German and get scored | Uzyra" },
       {
         name: "description",
         content:

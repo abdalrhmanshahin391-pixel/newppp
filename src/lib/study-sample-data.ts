@@ -7,7 +7,7 @@ export type SampleSubject = {
   subs: SampleSubSubject[];
 };
 
-/** Built-in sample subject available to all students on RitaJet. */
+/** Built-in sample subject available to all students on Uzyra. */
 export const SAMPLE_SUBJECTS: SampleSubject[] = [
   {
     name: "Sample subject — Cardiology",

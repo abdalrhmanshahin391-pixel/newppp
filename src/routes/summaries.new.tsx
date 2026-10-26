@@ -31,12 +31,12 @@ const SearchSchema = z.object({
 export const Route = createFileRoute("/summaries/new")({
   head: () => ({
     meta: [
-      { title: "New summary — RitaJet study workspace" },
+      { title: "New summary — Uzyra study workspace" },
       {
         name: "description",
         content: "Turn photos of your pages or a lecture PDF into a clean Rita summary sheet.",
       },
-      { property: "og:title", content: "New summary — RitaJet study workspace" },
+      { property: "og:title", content: "New summary — Uzyra study workspace" },
       {
         property: "og:description",
         content: "Upload pages or a PDF and Rita writes the summary sheet for you.",

@@ -10,13 +10,13 @@ import { KIND_LABEL, joinByCode, previewInvite, refreshSpace, spaceTone } from "
 export const Route = createFileRoute("/join/$code")({
   head: () => ({
     meta: [
-      { title: "Join a classroom or study group | RitaJet" },
+      { title: "Join a classroom or study group | Uzyra" },
       {
         name: "description",
         content:
-          "Open your invite link to join a RitaJet classroom or study group and get its shared flashcard decks.",
+          "Open your invite link to join a Uzyra classroom or study group and get its shared flashcard decks.",
       },
-      { property: "og:title", content: "You're invited to a RitaJet space" },
+      { property: "og:title", content: "You're invited to a Uzyra space" },
       { property: "og:description", content: "Join the classroom or study group and start studying together." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

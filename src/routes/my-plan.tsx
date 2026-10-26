@@ -29,12 +29,12 @@ import {
 export const Route = createFileRoute("/my-plan")({
   head: () => ({
     meta: [
-      { title: "My plan | RitaJet" },
+      { title: "My plan | Uzyra" },
       {
         name: "description",
-        content: "See your RitaJet plan, how much of each allowance is left and when a claimed offer runs out.",
+        content: "See your Uzyra plan, how much of each allowance is left and when a claimed offer runs out.",
       },
-      { property: "og:title", content: "My RitaJet plan" },
+      { property: "og:title", content: "My Uzyra plan" },
       { property: "og:description", content: "Your allowances, your balance and your offer countdown in one place." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

@@ -41,7 +41,7 @@ export const sqImport = createServerFn({ method: "POST" })
         user_id: userId,
         subtopic_id: data.subtopicId,
         title: set.title,
-        source_name: "Shared on RitaJet",
+        source_name: "Shared on Uzyra",
         question_count: 0,
       })
       .select("id")

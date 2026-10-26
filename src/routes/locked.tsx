@@ -10,14 +10,14 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/locked")({
   head: () => ({
     meta: [
-      { title: "Account temporarily locked — RitaJet" },
+      { title: "Account temporarily locked — Uzyra" },
       {
         name: "description",
         content:
           "Your account is locked because it was opened on more devices than allowed. Contact us to receive a reactivation code.",
       },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Account temporarily locked — RitaJet" },
+      { property: "og:title", content: "Account temporarily locked — Uzyra" },
       { property: "og:description", content: "Enter your reactivation code to restore access." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

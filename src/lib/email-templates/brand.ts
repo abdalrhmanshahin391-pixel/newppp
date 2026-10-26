@@ -1,4 +1,4 @@
-// Shared inline styles for RitaJet authentication emails.
+// Shared inline styles for Uzyra authentication emails.
 // Email clients need inline styles — no Tailwind, no external CSS.
 
 export const TEAL = "#0f9aa9";

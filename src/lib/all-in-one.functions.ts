@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import type { ChatTarget } from "@/lib/mode-ai.server";
 
-/** Where this mode sends its request: the owner's own key, or shared RitaJet AI. */
+/** Where this mode sends its request: the owner's own key, or shared Uzyra AI. */
 async function target(supabase: any): Promise<ChatTarget> {
   const { resolveChatTarget } = await import("@/lib/mode-ai.server");
   return await resolveChatTarget(supabase, "aio");

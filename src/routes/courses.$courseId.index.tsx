@@ -54,10 +54,10 @@ export const Route = createFileRoute("/courses/$courseId/")({
   },
   head: ({ params, loaderData }) => {
     const name = loaderData?.title ?? "Subject";
-    const title = `${name} question bank — RitaJet`;
+    const title = `${name} question bank — Uzyra`;
     const description = loaderData?.title
-      ? `Practise ${name} on RitaJet: pick your sub-subjects, then run study, session or timed exam mode with full concept explanations.`
-      : "RitaJet question bank — pick sub-subjects and practise in study, session or exam mode.";
+      ? `Practise ${name} on Uzyra: pick your sub-subjects, then run study, session or timed exam mode with full concept explanations.`
+      : "Uzyra question bank — pick sub-subjects and practise in study, session or exam mode.";
     const url = `https://ritajet.com/courses/${params.courseId}`;
     return {
       meta: [
