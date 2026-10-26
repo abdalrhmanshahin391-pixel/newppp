@@ -68,6 +68,7 @@ jobs:
           node --test src/lib/page-transcript.test.ts
           node --test src/lib/page-reading.test.ts
           node --test src/lib/model-reply-normalize.test.ts
+          node --test src/lib/rita-engine-check.test.ts
           node --test src/routes/api/rita-v3/session/start.source.test.mjs
           bunx tsc --noEmit
       - name: Build site

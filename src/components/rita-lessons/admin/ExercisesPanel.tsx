@@ -26,6 +26,7 @@ import {
   type LessonContent,
   type LessonItem,
 } from "@/lib/rita-lesson-content";
+import { EngineCheck } from "./EngineCheck";
 
 const TEMPLATE_LABEL: Record<LessonItem["template"], string> = {
   choice_fill: "اختيار بالفراغ",
@@ -190,6 +191,11 @@ export function ExercisesPanel({ lessonId }: { lessonId: string }) {
           </button>
         )}
       </div>
+
+      <EngineCheck
+        lessonId={lessonId}
+        refreshKey={`${view.status}:${view.version}:${view.updated_at}`}
+      />
 
       <p className="text-sm text-[var(--pp-muted)]">
         الطلاب بيشوفوا التمارين بس بعد النشر. قبلها بضل عندهم الدرس الصوتي القديم. المحاولة اللي

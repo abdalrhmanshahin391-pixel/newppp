@@ -39,6 +39,7 @@ import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
 import { useRitaLesson } from "@/components/rita-lessons/useRitaLesson";
 import { useLessonRun } from "@/components/rita-lessons/useLessonRun";
 import { LessonFlow } from "@/components/rita-lessons/LessonFlow";
+import { EngineCheck } from "@/components/rita-lessons/admin/EngineCheck";
 import { ExerciseWindow } from "@/components/rita-lessons/ExerciseWindow";
 import { useLessonVoice, type LessonSignal } from "@/components/rita-lessons/useLessonVoice";
 import type { SampleKey } from "@/lib/rita-lesson-run";
@@ -46,6 +47,7 @@ import {
   LessonObjectivesPanel,
   LessonResourcesPanel,
   LessonResultCard,
+  LessonResultChip,
 } from "@/components/rita-lessons/LessonPanels";
 import { dbLanguage, setVoiceSessionActive } from "@/lib/language-scope";
 import { useExplanationLanguage } from "@/hooks/useExplanationLanguage";
@@ -138,7 +140,7 @@ export function RitaRealtimeV3({
   const exercises = lessonRun.available === true;
   const lastCheckedMessage = useRef("");
   const [resultDismissed, setResultDismissed] = useState(false);
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const client = useRef<ClientHandle | null>(null);
   const activeRef = useRef(false);
   const mutedRef = useRef(false);
@@ -1622,6 +1624,17 @@ export function RitaRealtimeV3({
                   score={lesson.score}
                   checking={lesson.checking}
                   justMet={lesson.justMet}
+                />
+              )}
+              {isAdmin && lessonId && !sample && lessonRun.available === false && (
+                // Only admins see this: why this lesson came without exercises.
+                <EngineCheck lessonId={lessonId} title="للأدمن: ليش هالدرس بدون تمارين؟" />
+              )}
+              {lesson.result && resultDismissed && (
+                <LessonResultChip
+                  score={lesson.result.score}
+                  stars={lesson.result.stars}
+                  onOpen={() => setResultDismissed(false)}
                 />
               )}
               {lesson.session && <LessonResourcesPanel session={lesson.session} />}

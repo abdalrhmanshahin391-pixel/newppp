@@ -41,6 +41,7 @@ import {
   parseLessonContent,
   type LessonContent,
 } from "@/lib/rita-lesson-content";
+import type { EngineFacts } from "@/lib/rita-engine-check";
 import {
   MAX_RESOURCES,
   NewResourceSchema,
@@ -2382,6 +2383,48 @@ export type ExercisesSummary = {
     { status: "none" | "draft" | "published"; warnings: number; problems: number }
   >;
 };
+
+/**
+ * Why a learner does or does not get this lesson's exercises (admin only). The exercise window opens
+ * only when the lesson and its exercises are published and the server can read them; otherwise the
+ * learner quietly gets the spoken lesson. This puts each of those facts on screen.
+ */
+export const adminLessonEngineCheck = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => parseWith(z.object({ lessonId: uuid }), data))
+  .handler(async ({ data, context }): Promise<EngineFacts> => {
+    await assertAdmin(context);
+    const { data: lesson, error } = await context.supabase
+      .from("rita_lessons")
+      .select("status")
+      .eq("id", data.lessonId)
+      .maybeSingle();
+    fail(error, "lesson");
+    const view = await readExercises(context.supabase, data.lessonId);
+    // The same connection the exercise window uses for the protected content.
+    let serverKey: EngineFacts["serverKey"] = "ok";
+    let serverKeyMessage = "";
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
+      const probe = await supabaseAdmin.from("rita_lesson_contents").select("lesson_id").limit(1);
+      if (probe.error && !isMissingSchemaError(probe.error)) {
+        serverKey = "error";
+        serverKeyMessage = String(probe.error.message ?? "").slice(0, 200);
+      }
+    } catch (cause) {
+      const text = cause instanceof Error ? cause.message : String(cause ?? "");
+      serverKey = /Missing server-only/i.test(text) ? "missing" : "error";
+      serverKeyMessage = text.slice(0, 200);
+    }
+    return {
+      migrationReady: view.ready,
+      lessonStatus: String(lesson?.status ?? "draft"),
+      contentStatus: view.status,
+      problems: view.problems.length,
+      serverKey,
+      serverKeyMessage,
+    };
+  });
 
 /** Every lesson's exercise status for one book, in one request (the review list needs it). */
 export const adminExercisesSummary = createServerFn({ method: "GET" })
