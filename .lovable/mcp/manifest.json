@@ -13,7 +13,7 @@
     "server": {
       "name": "ritajet-mcp",
       "version": "0.1.0",
-      "title": "RitaJet"
+      "title": "Uzyra"
     },
     "tools": [
       {
@@ -35,7 +35,7 @@
       {
         "name": "list_my_courses",
         "title": "List my courses",
-        "description": "List the courses the signed-in user is enrolled in on RitaJet.",
+        "description": "List the courses the signed-in user is enrolled in on Uzyra.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
