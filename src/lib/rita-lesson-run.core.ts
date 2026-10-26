@@ -26,12 +26,12 @@ export type Db = SupabaseClient<any, "public", any>;
 export type LessonDeps = { db: Db; userDb: Db; userId: string };
 
 export class LessonRunError extends Error {
-  constructor(
-    public code: string,
-    public status: number,
-    message: string,
-  ) {
+  code: string;
+  status: number;
+  constructor(code: string, status: number, message: string) {
     super(message);
+    this.code = code;
+    this.status = status;
   }
 }
 

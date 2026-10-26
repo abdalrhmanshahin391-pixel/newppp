@@ -2401,20 +2401,21 @@ export const adminLessonEngineCheck = createServerFn({ method: "POST" })
       .maybeSingle();
     fail(error, "lesson");
     const view = await readExercises(context.supabase, data.lessonId);
-    // The same connection the exercise window uses for the protected content.
+    // Ask the exercise service itself (the Edge Function the exercise window uses).
     let serverKey: EngineFacts["serverKey"] = "ok";
     let serverKeyMessage = "";
-    try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
-      const probe = await supabaseAdmin.from("rita_lesson_contents").select("lesson_id").limit(1);
-      if (probe.error && !isMissingSchemaError(probe.error)) {
+    const { callLessonEdge } = await import("@/lib/rita-lesson-edge.server");
+    const ping = await callLessonEdge<{ ok: boolean; schemaMissing: boolean }>("ping");
+    if (ping.ok) {
+      if (!ping.data.ok && !ping.data.schemaMissing) {
         serverKey = "error";
-        serverKeyMessage = String(probe.error.message ?? "").slice(0, 200);
+        serverKeyMessage = "the service could not read the exercise table";
       }
-    } catch (cause) {
-      const text = cause instanceof Error ? cause.message : String(cause ?? "");
-      serverKey = /Missing server-only/i.test(text) ? "missing" : "error";
-      serverKeyMessage = text.slice(0, 200);
+    } else if (ping.unreachable) {
+      serverKey = "missing";
+    } else {
+      serverKey = "error";
+      serverKeyMessage = `${ping.code}: ${ping.message}`.slice(0, 200);
     }
     return {
       migrationReady: view.ready,

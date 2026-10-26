@@ -12,7 +12,7 @@ export type EngineFacts = {
   contentStatus: "none" | "draft" | "published";
   /** Problems the code checks found in the written exercises. */
   problems: number;
-  /** Can the server connection the exercise window needs be opened? */
+  /** Is the exercise service (the rita-lesson-run Edge Function) reachable and able to read the content? */
   serverKey: "ok" | "missing" | "error";
   serverKeyMessage: string;
 };
@@ -72,7 +72,7 @@ export function explainEngine(facts: EngineFacts): EngineVerdict {
       state: facts.serverKey === "ok" ? "ok" : "fail",
       hint:
         facts.serverKey === "missing"
-          ? "خادم الموقع ما عنده مفتاح الوصول الكامل للتمارين، فالطالب بيكمل الدرس صوتي بدون تمارين حتى لو كل شي ثاني تمام. هاد بدو حل من جهة الخادم، قولي وبشتغل عليه."
+          ? "خدمة التمارين (rita-lesson-run) مش شغّالة على الموقع بعد، فالطالب بيكمل الدرس صوتي بدون تمارين حتى لو كل شي ثاني تمام. تأكد إنو Lovable نشرها (Publish ثم Update) وبعدين اضغط «افحص»."
           : `الخادم ما قدر يفتح التمارين: ${facts.serverKeyMessage || "سبب غير معروف"}`,
     },
   ];
