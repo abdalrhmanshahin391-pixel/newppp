@@ -16,7 +16,7 @@ function Panel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function TalkPanel() {
+export function TalkPanel() {
   return (
     <Panel>
       <span
@@ -46,7 +46,7 @@ function TalkPanel() {
   );
 }
 
-function WordsPanel() {
+export function WordsPanel() {
   const rows = [
     ["Guten Morgen", "صباح الخير"],
     ["borrow", "يستعير"],
@@ -82,7 +82,7 @@ function WordsPanel() {
   );
 }
 
-function StudyPanel() {
+export function StudyPanel() {
   return (
     <Panel>
       <div className="flex items-center gap-3">

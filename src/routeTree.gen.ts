@@ -39,6 +39,7 @@ import { Route as ToolkitRouteImport } from './routes/toolkit'
 import { Route as TourRouteImport } from './routes/tour'
 import { Route as TutorialRouteImport } from './routes/tutorial'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as ZzHeroRouteImport } from './routes/zz-hero'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -290,6 +291,11 @@ const TutorialRoute = TutorialRouteImport.update({
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ZzHeroRoute = ZzHeroRouteImport.update({
+  id: '/zz-hero',
+  path: '/zz-hero',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Char91DotmcpChar93ListToolsRoute =
@@ -842,6 +848,7 @@ export interface FileRoutesByFullPath {
   '/tour': typeof TourRoute
   '/tutorial': typeof TutorialRoute
   '/welcome': typeof WelcomeRoute
+  '/zz-hero': typeof ZzHeroRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/ai': typeof AdminAiRoute
@@ -974,6 +981,7 @@ export interface FileRoutesByTo {
   '/tour': typeof TourRoute
   '/tutorial': typeof TutorialRoute
   '/welcome': typeof WelcomeRoute
+  '/zz-hero': typeof ZzHeroRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/ai': typeof AdminAiRoute
@@ -1106,6 +1114,7 @@ export interface FileRoutesById {
   '/tour': typeof TourRoute
   '/tutorial': typeof TutorialRoute
   '/welcome': typeof WelcomeRoute
+  '/zz-hero': typeof ZzHeroRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/ai': typeof AdminAiRoute
@@ -1242,6 +1251,7 @@ export interface FileRouteTypes {
     | '/tour'
     | '/tutorial'
     | '/welcome'
+    | '/zz-hero'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin/ai'
@@ -1374,6 +1384,7 @@ export interface FileRouteTypes {
     | '/tour'
     | '/tutorial'
     | '/welcome'
+    | '/zz-hero'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin/ai'
@@ -1505,6 +1516,7 @@ export interface FileRouteTypes {
     | '/tour'
     | '/tutorial'
     | '/welcome'
+    | '/zz-hero'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin/ai'
@@ -1640,6 +1652,7 @@ export interface RootRouteChildren {
   TourRoute: typeof TourRoute
   TutorialRoute: typeof TutorialRoute
   WelcomeRoute: typeof WelcomeRoute
+  ZzHeroRoute: typeof ZzHeroRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AdminAiRoute: typeof AdminAiRoute
@@ -1920,6 +1933,13 @@ declare module '@tanstack/react-router' {
       path: '/welcome'
       fullPath: '/welcome'
       preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zz-hero': {
+      id: '/zz-hero'
+      path: '/zz-hero'
+      fullPath: '/zz-hero'
+      preLoaderRoute: typeof ZzHeroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/list-tools': {
@@ -2802,6 +2822,7 @@ const rootRouteChildren: RootRouteChildren = {
   TourRoute: TourRoute,
   TutorialRoute: TutorialRoute,
   WelcomeRoute: WelcomeRoute,
+  ZzHeroRoute: ZzHeroRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
