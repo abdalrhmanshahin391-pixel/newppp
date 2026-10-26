@@ -1,5 +1,17 @@
+import { useEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, ExternalLink, FileText, Link2, Loader2, RotateCcw, Video } from "lucide-react";
+import {
+  Check,
+  ExternalLink,
+  FileText,
+  Link2,
+  Loader2,
+  MessageSquareText,
+  RotateCcw,
+  Star,
+  Video,
+  X,
+} from "lucide-react";
 import { KIND_LABEL_AR, formatBytes, type ResourceKind } from "@/lib/rita-resources";
 import type { ObjectiveState } from "@/lib/rita-curriculum";
 import type { LessonSession } from "@/lib/rita-curriculum.functions";
@@ -97,7 +109,11 @@ export function LessonObjectivesPanel({
   );
 }
 
-/** Shown when every objective is met: score, stars and the way forward. */
+/**
+ * Shown when every objective is met: score, stars and the way forward. It can be closed (the cross,
+ * Esc, a tap outside, or "review the conversation") so the learner can read the whole call again;
+ * LessonResultChip brings it back.
+ */
 export function LessonResultCard({
   score,
   stars,
@@ -113,18 +129,46 @@ export function LessonResultCard({
 }) {
   const praise =
     stars === 3 ? "ممتاز!" : stars === 2 ? "عمل رائع!" : stars === 1 ? "أحسنت!" : "أكملت الدرس!";
+  const closeRef = useRef<HTMLButtonElement>(null);
+  // The latest onClose without re-running the effect: the parent passes a new function each render,
+  // and focus must move to the cross once, when the card opens.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  useEffect(() => {
+    closeRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onCloseRef.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   return (
     <div
       className="edith-premium fixed inset-0 z-50 grid place-items-center bg-[#121117]/40 p-4"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="lesson-result-title"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
     >
       <section
         dir="rtl"
-        className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl"
+        className="relative w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl"
       >
+        <button
+          ref={closeRef}
+          type="button"
+          onClick={onClose}
+          aria-label="إغلاق"
+          className="absolute start-3 top-3 grid h-10 w-10 place-items-center rounded-full text-[var(--pp-muted)] transition-colors hover:bg-[var(--pp-grey)]"
+        >
+          <X size={20} aria-hidden="true" />
+        </button>
         <LessonStars stars={stars} size={44} />
-        <h2 className="mt-3 text-3xl font-bold text-[var(--pp-ink)]">{praise}</h2>
+        <h2 id="lesson-result-title" className="mt-3 text-3xl font-bold text-[var(--pp-ink)]">
+          {praise}
+        </h2>
         <p className="mt-1 font-bold text-[var(--pp-muted)]">حققت كل أهداف الدرس</p>
         <p className="mt-4 text-5xl font-bold text-[var(--pp-ink)]">{score}%</p>
         <div className="mt-6 space-y-2">
@@ -142,9 +186,16 @@ export function LessonResultCard({
               أنهيت كل الدروس المتاحة 🎉
             </p>
           )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="rita-btn rita-btn-secondary !flex !w-full !items-center !justify-center !gap-2 !self-stretch"
+          >
+            <MessageSquareText size={16} aria-hidden="true" /> راجع المحادثة
+          </button>
           <Link
             to="/rita-lessons"
-            className="rita-btn rita-btn-secondary !flex !w-full !self-stretch"
+            className="rita-btn rita-btn-quiet !flex !w-full !self-stretch"
             onClick={onClose}
           >
             العودة إلى المسار
@@ -159,6 +210,34 @@ export function LessonResultCard({
         </div>
       </section>
     </div>
+  );
+}
+
+/** A small bar that reopens the result after it was closed to review the conversation. */
+export function LessonResultChip({
+  score,
+  stars,
+  onOpen,
+}: {
+  score: number;
+  stars: number;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      dir="rtl"
+      className="flex w-full items-center gap-2 rounded-2xl bg-[var(--pp-accent-soft)] px-4 py-3 text-start text-[15px] font-bold text-[var(--pp-accent-text)]"
+    >
+      <span className="flex items-center gap-0.5" aria-hidden="true">
+        {Array.from({ length: Math.max(1, stars) }, (_, index) => (
+          <Star key={index} size={15} fill="currentColor" />
+        ))}
+      </span>
+      <span className="me-auto">أنهيت الدرس · {score}%</span>
+      <span className="underline">عرض النتيجة</span>
+    </button>
   );
 }
 

@@ -10,6 +10,8 @@ import type { LessonReadiness } from "@/lib/rita-book-flow";
 import type { Objective } from "@/lib/rita-curriculum";
 import {
   adminGenerateLessonImage,
+  adminLessonExercises,
+  adminPublishExercises,
   adminGenerateSlides,
   adminRegenerateObjective,
   adminSaveSlides,
@@ -18,6 +20,7 @@ import {
   adminUpdateLesson,
   type LessonRow,
 } from "@/lib/rita-curriculum.functions";
+import { shouldPublishExercisesWithLesson } from "@/lib/rita-engine-check";
 import type { Resource } from "@/lib/rita-resources";
 import type { Slide } from "@/lib/rita-slides";
 import { LessonForm } from "@/components/rita-lessons/LessonForm";
@@ -58,6 +61,8 @@ export function LessonDrawer({
   onChanged: () => Promise<void>;
 }) {
   const statusFn = useServerFn(adminSetLessonStatus);
+  const exercisesFn = useServerFn(adminLessonExercises);
+  const publishExercisesFn = useServerFn(adminPublishExercises);
   const updateFn = useServerFn(adminUpdateLesson);
   const regenerateFn = useServerFn(adminRegenerateObjective);
   const imageFn = useServerFn(adminGenerateLessonImage);
@@ -132,29 +137,51 @@ export function LessonDrawer({
                   <button
                     type="button"
                     disabled={Boolean(busy)}
-                    onClick={() =>
-                      void run(
-                        "status",
-                        () =>
-                          statusFn({
-                            data: {
-                              lessonId: lesson.id,
-                              status: lesson.status === "published" ? "draft" : "published",
-                            },
-                          }),
-                        lesson.status === "published"
-                          ? "رجع الدرس مسودة"
-                          : bookPublished
-                            ? "انشر الدرس"
-                            : "انشر الدرس، وبيظهر للطلاب لما تنشر الكتاب",
-                      )
-                    }
+                    onClick={() => {
+                      if (lesson.status === "published") {
+                        void run(
+                          "status",
+                          () => statusFn({ data: { lessonId: lesson.id, status: "draft" } }),
+                          "رجع الدرس مسودة",
+                        );
+                        return;
+                      }
+                      // The exercises go out with the lesson, or learners get a spoken lesson only.
+                      let withExercises = false;
+                      void run("status", async () => {
+                        const view = await exercisesFn({ data: { lessonId: lesson.id } });
+                        if (
+                          shouldPublishExercisesWithLesson({
+                            hasContent: view.content !== null,
+                            status: view.status,
+                            problems: view.problems.length,
+                          })
+                        ) {
+                          await publishExercisesFn({
+                            data: { lessonId: lesson.id, publish: true },
+                          });
+                          withExercises = true;
+                        }
+                        await statusFn({ data: { lessonId: lesson.id, status: "published" } });
+                        toast.success(
+                          withExercises
+                            ? "انشر الدرس مع تمارينه"
+                            : bookPublished
+                              ? "انشر الدرس (بدون تمارين)"
+                              : "انشر الدرس، وبيظهر للطلاب لما تنشر الكتاب",
+                        );
+                      });
+                    }}
                     className={`rita-btn rita-btn-sm gap-1.5 ${lesson.status === "published" ? "rita-btn-soft" : "rita-btn-primary"}`}
                   >
                     {busy === "status" && (
                       <Loader2 size={15} className="animate-spin" aria-hidden="true" />
                     )}
-                    {lesson.status === "published" ? "إلغاء النشر" : "انشر الدرس"}
+                    {lesson.status === "published"
+                      ? "إلغاء النشر"
+                      : readiness === "ready" || readiness === "warnings"
+                        ? "انشر الدرس مع تمارينه"
+                        : "انشر الدرس"}
                   </button>
                   <Menu.Root dir="rtl">
                     <Menu.Trigger asChild>
@@ -205,6 +232,32 @@ export function LessonDrawer({
                     </Menu.Portal>
                   </Menu.Root>
                 </div>
+                {lesson.status === "published" &&
+                  (readiness === "ready" || readiness === "warnings") && (
+                    <div className="flex flex-wrap items-center gap-2 rounded-xl bg-[#fff6e5] p-3 text-[14px] text-[#6b4100]">
+                      <p className="me-auto font-semibold">
+                        الدرس منشور بس تمارينه لسا مسودة، فالطلاب بياخدوا الدرس صوتي بدون تمارين.
+                      </p>
+                      <button
+                        type="button"
+                        disabled={Boolean(busy)}
+                        onClick={() =>
+                          void run(
+                            "exercises",
+                            () =>
+                              publishExercisesFn({ data: { lessonId: lesson.id, publish: true } }),
+                            "انشرت التمارين للطلاب",
+                          )
+                        }
+                        className="rita-btn rita-btn-primary rita-btn-sm gap-1.5"
+                      >
+                        {busy === "exercises" && (
+                          <Loader2 size={15} className="animate-spin" aria-hidden="true" />
+                        )}
+                        انشر التمارين
+                      </button>
+                    </div>
+                  )}
               </header>
 
               <Tabs.Root
