@@ -5,13 +5,13 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useLearningLanguage } from "@/hooks/useLearningLanguage";
 import { showsGermanLab } from "@/lib/learning-language";
 import { SUPPORT_EMAIL } from "@/lib/legal-content";
-import { EdithWordmark } from "@/components/brand/EdithWordmark";
+import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
 import { BRAND_NAME } from "@/lib/brand";
 
 type Col = { heading: string; links: { label: string; to: string }[] };
 
 /**
- * EdithLab footer: black surface, white ink. Wordmark and tagline on the
+ * Uzyra footer: dark surface, soft white ink. Wordmark and tagline on the
  * left, five link columns on the right (Rita first), then a quiet bottom row.
  */
 export function SiteFooter() {
@@ -76,21 +76,8 @@ export function SiteFooter() {
       <div className="mx-auto max-w-[1240px] px-6 py-16 md:px-10 md:py-24">
         <div className="grid gap-14 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,2.6fr)]">
           <div className="min-w-0">
-            <Link
-              to="/"
-              aria-label={`${BRAND_NAME} home`}
-              className="inline-block"
-              style={
-                {
-                  "--wordmark-prefix": "#ffffff",
-                  "--wordmark-suffix": "#ffffff",
-                  "--wordmark-prefix-weight": 800,
-                  "--wordmark-suffix-weight": 800,
-                  "--wordmark-tracking": "-0.045em",
-                } as React.CSSProperties
-              }
-            >
-              <EdithWordmark size={36} tone="light" />
+            <Link to="/" aria-label={`${BRAND_NAME} home`} className="rf-wordmark inline-block">
+              <UzyraWordmark size={26} />
             </Link>
             <p className="mt-4 max-w-[22rem] text-[16px] leading-relaxed text-white/60">
               {ar

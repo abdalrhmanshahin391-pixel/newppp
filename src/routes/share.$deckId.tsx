@@ -12,13 +12,13 @@ import { coverOf, deleteDeck, fetchDeck, saveDeckToMySubjects, setPublished } fr
 export const Route = createFileRoute("/share/$deckId")({
   head: () => ({
     meta: [
-      { title: "Shared flashcard deck | RitaJet" },
+      { title: "Shared flashcard deck | Uzyra" },
       {
         name: "description",
         content:
           "Flip through a flashcard deck shared by another student and save it into your own subjects in one tap.",
       },
-      { property: "og:title", content: "A shared flashcard deck on RitaJet" },
+      { property: "og:title", content: "A shared flashcard deck on Uzyra" },
       {
         property: "og:description",
         content: "Study this student-made deck and copy it into your own subjects.",

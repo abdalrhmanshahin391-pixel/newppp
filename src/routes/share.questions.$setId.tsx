@@ -47,7 +47,7 @@ import {
 export const Route = createFileRoute("/share/questions/$setId")({
   head: () => ({
     meta: [
-      { title: "Shared question set | RitaJet" },
+      { title: "Shared question set | Uzyra" },
       {
         name: "description",
         content: "Study questions shared by students, test your knowledge, and save into your own subjects.",
@@ -143,7 +143,7 @@ export function QuestionSetDetailPage() {
       await setQuestionSetAudience(set.id, newAudience);
       toast.success(
         newAudience === "public"
-          ? "Question set is now shared publicly with everyone on RitaJet!"
+          ? "Question set is now shared publicly with everyone on Uzyra!"
           : "Question set is now restricted to your space members only.",
       );
       qc.invalidateQueries({ queryKey: ["share-qset", setId] });

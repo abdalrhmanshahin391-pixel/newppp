@@ -30,13 +30,13 @@ import { useTutorialLang, type TutorialLang } from "@/components/tutorials/tutor
 export const Route = createFileRoute("/study/progress")({
   head: () => ({
     meta: [
-      { title: "My Progress & SM-2 Analytics — RitaJet" },
+      { title: "My Progress & SM-2 Analytics — Uzyra" },
       {
         name: "description",
         content:
           "Advanced memory analytics, SuperMemo SM-2 grade distribution, hard cards, lapsed leeches, and workload forecasts.",
       },
-      { property: "og:title", content: "My Progress & SM-2 Analytics — RitaJet" },
+      { property: "og:title", content: "My Progress & SM-2 Analytics — Uzyra" },
       {
         property: "og:description",
         content: "Mastery, accuracy, hard and wrong cards breakdown in one clinical dashboard.",

@@ -25,7 +25,7 @@ export const Route = createFileRoute("/study/all-in-one/")({
   component: AllInOneUpload,
   head: () => ({
     meta: [
-      { title: "All in one — one upload, everything | RitaJet" },
+      { title: "All in one — one upload, everything | Uzyra" },
       {
         name: "description",
         content:

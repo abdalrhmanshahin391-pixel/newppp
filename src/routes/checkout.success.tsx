@@ -13,13 +13,13 @@ import { saveCheckoutPaymentMethod } from "@/lib/subscription.functions";
 export const Route = createFileRoute("/checkout/success")({
   head: () => ({
     meta: [
-      { title: "Payment successful — RitaJet" },
+      { title: "Payment successful — Uzyra" },
       {
         name: "description",
-        content: "Your RitaJet purchase is confirmed and your study plan is being activated.",
+        content: "Your Uzyra purchase is confirmed and your study plan is being activated.",
       },
-      { property: "og:title", content: "Payment successful — RitaJet" },
-      { property: "og:description", content: "Your RitaJet purchase is confirmed." },
+      { property: "og:title", content: "Payment successful — Uzyra" },
+      { property: "og:description", content: "Your Uzyra purchase is confirmed." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -119,7 +119,7 @@ function SuccessPage() {
         </h1>
         <p className="mt-4 text-[16px] leading-[1.6] text-white/50">
           {isFree
-            ? "Congratulations! Your plan has been unlocked and added to your RitaJet account with zero payment required."
+            ? "Congratulations! Your plan has been unlocked and added to your Uzyra account with zero payment required."
             : "Thank you — a receipt is on its way to your email from Paddle, our payment partner."}
         </p>
 

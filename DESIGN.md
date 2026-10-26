@@ -1,4 +1,4 @@
-# DESIGN.md — the visual system of EdithLab / Rita
+# DESIGN.md — the visual system of Uzyra (formerly EdithLab) / Rita
 
 This is the source of truth for every visual change. It was written from the code that is
 already shipped (`src/styles.css`, section "Home page theme", and the Rita components), not
@@ -100,6 +100,15 @@ equal feature cards in a row as the default layout, icons inside tinted circles 
 decorative rounded corners everywhere, stock-photo heroes, fake testimonials or numbers,
 random shadows, more than one accent colour, centre-everything layouts, cards for content
 that is just a list, text under 12px, low-contrast grey on grey.
+
+## Name and logo
+
+The site is called **Uzyra** (name only; Rita and ritajet.com stay). The logo is the owner's symbol (five
+solid shapes, `UzyraMark`) beside the name in wide-tracked capitals with an A drawn without its crossbar
+(`UzyraWordmark`, Outfit 600, tracking 0.2em). On the dark bar and footer both are **soft white**
+(`#f2f2f5`, token `--uz-logo`), never pure white; on light pages (sign in, register) they take the ink
+colour. Use `BRAND_NAME` from `src/lib/brand.ts` in code, never a typed name. The app icon is the soft
+white symbol on the dark ink square (`#121117`), full-bleed for Apple, rounded for the tab and the app list.
 
 ## Top bar and menus
 

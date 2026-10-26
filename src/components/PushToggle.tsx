@@ -115,8 +115,8 @@ export function PushToggle() {
           <li>{ar ? "اختر «إضافة إلى الشاشة الرئيسية»." : "Choose “Add to Home Screen”."}</li>
           <li>
             {ar
-              ? "أغلق Safari وافتح RitaJet من الأيقونة الجديدة."
-              : "Close Safari and open RitaJet from the new icon."}
+              ? "أغلق Safari وافتح Uzyra من الأيقونة الجديدة."
+              : "Close Safari and open Uzyra from the new icon."}
           </li>
           <li>{ar ? "ارجع إلى هذه الصفحة واضغط «تفعيل»." : "Come back to this page and tap “Enable”."}</li>
         </ol>

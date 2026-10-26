@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/legacy-client";
 import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/notes")({
-  head: () => ({ meta: [{ title: "My Notes — RitaJet" }] }),
+  head: () => ({ meta: [{ title: "My Notes — Uzyra" }] }),
   component: () => (
     <RequireAuth what="your notes">
       <NotesPage />

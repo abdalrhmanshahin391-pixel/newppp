@@ -4,10 +4,10 @@ import { REFUND_EN } from "@/lib/legal-content";
 
 export const Route = createFileRoute("/refund-policy")({
   head: () => ({ meta: [
-    { title: "Refund Policy — RitaJet" },
-    { name: "description", content: "RitaJet cancellation and refund rules for paid digital study plans." },
-    { property: "og:title", content: "Refund Policy — RitaJet" },
-    { property: "og:description", content: "RitaJet cancellation and refund rules for paid digital study plans." },
+    { title: "Refund Policy — Uzyra" },
+    { name: "description", content: "Uzyra cancellation and refund rules for paid digital study plans." },
+    { property: "og:title", content: "Refund Policy — Uzyra" },
+    { property: "og:description", content: "Uzyra cancellation and refund rules for paid digital study plans." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),

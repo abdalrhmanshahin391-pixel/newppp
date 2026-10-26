@@ -30,11 +30,11 @@ interface ReauthenticationEmailProps {
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
   <Html lang="en" dir="ltr">
     <Head />
-    <Preview>Your RitaJet verification code</Preview>
+    <Preview>Your Uzyra verification code</Preview>
     <Body style={main}>
       <Container style={container}>
         <div style={brandBar}>
-          <Text style={brandName}>RitaJet</Text>
+          <Text style={brandName}>Uzyra</Text>
         </div>
         <Heading style={h1}>Your verification code</Heading>
         <Text style={text}>Enter this code to confirm it&apos;s you:</Text>

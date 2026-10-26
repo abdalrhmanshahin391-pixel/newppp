@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "RitaJet"
+const SITE_NAME = "Uzyra"
 const SENDER_DOMAIN = "ritajet.com"
 const ROOT_DOMAIN = "ritajet.com"
 const FROM_DOMAIN = "ritajet.com"
@@ -24,7 +24,7 @@ const createHandler = () => createAuthEmailHandler({
   sendUrl: process.env['LOVABLE_SEND_URL'],
   emails: {
     signup: {
-      subject: 'Verify your email for RitaJet',
+      subject: 'Verify your email for Uzyra',
       render: (data) =>
         React.createElement(SignupEmail, {
           siteName: SITE_NAME,
@@ -34,7 +34,7 @@ const createHandler = () => createAuthEmailHandler({
         }),
     },
     invite: {
-      subject: "You're invited to RitaJet",
+      subject: "You're invited to Uzyra",
       render: (data) =>
         React.createElement(InviteEmail, {
           siteName: SITE_NAME,
@@ -43,7 +43,7 @@ const createHandler = () => createAuthEmailHandler({
         }),
     },
     magiclink: {
-      subject: 'Your RitaJet sign-in link',
+      subject: 'Your Uzyra sign-in link',
       render: (data) =>
         React.createElement(MagicLinkEmail, {
           siteName: SITE_NAME,
@@ -51,7 +51,7 @@ const createHandler = () => createAuthEmailHandler({
         }),
     },
     recovery: {
-      subject: 'Reset your RitaJet password',
+      subject: 'Reset your Uzyra password',
       render: (data) =>
         React.createElement(RecoveryEmail, {
           siteName: SITE_NAME,

@@ -28,7 +28,7 @@ import qbankArt from "@/assets/mode-qbank.jpg";
 import lectureArt from "@/assets/mode-lecturelab.jpg";
 
 /**
- * One catalog for every study tool on RitaJet.
+ * One catalog for every study tool on Uzyra.
  *
  * Everything that lists tools reads from here: the three doors on /learn, the
  * three section pages, the header Study menu, the /tour tutorials, the
@@ -114,7 +114,7 @@ export const SECTIONS: SectionDef[] = [
     to: "/learn/study-room",
     title: { en: "Study Room", ar: "غرفة الدراسة" },
     intro: {
-      en: "Study with your class, your group and the rest of RitaJet.",
+      en: "Study with your class, your group and the rest of Uzyra.",
       ar: "ادرس مع صفك ومجموعتك وبقية طلاب ريتاجت.",
     },
     tint: "#f4f4f8",

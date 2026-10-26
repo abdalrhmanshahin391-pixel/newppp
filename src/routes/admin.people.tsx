@@ -21,11 +21,11 @@ import {
 export const Route = createFileRoute("/admin/people")({
   head: () => ({
     meta: [
-      { title: "People Intelligence — RitaJet" },
-      { name: "description", content: "Growth, activity, revenue, retention and data backup for every RitaJet account." },
+      { title: "People Intelligence — Uzyra" },
+      { name: "description", content: "Growth, activity, revenue, retention and data backup for every Uzyra account." },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "People Intelligence — RitaJet" },
-      { property: "og:description", content: "Admin analytics console for RitaJet accounts." },
+      { property: "og:title", content: "People Intelligence — Uzyra" },
+      { property: "og:description", content: "Admin analytics console for Uzyra accounts." },
     ],
   }),
   component: PeoplePage,
@@ -113,7 +113,7 @@ function PeoplePage() {
             <p className="text-xs font-black uppercase tracking-[0.28em] text-primary">Admin · Intelligence</p>
             <h1 className="mt-2 text-3xl md:text-4xl font-black tracking-tight text-foreground">People Intelligence</h1>
             <p className="mt-2 text-muted-foreground">
-              Everyone who joined RitaJet — growth, activity, money and retention in one console.
+              Everyone who joined Uzyra — growth, activity, money and retention in one console.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -570,7 +570,7 @@ function PersonDrawer({ row, reveal, onClose }: { row: DirectoryRow; reveal: boo
           </p>
         )}
 
-        <Section title="Their work on RitaJet">
+        <Section title="Their work on Uzyra">
           <div className="grid grid-cols-4 gap-2 text-center text-sm">
             {[
               ["Decks", history?.decks],
@@ -711,7 +711,7 @@ function BackupPanel() {
     setLog([]);
     try {
       const parsed = JSON.parse(await file.text());
-      if (parsed?.format !== "ritajet.people") throw new Error("This file is not a RitaJet people archive.");
+      if (parsed?.format !== "ritajet.people") throw new Error("This file is not a Uzyra people archive.");
       const lines: string[] = [];
       for (const t of IMPORTABLE_TABLES) {
         const rows = parsed.tables?.[t] ?? [];

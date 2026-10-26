@@ -24,7 +24,7 @@ const SOURCE_LABEL: Record<Tool["source"], string> = {
   own: "its own key",
   shared: "shared Gemini key",
   secret: "site Gemini key",
-  gateway: "shared RitaJet AI",
+  gateway: "shared Uzyra AI",
 };
 
 export function AiEnginePanel() {
@@ -112,7 +112,7 @@ export function AiEnginePanel() {
           <h2 className="text-base font-bold">Every AI tool in one place</h2>
           <p className="mt-0.5 text-xs text-white/55">
             Each tool uses its own key if you paste one, otherwise the shared Gemini key, otherwise
-            the shared RitaJet AI. Keys start with <code className="text-emerald-200">AIza</code> and
+            the shared Uzyra AI. Keys start with <code className="text-emerald-200">AIza</code> and
             come from aistudio.google.com/apikey.
           </p>
         </div>

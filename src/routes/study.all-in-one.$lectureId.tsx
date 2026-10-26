@@ -29,7 +29,7 @@ export const Route = createFileRoute("/study/all-in-one/$lectureId")({
   component: AllInOneWorkspace,
   head: () => ({
     meta: [
-      { title: "Your lecture workspace | RitaJet" },
+      { title: "Your lecture workspace | Uzyra" },
       {
         name: "description",
         content: "Study guide, summary, flashcards and questions from one lecture, side by side in one workspace.",

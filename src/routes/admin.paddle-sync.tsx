@@ -29,7 +29,7 @@ import {
 export const Route = createFileRoute("/admin/paddle-sync")({
   head: () => ({
     meta: [
-      { title: "Paddle Catalog Sync — RitaJet Admin" },
+      { title: "Paddle Catalog Sync — Uzyra Admin" },
       { name: "description", content: "One-click synchronization of plan prices and 3-month billing cycles with Paddle." },
       { name: "robots", content: "noindex" },
     ],

@@ -57,7 +57,7 @@ export type SiteSettings = {
 
 const DEFAULTS: SiteSettings = {
   classic_colors: false,
-  site_name: "RitaJet",
+  site_name: "Uzyra",
   brand_style: "aqua-flow",
   header_style: "institutional",
   tagline: "Academy — Medical Question Bank & Study Materials",

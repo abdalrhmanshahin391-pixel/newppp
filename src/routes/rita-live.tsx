@@ -11,7 +11,7 @@ type RitaLiveSearch = {
 
 export const Route = createFileRoute("/rita-live")({
   head: () => ({
-    meta: [{ title: "Talk with Rita — RitaJet" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Talk with Rita — Uzyra" }, { name: "robots", content: "noindex" }],
   }),
   validateSearch: (search: Record<string, unknown>): RitaLiveSearch => {
     const lesson = typeof search.lesson === "string" ? search.lesson.trim() : "";

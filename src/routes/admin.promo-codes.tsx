@@ -29,13 +29,13 @@ import { getPaddleEnvironment } from "@/lib/paddle";
 export const Route = createFileRoute("/admin/promo-codes")({
   head: () => ({
     meta: [
-      { title: "Promo codes — RitaJet admin" },
+      { title: "Promo codes — Uzyra admin" },
       {
         name: "description",
         content: "Create fast, simple discount codes that apply across all plans or specific plans at checkout.",
       },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Promo codes — RitaJet admin" },
+      { property: "og:title", content: "Promo codes — Uzyra admin" },
     ],
   }),
   component: PromoCodesPage,
@@ -410,7 +410,7 @@ function PromoCodesPage() {
                         📦
                       </span>
                       <span className="text-[14.5px] font-black text-[#121117] truncate">
-                        RitaJet {selectedTarget.planName}
+                        Uzyra {selectedTarget.planName}
                       </span>
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-[11px] font-black shrink-0 ${
@@ -483,7 +483,7 @@ function PromoCodesPage() {
                           }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            <span className="text-[13.5px] font-bold text-[#121117]">RitaJet {opt.planName}</span>
+                            <span className="text-[13.5px] font-bold text-[#121117]">Uzyra {opt.planName}</span>
                             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10.5px] font-black text-amber-900 border border-amber-200">
                               3 Months
                             </span>
@@ -517,7 +517,7 @@ function PromoCodesPage() {
                           }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            <span className="text-[13.5px] font-bold text-[#121117]">RitaJet {opt.planName}</span>
+                            <span className="text-[13.5px] font-bold text-[#121117]">Uzyra {opt.planName}</span>
                             <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10.5px] font-black text-emerald-900 border border-emerald-200">
                               Yearly
                             </span>
@@ -551,7 +551,7 @@ function PromoCodesPage() {
                           }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            <span className="text-[13.5px] font-bold text-[#121117]">RitaJet {opt.planName}</span>
+                            <span className="text-[13.5px] font-bold text-[#121117]">Uzyra {opt.planName}</span>
                             <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10.5px] font-black text-blue-900 border border-blue-200">
                               Pack
                             </span>
@@ -570,9 +570,9 @@ function PromoCodesPage() {
               {/* Note */}
               <p className="mt-1.5 text-[12px] font-medium text-[#54546a]">
                 {selectedTarget.category === "all" ? (
-                  <span>🌐 <strong>Universal:</strong> Students can use this promo code on any RitaJet plan at checkout.</span>
+                  <span>🌐 <strong>Universal:</strong> Students can use this promo code on any Uzyra plan at checkout.</span>
                 ) : (
-                  <span>🎯 <strong>Single-Plan Target:</strong> This code will ONLY work when purchasing <strong>RitaJet {selectedTarget.planName} ({selectedTarget.interval})</strong>. It will be rejected on any other plan or billing cycle.</span>
+                  <span>🎯 <strong>Single-Plan Target:</strong> This code will ONLY work when purchasing <strong>Uzyra {selectedTarget.planName} ({selectedTarget.interval})</strong>. It will be rejected on any other plan or billing cycle.</span>
                 )}
               </p>
             </div>

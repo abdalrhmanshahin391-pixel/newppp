@@ -48,13 +48,13 @@ const ACCENT = "#b26b00";
 export const Route = createFileRoute("/study/")({
   head: () => ({
     meta: [
-      { title: "Flashcards — RitaJet study workspace" },
+      { title: "Flashcards — Uzyra study workspace" },
       {
         name: "description",
         content:
           "Build subjects, fill them with your own flashcards and study any combination of them in one session.",
       },
-      { property: "og:title", content: "Flashcards — RitaJet study workspace" },
+      { property: "og:title", content: "Flashcards — Uzyra study workspace" },
       {
         property: "og:description",
         content: "Your subjects, your cards, one calm place to study them.",

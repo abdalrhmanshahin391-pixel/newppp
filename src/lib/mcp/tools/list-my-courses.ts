@@ -13,7 +13,7 @@ function supabaseForUser(ctx: ToolContext) {
 export default defineTool({
   name: "list_my_courses",
   title: "List my courses",
-  description: "List the courses the signed-in user is enrolled in on RitaJet.",
+  description: "List the courses the signed-in user is enrolled in on Uzyra.",
   inputSchema: {},
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async (_input, ctx) => {

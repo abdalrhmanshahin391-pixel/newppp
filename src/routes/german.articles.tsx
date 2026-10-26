@@ -13,7 +13,7 @@ const ACCENT = "#4a82f3";
 export const Route = createFileRoute("/german/articles")({
   head: () => ({
     meta: [
-      { title: "Article Lab — der, die, das trainer | RitaJet" },
+      { title: "Article Lab — der, die, das trainer | Uzyra" },
       {
         name: "description",
         content:

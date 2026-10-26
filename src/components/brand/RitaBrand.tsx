@@ -1,3 +1,5 @@
+import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
+
 // The original Rita face (the icon Google still shows) — restored on request.
 const ritaFace = { url: "/brand-rita.png" };
 
@@ -19,6 +21,7 @@ export function RitaFace({ size = 40 }: { size?: number }) {
   );
 }
 
+/** The site's name block on light pages (sign in, register): the Uzyra mark and name in ink. */
 export function RitaBrand({
   size = 40,
   onArtwork = false,
@@ -27,16 +30,8 @@ export function RitaBrand({
   onArtwork?: boolean;
 }) {
   return (
-    <span className="inline-flex items-center gap-2.5">
-      <RitaFace size={size} />
-      <span
-        className={`whitespace-nowrap font-display font-black leading-none ${
-          onArtwork ? "text-white" : "text-foreground"
-        }`}
-        style={{ fontSize: Math.round(size * 0.62) }}
-      >
-        Rita<span className="rita-accent">Jet</span>
-      </span>
+    <span className={onArtwork ? "text-white" : "text-foreground"}>
+      <UzyraWordmark size={Math.round(size * 0.55)} />
     </span>
   );
 }

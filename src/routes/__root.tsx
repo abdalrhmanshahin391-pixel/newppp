@@ -33,7 +33,7 @@ const themeBootScript = `(function(){try{document.documentElement.classList.remo
 // A stale deployment can make a lazy-loaded chunk unavailable. Retry once, then
 // stop with a readable page. The old pageshow handler cleared this guard on the
 // retry itself, which turned one persistent chunk error into an endless reload.
-const recoveryBootScript = `(function(){var m='rita-recovered-build';var ttl=300000;function clearLater(){try{if(sessionStorage.getItem(m)==='1'){setTimeout(function(){try{sessionStorage.removeItem(m)}catch(_){}},ttl)}}catch(_){}}function stale(e){var s=String((e&&e.reason&&e.reason.message)||(e&&e.message)||'');return /dynamically imported module|ChunkLoadError|Loading chunk|Importing a module script failed/i.test(s)}function recover(e){if(!stale(e))return;try{if(sessionStorage.getItem(m)!=='1'){sessionStorage.setItem(m,'1');location.reload();return}}catch(_){}document.body.innerHTML='<main style="min-height:100vh;display:grid;place-items:center;padding:24px;font:15px/1.5 system-ui;background:#faf8f2;color:#181817"><div style="max-width:430px;text-align:center"><h1 style="font-size:24px">RitaJet needs a refresh</h1><p>The site was updated while this page was open. Try again after a moment, or return home.</p><button onclick="location.reload()" style="border:0;border-radius:999px;padding:12px 20px;background:#0071e3;color:white;font-weight:700">Reload RitaJet</button></div></main>'}clearLater();addEventListener('error',recover,true);addEventListener('unhandledrejection',recover);clearLater()})();`;
+const recoveryBootScript = `(function(){var m='rita-recovered-build';var ttl=300000;function clearLater(){try{if(sessionStorage.getItem(m)==='1'){setTimeout(function(){try{sessionStorage.removeItem(m)}catch(_){}},ttl)}}catch(_){}}function stale(e){var s=String((e&&e.reason&&e.reason.message)||(e&&e.message)||'');return /dynamically imported module|ChunkLoadError|Loading chunk|Importing a module script failed/i.test(s)}function recover(e){if(!stale(e))return;try{if(sessionStorage.getItem(m)!=='1'){sessionStorage.setItem(m,'1');location.reload();return}}catch(_){}document.body.innerHTML='<main style="min-height:100vh;display:grid;place-items:center;padding:24px;font:15px/1.5 system-ui;background:#faf8f2;color:#181817"><div style="max-width:430px;text-align:center"><h1 style="font-size:24px">Uzyra needs a refresh</h1><p>The site was updated while this page was open. Try again after a moment, or return home.</p><button onclick="location.reload()" style="border:0;border-radius:999px;padding:12px 20px;background:#0071e3;color:white;font-weight:700">Reload Uzyra</button></div></main>'}clearLater();addEventListener('error',recover,true);addEventListener('unhandledrejection',recover);clearLater()})();`;
 
 function NotFoundComponent() {
   return (
@@ -103,25 +103,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "RitaJet — flashcards, PDF summaries and AI study questions" },
+      { title: "Uzyra — flashcards, PDF summaries and AI study questions" },
       {
         name: "description",
         content:
           "Rita is a calm study workspace: build flashcard decks, turn lecture PDFs into one-page summaries, generate practice questions and plan your day.",
       },
-      { name: "author", content: "RitaJet" },
+      { name: "author", content: "Uzyra" },
       { name: "google-site-verification", content: "U9UIGln2ZVhjR6-rfab8T6y0XwmD0zLbLQqcwmBL1Lg" },
       { name: "google-site-verification", content: "5x31hbQQtmr14Jhd9AbkN5YlijfbfFTulNvcHMs1Y_8" },
-      { name: "application-name", content: "RitaJet" },
+      { name: "application-name", content: "Uzyra" },
       { name: "theme-color", content: "#4a82f3" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-title", content: "RitaJet" },
+      { name: "apple-mobile-web-app-title", content: "Uzyra" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
 
       {
         property: "og:title",
-        content: "RitaJet — flashcards, PDF summaries and AI study questions",
+        content: "Uzyra — flashcards, PDF summaries and AI study questions",
       },
       {
         property: "og:description",
@@ -129,10 +129,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "A calm study workspace: flashcards, one-page PDF summaries, practice questions and a to-do board that keeps your streak alive.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "RitaJet" },
+      { property: "og:site_name", content: "Uzyra" },
       {
         name: "twitter:title",
-        content: "RitaJet — flashcards, PDF summaries and AI study questions",
+        content: "Uzyra — flashcards, PDF summaries and AI study questions",
       },
       {
         name: "twitter:description",
@@ -147,13 +147,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "preload",
         as: "style",
-        href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@600&display=swap",
       },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@600&display=swap",
       },
 
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
       { rel: "icon", type: "image/png", sizes: "96x96", href: "/favicon.png" },
       { rel: "icon", type: "image/png", sizes: "512x512", href: "/favicon-512.png" },
@@ -177,8 +178,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             {
               "@type": "EducationalOrganization",
               "@id": "https://ritajet.com/#organization",
-              name: "RitaJet",
-              alternateName: ["RitaJet", "Rita Study", "RitaJet study tools"],
+              name: "Uzyra",
+              alternateName: ["RitaJet", "EdithLab", "Rita Study", "Uzyra study tools"],
               url: "https://ritajet.com/",
               logo: "https://ritajet.com/favicon-512.png",
               description:
@@ -187,7 +188,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             {
               "@type": "WebSite",
               "@id": "https://ritajet.com/#website",
-              name: "RitaJet",
+              name: "Uzyra",
               url: "https://ritajet.com/",
               publisher: { "@id": "https://ritajet.com/#organization" },
             },
@@ -237,7 +238,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <noscript>
           <link
             rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@600&display=swap"
           />
         </noscript>
       </head>

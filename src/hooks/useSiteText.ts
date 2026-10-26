@@ -1,5 +1,5 @@
 /**
- * Wording for the RitaJet pages. The words now ship in the code, so this hook
+ * Wording for the Uzyra pages. The words now ship in the code, so this hook
  * simply returns the fallback each caller passes in.
  */
 export function useSiteText() {

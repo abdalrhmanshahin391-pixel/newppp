@@ -20,13 +20,13 @@ export const Route = createFileRoute("/share/new")({
   },
   head: () => ({
     meta: [
-      { title: "Share your flashcards | RitaJet" },
+      { title: "Share your flashcards | Uzyra" },
       {
         name: "description",
         content:
           "Pick the subjects and sub-subjects you want to share and publish them as a flashcard deck other students can study.",
       },
-      { property: "og:title", content: "Share your flashcards on RitaJet" },
+      { property: "og:title", content: "Share your flashcards on Uzyra" },
       {
         property: "og:description",
         content: "Publish your subjects as a deck other students can study and save.",
@@ -114,7 +114,7 @@ function ShareNew() {
           <span className="text-5xl">🃏</span>
           <h1 className="mt-4 font-display text-3xl font-black">Sign in to share flashcards</h1>
           <p className="mx-auto mt-2 max-w-md text-sm text-[#54546a]">
-            Rita saves your decks to your account so students across RitaJet can learn from your work.
+            Rita saves your decks to your account so students across Uzyra can learn from your work.
           </p>
           <button
             type="button"
@@ -217,7 +217,7 @@ function ShareNew() {
               toSpace ? "bg-[#f4f4f8] text-[#1a4ba8]" : "bg-[#f4f4f8] text-[#8a5200]"
             }`}
           >
-            {toSpace ? "🔒 Space members only" : "🌍 Everyone on RitaJet"}
+            {toSpace ? "🔒 Space members only" : "🌍 Everyone on Uzyra"}
           </span>
         </div>
 

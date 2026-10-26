@@ -5,9 +5,9 @@ import { ComingNext } from "@/components/study/ComingNext";
 export const Route = createFileRoute("/study/summaries")({
   head: () => ({
     meta: [
-      { title: "Summaries — RitaJet study workspace" },
+      { title: "Summaries — Uzyra study workspace" },
       { name: "description", content: "Turn a long lecture PDF into a clean one-page summary you can print." },
-      { property: "og:title", content: "Summaries — RitaJet study workspace" },
+      { property: "og:title", content: "Summaries — Uzyra study workspace" },
       { property: "og:description", content: "One-page PDF summaries built from your own lectures." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

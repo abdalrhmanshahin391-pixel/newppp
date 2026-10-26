@@ -14,10 +14,10 @@ import { ICONS, mergeLayout, type HubLayout } from "@/lib/admin-hub-defaults";
 export const Route = createFileRoute("/admin/")({
   head: () => ({
     meta: [
-      { title: "Administration Site — RitaJet" },
+      { title: "Administration Site — Uzyra" },
       { name: "description", content: "Central admin hub: content, navigation, pages, users, courses, theme and more." },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Administration Site — RitaJet" },
+      { property: "og:title", content: "Administration Site — Uzyra" },
       { property: "og:description", content: "Central admin hub for managing the whole site." },
     ],
   }),

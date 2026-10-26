@@ -141,7 +141,7 @@ export const testTool = createServerFn({ method: "POST" })
             ? "the shared Gemini key"
             : target.source === "secret"
               ? "the site Gemini key"
-              : "the shared RitaJet AI";
+              : "the shared Uzyra AI";
       return { ok: r.ok, message: `${where}: ${r.message}` };
     } catch (e: any) {
       return { ok: false, message: String(e?.message ?? e) };

@@ -62,13 +62,13 @@ import {
 export const Route = createFileRoute("/spaces/$spaceId")({
   head: () => ({
     meta: [
-      { title: "Space — shared decks & members | RitaJet" },
+      { title: "Space — shared decks & members | Uzyra" },
       {
         name: "description",
         content:
           "Your classroom or study group: shared flashcard decks in folders, the member list, announcements and optional chat.",
       },
-      { property: "og:title", content: "A RitaJet study space" },
+      { property: "og:title", content: "A Uzyra study space" },
       { property: "og:description", content: "Shared decks, members, announcements and chat in one place." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

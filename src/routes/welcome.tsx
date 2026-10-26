@@ -19,10 +19,10 @@ export const Route = createFileRoute("/welcome")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Finish your profile — RitaJet academy" },
+      { title: "Finish your profile — Uzyra academy" },
       {
         name: "description",
-        content: "Add your name, username and phone number to finish setting up your RitaJet academy account.",
+        content: "Add your name, username and phone number to finish setting up your Uzyra academy account.",
       },
       { name: "robots", content: "noindex" },
     ],

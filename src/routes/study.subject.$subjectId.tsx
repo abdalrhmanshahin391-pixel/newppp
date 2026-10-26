@@ -18,9 +18,9 @@ import {
 export const Route = createFileRoute("/study/subject/$subjectId")({
   head: () => ({
     meta: [
-      { title: "Subject — RitaJet flashcards" },
+      { title: "Subject — Uzyra flashcards" },
       { name: "description", content: "Add and review the flashcards inside one of your subjects." },
-      { property: "og:title", content: "Subject — RitaJet flashcards" },
+      { property: "og:title", content: "Subject — Uzyra flashcards" },
       { property: "og:description", content: "Add cards to a subject and study them straight away." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

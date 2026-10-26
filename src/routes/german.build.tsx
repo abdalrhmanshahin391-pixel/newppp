@@ -13,7 +13,7 @@ const ACCENT = "#4a82f3";
 export const Route = createFileRoute("/german/build")({
   head: () => ({
     meta: [
-      { title: "Build Lab — German word & sentence order game | RitaJet" },
+      { title: "Build Lab — German word & sentence order game | Uzyra" },
       {
         name: "description",
         content:

@@ -5,13 +5,13 @@ import { RequireAuth } from "@/components/study/RequireAuth";
 export const Route = createFileRoute("/learn/german")({
   head: () => ({
     meta: [
-      { title: "German — RitaJet" },
+      { title: "German — Uzyra" },
       {
         name: "description",
         content:
-          "German study tools on RitaJet: der/die/das article games, pronunciation practice and sentence building from one shared word shelf.",
+          "German study tools on Uzyra: der/die/das article games, pronunciation practice and sentence building from one shared word shelf.",
       },
-      { property: "og:title", content: "German — RitaJet" },
+      { property: "og:title", content: "German — Uzyra" },
       {
         property: "og:description",
         content: "Articles, pronunciation and sentence building from one shared word shelf.",

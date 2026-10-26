@@ -9,15 +9,15 @@ import { AiEnginePanel } from "@/components/admin/AiEnginePanel";
 export const Route = createFileRoute("/admin/ai")({
   head: () => ({
     meta: [
-      { title: "AI engine — RitaJet admin" },
+      { title: "AI engine — Uzyra admin" },
       {
         name: "description",
-        content: "One page to give every RitaJet AI tool its Gemini key, model and live test.",
+        content: "One page to give every Uzyra AI tool its Gemini key, model and live test.",
       },
-      { property: "og:title", content: "AI engine — RitaJet admin" },
+      { property: "og:title", content: "AI engine — Uzyra admin" },
       {
         property: "og:description",
-        content: "Keys, models and live tests for every RitaJet AI tool.",
+        content: "Keys, models and live tests for every Uzyra AI tool.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -39,7 +39,7 @@ export type AiTarget = {
   key: string;
   model: string;
   source: KeySource;
-  /** true when a Google Gemini key is used (not the shared RitaJet AI) */
+  /** true when a Google Gemini key is used (not the shared Uzyra AI) */
   google: boolean;
 };
 

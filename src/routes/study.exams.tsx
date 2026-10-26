@@ -6,13 +6,13 @@ import { useAuth } from "@/hooks/useAuth";
 export const Route = createFileRoute("/study/exams")({
   head: () => ({
     meta: [
-      { title: "Exam schedule — RitaJet study workspace" },
+      { title: "Exam schedule — Uzyra study workspace" },
       {
         name: "description",
         content:
           "A month calendar for every exam: add a course with its date and see the whole term at a glance.",
       },
-      { property: "og:title", content: "Exam schedule — RitaJet study workspace" },
+      { property: "og:title", content: "Exam schedule — Uzyra study workspace" },
       {
         property: "og:description",
         content: "Plan exams months ahead on one clean calendar.",

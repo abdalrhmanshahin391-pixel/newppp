@@ -7,7 +7,7 @@ const db = (t: string) => (supabase.from as any)(t);
 /** Question source categories with distinct identities */
 export type QuestionSourceType = "bank" | "archive" | "lecture" | "mixed";
 
-/** Who a shared question set is for: one classroom/group, or everyone on RitaJet. */
+/** Who a shared question set is for: one classroom/group, or everyone on Uzyra. */
 export type SetAudience = "space" | "public";
 
 export type SharedQuestionSet = {

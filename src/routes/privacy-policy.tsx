@@ -4,10 +4,10 @@ import { PRIVACY_EN } from "@/lib/legal-content";
 
 export const Route = createFileRoute("/privacy-policy")({
   head: () => ({ meta: [
-    { title: "Privacy Policy — RitaJet" },
-    { name: "description", content: "How RitaJet collects, protects and uses account and study data." },
-    { property: "og:title", content: "Privacy Policy — RitaJet" },
-    { property: "og:description", content: "How RitaJet collects, protects and uses account and study data." },
+    { title: "Privacy Policy — Uzyra" },
+    { name: "description", content: "How Uzyra collects, protects and uses account and study data." },
+    { property: "og:title", content: "Privacy Policy — Uzyra" },
+    { property: "og:description", content: "How Uzyra collects, protects and uses account and study data." },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },
   ] }),

@@ -116,7 +116,7 @@ type TargetSpec = {
 
 /**
  * Pushes a plan's name, prices, and billing intervals to the payment catalog
- * so the amount and cadence a student is charged always matches what RitaJet promises.
+ * so the amount and cadence a student is charged always matches what Uzyra promises.
  * Automatically migrates legacy 1-month prices to 3-month recurring subscriptions,
  * archives obsolete 1-month prices, and synchronizes product metadata.
  */

@@ -11,12 +11,12 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/summaries/$summaryId")({
   head: () => ({
     meta: [
-      { title: "Summary sheet — RitaJet" },
+      { title: "Summary sheet — Uzyra" },
       {
         name: "description",
         content: "A printable one-page Rita summary built from your own study material.",
       },
-      { property: "og:title", content: "Summary sheet — RitaJet" },
+      { property: "og:title", content: "Summary sheet — Uzyra" },
       {
         property: "og:description",
         content: "A printable one-page Rita summary built from your own study material.",
