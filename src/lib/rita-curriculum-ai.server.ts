@@ -1,6 +1,19 @@
 // OpenAI calls for Rita's curriculum: summarise a ten-page window, write a
 // lesson, judge a learner's answers against the lesson objectives, and draw the
 // lesson picture. Every reply is strict JSON checked against the zod schemas.
+import {
+  GuideContentSchema,
+  normalizeGuideReply,
+  type GuideContent,
+} from "@/lib/guides/guide-content";
+import {
+  GuideReviewSchema,
+  guideSystemPrompt,
+  guideUserPrompt,
+  reviewSystemPrompt,
+  reviewUserPrompt,
+  type GuideProblem,
+} from "@/lib/guides/guide-prompts";
 import { normalizeLessonContentReply, normalizeLessonDraftReply } from "./model-reply-normalize";
 import { interpretTranscript, type TranscriptOutcome } from "./page-transcript";
 import { isImageRejection, VISION_CHECK_JPEG_BASE64 } from "./vision-check-image";
@@ -121,10 +134,12 @@ async function chatJson<S extends z.ZodTypeAny>(
     temperature?: number;
     /** Tidies the parsed reply (cosmetic limits only) before it is checked. */
     normalize?: (raw: unknown) => unknown;
+    /** A model other than the curriculum default (the PDF guides use a stronger one). */
+    model?: string;
   },
 ): Promise<{ value: z.infer<S>; model: string }> {
   const key = await apiKey();
-  const model = await curriculumTextModel();
+  const model = options.model || (await curriculumTextModel());
   const messages: { role: string; content: string }[] = [
     { role: "system", content: system },
     { role: "user", content: user },
@@ -818,4 +833,50 @@ export async function checkVisionKey(): Promise<{
     const message = error instanceof Error ? error.message : String(error);
     return { ok: false, model, error: message, imageProblem: isImageRejection(message) };
   }
+}
+
+// ---------- PDF guides ----------
+
+const DEFAULT_GUIDE_MODEL = "gpt-4.1";
+
+/** Grammar must be right more than it must be cheap, so guides default to a stronger model. */
+export async function guideModel() {
+  return (await getServerRuntimeSecret("RITA_GUIDE_MODEL")) || DEFAULT_GUIDE_MODEL;
+}
+
+/** Writes one printed guide page from the book pages of a lesson. Checked and tidied before it returns. */
+export async function generateGuide(input: {
+  bookTitle: string;
+  title: string;
+  from: number;
+  to: number;
+  pages: { page_no: number; text: string }[];
+}): Promise<{ content: GuideContent; model: string }> {
+  const { value, model } = await chatJson(
+    GuideContentSchema,
+    guideSystemPrompt(),
+    guideUserPrompt(input),
+    {
+      maxTokens: 4_000,
+      timeoutMs: 120_000,
+      temperature: 0.3,
+      normalize: normalizeGuideReply,
+      model: await guideModel(),
+    },
+  );
+  return { content: { ...value, source: { from_page: input.from, to_page: input.to } }, model };
+}
+
+/** A second, separate read of the finished guide against the pages. Problems are shown, never hidden. */
+export async function reviewGuide(input: {
+  content: GuideContent;
+  pages: { page_no: number; text: string }[];
+}): Promise<{ problems: GuideProblem[]; model: string }> {
+  const { value, model } = await chatJson(
+    GuideReviewSchema,
+    reviewSystemPrompt(),
+    reviewUserPrompt(input),
+    { maxTokens: 2_500, timeoutMs: 90_000, temperature: 0, model: await guideModel() },
+  );
+  return { problems: value.problems, model };
 }

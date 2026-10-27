@@ -130,6 +130,11 @@ content is data (`src/lib/guides/guide-content.ts`); the look is one template
   words inside it keep their own direction.
 - **Footer:** "Uzyra · Grammar guide" with "draft for review" until the owner approves, and the page number.
 - **Fonts** (all OFL, in `guides-worker/fonts`): Figtree, Inter Tight, Outfit, Noto Sans Arabic; embedded.
+- **Admin screen** (book workspace, step 2 "الدروس", `GuidesPanel`): next to "اصنع الدروس المختارة" there is
+  a soft button "اصنع دليل PDF (N)" for the ticked suggestions; below the list an always-visible section
+  "أدلة PDF" lists every guide, newest first: title, a chip (مسودة / جاري العمل / ما زبط), pages, review
+  notes and the version, with فتح (primary) · تنزيل · أعد الصنع. Progress shows on the lesson's own row while
+  it is made. Files are admin only (private bucket, one-hour links); learners never see them.
 - **Never** copy another publisher's logo, mascot, wording or examples; the structure is ours to reuse,
   the content is written fresh and checked by a teacher before approval.
 

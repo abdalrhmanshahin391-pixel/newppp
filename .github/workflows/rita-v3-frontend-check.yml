@@ -35,6 +35,7 @@ on:
       - "supabase/functions/**"
       - "src/lib/guides/**"
       - "guides-worker/**"
+      - "supabase/migrations/20261027120000_rita_lesson_guides.sql"
       - "supabase/config.toml"
       - "scripts/sync-lesson-edge.mjs"
       - ".github/workflows/rita-v3-frontend-check.yml"
@@ -81,6 +82,7 @@ jobs:
           node --test src/lib/rita-lesson-run.core.test.ts
           node --test src/lib/rita-lesson-edge-sync.test.ts
           node --test src/lib/guides/guide.test.ts
+          node --test src/lib/guides/guide-pipeline.test.ts
           node --test src/routes/api/rita-v3/session/start.source.test.mjs
           bunx tsc --noEmit
       - name: Build site

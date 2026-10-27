@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Check, Loader2, Pencil, Sparkles, Square, X } from "lucide-react";
+import { ArrowLeft, Check, FileText, Loader2, Pencil, Sparkles, Square, X } from "lucide-react";
 import { toast } from "sonner";
 import { lessonPlan } from "@/lib/rita-book-flow";
 import {
@@ -14,6 +14,8 @@ import { NextLessonPicker } from "@/components/rita-lessons/admin/NextLessonPick
 import type { TopicSuggestion } from "@/lib/rita-slides";
 import { errorDetail, errorText, pagesLabel } from "./book-utils";
 import { BidiText } from "./BookBits";
+import { GuidesPanel } from "./GuidesPanel";
+import { useGuides, type GuideProgress } from "./useGuides";
 
 type ItemState = {
   state: "waiting" | "lesson" | "exercises" | "done" | "failed";
@@ -64,6 +66,8 @@ export function StepLessons({
   const [running, setRunning] = useState(false);
   const [editing, setEditing] = useState("");
   const cancel = useRef(false);
+  const guides = useGuides(book.id);
+  const working = running || guides.running;
   const live = lessons.filter((lesson) => lesson.status !== "archived");
   const chosen = plan.filter((item) => !unchecked.has(keyOf(item)));
   const nextNo = lessons.reduce((max, lesson) => Math.max(max, lesson.lesson_no), 0) + 1;
@@ -173,7 +177,7 @@ export function StepLessons({
                     type="checkbox"
                     className="mt-1.5 h-5 w-5 shrink-0 accent-[var(--pp-accent)]"
                     checked={checked}
-                    disabled={running}
+                    disabled={working}
                     aria-label={`اختيار ${item.title_ar || item.topic}`}
                     onChange={() =>
                       setUnchecked((current) => {
@@ -221,6 +225,7 @@ export function StepLessons({
                         </>
                       )}
                     </div>
+                    {guides.progress[key] && <GuideLine value={guides.progress[key]} />}
                     {state?.state === "failed" && (
                       <div className="mt-1 space-y-1">
                         <p className="text-[14px] font-semibold text-[#8c1a31]">{state.error}</p>
@@ -253,12 +258,34 @@ export function StepLessons({
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                disabled={!chosen.length}
+                disabled={!chosen.length || working}
                 onClick={() => void makeLessons()}
                 className="rita-btn rita-btn-primary gap-2"
               >
                 <Sparkles size={17} aria-hidden="true" />
                 اصنع الدروس المختارة ({chosen.length})
+              </button>
+              <button
+                type="button"
+                disabled={!chosen.length || working}
+                onClick={() =>
+                  void guides
+                    .make(
+                      chosen.map((item) => ({
+                        key: keyOf(item),
+                        title: (topics[keyOf(item)] ?? item.topic).trim() || item.topic,
+                        from: item.from_page,
+                        to: item.to_page,
+                      })),
+                    )
+                    .then((made) => {
+                      if (made) toast.success(`انصنع ${made} دليل PDF`);
+                    })
+                }
+                className="rita-btn rita-btn-soft gap-2"
+              >
+                <FileText size={17} aria-hidden="true" />
+                اصنع دليل PDF ({chosen.length})
               </button>
               {live.length > 0 && (
                 <button type="button" onClick={onNext} className="rita-btn rita-btn-soft gap-2">
@@ -303,6 +330,8 @@ export function StepLessons({
         </>
       )}
 
+      <GuidesPanel guides={guides} />
+
       <details className="rounded-xl border border-[var(--pp-line)] p-3">
         <summary className="cursor-pointer text-[15px] font-semibold">
           درس بموضوع وصفحات من عندك
@@ -334,6 +363,37 @@ export function StepLessons({
         </div>
       </details>
     </section>
+  );
+}
+
+function GuideLine({ value }: { value: GuideProgress }) {
+  if (value.stage === "failed") {
+    return (
+      <div className="mt-1 space-y-0.5">
+        <p className="text-[14px] font-semibold text-[#8c1a31]">دليل PDF: {value.message}</p>
+        {value.detail && (
+          <p className="break-words text-[12.5px] text-[var(--pp-muted)]" dir="ltr">
+            {value.detail}
+          </p>
+        )}
+      </div>
+    );
+  }
+  if (value.stage === "done") {
+    return (
+      <p className="mt-1 flex items-center gap-1 text-[14px] font-semibold text-[#1d6b3a]">
+        <Check size={15} aria-hidden="true" /> دليل PDF جاهز (بالقائمة تحت)
+      </p>
+    );
+  }
+  return (
+    <p
+      role="status"
+      className="mt-1 flex items-center gap-1 text-[14px] font-semibold text-[var(--pp-accent-text)]"
+    >
+      <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+      دليل PDF: {value.stage === "writing" ? "جاري الكتابة…" : "جاري الرسم…"}
+    </p>
   );
 }
 

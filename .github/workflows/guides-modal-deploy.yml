@@ -1,0 +1,48 @@
+name: Deploy PDF guides renderer to Modal
+
+# Runs when the guides renderer reaches main. It uses the same two repository secrets as the voice
+# worker, MODAL_TOKEN_ID and MODAL_TOKEN_SECRET. Without them the job reports that and stops cleanly;
+# nothing else is affected.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "guides-worker/**"
+      - ".github/workflows/guides-modal-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: guides-modal-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Modal credentials
+        id: creds
+        run: |
+          if [ -n "$MODAL_TOKEN_ID" ] && [ -n "$MODAL_TOKEN_SECRET" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "MODAL_TOKEN_ID / MODAL_TOKEN_SECRET are not set; skipping the deploy."
+          fi
+      - uses: actions/setup-python@v5
+        if: steps.creds.outputs.ready == 'true'
+        with:
+          python-version: "3.12"
+      - name: Deploy
+        if: steps.creds.outputs.ready == 'true'
+        working-directory: guides-worker
+        run: |
+          python -m pip install --disable-pip-version-check modal
+          modal deploy modal_app.py
