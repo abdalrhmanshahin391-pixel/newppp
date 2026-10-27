@@ -110,6 +110,29 @@ solid shapes, `UzyraMark`) beside the name in wide-tracked capitals with an A dr
 colour. Use `BRAND_NAME` from `src/lib/brand.ts` in code, never a typed name. The app icon is the soft
 white symbol on the dark ink square (`#121117`), full-bleed for Apple, rounded for the tab and the app list.
 
+## Guides (PDF)
+
+Printed grammar guides, one rule per page, in a booklet size (439 x 621 pt). Admin only for now. The
+content is data (`src/lib/guides/guide-content.ts`); the look is one template
+(`src/lib/guides/guide-html.ts`), so a guide never carries layout or colour.
+
+- **Header:** the title in capitals (Inter Tight 700) on the left; the Uzyra symbol and name on the right
+  in ink (no Rita face); a 1pt hairline under it.
+- **Body:** Figtree 10 to 11pt. The taught term is blue (`#2b6df0`), bold, italic. Section headings are
+  blue and centred ("Form", "Usage").
+- **Tables:** header cells are pills: neutral (grey), positive (green), negative (red), question (blue).
+  The word is always printed, so meaning never depends on colour (it prints well in black and white).
+  The tense matrix uses solid blue column pills and solid green row pills (white text, contrast 4.5:1 or
+  more). A row never splits across pages; a long table repeats its header.
+- **Cards:** "Usage" is `#eaf1ff`, the closing reminder is `#f4f4f8`, both 12pt corners. Examples are
+  italic with the stressed form in bold.
+- **Arabic note:** a thin bordered box tagged AR, right to left, Noto Sans Arabic, plain Arabic; Latin
+  words inside it keep their own direction.
+- **Footer:** "Uzyra · Grammar guide" with "draft for review" until the owner approves, and the page number.
+- **Fonts** (all OFL, in `guides-worker/fonts`): Figtree, Inter Tight, Outfit, Noto Sans Arabic; embedded.
+- **Never** copy another publisher's logo, mascot, wording or examples; the structure is ours to reuse,
+  the content is written fresh and checked by a teacher before approval.
+
 ## Top bar and menus
 
 One bar for the whole site (`ProHeader`, classes `.rh-bar*`, explicit colours so they look the
