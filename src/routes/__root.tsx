@@ -21,6 +21,7 @@ import { LanguageProvider } from "@/components/LanguageProvider";
 import { GoldenTheme } from "@/components/GoldenTheme";
 import { LearningLanguageScope } from "@/components/language/LearningLanguageScope";
 import { SiteFooter } from "@/components/SiteFooter";
+import { LanguageSplash } from "@/components/language/LanguageSplash";
 import { useAuth } from "@/hooks/useAuth";
 import { needsOnboarding } from "@/lib/onboarding";
 import "@/i18n";
@@ -352,6 +353,7 @@ function RootComponent() {
           </AppScope>
           <GlobalFooter />
           <DeferredOverlays />
+          <LanguageSplash />
         </LanguageProvider>
       </ThemeProvider>
     </QueryClientProvider>

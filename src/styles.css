@@ -6238,3 +6238,149 @@ html.rita-app,
     width: 100%;
   }
 }
+
+/* The language-change splash (LanguageSplash). White and quiet: the word, a blue line, the language. */
+@font-face {
+  font-family: "Uzyra Serif";
+  src: url("/fonts/brand/instrument-serif-latin-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+.uz-splash {
+  --uz-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  color: #121117;
+  cursor: pointer;
+  animation:
+    uz-sp-in 0.25s ease both,
+    uz-sp-out 0.4s ease-in 3s both;
+}
+@keyframes uz-sp-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes uz-sp-out {
+  to {
+    opacity: 0;
+  }
+}
+.uz-splash-word {
+  display: flex;
+  gap: 0.02em;
+  padding-bottom: 0.08em;
+  font-family: "Uzyra Serif", Georgia, "Times New Roman", serif;
+  font-size: clamp(96px, 24vw, 180px);
+  line-height: 1;
+  letter-spacing: 0.07em;
+  -webkit-text-stroke: 1.6px #121117;
+}
+@media (min-width: 640px) {
+  .uz-splash-word {
+    -webkit-text-stroke: 2.2px #121117;
+  }
+}
+.uz-splash-cell {
+  display: block;
+  overflow: hidden;
+  margin: 0 -0.05em -0.24em;
+  padding: 0 0.05em 0.24em;
+}
+.uz-splash-cell > i {
+  display: block;
+  font-style: normal;
+  animation: uz-sp-up 0.9s var(--uz-ease) calc(0.25s + var(--i) * 0.11s) both;
+}
+@keyframes uz-sp-up {
+  from {
+    transform: translateY(105%);
+    filter: blur(7px);
+  }
+  60% {
+    filter: blur(0);
+  }
+}
+.uz-splash-rule {
+  width: clamp(150px, 26vw, 330px);
+  height: 3px;
+  margin-top: 10px;
+  border-radius: 2px;
+  background: #2b6df0;
+  transform-origin: center;
+  animation: uz-sp-rule 0.7s var(--uz-ease) 1.2s both;
+}
+@keyframes uz-sp-rule {
+  from {
+    transform: scaleX(0);
+  }
+}
+.uz-splash-lang {
+  position: relative;
+  width: min(320px, 86vw);
+  height: 46px;
+  margin-top: 40px;
+  overflow: hidden;
+  animation: uz-sp-in 0.4s ease 1.5s both;
+}
+.uz-splash-item {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.uz-splash-item b {
+  font-family: "Inter Tight", "Figtree", "Noto Sans Arabic", sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.uz-splash-old {
+  color: #9a99a8;
+  animation: uz-sp-old 0.55s cubic-bezier(0.65, 0, 0.35, 1) 1.9s both;
+}
+.uz-splash-old img {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+.uz-splash-new {
+  animation: uz-sp-new 0.75s cubic-bezier(0.2, 1.1, 0.3, 1) 1.9s both;
+}
+.uz-splash-lang[data-first="true"] .uz-splash-new {
+  animation-delay: 1.6s;
+}
+@keyframes uz-sp-old {
+  to {
+    transform: translateY(-110%);
+    opacity: 0;
+  }
+}
+@keyframes uz-sp-new {
+  from {
+    transform: translateY(110%);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uz-splash {
+    animation: uz-sp-in 0.2s ease both;
+  }
+  .uz-splash-cell > i,
+  .uz-splash-rule,
+  .uz-splash-lang,
+  .uz-splash-new {
+    animation: none;
+  }
+  .uz-splash-old {
+    display: none;
+  }
+}

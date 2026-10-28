@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { refreshAuthProfile, useAuth } from "@/hooks/useAuth";
 import { isVoiceSessionActive } from "@/lib/language-scope";
+import { showLanguageSplash } from "@/lib/language-splash";
 import {
   BUILT_IN_LANGUAGES,
   resolveActiveLanguage,
@@ -131,6 +132,7 @@ export function useLearningLanguage(): LearningLanguageState {
           await refreshAuthProfile();
         }
         writeDevice(uid, next);
+        showLanguageSplash(code, next);
         return true;
       } catch (cause) {
         setError(cause instanceof Error ? cause.message : "Could not change the language.");
