@@ -542,6 +542,37 @@ export type FinalReview = {
 };
 
 /**
+ * Does this turn need the diagnosis question? Not when every check came back clean: no wrong or
+ * loose fact, no dialect issue, the reference reply did not win, the voice system did not cut or
+ * drop the reply, and nobody reported it. Then the turn is "ok" without asking (most turns are), which
+ * saves the slowest question; anything at all that looks off still gets the full diagnosis.
+ */
+export function needsDiagnosis(args: {
+  facts: Fact[];
+  dialect: DialectIssue[];
+  merged: MergedScores | null;
+  timing: Timing | null;
+  report?: unknown;
+}): boolean {
+  if (args.report) return true;
+  if (args.facts.some((fact) => fact.verdict !== "correct")) return true;
+  if (args.dialect.length) return true;
+  if (!args.merged || args.merged.winner !== "rita" || !args.merged.agree) return true;
+  if (args.timing?.flags.length) return true;
+  return false;
+}
+
+/** The diagnosis of a turn every check passed (see needsDiagnosis). */
+export const CLEAN_DIAGNOSIS: Diagnosis = {
+  explanation: "Every check passed and Rita's reply beat the reference reply in both orders.",
+  category: "ok",
+  cause: "unknown",
+  severity: 0,
+  evidence: "",
+  fix: { where: "none", change: "" },
+};
+
+/**
  * The model's diagnosis, never softer than what the checks found: a wrong fact, a gender guess, a
  * reply cut off by the voice system, or a reference reply that clearly wins each set a floor.
  */
@@ -671,7 +702,9 @@ export function referencePrompt(args: {
   ledger?: Ledger | null;
 }) {
   const before = args.messages.slice(0, args.replyIndex);
-  return `${stateBlock(args.ledger)}\n<conversation_so_far>\n${renderMessages(before)}\n</conversation_so_far>\nWrite the next reply from the tutor.`;
+  // The conversation comes first: the same opening across a conversation's turns lets OpenAI reuse
+  // its cached prefix, which makes later questions faster and cheaper.
+  return `<conversation_so_far>\n${renderMessages(before)}\n</conversation_so_far>\n${stateBlock(args.ledger)}\nWrite the next reply from the tutor.`;
 }
 
 export const FACTS_SYSTEM = `${TUTOR_CONTRACT}
@@ -719,7 +752,7 @@ export function judgePrompt(args: {
   b: string;
 }) {
   const before = args.messages.slice(0, args.replyIndex);
-  return `${stateBlock(args.ledger)}\n<conversation_so_far>\n${renderMessages(before)}\n</conversation_so_far>\n<reply_a>\n${args.a.trim()}\n</reply_a>\n<reply_b>\n${args.b.trim()}\n</reply_b>`;
+  return `<conversation_so_far>\n${renderMessages(before)}\n</conversation_so_far>\n${stateBlock(args.ledger)}\n<reply_a>\n${args.a.trim()}\n</reply_a>\n<reply_b>\n${args.b.trim()}\n</reply_b>`;
 }
 
 export const DIAGNOSE_SYSTEM = `${TUTOR_CONTRACT}
