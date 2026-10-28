@@ -61,9 +61,9 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             : "";
         const study = studyLessonId
           ? await (async () => {
-              const [{ loadStudyLesson }, { guideOutline }] = await Promise.all([
+              const [{ loadStudyLesson }, { studyVoiceBrief }] = await Promise.all([
                 import("@/lib/study/study-lesson.server"),
-                import("@/lib/guides/guide-blocks"),
+                import("@/lib/study/study-voice-brief"),
               ]);
               const loaded = await loadStudyLesson(
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -72,18 +72,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
                 studyLessonId,
                 lessonPreview,
               );
-              if (!loaded.ok) return null;
-              const outline = guideOutline(loaded.data.guide.content);
-              return {
-                lessonId: loaded.data.lesson.id,
-                title: loaded.data.lesson.title || outline.title,
-                sections: outline.sections,
-                objectives: loaded.data.lesson.objectives
-                  .map((objective) => objective.text || objective.text_ar)
-                  .filter(Boolean)
-                  .slice(0, 8),
-                ...(loaded.data.preview ? { preview: true } : {}),
-              };
+              return loaded.ok ? studyVoiceBrief(loaded.data) : null;
             })().catch((error) => {
               console.warn("Rita study lesson could not be loaded", error);
               return null;

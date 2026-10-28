@@ -54,7 +54,7 @@ from rita_interruption import RitaUserTurnStartStrategy, gate_mode
 from rita_groq_llm import RitaGroqLLMService
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
 from rita_lesson_voice import LessonVoice, clean_say, lesson_engine_enabled, lesson_engine_section
-from rita_study_voice import StudyVoice, study_enabled, study_section
+from rita_study_voice import StudyVoice, handle_study_message, study_enabled, study_section
 from rita_state import ResponseType, RitaSessionState
 from rita_turn_ledger import TurnLedger, build_id, fixed_prompt_hash
 from rita_target_language import (
@@ -708,45 +708,21 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             return
         message_type = getattr(msg, "type", "")
         if message_type.startswith("rita-study-"):
-            data = getattr(msg, "data", None) or {}
-            if study_voice is None:
-                return  # only a study session reads these (the others ignore them)
-            if message_type == "rita-study-state":
-                if study_voice.set_state(data):
-                    refresh_prompt()
-                return
-            if message_type == "rita-study-focus":
-                if study_voice.set_focus(data):
-                    refresh_prompt()
-                return
-            if message_type == "rita-study-say":
-                await say_line(data.get("text"))
-                return
-            if message_type == "rita-study-cancel":
-                if study_voice.cancel(data):
-                    refresh_prompt()
-                    await rtvi.interrupt_bot()
-                await task.rtvi.send_server_message(
-                    {"type": "rita-study-ack", "request_id": data.get("request_id"), "state": "cancelled"}
-                )
-                return
-            if message_type == "rita-study-action":
-                request = study_voice.take_action(data)
-                if request is None:
-                    await task.rtvi.send_server_message(
-                        {"type": "rita-study-ack", "request_id": data.get("request_id"), "state": "failed"}
-                    )
-                    return
-                # A new request stops anything Rita was saying, then she answers this one.
+            # Decided in rita_study_voice (tested there); only a study session acts on these.
+            effects = handle_study_message(study_voice, message_type, getattr(msg, "data", None))
+            if effects.say:
+                await say_line(effects.say)
+            if effects.interrupt:
                 await rtvi.interrupt_bot()
+            if effects.refresh_prompt:
                 refresh_prompt()
-                context.add_message({"role": "user", "content": study_voice.user_line()})
-                logger.info("Rita study action action={} quote_chars={}", request.action, len(request.quote))
-                await task.rtvi.send_server_message(
-                    {"type": "rita-study-ack", "request_id": request.request_id, "state": "started"}
-                )
+            if effects.user_line:
+                context.add_message({"role": "user", "content": effects.user_line})
+                logger.info("Rita study action message={}", message_type)
+            if effects.ack:
+                await task.rtvi.send_server_message(effects.ack)
+            if effects.run_model:
                 await task.queue_frames([LLMRunFrame()])
-                return
             return
         if getattr(msg, "type", "") == "rita-stop":
             logger.info("Rita stopped by the learner's button")

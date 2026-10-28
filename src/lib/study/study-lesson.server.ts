@@ -2,10 +2,10 @@
 // the database rules decide what is visible (a learner sees only published lessons and only the
 // final copy of a linked guide). An admin's preview may open a draft lesson while the switch is off.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { GuideContentSchema } from "@/lib/guides/guide-content";
-import { studySwitchOn } from "./study-access.server";
-import { effectiveExperience } from "./study-experience";
-import type { StudyLessonData } from "./study-types";
+import { GuideContentSchema } from "../guides/guide-content.ts";
+import { studySwitchOn } from "./study-access.server.ts";
+import { effectiveExperience } from "./study-experience.ts";
+import type { StudyLessonData } from "./study-types.ts";
 
 export type { StudyLessonData };
 
