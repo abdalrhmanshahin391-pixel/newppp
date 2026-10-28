@@ -36,8 +36,12 @@ import { BidiText, ReadinessChip } from "./BookBits";
  * One lesson, opened from the review list: its exercises first (what the learner practises),
  * then its goals and plan, its slides and its resources. Preview and publish are always at the top.
  */
+export type DrawerTab = "exercises" | "plan" | "slides" | "resources" | "study";
+
 export function LessonDrawer({
   lesson,
+  initialTab = "exercises",
+  studyLinked = false,
   readiness,
   bookPublished,
   slides,
@@ -50,6 +54,10 @@ export function LessonDrawer({
   onChanged,
 }: {
   lesson: LessonRow | null;
+  /** The part to open first (the lesson sheet's «تعديل» rows open their own part). */
+  initialTab?: DrawerTab;
+  /** A ready guide is linked: "preview" opens the study page, as learners will get it. */
+  studyLinked?: boolean;
   readiness: LessonReadiness;
   bookPublished: boolean;
   slides: Record<string, Slide[]>;
@@ -128,7 +136,7 @@ export function LessonDrawer({
                   <ReadinessChip state={readiness} />
                   <span className="me-auto" />
                   <Link
-                    to="/rita-live"
+                    to={studyLinked ? "/rita-study" : "/rita-live"}
                     search={{ lesson: lesson.id, preview: true }}
                     target="_blank"
                     className="rita-btn rita-btn-soft rita-btn-sm gap-1.5"
@@ -262,7 +270,7 @@ export function LessonDrawer({
               </header>
 
               <Tabs.Root
-                defaultValue="exercises"
+                defaultValue={initialTab}
                 className="flex min-h-0 flex-1 flex-col"
                 dir="rtl"
               >

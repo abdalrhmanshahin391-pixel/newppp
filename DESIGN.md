@@ -333,21 +333,37 @@ code checks list what blocks publishing (red), each question can be edited (JSON
 deleted, "معاينة كطالب" opens the lesson in preview, and "نشر للطلاب" publishes. Any edit returns
 the exercises to a draft.
 
-## Curriculum admin (`/admin/curricula`)
+## Curriculum admin (`/admin/curricula`): calm tech
 
-A list of books, each a card with four steps under it (قراءة · دروس · مراجعة · نشر, `.rita-stepper`)
-and one button for its next step. A book opens one step at a time (the step is in the address):
-1. Read: one "اقرأ الكتاب كامل" button and a progress bar; page detail is folded away; a problem
-   shows as one sentence with what to do.
-2. Lessons: the suggested lessons with checkboxes (topic editable with the pencil); one button makes
-   each lesson with its exercises, with progress per lesson; can be stopped and resumed.
-3. Review: one row per lesson with a state chip (جاهز / فيه ملاحظات / فيه مشكلة / بدون تمارين /
-   منشور); a row opens the lesson in a side window (`.rita-drawer`: full screen on phones, a panel
-   from the left edge from 640px) with tabs for exercises, plan, slides and resources.
-4. Publish: one button publishes the book and every ready lesson; lessons with problems are named
-   and left out; the learner path order is folded below.
-Rarely needed tools (language, chosen page range, summaries, JSON import) sit in a dashed, folded
-"أدوات متقدمة". Mixed Arabic/English titles use `BidiText` so English punctuation stays in place.
+The owner asked for "one button, not a thousand": one book is one page, and making a lesson is one
+press. The look is "calm tech" (classes `.uz-*` in `src/styles.css`, section "Calm tech"): a dark
+`--pp-ink` top bar with the UZYRA wordmark, a soft page (`.uz-glow`, `#fafafb` with a faint blue
+light at the top), one list with hairlines instead of boxes, and one dark card for Rita (`.uz-hero`,
+ink gradient with a blue glow and the small glowing orb) as the only ornament.
+
+- Books: `.uz-card` per book (title, kind, one meta line, one button: اقرأ / كمّل الدروس / انشر / افتح).
+- A book: meta line, title (`.uz-title`, 34px phones / 40px wide, -0.03em), and a thin bar with one
+  segment per lesson (`.uz-meter`: ink published, light blue ready, blue being made, grey left).
+  Reading shows as a card only while it is not finished or has a problem.
+- The dark card says what is left and holds the one button: "اصنع N دروس" (each lesson is made in
+  full: lesson, exercises, PDF guide, then the guide checked and linked), then "انشر N دروس" when
+  only publishing is left. While it works it says how many are left and offers "وقّف بعد الدرس الحالي".
+- The list (`.uz-list`): number (tabular, faint), title, one short line, a state dot and word
+  (لسا / بالدور / بينعمل / ناقص / بدها إعادة / جاهز / منشور), and one button (اصنع / كمّل / أعِد / انشر /
+  افتح). A lesson being made shows its four steps (`.uz-pipe`: done = ink check, now = blue ring
+  with a pulse and "بكتب الدليل", failed = orange). A failure says the step, the reason, and that the
+  work before it is kept; "أعِد" carries on from there. Rules: `src/lib/study/lesson-maker.ts`.
+- A lesson opens one sheet (`.uz-sheet`: from the side on wide screens, from below on phones): a
+  picture of the guide, three checks, "انشر للطلاب" (accent) and "جرّب كطالب" (opens the study page
+  when the guide is linked, else the classic lesson). Edits are rows under «تعديل»; a row closes the
+  sheet and opens the full editor (`.rita-drawer`) at that part. One window at a time.
+- Buttons here: `.uz-btn` 40px (46px `-lg`), 8–10px radius, no ink border; `-accent` (one per view),
+  `-soft` (hairline), `-quiet`, `-white` and `-glass` on the dark card. Press scales to 0.97.
+- Folded at the bottom: a lesson of one's own, bulk publish and the learner path order, and
+  "أدوات متقدمة". Mixed titles use `BidiText` (a title with no Arabic is one left-to-right run).
+
+The study page's Rita column uses the same dark panel (`.uz-rita-dark`: the --pp tokens flipped to
+light-on-dark inside it, a white "ابدأ مع ريتا"); the guide stays on paper beside it.
 
 ## Home app window
 

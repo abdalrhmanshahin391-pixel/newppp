@@ -471,7 +471,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   );
 
   const ritaPane = (
-    <div className="flex h-full min-h-0 flex-col" dir="rtl">
+    <div className="uz-rita-dark flex h-full min-h-0 flex-col" dir="rtl">
       <RitaRealtimeV3
         study={{ lessonId: lesson.id, preview, title: "ريتا", bridge, children: status }}
       />
@@ -512,7 +512,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
             {ritaPane}
           </Panel>
           <Separator
-            className="w-1.5 bg-[var(--pp-line)] transition-colors hover:bg-[var(--pp-accent)] focus-visible:bg-[var(--pp-accent)] focus-visible:outline-none"
+            className="w-1 bg-[#121117] transition-colors hover:bg-[var(--pp-accent)] focus-visible:bg-[var(--pp-accent)] focus-visible:outline-none"
             aria-label="غيّر عرض الملف وريتا"
           />
           <Panel id="guide" defaultSize="56" minSize={420}>

@@ -1582,7 +1582,7 @@ export function RitaRealtimeV3({
     <main
       className={
         study
-          ? "edith-premium flex h-full min-h-0 flex-col bg-white text-[var(--pp-ink)]"
+          ? "edith-premium rita-study-col flex h-full min-h-0 flex-col text-[var(--pp-ink)]"
           : "edith-premium min-h-screen bg-white text-[var(--pp-ink)]"
       }
       style={{ fontFamily: "var(--font-grotesk), 'Noto Sans Arabic', sans-serif" }}
@@ -1792,13 +1792,19 @@ export function RitaRealtimeV3({
             </div>
           </div>
 
-          <div className="sticky bottom-0 bg-white pb-6 pt-3">
+          <div
+            className={
+              study
+                ? "rita-study-dock sticky bottom-0 pb-5 pt-3"
+                : "sticky bottom-0 bg-white pb-6 pt-3"
+            }
+          >
             {!active ? (
               <div className="flex justify-center">
                 <button
                   onClick={startLesson}
                   disabled={historyLoading || starting || (Boolean(lessonId) && !lesson.session)}
-                  className="rita-btn rita-btn-primary gap-2 disabled:opacity-60"
+                  className={`rita-btn gap-2 disabled:opacity-60 ${study ? "rita-study-start" : "rita-btn-primary"}`}
                 >
                   {historyLoading || starting ? (
                     <Loader2 className="animate-spin" size={18} />

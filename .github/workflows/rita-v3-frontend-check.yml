@@ -38,6 +38,8 @@ on:
       - "supabase/migrations/20261027120000_rita_lesson_guides.sql"
       - "supabase/migrations/20261028120000_rita_study_lessons.sql"
       - "supabase/migrations/20261028140000_rita_study_actions.sql"
+      - "supabase/migrations/20261029100000_rita_study_switch_on.sql"
+      - "src/routes/admin.curricula.tsx"
       - "voice-agent/rita_study_voice.py"
       - "supabase/tests/**"
       - "scripts/test-study-db.sh"
@@ -102,6 +104,7 @@ jobs:
           node --test src/lib/study/study-request-state.test.ts
           node --test src/lib/study/study-access.test.ts
           node --test src/lib/study/study-voice-brief.test.ts
+          node --test src/lib/study/lesson-maker.test.ts
           node --test src/routes/api/rita-v3/session/start.source.test.mjs
           bunx tsc --noEmit
       - name: Study page selection in a real browser

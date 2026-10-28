@@ -17,6 +17,7 @@ run -c "insert into public.rita_curricula (id, status) values ('00000000-0000-40
           ('10000000-0000-4000-8000-000000000000', '00000000-0000-4000-8000-0000000000c1', 'published');"
 run -f supabase/migrations/20261028120000_rita_study_lessons.sql
 run -f supabase/migrations/20261028140000_rita_study_actions.sql
+run -f supabase/migrations/20261029100000_rita_study_switch_on.sql
 # Supabase gives signed-in users these table rights; row level security decides the rest.
 run -c "grant usage on schema public, auth, storage to authenticated;
         grant select, insert, update, delete on all tables in schema public to authenticated;

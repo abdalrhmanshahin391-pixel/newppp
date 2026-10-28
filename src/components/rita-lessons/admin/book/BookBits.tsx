@@ -143,13 +143,15 @@ export function ProgressBar({ value, max, label }: { value: number; max: number;
 }
 
 // A run of Latin-script words with the punctuation that belongs to it ("Is he…?", "isn't / aren't").
-const LATIN_RUN = /[A-Za-zÀ-ɏ][A-Za-zÀ-ɏ0-9'’…?!.,/ -]*[A-Za-zÀ-ɏ0-9'’…?!.]|[A-Za-zÀ-ɏ]/g;
+const LATIN_RUN = /-?(?:[A-Za-zÀ-ɏ][A-Za-zÀ-ɏ0-9'’…?!.,/ -]*[A-Za-zÀ-ɏ0-9'’…?!.]|[A-Za-zÀ-ɏ])/g;
 
 /**
  * An Arabic title with English inside it ("السؤال: Is he…? Are you…?"), kept in reading order:
  * each English run is isolated so its punctuation stays with it instead of jumping to the end.
  */
 export function BidiText({ text }: { text: string }) {
+  // No Arabic at all: one left-to-right run, so "Present simple: am / is" keeps its order.
+  if (!/[\u0600-\u06FF]/.test(text)) return <bdi dir="ltr">{text}</bdi>;
   const parts: React.ReactNode[] = [];
   let last = 0;
   for (const match of text.matchAll(LATIN_RUN)) {
