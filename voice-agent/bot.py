@@ -54,6 +54,7 @@ from rita_interruption import RitaUserTurnStartStrategy, gate_mode
 from rita_groq_llm import RitaGroqLLMService
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
 from rita_lesson_voice import LessonVoice, clean_say, lesson_engine_enabled, lesson_engine_section
+from rita_study_voice import StudyVoice, study_enabled, study_section
 from rita_state import ResponseType, RitaSessionState
 from rita_turn_ledger import TurnLedger, build_id, fixed_prompt_hash
 from rita_target_language import (
@@ -207,6 +208,7 @@ def build_prompt(
     *,
     dialogue: bool = False,
     lesson_voice: LessonVoice | None = None,
+    study_voice: StudyVoice | None = None,
 ) -> str:
     personality = str(body.get("personality", "kind"))
     profile_language = str(body.get("language", "automatic"))
@@ -297,6 +299,7 @@ HUMAN TONE
 - Do not guess the learner's gender: no commands or adjectives aimed at them that change with gender
   (like خدي/خد, جاهز/جاهزة); use neutral wording such as "خلّينا نكمل" and "لما يناسبك".
 {lesson_engine_section(body, lesson_voice) or lesson_section(body)}
+{study_section(body, study_voice)}
 SESSION STATE (changes every turn; read it last)
 Structured session state: {state.prompt_state(dialogue=dialogue)}.
 {turn_note}{state.reply_language_line(target["name"] if target else None)}
@@ -458,11 +461,17 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
     saved_history = saved_conversation_history(body)
     # A lesson with exercises: the website's engine sends the steps; Rita follows them.
     lesson_voice = LessonVoice() if lesson_engine_enabled(body) else None
+    # An interactive study lesson: the guide is on screen; the website sends the learner's requests.
+    study_voice = StudyVoice.from_body(body) if study_enabled(body) else None
     initial_messages = [
         {
             "role": "system",
             "content": build_prompt(
-                body, state, dialogue=router_state == RouterMode.ON, lesson_voice=lesson_voice
+                body,
+                state,
+                dialogue=router_state == RouterMode.ON,
+                lesson_voice=lesson_voice,
+                study_voice=study_voice,
             ),
         },
         *saved_history,
@@ -538,7 +547,11 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         messages = context.get_messages()
         if messages and messages[0].get("role") == "system":
             messages[0]["content"] = build_prompt(
-                body, state, dialogue=router_state == RouterMode.ON, lesson_voice=lesson_voice
+                body,
+                state,
+                dialogue=router_state == RouterMode.ON,
+                lesson_voice=lesson_voice,
+                study_voice=study_voice,
             )
             ledger_meta["prompt_hash"] = fixed_prompt_hash(messages[0]["content"])
 
@@ -558,7 +571,11 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         messages = context.get_messages()
         if messages and messages[0].get("role") == "system":
             messages[0]["content"] = build_prompt(
-                body, state, dialogue=router_state == RouterMode.ON, lesson_voice=lesson_voice
+                body,
+                state,
+                dialogue=router_state == RouterMode.ON,
+                lesson_voice=lesson_voice,
+                study_voice=study_voice,
             )
 
     async def say_line(text: str) -> None:
@@ -688,6 +705,48 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         if getattr(msg, "type", "") == "rita-lesson-say":
             if lesson_voice is not None:
                 await say_line((getattr(msg, "data", None) or {}).get("text"))
+            return
+        message_type = getattr(msg, "type", "")
+        if message_type.startswith("rita-study-"):
+            data = getattr(msg, "data", None) or {}
+            if study_voice is None:
+                return  # only a study session reads these (the others ignore them)
+            if message_type == "rita-study-state":
+                if study_voice.set_state(data):
+                    refresh_prompt()
+                return
+            if message_type == "rita-study-focus":
+                if study_voice.set_focus(data):
+                    refresh_prompt()
+                return
+            if message_type == "rita-study-say":
+                await say_line(data.get("text"))
+                return
+            if message_type == "rita-study-cancel":
+                if study_voice.cancel(data):
+                    refresh_prompt()
+                    await rtvi.interrupt_bot()
+                await task.rtvi.send_server_message(
+                    {"type": "rita-study-ack", "request_id": data.get("request_id"), "state": "cancelled"}
+                )
+                return
+            if message_type == "rita-study-action":
+                request = study_voice.take_action(data)
+                if request is None:
+                    await task.rtvi.send_server_message(
+                        {"type": "rita-study-ack", "request_id": data.get("request_id"), "state": "failed"}
+                    )
+                    return
+                # A new request stops anything Rita was saying, then she answers this one.
+                await rtvi.interrupt_bot()
+                refresh_prompt()
+                context.add_message({"role": "user", "content": study_voice.user_line()})
+                logger.info("Rita study action action={} quote_chars={}", request.action, len(request.quote))
+                await task.rtvi.send_server_message(
+                    {"type": "rita-study-ack", "request_id": request.request_id, "state": "started"}
+                )
+                await task.queue_frames([LLMRunFrame()])
+                return
             return
         if getattr(msg, "type", "") == "rita-stop":
             logger.info("Rita stopped by the learner's button")

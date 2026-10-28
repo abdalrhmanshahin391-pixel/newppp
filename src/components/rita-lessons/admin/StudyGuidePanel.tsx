@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ExternalLink, Link2, Link2Off, Loader2, Sparkles } from "lucide-react";
+import { Check, ExternalLink, Eye, Link2, Link2Off, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { adminGuideUrl, adminRenderGuide, adminWriteGuide } from "@/lib/guides/guides.functions";
 import { describeGuideError } from "@/lib/guides/guide-record";
@@ -140,6 +141,17 @@ export function StudyGuidePanel({
             </button>
           ))}
         </div>
+        {state.experience === "study" && state.linkedGuideId && (
+          <Link
+            to="/rita-study"
+            search={{ lesson: lesson.id, preview: true }}
+            target="_blank"
+            className="rita-btn rita-btn-soft rita-btn-sm gap-1.5"
+          >
+            <Eye size={15} aria-hidden="true" />
+            معاينة كطالب
+          </Link>
+        )}
         <p
           role="status"
           className={`rounded-xl p-3 text-[14px] ${

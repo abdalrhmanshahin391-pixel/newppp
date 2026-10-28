@@ -38,6 +38,8 @@ on:
       - "supabase/migrations/20261027120000_rita_lesson_guides.sql"
       - "supabase/migrations/20261028120000_rita_study_lessons.sql"
       - "src/lib/study/**"
+      - "src/components/rita-study/**"
+      - "src/routes/rita-study.tsx"
       - "src/components/rita-lessons/admin/**"
       - "public/fonts/guides/**"
       - "supabase/config.toml"
