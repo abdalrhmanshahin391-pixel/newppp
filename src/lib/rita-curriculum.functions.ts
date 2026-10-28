@@ -1591,6 +1591,11 @@ export type PathLesson = {
   /** Slides an admin chose to share, and attached resources: shown before the lesson starts. */
   slide_count: number;
   resource_count: number;
+  /**
+   * The experience the lesson really opens with: "study" (guide + Rita) only when the admin chose it,
+   * a guide is linked and ready for learners, and the switch is on. Otherwise "classic".
+   */
+  experience: "classic" | "study";
 };
 
 /** A finished lesson suggested for review after a week. */
@@ -1680,6 +1685,11 @@ export const getLessonPath = createServerFn({ method: "GET" })
       // The map works without the extras.
       console.warn("Lesson extras unavailable", cause);
     }
+    const { lessonExperiences } = await import("@/lib/study/study-access.server");
+    const experiences = await lessonExperiences(
+      context.supabase,
+      ((lessons ?? []) as { id: string }[]).map((lesson) => lesson.id),
+    );
     const nodes = lessonPathStates((lessons ?? []) as PathSourceRow[], pathProgress).map(
       (lesson): PathLesson => ({
         id: lesson.id,
@@ -1695,6 +1705,7 @@ export const getLessonPath = createServerFn({ method: "GET" })
         in_progress: byLesson[lesson.id]?.status === "in_progress",
         slide_count: slideCounts[lesson.id] ?? 0,
         resource_count: resourceCounts[lesson.id] ?? 0,
+        experience: experiences[lesson.id] ?? "classic",
       }),
     );
     // Spaced review: lessons finished more than a week ago come back as

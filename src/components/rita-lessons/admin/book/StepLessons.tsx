@@ -10,6 +10,7 @@ import {
   type LessonRow,
   type WindowRow,
 } from "@/lib/rita-curriculum.functions";
+import { adminSetLessonExperience } from "@/lib/study/study.functions";
 import { NextLessonPicker } from "@/components/rita-lessons/admin/NextLessonPicker";
 import type { TopicSuggestion } from "@/lib/rita-slides";
 import { errorDetail, errorText, pagesLabel } from "./book-utils";
@@ -51,6 +52,8 @@ export function StepLessons({
 }) {
   const lessonFn = useServerFn(adminGenerateLesson);
   const exercisesFn = useServerFn(adminGenerateExercises);
+  const experienceFn = useServerFn(adminSetLessonExperience);
+  const [experience, setExperience] = useState<"classic" | "study">("classic");
   const plan = useMemo(
     () =>
       lessonPlan({
@@ -94,6 +97,14 @@ export function StepLessons({
               to: item.to_page,
             },
           });
+          // The current lesson is still made in full, so the lesson can always go back to it.
+          if (experience === "study") {
+            try {
+              await experienceFn({ data: { lessonId: row.id, experience: "study" } });
+            } catch {
+              toast.error("انصنع الدرس، بس نوع «دراسة تفاعلية» ما انحفظ. اختاره من الدرس نفسه.");
+            }
+          }
           if (exercisesReady) {
             stage = "exercises";
             set({ state: "exercises" });
@@ -255,45 +266,77 @@ export function StepLessons({
               إيقاف بعد الدرس الحالي
             </button>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                disabled={!chosen.length || working}
-                onClick={() => void makeLessons()}
-                className="rita-btn rita-btn-primary gap-2"
-              >
-                <Sparkles size={17} aria-hidden="true" />
-                اصنع الدروس المختارة ({chosen.length})
-              </button>
-              <button
-                type="button"
-                disabled={!chosen.length || working}
-                onClick={() =>
-                  void guides
-                    .make(
-                      chosen.map((item) => ({
-                        key: keyOf(item),
-                        title: (topics[keyOf(item)] ?? item.topic).trim() || item.topic,
-                        from: item.from_page,
-                        to: item.to_page,
-                      })),
-                    )
-                    .then((made) => {
-                      if (made) toast.success(`انصنع ${made} دليل PDF`);
-                    })
-                }
-                className="rita-btn rita-btn-soft gap-2"
-              >
-                <FileText size={17} aria-hidden="true" />
-                اصنع دليل PDF ({chosen.length})
-              </button>
-              {live.length > 0 && (
-                <button type="button" onClick={onNext} className="rita-btn rita-btn-soft gap-2">
-                  للمراجعة
-                  <ArrowLeft size={17} aria-hidden="true" />
+            <>
+              <div className="space-y-1.5">
+                <p id="new-lessons-kind" className="text-[15px] font-semibold">
+                  نوع الدروس الجديدة
+                </p>
+                <div role="radiogroup" aria-labelledby="new-lessons-kind" className="rita-choice">
+                  {(
+                    [
+                      ["classic", "الدرس الحالي"],
+                      ["study", "ريتا — دراسة تفاعلية (ملف + ريتا)"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      role="radio"
+                      aria-checked={experience === value}
+                      disabled={working}
+                      onClick={() => setExperience(value)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {experience === "study" && (
+                  <p className="text-[14px] text-[var(--pp-muted)]">
+                    الطلاب بياخدوا الدرس الحالي لحد ما تربط دليل PDF جاهز من الدرس ← «الدراسة
+                    التفاعلية».
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={!chosen.length || working}
+                  onClick={() => void makeLessons()}
+                  className="rita-btn rita-btn-primary gap-2"
+                >
+                  <Sparkles size={17} aria-hidden="true" />
+                  اصنع الدروس المختارة ({chosen.length})
                 </button>
-              )}
-            </div>
+                <button
+                  type="button"
+                  disabled={!chosen.length || working}
+                  onClick={() =>
+                    void guides
+                      .make(
+                        chosen.map((item) => ({
+                          key: keyOf(item),
+                          title: (topics[keyOf(item)] ?? item.topic).trim() || item.topic,
+                          from: item.from_page,
+                          to: item.to_page,
+                        })),
+                      )
+                      .then((made) => {
+                        if (made) toast.success(`انصنع ${made} دليل PDF`);
+                      })
+                  }
+                  className="rita-btn rita-btn-soft gap-2"
+                >
+                  <FileText size={17} aria-hidden="true" />
+                  اصنع دليل PDF ({chosen.length})
+                </button>
+                {live.length > 0 && (
+                  <button type="button" onClick={onNext} className="rita-btn rita-btn-soft gap-2">
+                    للمراجعة
+                    <ArrowLeft size={17} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+            </>
           )}
           {running && (
             <p role="status" className="text-[14px] text-[var(--pp-muted)]">
