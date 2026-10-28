@@ -22,11 +22,21 @@ build, hard review) and the system in `DESIGN.md`. Use the skills in `.claude/sk
 there. The Mandatory Planning Protocol above still applies: the Design Brief is the plan, and
 it ends with the approval phrase.
 
-## Backend: one documented exception to "no Edge Functions"
+## Backend: the two approved Edge Functions
 The project rule is to use in-app server functions, not Edge Functions. The published site's server has no
-service-role key, and lessons with exercises must read protected content (it holds the answer keys), so
-**one** Edge Function exists: `supabase/functions/rita-lesson-run`. Lovable Cloud gives it the key
-automatically. The app's server functions in `src/lib/rita-lesson-run.functions.ts` only forward the
-learner's token to it. The engine files it uses are copied into `supabase/functions/_shared` by
+service-role key, so the few operations that must read protected rows across all users run as Edge
+Functions, which Lovable Cloud gives the key automatically. Exactly two are approved:
+`supabase/functions/rita-lesson-run` (a learner's lesson run; the app's server functions in
+`src/lib/rita-lesson-run.functions.ts` only forward the learner's token) and
+`supabase/functions/rita-review` (the AI review of Rita's replies; it needs the worker key from
+`site_secrets.worker_cron_key` and returns counts only). Both set `verify_jwt = false` in
+`supabase/config.toml`. The engine files they use are copied into `supabase/functions/_shared` by
 `node scripts/sync-lesson-edge.mjs`; a test fails when a copy drifts. Do not add other Edge Functions
 without asking the owner.
+
+## Background work must be event-driven, not polling
+Nothing may wake the database on a timer except the one daily backup
+(`cron.job` name `vault-daily-snapshot`); timed polling is what kept the instance awake and billed
+compute while no one visited. Work that follows a user action starts from a trigger or from the call
+itself — for example the wake trigger on `rita_v3_sessions.ended_at` and the admin's "review now"
+button — and any new background job needs the owner's approval first.
