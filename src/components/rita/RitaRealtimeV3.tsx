@@ -61,11 +61,35 @@ import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rit
 
 type Persona = "kind" | "direct" | "playful" | "strict";
 /** In a lesson Rita opens the lesson herself as soon as the call starts, so nobody has to say hello. */
-function welcomeText(lessonId: string | undefined) {
+function welcomeText(lessonId: string | undefined, study?: boolean) {
+  if (study) return "أنا ريتا. اكبس «ابدأ مع ريتا»، وحدّد أي جزء من الدرس بدك نشتغل عليه.";
   return lessonId
     ? "Hi, I’m Rita. Press start and I’ll open today’s lesson."
     : "Hi, I’m Rita. What would you like to practise?";
 }
+
+/**
+ * How the study page talks to Rita's call (see src/components/rita-study). Rita fills `send` while
+ * the call is ready and clears it when it ends; the page receives the worker's "rita-study-*"
+ * messages and the speaking state.
+ */
+export type StudyBridge = {
+  send: ((type: string, data: Record<string, unknown>) => boolean) | null;
+  onMessage?: (message: Record<string, unknown>) => void;
+  onEvent?: (event: "ready" | "ended" | "speaking" | "quiet") => void;
+  /** Set by Rita: adds a line to the chat (the learner's request, or a written answer). */
+  post?: (role: "you" | "rita", text: string) => void;
+};
+
+/** An interactive study lesson: Rita sits beside the guide, in a column, without the page chrome. */
+export type StudyEmbed = {
+  lessonId: string;
+  preview?: boolean;
+  title: string;
+  bridge: StudyBridge;
+  /** Shown under the conversation (the study page's action cards). */
+  children?: React.ReactNode;
+};
 
 type LessonMode = "free_conversation" | "guided_lesson" | "pronunciation_drill";
 type Message = {
@@ -125,13 +149,19 @@ export function RitaRealtimeV3({
   conversationId,
   preview,
   sample,
+  study,
 }: {
   lessonId?: string;
   conversationId?: string;
   preview?: boolean;
   /** Admin preview of a built-in lesson with exercises. */
   sample?: SampleKey;
+  /** The study page's column. Without it Rita behaves exactly as before. */
+  study?: StudyEmbed;
 } = {}) {
+  const studyLessonId = study?.lessonId;
+  const studyRef = useRef(study);
+  studyRef.current = study;
   const navigate = useNavigate();
   const lesson = useRitaLesson(lessonId, preview);
   // A lesson with exercises (content version 2) runs on the lesson engine; without it the spoken
@@ -219,7 +249,7 @@ export function RitaRealtimeV3({
     {
       id: "welcome",
       role: "rita",
-      text: welcomeText(lessonId),
+      text: welcomeText(lessonId, Boolean(studyLessonId)),
     },
   ]);
   // The natural defaults. The page no longer asks the learner to pick these.
@@ -273,9 +303,40 @@ export function RitaRealtimeV3({
     if (!loading && !user) void navigate({ to: "/login" });
   }, [loading, navigate, user]);
 
+  // The study page sends its requests through this while Rita is ready, and hears when she is not.
+  const studyBridge = study?.bridge;
+  useEffect(() => {
+    if (!studyBridge) return;
+    studyBridge.post = (role, text) =>
+      setMessages((current) => [...current, { id: crypto.randomUUID(), role, text }]);
+    return () => {
+      studyBridge.post = undefined;
+    };
+  }, [studyBridge]);
+  useEffect(() => {
+    if (!studyBridge) return;
+    if (readyForSpeech) {
+      studyBridge.send = (type, data) => {
+        const pc = client.current;
+        if (!pc) return false;
+        try {
+          pc.sendClientMessage(type, data);
+          return true;
+        } catch {
+          return false;
+        }
+      };
+      studyBridge.onEvent?.("ready");
+    } else {
+      studyBridge.send = null;
+      studyBridge.onEvent?.("ended");
+    }
+  }, [readyForSpeech, studyBridge]);
+
   const persistConversationMessage = useCallback(
     (write: ConversationWrite) => {
-      if (lessonId || !user || !activeConversationId.current) return Promise.resolve();
+      if (lessonId || studyLessonId || !user || !activeConversationId.current)
+        return Promise.resolve();
       setSaveState("saving");
       const task = (async () => {
         const { error: saveError } = await supabase.from("rita_free_conversation_messages").upsert(
@@ -300,7 +361,7 @@ export function RitaRealtimeV3({
       });
       return task;
     },
-    [lessonId, user],
+    [lessonId, studyLessonId, user],
   );
 
   const retryFailedWrites = useCallback(async () => {
@@ -312,7 +373,7 @@ export function RitaRealtimeV3({
 
   useEffect(() => {
     activeConversationId.current = conversationId ?? "";
-    if (lessonId || !conversationId || !user) {
+    if (lessonId || studyLessonId || !conversationId || !user) {
       setHistoryLoading(false);
       return;
     }
@@ -385,7 +446,7 @@ export function RitaRealtimeV3({
     return () => {
       cancelled = true;
     };
-  }, [conversationId, lessonId, user]);
+  }, [conversationId, lessonId, studyLessonId, user]);
 
   // Curriculum lessons: after each learner turn, check the lesson objectives.
   const { enabled: lessonEnabled, checkTurns } = lesson;
@@ -709,7 +770,7 @@ export function RitaRealtimeV3({
   }, [cancelFiller, dialect, metric]);
 
   const ensureFreeConversation = useCallback(async () => {
-    if (lessonId) return "";
+    if (lessonId || studyLessonId) return "";
     if (activeConversationId.current) return activeConversationId.current;
     if (!user) throw new Error("Please sign in before starting Rita.");
     const { data, error: createError } = await supabase
@@ -726,7 +787,7 @@ export function RitaRealtimeV3({
       throw new Error(createError?.message ?? "Could not create the conversation.");
     activeConversationId.current = String(data.id);
     return activeConversationId.current;
-  }, [lessonId, user]);
+  }, [lessonId, studyLessonId, user]);
 
   const endLesson = useCallback(async () => {
     cancelFiller();
@@ -793,7 +854,7 @@ export function RitaRealtimeV3({
         {
           id: crypto.randomUUID(),
           role: "rita",
-          text: welcomeText(lessonId),
+          text: welcomeText(lessonId, Boolean(studyLessonId)),
         },
       ]);
     }
@@ -801,12 +862,12 @@ export function RitaRealtimeV3({
     skipExtraction.current = false;
     trayRef.current.closeTray();
     await Promise.allSettled([...pendingWrites.current]);
-  }, [cancelFiller, flushMetrics, lessonId, persistConversationMessage]);
+  }, [cancelFiller, flushMetrics, lessonId, studyLessonId, persistConversationMessage]);
 
   const finishConversation = useCallback(async () => {
     await endLesson();
-    if (!lessonId) void navigate({ to: "/rita-conversations" });
-  }, [endLesson, lessonId, navigate]);
+    if (!lessonId && !studyLessonId) void navigate({ to: "/rita-conversations" });
+  }, [endLesson, lessonId, studyLessonId, navigate]);
 
   useEffect(() => () => void endLesson(), [endLesson]);
 
@@ -1144,6 +1205,14 @@ export function RitaRealtimeV3({
             void metric("speech_start");
           },
           onServerMessage: (data: unknown) => {
+            const studyMessage = data as { type?: unknown } | null;
+            if (
+              typeof studyMessage?.type === "string" &&
+              studyMessage.type.startsWith("rita-study-")
+            ) {
+              studyRef.current?.bridge.onMessage?.(studyMessage as Record<string, unknown>);
+              return;
+            }
             const message = data as {
               type?: string;
               action?: string;
@@ -1345,9 +1414,11 @@ export function RitaRealtimeV3({
               beginScriptedReply(scripted);
             }
             replyAccumulator.current.beginTts();
+            studyRef.current?.bridge.onEvent?.("speaking");
             void metric("tts_start");
           },
           onBotTtsStopped: () => {
+            studyRef.current?.bridge.onEvent?.("quiet");
             const microphoneMuted = mutedRef.current || !botReady.current;
             setStatus(
               !botReady.current
@@ -1377,7 +1448,9 @@ export function RitaRealtimeV3({
           personality,
           language: languageRef.current,
           dialect,
-          mode: lessonId ? "guided_lesson" : mode,
+          mode: studyLessonId ? "study_lesson" : lessonId ? "guided_lesson" : mode,
+          ...(studyLessonId ? { studyLessonId } : {}),
+          ...(studyLessonId && study?.preview ? { preview: true } : {}),
           traceId: traceId.current,
           ...(currentConversationId ? { conversationId: currentConversationId } : {}),
           ...(lessonId ? { lessonId } : {}),
@@ -1487,7 +1560,11 @@ export function RitaRealtimeV3({
 
   if (loading || !user) {
     return (
-      <div className="grid min-h-screen place-items-center">
+      <div
+        className={
+          study ? "grid h-full place-items-center" : "grid min-h-screen place-items-center"
+        }
+      >
         <Loader2 className="animate-spin" />
       </div>
     );
@@ -1503,7 +1580,11 @@ export function RitaRealtimeV3({
 
   return (
     <main
-      className="edith-premium min-h-screen bg-white text-[var(--pp-ink)]"
+      className={
+        study
+          ? "edith-premium flex h-full min-h-0 flex-col bg-white text-[var(--pp-ink)]"
+          : "edith-premium min-h-screen bg-white text-[var(--pp-ink)]"
+      }
       style={{ fontFamily: "var(--font-grotesk), 'Noto Sans Arabic', sans-serif" }}
     >
       <audio
@@ -1519,12 +1600,20 @@ export function RitaRealtimeV3({
         onStalled={() => void metric("audio_stalled")}
         onEnded={() => void metric("audio_ended")}
       />
-      <div className="rita-cream edith-light edith-premium">
-        <ProHeader variant="solid" tone="light" />
-      </div>
+      {!study && (
+        <div className="rita-cream edith-light edith-premium">
+          <ProHeader variant="solid" tone="light" />
+        </div>
+      )}
 
-      <div className="mx-auto flex w-full max-w-2xl flex-col px-5 sm:px-8">
-        <div className="pt-6">
+      <div
+        className={
+          study
+            ? "flex min-h-0 w-full flex-1 flex-col overflow-y-auto px-4"
+            : "mx-auto flex w-full max-w-2xl flex-col px-5 sm:px-8"
+        }
+      >
+        <div className={study ? "hidden" : "pt-6"}>
           <Link
             to={lessonId ? "/rita-lessons" : "/rita-conversations"}
             className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
@@ -1539,14 +1628,22 @@ export function RitaRealtimeV3({
             levelsRef={orbLevels}
             mode={orbModeFor(active, mood)}
             label={active ? "Rita is with you" : "Rita, your language tutor"}
-            className="h-[min(70vw,360px)] w-[min(70vw,360px)]"
+            className={study ? "h-[132px] w-[132px]" : "h-[min(70vw,360px)] w-[min(70vw,360px)]"}
           />
-          <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
-            {exercises && lessonRun.view
-              ? lessonRun.view.title_ar || lessonRun.view.title
-              : lessonId
-                ? lesson.session?.lesson.title || lesson.session?.lesson.title_ar || "Lesson"
-                : "Talk with Rita"}
+          <h2
+            className={
+              study
+                ? "-mt-2 text-[20px] leading-[26px] text-[var(--pp-ink)]"
+                : "-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]"
+            }
+          >
+            {study
+              ? study.title
+              : exercises && lessonRun.view
+                ? lessonRun.view.title_ar || lessonRun.view.title
+                : lessonId
+                  ? lesson.session?.lesson.title || lesson.session?.lesson.title_ar || "Lesson"
+                  : "Talk with Rita"}
           </h2>
           <p className="mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]">
             <span
@@ -1561,7 +1658,7 @@ export function RitaRealtimeV3({
             />
             {status}
           </p>
-          {!lessonId && saveState !== "idle" ? (
+          {!lessonId && !study && saveState !== "idle" ? (
             <p
               role="status"
               className={`mt-1 text-xs font-semibold ${saveState === "failed" ? "text-red-600" : "text-[var(--pp-muted)]"}`}
@@ -1591,7 +1688,11 @@ export function RitaRealtimeV3({
           )}
         </aside>
 
-        <section className="flex min-h-[calc(100vh-72px)] w-full flex-col">
+        <section
+          className={
+            study ? "flex w-full flex-1 flex-col" : "flex min-h-[calc(100vh-72px)] w-full flex-col"
+          }
+        >
           {active && soundBlocked && (
             <div className="flex justify-center pt-4">
               <button type="button" onClick={enableSound} className="rita-btn rita-btn-primary">
@@ -1682,6 +1783,7 @@ export function RitaRealtimeV3({
                   className="ml-auto w-fit max-w-[80%] px-2 text-[15px] leading-6 text-[var(--pp-muted)]"
                 />
               )}
+              {study?.children}
               {error && (
                 <div className="rounded-2xl bg-[var(--pp-accent-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-accent-text)]">
                   {error}
@@ -1705,9 +1807,11 @@ export function RitaRealtimeV3({
                   )}{" "}
                   {historyLoading
                     ? "Loading conversation…"
-                    : lessonId
-                      ? "ابدأ الدرس مع ريتا"
-                      : "Start talking"}
+                    : study
+                      ? "ابدأ مع ريتا"
+                      : lessonId
+                        ? "ابدأ الدرس مع ريتا"
+                        : "Start talking"}
                 </button>
               </div>
             ) : (

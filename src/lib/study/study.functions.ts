@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";
 import { GuideContentSchema } from "@/lib/guides/guide-content";
 import { STUDY_FLAG, studyBlocker, type Experience } from "./study-experience";
+import type { StudyLessonData } from "./study-types";
 import {
   LINK_PROBLEM_TEXT,
   coversLesson,
@@ -296,4 +297,58 @@ export const adminSetStudySwitch = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(`switch: ${error.message}`);
     return { ok: true };
+  });
+
+// ---------------------------------------------------------------------------------------------
+// Learner side
+// ---------------------------------------------------------------------------------------------
+
+export type StudyPageResult =
+  { status: "study"; data: StudyLessonData } | { status: "classic" } | { status: "unavailable" };
+
+/** The study page: the lesson, its guide (final copy only) or "classic" when it opens as before. */
+export const getStudyLesson = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parse(z.object({ lessonId: uuid, preview: z.boolean().default(false) }), data),
+  )
+  .handler(async ({ data, context }): Promise<StudyPageResult> => {
+    const { loadStudyLesson } = await import("./study-lesson.server");
+    const result = await loadStudyLesson(
+      context.supabase,
+      context.userId,
+      data.lessonId,
+      data.preview,
+    );
+    if (result.ok) return { status: "study", data: result.data };
+    return { status: result.reason };
+  });
+
+/** A one-hour link to the learners' copy of the guide, when the admin allows downloads. */
+export const studyGuideDownload = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parse(z.object({ lessonId: uuid, preview: z.boolean().default(false) }), data),
+  )
+  .handler(async ({ data, context }): Promise<{ url: string }> => {
+    const [{ loadStudyLesson }, { guideFileName }] = await Promise.all([
+      import("./study-lesson.server"),
+      import("@/lib/guides/guide-record"),
+    ]);
+    const result = await loadStudyLesson(
+      context.supabase,
+      context.userId,
+      data.lessonId,
+      data.preview,
+    );
+    if (!result.ok) throw new Error("This lesson is not available.");
+    const { guide } = result.data;
+    if (!guide.allow_download) throw new Error("Downloading this file is turned off.");
+    const { data: signed, error } = await context.supabase.storage
+      .from("rita-guides")
+      .createSignedUrl(guide.learner_path, 60 * 60, {
+        download: guideFileName(guide.title, guide.version),
+      });
+    if (error || !signed?.signedUrl) throw new Error("The file could not be opened.");
+    return { url: signed.signedUrl };
   });

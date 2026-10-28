@@ -37,7 +37,11 @@ on:
       - "guides-worker/**"
       - "supabase/migrations/20261027120000_rita_lesson_guides.sql"
       - "supabase/migrations/20261028120000_rita_study_lessons.sql"
+      - "supabase/migrations/20261028140000_rita_study_actions.sql"
+      - "voice-agent/rita_study_voice.py"
       - "src/lib/study/**"
+      - "src/components/rita-study/**"
+      - "src/routes/rita-study.tsx"
       - "src/components/rita-lessons/admin/**"
       - "public/fonts/guides/**"
       - "supabase/config.toml"
@@ -90,6 +94,8 @@ jobs:
           node --test src/lib/guides/guide-blocks.test.ts
           node --test src/lib/study/study-experience.test.ts
           node --test src/lib/study/study-link.test.ts
+          node --test src/lib/study/study-selection.test.ts
+          node --test src/components/rita-study/orb-position.test.ts
           node --test src/routes/api/rita-v3/session/start.source.test.mjs
           bunx tsc --noEmit
       - name: Build site

@@ -319,6 +319,7 @@ body{padding:16px 12px 40px}
 .sheet{width:${PAGE_WIDTH_PT}pt;max-width:none;margin:0 auto;padding:34pt 34pt 40pt;background:#fff;border-radius:6pt;box-shadow:0 1px 2px rgba(18,17,23,.06),0 8px 24px rgba(18,17,23,.08)}
 section.block{scroll-margin-top:16px}
 ::selection{background:#cfe0ff}
+::highlight(st-sel){background-color:#cfe0ff}
 .st-flash{animation:st-flash 1.2s ease-out}
 @keyframes st-flash{0%{background:#fff3b0}100%{background:transparent}}
 }

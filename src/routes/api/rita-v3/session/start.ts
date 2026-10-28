@@ -6,6 +6,7 @@ import {
   loadTargetLanguage,
   recordRitaV3Event,
   requireRitaV3Access,
+  ritaV3UserClient,
   updateRitaV3Session,
 } from "@/lib/rita-v3.server";
 import { cleanLanguage, normalizePersonality } from "@/lib/rita-voice.server";
@@ -50,6 +51,50 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             { status: 404 },
           );
         }
+        // An interactive study lesson: the guide is on the learner's screen, so the worker gets its
+        // outline (headings, taught terms) and the goals, never the whole guide.
+        const studyLessonId =
+          !requestedLessonId &&
+          body.mode === "study_lesson" &&
+          typeof body.studyLessonId === "string"
+            ? body.studyLessonId
+            : "";
+        const study = studyLessonId
+          ? await (async () => {
+              const [{ loadStudyLesson }, { guideOutline }] = await Promise.all([
+                import("@/lib/study/study-lesson.server"),
+                import("@/lib/guides/guide-blocks"),
+              ]);
+              const loaded = await loadStudyLesson(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ritaV3UserClient(access.auth.token) as any,
+                access.auth.userId,
+                studyLessonId,
+                lessonPreview,
+              );
+              if (!loaded.ok) return null;
+              const outline = guideOutline(loaded.data.guide.content);
+              return {
+                lessonId: loaded.data.lesson.id,
+                title: loaded.data.lesson.title || outline.title,
+                sections: outline.sections,
+                objectives: loaded.data.lesson.objectives
+                  .map((objective) => objective.text || objective.text_ar)
+                  .filter(Boolean)
+                  .slice(0, 8),
+                ...(loaded.data.preview ? { preview: true } : {}),
+              };
+            })().catch((error) => {
+              console.warn("Rita study lesson could not be loaded", error);
+              return null;
+            })
+          : null;
+        if (studyLessonId && !study) {
+          return Response.json(
+            { ok: false, code: "lesson_unavailable", message: "This lesson is not available." },
+            { status: 404 },
+          );
+        }
         // A lesson with exercises: the page's lesson engine sends the steps during the call, so the
         // worker gets the lesson's name and the engine flag instead of the spoken-lesson brief.
         const sampleTitle =
@@ -66,8 +111,9 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
                 title: lesson?.title ?? sampleTitle,
               }
             : null;
-        const mode =
-          lesson || engineLesson
+        const mode = study
+          ? "study_lesson"
+          : lesson || engineLesson
             ? "guided_lesson"
             : ["free_conversation", "guided_lesson", "pronunciation_drill"].includes(
                   String(body.mode),
@@ -190,6 +236,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             ? { conversationHistory: savedConversation.history }
             : {}),
           ...(engineLesson ? { lesson: engineLesson } : lesson ? { lesson } : {}),
+          ...(study ? { study } : {}),
         };
         const diagnosticBase = {
           traceId,

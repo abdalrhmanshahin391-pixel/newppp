@@ -57,6 +57,11 @@ function RitaLessonsPage() {
   const sheetLesson = lessons?.find((lesson) => lesson.id === openId) ?? null;
 
   function start(lesson: PathLesson) {
+    // The server decided the lesson's real experience: the study page only when it is ready.
+    if (lesson.experience === "study") {
+      void navigate({ to: "/rita-study", search: { lesson: lesson.id } });
+      return;
+    }
     void navigate({ to: "/rita-live", search: { lesson: lesson.id } });
   }
 
