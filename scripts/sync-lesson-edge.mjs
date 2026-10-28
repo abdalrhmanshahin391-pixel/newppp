@@ -1,4 +1,5 @@
-// Copies the lesson engine files into the Edge Function's shared folder, byte for byte.
+// Copies the engine files the Edge Functions use (the lesson engine for rita-lesson-run, the review
+// engine for rita-review) into their shared folder, byte for byte.
 // The Edge Function runs outside the app bundle, so it cannot import from src/lib. The files are pure
 // TypeScript (zod and a type-only supabase import), so a copy is the same code. A test fails when a
 // copy drifts: run `node scripts/sync-lesson-edge.mjs` after editing any of them.
@@ -13,6 +14,9 @@ export const SHARED_FILES = [
   "rita-lesson-samples.ts",
   "rita-lesson-run.ts",
   "rita-lesson-run.core.ts",
+  "rita-tutor-contract.ts",
+  "rita-review.ts",
+  "rita-review.core.ts",
 ];
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");

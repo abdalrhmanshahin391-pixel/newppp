@@ -51,6 +51,9 @@ on:
       - "public/fonts/guides/**"
       - "supabase/config.toml"
       - "scripts/sync-lesson-edge.mjs"
+      - "src/lib/rita-review*"
+      - "src/lib/rita-tutor-contract.ts"
+      - "src/routes/api/rita-v3/review.ts"
       - ".github/workflows/rita-v3-frontend-check.yml"
   workflow_dispatch:
 
@@ -107,6 +110,10 @@ jobs:
           node --test src/lib/study/study-voice-brief.test.ts
           node --test src/lib/study/lesson-maker.test.ts
           node --test src/lib/language-splash.test.ts
+          node --test src/lib/rita-review.test.ts
+          node --test src/lib/rita-review-steps.test.ts
+          node --test src/lib/rita-golden.test.ts
+          node --test src/lib/rita-replay.test.ts
           node --test src/routes/api/rita-v3/session/start.source.test.mjs
           bunx tsc --noEmit
       - name: Study page selection in a real browser

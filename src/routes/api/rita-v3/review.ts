@@ -3,8 +3,13 @@ import { createClient } from "@supabase/supabase-js";
 import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 import { requireRitaUser } from "@/lib/rita-voice.server";
 
-/** The "Repair file" button asks for the review of one conversation right now (admin only). */
-const BUDGET_MS = 80_000;
+/**
+ * The admin's "review now" for one conversation, in small steps: each call reviews at most two
+ * replies (side by side), or does the closing work once none are left, and says how far it got.
+ * The page calls again until it is finished, so no single request runs for minutes.
+ */
+const BUDGET_MS = 60_000;
+const TURNS_PER_STEP = 2;
 
 export const Route = createFileRoute("/api/rita-v3/review")({
   server: {
@@ -35,6 +40,7 @@ export const Route = createFileRoute("/api/rita-v3/review")({
           const summary = await reviewConversation(db, {
             conversationId,
             deadlineAt: Date.now() + BUDGET_MS,
+            maxTurns: TURNS_PER_STEP,
           });
           return Response.json({ ok: true, enabled: true, ...summary });
         } catch (error) {

@@ -41,3 +41,12 @@ test("config turns the gateway JWT check off only because the function checks th
   const config = read("../../supabase/config.toml");
   assert.match(config, /\[functions\.rita-lesson-run\]\s+verify_jwt = false/);
 });
+
+test("the review Edge Function checks the worker key before it reviews, and answers with counts", () => {
+  const source = read("../../supabase/functions/rita-review/index.ts");
+  assert.match(source, /request\.method !== "POST"/);
+  assert.ok(source.indexOf("worker_cron_key") < source.indexOf("runScheduledReview(db"));
+  assert.ok(source.indexOf("sameText(provided, expected)") < source.indexOf("setReviewDeps("));
+  const config = read("../../supabase/config.toml");
+  assert.match(config, /\[functions\.rita-review\]\s+verify_jwt = false/);
+});

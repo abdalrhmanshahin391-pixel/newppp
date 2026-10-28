@@ -509,3 +509,52 @@ test("the assignment prompt lists the open patterns and carries the problem", ()
       prompt.includes("<problem>"),
   );
 });
+
+test("a turn every check passed skips the diagnosis; anything off still gets it", async () => {
+  const { needsDiagnosis, CLEAN_DIAGNOSIS, finalizeReview } = await import("./rita-review.ts");
+  const ritaWins = {
+    winner: "rita" as const,
+    agree: true,
+    ritaAverage: 4.5,
+    referenceAverage: 4,
+    criteria: {} as never,
+    comparison: [],
+  };
+  const clean = { facts: [], dialect: [], merged: ritaWins, timing: null };
+  assert.equal(needsDiagnosis(clean), false);
+  assert.equal(finalizeReview({ diagnosis: CLEAN_DIAGNOSIS, ...clean }).verdict, "ok");
+
+  const loose = { claim: "x", verdict: "imprecise" as const, correction: "y" };
+  assert.equal(needsDiagnosis({ ...clean, facts: [loose] }), true);
+  assert.equal(
+    needsDiagnosis({ ...clean, dialect: [{ phrase: "x", kind: "not_jordanian", better: "y" }] }),
+    true,
+  );
+  assert.equal(needsDiagnosis({ ...clean, merged: { ...ritaWins, winner: "tie" } }), true);
+  assert.equal(needsDiagnosis({ ...clean, merged: { ...ritaWins, agree: false } }), true);
+  assert.equal(needsDiagnosis({ ...clean, merged: null }), true);
+  assert.equal(
+    needsDiagnosis({
+      ...clean,
+      timing: {
+        interrupted: true,
+        answered: true,
+        stop: null,
+        waitMs: null,
+        resumed: null,
+        firstAudioMs: null,
+        cutAfterMs: null,
+        flags: ["cut_off"],
+      },
+    }),
+    true,
+  );
+  assert.equal(needsDiagnosis({ ...clean, report: { category: "wrong", note: null } }), true);
+});
+
+test("the conversation comes before the turn state, so the prompt opening can be cached", () => {
+  const reference = referencePrompt({ messages, replyIndex: 3, ledger: { lang: "ar" } });
+  assert.ok(reference.startsWith("<conversation_so_far>"));
+  const judge = judgePrompt({ messages, replyIndex: 3, a: "x", b: "y" });
+  assert.ok(judge.startsWith("<conversation_so_far>"));
+});

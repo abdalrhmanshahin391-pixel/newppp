@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Loader2, MessageCircle, Plus, X } from "lucide-react";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,6 +26,13 @@ import { AdminBar } from "@/components/rita-quality/AdminBar";
 import { ConversationMenu } from "@/components/rita/ConversationMenu";
 import { reviewCounts, reviewMark } from "@/lib/rita-quality-next";
 import { ritaRepairFile, ritaRepairFileName } from "@/lib/rita-issue-report";
+import {
+  MAX_STEPS,
+  decideStep,
+  progressText,
+  type ReviewProgress,
+  type StepAnswer,
+} from "@/lib/rita-review-steps";
 
 export const Route = createFileRoute("/rita-conversations")({
   head: () => ({
@@ -137,27 +144,36 @@ async function loadRepairData(bundle: Bundle) {
   };
 }
 
-// An admin gets the review of the conversation made right now, so the file is complete. Best
-// effort: anybody else, the switch being off or a failure just means the file is made without it.
-async function askForReview(conversationId: string): Promise<{
-  enabled?: boolean;
-  waiting?: number;
-  stopped?: string;
-  error?: string;
-} | null> {
+// One step of the admin's "review now" (see /api/rita-v3/review). A step never waits more than two
+// and a half minutes: a request that hangs ends with a clear message instead of a spinner forever.
+async function reviewStep(conversationId: string): Promise<StepAnswer | null> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) return { ok: false, error: "Sign in again to run the review." };
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), 150_000);
   try {
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
-    if (!token) return null;
     const response = await fetch("/api/rita-v3/review", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ conversationId }),
+      signal: controller.signal,
     });
-    return response.ok || response.status >= 500 ? await response.json().catch(() => null) : null;
-  } catch {
-    /* the file is still made */
-    return null;
+    const body = (await response.json().catch(() => null)) as StepAnswer | null;
+    if (!response.ok && !body?.error) {
+      return { ok: false, error: `The server answered ${response.status}.` };
+    }
+    return body;
+  } catch (cause) {
+    return {
+      ok: false,
+      error:
+        cause instanceof DOMException && cause.name === "AbortError"
+          ? "One step took longer than 2.5 minutes. Press Review again to carry on"
+          : "The connection dropped. Press Review again to carry on",
+    };
+  } finally {
+    window.clearTimeout(timer);
   }
 }
 
@@ -183,8 +199,9 @@ function RitaConversationsPage() {
   const [busy, setBusy] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
-  // Said once after a repair file whose review was not finished (still running, or stopped).
-  const [notice, setNotice] = useState("");
+  // The admin's AI review per conversation in this visit (it runs in steps, see reviewStep).
+  const [reviews, setReviews] = useState<Record<string, ReviewProgress>>({});
+  const stopReview = useRef(new Set<string>());
   const [busyFormat, setBusyFormat] = useState("");
   const [selected, setSelected] = useState<Bundle | null>(null);
   const [opening, setOpening] = useState("");
@@ -227,6 +244,8 @@ function RitaConversationsPage() {
   const [marks, setMarks] = useState(
     () => new Map<string, { reviewed: number; problems: number }>(),
   );
+  const [marksEpoch, setMarksEpoch] = useState(0);
+  const refreshMarks = () => setMarksEpoch((value) => value + 1);
   useEffect(() => {
     if (!isAdmin || !conversations.length) return;
     let cancelled = false;
@@ -253,7 +272,7 @@ function RitaConversationsPage() {
     return () => {
       cancelled = true;
     };
-  }, [conversations, isAdmin]);
+  }, [conversations, isAdmin, marksEpoch]);
 
   const empty = useMemo(() => !busy && conversations.length === 0, [busy, conversations.length]);
 
@@ -325,18 +344,13 @@ function RitaConversationsPage() {
           "text/markdown;charset=utf-8",
         );
       } else if (format === "repair") {
-        setNotice("");
-        const review = await askForReview(conversation.id);
-        if (review?.stopped || review?.error) {
-          setNotice(
-            `The AI review stopped: ${review.stopped ?? review.error}. The file has what was finished; download again later for the rest.`,
-          );
-        } else if (review?.waiting) {
-          setNotice(
-            `The AI review is still running for ${review.waiting} more ${review.waiting === 1 ? "reply" : "replies"}. Download the file again in a few minutes for the full review.`,
-          );
-        }
-        const { events, reports, reviews, conversationReview } = await loadRepairData(bundle);
+        // The file is made at once from what is saved; the AI review runs on its own afterwards.
+        const {
+          events,
+          reports,
+          reviews: saved,
+          conversationReview,
+        } = await loadRepairData(bundle);
         await saveFile(
           ritaRepairFileName(conversation.title, conversation.id),
           `${JSON.stringify(
@@ -346,7 +360,7 @@ function RitaConversationsPage() {
               sessions: bundle.sessions,
               events,
               reports,
-              reviews,
+              reviews: saved,
               conversationReview,
             }),
             null,
@@ -354,6 +368,10 @@ function RitaConversationsPage() {
           )}\n`,
           "application/json;charset=utf-8",
         );
+        // The review starts once per visit (again after it stopped); "done" keeps the updated file
+        // button from starting another round.
+        const review = reviews[conversation.id];
+        if (isAdmin && (!review || review.state === "stopped")) void runReview(conversation.id);
       } else {
         await saveFile(
           `${stem}.json`,
@@ -372,6 +390,40 @@ function RitaConversationsPage() {
       setOpening("");
       setBusyFormat("");
     }
+  }
+
+  /** Reviews the conversation's replies a step at a time, with progress on its card. */
+  async function runReview(conversationId: string) {
+    stopReview.current.delete(conversationId);
+    const set = (value: ReviewProgress) =>
+      setReviews((current) => ({ ...current, [conversationId]: value }));
+    let progress: ReviewProgress = { state: "running", turns: 0, finished: 0 };
+    set(progress);
+    for (let step = 0; step < MAX_STEPS; step += 1) {
+      if (stopReview.current.has(conversationId)) {
+        set({ ...progress, state: "stopped", message: "stopped by you" });
+        return;
+      }
+      const answer = await reviewStep(conversationId);
+      progress = {
+        ...progress,
+        turns: answer?.turns ?? progress.turns,
+        finished: answer?.finished ?? progress.finished,
+      };
+      const decision = decideStep(answer);
+      if (decision.next === "again") {
+        set(progress);
+        continue;
+      }
+      set(
+        decision.next === "stopped"
+          ? { ...progress, state: "stopped", message: decision.reason }
+          : { ...progress, state: decision.next },
+      );
+      if (decision.next === "done") refreshMarks();
+      return;
+    }
+    set({ ...progress, state: "stopped", message: "too many steps; press Review again" });
   }
 
   async function removeConversation(conversation: RitaConversation) {
@@ -433,16 +485,6 @@ function RitaConversationsPage() {
         </div>
 
         <AdminBar />
-
-        {notice ? (
-          <p
-            role="status"
-            aria-live="polite"
-            className="mt-4 rounded-2xl bg-[var(--pp-grey)] px-5 py-3 text-[15px] leading-[1.45] text-[var(--pp-ink)]"
-          >
-            {notice}
-          </p>
-        ) : null}
 
         {error ? (
           <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -512,8 +554,16 @@ function RitaConversationsPage() {
               </div>
               {opening === conversation.id && busyFormat === "repair" ? (
                 <p role="status" className="mt-3 text-[14px] text-[var(--pp-muted)]">
-                  Preparing the repair file. The AI review can take a minute or two.
+                  Making the repair file…
                 </p>
+              ) : null}
+              {isAdmin && reviews[conversation.id] ? (
+                <ReviewLine
+                  progress={reviews[conversation.id]}
+                  onStop={() => stopReview.current.add(conversation.id)}
+                  onAgain={() => void runReview(conversation.id)}
+                  onDownload={() => void download(conversation, "repair")}
+                />
               ) : null}
             </article>
           ))}
@@ -568,5 +618,73 @@ function RitaConversationsPage() {
         </div>
       ) : null}
     </main>
+  );
+}
+
+/** Under a conversation card: how far the AI review got, with stop, again and the updated file. */
+function ReviewLine({
+  progress,
+  onStop,
+  onAgain,
+  onDownload,
+}: {
+  progress: ReviewProgress;
+  onStop: () => void;
+  onAgain: () => void;
+  onDownload: () => void;
+}) {
+  const share = progress.turns > 0 ? Math.round((progress.finished / progress.turns) * 100) : 0;
+  return (
+    <div role="status" aria-live="polite" className="mt-4 space-y-2">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[14px]">
+        {progress.state === "running" && (
+          <Loader2
+            size={15}
+            className="animate-spin text-[var(--pp-accent-text)]"
+            aria-hidden="true"
+          />
+        )}
+        <span
+          className={progress.state === "stopped" ? "text-[#a3471a]" : "text-[var(--pp-muted)]"}
+        >
+          {progressText(progress)}
+        </span>
+        <span className="ms-auto flex gap-2">
+          {progress.state === "running" ? (
+            <button
+              type="button"
+              onClick={onStop}
+              className="rita-btn rita-btn-secondary rita-btn-sm"
+            >
+              Stop
+            </button>
+          ) : progress.state === "stopped" ? (
+            <button
+              type="button"
+              onClick={onAgain}
+              className="rita-btn rita-btn-secondary rita-btn-sm"
+            >
+              Review again
+            </button>
+          ) : progress.state === "done" ? (
+            <button
+              type="button"
+              onClick={onDownload}
+              className="rita-btn rita-btn-primary rita-btn-sm"
+            >
+              Download the updated repair file
+            </button>
+          ) : null}
+        </span>
+      </div>
+      {progress.turns > 0 && progress.state !== "off" && (
+        <div className="h-1 overflow-hidden rounded-full bg-[var(--pp-grey)]" aria-hidden="true">
+          <div
+            className="h-full rounded-full bg-[var(--pp-accent)] transition-[width] duration-500"
+            style={{ width: `${share}%` }}
+          />
+        </div>
+      )}
+    </div>
   );
 }
