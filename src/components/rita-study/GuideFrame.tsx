@@ -43,6 +43,20 @@ export const GuideFrame = forwardRef<
     if (doc?.documentElement) doc.documentElement.style.setProperty("zoom", String(zoom));
   }, [zoom]);
 
+  // The page may arrive already drawn by the server, and the frame can finish loading before
+  // React listens: then hand over the document now (once per document).
+  const handed = useRef<Document | null>(null);
+  const handOver = () => {
+    const doc = frame.current?.contentDocument;
+    if (!doc || handed.current === doc || !doc.querySelector("[data-seg]")) return;
+    handed.current = doc;
+    doc.documentElement.style.setProperty("zoom", String(zoom));
+    onLoad?.(doc);
+  };
+  useEffect(() => {
+    if (frame.current?.contentDocument?.readyState === "complete") handOver();
+  });
+
   useImperativeHandle(ref, () => ({
     document: () => frame.current?.contentDocument ?? null,
     window: () => frame.current?.contentWindow ?? null,
@@ -72,12 +86,7 @@ export const GuideFrame = forwardRef<
       // No allow-scripts: the guide never runs code. Same origin so the page can read a selection.
       sandbox="allow-same-origin"
       className="block h-full w-full border-0 bg-[#f4f4f8]"
-      onLoad={() => {
-        const doc = frame.current?.contentDocument;
-        if (!doc) return;
-        doc.documentElement.style.setProperty("zoom", String(zoom));
-        onLoad?.(doc);
-      }}
+      onLoad={handOver}
     />
   );
 });

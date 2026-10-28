@@ -77,6 +77,8 @@ export type StudyBridge = {
   send: ((type: string, data: Record<string, unknown>) => boolean) | null;
   onMessage?: (message: Record<string, unknown>) => void;
   onEvent?: (event: "ready" | "ended" | "speaking" | "quiet") => void;
+  /** Set by Rita: adds a line to the chat (the learner's request, or a written answer). */
+  post?: (role: "you" | "rita", text: string) => void;
 };
 
 /** An interactive study lesson: Rita sits beside the guide, in a column, without the page chrome. */
@@ -303,6 +305,14 @@ export function RitaRealtimeV3({
 
   // The study page sends its requests through this while Rita is ready, and hears when she is not.
   const studyBridge = study?.bridge;
+  useEffect(() => {
+    if (!studyBridge) return;
+    studyBridge.post = (role, text) =>
+      setMessages((current) => [...current, { id: crypto.randomUUID(), role, text }]);
+    return () => {
+      studyBridge.post = undefined;
+    };
+  }, [studyBridge]);
   useEffect(() => {
     if (!studyBridge) return;
     if (readyForSpeech) {
@@ -1550,7 +1560,11 @@ export function RitaRealtimeV3({
 
   if (loading || !user) {
     return (
-      <div className="grid min-h-screen place-items-center">
+      <div
+        className={
+          study ? "grid h-full place-items-center" : "grid min-h-screen place-items-center"
+        }
+      >
         <Loader2 className="animate-spin" />
       </div>
     );

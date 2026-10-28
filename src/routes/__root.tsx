@@ -209,7 +209,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
  * Every page except the ones built directly on the home design shares one look (see DESIGN.md,
  * "App pages"): the old tool pages take it through the `.rita-app` scope class.
  */
-const HOME_LOOK_PREFIXES = ["/rita", "/rita-lessons", "/rita-live", "/learn"];
+const HOME_LOOK_PREFIXES = ["/rita", "/rita-lessons", "/rita-live", "/rita-study", "/learn"];
 
 function AppScope({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -413,6 +413,7 @@ const NO_FOOTER = [
   "/forgot-password",
   "/reset-password",
   "/rita-live",
+  "/rita-study",
 ];
 
 function GlobalFooter() {

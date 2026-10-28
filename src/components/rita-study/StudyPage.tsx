@@ -2,14 +2,37 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Group, Panel, Separator } from "react-resizable-panels";
-import { ArrowRight, Download, Loader2, Minus, Plus, Star } from "lucide-react";
+import * as Popover from "@radix-ui/react-popover";
+import {
+  ArrowRight,
+  Download,
+  Loader2,
+  MessageCircleQuestion,
+  Minus,
+  Plus,
+  Square,
+  Star,
+} from "lucide-react";
 import { toast } from "sonner";
 import { RitaRealtimeV3, type StudyBridge } from "@/components/rita/RitaRealtimeV3";
 import { studyGuideDownload } from "@/lib/study/study.functions";
 import type { StudyLessonData } from "@/lib/study/study-types";
-import { sectionId } from "@/lib/guides/guide-blocks";
+import { PhraseDialog } from "@/components/rita/PhraseDialog";
+import { guideSegmentMap, sectionId } from "@/lib/guides/guide-blocks";
+import {
+  ACTION_INFO,
+  availableActions,
+  classifySelection,
+  type RitaAction,
+  type StudyAction,
+} from "@/lib/study/study-actions";
+import { ActionMenu } from "./ActionMenu";
+import { FloatingOrb, type OrbState } from "./FloatingOrb";
 import { GuideFrame, SHEET_PX, type GuideFrameHandle } from "./GuideFrame";
+import { DEFAULT_ORB, snapToEdge, type OrbPosition } from "./orb-position";
+import { markSelection, readSelection, sectionSegIds, type PageSelection } from "./selection";
 import { readStudyMemory, writeStudyMemory } from "./study-memory";
+import { useStudyRequests } from "./useStudyRequests";
 
 const ZOOM_MIN = 0.75;
 const ZOOM_MAX = 2;
@@ -57,6 +80,42 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   // One object for the whole visit: Rita fills `send` while her call is ready.
   const bridge = useMemo<StudyBridge>(() => ({ send: null }), []);
   const lastFocus = useRef("");
+  const requests = useStudyRequests({ lessonId: lesson.id, preview, bridge });
+  const segments = useMemo(() => guideSegmentMap(guide.content), [guide.content]);
+
+  // The learner's selection, kept even when the browser's own selection goes away (an iPhone tap).
+  const [selection, setSelection] = useState<PageSelection | null>(null);
+  const selectionRef = useRef<PageSelection | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuOpenRef = useRef(false);
+  menuOpenRef.current = menuOpen;
+  const [orb, setOrb] = useState<OrbPosition>(() => readStudyMemory(lesson.id).orb ?? DEFAULT_ORB);
+  const [movingOrb, setMovingOrb] = useState(false);
+  const [phrase, setPhrase] = useState("");
+
+  const selected = useMemo(() => {
+    if (!selection) return null;
+    const pieces = selection.segIds
+      .map((id) => segments.get(id))
+      .filter((piece): piece is NonNullable<typeof piece> => Boolean(piece));
+    const kind = classifySelection({ exact: selection.exact, segments: pieces });
+    const section = pieces.find((piece) => piece.section)?.section ?? "";
+    return { pieces, kind, section };
+  }, [segments, selection]);
+
+  const keepSelection = useCallback((next: PageSelection | null) => {
+    selectionRef.current = next;
+    setSelection(next);
+    markSelection(frame.current?.window() ?? null, next?.range ?? null);
+  }, []);
+
+  const moveOrb = useCallback(
+    (next: OrbPosition) => {
+      setOrb(next);
+      writeStudyMemory(lesson.id, { orb: next });
+    },
+    [lesson.id],
+  );
 
   const sendFocus = useCallback(
     (section: string) => {
@@ -70,6 +129,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
 
   useEffect(() => {
     bridge.onEvent = (event) => {
+      requests.onRitaEvent(event);
       if (event === "speaking") setRitaSpeaking(true);
       if (event === "quiet" || event === "ended") setRitaSpeaking(false);
       if (event !== "ready") return;
@@ -87,7 +147,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
       lastFocus.current = "";
       sendFocus(current || memory.section || "");
     };
-  }, [bridge, current, lesson.id, preview, sections, sendFocus]);
+  }, [bridge, current, lesson.id, preview, requests, sections, sendFocus]);
 
   // The fitted zoom keeps the whole sheet in view on narrow screens.
   useEffect(() => {
@@ -117,6 +177,27 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
       if (!win) return;
       const memory = readStudyMemory(lesson.id);
       if (memory.section) doc.getElementById(memory.section)?.scrollIntoView({ block: "start" });
+      // The selection is saved 120ms after it stops changing, before any menu opens: on a phone
+      // the tap on the circle can clear the browser's selection, so the copy must exist first.
+      let picking = 0;
+      doc.addEventListener("selectionchange", () => {
+        window.clearTimeout(picking);
+        picking = window.setTimeout(() => {
+          const next = readSelection(doc);
+          if (next) {
+            keepSelection(next);
+            const piece = next.segIds[0] ? segments.get(next.segIds[0]) : null;
+            if (piece?.section)
+              bridge.send?.("rita-study-focus", {
+                section: piece.section,
+                text: next.exact.slice(0, 300),
+              });
+            return;
+          }
+          // A tap elsewhere in the guide clears it, unless the menu is using it.
+          if (!menuOpenRef.current && doc.getSelection()?.isCollapsed) keepSelection(null);
+        }, 120);
+      });
       let timer = 0;
       win.addEventListener(
         "scroll",
@@ -138,7 +219,85 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
         { passive: true },
       );
     },
-    [lesson.id, preview, sections, sendFocus],
+    [bridge, keepSelection, lesson.id, preview, sections, segments, sendFocus],
+  );
+
+  const actions: StudyAction[] = selected ? availableActions(selected.kind) : [];
+
+  async function pick(action: StudyAction) {
+    const sel = selectionRef.current;
+    if (action === "meaning") {
+      if (sel) setPhrase(sel.exact);
+      setMenuOpen(false);
+      return;
+    }
+    if (action === "report") return;
+    const target =
+      action === "summarize_section"
+        ? {
+            segIds: sectionSegIds(
+              frame.current?.document() ?? null,
+              current || sections[0]?.id || "",
+            ),
+            exact: "",
+          }
+        : sel
+          ? { segIds: sel.segIds, exact: sel.exact, parts: sel.parts }
+          : null;
+    if (!target || !target.segIds.length) return;
+    setMenuOpen(false);
+    const ok = await requests.run(action as RitaAction, target);
+    // On a phone, a written answer is in Rita's tab; a spoken one plays while the guide stays open.
+    if (ok && !wide && !bridge.send) setTab("rita");
+  }
+
+  async function report(note: string) {
+    const sel = selectionRef.current;
+    if (!sel) return;
+    const ok = await requests.report(
+      { segIds: sel.segIds, exact: sel.exact, parts: sel.parts },
+      note,
+    );
+    if (ok) setMenuOpen(false);
+  }
+
+  const orbState: OrbState = requests.busy ? "busy" : selection ? "armed" : "idle";
+  const sectionLabel = (() => {
+    const id = selected?.section || current || sections[0]?.id || "";
+    const index = sections.findIndex((item) => item.id === id);
+    return index >= 0 ? `القسم ${index + 1}` : "";
+  })();
+
+  const live = requests.active;
+  const liveState =
+    live && (live.state === "resolving" || live.state === "sent" || live.state === "started");
+  const status = live && (liveState || live.state === "failed") && (
+    <div
+      role="status"
+      className={`rounded-2xl border px-3 py-2.5 text-[14px] ${
+        live.state === "failed"
+          ? "border-[#f3c4c4] bg-[#fdf1f1] text-[#8c1a31]"
+          : "border-[var(--pp-line)] bg-[var(--pp-grey)] text-[var(--pp-ink)]"
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        {liveState && <Loader2 size={15} className="shrink-0 animate-spin" aria-hidden="true" />}
+        <p className="min-w-0 flex-1">
+          {live.state === "failed"
+            ? live.message
+            : `${ACTION_INFO[live.action].label}: «${live.quote.slice(0, 60)}»`}
+        </p>
+        {liveState && (
+          <button
+            type="button"
+            onClick={requests.stop}
+            className="rita-btn rita-btn-soft rita-btn-sm gap-1 !h-8"
+          >
+            <Square size={12} fill="currentColor" aria-hidden="true" /> وقّف
+          </button>
+        )}
+      </div>
+    </div>
   );
 
   async function download() {
@@ -180,6 +339,14 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
             </select>
           </label>
         )}
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          className="rita-btn rita-btn-soft rita-btn-sm gap-1.5 !h-9"
+        >
+          <MessageCircleQuestion size={15} aria-hidden="true" />
+          اسأل ريتا عن التحديد
+        </button>
         <div className="ms-auto flex items-center gap-1">
           <button
             type="button"
@@ -233,13 +400,81 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
           title={title}
           onLoad={onGuideLoad}
         />
+        <Popover.Root open={menuOpen} onOpenChange={setMenuOpen}>
+          <Popover.Anchor asChild>
+            <FloatingOrb
+              state={orbState}
+              position={orb}
+              onMove={moveOrb}
+              onPress={() => setMenuOpen((open) => !open)}
+              moving={movingOrb}
+              onStopMoving={() => setMovingOrb(false)}
+              label={selection ? "شو بدك نعمل بالتحديد؟" : "حدّد جزء من الدرس"}
+            />
+          </Popover.Anchor>
+          <Popover.Portal>
+            <Popover.Content
+              side="top"
+              align="start"
+              sideOffset={10}
+              collisionPadding={12}
+              dir="rtl"
+              className="edith-premium z-50 overflow-hidden rounded-2xl border border-[var(--pp-line)] bg-white text-[var(--pp-ink)] shadow-[0_12px_40px_rgb(18_17_23/0.16)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+              onOpenAutoFocus={(event) => event.preventDefault()}
+            >
+              <ActionMenu
+                quote={selection?.exact ?? ""}
+                kind={selected?.kind ?? null}
+                sectionLabel={sectionLabel}
+                actions={actions}
+                hasSelection={Boolean(selection)}
+                busy={false}
+                onPick={(action) => void pick(action)}
+                onReport={(note) => void report(note)}
+                onClear={() => {
+                  frame.current?.document()?.getSelection()?.removeAllRanges();
+                  keepSelection(null);
+                }}
+                onMoveOrb={() => {
+                  setMenuOpen(false);
+                  setMovingOrb(true);
+                }}
+                onPinOrb={() => moveOrb(snapToEdge(orb))}
+                onResetOrb={() => moveOrb(DEFAULT_ORB)}
+                onClose={() => setMenuOpen(false)}
+              />
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
+        {movingOrb && (
+          <p
+            role="status"
+            className="absolute inset-x-3 top-3 z-30 rounded-xl bg-[var(--pp-ink)] px-3 py-2 text-center text-[13px] text-white"
+          >
+            حرّك الدائرة بالأسهم (Shift أسرع)، وEnter أو Esc لما تخلص.
+          </p>
+        )}
+        {!wide && tab === "guide" && live && liveState && live.channel === "voice" && (
+          <div className="absolute inset-x-3 bottom-3 z-30 flex items-center gap-2 rounded-2xl bg-[var(--pp-ink)] px-3 py-2 text-[14px] text-white">
+            <p className="min-w-0 flex-1 truncate">ريتا بتشرح… «{live.quote.slice(0, 40)}»</p>
+            <button
+              type="button"
+              onClick={() => setTab("rita")}
+              className="font-semibold underline"
+            >
+              افتح المحادثة
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 
   const ritaPane = (
     <div className="flex h-full min-h-0 flex-col" dir="rtl">
-      <RitaRealtimeV3 study={{ lessonId: lesson.id, preview, title: "ريتا", bridge }} />
+      <RitaRealtimeV3
+        study={{ lessonId: lesson.id, preview, title: "ريتا", bridge, children: status }}
+      />
     </div>
   );
 
@@ -255,7 +490,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
           <span className="hidden sm:inline">الدروس</span>
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[17px] font-bold leading-6">{title}</h1>
+          <h1 className="truncate !text-[17px] font-bold !leading-6 !tracking-normal">{title}</h1>
           <p className="text-[12.5px] font-semibold text-[var(--pp-accent-text)]">
             ريتا — دراسة تفاعلية{preview ? " · معاينة أدمن (ما بينحفظ إشي)" : ""}
           </p>
@@ -318,6 +553,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
           <div className={`min-h-0 flex-1 ${tab === "rita" ? "" : "hidden"}`}>{ritaPane}</div>
         </>
       )}
+      {phrase && <PhraseDialog phrase={phrase} onClose={() => setPhrase("")} />}
     </div>
   );
 }
