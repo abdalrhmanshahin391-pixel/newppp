@@ -28,6 +28,7 @@ import { LessonImage } from "@/components/rita-lessons/LessonArt";
 import { ExercisesPanel } from "@/components/rita-lessons/admin/ExercisesPanel";
 import { ResourcesPanel } from "@/components/rita-lessons/admin/ResourcesPanel";
 import { SlidesPanel } from "@/components/rita-lessons/admin/SlidesPanel";
+import { StudyGuidePanel } from "@/components/rita-lessons/admin/StudyGuidePanel";
 import { errorText, lessonToDraft, pagesLabel } from "./book-utils";
 import { BidiText, ReadinessChip } from "./BookBits";
 
@@ -278,6 +279,9 @@ export function LessonDrawer({
                   <Tabs.Trigger value="resources" className="rita-tab">
                     المراجع{resourcesReady ? ` (${resources[lesson.id]?.length ?? 0})` : ""}
                   </Tabs.Trigger>
+                  <Tabs.Trigger value="study" className="rita-tab">
+                    الدراسة التفاعلية
+                  </Tabs.Trigger>
                 </Tabs.List>
                 <div className="rita-ex-body">
                   <Tabs.Content value="exercises" className="rita-tab-panel">
@@ -308,6 +312,9 @@ export function LessonDrawer({
                         }
                       }}
                     />
+                  </Tabs.Content>
+                  <Tabs.Content value="study" className="rita-tab-panel">
+                    <StudyGuidePanel key={lesson.id} lesson={lesson} />
                   </Tabs.Content>
                   <Tabs.Content value="slides" className="rita-tab-panel">
                     <SlidesPanel

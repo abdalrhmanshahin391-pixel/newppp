@@ -36,6 +36,10 @@ on:
       - "src/lib/guides/**"
       - "guides-worker/**"
       - "supabase/migrations/20261027120000_rita_lesson_guides.sql"
+      - "supabase/migrations/20261028120000_rita_study_lessons.sql"
+      - "src/lib/study/**"
+      - "src/components/rita-lessons/admin/**"
+      - "public/fonts/guides/**"
       - "supabase/config.toml"
       - "scripts/sync-lesson-edge.mjs"
       - ".github/workflows/rita-v3-frontend-check.yml"
@@ -83,6 +87,9 @@ jobs:
           node --test src/lib/rita-lesson-edge-sync.test.ts
           node --test src/lib/guides/guide.test.ts
           node --test src/lib/guides/guide-pipeline.test.ts
+          node --test src/lib/guides/guide-blocks.test.ts
+          node --test src/lib/study/study-experience.test.ts
+          node --test src/lib/study/study-link.test.ts
           node --test src/routes/api/rita-v3/session/start.source.test.mjs
           bunx tsc --noEmit
       - name: Build site

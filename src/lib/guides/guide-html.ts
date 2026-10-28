@@ -4,6 +4,7 @@
 // The look follows docs in DESIGN.md ("Guides"): ink titles, the site blue for headings and the
 // taught term, soft tinted cards, and the Uzyra mark with the name at the top right.
 import { BRAND_NAME, UZYRA_MARK_PATHS, UZYRA_MARK_VIEWBOX } from "../brand.ts";
+import { sectionId } from "./guide-blocks.ts";
 import {
   parseMarkup,
   plainText,
@@ -22,7 +23,30 @@ export type GuideHtmlOptions = {
   draft?: boolean;
   /** Where the font files are, ending with a slash. Relative to the HTML file by default. */
   fontBase?: string;
+  /**
+   * Names every piece of text (data-block / data-seg, see guide-blocks.ts) so a learner's selection
+   * maps to the guide. Off for printing: the PDF is the same with or without it.
+   */
+  anchors?: boolean;
+  /**
+   * For the study page: the guide as a white sheet on a grey page, a strict content policy and no
+   * script. Printing ignores it.
+   */
+  screen?: boolean;
 };
+
+/** Attributes naming a piece of the guide; nothing unless anchors are on and the piece has text. */
+type Namer = (block: string | null, seg: string | null, markup?: string) => string;
+
+function namer(on: boolean): Namer {
+  if (!on) return () => "";
+  return (block, seg, markup) => {
+    const parts: string[] = [];
+    if (block) parts.push(` data-block="${block}"`);
+    if (seg && (markup === undefined || plainText(markup).trim())) parts.push(` data-seg="${seg}"`);
+    return parts.join("");
+  };
+}
 
 export function escapeHtml(value: string): string {
   return value
@@ -79,7 +103,7 @@ function widths(columns: string[][]): string[] {
   return shares.map((share) => `${(share * scale).toFixed(1)}%`);
 }
 
-function tableHtml(section: Extract<Section, { kind: "table" }>): string {
+function tableHtml(section: Extract<Section, { kind: "table" }>, s: string, name: Namer): string {
   const columns = section.columns.map((column, index) => [
     column.label,
     ...section.rows.map((row) => row[index] ?? ""),
@@ -89,72 +113,92 @@ function tableHtml(section: Extract<Section, { kind: "table" }>): string {
     .join("");
   const head = section.columns
     .map(
-      (column) =>
-        `<th><span class="pill ${tone(column.tone)}">${escapeHtml(column.label)}</span></th>`,
+      (column, c) =>
+        `<th><span class="pill ${tone(column.tone)}"${name(null, `${s}.hd.c${c + 1}`, column.label)}>${escapeHtml(column.label)}</span></th>`,
     )
     .join("");
   const body = section.rows
     .map(
-      (row) =>
-        `<tr>${row
+      (row, r) =>
+        `<tr${name(`${s}.r${r + 1}`, null)}>${row
           .map((value, index) =>
             section.row_headers && index === 0
-              ? `<td class="rowlab">${inline(value)}</td>`
-              : `<td>${inline(value)}</td>`,
+              ? `<td class="rowlab"${name(null, `${s}.r${r + 1}.c${index + 1}`, value)}>${inline(value)}</td>`
+              : `<td${name(null, `${s}.r${r + 1}.c${index + 1}`, value)}>${inline(value)}</td>`,
           )
           .join("")}</tr>`,
     )
     .join("");
-  return `<section class="block"><h2 class="sec">${escapeHtml(section.heading)}</h2><table class="grid"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></section>`;
+  return `<section class="block"${sectionAttr(s, name)}><h2 class="sec"${name(`${s}.h`, `${s}.h`, section.heading)}>${escapeHtml(section.heading)}</h2><table class="grid"><colgroup>${cols}</colgroup><thead><tr${name(`${s}.hd`, null)}>${head}</tr></thead><tbody>${body}</tbody></table></section>`;
 }
 
-function matrixHtml(section: Extract<Section, { kind: "matrix" }>): string {
+function matrixHtml(section: Extract<Section, { kind: "matrix" }>, s: string, name: Namer): string {
   const head = `<th></th>${section.columns
-    .map((column) => `<th><span class="pill tone-blue solid">${escapeHtml(column)}</span></th>`)
+    .map(
+      (column, c) =>
+        `<th><span class="pill tone-blue solid"${name(null, `${s}.hd.c${c + 1}`, column)}>${escapeHtml(column)}</span></th>`,
+    )
     .join("")}`;
   const body = section.rows
     .map(
-      (row) =>
-        `<tr><th class="rowhead"><span class="pill tone-green solid tall">${escapeHtml(row.label)}</span></th>${row.cells
-          .map((value) => `<td>${inline(value)}</td>`)
+      (row, r) =>
+        `<tr${name(`${s}.r${r + 1}`, null)}><th class="rowhead"><span class="pill tone-green solid tall"${name(null, `${s}.r${r + 1}.l`, row.label)}>${escapeHtml(row.label)}</span></th>${row.cells
+          .map(
+            (value, c) =>
+              `<td${name(null, `${s}.r${r + 1}.c${c + 1}`, value)}>${inline(value)}</td>`,
+          )
           .join("")}</tr>`,
     )
     .join("");
-  return `<section class="block"><h2 class="sec">${escapeHtml(section.heading)}</h2><table class="grid matrix"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></section>`;
+  return `<section class="block"${sectionAttr(s, name)}><h2 class="sec"${name(`${s}.h`, `${s}.h`, section.heading)}>${escapeHtml(section.heading)}</h2><table class="grid matrix"><thead><tr${name(`${s}.hd`, null)}>${head}</tr></thead><tbody>${body}</tbody></table></section>`;
 }
 
-function usageHtml(section: Extract<Section, { kind: "usage" }>): string {
+function usageHtml(section: Extract<Section, { kind: "usage" }>, s: string, name: Namer): string {
   const items = section.items
-    .map((item) => {
-      const label = item.label ? `${escapeHtml(item.label)}: ` : "";
-      return `<p>${label}<span class="ex">${inline(item.example)}</span></p>`;
+    .map((item, n) => {
+      const id = `${s}.i${n + 1}`;
+      const labelSeg = name(null, `${id}.l`, item.label);
+      const label = !item.label
+        ? ""
+        : labelSeg
+          ? `<span${labelSeg}>${escapeHtml(item.label)}</span>: `
+          : `${escapeHtml(item.label)}: `;
+      return `<p${name(id, null)}>${label}<span class="ex"${name(null, `${id}.x`, item.example)}>${inline(item.example)}</span></p>`;
     })
     .join("");
-  return `<section class="card usage block"><h3>${escapeHtml(section.heading)}</h3>${items}</section>`;
+  return `<section class="card usage block"${sectionAttr(s, name)}><h3${name(`${s}.h`, `${s}.h`, section.heading)}>${escapeHtml(section.heading)}</h3>${items}</section>`;
 }
 
-function rulesHtml(section: Extract<Section, { kind: "rules" }>): string {
+function rulesHtml(section: Extract<Section, { kind: "rules" }>, s: string, name: Namer): string {
   const items = section.items
-    .map(
-      (item) =>
-        `<li><div class="rule">${inline(item.rule)}</div>${item.examples
-          .map((example) => `<div class="ex">${inline(example)}</div>`)
-          .join("")}</li>`,
-    )
+    .map((item, n) => {
+      const id = `${s}.i${n + 1}`;
+      return `<li${name(id, null)}><div class="rule"${name(null, `${id}.r`, item.rule)}>${inline(item.rule)}</div>${item.examples
+        .map(
+          (example, m) =>
+            `<div class="ex"${name(null, `${id}.e${m + 1}`, example)}>${inline(example)}</div>`,
+        )
+        .join("")}</li>`;
+    })
     .join("");
-  return `<section class="block"><h2 class="sec">${escapeHtml(section.heading)}</h2><ul class="rules">${items}</ul></section>`;
+  return `<section class="block"${sectionAttr(s, name)}><h2 class="sec"${name(`${s}.h`, `${s}.h`, section.heading)}>${escapeHtml(section.heading)}</h2><ul class="rules">${items}</ul></section>`;
 }
 
-function sectionHtml(section: Section): string {
+function sectionAttr(s: string, name: Namer): string {
+  return name(s, null) ? ` data-section="${s}" id="${s}"` : "";
+}
+
+function sectionHtml(section: Section, index: number, name: Namer): string {
+  const s = sectionId(index);
   switch (section.kind) {
     case "table":
-      return tableHtml(section);
+      return tableHtml(section, s, name);
     case "matrix":
-      return matrixHtml(section);
+      return matrixHtml(section, s, name);
     case "usage":
-      return usageHtml(section);
+      return usageHtml(section, s, name);
     case "rules":
-      return rulesHtml(section);
+      return rulesHtml(section, s, name);
   }
 }
 
@@ -233,22 +277,52 @@ ul.rules .ex{font-size:10pt;color:var(--body);margin-top:2pt}
 
 export function renderGuideHtml(content: GuideContent, options: GuideHtmlOptions = {}): string {
   const base = options.fontBase ?? "fonts/";
+  const name = namer(Boolean(options.anchors));
   const footer = `${BRAND_NAME} · Grammar guide${options.draft === false ? "" : " · draft for review"}`;
   const callout = content.callout
-    ? `<aside class="card callout">${inline(content.callout)}</aside>`
+    ? `<aside class="card callout"${name("c", "c", content.callout)}>${inline(content.callout)}</aside>`
     : "";
+  const arabicRuns = runsHtml(parseMarkup(content.arabic_note), true);
+  const arabicSeg = name(null, "a", content.arabic_note);
   const arabic = content.arabic_note
-    ? `<aside class="ar" dir="rtl" lang="ar"><span class="tag">AR</span>${runsHtml(parseMarkup(content.arabic_note), true)}</aside>`
+    ? `<aside class="ar" dir="rtl" lang="ar"${name("a", null)}><span class="tag">AR</span>${arabicSeg ? `<span${arabicSeg}>${arabicRuns}</span>` : arabicRuns}</aside>`
     : "";
-  return `<!doctype html>
-<html lang="en" dir="ltr"><head><meta charset="utf-8"><title>${escapeHtml(content.title)}</title><style>${css(base, escapeCssString(footer))}</style></head><body>
-<header class="head"><h1>${keepTogether(escapeHtml(content.title))}</h1><div class="brand" role="img" aria-label="${BRAND_NAME}">${markSvg}<span aria-hidden="true">UZYR${wordmarkA}</span></div></header>
-<p class="intro">${inline(content.intro)}</p>
-${content.sections.map(sectionHtml).join("\n")}
+  const policy = options.screen
+    ? `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; font-src ${escapeHtml(fontOrigin(base))}; img-src data:">`
+    : "";
+  const styles = css(base, escapeCssString(footer)) + (options.screen ? SCREEN_CSS : "");
+  const body = `<header class="head"><h1${name("t", "t", content.title)}>${keepTogether(escapeHtml(content.title))}</h1><div class="brand" role="img" aria-label="${BRAND_NAME}">${markSvg}<span aria-hidden="true">UZYR${wordmarkA}</span></div></header>
+<p class="intro"${name("i", "i", content.intro)}>${inline(content.intro)}</p>
+${content.sections.map((section, index) => sectionHtml(section, index, name)).join("\n")}
 ${callout}
-${arabic}
+${arabic}`;
+  return `<!doctype html>
+<html lang="en" dir="ltr"><head><meta charset="utf-8">${policy}<title>${escapeHtml(content.title)}</title><style>${styles}</style></head><body>
+${options.screen ? `<main class="sheet">${body}</main>` : body}
 </body></html>`;
 }
+
+/** Fonts load from the site itself on screen ('self' does not work inside an srcdoc frame). */
+function fontOrigin(base: string): string {
+  const match = /^(https?:\/\/[^/]+)/i.exec(base);
+  return match ? match[1] : "'self'";
+}
+
+/**
+ * The study page shows the guide as one white sheet on a grey page. @page only splits pages when
+ * printing, so on screen the sheet is one long page and the learner moves by section.
+ */
+const SCREEN_CSS = `
+@media screen{
+html{background:#f4f4f8}
+body{padding:16px 12px 40px}
+.sheet{width:${PAGE_WIDTH_PT}pt;max-width:none;margin:0 auto;padding:34pt 34pt 40pt;background:#fff;border-radius:6pt;box-shadow:0 1px 2px rgba(18,17,23,.06),0 8px 24px rgba(18,17,23,.08)}
+section.block{scroll-margin-top:16px}
+::selection{background:#cfe0ff}
+.st-flash{animation:st-flash 1.2s ease-out}
+@keyframes st-flash{0%{background:#fff3b0}100%{background:transparent}}
+}
+@media screen and (prefers-reduced-motion:reduce){.st-flash{animation:none;outline:2px solid #2b6df0}}`;
 
 function escapeCssString(value: string): string {
   return value
