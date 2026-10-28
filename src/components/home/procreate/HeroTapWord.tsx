@@ -144,19 +144,6 @@ export function HeroTapWord() {
             Talk to Rita
           </Link>
         </div>
-        <p
-          className="edith-in mt-3 text-[14.5px]"
-          style={{ ...delay(280), color: "var(--pp-muted)" }}
-        >
-          Free to start. No card needed.{" "}
-          <Link to="/privacy-policy" className="underline underline-offset-4">
-            Privacy
-          </Link>
-          {" · "}
-          <Link to="/refund-policy" className="underline underline-offset-4">
-            Refunds
-          </Link>
-        </p>
       </div>
 
       <div

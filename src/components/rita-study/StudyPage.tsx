@@ -508,14 +508,14 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
       {wide ? (
         // Rita is always on the left and the guide on the right: the group is laid out left to right.
         <Group orientation="horizontal" dir="ltr" className="min-h-0 flex-1">
-          <Panel id="rita" defaultSize="44" minSize={340}>
+          <Panel id="rita" defaultSize="50" minSize={340}>
             {ritaPane}
           </Panel>
           <Separator
             className="w-1 bg-[#121117] transition-colors hover:bg-[var(--pp-accent)] focus-visible:bg-[var(--pp-accent)] focus-visible:outline-none"
             aria-label="غيّر عرض الملف وريتا"
           />
-          <Panel id="guide" defaultSize="56" minSize={420}>
+          <Panel id="guide" defaultSize="50" minSize={420}>
             {guidePane}
           </Panel>
         </Group>

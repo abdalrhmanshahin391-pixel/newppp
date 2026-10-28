@@ -23,6 +23,7 @@ on:
       - "src/lib/rita-target-language*"
       - "src/lib/language-scope.ts"
       - "src/lib/language-flags*"
+      - "src/lib/language-splash*"
       - "public/flags/**"
       - "src/components/home/procreate/ProHeader.tsx"
       - "supabase/migrations/20261020220000_language_flags.sql"
@@ -105,6 +106,7 @@ jobs:
           node --test src/lib/study/study-access.test.ts
           node --test src/lib/study/study-voice-brief.test.ts
           node --test src/lib/study/lesson-maker.test.ts
+          node --test src/lib/language-splash.test.ts
           node --test src/routes/api/rita-v3/session/start.source.test.mjs
           bunx tsc --noEmit
       - name: Study page selection in a real browser

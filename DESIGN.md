@@ -365,6 +365,27 @@ ink gradient with a blue glow and the small glowing orb) as the only ornament.
 The study page's Rita column uses the same dark panel (`.uz-rita-dark`: the --pp tokens flipped to
 light-on-dark inside it, a white "ابدأ مع ريتا"); the guide stays on paper beside it.
 
+## Language-change splash (`LanguageSplash`)
+
+When a signed-in learner changes the language they are learning (top-bar menu, settings, first
+choice), a full-screen white moment plays for about 3.4 seconds. It is only a picture: the change
+has already happened, nothing waits for it, and a tap anywhere or Escape closes it.
+
+- White page, ink text, one blue accent, no glow, almost no words: only the word and the language.
+- "Uzyra" is set in Instrument Serif (`public/fonts/brand`, family "Uzyra Serif"), a serious
+  display serif, never a script or signature face. Letter-spacing +0.07em and a thin ink stroke
+  (1.6px phones, 2.2px wide) make it read clearly. Always left to right, even on Arabic pages.
+- Motion, in order: the letters rise one after another, each coming out of a light blur (0.9s,
+  110ms apart); a 3px blue line opens from the middle (0.7s); the language being left (grey flag,
+  its own name) rolls up and out while the new one (flag, its own name in Inter Tight 700 32px)
+  rolls in from below. The first choice has no old language, so only the new one rises.
+- Only transform, opacity and filter move. The font is loaded first (at most 500ms) so the word
+  never shows in another face.
+- Reduced motion: a still card for 1.2 seconds. Hidden from screen readers (`aria-hidden`); the
+  switcher's own announcement ("Now learning …") stays the spoken part.
+- State and rules: `src/lib/language-splash.ts` (tested); it is started from `setLanguage` in
+  `useLearningLanguage`, so every place that changes the language gets it.
+
 ## Home app window
 
 `AppWindow.tsx` replaces the old lesson-path strip. A window built from real markup (no screenshots) that starts tilted (desktop only) and flattens as it scrolls to the middle of the screen, then plays a short story once: the path fills, the lesson in progress shows, two words are saved, Rita listens.
