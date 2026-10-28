@@ -5,26 +5,21 @@ import type { StudyBridge } from "@/components/rita/RitaRealtimeV3";
 import { useExplanationLanguage } from "@/hooks/useExplanationLanguage";
 import { ACTION_INFO, type RitaAction } from "@/lib/study/study-actions";
 import { resolveStudyRequest, studyExplainText } from "@/lib/study/study-request.functions";
+import {
+  ACK_MS,
+  FIRST_AUDIO_MS,
+  LATE_MESSAGE,
+  ackStep,
+  isLive,
+  ritaEventStep,
+  stopStep,
+  type ActiveRequest,
+  type RequestStep,
+} from "@/lib/study/study-request-state";
 
-export type RequestState = "resolving" | "sent" | "started" | "done" | "failed" | "cancelled";
-
-export type ActiveRequest = {
-  id: string;
-  action: RitaAction;
-  quote: string;
-  channel: "voice" | "text";
-  state: RequestState;
-  message?: string;
-};
+export type { ActiveRequest };
 
 export type SelectionRef = { segIds: string[]; exact: string; parts?: string[] };
-
-/** Waits for Rita's "started" before saying she is late; then for her first words. */
-const ACK_MS = 3_000;
-const FIRST_AUDIO_MS = 8_000;
-
-const isLive = (state: RequestState) =>
-  state === "resolving" || state === "sent" || state === "started";
 
 /**
  * One request at a time: a new one cancels the old one, and a late answer from an old request is
@@ -65,55 +60,44 @@ export function useStudyRequests({
     [update],
   );
 
+  /** Applies one step from study-request-state.ts to the current request. */
+  const apply = useCallback(
+    (step: RequestStep | null) => {
+      const current = activeRef.current;
+      if (!step || !current) return;
+      if (step.timer !== "keep") clearTimer();
+      update(current.id, { state: step.state, ...(step.message ? { message: step.message } : {}) });
+      if (step.timer === "first_audio") {
+        const id = current.id;
+        timer.current = window.setTimeout(() => fail(id, LATE_MESSAGE), FIRST_AUDIO_MS);
+      }
+    },
+    [fail, update],
+  );
+
   // The worker's answers about a request.
   useEffect(() => {
-    bridge.onMessage = (message) => {
-      if (message.type !== "rita-study-ack") return;
-      const id = String(message.request_id ?? "");
-      const current = activeRef.current;
-      if (!current || current.id !== id) return;
-      if (message.state === "started") {
-        clearTimer();
-        update(id, { state: "started" });
-        timer.current = window.setTimeout(
-          () => fail(id, "تأخرت ريتا بالرد. جرّب مرة ثانية."),
-          FIRST_AUDIO_MS,
-        );
-      } else if (message.state === "failed") {
-        fail(id, "ريتا ما قدرت تجاوب على هالطلب. جرّب مرة ثانية.");
-      } else if (message.state === "cancelled") {
-        clearTimer();
-        update(id, { state: "cancelled" });
-      }
-    };
+    bridge.onMessage = (message) => apply(ackStep(activeRef.current, message));
     return () => {
       bridge.onMessage = undefined;
       clearTimer();
     };
-  }, [bridge, fail, update]);
+  }, [apply, bridge]);
 
   /** Rita's speaking state, from the call (the study page forwards it). */
   const onRitaEvent = useCallback(
-    (event: "ready" | "ended" | "speaking" | "quiet") => {
-      const current = activeRef.current;
-      if (!current || current.channel !== "voice") return;
-      if (event === "speaking" && current.state === "started") clearTimer();
-      if (event === "quiet" && current.state === "started") update(current.id, { state: "done" });
-      if (event === "ended" && isLive(current.state)) {
-        clearTimer();
-        update(current.id, { state: "cancelled" });
-      }
-    },
-    [update],
+    (event: "ready" | "ended" | "speaking" | "quiet") =>
+      apply(ritaEventStep(activeRef.current, event)),
+    [apply],
   );
 
   const stop = useCallback(() => {
     const current = activeRef.current;
-    if (!current || !isLive(current.state)) return;
-    clearTimer();
+    const step = stopStep(current);
+    if (!current || !step) return;
     if (current.channel === "voice") bridge.send?.("rita-study-cancel", { request_id: current.id });
-    update(current.id, { state: "cancelled" });
-  }, [bridge, update]);
+    apply(step);
+  }, [apply, bridge]);
 
   const run = useCallback(
     async (action: RitaAction, selection: SelectionRef): Promise<boolean> => {
@@ -169,10 +153,7 @@ export function useStudyRequests({
             return false;
           }
           update(id, { state: "sent", quote: result.quote });
-          timer.current = window.setTimeout(
-            () => fail(id, "تأخرت ريتا بالرد. جرّب مرة ثانية."),
-            ACK_MS,
-          );
+          timer.current = window.setTimeout(() => fail(id, LATE_MESSAGE), ACK_MS);
           return true;
         }
         bridge.post?.("you", `[${ACTION_INFO[action].label}] «${selection.exact.slice(0, 160)}»`);

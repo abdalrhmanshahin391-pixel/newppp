@@ -84,7 +84,57 @@ def test_user_line_names_the_request_in_arabic():
 def test_bot_wires_the_study_section_and_messages():
     source = (ROOT / "bot.py").read_text(encoding="utf-8")
     assert "{study_section(body, study_voice)}" in source
+    assert "handle_study_message(study_voice, message_type" in source
+    module = (ROOT / "rita_study_voice.py").read_text(encoding="utf-8")
     for kind in ("rita-study-state", "rita-study-focus", "rita-study-action", "rita-study-cancel", "rita-study-say"):
-        assert f'"{kind}"' in source
+        assert f'"{kind}"' in module
     # The spoken lesson and the lesson engine are untouched (ST-V07).
     assert "{lesson_engine_section(body, lesson_voice) or lesson_section(body)}" in source
+
+
+from rita_study_voice import handle_study_message  # noqa: E402
+
+
+def test_st_v01_other_sessions_ignore_study_messages():
+    effects = handle_study_message(None, "rita-study-action", {"request_id": "a", "action": "explain", "quote": "x"})
+    assert effects == type(effects)()
+
+
+def test_st_v02_state_and_focus_never_run_the_model():
+    voice = StudyVoice.from_body(BODY)
+    for kind, data in (("rita-study-state", {"state": "practicing"}), ("rita-study-focus", {"section": "s1", "text": "x"})):
+        effects = handle_study_message(voice, kind, data)
+        assert effects.refresh_prompt and not effects.run_model and not effects.interrupt and effects.ack is None
+
+
+def test_st_v03_an_action_interrupts_answers_and_acks_started():
+    voice = StudyVoice.from_body(BODY)
+    effects = handle_study_message(
+        voice, "rita-study-action", {"request_id": "r1", "action": "explain", "quote": "are", "context": "I am / you are"}
+    )
+    assert effects.interrupt and effects.refresh_prompt and effects.run_model
+    assert effects.user_line == "[اشرحلي] «are»"
+    assert effects.ack == {"type": "rita-study-ack", "request_id": "r1", "state": "started"}
+
+
+def test_a_bad_action_is_acked_failed_without_a_model_call():
+    voice = StudyVoice.from_body(BODY)
+    effects = handle_study_message(voice, "rita-study-action", {"request_id": "r2", "action": "hack", "quote": "x"})
+    assert effects.ack == {"type": "rita-study-ack", "request_id": "r2", "state": "failed"}
+    assert not effects.run_model and not effects.interrupt
+
+
+def test_st_v05_cancel_stops_only_the_current_request_and_always_acks():
+    voice = StudyVoice.from_body(BODY)
+    handle_study_message(voice, "rita-study-action", {"request_id": "r1", "action": "explain", "quote": "are", "context": "x"})
+    other = handle_study_message(voice, "rita-study-cancel", {"request_id": "old"})
+    assert not other.interrupt and other.ack["state"] == "cancelled"
+    stop = handle_study_message(voice, "rita-study-cancel", {"request_id": "r1"})
+    assert stop.interrupt and stop.refresh_prompt and stop.ack["state"] == "cancelled"
+
+
+def test_say_is_bounded_and_needs_text():
+    voice = StudyVoice.from_body(BODY)
+    assert handle_study_message(voice, "rita-study-say", {"text": "انحفظت ٥ بطاقات"}).say == "انحفظت ٥ بطاقات"
+    assert len(handle_study_message(voice, "rita-study-say", {"text": "a" * 2000}).say) == 300
+    assert handle_study_message(voice, "rita-study-say", "not a dict").say == ""

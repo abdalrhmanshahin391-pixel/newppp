@@ -222,3 +222,46 @@ def study_section(body: dict[str, Any], voice: StudyVoice | None) -> str:
     if voice is None or not study_enabled(body):
         return ""
     return "\n" + voice.section() + "\n"
+
+
+@dataclass
+class StudyEffects:
+    """What the bot does for one rita-study-* message, in this order."""
+
+    interrupt: bool = False
+    refresh_prompt: bool = False
+    say: str = ""
+    user_line: str = ""
+    ack: dict[str, Any] | None = None
+    run_model: bool = False
+
+
+def handle_study_message(voice: StudyVoice | None, message_type: str, data: Any) -> StudyEffects:
+    """Decides what a study message does. A session that is not a study lesson ignores them all."""
+    effects = StudyEffects()
+    if voice is None or not message_type.startswith("rita-study-"):
+        return effects
+    data = data if isinstance(data, dict) else {}
+    if message_type == "rita-study-state":
+        effects.refresh_prompt = voice.set_state(data)
+    elif message_type == "rita-study-focus":
+        effects.refresh_prompt = voice.set_focus(data)
+    elif message_type == "rita-study-say":
+        effects.say = _text(data.get("text"), 300)
+    elif message_type == "rita-study-cancel":
+        stopped = voice.cancel(data)
+        effects.refresh_prompt = stopped
+        effects.interrupt = stopped
+        effects.ack = {"type": "rita-study-ack", "request_id": data.get("request_id"), "state": "cancelled"}
+    elif message_type == "rita-study-action":
+        request = voice.take_action(data)
+        if request is None:
+            effects.ack = {"type": "rita-study-ack", "request_id": data.get("request_id"), "state": "failed"}
+        else:
+            # A new request stops anything Rita was saying, then she answers this one.
+            effects.interrupt = True
+            effects.refresh_prompt = True
+            effects.user_line = voice.user_line()
+            effects.ack = {"type": "rita-study-ack", "request_id": request.request_id, "state": "started"}
+            effects.run_model = True
+    return effects

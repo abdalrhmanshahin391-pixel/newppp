@@ -8,7 +8,7 @@ import {
   effectiveExperience,
   type Experience,
   type StudyGuideState,
-} from "./study-experience";
+} from "./study-experience.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Db = SupabaseClient<any, "public", any>;
