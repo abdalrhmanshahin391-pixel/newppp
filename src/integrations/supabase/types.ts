@@ -3233,6 +3233,27 @@ export type Database = {
           },
         ]
       }
+      rita_feature_flags: {
+        Row: {
+          enabled: boolean
+          key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       rita_free_conversation_messages: {
         Row: {
           client_message_id: string
@@ -3546,6 +3567,87 @@ export type Database = {
           },
         ]
       }
+      rita_lesson_guides: {
+        Row: {
+          allow_download: boolean
+          content: Json | null
+          created_at: string
+          created_by: string | null
+          curriculum_id: string
+          error_code: string | null
+          error_message: string | null
+          from_page: number
+          id: string
+          learner_path: string | null
+          lesson_id: string | null
+          model: string | null
+          status: string
+          storage_path: string | null
+          title: string
+          to_page: number
+          updated_at: string
+          version: number
+          warnings: Json
+        }
+        Insert: {
+          allow_download?: boolean
+          content?: Json | null
+          created_at?: string
+          created_by?: string | null
+          curriculum_id: string
+          error_code?: string | null
+          error_message?: string | null
+          from_page: number
+          id?: string
+          learner_path?: string | null
+          lesson_id?: string | null
+          model?: string | null
+          status?: string
+          storage_path?: string | null
+          title: string
+          to_page: number
+          updated_at?: string
+          version?: number
+          warnings?: Json
+        }
+        Update: {
+          allow_download?: boolean
+          content?: Json | null
+          created_at?: string
+          created_by?: string | null
+          curriculum_id?: string
+          error_code?: string | null
+          error_message?: string | null
+          from_page?: number
+          id?: string
+          learner_path?: string | null
+          lesson_id?: string | null
+          model?: string | null
+          status?: string
+          storage_path?: string | null
+          title?: string
+          to_page?: number
+          updated_at?: string
+          version?: number
+          warnings?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_lesson_guides_curriculum_id_fkey"
+            columns: ["curriculum_id"]
+            isOneToOne: false
+            referencedRelation: "rita_curricula"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rita_lesson_guides_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "rita_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rita_lesson_item_results: {
         Row: {
           channel: string
@@ -3828,6 +3930,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           curriculum_id: string
+          experience: string
           id: string
           image_generating_at: string | null
           image_prompt: string | null
@@ -3842,6 +3945,7 @@ export type Database = {
           source_from_page: number
           source_to_page: number
           status: string
+          study_guide_id: string | null
           title: string
           title_ar: string
           topic: string
@@ -3853,6 +3957,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           curriculum_id: string
+          experience?: string
           id?: string
           image_generating_at?: string | null
           image_prompt?: string | null
@@ -3867,6 +3972,7 @@ export type Database = {
           source_from_page: number
           source_to_page: number
           status?: string
+          study_guide_id?: string | null
           title: string
           title_ar?: string
           topic?: string
@@ -3878,6 +3984,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           curriculum_id?: string
+          experience?: string
           id?: string
           image_generating_at?: string | null
           image_prompt?: string | null
@@ -3892,6 +3999,7 @@ export type Database = {
           source_from_page?: number
           source_to_page?: number
           status?: string
+          study_guide_id?: string | null
           title?: string
           title_ar?: string
           topic?: string
@@ -3905,6 +4013,13 @@ export type Database = {
             columns: ["curriculum_id"]
             isOneToOne: false
             referencedRelation: "rita_curricula"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rita_lessons_study_guide_id_fkey"
+            columns: ["study_guide_id"]
+            isOneToOne: false
+            referencedRelation: "rita_lesson_guides"
             referencedColumns: ["id"]
           },
         ]
@@ -4071,6 +4186,63 @@ export type Database = {
           trigger?: string
         }
         Relationships: []
+      }
+      rita_study_actions: {
+        Row: {
+          action: string
+          block_ids: string[]
+          channel: string | null
+          created_at: string
+          guide_id: string | null
+          lesson_id: string
+          note: string | null
+          quota_group: string
+          request_id: string
+          selection_len: number
+          user_id: string
+        }
+        Insert: {
+          action: string
+          block_ids?: string[]
+          channel?: string | null
+          created_at?: string
+          guide_id?: string | null
+          lesson_id: string
+          note?: string | null
+          quota_group: string
+          request_id: string
+          selection_len?: number
+          user_id: string
+        }
+        Update: {
+          action?: string
+          block_ids?: string[]
+          channel?: string | null
+          created_at?: string
+          guide_id?: string | null
+          lesson_id?: string
+          note?: string | null
+          quota_group?: string
+          request_id?: string
+          selection_len?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_study_actions_guide_id_fkey"
+            columns: ["guide_id"]
+            isOneToOne: false
+            referencedRelation: "rita_lesson_guides"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rita_study_actions_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "rita_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rita_turn_metrics: {
         Row: {
@@ -7347,6 +7519,20 @@ export type Database = {
       rita_set_lesson_path_orders: {
         Args: { p_orders: Json }
         Returns: undefined
+      }
+      rita_study_take_quota: {
+        Args: {
+          _action: string
+          _block_ids: string[]
+          _channel: string
+          _guide_id: string
+          _lesson_id: string
+          _note?: string
+          _quota_group: string
+          _request_id: string
+          _selection_len: number
+        }
+        Returns: Json
       }
       rita_voice_usage_totals: {
         Args: { _user_id: string }
