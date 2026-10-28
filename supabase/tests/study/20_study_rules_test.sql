@@ -64,13 +64,13 @@ select pg_temp.check(
   (select array_agg(name order by name) from storage.objects) = array['c/g1-v1-final.pdf'],
   'ST-I01 a learner reads only that guide''s final file, never a draft');
 select pg_temp.check(
-  (select count(*) = 1 from public.rita_feature_flags where key = 'rita_study' and not enabled),
-  'the feature switch is readable and starts off');
-update public.rita_feature_flags set enabled = true where key = 'rita_study';
+  (select count(*) = 1 from public.rita_feature_flags where key = 'rita_study' and enabled),
+  'the feature switch is readable and starts on');
+update public.rita_feature_flags set enabled = false where key = 'rita_study';
 rollback;
 select pg_temp.check(
-  (select not enabled from public.rita_feature_flags where key = 'rita_study'),
-  'a learner cannot turn the switch on');
+  (select enabled from public.rita_feature_flags where key = 'rita_study'),
+  'a learner cannot turn the switch off');
 
 -- A guide unlinked or archived disappears for learners at once.
 begin;

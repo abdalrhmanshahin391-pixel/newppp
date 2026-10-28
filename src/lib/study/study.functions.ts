@@ -148,6 +148,60 @@ export const adminStudyLessonState = createServerFn({ method: "GET" })
     };
   });
 
+export type BookStudyState =
+  | { ready: false }
+  | {
+      ready: true;
+      switchOn: boolean;
+      /** Per lesson: a ready guide with its learners' copy is linked. */
+      linked: Record<string, boolean>;
+    };
+
+/** For the book page's list: which of the book's lessons already have their guide linked. */
+export const adminBookStudyState = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => parse(z.object({ curriculumId: uuid }), data))
+  .handler(async ({ data, context }): Promise<BookStudyState> => {
+    const { assertGuideAdmin } = await import("@/lib/guides/guide-admin.server");
+    await assertGuideAdmin(context);
+    const db = context.supabase;
+    const [{ data: lessons, error }, { data: flag }] = await Promise.all([
+      db
+        .from("rita_lessons")
+        .select("id, study_guide_id")
+        .eq("curriculum_id", data.curriculumId)
+        .neq("status", "archived"),
+      db.from("rita_feature_flags").select("enabled").eq("key", STUDY_FLAG).maybeSingle(),
+    ]);
+    if (error) {
+      if (NOT_APPLIED.test(`${error.code ?? ""} ${error.message}`)) return { ready: false };
+      throw new Error(`lessons: ${error.message}`);
+    }
+    const guideIds = [
+      ...new Set((lessons ?? []).map((row) => row.study_guide_id).filter(Boolean)),
+    ] as string[];
+    const usable = new Set<string>();
+    if (guideIds.length) {
+      const { data: guides, error: guidesError } = await db
+        .from("rita_lesson_guides")
+        .select("id, status, learner_path")
+        .in("id", guideIds);
+      if (guidesError) throw new Error(`guides: ${guidesError.message}`);
+      for (const guide of guides ?? [])
+        if (guide.status === "ready" && guide.learner_path) usable.add(String(guide.id));
+    }
+    return {
+      ready: true,
+      switchOn: Boolean(flag?.enabled),
+      linked: Object.fromEntries(
+        (lessons ?? []).map((row) => [
+          String(row.id),
+          Boolean(row.study_guide_id && usable.has(String(row.study_guide_id))),
+        ]),
+      ),
+    };
+  });
+
 export const adminSetLessonExperience = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
