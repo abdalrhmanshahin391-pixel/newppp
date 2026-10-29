@@ -45,7 +45,11 @@ test("config turns the gateway JWT check off only because the function checks th
 test("the review Edge Function checks the worker key before it reviews, and answers with counts", () => {
   const source = read("../../supabase/functions/rita-review/index.ts");
   assert.match(source, /request\.method !== "POST"/);
-  assert.ok(source.indexOf("worker_cron_key") < source.indexOf("runScheduledReview(db"));
+  assert.ok(source.indexOf("worker_cron_key") < source.indexOf("reviewConversation(db"));
+  // One conversation per run, claimed first, and no polling: the next run is woken, not scheduled.
+  assert.ok(source.indexOf("rita_review_claim") < source.indexOf("reviewConversation(db"));
+  assert.match(source, /rita_review_wake/);
+  assert.match(source, /MAX_DEPTH/);
   assert.ok(source.indexOf("sameText(provided, expected)") < source.indexOf("setReviewDeps("));
   const config = read("../../supabase/config.toml");
   assert.match(config, /\[functions\.rita-review\]\s+verify_jwt = false/);

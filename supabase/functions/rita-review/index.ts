@@ -1,24 +1,45 @@
-// The scheduled AI review of Rita's replies (every 2 minutes, from pg_cron).
+// The AI review of Rita's replies, one conversation at a time, with no timer.
 //
-// It reads every recent conversation, so it needs the service key, which the published site's
-// server does not have; Lovable Cloud gives it to Edge Functions automatically. The engine is the
-// app's own (../_shared/rita-review.core.ts, a byte for byte copy kept by
-// scripts/sync-lesson-edge.mjs); the admin's "review now" steps on the site use the same code.
+// When a call ends, the database wakes this function for that call's conversation
+// (public.rita_review_wake, from the trigger on rita_v3_sessions.ended_at). One run reviews up to two
+// replies, a stage at a time, for about a minute; if replies are left it asks the database to wake it
+// again for the same conversation, until every reply and the whole-conversation review are done.
+// Nothing runs while nobody has talked to Rita.
+//
+// It needs the service key, which the published site's server does not have; Lovable Cloud gives it
+// to Edge Functions automatically. The engine is the app's own (../_shared/rita-review.core.ts, a
+// byte for byte copy kept by scripts/sync-lesson-edge.mjs); the admin's "review now" uses the same code.
 //
 // Rules this file keeps:
-// - POST only, and only with the private worker key (site_secrets.worker_cron_key), the same key the
-//   cron job sends. verify_jwt is off in config.toml because the caller is the database, not a user.
+// - POST only, and only with the private worker key (site_secrets.worker_cron_key).
+//   verify_jwt is off in config.toml because the caller is the database, not a user.
+// - One run per conversation at a time (rita_review_claim), a daily ceiling against loops, and at
+//   most MAX_DEPTH runs in a row for one conversation.
 // - It answers with counts only (reviewed, problems, waiting...), never conversation text.
 import { createClient } from "@supabase/supabase-js";
-import { runScheduledReview, setReviewDeps, type ReviewDb } from "../_shared/rita-review.core.ts";
+import {
+  reviewConversation,
+  reviewEnabled,
+  setReviewDeps,
+  type ReviewDb,
+} from "../_shared/rita-review.core.ts";
 
 declare const Deno: {
   env: { get(name: string): string | undefined };
   serve(handler: (request: Request) => Response | Promise<Response>): void;
 };
 
-/** Leaves time for a reply started near the end to finish before the platform's limit. */
-const BUDGET_MS = 90_000;
+/** A new stage starts only in the first 45 seconds; a question still open at 125 seconds is saved
+ * and stopped, well inside the platform's limit for one run. */
+const START_WINDOW_MS = 45_000;
+const HARD_STOP_MS = 125_000;
+const TURNS_PER_RUN = 2;
+/** Runs in a row for one conversation (about 40 replies' worth with room for retries). */
+const MAX_DEPTH = 80;
+/** After OpenAI says "too many requests" or is down, wait this long before the next run. */
+const SERVICE_PAUSE_MS = 30_000;
+
+const uuid = /^[0-9a-f-]{36}$/i;
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -81,12 +102,69 @@ async function handle(request: Request): Promise<Response> {
     modelOverride: async () => (Deno.env.get("RITA_REVIEW_MODEL") ?? "").trim(),
   });
 
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+  const conversationId = String(body.conversationId ?? "");
+  const depth = Number.isInteger(body.depth) ? Number(body.depth) : 0;
+  if (!uuid.test(conversationId)) return json({ error: "bad_request" }, 400);
+  if (!(await reviewEnabled(db as unknown as ReviewDb))) return json({ enabled: false });
+
+  // A ceiling against a runaway loop, not a budget: replies finished in the last 24 hours.
+  const { data: settings } = await db
+    .from("rita_review_settings")
+    .select("daily_turn_limit")
+    .eq("id", true)
+    .maybeSingle();
+  const limit = Number(settings?.daily_turn_limit ?? 1500);
+  const dayStart = new Date(Date.now() - 24 * 3600 * 1000);
+  const { count } = await db
+    .from("rita_turn_reviews")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "done")
+    .gte("reviewed_at", dayStart.toISOString());
+  if ((count ?? 0) >= limit) return json({ enabled: true, skipped: "daily_limit" });
+
+  const { data: claimed } = await db.rpc("rita_review_claim", {
+    p_conversation: conversationId,
+    p_seconds: Math.ceil(HARD_STOP_MS / 1000) + 15,
+  });
+  if (!claimed) return json({ enabled: true, skipped: "busy" });
+
+  const started = Date.now();
+  const stop = new AbortController();
+  const timer = setTimeout(() => stop.abort(), HARD_STOP_MS);
+  let again = false;
+  let pause = 0;
   try {
-    return json(await runScheduledReview(db as unknown as ReviewDb, BUDGET_MS));
+    const summary = await reviewConversation(db as unknown as ReviewDb, {
+      conversationId,
+      deadlineAt: started + START_WINDOW_MS,
+      maxTurns: TURNS_PER_RUN,
+      signal: stop.signal,
+    });
+    // Replies left, part-way stages, or the closing work: wake again for the same conversation.
+    again = summary.waiting > 0 || summary.finalPending || summary.failed > 0;
+    if (summary.stopped) {
+      again = true;
+      pause = SERVICE_PAUSE_MS;
+    }
+    return json({ enabled: true, depth, ...summary });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error("rita-review:", message);
     return json({ error: "review_failed", message: message.slice(0, 300) }, 500);
+  } finally {
+    clearTimeout(timer);
+    await db.rpc("rita_review_release", { p_conversation: conversationId });
+    if (again && depth < MAX_DEPTH) {
+      if (pause && Date.now() - started + pause < HARD_STOP_MS) {
+        await new Promise((resolve) => setTimeout(resolve, pause));
+      }
+      const { error } = await db.rpc("rita_review_wake", {
+        p_conversation: conversationId,
+        p_depth: depth + 1,
+      });
+      if (error) console.error("rita-review: could not wake the next run", error.message);
+    }
   }
 }
 

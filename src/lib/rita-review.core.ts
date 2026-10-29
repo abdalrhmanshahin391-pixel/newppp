@@ -21,7 +21,6 @@ import {
   DUPLICATES_SCHEMA,
   DUPLICATES_SYSTEM,
   DIAGNOSE_SYSTEM,
-  CLEAN_DIAGNOSIS,
   DIALECT_SCHEMA,
   DIALECT_SYSTEM,
   FACTS_SCHEMA,
@@ -40,7 +39,10 @@ import {
   finalizeReview,
   judgePrompt,
   mergeJudgements,
-  needsDiagnosis,
+  nextStage,
+  parsePartial,
+  planTurns,
+  storePartial,
   parseAssignment,
   parseConversationReview,
   parseDiagnosis,
@@ -55,6 +57,7 @@ import {
   type Ledger,
   type OpenIssue,
   type ReviewMessage,
+  type TurnPartial,
 } from "./rita-review.ts";
 import { RUBRIC_VERSION } from "./rita-tutor-contract.ts";
 
@@ -68,8 +71,17 @@ const MODEL_PREFERENCE = ["gpt-5", "gpt-4.1"];
 const MAX_ATTEMPTS = 3;
 /** A review claimed this long ago and never finished (the run died) is taken again. */
 const STALE_PENDING_MS = 6 * 60 * 1000;
-const REQUEST_TIMEOUT_MS = 5 * 60 * 1000;
-const PARALLEL_TURNS = 4;
+/** One question may think for this long; a stage that runs past the run's time is saved for the next run. */
+const REQUEST_TIMEOUT_MS = 110 * 1000;
+/** Two replies side by side: each reply is still asked about on its own, this only limits load. */
+const PARALLEL_TURNS = 2;
+
+/** The run reached its time limit in the middle of a question: the stage is kept for the next run. */
+export class TimeUp extends Error {
+  constructor() {
+    super("The run's time was up.");
+  }
+}
 
 export class ReviewError extends Error {
   status: number;
@@ -147,9 +159,13 @@ async function post(
   name: string,
   schema: unknown,
   effort: Effort,
+  stopSignal?: AbortSignal,
 ) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const onStop = () => controller.abort();
+  if (stopSignal?.aborted) controller.abort();
+  stopSignal?.addEventListener("abort", onStop);
   try {
     const response = await fetch(CHAT_URL, {
       method: "POST",
@@ -179,11 +195,13 @@ async function post(
     return JSON.parse(raw)?.choices?.[0]?.message?.content as unknown;
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
+      if (stopSignal?.aborted) throw new TimeUp();
       throw new ReviewError(504, "OpenAI took too long to answer.");
     }
     throw error;
   } finally {
     clearTimeout(timer);
+    stopSignal?.removeEventListener("abort", onStop);
   }
 }
 
@@ -198,14 +216,16 @@ export type Ask = <T>(args: {
 }) => Promise<T>;
 
 /** One structured question. An answer that does not parse is asked once more. */
-function makeAsk(key: string): Ask {
+function makeAsk(key: string, stopSignal?: AbortSignal): Ask {
   return async ({ name, system, user, schema, parse, effort = "high" }) => {
     const models = resolvedModel ? [resolvedModel] : await modelCandidates();
     let lastError: unknown;
     for (const model of models) {
       try {
         for (let attempt = 0; attempt < 2; attempt += 1) {
-          const value = parse(await post(key, model, system, user, name, schema, effort));
+          const value = parse(
+            await post(key, model, system, user, name, schema, effort, stopSignal),
+          );
           if (value !== null) {
             resolvedModel = model;
             return value;
@@ -214,7 +234,7 @@ function makeAsk(key: string): Ask {
         throw new ReviewError(422, `The ${name} answer did not match its format.`);
       } catch (error) {
         lastError = error;
-        if (!modelUnavailable(error)) throw error;
+        if (error instanceof TimeUp || !modelUnavailable(error)) throw error;
       }
     }
     throw lastError;
@@ -240,6 +260,8 @@ type MessageRow = {
 type ReviewRow = {
   id: string;
   turn_key: string;
+  reply_message_id: string | null;
+  partial: unknown;
   status: string;
   attempts: number;
   created_at: string;
@@ -259,6 +281,8 @@ export type ReviewSummary = {
   /** Reviewable turns in the conversation, and how many of them are finished (for a progress bar). */
   turns: number;
   finished: number;
+  /** Replies part-way through their stages (saved; the next run carries on). */
+  staged: number;
   /** Step mode only: turns were reviewed in this call, so the grouping and the whole-conversation
    * review are left for the next call. */
   finalPending: boolean;
@@ -275,6 +299,7 @@ const empty = (): ReviewSummary => ({
   grouped: 0,
   turns: 0,
   finished: 0,
+  staged: 0,
   finalPending: false,
 });
 
@@ -285,76 +310,108 @@ type TurnInput = {
   report: { category: string; note: string | null } | undefined;
 };
 
-/** The six questions for one turn, and the finished review. */
-export async function reviewTurn(ask: Ask, input: TurnInput) {
+/**
+ * One stage of one reply's review (see TurnPartial in rita-review.ts). Every question is asked at
+ * the highest effort and about this one reply only, with the conversation up to it as context.
+ */
+export async function reviewStage(
+  ask: Ask,
+  input: TurnInput,
+  partial: TurnPartial,
+): Promise<{ partial: TurnPartial; result?: TurnResult }> {
   const { messages, replyIndex, ledger, report } = input;
   const reply = messages[replyIndex].content;
-  const [reference, facts, dialect] = await Promise.all([
-    ask({
-      name: "rita_reference_reply",
-      system: REFERENCE_SYSTEM,
-      user: referencePrompt({ messages, replyIndex, ledger }),
-      schema: REFERENCE_SCHEMA,
-      parse: parseReference,
-    }),
-    ask({
-      name: "rita_fact_check",
-      system: FACTS_SYSTEM,
-      user: factsPrompt({ messages, replyIndex }),
-      schema: FACTS_SCHEMA,
-      parse: parseFacts,
-      effort: "medium",
-    }),
-    ask({
-      name: "rita_dialect_check",
-      system: DIALECT_SYSTEM,
-      user: dialectPrompt({ messages, replyIndex, ledger }),
-      schema: DIALECT_SCHEMA,
-      parse: parseDialect,
-      effort: "medium",
-    }),
-  ]);
-  const judge = (a: string, b: string) =>
-    ask({
-      name: "rita_reply_comparison",
-      system: JUDGE_SYSTEM,
-      user: judgePrompt({ messages, replyIndex, ledger, a, b }),
-      schema: JUDGE_SCHEMA,
-      parse: parseJudgement,
-      effort: "medium",
-    });
-  // Both orders, so the model's pull towards the first reply cancels out.
-  const [ritaFirst, ritaSecond] = await Promise.all([
-    judge(reply, reference.reply),
-    judge(reference.reply, reply),
-  ]);
+  const stage = nextStage(partial);
+  if (stage === 1) {
+    const [reference, facts, dialect] = await Promise.all([
+      ask({
+        name: "rita_reference_reply",
+        system: REFERENCE_SYSTEM,
+        user: referencePrompt({ messages, replyIndex, ledger }),
+        schema: REFERENCE_SCHEMA,
+        parse: parseReference,
+      }),
+      ask({
+        name: "rita_fact_check",
+        system: FACTS_SYSTEM,
+        user: factsPrompt({ messages, replyIndex }),
+        schema: FACTS_SCHEMA,
+        parse: parseFacts,
+      }),
+      ask({
+        name: "rita_dialect_check",
+        system: DIALECT_SYSTEM,
+        user: dialectPrompt({ messages, replyIndex, ledger }),
+        schema: DIALECT_SCHEMA,
+        parse: parseDialect,
+      }),
+    ]);
+    return { partial: { reference, facts, dialect } };
+  }
+  const reference = partial.reference!;
+  if (stage === 2) {
+    const judge = (a: string, b: string) =>
+      ask({
+        name: "rita_reply_comparison",
+        system: JUDGE_SYSTEM,
+        user: judgePrompt({ messages, replyIndex, ledger, a, b }),
+        schema: JUDGE_SCHEMA,
+        parse: parseJudgement,
+      });
+    // Both orders, so the model's pull towards the first reply cancels out.
+    const judges = await Promise.all([
+      judge(reply, reference.reply),
+      judge(reference.reply, reply),
+    ]);
+    return { partial: { ...partial, judges: [judges[0], judges[1]] } };
+  }
+  const facts = partial.facts!;
+  const dialect = partial.dialect!;
+  const [ritaFirst, ritaSecond] = partial.judges!;
   const merged = mergeJudgements([
     { ritaIs: "a", result: ritaFirst },
     { ritaIs: "b", result: ritaSecond },
   ]);
   const timing = timingFromLedger(ledger);
-  // The slowest question, asked only when something looks off (most turns pass every check).
-  const diagnosis = needsDiagnosis({ facts, dialect, merged, timing, report })
-    ? await ask({
-        name: "rita_diagnosis",
-        system: DIAGNOSE_SYSTEM,
-        user: diagnosePrompt({
-          messages,
-          replyIndex,
-          ledger,
-          reference,
-          merged,
-          facts,
-          dialect,
-          timing,
-          report,
-        }),
-        schema: DIAGNOSE_SCHEMA,
-        parse: parseDiagnosis,
-      })
-    : CLEAN_DIAGNOSIS;
+  // Every reply gets the diagnosis, also the ones every check passed.
+  const diagnosis = await ask({
+    name: "rita_diagnosis",
+    system: DIAGNOSE_SYSTEM,
+    user: diagnosePrompt({
+      messages,
+      replyIndex,
+      ledger,
+      reference,
+      merged,
+      facts,
+      dialect,
+      timing,
+      report,
+    }),
+    schema: DIAGNOSE_SCHEMA,
+    parse: parseDiagnosis,
+  });
   const final = finalizeReview({ diagnosis, merged, facts, dialect, timing });
-  return { reference, facts, dialect, merged, timing, final };
+  return { partial, result: { reference, facts, dialect, merged, timing, final } };
+}
+
+type TurnResult = {
+  reference: NonNullable<TurnPartial["reference"]>;
+  facts: NonNullable<TurnPartial["facts"]>;
+  dialect: NonNullable<TurnPartial["dialect"]>;
+  merged: ReturnType<typeof mergeJudgements>;
+  timing: ReturnType<typeof timingFromLedger>;
+  final: ReturnType<typeof finalizeReview>;
+};
+
+/** All three stages of one reply in one go (the golden check). */
+export async function reviewTurn(ask: Ask, input: TurnInput): Promise<TurnResult> {
+  let partial: TurnPartial = {};
+  for (;;) {
+    const step = await reviewStage(ask, input, partial);
+    if (step.result) return step.result;
+    partial = step.partial;
+  }
 }
 
 /** Reviews the turns of one conversation that have no current review, then the conversation. */
@@ -370,6 +427,8 @@ export async function reviewConversation(
      * (grouping, the whole-conversation review) in a call of its own, so no call runs long.
      */
     maxTurns?: number;
+    /** Aborts the questions in flight when the run's time is up (the stage is kept for later). */
+    signal?: AbortSignal;
   },
 ): Promise<ReviewSummary> {
   const stepped = args.maxTurns !== undefined;
@@ -427,11 +486,14 @@ export async function reviewConversation(
 
   const { data: reviewData } = await db
     .from("rita_turn_reviews")
-    .select("id,turn_key,status,attempts,created_at,rubric_version")
+    .select("id,turn_key,reply_message_id,partial,status,attempts,created_at,rubric_version")
     .eq("conversation_id", args.conversationId);
+  const rows = (reviewData ?? []) as ReviewRow[];
   const blocked = new Set<string>();
   const retryable = new Map<string, ReviewRow>();
-  for (const row of (reviewData ?? []) as ReviewRow[]) {
+  const keyByReply = new Map<string, string>();
+  for (const row of rows) {
+    if (row.reply_message_id) keyByReply.set(row.reply_message_id, row.turn_key);
     const stale = Date.now() - new Date(row.created_at).getTime() > STALE_PENDING_MS;
     const current = (row.rubric_version ?? 1) === RUBRIC_VERSION;
     if (row.status === "no_text") blocked.add(row.turn_key);
@@ -442,18 +504,26 @@ export async function reviewConversation(
     else retryable.set(row.turn_key, row);
   }
 
-  const due = pickCandidates({
-    ledgers,
-    reports,
-    existing: blocked,
-    all: args.all ?? true,
-    reportsOnly: args.reportsOnly,
-  });
+  // Every reply once: turn records, reports, and Rita's replies without a record.
+  const plan = (all: boolean) =>
+    planTurns({
+      candidates: pickCandidates({
+        ledgers,
+        reports,
+        existing: new Set(),
+        all,
+        reportsOnly: args.reportsOnly,
+      }),
+      messages: all && !args.reportsOnly ? messages : [],
+      ledgers,
+      keyByReply,
+    });
+  const due = plan(args.all ?? true).filter((turn) => !blocked.has(turn.turnKey));
 
-  // Progress: every reviewable turn, and the ones already finished (done, no text, or given up).
-  const allTurns = pickCandidates({ ledgers, reports, existing: new Set(), all: true });
+  // Progress: every reviewable reply, and the ones already finished (done, no text, or given up).
+  const allTurns = plan(true);
   const finishedKeys = new Set(
-    ((reviewData ?? []) as ReviewRow[])
+    rows
       .filter(
         (row) =>
           (row.rubric_version ?? 1) === RUBRIC_VERSION &&
@@ -468,7 +538,7 @@ export async function reviewConversation(
 
   let ask: Ask | null = null;
   const prepare = async () => {
-    if (!ask) ask = makeAsk(await openAiKey());
+    if (!ask) ask = makeAsk(await openAiKey(), args.signal);
     return ask;
   };
 
@@ -485,7 +555,14 @@ export async function reviewConversation(
       attempts = (retry.rubric_version ?? 1) === RUBRIC_VERSION ? retry.attempts : 0;
       const { data } = await db
         .from("rita_turn_reviews")
-        .update({ status: "pending", created_at: now, attempts, rubric_version: RUBRIC_VERSION })
+        .update({
+          status: "pending",
+          created_at: now,
+          attempts,
+          rubric_version: RUBRIC_VERSION,
+          // A review written for an older rubric starts over.
+          ...((retry.rubric_version ?? 1) === RUBRIC_VERSION ? {} : { partial: null }),
+        })
         .eq("id", retry.id)
         .eq("status", retry.status)
         .select("id");
@@ -526,45 +603,78 @@ export async function reviewConversation(
     }
     const ledger = ledgers.find((item) => item.replyMessageId === candidate.replyMessageId);
     const report = reports.find((item) => item.replyMessageId === candidate.replyMessageId);
+    let partial =
+      retry && (retry.rubric_version ?? 1) === RUBRIC_VERSION ? parsePartial(retry.partial) : {};
     try {
       const turnAsk = await prepare();
-      const result = await reviewTurn(turnAsk, { messages, replyIndex, ledger, report });
-      await db
-        .from("rita_turn_reviews")
-        .update({
-          status: "done",
-          model: resolvedModel,
-          rubric_version: RUBRIC_VERSION,
-          verdict: result.final.verdict,
-          severity: result.final.severity,
-          category: result.final.category,
-          cause: result.final.cause,
-          evidence: result.final.evidence,
-          suggestion: result.final.fix.change,
-          explanation: result.final.explanation,
-          fix: result.final.fix,
-          reference_reply: result.reference.reply,
-          reference_why: result.reference.why,
-          winner: result.merged?.winner ?? null,
-          scores: result.merged
-            ? {
-                criteria: result.merged.criteria,
-                ritaAverage: result.merged.ritaAverage,
-                referenceAverage: result.merged.referenceAverage,
-                bothOrdersAgree: result.merged.agree,
-                comparison: result.merged.comparison,
-              }
-            : null,
-          facts: result.facts,
-          dialect: result.dialect,
-          timing: result.timing,
-          error: null,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq("id", rowId);
-      summary.reviewed += 1;
-      if (result.final.verdict === "problem") summary.problems += 1;
+      // One stage after another, each saved; a new stage starts only while the run has time.
+      for (;;) {
+        if (stop || Date.now() >= args.deadlineAt) {
+          await db
+            .from("rita_turn_reviews")
+            .update({ status: "staged", partial: storePartial(partial) })
+            .eq("id", rowId);
+          summary.staged += 1;
+          return;
+        }
+        const step = await reviewStage(turnAsk, { messages, replyIndex, ledger, report }, partial);
+        partial = step.partial;
+        if (step.result) {
+          const result = step.result;
+          await db
+            .from("rita_turn_reviews")
+            .update({
+              status: "done",
+              model: resolvedModel,
+              rubric_version: RUBRIC_VERSION,
+              verdict: result.final.verdict,
+              severity: result.final.severity,
+              category: result.final.category,
+              cause: result.final.cause,
+              evidence: result.final.evidence,
+              suggestion: result.final.fix.change,
+              explanation: result.final.explanation,
+              fix: result.final.fix,
+              reference_reply: result.reference.reply,
+              reference_why: result.reference.why,
+              winner: result.merged?.winner ?? null,
+              scores: result.merged
+                ? {
+                    criteria: result.merged.criteria,
+                    ritaAverage: result.merged.ritaAverage,
+                    referenceAverage: result.merged.referenceAverage,
+                    bothOrdersAgree: result.merged.agree,
+                    comparison: result.merged.comparison,
+                  }
+                : null,
+              facts: result.facts,
+              dialect: result.dialect,
+              timing: result.timing,
+              partial: null,
+              error: null,
+              reviewed_at: new Date().toISOString(),
+            })
+            .eq("id", rowId);
+          summary.reviewed += 1;
+          if (result.final.verdict === "problem") summary.problems += 1;
+          return;
+        }
+        await db
+          .from("rita_turn_reviews")
+          .update({ partial: storePartial(partial) })
+          .eq("id", rowId);
+      }
     } catch (error) {
+      if (error instanceof TimeUp) {
+        // The run ran out of time mid-question: the finished stages stay, the next run carries on.
+        await db
+          .from("rita_turn_reviews")
+          .update({ status: "staged", partial: storePartial(partial) })
+          .eq("id", rowId);
+        summary.staged += 1;
+        stop = stop ?? "time";
+        return;
+      }
       const message = error instanceof Error ? error.message : String(error);
       const service = isServiceProblem(error);
       await db
@@ -573,6 +683,7 @@ export async function reviewConversation(
           status: "failed",
           error: message.slice(0, 300),
           attempts: attempts + (service ? 0 : 1),
+          partial: storePartial(partial),
         })
         .eq("id", rowId);
       summary.failed += 1;
@@ -587,8 +698,10 @@ export async function reviewConversation(
     }
   };
   await Promise.all(Array.from({ length: PARALLEL_TURNS }, worker));
-  summary.waiting = queue.length + leftForLater;
+  summary.waiting = queue.length + leftForLater + summary.staged;
   summary.finished += summary.reviewed + summary.noText;
+  // Running out of time is not a stop: the replies left are simply waiting.
+  if (stop === "time") stop = undefined;
   if (stop) summary.stopped = stop;
   // Step mode: a call that reviewed turns stops here; the closing work gets a call of its own.
   if (stepped && due.length > 0) {
@@ -605,11 +718,15 @@ export async function reviewConversation(
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (isServiceProblem(error)) {
+      if (error instanceof TimeUp) {
+        // Out of time: the closing work is done by the next run.
+        summary.finalPending = true;
+        stop = "time";
+      } else if (isServiceProblem(error)) {
         summary.stopped = message;
         stop = message;
       }
-      console.error("Rita issue grouping failed", error);
+      if (!(error instanceof TimeUp)) console.error("Rita issue grouping failed", error);
     }
   }
 
@@ -623,8 +740,11 @@ export async function reviewConversation(
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (isServiceProblem(error)) summary.stopped = message;
-      console.error("Rita conversation review failed", error);
+      if (error instanceof TimeUp) summary.finalPending = true;
+      else {
+        if (isServiceProblem(error)) summary.stopped = message;
+        console.error("Rita conversation review failed", error);
+      }
     }
   }
   return summary;
