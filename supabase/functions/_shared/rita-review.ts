@@ -541,36 +541,112 @@ export type FinalReview = {
   fix: { where: FixPlace; change: string };
 };
 
+// ------------------------------------------------------------------------- turn stages
+
 /**
- * Does this turn need the diagnosis question? Not when every check came back clean: no wrong or
- * loose fact, no dialect issue, the reference reply did not win, the voice system did not cut or
- * drop the reply, and nobody reported it. Then the turn is "ok" without asking (most turns are), which
- * saves the slowest question; anything at all that looks off still gets the full diagnosis.
+ * One reply is reviewed in three stages, each saved before the next, so a run that is stopped (the
+ * server's time limit) loses at most the stage it was in:
+ * 1. the reference reply, the fact check and the dialect check (side by side);
+ * 2. the judge, once in each order (side by side);
+ * 3. the diagnosis, which reads everything above.
  */
-export function needsDiagnosis(args: {
-  facts: Fact[];
-  dialect: DialectIssue[];
-  merged: MergedScores | null;
-  timing: Timing | null;
-  report?: unknown;
-}): boolean {
-  if (args.report) return true;
-  if (args.facts.some((fact) => fact.verdict !== "correct")) return true;
-  if (args.dialect.length) return true;
-  if (!args.merged || args.merged.winner !== "rita" || !args.merged.agree) return true;
-  if (args.timing?.flags.length) return true;
-  return false;
+export type TurnPartial = {
+  reference?: Reference;
+  facts?: Fact[];
+  dialect?: DialectIssue[];
+  judges?: [Judgement, Judgement];
+};
+
+export type TurnStage = 1 | 2 | 3;
+
+export function nextStage(partial: TurnPartial | null | undefined): TurnStage {
+  if (!partial?.reference || !partial.facts || !partial.dialect) return 1;
+  if (!partial.judges) return 2;
+  return 3;
 }
 
-/** The diagnosis of a turn every check passed (see needsDiagnosis). */
-export const CLEAN_DIAGNOSIS: Diagnosis = {
-  explanation: "Every check passed and Rita's reply beat the reference reply in both orders.",
-  category: "ok",
-  cause: "unknown",
-  severity: 0,
-  evidence: "",
-  fix: { where: "none", change: "" },
-};
+/** A saved partial review, read back defensively: a part that does not parse is asked again. */
+export function parsePartial(raw: unknown): TurnPartial {
+  const value = asObject(raw);
+  if (!value) return {};
+  const out: TurnPartial = {};
+  const reference = parseReference(value.reference);
+  const facts = parseFacts({ claims: value.facts });
+  const dialect = parseDialect({ issues: value.dialect });
+  if (reference && facts && dialect) {
+    out.reference = reference;
+    out.facts = facts;
+    out.dialect = dialect;
+    if (Array.isArray(value.judges) && value.judges.length === 2) {
+      const first = parseJudgement(value.judges[0]);
+      const second = parseJudgement(value.judges[1]);
+      if (first && second) out.judges = [first, second];
+    }
+  }
+  return out;
+}
+
+/** What is stored for a partial review (the inverse of parsePartial). */
+export function storePartial(partial: TurnPartial) {
+  return {
+    reference: partial.reference ?? null,
+    facts: partial.facts ?? null,
+    dialect: partial.dialect ?? null,
+    judges: partial.judges
+      ? partial.judges.map((judgement) => ({
+          ...judgement,
+          scores: CRITERION_IDS.map((criterion) => ({ criterion, ...judgement.scores[criterion] })),
+        }))
+      : null,
+  };
+}
+
+export type PlannedTurn = Candidate & { replyMessageId: string };
+
+/**
+ * Every reply of the conversation that should have a review, each once:
+ * - the turns from the turn records (and the learner's reports), as before;
+ * - Rita's replies that have no turn record (the page closed before it was saved, or a dropped
+ *   connection), so no reply is left out;
+ * - a reply that already has a review row keeps that row's key, so it is never reviewed twice
+ *   when its turn record arrives later or under another key.
+ */
+export function planTurns(input: {
+  candidates: PlannedTurn[];
+  messages: { client_message_id: string; role: string; content: string }[];
+  ledgers: Ledger[];
+  /** Existing review rows: their key per reply. */
+  keyByReply: Map<string, string>;
+}): PlannedTurn[] {
+  const recorded = new Set(
+    input.ledgers
+      .map((ledger) => ledger.replyMessageId)
+      .filter((id): id is string => typeof id === "string"),
+  );
+  const extra: PlannedTurn[] = [];
+  for (const message of input.messages) {
+    if (message.role !== "assistant" || !message.content.trim()) continue;
+    if (recorded.has(message.client_message_id)) continue;
+    extra.push({
+      turnKey: `reply-${message.client_message_id}`,
+      replyMessageId: message.client_message_id,
+      trigger: "manual",
+      reasons: ["no_turn_record"],
+    });
+  }
+  const out: PlannedTurn[] = [];
+  const seenKeys = new Set<string>();
+  const seenReplies = new Set<string>();
+  for (const candidate of [...input.candidates, ...extra]) {
+    if (seenReplies.has(candidate.replyMessageId)) continue;
+    const turnKey = input.keyByReply.get(candidate.replyMessageId) ?? candidate.turnKey;
+    if (seenKeys.has(turnKey)) continue;
+    seenKeys.add(turnKey);
+    seenReplies.add(candidate.replyMessageId);
+    out.push({ ...candidate, turnKey });
+  }
+  return out;
+}
 
 /**
  * The model's diagnosis, never softer than what the checks found: a wrong fact, a gender guess, a

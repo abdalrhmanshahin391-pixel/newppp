@@ -510,46 +510,71 @@ test("the assignment prompt lists the open patterns and carries the problem", ()
   );
 });
 
-test("a turn every check passed skips the diagnosis; anything off still gets it", async () => {
-  const { needsDiagnosis, CLEAN_DIAGNOSIS, finalizeReview } = await import("./rita-review.ts");
-  const ritaWins = {
-    winner: "rita" as const,
-    agree: true,
-    ritaAverage: 4.5,
-    referenceAverage: 4,
-    criteria: {} as never,
-    comparison: [],
-  };
-  const clean = { facts: [], dialect: [], merged: ritaWins, timing: null };
-  assert.equal(needsDiagnosis(clean), false);
-  assert.equal(finalizeReview({ diagnosis: CLEAN_DIAGNOSIS, ...clean }).verdict, "ok");
+test("a reply is reviewed in three saved stages; a stage that does not read back is redone", async () => {
+  const { nextStage, parsePartial, storePartial } = await import("./rita-review.ts");
+  const reference = { reply: "Sag: Ich heiße …", why: "short and natural" };
+  const facts = [{ claim: "x", verdict: "correct" as const, correction: "" }];
+  const dialect: never[] = [];
+  const { CRITERION_IDS } = await import("./rita-tutor-contract.ts");
+  const scores = Object.fromEntries(CRITERION_IDS.map((id) => [id, { a: 4, b: 3, reason: "r" }]));
+  const judgement = { scores, winner: "a" as const, comparison: "a is clearer" } as never;
+  assert.equal(nextStage({}), 1);
+  assert.equal(nextStage(null), 1);
+  assert.equal(nextStage({ reference, facts }), 1);
+  assert.equal(nextStage({ reference, facts, dialect }), 2);
 
-  const loose = { claim: "x", verdict: "imprecise" as const, correction: "y" };
-  assert.equal(needsDiagnosis({ ...clean, facts: [loose] }), true);
-  assert.equal(
-    needsDiagnosis({ ...clean, dialect: [{ phrase: "x", kind: "not_jordanian", better: "y" }] }),
-    true,
+  // What is saved reads back the same, stage by stage.
+  const stage1 = parsePartial(
+    JSON.parse(JSON.stringify(storePartial({ reference, facts, dialect }))),
   );
-  assert.equal(needsDiagnosis({ ...clean, merged: { ...ritaWins, winner: "tie" } }), true);
-  assert.equal(needsDiagnosis({ ...clean, merged: { ...ritaWins, agree: false } }), true);
-  assert.equal(needsDiagnosis({ ...clean, merged: null }), true);
-  assert.equal(
-    needsDiagnosis({
-      ...clean,
-      timing: {
-        interrupted: true,
-        answered: true,
-        stop: null,
-        waitMs: null,
-        resumed: null,
-        firstAudioMs: null,
-        cutAfterMs: null,
-        flags: ["cut_off"],
-      },
-    }),
-    true,
+  assert.deepEqual(stage1, { reference, facts, dialect });
+  assert.equal(nextStage(stage1), 2);
+
+  // A broken saved part is not trusted: the stage is asked again.
+  assert.deepEqual(parsePartial({ reference: { why: "no reply" }, facts: [], dialect: [] }), {});
+  assert.deepEqual(parsePartial("nonsense"), {});
+
+  const stage2 = parsePartial(
+    JSON.parse(JSON.stringify(storePartial({ ...stage1, judges: [judgement, judgement] }))),
   );
-  assert.equal(needsDiagnosis({ ...clean, report: { category: "wrong", note: null } }), true);
+  assert.equal(nextStage(stage2), 3);
+  assert.deepEqual(stage2.judges?.[0], judgement);
+});
+
+test("every reply is planned once: records, reports and replies without a record", async () => {
+  const { planTurns } = await import("./rita-review.ts");
+  const messages = [
+    { client_message_id: "u1", role: "user", content: "hi" },
+    { client_message_id: "r1", role: "assistant", content: "Hallo!" },
+    { client_message_id: "u2", role: "user", content: "and?" },
+    { client_message_id: "r2", role: "assistant", content: "Na ja…" },
+    { client_message_id: "r3", role: "assistant", content: "   " },
+  ];
+  const candidates = [
+    { turnKey: "turn-1", replyMessageId: "r1", trigger: "manual" as const, reasons: [] },
+  ];
+  const ledgers = [{ replyMessageId: "r1", turn_ref: "turn-1" }];
+  const planned = planTurns({ candidates, messages, ledgers, keyByReply: new Map() });
+  assert.deepEqual(
+    planned.map((turn) => [turn.turnKey, turn.replyMessageId]),
+    [
+      ["turn-1", "r1"],
+      ["reply-r2", "r2"],
+    ],
+  );
+  assert.deepEqual(planned[1].reasons, ["no_turn_record"]);
+
+  // A reply that already has a review keeps that review's key: never reviewed twice.
+  const again = planTurns({
+    candidates: [{ turnKey: "turn-2", replyMessageId: "r2", trigger: "manual", reasons: [] }],
+    messages,
+    ledgers: [...ledgers, { replyMessageId: "r2", turn_ref: "turn-2" }],
+    keyByReply: new Map([["r2", "reply-r2"]]),
+  });
+  assert.deepEqual(
+    again.map((turn) => turn.turnKey),
+    ["reply-r2"],
+  );
 });
 
 test("the conversation comes before the turn state, so the prompt opening can be cached", () => {

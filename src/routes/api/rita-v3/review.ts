@@ -8,7 +8,9 @@ import { requireRitaUser } from "@/lib/rita-voice.server";
  * replies (side by side), or does the closing work once none are left, and says how far it got.
  * The page calls again until it is finished, so no single request runs for minutes.
  */
-const BUDGET_MS = 60_000;
+/** A new stage starts only in the first 40 seconds; anything still asking at 95 seconds is saved and stopped. */
+const START_WINDOW_MS = 40_000;
+const HARD_STOP_MS = 95_000;
 const TURNS_PER_STEP = 2;
 
 export const Route = createFileRoute("/api/rita-v3/review")({
@@ -37,12 +39,19 @@ export const Route = createFileRoute("/api/rita-v3/review")({
           await import("@/lib/rita-review.server");
         try {
           if (!(await reviewEnabled(db))) return Response.json({ ok: true, enabled: false });
-          const summary = await reviewConversation(db, {
-            conversationId,
-            deadlineAt: Date.now() + BUDGET_MS,
-            maxTurns: TURNS_PER_STEP,
-          });
-          return Response.json({ ok: true, enabled: true, ...summary });
+          const stop = new AbortController();
+          const timer = setTimeout(() => stop.abort(), HARD_STOP_MS);
+          try {
+            const summary = await reviewConversation(db, {
+              conversationId,
+              deadlineAt: Date.now() + START_WINDOW_MS,
+              maxTurns: TURNS_PER_STEP,
+              signal: stop.signal,
+            });
+            return Response.json({ ok: true, enabled: true, ...summary });
+          } finally {
+            clearTimeout(timer);
+          }
         } catch (error) {
           const status = error instanceof ReviewError ? error.status : 500;
           return Response.json(
