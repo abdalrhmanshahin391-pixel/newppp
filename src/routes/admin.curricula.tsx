@@ -30,13 +30,13 @@ export const Route = createFileRoute("/admin/curricula")({
 type Overview = Awaited<ReturnType<typeof adminCurriculumOverview>>;
 
 /**
- * Rita's books for admins: the list of books, or one book on one page (its lessons in one list,
- * one button each). The book is in the address, so back and reload keep the place.
+ * Rita's books for admins: the list of books (each with its next step), or one book worked through
+ * in four steps. The book and step are in the address, so back and reload keep the place.
  */
 function AdminCurricula() {
   const { isAdmin, loading } = useAuth();
   const navigate = useNavigate({ from: "/admin/curricula" });
-  const { book: bookId } = Route.useSearch();
+  const { book: bookId, step } = Route.useSearch();
   const overviewFn = useServerFn(adminCurriculumOverview);
   const summaryFn = useServerFn(adminExercisesSummary);
   const [overview, setOverview] = useState<Overview | null>(null);
@@ -97,25 +97,24 @@ function AdminCurricula() {
   return (
     <main
       dir="rtl"
-      className="edith-premium uz-glow min-h-screen pb-24 text-[var(--pp-ink)]"
+      className="edith-premium min-h-screen bg-white pb-24 text-[var(--pp-ink)]"
       style={{ fontFamily: "var(--font-grotesk), 'Noto Sans Arabic', sans-serif" }}
     >
-      <header className="uz-topbar">
-        <div className="mx-auto flex h-[52px] max-w-5xl items-center gap-4 px-5">
-          <span className="uz-wordmark" dir="ltr">
-            UZYRA
-          </span>
-          <span className="text-[13.5px] text-white/55">دروس ريتا</span>
-          <nav className="ms-auto flex items-center gap-4 text-[13.5px] font-semibold">
-            <Link to="/rita-lessons">مسار الطالب</Link>
-            <Link to="/admin" className="inline-flex items-center gap-1">
-              الإدارة <ArrowLeft size={14} aria-hidden="true" />
+      <header className="border-b border-[var(--pp-line)] bg-white">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-5 py-3">
+          <p className="text-[15px] font-semibold">مناهج دروس ريتا</p>
+          <div className="flex items-center gap-1">
+            <Link to="/rita-lessons" className="rita-btn rita-btn-quiet rita-btn-sm">
+              مسار الطالب
             </Link>
-          </nav>
+            <Link to="/admin" className="rita-btn rita-btn-soft rita-btn-sm gap-1">
+              الإدارة <ArrowLeft size={15} aria-hidden="true" />
+            </Link>
+          </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-[920px] space-y-4 px-4 pt-8 sm:px-6">
+      <div className="mx-auto max-w-5xl space-y-4 px-5 pt-6">
         {loadError && (
           <div className="space-y-2">
             <ErrorBox hint={`ما قدرنا نحمّل الكتب: ${loadError}`} />
@@ -156,6 +155,8 @@ function AdminCurricula() {
             resources={overview.resources}
             resourcesReady={overview.resourcesReady}
             pdfCache={pdfCache}
+            step={step ?? "read"}
+            onStep={(next) => void navigate({ search: { book: selected.id, step: next } })}
             onBack={() => void navigate({ search: {} })}
             onChanged={refresh}
           />

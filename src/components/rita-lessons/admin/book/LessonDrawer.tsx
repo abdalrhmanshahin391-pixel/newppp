@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { LessonKind } from "@/lib/study/lesson-maker";
 import { Link } from "@tanstack/react-router";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Tabs from "@radix-ui/react-tabs";
@@ -30,7 +31,7 @@ import { ResourcesPanel } from "@/components/rita-lessons/admin/ResourcesPanel";
 import { SlidesPanel } from "@/components/rita-lessons/admin/SlidesPanel";
 import { StudyGuidePanel } from "@/components/rita-lessons/admin/StudyGuidePanel";
 import { errorText, lessonToDraft, pagesLabel } from "./book-utils";
-import { BidiText, ReadinessChip } from "./BookBits";
+import { BidiText, LessonKindBadge, ReadinessChip } from "./BookBits";
 
 /**
  * One lesson, opened from the review list: its exercises first (what the learner practises),
@@ -42,6 +43,7 @@ export function LessonDrawer({
   lesson,
   initialTab = "exercises",
   studyLinked = false,
+  kind,
   readiness,
   bookPublished,
   slides,
@@ -58,6 +60,8 @@ export function LessonDrawer({
   initialTab?: DrawerTab;
   /** A ready guide is linked: "preview" opens the study page, as learners will get it. */
   studyLinked?: boolean;
+  /** Red (Rita's lesson) or green (guide + Rita), shown next to the state. */
+  kind?: LessonKind;
   readiness: LessonReadiness;
   bookPublished: boolean;
   slides: Record<string, Slide[]>;
@@ -133,6 +137,7 @@ export function LessonDrawer({
                   </Dialog.Close>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                  {kind && <LessonKindBadge kind={kind} />}
                   <ReadinessChip state={readiness} />
                   <span className="me-auto" />
                   <Link
@@ -322,7 +327,7 @@ export function LessonDrawer({
                     />
                   </Tabs.Content>
                   <Tabs.Content value="study" className="rita-tab-panel">
-                    <StudyGuidePanel key={lesson.id} lesson={lesson} />
+                    <StudyGuidePanel key={lesson.id} lesson={lesson} onChanged={onChanged} />
                   </Tabs.Content>
                   <Tabs.Content value="slides" className="rita-tab-panel">
                     <SlidesPanel

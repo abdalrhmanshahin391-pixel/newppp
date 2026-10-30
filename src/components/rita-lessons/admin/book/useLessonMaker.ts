@@ -4,15 +4,10 @@ import { toast } from "sonner";
 import {
   adminGenerateExercises,
   adminGenerateLesson,
-  adminLessonExercises,
-  adminPublishExercises,
-  adminSetCurriculumStatus,
-  adminSetLessonStatus,
   type CurriculumRow,
 } from "@/lib/rita-curriculum.functions";
 import { adminRenderGuide, adminWriteGuide } from "@/lib/guides/guides.functions";
 import { describeGuideError } from "@/lib/guides/guide-record";
-import { shouldPublishExercisesWithLesson } from "@/lib/rita-engine-check";
 import {
   adminLinkStudyGuide,
   adminSetLessonExperience,
@@ -40,8 +35,8 @@ class StepError extends Error {
 }
 
 /**
- * The book page's "make" button: one lesson is made in full (lesson, exercises, PDF guide, then the
- * guide checked and linked), one lesson after the other. Each step looks at what is already saved,
+ * Making green lessons (guide + Rita): one lesson is made in full (lesson, exercises, PDF guide, then
+ * the guide checked and linked), one lesson after the other. Each step looks at what is already saved,
  * so a stopped or closed page carries on where it stopped and nothing is made twice.
  */
 export function useLessonMaker({
@@ -60,14 +55,9 @@ export function useLessonMaker({
   const writeFn = useServerFn(adminWriteGuide);
   const renderFn = useServerFn(adminRenderGuide);
   const linkFn = useServerFn(adminLinkStudyGuide);
-  const viewFn = useServerFn(adminLessonExercises);
-  const publishExercisesFn = useServerFn(adminPublishExercises);
-  const lessonStatusFn = useServerFn(adminSetLessonStatus);
-  const bookStatusFn = useServerFn(adminSetCurriculumStatus);
 
   const [runs, setRuns] = useState<Record<string, RunState>>({});
   const [running, setRunning] = useState(false);
-  const [publishing, setPublishing] = useState("");
   const cancel = useRef(false);
 
   /** A run is kept under the row's key and, once the lesson exists, under the lesson too. */
@@ -176,43 +166,18 @@ export function useLessonMaker({
         if (await makeOne(item.row, item.facts)) made += 1;
         await onChanged();
       }
-      if (made) toast.success(made === 1 ? "انصنع الدرس كامل" : `انصنعوا ${made} دروس كاملين`);
+      if (made)
+        toast.success(made === 1 ? "انصنع الدرس الأخضر كامل" : `انصنعوا ${made} دروس خضرا كاملين`);
     } finally {
       setRunning(false);
     }
-  }
-
-  /** Publishes one lesson with its exercises, and the book too when it is still a draft. */
-  async function publish(lessonId: string) {
-    setPublishing(lessonId);
-    try {
-      const view = await viewFn({ data: { lessonId } });
-      const withExercises = shouldPublishExercisesWithLesson({
-        hasContent: view.content !== null,
-        status: view.status,
-        problems: view.problems.length,
-      });
-      if (withExercises) await publishExercisesFn({ data: { lessonId, publish: true } });
-      await lessonStatusFn({ data: { lessonId, status: "published" } });
-      if (book.status !== "published")
-        await bookStatusFn({ data: { curriculumId: book.id, status: "published" } });
-      toast.success(
-        withExercises ? "انشر الدرس للطلاب مع تمارينه" : "انشر الدرس (تمارينه فيها مشكلة، فبدونها)",
-      );
-    } catch (error) {
-      toast.error(errorText(error));
-    } finally {
-      setPublishing("");
-      await onChanged();
-    }
+    return made;
   }
 
   return {
     runs,
     running,
-    publishing,
     make,
-    publish,
     stop: () => {
       cancel.current = true;
     },
