@@ -5,7 +5,7 @@
 export type SplashState = { id: number; from: string | null; to: string };
 
 /** How long it stays, in milliseconds; with reduced motion it is a short still card. */
-export const SPLASH_MS = 3400;
+export const SPLASH_MS = 2900;
 export const SPLASH_REDUCED_MS = 1200;
 
 let state: SplashState | null = null;

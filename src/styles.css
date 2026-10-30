@@ -5922,16 +5922,13 @@ html.rita-app,
 .uz-rita-dark .edith-premium .rita-btn:focus-visible {
   outline-color: #fff;
 }
-/* The language-change splash (LanguageSplash). White and quiet: the word, a blue line, the language. */
-@font-face {
-  font-family: "Uzyra Serif";
-  src: url("/fonts/brand/instrument-serif-latin-400.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
+/* The language-change splash (LanguageSplash). The word UZYRA is drawn in fine single lines, its
+   letters drift apart as they are drawn, a hairline opens, then the language rolls in. */
 .uz-splash {
   --uz-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --uz-line: #121117;
+  --uz-muted: #8d8c9c;
+  --uz-rule: #2b6df0;
   position: fixed;
   inset: 0;
   z-index: 200;
@@ -5940,11 +5937,17 @@ html.rita-app,
   align-items: center;
   justify-content: center;
   background: #fff;
-  color: #121117;
+  color: var(--uz-line);
   cursor: pointer;
   animation:
     uz-sp-in 0.25s ease both,
-    uz-sp-out 0.4s ease-in 3s both;
+    uz-sp-out 0.4s ease-in 2.5s both;
+}
+.uz-splash[data-tone="dark"] {
+  --uz-line: #f3f5fb;
+  --uz-muted: #7f89a3;
+  --uz-rule: rgb(243 245 251 / 0.55);
+  background: #0a1220;
 }
 @keyframes uz-sp-in {
   from {
@@ -5958,47 +5961,48 @@ html.rita-app,
 }
 .uz-splash-word {
   display: flex;
-  gap: 0.02em;
-  padding-bottom: 0.08em;
-  font-family: "Uzyra Serif", Georgia, "Times New Roman", serif;
-  font-size: clamp(96px, 24vw, 180px);
-  line-height: 1;
-  letter-spacing: 0.07em;
-  -webkit-text-stroke: 1.6px #121117;
+  align-items: flex-end;
+  height: clamp(76px, 15vw, 150px);
+  /* The letters start close and settle far apart, like the title of a film. */
+  animation: uz-sp-gap 2.2s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
 }
-@media (min-width: 640px) {
-  .uz-splash-word {
-    -webkit-text-stroke: 2.2px #121117;
-  }
-}
-.uz-splash-cell {
-  display: block;
-  overflow: hidden;
-  margin: 0 -0.05em -0.24em;
-  padding: 0 0.05em 0.24em;
-}
-.uz-splash-cell > i {
-  display: block;
-  font-style: normal;
-  animation: uz-sp-up 0.9s var(--uz-ease) calc(0.25s + var(--i) * 0.11s) both;
-}
-@keyframes uz-sp-up {
+@keyframes uz-sp-gap {
   from {
-    transform: translateY(105%);
-    filter: blur(7px);
+    gap: 0.1em;
   }
-  60% {
-    filter: blur(0);
+  to {
+    gap: clamp(14px, 4.4vw, 40px);
+  }
+}
+.uz-splash-letter {
+  display: block;
+  height: 100%;
+  width: auto;
+  overflow: visible;
+}
+.uz-splash-letter path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
+  stroke-miterlimit: 6;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: uz-sp-draw 1s cubic-bezier(0.65, 0, 0.35, 1) calc(0.2s + var(--i) * 0.13s) both;
+}
+@keyframes uz-sp-draw {
+  from {
+    stroke-dashoffset: 1;
   }
 }
 .uz-splash-rule {
-  width: clamp(150px, 26vw, 330px);
-  height: 3px;
-  margin-top: 10px;
-  border-radius: 2px;
-  background: #2b6df0;
+  width: clamp(140px, 30vw, 340px);
+  height: 1px;
+  margin-top: clamp(22px, 4vw, 36px);
+  background: var(--uz-rule);
   transform-origin: center;
-  animation: uz-sp-rule 0.7s var(--uz-ease) 1.2s both;
+  animation: uz-sp-rule 0.7s var(--uz-ease) 1.35s both;
 }
 @keyframes uz-sp-rule {
   from {
@@ -6007,11 +6011,11 @@ html.rita-app,
 }
 .uz-splash-lang {
   position: relative;
-  width: min(320px, 86vw);
-  height: 46px;
-  margin-top: 40px;
+  width: min(360px, 88vw);
+  height: 40px;
+  margin-top: 26px;
   overflow: hidden;
-  animation: uz-sp-in 0.4s ease 1.5s both;
+  animation: uz-sp-in 0.4s ease 1.6s both;
 }
 .uz-splash-item {
   position: absolute;
@@ -6023,23 +6027,24 @@ html.rita-app,
 }
 .uz-splash-item b {
   font-family: "Inter Tight", "Figtree", "Noto Sans Arabic", sans-serif;
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
 }
 .uz-splash-old {
-  color: #9a99a8;
-  animation: uz-sp-old 0.55s cubic-bezier(0.65, 0, 0.35, 1) 1.9s both;
+  color: var(--uz-muted);
+  animation: uz-sp-old 0.5s cubic-bezier(0.65, 0, 0.35, 1) 1.75s both;
 }
 .uz-splash-old img {
   filter: grayscale(1);
-  opacity: 0.6;
+  opacity: 0.55;
 }
 .uz-splash-new {
-  animation: uz-sp-new 0.75s cubic-bezier(0.2, 1.1, 0.3, 1) 1.9s both;
+  animation: uz-sp-new 0.7s cubic-bezier(0.2, 1, 0.3, 1) 1.75s both;
 }
 .uz-splash-lang[data-first="true"] .uz-splash-new {
-  animation-delay: 1.6s;
+  animation-delay: 1.5s;
 }
 @keyframes uz-sp-old {
   to {
@@ -6057,11 +6062,15 @@ html.rita-app,
   .uz-splash {
     animation: uz-sp-in 0.2s ease both;
   }
-  .uz-splash-cell > i,
+  .uz-splash-word,
+  .uz-splash-letter path,
   .uz-splash-rule,
   .uz-splash-lang,
   .uz-splash-new {
     animation: none;
+  }
+  .uz-splash-word {
+    gap: clamp(14px, 4.4vw, 40px);
   }
   .uz-splash-old {
     display: none;

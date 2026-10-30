@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { LanguageFlag } from "@/components/language/LanguageFlag";
 import { useLanguageRegistry } from "@/hooks/useLearningLanguage";
 import {
@@ -9,45 +9,82 @@ import {
   subscribeSplash,
 } from "@/lib/language-splash";
 
-const WORD = "Uzyra";
+/** "light": white page, ink lines. "dark": deep navy page, white lines. */
+export type SplashTone = "light" | "dark";
+const TONE: SplashTone = "light";
 
-/** The word's serif is loaded first (at most 500ms), so it never appears in another face. */
-function useFontReady(active: boolean): boolean {
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    if (!active) {
-      setReady(false);
-      return;
-    }
-    let live = true;
-    const fonts = typeof document !== "undefined" ? document.fonts : undefined;
-    const loaded = fonts
-      ? fonts.load('180px "Uzyra Serif"').catch(() => undefined)
-      : Promise.resolve();
-    void Promise.race([loaded, new Promise((resolve) => window.setTimeout(resolve, 500))]).then(
-      () => live && setReady(true),
-    );
-    return () => {
-      live = false;
-    };
-  }, [active]);
-  return ready;
+// UZYRA drawn as single lines, all one weight, on a 56 x 100 grid. The A has no bar (a pointed
+// arch), the R's leg starts apart from its bowl. Each path is drawn by its own stroke.
+const LETTERS: { key: string; d: string }[] = [
+  { key: "U", d: "M0 0 V72 A28 28 0 0 0 56 72 V0" },
+  { key: "Z", d: "M0 0 H56 L0 100 H56" },
+  { key: "Y", d: "M0 0 L28 52 L56 0 M28 52 V100" },
+  { key: "R", d: "M0 100 V0 H32 A25 25 0 0 1 32 50 H0 M30 56 L56 100" },
+  { key: "A", d: "M0 100 L28 0 L56 100" },
+];
+
+type SplashLanguage = { code: string; name_native: string };
+
+/**
+ * The picture itself: the word is drawn line by line while its letters drift apart, a hairline
+ * opens under it, then the language being left rolls up and the new one rolls in. Shared by the
+ * live splash and the preview, so what is reviewed is what ships.
+ */
+export function SplashStage({
+  tone,
+  from,
+  to,
+  flag,
+}: {
+  tone: SplashTone;
+  from?: SplashLanguage;
+  to: SplashLanguage;
+  flag: (language: SplashLanguage) => React.ReactNode;
+}) {
+  return (
+    <>
+      <div className="uz-splash-word" dir="ltr" role="presentation">
+        {LETTERS.map((letter, index) => (
+          <svg
+            key={letter.key}
+            viewBox="-2 -2 60 104"
+            className="uz-splash-letter"
+            style={{ ["--i" as string]: index }}
+            focusable="false"
+          >
+            <path d={letter.d} pathLength={1} />
+          </svg>
+        ))}
+      </div>
+      <span className="uz-splash-rule" data-tone={tone} />
+      <div className="uz-splash-lang" data-first={from ? "false" : "true"}>
+        {from && (
+          <div className="uz-splash-item uz-splash-old">
+            {flag(from)}
+            <b dir="auto">{from.name_native}</b>
+          </div>
+        )}
+        <div className="uz-splash-item uz-splash-new">
+          {flag(to)}
+          <b dir="auto">{to.name_native}</b>
+        </div>
+      </div>
+    </>
+  );
 }
 
 /**
- * White, quiet, about three seconds: "Uzyra" rises letter by letter, a blue line opens under it,
- * and the language being left rolls up while the new one (flag and its own name) rolls in. It is
+ * About three seconds: a quiet page, the word drawn in fine lines, then the new language. It is
  * only a picture: the change itself has already happened, tapping anywhere or pressing Escape
  * closes it, and the screen reader announcement stays with the switcher that made the change.
  */
 export function LanguageSplash() {
   const splash = useSyncExternalStore(subscribeSplash, getSplash, () => null);
   const { all } = useLanguageRegistry();
-  const ready = useFontReady(splash !== null);
   const id = splash?.id;
 
   useEffect(() => {
-    if (id === undefined || !ready) return;
+    if (id === undefined) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timer = window.setTimeout(
       () => dismissLanguageSplash(id),
@@ -61,9 +98,9 @@ export function LanguageSplash() {
       window.clearTimeout(timer);
       window.removeEventListener("keydown", onKey);
     };
-  }, [id, ready]);
+  }, [id]);
 
-  if (!splash || !ready) return null;
+  if (!splash) return null;
   const to = all.find((language) => language.code === splash.to);
   const from = splash.from ? all.find((language) => language.code === splash.from) : undefined;
   if (!to) return null;
@@ -72,29 +109,19 @@ export function LanguageSplash() {
     <div
       key={splash.id}
       className="uz-splash"
+      data-tone={TONE}
       aria-hidden="true"
       onClick={() => dismissLanguageSplash(splash.id)}
     >
-      <div className="uz-splash-word" dir="ltr">
-        {WORD.split("").map((letter, index) => (
-          <span key={index} className="uz-splash-cell">
-            <i style={{ ["--i" as string]: index }}>{letter}</i>
-          </span>
-        ))}
-      </div>
-      <span className="uz-splash-rule" />
-      <div className="uz-splash-lang" data-first={from ? "false" : "true"}>
-        {from && (
-          <div className="uz-splash-item uz-splash-old">
-            <LanguageFlag language={from} size={46} />
-            <b dir="auto">{from.name_native}</b>
-          </div>
-        )}
-        <div className="uz-splash-item uz-splash-new">
-          <LanguageFlag language={to} size={46} />
-          <b dir="auto">{to.name_native}</b>
-        </div>
-      </div>
+      <SplashStage
+        tone={TONE}
+        from={from}
+        to={to}
+        flag={(language) => {
+          const full = all.find((item) => item.code === language.code);
+          return full ? <LanguageFlag language={full} size={34} /> : null;
+        }}
+      />
     </div>
   );
 }
