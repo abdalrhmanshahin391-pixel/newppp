@@ -8,6 +8,7 @@ import {
   type BookStep,
   type LessonReadiness,
 } from "@/lib/rita-book-flow";
+import { KIND_TEXT, STEP_TEXT, type LessonKind, type pipelineView } from "@/lib/study/lesson-maker";
 
 export function KindBadge({ kind }: { kind: "grammar" | "vocabulary" }) {
   return (
@@ -166,4 +167,32 @@ export function BidiText({ text }: { text: string }) {
   }
   if (last < text.length) parts.push(text.slice(last));
   return <>{parts}</>;
+}
+
+/** A lesson's kind: red for Rita's lesson, green for the guide + Rita. */
+export function LessonKindBadge({ kind }: { kind: LessonKind }) {
+  return (
+    <span className="lesson-kind" data-kind={kind}>
+      {KIND_TEXT[kind].short}
+    </span>
+  );
+}
+
+/** The steps of a green lesson being made: done, now, failed or still to do. */
+export function MakerSteps({ steps }: { steps: ReturnType<typeof pipelineView> }) {
+  return (
+    <span className="uz-pipe" role="status">
+      {steps.map((step, index) => (
+        <span key={step.step} className="contents">
+          {index > 0 && (
+            <i className="uz-pipe-line" data-done={step.state === "done" || step.state === "now"} />
+          )}
+          <span className="uz-pipe-step" data-state={step.state}>
+            <i aria-hidden="true">{step.state === "done" && <Check size={9} strokeWidth={3} />}</i>
+            {step.state === "now" ? STEP_TEXT[step.step].doing : STEP_TEXT[step.step].label}
+          </span>
+        </span>
+      ))}
+    </span>
+  );
 }

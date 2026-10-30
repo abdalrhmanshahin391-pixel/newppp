@@ -155,9 +155,11 @@ export type BookStudyState =
       switchOn: boolean;
       /** Per lesson: a ready guide with its learners' copy is linked. */
       linked: Record<string, boolean>;
+      /** Per lesson: the kind the admin chose (red classic or green study). */
+      experience: Record<string, Experience>;
     };
 
-/** For the book page's list: which of the book's lessons already have their guide linked. */
+/** For the book page: each lesson's kind, and whether its guide is linked. */
 export const adminBookStudyState = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => parse(z.object({ curriculumId: uuid }), data))
@@ -168,7 +170,7 @@ export const adminBookStudyState = createServerFn({ method: "GET" })
     const [{ data: lessons, error }, { data: flag }] = await Promise.all([
       db
         .from("rita_lessons")
-        .select("id, study_guide_id")
+        .select("id, study_guide_id, experience")
         .eq("curriculum_id", data.curriculumId)
         .neq("status", "archived"),
       db.from("rita_feature_flags").select("enabled").eq("key", STUDY_FLAG).maybeSingle(),
@@ -199,6 +201,12 @@ export const adminBookStudyState = createServerFn({ method: "GET" })
           Boolean(row.study_guide_id && usable.has(String(row.study_guide_id))),
         ]),
       ),
+      experience: Object.fromEntries(
+        (lessons ?? []).map((row) => [
+          String(row.id),
+          row.experience === "study" ? "study" : "classic",
+        ]),
+      ) as Record<string, Experience>,
     };
   });
 

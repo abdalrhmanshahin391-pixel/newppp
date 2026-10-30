@@ -1,10 +1,7 @@
-// The book page's one list and its one button per lesson. A lesson is made in four steps (the
-// lesson, its exercises, its PDF guide, then the guide checked and linked); these rules say which
-// steps are still missing, what the row shows, and what its button does. Pure, so they are unit
-// tested with node. The state comes from the database each time, so a closed page resumes where it
-// stopped.
-import type { TopicSuggestion } from "../rita-slides.ts";
-
+// The green lesson (guide + Rita), made in one press: the lesson, its exercises, its PDF guide, then
+// the guide checked and linked. These rules say which steps are still missing and what the step line
+// shows; the two kinds' names and colours live with the book page. Pure, so they are unit tested
+// with node. The state comes from the database each time, so a closed page resumes where it stopped.
 export const MAKER_STEPS = ["lesson", "exercises", "guide", "link"] as const;
 export type MakerStep = (typeof MAKER_STEPS)[number];
 
@@ -51,56 +48,6 @@ export function missingSteps(facts: LessonFacts, setup: MakerSetup): MakerStep[]
   return MAKER_STEPS.filter((step) => !done[step]);
 }
 
-export type RowStatus =
-  "new" | "queued" | "working" | "failed" | "incomplete" | "ready" | "published";
-
-export const ROW_STATUS_TEXT: Record<RowStatus, string> = {
-  new: "لسا",
-  queued: "بالدور",
-  working: "بينعمل",
-  failed: "بدها إعادة",
-  incomplete: "ناقص",
-  ready: "جاهز",
-  published: "منشور",
-};
-
-export function rowStatus(facts: LessonFacts, setup: MakerSetup, run?: RunState): RowStatus {
-  if (run?.state === "running") return "working";
-  if (run?.state === "queued") return "queued";
-  if (run?.state === "failed") return "failed";
-  if (!facts.exists) return "new";
-  if (missingSteps(facts, setup).length) return "incomplete";
-  return facts.status === "published" ? "published" : "ready";
-}
-
-/** The row's one button. */
-export type RowAction = "make" | "continue" | "retry" | "publish" | "open" | null;
-
-export function rowAction(status: RowStatus): RowAction {
-  switch (status) {
-    case "new":
-      return "make";
-    case "incomplete":
-      return "continue";
-    case "failed":
-      return "retry";
-    case "ready":
-      return "publish";
-    case "published":
-      return "open";
-    default:
-      return null;
-  }
-}
-
-export const ACTION_TEXT: Record<Exclude<RowAction, null>, string> = {
-  make: "اصنع",
-  continue: "كمّل",
-  retry: "أعِد",
-  publish: "انشر",
-  open: "افتح",
-};
-
 /** The step a running row shows as current, and the ones before it as done. */
 export function pipelineView(
   facts: LessonFacts,
@@ -122,11 +69,10 @@ export function pipelineView(
     });
 }
 
-/** One row of the book page: a lesson that exists, or a suggested one not made yet. */
+/** One lesson to make: a suggestion not made yet (no id), or a made lesson to finish. */
 export type BookRow = {
   key: string;
   lessonId: string | null;
-  no: number | null;
   title: string;
   titleEn: string;
   topic: string;
@@ -134,87 +80,36 @@ export type BookRow = {
   to: number;
 };
 
-export type LessonLike = {
-  id: string;
-  lesson_no: number;
-  title: string;
-  title_ar: string;
-  topic: string;
-  source_from_page: number;
-  source_to_page: number;
-  status: "draft" | "published" | "archived";
+export type LessonKind = "classic" | "study";
+
+/** The two kinds, as the admin sees them: red for Rita's lesson, green for the guide + Rita. */
+export const KIND_TEXT: Record<LessonKind, { name: string; short: string; about: string }> = {
+  classic: {
+    name: "درس ريتا",
+    short: "ريتا",
+    about: "ريتا بتشرح وبتعطي تمارين، مثل ما كانت الدروس دايماً.",
+  },
+  study: {
+    name: "ملف + ريتا",
+    short: "ملف + ريتا",
+    about: "دليل PDF يمين وريتا يسار. بينصنع الدرس وتمارينه ودليله وبينربط لحاله.",
+  },
 };
 
-export const suggestionKey = (item: TopicSuggestion) =>
-  `s:${item.topic}:${item.from_page}-${item.to_page}`;
-
-/** Lessons and the suggestions not made yet, in one list in page order. Archived lessons are left out. */
-export function bookRows(lessons: LessonLike[], suggestions: TopicSuggestion[]): BookRow[] {
-  const rows: BookRow[] = lessons
-    .filter((lesson) => lesson.status !== "archived")
-    .map((lesson) => ({
-      key: lesson.id,
-      lessonId: lesson.id,
-      no: lesson.lesson_no,
-      title: lesson.title_ar || lesson.title,
-      titleEn: lesson.title,
-      topic: lesson.topic,
-      from: lesson.source_from_page,
-      to: lesson.source_to_page,
-    }));
-  for (const item of suggestions) {
-    rows.push({
-      key: suggestionKey(item),
-      lessonId: null,
-      no: null,
-      title: item.title_ar || item.topic,
-      titleEn: item.topic,
-      topic: item.topic,
-      from: item.from_page,
-      to: item.to_page,
-    });
-  }
-  return rows.sort(
-    (a, b) =>
-      a.from - b.from ||
-      a.to - b.to ||
-      // A made lesson before a suggestion on the same pages.
-      Number(a.lessonId === null) - Number(b.lessonId === null) ||
-      (a.no ?? 0) - (b.no ?? 0),
-  );
+/**
+ * A green lesson whose guide is not linked yet: learners still get the red lesson until it is, so
+ * the review list offers to finish it. Without the study tables there is nothing to finish.
+ */
+export function needsGuide(kind: LessonKind, linked: boolean, studyReady: boolean): boolean {
+  return studyReady && kind === "study" && !linked;
 }
 
-/** The rows the hero button makes: everything not finished, in page order. */
-export function makeAllQueue(statuses: { key: string; status: RowStatus }[]): string[] {
-  return statuses
-    .filter((row) => row.status === "new" || row.status === "incomplete" || row.status === "failed")
-    .map((row) => row.key);
-}
-
-/** The counts under the book title, and one segment per row for the thin bar. */
-export function bookSummary(statuses: RowStatus[]): {
-  published: number;
-  ready: number;
-  working: number;
-  left: number;
-  segments: ("published" | "ready" | "working" | "left")[];
-} {
-  const segments = statuses.map((status) =>
-    status === "published"
-      ? ("published" as const)
-      : status === "ready"
-        ? ("ready" as const)
-        : status === "working" || status === "queued"
-          ? ("working" as const)
-          : ("left" as const),
-  );
-  const count = (value: (typeof segments)[number]) => segments.filter((s) => s === value).length;
+/** How many lessons of each kind, for the review filter. */
+export function kindCounts(kinds: LessonKind[]): Record<LessonKind | "all", number> {
   return {
-    published: count("published"),
-    ready: count("ready"),
-    working: count("working"),
-    left: count("left"),
-    segments,
+    all: kinds.length,
+    classic: kinds.filter((kind) => kind === "classic").length,
+    study: kinds.filter((kind) => kind === "study").length,
   };
 }
 

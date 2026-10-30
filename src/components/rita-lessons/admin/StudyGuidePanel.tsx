@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { KIND_TEXT } from "@/lib/study/lesson-maker";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, ExternalLink, Eye, Link2, Link2Off, Loader2, Sparkles } from "lucide-react";
@@ -31,6 +32,7 @@ const BLOCKER_TEXT = {
  */
 export function StudyGuidePanel({
   lesson,
+  onChanged,
 }: {
   lesson: {
     id: string;
@@ -39,6 +41,8 @@ export function StudyGuidePanel({
     source_from_page: number;
     source_to_page: number;
   };
+  /** The book page refreshes the lesson's red/green mark and its guide state. */
+  onChanged?: () => Promise<void>;
 }) {
   const stateFn = useServerFn(adminStudyLessonState);
   const experienceFn = useServerFn(adminSetLessonExperience);
@@ -75,7 +79,7 @@ export function StudyGuidePanel({
       toast.error(errorText(error));
     } finally {
       setBusy("");
-      await load();
+      await Promise.all([load(), onChanged?.()]);
     }
   }
 
@@ -125,8 +129,8 @@ export function StudyGuidePanel({
         <div role="radiogroup" aria-label="نوع التجربة" className="rita-choice">
           {(
             [
-              ["classic", "الدرس الحالي"],
-              ["study", "ريتا — دراسة تفاعلية (ملف + ريتا)"],
+              ["classic", `${KIND_TEXT.classic.name} (أحمر)`],
+              ["study", `${KIND_TEXT.study.name} (أخضر)`],
             ] as const
           ).map(([value, label]) => (
             <button
