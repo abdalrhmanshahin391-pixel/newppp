@@ -1,7 +1,6 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { ProHome } from "@/components/home/procreate/ProHome";
-import { InstallAppBanner } from "@/components/InstallAppButton";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -66,7 +65,6 @@ function Index() {
   return (
     <div className="rita-cream edith-light edith-premium min-h-screen bg-black text-white">
       <ProHome />
-      <InstallAppBanner />
     </div>
   );
 }
