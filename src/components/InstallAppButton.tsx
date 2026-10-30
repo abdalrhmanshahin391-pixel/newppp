@@ -7,8 +7,6 @@ type BIPEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const DISMISS_KEY = "aqb-install-dismissed";
-
 function isStandalone() {
   if (typeof window === "undefined") return false;
   return (
@@ -53,13 +51,7 @@ export function useInstallApp() {
     };
   }, []);
 
-  const mode: "prompt" | "ios" | null = installed
-    ? null
-    : deferred
-      ? "prompt"
-      : ios
-        ? "ios"
-        : null;
+  const mode: "prompt" | "ios" | null = installed ? null : deferred ? "prompt" : ios ? "ios" : null;
 
   async function install() {
     if (!deferred) return false;
@@ -87,10 +79,16 @@ function IosSheet({ onClose }: { onClose: () => void }) {
             <RitaFace size={52} />
             <div>
               <p className="text-[17px] font-black leading-tight">Keep Uzyra one tap away</p>
-              <p className="mt-1 text-[13px] text-[color:var(--pro-muted)]">Add it to your Home Screen.</p>
+              <p className="mt-1 text-[13px] text-[color:var(--pro-muted)]">
+                Add it to your Home Screen.
+              </p>
             </div>
           </div>
-          <button onClick={onClose} aria-label="Close" className="grid h-9 w-9 place-items-center rounded-full text-[color:var(--pro-muted)] transition-colors hover:bg-[color:var(--rita-green-soft)] hover:text-[color:var(--pro-ink)]">
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="grid h-9 w-9 place-items-center rounded-full text-[color:var(--pro-muted)] transition-colors hover:bg-[color:var(--rita-green-soft)] hover:text-[color:var(--pro-ink)]"
+          >
             <X size={18} />
           </button>
         </div>
@@ -101,7 +99,8 @@ function IosSheet({ onClose }: { onClose: () => void }) {
               1
             </span>
             <span className="inline-flex items-center gap-1.5">
-              Tap the <Share size={16} className="text-[color:var(--rita-green-deep)]" /> Share button in Safari
+              Tap the <Share size={16} className="text-[color:var(--rita-green-deep)]" /> Share
+              button in Safari
             </span>
           </li>
           <li className="flex items-center gap-3">
@@ -109,7 +108,8 @@ function IosSheet({ onClose }: { onClose: () => void }) {
               2
             </span>
             <span className="inline-flex items-center gap-1.5">
-              Choose <PlusSquare size={16} className="text-[color:var(--rita-green-deep)]" /> “Add to Home Screen”
+              Choose <PlusSquare size={16} className="text-[color:var(--rita-green-deep)]" /> “Add
+              to Home Screen”
             </span>
           </li>
         </ol>
@@ -147,62 +147,6 @@ export function InstallAppButton({
         <Download size={16} className={iconClassName} />
         Install app
       </button>
-      {sheet && <IosSheet onClose={() => setSheet(false)} />}
-    </>
-  );
-}
-
-/** Dismissible bottom banner for mobile visitors on the home page. */
-export function InstallAppBanner() {
-  const { mode, install } = useInstallApp();
-  const [dismissed, setDismissed] = useState(true);
-  const [sheet, setSheet] = useState(false);
-
-  useEffect(() => {
-    try {
-      setDismissed(localStorage.getItem(DISMISS_KEY) === "1");
-    } catch {
-      setDismissed(false);
-    }
-  }, []);
-
-  function close() {
-    setDismissed(true);
-    try {
-      localStorage.setItem(DISMISS_KEY, "1");
-    } catch {
-      /* ignore */
-    }
-  }
-
-  if (!mode || dismissed) return null;
-
-  return (
-    <>
-      <div className="fixed inset-x-3 bottom-3 z-[150] sm:hidden">
-        <div className="rita-install-banner flex items-center gap-3 rounded-[24px] border p-3 shadow-xl">
-          <RitaFace size={44} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[14px] font-black text-[color:var(--pro-ink)]">Keep Uzyra close</p>
-            <p className="truncate text-[12px] text-[color:var(--pro-muted)]">Open it from your Home Screen.</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => (mode === "ios" ? setSheet(true) : install())}
-            className="rita-btn rita-btn-primary !h-9 !px-4 !text-[13px]"
-          >
-            Add
-          </button>
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Dismiss"
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[color:var(--pro-muted)] transition-colors hover:bg-[color:var(--rita-green-soft)]"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      </div>
       {sheet && <IosSheet onClose={() => setSheet(false)} />}
     </>
   );

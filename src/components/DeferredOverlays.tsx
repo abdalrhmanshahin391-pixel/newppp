@@ -11,13 +11,12 @@ export function DeferredOverlays() {
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const [banner, ritax, help, auth, toaster, phoneTip] = await Promise.all([
+      const [banner, ritax, help, auth, toaster] = await Promise.all([
         import("@/components/PaymentTestModeBanner"),
         import("@/components/RitaXAnnouncements"),
         import("@/components/tutorials/HowItWorksButton"),
         import("@/components/auth/AuthDialog"),
         import("@/components/ui/sonner"),
-        import("@/components/PhoneExperienceTip"),
       ]).catch((error) => {
         console.warn("Optional tools could not be loaded", error);
         return [];
@@ -32,9 +31,6 @@ export function DeferredOverlays() {
         auth.AuthDialogHost,
         Toasts,
       ];
-      if (phoneTip?.PhoneExperienceTip) {
-        activeParts.push(phoneTip.PhoneExperienceTip);
-      }
       setParts(activeParts);
     };
 

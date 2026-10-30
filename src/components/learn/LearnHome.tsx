@@ -20,15 +20,7 @@ import { LanguageChooserCard } from "@/components/language/LanguagePicker";
 import { showsGermanLab } from "@/lib/learning-language";
 import { useStudyOverview } from "@/lib/use-review";
 import { TOOLS, type ToolDef } from "@/lib/site-tools";
-import {
-  cardsLabel,
-  dayPart,
-  firstName,
-  goalPercent,
-  lessonsDone,
-  pickContinue,
-  type ContinueChoice,
-} from "@/lib/learn-home";
+import { cardsLabel, goalPercent, lessonsDone } from "@/lib/learn-home";
 
 type Lang = "en" | "ar";
 type Bi = { en: string; ar: string };
@@ -286,99 +278,6 @@ function Section({ section, lang }: { section: SectionDef; lang: Lang }) {
   );
 }
 
-/** The one suggested next step. */
-function NextUp({
-  choice,
-  loading,
-  lang,
-}: {
-  choice: ContinueChoice;
-  loading: boolean;
-  lang: Lang;
-}) {
-  if (loading) {
-    return (
-      <div
-        role="status"
-        aria-label={lang === "ar" ? "جارٍ التحميل" : "Loading"}
-        className="h-[116px] animate-pulse rounded-[20px] bg-[var(--pp-grey)]"
-      />
-    );
-  }
-  const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
-  let title = "";
-  let detail = "";
-  let cta = "";
-  let to = "/rita-conversations";
-  let search: Record<string, string> | undefined;
-  switch (choice.kind) {
-    case "signin":
-      title = t("Sign in to keep your progress", "سجّل الدخول لتحفظ تقدمك");
-      detail = t(
-        "Your cards, lessons and streak are saved to your account.",
-        "بطاقاتك ودروسك وسلسلة أيامك تُحفظ في حسابك.",
-      );
-      cta = t("Sign in", "تسجيل الدخول");
-      to = "/login";
-      break;
-    case "lesson": {
-      const name = lang === "ar" && choice.titleAr ? choice.titleAr : choice.title;
-      title = choice.started
-        ? t(`Continue: ${name}`, `تابع: ${name}`)
-        : t(`Start your next lesson: ${name}`, `ابدأ درسك التالي: ${name}`);
-      detail = choice.started
-        ? t("Pick up where you stopped.", "أكمل من حيث توقفت.")
-        : t("It takes a few minutes and Rita guides you.", "تستغرق بضع دقائق وريتا ترشدك.");
-      cta = choice.started ? t("Continue lesson", "تابع الدرس") : t("Start lesson", "ابدأ الدرس");
-      to = "/rita-lessons";
-      search = { lesson: choice.lessonId };
-      break;
-    }
-    case "review":
-      title = t(`Review ${cardsLabel(choice.due)}`, `راجع ${choice.due} بطاقة`);
-      detail = t(
-        "They are due now. A few minutes keeps them from slipping.",
-        "حان موعدها الآن. بضع دقائق تمنعك من نسيانها.",
-      );
-      cta = t("Start review", "ابدأ المراجعة");
-      to = "/study";
-      break;
-    default:
-      title = t("Talk to Rita for five minutes", "تحدث مع ريتا خمس دقائق");
-      detail = t(
-        "Say anything out loud. She answers and gently corrects you.",
-        "قل أي شيء بصوتك. ترد عليك وتصحح لك بلطف.",
-      );
-      cta = t("Talk to Rita", "تحدث مع ريتا");
-      to = "/rita-conversations";
-  }
-  return (
-    <section
-      aria-labelledby="next-up-title"
-      className="flex flex-col gap-4 rounded-[20px] bg-[var(--pp-grey)] p-5 md:flex-row md:items-center md:justify-between md:p-6"
-    >
-      <div className="min-w-0">
-        <p className="text-[14px] font-semibold text-[#4b4a5c]">{t("Next up", "خطوتك التالية")}</p>
-        <h2
-          id="next-up-title"
-          className="rh-app-h2 mt-1 line-clamp-3 text-[24px] font-bold leading-tight tracking-[-0.02em] break-words"
-        >
-          {title}
-        </h2>
-        <p className="mt-1 text-[15px] leading-[1.45] text-[#4b4a5c]">{detail}</p>
-      </div>
-      <Link
-        to={to}
-        search={search as never}
-        className="rita-btn rita-btn-primary min-h-12 shrink-0 gap-2 self-start whitespace-nowrap md:self-center"
-      >
-        {cta}
-        <ArrowRight size={18} aria-hidden="true" className="rtl:rotate-180" />
-      </Link>
-    </section>
-  );
-}
-
 function TodayPanel({
   lang,
   signedIn,
@@ -526,40 +425,11 @@ function TodayPanel({
 export function LearnHome() {
   const { i18n } = useTranslation();
   const lang: Lang = (i18n.language ?? "").startsWith("ar") ? "ar" : "en";
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const signedIn = Boolean(user);
   const overview = useStudyOverview();
   const lessons = useLessonPath(signedIn);
   const learning = useLearningLanguage();
-
-  // The greeting needs the learner's own clock, so it is set after the page has loaded.
-  const [hour, setHour] = useState<number | null>(null);
-  useEffect(() => setHour(new Date().getHours()), []);
-
-  const name = firstName(profile?.full_name, user?.email);
-  const part = hour === null ? null : dayPart(hour);
-  const hello = (() => {
-    if (!signedIn || !name) {
-      return lang === "ar" ? "أين تريد الدراسة اليوم؟" : "Where do you want to study today?";
-    }
-    const en =
-      part === "morning"
-        ? "Good morning"
-        : part === "afternoon"
-          ? "Good afternoon"
-          : "Good evening";
-    const ar = part === "morning" ? "صباح الخير" : part === "afternoon" ? "أهلًا بك" : "مساء الخير";
-    if (part === null) return lang === "ar" ? `أهلًا بك، ${name}` : `Welcome back, ${name}`;
-    return lang === "ar" ? `${ar}، ${name}` : `${en}, ${name}`;
-  })();
-
-  const lessonsReady = lessons.status === "ready" || lessons.status === "error";
-  const waiting = authLoading || (signedIn && (overview.isLoading || !lessonsReady));
-  const choice = pickContinue({
-    signedIn,
-    lessons: lessons.lessons,
-    due: overview.data?.due ?? null,
-  });
 
   const path = lessonsDone(lessons.lessons);
   const showGerman = showsGermanLab(learning.code);
@@ -582,34 +452,13 @@ export function LearnHome() {
       <SiteHeader />
 
       <main className="mx-auto max-w-[1280px] px-4 pb-28 pt-8 md:px-8 md:pt-10">
-        <h1 className="rh-app-title max-w-[24ch] font-bold tracking-[-0.03em]">{hello}</h1>
+        <h1 className="sr-only">{lang === "ar" ? "التعلّم" : "Learn"}</h1>
 
-        {signedIn && learning.ready && learning.language ? (
-          <p className="mt-2 flex flex-wrap items-center gap-x-2 text-[15px] text-[#4b4a5c]">
-            <span>
-              {lang === "ar"
-                ? `تتعلّم ${learning.language.name_ar}`
-                : `Learning ${learning.language.name_native}`}
-            </span>
-            <span aria-hidden="true">·</span>
-            <Link
-              to="/profile"
-              hash="learning-language"
-              className="inline-flex min-h-11 items-center font-semibold text-[var(--pp-accent-text)] underline underline-offset-4"
-            >
-              {lang === "ar" ? "غيّر" : "Change"}
-            </Link>
-          </p>
-        ) : null}
         {signedIn && learning.ready && learning.code === null ? (
-          <div className="mt-6">
+          <div className="mb-6">
             <LanguageChooserCard />
           </div>
         ) : null}
-
-        <div className="mt-6">
-          <NextUp choice={choice} loading={waiting} lang={lang} />
-        </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[12.5rem_minmax(0,1fr)_20rem] lg:items-start lg:gap-6">
           <SideList lang={lang} showGerman={showGerman} />
