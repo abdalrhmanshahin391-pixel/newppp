@@ -11,7 +11,7 @@ import {
 
 /** "light": white page, ink lines. "dark": deep navy page, white lines. */
 export type SplashTone = "light" | "dark";
-const TONE: SplashTone = "light";
+const TONE: SplashTone = "dark";
 
 // UZYRA drawn as single lines, all one weight, on a 56 x 100 grid. The A has no bar (a pointed
 // arch), the R's leg starts apart from its bowl. Each path is drawn by its own stroke.
