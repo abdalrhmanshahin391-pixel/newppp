@@ -256,6 +256,7 @@ function RootComponent() {
   const boot = Route.useLoaderData();
   const router = useRouter();
   const { user, loading } = useAuth();
+  useWarmPages();
 
   // Seed the caches synchronously (before the first paint) so no component
   // has to refetch global settings/copy after hydration.
@@ -348,6 +349,7 @@ function RootComponent() {
           <OnboardingGate />
           <AnnouncementBar />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <NavigationBar />
           <AppScope>
             <Outlet />
           </AppScope>
@@ -358,6 +360,62 @@ function RootComponent() {
       </ThemeProvider>
     </QueryClientProvider>
   );
+}
+
+/**
+ * A thin line at the top while a page takes longer than a moment to arrive, so a slow network
+ * never looks like a dead tap. Fast changes never show it.
+ */
+function NavigationBar() {
+  const pending = useRouterState({ select: (s) => s.status === "pending" });
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (!pending) {
+      setShown(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setShown(true), 150);
+    return () => window.clearTimeout(timer);
+  }, [pending]);
+  return shown ? <div className="uz-navbar" role="progressbar" aria-label="Loading" /> : null;
+}
+
+/**
+ * The code of the pages people open most is fetched once the browser is idle, so the first tap
+ * on them does not wait for a download. Only code: no data and no database calls.
+ */
+const WARM_PATHS = ["/learn/", "/rita-conversations", "/study/", "/rita-lessons", "/pricing"];
+
+function useWarmPages() {
+  const router = useRouter();
+  useEffect(() => {
+    const connection = (
+      navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }
+    ).connection;
+    if (connection?.saveData || /2g/.test(connection?.effectiveType ?? "")) return;
+    const idle = (
+      window as unknown as {
+        requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+      }
+    ).requestIdleCallback;
+    const warm = () => {
+      const routes = router.routesByPath as unknown as Record<
+        string,
+        Parameters<typeof router.loadRouteChunk>[0]
+      >;
+      for (const path of WARM_PATHS) {
+        const route = routes[path];
+        if (route) void Promise.resolve(router.loadRouteChunk(route)).catch(() => undefined);
+      }
+    };
+    const id = idle ? idle(warm, { timeout: 4000 }) : window.setTimeout(warm, 2500);
+    return () => {
+      const cancelIdle = (window as unknown as { cancelIdleCallback?: (id: number) => void })
+        .cancelIdleCallback;
+      if (idle && cancelIdle) cancelIdle(id as number);
+      else window.clearTimeout(id as number);
+    };
+  }, [router]);
 }
 
 function PresenceTracker() {

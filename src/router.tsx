@@ -31,6 +31,11 @@ export const getRouter = () => {
     // Avoid flashing a spinner for fast transitions.
     defaultPendingMs: 300,
     defaultPendingMinMs: 200,
+    // A short cross-fade when the page itself changes (styles: "Page transitions" in styles.css).
+    // Changes inside one page (a tab or a filter kept in the address) stay instant.
+    defaultViewTransition: {
+      types: ({ pathChanged }) => (pathChanged ? ["page"] : false),
+    },
   });
 
 
