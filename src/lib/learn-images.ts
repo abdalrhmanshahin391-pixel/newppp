@@ -1,16 +1,16 @@
-import ritaConversationsArt from "@/assets/learn-rita-conversations.jpg";
-import ritaLessonsArt from "@/assets/learn-rita-lessons.jpg";
-import allInOneArt from "@/assets/mode-allinone.jpg";
-import examsArt from "@/assets/mode-exams.jpg";
-import flashcardsArt from "@/assets/mode-flashcards.jpg";
-import germanArt from "@/assets/mode-german.jpg";
-import lectureArt from "@/assets/mode-lecturelab.jpg";
-import memoryArt from "@/assets/mode-memory.jpg";
-import qbankArt from "@/assets/mode-qbank.jpg";
-import shareArt from "@/assets/mode-share.jpg";
-import spacesArt from "@/assets/mode-spaces.jpg";
-import summaryArt from "@/assets/mode-summary.jpg";
-import todoArt from "@/assets/mode-todo.jpg";
+import ritaConversationsArt from "@/assets/mono-rita-conversations.webp";
+import ritaLessonsArt from "@/assets/mono-rita-lessons.webp";
+import allInOneArt from "@/assets/mono-allinone.webp";
+import examsArt from "@/assets/mono-exams.webp";
+import flashcardsArt from "@/assets/mono-flashcards.webp";
+import germanArt from "@/assets/mono-german.webp";
+import lectureArt from "@/assets/mono-lecturelab.webp";
+import memoryArt from "@/assets/mono-memory.webp";
+import qbankArt from "@/assets/mono-qbank.webp";
+import shareArt from "@/assets/mono-share.webp";
+import spacesArt from "@/assets/mono-spaces.webp";
+import summaryArt from "@/assets/mono-summary.webp";
+import todoArt from "@/assets/mono-todo.webp";
 
 /**
  * Visual identity for every card on the learning home.  Keeping the catalogue
