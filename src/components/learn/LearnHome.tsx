@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowRight } from "lucide-react";
@@ -114,62 +114,43 @@ const RAIL: { id: (typeof SECTION_IDS)[number]; label: Bi }[] = [
   { id: "german", label: { en: "German", ar: "الألمانية" } },
 ];
 
-/** Which section is under the top of the screen, for the highlight in the side list. */
-function useActiveSection(ids: readonly string[]) {
+/**
+ * The section shown, kept in the address (`/learn#study`) so back, reload and shared links land on
+ * the same one. It starts on the first section so the server and the first paint agree.
+ */
+function useSection(ids: readonly string[]) {
   const [active, setActive] = useState<string>(ids[0] ?? "");
-  // After a tap the page is still gliding to the section; do not let the scroll watcher
-  // highlight the sections it passes on the way (or the last one, near the page end).
-  const heldUntil = useRef(0);
   useEffect(() => {
-    if (typeof IntersectionObserver === "undefined") return;
-    const elements = ids
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => Boolean(el));
-    if (!elements.length) return;
-    const visible = new Set<string>();
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) visible.add(entry.target.id);
-          else visible.delete(entry.target.id);
-        }
-        if (Date.now() < heldUntil.current) return;
-        const first = ids.find((id) => visible.has(id));
-        if (first) setActive(first);
-      },
-      { rootMargin: "-96px 0px -55% 0px" },
-    );
-    elements.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+    const fromHash = () => {
+      const id = window.location.hash.replace("#", "");
+      if (ids.includes(id)) setActive(id);
+    };
+    fromHash();
+    window.addEventListener("hashchange", fromHash);
+    return () => window.removeEventListener("hashchange", fromHash);
   }, [ids]);
   const choose = (id: string) => {
-    heldUntil.current = Date.now() + 1200;
     setActive(id);
+    try {
+      window.history.replaceState(window.history.state, "", `#${id}`);
+    } catch {
+      /* the section already changed */
+    }
   };
-  return [active, choose] as const;
+  return [ids.includes(active) ? active : (ids[0] ?? ""), choose] as const;
 }
 
-/** Scrolls to a section and keeps the address in step, without going through the router. */
-function jumpTo(event: MouseEvent<HTMLAnchorElement>, id: string) {
-  const target = document.getElementById(id);
-  if (!target) return;
-  event.preventDefault();
-  const calm = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  target.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
-  try {
-    window.history.replaceState(window.history.state, "", `#${id}`);
-  } catch {
-    /* the scroll already happened */
-  }
-}
-
-function SideList({ lang, showGerman }: { lang: Lang; showGerman: boolean }) {
-  const rail = useMemo(
-    () => (showGerman ? RAIL : RAIL.filter((entry) => entry.id !== "german")),
-    [showGerman],
-  );
-  const railIds = useMemo(() => rail.map((entry) => entry.id), [rail]);
-  const [active, choose] = useActiveSection(railIds);
+function SideList({
+  lang,
+  rail,
+  active,
+  onChoose,
+}: {
+  lang: Lang;
+  rail: typeof RAIL;
+  active: string;
+  onChoose: (id: string) => void;
+}) {
   return (
     <nav aria-label={lang === "ar" ? "أقسام التعلم" : "Learning sections"} className="uz-rail">
       {rail.map(({ id, label }) => (
@@ -177,10 +158,10 @@ function SideList({ lang, showGerman }: { lang: Lang; showGerman: boolean }) {
           key={id}
           href={`#${id}`}
           onClick={(event) => {
-            choose(id);
-            jumpTo(event, id);
+            event.preventDefault();
+            onChoose(id);
           }}
-          aria-current={active === id ? "location" : undefined}
+          aria-current={active === id ? "page" : undefined}
           className="uz-rail-item"
         >
           {label[lang]}
@@ -223,7 +204,7 @@ function ToolTile({ row, lang, lead }: { row: Row; lang: Lang; lead: boolean }) 
 
 function Section({ section, lang }: { section: SectionDef; lang: Lang }) {
   return (
-    <section id={section.id} aria-labelledby={`${section.id}-title`} className="uz-section">
+    <section id={section.id} aria-labelledby={`${section.id}-title`} className="uz-section uz-pane">
       <div className="uz-section-head" data-reveal>
         <h2 id={`${section.id}-title`} className="uz-section-title">
           {section.title[lang]}
@@ -245,11 +226,13 @@ function Section({ section, lang }: { section: SectionDef; lang: Lang }) {
  * Section titles draw their line once, when they first come into view. Without script, or with
  * reduced motion, everything is simply shown.
  */
-function useReveal() {
+function useReveal(section: string) {
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
-    const heads = Array.from(document.querySelectorAll<HTMLElement>(".uz-learn [data-reveal]"));
+    const heads = Array.from(
+      document.querySelectorAll<HTMLElement>('.uz-learn [data-reveal]:not([data-reveal="in"])'),
+    );
     heads.forEach((head) => head.setAttribute("data-reveal", "wait"));
     const observer = new IntersectionObserver(
       (entries) => {
@@ -263,7 +246,7 @@ function useReveal() {
     );
     heads.forEach((head) => observer.observe(head));
     return () => observer.disconnect();
-  }, []);
+  }, [section]);
 }
 
 /** /learn: Rita and every study tool in one place. */
@@ -289,7 +272,13 @@ export function LearnHome() {
         : null,
   });
 
-  useReveal();
+  const rail = useMemo(
+    () => (showGerman ? RAIL : RAIL.filter((entry) => entry.id !== "german")),
+    [showGerman],
+  );
+  const railIds = useMemo(() => rail.map((entry) => entry.id), [rail]);
+  const [active, choose] = useSection(railIds);
+  useReveal(active);
 
   return (
     <div className="edith-premium rh-learn-home uz-learn min-h-screen">
@@ -308,10 +297,10 @@ export function LearnHome() {
         ) : null}
 
         <div className="uz-learn-grid">
-          <SideList lang={lang} showGerman={showGerman} />
+          <SideList lang={lang} rail={rail} active={active} onChoose={choose} />
           <div className="min-w-0">
             {sections
-              .filter((section) => showGerman || section.id !== "german")
+              .filter((section) => section.id === active)
               .map((section) => (
                 <Section key={section.id} section={section} lang={lang} />
               ))}

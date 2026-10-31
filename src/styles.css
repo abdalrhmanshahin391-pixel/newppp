@@ -5282,10 +5282,10 @@ html.rita-app,
   transform: translateY(-50%) scaleY(0);
   transition: transform 220ms var(--uz-out);
 }
-.uz-rail-item[aria-current="location"] {
+.uz-rail-item[aria-current="page"] {
   color: var(--uz-ink);
 }
-.uz-rail-item[aria-current="location"]::before {
+.uz-rail-item[aria-current="page"]::before {
   transform: translateY(-50%) scaleY(1);
 }
 @media (max-width: 1023px) {
@@ -5296,7 +5296,7 @@ html.rita-app,
     height: 1px;
     transform: scaleX(0);
   }
-  .uz-rail-item[aria-current="location"]::before {
+  .uz-rail-item[aria-current="page"]::before {
     transform: scaleX(1);
   }
 }
@@ -5319,12 +5319,14 @@ html.rita-app,
 .uz-section {
   scroll-margin-top: 104px;
 }
-.uz-section + .uz-section {
-  margin-top: 88px;
+/* One section at a time: it fades in when chosen. */
+.uz-pane {
+  animation: uz-pane-in 260ms var(--uz-out) both;
 }
-@media (min-width: 768px) {
-  .uz-section + .uz-section {
-    margin-top: 120px;
+@keyframes uz-pane-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
 }
 .uz-tiles {
@@ -5483,5 +5485,8 @@ html.rita-app,
   .uz-tile-go svg,
   .uz-rail-item::before {
     transition: none !important;
+  }
+  .uz-pane {
+    animation: none;
   }
 }
