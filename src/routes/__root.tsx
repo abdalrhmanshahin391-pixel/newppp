@@ -148,11 +148,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "preload",
         as: "style",
-        href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@600&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@600&family=Syncopate:wght@400&family=Noto+Kufi+Arabic:wght@300;400&display=swap",
       },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@600&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@600&family=Syncopate:wght@400&family=Noto+Kufi+Arabic:wght@300;400&display=swap",
       },
 
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -239,7 +239,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <noscript>
           <link
             rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@600&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Inter+Tight:wght@400;500;600;700&family=Figtree:wght@300;400;500;600;700&family=Outfit:wght@600&family=Syncopate:wght@400&family=Noto+Kufi+Arabic:wght@300;400&display=swap"
           />
         </noscript>
       </head>
