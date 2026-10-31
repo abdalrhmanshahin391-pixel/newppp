@@ -263,9 +263,10 @@ function RitaStage({ section, lang }: { section: SectionDef; lang: Lang }) {
               {lessons.chip ? <span className="uz-tile-tag">{lessons.chip[lang]}</span> : null}
             </span>
             <span className="uz-tile-line">{lessons.line[lang]}</span>
-          </span>
-          <span className="uz-tile-go" aria-hidden="true">
-            <ArrowRight size={18} className="rtl:rotate-180" />
+            <span className="rita-btn uz-light-btn">
+              {t("Open lessons", "افتح الدروس")}
+              <ArrowRight size={17} aria-hidden="true" className="rtl:rotate-180" />
+            </span>
           </span>
         </Link>
       ) : null}
@@ -282,7 +283,11 @@ function Section({ section, lang }: { section: SectionDef; lang: Lang }) {
       </h2>
       <ul className="uz-tiles" data-count={section.rows.length}>
         {section.rows.map((row, index) => (
-          <li key={row.key} data-lead={index === 0 || undefined}>
+          <li
+            key={row.key}
+            data-lead={index === 0 || undefined}
+            style={{ ["--i" as string]: index }}
+          >
             <ToolTile row={row} lang={lang} lead={index === 0} />
           </li>
         ))}
