@@ -1,6 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { openAuth } from "@/lib/auth-dialog";
+import { createFileRoute } from "@tanstack/react-router";
+import { AuthPage } from "@/components/auth/AuthPage";
 
 export const Route = createFileRoute("/forgot-password")({
   ssr: false,
@@ -17,17 +16,16 @@ export const Route = createFileRoute("/forgot-password")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: ForgotRedirect,
+  validateSearch: (s: Record<string, unknown>): { next?: string } => ({
+    next:
+      typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//")
+        ? s.next
+        : undefined,
+  }),
+  component: ForgotPasswordPage,
 });
 
-/** Old bookmark → home page with the reset window already open. */
-function ForgotRedirect() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    openAuth("forgot");
-    void navigate({ to: "/", replace: true });
-  }, [navigate]);
-
-  return null;
+function ForgotPasswordPage() {
+  const { next } = Route.useSearch();
+  return <AuthPage mode="forgot" next={next || undefined} />;
 }

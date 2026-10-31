@@ -15,7 +15,7 @@ export function DeferredOverlays() {
         import("@/components/PaymentTestModeBanner"),
         import("@/components/RitaXAnnouncements"),
         import("@/components/tutorials/HowItWorksButton"),
-        import("@/components/auth/AuthDialog"),
+        import("@/components/auth/AuthPanels"),
         import("@/components/ui/sonner"),
       ]).catch((error) => {
         console.warn("Optional tools could not be loaded", error);
@@ -28,7 +28,7 @@ export function DeferredOverlays() {
         banner.PaymentTestModeBanner,
         ritax.RitaXAnnouncements,
         help.ToolTutorialLauncher,
-        auth.AuthDialogHost,
+        auth.AuthReturn,
         Toasts,
       ];
       setParts(activeParts);

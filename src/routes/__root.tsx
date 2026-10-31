@@ -24,6 +24,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { LanguageSplash } from "@/components/language/LanguageSplash";
 import { useAuth } from "@/hooks/useAuth";
 import { needsOnboarding } from "@/lib/onboarding";
+import { setAuthNavigator } from "@/lib/auth-dialog";
 import "@/i18n";
 import { DeferredOverlays } from "@/components/DeferredOverlays";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
@@ -257,6 +258,12 @@ function RootComponent() {
   const router = useRouter();
   const { user, loading } = useAuth();
   useWarmPages();
+
+  // Opening sign-in anywhere is an in-app page change (see `openAuth`).
+  useEffect(() => {
+    setAuthNavigator((href) => void router.navigate({ href }));
+    return () => setAuthNavigator(null);
+  }, [router]);
 
   // Seed the caches synchronously (before the first paint) so no component
   // has to refetch global settings/copy after hydration.

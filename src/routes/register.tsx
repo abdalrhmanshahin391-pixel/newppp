@@ -1,6 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { openAuth } from "@/lib/auth-dialog";
+import { createFileRoute } from "@tanstack/react-router";
+import { AuthPage } from "@/components/auth/AuthPage";
 
 export const Route = createFileRoute("/register")({
   ssr: false,
@@ -21,17 +20,16 @@ export const Route = createFileRoute("/register")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: RegisterRedirect,
+  validateSearch: (s: Record<string, unknown>): { next?: string } => ({
+    next:
+      typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//")
+        ? s.next
+        : undefined,
+  }),
+  component: RegisterPage,
 });
 
-/** Old bookmark → home page with the sign-up window already open. */
-function RegisterRedirect() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    openAuth("signup");
-    void navigate({ to: "/", replace: true });
-  }, [navigate]);
-
-  return null;
+function RegisterPage() {
+  const { next } = Route.useSearch();
+  return <AuthPage mode="signup" next={next || undefined} />;
 }
