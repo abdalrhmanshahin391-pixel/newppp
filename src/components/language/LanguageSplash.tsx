@@ -73,10 +73,16 @@ export function SplashStage({
   );
 }
 
+const swallow = (event: React.SyntheticEvent) => {
+  event.preventDefault();
+  event.stopPropagation();
+};
+
 /**
  * About three seconds: a quiet page, the word drawn in fine lines, then the new language. It is
- * only a picture: the change itself has already happened, tapping anywhere or pressing Escape
- * closes it, and the screen reader announcement stays with the switcher that made the change.
+ * only a picture: the change itself has already happened, it always plays to its end (with
+ * reduced motion it is a one-second still), and the screen reader announcement stays with the
+ * switcher that made the change.
  */
 export function LanguageSplash() {
   const splash = useSyncExternalStore(subscribeSplash, getSplash, () => null);
@@ -90,14 +96,7 @@ export function LanguageSplash() {
       () => dismissLanguageSplash(id),
       reduced ? SPLASH_REDUCED_MS : SPLASH_MS,
     );
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") dismissLanguageSplash(id);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener("keydown", onKey);
-    };
+    return () => window.clearTimeout(timer);
   }, [id]);
 
   if (!splash) return null;
@@ -111,7 +110,10 @@ export function LanguageSplash() {
       className="uz-splash"
       data-tone={TONE}
       aria-hidden="true"
-      onClick={() => dismissLanguageSplash(splash.id)}
+      // It plays to the end: a tap is caught here so it never reaches the page underneath
+      // (a tap on the logo below used to open the home page).
+      onPointerDown={swallow}
+      onClick={swallow}
     >
       <SplashStage
         tone={TONE}

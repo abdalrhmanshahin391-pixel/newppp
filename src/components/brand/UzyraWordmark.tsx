@@ -33,7 +33,8 @@ export function UzyraWordmark({
       }}
     >
       {withMark && <UzyraMark className="shrink-0 h-[1.55em] w-auto" />}
-      <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "center" }}>
+      {/* Always left to right: in Arabic pages the drawn A otherwise jumps in front ("AUZYR"). */}
+      <span aria-hidden="true" dir="ltr" style={{ display: "inline-flex", alignItems: "center" }}>
         UZYR
         <svg
           viewBox="0 0 10 9"

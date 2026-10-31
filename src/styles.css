@@ -4930,7 +4930,9 @@ html.rita-app,
   justify-content: center;
   background: #fff;
   color: var(--uz-line);
-  cursor: pointer;
+  cursor: default;
+  touch-action: none;
+  user-select: none;
   animation:
     uz-sp-in 0.25s ease both,
     uz-sp-out 0.4s ease-in 2.5s both;
@@ -5110,5 +5112,381 @@ html.rita-app,
     animation: none;
     transform: none;
     opacity: 0.6;
+  }
+}
+
+/* ===========================================================================
+   The learning home (/learn), in the line of the UZYRA wordmark: wide, thin
+   capitals for titles, hairlines that draw once, the pictures as the subject,
+   and a lot of quiet space. The site's own ink, white and blue are kept.
+   =========================================================================== */
+.uz-learn {
+  --uz-display: "Syncopate", "Inter Tight", Helvetica, Arial, sans-serif;
+  --uz-display-ar: "Noto Kufi Arabic", "Noto Sans Arabic", sans-serif;
+  --uz-ink: var(--pp-ink, #121117);
+  --uz-quiet: #5b5a6b;
+  --uz-hair: rgb(18 17 23 / 0.12);
+  --uz-blue: var(--pp-accent, #2b6df0);
+  --uz-out: cubic-bezier(0.23, 1, 0.32, 1);
+  background: #fff;
+  color: var(--uz-ink);
+  font-family: var(--font-grotesk);
+}
+.uz-learn ::selection {
+  background: rgb(43 109 240 / 0.18);
+}
+.uz-learn-main {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 56px 16px 120px;
+}
+@media (min-width: 768px) {
+  .uz-learn-main {
+    padding: 88px 32px 160px;
+  }
+}
+
+/* Page title: wide thin capitals and the drawn hairline, like the wordmark splash. */
+.uz-learn-head,
+.uz-section-head {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.edith-premium .uz-learn-title {
+  margin: 0;
+  font-family: var(--uz-display);
+  font-size: clamp(30px, 5.2vw, 56px) !important;
+  font-weight: 400;
+  line-height: 1 !important;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.edith-premium .uz-section-title {
+  margin: 0;
+  font-family: var(--uz-display);
+  font-size: 14px !important;
+  font-weight: 400;
+  line-height: 1.4 !important;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+[dir="rtl"] .uz-learn .uz-learn-title,
+[dir="rtl"] .uz-learn .uz-section-title {
+  font-family: var(--uz-display-ar);
+  font-weight: 300;
+  letter-spacing: 0;
+}
+[dir="rtl"] .uz-learn .uz-section-title {
+  font-size: 17px !important;
+}
+.uz-section-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--uz-hair);
+  transform-origin: left center;
+  transition: transform 1.1s var(--uz-out);
+}
+[dir="rtl"] .uz-section-rule {
+  transform-origin: right center;
+}
+.uz-learn-head .uz-section-rule {
+  background: var(--uz-ink);
+  opacity: 0.85;
+}
+.uz-learn-head {
+  margin-bottom: 64px;
+}
+@media (min-width: 768px) {
+  .uz-learn-head {
+    margin-bottom: 96px;
+  }
+}
+[data-reveal] > :not(.uz-section-rule) {
+  transition:
+    opacity 0.7s var(--uz-out),
+    transform 0.7s var(--uz-out);
+}
+[data-reveal="wait"] .uz-section-rule {
+  transform: scaleX(0);
+}
+[data-reveal="wait"] > :not(.uz-section-rule) {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* Layout: the section list beside the sections. */
+.uz-learn-grid {
+  display: grid;
+  gap: 40px;
+}
+@media (min-width: 1024px) {
+  .uz-learn-grid {
+    grid-template-columns: 11rem minmax(0, 1fr);
+    gap: 72px;
+  }
+}
+
+/* The section list: words only, the current one marked by a short blue line. */
+.uz-rail {
+  display: flex;
+  gap: 4px;
+  margin: 0 -16px;
+  padding: 0 16px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+@media (min-width: 1024px) {
+  .uz-rail {
+    position: sticky;
+    top: 104px;
+    flex-direction: column;
+    align-self: start;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+}
+.uz-rail-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  flex-shrink: 0;
+  padding: 0 14px;
+  color: var(--uz-quiet);
+  font-family: var(--uz-display);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  touch-action: manipulation;
+  transition: color 150ms ease;
+}
+[dir="rtl"] .uz-rail-item {
+  font-family: var(--uz-display-ar);
+  font-size: 15px;
+  letter-spacing: 0;
+}
+.uz-rail-item::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  width: 1px;
+  height: 18px;
+  background: var(--uz-blue);
+  transform: translateY(-50%) scaleY(0);
+  transition: transform 220ms var(--uz-out);
+}
+.uz-rail-item[aria-current="page"] {
+  color: var(--uz-ink);
+}
+.uz-rail-item[aria-current="page"]::before {
+  transform: translateY(-50%) scaleY(1);
+}
+@media (max-width: 1023px) {
+  .uz-rail-item::before {
+    inset: auto 14px 6px;
+    top: auto;
+    width: auto;
+    height: 1px;
+    transform: scaleX(0);
+  }
+  .uz-rail-item[aria-current="page"]::before {
+    transform: scaleX(1);
+  }
+}
+@media (min-width: 1024px) {
+  .uz-rail-extra {
+    margin-top: 20px;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .uz-rail-item:hover {
+    color: var(--uz-ink);
+  }
+}
+.uz-rail-item:focus-visible {
+  outline: 2px solid var(--uz-blue);
+  outline-offset: 2px;
+}
+
+/* Sections and tiles. The first tile of a section is wide; the rest share the row. */
+.uz-section {
+  scroll-margin-top: 104px;
+}
+/* One section at a time: it fades in when chosen. */
+.uz-pane {
+  animation: uz-pane-in 260ms var(--uz-out) both;
+}
+@keyframes uz-pane-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.uz-tiles {
+  display: grid;
+  gap: 40px 28px;
+  margin-top: 32px;
+}
+@media (min-width: 640px) {
+  .uz-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .uz-tiles > [data-lead] {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 1180px) {
+  .uz-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .uz-tiles > [data-lead] {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+}
+.uz-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  height: 100%;
+  color: inherit;
+  touch-action: manipulation;
+}
+@media (min-width: 640px) and (max-width: 1179px) {
+  .uz-tile[data-lead] {
+    flex-direction: row;
+    align-items: center;
+    gap: 32px;
+  }
+  .uz-tile[data-lead] .uz-tile-img {
+    width: 52%;
+    flex-shrink: 0;
+  }
+}
+.uz-tile-img {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border-radius: 4px;
+  /* The artwork is drawn on pure black, so the frame is the same black. */
+  background: #000;
+}
+.uz-tile[data-lead] .uz-tile-img {
+  aspect-ratio: 16 / 9;
+}
+@media (min-width: 1180px) {
+  .uz-tile[data-lead] .uz-tile-img {
+    aspect-ratio: auto;
+    flex: 1;
+    min-height: 340px;
+  }
+}
+.uz-tile-img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(1);
+  transition: transform 900ms var(--uz-out);
+}
+.uz-tile-img[data-image-slot] {
+  background: linear-gradient(160deg, #1a1a22, #0b0b0e);
+}
+.uz-tile-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.uz-tile-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.uz-tile[data-lead] .uz-tile-name {
+  font-size: clamp(22px, 2.4vw, 28px);
+}
+.uz-tile-tag {
+  color: var(--uz-blue);
+  font-family: var(--uz-display);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+[dir="rtl"] .uz-tile-tag {
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: 0;
+}
+.uz-tile-line {
+  max-width: 46ch;
+  color: var(--uz-quiet);
+  font-size: 15.5px;
+  line-height: 1.5;
+}
+.uz-tile-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  color: var(--uz-ink);
+  font-family: var(--uz-display);
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+[dir="rtl"] .uz-tile-go {
+  font-family: var(--uz-display-ar);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+.uz-tile-go svg {
+  transition: transform 300ms var(--uz-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .uz-tile:hover .uz-tile-img img {
+    transform: scale(1.035);
+  }
+  .uz-tile:hover .uz-tile-go svg {
+    transform: translateX(4px);
+  }
+  [dir="rtl"] .uz-tile:hover .uz-tile-go svg {
+    transform: translateX(-4px) rotate(180deg);
+  }
+}
+.uz-tile:active .uz-tile-img {
+  transform: scale(0.99);
+  transition: transform 120ms ease-out;
+}
+.uz-tile:focus-visible {
+  outline: 2px solid var(--uz-blue);
+  outline-offset: 6px;
+  border-radius: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .uz-section-rule,
+  [data-reveal] > *,
+  .uz-tile-img img,
+  .uz-tile-go svg,
+  .uz-rail-item::before {
+    transition: none !important;
+  }
+  .uz-pane {
+    animation: none;
   }
 }
