@@ -174,7 +174,7 @@ function SideList({
   );
 }
 
-/** One destination: its picture, its name and one line. The first of a section is the wide one. */
+/** One destination: its picture on black, its name and one line. The first of a section is big. */
 function ToolTile({ row, lang, lead }: { row: Row; lang: Lang; lead: boolean }) {
   return (
     <Link
@@ -183,7 +183,7 @@ function ToolTile({ row, lang, lead }: { row: Row; lang: Lang; lead: boolean }) 
       search={row.search as never}
       data-learn-row={row.key}
       data-lead={lead || undefined}
-      className="uz-tile group"
+      className="uz-tile"
     >
       <ImageSlot slot={row.slot} lang={lang} />
       <span className="uz-tile-text">
@@ -193,25 +193,94 @@ function ToolTile({ row, lang, lead }: { row: Row; lang: Lang; lead: boolean }) 
           {row.chip ? <span className="uz-tile-tag">{row.chip[lang]}</span> : null}
         </span>
         <span className="uz-tile-line">{row.line[lang]}</span>
-        <span className="uz-tile-go" aria-hidden="true">
-          {lang === "ar" ? "افتح" : "Open"}
-          <ArrowRight size={14} strokeWidth={1.5} className="rtl:rotate-180" />
-        </span>
+      </span>
+      <span className="uz-tile-go" aria-hidden="true">
+        <ArrowRight size={18} className="rtl:rotate-180" />
       </span>
     </Link>
   );
 }
 
-function Section({ section, lang }: { section: SectionDef; lang: Lang }) {
+const PHRASES = [
+  { text: "Guten Morgen", lang: "de", spot: "uz-float-a", delay: 0 },
+  { text: "How do I say…?", lang: "en", spot: "uz-float-b", delay: 1500 },
+  { text: "كيف أحكي؟", lang: "ar", spot: "uz-float-c", delay: 3000 },
+];
+
+/** "Talk to Rita": the conversation as the big blue stage with Rita's orb, lessons beside it. */
+function RitaStage({ section, lang }: { section: SectionDef; lang: Lang }) {
+  const talk = section.rows.find((row) => row.key === "rita-conversations");
+  const lessons = section.rows.find((row) => row.key === "rita-lessons");
+  const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
   return (
-    <section id={section.id} aria-labelledby={`${section.id}-title`} className="uz-section uz-pane">
-      <div className="uz-section-head" data-reveal>
-        <h2 id={`${section.id}-title`} className="uz-section-title">
-          {section.title[lang]}
-        </h2>
-        <span className="uz-section-rule" aria-hidden="true" />
-      </div>
-      <ul className="uz-tiles">
+    <section id={section.id} aria-labelledby="rita-title" className="uz-pane uz-rita">
+      {talk ? (
+        <Link to={talk.to} data-learn-row={talk.key} className="uz-stage">
+          <span className="uz-stage-text">
+            <h2 id="rita-title" className="uz-stage-title">
+              {t("Talk to Rita now", "تحدث مع ريتا الآن")}
+            </h2>
+            <span className="uz-stage-line">{talk.line[lang]}</span>
+            <span className="rita-btn rita-btn-primary uz-stage-btn">
+              {t("Start talking", "ابدأ الحديث")}
+              <ArrowRight size={18} aria-hidden="true" className="rtl:rotate-180" />
+            </span>
+          </span>
+          <span className="uz-orb-zone" aria-hidden="true">
+            <span className="rh-ring uz-orb-ring" />
+            <span className="rh-ring uz-orb-ring" style={{ ["--rh-d" as string]: "1800ms" }} />
+            <span className="uz-orb">
+              <span className="uz-orb-waves">
+                {[0, 200, 100, 300, 150].map((delay, i) => (
+                  <span
+                    key={i}
+                    className="rh-wave"
+                    style={{ ["--rh-d" as string]: `${delay}ms` }}
+                  />
+                ))}
+              </span>
+            </span>
+            {PHRASES.map((phrase) => (
+              <span
+                key={phrase.text}
+                lang={phrase.lang}
+                dir={phrase.lang === "ar" ? "rtl" : "ltr"}
+                className={`rh-float uz-float ${phrase.spot}`}
+                style={{ ["--rh-d" as string]: `${phrase.delay}ms` }}
+              >
+                {phrase.text}
+              </span>
+            ))}
+          </span>
+        </Link>
+      ) : null}
+      {lessons ? (
+        <Link to={lessons.to} data-learn-row={lessons.key} className="uz-lessons">
+          <ImageSlot slot={lessons.slot} lang={lang} />
+          <span className="uz-tile-text">
+            <span className="uz-tile-name">
+              {lessons.name[lang]}
+              {lessons.chip ? <span className="uz-tile-tag">{lessons.chip[lang]}</span> : null}
+            </span>
+            <span className="uz-tile-line">{lessons.line[lang]}</span>
+          </span>
+          <span className="uz-tile-go" aria-hidden="true">
+            <ArrowRight size={18} className="rtl:rotate-180" />
+          </span>
+        </Link>
+      ) : null}
+    </section>
+  );
+}
+
+function Section({ section, lang }: { section: SectionDef; lang: Lang }) {
+  if (section.id === "rita") return <RitaStage section={section} lang={lang} />;
+  return (
+    <section id={section.id} aria-labelledby={`${section.id}-title`} className="uz-pane">
+      <h2 id={`${section.id}-title`} className="uz-section-title">
+        {section.title[lang]}
+      </h2>
+      <ul className="uz-tiles" data-count={section.rows.length}>
         {section.rows.map((row, index) => (
           <li key={row.key} data-lead={index === 0 || undefined}>
             <ToolTile row={row} lang={lang} lead={index === 0} />
@@ -220,33 +289,6 @@ function Section({ section, lang }: { section: SectionDef; lang: Lang }) {
       </ul>
     </section>
   );
-}
-
-/**
- * Section titles draw their line once, when they first come into view. Without script, or with
- * reduced motion, everything is simply shown.
- */
-function useReveal(section: string) {
-  useEffect(() => {
-    if (typeof IntersectionObserver === "undefined") return;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
-    const heads = Array.from(
-      document.querySelectorAll<HTMLElement>('.uz-learn [data-reveal]:not([data-reveal="in"])'),
-    );
-    heads.forEach((head) => head.setAttribute("data-reveal", "wait"));
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          entry.target.setAttribute("data-reveal", "in");
-          observer.unobserve(entry.target);
-        }
-      },
-      { rootMargin: "0px 0px -10% 0px" },
-    );
-    heads.forEach((head) => observer.observe(head));
-    return () => observer.disconnect();
-  }, [section]);
 }
 
 /** /learn: Rita and every study tool in one place. */
@@ -278,17 +320,13 @@ export function LearnHome() {
   );
   const railIds = useMemo(() => rail.map((entry) => entry.id), [rail]);
   const [active, choose] = useSection(railIds);
-  useReveal(active);
 
   return (
-    <div className="edith-premium rh-learn-home uz-learn min-h-screen">
+    <div className="edith-premium edith-light rh-learn-home uz-learn min-h-screen">
       <SiteHeader />
 
       <main className="uz-learn-main">
-        <div className="uz-learn-head" data-reveal>
-          <h1 className="uz-learn-title">{lang === "ar" ? "التعلّم" : "Learn"}</h1>
-          <span className="uz-section-rule" aria-hidden="true" />
-        </div>
+        <h1 className="sr-only">{lang === "ar" ? "التعلّم" : "Learn"}</h1>
 
         {signedIn && learning.ready && learning.code === null ? (
           <div className="mb-10">
