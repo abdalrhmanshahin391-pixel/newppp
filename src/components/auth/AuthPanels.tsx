@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
-import { Eye, EyeOff, MailCheck, X, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, MailCheck, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/legacy-client";
@@ -13,14 +13,7 @@ import {
 } from "@/lib/remember-login";
 import { GoogleButton } from "@/components/auth/GoogleButton";
 
-import {
-  closeAuth,
-  getAuthDialogState,
-  setAuthMode,
-  subscribeAuthDialog,
-  type AuthDialogState,
-  type AuthMode,
-} from "@/lib/auth-dialog";
+import { closeAuth, setAuthMode } from "@/lib/auth-dialog";
 
 /* ── shared bits ────────────────────────────────────────────────────────── */
 
@@ -49,13 +42,7 @@ type Problem = {
 };
 
 /** A calm, explanatory message with a way forward — used when sign-up can't continue. */
-function ProblemNote({
-  problem,
-  onPick,
-}: {
-  problem: Problem;
-  onPick?: (value: string) => void;
-}) {
+function ProblemNote({ problem, onPick }: { problem: Problem; onPick?: (value: string) => void }) {
   return (
     <div
       role="alert"
@@ -63,7 +50,9 @@ function ProblemNote({
     >
       <p className="text-[14px] font-bold text-destructive">{problem.title}</p>
       {problem.hint && (
-        <p className="mt-1 text-[13px] font-medium leading-relaxed text-[#6a697c]">{problem.hint}</p>
+        <p className="mt-1 text-[13px] font-medium leading-relaxed text-[#6a697c]">
+          {problem.hint}
+        </p>
       )}
       {!!problem.suggestions?.length && (
         <div className="mt-2.5 flex flex-wrap gap-2">
@@ -93,40 +82,17 @@ function ProblemNote({
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="mb-1.5 block text-[13px] font-semibold text-[#121117]">
-      {children}
-    </span>
-  );
+  return <span className="mb-1.5 block text-[13px] font-semibold text-[#121117]">{children}</span>;
 }
 
-/* ── the window ─────────────────────────────────────────────────────────── */
+/* ── returning from Google ─────────────────────────────────────────────── */
 
-export function AuthDialogHost() {
-  const [state, setState] = useState<AuthDialogState>(() => getAuthDialogState());
+/**
+ * Google sends people back to the home page. When a sign-in page asked to go somewhere after it,
+ * that wish is kept for the trip and honoured here, once the account is really signed in.
+ */
+export function AuthReturn() {
   const router = useRouter();
-
-  useEffect(() => {
-    const unsub = subscribeAuthDialog(setState);
-    return () => {
-      unsub();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!state.open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeAuth();
-    };
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [state.open]);
-
   useEffect(() => {
     const destination = sessionStorage.getItem("rita-auth-next");
     if (!destination) return;
@@ -138,70 +104,12 @@ export function AuthDialogHost() {
       }
     });
   }, [router]);
-
-  if (!state.open) return null;
-  return <AuthWindow mode={state.mode} next={state.next} />;
-}
-
-function AuthWindow({ mode, next }: { mode: AuthMode; next?: string }) {
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  return (
-    <div
-      className="rita-app fixed inset-0 z-[120] grid place-items-center overflow-y-auto bg-[#121117]/55 p-4"
-      onMouseDown={(e) => {
-        if (!cardRef.current?.contains(e.target as Node)) closeAuth();
-      }}
-    >
-      <div
-        ref={cardRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Sign in to Uzyra"
-        className="rita-dialog-pop relative w-full max-w-[27rem] rounded-[20px] border-2 border-[#121117] bg-white p-6 sm:p-9"
-      >
-        <button
-          type="button"
-          onClick={closeAuth}
-          aria-label="Close"
-          className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-lg text-[#6a697c] transition-colors hover:bg-[#f4f4f8] hover:text-[#121117]"
-        >
-          <X size={18} />
-        </button>
-
-        <div className="mb-6 flex flex-col items-center text-center">
-          <span
-            aria-hidden="true"
-            className="block h-14 w-14 rounded-full"
-            style={{ background: "radial-gradient(circle at 35% 30%, #ffffff 0%, #e7eefd 40%, #a9c4f9 75%, #2b6df0 100%)" }}
-          />
-          <h2 className="mt-3 font-display text-[24px] font-bold leading-tight tracking-tight text-[#121117]">
-            {mode === "signup"
-              ? "Create your Uzyra account"
-              : mode === "forgot"
-                ? "Reset your password"
-                : "Welcome back"}
-          </h2>
-          <p className="mt-1.5 max-w-[19rem] text-[14px] leading-relaxed text-[#6a697c]">
-            {mode === "signup"
-              ? "Your flashcards, summaries and to-dos, saved to one account."
-              : mode === "forgot"
-                ? "We'll email you a link to choose a new password."
-                : "Pick up your cards, decks and study streak where you left them."}
-          </p>
-        </div>
-
-        {mode === "signin" && <SignInPanel next={next} />}
-        {mode === "signup" && <SignUpPanel />}
-        {mode === "forgot" && <ForgotPanel />}
-      </div>
-    </div>
-  );
+  return null;
 }
 
 /* ── sign in ────────────────────────────────────────────────────────────── */
 
-function SignInPanel({ next }: { next?: string }) {
+export function SignInPanel({ next }: { next?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -239,8 +147,8 @@ function SignInPanel({ next }: { next?: string }) {
           msg.includes("fetch") || msg.includes("network")
             ? "Uzyra cannot reach its account service right now. Your password was not rejected; please try again after the database connection is restored."
             : msg.includes("confirm") || msg.includes("verif")
-            ? "Your email isn't verified yet. Open the verification link we sent you, then sign in again — check your spam folder too."
-            : "That email and password don't match.",
+              ? "Your email isn't verified yet. Open the verification link we sent you, then sign in again — check your spam folder too."
+              : "That email and password don't match.",
         );
         setLoading(false);
         return;
@@ -305,7 +213,9 @@ function SignInPanel({ next }: { next?: string }) {
         void router.navigate({ href: destination });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Google sign-in could not start. Please try again.");
+      setError(
+        err instanceof Error ? err.message : "Google sign-in could not start. Please try again.",
+      );
       setLoading(false);
     }
   }
@@ -339,75 +249,72 @@ function SignInPanel({ next }: { next?: string }) {
 
       <GoogleButton label="Continue with Google" onClick={handleGoogle} disabled={loading} />
       <div className="my-5 flex items-center gap-3 text-[13px] font-medium text-[#6a697c]">
-        <span className="h-px flex-1 bg-[#dcdce5]" /> or <span className="h-px flex-1 bg-[#dcdce5]" />
+        <span className="h-px flex-1 bg-[#dcdce5]" /> or{" "}
+        <span className="h-px flex-1 bg-[#dcdce5]" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <label className="block">
+          <Label>email</Label>
+          <input
+            type="email"
+            autoComplete="email"
+            autoFocus
+            className={field}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+          />
+        </label>
 
-          <label className="block">
-            <Label>email</Label>
+        <label className="block">
+          <Label>password</Label>
+          <div className="relative">
             <input
-              type="email"
-              autoComplete="email"
-              autoFocus
-              className={field}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              type={showPw ? "text" : "password"}
+              autoComplete="current-password"
+              className={field + " pr-12"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
             />
-          </label>
-
-          <label className="block">
-            <Label>password</Label>
-            <div className="relative">
-              <input
-                type={showPw ? "text" : "password"}
-                autoComplete="current-password"
-                className={field + " pr-12"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw((v) => !v)}
-                aria-label={showPw ? "Hide password" : "Show password"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
-              >
-                {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </label>
-
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <label className="flex cursor-pointer select-none items-center gap-2 text-sm font-medium text-foreground">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => {
-                  setRemember(e.target.checked);
-                  if (!e.target.checked) clearRememberedLogin();
-                }}
-                className="h-4 w-4 rounded border-2 border-border accent-[#2b6df0]"
-              />
-              keep me signed in
-            </label>
             <button
               type="button"
-              onClick={() => setAuthMode("forgot")}
-              className="text-sm font-medium text-muted-foreground underline hover:text-foreground"
+              onClick={() => setShowPw((v) => !v)}
+              aria-label={showPw ? "Hide password" : "Show password"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
             >
-              forgot your password?
+              {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+        </label>
 
-          <button type="submit" disabled={loading} className={primaryBtn}>
-
-            {loading ? "Signing in…" : "Sign in"}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <label className="flex cursor-pointer select-none items-center gap-2 text-sm font-medium text-foreground">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => {
+                setRemember(e.target.checked);
+                if (!e.target.checked) clearRememberedLogin();
+              }}
+              className="h-4 w-4 rounded border-2 border-border accent-[#2b6df0]"
+            />
+            keep me signed in
+          </label>
+          <button
+            type="button"
+            onClick={() => setAuthMode("forgot")}
+            className="text-sm font-medium text-muted-foreground underline hover:text-foreground"
+          >
+            forgot your password?
           </button>
+        </div>
+
+        <button type="submit" disabled={loading} className={primaryBtn}>
+          {loading ? "Signing in…" : "Sign in"}
+        </button>
       </form>
-
-
 
       <p className="mt-6 border-t-2 border-[#dcdce5] pt-4 text-center text-sm font-medium text-muted-foreground">
         New to Rita?{" "}
@@ -445,7 +352,7 @@ const signupSchema = z
   })
   .strip();
 
-function SignUpPanel() {
+export function SignUpPanel() {
   const checkIdentity = useServerFn(checkIdentityAvailability);
   const [form, setForm] = useState({
     full_name: "",
@@ -467,7 +374,11 @@ function SignUpPanel() {
 
   /** Friendly alternatives when the chosen username is gone. */
   function usernameIdeas(base: string) {
-    const clean = base.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 20) || "student";
+    const clean =
+      base
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, "")
+        .slice(0, 20) || "student";
     const n = new Date().getFullYear() % 100;
     return [`${clean}${n}`, `${clean}_${Math.floor(10 + Math.random() * 89)}`, `real${clean}`];
   }
@@ -592,12 +503,22 @@ function SignUpPanel() {
           We sent a verification link to <span className="underline">{sentTo}</span>
         </p>
         <p className="text-sm text-muted-foreground">
-          Your account stays inactive until you open that link. Check your spam folder if it is not in your inbox.
+          Your account stays inactive until you open that link. Check your spam folder if it is not
+          in your inbox.
         </p>
-        <button type="button" onClick={resendVerification} disabled={loading} className="rita-btn rita-btn-secondary mx-auto">
+        <button
+          type="button"
+          onClick={resendVerification}
+          disabled={loading}
+          className="rita-btn rita-btn-secondary mx-auto"
+        >
           {loading ? "Sending…" : "Send the verification email again"}
         </button>
-        <button type="button" onClick={() => setSentTo(null)} className="text-sm font-bold text-muted-foreground underline">
+        <button
+          type="button"
+          onClick={() => setSentTo(null)}
+          className="text-sm font-bold text-muted-foreground underline"
+        >
           Use a different email
         </button>
         <button type="button" onClick={() => setAuthMode("signin")} className={primaryBtn}>
@@ -618,7 +539,9 @@ function SignUpPanel() {
       if (result.error) throw result.error;
       if (!result.redirected) closeAuth();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Google sign-up could not start. Please try again.");
+      setError(
+        err instanceof Error ? err.message : "Google sign-up could not start. Please try again.",
+      );
       setLoading(false);
     }
   };
@@ -636,106 +559,127 @@ function SignUpPanel() {
         />
       )}
 
-      <GoogleButton label="Sign up with Google" onClick={() => void googleSignUp()} disabled={loading} />
+      <GoogleButton
+        label="Sign up with Google"
+        onClick={() => void googleSignUp()}
+        disabled={loading}
+      />
       <p className="mt-2 text-center text-xs font-medium text-muted-foreground">
         By continuing with Google you agree to Uzyra's{" "}
-        <Link to="/terms" className="underline">Terms</Link>,{" "}
-        <Link to="/privacy-policy" className="underline">Privacy Policy</Link> and{" "}
-        <Link to="/refund-policy" className="underline">Refund Policy</Link>.
+        <Link to="/terms" className="underline">
+          Terms
+        </Link>
+        ,{" "}
+        <Link to="/privacy-policy" className="underline">
+          Privacy Policy
+        </Link>{" "}
+        and{" "}
+        <Link to="/refund-policy" className="underline">
+          Refund Policy
+        </Link>
+        .
       </p>
       <div className="my-5 flex items-center gap-3 text-[13px] font-medium text-[#6a697c]">
-        <span className="h-px flex-1 bg-[#dcdce5]" /> or <span className="h-px flex-1 bg-[#dcdce5]" />
+        <span className="h-px flex-1 bg-[#dcdce5]" /> or{" "}
+        <span className="h-px flex-1 bg-[#dcdce5]" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3.5">
+        <label className="block">
+          <Label>full name</Label>
+          <input
+            type="text"
+            autoComplete="name"
+            autoFocus
+            className={field}
+            value={form.full_name}
+            onChange={(e) => update("full_name", e.target.value)}
+            placeholder="Your full name"
+          />
+        </label>
+        <label className="block">
+          <Label>username</Label>
+          <input
+            type="text"
+            autoComplete="username"
+            className={field}
+            value={form.username}
+            onChange={(e) => update("username", e.target.value)}
+            placeholder="Choose a username"
+          />
+        </label>
+        <label className="block">
+          <Label>email</Label>
+          <input
+            type="email"
+            autoComplete="email"
+            className={field}
+            value={form.email}
+            onChange={(e) => update("email", e.target.value)}
+            placeholder="you@example.com"
+          />
+        </label>
+        <label className="block">
+          <Label>phone number</Label>
+          <input
+            type="tel"
+            autoComplete="tel"
+            className={field}
+            value={form.phone}
+            onChange={(e) => update("phone", e.target.value)}
+            placeholder="07XXXXXXXX"
+          />
+        </label>
+        <label className="block">
+          <Label>password</Label>
+          <div className="relative">
+            <input
+              type={showPw ? "text" : "password"}
+              autoComplete="new-password"
+              className={field + " pr-12"}
+              value={form.password}
+              onChange={(e) => update("password", e.target.value)}
+              placeholder="At least 6 characters"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPw((v) => !v)}
+              aria-label={showPw ? "Hide password" : "Show password"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+            >
+              {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+        </label>
 
-          <label className="block">
-            <Label>full name</Label>
-            <input
-              type="text"
-              autoComplete="name"
-              autoFocus
-              className={field}
-              value={form.full_name}
-              onChange={(e) => update("full_name", e.target.value)}
-              placeholder="Your full name"
-            />
-          </label>
-          <label className="block">
-            <Label>username</Label>
-            <input
-              type="text"
-              autoComplete="username"
-              className={field}
-              value={form.username}
-              onChange={(e) => update("username", e.target.value)}
-              placeholder="Choose a username"
-            />
-          </label>
-          <label className="block">
-            <Label>email</Label>
-            <input
-              type="email"
-              autoComplete="email"
-              className={field}
-              value={form.email}
-              onChange={(e) => update("email", e.target.value)}
-              placeholder="you@example.com"
-            />
-          </label>
-          <label className="block">
-            <Label>phone number</Label>
-            <input
-              type="tel"
-              autoComplete="tel"
-              className={field}
-              value={form.phone}
-              onChange={(e) => update("phone", e.target.value)}
-              placeholder="07XXXXXXXX"
-            />
-          </label>
-          <label className="block">
-            <Label>password</Label>
-            <div className="relative">
-              <input
-                type={showPw ? "text" : "password"}
-                autoComplete="new-password"
-                className={field + " pr-12"}
-                value={form.password}
-                onChange={(e) => update("password", e.target.value)}
-                placeholder="At least 6 characters"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw((v) => !v)}
-                aria-label={showPw ? "Hide password" : "Show password"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
-              >
-                {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          </label>
+        <label className="flex cursor-pointer select-none items-start gap-2 rounded-lg border-2 border-[#121117] bg-[#f4f4f8] p-3 text-xs font-medium text-foreground">
+          <input
+            type="checkbox"
+            checked={accepted}
+            onChange={(e) => setAccepted(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-2 border-border accent-[#2b6df0]"
+          />
+          <span>
+            I agree to Uzyra's{" "}
+            <Link to="/terms" className="underline">
+              Terms
+            </Link>
+            ,{" "}
+            <Link to="/privacy-policy" className="underline">
+              Privacy Policy
+            </Link>{" "}
+            and{" "}
+            <Link to="/refund-policy" className="underline">
+              Refund Policy
+            </Link>
+            .
+          </span>
+        </label>
 
-          <label className="flex cursor-pointer select-none items-start gap-2 rounded-lg border-2 border-[#121117] bg-[#f4f4f8] p-3 text-xs font-medium text-foreground">
-            <input
-              type="checkbox"
-              checked={accepted}
-              onChange={(e) => setAccepted(e.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 rounded border-2 border-border accent-[#2b6df0]"
-            />
-            <span>
-              I agree to Uzyra's <Link to="/terms" className="underline">Terms</Link>,{" "}
-              <Link to="/privacy-policy" className="underline">Privacy Policy</Link> and{" "}
-              <Link to="/refund-policy" className="underline">Refund Policy</Link>.
-            </span>
-          </label>
-
-          <button type="submit" disabled={loading || !accepted} className={primaryBtn}>
-            {loading ? "Creating your account…" : "Create account"}
-          </button>
+        <button type="submit" disabled={loading || !accepted} className={primaryBtn}>
+          {loading ? "Creating your account…" : "Create account"}
+        </button>
       </form>
-
-
 
       <p className="mt-6 border-t-2 border-[#dcdce5] pt-4 text-center text-sm font-medium text-muted-foreground">
         Already have an account?{" "}
@@ -753,7 +697,7 @@ function SignUpPanel() {
 
 /* ── forgot password ────────────────────────────────────────────────────── */
 
-function ForgotPanel() {
+export function ForgotPanel() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);

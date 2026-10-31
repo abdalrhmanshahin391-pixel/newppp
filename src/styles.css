@@ -5685,3 +5685,296 @@ html.rita-app,
     transition: none;
   }
 }
+
+/* ===========================================================================
+   Sign in, sign up and reset (AuthPage): a warm white page with a blue light,
+   thin uneven rings turning slowly around the drawn UZYRA wordmark, and the
+   form in a rounded card beside it (below it on phones).
+   =========================================================================== */
+.uz-auth {
+  --uz-out: cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+  min-height: 100dvh;
+  /* clip, not hidden: a focused field must never scroll the page sideways. */
+  overflow: clip;
+  background: #fbfaf7;
+  color: var(--pro-ink, #0a0f1a);
+  font-family: var(--font-grotesk);
+}
+.uz-auth-glow {
+  position: absolute;
+  inset: -20% -10% auto auto;
+  width: 70vmax;
+  height: 70vmax;
+  background:
+    radial-gradient(closest-side, rgb(43 109 240 / 0.12), transparent 70%),
+    radial-gradient(closest-side at 30% 70%, rgb(155 124 242 / 0.1), transparent 70%);
+  pointer-events: none;
+}
+.uz-auth-top {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) 20px 0;
+}
+.uz-auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  color: var(--pro-muted, #5b6676);
+  font-size: 15px;
+  font-weight: 600;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .uz-auth-back:hover {
+    background: rgb(10 15 26 / 0.05);
+    color: var(--pro-ink, #0a0f1a);
+  }
+}
+.uz-auth-main {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 16px max(24px, env(safe-area-inset-bottom));
+}
+@media (min-width: 1100px) {
+  .uz-auth-main {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    align-items: center;
+    gap: 48px;
+    min-height: calc(100dvh - 80px);
+    padding: 0 32px 40px;
+  }
+}
+
+/* The stage: rings, light and the wordmark. */
+.uz-auth-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  justify-items: center;
+  padding: 8px 0 20px;
+}
+.uz-rings {
+  grid-area: 1 / 1;
+  width: min(92vw, 420px);
+  height: auto;
+  overflow: visible;
+  animation: uz-rings-in 1.2s var(--uz-out) both;
+}
+@media (min-width: 1100px) {
+  .uz-rings {
+    width: min(46vw, 560px);
+  }
+}
+.uz-ring {
+  transform-origin: 0 0;
+  opacity: 0.55;
+  animation: uz-ring-turn calc(48s + var(--i) * 7s) linear infinite;
+}
+.uz-ring:nth-child(even) {
+  animation-direction: reverse;
+}
+.uz-rings-core {
+  transform-origin: 0 0;
+  animation: uz-core-breathe 6s ease-in-out infinite;
+}
+@keyframes uz-ring-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes uz-core-breathe {
+  50% {
+    transform: scale(1.08);
+    opacity: 0.85;
+  }
+}
+@keyframes uz-rings-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+.uz-auth-mark {
+  grid-area: 1 / 1;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.uz-auth-welcome {
+  color: var(--pp-accent, #2b6df0);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  animation: uz-fade-up 600ms var(--uz-out) 300ms both;
+}
+.uz-auth-word {
+  display: flex;
+  gap: clamp(8px, 1.6vw, 16px);
+  height: clamp(44px, 7vw, 72px);
+}
+.uz-auth-word svg {
+  height: 100%;
+  width: auto;
+  overflow: visible;
+}
+.uz-auth-word path {
+  fill: none;
+  stroke: var(--pro-ink, #0a0f1a);
+  stroke-width: 3.4;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: uz-sp-draw 1s cubic-bezier(0.65, 0, 0.35, 1) calc(0.35s + var(--i) * 0.12s) both;
+}
+.uz-auth-pitch {
+  max-width: 34ch;
+  margin: 8px 0 0;
+  color: var(--pro-muted, #5b6676);
+  font-size: 17px;
+  line-height: 1.5;
+  text-align: center;
+  animation: uz-fade-up 600ms var(--uz-out) 900ms both;
+}
+@media (max-width: 1099px) {
+  .uz-auth-pitch {
+    display: none;
+  }
+}
+@keyframes uz-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* The card with the form. */
+.uz-auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  justify-self: center;
+  padding: 22px;
+  border: 1px solid rgb(10 15 26 / 0.08);
+  border-radius: 28px;
+  background: rgb(255 255 255 / 0.9);
+  box-shadow: 0 30px 70px -40px rgb(4 30 90 / 0.35);
+  backdrop-filter: blur(12px);
+  animation: uz-card-in 700ms var(--uz-out) 200ms both;
+}
+@media (min-width: 640px) {
+  .uz-auth-card {
+    padding: 30px;
+  }
+}
+@keyframes uz-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+.uz-auth-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 22px;
+  padding: 5px;
+  border-radius: 16px;
+  background: #f1f3f7;
+}
+.uz-auth-switch button {
+  min-height: 44px;
+  border-radius: 12px;
+  color: var(--pro-muted, #5b6676);
+  font-size: 15px;
+  font-weight: 700;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    box-shadow 200ms ease;
+  touch-action: manipulation;
+}
+.uz-auth-switch button[aria-pressed="true"] {
+  background: linear-gradient(120deg, #2b6df0, #5b8cff 55%, #8a7cf2);
+  color: #fff;
+  box-shadow: 0 10px 24px -14px rgb(43 109 240 / 0.8);
+}
+.uz-auth-switch button:focus-visible,
+.uz-auth-back:focus-visible {
+  outline: 2px solid var(--pp-accent, #2b6df0);
+  outline-offset: 2px;
+}
+.uz-auth-step {
+  animation: uz-fade-up 360ms var(--uz-out) both;
+}
+.edith-premium .uz-auth-title {
+  margin: 0;
+  font-size: clamp(26px, 3vw, 32px) !important;
+  font-weight: 700;
+  line-height: 1.12 !important;
+  letter-spacing: -0.02em;
+}
+.uz-auth-line {
+  margin: 6px 0 20px;
+  color: var(--pro-muted, #5b6676);
+  font-size: 15.5px;
+  line-height: 1.5;
+}
+/* The form fields keep their own markup; here they get the page's softer look. */
+.uz-auth-form input:not([type="checkbox"]) {
+  min-height: 48px;
+  border-width: 1.5px !important;
+  border-color: #d7dce5 !important;
+  border-radius: 14px !important;
+  background: #fff;
+  font-size: 16px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.uz-auth-form input:not([type="checkbox"]):focus {
+  border-color: var(--pp-accent, #2b6df0) !important;
+  box-shadow: 0 0 0 4px rgb(43 109 240 / 0.14);
+}
+.uz-auth-form button[type="submit"] {
+  min-height: 50px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #2b6df0, #5b8cff 55%, #8a7cf2);
+  box-shadow: 0 14px 30px -18px rgb(43 109 240 / 0.9);
+  transition:
+    transform 140ms ease-out,
+    filter 160ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .uz-auth-form button[type="submit"]:hover {
+    filter: brightness(1.05);
+  }
+}
+.uz-auth-form button[type="submit"]:active {
+  transform: scale(0.98);
+}
+@media (prefers-reduced-motion: reduce) {
+  .uz-rings,
+  .uz-ring,
+  .uz-rings-core,
+  .uz-auth-welcome,
+  .uz-auth-word path,
+  .uz-auth-pitch,
+  .uz-auth-card,
+  .uz-auth-step {
+    animation: none !important;
+  }
+}

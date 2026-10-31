@@ -15,7 +15,7 @@ const TONE: SplashTone = "dark";
 
 // UZYRA drawn as single lines, all one weight, on a 56 x 100 grid. The A has no bar (a pointed
 // arch), the R's leg starts apart from its bowl. Each path is drawn by its own stroke.
-const LETTERS: { key: string; d: string }[] = [
+export const LETTERS: { key: string; d: string }[] = [
   { key: "U", d: "M0 0 V72 A28 28 0 0 0 56 72 V0" },
   { key: "Z", d: "M0 0 H56 L0 100 H56" },
   { key: "Y", d: "M0 0 L28 52 L56 0 M28 52 V100" },

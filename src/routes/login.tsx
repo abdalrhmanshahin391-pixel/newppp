@@ -1,6 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { openAuth } from "@/lib/auth-dialog";
+import { createFileRoute } from "@tanstack/react-router";
+import { AuthPage } from "@/components/auth/AuthPage";
 
 export const Route = createFileRoute("/login")({
   ssr: false,
@@ -21,24 +20,12 @@ export const Route = createFileRoute("/login")({
     next:
       typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//")
         ? s.next
-        : "",
+        : undefined,
   }),
-  component: LoginRedirect,
+  component: LoginPage,
 });
 
-/**
- * Signing in is a window now, not a page. This route only exists so old links
- * and bookmarks keep working: it drops you on the home page with the sign-in
- * window already open.
- */
-function LoginRedirect() {
-  const navigate = useNavigate();
+function LoginPage() {
   const { next } = Route.useSearch();
-
-  useEffect(() => {
-    openAuth("signin", next || undefined);
-    void navigate({ to: "/", replace: true });
-  }, [navigate, next]);
-
-  return null;
+  return <AuthPage mode="signin" next={next || undefined} />;
 }
