@@ -1,9 +1,9 @@
-// Where the floating circle sits, as a share of the guide pane (0 to 1 on each side). Pure.
+// Where the floating circle sits, as a share of the study area (both sides; 0 to 1). Pure.
 
 export type OrbPosition = { x: number; y: number };
 
-/** Bottom corner on Rita's side (Rita is on the left). */
-export const DEFAULT_ORB: OrbPosition = { x: 0.04, y: 0.9 };
+/** Near the bottom, just on the guide's side of the divider (Rita is on the left). */
+export const DEFAULT_ORB: OrbPosition = { x: 0.53, y: 0.9 };
 
 /** Keeps the circle fully inside the pane, below the pane's top strip. */
 export function clampOrb(

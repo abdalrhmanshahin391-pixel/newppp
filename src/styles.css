@@ -4543,7 +4543,87 @@ html.rita-app,
   }
 }
 
-/* Interactive study: the floating circle over the guide (one action colour, 56px target). */
+/* Interactive study: the guide scrolls in its own box (the frame inside never scrolls; zoom is a
+   transform so Safari keeps text selection), and the divider between Rita and the guide. */
+.st-scroll {
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: #f4f4f8;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+.st-stage {
+  position: relative;
+  margin-inline: auto;
+  /* The frame's own (unscaled) box must not add scroll space; what shows is the scaled sheet. */
+  overflow: hidden;
+}
+.st-frame {
+  display: block;
+  border: 0;
+  background: #f4f4f8;
+  transform-origin: 0 0;
+}
+.st-divider {
+  position: relative;
+  width: 12px;
+  background: transparent;
+  cursor: col-resize;
+  outline: none;
+  touch-action: none;
+}
+.st-divider::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: #121117;
+  transition: background-color 160ms ease;
+}
+.st-grip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 48px;
+  border: 2px solid #121117;
+  border-radius: 999px;
+  background: #fff;
+  transform: translate(-50%, -50%);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    height 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.st-divider[data-separator="hover"]::before,
+.st-divider[data-separator="active"]::before,
+.st-divider[data-separator="focus"]::before {
+  background: #2b6df0;
+}
+.st-divider[data-separator="hover"] .st-grip,
+.st-divider[data-separator="focus"] .st-grip {
+  border-color: #2b6df0;
+}
+.st-divider[data-separator="active"] .st-grip {
+  height: 64px;
+  border-color: #2b6df0;
+  background: #2b6df0;
+}
+/* While the divider moves, the guide's frame must not swallow the pointer. */
+.st-split:has([data-separator="active"]) iframe {
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .st-grip,
+  .st-divider::before {
+    transition: none;
+  }
+}
+
+/* Interactive study: the floating Uzyra circle over the study area (56px target). */
 .edith-premium .st-orb {
   position: absolute;
   z-index: 20;
@@ -4563,12 +4643,27 @@ html.rita-app,
   -webkit-tap-highlight-color: transparent;
   cursor: grab;
   transition:
+    left 260ms var(--pp-ease),
+    top 260ms var(--pp-ease),
     transform 160ms var(--pp-ease),
     opacity 200ms var(--pp-ease),
     box-shadow 200ms var(--pp-ease);
 }
+.edith-premium .st-orb[data-dragging] {
+  cursor: grabbing;
+  transition:
+    transform 160ms var(--pp-ease),
+    box-shadow 200ms var(--pp-ease);
+  box-shadow:
+    0 2px 4px rgb(18 17 23 / 0.14),
+    0 16px 36px rgb(18 17 23 / 0.24);
+}
+.edith-premium .st-orb-mark {
+  width: 28px;
+  height: auto;
+}
 .edith-premium .st-orb[data-state="idle"] {
-  opacity: 0.72;
+  opacity: 0.85;
 }
 .edith-premium .st-orb[data-state="armed"] {
   opacity: 1;
@@ -4590,7 +4685,7 @@ html.rita-app,
   background: #fff;
 }
 .edith-premium .st-orb-spin {
-  animation: st-orb-spin 1.1s linear infinite;
+  animation: st-orb-spin 2.4s linear infinite;
 }
 @keyframes st-orb-spin {
   to {

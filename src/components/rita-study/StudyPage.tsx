@@ -3,17 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import * as Popover from "@radix-ui/react-popover";
-import {
-  ArrowRight,
-  Download,
-  Loader2,
-  MessageCircleQuestion,
-  Minus,
-  Plus,
-  Shuffle,
-  Square,
-  Star,
-} from "lucide-react";
+import { ArrowRight, Download, Loader2, Shuffle, Square, Star } from "lucide-react";
 import { toast } from "sonner";
 import { RitaRealtimeV3, type StudyBridge } from "@/components/rita/RitaRealtimeV3";
 import { studyGuideDownload } from "@/lib/study/study.functions";
@@ -29,14 +19,27 @@ import {
 } from "@/lib/study/study-actions";
 import { ActionMenu } from "./ActionMenu";
 import { FloatingOrb, type OrbState } from "./FloatingOrb";
-import { GuideFrame, SHEET_PX, type GuideFrameHandle } from "./GuideFrame";
+import { GuideFrame, type GuideFrameHandle } from "./GuideFrame";
 import { DEFAULT_ORB, snapToEdge, type OrbPosition } from "./orb-position";
 import { markSelection, readSelection, sectionSegIds, type PageSelection } from "./selection";
 import { readStudyMemory, writeStudyMemory } from "./study-memory";
 import { useStudyRequests } from "./useStudyRequests";
 
-const ZOOM_MIN = 0.75;
-const ZOOM_MAX = 2;
+/** Where the divider was left (share of the width for Rita and the guide), per browser. */
+const SPLIT_KEY = "uzyra-study-split";
+
+function readSplit(): { rita: number; guide: number } | undefined {
+  try {
+    const raw = JSON.parse(window.localStorage.getItem(SPLIT_KEY) ?? "null") as unknown;
+    if (!raw || typeof raw !== "object") return undefined;
+    const { rita, guide } = raw as Record<string, unknown>;
+    if (typeof rita !== "number" || typeof guide !== "number") return undefined;
+    if (!(rita > 10 && guide > 10 && Math.abs(rita + guide - 100) < 1)) return undefined;
+    return { rita, guide };
+  } catch {
+    return undefined;
+  }
+}
 
 function useWide(min: number): boolean {
   const [wide, setWide] = useState(true);
@@ -60,9 +63,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   const wide = useWide(900);
   const [tab, setTab] = useState<"guide" | "rita">("guide");
   const frame = useRef<GuideFrameHandle | null>(null);
-  const guideBox = useRef<HTMLDivElement | null>(null);
-  const [zoom, setZoom] = useState(1);
-  const [fitted, setFitted] = useState(true);
+  const [split] = useState(readSplit);
   const [current, setCurrent] = useState("");
   const [downloading, setDownloading] = useState(false);
   const [ritaSpeaking, setRitaSpeaking] = useState(false);
@@ -150,34 +151,11 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
     };
   }, [bridge, current, lesson.id, preview, requests, sections, sendFocus]);
 
-  // The fitted zoom keeps the whole sheet in view on narrow screens.
-  useEffect(() => {
-    const box = guideBox.current;
-    if (!box || !fitted) return;
-    const resize = () => {
-      const width = box.clientWidth;
-      if (width > 0) setZoom(Math.min(1, Math.max(0.5, (width - 8) / SHEET_PX)));
-    };
-    resize();
-    const observer = new ResizeObserver(resize);
-    observer.observe(box);
-    return () => observer.disconnect();
-  }, [fitted, wide, tab]);
-
-  const changeZoom = (step: number) => {
-    setFitted(false);
-    setZoom((value) =>
-      Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round((value + step) * 100) / 100)),
-    );
-  };
-
   // The section in view becomes Rita's focus, and where the next visit starts.
   const onGuideLoad = useCallback(
     (doc: Document) => {
-      const win = doc.defaultView;
-      if (!win) return;
       const memory = readStudyMemory(lesson.id);
-      if (memory.section) doc.getElementById(memory.section)?.scrollIntoView({ block: "start" });
+      if (memory.section) frame.current?.scrollToSection(memory.section, false);
       // The selection is saved 120ms after it stops changing, before any menu opens: on a phone
       // the tap on the circle can clear the browser's selection, so the copy must exist first.
       let picking = 0;
@@ -199,28 +177,30 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
           if (!menuOpenRef.current && doc.getSelection()?.isCollapsed) keepSelection(null);
         }, 120);
       });
-      let timer = 0;
-      win.addEventListener(
-        "scroll",
-        () => {
-          window.clearTimeout(timer);
-          timer = window.setTimeout(() => {
-            const middle = win.innerHeight / 3;
-            let seen = "";
-            for (const element of doc.querySelectorAll<HTMLElement>("[data-section]")) {
-              if (element.getBoundingClientRect().top <= middle)
-                seen = element.dataset.section ?? "";
-            }
-            const section = seen || sections[0]?.id || "";
-            setCurrent(section);
-            if (!preview) writeStudyMemory(lesson.id, { section });
-            sendFocus(section);
-          }, 250);
-        },
-        { passive: true },
-      );
     },
-    [bridge, keepSelection, lesson.id, preview, sections, segments, sendFocus],
+    [bridge, keepSelection, lesson.id, segments],
+  );
+
+  // The section in view (a third of the way down) becomes Rita's focus, and where the next visit
+  // starts. Settles 250ms after the scrolling stops.
+  const readingTimer = useRef(0);
+  const onGuideScroll = useCallback(
+    (readingY: number) => {
+      window.clearTimeout(readingTimer.current);
+      readingTimer.current = window.setTimeout(() => {
+        const doc = frame.current?.document();
+        if (!doc) return;
+        let seen = "";
+        for (const element of doc.querySelectorAll<HTMLElement>("[data-section]")) {
+          if (element.getBoundingClientRect().top <= readingY) seen = element.dataset.section ?? "";
+        }
+        const section = seen || sections[0]?.id || "";
+        setCurrent(section);
+        if (!preview) writeStudyMemory(lesson.id, { section });
+        sendFocus(section);
+      }, 250);
+    },
+    [lesson.id, preview, sections, sendFocus],
   );
 
   const actions: StudyAction[] = selected ? availableActions(selected.kind) : [];
@@ -315,92 +295,153 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
 
   const guidePane = (
     <div className="flex h-full min-h-0 flex-col bg-[#f4f4f8]" dir="rtl">
-      <div
-        className="flex flex-wrap items-center gap-1.5 border-b border-[var(--pp-line)] bg-white px-3 py-2"
-        role="toolbar"
-        aria-label="شريط الملف"
-      >
-        {sections.length > 1 && (
-          <label className="flex items-center gap-1.5 text-[14px]">
-            <span className="sr-only">القسم</span>
-            <select
-              value={current || sections[0]?.id}
-              onChange={(event) => {
-                setCurrent(event.target.value);
-                frame.current?.scrollToSection(event.target.value);
-              }}
-              className="h-9 max-w-[14rem] rounded-lg border border-[var(--pp-line)] bg-white px-2 text-[14px]"
-              dir="ltr"
-            >
-              {sections.map((section, index) => (
-                <option key={section.id} value={section.id}>
-                  {index + 1}. {section.heading}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        <button
-          type="button"
-          onClick={() => setMenuOpen(true)}
-          className="rita-btn rita-btn-soft rita-btn-sm gap-1.5 !h-9"
-        >
-          <MessageCircleQuestion size={15} aria-hidden="true" />
-          اسأل ريتا عن التحديد
-        </button>
-        <div className="ms-auto flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => changeZoom(-0.1)}
-            disabled={zoom <= ZOOM_MIN}
-            aria-label="تصغير"
-            className="rita-btn rita-btn-quiet rita-btn-sm !h-9 !w-9 !px-0"
-          >
-            <Minus size={16} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setFitted(true)}
-            aria-pressed={fitted}
-            className="rita-btn rita-btn-quiet rita-btn-sm !h-9 tabular-nums"
-            title="ملاءمة العرض"
-          >
-            {Math.round(zoom * 100)}%
-          </button>
-          <button
-            type="button"
-            onClick={() => changeZoom(0.1)}
-            disabled={zoom >= ZOOM_MAX}
-            aria-label="تكبير"
-            className="rita-btn rita-btn-quiet rita-btn-sm !h-9 !w-9 !px-0"
-          >
-            <Plus size={16} aria-hidden="true" />
-          </button>
-          {guide.allow_download && (
-            <button
-              type="button"
-              onClick={() => void download()}
-              disabled={downloading}
-              className="rita-btn rita-btn-soft rita-btn-sm gap-1.5 !h-9"
-            >
-              {downloading ? (
-                <Loader2 size={15} className="animate-spin" aria-hidden="true" />
-              ) : (
-                <Download size={15} aria-hidden="true" />
-              )}
-              PDF
-            </button>
-          )}
-        </div>
-      </div>
-      <div ref={guideBox} className="relative min-h-0 flex-1">
+      <div className="relative min-h-0 flex-1">
         <GuideFrame
           ref={frame}
           content={guide.content}
-          zoom={zoom}
           title={title}
           onLoad={onGuideLoad}
+          onScroll={onGuideScroll}
         />
+        {!wide && tab === "guide" && live && liveState && live.channel === "voice" && (
+          <div className="absolute inset-x-3 bottom-3 z-30 flex items-center gap-2 rounded-2xl bg-[var(--pp-ink)] px-3 py-2 text-[14px] text-white">
+            <p className="min-w-0 flex-1 truncate">ريتا بتشرح… «{live.quote.slice(0, 40)}»</p>
+            <button
+              type="button"
+              onClick={() => setTab("rita")}
+              className="font-semibold underline"
+            >
+              افتح المحادثة
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const ritaPane = (
+    <div className="uz-rita-dark flex h-full min-h-0 flex-col" dir="rtl">
+      <RitaRealtimeV3
+        study={{ lessonId: lesson.id, preview, title: "ريتا", bridge, children: status }}
+      />
+    </div>
+  );
+
+  return (
+    <div className="edith-premium flex h-[100dvh] flex-col bg-white text-[var(--pp-ink)]" dir="rtl">
+      <header className="flex items-center gap-3 border-b border-[var(--pp-line)] px-4 py-2.5">
+        <Link
+          to="/rita-lessons"
+          className="rita-btn rita-btn-quiet rita-btn-sm gap-1 !px-2"
+          aria-label="رجوع للدروس"
+        >
+          <ArrowRight size={17} aria-hidden="true" />
+          <span className="hidden sm:inline">الدروس</span>
+        </Link>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate !text-[17px] font-bold !leading-6 !tracking-normal">{title}</h1>
+          <p className="text-[12.5px] font-semibold text-[var(--pp-accent-text)]">
+            ريتا — دراسة تفاعلية{preview ? " · معاينة أدمن (ما بينحفظ إشي)" : ""}
+          </p>
+        </div>
+        {preview && lesson.topic === SAMPLE_STUDY_TOPIC ? (
+          <Link
+            to="/admin/study-sample"
+            search={{ another: true }}
+            replace
+            className="rita-btn rita-btn-soft rita-btn-sm gap-1.5"
+          >
+            <Shuffle size={15} aria-hidden="true" />
+            دليل ثاني
+          </Link>
+        ) : null}
+        {guide.allow_download && (
+          <button
+            type="button"
+            onClick={() => void download()}
+            disabled={downloading}
+            className="rita-btn rita-btn-soft rita-btn-sm gap-1.5"
+          >
+            {downloading ? (
+              <Loader2 size={15} className="animate-spin" aria-hidden="true" />
+            ) : (
+              <Download size={15} aria-hidden="true" />
+            )}
+            PDF
+          </button>
+        )}
+        <Link
+          to="/rita-live"
+          search={{ lesson: lesson.id, ...(preview ? { preview: true } : {}) }}
+          className="rita-btn rita-btn-soft rita-btn-sm gap-1.5"
+        >
+          <Star size={15} aria-hidden="true" />
+          تحدّي الدرس
+        </Link>
+      </header>
+
+      {/* The circle lives over both sides, so it can sit wherever the learner likes. */}
+      <div className="st-work relative flex min-h-0 flex-1 flex-col">
+        {wide ? (
+          // Rita is always on the left and the guide on the right: the group is laid out left to right.
+          <Group
+            orientation="horizontal"
+            dir="ltr"
+            className="st-split min-h-0 flex-1"
+            defaultLayout={split}
+            resizeTargetMinimumSize={{ coarse: 40, fine: 16 }}
+            onLayoutChanged={(layout) => {
+              try {
+                window.localStorage.setItem(SPLIT_KEY, JSON.stringify(layout));
+              } catch {
+                /* storage can be blocked; the divider still works */
+              }
+            }}
+          >
+            <Panel id="rita" defaultSize="50" minSize={320}>
+              {ritaPane}
+            </Panel>
+            <Separator className="st-divider" aria-label="غيّر عرض الملف وريتا">
+              <span className="st-grip" aria-hidden="true" />
+            </Separator>
+            <Panel id="guide" defaultSize="50" minSize={320}>
+              {guidePane}
+            </Panel>
+          </Group>
+        ) : (
+          <>
+            <div
+              role="tablist"
+              aria-label="الدرس وريتا"
+              className="flex border-b border-[var(--pp-line)]"
+            >
+              {(
+                [
+                  ["guide", "الدرس"],
+                  ["rita", ritaSpeaking ? "ريتا بتحكي…" : "ريتا"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === value}
+                  onClick={() => setTab(value)}
+                  className={`h-11 flex-1 text-[15px] font-semibold ${
+                    tab === value
+                      ? "border-b-2 border-[var(--pp-accent)] text-[var(--pp-ink)]"
+                      : "text-[var(--pp-muted)]"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {/* Both stay mounted so the call keeps going and the reading place is kept. */}
+            <div className={`min-h-0 flex-1 ${tab === "guide" ? "" : "hidden"}`}>{guidePane}</div>
+            <div className={`min-h-0 flex-1 ${tab === "rita" ? "" : "hidden"}`}>{ritaPane}</div>
+          </>
+        )}
         <Popover.Root open={menuOpen} onOpenChange={setMenuOpen}>
           <Popover.Anchor asChild>
             <FloatingOrb
@@ -455,116 +496,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
             حرّك الدائرة بالأسهم (Shift أسرع)، وEnter أو Esc لما تخلص.
           </p>
         )}
-        {!wide && tab === "guide" && live && liveState && live.channel === "voice" && (
-          <div className="absolute inset-x-3 bottom-3 z-30 flex items-center gap-2 rounded-2xl bg-[var(--pp-ink)] px-3 py-2 text-[14px] text-white">
-            <p className="min-w-0 flex-1 truncate">ريتا بتشرح… «{live.quote.slice(0, 40)}»</p>
-            <button
-              type="button"
-              onClick={() => setTab("rita")}
-              className="font-semibold underline"
-            >
-              افتح المحادثة
-            </button>
-          </div>
-        )}
       </div>
-    </div>
-  );
-
-  const ritaPane = (
-    <div className="uz-rita-dark flex h-full min-h-0 flex-col" dir="rtl">
-      <RitaRealtimeV3
-        study={{ lessonId: lesson.id, preview, title: "ريتا", bridge, children: status }}
-      />
-    </div>
-  );
-
-  return (
-    <div className="edith-premium flex h-[100dvh] flex-col bg-white text-[var(--pp-ink)]" dir="rtl">
-      <header className="flex items-center gap-3 border-b border-[var(--pp-line)] px-4 py-2.5">
-        <Link
-          to="/rita-lessons"
-          className="rita-btn rita-btn-quiet rita-btn-sm gap-1 !px-2"
-          aria-label="رجوع للدروس"
-        >
-          <ArrowRight size={17} aria-hidden="true" />
-          <span className="hidden sm:inline">الدروس</span>
-        </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate !text-[17px] font-bold !leading-6 !tracking-normal">{title}</h1>
-          <p className="text-[12.5px] font-semibold text-[var(--pp-accent-text)]">
-            ريتا — دراسة تفاعلية{preview ? " · معاينة أدمن (ما بينحفظ إشي)" : ""}
-          </p>
-        </div>
-        {preview && lesson.topic === SAMPLE_STUDY_TOPIC ? (
-          <Link
-            to="/admin/study-sample"
-            search={{ another: true }}
-            replace
-            className="rita-btn rita-btn-soft rita-btn-sm gap-1.5"
-          >
-            <Shuffle size={15} aria-hidden="true" />
-            دليل ثاني
-          </Link>
-        ) : null}
-        <Link
-          to="/rita-live"
-          search={{ lesson: lesson.id, ...(preview ? { preview: true } : {}) }}
-          className="rita-btn rita-btn-soft rita-btn-sm gap-1.5"
-        >
-          <Star size={15} aria-hidden="true" />
-          تحدّي الدرس
-        </Link>
-      </header>
-
-      {wide ? (
-        // Rita is always on the left and the guide on the right: the group is laid out left to right.
-        <Group orientation="horizontal" dir="ltr" className="min-h-0 flex-1">
-          <Panel id="rita" defaultSize="50" minSize={340}>
-            {ritaPane}
-          </Panel>
-          <Separator
-            className="w-1 bg-[#121117] transition-colors hover:bg-[var(--pp-accent)] focus-visible:bg-[var(--pp-accent)] focus-visible:outline-none"
-            aria-label="غيّر عرض الملف وريتا"
-          />
-          <Panel id="guide" defaultSize="50" minSize={420}>
-            {guidePane}
-          </Panel>
-        </Group>
-      ) : (
-        <>
-          <div
-            role="tablist"
-            aria-label="الدرس وريتا"
-            className="flex border-b border-[var(--pp-line)]"
-          >
-            {(
-              [
-                ["guide", "الدرس"],
-                ["rita", ritaSpeaking ? "ريتا بتحكي…" : "ريتا"],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                role="tab"
-                aria-selected={tab === value}
-                onClick={() => setTab(value)}
-                className={`h-11 flex-1 text-[15px] font-semibold ${
-                  tab === value
-                    ? "border-b-2 border-[var(--pp-accent)] text-[var(--pp-ink)]"
-                    : "text-[var(--pp-muted)]"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {/* Both stay mounted so the call keeps going and the reading place is kept. */}
-          <div className={`min-h-0 flex-1 ${tab === "guide" ? "" : "hidden"}`}>{guidePane}</div>
-          <div className={`min-h-0 flex-1 ${tab === "rita" ? "" : "hidden"}`}>{ritaPane}</div>
-        </>
-      )}
       {phrase && <PhraseDialog phrase={phrase} onClose={() => setPhrase("")} />}
     </div>
   );
