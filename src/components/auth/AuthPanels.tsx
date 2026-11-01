@@ -1,6 +1,5 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
-import { Eye, EyeOff, MailCheck, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/legacy-client";
@@ -12,25 +11,22 @@ import {
   clearRememberedLogin,
 } from "@/lib/remember-login";
 import { GoogleButton } from "@/components/auth/GoogleButton";
+import { useAuthCopy, type AuthCopy } from "@/components/auth/auth-copy";
 
 import { closeAuth, setAuthMode } from "@/lib/auth-dialog";
 
 /* ── shared bits ────────────────────────────────────────────────────────── */
 
-const field =
-  "w-full rounded-lg border-2 border-[#121117] bg-white px-4 py-3 text-[15px] font-medium text-[#121117] placeholder:font-normal placeholder:text-[#6a697c] outline-none transition-colors focus:ring-4 focus:ring-[#e7eefd]";
+/* Plain on purpose: no design until the owner asks for one (see AuthPage). */
+const field = "w-full border border-black bg-white p-2";
 
-const primaryBtn =
-  "inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border-2 border-[#121117] bg-[#2b6df0] px-8 text-[16px] font-semibold text-white transition-colors hover:bg-[#2260e4] disabled:opacity-60";
+const primaryBtn = "w-full border border-black bg-white p-2 disabled:opacity-60";
 
 function Err({ message }: { message: string }) {
   return (
-    <div
-      role="alert"
-      className="mb-4 rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
-    >
+    <p role="alert" className="mb-4 text-red-700">
       {message}
-    </div>
+    </p>
   );
 }
 
@@ -42,26 +38,28 @@ type Problem = {
 };
 
 /** A calm, explanatory message with a way forward — used when sign-up can't continue. */
-function ProblemNote({ problem, onPick }: { problem: Problem; onPick?: (value: string) => void }) {
+function ProblemNote({
+  problem,
+  onPick,
+  t,
+}: {
+  problem: Problem;
+  onPick?: (value: string) => void;
+  t: AuthCopy;
+}) {
   return (
-    <div
-      role="alert"
-      className="mb-4 rounded-2xl border border-destructive/25 bg-destructive/[0.07] px-4 py-3.5"
-    >
-      <p className="text-[14px] font-bold text-destructive">{problem.title}</p>
-      {problem.hint && (
-        <p className="mt-1 text-[13px] font-medium leading-relaxed text-[#6a697c]">
-          {problem.hint}
-        </p>
-      )}
+    <div role="alert" className="mb-4 border border-red-700 p-3 text-red-700">
+      <p className="font-bold">{problem.title}</p>
+      {problem.hint && <p>{problem.hint}</p>}
       {!!problem.suggestions?.length && (
-        <div className="mt-2.5 flex flex-wrap gap-2">
+        <div className="mt-2 flex flex-wrap gap-2">
           {problem.suggestions.map((s) => (
             <button
               key={s}
               type="button"
+              dir="ltr"
               onClick={() => onPick?.(s)}
-              className="rounded-lg border-2 border-[#121117] bg-white px-3 py-1.5 text-[13px] font-bold text-foreground transition hover:bg-[#f4f4f8]"
+              className="border border-black bg-white px-2 py-1 text-black"
             >
               {s}
             </button>
@@ -72,9 +70,9 @@ function ProblemNote({ problem, onPick }: { problem: Problem; onPick?: (value: s
         <button
           type="button"
           onClick={() => setAuthMode(problem.action === "reset" ? "forgot" : "signin")}
-          className="mt-2.5 text-[13px] font-bold text-[#2563eb] underline underline-offset-2"
+          className="mt-2 underline"
         >
-          {problem.action === "reset" ? "Reset your password" : "Sign in instead"}
+          {problem.action === "reset" ? t.resetInstead : t.signInInstead}
         </button>
       )}
     </div>
@@ -82,7 +80,46 @@ function ProblemNote({ problem, onPick }: { problem: Problem; onPick?: (value: s
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <span className="mb-1.5 block text-[13px] font-semibold text-[#121117]">{children}</span>;
+  return <span className="mb-1 block">{children}</span>;
+}
+
+function Divider({ children }: { children: React.ReactNode }) {
+  return <p className="my-4 text-center">{children}</p>;
+}
+
+function ShowPassword({
+  shown,
+  onToggle,
+  t,
+}: {
+  shown: boolean;
+  onToggle: () => void;
+  t: AuthCopy;
+}) {
+  return (
+    <button type="button" onClick={onToggle} className="mt-1 underline">
+      {shown ? t.hidePassword : t.showPassword}
+    </button>
+  );
+}
+
+/** "Terms, Privacy Policy and Refund Policy" as three links. */
+function LegalLinks({ t }: { t: AuthCopy }) {
+  return (
+    <>
+      <Link to="/terms" className="underline">
+        {t.terms}
+      </Link>
+      {", "}
+      <Link to="/privacy-policy" className="underline">
+        {t.privacy}
+      </Link>{" "}
+      {t.and}{" "}
+      <Link to="/refund-policy" className="underline">
+        {t.refund}
+      </Link>
+    </>
+  );
 }
 
 /* ── returning from Google ─────────────────────────────────────────────── */
@@ -111,6 +148,7 @@ export function AuthReturn() {
 
 export function SignInPanel({ next }: { next?: string }) {
   const router = useRouter();
+  const { t } = useAuthCopy();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -132,7 +170,7 @@ export function SignInPanel({ next }: { next?: string }) {
     e.preventDefault();
     setError(null);
     if (!email.trim() || !password) {
-      setError("Please fill in your email and password.");
+      setError(t.fillBoth);
       return;
     }
     setLoading(true);
@@ -145,10 +183,10 @@ export function SignInPanel({ next }: { next?: string }) {
         const msg = (signInError.message ?? "").toLowerCase();
         setError(
           msg.includes("fetch") || msg.includes("network")
-            ? "Uzyra cannot reach its account service right now. Your password was not rejected; please try again after the database connection is restored."
+            ? t.offline
             : msg.includes("confirm") || msg.includes("verif")
-              ? "Your email isn't verified yet. Open the verification link we sent you, then sign in again — check your spam folder too."
-              : "That email and password don't match.",
+              ? t.unverified
+              : t.mismatch,
         );
         setLoading(false);
         return;
@@ -181,13 +219,11 @@ export function SignInPanel({ next }: { next?: string }) {
       if (remember) saveRememberedLogin({ email: email.trim().toLowerCase() });
       else clearRememberedLogin();
 
+      // The page hears this, plays its little "welcome in" moment and then goes to `next`.
       closeAuth();
-      if (next) {
-        void router.navigate({ href: next });
-      }
       void router.invalidate();
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t.wrong);
       setLoading(false);
     }
   }
@@ -213,9 +249,7 @@ export function SignInPanel({ next }: { next?: string }) {
         void router.navigate({ href: destination });
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Google sign-in could not start. Please try again.",
-      );
+      setError(err instanceof Error ? err.message : t.googleSigninFailed);
       setLoading(false);
     }
   }
@@ -223,21 +257,15 @@ export function SignInPanel({ next }: { next?: string }) {
   if (blocked) {
     return (
       <div className="text-center">
-        <h3 className="text-lg font-bold text-foreground">
-          {blocked.kind === "suspend"
-            ? "Your account is temporarily stopped"
-            : "Your account has been blocked"}
-        </h3>
-        {blocked.message && (
-          <p className="mt-3 whitespace-pre-wrap text-sm text-foreground">{blocked.message}</p>
-        )}
+        <h3 className="font-bold">{blocked.kind === "suspend" ? t.stopped : t.blocked}</h3>
+        {blocked.message && <p className="mt-3 whitespace-pre-wrap">{blocked.message}</p>}
         {blocked.kind === "suspend" && blocked.until && (
-          <p className="mt-3 text-sm font-bold text-muted-foreground">
-            Access returns on {new Date(blocked.until).toLocaleString()}
+          <p className="mt-3">
+            {t.accessReturns} {new Date(blocked.until).toLocaleString()}
           </p>
         )}
         <button type="button" onClick={() => setBlocked(null)} className={primaryBtn + " mt-6"}>
-          Close
+          {t.close}
         </button>
       </div>
     );
@@ -247,17 +275,15 @@ export function SignInPanel({ next }: { next?: string }) {
     <div>
       {error && <Err message={error} />}
 
-      <GoogleButton label="Continue with Google" onClick={handleGoogle} disabled={loading} />
-      <div className="my-5 flex items-center gap-3 text-[13px] font-medium text-[#6a697c]">
-        <span className="h-px flex-1 bg-[#dcdce5]" /> or{" "}
-        <span className="h-px flex-1 bg-[#dcdce5]" />
-      </div>
+      <GoogleButton label={t.continueGoogle} onClick={handleGoogle} disabled={loading} />
+      <Divider>{t.or}</Divider>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <label className="block">
-          <Label>email</Label>
+          <Label>{t.email}</Label>
           <input
             type="email"
+            dir="ltr"
             autoComplete="email"
             autoFocus
             className={field}
@@ -268,29 +294,23 @@ export function SignInPanel({ next }: { next?: string }) {
         </label>
 
         <label className="block">
-          <Label>password</Label>
+          <Label>{t.password}</Label>
           <div className="relative">
             <input
               type={showPw ? "text" : "password"}
+              dir="ltr"
               autoComplete="current-password"
-              className={field + " pr-12"}
+              className={field}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
             />
-            <button
-              type="button"
-              onClick={() => setShowPw((v) => !v)}
-              aria-label={showPw ? "Hide password" : "Show password"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
-            >
-              {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
+            <ShowPassword shown={showPw} onToggle={() => setShowPw((v) => !v)} t={t} />
           </div>
         </label>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <label className="flex cursor-pointer select-none items-center gap-2 text-sm font-medium text-foreground">
+          <label className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={remember}
@@ -298,32 +318,23 @@ export function SignInPanel({ next }: { next?: string }) {
                 setRemember(e.target.checked);
                 if (!e.target.checked) clearRememberedLogin();
               }}
-              className="h-4 w-4 rounded border-2 border-border accent-[#2b6df0]"
             />
-            keep me signed in
+            {t.keepSignedIn}
           </label>
-          <button
-            type="button"
-            onClick={() => setAuthMode("forgot")}
-            className="text-sm font-medium text-muted-foreground underline hover:text-foreground"
-          >
-            forgot your password?
+          <button type="button" onClick={() => setAuthMode("forgot")} className="underline">
+            {t.forgotLink}
           </button>
         </div>
 
         <button type="submit" disabled={loading} className={primaryBtn}>
-          {loading ? "Signing in…" : "Sign in"}
+          {loading ? t.signingIn : t.signIn}
         </button>
       </form>
 
-      <p className="mt-6 border-t-2 border-[#dcdce5] pt-4 text-center text-sm font-medium text-muted-foreground">
-        New to Rita?{" "}
-        <button
-          type="button"
-          onClick={() => setAuthMode("signup")}
-          className="font-bold text-[#2563eb] underline"
-        >
-          Create account
+      <p className="mt-6 text-center">
+        {t.newHere}{" "}
+        <button type="button" onClick={() => setAuthMode("signup")} className="underline">
+          {t.createAccountLink}
         </button>
       </p>
     </div>
@@ -332,28 +343,32 @@ export function SignInPanel({ next }: { next?: string }) {
 
 /* ── sign up ────────────────────────────────────────────────────────────── */
 
-const signupSchema = z
-  .object({
-    full_name: z.string().trim().min(2, "Please enter your full name.").max(100),
-    username: z
-      .string()
-      .trim()
-      .min(3, "Username must be at least 3 characters.")
-      .max(30, "Username must be less than 30 characters.")
-      .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores."),
-    email: z.string().trim().email("Please enter a valid email address.").max(255),
-    phone: z
-      .string()
-      .trim()
-      .min(6, "Please enter your phone number (at least 6 digits).")
-      .max(20, "Phone number cannot exceed 20 characters.")
-      .regex(/^[0-9+\-\s()]{6,20}$/, "Please enter a valid phone number."),
-    password: z.string().min(6, "Password must be at least 6 characters.").max(72),
-  })
-  .strip();
+function makeSignupSchema(t: AuthCopy) {
+  return z
+    .object({
+      full_name: z.string().trim().min(2, t.vName).max(100),
+      username: z
+        .string()
+        .trim()
+        .min(3, t.vUserMin)
+        .max(30, t.vUserMax)
+        .regex(/^[a-zA-Z0-9_]+$/, t.vUserChars),
+      email: z.string().trim().email(t.vEmail).max(255),
+      phone: z
+        .string()
+        .trim()
+        .min(6, t.vPhoneMin)
+        .max(20, t.vPhoneMax)
+        .regex(/^[0-9+\-\s()]{6,20}$/, t.vPhone),
+      password: z.string().min(6, t.vPassword).max(72),
+    })
+    .strip();
+}
 
 export function SignUpPanel() {
   const checkIdentity = useServerFn(checkIdentityAvailability);
+  const { t } = useAuthCopy();
+  const signupSchema = useMemo(() => makeSignupSchema(t), [t]);
   const [form, setForm] = useState({
     full_name: "",
     username: "",
@@ -388,17 +403,14 @@ export function SignUpPanel() {
     setError(null);
     setProblem(null);
     if (!accepted) {
-      setProblem({
-        title: "One last step",
-        hint: "Tick the box to accept the Terms and Privacy Policy, then create your account.",
-      });
+      setProblem({ title: t.oneLastStep, hint: t.tickBox });
       return;
     }
     const parsed = signupSchema.safeParse(form);
     if (!parsed.success) {
       setProblem({
-        title: "Let's fix one thing",
-        hint: parsed.error.issues[0]?.message ?? "Please check your information.",
+        title: t.fixOne,
+        hint: parsed.error.issues[0]?.message ?? t.checkInfo,
       });
       return;
     }
@@ -410,19 +422,15 @@ export function SignUpPanel() {
       const taken = await checkIdentity({ data: { username: data.username, phone: phone ?? "" } });
       if (taken?.username) {
         setProblem({
-          title: "That username is already in use",
-          hint: "Usernames are unique on Uzyra. Here are a few that are free right now:",
+          title: t.usernameTaken,
+          hint: t.usernameTakenHint,
           suggestions: usernameIdeas(data.username),
         });
         setLoading(false);
         return;
       }
       if (taken?.phone) {
-        setProblem({
-          title: "This phone number already has an account",
-          hint: "You can sign in with that account, or leave the phone field empty and add a different number later.",
-          action: "signin",
-        });
+        setProblem({ title: t.phoneTaken, hint: t.phoneTakenHint, action: "signin" });
         setLoading(false);
         return;
       }
@@ -442,23 +450,13 @@ export function SignUpPanel() {
       if (signUpError) {
         const msg = signUpError.message.toLowerCase();
         if (msg.includes("registered") || msg.includes("exists")) {
-          setProblem({
-            title: "You already have an account with this email",
-            hint: "Sign in to pick up where you left off, or reset your password if you don't remember it.",
-            action: "signin",
-          });
+          setProblem({ title: t.emailTaken, hint: t.emailTakenHint, action: "signin" });
         } else if (msg.includes("password")) {
-          setProblem({
-            title: "Choose a stronger password",
-            hint: "Use at least 8 characters and mix in a number or symbol — common passwords are not accepted.",
-          });
+          setProblem({ title: t.strongerPassword, hint: t.strongerPasswordHint });
         } else if (msg.includes("email")) {
-          setProblem({
-            title: "That email address didn't work",
-            hint: "Double-check the spelling, or try another address you can open right now.",
-          });
+          setProblem({ title: t.badEmail, hint: t.badEmailHint });
         } else {
-          setProblem({ title: "We couldn't create the account", hint: signUpError.message });
+          setProblem({ title: t.cantCreate, hint: signUpError.message });
         }
         setLoading(false);
         return;
@@ -466,15 +464,11 @@ export function SignUpPanel() {
       setSentTo(data.email);
       setLoading(false);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Something went wrong.";
+      const msg = err instanceof Error ? err.message : t.somethingWrong;
       setProblem(
         /duplicate|unique/i.test(msg)
-          ? {
-              title: "That username or phone is already in use",
-              hint: "Try a different username, or sign in to the account that already has it.",
-              action: "signin",
-            }
-          : { title: "Something went wrong", hint: msg },
+          ? { title: t.dupTitle, hint: t.dupHint, action: "signin" }
+          : { title: t.somethingWrong, hint: msg },
       );
       setLoading(false);
     }
@@ -496,33 +490,23 @@ export function SignUpPanel() {
     return (
       <div className="space-y-4 text-center">
         {error && <Err message={error} />}
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-lg border-2 border-[#121117] bg-[#2b6df0] text-white">
-          <MailCheck size={26} />
-        </span>
-        <p className="text-sm font-bold text-foreground">
-          We sent a verification link to <span className="underline">{sentTo}</span>
+        <p>
+          {t.sentTo} <span className="underline">{sentTo}</span>
         </p>
-        <p className="text-sm text-muted-foreground">
-          Your account stays inactive until you open that link. Check your spam folder if it is not
-          in your inbox.
-        </p>
+        <p>{t.sentLine}</p>
         <button
           type="button"
           onClick={resendVerification}
           disabled={loading}
-          className="rita-btn rita-btn-secondary mx-auto"
+          className={primaryBtn}
         >
-          {loading ? "Sending…" : "Send the verification email again"}
+          {loading ? t.sending : t.sendAgain}
         </button>
-        <button
-          type="button"
-          onClick={() => setSentTo(null)}
-          className="text-sm font-bold text-muted-foreground underline"
-        >
-          Use a different email
+        <button type="button" onClick={() => setSentTo(null)} className="underline">
+          {t.otherEmail}
         </button>
         <button type="button" onClick={() => setAuthMode("signin")} className={primaryBtn}>
-          Back to sign in
+          {t.backToSignin}
         </button>
       </div>
     );
@@ -539,9 +523,7 @@ export function SignUpPanel() {
       if (result.error) throw result.error;
       if (!result.redirected) closeAuth();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Google sign-up could not start. Please try again.",
-      );
+      setError(err instanceof Error ? err.message : t.googleSignupFailed);
       setLoading(false);
     }
   };
@@ -551,6 +533,7 @@ export function SignUpPanel() {
       {error && <Err message={error} />}
       {problem && (
         <ProblemNote
+          t={t}
           problem={problem}
           onPick={(v) => {
             update("username", v);
@@ -559,59 +542,44 @@ export function SignUpPanel() {
         />
       )}
 
-      <GoogleButton
-        label="Sign up with Google"
-        onClick={() => void googleSignUp()}
-        disabled={loading}
-      />
-      <p className="mt-2 text-center text-xs font-medium text-muted-foreground">
-        By continuing with Google you agree to Uzyra's{" "}
-        <Link to="/terms" className="underline">
-          Terms
-        </Link>
-        ,{" "}
-        <Link to="/privacy-policy" className="underline">
-          Privacy Policy
-        </Link>{" "}
-        and{" "}
-        <Link to="/refund-policy" className="underline">
-          Refund Policy
-        </Link>
-        .
+      <GoogleButton label={t.signupGoogle} onClick={() => void googleSignUp()} disabled={loading} />
+      <p className="mt-2 text-center text-sm">
+        {t.googleAgree} <LegalLinks t={t} />
       </p>
-      <div className="my-5 flex items-center gap-3 text-[13px] font-medium text-[#6a697c]">
-        <span className="h-px flex-1 bg-[#dcdce5]" /> or{" "}
-        <span className="h-px flex-1 bg-[#dcdce5]" />
-      </div>
+      <Divider>{t.or}</Divider>
 
       <form onSubmit={handleSubmit} className="space-y-3.5">
         <label className="block">
-          <Label>full name</Label>
+          <Label>{t.fullName}</Label>
           <input
             type="text"
+            dir="auto"
             autoComplete="name"
             autoFocus
             className={field}
             value={form.full_name}
             onChange={(e) => update("full_name", e.target.value)}
-            placeholder="Your full name"
+            placeholder={t.placeholderName}
           />
         </label>
         <label className="block">
-          <Label>username</Label>
+          <Label>{t.username}</Label>
           <input
             type="text"
+            dir="ltr"
             autoComplete="username"
+            autoCapitalize="none"
             className={field}
             value={form.username}
             onChange={(e) => update("username", e.target.value)}
-            placeholder="Choose a username"
+            placeholder={t.placeholderUsername}
           />
         </label>
         <label className="block">
-          <Label>email</Label>
+          <Label>{t.email}</Label>
           <input
             type="email"
+            dir="ltr"
             autoComplete="email"
             className={field}
             value={form.email}
@@ -620,9 +588,10 @@ export function SignUpPanel() {
           />
         </label>
         <label className="block">
-          <Label>phone number</Label>
+          <Label>{t.phone}</Label>
           <input
             type="tel"
+            dir="ltr"
             autoComplete="tel"
             className={field}
             value={form.phone}
@@ -631,64 +600,42 @@ export function SignUpPanel() {
           />
         </label>
         <label className="block">
-          <Label>password</Label>
+          <Label>{t.password}</Label>
           <div className="relative">
             <input
               type={showPw ? "text" : "password"}
+              dir="ltr"
               autoComplete="new-password"
-              className={field + " pr-12"}
+              className={field}
               value={form.password}
               onChange={(e) => update("password", e.target.value)}
-              placeholder="At least 6 characters"
+              placeholder={t.placeholderPassword}
             />
-            <button
-              type="button"
-              onClick={() => setShowPw((v) => !v)}
-              aria-label={showPw ? "Hide password" : "Show password"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
-            >
-              {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
+            <ShowPassword shown={showPw} onToggle={() => setShowPw((v) => !v)} t={t} />
           </div>
         </label>
 
-        <label className="flex cursor-pointer select-none items-start gap-2 rounded-lg border-2 border-[#121117] bg-[#f4f4f8] p-3 text-xs font-medium text-foreground">
+        <label className="flex items-start gap-2">
           <input
             type="checkbox"
             checked={accepted}
             onChange={(e) => setAccepted(e.target.checked)}
-            className="mt-0.5 h-4 w-4 shrink-0 rounded border-2 border-border accent-[#2b6df0]"
+            className="mt-1"
           />
           <span>
-            I agree to Uzyra's{" "}
-            <Link to="/terms" className="underline">
-              Terms
-            </Link>
-            ,{" "}
-            <Link to="/privacy-policy" className="underline">
-              Privacy Policy
-            </Link>{" "}
-            and{" "}
-            <Link to="/refund-policy" className="underline">
-              Refund Policy
-            </Link>
-            .
+            {t.agree} <LegalLinks t={t} />
           </span>
         </label>
 
         <button type="submit" disabled={loading || !accepted} className={primaryBtn}>
-          {loading ? "Creating your account…" : "Create account"}
+          {loading ? t.creating : t.createAccount}
         </button>
       </form>
 
-      <p className="mt-6 border-t-2 border-[#dcdce5] pt-4 text-center text-sm font-medium text-muted-foreground">
-        Already have an account?{" "}
-        <button
-          type="button"
-          onClick={() => setAuthMode("signin")}
-          className="font-bold text-[#2563eb] underline"
-        >
-          Sign in
+      <p className="mt-6 text-center">
+        {t.haveAccountQ}{" "}
+        <button type="button" onClick={() => setAuthMode("signin")} className="underline">
+          {t.signIn}
         </button>
       </p>
     </div>
@@ -698,6 +645,7 @@ export function SignUpPanel() {
 /* ── forgot password ────────────────────────────────────────────────────── */
 
 export function ForgotPanel() {
+  const { t } = useAuthCopy();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -707,7 +655,7 @@ export function ForgotPanel() {
     e.preventDefault();
     setError(null);
     if (!email.trim()) {
-      setError("Please enter your email address.");
+      setError(t.enterEmail);
       return;
     }
     setLoading(true);
@@ -718,9 +666,7 @@ export function ForgotPanel() {
     if (err) {
       const message = (err.message ?? "").toLowerCase();
       setError(
-        message.includes("fetch") || message.includes("network")
-          ? "Uzyra cannot reach its account service right now. No reset email was sent; please try again after the database connection is restored."
-          : err.message,
+        message.includes("fetch") || message.includes("network") ? t.resetOffline : err.message,
       );
       return;
     }
@@ -731,25 +677,26 @@ export function ForgotPanel() {
     <div>
       {sent ? (
         <div className="space-y-4 text-center">
-          <MailCheck className="mx-auto text-[#2563eb]" size={28} />
-          <p className="text-sm text-muted-foreground">
-            If an account exists for <span className="font-bold">{email}</span>, a reset link is on
-            its way.
+          <p>
+            {t.resetSentA}{" "}
+            <span className="font-bold" dir="ltr">
+              {email}
+            </span>
+            , {t.resetSentB}
           </p>
           <button type="button" onClick={() => setAuthMode("signin")} className={primaryBtn}>
-            Back to sign in
+            {t.backToSignin}
           </button>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <Err message={error} />}
-          <p className="text-center text-sm text-muted-foreground">
-            Enter the email you signed up with and we'll send you a link to set a new password.
-          </p>
+          <p>{t.resetLine}</p>
           <label className="block">
-            <Label>email</Label>
+            <Label>{t.email}</Label>
             <input
               type="email"
+              dir="ltr"
               autoComplete="email"
               autoFocus
               className={field}
@@ -759,14 +706,10 @@ export function ForgotPanel() {
             />
           </label>
           <button type="submit" disabled={loading} className={primaryBtn}>
-            {loading ? "Sending…" : "Send reset link"}
+            {loading ? t.sending : t.sendReset}
           </button>
-          <button
-            type="button"
-            onClick={() => setAuthMode("signin")}
-            className="mx-auto flex items-center gap-1.5 text-sm font-medium text-muted-foreground underline hover:text-foreground"
-          >
-            <ArrowLeft size={14} /> back to sign in
+          <button type="button" onClick={() => setAuthMode("signin")} className="underline">
+            {t.backToSignin}
           </button>
         </form>
       )}
