@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { UzyraMark } from "@/components/brand/UzyraMark";
 import { clampOrb, type OrbPosition } from "./orb-position";
 
 export type OrbState = "idle" | "armed" | "busy";
@@ -8,10 +8,10 @@ const SIZE = 56;
 const DRAG_START_PX = 6;
 
 /**
- * The small circle over the guide. Tap it to open the menu; drag it anywhere inside the guide pane
- * (it never follows the pointer on its own and never jumps over the text). Its place is kept as a
- * share of the pane, so it stays in the same spot when the pane is resized. Arrow keys move it while
- * "move" mode is on (no dragging needed).
+ * The small Uzyra circle over the study area. Tap it to open the menu; drag it anywhere, over Rita
+ * or over the guide (it never follows the pointer on its own). Its place is kept as a share of the
+ * area, so it stays in the same spot when the window or the divider changes. Arrow keys move it
+ * while "move" mode is on (no dragging needed).
  */
 export const FloatingOrb = forwardRef<
   HTMLButtonElement,
@@ -28,6 +28,7 @@ export const FloatingOrb = forwardRef<
   const drag = useRef<{ x: number; y: number; moved: boolean; id: number } | null>(null);
   const button = useRef<HTMLButtonElement | null>(null);
   const [pressed, setPressed] = useState(false);
+  const [dragging, setDragging] = useState(false);
 
   const box = () => button.current?.parentElement?.getBoundingClientRect() ?? null;
 
@@ -63,16 +64,19 @@ export const FloatingOrb = forwardRef<
       aria-label={label}
       aria-keyshortcuts={moving ? "ArrowUp ArrowDown ArrowLeft ArrowRight Escape" : undefined}
       data-state={state}
+      data-dragging={dragging || undefined}
       className="st-orb"
       style={{
         left: `calc((100% - ${SIZE}px) * ${position.x})`,
         top: `calc((100% - ${SIZE}px) * ${position.y})`,
-        transform: pressed ? "scale(0.94)" : undefined,
+        transform: dragging ? "scale(1.08)" : pressed ? "scale(0.94)" : undefined,
       }}
       onPointerDown={(event) => {
         // Keep the learner's selection in the guide: the orb never takes it away on a desktop.
         event.preventDefault();
         setPressed(true);
+        // Capture now: the circle may be dragged across the guide's frame, which would swallow moves.
+        event.currentTarget.setPointerCapture(event.pointerId);
         drag.current = { x: event.clientX, y: event.clientY, moved: false, id: event.pointerId };
       }}
       onPointerMove={(event) => {
@@ -85,7 +89,7 @@ export const FloatingOrb = forwardRef<
           return;
         if (!current.moved) {
           current.moved = true;
-          event.currentTarget.setPointerCapture(event.pointerId);
+          setDragging(true);
         }
         place(event.clientX, event.clientY);
       }}
@@ -93,15 +97,15 @@ export const FloatingOrb = forwardRef<
         const current = drag.current;
         drag.current = null;
         setPressed(false);
-        if (current?.moved) {
-          event.currentTarget.releasePointerCapture?.(event.pointerId);
-          return;
-        }
+        setDragging(false);
+        event.currentTarget.releasePointerCapture?.(event.pointerId);
+        if (current?.moved) return;
         onPress();
       }}
       onPointerCancel={() => {
         drag.current = null;
         setPressed(false);
+        setDragging(false);
       }}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -137,11 +141,7 @@ export const FloatingOrb = forwardRef<
         );
       }}
     >
-      {state === "busy" ? (
-        <Loader2 size={22} className="st-orb-spin" aria-hidden="true" />
-      ) : (
-        <Sparkles size={22} aria-hidden="true" />
-      )}
+      <UzyraMark className={`st-orb-mark${state === "busy" ? " st-orb-spin" : ""}`} />
       {state === "armed" && <span className="st-orb-dot" aria-hidden="true" />}
     </button>
   );
