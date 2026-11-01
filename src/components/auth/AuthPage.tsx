@@ -28,10 +28,9 @@ function Rising({ text, className }: { text: string; className: string }) {
 }
 
 /**
- * The welcome page and the sign-in, sign-up and reset pages, as one family: black and white only,
- * the home page's top bar, buttons and fonts, large bold type and slow black rings. Words are kept
- * to the minimum. The choice on the welcome page opens its own page; sign-up asks two things at a
- * time (see SignUpPanel).
+ * The welcome page and the sign-in, sign-up and reset pages, in the home page's own colours, top
+ * bar, buttons and fonts. Slow rings on the welcome page only; few words. The choice on the welcome
+ * page opens its own page; sign-up asks two things per card (see SignUpPanel).
  */
 export function AuthPage({ mode, next }: { mode: AuthStep; next?: string }) {
   const navigate = useNavigate();
@@ -43,8 +42,6 @@ export function AuthPage({ mode, next }: { mode: AuthStep; next?: string }) {
   const target = next && next.startsWith("/") && !next.startsWith("//") ? next : "/learn";
   const search = next ? `?next=${encodeURIComponent(next)}` : "";
   const leaving = useRef(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const calm = useRef<number | undefined>(undefined);
 
   // A form page owns the flow while it is open: the forms switch pages and finish through it.
   useEffect(() => {
@@ -80,29 +77,12 @@ export function AuthPage({ mode, next }: { mode: AuthStep; next?: string }) {
     }
   }, [loading, navigate, target, user]);
 
-  useEffect(() => () => window.clearTimeout(calm.current), []);
-
-  // While someone types, the rings swell a little, then settle a moment after they stop.
-  const listen = () => {
-    const root = rootRef.current;
-    if (!root) return;
-    root.dataset.alive = "1";
-    window.clearTimeout(calm.current);
-    calm.current = window.setTimeout(() => {
-      delete root.dataset.alive;
-    }, 1400);
-  };
-
-  const title =
-    shown === "signin" ? t.signinTitle : shown === "signup" ? t.signupTitle : t.forgotTitle;
   const Forward = ar ? ArrowLeft : ArrowRight;
 
   return (
     <div
-      ref={rootRef}
       className={`edith-premium edith-light ua ${welcome ? "ua--welcome" : "ua--form"}`}
       dir={ar ? "rtl" : "ltr"}
-      onInputCapture={listen}
     >
       <header className="rh-bar">
         <div className="rh-bar-inner">
@@ -123,9 +103,11 @@ export function AuthPage({ mode, next }: { mode: AuthStep; next?: string }) {
       </header>
 
       <main className="ua-main">
-        <div className="ua-art" aria-hidden="true">
-          <AuthRings />
-        </div>
+        {welcome ? (
+          <div className="ua-art" aria-hidden="true">
+            <AuthRings />
+          </div>
+        ) : null}
 
         <section className="ua-body">
           {welcome ? (
@@ -156,7 +138,6 @@ export function AuthPage({ mode, next }: { mode: AuthStep; next?: string }) {
             </div>
           ) : (
             <div key={shown} className="ua-form">
-              <Rising text={title} className="ua-title" />
               {shown === "signin" && <SignInPanel next={target} />}
               {shown === "signup" && <SignUpPanel />}
               {shown === "forgot" && <ForgotPanel />}

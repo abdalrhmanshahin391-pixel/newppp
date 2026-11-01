@@ -5687,16 +5687,19 @@ html.rita-app,
 }
 
 /* ===========================================================================
-   Welcome, sign in, sign up and reset (AuthPage, `ua-`). Black and white only, with the home
-   page's dark top bar, Figtree, and buttons with the 2px ink border and 8px corners. Large bold
-   type, few words, slow thin black rings. Motion: words rise once, rings turn slowly, sign-up
-   steps slide a little. Reduced motion keeps everything still.
+   Welcome, sign in, sign up and reset (AuthPage, `ua-`). The home page's colours, dark top bar,
+   Figtree and buttons (blue fill, 2px ink border, 8px corners). Slow blue rings on the welcome page
+   only. Forms sit in a white card; sign-up cards slide out one way and in from the other.
+   Reduced motion keeps everything still.
    =========================================================================== */
 .ua {
   --ua-ink: #121117;
   --ua-muted: #6a697c;
   --ua-line: #dcdce5;
   --ua-grey: #f4f4f8;
+  --ua-accent: #2b6df0;
+  --ua-accent-hover: #2260e4;
+  --ua-accent-soft: #e7eefd;
   --ua-out: cubic-bezier(0.23, 1, 0.32, 1);
   display: flex;
   flex-direction: column;
@@ -5726,9 +5729,6 @@ html.rita-app,
   height: 290px;
   overflow: clip;
 }
-.ua--form .ua-art {
-  height: 170px;
-}
 .ua-rings {
   width: 320px;
   max-width: none;
@@ -5737,15 +5737,9 @@ html.rita-app,
   transition: transform 700ms var(--ua-out);
   animation: ua-fade 1.2s var(--ua-out) backwards;
 }
-.ua--form .ua-rings {
-  width: 190px;
-}
-.ua[data-alive] .ua-rings {
-  transform: scale(1.04);
-}
 .ua-ring {
   transform-origin: 0 0;
-  opacity: 0.4;
+  opacity: 0.7;
   animation: ua-turn calc(50s + var(--i) * 7s) linear infinite;
 }
 .ua-ring:nth-of-type(even) {
@@ -5762,12 +5756,21 @@ html.rita-app,
   max-width: 440px;
   margin-inline: auto;
 }
+.ua--form .ua-main {
+  grid-template-rows: auto;
+}
+.ua--form .ua-body {
+  padding-top: 40px;
+}
+.ua--form .ua-form {
+  max-width: 560px;
+}
 .ua-welcome {
   max-width: 520px;
 }
 .ua-eyebrow {
   margin: 0 0 12px;
-  color: var(--ua-ink);
+  color: var(--ua-accent);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.16em;
@@ -5792,8 +5795,9 @@ html.rita-app,
 }
 .edith-premium.ua .ua-display {
   margin: 24px 0 32px;
-  font-size: clamp(32px, 3.6vw, 48px) !important;
-  line-height: 1.1 !important;
+  font-size: clamp(28px, 2.9vw, 40px) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.025em;
 }
 .edith-premium.ua .ua-title {
   margin-bottom: 28px;
@@ -5842,8 +5846,8 @@ html.rita-app,
   justify-content: center;
   gap: 10px;
   width: 100%;
-  min-height: 52px;
-  padding: 10px 20px;
+  min-height: 48px;
+  padding: 10px 24px;
   border: 2px solid var(--ua-ink);
   border-radius: 8px;
   font-family: "Figtree", Helvetica, Arial, sans-serif;
@@ -5862,22 +5866,24 @@ html.rita-app,
 }
 .ua-btn:active {
   transform: scale(0.97);
+  background: var(--ua-ink);
+  color: #fff;
 }
 .ua-btn:disabled {
   opacity: 0.55;
   pointer-events: none;
 }
 .ua-btn--primary {
-  background: var(--ua-ink);
+  background: var(--ua-accent);
   color: #fff;
 }
 .ua-btn--ghost {
-  background: #fff;
+  background: transparent;
   color: var(--ua-ink);
 }
 @media (hover: hover) and (pointer: fine) {
   .ua-btn--primary:hover {
-    background: #2a2933;
+    background: var(--ua-accent-hover);
   }
   .ua-btn--ghost:hover {
     background: var(--ua-grey);
@@ -5931,7 +5937,7 @@ html.rita-app,
   color: #9a99a8;
 }
 .ua-input:focus {
-  box-shadow: 0 0 0 4px rgb(18 17 23 / 0.12);
+  box-shadow: 0 0 0 4px var(--ua-accent-soft);
 }
 [dir="rtl"] .ua-input[dir="ltr"] {
   text-align: right;
@@ -6006,7 +6012,7 @@ html.rita-app,
   transition: transform 180ms var(--ua-out);
 }
 .ua-check:checked {
-  background: var(--ua-ink);
+  background: var(--ua-accent);
 }
 .ua-check:checked::after {
   transform: rotate(-45deg) scale(1);
@@ -6095,68 +6101,83 @@ html.rita-app,
   font-weight: 600;
 }
 
-/* Sign-up steps. */
-.ua-steps {
-  margin-bottom: 22px;
+/* The card, the progress line and the sliding sign-up steps. */
+.ua-flow {
+  display: grid;
+  gap: 16px;
+}
+.ua-card {
+  padding: 24px 20px;
+  border: 2px solid var(--ua-ink);
+  border-radius: 16px;
+  background: #fff;
+}
+.ua-hint {
+  margin: 0 0 6px;
+  color: var(--ua-muted);
+  font-size: 16px;
+}
+.edith-premium.ua .ua-q {
+  margin: 0 0 22px;
+  color: var(--ua-ink);
+  font-size: clamp(26px, 3vw, 34px) !important;
+  font-weight: 700;
+  line-height: 1.15 !important;
+  letter-spacing: -0.03em;
+}
+[dir="rtl"].ua .ua-q {
+  letter-spacing: 0;
 }
 .ua-progress {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  height: 8px;
+  margin-bottom: 20px;
+  overflow: clip;
+  border: 2px solid var(--ua-ink);
+  border-radius: 999px;
+  background: #fff;
 }
 .ua-progress span {
-  position: relative;
-  height: 4px;
-  overflow: clip;
-  border-radius: 4px;
-  background: var(--ua-line);
-}
-.ua-progress span::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--ua-ink);
-  transform: scaleX(0);
+  display: block;
+  height: 100%;
+  background: var(--ua-accent);
   transform-origin: left;
   transition: transform 450ms var(--ua-out);
 }
-[dir="rtl"] .ua-progress span::after {
+[dir="rtl"] .ua-progress span {
   transform-origin: right;
 }
-.ua-progress span.is-on::after {
-  transform: scaleX(1);
+.ua-viewport {
+  overflow: clip;
+  overflow-clip-margin: 8px;
 }
-.ua-step-label {
-  margin: 12px 0 0;
-  color: var(--ua-muted);
-  font-size: 14px;
+.ua-slide {
+  --ua-x: 64px;
 }
-.ua-step-label strong {
-  color: var(--ua-ink);
-  font-weight: 600;
+[dir="rtl"] .ua-slide {
+  --ua-x: -64px;
 }
-.ua-step {
-  --ua-from: 28px;
-  animation: ua-step 280ms var(--ua-out) backwards;
+.ua-slide.is-out-next {
+  animation: ua-out 200ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  --ua-to: calc(var(--ua-x) * -1);
 }
-.ua-step.is-back {
-  --ua-from: -28px;
+.ua-slide.is-out-back {
+  animation: ua-out 200ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  --ua-to: var(--ua-x);
 }
-[dir="rtl"] .ua-step {
-  --ua-from: -28px;
+.ua-slide.is-in-next {
+  animation: ua-in 320ms var(--ua-out) backwards;
+  --ua-from: var(--ua-x);
 }
-[dir="rtl"] .ua-step.is-back {
-  --ua-from: 28px;
+.ua-slide.is-in-back {
+  animation: ua-in 320ms var(--ua-out) backwards;
+  --ua-from: calc(var(--ua-x) * -1);
 }
-.ua-step-actions {
+.ua-bar {
   display: flex;
-  gap: 10px;
-  margin-top: 4px;
+  gap: 12px;
 }
-.ua-btn--back {
-  flex: none;
-  width: 52px;
-  padding: 0;
+.ua-bar .ua-btn {
+  flex: 1;
 }
 .ua-sent {
   justify-items: center;
@@ -6187,12 +6208,6 @@ html.rita-app,
   .ua-rings {
     width: 420px;
   }
-  .ua--form .ua-art {
-    height: 200px;
-  }
-  .ua--form .ua-rings {
-    width: 230px;
-  }
   .ua-body {
     padding-inline: 32px;
   }
@@ -6205,15 +6220,20 @@ html.rita-app,
     grid-template-rows: minmax(0, 1fr);
     min-height: calc(100dvh - 65px);
   }
-  .ua-art,
-  .ua--form .ua-art {
+  .ua-art {
     grid-column: 2;
     grid-row: 1;
     height: auto;
   }
-  .ua-rings,
-  .ua--form .ua-rings {
+  .ua-rings {
     width: min(44vw, 600px);
+  }
+  .ua--form .ua-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ua--form .ua-body {
+    padding: 56px 24px;
+    align-content: start;
   }
   .ua-body {
     grid-column: 1;
@@ -6225,8 +6245,7 @@ html.rita-app,
   [dir="rtl"] .ua-body {
     padding: 48px clamp(40px, 6vw, 96px) 48px 40px;
   }
-  .ua-welcome,
-  .ua-form {
+  .ua-welcome {
     margin-inline: 0;
   }
 }
@@ -6253,10 +6272,16 @@ html.rita-app,
     transform: translateY(10px);
   }
 }
-@keyframes ua-step {
+@keyframes ua-in {
   from {
     opacity: 0;
     transform: translateX(var(--ua-from));
+  }
+}
+@keyframes ua-out {
+  to {
+    opacity: 0;
+    transform: translateX(var(--ua-to));
   }
 }
 @keyframes ua-shake {
@@ -6287,7 +6312,9 @@ html.rita-app,
     animation: none !important;
     transition: none !important;
   }
-  .ua[data-alive] .ua-rings {
-    transform: none;
+}
+@media (min-width: 640px) {
+  .ua-card {
+    padding: 32px;
   }
 }

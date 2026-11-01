@@ -1,6 +1,7 @@
 /**
- * Thin, uneven black rings around a soft grey light, each turning slowly at its own pace. Black and
- * white only. Pure SVG and CSS transforms; with reduced motion they stand still.
+ * Thin, uneven rings in the home page's blue around a soft light, each turning slowly at its own
+ * pace. Shown on the welcome page only. Pure SVG and CSS transforms; with reduced motion they stand
+ * still.
  */
 const RINGS = 9;
 
@@ -28,15 +29,20 @@ export function AuthRings() {
     <svg viewBox="-280 -280 560 560" className="ua-rings" aria-hidden="true">
       <defs>
         <radialGradient id="ua-glow">
-          <stop offset="0%" stopColor="#121117" stopOpacity="0.07" />
-          <stop offset="60%" stopColor="#121117" stopOpacity="0.03" />
-          <stop offset="100%" stopColor="#121117" stopOpacity="0" />
+          <stop offset="0%" stopColor="#e7eefd" stopOpacity="1" />
+          <stop offset="60%" stopColor="#e7eefd" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#e7eefd" stopOpacity="0" />
         </radialGradient>
+        <linearGradient id="ua-ink" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#9cbcff" />
+          <stop offset="55%" stopColor="#2b6df0" />
+          <stop offset="100%" stopColor="#7fa6ff" />
+        </linearGradient>
       </defs>
       <circle r="200" fill="url(#ua-glow)" />
       {PATHS.map((d, i) => (
         <g key={i} className="ua-ring" style={{ ["--i" as string]: i }}>
-          <path d={d} fill="none" stroke="#121117" strokeWidth="1" />
+          <path d={d} fill="none" stroke="url(#ua-ink)" strokeWidth="1.1" />
         </g>
       ))}
     </svg>

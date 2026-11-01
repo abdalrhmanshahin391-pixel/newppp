@@ -1,6 +1,13 @@
-import { useEffect, useMemo, useState, type FormEvent, type InputHTMLAttributes } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type InputHTMLAttributes,
+} from "react";
 import { Link, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, Check, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/legacy-client";
@@ -133,6 +140,27 @@ function Divider({ children }: { children: React.ReactNode }) {
     <p className="ua-or">
       <span>{children}</span>
     </p>
+  );
+}
+
+/** The white card each step lives in: a small grey line, then the question in large bold type. */
+function Card({
+  hint,
+  title,
+  className = "",
+  children,
+}: {
+  hint: string;
+  title: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={`ua-card ${className}`}>
+      <p className="ua-hint">{hint}</p>
+      <h1 className="ua-q">{title}</h1>
+      {children}
+    </div>
   );
 }
 
@@ -288,63 +316,65 @@ export function SignInPanel({ next }: { next?: string }) {
 
   if (blocked) {
     return (
-      <div className="ua-stack">
-        <p className="ua-alert-title">{blocked.kind === "suspend" ? t.stopped : t.blocked}</p>
-        {blocked.message && <p className="whitespace-pre-wrap">{blocked.message}</p>}
-        {blocked.kind === "suspend" && blocked.until && (
-          <p className="ua-muted">
-            {t.accessReturns} {new Date(blocked.until).toLocaleString()}
-          </p>
-        )}
-        <button type="button" onClick={() => setBlocked(null)} className="ua-btn ua-btn--primary">
-          {t.close}
-        </button>
-      </div>
+      <Card hint={t.signinTitle} title={blocked.kind === "suspend" ? t.stopped : t.blocked}>
+        <div className="ua-stack">
+          {blocked.message && <p className="whitespace-pre-wrap">{blocked.message}</p>}
+          {blocked.kind === "suspend" && blocked.until && (
+            <p className="ua-muted">
+              {t.accessReturns} {new Date(blocked.until).toLocaleString()}
+            </p>
+          )}
+          <button type="button" onClick={() => setBlocked(null)} className="ua-btn ua-btn--primary">
+            {t.close}
+          </button>
+        </div>
+      </Card>
     );
   }
 
   return (
     <div>
-      {error && <Err message={error} />}
-
-      <form onSubmit={handleSubmit} className="ua-stack">
-        <Field
-          label={t.email}
-          ltr
-          type="email"
-          autoComplete="email"
-          autoFocus
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-        />
-        <PasswordField
-          label={t.password}
-          value={password}
-          onChange={setPassword}
-          autoComplete="current-password"
-          placeholder="••••••••"
-          t={t}
-        />
-
-        <div className="ua-row">
-          <label className="ua-check-row">
-            <input
-              type="checkbox"
-              className="ua-check"
-              checked={remember}
-              onChange={(e) => {
-                setRemember(e.target.checked);
-                if (!e.target.checked) clearRememberedLogin();
-              }}
+      <form onSubmit={handleSubmit} className="ua-flow">
+        <Card hint={t.signinHint} title={t.signinTitle}>
+          {error && <Err message={error} />}
+          <div className="ua-stack">
+            <Field
+              label={t.email}
+              ltr
+              type="email"
+              autoComplete="email"
+              autoFocus
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
             />
-            {t.keepSignedIn}
-          </label>
-          <button type="button" onClick={() => setAuthMode("forgot")} className="ua-link">
-            {t.forgotLink}
-          </button>
-        </div>
-
+            <PasswordField
+              label={t.password}
+              value={password}
+              onChange={setPassword}
+              autoComplete="current-password"
+              placeholder="••••••••"
+              t={t}
+            />
+            <div className="ua-row">
+              <label className="ua-check-row">
+                <input
+                  type="checkbox"
+                  className="ua-check"
+                  checked={remember}
+                  onChange={(e) => {
+                    setRemember(e.target.checked);
+                    if (!e.target.checked) clearRememberedLogin();
+                  }}
+                />
+                {t.keepSignedIn}
+              </label>
+              <button type="button" onClick={() => setAuthMode("forgot")} className="ua-link">
+                {t.forgotLink}
+              </button>
+            </div>
+          </div>
+        </Card>
         <button type="submit" disabled={loading} className="ua-btn ua-btn--primary">
           {loading ? t.signingIn : t.signIn}
         </button>
@@ -414,7 +444,7 @@ function usernameIdeas(base: string) {
 
 export function SignUpPanel() {
   const checkIdentity = useServerFn(checkIdentityAvailability);
-  const { t, ar } = useAuthCopy();
+  const { t } = useAuthCopy();
   const schema = useMemo(() => makeSignupSchema(t), [t]);
   const [form, setForm] = useState<SignupForm>({
     full_name: "",
@@ -424,7 +454,12 @@ export function SignUpPanel() {
     password: "",
   });
   const [step, setStep] = useState(0);
-  const [forward, setForward] = useState(true);
+  // The card slides out one way and the next one slides in from the other (mirrored in Arabic).
+  const [slide, setSlide] = useState<"still" | "out-next" | "out-back" | "in-next" | "in-back">(
+    "still",
+  );
+  const slideTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(slideTimer.current), []);
   const [accepted, setAccepted] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -436,10 +471,20 @@ export function SignUpPanel() {
   }
 
   function goTo(to: number) {
-    setForward(to > step);
     setProblem(null);
     setError(null);
-    setStep(to);
+    if (to === step) return;
+    const way = to > step ? "next" : "back";
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setStep(to);
+      return;
+    }
+    window.clearTimeout(slideTimer.current);
+    setSlide(`out-${way}`);
+    slideTimer.current = window.setTimeout(() => {
+      setStep(to);
+      setSlide(`in-${way}`);
+    }, 200);
   }
 
   /** The availability check is a courtesy: if it cannot run, sign-up itself still catches clashes. */
@@ -574,45 +619,42 @@ export function SignUpPanel() {
       if (resendError) setError(resendError.message);
     }
     return (
-      <div className="ua-stack ua-sent">
+      <Card hint={t.sentTo} title={t.sentTitle} className="ua-sent">
         {error && <Err message={error} />}
-        <span className="ua-tick" aria-hidden="true">
-          <Check size={28} strokeWidth={2.5} />
-        </span>
-        <p className="ua-sent-title">{t.sentTitle}</p>
-        <p>
-          {t.sentTo}{" "}
-          <strong dir="ltr" className="ua-break">
-            {sentTo}
-          </strong>
-        </p>
-        <p className="ua-muted">{t.sentLine}</p>
-        <button
-          type="button"
-          onClick={() => setAuthMode("signin")}
-          className="ua-btn ua-btn--primary"
-        >
-          {t.backToSignin}
-        </button>
-        <button
-          type="button"
-          onClick={resendVerification}
-          disabled={loading}
-          className="ua-btn ua-btn--ghost"
-        >
-          {loading ? t.sending : t.sendAgain}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setSentTo(null);
-            goTo(1);
-          }}
-          className="ua-link"
-        >
-          {t.otherEmail}
-        </button>
-      </div>
+        <div className="ua-stack">
+          <p>
+            <strong dir="ltr" className="ua-break">
+              {sentTo}
+            </strong>
+          </p>
+          <p className="ua-muted">{t.sentLine}</p>
+          <button
+            type="button"
+            onClick={() => setAuthMode("signin")}
+            className="ua-btn ua-btn--primary"
+          >
+            {t.backToSignin}
+          </button>
+          <button
+            type="button"
+            onClick={resendVerification}
+            disabled={loading}
+            className="ua-btn ua-btn--ghost"
+          >
+            {loading ? t.sending : t.sendAgain}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSentTo(null);
+              goTo(1);
+            }}
+            className="ua-link ua-center"
+          >
+            {t.otherEmail}
+          </button>
+        </div>
+      </Card>
     );
   }
 
@@ -621,122 +663,117 @@ export function SignUpPanel() {
 
   return (
     <div>
-      <div className="ua-steps">
-        <div className="ua-progress" aria-hidden="true">
-          {STEP_FIELDS.map((_, i) => (
-            <span key={i} className={i <= step ? "is-on" : undefined} />
-          ))}
-        </div>
-        <p className="ua-step-label">
-          {t.stepWord} {step + 1} {t.ofWord} {STEP_FIELDS.length}
-          <span aria-hidden="true"> · </span>
-          <strong>{stepTitle}</strong>
-        </p>
+      <div
+        className="ua-progress"
+        role="progressbar"
+        aria-valuemin={1}
+        aria-valuemax={STEP_FIELDS.length}
+        aria-valuenow={step + 1}
+        aria-label={`${t.stepWord} ${step + 1} ${t.ofWord} ${STEP_FIELDS.length}`}
+      >
+        <span style={{ transform: `scaleX(${(step + 1) / STEP_FIELDS.length})` }} />
       </div>
 
-      {error && <Err message={error} />}
-
-      <form
-        key={step}
-        onSubmit={handleNext}
-        className={`ua-stack ua-step ${forward ? "is-forward" : "is-back"}`}
-        aria-label={stepTitle}
-      >
-        {problem && (
-          <ProblemNote
-            t={t}
-            problem={problem}
-            onPick={(v) => {
-              update("username", v);
-              setProblem(null);
-            }}
-          />
-        )}
-
-        {step === 0 && (
-          <>
-            <Field
-              label={t.fullName}
-              type="text"
-              autoComplete="name"
-              autoFocus
-              value={form.full_name}
-              onChange={(e) => update("full_name", e.target.value)}
-              placeholder={t.placeholderName}
-            />
-            <Field
-              label={t.username}
-              ltr
-              type="text"
-              autoComplete="username"
-              autoCapitalize="none"
-              spellCheck={false}
-              value={form.username}
-              onChange={(e) => update("username", e.target.value)}
-              placeholder={t.placeholderUsername}
-            />
-          </>
-        )}
-
-        {step === 1 && (
-          <>
-            <Field
-              label={t.email}
-              ltr
-              type="email"
-              autoComplete="email"
-              autoFocus
-              value={form.email}
-              onChange={(e) => update("email", e.target.value)}
-              placeholder="you@example.com"
-            />
-            <Field
-              label={t.phone}
-              ltr
-              type="tel"
-              autoComplete="tel"
-              inputMode="tel"
-              value={form.phone}
-              onChange={(e) => update("phone", e.target.value)}
-              placeholder="07XXXXXXXX"
-            />
-          </>
-        )}
-
-        {step === 2 && (
-          <>
-            <PasswordField
-              label={t.password}
-              value={form.password}
-              onChange={(v) => update("password", v)}
-              autoComplete="new-password"
-              placeholder={t.placeholderPassword}
-              autoFocus
-              t={t}
-            />
-            <label className="ua-check-row ua-check-row--top">
-              <input
-                type="checkbox"
-                className="ua-check"
-                checked={accepted}
-                onChange={(e) => setAccepted(e.target.checked)}
+      <form onSubmit={handleNext} className="ua-flow">
+        <div className="ua-viewport">
+          <Card
+            key={step}
+            hint={`${t.stepWord} ${step + 1} ${t.ofWord} ${STEP_FIELDS.length}`}
+            title={stepTitle}
+            className={`ua-slide is-${slide}`}
+          >
+            {error && <Err message={error} />}
+            {problem && (
+              <ProblemNote
+                t={t}
+                problem={problem}
+                onPick={(v) => {
+                  update("username", v);
+                  setProblem(null);
+                }}
               />
-              <span>
-                {t.agree} <LegalLinks t={t} />
-              </span>
-            </label>
-          </>
-        )}
+            )}
+            <div className="ua-stack">
+              {step === 0 && (
+                <>
+                  <Field
+                    label={t.fullName}
+                    type="text"
+                    autoComplete="name"
+                    autoFocus
+                    value={form.full_name}
+                    onChange={(e) => update("full_name", e.target.value)}
+                    placeholder={t.placeholderName}
+                  />
+                  <Field
+                    label={t.username}
+                    ltr
+                    type="text"
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    value={form.username}
+                    onChange={(e) => update("username", e.target.value)}
+                    placeholder={t.placeholderUsername}
+                  />
+                </>
+              )}
+              {step === 1 && (
+                <>
+                  <Field
+                    label={t.email}
+                    ltr
+                    type="email"
+                    autoComplete="email"
+                    autoFocus
+                    value={form.email}
+                    onChange={(e) => update("email", e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                  <Field
+                    label={t.phone}
+                    ltr
+                    type="tel"
+                    autoComplete="tel"
+                    inputMode="tel"
+                    value={form.phone}
+                    onChange={(e) => update("phone", e.target.value)}
+                    placeholder="07XXXXXXXX"
+                  />
+                </>
+              )}
+              {step === 2 && (
+                <>
+                  <PasswordField
+                    label={t.password}
+                    value={form.password}
+                    onChange={(v) => update("password", v)}
+                    autoComplete="new-password"
+                    placeholder={t.placeholderPassword}
+                    autoFocus
+                    t={t}
+                  />
+                  <label className="ua-check-row ua-check-row--top">
+                    <input
+                      type="checkbox"
+                      className="ua-check"
+                      checked={accepted}
+                      onChange={(e) => setAccepted(e.target.checked)}
+                    />
+                    <span>
+                      {t.agree} <LegalLinks t={t} />
+                    </span>
+                  </label>
+                </>
+              )}
+            </div>
+          </Card>
+        </div>
 
-        <div className="ua-step-actions">
+        <div className="ua-bar">
           {step > 0 && (
-            <button
-              type="button"
-              onClick={() => goTo(step - 1)}
-              className="ua-btn ua-btn--ghost ua-btn--back"
-              aria-label={t.back}
-            >
-              <ArrowLeft size={20} aria-hidden="true" className={ar ? "rotate-180" : undefined} />
+            <button type="button" onClick={() => goTo(step - 1)} className="ua-btn ua-btn--ghost">
+              {t.back}
             </button>
           )}
           <button type="submit" disabled={loading} className="ua-btn ua-btn--primary">
@@ -802,41 +839,42 @@ export function ForgotPanel() {
 
   if (sent) {
     return (
-      <div className="ua-stack ua-sent">
-        <span className="ua-tick" aria-hidden="true">
-          <Check size={28} strokeWidth={2.5} />
-        </span>
-        <p>
-          {t.resetSentA}{" "}
-          <strong dir="ltr" className="ua-break">
-            {email}
-          </strong>
-          , {t.resetSentB}
-        </p>
-        <button
-          type="button"
-          onClick={() => setAuthMode("signin")}
-          className="ua-btn ua-btn--primary"
-        >
-          {t.backToSignin}
-        </button>
-      </div>
+      <Card hint={t.forgotTitle} title={t.sentTitle} className="ua-sent">
+        <div className="ua-stack">
+          <p>
+            {t.resetSentA}{" "}
+            <strong dir="ltr" className="ua-break">
+              {email}
+            </strong>
+            , {t.resetSentB}
+          </p>
+          <button
+            type="button"
+            onClick={() => setAuthMode("signin")}
+            className="ua-btn ua-btn--primary"
+          >
+            {t.backToSignin}
+          </button>
+        </div>
+      </Card>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="ua-stack">
-      {error && <Err message={error} />}
-      <Field
-        label={t.email}
-        ltr
-        type="email"
-        autoComplete="email"
-        autoFocus
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="you@example.com"
-      />
+    <form onSubmit={handleSubmit} className="ua-flow">
+      <Card hint={t.forgotHint} title={t.forgotTitle}>
+        {error && <Err message={error} />}
+        <Field
+          label={t.email}
+          ltr
+          type="email"
+          autoComplete="email"
+          autoFocus
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+        />
+      </Card>
       <button type="submit" disabled={loading} className="ua-btn ua-btn--primary">
         {loading ? t.sending : t.sendReset}
       </button>
