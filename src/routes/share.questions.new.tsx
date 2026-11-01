@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
-import { openAuth } from "@/lib/auth-dialog";
+import { openWelcome } from "@/lib/auth-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { getDailyShareQuota } from "@/lib/share-decks";
 import {
@@ -290,7 +290,7 @@ export function NewQuestionSetPage() {
           </p>
           <button
             type="button"
-            onClick={() => openAuth("signin", "/share/questions/new")}
+            onClick={() => openWelcome("/share/questions/new")}
             className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-6 py-3 text-sm font-black text-white shadow-sm transition hover:brightness-105"
           >
             Sign in

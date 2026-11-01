@@ -5685,3 +5685,636 @@ html.rita-app,
     transition: none;
   }
 }
+
+/* ===========================================================================
+   Welcome, sign in, sign up and reset (AuthPage, `ua-`). The home page's colours, dark top bar,
+   Figtree and buttons (blue fill, 2px ink border, 8px corners). Slow blue rings on the welcome page
+   only. Forms sit in a white card; sign-up cards slide out one way and in from the other.
+   Reduced motion keeps everything still.
+   =========================================================================== */
+.ua {
+  --ua-ink: #121117;
+  --ua-muted: #6a697c;
+  --ua-line: #dcdce5;
+  --ua-grey: #f4f4f8;
+  --ua-accent: #2b6df0;
+  --ua-accent-hover: #2260e4;
+  --ua-accent-soft: #e7eefd;
+  --ua-out: cubic-bezier(0.23, 1, 0.32, 1);
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  overflow: clip;
+  background: #fff;
+  color: var(--ua-ink);
+  font-family: "Figtree", Helvetica, Arial, sans-serif;
+}
+.ua-back {
+  gap: 6px;
+}
+.ua-main {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  width: 100%;
+  max-width: 1240px;
+  margin-inline: auto;
+}
+
+/* The rings. */
+.ua-art {
+  display: grid;
+  place-items: center;
+  height: 290px;
+  overflow: clip;
+}
+.ua-rings {
+  width: 320px;
+  max-width: none;
+  height: auto;
+  overflow: visible;
+  transition: transform 700ms var(--ua-out);
+  animation: ua-fade 1.2s var(--ua-out) backwards;
+}
+.ua-ring {
+  transform-origin: 0 0;
+  opacity: 0.7;
+  animation: ua-turn calc(50s + var(--i) * 7s) linear infinite;
+}
+.ua-ring:nth-of-type(even) {
+  animation-direction: reverse;
+}
+
+/* Words. */
+.ua-body {
+  padding: 8px 20px max(32px, env(safe-area-inset-bottom));
+}
+.ua-welcome,
+.ua-form {
+  width: 100%;
+  max-width: 440px;
+  margin-inline: auto;
+}
+.ua--form .ua-main {
+  grid-template-rows: auto;
+}
+.ua--form .ua-body {
+  padding-top: 40px;
+}
+.ua--form .ua-form {
+  max-width: 560px;
+}
+.ua-welcome {
+  max-width: 520px;
+}
+.ua-eyebrow {
+  margin: 0 0 12px;
+  color: var(--ua-accent);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  animation: ua-up 500ms var(--ua-out) backwards;
+}
+[dir="rtl"] .ua-eyebrow {
+  font-size: 15px;
+  letter-spacing: 0;
+}
+.ua-mark {
+  color: var(--ua-ink);
+  animation: ua-up 600ms var(--ua-out) 80ms backwards;
+}
+.edith-premium.ua .ua-display,
+.edith-premium.ua .ua-title {
+  margin: 0;
+  color: var(--ua-ink);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.edith-premium.ua .ua-display {
+  margin: 24px 0 32px;
+  font-size: clamp(28px, 2.9vw, 40px) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.025em;
+}
+.edith-premium.ua .ua-title {
+  margin-bottom: 28px;
+  font-size: clamp(34px, 4vw, 48px) !important;
+  line-height: 1.05 !important;
+}
+[dir="rtl"].ua .ua-display,
+[dir="rtl"].ua .ua-title {
+  letter-spacing: 0;
+  line-height: 1.3 !important;
+}
+.ua-word {
+  display: inline-block;
+  overflow: clip;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+  vertical-align: top;
+}
+.ua-word > span {
+  display: inline-block;
+  animation: ua-rise 700ms var(--ua-out) calc(120ms + var(--w) * 60ms) backwards;
+}
+.ua-actions {
+  display: grid;
+  gap: 12px;
+  animation: ua-up 600ms var(--ua-out) 420ms backwards;
+}
+.ua-fine {
+  margin: 16px 0 0;
+  color: var(--ua-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ua-welcome .ua-fine {
+  animation: ua-up 600ms var(--ua-out) 500ms backwards;
+}
+.ua-form > div,
+.ua-form > form {
+  animation: ua-up 600ms var(--ua-out) 250ms backwards;
+}
+
+/* Buttons: the home page's own (2px ink border, 8px corners, Figtree 18/600). */
+.ua-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 24px;
+  border: 2px solid var(--ua-ink);
+  border-radius: 8px;
+  font-family: "Figtree", Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.16s var(--ua-out);
+}
+.ua-btn:active {
+  transform: scale(0.97);
+  background: var(--ua-ink);
+  color: #fff;
+}
+.ua-btn:disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+.ua-btn--primary {
+  background: var(--ua-accent);
+  color: #fff;
+}
+.ua-btn--ghost {
+  background: transparent;
+  color: var(--ua-ink);
+}
+@media (hover: hover) and (pointer: fine) {
+  .ua-btn--primary:hover {
+    background: var(--ua-accent-hover);
+  }
+  .ua-btn--ghost:hover {
+    background: var(--ua-grey);
+  }
+  .ua-go:hover svg {
+    transform: translateX(4px);
+  }
+  [dir="rtl"] .ua-go:hover svg {
+    transform: translateX(-4px);
+  }
+}
+.ua-go svg {
+  transition: transform 220ms var(--ua-out);
+}
+.ua-btn:focus-visible,
+.ua-link:focus-visible,
+.ua-eye:focus-visible,
+.ua-chip:focus-visible,
+.ua-check:focus-visible {
+  outline: 2px solid var(--ua-ink);
+  outline-offset: 3px;
+}
+
+/* Fields. */
+.ua-stack {
+  display: grid;
+  gap: 16px;
+}
+.ua-field {
+  display: grid;
+  gap: 8px;
+}
+.ua-label {
+  font-size: 15px;
+  font-weight: 600;
+}
+.ua-input {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  border: 2px solid var(--ua-ink);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ua-ink);
+  font: inherit;
+  font-size: 17px;
+  outline: none;
+  transition: box-shadow 160ms ease;
+}
+.ua-input::placeholder {
+  color: #9a99a8;
+}
+.ua-input:focus {
+  box-shadow: 0 0 0 4px var(--ua-accent-soft);
+}
+[dir="rtl"] .ua-input[dir="ltr"] {
+  text-align: right;
+}
+.ua-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--ua-ink);
+  box-shadow: 0 0 0 100px #fff inset;
+}
+.ua-pw {
+  position: relative;
+  display: block;
+}
+.ua-pw .ua-input {
+  padding-inline-end: 56px;
+}
+.ua-eye {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: 4px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  color: var(--ua-muted);
+  transform: translateY(-50%);
+}
+.ua-eye:hover {
+  color: var(--ua-ink);
+}
+.ua-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 15px;
+}
+.ua-check-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.ua-check-row--top {
+  align-items: flex-start;
+  line-height: 1.5;
+}
+.ua-check {
+  display: grid;
+  flex: none;
+  place-content: center;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  border: 2px solid var(--ua-ink);
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  appearance: none;
+  transition: background-color 160ms ease;
+}
+.ua-check::after {
+  content: "";
+  width: 10px;
+  height: 5px;
+  margin-top: -2px;
+  border: solid #fff;
+  border-width: 0 0 2px 2px;
+  transform: rotate(-45deg) scale(0);
+  transition: transform 180ms var(--ua-out);
+}
+.ua-check:checked {
+  background: var(--ua-accent);
+}
+.ua-check:checked::after {
+  transform: rotate(-45deg) scale(1);
+}
+.ua-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ua-ink);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.ua-center {
+  justify-self: center;
+}
+.ua-or {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 22px 0;
+  color: var(--ua-muted);
+  font-size: 14px;
+}
+.ua-or::before,
+.ua-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--ua-line);
+}
+.ua-switch {
+  margin: 26px 0 0;
+  color: var(--ua-muted);
+  font-size: 15px;
+  text-align: center;
+}
+.ua-muted {
+  color: var(--ua-muted);
+}
+.ua-break {
+  overflow-wrap: anywhere;
+}
+
+/* Messages. */
+.ua-alert {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 2px solid #b42318;
+  border-radius: 8px;
+  background: #fff;
+  color: #b42318;
+  font-size: 15px;
+  line-height: 1.45;
+  animation: ua-shake 400ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+.ua-stack > .ua-alert {
+  margin: 0;
+}
+.ua-alert p {
+  margin: 0;
+}
+.ua-alert-title {
+  margin: 0;
+  font-weight: 700;
+}
+.ua-alert-action {
+  margin-top: 8px;
+  color: #b42318;
+}
+.ua-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.ua-chip {
+  padding: 6px 12px;
+  border: 2px solid var(--ua-ink);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ua-ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* The card, the progress line and the sliding sign-up steps. */
+.ua-flow {
+  display: grid;
+  gap: 16px;
+}
+.ua-card {
+  padding: 24px 20px;
+  border: 2px solid var(--ua-ink);
+  border-radius: 16px;
+  background: #fff;
+}
+.ua-hint {
+  margin: 0 0 6px;
+  color: var(--ua-muted);
+  font-size: 16px;
+}
+.edith-premium.ua .ua-q {
+  margin: 0 0 22px;
+  color: var(--ua-ink);
+  font-size: clamp(26px, 3vw, 34px) !important;
+  font-weight: 700;
+  line-height: 1.15 !important;
+  letter-spacing: -0.03em;
+}
+[dir="rtl"].ua .ua-q {
+  letter-spacing: 0;
+}
+.ua-progress {
+  height: 8px;
+  margin-bottom: 20px;
+  overflow: clip;
+  border: 2px solid var(--ua-ink);
+  border-radius: 999px;
+  background: #fff;
+}
+.ua-progress span {
+  display: block;
+  height: 100%;
+  background: var(--ua-accent);
+  transform-origin: left;
+  transition: transform 450ms var(--ua-out);
+}
+[dir="rtl"] .ua-progress span {
+  transform-origin: right;
+}
+.ua-viewport {
+  overflow: clip;
+  overflow-clip-margin: 8px;
+}
+.ua-slide {
+  --ua-x: 64px;
+}
+[dir="rtl"] .ua-slide {
+  --ua-x: -64px;
+}
+.ua-slide.is-out-next {
+  animation: ua-out 200ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  --ua-to: calc(var(--ua-x) * -1);
+}
+.ua-slide.is-out-back {
+  animation: ua-out 200ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  --ua-to: var(--ua-x);
+}
+.ua-slide.is-in-next {
+  animation: ua-in 320ms var(--ua-out) backwards;
+  --ua-from: var(--ua-x);
+}
+.ua-slide.is-in-back {
+  animation: ua-in 320ms var(--ua-out) backwards;
+  --ua-from: calc(var(--ua-x) * -1);
+}
+.ua-bar {
+  display: flex;
+  gap: 12px;
+}
+.ua-bar .ua-btn {
+  flex: 1;
+}
+.ua-sent {
+  justify-items: center;
+  text-align: center;
+}
+.ua-sent p {
+  margin: 0;
+}
+.ua-sent-title {
+  font-size: 26px;
+  font-weight: 700;
+}
+.ua-tick {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--ua-ink);
+  color: #fff;
+  animation: ua-pop 500ms cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+}
+
+@media (min-width: 640px) {
+  .ua-art {
+    height: 380px;
+  }
+  .ua-rings {
+    width: 420px;
+  }
+  .ua-body {
+    padding-inline: 32px;
+  }
+}
+
+/* Desktop: words and buttons on the left, the rings on the right. */
+@media (min-width: 1024px) {
+  .ua-main {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    min-height: calc(100dvh - 65px);
+  }
+  .ua-art {
+    grid-column: 2;
+    grid-row: 1;
+    height: auto;
+  }
+  .ua-rings {
+    width: min(44vw, 600px);
+  }
+  .ua--form .ua-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ua--form .ua-body {
+    padding: 56px 24px;
+    align-content: start;
+  }
+  .ua-body {
+    grid-column: 1;
+    grid-row: 1;
+    display: grid;
+    align-content: center;
+    padding: 48px 40px 48px clamp(40px, 6vw, 96px);
+  }
+  [dir="rtl"] .ua-body {
+    padding: 48px clamp(40px, 6vw, 96px) 48px 40px;
+  }
+  .ua-welcome {
+    margin-inline: 0;
+  }
+}
+
+@keyframes ua-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ua-fade {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+@keyframes ua-rise {
+  from {
+    transform: translateY(105%);
+  }
+}
+@keyframes ua-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes ua-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--ua-from));
+  }
+}
+@keyframes ua-out {
+  to {
+    opacity: 0;
+    transform: translateX(var(--ua-to));
+  }
+}
+@keyframes ua-shake {
+  20% {
+    transform: translateX(-5px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-2px);
+  }
+  80% {
+    transform: translateX(1px);
+  }
+}
+@keyframes ua-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ua *,
+  .ua *::before,
+  .ua *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+@media (min-width: 640px) {
+  .ua-card {
+    padding: 32px;
+  }
+}

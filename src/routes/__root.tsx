@@ -438,6 +438,7 @@ function PresenceTracker() {
 const ONBOARDING_EXEMPT = [
   "/welcome",
   "/auth",
+  "/start",
   "/login",
   "/register",
   "/forgot-password",
@@ -474,6 +475,7 @@ function OnboardingGate() {
  */
 const NO_FOOTER = [
   "/admin",
+  "/start",
   "/locked",
   "/login",
   "/register",
