@@ -1,0 +1,210 @@
+import { useTranslation } from "react-i18next";
+
+/**
+ * Every word on the sign-in, sign-up and reset pages, in English and Arabic. The pages
+ * pick one by the site language, so nothing on them is left in the wrong language.
+ */
+const EN = {
+  home: "Home",
+  terms: "Terms",
+  privacy: "Privacy Policy",
+  refund: "Refund Policy",
+  and: "and",
+  // page titles
+  signinTitle: "Welcome back",
+  signupTitle: "Create your account",
+  forgotTitle: "Reset your password",
+  // shared
+  or: "or",
+  email: "Email",
+  password: "Password",
+  fullName: "Full name",
+  username: "Username",
+  phone: "Phone number",
+  showPassword: "Show password",
+  hidePassword: "Hide password",
+  // sign in
+  continueGoogle: "Continue with Google",
+  keepSignedIn: "Keep me signed in",
+  forgotLink: "Forgot your password?",
+  signIn: "Sign in",
+  signingIn: "Signing in…",
+  newHere: "New to Rita?",
+  createAccountLink: "Create account",
+  fillBoth: "Please fill in your email and password.",
+  offline:
+    "Uzyra cannot reach its account service right now. Your password was not rejected; please try again in a moment.",
+  unverified:
+    "Your email isn't verified yet. Open the verification link we sent you, then sign in again. Check your spam folder too.",
+  mismatch: "That email and password don't match.",
+  wrong: "Something went wrong. Please try again.",
+  googleSigninFailed: "Google sign-in could not start. Please try again.",
+  stopped: "Your account is temporarily stopped",
+  blocked: "Your account has been blocked",
+  accessReturns: "Access returns on",
+  close: "Close",
+  // sign up
+  signupGoogle: "Sign up with Google",
+  googleAgree: "By continuing with Google you agree to Uzyra's",
+  agree: "I agree to Uzyra's",
+  createAccount: "Create account",
+  creating: "Creating your account…",
+  haveAccountQ: "Already have an account?",
+  oneLastStep: "One last step",
+  tickBox: "Tick the box to accept the Terms and Privacy Policy, then create your account.",
+  fixOne: "Let's fix one thing",
+  checkInfo: "Please check your information.",
+  usernameTaken: "That username is already in use",
+  usernameTakenHint: "Usernames are unique on Uzyra. Here are a few that are free right now:",
+  phoneTaken: "This phone number already has an account",
+  phoneTakenHint:
+    "You can sign in with that account, or leave the phone field empty and add a different number later.",
+  emailTaken: "You already have an account with this email",
+  emailTakenHint:
+    "Sign in to pick up where you left off, or reset your password if you don't remember it.",
+  strongerPassword: "Choose a stronger password",
+  strongerPasswordHint:
+    "Use at least 8 characters and mix in a number or symbol. Common passwords are not accepted.",
+  badEmail: "That email address didn't work",
+  badEmailHint: "Double-check the spelling, or try another address you can open right now.",
+  cantCreate: "We couldn't create the account",
+  dupTitle: "That username or phone is already in use",
+  dupHint: "Try a different username, or sign in to the account that already has it.",
+  somethingWrong: "Something went wrong",
+  resetInstead: "Reset your password",
+  signInInstead: "Sign in instead",
+  placeholderName: "Your full name",
+  placeholderUsername: "Choose a username",
+  placeholderPassword: "At least 6 characters",
+  sentTo: "We sent a verification link to",
+  sentLine:
+    "Your account stays inactive until you open that link. Check your spam folder if it is not in your inbox.",
+  sendAgain: "Send the verification email again",
+  sending: "Sending…",
+  otherEmail: "Use a different email",
+  backToSignin: "Back to sign in",
+  googleSignupFailed: "Google sign-up could not start. Please try again.",
+  // forgot
+  enterEmail: "Please enter your email address.",
+  resetOffline:
+    "Uzyra cannot reach its account service right now. No reset email was sent; please try again in a moment.",
+  resetSentA: "If an account exists for",
+  resetSentB: "a reset link is on its way.",
+  resetLine: "Enter the email you signed up with and we'll send you a link to set a new password.",
+  sendReset: "Send reset link",
+  // validation
+  vName: "Please enter your full name.",
+  vUserMin: "Username must be at least 3 characters.",
+  vUserMax: "Username must be less than 30 characters.",
+  vUserChars: "Username can only contain letters, numbers, and underscores.",
+  vEmail: "Please enter a valid email address.",
+  vPhoneMin: "Please enter your phone number (at least 6 digits).",
+  vPhoneMax: "Phone number cannot exceed 20 characters.",
+  vPhone: "Please enter a valid phone number.",
+  vPassword: "Password must be at least 6 characters.",
+};
+
+export type AuthCopy = typeof EN;
+
+const AR: AuthCopy = {
+  home: "الرئيسية",
+  terms: "الشروط",
+  privacy: "سياسة الخصوصية",
+  refund: "سياسة الاسترجاع",
+  and: "و",
+  signinTitle: "أهلاً من جديد",
+  signupTitle: "أنشئ حسابك",
+  forgotTitle: "إعادة تعيين كلمة السر",
+  or: "أو",
+  email: "الإيميل",
+  password: "كلمة السر",
+  fullName: "الاسم الكامل",
+  username: "اسم المستخدم",
+  phone: "رقم الهاتف",
+  showPassword: "إظهار كلمة السر",
+  hidePassword: "إخفاء كلمة السر",
+  continueGoogle: "المتابعة بحساب Google",
+  keepSignedIn: "خلّيني مسجّل دخول",
+  forgotLink: "نسيت كلمة السر؟",
+  signIn: "تسجيل الدخول",
+  signingIn: "جاري الدخول…",
+  newHere: "جديد على ريتا؟",
+  createAccountLink: "أنشئ حساب",
+  fillBoth: "اكتب إيميلك وكلمة السر.",
+  offline: "ما قدرنا نوصل لخدمة الحسابات هلأ. كلمة السر ما انرفضت، جرّب كمان شوي.",
+  unverified:
+    "إيميلك لسا ما انفعّل. افتح رابط التفعيل يلي بعتناه، وبعدين سجّل دخول. شوف مجلد الرسائل المزعجة كمان.",
+  mismatch: "الإيميل وكلمة السر ما بيتطابقوا.",
+  wrong: "صار خطأ. جرّب مرة ثانية.",
+  googleSigninFailed: "ما قدرنا نبدأ الدخول بحساب Google. جرّب مرة ثانية.",
+  stopped: "حسابك موقوف مؤقتاً",
+  blocked: "تم حظر حسابك",
+  accessReturns: "بيرجع الوصول بتاريخ",
+  close: "إغلاق",
+  signupGoogle: "التسجيل بحساب Google",
+  googleAgree: "بمتابعتك بحساب Google فأنت توافق على",
+  agree: "أوافق على",
+  createAccount: "أنشئ الحساب",
+  creating: "جاري إنشاء حسابك…",
+  haveAccountQ: "عندك حساب؟",
+  oneLastStep: "خطوة أخيرة",
+  tickBox: "حط إشارة على الموافقة على الشروط وسياسة الخصوصية، وبعدين أنشئ حسابك.",
+  fixOne: "خلّينا نصلّح شي واحد",
+  checkInfo: "راجع معلوماتك.",
+  usernameTaken: "اسم المستخدم هاد مستخدم",
+  usernameTakenHint: "أسماء المستخدمين ما بتتكرر. هاي كم اسم فاضي هلأ:",
+  phoneTaken: "رقم الهاتف هاد إله حساب",
+  phoneTakenHint: "فيك تدخل بهاد الحساب، أو تترك خانة الهاتف فاضية وتضيف رقم ثاني لاحقاً.",
+  emailTaken: "عندك حساب بهاد الإيميل",
+  emailTakenHint: "سجّل دخول وكمّل من وين وقفت، أو غيّر كلمة السر إذا نسيتها.",
+  strongerPassword: "اختر كلمة سر أقوى",
+  strongerPasswordHint: "استخدم 8 أحرف على الأقل مع رقم أو رمز. كلمات السر الشائعة ما بتنقبل.",
+  badEmail: "الإيميل هاد ما اشتغل",
+  badEmailHint: "تأكد من الكتابة، أو جرّب إيميل ثاني بتقدر تفتحه هلأ.",
+  cantCreate: "ما قدرنا ننشئ الحساب",
+  dupTitle: "اسم المستخدم أو الهاتف مستخدم",
+  dupHint: "جرّب اسم مستخدم ثاني، أو سجّل دخول بالحساب يلي عنده.",
+  somethingWrong: "صار خطأ",
+  resetInstead: "غيّر كلمة السر",
+  signInInstead: "سجّل دخول بدلاً من هيك",
+  placeholderName: "اسمك الكامل",
+  placeholderUsername: "اختر اسم مستخدم",
+  placeholderPassword: "6 أحرف على الأقل",
+  sentTo: "بعتنا رابط التفعيل على",
+  sentLine: "حسابك بيضل غير مفعّل لحد ما تفتح الرابط. شوف مجلد الرسائل المزعجة إذا ما وصلك.",
+  sendAgain: "ابعت إيميل التفعيل مرة ثانية",
+  sending: "جاري الإرسال…",
+  otherEmail: "استخدم إيميل ثاني",
+  backToSignin: "رجوع لتسجيل الدخول",
+  googleSignupFailed: "ما قدرنا نبدأ التسجيل بحساب Google. جرّب مرة ثانية.",
+  enterEmail: "اكتب إيميلك.",
+  resetOffline: "ما قدرنا نوصل لخدمة الحسابات هلأ. ما انبعت إيميل، جرّب كمان شوي.",
+  resetSentA: "إذا كان في حساب على",
+  resetSentB: "رح يوصلك رابط إعادة التعيين.",
+  resetLine: "اكتب الإيميل يلي سجلت فيه ورح نبعتلك رابط لتختار كلمة سر جديدة.",
+  sendReset: "ابعت رابط إعادة التعيين",
+  vName: "اكتب اسمك الكامل.",
+  vUserMin: "اسم المستخدم 3 أحرف على الأقل.",
+  vUserMax: "اسم المستخدم لازم يكون أقل من 30 حرف.",
+  vUserChars: "اسم المستخدم فيه بس أحرف إنجليزية وأرقام وشرطة سفلية.",
+  vEmail: "اكتب إيميل صحيح.",
+  vPhoneMin: "اكتب رقم هاتفك (6 أرقام على الأقل).",
+  vPhoneMax: "رقم الهاتف ما بيزيد عن 20 خانة.",
+  vPhone: "اكتب رقم هاتف صحيح.",
+  vPassword: "كلمة السر 6 أحرف على الأقل.",
+};
+
+export function isArabicLanguage(language: string | undefined) {
+  return (language ?? "").startsWith("ar");
+}
+
+export function getAuthCopy(arabic: boolean): AuthCopy {
+  return arabic ? AR : EN;
+}
+
+/** The words of the auth pages in the site language, and whether that language is Arabic. */
+export function useAuthCopy(): { t: AuthCopy; ar: boolean } {
+  const { i18n } = useTranslation();
+  const ar = isArabicLanguage(i18n.language);
+  return { t: getAuthCopy(ar), ar };
+}
