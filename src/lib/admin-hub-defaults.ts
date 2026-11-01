@@ -106,6 +106,13 @@ export const DEFAULT_LAYOUT: HubLayout = {
           icon: "GraduationCap",
         },
         {
+          id: "/admin/study-sample",
+          to: "/admin/study-sample",
+          label: "Try the study page (guide + Rita)",
+          labelAr: "جرّب صفحة الدراسة (ملف + ريتا)",
+          icon: "BookOpen",
+        },
+        {
           id: "/admin/languages",
           to: "/admin/languages",
           label: "Learning languages",

@@ -19,3 +19,6 @@ export type StudyLessonData = {
   };
   preview: boolean;
 };
+
+/** Marks the one hidden practice lesson an admin opens from "try the study page". */
+export const SAMPLE_STUDY_TOPIC = "study-page-sample";

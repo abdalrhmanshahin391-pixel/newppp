@@ -60,6 +60,7 @@ import { Route as AdminPromoCodesRouteImport } from './routes/admin.promo-codes'
 import { Route as AdminRitaVoiceRouteImport } from './routes/admin.rita-voice'
 import { Route as AdminRitaxAnnouncementsRouteImport } from './routes/admin.ritax-announcements'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
+import { Route as AdminStudySampleRouteImport } from './routes/admin.study-sample'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminToolkitRouteImport } from './routes/admin.toolkit'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -398,6 +399,11 @@ const AdminRitaxAnnouncementsRoute = AdminRitaxAnnouncementsRouteImport.update({
 const AdminRolesRoute = AdminRolesRouteImport.update({
   id: '/admin/roles',
   path: '/admin/roles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminStudySampleRoute = AdminStudySampleRouteImport.update({
+  id: '/admin/study-sample',
+  path: '/admin/study-sample',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSupportRoute = AdminSupportRouteImport.update({
@@ -868,6 +874,7 @@ export interface FileRoutesByFullPath {
   '/admin/rita-voice': typeof AdminRitaVoiceRoute
   '/admin/ritax-announcements': typeof AdminRitaxAnnouncementsRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/study-sample': typeof AdminStudySampleRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/toolkit': typeof AdminToolkitRoute
   '/admin/users': typeof AdminUsersRoute
@@ -1000,6 +1007,7 @@ export interface FileRoutesByTo {
   '/admin/rita-voice': typeof AdminRitaVoiceRoute
   '/admin/ritax-announcements': typeof AdminRitaxAnnouncementsRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/study-sample': typeof AdminStudySampleRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/toolkit': typeof AdminToolkitRoute
   '/admin/users': typeof AdminUsersRoute
@@ -1134,6 +1142,7 @@ export interface FileRoutesById {
   '/admin/rita-voice': typeof AdminRitaVoiceRoute
   '/admin/ritax-announcements': typeof AdminRitaxAnnouncementsRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/study-sample': typeof AdminStudySampleRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/toolkit': typeof AdminToolkitRoute
   '/admin/users': typeof AdminUsersRoute
@@ -1271,6 +1280,7 @@ export interface FileRouteTypes {
     | '/admin/rita-voice'
     | '/admin/ritax-announcements'
     | '/admin/roles'
+    | '/admin/study-sample'
     | '/admin/support'
     | '/admin/toolkit'
     | '/admin/users'
@@ -1403,6 +1413,7 @@ export interface FileRouteTypes {
     | '/admin/rita-voice'
     | '/admin/ritax-announcements'
     | '/admin/roles'
+    | '/admin/study-sample'
     | '/admin/support'
     | '/admin/toolkit'
     | '/admin/users'
@@ -1536,6 +1547,7 @@ export interface FileRouteTypes {
     | '/admin/rita-voice'
     | '/admin/ritax-announcements'
     | '/admin/roles'
+    | '/admin/study-sample'
     | '/admin/support'
     | '/admin/toolkit'
     | '/admin/users'
@@ -1672,6 +1684,7 @@ export interface RootRouteChildren {
   AdminRitaVoiceRoute: typeof AdminRitaVoiceRoute
   AdminRitaxAnnouncementsRoute: typeof AdminRitaxAnnouncementsRoute
   AdminRolesRoute: typeof AdminRolesRoute
+  AdminStudySampleRoute: typeof AdminStudySampleRoute
   AdminSupportRoute: typeof AdminSupportRoute
   AdminToolkitRoute: typeof AdminToolkitRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -2080,6 +2093,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/roles'
       fullPath: '/admin/roles'
       preLoaderRoute: typeof AdminRolesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/study-sample': {
+      id: '/admin/study-sample'
+      path: '/admin/study-sample'
+      fullPath: '/admin/study-sample'
+      preLoaderRoute: typeof AdminStudySampleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/support': {
@@ -2843,6 +2863,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRitaVoiceRoute: AdminRitaVoiceRoute,
   AdminRitaxAnnouncementsRoute: AdminRitaxAnnouncementsRoute,
   AdminRolesRoute: AdminRolesRoute,
+  AdminStudySampleRoute: AdminStudySampleRoute,
   AdminSupportRoute: AdminSupportRoute,
   AdminToolkitRoute: AdminToolkitRoute,
   AdminUsersRoute: AdminUsersRoute,
