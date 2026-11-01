@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type InputHTMLAttributes } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
+import { ArrowLeft, Check, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/legacy-client";
@@ -17,14 +18,9 @@ import { closeAuth, setAuthMode } from "@/lib/auth-dialog";
 
 /* ── shared bits ────────────────────────────────────────────────────────── */
 
-/* Plain on purpose: no design until the owner asks for one (see AuthPage). */
-const field = "w-full border border-black bg-white p-2";
-
-const primaryBtn = "w-full border border-black bg-white p-2 disabled:opacity-60";
-
 function Err({ message }: { message: string }) {
   return (
-    <p role="alert" className="mb-4 text-red-700">
+    <p role="alert" className="ua-alert">
       {message}
     </p>
   );
@@ -48,19 +44,13 @@ function ProblemNote({
   t: AuthCopy;
 }) {
   return (
-    <div role="alert" className="mb-4 border border-red-700 p-3 text-red-700">
-      <p className="font-bold">{problem.title}</p>
+    <div role="alert" className="ua-alert">
+      <p className="ua-alert-title">{problem.title}</p>
       {problem.hint && <p>{problem.hint}</p>}
       {!!problem.suggestions?.length && (
-        <div className="mt-2 flex flex-wrap gap-2">
+        <div className="ua-chips">
           {problem.suggestions.map((s) => (
-            <button
-              key={s}
-              type="button"
-              dir="ltr"
-              onClick={() => onPick?.(s)}
-              className="border border-black bg-white px-2 py-1 text-black"
-            >
+            <button key={s} type="button" dir="ltr" onClick={() => onPick?.(s)} className="ua-chip">
               {s}
             </button>
           ))}
@@ -70,7 +60,7 @@ function ProblemNote({
         <button
           type="button"
           onClick={() => setAuthMode(problem.action === "reset" ? "forgot" : "signin")}
-          className="mt-2 underline"
+          className="ua-link ua-alert-action"
         >
           {problem.action === "reset" ? t.resetInstead : t.signInInstead}
         </button>
@@ -79,27 +69,70 @@ function ProblemNote({
   );
 }
 
-function Label({ children }: { children: React.ReactNode }) {
-  return <span className="mb-1 block">{children}</span>;
+/** A labelled text field. Email, phone, username and password read left to right in any language. */
+function Field({
+  label,
+  ltr,
+  ...input
+}: { label: string; ltr?: boolean } & InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <label className="ua-field">
+      <span className="ua-label">{label}</span>
+      <input className="ua-input" dir={ltr ? "ltr" : "auto"} {...input} />
+    </label>
+  );
+}
+
+function PasswordField({
+  label,
+  value,
+  onChange,
+  autoComplete,
+  placeholder,
+  autoFocus,
+  t,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  autoComplete: string;
+  placeholder: string;
+  autoFocus?: boolean;
+  t: AuthCopy;
+}) {
+  const [shown, setShown] = useState(false);
+  return (
+    <label className="ua-field">
+      <span className="ua-label">{label}</span>
+      <span className="ua-pw">
+        <input
+          className="ua-input"
+          dir="ltr"
+          type={shown ? "text" : "password"}
+          autoComplete={autoComplete}
+          autoFocus={autoFocus}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+        />
+        <button
+          type="button"
+          className="ua-eye"
+          onClick={() => setShown((v) => !v)}
+          aria-label={shown ? t.hidePassword : t.showPassword}
+        >
+          {shown ? <EyeOff size={20} /> : <Eye size={20} />}
+        </button>
+      </span>
+    </label>
+  );
 }
 
 function Divider({ children }: { children: React.ReactNode }) {
-  return <p className="my-4 text-center">{children}</p>;
-}
-
-function ShowPassword({
-  shown,
-  onToggle,
-  t,
-}: {
-  shown: boolean;
-  onToggle: () => void;
-  t: AuthCopy;
-}) {
   return (
-    <button type="button" onClick={onToggle} className="mt-1 underline">
-      {shown ? t.hidePassword : t.showPassword}
-    </button>
+    <p className="ua-or">
+      <span>{children}</span>
+    </p>
   );
 }
 
@@ -107,15 +140,15 @@ function ShowPassword({
 function LegalLinks({ t }: { t: AuthCopy }) {
   return (
     <>
-      <Link to="/terms" className="underline">
+      <Link to="/terms" className="ua-link">
         {t.terms}
       </Link>
       {", "}
-      <Link to="/privacy-policy" className="underline">
+      <Link to="/privacy-policy" className="ua-link">
         {t.privacy}
       </Link>{" "}
       {t.and}{" "}
-      <Link to="/refund-policy" className="underline">
+      <Link to="/refund-policy" className="ua-link">
         {t.refund}
       </Link>
     </>
@@ -151,7 +184,6 @@ export function SignInPanel({ next }: { next?: string }) {
   const { t } = useAuthCopy();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPw, setShowPw] = useState(false);
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -219,7 +251,7 @@ export function SignInPanel({ next }: { next?: string }) {
       if (remember) saveRememberedLogin({ email: email.trim().toLowerCase() });
       else clearRememberedLogin();
 
-      // The page hears this, plays its little "welcome in" moment and then goes to `next`.
+      // The page hears this and goes on to `next`.
       closeAuth();
       void router.invalidate();
     } catch {
@@ -256,15 +288,15 @@ export function SignInPanel({ next }: { next?: string }) {
 
   if (blocked) {
     return (
-      <div className="text-center">
-        <h3 className="font-bold">{blocked.kind === "suspend" ? t.stopped : t.blocked}</h3>
-        {blocked.message && <p className="mt-3 whitespace-pre-wrap">{blocked.message}</p>}
+      <div className="ua-stack">
+        <p className="ua-alert-title">{blocked.kind === "suspend" ? t.stopped : t.blocked}</p>
+        {blocked.message && <p className="whitespace-pre-wrap">{blocked.message}</p>}
         {blocked.kind === "suspend" && blocked.until && (
-          <p className="mt-3">
+          <p className="ua-muted">
             {t.accessReturns} {new Date(blocked.until).toLocaleString()}
           </p>
         )}
-        <button type="button" onClick={() => setBlocked(null)} className={primaryBtn + " mt-6"}>
+        <button type="button" onClick={() => setBlocked(null)} className="ua-btn ua-btn--primary">
           {t.close}
         </button>
       </div>
@@ -275,44 +307,31 @@ export function SignInPanel({ next }: { next?: string }) {
     <div>
       {error && <Err message={error} />}
 
-      <GoogleButton label={t.continueGoogle} onClick={handleGoogle} disabled={loading} />
-      <Divider>{t.or}</Divider>
+      <form onSubmit={handleSubmit} className="ua-stack">
+        <Field
+          label={t.email}
+          ltr
+          type="email"
+          autoComplete="email"
+          autoFocus
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+        />
+        <PasswordField
+          label={t.password}
+          value={password}
+          onChange={setPassword}
+          autoComplete="current-password"
+          placeholder="••••••••"
+          t={t}
+        />
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <label className="block">
-          <Label>{t.email}</Label>
-          <input
-            type="email"
-            dir="ltr"
-            autoComplete="email"
-            autoFocus
-            className={field}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-          />
-        </label>
-
-        <label className="block">
-          <Label>{t.password}</Label>
-          <div className="relative">
-            <input
-              type={showPw ? "text" : "password"}
-              dir="ltr"
-              autoComplete="current-password"
-              className={field}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-            />
-            <ShowPassword shown={showPw} onToggle={() => setShowPw((v) => !v)} t={t} />
-          </div>
-        </label>
-
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <label className="flex items-center gap-2">
+        <div className="ua-row">
+          <label className="ua-check-row">
             <input
               type="checkbox"
+              className="ua-check"
               checked={remember}
               onChange={(e) => {
                 setRemember(e.target.checked);
@@ -321,19 +340,22 @@ export function SignInPanel({ next }: { next?: string }) {
             />
             {t.keepSignedIn}
           </label>
-          <button type="button" onClick={() => setAuthMode("forgot")} className="underline">
+          <button type="button" onClick={() => setAuthMode("forgot")} className="ua-link">
             {t.forgotLink}
           </button>
         </div>
 
-        <button type="submit" disabled={loading} className={primaryBtn}>
+        <button type="submit" disabled={loading} className="ua-btn ua-btn--primary">
           {loading ? t.signingIn : t.signIn}
         </button>
       </form>
 
-      <p className="mt-6 text-center">
+      <Divider>{t.or}</Divider>
+      <GoogleButton label={t.continueGoogle} onClick={handleGoogle} disabled={loading} />
+
+      <p className="ua-switch">
         {t.newHere}{" "}
-        <button type="button" onClick={() => setAuthMode("signup")} className="underline">
+        <button type="button" onClick={() => setAuthMode("signup")} className="ua-link">
           {t.createAccountLink}
         </button>
       </p>
@@ -341,7 +363,7 @@ export function SignInPanel({ next }: { next?: string }) {
   );
 }
 
-/* ── sign up ────────────────────────────────────────────────────────────── */
+/* ── sign up: three short steps, two things at a time ───────────────────── */
 
 function makeSignupSchema(t: AuthCopy) {
   return z
@@ -365,111 +387,175 @@ function makeSignupSchema(t: AuthCopy) {
     .strip();
 }
 
+type SignupForm = {
+  full_name: string;
+  username: string;
+  email: string;
+  phone: string;
+  password: string;
+};
+
+const STEP_FIELDS: (keyof SignupForm)[][] = [
+  ["full_name", "username"],
+  ["email", "phone"],
+  ["password"],
+];
+
+/** Friendly alternatives when the chosen username is gone. */
+function usernameIdeas(base: string) {
+  const clean =
+    base
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, "")
+      .slice(0, 20) || "student";
+  const n = new Date().getFullYear() % 100;
+  return [`${clean}${n}`, `${clean}_${Math.floor(10 + Math.random() * 89)}`, `real${clean}`];
+}
+
 export function SignUpPanel() {
   const checkIdentity = useServerFn(checkIdentityAvailability);
-  const { t } = useAuthCopy();
-  const signupSchema = useMemo(() => makeSignupSchema(t), [t]);
-  const [form, setForm] = useState({
+  const { t, ar } = useAuthCopy();
+  const schema = useMemo(() => makeSignupSchema(t), [t]);
+  const [form, setForm] = useState<SignupForm>({
     full_name: "",
     username: "",
     email: "",
     phone: "",
     password: "",
   });
+  const [step, setStep] = useState(0);
+  const [forward, setForward] = useState(true);
   const [accepted, setAccepted] = useState(false);
-  const [showPw, setShowPw] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [loading, setLoading] = useState(false);
 
-  function update<K extends keyof typeof form>(key: K, value: string) {
+  function update<K extends keyof SignupForm>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  /** Friendly alternatives when the chosen username is gone. */
-  function usernameIdeas(base: string) {
-    const clean =
-      base
-        .toLowerCase()
-        .replace(/[^a-z0-9_]/g, "")
-        .slice(0, 20) || "student";
-    const n = new Date().getFullYear() % 100;
-    return [`${clean}${n}`, `${clean}_${Math.floor(10 + Math.random() * 89)}`, `real${clean}`];
+  function goTo(to: number) {
+    setForward(to > step);
+    setProblem(null);
+    setError(null);
+    setStep(to);
   }
 
-  async function handleSubmit(e: FormEvent) {
+  /** The availability check is a courtesy: if it cannot run, sign-up itself still catches clashes. */
+  async function taken(phone: string) {
+    try {
+      return await checkIdentity({ data: { username: form.username.trim(), phone } });
+    } catch {
+      return null;
+    }
+  }
+
+  async function handleNext(e: FormEvent) {
     e.preventDefault();
-    setError(null);
     setProblem(null);
+    setError(null);
+
+    const fields = STEP_FIELDS[step];
+    const mask = Object.fromEntries(fields.map((f) => [f, true])) as Partial<
+      Record<keyof SignupForm, true>
+    >;
+    const parsed = schema.pick(mask).safeParse(form);
+    if (!parsed.success) {
+      setProblem({ title: t.fixOne, hint: parsed.error.issues[0]?.message ?? t.checkInfo });
+      return;
+    }
+
+    if (step === 0) {
+      setLoading(true);
+      const result = await taken("");
+      setLoading(false);
+      if (result?.username) {
+        setProblem({
+          title: t.usernameTaken,
+          hint: t.usernameTakenHint,
+          suggestions: usernameIdeas(form.username),
+        });
+        return;
+      }
+      goTo(1);
+      return;
+    }
+
+    if (step === 1) {
+      setLoading(true);
+      const result = await taken(form.phone.trim());
+      setLoading(false);
+      if (result?.phone) {
+        setProblem({ title: t.phoneTaken, hint: t.phoneTakenHint, action: "signin" });
+        return;
+      }
+      goTo(2);
+      return;
+    }
+
     if (!accepted) {
       setProblem({ title: t.oneLastStep, hint: t.tickBox });
       return;
     }
-    const parsed = signupSchema.safeParse(form);
-    if (!parsed.success) {
-      setProblem({
-        title: t.fixOne,
-        hint: parsed.error.issues[0]?.message ?? t.checkInfo,
-      });
+    const all = schema.safeParse(form);
+    if (!all.success) {
+      setProblem({ title: t.fixOne, hint: all.error.issues[0]?.message ?? t.checkInfo });
       return;
     }
-    const data = parsed.data;
-    const phone = data.phone ? data.phone : null;
+    const data = all.data;
 
     setLoading(true);
     try {
-      const taken = await checkIdentity({ data: { username: data.username, phone: phone ?? "" } });
-      if (taken?.username) {
-        setProblem({
-          title: t.usernameTaken,
-          hint: t.usernameTakenHint,
-          suggestions: usernameIdeas(data.username),
-        });
-        setLoading(false);
-        return;
-      }
-      if (taken?.phone) {
-        setProblem({ title: t.phoneTaken, hint: t.phoneTakenHint, action: "signin" });
-        setLoading(false);
-        return;
-      }
-
       const { error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: data.full_name,
-            username: data.username,
-            phone: phone ?? "",
-          },
+          data: { full_name: data.full_name, username: data.username, phone: data.phone },
         },
       });
+      setLoading(false);
       if (signUpError) {
         const msg = signUpError.message.toLowerCase();
         if (msg.includes("registered") || msg.includes("exists")) {
+          goTo(1);
           setProblem({ title: t.emailTaken, hint: t.emailTakenHint, action: "signin" });
         } else if (msg.includes("password")) {
           setProblem({ title: t.strongerPassword, hint: t.strongerPasswordHint });
         } else if (msg.includes("email")) {
+          goTo(1);
           setProblem({ title: t.badEmail, hint: t.badEmailHint });
         } else {
           setProblem({ title: t.cantCreate, hint: signUpError.message });
         }
-        setLoading(false);
         return;
       }
       setSentTo(data.email);
-      setLoading(false);
     } catch (err) {
+      setLoading(false);
       const msg = err instanceof Error ? err.message : t.somethingWrong;
-      setProblem(
-        /duplicate|unique/i.test(msg)
-          ? { title: t.dupTitle, hint: t.dupHint, action: "signin" }
-          : { title: t.somethingWrong, hint: msg },
-      );
+      if (/duplicate|unique/i.test(msg)) {
+        goTo(0);
+        setProblem({ title: t.dupTitle, hint: t.dupHint, action: "signin" });
+      } else {
+        setProblem({ title: t.somethingWrong, hint: msg });
+      }
+    }
+  }
+
+  async function googleSignUp() {
+    setError(null);
+    setLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+        extraParams: { prompt: "select_account" },
+      });
+      if (result.error) throw result.error;
+      if (!result.redirected) closeAuth();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.googleSignupFailed);
       setLoading(false);
     }
   }
@@ -488,153 +574,194 @@ export function SignUpPanel() {
       if (resendError) setError(resendError.message);
     }
     return (
-      <div className="space-y-4 text-center">
+      <div className="ua-stack ua-sent">
         {error && <Err message={error} />}
+        <span className="ua-tick" aria-hidden="true">
+          <Check size={28} strokeWidth={2.5} />
+        </span>
+        <p className="ua-sent-title">{t.sentTitle}</p>
         <p>
-          {t.sentTo} <span className="underline">{sentTo}</span>
+          {t.sentTo}{" "}
+          <strong dir="ltr" className="ua-break">
+            {sentTo}
+          </strong>
         </p>
-        <p>{t.sentLine}</p>
+        <p className="ua-muted">{t.sentLine}</p>
+        <button
+          type="button"
+          onClick={() => setAuthMode("signin")}
+          className="ua-btn ua-btn--primary"
+        >
+          {t.backToSignin}
+        </button>
         <button
           type="button"
           onClick={resendVerification}
           disabled={loading}
-          className={primaryBtn}
+          className="ua-btn ua-btn--ghost"
         >
           {loading ? t.sending : t.sendAgain}
         </button>
-        <button type="button" onClick={() => setSentTo(null)} className="underline">
+        <button
+          type="button"
+          onClick={() => {
+            setSentTo(null);
+            goTo(1);
+          }}
+          className="ua-link"
+        >
           {t.otherEmail}
-        </button>
-        <button type="button" onClick={() => setAuthMode("signin")} className={primaryBtn}>
-          {t.backToSignin}
         </button>
       </div>
     );
   }
 
-  const googleSignUp = async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
-        extraParams: { prompt: "select_account" },
-      });
-      if (result.error) throw result.error;
-      if (!result.redirected) closeAuth();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t.googleSignupFailed);
-      setLoading(false);
-    }
-  };
+  const stepTitle = [t.step1, t.step2, t.step3][step];
+  const last = step === STEP_FIELDS.length - 1;
 
   return (
     <div>
+      <div className="ua-steps">
+        <div className="ua-progress" aria-hidden="true">
+          {STEP_FIELDS.map((_, i) => (
+            <span key={i} className={i <= step ? "is-on" : undefined} />
+          ))}
+        </div>
+        <p className="ua-step-label">
+          {t.stepWord} {step + 1} {t.ofWord} {STEP_FIELDS.length}
+          <span aria-hidden="true"> · </span>
+          <strong>{stepTitle}</strong>
+        </p>
+      </div>
+
       {error && <Err message={error} />}
-      {problem && (
-        <ProblemNote
-          t={t}
-          problem={problem}
-          onPick={(v) => {
-            update("username", v);
-            setProblem(null);
-          }}
-        />
-      )}
 
-      <GoogleButton label={t.signupGoogle} onClick={() => void googleSignUp()} disabled={loading} />
-      <p className="mt-2 text-center text-sm">
-        {t.googleAgree} <LegalLinks t={t} />
-      </p>
-      <Divider>{t.or}</Divider>
+      <form
+        key={step}
+        onSubmit={handleNext}
+        className={`ua-stack ua-step ${forward ? "is-forward" : "is-back"}`}
+        aria-label={stepTitle}
+      >
+        {problem && (
+          <ProblemNote
+            t={t}
+            problem={problem}
+            onPick={(v) => {
+              update("username", v);
+              setProblem(null);
+            }}
+          />
+        )}
 
-      <form onSubmit={handleSubmit} className="space-y-3.5">
-        <label className="block">
-          <Label>{t.fullName}</Label>
-          <input
-            type="text"
-            dir="auto"
-            autoComplete="name"
-            autoFocus
-            className={field}
-            value={form.full_name}
-            onChange={(e) => update("full_name", e.target.value)}
-            placeholder={t.placeholderName}
-          />
-        </label>
-        <label className="block">
-          <Label>{t.username}</Label>
-          <input
-            type="text"
-            dir="ltr"
-            autoComplete="username"
-            autoCapitalize="none"
-            className={field}
-            value={form.username}
-            onChange={(e) => update("username", e.target.value)}
-            placeholder={t.placeholderUsername}
-          />
-        </label>
-        <label className="block">
-          <Label>{t.email}</Label>
-          <input
-            type="email"
-            dir="ltr"
-            autoComplete="email"
-            className={field}
-            value={form.email}
-            onChange={(e) => update("email", e.target.value)}
-            placeholder="you@example.com"
-          />
-        </label>
-        <label className="block">
-          <Label>{t.phone}</Label>
-          <input
-            type="tel"
-            dir="ltr"
-            autoComplete="tel"
-            className={field}
-            value={form.phone}
-            onChange={(e) => update("phone", e.target.value)}
-            placeholder="07XXXXXXXX"
-          />
-        </label>
-        <label className="block">
-          <Label>{t.password}</Label>
-          <div className="relative">
-            <input
-              type={showPw ? "text" : "password"}
-              dir="ltr"
-              autoComplete="new-password"
-              className={field}
-              value={form.password}
-              onChange={(e) => update("password", e.target.value)}
-              placeholder={t.placeholderPassword}
+        {step === 0 && (
+          <>
+            <Field
+              label={t.fullName}
+              type="text"
+              autoComplete="name"
+              autoFocus
+              value={form.full_name}
+              onChange={(e) => update("full_name", e.target.value)}
+              placeholder={t.placeholderName}
             />
-            <ShowPassword shown={showPw} onToggle={() => setShowPw((v) => !v)} t={t} />
-          </div>
-        </label>
+            <Field
+              label={t.username}
+              ltr
+              type="text"
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              value={form.username}
+              onChange={(e) => update("username", e.target.value)}
+              placeholder={t.placeholderUsername}
+            />
+          </>
+        )}
 
-        <label className="flex items-start gap-2">
-          <input
-            type="checkbox"
-            checked={accepted}
-            onChange={(e) => setAccepted(e.target.checked)}
-            className="mt-1"
-          />
-          <span>
-            {t.agree} <LegalLinks t={t} />
-          </span>
-        </label>
+        {step === 1 && (
+          <>
+            <Field
+              label={t.email}
+              ltr
+              type="email"
+              autoComplete="email"
+              autoFocus
+              value={form.email}
+              onChange={(e) => update("email", e.target.value)}
+              placeholder="you@example.com"
+            />
+            <Field
+              label={t.phone}
+              ltr
+              type="tel"
+              autoComplete="tel"
+              inputMode="tel"
+              value={form.phone}
+              onChange={(e) => update("phone", e.target.value)}
+              placeholder="07XXXXXXXX"
+            />
+          </>
+        )}
 
-        <button type="submit" disabled={loading || !accepted} className={primaryBtn}>
-          {loading ? t.creating : t.createAccount}
-        </button>
+        {step === 2 && (
+          <>
+            <PasswordField
+              label={t.password}
+              value={form.password}
+              onChange={(v) => update("password", v)}
+              autoComplete="new-password"
+              placeholder={t.placeholderPassword}
+              autoFocus
+              t={t}
+            />
+            <label className="ua-check-row ua-check-row--top">
+              <input
+                type="checkbox"
+                className="ua-check"
+                checked={accepted}
+                onChange={(e) => setAccepted(e.target.checked)}
+              />
+              <span>
+                {t.agree} <LegalLinks t={t} />
+              </span>
+            </label>
+          </>
+        )}
+
+        <div className="ua-step-actions">
+          {step > 0 && (
+            <button
+              type="button"
+              onClick={() => goTo(step - 1)}
+              className="ua-btn ua-btn--ghost ua-btn--back"
+              aria-label={t.back}
+            >
+              <ArrowLeft size={20} aria-hidden="true" className={ar ? "rotate-180" : undefined} />
+            </button>
+          )}
+          <button type="submit" disabled={loading} className="ua-btn ua-btn--primary">
+            {loading ? (last ? t.creating : t.checking) : last ? t.createAccount : t.next}
+          </button>
+        </div>
       </form>
 
-      <p className="mt-6 text-center">
+      {step === 0 && (
+        <>
+          <Divider>{t.or}</Divider>
+          <GoogleButton
+            label={t.signupGoogle}
+            onClick={() => void googleSignUp()}
+            disabled={loading}
+          />
+          <p className="ua-fine">
+            {t.googleAgree} <LegalLinks t={t} />
+          </p>
+        </>
+      )}
+
+      <p className="ua-switch">
         {t.haveAccountQ}{" "}
-        <button type="button" onClick={() => setAuthMode("signin")} className="underline">
+        <button type="button" onClick={() => setAuthMode("signin")} className="ua-link">
           {t.signIn}
         </button>
       </p>
@@ -673,46 +800,49 @@ export function ForgotPanel() {
     setSent(true);
   }
 
+  if (sent) {
+    return (
+      <div className="ua-stack ua-sent">
+        <span className="ua-tick" aria-hidden="true">
+          <Check size={28} strokeWidth={2.5} />
+        </span>
+        <p>
+          {t.resetSentA}{" "}
+          <strong dir="ltr" className="ua-break">
+            {email}
+          </strong>
+          , {t.resetSentB}
+        </p>
+        <button
+          type="button"
+          onClick={() => setAuthMode("signin")}
+          className="ua-btn ua-btn--primary"
+        >
+          {t.backToSignin}
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      {sent ? (
-        <div className="space-y-4 text-center">
-          <p>
-            {t.resetSentA}{" "}
-            <span className="font-bold" dir="ltr">
-              {email}
-            </span>
-            , {t.resetSentB}
-          </p>
-          <button type="button" onClick={() => setAuthMode("signin")} className={primaryBtn}>
-            {t.backToSignin}
-          </button>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <Err message={error} />}
-          <p>{t.resetLine}</p>
-          <label className="block">
-            <Label>{t.email}</Label>
-            <input
-              type="email"
-              dir="ltr"
-              autoComplete="email"
-              autoFocus
-              className={field}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-            />
-          </label>
-          <button type="submit" disabled={loading} className={primaryBtn}>
-            {loading ? t.sending : t.sendReset}
-          </button>
-          <button type="button" onClick={() => setAuthMode("signin")} className="underline">
-            {t.backToSignin}
-          </button>
-        </form>
-      )}
-    </div>
+    <form onSubmit={handleSubmit} className="ua-stack">
+      {error && <Err message={error} />}
+      <Field
+        label={t.email}
+        ltr
+        type="email"
+        autoComplete="email"
+        autoFocus
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="you@example.com"
+      />
+      <button type="submit" disabled={loading} className="ua-btn ua-btn--primary">
+        {loading ? t.sending : t.sendReset}
+      </button>
+      <button type="button" onClick={() => setAuthMode("signin")} className="ua-link ua-center">
+        {t.backToSignin}
+      </button>
+    </form>
   );
 }

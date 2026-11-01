@@ -33,6 +33,7 @@ import { Route as RitaLessonsRouteImport } from './routes/rita-lessons'
 import { Route as RitaLiveRouteImport } from './routes/rita-live'
 import { Route as RitaStudyRouteImport } from './routes/rita-study'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as StartRouteImport } from './routes/start'
 import { Route as StudyRouteImport } from './routes/study'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -262,6 +263,11 @@ const RitaStudyRoute = RitaStudyRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StartRoute = StartRouteImport.update({
+  id: '/start',
+  path: '/start',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudyRoute = StudyRouteImport.update({
@@ -848,6 +854,7 @@ export interface FileRoutesByFullPath {
   '/rita-live': typeof RitaLiveRoute
   '/rita-study': typeof RitaStudyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/start': typeof StartRoute
   '/study': typeof StudyRouteWithChildren
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
@@ -983,6 +990,7 @@ export interface FileRoutesByTo {
   '/rita-live': typeof RitaLiveRoute
   '/rita-study': typeof RitaStudyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/start': typeof StartRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/toolkit': typeof ToolkitRoute
@@ -1116,6 +1124,7 @@ export interface FileRoutesById {
   '/rita-live': typeof RitaLiveRoute
   '/rita-study': typeof RitaStudyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/start': typeof StartRoute
   '/study': typeof StudyRouteWithChildren
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
@@ -1254,6 +1263,7 @@ export interface FileRouteTypes {
     | '/rita-live'
     | '/rita-study'
     | '/sitemap.xml'
+    | '/start'
     | '/study'
     | '/support'
     | '/terms'
@@ -1389,6 +1399,7 @@ export interface FileRouteTypes {
     | '/rita-live'
     | '/rita-study'
     | '/sitemap.xml'
+    | '/start'
     | '/support'
     | '/terms'
     | '/toolkit'
@@ -1521,6 +1532,7 @@ export interface FileRouteTypes {
     | '/rita-live'
     | '/rita-study'
     | '/sitemap.xml'
+    | '/start'
     | '/study'
     | '/support'
     | '/terms'
@@ -1658,6 +1670,7 @@ export interface RootRouteChildren {
   RitaLiveRoute: typeof RitaLiveRoute
   RitaStudyRoute: typeof RitaStudyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StartRoute: typeof StartRoute
   StudyRoute: typeof StudyRouteWithChildren
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
@@ -1904,6 +1917,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/start': {
+      id: '/start'
+      path: '/start'
+      fullPath: '/start'
+      preLoaderRoute: typeof StartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/study': {
@@ -2836,6 +2856,7 @@ const rootRouteChildren: RootRouteChildren = {
   RitaLiveRoute: RitaLiveRoute,
   RitaStudyRoute: RitaStudyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StartRoute: StartRoute,
   StudyRoute: StudyRouteWithChildren,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,

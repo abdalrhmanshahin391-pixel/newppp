@@ -5,7 +5,7 @@ import { refreshSpace } from "@/lib/spaces";
 import { ArrowLeft, Check, Loader2, Send, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
-import { openAuth } from "@/lib/auth-dialog";
+import { openWelcome } from "@/lib/auth-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { readBoardWithCounts, readTopicCards } from "@/lib/local-board";
 import { DECK_COVERS, coverOf, publishDeck, getDailyShareQuota } from "@/lib/share-decks";
@@ -118,7 +118,7 @@ function ShareNew() {
           </p>
           <button
             type="button"
-            onClick={() => openAuth("signin", "/share/new")}
+            onClick={() => openWelcome("/share/new")}
             className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-6 py-3 text-sm font-black text-white shadow-sm transition hover:brightness-105"
           >
             Sign in

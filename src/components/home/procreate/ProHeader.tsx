@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { openAuth } from "@/lib/auth-dialog";
+import { openWelcome } from "@/lib/auth-dialog";
 import { useAuth } from "@/hooks/useAuth";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -151,7 +151,7 @@ export function ProHeader({
             <div aria-hidden="true" className="h-9 w-9 animate-pulse rounded-full bg-white/10" />
           ) : !user ? (
             <>
-              <button type="button" onClick={() => openAuth("signin")} className="rh-link">
+              <button type="button" onClick={() => openWelcome()} className="rh-link">
                 Sign in
               </button>
               <StartLearningLink className="rh-btn">Start learning</StartLearningLink>
@@ -297,7 +297,7 @@ export function ProHeader({
                     type="button"
                     onClick={() => {
                       setSheet(false);
-                      openAuth("signin");
+                      openWelcome();
                     }}
                     className="rh-item"
                   >

@@ -29,6 +29,9 @@ export const AUTH_PATHS: Record<AuthMode, string> = {
   forgot: "/forgot-password",
 };
 
+/** The page before the forms: "Get started" or "I already have an account". */
+export const AUTH_START_PATH = "/start";
+
 let navigateTo: ((href: string) => void) | null = null;
 
 /** The root hands over the router, so opening sign-in is an in-app page change. */
@@ -39,6 +42,22 @@ export function setAuthNavigator(fn: ((href: string) => void) | null) {
 export function authHref(mode: AuthMode, next?: string) {
   const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : undefined;
   return safeNext ? `${AUTH_PATHS[mode]}?next=${encodeURIComponent(safeNext)}` : AUTH_PATHS[mode];
+}
+
+export function startHref(next?: string) {
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : undefined;
+  return safeNext ? `${AUTH_START_PATH}?next=${encodeURIComponent(safeNext)}` : AUTH_START_PATH;
+}
+
+/**
+ * Anyone who needs an account lands on the welcome page first and picks from there. Used by every
+ * generic "sign in" button; a button that already says which one uses `openAuth` and goes straight
+ * to that form.
+ */
+export function openWelcome(next?: string) {
+  const href = startHref(next);
+  if (navigateTo) navigateTo(href);
+  else if (typeof window !== "undefined") window.location.assign(href);
 }
 
 /** Go to the sign-in (or sign-up, or reset) page, coming back to `next` afterwards. */

@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
-import { openAuth } from "@/lib/auth-dialog";
+import { openWelcome } from "@/lib/auth-dialog";
 
 export function StartLearningLink({
   className,
@@ -28,7 +28,7 @@ export function StartLearningLink({
       className={className}
       onClick={() => {
         onOpen?.();
-        openAuth("signin", "/learn");
+        openWelcome("/learn");
       }}
     >
       {children}
