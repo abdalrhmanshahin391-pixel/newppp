@@ -10,13 +10,14 @@ import {
   MessageCircleQuestion,
   Minus,
   Plus,
+  Shuffle,
   Square,
   Star,
 } from "lucide-react";
 import { toast } from "sonner";
 import { RitaRealtimeV3, type StudyBridge } from "@/components/rita/RitaRealtimeV3";
 import { studyGuideDownload } from "@/lib/study/study.functions";
-import type { StudyLessonData } from "@/lib/study/study-types";
+import { SAMPLE_STUDY_TOPIC, type StudyLessonData } from "@/lib/study/study-types";
 import { PhraseDialog } from "@/components/rita/PhraseDialog";
 import { guideSegmentMap, sectionId } from "@/lib/guides/guide-blocks";
 import {
@@ -495,6 +496,17 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
             ريتا — دراسة تفاعلية{preview ? " · معاينة أدمن (ما بينحفظ إشي)" : ""}
           </p>
         </div>
+        {preview && lesson.topic === SAMPLE_STUDY_TOPIC ? (
+          <Link
+            to="/admin/study-sample"
+            search={{ another: true }}
+            replace
+            className="rita-btn rita-btn-soft rita-btn-sm gap-1.5"
+          >
+            <Shuffle size={15} aria-hidden="true" />
+            دليل ثاني
+          </Link>
+        ) : null}
         <Link
           to="/rita-live"
           search={{ lesson: lesson.id, ...(preview ? { preview: true } : {}) }}

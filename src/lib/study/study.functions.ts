@@ -6,7 +6,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";
 import { GuideContentSchema } from "@/lib/guides/guide-content";
 import { STUDY_FLAG, studyBlocker, type Experience } from "./study-experience";
-import type { StudyLessonData } from "./study-types";
+import { SAMPLE_STUDY_TOPIC, type StudyLessonData } from "./study-types";
 import {
   LINK_PROBLEM_TEXT,
   coversLesson,
@@ -413,4 +413,139 @@ export const studyGuideDownload = createServerFn({ method: "POST" })
       });
     if (error || !signed?.signedUrl) throw new Error("The file could not be opened.");
     return { url: signed.signedUrl };
+  });
+
+const SAMPLE_BOOK_TITLE = "Study page sample (preview only)";
+
+/**
+ * The admin's shortcut to the study page: a hidden practice lesson (an archived book, a draft lesson
+ * nobody but an admin can open) linked to one of the hand-written sample guides, so the page can be
+ * seen and reworked without making a book, a lesson and a guide with the AI each time. `another`
+ * switches to a different sample than the one linked now. Nothing here is visible to learners and
+ * nothing calls the AI or the PDF printer.
+ */
+export const adminStudySample = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => parse(z.object({ another: z.boolean().default(false) }), data))
+  .handler(async ({ data, context }): Promise<{ lessonId: string; title: string }> => {
+    const db = context.supabase;
+    const { data: isAdmin, error: roleError } = await db.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (roleError || !isAdmin) throw new Error("Forbidden: admin only");
+    const { SAMPLE_GUIDES } = await import("@/lib/guides/guide-samples");
+
+    // The practice book: made once, archived so it never shows in the books list.
+    let { data: book } = await db
+      .from("rita_curricula")
+      .select("id")
+      .eq("title", SAMPLE_BOOK_TITLE)
+      .maybeSingle();
+    if (!book) {
+      const { data: created, error } = await db
+        .from("rita_curricula")
+        .insert({
+          kind: "grammar",
+          title: SAMPLE_BOOK_TITLE,
+          title_ar: "نموذج صفحة الدراسة (معاينة فقط)",
+          target_language: "en",
+          level: "A1",
+          page_count: 10,
+          read_cursor: 10,
+          status: "archived",
+          created_by: context.userId,
+        })
+        .select("id")
+        .single();
+      if (error) throw new Error(`book: ${describe(error)}`);
+      book = created;
+    }
+    const bookId = String(book!.id);
+
+    let { data: lesson } = await db
+      .from("rita_lessons")
+      .select("id, study_guide_id")
+      .eq("curriculum_id", bookId)
+      .neq("status", "archived")
+      .eq("topic", SAMPLE_STUDY_TOPIC)
+      .maybeSingle();
+
+    // Which sample: the next one when asked (or the first time), else the one linked now.
+    const { data: current } = lesson?.study_guide_id
+      ? await db
+          .from("rita_lesson_guides")
+          .select("title")
+          .eq("id", lesson.study_guide_id)
+          .maybeSingle()
+      : { data: null };
+    const currentIndex = SAMPLE_GUIDES.findIndex((item) => item.content.title === current?.title);
+    let index = currentIndex;
+    if (index < 0 || data.another) {
+      const others = SAMPLE_GUIDES.map((_, i) => i).filter((i) => i !== currentIndex);
+      index = others[Math.floor(Math.random() * others.length)] ?? 0;
+    }
+    const sample = SAMPLE_GUIDES[index]!;
+    const content = GuideContentSchema.parse(sample.content);
+
+    // The guide row for this sample: "ready" with a stand-in file name, because the page draws the
+    // guide from its content. Downloads stay off, so nobody is offered a file that is not there.
+    let { data: guide } = await db
+      .from("rita_lesson_guides")
+      .select("id")
+      .eq("curriculum_id", bookId)
+      .eq("title", content.title)
+      .maybeSingle();
+    if (!guide) {
+      const { data: created, error } = await db
+        .from("rita_lesson_guides")
+        .insert({
+          curriculum_id: bookId,
+          title: content.title.slice(0, 200),
+          from_page: 1,
+          to_page: 10,
+          status: "ready",
+          content,
+          warnings: [],
+          learner_path: `samples/${sample.slug}.pdf`,
+          allow_download: false,
+          model: "sample",
+          created_by: context.userId,
+        })
+        .select("id")
+        .single();
+      if (error) throw new Error(`guide: ${describe(error)}`);
+      guide = created;
+    }
+    const guideId = String(guide!.id);
+
+    if (!lesson) {
+      const { data: created, error } = await db
+        .from("rita_lessons")
+        .insert({
+          curriculum_id: bookId,
+          lesson_no: 1,
+          title: content.title.slice(0, 160),
+          title_ar: "نموذج صفحة الدراسة",
+          topic: SAMPLE_STUDY_TOPIC,
+          source_from_page: 1,
+          source_to_page: 10,
+          status: "draft",
+          source: "manual",
+          experience: "study",
+          study_guide_id: guideId,
+          created_by: context.userId,
+        })
+        .select("id, study_guide_id")
+        .single();
+      if (error) throw new Error(`lesson: ${describe(error)}`);
+      lesson = created;
+    } else if (lesson.study_guide_id !== guideId) {
+      const { error } = await db
+        .from("rita_lessons")
+        .update({ title: content.title.slice(0, 160), study_guide_id: guideId })
+        .eq("id", lesson.id);
+      if (error) throw new Error(`lesson: ${describe(error)}`);
+    }
+    return { lessonId: String(lesson!.id), title: content.title };
   });
