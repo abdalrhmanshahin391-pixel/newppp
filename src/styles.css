@@ -4565,6 +4565,19 @@ html.rita-app,
   background: #f4f4f8;
   transform-origin: 0 0;
 }
+/* The layer over the sheet: pen, finger and mouse land here (this page's own element), and the
+   selection inside the frame is set from outside. A finger swipe still scrolls the box. */
+.st-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: text;
+  touch-action: pan-x pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
 .st-divider {
   position: relative;
   width: 12px;
@@ -4673,7 +4686,8 @@ html.rita-app,
   left: 50%;
   bottom: -16px;
   width: 54px;
-  height: auto;
+  /* An explicit height: Safari gives this absolutely placed image no height with "auto". */
+  height: 64px;
   max-width: none;
   transform: translateX(-50%);
   pointer-events: none;

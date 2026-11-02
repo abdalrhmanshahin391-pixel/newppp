@@ -17,6 +17,10 @@ export type GuideFrameHandle = {
   scrollToSection: (id: string, smooth?: boolean) => void;
   /** Scrolls to a named piece and flashes it once. */
   showPiece: (id: string) => void;
+  /** The transparent layer over the sheet that receives pen, finger and mouse. */
+  layer: () => HTMLDivElement | null;
+  /** A point on screen in the sheet's own units (what the frame's document measures in). */
+  toSheet: (clientX: number, clientY: number) => { x: number; y: number };
 };
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
@@ -44,6 +48,7 @@ export const GuideFrame = forwardRef<
   const scroller = useRef<HTMLDivElement | null>(null);
   const stage = useRef<HTMLDivElement | null>(null);
   const frame = useRef<HTMLIFrameElement | null>(null);
+  const hit = useRef<HTMLDivElement | null>(null);
   const scale = useRef(1);
   const height = useRef(1200);
   const fitted = useRef(true);
@@ -165,69 +170,54 @@ export const GuideFrame = forwardRef<
     };
   }, [onScroll]);
 
-  /** Pinch and trackpad zoom inside the sheet itself (the frame's own document). */
-  const listen = useCallback(
-    (doc: Document) => {
-      // The frame never scrolls or zooms itself; the box around it does.
-      doc.documentElement.style.overflow = "hidden";
-      doc.documentElement.style.setProperty("touch-action", "pan-x pan-y");
-      // Touch points inside the frame are in sheet units; turn them into the box's coordinates.
-      const toBox = (x: number, y: number) => {
-        const box = scroller.current;
-        if (!box) return { sx: 0, sy: 0 };
-        return {
-          sx: x * scale.current + offsetX() - box.scrollLeft,
-          sy: y * scale.current - box.scrollTop,
-        };
-      };
-      let pinch: { distance: number; scale: number } | null = null;
-      const spread = (touches: TouchList) =>
-        Math.hypot(
-          touches[0].clientX - touches[1].clientX,
-          touches[0].clientY - touches[1].clientY,
-        );
-      doc.addEventListener(
-        "touchstart",
-        (event) => {
-          if (event.touches.length === 2) {
-            pinch = { distance: spread(event.touches), scale: scale.current };
-          }
-        },
-        { passive: true },
-      );
-      doc.addEventListener(
-        "touchmove",
-        (event) => {
-          if (!pinch || event.touches.length !== 2) return;
-          event.preventDefault();
-          const midX = (event.touches[0].clientX + event.touches[1].clientX) / 2;
-          const midY = (event.touches[0].clientY + event.touches[1].clientY) / 2;
-          const { sx, sy } = toBox(midX, midY);
-          const wanted = pinch.scale * (spread(event.touches) / Math.max(pinch.distance, 1));
-          zoomAround(wanted / scale.current, sx, sy);
-        },
-        { passive: false },
-      );
-      const end = (event: TouchEvent) => {
-        if (event.touches.length < 2) pinch = null;
-      };
-      doc.addEventListener("touchend", end, { passive: true });
-      doc.addEventListener("touchcancel", end, { passive: true });
-      // Safari's own page zoom gesture would fight ours.
-      doc.addEventListener("gesturestart", (event) => event.preventDefault());
-      doc.addEventListener(
-        "wheel",
-        (event) => {
-          if (!event.ctrlKey) return;
-          event.preventDefault();
-          const { sx, sy } = toBox(event.clientX, event.clientY);
-          zoomAround(Math.exp(-event.deltaY * 0.01), sx, sy);
-        },
-        { passive: false },
-      );
-    },
-    [zoomAround],
-  );
+  /** The frame never scrolls or zooms itself; the box around it does. */
+  const listen = useCallback((doc: Document) => {
+    doc.documentElement.style.overflow = "hidden";
+  }, []);
+
+  /**
+   * Two fingers on the layer over the sheet zoom around the fingers. The layer belongs to this page:
+   * Safari runs no listener inside the locked frame, so every touch is read here, outside it.
+   */
+  useEffect(() => {
+    const layer = hit.current;
+    const box = scroller.current;
+    if (!layer || !box) return;
+    let pinch: { distance: number; scale: number } | null = null;
+    const spread = (touches: TouchList) =>
+      Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+    const onStart = (event: TouchEvent) => {
+      if (event.touches.length === 2) {
+        pinch = { distance: spread(event.touches), scale: scale.current };
+      }
+    };
+    const onMove = (event: TouchEvent) => {
+      if (!pinch || event.touches.length !== 2) return;
+      event.preventDefault();
+      const rect = box.getBoundingClientRect();
+      const midX = (event.touches[0].clientX + event.touches[1].clientX) / 2 - rect.left;
+      const midY = (event.touches[0].clientY + event.touches[1].clientY) / 2 - rect.top;
+      const wanted = pinch.scale * (spread(event.touches) / Math.max(pinch.distance, 1));
+      zoomAround(wanted / scale.current, midX, midY);
+    };
+    const onEnd = (event: TouchEvent) => {
+      if (event.touches.length < 2) pinch = null;
+    };
+    // Safari's own page zoom gesture would fight ours.
+    const onGesture = (event: Event) => event.preventDefault();
+    layer.addEventListener("touchstart", onStart, { passive: true });
+    layer.addEventListener("touchmove", onMove, { passive: false });
+    layer.addEventListener("touchend", onEnd, { passive: true });
+    layer.addEventListener("touchcancel", onEnd, { passive: true });
+    layer.addEventListener("gesturestart", onGesture);
+    return () => {
+      layer.removeEventListener("touchstart", onStart);
+      layer.removeEventListener("touchmove", onMove);
+      layer.removeEventListener("touchend", onEnd);
+      layer.removeEventListener("touchcancel", onEnd);
+      layer.removeEventListener("gesturestart", onGesture);
+    };
+  }, [zoomAround]);
 
   // The page may arrive already drawn by the server, and the frame can finish loading before
   // React listens: then hand over the document now (once per document).
@@ -255,6 +245,12 @@ export const GuideFrame = forwardRef<
   useImperativeHandle(ref, () => ({
     document: () => frame.current?.contentDocument ?? null,
     window: () => frame.current?.contentWindow ?? null,
+    layer: () => hit.current,
+    toSheet: (clientX, clientY) => {
+      const rect = frame.current?.getBoundingClientRect();
+      if (!rect) return { x: 0, y: 0 };
+      return { x: (clientX - rect.left) / scale.current, y: (clientY - rect.top) / scale.current };
+    },
     scrollToSection: (id, smooth = true) => {
       const target = frame.current?.contentDocument?.getElementById(id);
       const box = scroller.current;
@@ -291,13 +287,16 @@ export const GuideFrame = forwardRef<
           ref={frame}
           title={`ملف الدرس: ${title}`}
           srcDoc={html}
-          // No allow-scripts: the guide never runs code. Same origin so the page can read a selection.
+          // No allow-scripts: the guide never runs code. Same origin so the page can read and set the
+          // selection from outside. (Safari then runs no listener inside the frame at all, so all
+          // input is taken by the layer below, which belongs to this page.)
           sandbox="allow-same-origin"
           scrolling="no"
           className="st-frame"
           style={{ width: SHEET_PX, height: height.current }}
           onLoad={handOver}
         />
+        <div ref={hit} className="st-hit" />
       </div>
     </div>
   );
