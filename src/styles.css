@@ -4629,10 +4629,12 @@ html.rita-app,
   z-index: 20;
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border: 3px solid #fff;
   border-radius: 9999px;
-  background: var(--pp-accent);
+  background: #0b1638;
   color: var(--pp-on-accent, #fff);
   box-shadow:
     0 1px 2px rgb(18 17 23 / 0.12),
@@ -4658,17 +4660,39 @@ html.rita-app,
     0 2px 4px rgb(18 17 23 / 0.14),
     0 16px 36px rgb(18 17 23 / 0.24);
 }
-.edith-premium .st-orb-mark {
-  width: 28px;
+.edith-premium .st-orb-rain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+/* The character stands in the circle from the waist up, bobbing gently. */
+.edith-premium .st-orb-char {
+  position: absolute;
+  left: 50%;
+  bottom: -16px;
+  width: 54px;
   height: auto;
+  max-width: none;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: st-orb-bob 3.2s ease-in-out infinite;
+}
+@keyframes st-orb-bob {
+  50% {
+    transform: translateX(-50%) translateY(-2px);
+  }
 }
 .edith-premium .st-orb[data-state="idle"] {
-  opacity: 0.85;
+  opacity: 1;
 }
 .edith-premium .st-orb[data-state="armed"] {
   opacity: 1;
+  border-color: #9cc1ff;
   box-shadow:
-    0 0 0 4px rgb(43 109 240 / 0.22),
+    0 0 0 3px #2b6df0,
+    0 0 18px rgb(61 139 255 / 0.65),
     0 8px 24px rgb(18 17 23 / 0.18);
 }
 .edith-premium .st-orb:focus-visible {
@@ -4677,8 +4701,9 @@ html.rita-app,
 }
 .edith-premium .st-orb-dot {
   position: absolute;
-  top: 9px;
-  right: 9px;
+  z-index: 1;
+  top: 8px;
+  right: 10px;
   width: 9px;
   height: 9px;
   border-radius: 9999px;
@@ -4696,7 +4721,8 @@ html.rita-app,
   .edith-premium .st-orb {
     transition: opacity 200ms ease;
   }
-  .edith-premium .st-orb-spin {
+  .edith-premium .st-orb-spin,
+  .edith-premium .st-orb-char {
     animation: none;
   }
 }
