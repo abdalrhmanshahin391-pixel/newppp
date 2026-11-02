@@ -167,9 +167,6 @@ function SideList({
           {label[lang]}
         </a>
       ))}
-      <Link to="/study/progress" className="uz-rail-item uz-rail-extra">
-        {lang === "ar" ? "تقدمي" : "Progress"}
-      </Link>
     </nav>
   );
 }
