@@ -12,6 +12,7 @@ import {
   RotateCcw,
   Sparkles,
   Volume2,
+  VolumeX,
   X,
 } from "lucide-react";
 import { ACTION_INFO, type SelectionKind, type StudyAction } from "@/lib/study/study-actions";
@@ -82,6 +83,8 @@ export function ActionMenu({
   onMoveOrb,
   onPinOrb,
   onResetOrb,
+  sound,
+  onToggleSound,
   onClose,
 }: {
   quote: string;
@@ -96,6 +99,9 @@ export function ActionMenu({
   onMoveOrb: () => void;
   onPinOrb: () => void;
   onResetOrb: () => void;
+  /** The selection sound (arcade blips) is on. */
+  sound: boolean;
+  onToggleSound: () => void;
   onClose: () => void;
 }) {
   const [more, setMore] = useState(false);
@@ -237,6 +243,19 @@ export function ActionMenu({
           className="rita-btn rita-btn-quiet rita-btn-sm gap-1.5 !h-9"
         >
           <ArrowLeftRight size={14} aria-hidden="true" /> رجّعها لمكانها
+        </button>
+        <button
+          type="button"
+          onClick={onToggleSound}
+          aria-pressed={sound}
+          className="rita-btn rita-btn-quiet rita-btn-sm gap-1.5 !h-9"
+        >
+          {sound ? (
+            <Volume2 size={14} aria-hidden="true" />
+          ) : (
+            <VolumeX size={14} aria-hidden="true" />
+          )}
+          {sound ? "الصوت شغّال" : "الصوت مطفّي"}
         </button>
         <button
           type="button"

@@ -23,6 +23,8 @@ import { GuideFrame, type GuideFrameHandle } from "./GuideFrame";
 import { DEFAULT_ORB, snapToEdge, type OrbPosition } from "./orb-position";
 import { markSelection, readSelection, sectionSegIds, type PageSelection } from "./selection";
 import { readStudyMemory, writeStudyMemory } from "./study-memory";
+import { attachTechSelect, drawSelectionFx } from "./tech-select";
+import { setSoundOn, soundOn } from "./tech-sound";
 import { useStudyRequests } from "./useStudyRequests";
 
 /** Where the divider was left (share of the width for Rita and the guide), per browser. */
@@ -94,6 +96,8 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   const [orb, setOrb] = useState<OrbPosition>(() => readStudyMemory(lesson.id).orb ?? DEFAULT_ORB);
   const [movingOrb, setMovingOrb] = useState(false);
   const [phrase, setPhrase] = useState("");
+  const [sound, setSound] = useState(true);
+  useEffect(() => setSound(soundOn()), []);
 
   const selected = useMemo(() => {
     if (!selection) return null;
@@ -109,6 +113,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
     selectionRef.current = next;
     setSelection(next);
     markSelection(frame.current?.window() ?? null, next?.range ?? null);
+    drawSelectionFx(frame.current?.document() ?? null, next?.range ?? null);
   }, []);
 
   const moveOrb = useCallback(
@@ -156,6 +161,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
     (doc: Document) => {
       const memory = readStudyMemory(lesson.id);
       if (memory.section) frame.current?.scrollToSection(memory.section, false);
+      attachTechSelect(doc);
       // The selection is saved 120ms after it stops changing, before any menu opens: on a phone
       // the tap on the circle can clear the browser's selection, so the copy must exist first.
       let picking = 0;
@@ -483,6 +489,11 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
                 }}
                 onPinOrb={() => moveOrb(snapToEdge(orb))}
                 onResetOrb={() => moveOrb(DEFAULT_ORB)}
+                sound={sound}
+                onToggleSound={() => {
+                  setSoundOn(!sound);
+                  setSound(!sound);
+                }}
                 onClose={() => setMenuOpen(false)}
               />
             </Popover.Content>
