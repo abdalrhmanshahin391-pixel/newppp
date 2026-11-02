@@ -161,7 +161,32 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
     (doc: Document) => {
       const memory = readStudyMemory(lesson.id);
       if (memory.section) frame.current?.scrollToSection(memory.section, false);
-      attachTechSelect(doc);
+      // Pen, finger and mouse land on this page's layer over the sheet (Safari runs no listener
+      // inside the locked frame); the finished selection comes back here.
+      const layer = frame.current?.layer();
+      if (layer && frame.current) {
+        const handle = frame.current;
+        attachTechSelect({
+          doc,
+          layer,
+          toSheet: (x, y) => handle.toSheet(x, y),
+          onChange: (range) => {
+            if (!range) {
+              if (!menuOpenRef.current) keepSelection(null);
+              return;
+            }
+            const next = readSelection(doc);
+            if (!next) return;
+            keepSelection(next);
+            const piece = next.segIds[0] ? segments.get(next.segIds[0]) : null;
+            if (piece?.section)
+              bridge.send?.("rita-study-focus", {
+                section: piece.section,
+                text: next.exact.slice(0, 300),
+              });
+          },
+        });
+      }
       // The selection is saved 120ms after it stops changing, before any menu opens: on a phone
       // the tap on the circle can clear the browser's selection, so the copy must exist first.
       let picking = 0;

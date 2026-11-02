@@ -1,11 +1,12 @@
-// Fast, "electronic" text selection for the guide frame. The frame runs no script, so this page
-// drives it from outside (same origin):
-//   - Apple Pencil or a mouse: press on a word and drag; whole words join the selection at once.
+// Fast, "electronic" text selection for the guide. The guide sits in a locked frame that runs no
+// code; Safari also runs no listener inside such a frame, so all input is taken by a transparent
+// layer of this page over the sheet (GuideFrame's `layer`), and the selection inside the frame is
+// set from outside:
+//   - Apple Pencil or a mouse: press on a word and drag; whole words join at once.
 //   - A finger: hold a quarter of a second, then drag (a plain swipe still scrolls).
-//   - Double tap or double click: the whole sentence.
-// Every selected word gets a thin glowing box, joined to the next one by a line with small nodes,
-// and each new word makes a short arcade "ti" (tech-sound.ts). The result is a normal browser
-// selection, so the rest of the page (the circle, the menu, Rita) reads it as before.
+//   - Double tap or double click: the whole sentence. A single tap clears.
+// Every selected word gets a thin glowing box, joined to the next one by a wire that runs through
+// the gap between lines, and each new word makes a short arcade "ti".
 
 import { blip, chirp, primeSound } from "./tech-sound";
 
@@ -261,8 +262,18 @@ export function drawSelectionFx(doc: Document | null, range: Range | null): void
   for (const [key, element] of keep) if (!wanted.has(key)) element.remove();
 }
 
-/** Takes over pressing and dragging on the guide's text. Returns a function that stops it. */
-export function attachTechSelect(doc: Document): () => void {
+/**
+ * Takes pen, finger and mouse on `layer` (this page's element over the sheet) and selects text in
+ * the frame's document. `toSheet` turns a screen point into the sheet's units. `onChange` hears
+ * the finished selection (or null when it is cleared). Returns a function that stops it.
+ */
+export function attachTechSelect(options: {
+  doc: Document;
+  layer: HTMLElement;
+  toSheet: (clientX: number, clientY: number) => { x: number; y: number };
+  onChange: (range: Range | null) => void;
+}): () => void {
+  const { doc, layer, toSheet, onChange } = options;
   let pressed: {
     id: number;
     type: string;
@@ -272,16 +283,20 @@ export function attachTechSelect(doc: Document): () => void {
     dragging: boolean;
     timer: number;
     count: number;
+    range: Range | null;
   } | null = null;
   let pointers = 0;
   let lastTap = { at: 0, x: 0, y: 0 };
-  // The whole page: no long-press callout over the guide (our own hold replaces it).
-  doc.documentElement.style.setProperty("-webkit-touch-callout", "none");
 
-  const update = (x: number, y: number) => {
+  const wordFrom = (clientX: number, clientY: number) => {
+    const point = toSheet(clientX, clientY);
+    const caret = caretAt(doc, point.x, point.y);
+    return caret ? { caret, word: wordAt(caret) } : null;
+  };
+
+  const update = (clientX: number, clientY: number) => {
     if (!pressed?.anchor) return;
-    const caret = caretAt(doc, x, y);
-    const focus = caret ? wordAt(caret) : null;
+    const focus = wordFrom(clientX, clientY)?.word;
     if (!focus) return;
     const range = doc.createRange();
     if (before(doc, focus, pressed.anchor)) {
@@ -292,6 +307,7 @@ export function attachTechSelect(doc: Document): () => void {
       range.setEnd(focus.node, focus.end);
     }
     select(doc, range);
+    pressed.range = range;
     const count = (range.toString().match(WORDS) ?? []).length;
     if (count !== pressed.count) blip();
     pressed.count = count;
@@ -305,6 +321,11 @@ export function attachTechSelect(doc: Document): () => void {
     update(pressed.x, pressed.y);
   };
 
+  const finish = (range: Range) => {
+    chirp();
+    onChange(range);
+  };
+
   const onDown = (event: PointerEvent) => {
     pointers += 1;
     if (pointers > 1) {
@@ -314,24 +335,28 @@ export function attachTechSelect(doc: Document): () => void {
       return;
     }
     if (event.button !== 0) return;
-    const caret = caretAt(doc, event.clientX, event.clientY);
-    const anchor = caret ? wordAt(caret) : null;
     primeSound();
     pressed = {
       id: event.pointerId,
       type: event.pointerType,
       x: event.clientX,
       y: event.clientY,
-      anchor,
+      anchor: wordFrom(event.clientX, event.clientY)?.word ?? null,
       dragging: false,
       timer: 0,
       count: 0,
+      range: null,
     };
     if (event.pointerType === "touch") {
-      if (anchor) pressed.timer = window.setTimeout(begin, HOLD_MS);
-    } else {
-      // Pencil and mouse: our selection, not the browser's.
-      event.preventDefault();
+      if (pressed.anchor) pressed.timer = window.setTimeout(begin, HOLD_MS);
+      return;
+    }
+    if (event.pointerType === "mouse") event.preventDefault();
+    // Pencil and mouse select from the first press: keep the moves even past the sheet's edge.
+    try {
+      layer.setPointerCapture(event.pointerId);
+    } catch {
+      /* not a live pointer (some browsers refuse); moves still arrive while over the sheet */
     }
   };
 
@@ -347,7 +372,7 @@ export function attachTechSelect(doc: Document): () => void {
         }
         return;
       }
-      if (moved < 4 || !pressed.anchor) return;
+      if (moved < 3 || !pressed.anchor) return;
       begin();
     }
     update(event.clientX, event.clientY);
@@ -360,58 +385,63 @@ export function attachTechSelect(doc: Document): () => void {
     const was = pressed;
     pressed = null;
     if (was.dragging) {
-      chirp();
+      if (was.range) finish(was.range);
       return;
     }
     // A tap: twice in a row on the same spot picks the sentence; once clears the selection.
     const now = performance.now();
     const again =
-      now - lastTap.at < 320 &&
-      Math.hypot(event.clientX - lastTap.x, event.clientY - lastTap.y) < 24;
+      now - lastTap.at < 350 &&
+      Math.hypot(event.clientX - lastTap.x, event.clientY - lastTap.y) < 28;
     lastTap = { at: now, x: event.clientX, y: event.clientY };
     if (again) {
-      const caret = caretAt(doc, event.clientX, event.clientY);
-      const range = caret ? sentenceRange(doc, caret) : null;
+      const hit = wordFrom(event.clientX, event.clientY);
+      const range = hit ? sentenceRange(doc, hit.caret) : null;
       if (range) {
         select(doc, range);
         drawSelectionFx(doc, range);
-        chirp();
+        finish(range);
         lastTap.at = 0;
         return;
       }
     }
-    if (was.type !== "touch") doc.getSelection()?.removeAllRanges();
+    doc.getSelection()?.removeAllRanges();
+    drawSelectionFx(doc, null);
+    onChange(null);
   };
 
   const onCancel = (event: PointerEvent) => {
     pointers = Math.max(0, pointers - 1);
     if (pressed?.id === event.pointerId) {
       window.clearTimeout(pressed.timer);
+      const was = pressed;
       pressed = null;
+      if (was.dragging && was.range) finish(was.range);
     }
   };
 
-  // While selecting, the finger or pencil must not scroll the page.
+  // A pencil never scrolls the page here (it selects); a finger only stops scrolling once it
+  // is selecting.
+  const onTouchStart = (event: TouchEvent) => {
+    const touch = event.touches[0] as Touch & { touchType?: string };
+    if (event.touches.length === 1 && touch.touchType === "stylus") event.preventDefault();
+  };
   const onTouchMove = (event: TouchEvent) => {
     if (pressed?.dragging) event.preventDefault();
   };
-  // The browser's own mouse selection would fight ours.
-  const onMouseDown = (event: MouseEvent) => {
-    if (pressed && pressed.type === "mouse") event.preventDefault();
-  };
 
-  doc.addEventListener("pointerdown", onDown);
-  doc.addEventListener("pointermove", onMove);
-  doc.addEventListener("pointerup", onUp);
-  doc.addEventListener("pointercancel", onCancel);
-  doc.addEventListener("touchmove", onTouchMove, { passive: false });
-  doc.addEventListener("mousedown", onMouseDown);
+  layer.addEventListener("pointerdown", onDown);
+  layer.addEventListener("pointermove", onMove);
+  layer.addEventListener("pointerup", onUp);
+  layer.addEventListener("pointercancel", onCancel);
+  layer.addEventListener("touchstart", onTouchStart, { passive: false });
+  layer.addEventListener("touchmove", onTouchMove, { passive: false });
   return () => {
-    doc.removeEventListener("pointerdown", onDown);
-    doc.removeEventListener("pointermove", onMove);
-    doc.removeEventListener("pointerup", onUp);
-    doc.removeEventListener("pointercancel", onCancel);
-    doc.removeEventListener("touchmove", onTouchMove);
-    doc.removeEventListener("mousedown", onMouseDown);
+    layer.removeEventListener("pointerdown", onDown);
+    layer.removeEventListener("pointermove", onMove);
+    layer.removeEventListener("pointerup", onUp);
+    layer.removeEventListener("pointercancel", onCancel);
+    layer.removeEventListener("touchstart", onTouchStart);
+    layer.removeEventListener("touchmove", onTouchMove);
   };
 }
