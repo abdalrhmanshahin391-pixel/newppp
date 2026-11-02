@@ -5538,6 +5538,11 @@ html.rita-app,
   }
 }
 
+/* Keep the two Together cards comfortably sized on wider screens. */
+#together .uz-tiles {
+  max-width: 760px;
+}
+
 /* The other sections: tiles of two sizes on the site's light card. */
 .uz-tiles {
   display: grid;
