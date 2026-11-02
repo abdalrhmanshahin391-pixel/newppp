@@ -456,7 +456,7 @@ function RitaConversationsPage() {
       </div>
       <section className="mx-auto w-full max-w-5xl px-5 pb-20 pt-8 sm:px-8 sm:pt-12">
         <Link
-          to="/rita"
+          to="/learn" hash="rita"
           className="inline-flex items-center gap-2 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
         >
           <ArrowLeft size={17} /> Rita

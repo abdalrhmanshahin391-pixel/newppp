@@ -1,16 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { RitaHub } from "@/components/rita-hub/RitaHub";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+/** Old Rita links open the current learning hub. */
 export const Route = createFileRoute("/rita")({
-  head: () => ({
-    meta: [
-      { title: "Rita — Choose how to practise" },
-      {
-        name: "description",
-        content: "Practise out loud with Rita: a free conversation or guided lessons.",
-      },
-      { name: "robots", content: "noindex" },
-    ],
-  }),
-  component: RitaHub,
+  beforeLoad: () => {
+    throw redirect({ to: "/learn", hash: "rita", replace: true });
+  },
 });
