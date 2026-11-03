@@ -8,6 +8,9 @@ let ctx: AudioContext | null = null;
 let lastBlip = 0;
 let step = 0;
 
+/** A sound that was not allowed to start within this many ms is dropped, not played late. */
+const STALE_MS = 400;
+
 export function soundOn(): boolean {
   try {
     return window.localStorage.getItem(KEY) !== "off";
@@ -24,8 +27,10 @@ export function setSoundOn(on: boolean): void {
   }
 }
 
+/** The audio context, made on first use (and again if the browser closed the old one). */
 function audio(): AudioContext | null {
   if (typeof window === "undefined") return null;
+  if (ctx && (ctx.state as string) === "closed") ctx = null;
   if (!ctx) {
     const Ctor =
       window.AudioContext ??
@@ -37,13 +42,84 @@ function audio(): AudioContext | null {
       return null;
     }
   }
-  if (ctx.state === "suspended") void ctx.resume();
   return ctx;
 }
 
-function tone(freq: number, start: number, length: number, volume: number) {
+/**
+ * Makes sure the sound is awake. Safari only lets sound start from a real touch, press or key, and
+ * it puts the sound to sleep again ("interrupted") when the learner switches tabs or the screen
+ * locks. So this is called straight from those events (see `installSoundUnlock`): it creates the
+ * context if needed, wakes it from any state that is not "running", and plays one silent sample,
+ * which is what unlocks audio on iPhone and iPad.
+ */
+export function unlockSound(): void {
+  if (!soundOn()) return;
   const a = audio();
   if (!a) return;
+  if (a.state !== "running") void a.resume().catch(() => undefined);
+  try {
+    const source = a.createBufferSource();
+    source.buffer = a.createBuffer(1, 1, 22050);
+    source.connect(a.destination);
+    source.start(0);
+  } catch {
+    /* the silent sample is a nicety; the wake-up above is what matters */
+  }
+}
+
+/** Kept for the selection code: wake the sound from a press. */
+export function primeSound(): void {
+  unlockSound();
+}
+
+/**
+ * Listens for the learner's first touch (and every one after a sleep) anywhere on the page, so the
+ * sound is already awake before the first selection or tap on the circle. Also tries to wake it
+ * when the learner comes back to the tab. Returns a function that stops listening.
+ */
+export function installSoundUnlock(): () => void {
+  const wake = () => {
+    if (!ctx || ctx.state !== "running") unlockSound();
+  };
+  const events = ["pointerdown", "pointerup", "touchend", "click", "keydown"] as const;
+  for (const name of events) window.addEventListener(name, wake, { capture: true, passive: true });
+  const back = () => {
+    if (document.visibilityState === "hidden") return;
+    // No gesture here, so this may be refused: then the next touch wakes it.
+    if (ctx && ctx.state !== "running") void ctx.resume().catch(() => undefined);
+  };
+  document.addEventListener("visibilitychange", back);
+  window.addEventListener("pageshow", back);
+  window.addEventListener("focus", back);
+  return () => {
+    for (const name of events) window.removeEventListener(name, wake, { capture: true });
+    document.removeEventListener("visibilitychange", back);
+    window.removeEventListener("pageshow", back);
+    window.removeEventListener("focus", back);
+  };
+}
+
+/**
+ * Runs `play` once the sound is running. If it is asleep, wake it first and play only if it woke
+ * up straight away; a sound that would come out late, or all at once with others, is dropped.
+ */
+function whenRunning(play: (a: AudioContext) => void) {
+  const a = audio();
+  if (!a) return;
+  if (a.state === "running") {
+    play(a);
+    return;
+  }
+  const asked = performance.now();
+  void a
+    .resume()
+    .then(() => {
+      if (a.state === "running" && performance.now() - asked < STALE_MS) play(a);
+    })
+    .catch(() => undefined);
+}
+
+function tone(a: AudioContext, freq: number, start: number, length: number, volume: number) {
   const osc = a.createOscillator();
   const gain = a.createGain();
   osc.type = "square";
@@ -56,11 +132,6 @@ function tone(freq: number, start: number, length: number, volume: number) {
   osc.stop(a.currentTime + start + length + 0.02);
 }
 
-/** Wakes the audio from a press, so the first blip is not lost (browsers need a gesture). */
-export function primeSound(): void {
-  if (soundOn()) audio();
-}
-
 /** One short "ti" for a new word; quick drags make a "titititi" (at most one per 28ms). */
 export function blip(): void {
   if (!soundOn()) return;
@@ -68,20 +139,28 @@ export function blip(): void {
   if (now - lastBlip < 28) return;
   lastBlip = now;
   step = (step + 1) % 6;
-  tone(1180 + step * 90, 0, 0.03, 0.035);
+  const freq = 1180 + step * 90;
+  whenRunning((a) => tone(a, freq, 0, 0.03, 0.035));
 }
 
 /** The selection is done. */
 export function chirp(): void {
   if (!soundOn()) return;
-  tone(1320, 0, 0.05, 0.04);
-  tone(1980, 0.055, 0.08, 0.04);
+  whenRunning((a) => {
+    tone(a, 1320, 0, 0.05, 0.04);
+    tone(a, 1980, 0.055, 0.08, 0.04);
+  });
 }
 
 /** A quick rising or falling sweep (the "whoosh" of the round menu). */
-function sweep(from: number, to: number, length: number, volume: number, type: OscillatorType) {
-  const a = audio();
-  if (!a) return;
+function sweep(
+  a: AudioContext,
+  from: number,
+  to: number,
+  length: number,
+  volume: number,
+  type: OscillatorType,
+) {
   const osc = a.createOscillator();
   const gain = a.createGain();
   osc.type = type;
@@ -98,14 +177,16 @@ function sweep(from: number, to: number, length: number, volume: number, type: O
 /** The round menu opens: a short rising electronic sweep. */
 export function menuOpenSound(): void {
   if (!soundOn()) return;
-  sweep(360, 1500, 0.16, 0.03, "sawtooth");
-  tone(1760, 0.12, 0.05, 0.025);
+  whenRunning((a) => {
+    sweep(a, 360, 1500, 0.16, 0.03, "sawtooth");
+    tone(a, 1760, 0.12, 0.05, 0.025);
+  });
 }
 
 /** The round menu closes: the same sweep, falling. */
 export function menuCloseSound(): void {
   if (!soundOn()) return;
-  sweep(1300, 420, 0.12, 0.025, "sawtooth");
+  whenRunning((a) => sweep(a, 1300, 420, 0.12, 0.025, "sawtooth"));
 }
 
 const SCALE = [784, 880, 1047, 1175, 1319, 1568, 1760, 2093];
@@ -113,13 +194,16 @@ const SCALE = [784, 880, 1047, 1175, 1319, 1568, 1760, 2093];
 /** Passing over an option: one note of a small rising scale, so sliding across them plays a tune. */
 export function optionNote(index: number): void {
   if (!soundOn()) return;
-  tone(SCALE[index % SCALE.length], 0, 0.045, 0.03);
+  const freq = SCALE[index % SCALE.length];
+  whenRunning((a) => tone(a, freq, 0, 0.045, 0.03));
 }
 
 /** An option is chosen: a three-note run up. */
 export function confirmSound(): void {
   if (!soundOn()) return;
-  tone(1047, 0, 0.05, 0.04);
-  tone(1319, 0.05, 0.05, 0.04);
-  tone(1568, 0.1, 0.09, 0.04);
+  whenRunning((a) => {
+    tone(a, 1047, 0, 0.05, 0.04);
+    tone(a, 1319, 0.05, 0.05, 0.04);
+    tone(a, 1568, 0.1, 0.09, 0.04);
+  });
 }
