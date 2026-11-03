@@ -24,7 +24,7 @@ import { DEFAULT_ORB, snapToEdge, type OrbPosition } from "./orb-position";
 import { markSelection, readSelection, sectionSegIds, type PageSelection } from "./selection";
 import { readStudyMemory, writeStudyMemory } from "./study-memory";
 import { attachTechSelect, drawSelectionFx } from "./tech-select";
-import { setSoundOn, soundOn } from "./tech-sound";
+import { installSoundUnlock, setSoundOn, soundOn } from "./tech-sound";
 import { useStudyRequests } from "./useStudyRequests";
 
 /** Where the divider was left (share of the width for Rita and the guide), per browser. */
@@ -102,6 +102,8 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   const [openedByKey, setOpenedByKey] = useState(false);
   const [sound, setSound] = useState(true);
   useEffect(() => setSound(soundOn()), []);
+  // Wake the sound on the first touch anywhere (and after every tab switch), before it is needed.
+  useEffect(() => installSoundUnlock(), []);
 
   const selected = useMemo(() => {
     if (!selection) return null;
