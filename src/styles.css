@@ -5810,7 +5810,8 @@ html.rita-app,
     padding: 14px 14px 24px;
   }
   .uz-lessons .uz-tile-img {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 2 / 1;
+    max-height: 210px;
   }
   .uz-lessons .uz-tile-text {
     padding: 4px 10px 0;
@@ -5844,11 +5845,6 @@ html.rita-app,
   }
   .uz-tiles > [data-lead] {
     grid-column: span 2;
-    grid-row: span 2;
-  }
-  .uz-tiles[data-count="1"] > [data-lead],
-  .uz-tiles[data-count="2"] > [data-lead] {
-    grid-row: auto;
   }
 }
 .uz-tile {
@@ -5887,16 +5883,18 @@ html.rita-app,
   position: relative;
   display: block;
   overflow: hidden;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 2 / 1;
+  max-height: 210px;
   border-radius: 16px;
   background: #000;
 }
 .uz-lessons > .uz-tile-img {
   aspect-ratio: 1;
+  max-height: none;
 }
 .uz-tile[data-lead] .uz-tile-img {
-  flex: 1;
-  min-height: 220px;
+  aspect-ratio: 21 / 9;
+  max-height: 240px;
 }
 .uz-tile-img img {
   position: absolute;
@@ -6053,7 +6051,8 @@ html.rita-app,
     align-content: space-between;
   }
   .uz-lessons .uz-tile-img {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 2 / 1;
+    max-height: 210px;
   }
 }
 .edith-premium .rita-btn.uz-light-btn {
