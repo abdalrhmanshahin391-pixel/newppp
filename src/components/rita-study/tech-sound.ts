@@ -77,3 +77,49 @@ export function chirp(): void {
   tone(1320, 0, 0.05, 0.04);
   tone(1980, 0.055, 0.08, 0.04);
 }
+
+/** A quick rising or falling sweep (the "whoosh" of the round menu). */
+function sweep(from: number, to: number, length: number, volume: number, type: OscillatorType) {
+  const a = audio();
+  if (!a) return;
+  const osc = a.createOscillator();
+  const gain = a.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(from, a.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(to, a.currentTime + length);
+  gain.gain.setValueAtTime(0, a.currentTime);
+  gain.gain.linearRampToValueAtTime(volume, a.currentTime + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + length);
+  osc.connect(gain).connect(a.destination);
+  osc.start();
+  osc.stop(a.currentTime + length + 0.02);
+}
+
+/** The round menu opens: a short rising electronic sweep. */
+export function menuOpenSound(): void {
+  if (!soundOn()) return;
+  sweep(360, 1500, 0.16, 0.03, "sawtooth");
+  tone(1760, 0.12, 0.05, 0.025);
+}
+
+/** The round menu closes: the same sweep, falling. */
+export function menuCloseSound(): void {
+  if (!soundOn()) return;
+  sweep(1300, 420, 0.12, 0.025, "sawtooth");
+}
+
+const SCALE = [784, 880, 1047, 1175, 1319, 1568, 1760, 2093];
+
+/** Passing over an option: one note of a small rising scale, so sliding across them plays a tune. */
+export function optionNote(index: number): void {
+  if (!soundOn()) return;
+  tone(SCALE[index % SCALE.length], 0, 0.045, 0.03);
+}
+
+/** An option is chosen: a three-note run up. */
+export function confirmSound(): void {
+  if (!soundOn()) return;
+  tone(1047, 0, 0.05, 0.04);
+  tone(1319, 0.05, 0.05, 0.04);
+  tone(1568, 0.1, 0.09, 0.04);
+}

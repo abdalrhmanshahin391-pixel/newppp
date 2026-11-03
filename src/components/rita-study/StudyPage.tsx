@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Group, Panel, Separator } from "react-resizable-panels";
-import * as Popover from "@radix-ui/react-popover";
 import { ArrowRight, Download, Loader2, Shuffle, Square, Star } from "lucide-react";
 import { toast } from "sonner";
 import { RitaRealtimeV3, type StudyBridge } from "@/components/rita/RitaRealtimeV3";
@@ -17,8 +16,9 @@ import {
   type RitaAction,
   type StudyAction,
 } from "@/lib/study/study-actions";
-import { ActionMenu } from "./ActionMenu";
 import { FloatingOrb, type OrbState } from "./FloatingOrb";
+import { RadialMenu, type RadialHandle } from "./RadialMenu";
+import { KIND_LABEL, ringItems } from "./radial-items";
 import { GuideFrame, type GuideFrameHandle } from "./GuideFrame";
 import { DEFAULT_ORB, snapToEdge, type OrbPosition } from "./orb-position";
 import { markSelection, readSelection, sectionSegIds, type PageSelection } from "./selection";
@@ -96,6 +96,10 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   const [orb, setOrb] = useState<OrbPosition>(() => readStudyMemory(lesson.id).orb ?? DEFAULT_ORB);
   const [movingOrb, setMovingOrb] = useState(false);
   const [phrase, setPhrase] = useState("");
+  const work = useRef<HTMLDivElement | null>(null);
+  const orbButton = useRef<HTMLButtonElement | null>(null);
+  const radial = useRef<RadialHandle | null>(null);
+  const [openedByKey, setOpenedByKey] = useState(false);
   const [sound, setSound] = useState(true);
   useEffect(() => setSound(soundOn()), []);
 
@@ -412,7 +416,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
       </header>
 
       {/* The circle lives over both sides, so it can sit wherever the learner likes. */}
-      <div className="st-work relative flex min-h-0 flex-1 flex-col">
+      <div ref={work} className="st-work relative flex min-h-0 flex-1 flex-col">
         {wide ? (
           // Rita is always on the left and the guide on the right: the group is laid out left to right.
           <Group
@@ -473,57 +477,65 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
             <div className={`min-h-0 flex-1 ${tab === "rita" ? "" : "hidden"}`}>{ritaPane}</div>
           </>
         )}
-        <Popover.Root open={menuOpen} onOpenChange={setMenuOpen}>
-          <Popover.Anchor asChild>
-            <FloatingOrb
-              state={orbState}
-              position={orb}
-              onMove={moveOrb}
-              onPress={() => setMenuOpen((open) => !open)}
-              moving={movingOrb}
-              onStopMoving={() => setMovingOrb(false)}
-              label={selection ? "شو بدك نعمل بالتحديد؟" : "حدّد جزء من الدرس"}
-            />
-          </Popover.Anchor>
-          <Popover.Portal>
-            <Popover.Content
-              side="top"
-              align="start"
-              sideOffset={10}
-              collisionPadding={12}
-              dir="rtl"
-              className="edith-premium z-50 overflow-hidden rounded-2xl border border-[var(--pp-line)] bg-white text-[var(--pp-ink)] shadow-[0_12px_40px_rgb(18_17_23/0.16)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
-              onOpenAutoFocus={(event) => event.preventDefault()}
-            >
-              <ActionMenu
-                quote={selection?.exact ?? ""}
-                kind={selected?.kind ?? null}
-                sectionLabel={sectionLabel}
-                actions={actions}
-                hasSelection={Boolean(selection)}
-                busy={false}
-                onPick={(action) => void pick(action)}
-                onReport={(note) => void report(note)}
-                onClear={() => {
-                  frame.current?.document()?.getSelection()?.removeAllRanges();
-                  keepSelection(null);
-                }}
-                onMoveOrb={() => {
-                  setMenuOpen(false);
-                  setMovingOrb(true);
-                }}
-                onPinOrb={() => moveOrb(snapToEdge(orb))}
-                onResetOrb={() => moveOrb(DEFAULT_ORB)}
-                sound={sound}
-                onToggleSound={() => {
-                  setSoundOn(!sound);
-                  setSound(!sound);
-                }}
-                onClose={() => setMenuOpen(false)}
-              />
-            </Popover.Content>
-          </Popover.Portal>
-        </Popover.Root>
+        <FloatingOrb
+          ref={orbButton}
+          state={orbState}
+          position={orb}
+          onMove={moveOrb}
+          open={menuOpen}
+          onPress={(viaKey) => {
+            setOpenedByKey(viaKey);
+            setMenuOpen((open) => !open);
+          }}
+          onHoldStart={() => {
+            setOpenedByKey(false);
+            setMenuOpen(true);
+          }}
+          onHoldMove={(x, y) => radial.current?.hover(x, y)}
+          onHoldEnd={(x, y) => radial.current?.release(x, y)}
+          moving={movingOrb}
+          onStopMoving={() => setMovingOrb(false)}
+          label={selection ? "شو بدك نعمل بالتحديد؟" : "حدّد جزء من الدرس"}
+        />
+        <RadialMenu
+          ref={radial}
+          open={menuOpen}
+          containerRef={work}
+          orbRef={orbButton}
+          orbKey={`${orb.x.toFixed(3)},${orb.y.toFixed(3)},${wide ? "w" : "n"},${tab}`}
+          items={ringItems({
+            actions,
+            hasSelection: Boolean(selection),
+            hasSection: Boolean(sectionLabel),
+          })}
+          quote={selection?.exact ?? ""}
+          meta={[sectionLabel, selected?.kind ? KIND_LABEL[selected.kind] : ""]
+            .filter(Boolean)
+            .join(" · ")}
+          hasSelection={Boolean(selection)}
+          hint="حدّد كلمة أو جملة من الدرس، وبعدين اكبس على الدائرة."
+          canReport={actions.includes("report")}
+          busy={false}
+          sound={sound}
+          autoFocus={openedByKey}
+          onToggleSound={() => {
+            setSoundOn(!sound);
+            setSound(!sound);
+          }}
+          onPick={(action) => void pick(action as StudyAction)}
+          onReport={(note) => void report(note)}
+          onClear={() => {
+            frame.current?.document()?.getSelection()?.removeAllRanges();
+            keepSelection(null);
+          }}
+          onMoveOrb={() => {
+            setMenuOpen(false);
+            setMovingOrb(true);
+          }}
+          onPinOrb={() => moveOrb(snapToEdge(orb))}
+          onResetOrb={() => moveOrb(DEFAULT_ORB)}
+          onClose={() => setMenuOpen(false)}
+        />
         {movingOrb && (
           <p
             role="status"

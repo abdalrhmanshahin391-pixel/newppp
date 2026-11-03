@@ -4,6 +4,8 @@ import { clampOrb, type OrbPosition } from "./orb-position";
 export type OrbState = "idle" | "armed" | "busy";
 
 const SIZE = 72;
+/** Holding still on the circle this long starts "slide to an option" (see RadialMenu). */
+const HOLD_MS = 320;
 const CELL = 7;
 
 /**
@@ -76,13 +78,42 @@ export const FloatingOrb = forwardRef<
     state: OrbState;
     position: OrbPosition;
     onMove: (position: OrbPosition) => void;
-    onPress: () => void;
+    /** A tap (or Enter / Space: `viaKey`). */
+    onPress: (viaKey: boolean) => void;
+    /** Held still, then sliding: the menu lights up the option under the pointer. */
+    onHoldStart?: () => void;
+    onHoldMove?: (clientX: number, clientY: number) => void;
+    onHoldEnd?: (clientX: number, clientY: number) => void;
+    /** The round menu is open. */
+    open?: boolean;
     moving: boolean;
     onStopMoving: () => void;
     label: string;
   }
->(function FloatingOrb({ state, position, onMove, onPress, moving, onStopMoving, label }, ref) {
-  const drag = useRef<{ x: number; y: number; moved: boolean; id: number } | null>(null);
+>(function FloatingOrb(
+  {
+    state,
+    position,
+    onMove,
+    onPress,
+    onHoldStart,
+    onHoldMove,
+    onHoldEnd,
+    open,
+    moving,
+    onStopMoving,
+    label,
+  },
+  ref,
+) {
+  const drag = useRef<{
+    x: number;
+    y: number;
+    moved: boolean;
+    holding: boolean;
+    id: number;
+  } | null>(null);
+  const holdTimer = useRef<number | undefined>(undefined);
   const button = useRef<HTMLButtonElement | null>(null);
   const [pressed, setPressed] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -121,6 +152,7 @@ export const FloatingOrb = forwardRef<
       aria-label={label}
       aria-keyshortcuts={moving ? "ArrowUp ArrowDown ArrowLeft ArrowRight Escape" : undefined}
       data-state={state}
+      data-open={open || undefined}
       data-dragging={dragging || undefined}
       className="st-orb"
       style={{
@@ -133,12 +165,35 @@ export const FloatingOrb = forwardRef<
         event.preventDefault();
         setPressed(true);
         // Capture now: the circle may be dragged across the guide's frame, which would swallow moves.
-        event.currentTarget.setPointerCapture(event.pointerId);
-        drag.current = { x: event.clientX, y: event.clientY, moved: false, id: event.pointerId };
+        try {
+          event.currentTarget.setPointerCapture(event.pointerId);
+        } catch {
+          /* not a live pointer; moves still arrive while it is over the circle */
+        }
+        drag.current = {
+          x: event.clientX,
+          y: event.clientY,
+          moved: false,
+          holding: false,
+          id: event.pointerId,
+        };
+        window.clearTimeout(holdTimer.current);
+        if (onHoldStart) {
+          holdTimer.current = window.setTimeout(() => {
+            const held = drag.current;
+            if (!held || held.moved) return;
+            held.holding = true;
+            onHoldStart();
+          }, HOLD_MS);
+        }
       }}
       onPointerMove={(event) => {
         const current = drag.current;
         if (!current || current.id !== event.pointerId) return;
+        if (current.holding) {
+          onHoldMove?.(event.clientX, event.clientY);
+          return;
+        }
         if (
           !current.moved &&
           Math.hypot(event.clientX - current.x, event.clientY - current.y) < DRAG_START_PX
@@ -146,6 +201,7 @@ export const FloatingOrb = forwardRef<
           return;
         if (!current.moved) {
           current.moved = true;
+          window.clearTimeout(holdTimer.current);
           setDragging(true);
         }
         place(event.clientX, event.clientY);
@@ -153,14 +209,24 @@ export const FloatingOrb = forwardRef<
       onPointerUp={(event) => {
         const current = drag.current;
         drag.current = null;
+        window.clearTimeout(holdTimer.current);
         setPressed(false);
         setDragging(false);
-        event.currentTarget.releasePointerCapture?.(event.pointerId);
+        try {
+          event.currentTarget.releasePointerCapture?.(event.pointerId);
+        } catch {
+          /* the pointer is already gone */
+        }
+        if (current?.holding) {
+          onHoldEnd?.(event.clientX, event.clientY);
+          return;
+        }
         if (current?.moved) return;
-        onPress();
+        onPress(false);
       }}
       onPointerCancel={() => {
         drag.current = null;
+        window.clearTimeout(holdTimer.current);
         setPressed(false);
         setDragging(false);
       }}
@@ -168,7 +234,7 @@ export const FloatingOrb = forwardRef<
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           if (moving) onStopMoving();
-          else onPress();
+          else onPress(true);
           return;
         }
         if (!moving) return;
