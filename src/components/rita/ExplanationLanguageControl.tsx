@@ -20,8 +20,11 @@ export function ExplanationLanguageControl({
   ui = "en",
   live,
   onChange,
+  compact = false,
 }: {
   ui?: Ui;
+  /** Three small chips and nothing else; the label and the sentence stay for screen readers. */
+  compact?: boolean;
   /** A conversation is running: the hint says "from her next answer". */
   live: boolean;
   onChange?: (value: ExplanationLanguage) => void;
@@ -49,15 +52,19 @@ export function ExplanationLanguageControl({
   }
 
   return (
-    <div className="mt-4 w-full max-w-sm text-start">
-      <p id={labelId} dir="auto" className="text-[14px] font-semibold text-[var(--pp-muted)]">
+    <div className={compact ? "w-full text-center" : "mt-4 w-full max-w-sm text-start"}>
+      <p
+        id={labelId}
+        dir="auto"
+        className={compact ? "sr-only" : "text-[14px] font-semibold text-[var(--pp-muted)]"}
+      >
         {ui === "ar" ? "ريتا بتشرح بـ" : "Rita explains in"}
       </p>
       <div
         role="radiogroup"
         aria-labelledby={labelId}
         aria-describedby={hintId}
-        className="rita-choice mt-2"
+        className={compact ? "rita-choice rita-choice-mini" : "rita-choice mt-2"}
       >
         {EXPLANATION_LANGUAGES.map((option, index) => (
           <button
@@ -80,7 +87,7 @@ export function ExplanationLanguageControl({
         dir="auto"
         role="status"
         aria-live="polite"
-        className="mt-2 text-[14px] leading-[1.4] text-[var(--pp-muted)]"
+        className={compact ? "sr-only" : "mt-2 text-[14px] leading-[1.4] text-[var(--pp-muted)]"}
       >
         {explanationHint(value, ui, live)}
       </p>

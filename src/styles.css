@@ -5287,49 +5287,251 @@ html.rita-app,
   }
 }
 
-/* The study page: Rita's column is the dark panel with the glowing orb; the guide stays on paper. */
-.uz-rita-dark {
-  background:
-    radial-gradient(380px 300px at 50% 22%, rgb(43 109 240 / 0.34), transparent 70%),
-    linear-gradient(170deg, #1b1a22, #0f0e14);
+/* The study page: Rita's column is white. Her face is a blue jelly cube (RitaCube). Before the call
+   it is big and wobbles, with Uzyra beside it; during the call it is small at the top. Only
+   transform and opacity move; the one-off size change of the stage is a single height transition. */
+.uz-cube-stage {
+  --uz-cube: 168px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 128px;
+  transition: height 600ms cubic-bezier(0.32, 0.72, 0, 1);
 }
-.uz-rita-dark .edith-premium {
-  --pp-ink: #f4f4f8;
-  --pp-muted: rgb(255 255 255 / 0.62);
-  --pp-line: rgb(255 255 255 / 0.14);
-  --pp-grey: rgb(255 255 255 / 0.07);
-  --pp-accent-soft: rgb(43 109 240 / 0.24);
-  --pp-accent-text: #9dbcff;
-  color-scheme: dark;
+.uz-cube-stage[data-intro="true"] {
+  height: 300px;
 }
-.uz-rita-dark .rita-study-col {
-  background: transparent;
+.uz-cube-move {
+  position: relative;
+  width: var(--uz-cube);
+  height: var(--uz-cube);
+  transform: scale(0.46);
+  transition: transform 600ms cubic-bezier(0.32, 0.72, 0, 1);
 }
-.uz-rita-dark .rita-study-dock {
-  background: linear-gradient(to top, #100f15 70%, transparent);
+.uz-cube-stage[data-intro="true"] .uz-cube-move {
+  transform: scale(1);
 }
-.uz-rita-dark .edith-premium .rita-btn-secondary:active,
-.uz-rita-dark .edith-premium .rita-btn-primary:active {
-  background-color: #fff;
-  color: #121117;
+.uz-cube-level {
+  width: 100%;
+  height: 100%;
+  will-change: transform;
 }
-.uz-rita-dark .edith-premium .rita-btn.rita-study-start {
-  height: 48px;
-  padding-inline: 24px;
-  border: 0;
-  border-radius: 12px;
-  background: #fff;
-  color: #121117;
-  box-shadow: 0 10px 30px -10px rgb(80 140 255 / 0.55);
+.uz-cube-jelly {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 88%;
+  animation: uz-jelly 3.4s ease-in-out infinite;
 }
-.uz-rita-dark .edith-premium .rita-btn.rita-study-start:hover {
-  background: #eef1f8;
+.uz-cube-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 30%;
+  background: #2b6df0;
+  box-shadow:
+    inset 0 -14px 22px rgb(8 36 120 / 0.28),
+    inset 0 10px 16px rgb(255 255 255 / 0.24);
+  animation: uz-shiver 4.6s ease-in-out infinite;
 }
-.uz-rita-dark .edith-premium .rita-btn.rita-study-start svg {
-  color: var(--pp-accent);
+.uz-cube-shine {
+  position: absolute;
+  inset-block-start: 11%;
+  inset-inline-start: 13%;
+  width: 26%;
+  height: 12%;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.34);
+  transform: rotate(-24deg);
 }
-.uz-rita-dark .edith-premium .rita-btn:focus-visible {
-  outline-color: #fff;
+.uz-cube-eye {
+  position: absolute;
+  inset-block-start: 40%;
+  width: 12%;
+  height: 19%;
+  border-radius: 40%;
+  background: #10131a;
+  transform-origin: 50% 50%;
+  animation: uz-blink 5.2s ease-in-out infinite;
+}
+.uz-cube-eye:nth-of-type(2) {
+  inset-inline-start: 34%;
+}
+.uz-cube-eye:nth-of-type(3) {
+  inset-inline-end: 34%;
+  animation-delay: 0.04s;
+}
+.uz-cube-shadow {
+  position: absolute;
+  inset-inline: 14%;
+  inset-block-end: -9%;
+  height: 12%;
+  border-radius: 50%;
+  background: rgb(18 17 23 / 0.12);
+  filter: blur(7px);
+  animation: uz-shadow 3.4s ease-in-out infinite;
+}
+.uz-cube-uzyra {
+  position: absolute;
+  inset-block-end: 6px;
+  left: max(8px, calc(50% - 176px));
+  width: 84px;
+  height: 100px;
+  object-fit: contain;
+  opacity: 0;
+  transform: translateX(-24px) scale(0.9);
+  transition:
+    opacity 300ms ease-out,
+    transform 400ms cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
+  user-select: none;
+}
+.uz-cube-stage[data-intro="true"] .uz-cube-uzyra {
+  opacity: 1;
+  transform: none;
+  transition-delay: 180ms;
+}
+/* The mood of the cube while the call runs. */
+.uz-cube-stage[data-mode="thinking"] .uz-cube-jelly {
+  animation-duration: 2.2s;
+}
+.uz-cube-stage[data-mode="thinking"] .uz-cube-eye {
+  animation: uz-look 2.4s ease-in-out infinite;
+}
+.uz-cube-stage[data-mode="listening"] .uz-cube-jelly,
+.uz-cube-stage[data-mode="speaking"] .uz-cube-jelly {
+  animation-duration: 2.6s;
+}
+.uz-cube-stage[data-mode="speaking"] .uz-cube-body {
+  animation-duration: 1.6s;
+}
+@keyframes uz-jelly {
+  0%,
+  100% {
+    transform: scale(1, 1) rotate(0deg);
+  }
+  18% {
+    transform: scale(1.06, 0.94) rotate(-1.4deg) skewX(1.2deg);
+  }
+  38% {
+    transform: scale(0.95, 1.06) rotate(1.1deg) skewX(-1.4deg);
+  }
+  58% {
+    transform: scale(1.04, 0.97) rotate(-0.7deg) skewX(0.8deg);
+  }
+  78% {
+    transform: scale(0.98, 1.03) rotate(0.6deg) skewX(-0.6deg);
+  }
+}
+/* A quick tremble every few seconds, like the slime was nudged. */
+@keyframes uz-shiver {
+  0%,
+  78%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  80% {
+    transform: translate(-2px, 0) rotate(-0.8deg);
+  }
+  82% {
+    transform: translate(2px, 1px) rotate(0.8deg);
+  }
+  84% {
+    transform: translate(-2px, 0) rotate(-0.6deg);
+  }
+  86% {
+    transform: translate(1px, 0) rotate(0.4deg);
+  }
+  90% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+@keyframes uz-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.12);
+  }
+}
+@keyframes uz-look {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(-18%);
+  }
+  70% {
+    transform: translateX(18%);
+  }
+}
+@keyframes uz-shadow {
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  38% {
+    transform: scaleX(0.9);
+    opacity: 0.8;
+  }
+  18% {
+    transform: scaleX(1.08);
+    opacity: 1;
+  }
+}
+@keyframes uz-msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.uz-msg-in {
+  animation: uz-msg-in 240ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+/* The language choice under the start button: three small chips, no label, no sentence. */
+.edith-premium .rita-choice.rita-choice-mini {
+  grid-auto-flow: column;
+  grid-auto-columns: auto;
+  justify-content: center;
+  gap: 6px;
+}
+.edith-premium .rita-choice.rita-choice-mini > button {
+  min-height: 36px;
+  padding-inline: 14px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+@media (max-width: 640px) {
+  .uz-cube-stage[data-intro="true"] {
+    height: 260px;
+  }
+  .uz-cube-uzyra {
+    width: 68px;
+    height: 81px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uz-cube-jelly,
+  .uz-cube-body,
+  .uz-cube-eye,
+  .uz-cube-shadow,
+  .uz-cube-stage[data-mode] .uz-cube-jelly,
+  .uz-cube-stage[data-mode] .uz-cube-body,
+  .uz-cube-stage[data-mode] .uz-cube-eye {
+    animation: none;
+  }
+  .uz-cube-stage,
+  .uz-cube-move,
+  .uz-cube-uzyra {
+    transition: opacity 200ms ease;
+  }
+  .uz-msg-in {
+    animation: none;
+  }
 }
 /* The language-change splash (LanguageSplash). The word UZYRA is drawn in fine single lines, its
    letters drift apart as they are drawn, a hairline opens, then the language rolls in. */

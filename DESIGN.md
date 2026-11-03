@@ -367,8 +367,12 @@ for green); a lesson carries a pill (`.lesson-kind`) and its row a 4px edge (`.l
 lesson whose guide is not linked says "بدون دليل مربوط" and offers «كمّل» (learners get the red lesson
 until it is linked). The kind can be changed later in the lesson window, tab «الدراسة التفاعلية».
 
-The study page's Rita column is a dark panel (`.uz-rita-dark`: the --pp tokens flipped to
-light-on-dark inside it, a white "ابدأ مع ريتا"); the guide stays on paper beside it.
+The study page's Rita column is white, like the rest of the site. Rita's face is a blue jelly
+cube (`RitaCube`, `.uz-cube-*`): before the call it is big and wobbles, with Uzyra beside it, one
+short line, the three language chips and "ابدأ مع ريتا"; when the call starts it shrinks to the top
+and Uzyra leaves; it gets smaller while the learner speaks and swells a little with Rita's voice.
+The chat under it is light text on white, a reply fades in as it is written. Motion is transform and
+opacity only and stops under reduced motion.
 
 ## Language-change splash (`LanguageSplash`)
 

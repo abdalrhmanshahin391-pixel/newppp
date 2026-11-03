@@ -357,7 +357,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   );
 
   const ritaPane = (
-    <div className="uz-rita-dark flex h-full min-h-0 flex-col" dir="rtl">
+    <div className="flex h-full min-h-0 flex-col bg-white" dir="rtl">
       <RitaRealtimeV3
         study={{ lessonId: lesson.id, preview, title: "ريتا", bridge, children: status }}
       />

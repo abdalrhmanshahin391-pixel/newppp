@@ -57,12 +57,13 @@ import { issueReportRow, type IssueCategory } from "@/lib/rita-issue-report";
 import { ReplyReport } from "@/components/rita/ReplyReport";
 import { MetricQueue } from "@/lib/metric-queue";
 import { ExplanationLanguageControl } from "@/components/rita/ExplanationLanguageControl";
+import { RitaCube } from "@/components/rita-study/RitaCube";
 import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rita-conversation";
 
 type Persona = "kind" | "direct" | "playful" | "strict";
 /** In a lesson Rita opens the lesson herself as soon as the call starts, so nobody has to say hello. */
 function welcomeText(lessonId: string | undefined, study?: boolean) {
-  if (study) return "أنا ريتا. اكبس «ابدأ مع ريتا»، وحدّد أي جزء من الدرس بدك نشتغل عليه.";
+  if (study) return "حدّد أي جزء من الدرس، وريتا بتشرحه.";
   return lessonId
     ? "Hi, I’m Rita. Press start and I’ll open today’s lesson."
     : "Hi, I’m Rita. What would you like to practise?";
@@ -1572,6 +1573,8 @@ export function RitaRealtimeV3({
 
   // Not on the welcome line; and not on the newest reply while she is still talking (her turn
   // record arrives when the answer ends).
+  // The study column before the call: the big cube, Uzyra beside it, one short line and the button.
+  const introScreen = Boolean(study) && !active && !starting && messages.length === 1;
   const newestReplyId = [...messages].reverse().find((m) => m.role === "rita")?.id;
   const canReport = (message: Message) =>
     message.role === "rita" &&
@@ -1624,28 +1627,38 @@ export function RitaRealtimeV3({
         </div>
 
         <aside className="flex flex-col items-center pt-2 text-center">
-          <VoiceOrb
-            levelsRef={orbLevels}
-            mode={orbModeFor(active, mood)}
-            label={active ? "Rita is with you" : "Rita, your language tutor"}
-            className={study ? "h-[132px] w-[132px]" : "h-[min(70vw,360px)] w-[min(70vw,360px)]"}
-          />
-          <h2
-            className={
-              study
-                ? "-mt-2 text-[20px] leading-[26px] text-[var(--pp-ink)]"
-                : "-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]"
-            }
-          >
-            {study
-              ? study.title
-              : exercises && lessonRun.view
+          {study ? (
+            <RitaCube
+              levelsRef={orbLevels}
+              mode={orbModeFor(active, starting && !active ? "thinking" : mood)}
+              intro={introScreen}
+              label={active ? "ريتا معك" : "ريتا، معلمتك"}
+            />
+          ) : (
+            <VoiceOrb
+              levelsRef={orbLevels}
+              mode={orbModeFor(active, mood)}
+              label={active ? "Rita is with you" : "Rita, your language tutor"}
+              className="h-[min(70vw,360px)] w-[min(70vw,360px)]"
+            />
+          )}
+          {!study && (
+            <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
+              {exercises && lessonRun.view
                 ? lessonRun.view.title_ar || lessonRun.view.title
                 : lessonId
                   ? lesson.session?.lesson.title || lesson.session?.lesson.title_ar || "Lesson"
                   : "Talk with Rita"}
-          </h2>
-          <p className="mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]">
+            </h2>
+          )}
+          <p
+            className={
+              study
+                ? "sr-only"
+                : "mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]"
+            }
+            role={study ? "status" : undefined}
+          >
             <span
               aria-hidden="true"
               className={`h-2.5 w-2.5 shrink-0 rounded-full ${
@@ -1676,14 +1689,14 @@ export function RitaRealtimeV3({
               ) : null}
             </p>
           ) : null}
-          <ExplanationLanguageControl live={active} onChange={explanationChanged} />
+          {!study && <ExplanationLanguageControl live={active} onChange={explanationChanged} />}
           {active && mood === "talking" && (
             <button
               type="button"
               onClick={stopRita}
               className="rita-btn rita-btn-secondary rita-btn-sm mt-3 gap-1.5"
             >
-              <Square size={14} fill="currentColor" /> Stop
+              <Square size={14} fill="currentColor" /> {study ? "وقّف" : "Stop"}
             </button>
           )}
         </aside>
@@ -1747,33 +1760,39 @@ export function RitaRealtimeV3({
                   </Link>
                 </div>
               )}
-              {groupTurns(messages).map((message) =>
-                message.role === "you" ? (
-                  <ChatText
-                    key={message.id}
-                    text={message.text}
-                    className="ml-auto w-fit max-w-[80%] rounded-2xl rounded-br-md bg-[var(--pp-accent-soft)] px-4 py-2 text-[17px] leading-8"
-                  />
-                ) : (
-                  <div key={message.id}>
+              {groupTurns(messages)
+                .filter((message) => !(study && message.id === "welcome" && !introScreen))
+                .map((message) =>
+                  message.role === "you" ? (
                     <ChatText
+                      key={message.id}
                       text={message.text}
-                      onPhrase={openPhrase}
-                      interruptedAt={message.interruptedAt}
-                      className={
-                        !active && messages.length === 1
-                          ? "mx-auto text-center text-[20px] leading-8"
-                          : "max-w-[94%] text-[18px] leading-9"
-                      }
+                      className={`ml-auto w-fit max-w-[80%] rounded-2xl rounded-br-md bg-[var(--pp-accent-soft)] px-4 py-2 text-[17px] leading-8${study ? " uz-msg-in" : ""}`}
                     />
-                    {canReport(message) && (
-                      <ReplyReport
-                        onSubmit={(category, note) => reportReply(message.id, category, note)}
+                  ) : (
+                    <div key={message.id} className={study ? "uz-msg-in" : undefined}>
+                      <ChatText
+                        text={message.text}
+                        onPhrase={openPhrase}
+                        interruptedAt={message.interruptedAt}
+                        className={
+                          !active && messages.length === 1
+                            ? study
+                              ? "mx-auto text-center text-[18px] font-medium leading-8 text-[var(--pp-muted)]"
+                              : "mx-auto text-center text-[20px] leading-8"
+                            : study
+                              ? "max-w-[94%] text-[17px] leading-8"
+                              : "max-w-[94%] text-[18px] leading-9"
+                        }
                       />
-                    )}
-                  </div>
-                ),
-              )}
+                      {canReport(message) && !(study && introScreen) && (
+                        <ReplyReport
+                          onSubmit={(category, note) => reportReply(message.id, category, note)}
+                        />
+                      )}
+                    </div>
+                  ),
+                )}
               {showCaption(
                 caption,
                 [...messages].reverse().find((m) => m.role === "you")?.text,
@@ -1794,17 +1813,23 @@ export function RitaRealtimeV3({
 
           <div
             className={
-              study
-                ? "rita-study-dock sticky bottom-0 pb-5 pt-3"
-                : "sticky bottom-0 bg-white pb-6 pt-3"
+              study ? "sticky bottom-0 bg-white pb-5 pt-3" : "sticky bottom-0 bg-white pb-6 pt-3"
             }
           >
+            {study && (
+              <ExplanationLanguageControl
+                ui="ar"
+                compact
+                live={active}
+                onChange={explanationChanged}
+              />
+            )}
             {!active ? (
-              <div className="flex justify-center">
+              <div className={`flex justify-center${study ? " mt-3" : ""}`}>
                 <button
                   onClick={startLesson}
                   disabled={historyLoading || starting || (Boolean(lessonId) && !lesson.session)}
-                  className={`rita-btn gap-2 disabled:opacity-60 ${study ? "rita-study-start" : "rita-btn-primary"}`}
+                  className="rita-btn rita-btn-primary gap-2 disabled:opacity-60"
                 >
                   {historyLoading || starting ? (
                     <Loader2 className="animate-spin" size={18} />
