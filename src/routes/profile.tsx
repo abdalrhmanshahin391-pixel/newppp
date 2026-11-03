@@ -3,7 +3,6 @@ import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { useAuth } from "@/hooks/useAuth";
 import { SiteHeader } from "@/components/SiteHeader";
-import { LanguagePicker } from "@/components/language/LanguagePicker";
 import { GoldenBadge } from "@/components/GoldenBadge";
 import { CommitteeBadge } from "@/components/CommitteeBadge";
 import { AdminBadge, StudentBadge } from "@/components/RoleBadge";
@@ -24,7 +23,6 @@ import {
   Save,
   ShieldCheck,
   UserRound,
-  Languages,
 } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
@@ -65,8 +63,6 @@ function ProfilePage() {
   const [confirmPw, setConfirmPw] = useState("");
   const [savingPw, setSavingPw] = useState(false);
   const [pwMsg, setPwMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
-
-
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
@@ -187,7 +183,7 @@ function ProfilePage() {
       const { error } = await supabase.auth.updateUser({
         password: newPw,
         // Lovable Cloud requires the current password for signed-in changes.
-        ...( { current_password: currentPw } as any),
+        ...({ current_password: currentPw } as any),
       } as any);
       if (error) {
         const m = (error.message || "").toLowerCase();
@@ -214,7 +210,6 @@ function ProfilePage() {
       setSavingPw(false);
     }
   }
-
 
   async function pickAvatar(file: File) {
     if (!user) return;
@@ -249,7 +244,6 @@ function ProfilePage() {
     return <div className="min-h-screen" style={{ background: "#f4f4f8" }} />;
   }
 
-  
   const pwScore =
     newPw.length === 0
       ? null
@@ -288,7 +282,8 @@ function ProfilePage() {
         />
 
         <Link
-          to="/share" search={{ type: "flashcards" }}
+          to="/share"
+          search={{ type: "flashcards" }}
           className="mb-8 flex items-center gap-3 rounded-3xl border border-black/[0.07] bg-white px-6 py-5 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-28px_rgba(0,0,0,0.5)]"
         >
           <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#f4f4f8] text-[#1d4f20]">
@@ -302,19 +297,6 @@ function ProfilePage() {
           </span>
           <span className="text-sm font-black text-[#3a9042]">Open →</span>
         </Link>
-
-        {/* Learning language */}
-        <SectionCard
-          id="learning-language"
-          icon={<Languages size={18} />}
-          title="Learning language"
-        >
-          <p className="-mt-3 mb-5 text-sm text-[#54546a]">
-            Your flashcards, lessons and conversations are kept separately for each language.
-            Switching never deletes anything.
-          </p>
-          <LanguagePicker />
-        </SectionCard>
 
         {/* Personal Information */}
         <SectionCard icon={<UserRound size={18} />} title="Personal Information">
@@ -423,7 +405,6 @@ function ProfilePage() {
             </Link>
           </div>
         </SectionCard>
-
 
         <div className="mt-10 text-center">
           <Link
@@ -534,9 +515,7 @@ function SectionCard({
       className="mb-8 scroll-mt-24 rounded-[20px] border-2 border-[#121117] bg-white p-6 md:p-8"
     >
       <div className="mb-6 flex items-center gap-3">
-        <span className="grid h-9 w-9 place-items-center text-[#121117]">
-          {icon}
-        </span>
+        <span className="grid h-9 w-9 place-items-center text-[#121117]">{icon}</span>
         <h2 className="text-lg font-bold">{title}</h2>
       </div>
       {children}
@@ -544,13 +523,7 @@ function SectionCard({
   );
 }
 
-function PasswordInput({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
+function PasswordInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [show, setShow] = useState(false);
   return (
     <div className="relative">
