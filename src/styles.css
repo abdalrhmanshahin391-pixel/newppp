@@ -5318,13 +5318,13 @@ html.rita-app,
   pointer-events: none;
 }
 .uz-rc-spot.is-hero {
-  width: min(168px, 42vw);
+  width: min(120px, 32vw);
   aspect-ratio: 1;
   margin-block: 14px 8px;
 }
 .uz-rc-spot.is-dock {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   margin-inline: auto;
 }
 .uz-rc[data-phase="intro"] .uz-rc-spot.is-dock {
@@ -5566,55 +5566,42 @@ html.rita-app,
 .uz-cube-body {
   position: absolute;
   inset: 0;
-  border-radius: 31%;
-  background:
-    radial-gradient(85% 70% at 32% 18%, rgb(255 255 255 / 0.28), transparent 60%),
-    radial-gradient(120% 110% at 70% 95%, rgb(10 40 140 / 0.35), transparent 55%),
-    #2f6ff1;
-  box-shadow:
-    inset 0 -10px 18px rgb(8 30 110 / 0.22),
-    inset 0 6px 10px rgb(255 255 255 / 0.18);
   transform-origin: 50% 100%;
   will-change: transform;
 }
-.uz-cube-shine {
+.uz-cube-shape {
   position: absolute;
-  top: 9%;
-  left: 14%;
-  width: 22%;
-  height: 9%;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 0.32);
-  transform: rotate(-20deg);
-  filter: blur(1px);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
+/* Two small dark ovals in the middle of the block, a little apart. */
 .uz-cube-eyes {
   position: absolute;
-  top: 36%;
-  left: 50%;
+  top: 43.6%;
+  left: 34.2%;
   display: flex;
-  gap: 17%;
-  justify-content: center;
-  width: 40%;
-  height: 19%;
-  margin-left: -20%;
+  justify-content: space-between;
+  width: 31.6%;
+  height: 17.6%;
   transform-origin: 50% 50%;
   will-change: transform;
 }
 .uz-cube-eye {
-  width: 22%;
+  width: 25%;
   height: 100%;
-  border-radius: 999px;
-  background: #0d0f14;
+  border-radius: 50%;
+  background: #0f1116;
 }
 .uz-cube-shadow {
   position: absolute;
-  left: 14%;
-  right: 14%;
-  bottom: -11%;
-  height: 10%;
+  left: 16%;
+  right: 16%;
+  bottom: 0;
+  height: 8%;
   border-radius: 50%;
-  background: rgb(14 17 22 / 0.13);
+  background: rgb(14 17 22 / 0.12);
   filter: blur(6px);
   will-change: transform;
 }

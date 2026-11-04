@@ -1,12 +1,42 @@
-import { useEffect, useRef, type MutableRefObject } from "react";
+import { useEffect, useId, useRef, type MutableRefObject } from "react";
 import { OrbDynamics, type OrbMode } from "@/components/rita-live/orb-dynamics";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
+
+/**
+ * The cube's outline in a 100 × 100 box: a block a little wider than tall with soft corners. Each
+ * corner has its own radius and the box is a touch uneven, so it reads as a hand-made, squishy thing
+ * rather than a perfect icon. `wobble` (0..1 per corner) nudges the radii frame by frame.
+ */
+function blobPath(radii: [number, number, number, number]): string {
+  const [tl, tr, br, bl] = radii;
+  // Corners: slightly uneven, a touch wider than tall (about 84 × 80).
+  const L = 8;
+  const R = 92;
+  const T = 10;
+  const B = 90;
+  const tilt = 1.6; // the top edge leans a little
+  return [
+    `M${L + tl} ${T + tilt}`,
+    `L${R - tr} ${T}`,
+    `Q${R} ${T} ${R} ${T + tr}`,
+    `L${R + 0.6} ${B - br}`,
+    `Q${R + 0.6} ${B} ${R - br} ${B}`,
+    `L${L + bl} ${B + 0.4}`,
+    `Q${L} ${B + 0.4} ${L} ${B - bl}`,
+    `L${L - 0.4} ${T + tilt + tl}`,
+    `Q${L - 0.4} ${T + tilt} ${L + tl} ${T + tilt}`,
+    "Z",
+  ].join(" ");
+}
+
+const BASE_RADII: [number, number, number, number] = [17, 19, 16, 20];
+const BLOB = blobPath(BASE_RADII);
 
 /**
  * Rita's face on the study page: a soft blue cube with two dark eyes that is quietly alive.
  *
  * Everything moves from one animation-frame loop that writes three transforms (body, eyes, shadow)
- * and never touches React state:
+ * and the outline's corners (it is soft, like clay), and never touches React state:
  * - waiting: slow breathing and a slight jelly sway; it blinks every 3–7 s (sometimes twice) and
  *   now and then glances to one side, holds, and looks back;
  * - the learner speaking: it squashes with their voice like jelly and the eyes lift, listening;
@@ -27,6 +57,7 @@ export function RitaCube({
   const body = useRef<HTMLDivElement>(null);
   const eyes = useRef<HTMLDivElement>(null);
   const shadow = useRef<HTMLSpanElement>(null);
+  const shape = useRef<SVGSVGElement>(null);
   const modeRef = useRef<OrbMode>(mode);
   modeRef.current = mode;
 
@@ -34,6 +65,7 @@ export function RitaCube({
     const bodyEl = body.current;
     const eyesEl = eyes.current;
     const shadowEl = shadow.current;
+    const paths = Array.from(shape.current?.querySelectorAll("path") ?? []);
     if (!bodyEl || !eyesEl || !shadowEl) return;
     const dynamics = new OrbDynamics();
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -136,13 +168,23 @@ export function RitaCube({
       eyeX = ease(eyeX, wantX, dt, 0.09);
       eyeY = ease(eyeY, wantY - lift * 0.5, dt, 0.09);
 
-      const calm = current === "idle" ? 1 : 0.55;
-      const breathe = Math.sin((t * Math.PI * 2) / 3.6) * 0.02 * calm;
-      const sway = Math.sin((t * Math.PI * 2) / 4.4) * 1.1 * calm;
-      const skew = Math.sin((t * Math.PI * 2) / 2.9 + 0.7) * 0.9 * calm;
-      const sy = 1 + breathe - press * 0.22 + voice * 0.06;
-      const sx = 1 - breathe * 0.5 + press * 0.14 - voice * 0.03;
-      const hop = -voice * 9;
+      // Calm, clay-like: small amplitudes, slow periods.
+      const calm = current === "idle" ? 1 : 0.6;
+      const breathe = Math.sin((t * Math.PI * 2) / 3.8) * 0.018 * calm;
+      const sway = Math.sin((t * Math.PI * 2) / 5.2) * 0.6 * calm;
+      const skew = Math.sin((t * Math.PI * 2) / 3.3 + 0.7) * 0.5 * calm;
+      const sy = 1 + breathe - press * 0.2 + voice * 0.05;
+      const sx = 1 - breathe * 0.5 + press * 0.12 - voice * 0.025;
+      const hop = -voice * 7;
+      // The outline itself moves a little, like soft clay: each corner breathes on its own.
+      const squish = 0.8 + press * 3 + voice * 2;
+      const outline = blobPath([
+        BASE_RADII[0] + Math.sin(t * 1.1) * squish,
+        BASE_RADII[1] + Math.sin(t * 0.9 + 1.7) * squish,
+        BASE_RADII[2] + Math.sin(t * 1.3 + 3.1) * squish,
+        BASE_RADII[3] + Math.sin(t * 0.8 + 4.4) * squish,
+      ]);
+      for (const path of paths) path.setAttribute("d", outline);
       bodyEl.style.transform =
         `translateY(${hop.toFixed(2)}%) rotate(${(sway + lean).toFixed(2)}deg) ` +
         `skewX(${skew.toFixed(2)}deg) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`;
@@ -165,10 +207,43 @@ export function RitaCube({
     };
   }, [levelsRef]);
 
+  const id = useId().replace(/:/g, "");
   return (
     <div className="uz-cube" role="img" aria-label={label}>
       <div ref={body} className="uz-cube-body">
-        <span className="uz-cube-shine" aria-hidden="true" />
+        {/* Matte and soft, like clay or a gummy: light from above, a slightly lighter rim, a
+            deeper bottom. No glossy highlight. */}
+        <svg ref={shape} className="uz-cube-shape" viewBox="0 0 100 100" aria-hidden="true">
+          <defs>
+            <linearGradient id={`${id}-fill`} x1="0.1" y1="0.95" x2="0.9" y2="0.05">
+              <stop offset="0" stopColor="#4a83f4" />
+              <stop offset="0.5" stopColor="#3170ef" />
+              <stop offset="1" stopColor="#2a63dc" />
+            </linearGradient>
+            <linearGradient id={`${id}-rim`} x1="0" y1="1" x2="0.75" y2="0.25">
+              <stop offset="0" stopColor="#ffffff" stopOpacity="0.55" />
+              <stop offset="0.45" stopColor="#ffffff" stopOpacity="0.12" />
+              <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
+            </linearGradient>
+            <filter id={`${id}-soft`} x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="0.9" />
+            </filter>
+            <clipPath id={`${id}-clip`}>
+              <path d={BLOB} />
+            </clipPath>
+          </defs>
+          <g>
+            <path d={BLOB} fill={`url(#${id}-fill)`} />
+            <path
+              d={BLOB}
+              fill="none"
+              stroke={`url(#${id}-rim)`}
+              strokeWidth="5"
+              filter={`url(#${id}-soft)`}
+              clipPath={`url(#${id}-clip)`}
+            />
+          </g>
+        </svg>
         <div ref={eyes} className="uz-cube-eyes" aria-hidden="true">
           <span className="uz-cube-eye" />
           <span className="uz-cube-eye" />
