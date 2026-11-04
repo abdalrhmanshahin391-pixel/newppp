@@ -14,7 +14,6 @@ const PREFIX = "rita_";
 const LOCAL_ONLY = new Set(["rita_study_muted", "rita_mem_muted", "rita_fc_creator_mode"]);
 
 let userId: string | null = null;
-let installed = false;
 let applyingRemote = false;
 const dirty = new Set<string>();
 let timer: ReturnType<typeof setTimeout> | null = null;
@@ -175,7 +174,6 @@ let readyPromise: Promise<void> | null = null;
 export function startCloudSync(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
   if (readyPromise) return readyPromise;
-  installed = true;
   patchStorage();
 
   supabase.auth.onAuthStateChange((event, session) => {

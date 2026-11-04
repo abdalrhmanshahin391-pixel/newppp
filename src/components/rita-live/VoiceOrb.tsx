@@ -40,6 +40,7 @@ export function VoiceOrb({ levelsRef, mode, label, className = "" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const modeRef = useRef<OrbMode>(mode);
   const [fallback, setFallback] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     modeRef.current = mode;
@@ -72,6 +73,10 @@ export function VoiceOrb({ levelsRef, mode, label, className = "" }: Props) {
         throw new Error(gl.getProgramInfoLog(program) ?? "link failed");
       }
     } catch (error) {
+      if (program) {
+        for (const shader of gl.getAttachedShaders(program) ?? []) gl.deleteShader(shader);
+        gl.deleteProgram(program);
+      }
       console.warn("Voice orb shader unavailable, using the still orb", error);
       setFallback(true);
       return;
@@ -104,12 +109,21 @@ export function VoiceOrb({ levelsRef, mode, label, className = "" }: Props) {
     let slowFrames = 0;
     let last = performance.now();
     let raf = 0;
-    let visible = true;
+    let visible = !document.hidden;
     let onScreen = true;
+    let painted = false;
+    let contextLost = false;
+    let cssWidth = canvas.clientWidth;
+    let cssHeight = canvas.clientHeight;
+    const resize = new ResizeObserver(([entry]) => {
+      cssWidth = entry.contentRect.width;
+      cssHeight = entry.contentRect.height;
+    });
+    resize.observe(canvas);
 
     const draw = (now: number) => {
-      raf = requestAnimationFrame(draw);
-      if (!visible || !onScreen) {
+      raf = 0;
+      if (!visible || !onScreen || contextLost) {
         last = now;
         return;
       }
@@ -125,8 +139,8 @@ export function VoiceOrb({ levelsRef, mode, label, className = "" }: Props) {
       }
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2) * resolutionScale;
-      const width = Math.max(2, Math.floor(canvas.clientWidth * dpr));
-      const height = Math.max(2, Math.floor(canvas.clientHeight * dpr));
+      const width = Math.max(2, Math.floor(cssWidth * dpr));
+      const height = Math.max(2, Math.floor(cssHeight * dpr));
       if (canvas.width !== width || canvas.height !== height) {
         canvas.width = width;
         canvas.height = height;
@@ -157,11 +171,26 @@ export function VoiceOrb({ levelsRef, mode, label, className = "" }: Props) {
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
+      if (!painted) {
+        painted = true;
+        setReady(true);
+      }
+      raf = requestAnimationFrame(draw);
     };
-    raf = requestAnimationFrame(draw);
+    function resume() {
+      if (visible && onScreen && !contextLost && !raf) {
+        last = performance.now();
+        raf = requestAnimationFrame(draw);
+      } else if (!visible || !onScreen || contextLost) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    }
+    resume();
 
     const onVisibility = () => {
       visible = document.visibilityState === "visible";
+      resume();
     };
     document.addEventListener("visibilitychange", onVisibility);
 
@@ -170,11 +199,13 @@ export function VoiceOrb({ levelsRef, mode, label, className = "" }: Props) {
         ? null
         : new IntersectionObserver(([entry]) => {
             onScreen = entry?.isIntersecting ?? true;
+            resume();
           });
     observer?.observe(canvas);
 
     const onContextLost = (event: Event) => {
       event.preventDefault();
+      contextLost = true;
       cancelAnimationFrame(raf);
       setFallback(true);
     };
@@ -184,7 +215,12 @@ export function VoiceOrb({ levelsRef, mode, label, className = "" }: Props) {
       cancelAnimationFrame(raf);
       document.removeEventListener("visibilitychange", onVisibility);
       observer?.disconnect();
+      resize.disconnect();
       canvas.removeEventListener("webglcontextlost", onContextLost);
+      // Effect cleanup can run before React disconnects the canvas.
+      gl.deleteBuffer(buffer);
+      for (const shader of gl.getAttachedShaders(program) ?? []) gl.deleteShader(shader);
+      gl.deleteProgram(program);
       // Free the GPU context only when the canvas is really gone. React's development
       // double-run re-uses the same canvas, and a lost context would send it to the fallback.
       if (!canvas.isConnected) gl.getExtension("WEBGL_lose_context")?.loseContext();
@@ -197,14 +233,13 @@ export function VoiceOrb({ levelsRef, mode, label, className = "" }: Props) {
       aria-label={label ?? "Rita voice"}
       className={`relative aspect-square ${className}`}
     >
-      {fallback ? (
+      {(fallback || !ready) && (
         <div
           className="absolute left-1/2 top-1/2 h-1/2 w-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={FALLBACK_STYLE}
         />
-      ) : (
-        <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       )}
+      {!fallback && <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />}
     </div>
   );
 }

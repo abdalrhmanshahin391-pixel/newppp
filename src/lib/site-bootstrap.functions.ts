@@ -1,8 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeader } from "@tanstack/react-start/server";
+import { languageFromCookie, type UiLanguage } from "./ui-language";
 
 export type SettingsRow = Record<string, string | number | boolean | null>;
 
 export type BootstrapPayload = {
+  language: UiLanguage;
   settings: SettingsRow | null;
   siteImages: Record<string, string>;
 };
@@ -13,11 +16,12 @@ export type BootstrapPayload = {
  */
 export const getSiteBootstrap = createServerFn({ method: "GET" }).handler(
   async (): Promise<BootstrapPayload> => {
+    const language = languageFromCookie(getRequestHeader("cookie")) ?? "en";
     try {
       const { loadSiteBootstrap } = await import("./site-bootstrap.server");
-      return (await loadSiteBootstrap()) as BootstrapPayload;
+      return { ...(await loadSiteBootstrap()), language };
     } catch {
-      return { settings: null, siteImages: {} };
+      return { settings: null, siteImages: {}, language };
     }
   },
 );

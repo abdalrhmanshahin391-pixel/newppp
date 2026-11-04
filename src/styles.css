@@ -382,7 +382,7 @@ text-primary).
   --shadow-brand: none;
   --gradient-brand: linear-gradient(135deg, #2b6df0 0%, #4a82f3 100%);
 } /*
- * Golden accounts — cosmetic gold accent applied to <html> by GoldenTheme.
+ * Golden accounts — cosmetic gold accent applied to <html> by RootShell.
  * Only re-points the semantic tokens,
 so every component follows along
  * without hardcoding colours.
@@ -516,14 +516,6 @@ body {
   h2 {
     letter-spacing: -0.022em;
     font-weight: 700;
-  } /* Skip rendering work for offscreen sections */
-  section {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 600px;
-  }
-  img,
-  video {
-    content-visibility: auto;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -5488,13 +5480,7 @@ html.rita-app,
   }
 }
 
-/* Page transitions: a short cross-fade when the page changes (router `defaultViewTransition`),
-   and a thin line at the top while a slow page is on its way (NavigationBar in __root.tsx). */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 180ms;
-  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
-}
+/* Delayed navigation feedback without a full-screen cross-fade. */
 .uz-navbar {
   position: fixed;
   inset: 0 0 auto;
