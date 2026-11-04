@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
+  ArrowUp,
   Layers,
   Loader2,
   Mic,
@@ -35,6 +36,9 @@ import { LearningTray } from "./LearningTray";
 import { useLearningTray } from "./useLearningTray";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { VoiceOrb } from "@/components/rita-live/VoiceOrb";
+import { RitaCube } from "@/components/rita-study/RitaCube";
+import { FlyingCube, StickyScroll } from "@/components/rita-study/RitaColumn";
+import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
 import { useRitaLesson } from "@/components/rita-lessons/useRitaLesson";
 import { useLessonRun } from "@/components/rita-lessons/useLessonRun";
@@ -852,7 +856,8 @@ export function RitaRealtimeV3({
     if (!activeConversationId.current) {
       setMessages([
         {
-          id: crypto.randomUUID(),
+          // The same id as the first welcome, so it is never taken for one of Rita's replies.
+          id: "welcome",
           role: "rita",
           text: welcomeText(lessonId, Boolean(studyLessonId)),
         },
@@ -1515,6 +1520,14 @@ export function RitaRealtimeV3({
     },
     [metric],
   );
+  // On the study page the language is chosen from the circle (the shared setting): tell a running
+  // call when it changes there.
+  const lastExplanation = useRef(explanation.value);
+  useEffect(() => {
+    if (!studyLessonId || lastExplanation.current === explanation.value) return;
+    lastExplanation.current = explanation.value;
+    explanationChanged(explanation.value);
+  }, [explanation.value, explanationChanged, studyLessonId]);
 
   function stopRita() {
     cancelFiller();
@@ -1578,13 +1591,210 @@ export function RitaRealtimeV3({
     message.id !== "welcome" &&
     (!active || message.id !== newestReplyId || ledgerReplies.has(message.id));
 
+  if (study) {
+    const turns = groupTurns(messages).filter((message) => message.id !== "welcome");
+    const chatting = active || starting || turns.length > 0;
+    const stateWord = !active
+      ? historyLoading || starting
+        ? "بتجهّز…"
+        : "ريتا جاهزة"
+      : mood === "talking" || mood === "laughing"
+        ? "بتحكي…"
+        : mood === "thinking"
+          ? "بتفكر…"
+          : muted
+            ? "المايك مسكّر"
+            : "بسمعك…";
+    const lastTurn = turns[turns.length - 1];
+    return (
+      <main
+        className="edith-premium uz-rc text-[var(--pp-ink)]"
+        data-phase={chatting ? "chat" : "intro"}
+        style={{ fontFamily: "var(--font-grotesk), 'Noto Sans Arabic', sans-serif" }}
+      >
+        <audio
+          ref={botAudio}
+          autoPlay
+          playsInline
+          className="hidden"
+          onPlaying={() => {
+            if (botAudioPlaying.current) return;
+            botAudioPlaying.current = true;
+            void metric("audio_playing");
+          }}
+          onStalled={() => void metric("audio_stalled")}
+          onEnded={() => void metric("audio_ended")}
+        />
+        <p className="sr-only" role="status" aria-live="polite">
+          {stateWord}
+        </p>
+
+        {chatting ? (
+          <StickyScroll
+            follow={`${turns.length}:${lastTurn?.text.length ?? 0}:${caption.length}:${error}`}
+          >
+            <div className="uz-rc-chat">
+              {active && soundBlocked && (
+                <button type="button" onClick={enableSound} className="uz-rc-chip">
+                  اكبس لتشغيل الصوت
+                </button>
+              )}
+              {turns.map((message) =>
+                message.role === "you" ? (
+                  <ChatText key={message.id} text={message.text} className="uz-rc-you uz-msg-in" />
+                ) : (
+                  <div key={message.id} className="uz-rc-rita uz-msg-in">
+                    <ChatText
+                      text={message.text}
+                      onPhrase={openPhrase}
+                      interruptedAt={message.interruptedAt}
+                    />
+                    {canReport(message) && (
+                      <ReplyReport
+                        compact
+                        onSubmit={(category, note) => reportReply(message.id, category, note)}
+                      />
+                    )}
+                  </div>
+                ),
+              )}
+              {showCaption(
+                caption,
+                [...messages].reverse().find((m) => m.role === "you")?.text,
+              ) && <ChatText text={caption} className="uz-rc-you is-live" />}
+              {study.children}
+              {error && <p className="uz-rc-error">{error}</p>}
+            </div>
+          </StickyScroll>
+        ) : (
+          <div className="uz-rc-hero">
+            <UzyraWordmark size={14} withMark={false} className="uz-rc-brand" />
+            <div className="uz-rc-spot is-hero" data-cube-spot="hero" />
+            <p className="uz-rc-word">{stateWord}</p>
+            {error && <p className="uz-rc-error">{error}</p>}
+          </div>
+        )}
+
+        <div className="uz-rc-dock">
+          <div className="uz-rc-spot is-dock" data-cube-spot="dock" />
+          {chatting && <p className="uz-rc-word is-small">{stateWord}</p>}
+          {!active ? (
+            <button
+              type="button"
+              onClick={startLesson}
+              disabled={historyLoading || starting}
+              className="uz-rc-bar is-start"
+            >
+              <span className="uz-rc-placeholder">احكي مع ريتا…</span>
+              <span className="uz-rc-mic" aria-hidden="true">
+                {historyLoading || starting ? (
+                  <Loader2 className="animate-spin" size={18} />
+                ) : (
+                  <Mic size={18} />
+                )}
+              </span>
+            </button>
+          ) : (
+            <form onSubmit={sendText} className="uz-rc-bar">
+              <input
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                placeholder="اكتب لريتا…"
+                aria-label="اكتب لريتا"
+                dir="auto"
+                className="uz-rc-input"
+              />
+              <div className="uz-rc-tools">
+                {mood === "talking" && (
+                  <button
+                    type="button"
+                    onClick={stopRita}
+                    className="uz-rc-icon"
+                    aria-label="وقّف ريتا"
+                    title="وقّف ريتا"
+                  >
+                    <Square size={13} fill="currentColor" aria-hidden="true" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={toggleMute}
+                  disabled={!readyForSpeech}
+                  className="uz-rc-icon"
+                  aria-pressed={muted}
+                  aria-label={muted ? "شغّل المايك" : "سكّر المايك"}
+                  title={muted ? "شغّل المايك" : "سكّر المايك"}
+                >
+                  {muted ? (
+                    <MicOff size={17} aria-hidden="true" />
+                  ) : (
+                    <Mic size={17} aria-hidden="true" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void tray.openTray()}
+                  className="uz-rc-icon"
+                  aria-label={`كلماتي (${tray.entries.length})`}
+                  title="كلماتي"
+                >
+                  <Layers size={17} aria-hidden="true" />
+                  {tray.entries.length > 0 && (
+                    <span className="uz-rc-badge">{tray.entries.length}</span>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void finishConversation()}
+                  className="uz-rc-icon is-end"
+                  aria-label="إنهاء المكالمة"
+                  title="إنهاء المكالمة"
+                >
+                  <X size={17} aria-hidden="true" />
+                </button>
+                <button
+                  type="submit"
+                  disabled={!readyForSpeech}
+                  className="uz-rc-send"
+                  aria-label="إرسال"
+                  title="إرسال"
+                >
+                  <ArrowUp size={17} aria-hidden="true" />
+                </button>
+              </div>
+            </form>
+          )}
+          {tray.latest && (
+            <p role="status" className="uz-rc-word is-small">
+              {tray.latest}
+            </p>
+          )}
+        </div>
+
+        <FlyingCube chatting={chatting}>
+          <RitaCube
+            levelsRef={orbLevels}
+            mode={active ? orbModeFor(active, mood) : starting ? "thinking" : "idle"}
+            label={active ? "ريتا معك" : "ريتا"}
+          />
+        </FlyingCube>
+
+        {phrase && (
+          <PhraseDialog
+            phrase={phrase}
+            onClose={closePhrase}
+            onPlayingChange={phrasePlaying}
+            onWord={(item) => tray.add([item], item.term)}
+          />
+        )}
+        <LearningTray tray={tray} />
+      </main>
+    );
+  }
+
   return (
     <main
-      className={
-        study
-          ? "edith-premium rita-study-col flex h-full min-h-0 flex-col text-[var(--pp-ink)]"
-          : "edith-premium min-h-screen bg-white text-[var(--pp-ink)]"
-      }
+      className="edith-premium min-h-screen bg-white text-[var(--pp-ink)]"
       style={{ fontFamily: "var(--font-grotesk), 'Noto Sans Arabic', sans-serif" }}
     >
       <audio
@@ -1600,20 +1810,12 @@ export function RitaRealtimeV3({
         onStalled={() => void metric("audio_stalled")}
         onEnded={() => void metric("audio_ended")}
       />
-      {!study && (
-        <div className="rita-cream edith-light edith-premium">
-          <ProHeader variant="solid" tone="light" />
-        </div>
-      )}
+      <div className="rita-cream edith-light edith-premium">
+        <ProHeader variant="solid" tone="light" />
+      </div>
 
-      <div
-        className={
-          study
-            ? "flex min-h-0 w-full flex-1 flex-col overflow-y-auto px-4"
-            : "mx-auto flex w-full max-w-2xl flex-col px-5 sm:px-8"
-        }
-      >
-        <div className={study ? "hidden" : "pt-6"}>
+      <div className="mx-auto flex w-full max-w-2xl flex-col px-5 sm:px-8">
+        <div className="pt-6">
           <Link
             to={lessonId ? "/rita-lessons" : "/rita-conversations"}
             className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
@@ -1628,22 +1830,14 @@ export function RitaRealtimeV3({
             levelsRef={orbLevels}
             mode={orbModeFor(active, mood)}
             label={active ? "Rita is with you" : "Rita, your language tutor"}
-            className={study ? "h-[132px] w-[132px]" : "h-[min(70vw,360px)] w-[min(70vw,360px)]"}
+            className="h-[min(70vw,360px)] w-[min(70vw,360px)]"
           />
-          <h2
-            className={
-              study
-                ? "-mt-2 text-[20px] leading-[26px] text-[var(--pp-ink)]"
-                : "-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]"
-            }
-          >
-            {study
-              ? study.title
-              : exercises && lessonRun.view
-                ? lessonRun.view.title_ar || lessonRun.view.title
-                : lessonId
-                  ? lesson.session?.lesson.title || lesson.session?.lesson.title_ar || "Lesson"
-                  : "Talk with Rita"}
+          <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
+            {exercises && lessonRun.view
+              ? lessonRun.view.title_ar || lessonRun.view.title
+              : lessonId
+                ? lesson.session?.lesson.title || lesson.session?.lesson.title_ar || "Lesson"
+                : "Talk with Rita"}
           </h2>
           <p className="mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]">
             <span
@@ -1658,7 +1852,7 @@ export function RitaRealtimeV3({
             />
             {status}
           </p>
-          {!lessonId && !study && saveState !== "idle" ? (
+          {!lessonId && saveState !== "idle" ? (
             <p
               role="status"
               className={`mt-1 text-xs font-semibold ${saveState === "failed" ? "text-red-600" : "text-[var(--pp-muted)]"}`}
@@ -1688,11 +1882,7 @@ export function RitaRealtimeV3({
           )}
         </aside>
 
-        <section
-          className={
-            study ? "flex w-full flex-1 flex-col" : "flex min-h-[calc(100vh-72px)] w-full flex-col"
-          }
-        >
+        <section className="flex min-h-[calc(100vh-72px)] w-full flex-col">
           {active && soundBlocked && (
             <div className="flex justify-center pt-4">
               <button type="button" onClick={enableSound} className="rita-btn rita-btn-primary">
@@ -1783,7 +1973,6 @@ export function RitaRealtimeV3({
                   className="ml-auto w-fit max-w-[80%] px-2 text-[15px] leading-6 text-[var(--pp-muted)]"
                 />
               )}
-              {study?.children}
               {error && (
                 <div className="rounded-2xl bg-[var(--pp-accent-soft)] px-4 py-3 text-[15px] font-semibold text-[var(--pp-accent-text)]">
                   {error}
@@ -1792,19 +1981,13 @@ export function RitaRealtimeV3({
             </div>
           </div>
 
-          <div
-            className={
-              study
-                ? "rita-study-dock sticky bottom-0 pb-5 pt-3"
-                : "sticky bottom-0 bg-white pb-6 pt-3"
-            }
-          >
+          <div className="sticky bottom-0 bg-white pb-6 pt-3">
             {!active ? (
               <div className="flex justify-center">
                 <button
                   onClick={startLesson}
                   disabled={historyLoading || starting || (Boolean(lessonId) && !lesson.session)}
-                  className={`rita-btn gap-2 disabled:opacity-60 ${study ? "rita-study-start" : "rita-btn-primary"}`}
+                  className="rita-btn rita-btn-primary gap-2 disabled:opacity-60"
                 >
                   {historyLoading || starting ? (
                     <Loader2 className="animate-spin" size={18} />
@@ -1813,11 +1996,9 @@ export function RitaRealtimeV3({
                   )}{" "}
                   {historyLoading
                     ? "Loading conversation…"
-                    : study
-                      ? "ابدأ مع ريتا"
-                      : lessonId
-                        ? "ابدأ الدرس مع ريتا"
-                        : "Start talking"}
+                    : lessonId
+                      ? "ابدأ الدرس مع ريتا"
+                      : "Start talking"}
                 </button>
               </div>
             ) : (

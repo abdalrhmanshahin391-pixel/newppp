@@ -12,8 +12,11 @@ type State = "closed" | "open" | "sending" | "error" | "sent";
  */
 export function ReplyReport({
   onSubmit,
+  compact = false,
 }: {
   onSubmit: (category: IssueCategory, note: string) => Promise<void>;
+  /** Closed, it is only a small quiet flag icon (the study page's clean chat). */
+  compact?: boolean;
 }) {
   const [state, setState] = useState<State>("closed");
   const [category, setCategory] = useState<IssueCategory | null>(null);
@@ -57,6 +60,20 @@ export function ReplyReport({
         <Check size={16} aria-hidden="true" />
         Thanks — saved with this reply&apos;s details.
       </p>
+    );
+  }
+
+  if (state === "closed" && compact) {
+    return (
+      <button
+        type="button"
+        onClick={() => setState("open")}
+        aria-label="إبلاغ عن مشكلة بهالرد"
+        title="إبلاغ عن مشكلة بهالرد"
+        className="uz-rc-flag"
+      >
+        <Flag size={14} aria-hidden="true" />
+      </button>
     );
   }
 

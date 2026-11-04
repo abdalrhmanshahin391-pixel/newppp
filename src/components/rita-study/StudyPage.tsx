@@ -20,7 +20,14 @@ import {
 } from "@/lib/study/study-actions";
 import { FloatingOrb, type OrbState } from "./FloatingOrb";
 import { RadialMenu, type RadialHandle } from "./RadialMenu";
-import { KIND_LABEL, ringItems } from "./radial-items";
+import {
+  KIND_LABEL,
+  LANGUAGE_NAMES,
+  languageFromId,
+  languageItems,
+  ringItems,
+} from "./radial-items";
+import { useExplanationLanguage } from "@/hooks/useExplanationLanguage";
 import { GuideFrame, type GuideFrameHandle } from "./GuideFrame";
 import { DEFAULT_ORB, snapToEdge, type OrbPosition } from "./orb-position";
 import { markSelection, readSelection, sectionSegIds, type PageSelection } from "./selection";
@@ -93,6 +100,12 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   const [selection, setSelection] = useState<PageSelection | null>(null);
   const selectionRef = useRef<PageSelection | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  // The ring shows the study options, or the three languages Rita can explain in.
+  const [ringMode, setRingMode] = useState<"main" | "language">("main");
+  const explanation = useExplanationLanguage();
+  useEffect(() => {
+    if (!menuOpen) setRingMode("main");
+  }, [menuOpen]);
   const menuOpenRef = useRef(false);
   menuOpenRef.current = menuOpen;
   const [orb, setOrb] = useState<OrbPosition>(() => readStudyMemory(lesson.id).orb ?? DEFAULT_ORB);
@@ -288,6 +301,18 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
     }
   }
 
+  function ringPick(id: string) {
+    if (id === "lang") return setRingMode("language");
+    if (id === "lang:back") return setRingMode("main");
+    const language = languageFromId(id);
+    if (language) {
+      explanation.setValue(language);
+      setRingMode("main");
+      return;
+    }
+    void pick(id as StudyAction);
+  }
+
   async function pick(action: StudyAction) {
     if (action === "make_cards" || action === "make_mcq") return void practice(action);
     const sel = selectionRef.current;
@@ -404,7 +429,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   );
 
   const ritaPane = (
-    <div className="uz-rita-dark flex h-full min-h-0 flex-col" dir="rtl">
+    <div className="flex h-full min-h-0 flex-col bg-white" dir="rtl">
       <RitaRealtimeV3
         study={{ lessonId: lesson.id, preview, title: "ريتا", bridge, children: status }}
       />
@@ -552,13 +577,19 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
           containerRef={work}
           orbRef={orbButton}
           orbKey={`${orb.x.toFixed(3)},${orb.y.toFixed(3)},${wide ? "w" : "n"},${tab}`}
-          items={ringItems({ actions })}
+          items={
+            ringMode === "language" ? languageItems(explanation.value) : ringItems({ actions })
+          }
           quote={selection?.exact ?? ""}
           meta={[sectionLabel, selected?.kind ? KIND_LABEL[selected.kind] : ""]
             .filter(Boolean)
             .join(" · ")}
-          hasSelection={Boolean(selection)}
-          hint="حدّد كلمة أو جملة من الدرس، وبعدين اكبس على الدائرة."
+          hasSelection={Boolean(selection) && ringMode === "main"}
+          hint={
+            ringMode === "language"
+              ? `ريتا بتشرح بـ: ${LANGUAGE_NAMES[explanation.value]}`
+              : "حدّد كلمة أو جملة من الدرس، وبعدين اكبس على الدائرة."
+          }
           canReport={actions.includes("report")}
           busy={false}
           sound={sound}
@@ -567,7 +598,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
             setSoundOn(!sound);
             setSound(!sound);
           }}
-          onPick={(action) => void pick(action as StudyAction)}
+          onPick={ringPick}
           onReport={(note) => void report(note)}
           onClear={() => {
             frame.current?.document()?.getSelection()?.removeAllRanges();

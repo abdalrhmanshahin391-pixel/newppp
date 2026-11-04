@@ -9,12 +9,15 @@ import {
   Languages,
   ListTree,
   MessageCircleQuestion,
+  Mic,
+  Undo2,
   RotateCcw,
   Sparkles,
   Volume2,
   type LucideIcon,
 } from "lucide-react";
 import { ACTION_INFO, type SelectionKind, type StudyAction } from "@/lib/study/study-actions";
+import type { ExplanationLanguage } from "@/lib/explanation-language";
 
 export type RadialItem = {
   id: string;
@@ -22,6 +25,10 @@ export type RadialItem = {
   Icon: LucideIcon;
   /** A trial option with nothing behind it yet. */
   placeholder?: boolean;
+  /** Short text drawn in the disc instead of the icon (a language: "ع", "EN"). */
+  glyph?: string;
+  /** One of a set of choices: true for the chosen one, false for the others. */
+  checked?: boolean;
   disabled?: boolean;
 };
 
@@ -73,7 +80,41 @@ export const KIND_LABEL: Record<SelectionKind, string> = {
   non_text: "",
 };
 
-/** The ring's options for what is selected. */
+/** The ring's options for what is selected, then the language Rita explains in. */
 export function ringItems(options: { actions: StudyAction[] }): RadialItem[] {
-  return RING_ACTIONS.filter((action) => options.actions.includes(action)).map(actionItem);
+  return [
+    ...RING_ACTIONS.filter((action) => options.actions.includes(action)).map(actionItem),
+    LANGUAGE_ITEM,
+  ];
+}
+
+/** Opens the language choices; always there, with or without a selection. */
+export const LANGUAGE_ITEM: RadialItem = { id: "lang", label: "لغة الشرح", Icon: Languages };
+
+export const LANGUAGE_NAMES: Record<ExplanationLanguage, string> = {
+  ar: "العربي",
+  en: "English",
+  automatic: "حسب كلامي",
+};
+
+const LANGUAGE_ORDER: ExplanationLanguage[] = ["ar", "en", "automatic"];
+
+/** The ring while choosing the language: the three choices (the current one ticked) and back. */
+export function languageItems(current: ExplanationLanguage): RadialItem[] {
+  return [
+    ...LANGUAGE_ORDER.map((value) => ({
+      id: `lang:${value}`,
+      label: LANGUAGE_NAMES[value],
+      Icon: value === "automatic" ? Mic : Languages,
+      glyph: value === "ar" ? "ع" : value === "en" ? "EN" : undefined,
+      checked: value === current,
+    })),
+    { id: "lang:back", label: "رجوع", Icon: Undo2 },
+  ];
+}
+
+/** The language named by a ring id ("lang:ar"), or null. */
+export function languageFromId(id: string): ExplanationLanguage | null {
+  const value = id.startsWith("lang:") ? id.slice(5) : "";
+  return (LANGUAGE_ORDER as string[]).includes(value) ? (value as ExplanationLanguage) : null;
 }

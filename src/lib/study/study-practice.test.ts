@@ -10,7 +10,11 @@ import {
   shuffleOptions,
 } from "./study-practice.ts";
 import { ACTION_INFO, availableActions } from "./study-actions.ts";
-import { ringItems } from "../../components/rita-study/radial-items.ts";
+import {
+  languageFromId,
+  languageItems,
+  ringItems,
+} from "../../components/rita-study/radial-items.ts";
 
 const LESSON = "Guten Morgen! Wie geht's? | She studies at night and watches a film on Fridays.";
 
@@ -114,13 +118,33 @@ test("model replies are read with or without a code fence", () => {
   assert.equal(looseText("Grüße, Straße!"), "grusse strasse");
 });
 
-test("the ring shows only flashcards and questions", () => {
+test("the ring shows flashcards, questions and the language", () => {
   for (const kind of ["word", "phrase", "sentence", "rule", "table_cells", "arabic_only"] as const)
     assert.deepEqual(
       ringItems({ actions: availableActions(kind) }).map((item) => item.id),
-      ["make_cards", "make_mcq"],
+      ["make_cards", "make_mcq", "lang"],
     );
-  assert.deepEqual(ringItems({ actions: availableActions("too_long") }), []);
+  // Without a usable selection only the language is offered.
+  assert.deepEqual(
+    ringItems({ actions: availableActions("too_long") }).map((item) => item.id),
+    ["lang"],
+  );
   assert.equal(ACTION_INFO.make_cards.group, "cards");
   assert.equal(ACTION_INFO.make_mcq.group, "practice");
+});
+
+test("the language ring offers the three choices with the current one ticked, and back", () => {
+  const items = languageItems("en");
+  assert.deepEqual(
+    items.map((item) => item.id),
+    ["lang:ar", "lang:en", "lang:automatic", "lang:back"],
+  );
+  assert.deepEqual(
+    items.filter((item) => item.checked).map((item) => item.id),
+    ["lang:en"],
+  );
+  assert.equal(languageFromId("lang:ar"), "ar");
+  assert.equal(languageFromId("lang:automatic"), "automatic");
+  assert.equal(languageFromId("lang:back"), null);
+  assert.equal(languageFromId("make_mcq"), null);
 });
