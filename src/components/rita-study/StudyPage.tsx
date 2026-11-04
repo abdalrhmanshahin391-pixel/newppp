@@ -6,6 +6,8 @@ import { ArrowRight, Download, Loader2, Shuffle, Square, Star } from "lucide-rea
 import { toast } from "sonner";
 import { RitaRealtimeV3, type StudyBridge } from "@/components/rita/RitaRealtimeV3";
 import { studyGuideDownload } from "@/lib/study/study.functions";
+import { studyMakeCards, studyMakeMcq } from "@/lib/study/study-practice.functions";
+import type { StudyCard, StudyMcq } from "@/lib/study/study-practice";
 import { SAMPLE_STUDY_TOPIC, type StudyLessonData } from "@/lib/study/study-types";
 import { PhraseDialog } from "@/components/rita/PhraseDialog";
 import { guideSegmentMap, sectionId } from "@/lib/guides/guide-blocks";
@@ -241,8 +243,53 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   );
 
   const actions: StudyAction[] = selected ? availableActions(selected.kind) : [];
+  // Flashcards and questions made from selections. Kept here until it is decided where they show.
+  const makeCardsFn = useServerFn(studyMakeCards);
+  const makeMcqFn = useServerFn(studyMakeMcq);
+  const [making, setMaking] = useState<"make_cards" | "make_mcq" | null>(null);
+  const [made, setMade] = useState<{ cards: StudyCard[]; questions: StudyMcq[] }>({
+    cards: [],
+    questions: [],
+  });
+
+  async function practice(action: "make_cards" | "make_mcq") {
+    const sel = selectionRef.current;
+    if (!sel || !sel.segIds.length || making) return;
+    setMenuOpen(false);
+    setMaking(action);
+    const input = {
+      data: {
+        lessonId: lesson.id,
+        preview,
+        requestId: crypto.randomUUID(),
+        selection: { segIds: sel.segIds, exact: sel.exact, parts: sel.parts },
+      },
+    };
+    try {
+      if (action === "make_cards") {
+        const result = await makeCardsFn(input);
+        if (!result.ok) return void toast.message(result.message);
+        setMade({ cards: result.cards, questions: made.questions });
+        toast.success(
+          `جهّزت ${result.cards.length} ${result.cards.length === 1 ? "بطاقة" : "بطاقات"}`,
+        );
+      } else {
+        const result = await makeMcqFn(input);
+        if (!result.ok) return void toast.message(result.message);
+        setMade({ cards: made.cards, questions: result.questions });
+        toast.success(
+          `جهّزت ${result.questions.length} ${result.questions.length === 1 ? "سؤال" : "أسئلة"}`,
+        );
+      }
+    } catch {
+      toast.error("ما زبطت هالمرة. جرّب مرة ثانية.");
+    } finally {
+      setMaking(null);
+    }
+  }
 
   async function pick(action: StudyAction) {
+    if (action === "make_cards" || action === "make_mcq") return void practice(action);
     const sel = selectionRef.current;
     if (action === "meaning") {
       if (sel) setPhrase(sel.exact);
@@ -279,7 +326,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
     if (ok) setMenuOpen(false);
   }
 
-  const orbState: OrbState = requests.busy ? "busy" : selection ? "armed" : "idle";
+  const orbState: OrbState = requests.busy || making ? "busy" : selection ? "armed" : "idle";
   const sectionLabel = (() => {
     const id = selected?.section || current || sections[0]?.id || "";
     const index = sections.findIndex((item) => item.id === id);
@@ -505,11 +552,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
           containerRef={work}
           orbRef={orbButton}
           orbKey={`${orb.x.toFixed(3)},${orb.y.toFixed(3)},${wide ? "w" : "n"},${tab}`}
-          items={ringItems({
-            actions,
-            hasSelection: Boolean(selection),
-            hasSection: Boolean(sectionLabel),
-          })}
+          items={ringItems({ actions })}
           quote={selection?.exact ?? ""}
           meta={[sectionLabel, selected?.kind ? KIND_LABEL[selected.kind] : ""]
             .filter(Boolean)

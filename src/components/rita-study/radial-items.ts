@@ -1,14 +1,14 @@
-// What the round menu offers. The real study actions come from `study-actions.ts` (they depend on
-// what is selected); the trial options below are placeholders the owner fills in later: change a
-// label or an icon here, or give one an `id` and handle it in StudyPage's `pickRing`.
+// What the round menu offers. The actions come from `study-actions.ts` (they depend on what is
+// selected); RING_ACTIONS says which of them the ring shows.
 
 import {
   AlertTriangle,
   BookOpenText,
+  Layers,
+  ListChecks,
   Languages,
   ListTree,
   MessageCircleQuestion,
-  Plus,
   RotateCcw,
   Sparkles,
   Volume2,
@@ -34,6 +34,8 @@ const ICONS: Record<StudyAction, LucideIcon> = {
   word_by_word: ListTree,
   common_mistake: AlertTriangle,
   summarize_section: BookOpenText,
+  make_cards: Layers,
+  make_mcq: ListChecks,
   report: AlertTriangle,
 };
 
@@ -49,11 +51,11 @@ const SHORT: Partial<Record<StudyAction, string>> = {
   summarize_section: "لخّص القسم",
 };
 
-/** The trial options. Replace them when the real ones are decided. */
-export const PLACEHOLDER_ITEMS: RadialItem[] = [
-  { id: "slot-1", label: "خيار ١", Icon: Plus, placeholder: true },
-  { id: "slot-2", label: "خيار ٢", Icon: Plus, placeholder: true },
-];
+/**
+ * What the ring shows for now: only the flashcards and the four-option questions. The explain
+ * actions still exist (Rita's voice worker knows them); add them here to bring them back.
+ */
+export const RING_ACTIONS: StudyAction[] = ["make_cards", "make_mcq"];
 
 export function actionItem(action: StudyAction): RadialItem {
   return { id: action, label: SHORT[action] ?? ACTION_INFO[action].label, Icon: ICONS[action] };
@@ -71,17 +73,7 @@ export const KIND_LABEL: Record<SelectionKind, string> = {
   non_text: "",
 };
 
-/** The ring's options for what is selected (the main actions first), then the trial ones. */
-export function ringItems(options: {
-  actions: StudyAction[];
-  hasSelection: boolean;
-  hasSection: boolean;
-}): RadialItem[] {
-  const real = options.actions.filter((action) => action !== "report");
-  const ordered = [
-    ...real.filter((action) => ACTION_INFO[action].primary),
-    ...real.filter((action) => !ACTION_INFO[action].primary),
-  ];
-  if (!options.hasSelection && options.hasSection) ordered.unshift("summarize_section");
-  return [...ordered.map(actionItem), ...PLACEHOLDER_ITEMS];
+/** The ring's options for what is selected. */
+export function ringItems(options: { actions: StudyAction[] }): RadialItem[] {
+  return RING_ACTIONS.filter((action) => options.actions.includes(action)).map(actionItem);
 }
