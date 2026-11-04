@@ -28,7 +28,11 @@ export const RITA_ACTIONS = [
 ] as const;
 export type RitaAction = (typeof RITA_ACTIONS)[number];
 
-export type StudyAction = RitaAction | "meaning" | "report";
+/** Made on the page from the selection, without Rita's call: flashcards and four-option questions. */
+export const PRACTICE_ACTIONS = ["make_cards", "make_mcq"] as const;
+export type PracticeAction = (typeof PRACTICE_ACTIONS)[number];
+
+export type StudyAction = RitaAction | PracticeAction | "meaning" | "report";
 
 export type ActionInfo = {
   label: string;
@@ -53,6 +57,8 @@ export const ACTION_INFO: Record<StudyAction, ActionInfo> = {
   word_by_word: { label: "فصّلها كلمة كلمة", primary: false, group: "explain" },
   common_mistake: { label: "الغلطة الشائعة", primary: false, group: "explain" },
   summarize_section: { label: "لخّصلي القسم", primary: false, group: "explain" },
+  make_cards: { label: "بطاقات", primary: true, group: "cards" },
+  make_mcq: { label: "أسئلة اختيار", primary: true, group: "practice" },
   report: { label: "في غلط بالدرس؟", primary: false, group: "report" },
 };
 
@@ -75,6 +81,8 @@ const AVAILABLE: Record<StudyAction, SelectionKind[]> = {
   word_by_word: ["phrase", "sentence"],
   common_mistake: ["phrase", "sentence", "rule", "table_cells"],
   summarize_section: [],
+  make_cards: ALL_TEXT,
+  make_mcq: ALL_TEXT,
   report: [...ALL_TEXT, "too_long"],
 };
 

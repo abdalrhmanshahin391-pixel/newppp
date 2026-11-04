@@ -41,8 +41,15 @@ function parse<S extends z.ZodTypeAny>(schema: S, data: unknown): z.infer<S> {
   return result.data;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function resolveRequest(context: { supabase: any; userId: string }, data: RequestData) {
+/**
+ * Checks the lesson and the selection on the server and counts the request (shared with the
+ * flashcards and questions in study-practice.functions.ts).
+ */
+export async function resolveRequest(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  context: { supabase: any; userId: string },
+  data: Omit<RequestData, "action"> & { action: StudyAction },
+) {
   const { loadStudyLesson } = await import("./study-lesson.server");
   const loaded = await loadStudyLesson(
     context.supabase,
