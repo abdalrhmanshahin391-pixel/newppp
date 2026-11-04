@@ -11,19 +11,22 @@ import { supabase } from "@/integrations/supabase/legacy-client";
  */
 export function usePresence() {
   useEffect(() => {
+    let disposed = false;
     let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
     let activeUserId: string | null = null;
 
     function heartbeat(uid: string) {
-      void (supabase.from as any)("user_sessions")
-        .upsert(
-          { user_id: uid, last_seen_at: new Date().toISOString() },
-          { onConflict: "user_id" },
-        )
-        .then(() => {}, () => {});
+      void supabase
+        .from("user_sessions")
+        .upsert({ user_id: uid, last_seen_at: new Date().toISOString() }, { onConflict: "user_id" })
+        .then(
+          () => {},
+          () => {},
+        );
     }
 
     function start(uid: string) {
+      if (disposed || activeUserId === uid) return;
       stop();
       activeUserId = uid;
       heartbeat(uid);
@@ -41,31 +44,39 @@ export function usePresence() {
 
     let sub: { subscription: { unsubscribe: () => void } } | null = null;
     try {
-    const result = supabase.auth.onAuthStateChange((event, session) => {
-      const uid = session?.user?.id;
-      if (event === "SIGNED_IN" && uid) {
-        void (supabase.from as any)("user_login_events")
-          .insert({ user_id: uid })
-          .then(() => {}, () => {});
-        start(uid);
-      } else if (event === "SIGNED_OUT") {
-        stop();
-      } else if (event === "TOKEN_REFRESHED" && uid && uid !== activeUserId) {
-        start(uid);
-      }
-    });
-    sub = result.data;
+      const result = supabase.auth.onAuthStateChange((event, session) => {
+        const uid = session?.user?.id;
+        if (event === "SIGNED_IN" && uid) {
+          void supabase
+            .from("user_login_events")
+            .insert({ user_id: uid })
+            .then(
+              () => {},
+              () => {},
+            );
+          start(uid);
+        } else if (event === "SIGNED_OUT") {
+          stop();
+        } else if (event === "TOKEN_REFRESHED" && uid && uid !== activeUserId) {
+          start(uid);
+        }
+      });
+      sub = result.data;
 
-    // On first mount, if a session already exists, start heartbeat.
-    supabase.auth.getSession().then(({ data }) => {
-      const uid = data.session?.user?.id;
-      if (uid) start(uid);
-    }, () => {});
+      // On first mount, if a session already exists, start heartbeat.
+      supabase.auth.getSession().then(
+        ({ data }) => {
+          const uid = data.session?.user?.id;
+          if (uid) start(uid);
+        },
+        () => {},
+      );
     } catch {
       /* Presence is optional when account services are unavailable. */
     }
 
     return () => {
+      disposed = true;
       sub?.subscription.unsubscribe();
       stop();
     };

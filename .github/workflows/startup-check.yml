@@ -1,0 +1,34 @@
+name: Startup and navigation checks
+on:
+  pull_request:
+    paths:
+      - "src/routes/__root.tsx"
+      - "src/router.tsx"
+      - "src/styles.css"
+      - "src/i18n/**"
+      - "src/components/LanguageProvider*"
+      - "src/components/ThemeProvider.tsx"
+      - "src/hooks/usePresence.ts"
+      - "src/components/rita-live/VoiceOrb.tsx"
+      - "src/lib/site-bootstrap*"
+      - "src/lib/startup-cache*"
+      - "src/lib/ui-language*"
+      - ".github/workflows/startup-check.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  startup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Locale rendering and cache lifecycle regressions
+        run: bun test src/lib/ui-language.test.ts src/lib/startup-cache.test.ts src/components/LanguageProvider.test.tsx
+      - run: bunx tsc --noEmit
+      - run: bun run build

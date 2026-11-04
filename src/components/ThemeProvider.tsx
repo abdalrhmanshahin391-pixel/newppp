@@ -16,12 +16,12 @@ const ThemeContext = createContext<Ctx | null>(null);
  * setTheme/toggle are no-ops. No effects, no localStorage reads — the
  * root shell ships clean light HTML, so there is nothing to reconcile.
  */
+const value: Ctx = {
+  theme: "light",
+  setTheme: () => {},
+  toggle: () => {},
+};
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const value: Ctx = {
-    theme: "light",
-    setTheme: () => {},
-    toggle: () => {},
-  };
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 

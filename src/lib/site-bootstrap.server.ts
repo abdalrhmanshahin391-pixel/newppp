@@ -1,3 +1,4 @@
+import { createStartupCache } from "./startup-cache";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 
@@ -10,7 +11,7 @@ export type BootstrapData = {
 };
 
 const SETTINGS_COLUMNS =
-  "id,site_name,tagline,logo_url,updated_at,theme,show_signature,protect_enabled,protect_watermark_opacity,protect_blur_on_blur,protect_block_print,protect_block_copy,protect_consent_required,protect_devtools_guard,protect_auto_lock_threshold,protect_terms_en,protect_terms_ar,committee_default_storage,brand_style,header_style,study_plan_path,study_plan_title,study_plan_subtitle,terms_en,terms_ar,privacy_en,privacy_ar,refund_en,refund_ar,study_hub_title,study_hub_title_ar,study_hub_subtitle,study_hub_subtitle_ar,committee_qr_path,committee_qr_link,home_video_url,home_video_poster_url";
+  "id,site_name,tagline,logo_url,updated_at,theme,show_signature,protect_enabled,protect_watermark_opacity,protect_blur_on_blur,protect_block_print,protect_block_copy,protect_consent_required,protect_devtools_guard,protect_auto_lock_threshold,protect_terms_en,protect_terms_ar,committee_default_storage,brand_style,header_style,study_plan_path,study_plan_title,study_plan_subtitle,terms_en,terms_ar,privacy_en,privacy_ar,refund_en,refund_ar,study_hub_title,study_hub_title_ar,study_hub_subtitle,study_hub_subtitle_ar,committee_qr_path,committee_qr_link,home_video_url,home_video_poster_url,feature_ai_cards_enabled,offers_page_enabled,credit_packs_enabled,classic_colors";
 
 const EMPTY: BootstrapData = { settings: null, siteImages: {} };
 
@@ -22,9 +23,6 @@ const EMPTY: BootstrapData = { settings: null, siteImages: {} };
  */
 const CACHE_TTL_MS = 60_000;
 const LOAD_TIMEOUT_MS = 1800;
-let cached: { at: number; data: BootstrapData } | null = null;
-let inFlight: Promise<BootstrapData> | null = null;
-
 async function load(): Promise<BootstrapData> {
   const { url, publishableKey: key } = getSupabasePublicConfig();
 
@@ -37,15 +35,28 @@ async function load(): Promise<BootstrapData> {
           headers.delete("Authorization");
         }
         headers.set("apikey", key);
-        return fetch(input, { ...init, headers });
+        return fetch(input, {
+          ...init,
+          headers,
+          signal: AbortSignal.any([
+            ...(init?.signal ? [init.signal] : []),
+            AbortSignal.timeout(8000),
+          ]),
+        });
       },
     },
   });
 
   const [settingsRes, imagesRes] = await Promise.all([
-    (client.from as any)("site_settings_public").select(SETTINGS_COLUMNS).eq("id", true).maybeSingle(),
+    (client.from as any)("site_settings_public")
+      .select(SETTINGS_COLUMNS)
+      .eq("id", true)
+      .maybeSingle(),
     (client.from as any)("site_images_public").select("key,path"),
   ]);
+
+  if (settingsRes.error) throw settingsRes.error;
+  if (imagesRes.error) throw imagesRes.error;
 
   // Sign the replaced artwork here so the very first HTML frame already points
   // at the right picture — otherwise the page paints the built-in art and then
@@ -54,9 +65,11 @@ async function load(): Promise<BootstrapData> {
   const siteImages: Record<string, string> = {};
   if (rows.length) {
     const paths = rows.filter((r) => !/^https?:\/\//i.test(r.path)).map((r) => r.path);
-    const signed = paths.length
-      ? (await client.storage.from("site-media").createSignedUrls(paths, 60 * 60 * 6)).data
-      : [];
+    const signedResult = paths.length
+      ? await client.storage.from("site-media").createSignedUrls(paths, 60 * 60 * 6)
+      : null;
+    if (signedResult?.error) throw signedResult.error;
+    const signed = signedResult?.data ?? [];
     const byPath = new Map(
       (signed ?? []).map((s: any) => [s.path as string, s.signedUrl as string]),
     );
@@ -69,28 +82,11 @@ async function load(): Promise<BootstrapData> {
   return { settings: (settingsRes?.data as BootstrapSettings | null) ?? null, siteImages };
 }
 
-/** Drop the cache so the very next render sees a just-saved settings change. */
+const bootstrapCache = createStartupCache(load, EMPTY, CACHE_TTL_MS, LOAD_TIMEOUT_MS);
+
+/** Drop the cache so the next render sees an admin's settings change. */
 export function invalidateSiteBootstrapCache() {
-  cached = null;
+  bootstrapCache.invalidate();
 }
 
-export async function loadSiteBootstrap(): Promise<BootstrapData> {
-  const now = Date.now();
-  if (cached && now - cached.at < CACHE_TTL_MS) return cached.data;
-  // Collapse concurrent misses into a single database round-trip.
-  if (!inFlight) {
-    const timeout = new Promise<BootstrapData>((resolve) => {
-      setTimeout(() => resolve(cached?.data ?? EMPTY), LOAD_TIMEOUT_MS);
-    });
-    inFlight = Promise.race([load(), timeout])
-      .then((data) => {
-        cached = { at: Date.now(), data };
-        return data;
-      })
-      .catch(() => cached?.data ?? EMPTY)
-      .finally(() => {
-        inFlight = null;
-      });
-  }
-  return inFlight;
-}
+export const loadSiteBootstrap = () => bootstrapCache.get();

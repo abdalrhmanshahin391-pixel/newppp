@@ -18,20 +18,15 @@ import { normalizeSettings } from "@/hooks/useSiteSettings";
 import { usePresence } from "@/hooks/usePresence";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/components/LanguageProvider";
-import { GoldenTheme } from "@/components/GoldenTheme";
 import { LearningLanguageScope } from "@/components/language/LearningLanguageScope";
 import { SiteFooter } from "@/components/SiteFooter";
 import { LanguageSplash } from "@/components/language/LanguageSplash";
 import { useAuth } from "@/hooks/useAuth";
 import { needsOnboarding } from "@/lib/onboarding";
 import { setAuthNavigator } from "@/lib/auth-dialog";
-import "@/i18n";
 import { DeferredOverlays } from "@/components/DeferredOverlays";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
 
-// Language only — the seasonal theme comes from the server-rendered head script
-// so it can never flash a stale value from localStorage.
-const themeBootScript = `(function(){try{document.documentElement.classList.remove('dark');var l='en';try{l=localStorage.getItem('ysmu-lang')==='ar'?'ar':'en';}catch(_){}document.documentElement.setAttribute('lang',l);document.documentElement.setAttribute('dir',l==='ar'?'rtl':'ltr');}catch(e){}})();`;
 // A stale deployment can make a lazy-loaded chunk unavailable. Retry once, then
 // stop with a readable page. The old pageshow handler cleared this guard on the
 // retry itself, which turned one persistent chunk error into an endless reload.
@@ -101,7 +96,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   loader: async (): Promise<BootstrapPayload> => {
     return await getSiteBootstrap();
   },
-  head: ({ loaderData }) => ({
+  head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
@@ -165,14 +160,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       {
-        // Runs once per page load only. Re-injections after a router
-        // invalidate can carry a stale (cached) theme and would otherwise
-        // snap the skin back to the previous one.
-        children: `(function(){try{if(window.__themeBooted)return;window.__themeBooted=1;var d=['ramadan','eid','fireworks','stars','golden-age','desert-night','emerald-library'];var t=${JSON.stringify(
-          (loaderData?.settings?.["theme"] as string) ?? "default",
-        )};if(t&&t!=='default'){document.documentElement.setAttribute('data-theme',t);}else{document.documentElement.removeAttribute('data-theme');}document.documentElement.classList.toggle('dark',d.indexOf(t)>=0);try{localStorage.setItem('ysmu-theme',t);}catch(_){}}catch(e){}})();`,
-      },
-      {
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
@@ -214,15 +201,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 const HOME_LOOK_PREFIXES = ["/rita", "/rita-lessons", "/rita-live", "/rita-study", "/learn"];
 
 function AppScope({ children }: { children: ReactNode }) {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = useRouterState({
+    select: (s) => s.matches.at(-1)?.pathname ?? s.location.pathname,
+  });
   const inApp =
     pathname !== "/" &&
     !HOME_LOOK_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
-  // Dialogs and menus render outside this wrapper, so the document carries the scope too.
-  useEffect(() => {
-    document.documentElement.classList.toggle("rita-app", inApp);
-    return () => document.documentElement.classList.remove("rita-app");
-  }, [inApp]);
   return (
     <div className={inApp ? "rita-app" : undefined} style={{ display: "contents" }}>
       {children}
@@ -231,11 +215,41 @@ function AppScope({ children }: { children: ReactNode }) {
 }
 
 function RootShell({ children }: { children: ReactNode }) {
+  const { isGolden } = useAuth();
+  const { pathname, boot } = useRouterState({
+    select: (state) => ({
+      pathname: state.matches.at(-1)?.pathname ?? state.location.pathname,
+      boot: state.matches.find((match) => match.routeId === "__root__")?.loaderData as
+        BootstrapPayload | undefined,
+    }),
+  });
+  const language = boot?.language ?? "en";
+  const inApp =
+    pathname !== "/" &&
+    !HOME_LOOK_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(prefix + "/"));
+  const theme = String(boot?.settings?.theme ?? "default");
+  const dark = [
+    "ramadan",
+    "eid",
+    "fireworks",
+    "stars",
+    "golden-age",
+    "desert-night",
+    "emerald-library",
+  ].includes(theme);
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning>
+    <html
+      lang={language}
+      dir={language === "ar" ? "rtl" : "ltr"}
+      className={
+        [inApp && "rita-app", dark && "dark", isGolden && "golden"].filter(Boolean).join(" ") ||
+        undefined
+      }
+      data-theme={theme === "default" ? undefined : theme}
+      suppressHydrationWarning
+    >
       <head>
         <HeadContent />
-        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
         <script dangerouslySetInnerHTML={{ __html: recoveryBootScript }} />
         <noscript>
           <link
@@ -257,7 +271,6 @@ function RootComponent() {
   const boot = Route.useLoaderData();
   const router = useRouter();
   const { user, loading } = useAuth();
-  useWarmPages();
 
   // Opening sign-in anywhere is an in-app page change (see `openAuth`).
   useEffect(() => {
@@ -272,7 +285,8 @@ function RootComponent() {
       queryClient.setQueryData(["site-settings"], normalizeSettings(boot.settings));
     // Replaced artwork is already resolved on the server, so pictures paint
     // correct on the first frame instead of flashing the built-in art.
-    if (boot?.siteImages) queryClient.setQueryData(["site-images"], boot.siteImages);
+    if (boot?.settings || Object.keys(boot?.siteImages ?? {}).length)
+      queryClient.setQueryData(["site-images"], boot.siteImages);
     return null;
   });
 
@@ -292,7 +306,7 @@ function RootComponent() {
       if (cancelled) return;
       try {
         const seed = await import("@/lib/demo-seed");
-        if (user) {
+        if (user?.id) {
           const sync = await import("@/lib/cloud-sync");
           await sync.startCloudSync();
         }
@@ -315,11 +329,18 @@ function RootComponent() {
   }, [loading, user?.id]);
 
   useEffect(() => {
+    let cancelled = false;
+    let previousUserId: string | null | undefined;
     let unsub: (() => void) | undefined;
     (async () => {
       try {
         const { supabase } = await import("@/integrations/supabase/client");
-        const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+        if (cancelled) return;
+        const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+          const uid = session?.user?.id ?? null;
+          const identityChanged = uid !== previousUserId;
+          previousUserId = uid;
+          if (event === "SIGNED_IN" && !identityChanged) return;
           if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
             router.invalidate();
             // Only user-scoped caches change on auth transitions; blanket
@@ -342,14 +363,16 @@ function RootComponent() {
         reportLovableError(error, { boundary: "auth_listener_startup" });
       }
     })();
-    return () => unsub?.();
+    return () => {
+      cancelled = true;
+      unsub?.();
+    };
   }, [queryClient, router]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <LanguageProvider>
-          <GoldenTheme />
+        <LanguageProvider initialLang={boot?.language}>
           <PresenceTracker />
           <LearningLanguageScope />
           <DeviceTracker />
@@ -384,45 +407,9 @@ function NavigationBar() {
     const timer = window.setTimeout(() => setShown(true), 150);
     return () => window.clearTimeout(timer);
   }, [pending]);
-  return shown ? <div className="uz-navbar" role="progressbar" aria-label="Loading" /> : null;
-}
-
-/**
- * The code of the pages people open most is fetched once the browser is idle, so the first tap
- * on them does not wait for a download. Only code: no data and no database calls.
- */
-const WARM_PATHS = ["/learn/", "/rita-conversations", "/study/", "/rita-lessons", "/pricing"];
-
-function useWarmPages() {
-  const router = useRouter();
-  useEffect(() => {
-    const connection = (
-      navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }
-    ).connection;
-    if (connection?.saveData || /2g/.test(connection?.effectiveType ?? "")) return;
-    const idle = (
-      window as unknown as {
-        requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
-      }
-    ).requestIdleCallback;
-    const warm = () => {
-      const routes = router.routesByPath as unknown as Record<
-        string,
-        Parameters<typeof router.loadRouteChunk>[0]
-      >;
-      for (const path of WARM_PATHS) {
-        const route = routes[path];
-        if (route) void Promise.resolve(router.loadRouteChunk(route)).catch(() => undefined);
-      }
-    };
-    const id = idle ? idle(warm, { timeout: 4000 }) : window.setTimeout(warm, 2500);
-    return () => {
-      const cancelIdle = (window as unknown as { cancelIdleCallback?: (id: number) => void })
-        .cancelIdleCallback;
-      if (idle && cancelIdle) cancelIdle(id as number);
-      else window.clearTimeout(id as number);
-    };
-  }, [router]);
+  return shown && pending ? (
+    <div className="uz-navbar" role="progressbar" aria-label="Loading" />
+  ) : null;
 }
 
 function PresenceTracker() {
@@ -540,6 +527,7 @@ function DeviceTracker() {
     (async () => {
       try {
         const { supabase } = await import("@/integrations/supabase/client");
+        if (cancelled) return;
         const { data: sub } = supabase.auth.onAuthStateChange((event) => {
           if (event === "SIGNED_IN") void ping(true);
         });
@@ -552,13 +540,13 @@ function DeviceTracker() {
         if (idle) {
           idle(
             () => {
-              if (!cancelled) void ping(true);
+              if (!cancelled) void ping();
             },
             { timeout: 2000 },
           );
         } else {
           setTimeout(() => {
-            if (!cancelled) void ping(true);
+            if (!cancelled) void ping();
           }, 1000);
         }
       } catch {
