@@ -7885,26 +7885,6 @@ html.rita-app,
     translate: 0 6px;
   }
 }
-/* The trial content. */
-.fw-hello {
-  display: grid;
-  height: 100%;
-  place-content: center;
-  gap: 6px;
-  padding: 20px;
-  text-align: center;
-}
-.fw-hello h3 {
-  color: var(--fw-ink);
-  font-size: 22px;
-  font-weight: 650;
-  letter-spacing: -0.022em;
-  line-height: 1.15;
-}
-.fw-hello p {
-  color: var(--fw-muted);
-  font-size: 12.5px;
-}
 @media (prefers-reduced-motion: reduce) {
   .fw-dots,
   .fw-dots-menu {

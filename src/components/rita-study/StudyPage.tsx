@@ -21,6 +21,8 @@ import {
 import { FloatingOrb, type OrbState } from "./FloatingOrb";
 import { RadialMenu, type RadialHandle } from "./RadialMenu";
 import { FloatingWindow, WindowDots } from "./FloatingWindow";
+import { QuestionPreview } from "./QuestionPreview";
+import { BRAND_NAME } from "@/lib/brand";
 import {
   KIND_LABEL,
   LANGUAGE_NAMES,
@@ -106,7 +108,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   // The ring shows the study options, or the three languages Rita can explain in.
   const [ringMode, setRingMode] = useState<"main" | "language">("main");
   const explanation = useExplanationLanguage();
-  // The trial floating window, opened from the circle; it grows out of the circle's spot.
+  // Temporary question design preview, independent of real generated practice.
   // Hidden with its X it stays alive, and the ••• at the bottom brings it back.
   const [win, setWin] = useState<{ at: { x: number; y: number }; shown: boolean } | null>(null);
   useEffect(() => {
@@ -619,20 +621,21 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
         )}
         {win && (
           <FloatingWindow
-            title="Uzyra"
+            title={BRAND_NAME}
+            variant="questions"
             origin={win.at}
             shown={win.shown}
-            onHidden={() => setWin((current) => current && { ...current, shown: false })}
+            onHidden={() => {
+              setWin((current) => current && { ...current, shown: false });
+              orbButton.current?.focus({ preventScroll: true });
+            }}
           >
-            <div className="fw-hello">
-              <h3>Hello world</h3>
-              <p>اسحبها من الحبة فوق، كبّرها من الزاوية، والصفحة وراها بتضل شغالة.</p>
-            </div>
+            <QuestionPreview />
           </FloatingWindow>
         )}
         {win && !win.shown && (
           <WindowDots
-            title="Uzyra"
+            title={BRAND_NAME}
             onShow={() => setWin((current) => current && { ...current, shown: true })}
             onClose={() => setWin(null)}
           />

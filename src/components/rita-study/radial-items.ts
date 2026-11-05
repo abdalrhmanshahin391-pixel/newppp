@@ -94,10 +94,10 @@ export function ringItems(options: { actions: StudyAction[] }): RadialItem[] {
   ];
 }
 
-/** A trial: opens the floating window with «Hello world» (its real content comes later). */
+/** Temporary, local-only preview with three sample questions. Remove after design approval. */
 export const WINDOW_ITEM: RadialItem = {
   id: "window-demo",
-  label: "نموذج ويندو",
+  label: "معاينة الأسئلة",
   Icon: AppWindowMac,
 };
 

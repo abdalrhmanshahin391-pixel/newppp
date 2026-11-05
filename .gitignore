@@ -43,3 +43,6 @@ guides-worker/samples/
 
 # Isolated learning-navigation QA, screenshots and video
 /output/learn-preview/
+
+# Isolated study-question preview, captures and recordings
+/output/question-preview/

@@ -48,12 +48,15 @@ function save(rect: Rect) {
  */
 export function FloatingWindow({
   title,
+  variant,
   origin,
   shown,
   onHidden,
   children,
 }: {
   title: string;
+  /** A light question workspace inside the existing dark window chrome. */
+  variant?: "questions";
   /** The circle's centre in the work area, where the window grows from and returns to. */
   origin: { x: number; y: number };
   /** False hides it (it stays mounted, so its content keeps its state). */
@@ -88,7 +91,14 @@ export function FloatingWindow({
     if (!area.w || !area.h) return;
     setRect((current) => {
       if (max) return maximisedRect(area);
-      return clampRect(current ?? readSaved() ?? defaultRect(area), area);
+      const preferred =
+        variant === "questions"
+          ? { w: Math.min(960, area.w * 0.88), h: Math.min(700, area.h * 0.88) }
+          : null;
+      const initial = preferred
+        ? { ...preferred, x: (area.w - preferred.w) / 2, y: (area.h - preferred.h) / 2 }
+        : defaultRect(area);
+      return clampRect(current ?? readSaved() ?? initial, area);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [area.w, area.h]);
@@ -207,7 +217,7 @@ export function FloatingWindow({
   return (
     <div
       ref={holder}
-      className="fw"
+      className={`fw${variant === "questions" ? " is-questions" : ""}`}
       data-max={max || undefined}
       data-active={active || undefined}
       hidden={!rect || !visible}
