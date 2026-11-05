@@ -122,12 +122,12 @@ test("the ring shows flashcards, questions and the language", () => {
   for (const kind of ["word", "phrase", "sentence", "rule", "table_cells", "arabic_only"] as const)
     assert.deepEqual(
       ringItems({ actions: availableActions(kind) }).map((item) => item.id),
-      ["make_cards", "make_mcq", "lang", "window-demo"],
+      ["make_cards", "make_mcq", "lang"],
     );
   // Without a usable selection only the language is offered.
   assert.deepEqual(
     ringItems({ actions: availableActions("too_long") }).map((item) => item.id),
-    ["lang", "window-demo"],
+    ["lang"],
   );
   assert.equal(ACTION_INFO.make_cards.group, "cards");
   assert.equal(ACTION_INFO.make_mcq.group, "practice");

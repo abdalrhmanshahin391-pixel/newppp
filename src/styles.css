@@ -7904,26 +7904,6 @@ html.rita-app,
     translate: 0 6px;
   }
 }
-/* The trial content. */
-.fw-hello {
-  display: grid;
-  height: 100%;
-  place-content: center;
-  gap: 6px;
-  padding: 20px;
-  text-align: center;
-}
-.fw-hello h3 {
-  color: var(--fw-ink);
-  font-size: 22px;
-  font-weight: 650;
-  letter-spacing: -0.022em;
-  line-height: 1.15;
-}
-.fw-hello p {
-  color: var(--fw-muted);
-  font-size: 12.5px;
-}
 @media (prefers-reduced-motion: reduce) {
   .fw-dots,
   .fw-dots-menu {
@@ -8075,4 +8055,318 @@ html.rita-app,
 }
 .st-top-btn:disabled {
   opacity: 0.5;
+}
+
+/* Flashcards inside the floating window (CardsPanel). Dark like the window, compact 12–15px type.
+   A card flips between its word and its meaning (each face turns on its own, transform only); the save bar at the
+   bottom files the chosen cards into a subject and sub-subject of the learner's flashcards. */
+.cp {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  color: var(--fw-ink, #fff);
+}
+.cp-head {
+  flex: none;
+  padding: 12px 16px 8px;
+}
+.cp-count {
+  font-size: 13px;
+  font-weight: 600;
+}
+.cp-muted {
+  color: var(--fw-muted, rgb(235 235 245 / 0.55));
+  font-weight: 500;
+}
+.cp-quote {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--fw-muted, rgb(235 235 245 / 0.55));
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cp-list {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  align-content: start;
+  gap: 10px;
+  padding: 4px 16px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.cp-card {
+  position: relative;
+  min-height: 108px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.06);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+  perspective: 900px;
+  animation: cp-in 320ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation-delay: calc(min(var(--i, 0), 8) * 40ms);
+  transition: opacity 150ms ease;
+}
+@keyframes cp-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+.cp-card[data-off] {
+  opacity: 0.42;
+}
+.cp-card.is-skeleton {
+  background: linear-gradient(
+    100deg,
+    rgb(255 255 255 / 0.04) 30%,
+    rgb(255 255 255 / 0.09) 50%,
+    rgb(255 255 255 / 0.04) 70%
+  );
+  background-size: 300% 100%;
+  animation: cp-shimmer 1.3s linear infinite;
+}
+@keyframes cp-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+.cp-flip {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 108px;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Each face turns on its own (with its own perspective) and the two swap at the halfway point.
+   The window's clip-path flattens preserve-3d in Safari, so backface-visibility can't be used. */
+.cp-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 26px 14px 14px;
+  text-align: center;
+  transition:
+    transform 460ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0s linear 130ms;
+}
+.cp-face.is-front {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  transform: perspective(700px) rotateY(0deg);
+}
+.cp-face.is-back {
+  transform: perspective(700px) rotateY(-180deg);
+  opacity: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.cp-card[data-flipped] .cp-face.is-front {
+  transform: perspective(700px) rotateY(180deg);
+  opacity: 0;
+}
+.cp-card[data-flipped] .cp-face.is-back {
+  transform: perspective(700px) rotateY(0deg);
+  opacity: 1;
+}
+.cp-face small {
+  color: var(--fw-muted, rgb(235 235 245 / 0.55));
+  font-size: 12px;
+}
+.cp-tools {
+  position: absolute;
+  top: 6px;
+  inset-inline: 6px;
+  z-index: 2;
+  display: flex;
+  gap: 2px;
+  justify-content: flex-start;
+}
+.cp-tools > button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  color: rgb(235 235 245 / 0.6);
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+.cp-tools > button:hover {
+  background: rgb(255 255 255 / 0.08);
+  color: #fff;
+}
+.cp-tools > .cp-check {
+  width: 18px;
+  height: 18px;
+  margin: 4px 4px 4px 6px;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.35);
+  color: #fff;
+}
+.cp-tools > .cp-check[aria-pressed="true"] {
+  background: #2b6df0;
+  box-shadow: none;
+}
+.cp-card.is-editing {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  animation: none;
+}
+.cp-card.is-editing input,
+.cp-card.is-editing textarea,
+.cp-fields input,
+.cp-fields select {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: rgb(255 255 255 / 0.08);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
+  color: #fff;
+  font-size: 16px; /* 16px keeps iPad Safari from zooming into the field */
+  outline: none;
+}
+.cp-card.is-editing textarea {
+  resize: vertical;
+}
+.cp-card.is-editing :focus,
+.cp-fields :focus {
+  box-shadow: inset 0 0 0 1.5px #5b8cff;
+}
+.cp-edit-actions,
+.cp-done-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.cp-edit-actions > button,
+.cp-done-actions > :is(button, a),
+.cp-state > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding-inline: 12px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.08);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.cp-edit-actions > .is-primary,
+.cp-done-actions > .is-primary {
+  background: #2b6df0;
+}
+.cp-edit-actions > button:disabled {
+  opacity: 0.4;
+}
+.cp-state {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 16px 10px;
+  color: var(--fw-muted, rgb(235 235 245 / 0.55));
+  font-size: 12.5px;
+  text-align: center;
+}
+.cp-state.is-error {
+  flex-direction: column;
+  color: #ffb4ab;
+}
+.cp-save {
+  flex: none;
+  padding: 12px 16px 14px;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+  background: rgb(255 255 255 / 0.02);
+}
+.cp-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  gap: 8px;
+}
+.cp-fields label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.cp-fields label > span {
+  color: var(--fw-muted, rgb(235 235 245 / 0.55));
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.cp-fields select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-inline-end: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23ffffff' stroke-opacity='.6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: left 10px center;
+  background-size: 10px 6px;
+  background-repeat: no-repeat;
+}
+.cp-go {
+  width: 100%;
+  min-height: 38px;
+  margin-top: 10px;
+  border-radius: 10px;
+  background: #2b6df0;
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 650;
+  transition:
+    transform 120ms ease,
+    opacity 150ms ease;
+}
+.cp-go:active {
+  transform: scale(0.98);
+}
+.cp-go:disabled {
+  opacity: 0.4;
+}
+.cp-done p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.cp-done-actions {
+  justify-content: flex-start;
+  margin-top: 8px;
+}
+.cp :is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid #5b8cff;
+  outline-offset: 2px;
+}
+@media (max-width: 480px) {
+  .cp-fields {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cp-card,
+  .cp-card.is-skeleton {
+    animation: none;
+  }
+  .cp-face,
+  .cp-card[data-flipped] .cp-face {
+    transform: none;
+    transition: opacity 160ms ease;
+  }
 }
