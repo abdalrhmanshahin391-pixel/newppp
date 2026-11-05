@@ -8302,12 +8302,39 @@ html.rita-app,
   --home-bar-btn-h: 38px;
   --home-orb: 280px;
   --home-chip: clamp(14px, 1.5vw, 17px);
+  --home-h2: clamp(1.75rem, calc(1.2rem + 1.4vw), 2.25rem); /* 28px on phones, 36 from ~1200 */
+  --home-h3: 17px;
 }
 @media (min-width: 768px) {
   .uz-home {
     --home-lead: 17px;
     --home-orb: 380px;
+    --home-h3: 18px;
   }
+}
+/* Stage 2: the sections below the first screen share one title, card title and lead size. */
+.uz-home h2.rh-h2 {
+  font-size: var(--home-h2);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+.uz-home h3.rh-h3 {
+  font-size: var(--home-h3);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.uz-home .rh-lead2 {
+  font-size: var(--home-lead);
+  line-height: 1.6;
+}
+/* Buttons in every home section (the hero's too) share one size; small buttons stay small. */
+.uz-home section .rita-btn:not(.rita-btn-sm) {
+  height: var(--home-btn-h);
+  padding-inline: 20px;
+  border-width: 1.5px;
+  font-size: var(--home-btn-font);
 }
 .uz-home h1.rh-hero-title {
   font-size: var(--home-h1);
@@ -8319,12 +8346,6 @@ html.rita-app,
   max-width: 36rem;
   font-size: var(--home-lead);
   line-height: 1.6;
-}
-.uz-home .rh-hero-cta .rita-btn {
-  height: var(--home-btn-h);
-  padding-inline: 20px;
-  border-width: 1.5px;
-  font-size: var(--home-btn-font);
 }
 /* The header on the home page: smaller, lighter links and a lower bar; the links keep a 44px
    target for touch. */

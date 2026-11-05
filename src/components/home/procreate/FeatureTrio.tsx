@@ -72,7 +72,7 @@ function WordsPanel() {
         className="mt-1 self-start rounded-lg px-3 py-1.5 text-[12.5px] font-bold"
         style={{
           background: "var(--pp-accent)",
-          border: "1.5px solid var(--pp-ink)",
+          border: "1px solid var(--pp-ink)",
           color: "var(--pp-on-accent)",
         }}
       >
@@ -112,7 +112,7 @@ function StudyPanel() {
           />
           <span
             className="absolute inset-x-0 top-0 flex h-[70px] flex-col justify-center rounded-xl px-3"
-            style={{ background: "#ffffff", border: "1.5px solid var(--pp-ink)" }}
+            style={{ background: "#ffffff", border: "1px solid var(--pp-ink)" }}
           >
             <span className="text-[11px] font-semibold" style={muted}>
               Question
@@ -148,27 +148,24 @@ const CARDS = [
 export function FeatureTrio() {
   const { ref, shown } = useReveal<HTMLDivElement>();
   return (
-    <section className="mx-auto w-full max-w-[1180px] px-5 pb-20 md:px-10 md:pb-28">
-      <h2
-        className="mx-auto max-w-[40rem] text-center text-[34px] font-bold leading-[1.08] md:text-[48px]"
-        style={ink}
-      >
+    <section className="mx-auto w-full max-w-[1180px] px-5 pb-16 md:px-10 md:pb-24">
+      <h2 className="rh-h2 mx-auto max-w-[40rem] text-center" style={ink}>
         Practise out loud, then keep what you learn.
       </h2>
-      <div ref={ref} className="mt-12 grid gap-5 md:grid-cols-3">
+      <div ref={ref} className="mt-8 grid gap-4 md:grid-cols-3">
         {CARDS.map((card, index) => (
           <article
             key={card.title}
-            className={`rita-reveal rh-lift rounded-[24px] p-5 ${shown ? "rita-reveal-in" : ""}`}
+            className={`rita-reveal rh-lift rounded-[16px] p-5 ${shown ? "rita-reveal-in" : ""}`}
             style={
               { background: "var(--pp-grey)", transitionDelay: `${index * 90}ms` } as CSSProperties
             }
           >
             {card.panel}
-            <h3 className="mt-6 text-[24px] font-bold leading-tight" style={ink}>
+            <h3 className="rh-h3 mt-5" style={ink}>
               {card.title}
             </h3>
-            <p className="mt-2 text-[16px] leading-[1.6]" style={muted}>
+            <p className="mt-1.5 text-[15px] leading-[1.6]" style={muted}>
               {card.text}
             </p>
           </article>

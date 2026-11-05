@@ -455,6 +455,12 @@ the user's zoom are never changed.
 - Word tags around the orb: 14–17px, weight 600, 1px border, radius 12, a 44px touch area.
 - The hero is `dir="ltr" lang="en"` (its words are English), so punctuation stays right in Arabic.
 - Below 360px the header spacing tightens so the logo, the button and the menu fit.
+- The sections below (topics, three features, voice band, sample app window, under the hood,
+  questions, closing invitation) share `.rh-h2` (`clamp(1.75rem, calc(1.2rem + 1.4vw), 2.25rem)`,
+  weight 600: 28px on phones, 36 from ~1200), `.rh-h3` (17/18px, 600) and `.rh-lead2` (the lead
+  size). Their buttons are the hero's 42px. Borders 1px (path rings 1.5px), card corners 16 (inner
+  tiles 12), headline-to-content 32–40px, section gaps 64/96px, dark bands 48/64px inside. The sample
+  app window stays labelled «Sample screen». Body copy 15–16px; eyebrow labels 13px.
 
 
 `AppWindow.tsx` replaces the old lesson-path strip. A window built from real markup (no screenshots) that starts tilted (desktop only) and flattens as it scrolls to the middle of the screen, then plays a short story once: the path fills, the lesson in progress shows, two words are saved, Rita listens.

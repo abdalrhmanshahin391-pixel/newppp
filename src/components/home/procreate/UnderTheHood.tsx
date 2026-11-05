@@ -5,7 +5,7 @@ import { useReveal } from "@/hooks/useReveal";
 
 const ink = { color: "var(--pp-ink)" } as const;
 const muted = { color: "var(--pp-muted)" } as const;
-const ringed: CSSProperties = { border: "2px solid var(--pp-ink)", background: "#ffffff" };
+const ringed: CSSProperties = { border: "1px solid var(--pp-ink)", background: "#ffffff" };
 
 function prefersCalm() {
   return (
@@ -126,7 +126,7 @@ function LiveTranscript() {
   return (
     <div
       ref={ref}
-      className={`rita-reveal rounded-[20px] p-5 md:p-7 ${shown ? "rita-reveal-in" : ""}`}
+      className={`rita-reveal rounded-[16px] p-5 md:p-7 ${shown ? "rita-reveal-in" : ""}`}
       style={ringed}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -148,7 +148,7 @@ function LiveTranscript() {
               lang={l.id}
               className="rounded-lg px-2.5 py-1 text-[13px] font-semibold transition-colors"
               style={{
-                border: "2px solid var(--pp-ink)",
+                border: "1px solid var(--pp-ink)",
                 background: current === l.id ? "var(--pp-accent)" : "#ffffff",
                 color: current === l.id ? "var(--pp-on-accent)" : "var(--pp-ink)",
               }}
@@ -168,7 +168,7 @@ function LiveTranscript() {
           <p className="text-[14px] font-semibold" style={muted}>
             What Rita hears, as you speak
           </p>
-          <p className="mt-2 text-[22px] font-semibold leading-[1.5] md:text-[26px]" style={ink}>
+          <p className="mt-2 text-[18px] font-medium leading-[1.5] md:text-[20px]" style={ink}>
             <Heard words={HEARD.slice(0, heard)} partialLast={!finishing} />
           </p>
         </div>
@@ -179,7 +179,7 @@ function LiveTranscript() {
           <p className="text-[14px] font-semibold" style={muted}>
             Rita's reply, already on its way
           </p>
-          <p className="mt-2 text-[22px] font-semibold leading-[1.5] md:text-[26px]" style={ink}>
+          <p className="mt-2 text-[18px] font-medium leading-[1.5] md:text-[20px]" style={ink}>
             <Heard words={REPLY.slice(0, replied)} partialLast={false} />
           </p>
         </div>
@@ -195,7 +195,7 @@ function LiveTranscript() {
           onClick={() => setRun((n) => n + 1)}
           className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-[14px] font-semibold"
           style={{
-            border: "2px solid var(--pp-ink)",
+            border: "1px solid var(--pp-ink)",
             background: "#ffffff",
             color: "var(--pp-ink)",
           }}
@@ -229,8 +229,8 @@ const QUEUE: Lane[] = [
 function toneStyle(tone: Bar["tone"]): CSSProperties {
   if (tone === "ink") return { background: "var(--pp-ink)" };
   if (tone === "accent")
-    return { background: "var(--pp-accent)", border: "2px solid var(--pp-ink)" };
-  return { background: "var(--pp-accent-soft)", border: "2px solid var(--pp-ink)" };
+    return { background: "var(--pp-accent)", border: "1px solid var(--pp-ink)" };
+  return { background: "var(--pp-accent-soft)", border: "1px solid var(--pp-ink)" };
 }
 
 function LaneRows({ lanes, shown }: { lanes: Lane[]; shown: boolean }) {
@@ -274,11 +274,11 @@ function TurnTimeline() {
   return (
     <div
       ref={ref}
-      className={`rita-reveal rounded-[20px] p-5 md:p-7 ${shown ? "rita-reveal-in" : ""}`}
+      className={`rita-reveal rounded-[16px] p-5 md:p-7 ${shown ? "rita-reveal-in" : ""}`}
       style={ringed}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-[22px] font-bold tracking-[-0.02em]" style={ink}>
+        <h3 className="rh-h3" style={ink}>
           One turn of conversation
         </h3>
         <p className="text-[14px] font-medium" style={muted}>
@@ -317,7 +317,7 @@ function Spec({ icon, title, children }: { icon: ReactNode; title: string; child
       <span aria-hidden="true" style={ink}>
         {icon}
       </span>
-      <h3 className="mt-3 text-[18px] font-bold leading-snug" style={ink}>
+      <h3 className="rh-h3 mt-3" style={ink}>
         {title}
       </h3>
       <p className="mt-2 text-[15.5px] leading-[1.6]" style={muted}>
@@ -360,9 +360,9 @@ function SpecGrid() {
         </p>
         <p
           className="mt-2 font-bold leading-none tracking-[-0.03em]"
-          style={{ fontSize: "clamp(2.6rem, 5vw, 3.4rem)", fontVariantNumeric: "tabular-nums" }}
+          style={{ fontSize: "clamp(2rem, 4vw, 2.6rem)", fontVariantNumeric: "tabular-nums" }}
         >
-          ≈75<span className="ms-1 text-[20px] font-semibold">ms</span>
+          ≈75<span className="ms-1 text-[17px] font-semibold">ms</span>
         </p>
         <p className="mt-3 text-[14.5px] leading-[1.55]" style={{ color: "rgba(255,255,255,0.8)" }}>
           Median time for the voice engine alone to produce its first sound, in Arabic and German,
@@ -379,32 +379,25 @@ export function UnderTheHood() {
   return (
     <section
       aria-labelledby="hood-heading"
-      className="mx-auto w-full max-w-[1180px] px-5 pb-20 md:px-8 md:pb-28"
+      className="mx-auto w-full max-w-[1180px] px-5 pb-16 md:px-8 md:pb-24"
     >
       <header
         ref={head.ref}
         className={`rita-reveal mx-auto max-w-[780px] text-center ${head.shown ? "rita-reveal-in" : ""}`}
       >
-        <p className="text-[16px] font-semibold" style={muted}>
+        <p className="text-[13px] font-semibold" style={muted}>
           Under the hood
         </p>
-        <h2
-          id="hood-heading"
-          className="mt-3 font-bold leading-[1.04] tracking-[-0.035em]"
-          style={{ fontSize: "clamp(2.2rem, 5.4vw, 4rem)", ...ink }}
-        >
+        <h2 id="hood-heading" className="rh-h2 mt-2" style={ink}>
           Fast enough to <span className="rita-accent">talk to.</span>
         </h2>
-        <p
-          className="mx-auto mt-5 max-w-[640px] text-[18px] leading-[1.6] md:text-[20px]"
-          style={muted}
-        >
+        <p className="rh-lead2 mx-auto mt-3 max-w-[640px]" style={muted}>
           Rita does not wait for you to finish, then think, then speak. Listening, deciding and
           speaking overlap, so a reply can begin while she is still shaping the end of it.
         </p>
       </header>
 
-      <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-5 md:mt-16">
+      <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-4 md:mt-10">
         <LiveTranscript />
         <TurnTimeline />
         <SpecGrid />

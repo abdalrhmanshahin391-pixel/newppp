@@ -20,10 +20,10 @@ export function TopicsStrip() {
         {TOPICS.map((topic) => (
           <li
             key={topic.label}
-            className="rounded-full px-5 py-2 text-[15px] font-bold"
+            className="rounded-full px-4 py-1.5 text-[14px] font-semibold"
             style={{
               background: "#ffffff",
-              border: "1.5px solid var(--pp-ink)",
+              border: "1px solid var(--pp-ink)",
               color: "var(--pp-ink)",
               transform: `rotate(${topic.rot}deg)`,
             }}
