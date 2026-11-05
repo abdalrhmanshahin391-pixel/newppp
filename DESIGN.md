@@ -487,7 +487,7 @@ orders (`rita_path_items`). Motion is transform/opacity and stops under reduced 
 ## Floating window (study page, `FloatingWindow`)
 
 A dark window over the study work area in the manner of iPadOS windows, opened from the circle (the
-trial item «نموذج ويندو» shows «Hello world»; real content comes later). Titled «Uzyra» with its
+ trial item «معاينة الأسئلة» opens the local question preview below). Titled «Uzyra» with its
 mark. Background #141416, continuous (squircle) corners drawn as an SVG clip path (Safari has no
 `corner-shape` yet; `window-geometry.ts` holds the Figma corner-smoothing construction, radius 26,
 smoothing 0.6), a hairline light edge and a deep soft shadow. A grey grabber pill above moves it (a
@@ -500,6 +500,37 @@ sounds. No backdrop: the page, the selection and the circle keep working.
 Type on the study page follows pro tools: 13px for UI text and 12px for small words (top bar, state
 word, window), 15px for Rita's replies; a thin 46px top bar; the guide fits its pane at most 112% so a
 wide pane gets more room around the sheet instead of bigger type.
+
+## Temporary question design preview
+
+The circle's «معاينة الأسئلة» item replaces the old Hello world demo. It opens the existing
+draggable/resizable floating window with a dark Uzyra title bar and a white question workspace.
+This is a client-only preview: three questions sampled once from six original English grammar
+fixtures, no AI request, no save destination, no database writes and no changes to lesson progress.
+The real generation actions remain unchanged. Closing for good discards the preview; hiding and
+restoring it preserves the current question, selected/submitted answers and review flags.
+
+Questionosis's standard session view is the visual reference: dark navy toolbar, question position,
+previous/next arrows and a flag, an outlined question, 59px-minimum answer rows with A-D discs,
+12px corners and a full-width dark Submit Answer button. The Uzyra mark replaces the reference's
+identity; its questions, watermark and logos are not copied. Inter is self-hosted for this workspace
+only (Fontsource variable Inter 5.3.0, Latin wght, SIL OFL license in `public/fonts/quiz`). Its
+palette lives in `.qp` component tokens. Arabic uses the existing bundled Noto Sans Arabic.
+
+One question is shown at a time. Native radio inputs allow one choice, then explicit submission
+locks it and shows the correct answer, an icon/text outcome and a short explanation. Answered
+count and accuracy are distinct; accuracy stays undefined until the first submission. Results
+are derived from submitted answers only, never incremented on revisits. The three navigation
+buttons expose current/answered/flagged states. On wide windows, progress/navigation sit beside
+the question; below 850px container width, progress moves above it and navigation follows it.
+At 480px the toolbar wraps into two rows. The save icon opens a portalled Radix popover explaining
+that the destination is undecided and nothing is saved. No nested dialog or success toast.
+
+Verification: `scripts/check-question-preview.mjs` renders the actual StudyPage, guide, orb, radial
+menu, floating window and question component. Only voice, phrase dialog and server boundaries
+are inert fixtures. It asserts no outgoing remote requests. Captures at 390/768/1180/1280px in
+Arabic/English, navigation, submit locking, scoring and hide/restore are reproducible in Chromium
+and WebKit. Physical iPad/Apple Pencil feel still requires hardware.
 
 ## Rita's written sheet (`RitaSheet`)
 
