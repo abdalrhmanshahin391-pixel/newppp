@@ -1596,6 +1596,8 @@ export type PathLesson = {
    * a guide is linked and ready for learners, and the switch is on. Otherwise "classic".
    */
   experience: "classic" | "study";
+  /** Place on the path (the admin's order); null for a lesson not placed yet. */
+  path_order: number | null;
 };
 
 /** A finished lesson suggested for review after a week. */
@@ -1706,6 +1708,10 @@ export const getLessonPath = createServerFn({ method: "GET" })
         slide_count: slideCounts[lesson.id] ?? 0,
         resource_count: resourceCounts[lesson.id] ?? 0,
         experience: experiences[lesson.id] ?? "classic",
+        path_order:
+          (lesson as { path_order?: number | null }).path_order == null
+            ? null
+            : Number((lesson as { path_order?: number | null }).path_order),
       }),
     );
     // Spaced review: lessons finished more than a week ago come back as
@@ -1724,7 +1730,10 @@ export const getLessonPath = createServerFn({ method: "GET" })
         daysAgo: Math.floor(age / 86_400_000),
       });
     }
-    return { lessons: nodes, reviews };
+    // The exercise and resources stops an admin placed on this path (none before the migration).
+    const { pathItemsFor } = await import("@/lib/rita-path-items.server");
+    const items = await pathItemsFor(context.supabase, data.language);
+    return { lessons: nodes, reviews, items };
   });
 
 /** What a learner can look at before starting a lesson. Reading it records nothing. */

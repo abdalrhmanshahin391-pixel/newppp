@@ -430,3 +430,19 @@ at least 40px, nothing relying on colour alone, RTL checked on any new text layo
 
 Phone 390×844, tablet 768, desktop 1280; Arabic (RTL) and English content; empty, one item,
 many items and very long text; loading and error states.
+
+## Lesson path (`/rita-lessons`, `LessonPathView`)
+
+A zig-zag road of round stops on white. Each kind of stop has one colour, used for its ring, its pill
+and the legend under the stats card: green «PDF + صوت» (a study lesson: guide + Rita's voice), blue
+«محادثة» (a conversation lesson), orange «تمارين» (an exercises stop: only its look for now, opening it
+does nothing yet) and purple «ملفات» (a resources stop that opens a sheet of files and links). The
+road is grey; the part already walked (up to the current lesson) is blue, and the current lesson
+carries a small bobbing «إنت هون» tag. Stats sit in one quiet card (lessons done, stars, a bar).
+
+Admins get «تعديل المسار»: hold a stop (300 ms) and drop it on another to swap them (it lifts and
+follows the finger, the target grows, and the swap glides into place; the study circle's sounds play
+on lift, hover and drop), or press a + in the gap between stops (or after the last) to add an
+exercises or resources stop, which pops in. Every change is saved at once (`rita_set_path_layout`)
+and undone if saving fails. Lessons keep their integer slots; stops sit between them with fractional
+orders (`rita_path_items`). Motion is transform/opacity and stops under reduced motion.
