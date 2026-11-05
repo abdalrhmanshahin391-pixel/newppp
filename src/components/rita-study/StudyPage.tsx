@@ -2,13 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Group, Panel, Separator } from "react-resizable-panels";
-import { ArrowRight, Download, Loader2, Shuffle, Square, Star } from "lucide-react";
+import { ArrowRight, Download, Loader2, Square } from "lucide-react";
 import { toast } from "sonner";
 import { RitaRealtimeV3, type StudyBridge } from "@/components/rita/RitaRealtimeV3";
 import { studyGuideDownload } from "@/lib/study/study.functions";
 import { studyMakeCards, studyMakeMcq } from "@/lib/study/study-practice.functions";
 import type { StudyCard, StudyMcq } from "@/lib/study/study-practice";
-import { SAMPLE_STUDY_TOPIC, type StudyLessonData } from "@/lib/study/study-types";
+import type { StudyLessonData } from "@/lib/study/study-types";
 import { PhraseDialog } from "@/components/rita/PhraseDialog";
 import { guideSegmentMap, sectionId } from "@/lib/guides/guide-blocks";
 import {
@@ -458,23 +458,9 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
           <ArrowRight size={17} aria-hidden="true" />
           <span className="hidden sm:inline">الدروس</span>
         </Link>
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate !text-[17px] font-bold !leading-6 !tracking-normal">{title}</h1>
-          <p className="text-[12.5px] font-semibold text-[var(--pp-accent-text)]">
-            ريتا — دراسة تفاعلية{preview ? " · معاينة أدمن (ما بينحفظ إشي)" : ""}
-          </p>
-        </div>
-        {preview && lesson.topic === SAMPLE_STUDY_TOPIC ? (
-          <Link
-            to="/admin/study-sample"
-            search={{ another: true }}
-            replace
-            className="rita-btn rita-btn-soft rita-btn-sm gap-1.5"
-          >
-            <Shuffle size={15} aria-hidden="true" />
-            دليل ثاني
-          </Link>
-        ) : null}
+        <h1 className="sr-only">{title}</h1>
+        {preview && <p className="sr-only">معاينة أدمن، لا يتم حفظ التقدم.</p>}
+        <div className="flex-1" />
         {guide.allow_download && (
           <button
             type="button"
@@ -490,14 +476,6 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
             PDF
           </button>
         )}
-        <Link
-          to="/rita-live"
-          search={{ lesson: lesson.id, ...(preview ? { preview: true } : {}) }}
-          className="rita-btn rita-btn-soft rita-btn-sm gap-1.5"
-        >
-          <Star size={15} aria-hidden="true" />
-          تحدّي الدرس
-        </Link>
       </header>
 
       {/* The circle lives over both sides, so it can sit wherever the learner likes. */}

@@ -1,8 +1,48 @@
 import asyncio
 import json
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from rita_cartesia_tts import RitaCartesiaTTSService
+
+
+def _connection_service():
+    service = object.__new__(RitaCartesiaTTSService)
+    service._websocket = None
+    service._api_key = "synthetic-test-key"
+    service._url = "wss://example.invalid/tts"
+    service._cartesia_version = "2026-08-14"
+    service._latency_recorder = Mock()
+    service._call_event_handler = AsyncMock()
+    service.push_error = AsyncMock()
+    return service
+
+
+def test_cartesia_retries_transient_handshake_before_reporting_error():
+    service = _connection_service()
+    socket = Mock()
+    connect = AsyncMock(side_effect=[TimeoutError("opening handshake"), socket])
+    with patch("rita_cartesia_tts.websocket_connect", connect):
+        asyncio.run(service._connect_websocket())
+    assert service._websocket is socket
+    assert connect.await_count == 2
+    assert connect.call_args.kwargs["open_timeout"] == 15
+    service.push_error.assert_not_awaited()
+    service._call_event_handler.assert_awaited_once_with("on_connected")
+
+
+def test_cartesia_final_failure_is_named_and_does_not_expose_provider_credentials():
+    service = _connection_service()
+    connect = AsyncMock(side_effect=TimeoutError("opening handshake ?api_key=private"))
+    with patch("rita_cartesia_tts.websocket_connect", connect):
+        asyncio.run(service._connect_websocket())
+    assert service._websocket is None
+    assert connect.await_count == 2
+    service.push_error.assert_awaited_once()
+    message = service.push_error.call_args.kwargs["error_msg"]
+    assert "Cartesia" in message
+    assert "timeout" in message
+    assert "private" not in message
+    service._call_event_handler.assert_awaited_once_with("on_connection_error", "timeout")
 
 
 def test_turn_language_is_conservative_and_never_switches_to_an_unknown_locale():

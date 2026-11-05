@@ -138,6 +138,23 @@ content is data (`src/lib/guides/guide-content.ts`); the look is one template
 - **Never** copy another publisher's logo, mascot, wording or examples; the structure is ours to reuse,
   the content is written fresh and checked by a teacher before approval.
 
+## Closing footer
+
+The global footer uses the ink surface and existing soft-white Uzyra mark. Five
+groups of real links and the existing legal destinations stay available. Short
+opening copy and Start learning sit beside the links on desktop; on phones they
+stack above two link columns. A large decorative Uzyra wordmark closes the page,
+with one thin blue learning thread behind its letters. Existing bundled Noto Sans
+Arabic supports Arabic copy. No new font assets, image downloads, scroll listeners
+or automatic animations. Links have 44px hit areas,
+readable muted text, visible focus and RTL layouts. Full-screen study keeps its
+footer exclusion.
+
+The study header keeps Back to lessons and optional PDF download. The lesson
+title and admin-preview notice remain available to screen readers. Visible sample
+headings, sample-switch and challenge shortcuts are removed. Idle copy below Rita's
+cube is omitted; connecting, failed and active statuses remain visible.
+
 ## Top bar and menus
 
 One bar for the whole site (`ProHeader`, classes `.rh-bar*`, explicit colours so they look the
