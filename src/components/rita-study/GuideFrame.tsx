@@ -9,7 +9,8 @@ const SCALE_MIN = 0.5;
 const SCALE_MAX = 3;
 /** The fitted size follows the pane: the wider the pane, the bigger the sheet. */
 const FIT_MIN = 0.4;
-const FIT_MAX = 1.6;
+/** Kept close to the page's real size: a wide pane gets more room around the sheet, not bigger type. */
+const FIT_MAX = 1.12;
 
 export type GuideFrameHandle = {
   document: () => Document | null;
@@ -92,7 +93,7 @@ export const GuideFrame = forwardRef<
     const box = scroller.current;
     if (!box || !fitted.current || box.clientWidth === 0) return;
     const top = box.scrollTop / scale.current;
-    apply(clamp((box.clientWidth - 16) / SHEET_PX, FIT_MIN, FIT_MAX));
+    apply(clamp((box.clientWidth - 40) / SHEET_PX, FIT_MIN, FIT_MAX));
     box.scrollTop = top * scale.current;
   }, [apply]);
 

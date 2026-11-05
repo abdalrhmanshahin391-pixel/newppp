@@ -466,14 +466,17 @@ orders (`rita_path_items`). Motion is transform/opacity and stops under reduced 
 
 ## Floating window (study page, `FloatingWindow`)
 
-A window over the study work area in the manner of iPadOS windows, opened from the circle (the trial
-item «نموذج ويندو» shows «Hello world»; real content comes later). White, with continuous (squircle)
-corners drawn as an SVG clip path (Safari has no `corner-shape` yet; `window-geometry.ts` holds the
-Figma corner-smoothing construction, radius 28, smoothing 0.6), a hairline edge (the same path
-stroked at 10% ink) and a soft three-layer shadow that deepens while it is moved. A grey grabber pill
-sits above it to move it (the bar moves it too; a double tap fills the area or brings it back); the
-three 13px buttons sit top-left (red closes, yellow minimises to a pill at the top of the work area,
-green fills the work area); any corner resizes it and the bottom-right one shows the curved mark.
-Minimum 300×220, kept 8px inside the area, place and size remembered. It grows out of the circle and
-shrinks back into it (spring, with the circle's open and close sounds). No backdrop: the page, the
-selection and the circle keep working (the window sits under the circle and its menu).
+A dark window over the study work area in the manner of iPadOS windows, opened from the circle (the
+trial item «نموذج ويندو» shows «Hello world»; real content comes later). Titled «Uzyra» with its
+mark. Background #141416, continuous (squircle) corners drawn as an SVG clip path (Safari has no
+`corner-shape` yet; `window-geometry.ts` holds the Figma corner-smoothing construction, radius 26,
+smoothing 0.6), a hairline light edge and a deep soft shadow. A grey grabber pill above moves it (a
+double tap on it or on the bar fills the work area and brings it back); a small dark X above the
+top-right corner hides it, and three dots («•••») at the bottom middle of the work area then bring it
+back or close it for good; any corner resizes it (curved mark bottom-right). Min 300×220, kept inside
+the area, place and size remembered. It grows out of the circle and back into it with the circle's
+sounds. No backdrop: the page, the selection and the circle keep working.
+
+Type on the study page follows pro tools: 13px for UI text and 12px for small words (top bar, state
+word, window), 15px for Rita's replies; a thin 46px top bar; the guide fits its pane at most 112% so a
+wide pane gets more room around the sheet instead of bigger type.

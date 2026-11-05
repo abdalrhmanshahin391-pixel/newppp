@@ -20,7 +20,7 @@ import {
 } from "@/lib/study/study-actions";
 import { FloatingOrb, type OrbState } from "./FloatingOrb";
 import { RadialMenu, type RadialHandle } from "./RadialMenu";
-import { FloatingWindow } from "./FloatingWindow";
+import { FloatingWindow, WindowDots } from "./FloatingWindow";
 import {
   KIND_LABEL,
   LANGUAGE_NAMES,
@@ -105,7 +105,8 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   const [ringMode, setRingMode] = useState<"main" | "language">("main");
   const explanation = useExplanationLanguage();
   // The trial floating window, opened from the circle; it grows out of the circle's spot.
-  const [windowAt, setWindowAt] = useState<{ x: number; y: number } | null>(null);
+  // Hidden with its X it stays alive, and the ••• at the bottom brings it back.
+  const [win, setWin] = useState<{ at: { x: number; y: number }; shown: boolean } | null>(null);
   useEffect(() => {
     if (!menuOpen) setRingMode("main");
   }, [menuOpen]);
@@ -308,9 +309,8 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
     if (id === "window-demo") {
       const box = work.current;
       setMenuOpen(false);
-      setWindowAt(
-        box ? { x: orb.x * box.clientWidth, y: orb.y * box.clientHeight } : { x: 0, y: 0 },
-      );
+      const at = box ? { x: orb.x * box.clientWidth, y: orb.y * box.clientHeight } : { x: 0, y: 0 };
+      setWin({ at, shown: true });
       return;
     }
     if (id === "lang") return setRingMode("language");
@@ -449,13 +449,9 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
 
   return (
     <div className="edith-premium flex h-[100dvh] flex-col bg-white text-[var(--pp-ink)]" dir="rtl">
-      <header className="flex items-center gap-3 border-b border-[var(--pp-line)] px-4 py-2.5">
-        <Link
-          to="/rita-lessons"
-          className="rita-btn rita-btn-quiet rita-btn-sm gap-1 !px-2"
-          aria-label="رجوع للدروس"
-        >
-          <ArrowRight size={17} aria-hidden="true" />
+      <header className="st-top">
+        <Link to="/rita-lessons" className="st-top-btn" aria-label="رجوع للدروس">
+          <ArrowRight size={15} aria-hidden="true" />
           <span className="hidden sm:inline">الدروس</span>
         </Link>
         <h1 className="sr-only">{title}</h1>
@@ -466,12 +462,12 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
             type="button"
             onClick={() => void download()}
             disabled={downloading}
-            className="rita-btn rita-btn-soft rita-btn-sm gap-1.5"
+            className="st-top-btn is-soft"
           >
             {downloading ? (
-              <Loader2 size={15} className="animate-spin" aria-hidden="true" />
+              <Loader2 size={14} className="animate-spin" aria-hidden="true" />
             ) : (
-              <Download size={15} aria-hidden="true" />
+              <Download size={14} aria-hidden="true" />
             )}
             PDF
           </button>
@@ -540,13 +536,25 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
             <div className={`min-h-0 flex-1 ${tab === "rita" ? "" : "hidden"}`}>{ritaPane}</div>
           </>
         )}
-        {windowAt && (
-          <FloatingWindow title="نموذج ويندو" origin={windowAt} onClose={() => setWindowAt(null)}>
+        {win && (
+          <FloatingWindow
+            title="Uzyra"
+            origin={win.at}
+            shown={win.shown}
+            onHidden={() => setWin((current) => current && { ...current, shown: false })}
+          >
             <div className="fw-hello">
               <h3>Hello world</h3>
-              <p>اسحبها من فوق، كبّرها من الزاوية، والصفحة وراها بتضل شغالة.</p>
+              <p>اسحبها من الحبة فوق، كبّرها من الزاوية، والصفحة وراها بتضل شغالة.</p>
             </div>
           </FloatingWindow>
+        )}
+        {win && !win.shown && (
+          <WindowDots
+            title="Uzyra"
+            onShow={() => setWin((current) => current && { ...current, shown: true })}
+            onClose={() => setWin(null)}
+          />
         )}
         <FloatingOrb
           ref={orbButton}
