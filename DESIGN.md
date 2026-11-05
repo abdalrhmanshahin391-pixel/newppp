@@ -467,9 +467,8 @@ orders (`rita_path_items`). Motion is transform/opacity and stops under reduced 
 
 ## Floating window (study page, `FloatingWindow`)
 
-A dark window over the study work area in the manner of iPadOS windows, opened from the circle (the
-trial item «نموذج ويندو» shows «Hello world»; real content comes later). Titled «Uzyra» with its
-mark. Background #141416, continuous (squircle) corners drawn as an SVG clip path (Safari has no
+A dark window over the study work area in the manner of iPadOS windows, opened from the circle when
+it makes flashcards (title «Uzyra · بطاقات»). Titled «Uzyra» with its mark. Background #141416, continuous (squircle) corners drawn as an SVG clip path (Safari has no
 `corner-shape` yet; `window-geometry.ts` holds the Figma corner-smoothing construction, radius 26,
 smoothing 0.6), a hairline light edge and a deep soft shadow. A grey grabber pill above moves it (a
 double tap on it or on the bar fills the work area and brings it back); a small dark X above the
@@ -477,6 +476,20 @@ top-right corner hides it, and three dots («•••») at the bottom middle o
 back or close it for good; any corner resizes it (curved mark bottom-right). Min 300×220, kept inside
 the area, place and size remembered. It grows out of the circle and back into it with the circle's
 sounds. No backdrop: the page, the selection and the circle keep working.
+
+### Flashcards in the window (`CardsPanel`)
+
+Choosing «بطاقات» on the circle opens the window and fills it with the cards made from the
+selection (a second selection adds to the same deck). Cards sit in a grid (min 180px), enter with a
+short stagger, and show grey shimmering placeholders while they are made; an error offers «جرّب مرة
+ثانية». A tap flips a card between its word and its meaning (each face turns on its own with its own
+perspective and they swap halfway, because the window's clip path flattens 3D in Safari). Each card
+has three small tools: a blue check (left out cards fade to 42%), edit in place, and delete. The save
+bar below picks the subject and the sub-subject of the site's flashcards, each an existing one or a
+new one typed right there (the sub-subject defaults to the lesson's title, the subject to the one used
+last). Saving skips repeats and empty cards (`card-save.ts`), then says where they went, with
+«تراجع» (takes back exactly that save), «افتح البطاقات» and «احفظ بمكان ثاني». Inputs are 16px so
+iPad Safari does not zoom.
 
 Type on the study page follows pro tools: 13px for UI text and 12px for small words (top bar, state
 word, window), 15px for Rita's replies; a thin 46px top bar; the guide fits its pane at most 112% so a

@@ -7,7 +7,8 @@ import { toast } from "sonner";
 import { RitaRealtimeV3, type StudyBridge } from "@/components/rita/RitaRealtimeV3";
 import { studyGuideDownload } from "@/lib/study/study.functions";
 import { studyMakeCards, studyMakeMcq } from "@/lib/study/study-practice.functions";
-import type { StudyCard, StudyMcq } from "@/lib/study/study-practice";
+import type { StudyMcq } from "@/lib/study/study-practice";
+import { CardsPanel, type Deck } from "./CardsPanel";
 import type { StudyLessonData } from "@/lib/study/study-types";
 import { PhraseDialog } from "@/components/rita/PhraseDialog";
 import { guideSegmentMap, sectionId } from "@/lib/guides/guide-blocks";
@@ -260,19 +261,78 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   );
 
   const actions: StudyAction[] = selected ? availableActions(selected.kind) : [];
-  // Flashcards and questions made from selections. Kept here until it is decided where they show.
+  // Flashcards show in the floating window; questions are kept until it is decided where they show.
   const makeCardsFn = useServerFn(studyMakeCards);
   const makeMcqFn = useServerFn(studyMakeMcq);
   const [making, setMaking] = useState<"make_cards" | "make_mcq" | null>(null);
-  const [made, setMade] = useState<{ cards: StudyCard[]; questions: StudyMcq[] }>({
-    cards: [],
-    questions: [],
-  });
+  const [, setQuestions] = useState<StudyMcq[]>([]);
+  // Flashcards collect in the floating window: each new selection adds to the same deck.
+  const [deck, setDeck] = useState<Deck | null>(null);
+  const lastCardsSelection = useRef<PageSelection | null>(null);
+
+  function openWindow() {
+    const box = work.current;
+    const at = box ? { x: orb.x * box.clientWidth, y: orb.y * box.clientHeight } : { x: 0, y: 0 };
+    setWin((current) => (current ? { ...current, shown: true } : { at, shown: true }));
+  }
+
+  async function makeCards(sel: PageSelection) {
+    lastCardsSelection.current = sel;
+    setMaking("make_cards");
+    openWindow();
+    setDeck((current) => ({
+      cards: current?.cards ?? [],
+      status: "loading",
+      message: "",
+      quote: sel.exact,
+    }));
+    try {
+      const result = await makeCardsFn({
+        data: {
+          lessonId: lesson.id,
+          preview,
+          requestId: crypto.randomUUID(),
+          selection: { segIds: sel.segIds, exact: sel.exact, parts: sel.parts },
+        },
+      });
+      setDeck((current) => {
+        const cards = current?.cards ?? [];
+        if (!result.ok)
+          return { cards, status: "error", message: result.message, quote: sel.exact };
+        const stamp = Date.now().toString(36);
+        return {
+          cards: [
+            ...cards,
+            ...result.cards.map((card, index) => ({
+              id: `${stamp}-${index}`,
+              front: card.front,
+              back: card.back,
+              note: card.note,
+              on: true,
+            })),
+          ],
+          status: "ready",
+          message: "",
+          quote: sel.exact,
+        };
+      });
+    } catch {
+      setDeck((current) => ({
+        cards: current?.cards ?? [],
+        status: "error",
+        message: "ما زبطت هالمرة. جرّب مرة ثانية.",
+        quote: sel.exact,
+      }));
+    } finally {
+      setMaking(null);
+    }
+  }
 
   async function practice(action: "make_cards" | "make_mcq") {
     const sel = selectionRef.current;
     if (!sel || !sel.segIds.length || making) return;
     setMenuOpen(false);
+    if (action === "make_cards") return void makeCards(sel);
     setMaking(action);
     const input = {
       data: {
@@ -283,21 +343,12 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
       },
     };
     try {
-      if (action === "make_cards") {
-        const result = await makeCardsFn(input);
-        if (!result.ok) return void toast.message(result.message);
-        setMade({ cards: result.cards, questions: made.questions });
-        toast.success(
-          `جهّزت ${result.cards.length} ${result.cards.length === 1 ? "بطاقة" : "بطاقات"}`,
-        );
-      } else {
-        const result = await makeMcqFn(input);
-        if (!result.ok) return void toast.message(result.message);
-        setMade({ cards: made.cards, questions: result.questions });
-        toast.success(
-          `جهّزت ${result.questions.length} ${result.questions.length === 1 ? "سؤال" : "أسئلة"}`,
-        );
-      }
+      const result = await makeMcqFn(input);
+      if (!result.ok) return void toast.message(result.message);
+      setQuestions(result.questions);
+      toast.success(
+        `جهّزت ${result.questions.length} ${result.questions.length === 1 ? "سؤال" : "أسئلة"}`,
+      );
     } catch {
       toast.error("ما زبطت هالمرة. جرّب مرة ثانية.");
     } finally {
@@ -306,13 +357,6 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   }
 
   function ringPick(id: string) {
-    if (id === "window-demo") {
-      const box = work.current;
-      setMenuOpen(false);
-      const at = box ? { x: orb.x * box.clientWidth, y: orb.y * box.clientHeight } : { x: 0, y: 0 };
-      setWin({ at, shown: true });
-      return;
-    }
     if (id === "lang") return setRingMode("language");
     if (id === "lang:back") return setRingMode("main");
     const language = languageFromId(id);
@@ -538,22 +582,32 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
         )}
         {win && (
           <FloatingWindow
-            title="Uzyra"
+            title="Uzyra · بطاقات"
             origin={win.at}
             shown={win.shown}
             onHidden={() => setWin((current) => current && { ...current, shown: false })}
           >
-            <div className="fw-hello">
-              <h3>Hello world</h3>
-              <p>اسحبها من الحبة فوق، كبّرها من الزاوية، والصفحة وراها بتضل شغالة.</p>
-            </div>
+            {deck && (
+              <CardsPanel
+                deck={deck}
+                lessonTitle={title}
+                onChange={(cards) => setDeck((current) => current && { ...current, cards })}
+                onRetry={() => {
+                  const sel = lastCardsSelection.current;
+                  if (sel && !making) void makeCards(sel);
+                }}
+              />
+            )}
           </FloatingWindow>
         )}
         {win && !win.shown && (
           <WindowDots
-            title="Uzyra"
+            title="Uzyra · بطاقات"
             onShow={() => setWin((current) => current && { ...current, shown: true })}
-            onClose={() => setWin(null)}
+            onClose={() => {
+              setWin(null);
+              setDeck(null);
+            }}
           />
         )}
         <FloatingOrb
