@@ -5284,6 +5284,7 @@ html.rita-app,
    the message bar and the conversation reads as plain text. The cube is one element that flies
    between the two spots (FlyingCube); its life is drawn by RitaCube. */
 .uz-rc {
+  --rc-page: #f7f7f6;
   --rc-ink: #0e1116;
   --rc-muted: #8b8d98;
   --rc-line: #e6e7ec;
@@ -5295,7 +5296,7 @@ html.rita-app,
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  background: #fff;
+  background: var(--rc-page);
 }
 .uz-rc-hero {
   flex: 1;
@@ -5362,152 +5363,272 @@ html.rita-app,
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+/* The conversation, in the manner of the ChatGPT and Claude chat pages (measured from the owner's
+   reference and scaled ×0.82 so the column keeps that "large screen" calm): Rita writes without a
+   bubble under a quiet line with her mark; the learner's words sit in a soft grey bubble on the
+   other side; the composer is one large grey field with a row of tools under the text. */
 .uz-rc-chat {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  max-width: 600px;
+  gap: 26px;
+  max-width: 640px;
   margin-inline: auto;
-  padding: 24px 20px 12px;
+  padding: 22px 16px 14px;
 }
 .uz-rc-rita {
-  color: var(--rc-ink);
-  font-size: 15px;
-  line-height: 1.75;
-  letter-spacing: -0.005em;
+  color: #2b2b2b;
+  font-size: 14px;
+  line-height: 1.95;
+  letter-spacing: -0.003em;
+}
+.uz-rc-rita [data-reply-text] p + p {
+  margin-top: 12px !important;
+}
+/* The sheet keeps its own tight spacing. */
+.uz-rc-rita [data-reply-text] .rita-sheet p + p {
+  margin-top: 1px !important;
+}
+.uz-rc-rita b,
+.uz-rc-rita strong {
+  color: #161616;
+  font-weight: 650;
+}
+.uz-rc-meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #e4e4e1;
+  color: #6b6b6b;
+  font-size: 13px;
+  line-height: 1.3;
+}
+.uz-rc-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px #d9d9d6;
+  background: #fff;
+  color: #1c1c1c;
+}
+.uz-rc-avatar svg {
+  width: auto;
+  height: 14px;
+}
+.uz-rc-meta-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .uz-rc-you {
-  align-self: flex-start;
+  align-self: flex-end;
   max-width: 82%;
-  padding: 7px 13px;
-  border-radius: 16px;
-  background: var(--rc-soft);
-  color: var(--rc-ink);
-  font-size: 14.5px;
-  line-height: 1.55;
+  padding: 8px 16px;
+  border-radius: 15px;
+  background: #ebebea;
+  color: #1f1f1f;
+  font-size: 14px;
+  line-height: 1.6;
 }
 .uz-rc-you.is-live {
   background: transparent;
-  color: var(--rc-muted);
+  color: #8a8a87;
+}
+.uz-rc-tag {
+  display: inline-block;
+  margin-bottom: 3px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: #dededb;
+  color: #5b5b58;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+/* Words in the language being learned: small grey tags, like the reference's source tags. */
+.uz-rc [data-reply-text] :is(button, bdi).rounded-md,
+.uz-rc-you :is(button, bdi).rounded-md {
+  margin-inline: 1px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: #ececea;
+  color: #1f1f1f;
+  font-size: 0.9em;
+  font-weight: 600;
+  line-height: 1.55;
+  vertical-align: 1px;
+}
+.uz-rc [data-reply-text] button.rounded-md:hover {
+  background: #e2e2df;
+}
+.uz-rc [data-reply-text] button.rounded-md svg {
+  color: #8a8a87;
 }
 .uz-rc-flag {
   display: inline-grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   margin-top: 2px;
-  border-radius: 8px;
-  color: #b4b6bf;
+  border-radius: 7px;
+  color: #b0b0ad;
   transition: color 150ms ease, background-color 150ms ease;
 }
 .uz-rc-flag:hover {
-  color: var(--rc-ink);
-  background: var(--rc-soft);
+  color: #1f1f1f;
+  background: #ebebea;
 }
 .uz-rc-flag:focus-visible,
 .uz-rc-icon:focus-visible,
 .uz-rc-send:focus-visible,
 .uz-rc-bar.is-start:focus-visible,
-.uz-rc-chip:focus-visible {
+.uz-rc-chip:focus-visible,
+.uz-rc-chip-tag.is-button:focus-visible {
   outline: 2px solid var(--rc-blue);
   outline-offset: 2px;
 }
 .uz-rc-chip {
   align-self: center;
-  min-height: 36px;
+  min-height: 34px;
   padding-inline: 14px;
   border-radius: 999px;
-  background: var(--rc-ink);
+  background: #1f1f1f;
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 .uz-rc-error {
   margin: 0;
   color: #b42318;
-  font-size: 14px;
+  font-size: 13px;
   text-align: center;
 }
-/* The bar at the bottom: before the call it is the way in, during it the message field. */
+/* The composer: one large grey field (no border, no shadow), the text on top and a row of tools
+   under it; Rita's tag at the start, the voice and the round blue send at the end. */
 .uz-rc-dock {
   flex: none;
-  padding: 10px 16px max(16px, env(safe-area-inset-bottom));
-  background: #fff;
+  padding: 8px 16px max(14px, env(safe-area-inset-bottom));
+  background: var(--rc-page);
 }
 .uz-rc-bar {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
   width: 100%;
   max-width: 640px;
-  min-height: 46px;
-  margin: 8px auto 0;
-  padding: 4px 4px 4px 6px;
-  padding-inline-start: 16px;
-  border: 1px solid var(--rc-line);
+  margin: 6px auto 0;
+  padding: 14px 12px 10px;
+  border: 0;
   border-radius: 26px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgb(16 18 24 / 0.04), 0 8px 24px -12px rgb(16 18 24 / 0.12);
-  transition: border-color 150ms ease, box-shadow 200ms ease;
+  background: #ebebea;
+  text-align: start;
+  transition: background-color 150ms ease, box-shadow 200ms ease;
 }
 .uz-rc-bar:focus-within {
-  border-color: #c9cbd3;
+  box-shadow: inset 0 0 0 1px #d6d6d3;
 }
 .uz-rc-bar.is-start {
   cursor: pointer;
-  text-align: start;
 }
 @media (hover: hover) and (pointer: fine) {
   .uz-rc-bar.is-start:hover {
-    border-color: #c9cbd3;
+    background: #e6e6e4;
   }
 }
 .uz-rc-bar.is-start:disabled {
   cursor: default;
 }
 .uz-rc-placeholder {
-  flex: 1;
-  color: var(--rc-muted);
-  font-size: 14px;
+  display: block;
+  padding-inline: 6px;
+  color: #6b6b6b;
+  font-size: 15px;
+  line-height: 1.5;
 }
 .uz-rc-input {
-  flex: 1;
+  width: 100%;
   min-width: 0;
+  padding-inline: 6px;
   border: 0;
   background: transparent;
-  color: var(--rc-ink);
+  color: #1f1f1f;
   font-size: 16px; /* 16px keeps iPad Safari from zooming into the field */
+  line-height: 1.5;
   outline: none;
 }
 .uz-rc-input::placeholder {
-  color: var(--rc-muted);
+  color: #6b6b6b;
 }
-.uz-rc-tools {
+.uz-rc-row {
   display: flex;
   align-items: center;
   gap: 2px;
+  min-height: 38px;
 }
-.uz-rc-mic,
+.uz-rc-row-gap {
+  flex: 1;
+}
+.uz-rc-bar.is-start .uz-rc-row {
+  justify-content: space-between;
+}
+.uz-rc-chip-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding-inline: 8px;
+  border-radius: 9px;
+  color: #2b2b2b;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color 150ms ease;
+}
+.uz-rc-chip-mark {
+  width: auto;
+  height: 14px;
+  color: #1c1c1c;
+}
+@media (hover: hover) and (pointer: fine) {
+  .uz-rc-chip-tag.is-button:hover {
+    background: #e0e0dd;
+  }
+}
+.uz-rc-count {
+  min-width: 18px;
+  height: 18px;
+  padding-inline: 5px;
+  border-radius: 9px;
+  background: #dcdcd9;
+  color: #3a3a38;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
 .uz-rc-send {
   display: grid;
   flex: none;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
+  margin-inline-start: 4px;
   border-radius: 50%;
-  background: var(--rc-ink);
+  background: #2b6df0;
   color: #fff;
-  transition: transform 120ms ease, opacity 150ms ease;
-}
-.uz-rc-bar.is-start .uz-rc-mic {
-  background: var(--rc-blue);
-}
-.uz-rc-bar.is-start:active .uz-rc-mic,
-.uz-rc-send:active {
-  transform: scale(0.94);
+  transition: transform 120ms ease, background-color 150ms ease;
 }
 .uz-rc-send:disabled {
-  opacity: 0.35;
+  background: #8fb3f5;
+}
+.uz-rc-bar.is-start:active .uz-rc-send,
+.uz-rc-send:not(:disabled):active {
+  transform: scale(0.94);
 }
 .uz-rc-icon {
   position: relative;
@@ -5516,37 +5637,21 @@ html.rita-app,
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  color: #5d606b;
+  color: #6b6b6b;
   transition: background-color 150ms ease, color 150ms ease;
 }
 @media (hover: hover) and (pointer: fine) {
   .uz-rc-icon:hover {
-    background: var(--rc-soft);
-    color: var(--rc-ink);
+    background: #e0e0dd;
+    color: #1f1f1f;
   }
 }
-.uz-rc-icon[aria-pressed="true"] {
-  color: #b42318;
+.uz-rc-icon:disabled {
+  opacity: 0.45;
 }
+.uz-rc-icon[aria-pressed="true"],
 .uz-rc-icon.is-end {
   color: #b42318;
-}
-.uz-rc-icon:disabled {
-  opacity: 0.4;
-}
-.uz-rc-badge {
-  position: absolute;
-  top: 3px;
-  inset-inline-end: 2px;
-  min-width: 16px;
-  height: 16px;
-  padding-inline: 4px;
-  border-radius: 8px;
-  background: var(--rc-blue);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 16px;
 }
 @keyframes uz-msg-in {
   from {
@@ -7958,25 +8063,21 @@ html.rita-app,
    points, examples with the key word in bold, and a blue watch-out card. Always a white page, so it
    reads the same in the light and the dark Rita column. */
 .rita-sheet {
-  --sh-ink: #121117;
-  --sh-body: #34333f;
-  --sh-muted: #5c5b6b;
-  --sh-line: #dcdce5;
+  --sh-ink: #161616;
+  --sh-body: #2b2b2b;
+  --sh-muted: #6b6b6b;
+  --sh-line: #e2e2df;
   --sh-blue: #2b6df0;
-  --sh-blue-soft: #eaf1ff;
+  --sh-blue-soft: #eef3fd;
   display: grid;
-  gap: 12px;
+  gap: 11px;
   margin-top: 12px;
-  padding: 16px 16px 18px;
+  padding: 14px 14px 15px;
   border-radius: 16px;
-  background: #fff;
-  box-shadow:
-    0 0 0 1px rgb(18 17 23 / 0.06),
-    0 1px 2px rgb(18 17 23 / 0.05),
-    0 8px 24px rgb(18 17 23 / 0.07);
+  background: #efefed;
   color: var(--sh-body);
   font-family: "Figtree", "Inter Tight", "Noto Sans Arabic", system-ui, sans-serif;
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.55;
   letter-spacing: normal;
   animation: rita-sheet-in 360ms cubic-bezier(0.23, 1, 0.32, 1) both;
@@ -7988,15 +8089,11 @@ html.rita-app,
   }
 }
 .rita-sheet-title {
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--sh-line);
   color: var(--sh-ink);
-  font-family: "Inter Tight", "Noto Sans Arabic", system-ui, sans-serif;
-  font-size: 18px;
-  font-weight: 750;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
+  font-size: 14.5px;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
 }
 .rita-sheet-title:lang(ar),
 .rita-sheet[dir="rtl"] .rita-sheet-title {
@@ -8018,33 +8115,34 @@ html.rita-app,
 }
 .rita-sheet-pill {
   display: block;
-  padding: 6px 8px;
-  border-radius: 9px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  padding: 5px 8px;
+  border-radius: 8px;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.03em;
   line-height: 1.2;
   text-align: center;
   text-transform: uppercase;
 }
 .rita-sheet-pill.is-neutral {
-  background: #eeeef2;
-  color: #5c5b6b;
+  background: #e4e4e1;
+  color: #5b5b58;
 }
 .rita-sheet-pill.is-green {
-  background: #e2f5e0;
-  color: #2a7d37;
+  background: #e4f1e2;
+  color: #3f7a47;
 }
 .rita-sheet-pill.is-blue {
-  background: #dcebff;
-  color: #1b62c9;
+  background: #e3ebf9;
+  color: #3a64b0;
 }
 .rita-sheet-table td {
-  padding: 8px 8px;
+  padding: 7px 8px;
   border: 0.75px solid var(--sh-line);
   border-top-width: 0;
+  background: #fff;
   color: var(--sh-body);
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 1.35;
   text-align: center;
   vertical-align: middle;
@@ -8057,7 +8155,7 @@ html.rita-app,
   border-top-width: 0.75px;
 }
 .rita-sheet-table td.is-label {
-  background: #fafafd;
+  background: #fafaf9;
   color: var(--sh-ink);
   font-weight: 700;
   text-align: start;
@@ -8083,10 +8181,9 @@ html.rita-app,
 }
 .rita-sheet-points li {
   position: relative;
-  padding: 7px 0;
-  padding-inline-start: 16px;
-  border-bottom: 0.75px solid var(--sh-line);
-  font-size: 14px;
+  padding: 5px 0;
+  padding-inline-start: 15px;
+  font-size: 13.5px;
 }
 .rita-sheet-points li:last-child {
   border-bottom: 0;
@@ -8094,18 +8191,18 @@ html.rita-app,
 .rita-sheet-points li::before {
   content: "";
   position: absolute;
-  top: 15px;
-  inset-inline-start: 2px;
-  width: 6px;
-  height: 6px;
-  border-radius: 2px;
-  background: var(--sh-blue);
+  top: 14px;
+  inset-inline-start: 3px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #8a8a87;
 }
 .rita-sheet-example {
-  padding-inline-start: 12px;
-  border-inline-start: 3px solid #dcebff;
+  padding-inline-start: 11px;
+  border-inline-start: 2px solid #d4d4d1;
   color: var(--sh-body);
-  font-size: 14px;
+  font-size: 13.5px;
   font-style: italic;
 }
 .rita-sheet b,
@@ -8114,9 +8211,9 @@ html.rita-app,
   font-weight: 700;
 }
 .rita-sheet-word {
-  padding: 0 3px;
+  padding: 0 4px;
   border-radius: 5px;
-  background: var(--sh-blue-soft);
+  background: #e2e2df;
   font-style: inherit;
   cursor: pointer;
 }
@@ -8125,20 +8222,20 @@ html.rita-app,
   outline-offset: 1px;
 }
 .rita-sheet-watch {
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: var(--sh-blue-soft);
-  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--sh-line);
+  font-size: 13.5px;
 }
 .rita-sheet-watch-title {
-  margin-bottom: 2px;
+  margin-bottom: 1px;
   color: var(--sh-blue);
-  font-family: "Inter Tight", "Noto Sans Arabic", system-ui, sans-serif;
-  font-size: 15px;
-  font-weight: 750;
+  font-size: 12.5px;
+  font-weight: 700;
 }
 .rita-sheet-line {
-  font-size: 14px;
+  font-size: 13.5px;
 }
 @media (prefers-reduced-motion: reduce) {
   .rita-sheet {
