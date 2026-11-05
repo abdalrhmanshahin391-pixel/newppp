@@ -12,6 +12,7 @@ import {
 import {
   AlertTriangle,
   ArrowLeftRight,
+  Check,
   Eraser,
   Ellipsis,
   Move,
@@ -363,11 +364,13 @@ export const RadialMenu = forwardRef<
                 buttons.current[i] = node;
               }}
               type="button"
-              role="menuitem"
+              role={item.checked === undefined ? "menuitem" : "menuitemradio"}
+              aria-checked={item.checked}
               className="st-rad-item"
               disabled={item.disabled || props.busy}
               data-hot={hot === i ? "" : undefined}
               data-placeholder={item.placeholder ? "" : undefined}
+              data-checked={item.checked ? "" : undefined}
               data-picked={picked === item.id ? "" : undefined}
               tabIndex={i === 0 ? 0 : -1}
               style={{
@@ -390,7 +393,18 @@ export const RadialMenu = forwardRef<
               onClick={() => choose(item)}
             >
               <span className="st-rad-disc">
-                <Icon size={22} aria-hidden="true" />
+                {item.glyph ? (
+                  <span className="st-rad-glyph" aria-hidden="true">
+                    {item.glyph}
+                  </span>
+                ) : (
+                  <Icon size={22} aria-hidden="true" />
+                )}
+                {item.checked && (
+                  <span className="st-rad-tick" aria-hidden="true">
+                    <Check size={11} strokeWidth={3} />
+                  </span>
+                )}
               </span>
               <span className="st-rad-label">{item.label}</span>
             </button>

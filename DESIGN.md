@@ -367,8 +367,18 @@ for green); a lesson carries a pill (`.lesson-kind`) and its row a 4px edge (`.l
 lesson whose guide is not linked says "بدون دليل مربوط" and offers «كمّل» (learners get the red lesson
 until it is linked). The kind can be changed later in the lesson window, tab «الدراسة التفاعلية».
 
-The study page's Rita column is a dark panel (`.uz-rita-dark`: the --pp tokens flipped to
-light-on-dark inside it, a white "ابدأ مع ريتا"); the guide stays on paper beside it.
+The study page's Rita column (`.uz-rc-*`, RitaRealtimeV3 in study mode) is white and roomy. Before
+the call: the UZYRA wordmark, Rita's cube big in the middle, one small grey word («ريتا جاهزة») and a
+thin rounded bar at the bottom («احكي مع ريتا…» with a blue mic) that starts the call. When the call
+starts the cube flies down and shrinks to sit just above the bar (FlyingCube), with one small state
+word under it («بسمعك…», «بتفكر…», «بتحكي…»). Rita's replies are plain text, the learner's are a light
+grey bubble, the report link is a small flag icon, and the bar holds the field and round icon
+buttons (stop, mic, my words, end, send). Rita's cube (RitaCube) is a soft, matte blue block (a touch wider than tall,
+slightly uneven corners, a lighter rim at the bottom-left) with two small dark oval eyes in the
+middle, alive from one animation-frame loop: breathing and a slight sway, random blinks and
+glances, it squashes with the learner's voice, its eyes drift while thinking, it hops with Rita's
+voice; still with reduced motion except the blink. The language Rita explains in is chosen from the
+circle («لغة الشرح» opens three choices, the current one ticked).
 
 ## Language-change splash (`LanguageSplash`)
 
