@@ -54,7 +54,7 @@ function PathNode({ index, step }: { index: number; step: number }) {
           : current
             ? "var(--pp-accent-soft)"
             : "var(--pp-grey)",
-        border: `3px solid ${finished || current ? "var(--pp-ink)" : "var(--pp-line)"}`,
+        border: `1.5px solid ${finished || current ? "var(--pp-ink)" : "var(--pp-line)"}`,
         boxShadow: current ? "0 0 0 5px rgba(43,109,240,0.25)" : "none",
         color: finished ? "var(--pp-on-accent)" : "var(--pp-muted)",
       }}
@@ -167,30 +167,22 @@ export function AppWindow() {
   return (
     <section
       aria-labelledby="window-heading"
-      className="mx-auto w-full max-w-[1180px] px-5 pb-20 md:px-10 md:pb-28"
+      className="mx-auto w-full max-w-[1180px] px-5 pb-16 md:px-10 md:pb-24"
     >
       <div
         ref={head.ref}
         className={`rita-reveal mx-auto max-w-[40rem] text-center ${head.shown ? "rita-reveal-in" : ""}`}
       >
-        <h2
-          id="window-heading"
-          className="text-[34px] font-bold leading-[1.08] md:text-[48px]"
-          style={ink}
-        >
+        <h2 id="window-heading" className="rh-h2" style={ink}>
           Your lessons, your words, and Rita.
         </h2>
-        <p className="mt-4 text-[17px] leading-[1.6] md:text-[19px]" style={muted}>
+        <p className="rh-lead2 mt-3" style={muted}>
           One place to pick up where you stopped, keep the words you asked about, and talk it
           through out loud.
         </p>
       </div>
 
-      <div
-        ref={stage}
-        className="mt-12 md:mt-16"
-        style={{ perspective: "1600px" } as CSSProperties}
-      >
+      <div ref={stage} className="mt-8 md:mt-10" style={{ perspective: "1600px" } as CSSProperties}>
         <p className="sr-only">
           Sample screen. The lessons list shows a path of five A1 lessons. The first two are done,
           the third, Thank you and Please, is in progress. Saved words: Thank you, Please and You're
@@ -199,9 +191,9 @@ export function AppWindow() {
         <div
           ref={frame}
           aria-hidden="true"
-          className="overflow-hidden rounded-[20px] will-change-transform"
+          className="overflow-hidden rounded-[16px] will-change-transform"
           style={{
-            border: "2px solid var(--pp-ink)",
+            border: "1px solid var(--pp-ink)",
             background: "#ffffff",
             transformOrigin: "50% 0%",
           }}
@@ -219,7 +211,7 @@ export function AppWindow() {
           <div className="grid min-h-[30rem] grid-cols-[minmax(0,1fr)] md:grid-cols-[13.5rem_minmax(0,1fr)]">
             <nav
               className="hidden flex-col gap-1 p-3 md:flex"
-              style={{ borderRight: "2px solid var(--pp-line)", background: "var(--pp-grey)" }}
+              style={{ borderInlineEnd: "1px solid var(--pp-line)", background: "var(--pp-grey)" }}
             >
               {NAV.map(({ label, Icon, on }) => (
                 <span
@@ -227,8 +219,8 @@ export function AppWindow() {
                   className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[14.5px] font-semibold"
                   style={
                     on
-                      ? { background: "#ffffff", border: "2px solid var(--pp-ink)", ...ink }
-                      : { border: "2px solid transparent", ...muted }
+                      ? { background: "#ffffff", border: "1px solid var(--pp-ink)", ...ink }
+                      : { border: "1px solid transparent", ...muted }
                   }
                 >
                   <Icon size={17} />
@@ -239,9 +231,9 @@ export function AppWindow() {
 
             <div className="grid content-start gap-5 p-4 md:p-6">
               <div
-                className="rounded-[14px] p-4"
+                className="rounded-[12px] p-4"
                 style={{
-                  border: "2px solid var(--pp-ink)",
+                  border: "1px solid var(--pp-ink)",
                   background: step >= 2 ? "var(--pp-accent-soft)" : "#ffffff",
                   transition: "background-color 300ms var(--pp-ease, ease)",
                 }}
@@ -249,13 +241,16 @@ export function AppWindow() {
                 <p className="text-[13.5px] font-semibold" style={muted}>
                   Pick up where you stopped
                 </p>
-                <p className="mt-1 text-[20px] font-bold leading-tight md:text-[22px]" style={ink}>
+                <p
+                  className="mt-1 text-[17px] font-semibold leading-tight md:text-[18px]"
+                  style={ink}
+                >
                   Thank you &amp; Please
                 </p>
                 <div className="mt-3 flex items-center gap-3">
                   <div
                     className="h-2.5 flex-1 overflow-hidden rounded-md"
-                    style={{ border: "2px solid var(--pp-ink)", background: "#ffffff" }}
+                    style={{ border: "1px solid var(--pp-ink)", background: "#ffffff" }}
                   >
                     <div
                       className="h-full"
@@ -301,7 +296,7 @@ export function AppWindow() {
                       key={word.en}
                       className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-[14px] font-semibold"
                       style={{
-                        border: "2px solid var(--pp-ink)",
+                        border: "1px solid var(--pp-ink)",
                         background: "#ffffff",
                         opacity: step >= 3 ? 1 : 0,
                         transform: step >= 3 ? "translateY(0)" : "translateY(-10px)",
@@ -324,7 +319,7 @@ export function AppWindow() {
               </div>
 
               <div
-                className="mt-1 flex items-center gap-3 rounded-[14px] px-4 py-3"
+                className="mt-1 flex items-center gap-3 rounded-[12px] px-4 py-3"
                 style={{ background: "var(--pp-ink)", color: "#ffffff" }}
               >
                 <span
@@ -369,7 +364,7 @@ export function AppWindow() {
           onClick={() => setRun((n) => n + 1)}
           className="inline-flex min-h-[44px] items-center gap-2 rounded-lg px-3.5 py-2 text-[14px] font-semibold"
           style={{
-            border: "2px solid var(--pp-ink)",
+            border: "1px solid var(--pp-ink)",
             background: "#ffffff",
             color: "var(--pp-ink)",
           }}

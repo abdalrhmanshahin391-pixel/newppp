@@ -53,8 +53,8 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
 
 export function HomeFaq() {
   return (
-    <section className="mx-auto w-full max-w-[860px] px-5 pb-20 md:px-8 md:pb-28">
-      <h2 className="text-[34px] font-bold leading-[1.08] md:text-[44px]" style={ink}>
+    <section className="mx-auto w-full max-w-[860px] px-5 pb-16 md:px-8 md:pb-24">
+      <h2 className="rh-h2" style={ink}>
         Questions, answered.
       </h2>
       <div className="mt-8 border-t" style={{ borderColor: "var(--pp-line)" }}>
@@ -65,13 +65,13 @@ export function HomeFaq() {
             style={{ borderColor: "var(--pp-line)" }}
           >
             <summary
-              className="flex min-h-[56px] items-center justify-between gap-6 py-3 text-[18px] font-bold"
+              className="flex min-h-[52px] items-center justify-between gap-6 py-3 text-[16px] font-semibold"
               style={ink}
             >
               {item.q}
               <Plus className="rh-plus shrink-0" size={22} aria-hidden="true" />
             </summary>
-            <p className="max-w-[40rem] pb-5 text-[16.5px] leading-[1.65]" style={muted}>
+            <p className="max-w-[40rem] pb-5 text-[16px] leading-[1.65]" style={muted}>
               {item.a}
             </p>
           </details>

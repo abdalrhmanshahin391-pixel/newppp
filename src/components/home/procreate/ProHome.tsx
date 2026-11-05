@@ -16,7 +16,7 @@ const FinalCta = lazy(() => import("./FinalCta").then((m) => ({ default: m.Final
 export function ProHome() {
   return (
     <main
-      className="rita-cream edith-light edith-premium relative min-h-screen overflow-hidden bg-black text-white"
+      className="uz-home rita-cream edith-light edith-premium relative min-h-screen overflow-hidden bg-black text-white"
       style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <noscript>

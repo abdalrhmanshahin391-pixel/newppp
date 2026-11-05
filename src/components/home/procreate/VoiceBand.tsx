@@ -15,30 +15,24 @@ const PHRASES = [
 export function VoiceBand() {
   const { ref, shown } = useReveal<HTMLDivElement>();
   return (
-    <section className="mx-auto w-full max-w-[1240px] px-5 pb-20 md:px-8 md:pb-28">
+    <section className="mx-auto w-full max-w-[1240px] px-5 pb-16 md:px-8 md:pb-24">
       <div
         ref={ref}
-        className={`rita-reveal relative overflow-hidden rounded-[28px] px-7 py-14 md:rounded-[36px] md:px-14 md:py-20 ${shown ? "rita-reveal-in" : ""}`}
+        className={`rita-reveal relative overflow-hidden rounded-[16px] px-6 py-12 md:px-12 md:py-16 ${shown ? "rita-reveal-in" : ""}`}
         style={{ background: "#121117" }}
       >
         <div className="relative z-10 grid items-center gap-12 md:grid-cols-[1fr_0.9fr]">
           <div>
-            <h2
-              className="text-[36px] font-bold leading-[1.06] md:text-[54px]"
-              style={{ color: "#ffffff" }}
-            >
+            <h2 className="rh-h2" style={{ color: "#ffffff" }}>
               Say it badly first.
               <br />
               <span style={{ color: "var(--pp-accent)" }}>Say it better next time.</span>
             </h2>
-            <p
-              className="mt-6 max-w-[30rem] text-[17px] leading-[1.65] md:text-[19px]"
-              style={{ color: "rgba(255,255,255,0.72)" }}
-            >
+            <p className="rh-lead2 mt-4 max-w-[30rem]" style={{ color: "rgba(255,255,255,0.72)" }}>
               Rita waits while you think, stops when you say stop, and corrects one thing at a time.
               It feels like talking to a patient teacher, not sitting an exam.
             </p>
-            <div className="mt-8">
+            <div className="mt-6">
               <Link to="/rita" className="rita-btn rita-btn-primary">
                 Talk to Rita
               </Link>
@@ -48,11 +42,11 @@ export function VoiceBand() {
           <div className="relative mx-auto h-[300px] w-full max-w-[420px]" aria-hidden="true">
             <span
               className="rh-ring absolute left-1/2 top-1/2 h-[130px] w-[130px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{ border: "2px solid var(--pp-accent)" }}
+              style={{ border: "1px solid var(--pp-accent)" }}
             />
             <span
               className="rh-ring absolute left-1/2 top-1/2 h-[130px] w-[130px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-              style={{ ...d(1800), border: "2px solid var(--pp-accent)" }}
+              style={{ ...d(1800), border: "1px solid var(--pp-accent)" }}
             />
             <span
               className="absolute left-1/2 top-1/2 grid h-[130px] w-[130px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full"

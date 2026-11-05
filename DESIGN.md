@@ -438,7 +438,30 @@ has already happened, nothing waits for it, and a tap anywhere or Escape closes 
 - State and rules: `src/lib/language-splash.ts` (tested); it is started from `setLanguage` in
   `useLearningLanguage`, so every place that changes the language gets it.
 
-## Home app window
+## Home scale (`.uz-home`, first screen and header)
+
+A calm technical workspace: the large, heavy pieces are smaller and lighter instead of shrinking
+everything (owner's UI research, Nov 2026). Values live as variables on `.uz-home` (the home page's
+`<main>`), so the shared header and buttons keep their sizes on other pages. The root font size and
+the user's zoom are never changed.
+- Headline: `clamp(2.25rem, calc(1.25rem + 3vw), 4rem)`, weight 600, line height 1.05, tracking
+  -0.03em (36px at 390, ~51 at 1024, ~63 at 1440). The general `.edith-premium h1` size rule leaves
+  `.rh-hero-title` out, so no `!important` is stacked; check with `getComputedStyle` after a change.
+- Lead text 16px (17 from 768), line height 1.6, at most 36rem wide.
+- Hero buttons 42px tall, 15px text, 1.5px border.
+- Header on the home page: bar 60px, links 14px weight 500 (44px target kept), its button 38px.
+- Rita's orb 280px (380 from 768) on a stage 320/360px tall and at most 840px wide; rings 1px.
+  The orb sits in a positioned wrapper (the orb itself is `position: relative`).
+- Word tags around the orb: 14–17px, weight 600, 1px border, radius 12, a 44px touch area.
+- The hero is `dir="ltr" lang="en"` (its words are English), so punctuation stays right in Arabic.
+- Below 360px the header spacing tightens so the logo, the button and the menu fit.
+- The sections below (topics, three features, voice band, sample app window, under the hood,
+  questions, closing invitation) share `.rh-h2` (`clamp(1.75rem, calc(1.2rem + 1.4vw), 2.25rem)`,
+  weight 600: 28px on phones, 36 from ~1200), `.rh-h3` (17/18px, 600) and `.rh-lead2` (the lead
+  size). Their buttons are the hero's 42px. Borders 1px (path rings 1.5px), card corners 16 (inner
+  tiles 12), headline-to-content 32–40px, section gaps 64/96px, dark bands 48/64px inside. The sample
+  app window stays labelled «Sample screen». Body copy 15–16px; eyebrow labels 13px.
+
 
 `AppWindow.tsx` replaces the old lesson-path strip. A window built from real markup (no screenshots) that starts tilted (desktop only) and flattens as it scrolls to the middle of the screen, then plays a short story once: the path fills, the lesson in progress shows, two words are saved, Rita listens.
 

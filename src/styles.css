@@ -2251,12 +2251,14 @@ hairline borders and generous radii.
   letter-spacing: -0.035em;
   text-wrap: balance;
 }
-.edith-premium h1 {
+/* The home page's own headline (.rh-hero-title) is left out: its size comes from the home scale
+   (.uz-home) below, so no !important has to be stacked on top of this one. */
+.edith-premium h1:not(.rh-hero-title) {
   font-size: 48px !important;
   line-height: 52px !important;
 }
 @media (min-width: 1024px) {
-  .edith-premium h1 {
+  .edith-premium h1:not(.rh-hero-title) {
     font-size: 64px !important;
     line-height: 68px !important;
   }
@@ -3064,11 +3066,7 @@ body:has(.rh-learn-home) {
   }
 }
 
-/* Hero: tap-a-word stage. */
-.edith-premium h1.rh-hero-title {
-  font-size: clamp(2.7rem, 8vw, 5.4rem) !important;
-  line-height: 0.98 !important;
-}
+/* Hero: tap-a-word stage. Sizes come from the home scale (.uz-home, at the end of this file). */
 .edith-premium .rh-rings {
   -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%);
   mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%);
@@ -8267,4 +8265,115 @@ html.rita-app,
 .st-rad-item[data-tone="reply"][data-hot] .st-rad-label {
   background: #fff;
   color: #5c0d18;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Home page scale ("calm technical workspace"): the large, heavy pieces are made smaller and
+   lighter instead of shrinking everything. Only inside the home page (.uz-home); the shared
+   header, buttons and other pages keep their sizes. The root font size and the user's zoom are
+   never touched. Values: owner's UI research (Nov 2026), stage 1 = headline, header and hero. */
+.uz-home {
+  --home-h1: clamp(2.25rem, calc(1.25rem + 3vw), 4rem); /* 36px at 390, ~51 at 1024, ~63 at 1440 */
+  --home-lead: 16px;
+  --home-btn-h: 42px;
+  --home-btn-font: 15px;
+  --home-nav: 14px;
+  --home-bar-h: 60px;
+  --home-bar-btn-h: 38px;
+  --home-orb: 280px;
+  --home-chip: clamp(14px, 1.5vw, 17px);
+  --home-h2: clamp(1.75rem, calc(1.2rem + 1.4vw), 2.25rem); /* 28px on phones, 36 from ~1200 */
+  --home-h3: 17px;
+}
+@media (min-width: 768px) {
+  .uz-home {
+    --home-lead: 17px;
+    --home-orb: 380px;
+    --home-h3: 18px;
+  }
+}
+/* Stage 2: the sections below the first screen share one title, card title and lead size. */
+.uz-home h2.rh-h2 {
+  font-size: var(--home-h2);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+.uz-home h3.rh-h3 {
+  font-size: var(--home-h3);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.uz-home .rh-lead2 {
+  font-size: var(--home-lead);
+  line-height: 1.6;
+}
+/* Buttons in every home section (the hero's too) share one size; small buttons stay small. */
+.uz-home section .rita-btn:not(.rita-btn-sm) {
+  height: var(--home-btn-h);
+  padding-inline: 20px;
+  border-width: 1.5px;
+  font-size: var(--home-btn-font);
+}
+.uz-home h1.rh-hero-title {
+  font-size: var(--home-h1);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+.uz-home .rh-hero-lead {
+  max-width: 36rem;
+  font-size: var(--home-lead);
+  line-height: 1.6;
+}
+/* The header on the home page: smaller, lighter links and a lower bar; the links keep a 44px
+   target for touch. */
+.uz-home .rh-bar-inner {
+  height: var(--home-bar-h);
+}
+.uz-home .rh-link {
+  font-size: var(--home-nav);
+  font-weight: 500;
+  line-height: 20px;
+}
+.uz-home .rh-btn {
+  height: var(--home-bar-btn-h);
+  padding-inline: 14px;
+  font-size: var(--home-nav);
+}
+/* Rita's orb and the words around it. */
+.uz-home .rh-hero-orb {
+  width: var(--home-orb);
+}
+.uz-home .rh-chip {
+  padding: 0.375rem 0.85rem;
+  border-width: 1px;
+  border-radius: 12px;
+  font-size: var(--home-chip);
+  font-weight: 600;
+  box-shadow: 0 10px 20px -16px rgba(18, 17, 23, 0.35);
+}
+/* The words stay light to look at but keep a 44px target for a finger. */
+.uz-home .rh-chip::after {
+  content: "";
+  position: absolute;
+  inset: -6px -4px;
+}
+.uz-home .rh-hero-answer {
+  border-radius: 16px;
+}
+/* Very narrow phones (320–359px): the logo, "Start learning" and the menu button did not fit the
+   bar (it ran ~25px past the edge before this change). Tighter spacing keeps them inside. */
+@media (max-width: 359px) {
+  .uz-home .rh-bar-inner {
+    gap: 8px;
+    padding-inline: 12px;
+  }
+  .uz-home .rh-actions {
+    gap: 6px;
+  }
+  .uz-home .rh-btn {
+    padding-inline: 10px;
+  }
 }

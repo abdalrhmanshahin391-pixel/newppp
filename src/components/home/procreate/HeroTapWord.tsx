@@ -102,9 +102,15 @@ export function HeroTapWord() {
   const isAdded = active !== null && added.has(active);
 
   return (
-    <section className="relative mx-auto max-w-[1240px] px-5 pb-6 pt-[104px] md:px-10 md:pt-[112px]">
+    // The hero's words are English: they read left to right even when the site is in Arabic, so
+    // full stops and question marks stay on the right side (the Arabic meaning sets its own).
+    <section
+      dir="ltr"
+      lang="en"
+      className="relative mx-auto max-w-[1240px] px-5 pb-6 pt-[96px] md:px-10 md:pt-[104px]"
+    >
       <div className="text-center">
-        <h1 className="edith-in rh-hero-title font-bold tracking-[-0.045em]" style={delay(60)}>
+        <h1 className="edith-in rh-hero-title" style={delay(60)}>
           Say it out loud.
           <br />
           <span className="rita-accent relative inline-block">
@@ -127,14 +133,14 @@ export function HeroTapWord() {
           </span>
         </h1>
         <p
-          className="edith-in mx-auto mt-5 max-w-[38rem] text-[18px] leading-[1.55] md:text-[21px]"
+          className="edith-in rh-hero-lead mx-auto mt-5"
           style={{ ...delay(140), color: "var(--pp-muted)" }}
         >
           Rita is a voice teacher for English and German who explains in Arabic. Every word you ask
           about can become a flashcard.
         </p>
         <div
-          className="edith-in mt-6 flex flex-wrap items-center justify-center gap-3"
+          className="edith-in rh-hero-cta mt-6 flex flex-wrap items-center justify-center gap-3"
           style={delay(220)}
         >
           <StartLearningLink className="rita-btn rita-btn-primary">
@@ -147,11 +153,11 @@ export function HeroTapWord() {
       </div>
 
       <div
-        className="edith-in relative mx-auto mt-4 h-[380px] w-full max-w-[980px] md:mt-2 md:h-[430px]"
+        className="edith-in relative mx-auto mt-4 h-[320px] w-full max-w-[840px] overflow-hidden md:mt-2 md:h-[360px]"
         style={delay(340)}
       >
         <div aria-hidden="true" className="rh-rings pointer-events-none absolute inset-0">
-          {[300, 470, 660, 880].map((size) => (
+          {[250, 390, 550, 730].map((size) => (
             <span
               key={size}
               className="absolute left-1/2 top-1/2 rounded-full"
@@ -159,18 +165,22 @@ export function HeroTapWord() {
                 width: size,
                 height: size,
                 transform: "translate(-50%,-50%)",
-                border: "1.5px solid var(--pp-line)",
+                border: "1px solid var(--pp-line)",
               }}
             />
           ))}
         </div>
 
-        <VoiceOrb
-          levelsRef={levels}
-          mode={speaking ? "speaking" : "idle"}
-          label="Rita's voice"
-          className="pointer-events-none absolute left-1/2 top-1/2 w-[330px] -translate-x-1/2 -translate-y-1/2 md:w-[470px]"
-        />
+        {/* The wrapper places the orb (the orb itself is position: relative, so it cannot be
+            centred with absolute classes of its own; in Arabic it slid to one side). */}
+        <div className="rh-hero-orb pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <VoiceOrb
+            levelsRef={levels}
+            mode={speaking ? "speaking" : "idle"}
+            label="Rita's voice"
+            className="w-full"
+          />
+        </div>
 
         {WORDS.map((item, index) => (
           <button
@@ -196,8 +206,8 @@ export function HeroTapWord() {
         {word ? (
           <div
             key={active}
-            className="rh-pop flex flex-col items-center gap-3 rounded-[20px] px-5 py-4 md:flex-row md:justify-between md:gap-6"
-            style={{ background: "#ffffff", border: "2px solid var(--pp-ink)" }}
+            className="rh-pop rh-hero-answer flex flex-col items-center gap-3 px-5 py-4 md:flex-row md:justify-between md:gap-6"
+            style={{ background: "#ffffff", border: "1px solid var(--pp-ink)" }}
           >
             <div className="text-center md:text-start">
               <p className="text-[24px] font-bold leading-tight" style={{ color: "var(--pp-ink)" }}>
