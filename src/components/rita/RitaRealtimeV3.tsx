@@ -59,6 +59,13 @@ import type { ExplanationLanguage } from "@/lib/explanation-language";
 import { ledgerMetadata } from "@/lib/rita-turn-ledger";
 import { issueReportRow, type IssueCategory } from "@/lib/rita-issue-report";
 import { ReplyReport } from "@/components/rita/ReplyReport";
+import {
+  VoiceAttempt,
+  guardVoiceCallbacks,
+  voiceErrorMessage,
+  voiceStateWord,
+  type VoicePhase,
+} from "@/lib/rita-voice-connection";
 import { MetricQueue } from "@/lib/metric-queue";
 import { ExplanationLanguageControl } from "@/components/rita/ExplanationLanguageControl";
 import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rita-conversation";
@@ -224,6 +231,8 @@ export function RitaRealtimeV3({
   const skipExtraction = useRef(false);
   const currentReplySource = useRef<RitaConversationSource>("voice");
 
+  const attemptRef = useRef<VoiceAttempt | null>(null);
+  const [connectionPhase, setConnectionPhase] = useState<VoicePhase>("idle");
   const [status, setStatus] = useState("Ready to start");
   const [mood, setMood] = useState<RitaMood>("ready");
   // Live audio levels for the orb. A ref, not state: they change dozens of times per second.
@@ -322,7 +331,7 @@ export function RitaRealtimeV3({
     if (readyForSpeech) {
       studyBridge.send = (type, data) => {
         const pc = client.current;
-        if (!pc) return false;
+        if (!pc?.connected || !botReady.current) return false;
         try {
           pc.sendClientMessage(type, data);
           return true;
@@ -793,81 +802,118 @@ export function RitaRealtimeV3({
     return activeConversationId.current;
   }, [lessonId, studyLessonId, user]);
 
-  const endLesson = useCallback(async () => {
-    cancelFiller();
-    if (botReadyTimer.current) {
-      clearTimeout(botReadyTimer.current);
-      botReadyTimer.current = null;
-    }
-    const unfinishedGenerated = replyAccumulator.current.generatedText.trim();
-    const unfinishedSpoken = replyAccumulator.current.spokenText.trim();
-    const unfinishedId = replyAccumulator.current.draftId;
-    if (unfinishedId && (unfinishedGenerated || unfinishedSpoken)) {
-      void persistConversationMessage({
-        client_message_id: unfinishedId,
-        role: "assistant",
-        content: unfinishedSpoken || unfinishedGenerated,
-        generated_content: unfinishedGenerated || null,
-        spoken_content: unfinishedSpoken || null,
-        source: currentReplySource.current,
-        delivery_status: "incomplete",
-        created_at: new Date().toISOString(),
-      });
-    }
-    const current = client.current;
-    client.current = null;
-    if (current) await current.disconnect().catch(() => undefined);
-    if (sessionId.current) {
-      fetch("/api/rita-v3/session/end", {
-        method: "POST",
-        headers: await authHeaders().catch(
-          () => new Headers({ "Content-Type": "application/json" }),
-        ),
-        body: JSON.stringify({
-          sessionId: sessionId.current,
-          providerSessionId: providerSessionId.current,
-        }),
-        keepalive: true,
-      }).catch(() => undefined);
-    }
-    void flushMetrics({ keepalive: true });
-    sessionId.current = "";
-    providerSessionId.current = "";
-    traceId.current = "";
-    pendingMetrics.current = [];
-    const audio = botAudio.current;
-    if (audio) {
-      audio.pause();
-      audio.srcObject = null;
-    }
-    botAudioPlaying.current = false;
-    replyAccumulator.current.clear();
-    pendingScriptedReply.current = "";
-    setSoundBlocked(false);
-    activeRef.current = false;
-    mutedRef.current = false;
-    botReady.current = false;
-    setActive(false);
-    setReadyForSpeech(false);
-    setMuted(false);
-    setMood("ready");
-    setStatus("Lesson ended");
-    setCaption("");
-    if (!activeConversationId.current) {
-      setMessages([
-        {
-          // The same id as the first welcome, so it is never taken for one of Rita's replies.
-          id: "welcome",
-          role: "rita",
-          text: welcomeText(lessonId, Boolean(studyLessonId)),
-        },
-      ]);
-    }
-    learnerTurn.current = new LearnerTurn();
-    skipExtraction.current = false;
-    trayRef.current.closeTray();
-    await Promise.allSettled([...pendingWrites.current]);
-  }, [cancelFiller, flushMetrics, lessonId, studyLessonId, persistConversationMessage]);
+  const endLesson = useCallback(
+    async (preserveMessages = false) => {
+      const retiring = attemptRef.current;
+      retiring?.close();
+      cancelFiller();
+      if (botReadyTimer.current) {
+        clearTimeout(botReadyTimer.current);
+        botReadyTimer.current = null;
+      }
+      const unfinishedGenerated = replyAccumulator.current.generatedText.trim();
+      const unfinishedSpoken = replyAccumulator.current.spokenText.trim();
+      const unfinishedId = replyAccumulator.current.draftId;
+      if (unfinishedId && (unfinishedGenerated || unfinishedSpoken)) {
+        void persistConversationMessage({
+          client_message_id: unfinishedId,
+          role: "assistant",
+          content: unfinishedSpoken || unfinishedGenerated,
+          generated_content: unfinishedGenerated || null,
+          spoken_content: unfinishedSpoken || null,
+          source: currentReplySource.current,
+          delivery_status: "incomplete",
+          created_at: new Date().toISOString(),
+        });
+      }
+      const current = client.current;
+      client.current = null;
+      const retiringSessionId = sessionId.current;
+      const retiringProviderId = providerSessionId.current;
+      try {
+        current?.enableMic(false);
+      } catch {
+        /* Already disconnected. */
+      }
+      const closeClient = current?.disconnect().catch(() => undefined);
+      const closeWorker = retiringSessionId
+        ? (async () => {
+            return fetch("/api/rita-v3/session/end", {
+              method: "POST",
+              headers: await authHeaders().catch(
+                () => new Headers({ "Content-Type": "application/json" }),
+              ),
+              body: JSON.stringify({
+                sessionId: retiringSessionId,
+                providerSessionId: retiringProviderId,
+              }),
+              keepalive: true,
+              signal: AbortSignal.timeout(5000),
+            }).catch(() => undefined);
+          })()
+        : Promise.resolve();
+      void flushMetrics({ keepalive: true });
+      sessionId.current = "";
+      providerSessionId.current = "";
+      traceId.current = "";
+      pendingMetrics.current = [];
+      const audio = botAudio.current;
+      if (audio) {
+        audio.pause();
+        audio.srcObject = null;
+      }
+      botAudioPlaying.current = false;
+      replyAccumulator.current.clear();
+      pendingScriptedReply.current = "";
+      setSoundBlocked(false);
+      activeRef.current = false;
+      mutedRef.current = false;
+      botReady.current = false;
+      setActive(false);
+      setReadyForSpeech(false);
+      setMuted(false);
+      setMood("ready");
+      setStatus("Lesson ended");
+      setConnectionPhase("ended");
+      orbLevels.current = { input: 0, output: 0 };
+      botSpeaking.current = false;
+      if (studyRef.current) {
+        studyRef.current.bridge.send = null;
+        studyRef.current.bridge.onEvent?.("ended");
+      }
+      setCaption("");
+      if (!preserveMessages && !activeConversationId.current) {
+        setMessages([
+          {
+            // The same id as the first welcome, so it is never taken for one of Rita's replies.
+            id: "welcome",
+            role: "rita",
+            text: welcomeText(lessonId, Boolean(studyLessonId)),
+          },
+        ]);
+      }
+      learnerTurn.current = new LearnerTurn();
+      skipExtraction.current = false;
+      trayRef.current.closeTray();
+      void Promise.allSettled([...pendingWrites.current]);
+      let cleanupTimer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        await Promise.race([
+          Promise.allSettled([closeClient, closeWorker]),
+          new Promise<void>((resolve) => {
+            cleanupTimer = setTimeout(resolve, 5000);
+          }),
+        ]);
+      } finally {
+        clearTimeout(cleanupTimer);
+        if (attemptRef.current === retiring) {
+          attemptRef.current = null;
+          setStarting(false);
+        }
+      }
+    },
+    [cancelFiller, flushMetrics, lessonId, studyLessonId, persistConversationMessage],
+  );
 
   const finishConversation = useCallback(async () => {
     await endLesson();
@@ -932,6 +978,7 @@ export function RitaRealtimeV3({
   }
 
   function attachBotAudio(track: MediaStreamTrack) {
+    const owner = attemptRef.current;
     const audio = botAudio.current;
     if (!audio) return;
     const existing = audio.srcObject instanceof MediaStream ? audio.srcObject : null;
@@ -946,10 +993,12 @@ export function RitaRealtimeV3({
     audio
       .play()
       .then(() => {
+        if (!owner?.current || attemptRef.current !== owner) return;
         setSoundBlocked(false);
         void metric("audio_play_resolved", performance.now() - calledAt);
       })
       .catch((error: unknown) => {
+        if (!owner?.current || attemptRef.current !== owner) return;
         setSoundBlocked(true);
         void metric("audio_play_blocked", undefined, {
           errorName: error instanceof Error ? error.name : "unknown",
@@ -971,7 +1020,27 @@ export function RitaRealtimeV3({
   }
 
   async function startLesson() {
-    if (starting || active) return;
+    if (starting || active || attemptRef.current) return;
+    const attempt = new VoiceAttempt();
+    attemptRef.current = attempt;
+    const isCurrent = () => attempt.current && attemptRef.current === attempt;
+    const failConnection = (cause: unknown, stage: string) => {
+      if (!isCurrent()) return;
+      const message = voiceErrorMessage(
+        cause,
+        Boolean(studyLessonId) || languageRef.current !== "en",
+      );
+      setStarting(true);
+      void metric("voice_connection_failed", undefined, {
+        stage,
+        errorKind: cause instanceof Error ? cause.name : "provider",
+      });
+      const cleanup = endLesson(true);
+      setConnectionPhase("failed");
+      setError(message);
+      setStatus(message);
+      void cleanup;
+    };
     // First thing inside the tap: unlock audio and start the real click-to-ready timer.
     unlockBotAudio();
     sessionStartedAt.current = performance.now();
@@ -983,13 +1052,15 @@ export function RitaRealtimeV3({
     setSoundBlocked(false);
     setStarting(true);
     setError("");
-    setStatus("Connecting Rita v3…");
+    setConnectionPhase("connecting");
+    setStatus("Connecting Rita…");
     try {
       const currentConversationId = await ensureFreeConversation();
       const [{ PipecatClient }, { DailyTransport }] = await Promise.all([
         import("@pipecat-ai/client-js"),
         import("@pipecat-ai/daily-transport"),
       ]);
+      if (!isCurrent()) return;
       void metric("imports_ready", performance.now() - sessionStartedAt.current);
       replyAccumulator.current.clear();
       botSpeaking.current = false;
@@ -1075,6 +1146,7 @@ export function RitaRealtimeV3({
         void transport.dailyCallClient
           .getNetworkStats()
           .then((networkStats: unknown) => {
+            if (!isCurrent()) return;
             const stats = networkStats as {
               networkState?: unknown;
               networkStateReasons?: unknown;
@@ -1104,345 +1176,351 @@ export function RitaRealtimeV3({
         enableMic: true,
         enableCam: false,
         disconnectOnBotDisconnect: true,
-        callbacks: {
-          onConnected: () => {
-            transportConnectedAt.current = performance.now();
-            activeRef.current = true;
-            botReady.current = false;
-            setReadyForSpeech(false);
-            // Safari receives microphone permission from the Start tap, then we close
-            // the gate until the worker explicitly says it is ready for real speech.
-            client.current?.enableMic(false);
-            setActive(true);
-            setStatus("Audio connected; waiting for Rita…");
-            setMood("ready");
-            if (botReadyTimer.current) clearTimeout(botReadyTimer.current);
-            botReadyTimer.current = setTimeout(() => {
-              botReadyTimer.current = null;
-              if (botReady.current || !client.current?.connected) return;
+        callbacks: guardVoiceCallbacks<
+          NonNullable<ConstructorParameters<typeof PipecatClient>[0]["callbacks"]>
+        >(
+          {
+            onConnected: () => {
+              transportConnectedAt.current = performance.now();
+              activeRef.current = true;
+              botReady.current = false;
               setReadyForSpeech(false);
-              setStatus("Rita could not get ready");
-              setError("Rita’s voice worker did not become ready. End this session and try again.");
-              void metric("bot_ready_timeout", 90_000);
-              snapshotNetwork("bot_ready_timeout");
-            }, 90_000);
-            snapshotNetwork("transport_connected");
-            if (!transportMetricRecorded.current) {
-              transportMetricRecorded.current = true;
-              void metric(
-                "transport_connected",
-                transportConnectedAt.current - sessionStartedAt.current,
-              );
-            }
-          },
-          onBotStarted: (botResponse) => {
-            const started = botResponse as {
-              sessionId?: string;
-              providerSessionId?: string | null;
-            };
-            sessionId.current = String(started.sessionId ?? "");
-            providerSessionId.current = String(started.providerSessionId ?? "");
-            if (sessionId.current) flushPendingMetrics(sessionId.current);
-            if (transportConnectedAt.current && !transportMetricRecorded.current) {
-              transportMetricRecorded.current = true;
-              void metric(
-                "transport_connected",
-                transportConnectedAt.current - sessionStartedAt.current,
-              );
-            }
-            if (botReadyAt.current && !botReadyMetricRecorded.current) {
-              botReadyMetricRecorded.current = true;
-              void metric("bot_ready", botReadyAt.current - sessionStartedAt.current);
-            }
-          },
-          onBotReady: () => {
-            if (botReadyTimer.current) {
-              clearTimeout(botReadyTimer.current);
-              botReadyTimer.current = null;
-            }
-            botReady.current = true;
-            botReadyAt.current = performance.now();
-            setReadyForSpeech(true);
-            if (!mutedRef.current && !phraseMuted.current) client.current?.enableMic(true);
-            setStatus("Rita is listening");
-            setMood("listening");
-            if (!botReadyMetricRecorded.current) {
-              botReadyMetricRecorded.current = true;
-              void metric("bot_ready", botReadyAt.current - sessionStartedAt.current);
-            }
-          },
-          onDisconnected: () => {
-            if (botReadyTimer.current) {
-              clearTimeout(botReadyTimer.current);
-              botReadyTimer.current = null;
-            }
-            activeRef.current = false;
-            botReady.current = false;
-            setReadyForSpeech(false);
-            setActive(false);
-            setMood("ready");
-            setStatus("Disconnected");
-          },
-          onError: (event) => {
-            const eventData = (event?.data ?? {}) as { error?: unknown; message?: unknown };
-            const detail = String(eventData.error ?? eventData.message ?? "Provider error");
-            setError(`${detail}. Rita did not switch to the old system.`);
-            setStatus("Rita v3 error");
-            void metric("provider_error", undefined, { provider: "transport_or_pipeline" });
-            snapshotNetwork("transport_error");
-          },
-          onDeviceError: () => {
-            setError("Microphone permission is blocked or the microphone is already in use.");
-            void metric("microphone_permission_error");
-          },
-          onUserStartedSpeaking: () => {
-            setLearnerActivity((count) => count + 1);
-            cancelFiller();
-            currentTurnHasFinalTranscript.current = false;
-            firstPartialRecorded.current = false;
-            learnerTurn.current.speechStarted(crypto.randomUUID(), new Date().toISOString());
-            if (botSpeaking.current) interruptCandidateAt.current = performance.now();
-            turnId.current = crypto.randomUUID();
-            if (!botSpeaking.current) {
-              setStatus("I’m listening…");
-              setMood("listening");
-            }
-            void metric("speech_start");
-          },
-          onServerMessage: (data: unknown) => {
-            const studyMessage = data as { type?: unknown } | null;
-            if (
-              typeof studyMessage?.type === "string" &&
-              studyMessage.type.startsWith("rita-study-")
-            ) {
-              studyRef.current?.bridge.onMessage?.(studyMessage as Record<string, unknown>);
-              return;
-            }
-            const message = data as {
-              type?: string;
-              action?: string;
-              target?: SaveTarget;
-              hint?: string;
-              text?: string;
-              act?: string;
-              wordCount?: number;
-            } | null;
-            if (message?.type === "rita-spoken-text") {
-              const text = String(message.text ?? "").trim();
-              if (!text) return;
-              if (botSpeaking.current) pendingScriptedReply.current = text;
-              else beginScriptedReply(text);
-              return;
-            }
-            if (message?.type === "rita-lesson-signal") {
-              lessonSignal.current(message as LessonSignal);
-              return;
-            }
-            if (message?.type === "rita-turn-ledger") {
-              const metadata = ledgerMetadata(message, {
-                conversationId: activeConversationId.current,
-                userMessageId: answeredUserMessageId.current,
-                replyMessageId: replyAccumulator.current.draftId || lastReplyMessageId.current,
-              });
-              if (metadata) {
-                void metric("turn_ledger", undefined, metadata);
-                const replyId =
-                  typeof metadata.replyMessageId === "string" ? metadata.replyMessageId : "";
-                if (replyId) {
-                  const kept = ledgerByReply.current;
-                  kept.set(replyId, metadata);
-                  while (kept.size > 60) kept.delete(kept.keys().next().value as string);
-                  setLedgerReplies(new Set(kept.keys()));
-                }
+              // Safari receives microphone permission from the Start tap, then we close
+              // the gate until the worker explicitly says it is ready for real speech.
+              client.current?.enableMic(false);
+              setActive(true);
+              setConnectionPhase("waiting");
+              setStatus("Audio connected; waiting for Rita…");
+              setMood("ready");
+              if (botReadyTimer.current) clearTimeout(botReadyTimer.current);
+              botReadyTimer.current = setTimeout(() => {
+                botReadyTimer.current = null;
+                if (!isCurrent() || botReady.current) return;
+                failConnection(new Error("Voice readiness timeout"), "bot_ready_timeout");
+                void metric("bot_ready_timeout", 90_000);
+                snapshotNetwork("bot_ready_timeout");
+              }, 90_000);
+              snapshotNetwork("transport_connected");
+              if (!transportMetricRecorded.current) {
+                transportMetricRecorded.current = true;
+                void metric(
+                  "transport_connected",
+                  transportConnectedAt.current - sessionStartedAt.current,
+                );
               }
-              return;
-            }
-            if (message?.type === "rita-dialogue-act") {
-              void metric("dialogue_act", undefined, {
-                act: String(message.act ?? "unknown").slice(0, 32),
-                wordCount: Math.max(0, Math.min(Number(message.wordCount ?? 0), 100)),
-              });
-              return;
-            }
-            if (message?.type !== "rita-ui") return;
-            skipExtraction.current = true;
-            if (message.action === "open_list") void trayRef.current.openTray();
-            if (message.action === "convert_list")
-              void trayRef.current.convertByVoice(
-                message.target === "german_lab" ? "german_lab" : "flashcards",
-                String(message.hint ?? ""),
+            },
+            onBotStarted: (botResponse) => {
+              const started = botResponse as {
+                sessionId?: string;
+                providerSessionId?: string | null;
+              };
+              sessionId.current = String(started.sessionId ?? "");
+              providerSessionId.current = String(started.providerSessionId ?? "");
+              if (sessionId.current) flushPendingMetrics(sessionId.current);
+              if (transportConnectedAt.current && !transportMetricRecorded.current) {
+                transportMetricRecorded.current = true;
+                void metric(
+                  "transport_connected",
+                  transportConnectedAt.current - sessionStartedAt.current,
+                );
+              }
+              if (botReadyAt.current && !botReadyMetricRecorded.current) {
+                botReadyMetricRecorded.current = true;
+                void metric("bot_ready", botReadyAt.current - sessionStartedAt.current);
+              }
+            },
+            onBotReady: () => {
+              if (botReadyTimer.current) {
+                clearTimeout(botReadyTimer.current);
+                botReadyTimer.current = null;
+              }
+              botReady.current = true;
+              botReadyAt.current = performance.now();
+              setReadyForSpeech(true);
+              setActive(true);
+              activeRef.current = true;
+              setConnectionPhase("ready");
+              if (!mutedRef.current && !phraseMuted.current) client.current?.enableMic(true);
+              setStatus("Rita is listening");
+              setMood("listening");
+              if (!botReadyMetricRecorded.current) {
+                botReadyMetricRecorded.current = true;
+                void metric("bot_ready", botReadyAt.current - sessionStartedAt.current);
+              }
+            },
+            onDisconnected: () => {
+              failConnection(new Error("Voice transport disconnected"), "transport_disconnected");
+            },
+            onError: (event) => {
+              const eventData = (event?.data ?? {}) as { error?: unknown; message?: unknown };
+              const detail = String(eventData.error ?? eventData.message ?? "Provider error");
+              snapshotNetwork("transport_error");
+              failConnection(new Error(detail), "transport_or_pipeline");
+            },
+            onDeviceError: () => {
+              failConnection(new Error("Microphone permission denied"), "microphone");
+            },
+            onUserStartedSpeaking: () => {
+              setLearnerActivity((count) => count + 1);
+              cancelFiller();
+              currentTurnHasFinalTranscript.current = false;
+              firstPartialRecorded.current = false;
+              learnerTurn.current.speechStarted(crypto.randomUUID(), new Date().toISOString());
+              if (botSpeaking.current) interruptCandidateAt.current = performance.now();
+              turnId.current = crypto.randomUUID();
+              if (!botSpeaking.current) {
+                setStatus("I’m listening…");
+                setMood("listening");
+              }
+              void metric("speech_start");
+            },
+            onServerMessage: (data: unknown) => {
+              const studyMessage = data as { type?: unknown } | null;
+              if (
+                typeof studyMessage?.type === "string" &&
+                studyMessage.type.startsWith("rita-study-")
+              ) {
+                studyRef.current?.bridge.onMessage?.(studyMessage as Record<string, unknown>);
+                return;
+              }
+              const message = data as {
+                type?: string;
+                action?: string;
+                target?: SaveTarget;
+                hint?: string;
+                text?: string;
+                act?: string;
+                wordCount?: number;
+              } | null;
+              if (message?.type === "rita-spoken-text") {
+                const text = String(message.text ?? "").trim();
+                if (!text) return;
+                if (botSpeaking.current) pendingScriptedReply.current = text;
+                else beginScriptedReply(text);
+                return;
+              }
+              if (message?.type === "rita-lesson-signal") {
+                lessonSignal.current(message as LessonSignal);
+                return;
+              }
+              if (message?.type === "rita-turn-ledger") {
+                const metadata = ledgerMetadata(message, {
+                  conversationId: activeConversationId.current,
+                  userMessageId: answeredUserMessageId.current,
+                  replyMessageId: replyAccumulator.current.draftId || lastReplyMessageId.current,
+                });
+                if (metadata) {
+                  void metric("turn_ledger", undefined, metadata);
+                  const replyId =
+                    typeof metadata.replyMessageId === "string" ? metadata.replyMessageId : "";
+                  if (replyId) {
+                    const kept = ledgerByReply.current;
+                    kept.set(replyId, metadata);
+                    while (kept.size > 60) kept.delete(kept.keys().next().value as string);
+                    setLedgerReplies(new Set(kept.keys()));
+                  }
+                }
+                return;
+              }
+              if (message?.type === "rita-dialogue-act") {
+                void metric("dialogue_act", undefined, {
+                  act: String(message.act ?? "unknown").slice(0, 32),
+                  wordCount: Math.max(0, Math.min(Number(message.wordCount ?? 0), 100)),
+                });
+                return;
+              }
+              if (message?.type !== "rita-ui") return;
+              skipExtraction.current = true;
+              if (message.action === "open_list") void trayRef.current.openTray();
+              if (message.action === "convert_list")
+                void trayRef.current.convertByVoice(
+                  message.target === "german_lab" ? "german_lab" : "flashcards",
+                  String(message.hint ?? ""),
+                );
+            },
+            onUserStoppedSpeaking: () => {
+              speechEndedAt.current = performance.now();
+              void metric("speech_end");
+              if (botSpeaking.current) return;
+              setStatus("Rita is thinking…");
+              setMood("thinking");
+              scheduleFiller();
+            },
+            onUserTranscript: (data) => {
+              setCaption(data.text);
+              if (!data.final && data.text.trim() && !firstPartialRecorded.current) {
+                firstPartialRecorded.current = true;
+                void metric("transcript_partial");
+              }
+              if (!data.final || !data.text.trim()) return;
+              lastUserText.current = data.text.trim();
+              // A request can arrive in several finished pieces; keep the whole turn, once.
+              const turn = learnerTurn.current;
+              const turnText = turn.addFinal(
+                data.text,
+                crypto.randomUUID(),
+                new Date().toISOString(),
               );
-          },
-          onUserStoppedSpeaking: () => {
-            speechEndedAt.current = performance.now();
-            void metric("speech_end");
-            if (botSpeaking.current) return;
-            setStatus("Rita is thinking…");
-            setMood("thinking");
-            scheduleFiller();
-          },
-          onUserTranscript: (data) => {
-            setCaption(data.text);
-            if (!data.final && data.text.trim() && !firstPartialRecorded.current) {
-              firstPartialRecorded.current = true;
-              void metric("transcript_partial");
-            }
-            if (!data.final || !data.text.trim()) return;
-            lastUserText.current = data.text.trim();
-            // A request can arrive in several finished pieces; keep the whole turn, once.
-            const turn = learnerTurn.current;
-            const turnText = turn.addFinal(
-              data.text,
-              crypto.randomUUID(),
-              new Date().toISOString(),
-            );
-            skipExtraction.current = false;
-            currentTurnHasFinalTranscript.current = true;
-            const message = { id: turn.id, role: "you" as const, text: turnText };
-            const createdAt = turn.createdAt;
-            setMessages((current) => upsertDraftReply(current, message));
-            void persistConversationMessage({
-              client_message_id: message.id,
-              role: "user",
-              content: message.text,
-              generated_content: null,
-              spoken_content: null,
-              source: "voice",
-              delivery_status: "completed",
-              created_at: createdAt,
-            });
-            void metric("transcript_final");
-          },
-          onBotLlmStarted: () => {
-            currentReplySource.current = "voice";
-            answeredUserMessageId.current = learnerTurn.current.id;
-            learnerTurn.current.replyStarted();
-            pendingScriptedReply.current = "";
-            replyAccumulator.current.beginLlm();
-            llmStartedAt.current = performance.now();
-            firstLlmTokenRecorded.current = false;
-            firstRemoteAudioRecorded.current = false;
-            interruptCandidateAt.current = 0;
-            setStatus("Rita is answering…");
-            void metric("llm_start");
-          },
-          onBotLlmText: ({ text }) => {
-            if (text && !firstLlmTokenRecorded.current) {
-              firstLlmTokenRecorded.current = true;
-              void metric("llm_first_token", performance.now() - llmStartedAt.current);
-            }
-            replyAccumulator.current.appendGenerated(text);
-            // Show the reply as it streams; playback accounting settles it later.
-            const draftText = stripModelNotes(replyAccumulator.current.visibleText()).trim();
-            if (draftText) {
+              skipExtraction.current = false;
+              currentTurnHasFinalTranscript.current = true;
+              const message = { id: turn.id, role: "you" as const, text: turnText };
+              const createdAt = turn.createdAt;
+              setMessages((current) => upsertDraftReply(current, message));
+              void persistConversationMessage({
+                client_message_id: message.id,
+                role: "user",
+                content: message.text,
+                generated_content: null,
+                spoken_content: null,
+                source: "voice",
+                delivery_status: "completed",
+                created_at: createdAt,
+              });
+              void metric("transcript_final");
+            },
+            onBotLlmStarted: () => {
+              currentReplySource.current = "voice";
+              answeredUserMessageId.current = learnerTurn.current.id;
+              learnerTurn.current.replyStarted();
+              pendingScriptedReply.current = "";
+              replyAccumulator.current.beginLlm();
+              llmStartedAt.current = performance.now();
+              firstLlmTokenRecorded.current = false;
+              firstRemoteAudioRecorded.current = false;
+              interruptCandidateAt.current = 0;
+              setStatus("Rita is answering…");
+              void metric("llm_start");
+            },
+            onBotLlmText: ({ text }) => {
+              if (text && !firstLlmTokenRecorded.current) {
+                firstLlmTokenRecorded.current = true;
+                void metric("llm_first_token", performance.now() - llmStartedAt.current);
+              }
+              replyAccumulator.current.appendGenerated(text);
+              // Show the reply as it streams; playback accounting settles it later.
+              const draftText = stripModelNotes(replyAccumulator.current.visibleText()).trim();
+              if (draftText) {
+                const id = replyAccumulator.current.draftId ?? crypto.randomUUID();
+                replyAccumulator.current.draftId = id;
+                setMessages((current) =>
+                  upsertDraftReply(current, { id, role: "rita", text: draftText }),
+                );
+              }
+            },
+            onBotOutput: (data) => {
+              if (data.will_be_spoken === false) return;
+              replyAccumulator.current.beginTts();
+              if (data.spoken_status === "new") return;
+              const audible = data.spoken_progress?.accumulated_text?.trim();
+              if (!audible) return;
+              replyAccumulator.current.reportSpoken(audible);
+              // Router replies such as "تمام." use TTSSpeakFrame and emit no LLM
+              // text. Spoken progress is therefore the authoritative chat source.
+              const draftText = stripModelNotes(replyAccumulator.current.visibleText()).trim();
+              if (!draftText) return;
               const id = replyAccumulator.current.draftId ?? crypto.randomUUID();
               replyAccumulator.current.draftId = id;
               setMessages((current) =>
                 upsertDraftReply(current, { id, role: "rita", text: draftText }),
               );
-            }
-          },
-          onBotOutput: (data) => {
-            if (data.will_be_spoken === false) return;
-            replyAccumulator.current.beginTts();
-            if (data.spoken_status === "new") return;
-            const audible = data.spoken_progress?.accumulated_text?.trim();
-            if (!audible) return;
-            replyAccumulator.current.reportSpoken(audible);
-            // Router replies such as "تمام." use TTSSpeakFrame and emit no LLM
-            // text. Spoken progress is therefore the authoritative chat source.
-            const draftText = stripModelNotes(replyAccumulator.current.visibleText()).trim();
-            if (!draftText) return;
-            const id = replyAccumulator.current.draftId ?? crypto.randomUUID();
-            replyAccumulator.current.draftId = id;
-            setMessages((current) =>
-              upsertDraftReply(current, { id, role: "rita", text: draftText }),
-            );
-          },
-          onBotStartedSpeaking: () => {
-            cancelFiller();
-            botSpeaking.current = true;
-            void metric("bot_speaking_signal");
-            setStatus("Rita is speaking — say stop or tap Stop");
-            setMood("talking");
-          },
-          onTrackStarted: (track, participant) => {
-            if (track.kind !== "audio" || participant?.local) return;
-            void metric("remote_track_started");
-            attachBotAudio(track);
-          },
-          onTrackStopped: (track, participant) => {
-            if (track.kind !== "audio" || participant?.local) return;
-            const audio = botAudio.current;
-            const current = audio?.srcObject instanceof MediaStream ? audio.srcObject : null;
-            if (audio && current?.getAudioTracks().some((candidate) => candidate.id === track.id)) {
-              audio.srcObject = null;
-            }
-            void metric("remote_track_stopped");
-          },
-          onLocalAudioLevel: (level) => {
-            orbLevels.current.input = level;
-          },
-          onRemoteAudioLevel: (level, participant) => {
-            if (!participant.local) orbLevels.current.output = level;
-            if (
-              participant.local ||
-              !botSpeaking.current ||
-              level < 0.02 ||
-              firstRemoteAudioRecorded.current
-            )
-              return;
-            firstRemoteAudioRecorded.current = true;
-            if (speechEndedAt.current) {
-              void metric("first_remote_audio_level", performance.now() - speechEndedAt.current, {
-                measurement: "remote_audio_level_proxy",
-                generatedCharacters: replyAccumulator.current.generatedText.length,
-              });
-              snapshotNetwork("first_remote_audio_level");
-              speechEndedAt.current = 0;
-            }
-          },
-          onBotStoppedSpeaking: () => {
-            botSpeaking.current = false;
-            const interrupted = wasRitaInterrupted(interruptCandidateAt.current, performance.now());
-            commitHeardReply(interrupted);
-            const scripted = pendingScriptedReply.current;
-            pendingScriptedReply.current = "";
-            if (scripted) beginScriptedReply(scripted);
-            interruptCandidateAt.current = 0;
-            void metric("playback_stop");
-          },
-          onBotTtsStarted: () => {
-            if (!botSpeaking.current && pendingScriptedReply.current) {
+            },
+            onBotStartedSpeaking: () => {
+              cancelFiller();
+              botSpeaking.current = true;
+              void metric("bot_speaking_signal");
+              setStatus("Rita is speaking — say stop or tap Stop");
+              setMood("talking");
+            },
+            onTrackStarted: (track, participant) => {
+              if (track.kind !== "audio" || participant?.local) return;
+              void metric("remote_track_started");
+              attachBotAudio(track);
+            },
+            onTrackStopped: (track, participant) => {
+              if (track.kind !== "audio" || participant?.local) return;
+              const audio = botAudio.current;
+              const current = audio?.srcObject instanceof MediaStream ? audio.srcObject : null;
+              if (
+                audio &&
+                current?.getAudioTracks().some((candidate) => candidate.id === track.id)
+              ) {
+                audio.srcObject = null;
+              }
+              void metric("remote_track_stopped");
+            },
+            onLocalAudioLevel: (level) => {
+              orbLevels.current.input = level;
+            },
+            onRemoteAudioLevel: (level, participant) => {
+              if (!participant.local) orbLevels.current.output = level;
+              if (
+                participant.local ||
+                !botSpeaking.current ||
+                level < 0.02 ||
+                firstRemoteAudioRecorded.current
+              )
+                return;
+              firstRemoteAudioRecorded.current = true;
+              if (speechEndedAt.current) {
+                void metric("first_remote_audio_level", performance.now() - speechEndedAt.current, {
+                  measurement: "remote_audio_level_proxy",
+                  generatedCharacters: replyAccumulator.current.generatedText.length,
+                });
+                snapshotNetwork("first_remote_audio_level");
+                speechEndedAt.current = 0;
+              }
+            },
+            onBotStoppedSpeaking: () => {
+              botSpeaking.current = false;
+              const interrupted = wasRitaInterrupted(
+                interruptCandidateAt.current,
+                performance.now(),
+              );
+              commitHeardReply(interrupted);
               const scripted = pendingScriptedReply.current;
               pendingScriptedReply.current = "";
-              beginScriptedReply(scripted);
-            }
-            replyAccumulator.current.beginTts();
-            studyRef.current?.bridge.onEvent?.("speaking");
-            void metric("tts_start");
+              if (scripted) beginScriptedReply(scripted);
+              interruptCandidateAt.current = 0;
+              void metric("playback_stop");
+            },
+            onBotTtsStarted: () => {
+              if (!botSpeaking.current && pendingScriptedReply.current) {
+                const scripted = pendingScriptedReply.current;
+                pendingScriptedReply.current = "";
+                beginScriptedReply(scripted);
+              }
+              replyAccumulator.current.beginTts();
+              studyRef.current?.bridge.onEvent?.("speaking");
+              void metric("tts_start");
+            },
+            onBotTtsStopped: () => {
+              studyRef.current?.bridge.onEvent?.("quiet");
+              const microphoneMuted = mutedRef.current || !botReady.current;
+              setStatus(
+                !botReady.current
+                  ? "Rita is getting ready…"
+                  : microphoneMuted
+                    ? "Microphone muted"
+                    : "Rita is listening",
+              );
+              setMood(microphoneMuted ? "ready" : "listening");
+            },
+            onMetrics: (data) => {
+              void metric("provider_metrics", undefined, {
+                payload: JSON.parse(JSON.stringify(data)),
+              });
+            },
           },
-          onBotTtsStopped: () => {
-            studyRef.current?.bridge.onEvent?.("quiet");
-            const microphoneMuted = mutedRef.current || !botReady.current;
-            setStatus(
-              !botReady.current
-                ? "Rita is getting ready…"
-                : microphoneMuted
-                  ? "Microphone muted"
-                  : "Rita is listening",
-            );
-            setMood(microphoneMuted ? "ready" : "listening");
-          },
-          onMetrics: (data) => {
-            void metric("provider_metrics", undefined, {
-              payload: JSON.parse(JSON.stringify(data)),
-            });
-          },
-        },
+          isCurrent,
+        ),
       });
+      if (!isCurrent()) {
+        void pc.disconnect().catch(() => undefined);
+        return;
+      }
       client.current = pc;
       const headers = await authHeaders();
+      if (!isCurrent()) return;
       setStatus("Waking Rita's voice worker…");
       const ready = await pc.startBotAndConnect({
         endpoint: "/api/rita-v3/session/start",
@@ -1473,35 +1551,35 @@ export function RitaRealtimeV3({
       // transport may resolve before it invokes that callback; otherwise the early
       // trace would remain queued and the run would look falsely incomplete.
       const startResult = ready as { sessionId?: unknown; providerSessionId?: unknown } | undefined;
+      if (!isCurrent()) {
+        if (typeof startResult?.sessionId === "string") {
+          void fetch("/api/rita-v3/session/end", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              sessionId: startResult.sessionId,
+              providerSessionId: startResult.providerSessionId,
+            }),
+            keepalive: true,
+            signal: AbortSignal.timeout(5000),
+          }).catch(() => undefined);
+        }
+        return;
+      }
       if (!sessionId.current && typeof startResult?.sessionId === "string") {
         sessionId.current = startResult.sessionId;
         providerSessionId.current = String(startResult.providerSessionId ?? "");
         flushPendingMetrics(sessionId.current);
       }
+      if (!isCurrent()) return;
       void metric("start_call_returned", performance.now() - sessionStartedAt.current);
       setActive(true);
       activeRef.current = true;
       if (!botReady.current) setStatus("Connected; waiting for Rita…");
     } catch (cause) {
-      if (botReadyTimer.current) {
-        clearTimeout(botReadyTimer.current);
-        botReadyTimer.current = null;
-      }
-      const pending = client.current;
-      client.current = null;
-      if (pending) await pending.disconnect().catch(() => undefined);
-      activeRef.current = false;
-      botReady.current = false;
-      setReadyForSpeech(false);
-      setActive(false);
-      setMood("ready");
-      setStatus("Rita could not connect");
-      setError(`${humanError(cause)} Rita v3 stayed isolated; no legacy voice system was started.`);
-      void metric("client_connection_error", undefined, {
-        errorKind: cause instanceof Error ? cause.name : "unknown",
-      });
+      failConnection(cause, "client_start");
     } finally {
-      setStarting(false);
+      if (isCurrent()) setStarting(false);
     }
   }
 
@@ -1594,17 +1672,7 @@ export function RitaRealtimeV3({
   if (study) {
     const turns = groupTurns(messages).filter((message) => message.id !== "welcome");
     const chatting = active || starting || turns.length > 0;
-    const stateWord = !active
-      ? historyLoading || starting
-        ? "بتجهّز…"
-        : "ريتا جاهزة"
-      : mood === "talking" || mood === "laughing"
-        ? "بتحكي…"
-        : mood === "thinking"
-          ? "بتفكر…"
-          : muted
-            ? "المايك مسكّر"
-            : "بسمعك…";
+    const stateWord = voiceStateWord(historyLoading ? "connecting" : connectionPhase, mood, muted);
     const lastTurn = turns[turns.length - 1];
     return (
       <main
@@ -1663,7 +1731,11 @@ export function RitaRealtimeV3({
                 [...messages].reverse().find((m) => m.role === "you")?.text,
               ) && <ChatText text={caption} className="uz-rc-you is-live" />}
               {study.children}
-              {error && <p className="uz-rc-error">{error}</p>}
+              {error && (
+                <p className="uz-rc-error" role="alert" dir="auto">
+                  {error}
+                </p>
+              )}
             </div>
           </StickyScroll>
         ) : (
@@ -1681,11 +1753,17 @@ export function RitaRealtimeV3({
           {!active ? (
             <button
               type="button"
-              onClick={startLesson}
+              onClick={() => void startLesson()}
               disabled={historyLoading || starting}
               className="uz-rc-bar is-start"
             >
-              <span className="uz-rc-placeholder">احكي مع ريتا…</span>
+              <span className="uz-rc-placeholder">
+                {connectionPhase === "failed"
+                  ? "إعادة الاتصال"
+                  : starting
+                    ? "جاري الاتصال…"
+                    : "احكي مع ريتا…"}
+              </span>
               <span className="uz-rc-mic" aria-hidden="true">
                 {historyLoading || starting ? (
                   <Loader2 className="animate-spin" size={18} />
@@ -1774,7 +1852,13 @@ export function RitaRealtimeV3({
         <FlyingCube chatting={chatting}>
           <RitaCube
             levelsRef={orbLevels}
-            mode={active ? orbModeFor(active, mood) : starting ? "thinking" : "idle"}
+            mode={
+              connectionPhase === "ready"
+                ? orbModeFor(active, mood)
+                : starting
+                  ? "thinking"
+                  : "idle"
+            }
             label={active ? "ريتا معك" : "ريتا"}
           />
         </FlyingCube>
