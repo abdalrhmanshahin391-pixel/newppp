@@ -70,6 +70,7 @@ from rita_turn_policy import (
 )
 from rita_turn_router import RitaTurnRouter, RouterMode, router_mode
 from rita_word_joiner import RitaWordJoiner
+from rita_sheet import MARKER_LINE, RitaSheetSplitter
 
 load_dotenv(override=False)
 
@@ -78,10 +79,11 @@ LLM_MODEL = "openai/gpt-oss-120b"
 # The reply and the model's short reasoning share this budget. Keep enough headroom
 # for reasoning without encouraging the tutor to continue offering examples after
 # the learner's question has already been answered.
-LLM_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_MAX_COMPLETION_TOKENS", "450"))
+# Room for one spoken sentence plus a written sheet (a small table, rules and examples).
+LLM_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_MAX_COMPLETION_TOKENS", "900"))
 # An explanation ("اشرح", "فصّلي كل كلمة") shares its budget with the model's thinking, and 450 cut
 # the longest ones off. Quick answers keep the small budget and low effort.
-LLM_EXPLAIN_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_EXPLAIN_MAX_COMPLETION_TOKENS", "800"))
+LLM_EXPLAIN_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_EXPLAIN_MAX_COMPLETION_TOKENS", "1300"))
 LLM_EXPLAIN_REASONING_EFFORT = os.getenv("RITA_LLM_EXPLAIN_REASONING_EFFORT", "medium")
 TTS_PROVIDER = os.getenv("RITA_TTS_PROVIDER", "cartesia").strip().casefold()
 TTS_MODEL = "sonic-3.6"
@@ -202,6 +204,22 @@ def explain_options(state: RitaSessionState) -> dict[str, Any] | None:
     }
 
 
+SHEET_PROMPT = f"""WRITTEN SHEET (shown under your words on the screen, never read aloud)
+- When an answer needs more than two short sentences, or has rules, several forms, steps, a list, a
+  comparison or more than one example: say only the core answer in ONE short spoken sentence (two at
+  most), then write the line {MARKER_LINE} and put the details after it. Never speak the details too.
+- Everything after {MARKER_LINE} is a tidy page, not speech. Write it with only these lines:
+  # Title (a few words)
+  | head | head | head |   then one | cell | cell | cell | line per row (at most 6 rows, 2 to 3 columns)
+  - one short point per line
+  = one example sentence per line, with the key word in **bold**
+  ! one watch-out line (the common mistake and the right form)
+- Keep the sheet short: at most 12 lines, no paragraphs, nothing the learner did not ask about. Write it
+  in the reply language; examples stay in the language being learned.
+- Short answers, reactions, corrections, questions to the learner and one-fact answers have no sheet.
+- Your spoken sentence must make sense alone; you may end it with a short pointer like "شوف تحت"."""
+
+
 def build_prompt(
     body: dict[str, Any],
     state: RitaSessionState,
@@ -242,6 +260,8 @@ VOICE CONTRACT
   speech. To give several items, say them in one flowing sentence.
 - Speak only to the learner. Never read internal metadata or tool data aloud, never write notes to
   yourself, and never write the words "user", "learner_act", "directive" or any session-state field name.
+
+{SHEET_PROMPT}
 
 LANGUAGE AND DIALECT
 - Write in the REPLY LANGUAGE named on the last line. Arabic defaults to friendly Jordanian Arabic
@@ -590,6 +610,14 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             ]
         )
 
+    # The written part of a long answer (after [[SHEET]]) is shown on the page, never spoken.
+    sheet_splitter = RitaSheetSplitter(
+        look_below=lambda: {
+            "en": "Have a look below.",
+            "de": "Schau unten.",
+        }.get(state.reply_language() or "ar", "شوف الشرح تحت.")
+    )
+
     pipeline = Pipeline(
         [
             transport.input(),
@@ -597,6 +625,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             user_aggregator,
             router,
             llm,
+            sheet_splitter,
             RitaWordJoiner(),
             RitaSpeechCleaner(),
             tts,
@@ -815,6 +844,13 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
     @assistant_aggregator.event_handler("on_assistant_turn_stopped")
     async def on_assistant_turn_stopped(aggregator, message):
         state.observe_assistant_turn(message.content)
+        sheet = sheet_splitter.take_sheet()
+        if sheet:
+            # Rita remembers what she wrote, not only what she said, so she can build on it.
+            for item in reversed(context.get_messages()):
+                if item.get("role") == "assistant" and isinstance(item.get("content"), str):
+                    item["content"] = f"{item['content'].rstrip()}\n{MARKER_LINE}\n{sheet}"
+                    break
         answered_turn = (
             latency.reply_turn if ledger.has_open(latency.reply_turn) else ledger.newest_open_turn()
         )

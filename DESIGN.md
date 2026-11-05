@@ -491,3 +491,15 @@ sounds. No backdrop: the page, the selection and the circle keep working.
 Type on the study page follows pro tools: 13px for UI text and 12px for small words (top bar, state
 word, window), 15px for Rita's replies; a thin 46px top bar; the guide fits its pane at most 112% so a
 wide pane gets more room around the sheet instead of bigger type.
+
+## Rita's written sheet (`RitaSheet`)
+
+A long answer is said in one short sentence; the details are written under it as a small white
+page in the study guide's style, never read aloud. The model writes them after the line `[[SHEET]]`
+(`voice-agent/rita_sheet.py` keeps that part from the voice; `src/lib/rita-sheet.ts` reads it). The
+page has an uppercase title over a hairline, a table whose heads are the guide's pills in turn (grey,
+green, blue) with a bold first column on #fafafd, points with small blue squares, examples in italics
+behind a soft blue rule with the key word bold (an English or German word opens the word window), and
+a blue-soft «انتبه / Watch out» card. Each line reads in its own direction (any Arabic: right to
+left). 14px body, 13.5px cells, radius 16, a soft shadow; it rises in once (reduced motion: no
+movement). A sheet the model wrote badly still shows as plain lines. Short answers have no sheet.
