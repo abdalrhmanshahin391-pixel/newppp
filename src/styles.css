@@ -5829,43 +5829,52 @@ html.rita-app,
 }
 
 /* ===========================================================================
-   The learning home (/learn): the home page's own type, colours, buttons and
-   rounded cards. "Talk to Rita" is a blue stage with Rita's breathing orb;
-   the other sections are tiles of different sizes, one section at a time.
+   The learning home (/learn). Flat monochrome cards, immediate local navigation.
+   Visited panels reuse their DOM/images; one finite 150ms transition per selection.
    =========================================================================== */
 .uz-learn {
-  --uz-ink: var(--pro-ink, #0a0f1a);
-  --uz-quiet: var(--pro-muted, #5b6676);
-  --uz-card: var(--pro-card, #f4f6f9);
-  --uz-blue: var(--pp-accent, #2b6df0);
-  --uz-soft: var(--rita-green-soft, #e7f3ff);
-  --uz-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --uz-ink: var(--pp-ink, #121117);
+  --uz-quiet: var(--pp-muted, #6a697c);
+  --uz-card: var(--pp-grey, #f4f4f8);
+  --uz-tile-bg: #000;
+  --uz-paper: #f2f2f5;
+  --uz-on-tile-muted: #b9b9c2;
+  --uz-out: var(--pp-ease, cubic-bezier(0.22, 1, 0.36, 1));
   background: #fff;
   color: var(--uz-ink);
-  font-family: var(--font-grotesk);
+  font-family:
+    "Figtree", "Uzyra Footer Arabic", "Noto Sans Arabic", Helvetica, Arial,
+    sans-serif;
 }
 .uz-learn-main {
   max-width: 1240px;
   margin: 0 auto;
-  padding: 32px 16px 120px;
-}
-@media (min-width: 768px) {
-  .uz-learn-main {
-    padding: 48px 32px 140px;
-  }
+  padding: 32px 16px 96px;
 }
 .uz-learn-grid {
   display: grid;
   gap: 24px;
 }
-@media (min-width: 1024px) {
-  .uz-learn-grid {
-    grid-template-columns: 13rem minmax(0, 1fr);
-    gap: 40px;
+.uz-panels {
+  min-width: 0;
+  min-height: calc(100svh - 220px);
+}
+.uz-panel[hidden] {
+  display: none !important;
+}
+.uz-panel:not([hidden]) {
+  animation: uz-section-in 150ms var(--uz-out) both;
+}
+@keyframes uz-section-in {
+  from {
+    opacity: 0.85;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
-
-/* The section list: rounded pills like the site's buttons; the current one is filled. */
 .uz-rail {
   display: flex;
   gap: 8px;
@@ -5873,18 +5882,7 @@ html.rita-app,
   padding: 0 16px 4px;
   overflow-x: auto;
   scrollbar-width: none;
-}
-@media (min-width: 1024px) {
-  .uz-rail {
-    position: sticky;
-    top: 96px;
-    flex-direction: column;
-    align-self: start;
-    gap: 4px;
-    margin: 0;
-    padding: 0;
-    overflow: visible;
-  }
+  overscroll-behavior-x: contain;
 }
 .uz-rail-item {
   display: inline-flex;
@@ -5894,64 +5892,40 @@ html.rita-app,
   padding: 0 18px;
   border-radius: 999px;
   color: var(--uz-quiet);
-  font-size: 15.5px;
+  font-size: 16px;
   font-weight: 600;
   white-space: nowrap;
+  text-decoration: none;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
   transition:
-    background-color 160ms ease,
-    color 160ms ease;
+    background-color 120ms ease,
+    color 120ms ease,
+    transform 100ms var(--uz-out);
 }
 .uz-rail-item[aria-current="page"] {
-  background: var(--uz-soft);
-  color: var(--uz-ink);
+  background: var(--uz-ink);
+  color: var(--uz-paper);
 }
-@media (hover: hover) and (pointer: fine) {
-  .uz-rail-item:not([aria-current="page"]):hover {
-    background: var(--uz-card);
-    color: var(--uz-ink);
-  }
+.uz-rail-item:active {
+  transform: scale(0.98);
 }
-@media (min-width: 1024px) {
-  .uz-rail-extra {
-    margin-top: 16px;
-  }
-}
-.uz-rail-item:focus-visible,
-.uz-tile:focus-visible,
-.uz-stage:focus-visible,
-.uz-lessons:focus-visible {
-  outline: 2px solid var(--uz-blue);
-  outline-offset: 3px;
-}
-
-/* One section at a time: it rises in when chosen. */
-.uz-pane {
-  animation: uz-pane-in 280ms var(--uz-out) both;
-}
-@keyframes uz-pane-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
+.uz-learn :is(.uz-rail-item, .uz-tile, .uz-stage, .uz-lessons):focus-visible {
+  outline: 2px solid var(--uz-ink);
+  outline-offset: 4px;
 }
 .edith-premium .uz-section-title {
   margin: 0 0 20px;
-  font-size: clamp(26px, 3vw, 34px) !important;
+  font-size: 28px !important;
   font-weight: 700;
-  line-height: 1.1 !important;
+  line-height: 1.2 !important;
   letter-spacing: -0.02em;
 }
-
-/* "Talk to Rita": the stage and the lessons card. */
 .uz-rita {
   display: grid;
   gap: 16px;
-}
-@media (min-width: 1180px) {
-  .uz-rita {
-    grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
-  }
 }
 .uz-stage {
   position: relative;
@@ -5960,95 +5934,57 @@ html.rita-app,
   gap: 8px;
   min-height: 380px;
   padding: 32px 28px;
-  border-radius: 28px;
-  color: #fff;
-  background:
-    radial-gradient(70% 55% at 78% 30%, rgb(125 185 255 / 0.5), transparent 62%),
-    radial-gradient(75% 70% at 12% 100%, rgb(4 87 203 / 0.95), transparent 66%),
-    linear-gradient(162deg, #0b2468 0%, #0457cb 46%, #06194a 100%);
-  isolation: isolate;
-}
-@media (min-width: 768px) {
-  .uz-stage {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
-    align-items: center;
-    padding: 44px 44px;
-    min-height: 420px;
-  }
+  border-radius: 24px;
+  color: var(--uz-paper);
+  background: var(--uz-tile-bg);
+  text-decoration: none;
 }
 .uz-stage-text {
   position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 14px;
+  min-width: 0;
 }
 .edith-premium .uz-stage-title {
   margin: 0;
-  color: #fff;
-  font-size: clamp(32px, 4.2vw, 50px) !important;
+  color: var(--uz-paper);
+  font-size: 36px !important;
   font-weight: 700;
-  line-height: 1.04 !important;
+  line-height: 1.08 !important;
   letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 .uz-stage-line {
   max-width: 30ch;
-  color: rgb(255 255 255 / 0.8);
+  color: var(--uz-on-tile-muted);
   font-size: 17px;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 .edith-premium .rita-btn.uz-stage-btn {
+  min-height: 48px;
   margin-top: 10px;
   gap: 10px;
-  background: #fff;
-  border-color: #fff;
-  color: #0a0f1a;
-}
-@media (hover: hover) and (pointer: fine) {
-  .uz-stage:hover .uz-stage-btn svg {
-    transform: translateX(3px);
-  }
-  [dir="rtl"] .uz-stage:hover .uz-stage-btn svg {
-    transform: translateX(-3px) rotate(180deg);
-  }
-}
-.uz-stage-btn svg {
-  transition: transform 220ms var(--uz-out);
+  background: var(--uz-paper);
+  border-color: var(--uz-paper);
+  color: var(--uz-ink);
 }
 .uz-orb-zone {
   position: relative;
   height: 230px;
 }
-@media (min-width: 768px) {
-  .uz-orb-zone {
-    height: 320px;
-  }
-}
-.uz-orb,
-.uz-orb-ring {
+.uz-orb {
   position: absolute;
   left: 50%;
   top: 50%;
+  display: grid;
+  place-items: center;
   width: 120px;
   height: 120px;
   margin: -60px 0 0 -60px;
   border-radius: 50%;
-}
-.uz-orb-ring {
-  border: 2px solid rgb(255 255 255 / 0.7);
-}
-.uz-orb {
-  display: grid;
-  place-items: center;
-  background: radial-gradient(circle at 35% 30%, #ffffff, #cfe0ff 45%, #8fb4ff);
-  box-shadow: 0 30px 60px -20px rgb(4 30 90 / 0.65);
-  animation: uz-breathe 4.8s ease-in-out infinite;
-}
-@keyframes uz-breathe {
-  50% {
-    transform: scale(1.06);
-  }
+  background: var(--uz-paper);
 }
 .uz-orb-waves {
   display: flex;
@@ -6056,23 +5992,30 @@ html.rita-app,
   gap: 6px;
   height: 40px;
 }
-.uz-orb-waves > span {
+.uz-orb-wave {
   display: block;
   width: 5px;
-  height: 40px;
+  height: 24px;
   border-radius: 999px;
-  background: #0457cb;
+  background: var(--uz-ink);
+}
+.uz-orb-wave:nth-child(2),
+.uz-orb-wave:nth-child(4) {
+  height: 36px;
+}
+.uz-orb-wave:nth-child(3) {
+  height: 18px;
 }
 .uz-float {
   position: absolute;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.95);
-  color: #0a0f1a;
+  border: 1px solid var(--uz-on-tile-muted);
+  background: var(--uz-tile-bg);
+  color: var(--uz-paper);
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
-  box-shadow: 0 12px 30px -16px rgb(4 30 90 / 0.6);
 }
 .uz-float-a {
   left: 2%;
@@ -6088,92 +6031,39 @@ html.rita-app,
 }
 .uz-lessons {
   display: grid;
-  grid-template-columns: 112px minmax(0, 1fr) auto;
+  grid-template-columns: 112px minmax(0, 1fr);
   align-items: center;
   gap: 18px;
-  padding: 14px;
-  border-radius: 28px;
-  background: var(--uz-card);
-  color: inherit;
-  transition:
-    transform 220ms var(--uz-out),
-    box-shadow 220ms var(--uz-out);
+  padding: 16px;
+  border-radius: 24px;
 }
-@media (min-width: 1180px) {
-  .uz-lessons {
-    grid-template-columns: 1fr;
-    align-content: start;
-    padding: 14px 14px 24px;
-  }
-  .uz-lessons .uz-tile-img {
-    aspect-ratio: 2 / 1;
-    max-height: 210px;
-  }
-  .uz-lessons .uz-tile-text {
-    padding: 4px 10px 0;
-  }
-  .uz-lessons .uz-tile-go {
-    display: none;
-  }
+.uz-tile,
+.uz-lessons {
+  position: relative;
+  overflow: hidden;
+  color: var(--uz-paper);
+  background: var(--uz-tile-bg);
+  text-decoration: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
-
-/* Keep the two Together cards comfortably sized on wider screens. */
-#together .uz-tiles {
-  max-width: 760px;
-}
-
-/* The other sections: tiles of two sizes on the site's light card. */
 .uz-tiles {
   display: grid;
   gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-@media (min-width: 640px) {
-  .uz-tiles {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .uz-tiles > [data-lead] {
-    grid-column: 1 / -1;
-  }
-}
-@media (min-width: 1180px) {
-  .uz-tiles {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .uz-tiles > [data-lead] {
-    grid-column: span 2;
-  }
+.uz-tiles > li {
+  min-width: 0;
 }
 .uz-tile {
-  position: relative;
   display: flex;
   flex-direction: column;
   gap: 14px;
   height: 100%;
-  padding: 12px 12px 22px;
+  padding: 16px 16px 24px;
   border-radius: 24px;
-  background: var(--uz-card);
-  color: inherit;
-  touch-action: manipulation;
-  transition:
-    transform 220ms var(--uz-out),
-    box-shadow 220ms var(--uz-out);
-}
-@media (hover: hover) and (pointer: fine) {
-  .uz-tile:hover,
-  .uz-lessons:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 18px 40px -26px rgb(10 15 26 / 0.45);
-  }
-  .uz-tile:hover .uz-tile-go,
-  .uz-lessons:hover .uz-tile-go {
-    background: var(--uz-ink);
-    color: #fff;
-  }
-}
-.uz-tile:active,
-.uz-lessons:active,
-.uz-stage:active {
-  transform: scale(0.99);
 }
 .uz-tile-img {
   position: relative;
@@ -6182,7 +6072,7 @@ html.rita-app,
   aspect-ratio: 2 / 1;
   max-height: 210px;
   border-radius: 16px;
-  background: #000;
+  background: var(--uz-tile-bg);
 }
 .uz-lessons > .uz-tile-img {
   aspect-ratio: 1;
@@ -6199,15 +6089,12 @@ html.rita-app,
   height: 100%;
   object-fit: contain;
 }
-.uz-tile-img[data-image-slot] {
-  background: linear-gradient(160deg, #1a2235, #0a0f1a);
-}
 .uz-tile-text {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
-  padding: 0 10px;
+  padding: 0 8px;
 }
 .uz-lessons .uz-tile-text {
   padding: 0;
@@ -6217,188 +6104,177 @@ html.rita-app,
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 10px;
+  color: var(--uz-paper);
   font-size: 19px;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.3;
   letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
 }
 .uz-tile[data-lead] .uz-tile-name {
-  font-size: clamp(22px, 2.2vw, 26px);
+  font-size: 24px;
 }
 .uz-tile-tag {
-  padding: 1px 9px;
+  padding: 2px 8px;
+  border: 1px solid var(--uz-on-tile-muted);
   border-radius: 999px;
-  background: var(--uz-soft);
-  color: #0457cb;
-  font-size: 12.5px;
-  font-weight: 700;
+  color: var(--uz-paper);
+  font-size: 12px;
+  font-weight: 600;
 }
 .uz-tile-line {
   max-width: 46ch;
-  color: var(--uz-quiet);
-  font-size: 15.5px;
-  line-height: 1.5;
+  color: var(--uz-on-tile-muted);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 .uz-tile-go {
   position: absolute;
-  inset-inline-end: 22px;
+  inset-inline-end: 20px;
   bottom: 20px;
   display: grid;
   place-items: center;
   width: 36px;
   height: 36px;
   border-radius: 999px;
-  background: #fff;
+  background: var(--uz-paper);
   color: var(--uz-ink);
-  transition:
-    background-color 200ms ease,
-    color 200ms ease;
 }
 .uz-tile .uz-tile-text {
-  padding-inline-end: 56px;
+  padding-inline-end: 52px;
 }
-.uz-lessons .uz-tile-go {
-  position: static;
+.edith-premium .rita-btn.uz-light-btn {
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 0 16px;
+  gap: 8px;
+  background: var(--uz-paper);
+  border-color: var(--uz-paper);
+  color: var(--uz-ink);
+  font-size: 15px;
 }
-@media (prefers-reduced-motion: reduce) {
-  .uz-pane,
-  .uz-orb,
-  .uz-learn .rh-ring,
-  .uz-learn .rh-wave,
-  .uz-learn .rh-float {
-    animation: none !important;
-  }
-  .uz-tile,
-  .uz-lessons,
-  .uz-stage-btn svg {
-    transition: none;
-  }
+.uz-stage {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
-
-/* Every learning tile on Rita's blue: the same deep "screen" as the Rita stage, the light falling
-   from a different side on each tile, and the black-backed artwork blended so only its white
-   shapes remain, glowing on the blue and drifting slowly. */
 .uz-tile,
-.uz-lessons {
-  --uz-light-x: 78%;
-  --uz-light-y: 24%;
-  color: #fff;
-  background:
-    radial-gradient(70% 60% at var(--uz-light-x) var(--uz-light-y), rgb(125 185 255 / 0.42), transparent 64%),
-    radial-gradient(80% 70% at 10% 100%, rgb(4 87 203 / 0.9), transparent 66%),
-    linear-gradient(160deg, #0b2468 0%, #0451bd 48%, #06194a 100%);
-  isolation: isolate;
-  overflow: hidden;
+.uz-lessons,
+.uz-stage {
+  transition: transform 120ms var(--uz-out);
 }
-.uz-tiles > li:nth-child(3n + 2) .uz-tile {
-  --uz-light-x: 22%;
-  --uz-light-y: 18%;
+.uz-tile:active,
+.uz-lessons:active,
+.uz-stage:active {
+  transform: scale(0.995);
 }
-.uz-tiles > li:nth-child(3n + 3) .uz-tile {
-  --uz-light-x: 60%;
-  --uz-light-y: 8%;
+.uz-stage-btn svg,
+.uz-light-btn svg,
+.uz-tile-go svg {
+  transition: transform 150ms var(--uz-out);
 }
-.uz-tile .uz-tile-img,
-.uz-lessons .uz-tile-img {
-  background: transparent;
-  /* The blend sits on the frame (which moves), so it mixes with the tile's blue behind it. */
-  mix-blend-mode: screen;
-  animation: uz-art-drift 7s ease-in-out calc(var(--i, 0) * -1.3s) infinite alternate;
+#learn-panel-together .uz-tiles {
+  max-width: 760px;
 }
-.uz-tile .uz-tile-img img,
-.uz-lessons .uz-tile-img img {
-  transition: transform 600ms var(--uz-out);
-}
-@keyframes uz-art-drift {
-  from {
-    transform: translateY(3px);
+@media (min-width: 640px) {
+  .uz-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  to {
-    transform: translateY(-5px);
+  .uz-tiles > [data-lead] {
+    grid-column: 1 / -1;
   }
 }
-.uz-tile .uz-tile-name,
-.uz-lessons .uz-tile-name {
-  color: #fff;
+@media (min-width: 768px) {
+  .uz-learn-main {
+    padding: 48px 32px 120px;
+  }
+  .uz-stage {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
+    align-items: center;
+    padding: 40px 36px;
+    min-height: 420px;
+  }
+  .uz-orb-zone {
+    height: 300px;
+  }
+  .edith-premium .uz-stage-title {
+    font-size: 46px !important;
+  }
 }
-.uz-tile .uz-tile-line,
-.uz-lessons .uz-tile-line {
-  color: rgb(255 255 255 / 0.8);
-}
-.uz-tile .uz-tile-tag,
-.uz-lessons .uz-tile-tag {
-  background: rgb(255 255 255 / 0.16);
-  color: #fff;
-}
-.uz-tile .uz-tile-go {
-  background: #fff;
-  color: #0a0f1a;
-}
-.uz-tile .uz-tile-go svg {
-  transition: transform 220ms var(--uz-out);
-}
-@media (max-width: 1179px) {
-  .uz-lessons {
-    grid-template-columns: 112px minmax(0, 1fr);
+@media (min-width: 1024px) {
+  .uz-learn-grid {
+    grid-template-columns: 13rem minmax(0, 1fr);
+    gap: 40px;
+  }
+  .uz-rail {
+    position: sticky;
+    top: 88px;
+    flex-direction: column;
+    align-self: start;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
   }
 }
 @media (min-width: 1180px) {
+  .uz-rita {
+    grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+  }
+  .uz-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .uz-tiles > [data-lead] {
+    grid-column: span 2;
+  }
   .uz-lessons {
+    grid-template-columns: 1fr;
     align-content: space-between;
+    padding: 16px 16px 24px;
   }
   .uz-lessons .uz-tile-img {
     aspect-ratio: 2 / 1;
     max-height: 210px;
   }
-}
-.edith-premium .rita-btn.uz-light-btn {
-  align-self: flex-start;
-  height: 40px;
-  margin-top: 10px;
-  padding: 0 16px;
-  gap: 8px;
-  background: #fff;
-  border-color: #fff;
-  color: #0a0f1a;
-  font-size: 15px;
-}
-.uz-light-btn svg {
-  transition: transform 220ms var(--uz-out);
+  .uz-lessons .uz-tile-text {
+    padding: 4px 8px 0;
+  }
 }
 @media (hover: hover) and (pointer: fine) {
+  .uz-rail-item:not([aria-current="page"]):hover {
+    background: var(--uz-card);
+    color: var(--uz-ink);
+  }
   .uz-tile:hover,
   .uz-lessons:hover {
-    box-shadow: 0 22px 44px -24px rgb(4 30 90 / 0.7);
+    transform: translateY(-2px);
   }
-  .uz-tile:hover .uz-tile-img img,
-  .uz-lessons:hover .uz-tile-img img {
-    transform: scale(1.05);
-  }
-  .uz-tile:hover .uz-tile-go {
-    background: #fff;
-    color: #0a0f1a;
-  }
+  .uz-stage:hover .uz-stage-btn svg,
   .uz-tile:hover .uz-tile-go svg,
   .uz-lessons:hover .uz-light-btn svg {
     transform: translateX(3px);
   }
+  [dir="rtl"] .uz-stage:hover .uz-stage-btn svg,
   [dir="rtl"] .uz-tile:hover .uz-tile-go svg,
   [dir="rtl"] .uz-lessons:hover .uz-light-btn svg {
     transform: translateX(-3px) rotate(180deg);
   }
 }
-/* When a section opens its tiles rise in one after another. */
-.uz-tiles > li {
-  animation: uz-pane-in 420ms var(--uz-out) calc(var(--i, 0) * 60ms) both;
-}
 @media (prefers-reduced-motion: reduce) {
-  .uz-tiles > li,
-  .uz-tile .uz-tile-img,
-  .uz-lessons .uz-tile-img {
-    animation: none !important;
+  .uz-panel:not([hidden]) {
+    animation: none;
   }
-  .uz-tile .uz-tile-img img,
-  .uz-lessons .uz-tile-img img {
+  .uz-learn
+    :is(
+      .uz-tile,
+      .uz-lessons,
+      .uz-stage,
+      .uz-rail-item,
+      .uz-stage-btn svg,
+      .uz-light-btn svg,
+      .uz-tile-go svg
+    ) {
     transition: none;
   }
 }

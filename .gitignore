@@ -40,3 +40,6 @@ guides-worker/samples/
 
 # Generated isolated footer QA bundles and screenshots
 /output/footer-preview/
+
+# Isolated learning-navigation QA, screenshots and video
+/output/learn-preview/

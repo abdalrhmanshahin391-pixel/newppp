@@ -5,12 +5,26 @@ import { LEARN_IMAGES } from "@/lib/learn-images";
  * in `learn-images.ts`; the quiet fallback only protects future cards while they
  * are being designed. Size and framing come from `.uz-tile-img` (styles.css).
  */
-export function ImageSlot({ slot }: { slot: string; lang: "en" | "ar" }) {
+export function ImageSlot({
+  slot,
+  priority = false,
+}: {
+  slot: string;
+  lang: "en" | "ar";
+  priority?: boolean;
+}) {
   const src = LEARN_IMAGES[slot];
   return (
     <span className="uz-tile-img" data-image-slot={src ? undefined : slot} aria-hidden="true">
       {src ? (
-        <img src={src} alt="" width={512} height={512} loading="lazy" decoding="async" />
+        <img
+          src={src}
+          alt=""
+          width={512}
+          height={512}
+          loading={priority ? "eager" : "lazy"}
+          decoding="async"
+        />
       ) : null}
     </span>
   );
