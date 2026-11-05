@@ -25,6 +25,8 @@ export const RITA_ACTIONS = [
   "word_by_word",
   "common_mistake",
   "summarize_section",
+  // A part of Rita's own answer, explained as to a complete beginner (selected on the left).
+  "explain_reply",
 ] as const;
 export type RitaAction = (typeof RITA_ACTIONS)[number];
 
@@ -57,6 +59,7 @@ export const ACTION_INFO: Record<StudyAction, ActionInfo> = {
   word_by_word: { label: "فصّلها كلمة كلمة", primary: false, group: "explain" },
   common_mistake: { label: "الغلطة الشائعة", primary: false, group: "explain" },
   summarize_section: { label: "لخّصلي القسم", primary: false, group: "explain" },
+  explain_reply: { label: "اشرحلي ببساطة", primary: true, group: "explain" },
   make_cards: { label: "بطاقات", primary: true, group: "cards" },
   make_mcq: { label: "أسئلة اختيار", primary: true, group: "practice" },
   report: { label: "في غلط بالدرس؟", primary: false, group: "report" },
@@ -81,6 +84,8 @@ const AVAILABLE: Record<StudyAction, SelectionKind[]> = {
   word_by_word: ["phrase", "sentence"],
   common_mistake: ["phrase", "sentence", "rule", "table_cells"],
   summarize_section: [],
+  // Only for a selection in Rita's answers, never for the guide (see reply-selection.ts).
+  explain_reply: [],
   make_cards: ALL_TEXT,
   make_mcq: ALL_TEXT,
   report: [...ALL_TEXT, "too_long"],

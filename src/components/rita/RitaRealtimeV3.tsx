@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowUp,
+  AudioLines,
   Layers,
   Loader2,
   Mic,
@@ -39,6 +40,7 @@ import { VoiceOrb } from "@/components/rita-live/VoiceOrb";
 import { RitaCube } from "@/components/rita-study/RitaCube";
 import { FlyingCube, StickyScroll } from "@/components/rita-study/RitaColumn";
 import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
+import { UzyraMark } from "@/components/brand/UzyraMark";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
 import { useRitaLesson } from "@/components/rita-lessons/useRitaLesson";
 import { useLessonRun } from "@/components/rita-lessons/useLessonRun";
@@ -72,6 +74,24 @@ import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rit
 
 type Persona = "kind" | "direct" | "playful" | "strict";
 /** In a lesson Rita opens the lesson herself as soon as the call starts, so nobody has to say hello. */
+/** A request from the study circle is posted as "[label] «quote»"; this is its label. */
+const REQUEST_LINE = /^\[([^\]]{1,40})\]\s*([\s\S]*)$/;
+
+function requestLabel(message: { role: string; text: string } | undefined): string {
+  return message?.role === "you" ? (REQUEST_LINE.exec(message.text)?.[1] ?? "") : "";
+}
+
+/** The learner's words in a soft grey bubble; a circle request shows its label as a small tag. */
+function YouBubble({ text }: { text: string }) {
+  const request = REQUEST_LINE.exec(text);
+  return (
+    <div className="uz-rc-you uz-msg-in">
+      {request && <span className="uz-rc-tag">{request[1]}</span>}
+      <ChatText text={request ? request[2]! : text} />
+    </div>
+  );
+}
+
 function welcomeText(lessonId: string | undefined, study?: boolean) {
   if (study) return "أنا ريتا. اكبس «ابدأ مع ريتا»، وحدّد أي جزء من الدرس بدك نشتغل عليه.";
   return lessonId
@@ -1707,16 +1727,35 @@ export function RitaRealtimeV3({
                   اكبس لتشغيل الصوت
                 </button>
               )}
-              {turns.map((message) =>
+              {turns.map((message, index) =>
                 message.role === "you" ? (
-                  <ChatText key={message.id} text={message.text} className="uz-rc-you uz-msg-in" />
+                  <YouBubble key={message.id} text={message.text} />
                 ) : (
                   <div key={message.id} className="uz-rc-rita uz-msg-in">
-                    <ChatText
-                      text={message.text}
-                      onPhrase={openPhrase}
-                      interruptedAt={message.interruptedAt}
-                    />
+                    {/* Rita's mark and a quiet line: her name, the request it answers, and
+                        what she is doing now on the newest answer. */}
+                    <div className="uz-rc-meta">
+                      <span className="uz-rc-avatar" aria-hidden="true">
+                        <UzyraMark />
+                      </span>
+                      <span className="uz-rc-meta-text">
+                        {[
+                          "ريتا",
+                          requestLabel(turns[index - 1]),
+                          active && message.id === lastTurn?.id ? stateWord : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    </div>
+                    {/* Marked so a part of the answer can be selected and explained simply. */}
+                    <div data-reply-text="">
+                      <ChatText
+                        text={message.text}
+                        onPhrase={openPhrase}
+                        interruptedAt={message.interruptedAt}
+                      />
+                    </div>
                     {canReport(message) && (
                       <ReplyReport
                         compact
@@ -1749,7 +1788,10 @@ export function RitaRealtimeV3({
 
         <div className="uz-rc-dock">
           <div className="uz-rc-spot is-dock" data-cube-spot="dock" />
-          {chatting && <p className="uz-rc-word is-small">{stateWord}</p>}
+          {/* Once Rita has answered, what she is doing shows beside her newest answer instead. */}
+          {chatting && !turns.some((turn) => turn.role === "rita") && (
+            <p className="uz-rc-word is-small">{stateWord}</p>
+          )}
           {!active ? (
             <button
               type="button"
@@ -1764,12 +1806,18 @@ export function RitaRealtimeV3({
                     ? "جاري الاتصال…"
                     : "احكي مع ريتا…"}
               </span>
-              <span className="uz-rc-mic" aria-hidden="true">
-                {historyLoading || starting ? (
-                  <Loader2 className="animate-spin" size={18} />
-                ) : (
-                  <Mic size={18} />
-                )}
+              <span className="uz-rc-row">
+                <span className="uz-rc-chip-tag">
+                  <UzyraMark className="uz-rc-chip-mark" />
+                  ريتا
+                </span>
+                <span className="uz-rc-send is-live" aria-hidden="true">
+                  {historyLoading || starting ? (
+                    <Loader2 className="animate-spin" size={17} />
+                  ) : (
+                    <Mic size={17} />
+                  )}
+                </span>
               </span>
             </button>
           ) : (
@@ -1782,7 +1830,20 @@ export function RitaRealtimeV3({
                 dir="auto"
                 className="uz-rc-input"
               />
-              <div className="uz-rc-tools">
+              <div className="uz-rc-row">
+                <button
+                  type="button"
+                  onClick={() => void tray.openTray()}
+                  className="uz-rc-chip-tag is-button"
+                  aria-label={`كلماتي (${tray.entries.length})`}
+                >
+                  <Layers size={15} aria-hidden="true" />
+                  كلماتي
+                  {tray.entries.length > 0 && (
+                    <span className="uz-rc-count">{tray.entries.length}</span>
+                  )}
+                </button>
+                <span className="uz-rc-row-gap" />
                 {mood === "talking" && (
                   <button
                     type="button"
@@ -1791,9 +1852,18 @@ export function RitaRealtimeV3({
                     aria-label="وقّف ريتا"
                     title="وقّف ريتا"
                   >
-                    <Square size={13} fill="currentColor" aria-hidden="true" />
+                    <Square size={12} fill="currentColor" aria-hidden="true" />
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={() => void finishConversation()}
+                  className="uz-rc-icon is-end"
+                  aria-label="إنهاء المكالمة"
+                  title="إنهاء المكالمة"
+                >
+                  <PhoneOff size={16} aria-hidden="true" />
+                </button>
                 <button
                   type="button"
                   onClick={toggleMute}
@@ -1806,38 +1876,17 @@ export function RitaRealtimeV3({
                   {muted ? (
                     <MicOff size={17} aria-hidden="true" />
                   ) : (
-                    <Mic size={17} aria-hidden="true" />
+                    <AudioLines size={17} aria-hidden="true" />
                   )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void tray.openTray()}
-                  className="uz-rc-icon"
-                  aria-label={`كلماتي (${tray.entries.length})`}
-                  title="كلماتي"
-                >
-                  <Layers size={17} aria-hidden="true" />
-                  {tray.entries.length > 0 && (
-                    <span className="uz-rc-badge">{tray.entries.length}</span>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void finishConversation()}
-                  className="uz-rc-icon is-end"
-                  aria-label="إنهاء المكالمة"
-                  title="إنهاء المكالمة"
-                >
-                  <X size={17} aria-hidden="true" />
                 </button>
                 <button
                   type="submit"
-                  disabled={!readyForSpeech}
+                  disabled={!readyForSpeech || !draft.trim()}
                   className="uz-rc-send"
                   aria-label="إرسال"
                   title="إرسال"
                 >
-                  <ArrowUp size={17} aria-hidden="true" />
+                  <ArrowUp size={18} strokeWidth={2.4} aria-hidden="true" />
                 </button>
               </div>
             </form>

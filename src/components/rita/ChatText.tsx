@@ -1,5 +1,7 @@
 import { Volume2 } from "lucide-react";
+import { splitSheet } from "@/lib/rita-sheet";
 import { parseParagraph, splitParagraphs, textDirection } from "./chat-text";
+import { RitaSheet } from "./RitaSheet";
 
 /**
  * One chat message, set out cleanly: it reads in the direction of its main
@@ -19,6 +21,18 @@ export function ChatText({
   onPhrase?: (phrase: string) => void;
   interruptedAt?: number | null;
 }) {
+  // A long answer: the spoken sentence, then the written sheet laid out like the guide.
+  const { speech, sheet } = splitSheet(text);
+  if (sheet || speech !== text) {
+    return (
+      <div className={className}>
+        {speech.trim() && (
+          <ChatText text={speech.trim()} onPhrase={onPhrase} interruptedAt={interruptedAt} />
+        )}
+        {sheet && <RitaSheet sheet={sheet} onPhrase={onPhrase} />}
+      </div>
+    );
+  }
   if (interruptedAt !== null && interruptedAt !== undefined && interruptedAt < text.length) {
     const heard = text.slice(0, Math.max(0, interruptedAt));
     const unheard = text.slice(Math.max(0, interruptedAt));

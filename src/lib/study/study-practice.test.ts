@@ -13,6 +13,7 @@ import { ACTION_INFO, availableActions } from "./study-actions.ts";
 import {
   languageFromId,
   languageItems,
+  replyRingItems,
   ringItems,
 } from "../../components/rita-study/radial-items.ts";
 
@@ -147,4 +148,17 @@ test("the language ring offers the three choices with the current one ticked, an
   assert.equal(languageFromId("lang:automatic"), "automatic");
   assert.equal(languageFromId("lang:back"), null);
   assert.equal(languageFromId("make_mcq"), null);
+});
+
+test("a selection in Rita's answers offers only the simple explanation (and the language)", () => {
+  const items = replyRingItems();
+  assert.deepEqual(
+    items.map((item) => item.id),
+    ["explain_reply", "lang"],
+  );
+  assert.equal(items[0]!.tone, "reply");
+  assert.equal(items[0]!.label, "اشرحلي ببساطة");
+  // Never offered for a piece of the guide.
+  for (const kind of ["word", "sentence", "rule", "table_cells"] as const)
+    assert.ok(!availableActions(kind).includes("explain_reply"));
 });

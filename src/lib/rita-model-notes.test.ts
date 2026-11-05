@@ -34,3 +34,11 @@ test("page-oriented markdown is removed from live speech text", () => {
   assert.equal(stripModelNotes("## جواب\n- **Guten Morgen**"), "جواب\nGuten Morgen");
   assert.equal(stripModelNotes("`مرحبا`"), "مرحبا");
 });
+
+test("the written sheet keeps its layout; only the spoken part is cleaned", () => {
+  const text = "**Add** -s. [[SHEET]]\n# Third person\n- work → **works**\n| a | b |";
+  assert.equal(
+    stripModelNotes(text),
+    "Add -s.\n[[SHEET]]\n# Third person\n- work → **works**\n| a | b |",
+  );
+});

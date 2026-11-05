@@ -26,12 +26,14 @@ import {
   LANGUAGE_NAMES,
   languageFromId,
   languageItems,
+  replyRingItems,
   ringItems,
 } from "./radial-items";
 import { useExplanationLanguage } from "@/hooks/useExplanationLanguage";
 import { GuideFrame, type GuideFrameHandle } from "./GuideFrame";
 import { DEFAULT_ORB, snapToEdge, type OrbPosition } from "./orb-position";
 import { markSelection, readSelection, sectionSegIds, type PageSelection } from "./selection";
+import { markReplySelection, readReplySelection, type ReplySelection } from "./reply-selection";
 import { readStudyMemory, writeStudyMemory } from "./study-memory";
 import { attachTechSelect, drawSelectionFx } from "./tech-select";
 import { installSoundUnlock, setSoundOn, soundOn } from "./tech-sound";
@@ -134,12 +136,79 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
     return { pieces, kind, section };
   }, [segments, selection]);
 
-  const keepSelection = useCallback((next: PageSelection | null) => {
-    selectionRef.current = next;
-    setSelection(next);
-    markSelection(frame.current?.window() ?? null, next?.range ?? null);
-    drawSelectionFx(frame.current?.document() ?? null, next?.range ?? null);
+  // A selection in Rita's own answers (the left column): its own options and its dark red. Only
+  // one of the two selections lives at a time; the newest wins.
+  const [replySelection, setReplySelection] = useState<ReplySelection | null>(null);
+  const replySelectionRef = useRef<ReplySelection | null>(null);
+  const [replyProblem, setReplyProblem] = useState("");
+  const ritaBox = useRef<HTMLDivElement | null>(null);
+
+  const keepReplySelection = useCallback((next: ReplySelection | null) => {
+    replySelectionRef.current = next;
+    setReplySelection(next);
+    markReplySelection(next?.range ?? null);
   }, []);
+
+  const keepSelection = useCallback(
+    (next: PageSelection | null) => {
+      selectionRef.current = next;
+      setSelection(next);
+      markSelection(frame.current?.window() ?? null, next?.range ?? null);
+      drawSelectionFx(frame.current?.document() ?? null, next?.range ?? null);
+      if (next) {
+        keepReplySelection(null);
+        setReplyProblem("");
+      }
+    },
+    [keepReplySelection],
+  );
+
+  // Selecting in Rita's answers. Saved 120ms after it stops changing, before any menu opens (a tap
+  // on the circle can clear the browser's selection on a phone, so the copy must exist first).
+  useEffect(() => {
+    let picking = 0;
+    const onChange = () => {
+      window.clearTimeout(picking);
+      picking = window.setTimeout(() => {
+        const root = ritaBox.current;
+        if (!root) return;
+        const read = readReplySelection(root);
+        if (read && "problem" in read) {
+          if (!menuOpenRef.current) {
+            // The newest selection wins even when it is not usable: the guide's goes too.
+            if (selectionRef.current) {
+              frame.current?.document()?.getSelection()?.removeAllRanges();
+              keepSelection(null);
+            }
+            keepReplySelection(null);
+            setReplyProblem(read.problem);
+          }
+          return;
+        }
+        if (read) {
+          // The guide's selection goes: the newest one wins.
+          if (selectionRef.current) {
+            frame.current?.document()?.getSelection()?.removeAllRanges();
+            keepSelection(null);
+          }
+          setReplyProblem("");
+          keepReplySelection(read);
+          return;
+        }
+        // A tap elsewhere on this page clears it, unless the menu is using it.
+        if (!menuOpenRef.current && document.getSelection()?.isCollapsed) {
+          if (replySelectionRef.current) keepReplySelection(null);
+          setReplyProblem("");
+        }
+      }, 120);
+    };
+    document.addEventListener("selectionchange", onChange);
+    return () => {
+      window.clearTimeout(picking);
+      document.removeEventListener("selectionchange", onChange);
+      markReplySelection(null);
+    };
+  }, [keepReplySelection, keepSelection]);
 
   const moveOrb = useCallback(
     (next: OrbPosition) => {
@@ -315,6 +384,17 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
     }
     if (id === "lang") return setRingMode("language");
     if (id === "lang:back") return setRingMode("main");
+    if (id === "explain_reply") {
+      const reply = replySelectionRef.current;
+      if (!reply) return;
+      setMenuOpen(false);
+      void requests.runReply(reply).then((ok) => {
+        if (!ok) return;
+        document.getSelection()?.removeAllRanges();
+        keepReplySelection(null);
+      });
+      return;
+    }
     const language = languageFromId(id);
     if (language) {
       explanation.setValue(language);
@@ -362,7 +442,8 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
     if (ok) setMenuOpen(false);
   }
 
-  const orbState: OrbState = requests.busy || making ? "busy" : selection ? "armed" : "idle";
+  const orbState: OrbState =
+    requests.busy || making ? "busy" : selection || replySelection ? "armed" : "idle";
   const sectionLabel = (() => {
     const id = selected?.section || current || sections[0]?.id || "";
     const index = sections.findIndex((item) => item.id === id);
@@ -440,7 +521,7 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   );
 
   const ritaPane = (
-    <div className="flex h-full min-h-0 flex-col bg-white" dir="rtl">
+    <div ref={ritaBox} className="flex h-full min-h-0 flex-col bg-white" dir="rtl">
       <RitaRealtimeV3
         study={{ lessonId: lesson.id, preview, title: "ريتا", bridge, children: status }}
       />
@@ -574,7 +655,14 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
           onHoldEnd={(x, y) => radial.current?.release(x, y)}
           moving={movingOrb}
           onStopMoving={() => setMovingOrb(false)}
-          label={selection ? "شو بدك نعمل بالتحديد؟" : "حدّد جزء من الدرس"}
+          label={
+            replySelection
+              ? "اشرحلي هاد الجزء من رد ريتا"
+              : selection
+                ? "شو بدك نعمل بالتحديد؟"
+                : "حدّد جزء من الدرس"
+          }
+          tone={replySelection && !selection ? "reply" : undefined}
         />
         <RadialMenu
           ref={radial}
@@ -583,19 +671,28 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
           orbRef={orbButton}
           orbKey={`${orb.x.toFixed(3)},${orb.y.toFixed(3)},${wide ? "w" : "n"},${tab}`}
           items={
-            ringMode === "language" ? languageItems(explanation.value) : ringItems({ actions })
+            ringMode === "language"
+              ? languageItems(explanation.value)
+              : replySelection
+                ? replyRingItems()
+                : ringItems({ actions })
           }
-          quote={selection?.exact ?? ""}
-          meta={[sectionLabel, selected?.kind ? KIND_LABEL[selected.kind] : ""]
-            .filter(Boolean)
-            .join(" · ")}
-          hasSelection={Boolean(selection) && ringMode === "main"}
+          quote={replySelection?.exact ?? selection?.exact ?? ""}
+          meta={
+            replySelection
+              ? "من جواب ريتا"
+              : [sectionLabel, selected?.kind ? KIND_LABEL[selected.kind] : ""]
+                  .filter(Boolean)
+                  .join(" · ")
+          }
+          hasSelection={Boolean(selection || replySelection) && ringMode === "main"}
+          tone={replySelection && ringMode === "main" ? "reply" : undefined}
           hint={
             ringMode === "language"
               ? `ريتا بتشرح بـ: ${LANGUAGE_NAMES[explanation.value]}`
-              : "حدّد كلمة أو جملة من الدرس، وبعدين اكبس على الدائرة."
+              : replyProblem || "حدّد كلمة أو جملة من الدرس، وبعدين اكبس على الدائرة."
           }
-          canReport={actions.includes("report")}
+          canReport={!replySelection && actions.includes("report")}
           busy={false}
           sound={sound}
           autoFocus={openedByKey}
@@ -608,6 +705,8 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
           onClear={() => {
             frame.current?.document()?.getSelection()?.removeAllRanges();
             keepSelection(null);
+            document.getSelection()?.removeAllRanges();
+            keepReplySelection(null);
           }}
           onMoveOrb={() => {
             setMenuOpen(false);

@@ -89,6 +89,8 @@ export const FloatingOrb = forwardRef<
     moving: boolean;
     onStopMoving: () => void;
     label: string;
+    /** "reply": the selection is in Rita's own answers; the circle takes their dark red. */
+    tone?: "reply";
   }
 >(function FloatingOrb(
   {
@@ -103,6 +105,7 @@ export const FloatingOrb = forwardRef<
     moving,
     onStopMoving,
     label,
+    tone,
   },
   ref,
 ) {
@@ -152,6 +155,7 @@ export const FloatingOrb = forwardRef<
       aria-label={label}
       aria-keyshortcuts={moving ? "ArrowUp ArrowDown ArrowLeft ArrowRight Escape" : undefined}
       data-state={state}
+      data-tone={tone}
       data-open={open || undefined}
       data-dragging={dragging || undefined}
       className="st-orb"

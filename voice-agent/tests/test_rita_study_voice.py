@@ -138,3 +138,52 @@ def test_say_is_bounded_and_needs_text():
     assert handle_study_message(voice, "rita-study-say", {"text": "انحفظت ٥ بطاقات"}).say == "انحفظت ٥ بطاقات"
     assert len(handle_study_message(voice, "rita-study-say", {"text": "a" * 2000}).say) == 300
     assert handle_study_message(voice, "rita-study-say", "not a dict").say == ""
+
+
+# A part of Rita's own answer the learner did not understand ("explain_reply").
+from rita_study_voice import ACTIONS, MAX_CONTEXT, reply_context  # noqa: E402
+
+
+def test_explain_reply_takes_its_context_from_ritas_own_answer():
+    voice = StudyVoice()
+    replies = [
+        "مرحبا",
+        "With he, add -s.\n[[SHEET]]\n| s, sh | add -es | watch → **watches** |",
+    ]
+    effects = handle_study_message(
+        voice,
+        "rita-study-action",
+        {"request_id": "q1", "action": "explain_reply", "quote": "add -es watch → watches", "context": "page copy"},
+        replies,
+    )
+    assert effects.run_model and effects.interrupt
+    assert "[[SHEET]]" in voice.request.context  # her own copy, not the page's
+    assert voice.user_line() == "[اشرحلي ببساطة] «add -es watch → watches»"
+    section = voice.section()
+    assert "YOUR EARLIER ANSWER" in section and "child" in ACTIONS["explain_reply"]
+
+
+def test_explain_reply_uses_the_page_copy_when_rita_has_none():
+    voice = StudyVoice()
+    handle_study_message(
+        voice,
+        "rita-study-action",
+        {"request_id": "q2", "action": "explain_reply", "quote": "written earlier", "context": "A reply written earlier"},
+        ["something else"],
+    )
+    assert voice.request.context == "A reply written earlier"
+
+
+def test_a_long_answer_is_cut_around_the_quote():
+    reply = "a " * 3000 + "THE PART " + "b " * 3000
+    context = reply_context("the part", [reply], "")
+    assert len(context) <= MAX_CONTEXT
+    assert "THE PART" in context
+
+
+def test_no_quote_no_request():
+    voice = StudyVoice()
+    effects = handle_study_message(
+        voice, "rita-study-action", {"request_id": "q3", "action": "explain_reply", "quote": ""}, []
+    )
+    assert effects.ack["state"] == "failed"

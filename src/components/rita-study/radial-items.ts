@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   AppWindowMac,
   BookOpenText,
+  Lightbulb,
   Layers,
   ListChecks,
   Languages,
@@ -28,6 +29,8 @@ export type RadialItem = {
   placeholder?: boolean;
   /** Short text drawn in the disc instead of the icon (a language: "ع", "EN"). */
   glyph?: string;
+  /** "reply": an option about Rita's own answer, drawn in dark red like that selection. */
+  tone?: "reply";
   /** One of a set of choices: true for the chosen one, false for the others. */
   checked?: boolean;
   disabled?: boolean;
@@ -42,6 +45,7 @@ const ICONS: Record<StudyAction, LucideIcon> = {
   word_by_word: ListTree,
   common_mistake: AlertTriangle,
   summarize_section: BookOpenText,
+  explain_reply: Lightbulb,
   make_cards: Layers,
   make_mcq: ListChecks,
   report: AlertTriangle,
@@ -96,6 +100,14 @@ export const WINDOW_ITEM: RadialItem = {
   label: "نموذج ويندو",
   Icon: AppWindowMac,
 };
+
+/**
+ * The ring for a selection in Rita's own answers (the left column): one option only, explaining
+ * that part as to a complete beginner, then the language Rita explains in.
+ */
+export function replyRingItems(): RadialItem[] {
+  return [{ ...actionItem("explain_reply"), tone: "reply" }, LANGUAGE_ITEM];
+}
 
 /** Opens the language choices; always there, with or without a selection. */
 export const LANGUAGE_ITEM: RadialItem = { id: "lang", label: "لغة الشرح", Icon: Languages };

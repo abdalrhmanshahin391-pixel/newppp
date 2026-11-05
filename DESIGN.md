@@ -394,13 +394,22 @@ for green); a lesson carries a pill (`.lesson-kind`) and its row a 4px edge (`.l
 lesson whose guide is not linked says "بدون دليل مربوط" and offers «كمّل» (learners get the red lesson
 until it is linked). The kind can be changed later in the lesson window, tab «الدراسة التفاعلية».
 
-The study page's Rita column (`.uz-rc-*`, RitaRealtimeV3 in study mode) is white and roomy. Before
-the call: the UZYRA wordmark, Rita's cube big in the middle, one small grey word («ريتا جاهزة») and a
-thin rounded bar at the bottom («احكي مع ريتا…» with a blue mic) that starts the call. When the call
-starts the cube flies down and shrinks to sit just above the bar (FlyingCube), with one small state
-word under it («بسمعك…», «بتفكر…», «بتحكي…»). Rita's replies are plain text, the learner's are a light
-grey bubble, the report link is a small flag icon, and the bar holds the field and round icon
-buttons (stop, mic, my words, end, send). Rita's cube (RitaCube) is a flat black block (no shading, no
+The study page's Rita column (`.uz-rc-*`, RitaRealtimeV3 in study mode) follows the ChatGPT / Claude
+chat pages, measured from the owner's reference and scaled ×0.82 so the column keeps that calm,
+large-screen feel. Page #F7F7F6. Before the call: the UZYRA wordmark and Rita's cube big in the
+middle, and the composer at the bottom («احكي مع ريتا…», a «ريتا» tag and a round blue mic that
+starts the call). When the call starts the cube flies down to sit just above the composer
+(FlyingCube). Rita writes without a bubble: a quiet 13px line first (her mark in a 26px white circle,
+«ريتا», the circle request it answers, and on the newest answer what she is doing now) over a hairline
+#E4E4E1, then 14px text #2B2B2B at 1.95 line height, paragraphs 12px apart, bold #161616. Words in the
+language being learned are small grey tags (#ECECEA, 0.9em). The learner's words sit on the other side
+in a #EBEBEA bubble (radius 15, 8×16 padding, 14px); a circle request shows its label as a small tag
+above the quote. Turns are 26px apart; the report link is a small flag. The composer is one #EBEBEA
+field (radius 26, no border, no shadow): the 16px field on top (16px keeps iPad Safari from zooming),
+then a row with «كلماتي» (and its count) at the start and stop, end call (red), mic and a 38px round
+blue send (#8FB3F5 while empty) at the end. Rita's sheet is a #EFEFED card (radius 16, no shadow)
+with white table cells, soft guide-tone head pills and a white «انتبه» tile.
+Rita's cube (RitaCube) is a flat black block (no shading, no
 shadow; a touch wider than tall, slightly uneven corners) with two white rounded eyes, alive from
 springs that overshoot and settle: waiting, it does a small random action every 2–4 s (a hop with
 anticipation, squash and stretch, a double bounce, a lean, a wiggle, a glance) and blinks fast; it
@@ -491,3 +500,25 @@ sounds. No backdrop: the page, the selection and the circle keep working.
 Type on the study page follows pro tools: 13px for UI text and 12px for small words (top bar, state
 word, window), 15px for Rita's replies; a thin 46px top bar; the guide fits its pane at most 112% so a
 wide pane gets more room around the sheet instead of bigger type.
+
+## Rita's written sheet (`RitaSheet`)
+
+A long answer is said in one short sentence; the details are written under it as a small white
+page in the study guide's style, never read aloud. The model writes them after the line `[[SHEET]]`
+(`voice-agent/rita_sheet.py` keeps that part from the voice; `src/lib/rita-sheet.ts` reads it). The
+page has an uppercase title over a hairline, a table whose heads are the guide's pills in turn (grey,
+green, blue) with a bold first column on #fafafd, points with small blue squares, examples in italics
+behind a soft blue rule with the key word bold (an English or German word opens the word window), and
+a blue-soft «انتبه / Watch out» card. Each line reads in its own direction (any Arabic: right to
+left). 14px body, 13.5px cells, radius 16, a soft shadow; it rises in once (reduced motion: no
+movement). A sheet the model wrote badly still shows as plain lines. Short answers have no sheet.
+
+### Explaining a part of Rita's answer
+
+A part of one of Rita's answers (her words or her sheet) can be selected in the left column. That
+selection is dark red (#8E1B2B, white text), never the guide's blue, and stays marked when the browser's
+own selection goes. The circle takes a dark red ring, the quote strip a dark red edge with «من جواب
+ريتا», and the ring offers one option only, «اشرحلي ببساطة» (dark red disc), plus the language. She
+answers that part as to a complete beginner: one very simple sentence and a small sheet. A selection
+across two answers, or with the learner's own words, shows «حدّد من رد واحد لريتا.» The newest
+selection wins: selecting in the guide clears the left one, and the other way round.

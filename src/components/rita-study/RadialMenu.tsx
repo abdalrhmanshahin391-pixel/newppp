@@ -56,6 +56,8 @@ export const RadialMenu = forwardRef<
     quote: string;
     meta: string;
     hasSelection: boolean;
+    /** "reply": the selection is in Rita's own answers (dark red quote card). */
+    tone?: "reply";
     hint: string;
     canReport: boolean;
     busy: boolean;
@@ -270,7 +272,9 @@ export const RadialMenu = forwardRef<
 
   return (
     <div
-      className={`st-rad${shown ? " is-shown" : ""}${reporting ? " is-report" : ""}`}
+      className={`st-rad${shown ? " is-shown" : ""}${reporting ? " is-report" : ""}${
+        props.tone === "reply" ? " is-reply" : ""
+      }`}
       dir="rtl"
       style={{ ["--n" as string]: visible.length }}
       onKeyDown={onKeyDown}
@@ -371,6 +375,7 @@ export const RadialMenu = forwardRef<
               data-hot={hot === i ? "" : undefined}
               data-placeholder={item.placeholder ? "" : undefined}
               data-checked={item.checked ? "" : undefined}
+              data-tone={item.tone}
               data-picked={picked === item.id ? "" : undefined}
               tabIndex={i === 0 ? 0 : -1}
               style={{
