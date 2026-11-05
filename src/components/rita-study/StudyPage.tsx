@@ -20,6 +20,7 @@ import {
 } from "@/lib/study/study-actions";
 import { FloatingOrb, type OrbState } from "./FloatingOrb";
 import { RadialMenu, type RadialHandle } from "./RadialMenu";
+import { FloatingWindow } from "./FloatingWindow";
 import {
   KIND_LABEL,
   LANGUAGE_NAMES,
@@ -103,6 +104,8 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   // The ring shows the study options, or the three languages Rita can explain in.
   const [ringMode, setRingMode] = useState<"main" | "language">("main");
   const explanation = useExplanationLanguage();
+  // The trial floating window, opened from the circle; it grows out of the circle's spot.
+  const [windowAt, setWindowAt] = useState<{ x: number; y: number } | null>(null);
   useEffect(() => {
     if (!menuOpen) setRingMode("main");
   }, [menuOpen]);
@@ -302,6 +305,14 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
   }
 
   function ringPick(id: string) {
+    if (id === "window-demo") {
+      const box = work.current;
+      setMenuOpen(false);
+      setWindowAt(
+        box ? { x: orb.x * box.clientWidth, y: orb.y * box.clientHeight } : { x: 0, y: 0 },
+      );
+      return;
+    }
     if (id === "lang") return setRingMode("language");
     if (id === "lang:back") return setRingMode("main");
     const language = languageFromId(id);
@@ -550,6 +561,14 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
             <div className={`min-h-0 flex-1 ${tab === "guide" ? "" : "hidden"}`}>{guidePane}</div>
             <div className={`min-h-0 flex-1 ${tab === "rita" ? "" : "hidden"}`}>{ritaPane}</div>
           </>
+        )}
+        {windowAt && (
+          <FloatingWindow title="نموذج ويندو" origin={windowAt} onClose={() => setWindowAt(null)}>
+            <div className="fw-hello">
+              <h3>Hello world</h3>
+              <p>اسحبها من فوق، كبّرها من الزاوية، والصفحة وراها بتضل شغالة.</p>
+            </div>
+          </FloatingWindow>
         )}
         <FloatingOrb
           ref={orbButton}

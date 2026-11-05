@@ -446,3 +446,17 @@ on lift, hover and drop), or press a + in the gap between stops (or after the la
 exercises or resources stop, which pops in. Every change is saved at once (`rita_set_path_layout`)
 and undone if saving fails. Lessons keep their integer slots; stops sit between them with fractional
 orders (`rita_path_items`). Motion is transform/opacity and stops under reduced motion.
+
+## Floating window (study page, `FloatingWindow`)
+
+A window over the study work area in the manner of iPadOS windows, opened from the circle (the trial
+item «نموذج ويندو» shows «Hello world»; real content comes later). White, with continuous (squircle)
+corners drawn as an SVG clip path (Safari has no `corner-shape` yet; `window-geometry.ts` holds the
+Figma corner-smoothing construction, radius 28, smoothing 0.6), a hairline edge (the same path
+stroked at 10% ink) and a soft three-layer shadow that deepens while it is moved. A grey grabber pill
+sits above it to move it (the bar moves it too; a double tap fills the area or brings it back); the
+three 13px buttons sit top-left (red closes, yellow minimises to a pill at the top of the work area,
+green fills the work area); any corner resizes it and the bottom-right one shows the curved mark.
+Minimum 300×220, kept 8px inside the area, place and size remembered. It grows out of the circle and
+shrinks back into it (spring, with the circle's open and close sounds). No backdrop: the page, the
+selection and the circle keep working (the window sits under the circle and its menu).

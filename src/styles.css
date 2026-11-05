@@ -7619,3 +7619,291 @@ html.rita-app,
     animation: none;
   }
 }
+
+/* ===========================================================================
+   Floating window on the study page (FloatingWindow), in the manner of iPadOS windows. The frame is
+   clipped to a continuous-corner (squircle) path drawn in JS, because Safari has no corner-shape
+   yet; a hairline edge is the same path stroked; the shadow is a soft two-layer box behind it.
+   It sits under the circle (20) and its menu (15) so both keep working while it is open.
+   =========================================================================== */
+.fw {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 12;
+  will-change: transform;
+}
+.fw[hidden] {
+  display: none;
+}
+.fw-motion {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.fw-shadow {
+  position: absolute;
+  inset: 0;
+  border-radius: 30px;
+  box-shadow:
+    0 0.5px 1.5px rgb(16 18 24 / 0.1),
+    0 6px 16px -6px rgb(16 18 24 / 0.14),
+    0 30px 70px -18px rgb(16 18 24 / 0.28);
+  pointer-events: none;
+}
+.fw[data-active] .fw-shadow {
+  box-shadow:
+    0 0.5px 1.5px rgb(16 18 24 / 0.1),
+    0 10px 22px -8px rgb(16 18 24 / 0.18),
+    0 40px 90px -20px rgb(16 18 24 / 0.34);
+}
+.fw-frame {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+.fw-edge {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.fw-edge path {
+  fill: none;
+  stroke: rgb(16 18 24 / 0.1);
+  stroke-width: 1;
+}
+.fw-bar {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  height: 50px;
+  padding-inline: 18px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.fw[data-active="move"] .fw-bar {
+  cursor: grabbing;
+}
+.fw-title {
+  position: absolute;
+  inset-inline: 96px;
+  overflow: hidden;
+  color: #1d1d1f;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+/* The three buttons: 12px discs with a faint inner edge; their glyphs show on hover or focus. */
+.fw-lights {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 8px;
+}
+.fw-lights > button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 0.14);
+}
+/* A bigger invisible target for fingers. */
+.fw-lights > button::before {
+  content: "";
+  position: absolute;
+  inset: -8px -4px;
+}
+.fw-lights .is-close {
+  background: #ff5f57;
+}
+.fw-lights .is-min {
+  background: #febc2e;
+}
+.fw-lights .is-max {
+  background: #28c840;
+}
+.fw-lights svg {
+  width: 9px;
+  height: 9px;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.fw-lights path {
+  fill: none;
+  stroke: rgb(0 0 0 / 0.55);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.fw-lights:hover svg,
+.fw-lights:focus-within svg {
+  opacity: 1;
+}
+@media (hover: none) {
+  .fw-lights svg {
+    opacity: 0.85;
+  }
+}
+.fw-lights > button:active {
+  filter: brightness(0.86);
+}
+.fw-lights > button:focus-visible {
+  outline: 2px solid #2b6df0;
+  outline-offset: 2px;
+}
+.fw-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+/* The grabber above the window, as on iPad. */
+.fw-grab {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 24px;
+  margin-left: -48px;
+  cursor: grab;
+  touch-action: none;
+}
+.fw-grab > span {
+  width: 40px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgb(60 60 67 / 0.32);
+  transition:
+    width 180ms cubic-bezier(0.32, 0.72, 0, 1),
+    background-color 150ms ease;
+}
+.fw-grab:hover > span,
+.fw[data-active="move"] .fw-grab > span {
+  width: 52px;
+  background: rgb(60 60 67 / 0.5);
+}
+/* Resize corners: invisible 34px targets on all four; the bottom-right one has the curved mark. */
+.fw-corner {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  touch-action: none;
+}
+.fw-corner.is-tl {
+  top: -10px;
+  left: -10px;
+  cursor: nwse-resize;
+}
+.fw-corner.is-tr {
+  top: -10px;
+  right: -10px;
+  cursor: nesw-resize;
+}
+.fw-corner.is-bl {
+  bottom: -10px;
+  left: -10px;
+  cursor: nesw-resize;
+}
+.fw-corner.is-br {
+  right: -12px;
+  bottom: -12px;
+  z-index: 2;
+  cursor: nwse-resize;
+}
+.fw-arc {
+  position: absolute;
+  right: -9px;
+  bottom: -9px;
+  width: 26px;
+  height: 26px;
+  overflow: visible;
+  pointer-events: none;
+}
+.fw-arc path {
+  fill: none;
+  stroke: rgb(60 60 67 / 0.4);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke 150ms ease;
+}
+.fw[data-active="resize"] .fw-arc path {
+  stroke: rgb(60 60 67 / 0.65);
+}
+.fw[data-mode="max"] .fw-grab,
+.fw[data-mode="max"] .fw-arc {
+  opacity: 0;
+}
+/* A minimised window waits as a small pill at the top of the work area (clear of both panes' bars). */
+.fw-dock {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding-inline: 14px 16px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.86);
+  box-shadow:
+    0 0 0 0.5px rgb(16 18 24 / 0.1),
+    0 12px 30px -10px rgb(16 18 24 / 0.3);
+  color: #1d1d1f;
+  font-size: 13.5px;
+  font-weight: 600;
+  transform: translateX(-50%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  animation: fw-dock-in 360ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.fw-dock-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #28c840;
+}
+@keyframes fw-dock-in {
+  from {
+    opacity: 0;
+    translate: 0 -12px;
+  }
+}
+/* The trial content. */
+.fw-hello {
+  display: grid;
+  height: 100%;
+  place-content: center;
+  gap: 6px;
+  padding: 24px;
+  text-align: center;
+}
+.fw-hello h3 {
+  color: #1d1d1f;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.fw-hello p {
+  color: #86868b;
+  font-size: 14px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fw-dock {
+    animation: none;
+  }
+}

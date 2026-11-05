@@ -3,6 +3,7 @@
 
 import {
   AlertTriangle,
+  AppWindowMac,
   BookOpenText,
   Layers,
   ListChecks,
@@ -85,8 +86,16 @@ export function ringItems(options: { actions: StudyAction[] }): RadialItem[] {
   return [
     ...RING_ACTIONS.filter((action) => options.actions.includes(action)).map(actionItem),
     LANGUAGE_ITEM,
+    WINDOW_ITEM,
   ];
 }
+
+/** A trial: opens the floating window with «Hello world» (its real content comes later). */
+export const WINDOW_ITEM: RadialItem = {
+  id: "window-demo",
+  label: "نموذج ويندو",
+  Icon: AppWindowMac,
+};
 
 /** Opens the language choices; always there, with or without a selection. */
 export const LANGUAGE_ITEM: RadialItem = { id: "lang", label: "لغة الشرح", Icon: Languages };
