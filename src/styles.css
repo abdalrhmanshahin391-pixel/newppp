@@ -586,8 +586,7 @@ body {
   font-size: 1rem;
   padding: 0 2rem;
   border-radius: 18px;
-} /* ==================================================================}
-
+} /* =========================================================================
  * Navy Trust component overrides
  * These legacy class names (magnetic-cta,
 medical-card,
@@ -7907,7 +7906,8 @@ html.rita-app,
   .fw-dock {
     animation: none;
   }
-=======
+}
+
 /* Closing signature. Static on arrival; no scroll or startup animation work. */
 @font-face {
   font-family: "Uzyra Footer Arabic";
