@@ -37,3 +37,6 @@ __pycache__/
 *.py[cod]
 .venv/
 guides-worker/samples/
+
+# Generated isolated footer QA bundles and screenshots
+/output/footer-preview/

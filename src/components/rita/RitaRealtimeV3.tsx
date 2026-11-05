@@ -1742,7 +1742,7 @@ export function RitaRealtimeV3({
           <div className="uz-rc-hero">
             <UzyraWordmark size={14} withMark={false} className="uz-rc-brand" />
             <div className="uz-rc-spot is-hero" data-cube-spot="hero" />
-            <p className="uz-rc-word">{stateWord}</p>
+            {connectionPhase !== "idle" && <p className="uz-rc-word">{stateWord}</p>}
             {error && <p className="uz-rc-error">{error}</p>}
           </div>
         )}

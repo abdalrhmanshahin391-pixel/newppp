@@ -8,6 +8,8 @@ on:
       - "src/i18n/**"
       - "src/components/LanguageProvider*"
       - "src/components/ThemeProvider.tsx"
+      - "src/components/SiteFooter*"
+      - "src/lib/footer-links.ts"
       - "src/hooks/usePresence.ts"
       - "src/components/rita-live/VoiceOrb.tsx"
       - "src/lib/site-bootstrap*"
@@ -29,6 +31,6 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - name: Locale rendering and cache lifecycle regressions
-        run: bun test src/lib/ui-language.test.ts src/lib/startup-cache.test.ts src/components/LanguageProvider.test.tsx
+        run: bun test src/lib/ui-language.test.ts src/lib/startup-cache.test.ts src/components/LanguageProvider.test.tsx src/components/SiteFooterView.test.tsx
       - run: bunx tsc --noEmit
       - run: bun run build
