@@ -390,11 +390,12 @@ thin rounded bar at the bottom («احكي مع ريتا…» with a blue mic) t
 starts the cube flies down and shrinks to sit just above the bar (FlyingCube), with one small state
 word under it («بسمعك…», «بتفكر…», «بتحكي…»). Rita's replies are plain text, the learner's are a light
 grey bubble, the report link is a small flag icon, and the bar holds the field and round icon
-buttons (stop, mic, my words, end, send). Rita's cube (RitaCube) is a soft, matte blue block (a touch wider than tall,
-slightly uneven corners, a lighter rim at the bottom-left) with two small dark oval eyes in the
-middle, alive from one animation-frame loop: breathing and a slight sway, random blinks and
-glances, it squashes with the learner's voice, its eyes drift while thinking, it hops with Rita's
-voice; still with reduced motion except the blink. The language Rita explains in is chosen from the
+buttons (stop, mic, my words, end, send). Rita's cube (RitaCube) is a flat black block (no shading, no
+shadow; a touch wider than tall, slightly uneven corners) with two white rounded eyes, alive from
+springs that overshoot and settle: waiting, it does a small random action every 2–4 s (a hop with
+anticipation, squash and stretch, a double bounce, a lean, a wiggle, a glance) and blinks fast; it
+squashes hard with the learner's voice, rocks with circling eyes while thinking, hops on the beats of
+Rita's voice, and hops on every change of mood; only the blink stays with reduced motion.
 circle («لغة الشرح» opens three choices, the current one ticked).
 
 ## Language-change splash (`LanguageSplash`)

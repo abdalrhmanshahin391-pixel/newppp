@@ -5557,8 +5557,8 @@ html.rita-app,
 .uz-msg-in {
   animation: uz-msg-in 260ms cubic-bezier(0.23, 1, 0.32, 1) both;
 }
-/* Rita's cube (RitaCube): a soft blue squircle with a little light on top, two dark pill eyes and
-   a soft shadow. The motion itself is written by the component, frame by frame. */
+/* Rita's cube (RitaCube): a flat black block (no shading, no shadow) with two white rounded eyes.
+   The motion itself is written by the component, frame by frame. */
 .uz-cube {
   position: relative;
   width: 100%;
@@ -5567,7 +5567,7 @@ html.rita-app,
 .uz-cube-body {
   position: absolute;
   inset: 0;
-  transform-origin: 50% 100%;
+  transform-origin: 50% 90%;
   will-change: transform;
 }
 .uz-cube-shape {
@@ -5577,34 +5577,25 @@ html.rita-app,
   height: 100%;
   overflow: visible;
 }
-/* Two small dark ovals in the middle of the block, a little apart. */
+.uz-cube-shape path {
+  fill: #111113;
+}
 .uz-cube-eyes {
   position: absolute;
-  top: 43.6%;
-  left: 34.2%;
+  top: 40%;
+  left: 31.5%;
   display: flex;
   justify-content: space-between;
-  width: 31.6%;
-  height: 17.6%;
+  width: 34.5%;
+  height: 20%;
   transform-origin: 50% 50%;
   will-change: transform;
 }
 .uz-cube-eye {
-  width: 25%;
+  width: 34%;
   height: 100%;
-  border-radius: 50%;
-  background: #0f1116;
-}
-.uz-cube-shadow {
-  position: absolute;
-  left: 16%;
-  right: 16%;
-  bottom: 0;
-  height: 8%;
-  border-radius: 50%;
-  background: rgb(14 17 22 / 0.12);
-  filter: blur(6px);
-  will-change: transform;
+  border-radius: 42% / 30%;
+  background: #fff;
 }
 /* The language choices in the circle: a short word in the disc, the chosen one blue and ticked. */
 .st-rad-glyph {
