@@ -1740,7 +1740,7 @@ export function RitaRealtimeV3({
           </StickyScroll>
         ) : (
           <div className="uz-rc-hero">
-            <UzyraWordmark size={14} withMark={false} className="uz-rc-brand" />
+            <UzyraWordmark size={12} withMark={false} className="uz-rc-brand" />
             <div className="uz-rc-spot is-hero" data-cube-spot="hero" />
             {connectionPhase !== "idle" && <p className="uz-rc-word">{stateWord}</p>}
             {error && <p className="uz-rc-error">{error}</p>}

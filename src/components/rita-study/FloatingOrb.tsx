@@ -3,7 +3,7 @@ import { clampOrb, type OrbPosition } from "./orb-position";
 
 export type OrbState = "idle" | "armed" | "busy";
 
-const SIZE = 72;
+const SIZE = 64;
 /** Holding still on the circle this long starts "slide to an option" (see RadialMenu). */
 const HOLD_MS = 320;
 const CELL = 7;

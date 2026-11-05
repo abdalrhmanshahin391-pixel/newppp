@@ -2,7 +2,7 @@ import { LanguageGate } from "@/components/language/LanguageGate";
 import { useActiveLanguage } from "@/lib/language-scope";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   getLessonPath,
@@ -11,6 +11,7 @@ import {
 } from "@/lib/rita-curriculum.functions";
 import { LessonPathView } from "@/components/rita-lessons/LessonPathView";
 import { LessonSheet } from "@/components/rita-lessons/LessonSheet";
+import type { PathItem } from "@/lib/rita-path-layout";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
@@ -33,26 +34,32 @@ function RitaLessonsPage() {
   const navigate = useNavigate();
   const { lesson: openId } = Route.useSearch();
   const pushed = useRef(false);
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const pathFn = useServerFn(getLessonPath);
   const language = useActiveLanguage();
   const [lessons, setLessons] = useState<PathLesson[] | null>(null);
   const [reviews, setReviews] = useState<ReviewSuggestion[]>([]);
+  const [items, setItems] = useState<PathItem[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!loading && !user) void navigate({ to: "/login" });
   }, [loading, navigate, user]);
 
+  const load = useCallback(async () => {
+    try {
+      const result = await pathFn({ data: { language } });
+      setLessons(result.lessons);
+      setReviews(result.reviews);
+      setItems(result.items ?? []);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "تعذّر تحميل الدروس.");
+    }
+  }, [pathFn, language]);
+
   useEffect(() => {
-    if (!user) return;
-    pathFn({ data: { language } })
-      .then((result) => {
-        setLessons(result.lessons);
-        setReviews(result.reviews);
-      })
-      .catch((cause) => setError(cause instanceof Error ? cause.message : "تعذّر تحميل الدروس."));
-  }, [pathFn, user, language]);
+    if (user) void load();
+  }, [load, user]);
 
   const sheetLesson = lessons?.find((lesson) => lesson.id === openId) ?? null;
 
@@ -87,7 +94,16 @@ function RitaLessonsPage() {
 
   return (
     <>
-      <LessonPathView lessons={lessons} reviews={reviews} error={error} onOpenLesson={open} />
+      <LessonPathView
+        lessons={lessons}
+        items={items}
+        reviews={reviews}
+        error={error}
+        isAdmin={isAdmin}
+        language={language}
+        onOpenLesson={open}
+        onReload={load}
+      />
       {sheetLesson && <LessonSheet lesson={sheetLesson} onClose={close} onStart={start} />}
     </>
   );

@@ -1,20 +1,15 @@
-import { useEffect, useId, useRef, type MutableRefObject } from "react";
+import { useEffect, useRef, type MutableRefObject } from "react";
 import { OrbDynamics, type OrbMode } from "@/components/rita-live/orb-dynamics";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
 
 /**
- * The cube's outline in a 100 × 100 box: a block a little wider than tall with soft corners. Each
- * corner has its own radius and the box is a touch uneven, so it reads as a hand-made, squishy thing
- * rather than a perfect icon. `wobble` (0..1 per corner) nudges the radii frame by frame.
+ * The cube's outline in a 100 × 100 box: a block a little wider than tall with soft corners, each a
+ * touch different, so it reads as a hand-made, squishy thing rather than a perfect icon.
  */
-function blobPath(radii: [number, number, number, number]): string {
-  const [tl, tr, br, bl] = radii;
-  // Corners: slightly uneven, a touch wider than tall (about 84 × 80).
-  const L = 8;
-  const R = 92;
-  const T = 10;
-  const B = 90;
-  const tilt = 1.6; // the top edge leans a little
+const BLOB = (() => {
+  const [tl, tr, br, bl] = [17, 19, 16, 20];
+  const [L, R, T, B] = [8, 92, 10, 90];
+  const tilt = 1.6;
   return [
     `M${L + tl} ${T + tilt}`,
     `L${R - tr} ${T}`,
@@ -27,23 +22,95 @@ function blobPath(radii: [number, number, number, number]): string {
     `Q${L - 0.4} ${T + tilt} ${L + tl} ${T + tilt}`,
     "Z",
   ].join(" ");
+})();
+
+/** A damped spring: it overshoots and settles, like a real soft body. */
+class Spring {
+  value: number;
+  velocity = 0;
+  target: number;
+  constructor(
+    initial: number,
+    private stiffness: number,
+    private damping: number,
+  ) {
+    this.value = initial;
+    this.target = initial;
+  }
+  step(dt: number) {
+    // Small sub-steps keep stiff springs stable on slow frames.
+    const steps = Math.max(1, Math.ceil(dt / (1 / 240)));
+    const h = dt / steps;
+    for (let i = 0; i < steps; i += 1) {
+      const force = -this.stiffness * (this.value - this.target) - this.damping * this.velocity;
+      this.velocity += force * h;
+      this.value += this.velocity * h;
+    }
+    return this.value;
+  }
+  kick(velocity: number) {
+    this.velocity += velocity;
+  }
 }
 
-const BASE_RADII: [number, number, number, number] = [17, 19, 16, 20];
-const BLOB = blobPath(BASE_RADII);
+type Keyframe = { at: number; squash?: number; lift?: number; tilt?: number; eyeX?: number };
 
 /**
- * Rita's face on the study page: a soft blue cube with two dark eyes that is quietly alive.
+ * The little actions it does on its own while waiting, as keyframes (seconds from the start).
+ * Built on squash and stretch, anticipation and overshoot: it gathers itself before a hop, stretches
+ * in the air, squashes on landing, and the springs make it bounce back.
+ */
+const ACTIONS: Keyframe[][] = [
+  // A hop.
+  [
+    { at: 0, squash: 0.16 },
+    { at: 0.13, squash: -0.14, lift: -16 },
+    { at: 0.32, squash: 0.02, lift: 0 },
+    { at: 0.44, squash: 0.14 },
+    { at: 0.54, squash: 0 },
+  ],
+  // A double bounce in place.
+  [
+    { at: 0, squash: 0.12 },
+    { at: 0.1, squash: -0.08 },
+    { at: 0.22, squash: 0.1 },
+    { at: 0.32, squash: -0.05 },
+    { at: 0.42, squash: 0 },
+  ],
+  // A curious lean to one side.
+  [
+    { at: 0, tilt: -9, eyeX: -1, squash: 0.05 },
+    { at: 0.75, tilt: 0, eyeX: 0, squash: 0 },
+  ],
+  [
+    { at: 0, tilt: 9, eyeX: 1, squash: 0.05 },
+    { at: 0.75, tilt: 0, eyeX: 0, squash: 0 },
+  ],
+  // A happy wiggle.
+  [
+    { at: 0, tilt: 7 },
+    { at: 0.09, tilt: -7 },
+    { at: 0.18, tilt: 5 },
+    { at: 0.27, tilt: -3 },
+    { at: 0.36, tilt: 0 },
+  ],
+  // A quick glance and back.
+  [
+    { at: 0, eyeX: 1 },
+    { at: 0.7, eyeX: -1 },
+    { at: 1.3, eyeX: 0 },
+  ],
+];
+
+/**
+ * Rita's face on the study page: a soft black block with two white eyes, clearly alive.
  *
- * Everything moves from one animation-frame loop that writes three transforms (body, eyes, shadow)
- * and the outline's corners (it is soft, like clay), and never touches React state:
- * - waiting: slow breathing and a slight jelly sway; it blinks every 3–7 s (sometimes twice) and
- *   now and then glances to one side, holds, and looks back;
- * - the learner speaking: it squashes with their voice like jelly and the eyes lift, listening;
- * - thinking: the eyes drift side to side and the cube leans a little;
- * - Rita speaking: small hops with her voice.
- * Timings are random so it never looks mechanical. It stops while the tab is hidden; with reduced
- * motion it stays still and only blinks.
+ * One animation-frame loop drives a few springs (squash, lift, tilt, eyes) and writes two transforms;
+ * React state is never touched. Waiting, it does a small random action every few seconds (a hop, a
+ * bounce, a lean, a wiggle, a glance) and blinks. While the learner speaks it squashes hard with
+ * their voice and the eyes lift; while it thinks it rocks and the eyes circle; while Rita speaks it
+ * hops on the beats of her voice. It pauses while the tab is hidden; with reduced motion it only
+ * blinks.
  */
 export function RitaCube({
   levelsRef,
@@ -56,81 +123,99 @@ export function RitaCube({
 }) {
   const body = useRef<HTMLDivElement>(null);
   const eyes = useRef<HTMLDivElement>(null);
-  const shadow = useRef<HTMLSpanElement>(null);
-  const shape = useRef<SVGSVGElement>(null);
   const modeRef = useRef<OrbMode>(mode);
   modeRef.current = mode;
 
   useEffect(() => {
     const bodyEl = body.current;
     const eyesEl = eyes.current;
-    const shadowEl = shadow.current;
-    const paths = Array.from(shape.current?.querySelectorAll("path") ?? []);
-    if (!bodyEl || !eyesEl || !shadowEl) return;
+    if (!bodyEl || !eyesEl) return;
     const dynamics = new OrbDynamics();
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     const rand = (min: number, max: number) => min + Math.random() * (max - min);
+
+    // Squash: + squashes (shorter, wider), − stretches. Lift in % of its height (− is up).
+    const squash = new Spring(0, 520, 14);
+    const lift = new Spring(0, 340, 15);
+    const tilt = new Spring(0, 300, 11);
+    const eyeX = new Spring(0, 520, 26);
+    const eyeY = new Spring(0, 520, 26);
 
     let clock = 0;
     let last = performance.now();
     let raf = 0;
     let visible = document.visibilityState === "visible";
-    // Smoothed values (critically damped by exponential easing).
-    let voice = 0;
-    let lift = 0;
-    let eyeX = 0;
-    let eyeY = 0;
-    let lean = 0;
-    // Blinks: when the next starts, and whether a second follows.
-    let nextBlink = rand(1.2, 3);
+    let lastMode: OrbMode = modeRef.current;
+    let action: { start: number; frames: Keyframe[]; next: number } | null = null;
+    let nextAction = rand(0.8, 1.8);
+    let nextBlink = rand(1.5, 3.5);
     let blinkAt = -10;
     let secondBlink = false;
-    // Glances: when the next one starts, where to, and until when it holds.
-    let nextGlance = rand(4, 7);
-    let glanceX = 0;
-    let glanceY = 0;
-    let glanceUntil = 0;
+    let voice = 0;
+    let beatReady = true;
 
-    const ease = (value: number, target: number, dt: number, tau: number) =>
-      value + (target - value) * (1 - Math.exp(-dt / tau));
+    const play = (frames: Keyframe[]) => {
+      action = { start: clock, frames, next: 0 };
+    };
 
-    /** 0 open, 1 shut: a quick close and a slightly slower open (about 140 ms). */
+    /** Applies the keyframes whose time has come. */
+    const runAction = () => {
+      if (!action) return;
+      const since = clock - action.start;
+      while (action.next < action.frames.length && action.frames[action.next].at <= since) {
+        const frame = action.frames[action.next];
+        if (frame.squash !== undefined) squash.target = frame.squash;
+        if (frame.lift !== undefined) lift.target = frame.lift;
+        if (frame.tilt !== undefined) tilt.target = frame.tilt;
+        if (frame.eyeX !== undefined) eyeX.target = frame.eyeX;
+        action.next += 1;
+      }
+      if (action.next >= action.frames.length) action = null;
+    };
+
+    /** 0 open, 1 shut: a quick close and open (about 110 ms). */
     const blinkAmount = (t: number) => {
       const since = t - blinkAt;
-      if (since < 0 || since > 0.14) return 0;
-      return since < 0.06 ? since / 0.06 : 1 - (since - 0.06) / 0.08;
+      if (since < 0 || since > 0.11) return 0;
+      return since < 0.045 ? since / 0.045 : 1 - (since - 0.045) / 0.065;
     };
 
     const draw = (now: number) => {
       raf = requestAnimationFrame(draw);
-      const dt = Math.min(0.1, (now - last) / 1000);
+      const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       if (!visible) return;
       clock += dt;
       const t = clock;
       const current = modeRef.current;
-      const still = reduced.matches;
 
-      // Blinks happen in every mood (and with reduced motion: they are tiny and calm).
       if (t >= nextBlink) {
         blinkAt = t;
         if (secondBlink) {
           secondBlink = false;
-          nextBlink = t + rand(3, 7);
-        } else if (Math.random() < 0.25) {
+          nextBlink = t + rand(2.5, 5.5);
+        } else if (Math.random() < 0.3) {
           secondBlink = true;
-          nextBlink = t + 0.24;
+          nextBlink = t + 0.18;
         } else {
-          nextBlink = t + rand(3, 7);
+          nextBlink = t + rand(2.5, 5.5);
         }
       }
       const shut = blinkAmount(t);
 
-      if (still) {
+      if (reduced.matches) {
         bodyEl.style.transform = "none";
-        shadowEl.style.transform = "none";
-        eyesEl.style.transform = `scaleY(${(1 - shut * 0.9).toFixed(3)})`;
+        eyesEl.style.transform = `scaleY(${(1 - shut * 0.92).toFixed(3)})`;
         return;
+      }
+
+      // A change of mood starts with a little hop, so the change is seen.
+      if (current !== lastMode) {
+        lastMode = current;
+        tilt.target = 0;
+        eyeX.target = 0;
+        eyeY.target = 0;
+        play(ACTIONS[0]);
       }
 
       const levels = levelsRef.current;
@@ -140,59 +225,65 @@ export function RitaCube({
         mode: current,
         reducedMotion: false,
       });
-      const speaking = current === "speaking";
-      const listening = current === "listening";
-      const thinking = current === "thinking";
 
-      // Rita's voice, smoothed: a fast rise and a softer fall, so it hops instead of shaking.
-      const target = speaking ? Math.min(1, levels.output * 1.4) : 0;
-      voice = ease(voice, target, dt, target > voice ? 0.045 : 0.16);
-      // The learner's voice: radius < 1 while they talk.
-      const press = listening ? Math.max(0, 1 - frame.radius) : 0;
-      lift = ease(lift, listening && frame.voiced ? 1 : 0, dt, 0.18);
-      lean = ease(lean, thinking ? Math.sin(t * 1.3) * 3 : 0, dt, 0.25);
-
-      // Glances while waiting, listening or speaking; thinking drifts instead.
-      if (thinking) {
-        glanceUntil = 0;
-        nextGlance = t + rand(3, 6);
-      } else if (t >= nextGlance) {
-        glanceX = Math.random() < 0.5 ? -1 : 1;
-        glanceY = rand(-0.4, 0.3);
-        glanceUntil = t + rand(0.7, 1.3);
-        nextGlance = t + rand(5, 9);
+      if (current === "idle") {
+        if (!action && t >= nextAction) {
+          play(ACTIONS[Math.floor(Math.random() * ACTIONS.length)]);
+          nextAction = t + rand(2, 4);
+        }
+        if (!action) {
+          squash.target = Math.sin(t * 2.4) * 0.025;
+          eyeY.target = 0;
+        }
+      } else if (current === "listening") {
+        // The learner's voice presses it down; it springs back in the pauses.
+        const press = Math.max(0, 1 - frame.radius);
+        if (!action) {
+          squash.target = Math.min(0.24, press * 0.9);
+          tilt.target = Math.sin(t * 3) * 2;
+          eyeX.target = 0;
+        }
+        eyeY.target = frame.voiced ? -0.7 : -0.3;
+      } else if (current === "thinking") {
+        if (!action) {
+          tilt.target = Math.sin(t * 3.4) * 7;
+          squash.target = Math.sin(t * 6.8) * 0.04;
+        }
+        eyeX.target = Math.cos(t * 2.6) * 0.9;
+        eyeY.target = Math.sin(t * 2.6) * 0.45 - 0.25;
+      } else if (current === "speaking") {
+        // Hops on the beats of Rita's voice, and stretches up while her voice is loud.
+        const target = Math.min(1, levels.output * 1.5);
+        voice += (target - voice) * (1 - Math.exp(-dt / (target > voice ? 0.03 : 0.12)));
+        if (beatReady && voice > 0.45) {
+          beatReady = false;
+          lift.kick(-140);
+          squash.kick(-3);
+        } else if (voice < 0.22) {
+          beatReady = true;
+        }
+        if (!action) {
+          squash.target = -voice * 0.1;
+          tilt.target = Math.sin(t * 4) * 2.5;
+        }
+        eyeY.target = -0.15;
+        eyeX.target = 0;
       }
-      const glancing = t < glanceUntil;
-      const wantX = thinking ? Math.sin(t * 1.5) * 0.9 : glancing ? glanceX : 0;
-      const wantY = thinking ? -0.35 : glancing ? glanceY : 0;
-      eyeX = ease(eyeX, wantX, dt, 0.09);
-      eyeY = ease(eyeY, wantY - lift * 0.5, dt, 0.09);
+      runAction();
 
-      // Calm, clay-like: small amplitudes, slow periods.
-      const calm = current === "idle" ? 1 : 0.6;
-      const breathe = Math.sin((t * Math.PI * 2) / 3.8) * 0.018 * calm;
-      const sway = Math.sin((t * Math.PI * 2) / 5.2) * 0.6 * calm;
-      const skew = Math.sin((t * Math.PI * 2) / 3.3 + 0.7) * 0.5 * calm;
-      const sy = 1 + breathe - press * 0.2 + voice * 0.05;
-      const sx = 1 - breathe * 0.5 + press * 0.12 - voice * 0.025;
-      const hop = -voice * 7;
-      // The outline itself moves a little, like soft clay: each corner breathes on its own.
-      const squish = 0.8 + press * 3 + voice * 2;
-      const outline = blobPath([
-        BASE_RADII[0] + Math.sin(t * 1.1) * squish,
-        BASE_RADII[1] + Math.sin(t * 0.9 + 1.7) * squish,
-        BASE_RADII[2] + Math.sin(t * 1.3 + 3.1) * squish,
-        BASE_RADII[3] + Math.sin(t * 0.8 + 4.4) * squish,
-      ]);
-      for (const path of paths) path.setAttribute("d", outline);
+      const q = squash.step(dt);
+      const y = lift.step(dt);
+      const r = tilt.step(dt);
+      const ex = eyeX.step(dt);
+      const ey = eyeY.step(dt);
+      const sy = 1 - q;
+      const sx = 1 + q * 0.75;
       bodyEl.style.transform =
-        `translateY(${hop.toFixed(2)}%) rotate(${(sway + lean).toFixed(2)}deg) ` +
-        `skewX(${skew.toFixed(2)}deg) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`;
-      shadowEl.style.transform = `scaleX(${(sx * (1 - voice * 0.25)).toFixed(4)})`;
-      shadowEl.style.opacity = (1 - voice * 0.35).toFixed(3);
+        `translateY(${y.toFixed(2)}%) rotate(${r.toFixed(2)}deg) ` +
+        `scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`;
       eyesEl.style.transform =
-        `translate(${(eyeX * 16).toFixed(2)}%, ${(eyeY * 14).toFixed(2)}%) ` +
-        `scaleY(${(1 - shut * 0.9).toFixed(3)})`;
+        `translate(${(ex * 22).toFixed(2)}%, ${(ey * 30).toFixed(2)}%) ` +
+        `scaleY(${(1 - shut * 0.92).toFixed(3)})`;
     };
     raf = requestAnimationFrame(draw);
 
@@ -207,49 +298,17 @@ export function RitaCube({
     };
   }, [levelsRef]);
 
-  const id = useId().replace(/:/g, "");
   return (
     <div className="uz-cube" role="img" aria-label={label}>
       <div ref={body} className="uz-cube-body">
-        {/* Matte and soft, like clay or a gummy: light from above, a slightly lighter rim, a
-            deeper bottom. No glossy highlight. */}
-        <svg ref={shape} className="uz-cube-shape" viewBox="0 0 100 100" aria-hidden="true">
-          <defs>
-            <linearGradient id={`${id}-fill`} x1="0.1" y1="0.95" x2="0.9" y2="0.05">
-              <stop offset="0" stopColor="#4a83f4" />
-              <stop offset="0.5" stopColor="#3170ef" />
-              <stop offset="1" stopColor="#2a63dc" />
-            </linearGradient>
-            <linearGradient id={`${id}-rim`} x1="0" y1="1" x2="0.75" y2="0.25">
-              <stop offset="0" stopColor="#ffffff" stopOpacity="0.55" />
-              <stop offset="0.45" stopColor="#ffffff" stopOpacity="0.12" />
-              <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
-            </linearGradient>
-            <filter id={`${id}-soft`} x="-10%" y="-10%" width="120%" height="120%">
-              <feGaussianBlur stdDeviation="0.9" />
-            </filter>
-            <clipPath id={`${id}-clip`}>
-              <path d={BLOB} />
-            </clipPath>
-          </defs>
-          <g>
-            <path d={BLOB} fill={`url(#${id}-fill)`} />
-            <path
-              d={BLOB}
-              fill="none"
-              stroke={`url(#${id}-rim)`}
-              strokeWidth="5"
-              filter={`url(#${id}-soft)`}
-              clipPath={`url(#${id}-clip)`}
-            />
-          </g>
+        <svg className="uz-cube-shape" viewBox="0 0 100 100" aria-hidden="true">
+          <path d={BLOB} />
         </svg>
         <div ref={eyes} className="uz-cube-eyes" aria-hidden="true">
           <span className="uz-cube-eye" />
           <span className="uz-cube-eye" />
         </div>
       </div>
-      <span ref={shadow} className="uz-cube-shadow" aria-hidden="true" />
     </div>
   );
 }

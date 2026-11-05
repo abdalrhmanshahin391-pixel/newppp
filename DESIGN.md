@@ -390,11 +390,12 @@ thin rounded bar at the bottom («احكي مع ريتا…» with a blue mic) t
 starts the cube flies down and shrinks to sit just above the bar (FlyingCube), with one small state
 word under it («بسمعك…», «بتفكر…», «بتحكي…»). Rita's replies are plain text, the learner's are a light
 grey bubble, the report link is a small flag icon, and the bar holds the field and round icon
-buttons (stop, mic, my words, end, send). Rita's cube (RitaCube) is a soft, matte blue block (a touch wider than tall,
-slightly uneven corners, a lighter rim at the bottom-left) with two small dark oval eyes in the
-middle, alive from one animation-frame loop: breathing and a slight sway, random blinks and
-glances, it squashes with the learner's voice, its eyes drift while thinking, it hops with Rita's
-voice; still with reduced motion except the blink. The language Rita explains in is chosen from the
+buttons (stop, mic, my words, end, send). Rita's cube (RitaCube) is a flat black block (no shading, no
+shadow; a touch wider than tall, slightly uneven corners) with two white rounded eyes, alive from
+springs that overshoot and settle: waiting, it does a small random action every 2–4 s (a hop with
+anticipation, squash and stretch, a double bounce, a lean, a wiggle, a glance) and blinks fast; it
+squashes hard with the learner's voice, rocks with circling eyes while thinking, hops on the beats of
+Rita's voice, and hops on every change of mood; only the blink stays with reduced motion.
 circle («لغة الشرح» opens three choices, the current one ticked).
 
 ## Language-change splash (`LanguageSplash`)
@@ -447,3 +448,36 @@ at least 40px, nothing relying on colour alone, RTL checked on any new text layo
 
 Phone 390×844, tablet 768, desktop 1280; Arabic (RTL) and English content; empty, one item,
 many items and very long text; loading and error states.
+
+## Lesson path (`/rita-lessons`, `LessonPathView`)
+
+A zig-zag road of round stops on white. Each kind of stop has one colour, used for its ring, its pill
+and the legend under the stats card: green «PDF + صوت» (a study lesson: guide + Rita's voice), blue
+«محادثة» (a conversation lesson), orange «تمارين» (an exercises stop: only its look for now, opening it
+does nothing yet) and purple «ملفات» (a resources stop that opens a sheet of files and links). The
+road is grey; the part already walked (up to the current lesson) is blue, and the current lesson
+carries a small bobbing «إنت هون» tag. Stats sit in one quiet card (lessons done, stars, a bar).
+
+Admins get «تعديل المسار»: hold a stop (300 ms) and drop it on another to swap them (it lifts and
+follows the finger, the target grows, and the swap glides into place; the study circle's sounds play
+on lift, hover and drop), or press a + in the gap between stops (or after the last) to add an
+exercises or resources stop, which pops in. Every change is saved at once (`rita_set_path_layout`)
+and undone if saving fails. Lessons keep their integer slots; stops sit between them with fractional
+orders (`rita_path_items`). Motion is transform/opacity and stops under reduced motion.
+
+## Floating window (study page, `FloatingWindow`)
+
+A dark window over the study work area in the manner of iPadOS windows, opened from the circle (the
+trial item «نموذج ويندو» shows «Hello world»; real content comes later). Titled «Uzyra» with its
+mark. Background #141416, continuous (squircle) corners drawn as an SVG clip path (Safari has no
+`corner-shape` yet; `window-geometry.ts` holds the Figma corner-smoothing construction, radius 26,
+smoothing 0.6), a hairline light edge and a deep soft shadow. A grey grabber pill above moves it (a
+double tap on it or on the bar fills the work area and brings it back); a small dark X above the
+top-right corner hides it, and three dots («•••») at the bottom middle of the work area then bring it
+back or close it for good; any corner resizes it (curved mark bottom-right). Min 300×220, kept inside
+the area, place and size remembered. It grows out of the circle and back into it with the circle's
+sounds. No backdrop: the page, the selection and the circle keep working.
+
+Type on the study page follows pro tools: 13px for UI text and 12px for small words (top bar, state
+word, window), 15px for Rita's replies; a thin 46px top bar; the guide fits its pane at most 112% so a
+wide pane gets more room around the sheet instead of bigger type.

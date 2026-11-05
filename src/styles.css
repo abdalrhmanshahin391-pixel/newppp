@@ -4634,8 +4634,8 @@ html.rita-app,
   z-index: 20;
   display: grid;
   place-items: center;
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
   overflow: hidden;
   border: 3px solid #fff;
   border-radius: 9999px;
@@ -4677,9 +4677,9 @@ html.rita-app,
   position: absolute;
   left: 50%;
   bottom: -16px;
-  width: 54px;
+  width: 48px;
   /* An explicit height: Safari gives this absolutely placed image no height with "auto". */
-  height: 64px;
+  height: 57px;
   max-width: none;
   transform: translateX(-50%);
   pointer-events: none;
@@ -5318,7 +5318,7 @@ html.rita-app,
   pointer-events: none;
 }
 .uz-rc-spot.is-hero {
-  width: min(120px, 32vw);
+  width: min(104px, 30vw);
   aspect-ratio: 1;
   margin-block: 14px 8px;
 }
@@ -5333,13 +5333,13 @@ html.rita-app,
 .uz-rc-word {
   margin: 0;
   color: var(--rc-muted);
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 500;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.005em;
 }
 .uz-rc-word.is-small {
-  margin-top: 6px;
-  font-size: 12.5px;
+  margin-top: 5px;
+  font-size: 12px;
   text-align: center;
 }
 .uz-rc-cube {
@@ -5365,25 +5365,26 @@ html.rita-app,
 .uz-rc-chat {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  max-width: 640px;
+  gap: 16px;
+  max-width: 600px;
   margin-inline: auto;
-  padding: 28px 22px 12px;
+  padding: 24px 20px 12px;
 }
 .uz-rc-rita {
   color: var(--rc-ink);
-  font-size: 17px;
-  line-height: 1.85;
+  font-size: 15px;
+  line-height: 1.75;
+  letter-spacing: -0.005em;
 }
 .uz-rc-you {
   align-self: flex-start;
   max-width: 82%;
-  padding: 9px 15px;
-  border-radius: 18px;
+  padding: 7px 13px;
+  border-radius: 16px;
   background: var(--rc-soft);
   color: var(--rc-ink);
-  font-size: 16px;
-  line-height: 1.6;
+  font-size: 14.5px;
+  line-height: 1.55;
 }
 .uz-rc-you.is-live {
   background: transparent;
@@ -5439,10 +5440,10 @@ html.rita-app,
   gap: 8px;
   width: 100%;
   max-width: 640px;
-  min-height: 52px;
-  margin: 10px auto 0;
-  padding: 6px 6px 6px 8px;
-  padding-inline-start: 18px;
+  min-height: 46px;
+  margin: 8px auto 0;
+  padding: 4px 4px 4px 6px;
+  padding-inline-start: 16px;
   border: 1px solid var(--rc-line);
   border-radius: 26px;
   background: #fff;
@@ -5467,7 +5468,7 @@ html.rita-app,
 .uz-rc-placeholder {
   flex: 1;
   color: var(--rc-muted);
-  font-size: 16px;
+  font-size: 14px;
 }
 .uz-rc-input {
   flex: 1;
@@ -5475,7 +5476,7 @@ html.rita-app,
   border: 0;
   background: transparent;
   color: var(--rc-ink);
-  font-size: 16px;
+  font-size: 16px; /* 16px keeps iPad Safari from zooming into the field */
   outline: none;
 }
 .uz-rc-input::placeholder {
@@ -5491,8 +5492,8 @@ html.rita-app,
   display: grid;
   flex: none;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: var(--rc-ink);
   color: #fff;
@@ -5512,8 +5513,8 @@ html.rita-app,
   position: relative;
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   color: #5d606b;
   transition: background-color 150ms ease, color 150ms ease;
@@ -5556,8 +5557,8 @@ html.rita-app,
 .uz-msg-in {
   animation: uz-msg-in 260ms cubic-bezier(0.23, 1, 0.32, 1) both;
 }
-/* Rita's cube (RitaCube): a soft blue squircle with a little light on top, two dark pill eyes and
-   a soft shadow. The motion itself is written by the component, frame by frame. */
+/* Rita's cube (RitaCube): a flat black block (no shading, no shadow) with two white rounded eyes.
+   The motion itself is written by the component, frame by frame. */
 .uz-cube {
   position: relative;
   width: 100%;
@@ -5566,7 +5567,7 @@ html.rita-app,
 .uz-cube-body {
   position: absolute;
   inset: 0;
-  transform-origin: 50% 100%;
+  transform-origin: 50% 90%;
   will-change: transform;
 }
 .uz-cube-shape {
@@ -5576,34 +5577,25 @@ html.rita-app,
   height: 100%;
   overflow: visible;
 }
-/* Two small dark ovals in the middle of the block, a little apart. */
+.uz-cube-shape path {
+  fill: #111113;
+}
 .uz-cube-eyes {
   position: absolute;
-  top: 43.6%;
-  left: 34.2%;
+  top: 40%;
+  left: 31.5%;
   display: flex;
   justify-content: space-between;
-  width: 31.6%;
-  height: 17.6%;
+  width: 34.5%;
+  height: 20%;
   transform-origin: 50% 50%;
   will-change: transform;
 }
 .uz-cube-eye {
-  width: 25%;
+  width: 34%;
   height: 100%;
-  border-radius: 50%;
-  background: #0f1116;
-}
-.uz-cube-shadow {
-  position: absolute;
-  left: 16%;
-  right: 16%;
-  bottom: 0;
-  height: 8%;
-  border-radius: 50%;
-  background: rgb(14 17 22 / 0.12);
-  filter: blur(6px);
-  will-change: transform;
+  border-radius: 42% / 30%;
+  background: #fff;
 }
 /* The language choices in the circle: a short word in the disc, the chosen one blue and ticked. */
 .st-rad-glyph {
@@ -7044,6 +7036,901 @@ html.rita-app,
   }
 }
 
+/* ===========================================================================
+   Lesson path (/rita-lessons, LessonPathView). A road of round stops, each kind with its colour:
+   green PDF + voice lessons, blue conversation lessons, orange exercises, purple files. In edit
+   mode (admins) a stop is held and dropped on another to swap them; + buttons on the road add
+   stops. Stops move with transform only; the swap glides on a spring-like curve.
+   =========================================================================== */
+.lp-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--pp-line);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 30px -18px rgb(18 17 23 / 0.25);
+}
+.lp-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.lp-stat-n {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.lp-stat-of {
+  color: var(--pp-muted);
+  font-size: 16px;
+  font-weight: 700;
+}
+.lp-stat-w {
+  color: var(--pp-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.lp-bar {
+  grid-column: 1 / -1;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eef0f5;
+}
+.lp-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #2b6df0;
+  transition: width 400ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.lp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 14px;
+  margin-top: 14px;
+  color: var(--pp-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.lp-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.lp-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.lp-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding-inline: 12px;
+  border: 1.5px solid var(--pp-line);
+  border-radius: 999px;
+  color: var(--pp-ink);
+  font-size: 13px;
+  font-weight: 700;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.lp-edit.is-on {
+  border-color: #2b6df0;
+  background: #2b6df0;
+  color: #fff;
+}
+.lp-edit-hint {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #f3f6fe;
+  color: #2a4a8f;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+.lp-road {
+  fill: none;
+  stroke: #e6e8ef;
+  stroke-width: 10;
+  stroke-linecap: round;
+}
+.lp-road.is-walked {
+  stroke: #2b6df0;
+  stroke-opacity: 0.85;
+}
+.lp-node {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 150px;
+  text-align: center;
+  transform: translate(var(--x), var(--y));
+  transition: transform 460ms cubic-bezier(0.32, 0.72, 0, 1);
+  animation: lp-in 520ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation-delay: calc(var(--i) * 55ms);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+@keyframes lp-in {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+    scale: 0.92;
+  }
+}
+.lp[data-editing] .lp-node {
+  touch-action: none;
+  cursor: grab;
+}
+.lp-node[data-drag] {
+  z-index: 20;
+  cursor: grabbing;
+  transition: none;
+  filter: drop-shadow(0 18px 24px rgb(18 17 23 / 0.28));
+}
+.lp-disc {
+  position: relative;
+  display: block;
+  margin-top: 4px;
+  border-radius: 50%;
+  transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.lp-node:active .lp-disc {
+  transform: scale(0.96);
+}
+.lp-node[data-over] .lp-disc {
+  transform: scale(1.12);
+}
+.lp-node[data-over] .lp-face {
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--c) 30%, transparent);
+}
+.lp-face {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 5px solid var(--c);
+  border-radius: 50%;
+  box-shadow: 0 12px 24px -12px color-mix(in srgb, var(--c) 60%, rgb(18 17 23 / 0.4));
+}
+.lp-face.is-locked {
+  border-color: #d5d8e2;
+  opacity: 0.65;
+  filter: grayscale(0.85);
+}
+.lp-item-face {
+  display: grid;
+  place-items: center;
+  background: var(--soft);
+  color: var(--c);
+}
+.lp-pulse {
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--c) 22%, transparent);
+  animation: lp-pulse 2.4s ease-in-out infinite;
+}
+@keyframes lp-pulse {
+  50% {
+    transform: scale(1.06);
+    opacity: 0.55;
+  }
+}
+.lp-pill {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  padding: 2px 8px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--c);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.lp-badge {
+  position: absolute;
+  bottom: -2px;
+  left: -2px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+.lp-badge.is-lock {
+  background: #fff;
+  color: var(--pp-muted);
+  box-shadow: 0 2px 8px rgb(18 17 23 / 0.15);
+}
+.lp-badge.is-done {
+  border: 3px solid #fff;
+  background: var(--c);
+  color: #fff;
+}
+.lp-count {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding-inline: 6px;
+  border: 3px solid #fff;
+  border-radius: 999px;
+  background: var(--c);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+.lp-title,
+.lp-sub {
+  position: relative;
+  padding-inline: 8px;
+  border-radius: 8px;
+  background: #fff;
+}
+.lp-title {
+  margin-top: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.lp-title.is-locked {
+  color: color-mix(in srgb, var(--pp-muted) 75%, transparent);
+}
+.lp-sub {
+  margin-top: 3px;
+  color: var(--pp-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.lp-sub.is-accent {
+  color: var(--c);
+}
+.lp-here {
+  position: absolute;
+  top: -30px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--pp-ink, #121117);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  animation: lp-bob 1.8s ease-in-out infinite;
+}
+.lp-here::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  background: inherit;
+  transform: rotate(45deg);
+}
+@keyframes lp-bob {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+.lp-node[data-fresh] .lp-disc {
+  animation: lp-pop 620ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes lp-pop {
+  from {
+    transform: scale(0.3);
+  }
+}
+.lp-node[data-shake] .lp-disc {
+  animation: lp-shake 420ms ease-in-out;
+}
+@keyframes lp-shake {
+  25% {
+    transform: rotate(-6deg);
+  }
+  75% {
+    transform: rotate(6deg);
+  }
+}
+.lp-plus-wrap {
+  position: absolute;
+  z-index: 10;
+  transform: translate(-50%, -50%);
+}
+.lp-plus {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 2px dashed #9db8f5;
+  border-radius: 50%;
+  background: #fff;
+  color: #2b6df0;
+  animation: lp-in 360ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  transition: transform 150ms ease, background-color 150ms ease;
+}
+.lp-plus[aria-expanded="true"] {
+  border-style: solid;
+  background: #2b6df0;
+  color: #fff;
+  transform: rotate(45deg);
+}
+.lp-add {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  z-index: 25;
+  display: grid;
+  gap: 4px;
+  width: 190px;
+  margin-left: -95px;
+  padding: 6px;
+  border: 1px solid var(--pp-line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 18px 40px -16px rgb(18 17 23 / 0.35);
+  animation: lp-in 220ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.lp-add > button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding-inline: 8px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: start;
+}
+.lp-add > button:hover,
+.lp-add > button:focus-visible {
+  background: var(--soft);
+}
+.lp-add > button > span {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--soft);
+  color: var(--c);
+}
+/* The sheet of a stop (files and links; renaming and removing for admins). */
+.lp-sheet-back {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgb(18 17 23 / 0.35);
+  animation: lp-fade 200ms ease-out both;
+}
+@keyframes lp-fade {
+  from {
+    opacity: 0;
+  }
+}
+.lp-sheet {
+  width: 100%;
+  max-width: 480px;
+  max-height: 86dvh;
+  overflow-y: auto;
+  padding: 18px 18px max(18px, env(safe-area-inset-bottom));
+  border-radius: 24px 24px 0 0;
+  background: #fff;
+  animation: lp-up 320ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@media (min-width: 640px) {
+  .lp-sheet-back {
+    align-items: center;
+  }
+  .lp-sheet {
+    border-radius: 24px;
+  }
+}
+@keyframes lp-up {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+}
+.lp-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.lp-sheet-head h3 {
+  flex: 1;
+  font-size: 19px;
+  font-weight: 800;
+}
+.lp-sheet-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--c);
+}
+.lp-sheet-x {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: var(--pp-muted);
+}
+.lp-sheet-x:hover {
+  background: var(--pp-grey);
+}
+.lp-sheet-empty {
+  padding: 22px 4px;
+  color: var(--pp-muted);
+  font-size: 14px;
+  text-align: center;
+}
+.lp-sheet-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+.lp-res {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lp-res > a {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 56px;
+  padding: 8px 12px;
+  border: 1px solid var(--pp-line);
+  border-radius: 14px;
+  color: var(--pp-ink);
+}
+.lp-res > a:hover {
+  border-color: var(--c);
+}
+.lp-res > button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  color: #b42318;
+}
+.lp-res-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--c) 12%, #fff);
+  color: var(--c);
+}
+.lp-res-title {
+  display: block;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lp-res-host {
+  display: block;
+  color: var(--pp-muted);
+  font-size: 12px;
+}
+.lp-sheet-admin {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--pp-line);
+}
+.lp-sheet-row {
+  display: flex;
+  gap: 8px;
+}
+.lp-sheet-row > input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding-inline: 12px;
+  border: 1.5px solid var(--pp-line);
+  border-radius: 12px;
+  font-size: 15px;
+}
+.lp-sheet-row > button,
+.lp-sheet-wide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding-inline: 14px;
+  border-radius: 12px;
+  background: var(--pp-ink, #121117);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+.lp-sheet-wide {
+  width: 100%;
+  background: color-mix(in srgb, var(--c) 12%, #fff);
+  color: var(--c);
+}
+.lp-sheet-wide.is-danger {
+  background: #fdf1f1;
+  color: #b42318;
+}
+.lp-sheet-row > button:disabled,
+.lp-sheet-wide:disabled {
+  opacity: 0.5;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-node,
+  .lp-plus,
+  .lp-add,
+  .lp-sheet,
+  .lp-sheet-back {
+    animation: none;
+  }
+  .lp-node {
+    transition: none;
+  }
+  .lp-pulse,
+  .lp-here,
+  .lp-node[data-fresh] .lp-disc,
+  .lp-node[data-shake] .lp-disc {
+    animation: none;
+  }
+}
+
+/* ===========================================================================
+   Floating window on the study page (FloatingWindow), dark, in the manner of iPadOS windows. The
+   frame is clipped to a continuous-corner (squircle) path drawn in JS (Safari has no corner-shape
+   yet); a hairline edge is the same path stroked; the shadow is a soft layered box behind it. Type
+   is compact (13px UI, 12px small), as in pro tools. It sits under the circle (20) and its menu (15).
+   =========================================================================== */
+.fw {
+  --fw-bg: #141416;
+  --fw-ink: rgb(255 255 255 / 0.92);
+  --fw-muted: rgb(235 235 245 / 0.55);
+  --fw-line: rgb(255 255 255 / 0.1);
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 12;
+  will-change: transform;
+  color-scheme: dark;
+}
+.fw[hidden] {
+  display: none;
+}
+.fw-motion {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.fw-shadow {
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.2),
+    0 10px 24px -8px rgb(0 0 0 / 0.3),
+    0 36px 80px -20px rgb(0 0 0 / 0.45);
+  pointer-events: none;
+}
+.fw[data-active] .fw-shadow {
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.2),
+    0 14px 30px -8px rgb(0 0 0 / 0.36),
+    0 48px 100px -20px rgb(0 0 0 / 0.5);
+}
+.fw-frame {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--fw-bg);
+  color: var(--fw-ink);
+}
+.fw-edge {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.fw-edge path {
+  fill: none;
+  stroke: var(--fw-line);
+  stroke-width: 1;
+}
+.fw-bar {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.06);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.fw[data-active="move"] .fw-bar {
+  cursor: grabbing;
+}
+.fw-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--fw-ink);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  pointer-events: none;
+}
+.fw-mark {
+  width: 14px;
+  height: 14px;
+}
+.fw-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.55;
+}
+/* The grabber above the window, as on iPad. */
+.fw-grab {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 22px;
+  margin-left: -48px;
+  cursor: grab;
+  touch-action: none;
+}
+.fw-grab > span {
+  width: 36px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgb(60 60 67 / 0.45);
+  transition:
+    width 180ms cubic-bezier(0.32, 0.72, 0, 1),
+    background-color 150ms ease;
+}
+.fw-grab:hover > span,
+.fw[data-active="move"] .fw-grab > span {
+  width: 48px;
+  background: rgb(60 60 67 / 0.65);
+}
+/* The X above the top-right corner hides the window (the ••• brings it back). */
+.fw-x {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #2a2a2e;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.12),
+    0 4px 10px rgb(0 0 0 / 0.3);
+  color: rgb(255 255 255 / 0.85);
+  transition:
+    transform 120ms ease,
+    background-color 150ms ease;
+}
+.fw-x::before {
+  content: "";
+  position: absolute;
+  inset: -9px;
+}
+.fw-x:hover {
+  background: #3a3a40;
+}
+.fw-x:active {
+  transform: scale(0.92);
+}
+.fw-x:focus-visible,
+.fw-grab:focus-visible,
+.fw-dots:focus-visible {
+  outline: 2px solid #5b8cff;
+  outline-offset: 2px;
+}
+/* Resize corners: invisible 34px targets on all four; the bottom-right one has the curved mark. */
+.fw-corner {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  touch-action: none;
+}
+.fw-corner.is-tl {
+  top: -10px;
+  left: -10px;
+  cursor: nwse-resize;
+}
+.fw-corner.is-tr {
+  top: 14px;
+  right: -10px;
+  cursor: nesw-resize;
+}
+.fw-corner.is-bl {
+  bottom: -10px;
+  left: -10px;
+  cursor: nesw-resize;
+}
+.fw-corner.is-br {
+  right: -12px;
+  bottom: -12px;
+  z-index: 2;
+  cursor: nwse-resize;
+}
+.fw-arc {
+  position: absolute;
+  right: -9px;
+  bottom: -9px;
+  width: 24px;
+  height: 24px;
+  overflow: visible;
+  pointer-events: none;
+}
+.fw-arc path {
+  fill: none;
+  stroke: rgb(60 60 67 / 0.45);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke 150ms ease;
+}
+.fw[data-active="resize"] .fw-arc path {
+  stroke: rgb(60 60 67 / 0.7);
+}
+.fw[data-max] .fw-grab,
+.fw[data-max] .fw-arc {
+  opacity: 0;
+}
+.fw[data-max] .fw-x {
+  top: 8px;
+  right: 8px;
+}
+/* The three dots at the bottom middle while the window is hidden, and their small menu. */
+.fw-dots-wrap {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  z-index: 21;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+}
+.fw-dots {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 26px;
+  padding-inline: 12px;
+  border-radius: 999px;
+  background: rgb(20 20 22 / 0.86);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 8px 20px -6px rgb(0 0 0 / 0.4);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  backdrop-filter: blur(16px) saturate(160%);
+  animation: fw-pop 320ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.fw-dots > span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.85);
+}
+.fw-dots-menu {
+  display: grid;
+  gap: 2px;
+  min-width: 200px;
+  margin-bottom: 8px;
+  padding: 5px;
+  border-radius: 14px;
+  background: rgb(28 28 31 / 0.98);
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 18px 40px -12px rgb(0 0 0 / 0.5);
+  color: rgb(255 255 255 / 0.92);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  animation: fw-pop 220ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.fw-dots-menu > button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding-inline: 10px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: start;
+}
+.fw-dots-menu > button:hover,
+.fw-dots-menu > button:focus-visible {
+  background: rgb(255 255 255 / 0.09);
+}
+.fw-dots-menu > button.is-quiet {
+  color: rgb(235 235 245 / 0.6);
+}
+@keyframes fw-pop {
+  from {
+    opacity: 0;
+    scale: 0.94;
+    translate: 0 6px;
+  }
+}
+/* The trial content. */
+.fw-hello {
+  display: grid;
+  height: 100%;
+  place-content: center;
+  gap: 6px;
+  padding: 20px;
+  text-align: center;
+}
+.fw-hello h3 {
+  color: var(--fw-ink);
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.022em;
+  line-height: 1.15;
+}
+.fw-hello p {
+  color: var(--fw-muted);
+  font-size: 12.5px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fw-dots,
+  .fw-dots-menu {
+    animation: none;
+  }
+}
+
 /* Closing signature. Static on arrival; no scroll or startup animation work. */
 @font-face {
   font-family: "Uzyra Footer Arabic";
@@ -7147,4 +8034,45 @@ html.rita-app,
 }
 @media (prefers-reduced-motion: reduce) {
   .uz-footer :is(a, button, svg) { transition: none; }
+}
+
+/* The study page's top bar: thin and quiet, small type (13px), as in pro tools. */
+.st-top {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding-inline: 10px;
+  border-bottom: 1px solid var(--pp-line);
+  background: #fff;
+}
+.st-top-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding-inline: 10px;
+  border-radius: 8px;
+  color: #3c3c43;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  transition: background-color 150ms ease;
+}
+.st-top-btn:hover {
+  background: #f2f2f5;
+}
+.st-top-btn.is-soft {
+  background: #f2f2f5;
+}
+.st-top-btn.is-soft:hover {
+  background: #e8e8ed;
+}
+.st-top-btn:focus-visible {
+  outline: 2px solid #2b6df0;
+  outline-offset: 2px;
+}
+.st-top-btn:disabled {
+  opacity: 0.5;
 }
