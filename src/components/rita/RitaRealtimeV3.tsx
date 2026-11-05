@@ -1712,11 +1712,14 @@ export function RitaRealtimeV3({
                   <ChatText key={message.id} text={message.text} className="uz-rc-you uz-msg-in" />
                 ) : (
                   <div key={message.id} className="uz-rc-rita uz-msg-in">
-                    <ChatText
-                      text={message.text}
-                      onPhrase={openPhrase}
-                      interruptedAt={message.interruptedAt}
-                    />
+                    {/* Marked so a part of the answer can be selected and explained simply. */}
+                    <div data-reply-text="">
+                      <ChatText
+                        text={message.text}
+                        onPhrase={openPhrase}
+                        interruptedAt={message.interruptedAt}
+                      />
+                    </div>
                     {canReport(message) && (
                       <ReplyReport
                         compact

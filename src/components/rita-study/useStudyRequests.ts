@@ -4,7 +4,12 @@ import { toast } from "sonner";
 import type { StudyBridge } from "@/components/rita/RitaRealtimeV3";
 import { useExplanationLanguage } from "@/hooks/useExplanationLanguage";
 import { ACTION_INFO, type RitaAction } from "@/lib/study/study-actions";
-import { resolveStudyRequest, studyExplainText } from "@/lib/study/study-request.functions";
+import {
+  resolveReplyRequest,
+  resolveStudyRequest,
+  studyExplainReplyText,
+  studyExplainText,
+} from "@/lib/study/study-request.functions";
 import {
   ACK_MS,
   FIRST_AUDIO_MS,
@@ -37,6 +42,8 @@ export function useStudyRequests({
 }) {
   const resolveFn = useServerFn(resolveStudyRequest);
   const textFn = useServerFn(studyExplainText);
+  const resolveReplyFn = useServerFn(resolveReplyRequest);
+  const replyTextFn = useServerFn(studyExplainReplyText);
   const { value: language } = useExplanationLanguage();
   const [active, setActive] = useState<ActiveRequest | null>(null);
   const activeRef = useRef<ActiveRequest | null>(null);
@@ -175,6 +182,77 @@ export function useStudyRequests({
     [bridge, fail, language, lessonId, preview, resolveFn, textFn, update],
   );
 
+  /**
+   * A part of Rita's own answer, explained as to a complete beginner. Same life as `run`: one
+   * request at a time, by voice in a call and in writing without one.
+   */
+  const runReply = useCallback(
+    async (selection: { exact: string; reply: string }): Promise<boolean> => {
+      const action = "explain_reply" as const;
+      const voice = Boolean(bridge.send);
+      const previous = activeRef.current;
+      if (previous && isLive(previous.state)) {
+        if (previous.channel === "voice")
+          bridge.send?.("rita-study-cancel", { request_id: previous.id });
+        update(previous.id, { state: "cancelled" });
+      }
+      clearTimer();
+      const id = crypto.randomUUID();
+      const request: ActiveRequest = {
+        id,
+        action,
+        quote: selection.exact,
+        channel: voice ? "voice" : "text",
+        state: "resolving",
+      };
+      activeRef.current = request;
+      setActive(request);
+      const payload = {
+        lessonId,
+        preview,
+        requestId: id,
+        quote: selection.exact,
+        reply: selection.reply.slice(0, 12000),
+        language,
+      };
+      const label = ACTION_INFO[action].label;
+      try {
+        const result = voice
+          ? await resolveReplyFn({ data: { ...payload, channel: "voice" } })
+          : await replyTextFn({ data: { ...payload, channel: "text" } });
+        if (activeRef.current?.id !== id) return false;
+        if (!result.ok) {
+          fail(id, result.message);
+          if (result.code === "rate_limited") toast.message(result.message);
+          return false;
+        }
+        bridge.post?.("you", `[${label}] «${selection.exact.slice(0, 160)}»`);
+        if (!voice) {
+          if ("text" in result) bridge.post?.("rita", result.text);
+          update(id, { state: "done" });
+          return true;
+        }
+        const sent = bridge.send?.("rita-study-action", {
+          request_id: id,
+          action,
+          quote: "quote" in result ? result.quote : selection.exact,
+          context: "context" in result ? result.context : "",
+        });
+        if (!sent) {
+          fail(id, "ريتا مش متصلة. اكبس «ابدأ مع ريتا».");
+          return false;
+        }
+        update(id, { state: "sent" });
+        timer.current = window.setTimeout(() => fail(id, LATE_MESSAGE), ACK_MS);
+        return true;
+      } catch {
+        fail(id, "ما قدرت أبعث الطلب. جرّب مرة ثانية.");
+        return false;
+      }
+    },
+    [bridge, fail, language, lessonId, preview, replyTextFn, resolveReplyFn, update],
+  );
+
   const report = useCallback(
     async (selection: SelectionRef, note: string) => {
       try {
@@ -200,5 +278,13 @@ export function useStudyRequests({
     [lessonId, preview, resolveFn],
   );
 
-  return { active, run, stop, report, onRitaEvent, busy: Boolean(active && isLive(active.state)) };
+  return {
+    active,
+    run,
+    runReply,
+    stop,
+    report,
+    onRitaEvent,
+    busy: Boolean(active && isLive(active.state)),
+  };
 }

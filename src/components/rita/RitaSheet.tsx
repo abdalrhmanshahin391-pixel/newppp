@@ -5,6 +5,12 @@ import { textDirection } from "./chat-text";
 /** A line with any Arabic in it reads right to left; an English or German line left to right. */
 const lineDir = (text: string) => (/[\u0600-\u06FF]/.test(text) ? "rtl" : "ltr");
 
+/** An example reads in the language it starts with ("He watches TV. يعني: …" stays left to right). */
+const exampleDir = (text: string) => {
+  const first = /[A-Za-zÀ-ÿ\u0600-\u06FF]/.exec(text)?.[0] ?? "";
+  return /[\u0600-\u06FF]/.test(first) ? "rtl" : "ltr";
+};
+
 // Table heads take the guide's pill colours in turn: grey, green, blue.
 const TONES = ["is-neutral", "is-green", "is-blue"];
 
@@ -121,7 +127,7 @@ function SheetPart({
       );
     case "example":
       return (
-        <p className="rita-sheet-example" dir={lineDir(block.text)}>
+        <p className="rita-sheet-example" dir={exampleDir(block.text)}>
           <Rich text={block.text} onPhrase={onPhrase} />
         </p>
       );

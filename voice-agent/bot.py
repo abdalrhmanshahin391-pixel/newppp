@@ -738,7 +738,13 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         message_type = getattr(msg, "type", "")
         if message_type.startswith("rita-study-"):
             # Decided in rita_study_voice (tested there); only a study session acts on these.
-            effects = handle_study_message(study_voice, message_type, getattr(msg, "data", None))
+            recent_replies = [
+                item["content"]
+                for item in context.get_messages()
+                if item.get("role") == "assistant" and isinstance(item.get("content"), str)
+            ]
+            data = getattr(msg, "data", None)
+            effects = handle_study_message(study_voice, message_type, data, recent_replies)
             if effects.say:
                 await say_line(effects.say)
             if effects.interrupt:

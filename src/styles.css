@@ -8145,3 +8145,49 @@ html.rita-app,
     animation: none;
   }
 }
+
+/* A selection in Rita's own answers (the left column) is dark red, so it never reads as a piece of
+   the guide (blue). The circle, the quote strip and the one option ("اشرحلي ببساطة") take the same
+   dark red while that selection is active. */
+[data-reply-text] ::selection {
+  background: #8e1b2b;
+  color: #fff;
+}
+::highlight(st-sel-reply) {
+  background-color: #8e1b2b;
+  color: #fff;
+}
+.edith-premium .st-orb[data-state="armed"][data-tone="reply"] {
+  border-color: #e9a3ad;
+  box-shadow:
+    0 0 0 3px #8e1b2b,
+    0 0 18px rgb(142 27 43 / 0.55),
+    0 8px 24px rgb(18 17 23 / 0.18);
+}
+.st-rad.is-reply .st-rad-quote {
+  padding-inline-start: 10px;
+  border-inline-start: 3px solid #8e1b2b;
+}
+.st-rad.is-reply .st-rad-meta {
+  color: #f0b3bc;
+}
+.st-rad-item[data-tone="reply"] .st-rad-disc {
+  border-color: rgb(233 163 173 / 0.6);
+  background: #3d0a12;
+  color: #ffd9de;
+}
+.st-rad-item[data-tone="reply"] .st-rad-label {
+  background: rgb(61 10 18 / 0.94);
+}
+.st-rad-item[data-tone="reply"][data-hot] .st-rad-disc,
+.st-rad-item[data-tone="reply"]:focus-visible .st-rad-disc {
+  border-color: #fff;
+  background: #8e1b2b;
+  box-shadow:
+    0 0 0 4px rgb(142 27 43 / 0.35),
+    0 0 22px rgb(142 27 43 / 0.8);
+}
+.st-rad-item[data-tone="reply"][data-hot] .st-rad-label {
+  background: #fff;
+  color: #5c0d18;
+}

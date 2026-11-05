@@ -503,3 +503,13 @@ behind a soft blue rule with the key word bold (an English or German word opens 
 a blue-soft «انتبه / Watch out» card. Each line reads in its own direction (any Arabic: right to
 left). 14px body, 13.5px cells, radius 16, a soft shadow; it rises in once (reduced motion: no
 movement). A sheet the model wrote badly still shows as plain lines. Short answers have no sheet.
+
+### Explaining a part of Rita's answer
+
+A part of one of Rita's answers (her words or her sheet) can be selected in the left column. That
+selection is dark red (#8E1B2B, white text), never the guide's blue, and stays marked when the browser's
+own selection goes. The circle takes a dark red ring, the quote strip a dark red edge with «من جواب
+ريتا», and the ring offers one option only, «اشرحلي ببساطة» (dark red disc), plus the language. She
+answers that part as to a complete beginner: one very simple sentence and a small sheet. A selection
+across two answers, or with the learner's own words, shows «حدّد من رد واحد لريتا.» The newest
+selection wins: selecting in the guide clears the left one, and the other way round.
