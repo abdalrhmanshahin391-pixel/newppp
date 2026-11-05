@@ -173,24 +173,34 @@ motion.
 
 ## Learning home (`/learn`)
 
-One working screen for Rita and every study tool (the three room pages still exist at `/learn/study-space`, `/learn/study-room`
-and `/learn/german`, but nothing on the home links to them). Structure follows a familiar app home, in this site's own look:
+One section at a time: Talk to Rita, Study with your own material, Plan, Together and German
+(the last follows the learning-language visibility rule). From 1024px, a sticky section rail
+sits beside the content; below it, a horizontal strip with 44px targets. Arabic mirrors the
+layout. Real due-card and lesson counts remain optional account data, never invented.
 
-- **Top:** the title (greeting with the first name, a calm 28 to 40px, class `rh-app-title`) and one grey "Next up" panel with
-  one blue button. The suggestion follows a fixed order (`src/lib/learn-home.ts`): a lesson already started, cards due,
-  the next lesson, a talk with Rita; guests are asked to sign in. Nothing here is invented: no number or streak is shown unless it came from the account.
-- **Three columns from 1024px:** a section list (anchors with the current one highlighted, plus Progress), the sections, and the
-  "Today" panel (due cards, daily goal bar, streak, lessons done; loading, error with retry, empty and guest states).
-  Below 1024px the list becomes a scrolling strip of 44px chips and "Today" sits above the sections.
-- **Sections** are plain titles (no small capital labels) over a list of wide rows: Talk to Rita, Study with your own material,
-  Plan your time, Study together, German. A row is one link with a 2px ink border (it is pressed), the picture slot on the
-  inline-start side, the name, one line of text, an "AI" tag where the tool uses AI, and a live chip when there is real
-  state ("10 due", "3 of 12 done").
-- **Picture slots** (`ImageSlot`) are 128px squares (88px on phones). With no picture they are a dashed, labelled "Image here"
-  square, so the gap is obvious. Pictures are added in `src/lib/learn-images.ts` by tool key; nothing else changes. One
-  illustration family for all of them: flat vector with thick ink outlines and the site blue, like the lesson covers.
-- Direction follows the language (logical padding, mirrored arrows). Every control is at least 44px. Motion is only
-  press feedback (`scale(.99)`) and colour changes under 200ms.
+- **Monochrome:** flat black cards (`--uz-tile-bg: #000`, matching the existing monochrome WebP
+  artwork), soft-white foreground (`--uz-paper: #f2f2f5`) and readable neutral secondary copy
+  (`--uz-on-tile-muted: #b9b9c2`). The selected rail entry uses the existing ink token and white
+  text. This exception is local to `/learn`; other screens retain their existing action colour.
+  No gradients, image blending, animated shadows or continuous decorative motion.
+- **Hierarchy:** the conversation stage and Lessons sit together; the other sections retain
+  their existing leading tile and smaller tool tiles. Every destination, description and AI
+  marker stays. Cards have 24px corners; button styling reuses the existing system in monochrome.
+- **Navigation:** selection is immediate, followed by one interruptible-by-replacement 150ms
+  entrance (opacity .85 to 1, translateY 2px to 0); no tile delays. Reduced motion removes it.
+  Previously visited content stays mounted with `hidden` and `inert`, so its images and DOM are
+  reused without making hidden links reachable. Unvisited content is not rendered or fetched.
+  This cache is bounded by five small sections (13 existing images in total).
+- **Address and scroll:** `#study` and other section fragments survive reload and browser
+  back/forward. Panel IDs have a prefix to avoid native anchor jumps. Selecting a shorter panel
+  after scrolling positions its top beneath the header; height is not animated. A minimum
+  content area keeps the footer below the working area on short sections.
+- **Images:** existing 512px monochrome WebPs, explicit dimensions/aspect ratios, eager loading
+  for the leading visible illustration and lazy loading for the rest. No new image/font assets.
+  Data hooks stay in `LearnHome`; local selection and reusable UI live in `LearnHomeView`.
+- Verify Arabic/English at 390, 768, 1180 and 1280px, long count labels, 320px and the CSS viewport
+  equivalent of 200% zoom, rapid navigation, keyboard, slow images and reduced motion. Isolated
+  Chromium/WebKit checks and comparison captures: `scripts/check-learn-navigation.mjs`.
 
 ## Learning language (chooser and switcher)
 
