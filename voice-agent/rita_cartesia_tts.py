@@ -14,6 +14,9 @@ import os
 import time
 from collections.abc import AsyncGenerator
 from typing import ClassVar
+from urllib.parse import urlencode
+from websockets.asyncio.client import connect as websocket_connect
+from websockets.protocol import State
 
 from pipecat.frames.frames import Frame, TTSAudioRawFrame, TTSStoppedFrame
 from pipecat.processors.frame_processor import FrameProcessorSetup
@@ -22,6 +25,7 @@ from pipecat.services.tts_service import TextAggregationMode
 
 from rita_latency import RitaLatencyRecorder
 from rita_leading_silence import LeadingSilenceTrimmer
+from rita_connection_retry import open_with_retry
 
 
 class RitaCartesiaTTSService(CartesiaTTSService):
@@ -107,8 +111,38 @@ class RitaCartesiaTTSService(CartesiaTTSService):
         await super().cleanup()
 
     async def _connect_websocket(self):
+        if self._websocket and self._websocket.state is State.OPEN:
+            return
         started_at = time.perf_counter()
-        await super()._connect_websocket()
+        def retry(attempt: int, error_type: str):
+            if self._latency_recorder:
+                self._latency_recorder.session_mark(
+                    "cartesia_ws_retry", attempt=attempt, error_type=error_type
+                )
+        try:
+            query = urlencode({"api_key": self._api_key, "cartesia_version": self._cartesia_version})
+            self._websocket = await open_with_retry(
+                lambda: websocket_connect(
+                    f"{self._url}?{query}", open_timeout=15, close_timeout=5
+                ),
+                on_retry=retry,
+            )
+            await self._call_event_handler("on_connected")
+        except Exception as error:
+            socket = self._websocket
+            self._websocket = None
+            if socket:
+                try:
+                    await socket.close()
+                except Exception:
+                    pass
+            # Never forward a provider URL or credential-bearing exception to the client.
+            kind = "timeout" if isinstance(error, TimeoutError) else type(error).__name__
+            if self._latency_recorder:
+                self._latency_recorder.session_mark("cartesia_ws_failed", error_type=kind)
+            await self.push_error(error_msg=f"Cartesia voice connection failed ({kind}). Reconnect to retry.")
+            await self._call_event_handler("on_connection_error", kind)
+            return
         self._last_socket_activity_at = time.monotonic()
         if self._latency_recorder and self._websocket:
             self._latency_recorder.session_mark(
