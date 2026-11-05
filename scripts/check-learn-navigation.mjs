@@ -130,8 +130,9 @@ const reset = `
 .edith-premium{--pp-ink:#121117;--pp-muted:#6a697c;--pp-grey:#f4f4f8;--pp-accent:#2b6df0;--pp-accent-soft:#e7eefd;--pp-ease:cubic-bezier(.22,1,.36,1);--font-grotesk:"Figtree","Uzyra Footer Arabic",sans-serif;--pp-display:"Inter Tight","Uzyra Footer Arabic",sans-serif}
 .edith-premium h2{font-family:var(--pp-display);font-weight:700;letter-spacing:-.035em;text-wrap:balance}
 .rita-btn{display:inline-flex;align-items:center;justify-content:center;height:48px;padding-inline:24px;border:2px solid;border-radius:8px;font-family:Figtree,sans-serif;font-size:18px;font-weight:600;line-height:24px}
-.min-w-0{min-width:0}.qa-header{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:#121117;color:#f2f2f5;font:600 15px Figtree,sans-serif;position:sticky;top:0;z-index:2}
+.min-w-0{min-width:0}.qa-header{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:#121117;color:#f2f2f5;font:600 15px Figtree,"Uzyra Footer Arabic",sans-serif;position:sticky;top:0;z-index:2}
 .qa-header [role=img]{display:inline-flex;align-items:center;gap:.4em}.qa-header svg{width:1.3em;height:1.3em}.qa-footer{height:300px;padding:30px;background:#f4f4f8}
+body[data-capture] .qa-footer{display:none}
 [dir=rtl] .rtl\\:rotate-180{transform:rotate(180deg)}
 `;
 const server = createServer((req, res) => {
@@ -180,6 +181,18 @@ async function ready(p) {
   await p.locator(".uz-rail a").first().waitFor();
   await p.evaluate(() => document.fonts.ready);
 }
+async function capture(p, name) {
+  // Capture the page from the top; element screenshots would scroll the main area
+  // beneath the sticky header in WebKit. Exclude only the test fixture's controls.
+  await p.evaluate(() => {
+    document.body.dataset.capture = "true";
+    scrollTo(0, 0);
+  });
+  await p.screenshot({ path: resolve(out, name), fullPage: true });
+  await p.evaluate(() => {
+    delete document.body.dataset.capture;
+  });
+}
 async function select(p, id) {
   await p.locator('.uz-rail a[href="#' + id + '"]').click();
   await p.waitForFunction(
@@ -216,15 +229,11 @@ try {
       p.on("pageerror", (e) => errors.push(e.message));
       await p.goto(origin + "/learn?lang=" + lang);
       await ready(p);
-      await p
-        .locator("main")
-        .screenshot({ path: resolve(out, prefix + "-" + lang + "-" + width + "-rita.png") });
+      await capture(p, prefix + "-" + lang + "-" + width + "-rita.png");
       await select(p, "study");
       await p.locator('[data-learn-row="flashcards"] img').evaluate((img) => img.decode());
       const state = await checks(p);
-      await p
-        .locator("main")
-        .screenshot({ path: resolve(out, prefix + "-" + lang + "-" + width + "-study.png") });
+      await capture(p, prefix + "-" + lang + "-" + width + "-study.png");
       assert.equal(state.overflow, false, "overflow " + lang + " " + width);
       if (!baseline) {
         assert.equal(
