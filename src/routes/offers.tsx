@@ -156,7 +156,7 @@ function OffersPage() {
             </h1>
             <p className="mt-5 max-w-lg text-[17px] leading-relaxed text-muted-foreground">
               Flashcards, one-page summaries and practice questions land in your account the moment you
-              tap. No card, one per student, and it works right away in every Rita mode.
+              tap. No card, one per student, and it works right away in every Uzyra mode.
             </p>
           </div>
         </section>

@@ -34,7 +34,7 @@ export function nextStep(args: {
     return {
       kind: "collect",
       title: "Nothing to review yet",
-      body: "Talk to Rita and end the conversation. Her replies are reviewed a few minutes later and the first problems appear here.",
+      body: "Talk to Uzyra and end the conversation. Her replies are reviewed a few minutes later and the first problems appear here.",
     };
   }
   const worse = rows.filter(
@@ -89,7 +89,7 @@ export function nextStep(args: {
   return {
     kind: "idle",
     title: "Nothing to fix right now",
-    body: "Keep talking to Rita. New problems appear here after each conversation.",
+    body: "Keep talking to Uzyra. New problems appear here after each conversation.",
   };
 }
 

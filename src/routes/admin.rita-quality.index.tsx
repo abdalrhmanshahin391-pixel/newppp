@@ -23,7 +23,7 @@ import { RUBRIC_VERSION } from "@/lib/rita-tutor-contract";
 
 export const Route = createFileRoute("/admin/rita-quality/")({
   head: () => ({
-    meta: [{ title: "Rita quality — Admin" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Uzyra quality — Admin" }, { name: "robots", content: "noindex" }],
   }),
   component: RitaQualityPage,
 });
@@ -102,7 +102,7 @@ function RitaQualityPage() {
         </Link>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <div>
-            <h1 className="rh-app-title">Rita quality</h1>
+            <h1 className="rh-app-title">Uzyra quality</h1>
             <p className="mt-1 text-[16px] text-[var(--pp-muted)]">
               What to fix next, and whether the last fix worked.
             </p>
@@ -146,7 +146,7 @@ function RitaQualityPage() {
           <div className="mt-8 rounded-2xl bg-[var(--pp-grey)] p-6 sm:p-8">
             <h2 className="text-[20px] font-semibold">No reviewed replies yet</h2>
             <ol className="mt-3 grid gap-2 text-[16px] leading-[1.5]">
-              <li>1. Talk to Rita and end the conversation.</li>
+              <li>1. Talk to Uzyra and end the conversation.</li>
               <li>2. Wait a few minutes. Her replies are reviewed after the call.</li>
               <li>
                 3. The first numbers and problems appear here. Check that AI analysis (top right) is
@@ -162,7 +162,7 @@ function RitaQualityPage() {
             onValueChange={(value) => setTab(value as Tab)}
             className="mt-6 min-w-0"
           >
-            <Tabs.List aria-label="Rita quality sections" className="rita-tabs-list">
+            <Tabs.List aria-label="Uzyra quality sections" className="rita-tabs-list">
               <Tabs.Trigger value="overview" className="rita-tab">
                 Overview
               </Tabs.Trigger>

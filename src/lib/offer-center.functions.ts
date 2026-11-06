@@ -114,7 +114,7 @@ export const getOfferCenterData = createServerFn({ method: "GET" })
         } else {
           const defaultOffer = {
             slug: "toolkit",
-            title: "The Rita Toolkit — free right now",
+            title: "The Uzyra Toolkit — free right now",
             subtitle: "Every study tool that costs us nothing to run, unlocked on your account for three months.",
             badge: "FREE FOR 3 MONTHS",
             bullets: [
@@ -179,7 +179,7 @@ export const getOfferCenterData = createServerFn({ method: "GET" })
     const announcement: OfferCenterAnnouncement = {
       id: sAnn?.id || rAnn?.id,
       enabled: isLive,
-      title: sAnn?.title || rAnn?.title || "🎁 Special Offer: The Rita Toolkit is free right now!",
+      title: sAnn?.title || rAnn?.title || "🎁 Special Offer: The Uzyra Toolkit is free right now!",
       body: sAnn?.body || rAnn?.body || "Claim your free 3 months access with promo code.",
       button_label: sAnn?.href_label || rAnn?.primary_label || "Claim offer →",
       style: (sAnn?.style as any) || (rAnn?.layout === "modal" ? "spotlight" : rAnn?.layout === "sheet" ? "floating" : "ribbon"),
@@ -338,7 +338,7 @@ export const saveOfferCenterConfig = createServerFn({ method: "POST" })
 
       if (announcement.enabled) {
         const sitePayload = {
-          title: announcement.title.trim() || "🎁 Special Offer: The Rita Toolkit is free right now!",
+          title: announcement.title.trim() || "🎁 Special Offer: The Uzyra Toolkit is free right now!",
           body: announcement.body.trim() || "Claim your free 3 months access with promo code " + (codeClean || "YSMU") + ".",
           href: "/offers",
           href_label: announcement.button_label.trim() || "Claim offer →",

@@ -46,3 +46,6 @@ guides-worker/samples/
 
 # Isolated study-question preview, captures and recordings
 /output/question-preview/
+
+# Brand identity checks and captures
+/output/brand-identity/

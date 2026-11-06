@@ -54,8 +54,8 @@ POSSESSIVE_AR = {
 }
 
 G = [
-  dict(key="to-be", title='The verb "to be"', title_ar="أنا ريتا", topic="to be: am / is / are", page=2,
-    summary="Rita teaches am, is and are with the learner's own life: who they are, how they feel and where they are from, then the negative and yes/no questions with short answers.",
+  dict(key="to-be", title='The verb "to be"', title_ar="أنا يوزرا", topic="to be: am / is / are", page=2,
+    summary="Uzyra teaches am, is and are with the learner's own life: who they are, how they feel and where they are from, then the negative and yes/no questions with short answers.",
     objectives=[
       obj("say-i-am", "Say a sentence about themselves with I am / I'm", "يقول جملة عن نفسه بـ I am",
           "The learner says a correct sentence starting with I am or I'm (name, feeling, job or country).", ["Tell me about you. Who are you?", "How are you today?"], 2),
@@ -69,15 +69,15 @@ G = [
           "The learner asks a correct question (Are you ...? / Is she ...?) or gives a correct short answer (Yes, I am. / No, she isn't.).",
           ["Are you a student? Answer with a short answer.", "Now ask me a question. Start with: Are you ...?"]),
     ],
-    plan=plan(["Greet the learner and say: I am Rita. I am your teacher."],
+    plan=plan(["Greet the learner and say: I am Uzyra. I am your teacher."],
               ["Show I am, you are, he/she/it is with one example each", "Show the short forms I'm, she's, they're", "Show questions with the verb first (Are you ...? Is he ...?) and the short answers Yes, I am. / No, she isn't."],
-              ["Ask the learner to say three sentences about themselves", "Ask about a friend: he is / she is", "Practise negatives: I'm not tired", "Swap: the learner asks Rita Are you ...? questions"],
+              ["Ask the learner to say three sentences about themselves", "Ask about a friend: he is / she is", "Practise negatives: I'm not tired", "Swap: the learner asks Uzyra Are you ...? questions"],
               ["Ask each objective's question and wait for a full sentence"],
               "Arabic has no 'to be' in the present, so learners drop it: 'I happy'. Model 'I am happy' and ask them to repeat. Another common slip is 'I am agree' (from أنا موافق): say 'I agree'."),
-    vocabulary=[{"word": "am", "meaning_ar": "أكون (مع I)", "example": "I am Rita."}, {"word": "is", "meaning_ar": "يكون (مع he/she/it)", "example": "She is my friend."}, {"word": "are", "meaning_ar": "يكون (مع you/we/they)", "example": "We are from Jordan."}],
+    vocabulary=[{"word": "am", "meaning_ar": "أكون (مع I)", "example": "I am Uzyra."}, {"word": "is", "meaning_ar": "يكون (مع he/she/it)", "example": "She is my friend."}, {"word": "are", "meaning_ar": "يكون (مع you/we/they)", "example": "We are from Jordan."}],
     image="to-be", scene="A smiling girl pointing at herself with a speech bubble"),
   dict(key="pronouns", title="Subject pronouns", title_ar="هو وهي ونحن", topic="subject pronouns", page=3,
-    summary="Rita teaches I, you, he, she, it, we and they by replacing names with pronouns in short spoken sentences.",
+    summary="Uzyra teaches I, you, he, she, it, we and they by replacing names with pronouns in short spoken sentences.",
     objectives=[
       obj("he-she", "Replace a person's name with he or she", "يستبدل الاسم بـ he أو she",
           "Given a name, the learner says a sentence using he or she correctly (e.g. Omar is tall → He is tall).", ["Omar is tall. Say it with he or she.", "Sara is a doctor. Say it again with a pronoun."], 2),
@@ -94,7 +94,7 @@ G = [
     vocabulary=[{"word": p, "meaning_ar": m, "example": e} for p, m, e in GRAMMAR["pages"][1]["table"]],
     image="pronouns", scene="Three friends standing together and waving"),
   dict(key="articles", title='Articles "a" and "an"', title_ar="تفاحة وكتاب", topic="a / an", page=4,
-    summary="Rita teaches when to say a and when to say an by listening to the first sound of the word, and using a/an for jobs.",
+    summary="Uzyra teaches when to say a and when to say an by listening to the first sound of the word, and using a/an for jobs.",
     objectives=[
       obj("use-a", "Use a before a consonant sound", "يستخدم a قبل صوت صامت (consonant)",
           "The learner says a correct phrase or sentence with a before a consonant sound (a book, a teacher).", ["What is in your bag? Name two things."], 1),
@@ -111,7 +111,7 @@ G = [
     vocabulary=[{"word": "a", "meaning_ar": "أداة نكرة قبل صوت صامت (consonant)", "example": "a book"}, {"word": "an", "meaning_ar": "أداة نكرة قبل صوت صائت (vowel)", "example": "an apple"}],
     image="articles", scene="A boy holding a red apple"),
   dict(key="possessives", title="Possessive adjectives", title_ar="بيتي وعائلتي", topic="my / your / his / her / our / their", page=5,
-    summary="Rita teaches my, your, his, her, its, our and their by talking about the learner's family and things.",
+    summary="Uzyra teaches my, your, his, her, its, our and their by talking about the learner's family and things.",
     objectives=[
       obj("my-your", "Use my and your", "يستخدم my و your",
           "The learner says a correct sentence with my (e.g. My name is ...) and also uses your correctly in a question or sentence (e.g. What's your name?).",
@@ -129,7 +129,7 @@ G = [
     vocabulary=[{"word": w, "meaning_ar": POSSESSIVE_AR[w], "example": e} for _, w, e in GRAMMAR["pages"][3]["table"]],
     image="possessives", scene="A girl pointing at herself next to a small house with a heart"),
   dict(key="present-simple", title="Present simple", title_ar="يومي العادي", topic="present simple routines", page=6,
-    summary="Rita teaches the present simple for daily routines: I work, she works, don't/doesn't and do/does questions.",
+    summary="Uzyra teaches the present simple for daily routines: I work, she works, don't/doesn't and do/does questions.",
     objectives=[
       obj("routine", "Describe a daily routine with I", "يصف روتينه اليومي",
           "The learner says a correct present simple sentence about their routine (e.g. I drink tea every morning).", ["What do you do every morning?"], 2),
@@ -153,9 +153,9 @@ G = [
 
 V = [
   dict(key="hello", title="Hello & Goodbye", title_ar="مرحبا", topic="greetings", page=2, voc=0,
-    summary="Rita practises saying hello, asking How are you?, answering, and saying goodbye at different times of day.",
+    summary="Uzyra practises saying hello, asking How are you?, answering, and saying goodbye at different times of day.",
     objectives=[
-      obj("greet", "Greet Rita and ask how she is", "يحيّي ريتا ويسأل عن حالها",
+      obj("greet", "Greet Uzyra and ask how she is", "يحيّي يوزرا ويسأل عن حالها",
           "The learner says a greeting (hello / hi / good morning ...) and asks How are you?", ["Imagine you meet me in the morning. What do you say?"], 2),
       obj("answer-how", "Answer How are you?", "يجيب على How are you?",
           "The learner answers with a phrase like I'm fine, thank you.", ["How are you today?"]),
@@ -163,17 +163,17 @@ V = [
           "The learner says goodbye / see you later / good night.", ["It is late and you are going home. What do you say?"]),
     ]),
   dict(key="me-and-you", title="Me & You", title_ar="أنا وأنت", topic="introducing yourself", page=3, voc=1,
-    summary="Rita helps the learner introduce themselves: name, country, city, age and job, and ask the same questions back.",
+    summary="Uzyra helps the learner introduce themselves: name, country, city, age and job, and ask the same questions back.",
     objectives=[
       obj("my-name", "Say their name", "يقول اسمه",
           "The learner says My name is ... or I'm ...", ["What's your name?"], 2),
       obj("from", "Say where they are from", "يقول من أين هو",
           "The learner says I'm from ... or I live in ...", ["Where are you from?"]),
-      obj("ask-back", "Ask Rita a question about her", "يسأل ريتا سؤالاً عنها",
+      obj("ask-back", "Ask Uzyra a question about her", "يسأل يوزرا سؤالاً عنها",
           "The learner asks a question like What's your name? / Where are you from? / How old are you?", ["Now you ask me a question."]),
     ]),
   dict(key="thank-you", title="Thank you & Please", title_ar="شكراً", topic="polite words", page=4, voc=2,
-    summary="Rita practises please, thank you, sorry, excuse me and the replies you're welcome and no problem.",
+    summary="Uzyra practises please, thank you, sorry, excuse me and the replies you're welcome and no problem.",
     objectives=[
       obj("ask-please", "Ask for something with please", "يطلب شيئاً مع please",
           "The learner asks for something using please (e.g. A glass of water, please / Can I ..., please?).", ["You are thirsty in a café. Ask for water."], 2),
@@ -183,7 +183,7 @@ V = [
           "The learner replies with You're welcome / No problem.", ["Thank you for your help! What do you say back?"]),
     ]),
   dict(key="yes-no", title="Yes, No & Great idea!", title_ar="فكرة عظيمة!", topic="agreeing and answering", page=5, voc=3,
-    summary="Rita practises answering with yes, no, maybe and sure, suggesting with Let's ... and replying Great idea!",
+    summary="Uzyra practises answering with yes, no, maybe and sure, suggesting with Let's ... and replying Great idea!",
     objectives=[
       obj("yes-no-answer", "Answer a question with yes or no and a short reason", "يجيب بنعم أو لا",
           "The learner answers a yes/no question with yes or no plus a few more words.", ["Do you like coffee?", "Are you ready?"]),
@@ -193,7 +193,7 @@ V = [
           "The learner replies to a suggestion with Great idea!, I agree, sure or OK.", ["Let's eat pizza tonight! What do you say?"]),
     ]),
   dict(key="busy", title="I'm busy", title_ar="أنا مشغول", topic="feelings and being busy", page=6, voc=4,
-    summary="Rita practises saying how you feel and whether you are busy or free: tired, happy, hungry, ready, late.",
+    summary="Uzyra practises saying how you feel and whether you are busy or free: tired, happy, hungry, ready, late.",
     objectives=[
       obj("feeling", "Say how they feel", "يعبّر عن شعوره",
           "The learner says I'm + a feeling word (tired, happy, hungry, sad, bored ...).", ["How do you feel right now?"], 2),
@@ -212,9 +212,9 @@ VOCAB_PLANS = {
         ["Ask each objective's question and wait"],
         "Good evening is for meeting someone; good night is for leaving or going to bed, and learners often swap them. Arabic uses مساء الخير for both afternoon and evening. If the learner answers in Arabic, give the English and ask them to repeat it."),
     "me-and-you": (
-        ["Say: My name is Rita. I'm from Jordan. Then ask: What's your name?"],
+        ["Say: My name is Uzyra. I'm from Jordan. Then ask: What's your name?"],
         ["Model the three sentences: My name is ... / I'm from ... / I'm ... years old", "Teach the matching questions: What's your name? Where are you from? How old are you?"],
-        ["Interview the learner with the three questions", "Swap roles: the learner interviews Rita", "Add friend, student, teacher or family: This is my friend, Ali."],
+        ["Interview the learner with the three questions", "Swap roles: the learner interviews Uzyra", "Add friend, student, teacher or family: This is my friend, Ali."],
         ["Ask each objective's question and wait"],
         "Learners often say 'My age is 20' or 'I have 20 years'. Model 'I'm twenty years old.' Remember I am / I'm: learners drop it (I from Jordan)."),
     "thank-you": (
@@ -226,7 +226,7 @@ VOCAB_PLANS = {
     "yes-no": (
         ["Ask three quick questions: Do you like tea? Are you ready? Is it Friday?"],
         ["Teach yes / no / maybe and short answers: Yes, I do. / No, I don't. / Yes, I am.", "Teach suggestions with Let's ... and the replies Great idea!, I agree, Sure, OK"],
-        ["Rita suggests an activity; the learner answers with Great idea! or Maybe later", "Swap: the learner suggests with Let's ... and Rita reacts", "Add right / wrong when you correct something"],
+        ["Uzyra suggests an activity; the learner answers with Great idea! or Maybe later", "Swap: the learner suggests with Let's ... and Uzyra reacts", "Add right / wrong when you correct something"],
         ["Ask each objective's question and wait"],
         "Learners often answer Do you like ...? with 'Yes, I like'. Model the short answer 'Yes, I do.' Encourage more than a bare yes or no."),
     "busy": (

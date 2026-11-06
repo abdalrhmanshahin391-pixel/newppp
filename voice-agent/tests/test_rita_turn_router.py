@@ -75,7 +75,7 @@ class DecisionTests(unittest.TestCase):
 def context_with(user_text: str, assistant_text: str = TWO_OPTIONS) -> LLMContext:
     return LLMContext(
         [
-            {"role": "system", "content": "You are Rita."},
+            {"role": "system", "content": "You are Uzyra."},
             {"role": "assistant", "content": assistant_text},
             {"role": "user", "content": user_text},
         ]

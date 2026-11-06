@@ -15,7 +15,7 @@ const RETENTION_CHOICES = [
 
 /**
  * Due today, the daily goal, what is coming this month and how much you are
- * actually holding on to — the reason to open Rita every morning.
+ * actually holding on to — the reason to open Uzyra every morning.
  */
 export function DailyPanel({
   onReview,

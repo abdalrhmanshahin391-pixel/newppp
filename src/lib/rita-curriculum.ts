@@ -1,4 +1,4 @@
-// Pure rules for Rita's curriculum lessons: the JSON shapes the AI must return,
+// Pure rules for Uzyra's curriculum lessons: the JSON shapes the AI must return,
 // how far each book has been read and taught, and how a lesson is scored.
 // No server or browser imports here so the rules can be unit tested with node.
 import { z } from "zod";
@@ -63,7 +63,7 @@ export const ObjectiveSchema = z.object({
   text_ar: shortText(240).default(""),
   /** what the learner must say or do for the objective to count as met */
   criteria: shortText(400).min(3),
-  /** questions Rita can ask to check the objective */
+  /** questions Uzyra can ask to check the objective */
   check_prompts: z.array(shortText(240).min(1)).min(1).max(4),
   weight: z.number().int().min(1).max(5).default(1),
 });

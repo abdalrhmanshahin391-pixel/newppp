@@ -10,7 +10,7 @@ import {
 
 test("Arabic with a German word reads right to left", () => {
   assert.equal(textDirection('إيه، بدي أسألك شو معنى "صباح الخير" بالألماني؟ Guten Morgen'), "rtl");
-  assert.equal(textDirection("Hi, I'm Rita. What would you like to practise?"), "ltr");
+  assert.equal(textDirection("Hi, I'm Uzyra. What would you like to practise?"), "ltr");
   assert.equal(textDirection("Good morning, يا صديقي and welcome to the lesson today"), "ltr");
   assert.equal(textDirection("12345 ?!"), "ltr");
   // An Arabic sentence around bolded English phrases is still Arabic.
@@ -88,7 +88,7 @@ test("quotes hugging a foreign word are dropped, lone quotes stay", () => {
   assert.equal(joined("قال \u201Cصباح\u201D و again"), "قال \u201Cصباح\u201D و again");
 });
 
-test("short pieces from the learner become one turn; Rita's replies stay apart", () => {
+test("short pieces from the learner become one turn; Uzyra's replies stay apart", () => {
   const turns = groupTurns([
     { id: "1", role: "you" as const, text: "طيب،" },
     { id: "2", role: "you" as const, text: "أمم..." },

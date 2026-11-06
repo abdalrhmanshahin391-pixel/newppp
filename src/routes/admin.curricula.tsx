@@ -16,7 +16,7 @@ type CurriculaSearch = { book?: string; step?: BookStep };
 
 export const Route = createFileRoute("/admin/curricula")({
   head: () => ({
-    meta: [{ title: "Rita curriculum — Admin" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Uzyra curriculum — Admin" }, { name: "robots", content: "noindex" }],
   }),
   validateSearch: (search: Record<string, unknown>): CurriculaSearch => {
     const book =
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/admin/curricula")({
 type Overview = Awaited<ReturnType<typeof adminCurriculumOverview>>;
 
 /**
- * Rita's books for admins: the list of books (each with its next step), or one book worked through
+ * Uzyra's books for admins: the list of books (each with its next step), or one book worked through
  * in four steps. The book and step are in the address, so back and reload keep the place.
  */
 function AdminCurricula() {
@@ -102,7 +102,7 @@ function AdminCurricula() {
     >
       <header className="border-b border-[var(--pp-line)] bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-5 py-3">
-          <p className="text-[15px] font-semibold">مناهج دروس ريتا</p>
+          <p className="text-[15px] font-semibold">مناهج دروس يوزرا</p>
           <div className="flex items-center gap-1">
             <Link to="/rita-lessons" className="rita-btn rita-btn-quiet rita-btn-sm">
               مسار الطالب

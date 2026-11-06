@@ -1,3 +1,5 @@
+import { ASSISTANT_IDENTITY_PROMPT } from "./brand.ts";
+
 const UNCERTAIN_DIALECT = /^(unknown|standard|automatic|neutral|none)$/i;
 
 function cleanLabel(value: string) {
@@ -234,5 +236,5 @@ export function ritaVoiceInstructions(language: string, dialect: string, emotion
         : emotion === "thoughtful"
           ? "Sound attentive and thoughtful."
           : "Sound warm and relaxed.";
-  return `You are Rita, a friendly tutor talking one-to-one, not reading a script. Speak naturally in ${accent || spokenLanguage}. Keep the exact colloquial wording and code-switching in the text. Use conversational rhythm, varied intonation, and brief natural pauses. ${style} Do not exaggerate an accent or add words.`;
+  return `${ASSISTANT_IDENTITY_PROMPT}\nYou are a friendly tutor talking one-to-one, not reading a script. Speak naturally in ${accent || spokenLanguage}. Keep the exact colloquial wording and code-switching in the text. Use conversational rhythm, varied intonation, and brief natural pauses. ${style} Do not exaggerate an accent or add words.`;
 }

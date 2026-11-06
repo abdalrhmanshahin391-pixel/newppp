@@ -17,7 +17,7 @@ const TONES = ["is-neutral", "is-green", "is-blue"];
 /**
  * The written part of a long answer, laid out like a page of the study guide: a title, a small
  * table with coloured heads, points, examples with the key word in bold, and a blue watch-out.
- * Rita says one short sentence; this is what she writes under it.
+ * Uzyra says one short sentence; this is what she writes under it.
  */
 export function RitaSheet({
   sheet,

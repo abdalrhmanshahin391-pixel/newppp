@@ -1,7 +1,7 @@
-// The server's check of a learner's selection, and the trusted context Rita gets for it. Pure.
+// The server's check of a learner's selection, and the trusted context Uzyra gets for it. Pure.
 // The browser sends which named pieces were selected (data-seg) and the text it saw. The text must
 // really be in those pieces of the guide, or the request is refused: a selection can never carry
-// new instructions to Rita. Rita then reads the guide's own text, never the browser's.
+// new instructions to Uzyra. Uzyra then reads the guide's own text, never the browser's.
 import { guideSegments, normalizeStudyText, type GuideSegment } from "../guides/guide-blocks.ts";
 import type { GuideContent } from "../guides/guide-content.ts";
 import { classifySelection, type SelectionKind, type StudyAction } from "./study-actions.ts";

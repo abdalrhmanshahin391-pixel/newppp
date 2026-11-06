@@ -1,4 +1,4 @@
-// Server functions for "Rita - interactive study", admin side: choose a lesson's experience, link a
+// Server functions for "Uzyra - interactive study", admin side: choose a lesson's experience, link a
 // PDF guide to it (printing the learners' final copy first), and the feature switch. Everything runs
 // with the admin's own session under row level security, like the guide functions: no service key.
 import { createServerFn } from "@tanstack/react-start";

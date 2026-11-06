@@ -104,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Rita is a calm study workspace: build flashcard decks, turn lecture PDFs into one-page summaries, generate practice questions and plan your day.",
+          "Uzyra is a calm study workspace: build flashcard decks, turn lecture PDFs into one-page summaries, generate practice questions and plan your day.",
       },
       { name: "author", content: "Uzyra" },
       { name: "google-site-verification", content: "U9UIGln2ZVhjR6-rfab8T6y0XwmD0zLbLQqcwmBL1Lg" },
@@ -168,11 +168,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               "@type": "EducationalOrganization",
               "@id": "https://ritajet.com/#organization",
               name: "Uzyra",
-              alternateName: ["RitaJet", "EdithLab", "Rita Study", "Uzyra study tools"],
+              alternateName: ["Uzyra", "EdithLab", "Uzyra Study", "Uzyra study tools"],
               url: "https://ritajet.com/",
               logo: "https://ritajet.com/favicon-512.png",
               description:
-                "Rita is a study workspace with flashcards, PDF summaries, AI practice questions and a study planner.",
+                "Uzyra is a study workspace with flashcards, PDF summaries, AI practice questions and a study planner.",
             },
             {
               "@type": "WebSite",

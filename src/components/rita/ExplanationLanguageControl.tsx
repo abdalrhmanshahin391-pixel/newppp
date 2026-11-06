@@ -11,9 +11,9 @@ import {
 type Ui = "en" | "ar";
 
 /**
- * "Rita explains in": Arabic, English, or like the learner speaks. A radio group of three, so it
+ * "Uzyra explains in": Arabic, English, or like the learner speaks. A radio group of three, so it
  * works with the keyboard (arrows move, the choice follows focus) and reads well to a screen
- * reader. During a conversation the choice reaches Rita straight away; the page's own words tell
+ * reader. During a conversation the choice reaches Uzyra straight away; the page's own words tell
  * the learner it applies from her next answer.
  */
 export function ExplanationLanguageControl({
@@ -51,7 +51,7 @@ export function ExplanationLanguageControl({
   return (
     <div className="mt-4 w-full max-w-sm text-start">
       <p id={labelId} dir="auto" className="text-[14px] font-semibold text-[var(--pp-muted)]">
-        {ui === "ar" ? "ريتا بتشرح بـ" : "Rita explains in"}
+        {ui === "ar" ? "يوزرا بتشرح بـ" : "Uzyra explains in"}
       </p>
       <div
         role="radiogroup"

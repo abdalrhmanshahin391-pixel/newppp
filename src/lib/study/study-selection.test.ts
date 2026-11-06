@@ -98,7 +98,7 @@ test("the context is the guide's own text around the selection, bounded", () => 
   assert.ok(section.ok && section.context.includes("- "));
 });
 
-test("Rita's actions are the same on the page and in the voice worker", () => {
+test("Uzyra's actions are the same on the page and in the voice worker", () => {
   const python = readFileSync(`${ROOT}voice-agent/rita_study_voice.py`, "utf8");
   const block = python.slice(
     python.indexOf("ACTIONS = {"),

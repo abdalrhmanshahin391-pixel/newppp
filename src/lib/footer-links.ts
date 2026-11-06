@@ -9,11 +9,11 @@ export function footerColumns(
 ): FooterColumn[] {
   return [
     {
-      heading: ar ? "ريتا" : "Rita",
+      heading: ar ? "يوزرا" : "Uzyra",
       links: [
-        { label: ar ? "تحدّث مع ريتا" : "Talk to Rita", to: "/rita" },
+        { label: ar ? "تحدّث مع يوزرا" : "Talk to Uzyra", to: "/rita" },
         { label: ar ? "محادثة حيّة" : "Live conversation", to: "/rita-live" },
-        { label: ar ? "دروس ريتا" : "Rita's lessons", to: "/rita-lessons" },
+        { label: ar ? "دروس يوزرا" : "Uzyra's lessons", to: "/rita-lessons" },
         ...(showsGermanLab(learningLanguage)
           ? [{ label: ar ? "الألمانية" : "German Lab", to: "/german" }]
           : []),

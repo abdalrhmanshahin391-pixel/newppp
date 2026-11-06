@@ -44,7 +44,7 @@ function parse(data: unknown) {
   return result.data;
 }
 
-/** One JSON answer from the same model as Rita's written answers; null when it fails. */
+/** One JSON answer from the same model as Uzyra's written answers; null when it fails. */
 async function askModel(system: string, user: string, maxTokens: number): Promise<unknown> {
   const { resolveRitaV3Key } = await import("@/lib/rita-v3.server");
   const key = await resolveRitaV3Key("groq", "GROQ_API_KEY");

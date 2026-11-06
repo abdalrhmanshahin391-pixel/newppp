@@ -25,6 +25,12 @@ test("ordinary sentences are untouched", () => {
   }
 });
 
+test("renamed and historical assistant self-notes are both removed", () => {
+  for (const name of ["Uzyra", "Rita"]) {
+    assert.equal(stripModelNotes(`${name} should respond in Arabic.أهلين!`), "أهلين!");
+  }
+});
+
 test("text without Latin letters is returned as is", () => {
   const text = "أهلين! كيف الحال؟";
   assert.equal(stripModelNotes(text), text);

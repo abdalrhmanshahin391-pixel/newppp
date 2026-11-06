@@ -7,7 +7,7 @@ const FILL_MS = 950;
 const DRAIN_MS = 420;
 
 /**
- * Starting a call with Rita: a black circle with the Uzyra mark that has to be held. While it is
+ * Starting a call with Uzyra: a black circle with the Uzyra mark that has to be held. While it is
  * held it fills with white from the bottom like a liquid (the mark turns black as the liquid
  * passes it); letting go early drains it back and nothing happens, so a call never starts by
  * accident. Full, it calls `onStart` and shrinks away (the page then shows the connecting ring).

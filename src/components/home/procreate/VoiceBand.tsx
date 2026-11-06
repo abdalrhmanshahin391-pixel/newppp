@@ -29,12 +29,12 @@ export function VoiceBand() {
               <span style={{ color: "var(--pp-accent)" }}>Say it better next time.</span>
             </h2>
             <p className="rh-lead2 mt-4 max-w-[30rem]" style={{ color: "rgba(255,255,255,0.72)" }}>
-              Rita waits while you think, stops when you say stop, and corrects one thing at a time.
+              Uzyra waits while you think, stops when you say stop, and corrects one thing at a time.
               It feels like talking to a patient teacher, not sitting an exam.
             </p>
             <div className="mt-6">
               <Link to="/rita" className="rita-btn rita-btn-primary">
-                Talk to Rita
+                Talk to Uzyra
               </Link>
             </div>
           </div>

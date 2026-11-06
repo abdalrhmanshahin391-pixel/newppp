@@ -25,7 +25,7 @@ export const Route = createFileRoute("/api/rita-v3/session/metrics")({
             metadata: event.metadata,
           });
         } catch (error) {
-          console.error("Rita v3 metric storage failed", error);
+          console.error("Uzyra v3 metric storage failed", error);
           return Response.json({ ok: false }, { status: 503 });
         }
         return Response.json({ ok: true });

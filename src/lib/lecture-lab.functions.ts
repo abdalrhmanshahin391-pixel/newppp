@@ -1,5 +1,5 @@
 // Lecture Lab — turn one lecture PDF into a quick quiz.
-// Light sibling of Rita AI 3.8: short 2-3 line explanations, runs on the page.
+// Light sibling of Uzyra AI 3.8: short 2-3 line explanations, runs on the page.
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";
 import { z } from "zod";

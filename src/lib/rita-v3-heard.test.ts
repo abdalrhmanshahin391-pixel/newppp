@@ -119,7 +119,7 @@ test("pieces of one learner turn share one bubble and each word appears once", (
   const turn = new LearnerTurn();
   turn.speechStarted("a", "t1");
   assert.equal(turn.addFinal("Äh. You are so confused.", "x", "tx"), "Äh. You are so confused.");
-  // The learner carries on before Rita answers: new speech start, same bubble.
+  // The learner carries on before Uzyra answers: new speech start, same bubble.
   turn.speechStarted("b", "t2");
   assert.equal(
     turn.addFinal("You don't understand what I say.", "y", "ty"),
@@ -129,7 +129,7 @@ test("pieces of one learner turn share one bubble and each word appears once", (
   assert.equal(turn.createdAt, "t1");
 });
 
-test("once Rita starts to answer, the next words are a new bubble that starts from nothing", () => {
+test("once Uzyra starts to answer, the next words are a new bubble that starts from nothing", () => {
   const turn = new LearnerTurn();
   turn.speechStarted("a", "t1");
   turn.addFinal("أعطيني مجموعة.", "x", "tx");

@@ -15,7 +15,7 @@ function when(iso: string | null) {
 }
 
 /**
- * Pinned at the top of Users & Roles: the whole of Rita's membership with the
+ * Pinned at the top of Users & Roles: the whole of Uzyra's membership with the
  * plan each person is on and any kit they claimed.
  */
 export function UsersPlanDirectory() {
@@ -80,7 +80,7 @@ export function UsersPlanDirectory() {
     <section className="mb-10 rounded-3xl border border-border bg-card p-5 md:p-6">
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="flex items-center gap-2 text-lg font-black">
-          <UsersIcon size={18} /> All users of Rita
+          <UsersIcon size={18} /> All users of Uzyra
           <span className="text-sm font-bold text-muted-foreground">({rows.length})</span>
         </h2>
         <button

@@ -6,7 +6,7 @@ import { useGuideOpen } from "@/hooks/useGuideOpen";
 import { AdminGuide, GuideButton } from "./AdminGuide";
 
 /**
- * The admin's strip on the conversations page: the AI analysis switch, the way to Rita quality and
+ * The admin's strip on the conversations page: the AI analysis switch, the way to Uzyra quality and
  * the guide. Dashed and labelled "Admin only" so it is never read as part of the learner's page;
  * learners do not get it at all.
  */
@@ -23,7 +23,7 @@ export function AdminBar() {
         <ReviewSwitch compact />
         <span className="flex flex-wrap items-center gap-2 sm:ms-auto">
           <Link to="/admin/rita-quality" className="rita-btn rita-btn-sm rita-btn-soft gap-2">
-            Rita quality <ArrowRight size={16} aria-hidden="true" />
+            Uzyra quality <ArrowRight size={16} aria-hidden="true" />
           </Link>
           <GuideButton open={guide} onToggle={() => setGuide(!guide)} />
         </span>

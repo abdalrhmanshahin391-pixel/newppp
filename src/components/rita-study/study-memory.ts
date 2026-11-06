@@ -1,4 +1,4 @@
-// What this browser remembers about a study lesson: whether Rita already explained how the page
+// What this browser remembers about a study lesson: whether Uzyra already explained how the page
 // works, and the section the learner was reading. A per-viewer convenience only: it can be empty
 // (private window, cleared data) and the page works the same.
 

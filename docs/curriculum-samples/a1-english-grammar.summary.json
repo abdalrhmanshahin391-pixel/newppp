@@ -17,7 +17,7 @@
           "Short answers: Yes, I am. / No, she isn't."
         ],
         "examples": [
-          "I am Rita.",
+          "I am Uzyra.",
           "She is my friend.",
           "We are from Jordan.",
           "It isn't cold today."
@@ -72,7 +72,7 @@
           "Ask with whose: Whose bag is this? It's her bag."
         ],
         "examples": [
-          "What's your name? My name is Rita.",
+          "What's your name? My name is Uzyra.",
           "This is his brother.",
           "Their house is big."
         ],
@@ -100,7 +100,7 @@
     "suggested_lessons": [
       {
         "topic": "The verb \"to be\"",
-        "title_ar": "أنا ريتا",
+        "title_ar": "أنا يوزرا",
         "from_page": 2,
         "to_page": 2
       },

@@ -39,7 +39,7 @@ export function ReplaySection({
         Test on the current version
       </h2>
       <p className="mt-2 max-w-2xl text-[16px] leading-[1.5] text-[var(--pp-muted)]">
-        Rita answers this problem&apos;s old turns again with the version running now, and the
+        Uzyra answers this problem&apos;s old turns again with the version running now, and the
         answers are judged against what a good tutor would say. Each turn is answered twice and
         counts only if both answers are good.
       </p>
@@ -79,7 +79,7 @@ export function ReplaySection({
           </p>
           {run.prompt_changed === false ? (
             <p className="mt-2 rounded-xl bg-[var(--pp-grey)] px-4 py-3 text-[14px]">
-              Rita&apos;s instructions have not changed since these replies were first given, so a
+              Uzyra&apos;s instructions have not changed since these replies were first given, so a
               different result here is chance, not a fix.
             </p>
           ) : null}

@@ -58,7 +58,7 @@ export async function resolveRitaV3Key(provider: string, environmentName: string
     const saved = String(data?.api_key ?? "").trim();
     if (saved) return saved;
   } catch (error) {
-    console.warn(`Could not read Rita v3 ${provider} key`, error);
+    console.warn(`Could not read Uzyra v3 ${provider} key`, error);
   }
 
   return String(process.env[environmentName] ?? "").trim();
@@ -178,7 +178,7 @@ export async function syncRitaV3WorkerSecrets(
       return {
         synced: true,
         pending: false,
-        reason: "Worker secrets are ready in Pipecat. Redeploy Rita to use replacement values.",
+        reason: "Worker secrets are ready in Pipecat. Redeploy Uzyra to use replacement values.",
         status: latest.status,
         fields: latest.fields,
       };
@@ -324,7 +324,7 @@ export async function getRitaV3Readiness(privateKeyOverride?: string) {
   const unhealthy = /failed|error|unhealthy|not.?ready|inactive/i.test(health);
   checks.push({
     id: "agent",
-    label: "Rita voice worker",
+    label: "Uzyra voice worker",
     ok: Boolean(agent) && !unhealthy,
     message: agent
       ? `${env.agentName} is visible; reported state: ${sanitizePipecatDiagnostic(health)}.`
@@ -440,8 +440,8 @@ export async function probeRitaV3Worker() {
       ok: true,
       code: "probe_started",
       message: cleanupOk
-        ? "Pipecat started and stopped a real Rita worker session successfully."
-        : "Pipecat started a real Rita session, but automatic probe cleanup could not be confirmed.",
+        ? "Pipecat started and stopped a real Uzyra worker session successfully."
+        : "Pipecat started a real Uzyra session, but automatic probe cleanup could not be confirmed.",
       startupMs: Date.now() - startedAt,
       cleanupOk,
     };
@@ -451,7 +451,7 @@ export async function probeRitaV3Worker() {
       ok: false,
       code: timedOut ? "cold_start_timeout" : "pipecat_network_error",
       message: timedOut
-        ? "The Rita worker did not start within 45 seconds."
+        ? "The Uzyra worker did not start within 45 seconds."
         : "The live Pipecat probe could not reach the worker.",
       retryable: true,
     };
@@ -472,7 +472,7 @@ export async function requireRitaV3Access(request: Request) {
         {
           ok: false,
           code: allowance.reason,
-          message: "Rita voice is unavailable because its usage safety limit has been reached.",
+          message: "Uzyra voice is unavailable because its usage safety limit has been reached.",
         },
         { status: 429 },
       ),
@@ -514,7 +514,7 @@ export async function persistRitaV3Session(args: {
     })
     .select("id")
     .single();
-  if (error || !data?.id) throw new Error(error?.message || "Could not create Rita v3 session");
+  if (error || !data?.id) throw new Error(error?.message || "Could not create Uzyra v3 session");
   return String(data.id);
 }
 
@@ -556,7 +556,7 @@ export async function loadOwnedRitaConversation(args: {
 }
 
 /**
- * The language Rita should teach in this session, or null when there is none (no language chosen
+ * The language Uzyra should teach in this session, or null when there is none (no language chosen
  * yet, or a database that has not been migrated): then the session behaves as it always did.
  */
 export async function loadTargetLanguage(args: {
@@ -589,7 +589,7 @@ export async function loadTargetLanguage(args: {
       registry: (registry.data ?? []) as RegistryLanguage[],
     });
   } catch (error) {
-    console.warn("Rita target language could not be loaded", error);
+    console.warn("Uzyra target language could not be loaded", error);
     return null;
   }
 }

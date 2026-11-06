@@ -1,5 +1,6 @@
-// Loads the lesson notes that the voice worker adds to Rita's prompt.
+// Loads the lesson notes that the voice worker adds to Uzyra's prompt.
 import { ritaV3UserClient } from "@/lib/rita-v3.server";
+import { currentProductCopy } from "@/lib/brand";
 import {
   buildLessonBrief,
   type LessonPlan,
@@ -68,5 +69,9 @@ export async function loadVoiceLesson(
     },
     ((progress?.data?.objectives ?? {}) as ObjectiveState) || {},
   );
-  return { id: String(lesson.id), title: String(lesson.title), brief };
+  return {
+    id: String(lesson.id),
+    title: currentProductCopy(String(lesson.title)),
+    brief: currentProductCopy(brief),
+  };
 }

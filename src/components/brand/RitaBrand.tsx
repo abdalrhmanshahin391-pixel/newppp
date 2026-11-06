@@ -1,6 +1,6 @@
 import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
 
-// The original Rita face (the icon Google still shows) — restored on request.
+// The original Uzyra face (the icon Google still shows) — restored on request.
 const ritaFace = { url: "/brand-rita.png" };
 
 export function RitaFace({ size = 40 }: { size?: number }) {

@@ -1,5 +1,5 @@
 """
-Prepare Rita for the web from an AI-generated T-pose mesh (Meshy GLB).
+Prepare Uzyra for the web from an AI-generated T-pose mesh (Meshy GLB).
 
 What it does
 1. Imports the source GLB, drops its textures and materials.

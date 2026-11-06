@@ -36,7 +36,7 @@ import {
 
 export const Route = createFileRoute("/rita-conversations")({
   head: () => ({
-    meta: [{ title: "Rita conversations — Uzyra" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Uzyra conversations — Uzyra" }, { name: "robots", content: "noindex" }],
   }),
   component: () => (
     <LanguageGate>
@@ -459,7 +459,7 @@ function RitaConversationsPage() {
           to="/learn" hash="rita"
           className="inline-flex items-center gap-2 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
         >
-          <ArrowLeft size={17} /> Rita
+          <ArrowLeft size={17} /> Uzyra
         </Link>
         <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -467,7 +467,7 @@ function RitaConversationsPage() {
               Free conversation
             </p>
             <h1 className="mt-2 text-[38px] leading-tight sm:text-[50px]">
-              Your Rita conversations
+              Your Uzyra conversations
             </h1>
             <p lang="ar" className="mt-2 text-[18px] font-semibold text-[var(--pp-muted)]">
               محادثاتك محفوظة وخاصة بحسابك.
@@ -598,7 +598,7 @@ function RitaConversationsPage() {
                     }`}
                   >
                     <p className="text-xs font-bold uppercase tracking-wide text-[var(--pp-muted)]">
-                      {message.role === "user" ? "You" : "Rita"}
+                      {message.role === "user" ? "You" : "Uzyra"}
                       {message.delivery_status !== "completed"
                         ? ` · ${message.delivery_status}`
                         : ""}

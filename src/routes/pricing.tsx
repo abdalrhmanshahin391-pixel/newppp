@@ -24,11 +24,11 @@ export const Route = createFileRoute("/pricing")({
   },
   head: () => ({
     meta: [
-      { title: "Rita plans — flashcards, summaries and AI questions" },
+      { title: "Uzyra plans — flashcards, summaries and AI questions" },
       {
         name: "description",
         content:
-          "Pick the Rita plan that matches your semester: a free start, an everyday study plan, or the exam-season plan with the biggest AI allowance.",
+          "Pick the Uzyra plan that matches your semester: a free start, an everyday study plan, or the exam-season plan with the biggest AI allowance.",
       },
       { property: "og:title", content: "Choose your smart study plan — Uzyra" },
       {

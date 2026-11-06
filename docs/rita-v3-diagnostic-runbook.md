@@ -1,4 +1,4 @@
-# Rita v3 diagnostic runbook
+# Uzyra v3 diagnostic runbook
 
 This runbook is for one bounded acceptance probe. It diagnoses speed and
 reliability; it is not a human voice-quality evaluation.
@@ -23,7 +23,7 @@ not an iPad hearing test.
 1. Confirm the deployment is Modal, its secrets are present, and no legacy
    fallback is enabled.
 2. Run worker/frontend tests and build. Do not deploy if any fails.
-3. Run `Rita v3 short voice probe` once. If `RITA_PROBE_START_URL` and
+3. Run `Uzyra v3 short voice probe` once. If `RITA_PROBE_START_URL` and
    `RITA_PROBE_START_TOKEN` repository secrets exist, it tests Modal; otherwise
    it explicitly reports `start_backend: pipecat` and is not evidence for Modal.
 4. Review `metrics.json`, captured response audio, application-session events,
@@ -31,7 +31,7 @@ not an iPad hearing test.
    filtered by session ID when that backend is used.
 5. Perform one human device check only after the synthetic run is clean:
    Arabic with `Guten Morgen`, an explicit German switch, one general question,
-   then interrupt Rita during speech.
+   then interrupt Uzyra during speech.
 
 ## Diagnosis rules
 

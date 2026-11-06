@@ -54,7 +54,7 @@ test("retry accepts only callbacks belonging to the new session", () => {
   assert.deepEqual(seen, ["new"]);
 });
 
-test("waiting, failure and idle never announce that Rita is listening", () => {
+test("waiting, failure and idle never announce that Uzyra is listening", () => {
   for (const phase of ["waiting", "failed", "connecting", "idle", "ended"] as const) {
     assert.doesNotMatch(voiceStateWord(phase, "listening", false), /بسمعك|جاهزة/);
   }

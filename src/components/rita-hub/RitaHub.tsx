@@ -146,7 +146,7 @@ export function RitaHub() {
       <section className="mx-auto w-full max-w-5xl px-5 pb-16 pt-10 sm:px-8 sm:pt-12">
         <div className="max-w-3xl">
           <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-[var(--pp-muted)]">
-            Rita
+            Uzyra
           </p>
           <h2 className="mt-3 text-[36px] leading-[40px] sm:text-[48px] sm:leading-[52px]">
             What would you like to do today?
@@ -163,7 +163,7 @@ export function RitaHub() {
             eyebrow="Open practice"
             title="Free conversation"
             titleAr="محادثة حرة"
-            text="Talk to Rita about anything. She listens, answers out loud and gently corrects you as you go."
+            text="Talk to Uzyra about anything. She listens, answers out loud and gently corrects you as you go."
             action="Your conversations"
           />
           <Card
@@ -172,7 +172,7 @@ export function RitaHub() {
             eyebrow="Guided path"
             title="Lessons"
             titleAr="الدروس"
-            text="Short lessons with clear goals. Rita teaches, asks you questions and gives you stars when you reach each goal."
+            text="Short lessons with clear goals. Uzyra teaches, asks you questions and gives you stars when you reach each goal."
             detail={
               lessons === null ? (
                 <Loader2 size={16} className="animate-spin text-[var(--pp-muted)]" />

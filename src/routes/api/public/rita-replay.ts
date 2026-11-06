@@ -25,7 +25,7 @@ export const Route = createFileRoute("/api/public/rita-replay")({
           return Response.json({ ...replay, reviewerCheck: check });
         } catch (error) {
           const status = error instanceof ReviewError ? error.status : 500;
-          console.error("Rita replay run failed", error);
+          console.error("Uzyra replay run failed", error);
           return Response.json(
             { error: error instanceof Error ? error.message : "Replay failed" },
             { status },

@@ -416,9 +416,9 @@ export function LessonPathView({
       </header>
 
       <section className="mx-auto max-w-md px-4 pt-7 text-center">
-        <h2 className="text-[30px] font-bold leading-9">دروسك مع ريتا</h2>
+        <h2 className="text-[30px] font-bold leading-9">دروسك مع يوزرا</h2>
         <p className="mt-1.5 text-sm font-semibold text-[var(--pp-muted)]">
-          تحدّث مع ريتا، حقّق أهداف كل درس، واجمع النجوم.
+          تحدّث مع يوزرا، حقّق أهداف كل درس، واجمع النجوم.
         </p>
         {lessonList.length > 0 && (
           <div className="lp-stats">
@@ -507,10 +507,10 @@ export function LessonPathView({
         <div className="mx-auto mt-16 max-w-xs text-center">
           <p className="font-bold text-[var(--pp-ink)]">لا توجد دروس منشورة بعد.</p>
           <p className="mt-1 text-sm font-semibold text-[var(--pp-muted)]">
-            جرّب محادثة حرة مع ريتا حتى تجهز الدروس:
+            جرّب محادثة حرة مع يوزرا حتى تجهز الدروس:
           </p>
           <Link to="/rita-live" className="rita-btn rita-btn-primary mt-4 gap-2 !inline-flex">
-            <MessageCircle size={16} /> محادثة حرة مع ريتا
+            <MessageCircle size={16} /> محادثة حرة مع يوزرا
           </Link>
         </div>
       )}

@@ -442,7 +442,7 @@ export const TOURS: Record<string, PageTourDef> = {
         },
         description: {
           en: "Uzyra explanations don't just state the right choice — they dissect the diagnostic reasoning, Jones criteria, clinical algorithms, and explain exactly why each distractor is clinically invalid.",
-          ar: "شروحات ريتاجت لا تكتفي بذكر الجواب الصحيح، بل تحلل المسار التشخيصي كاملاً، وتوضح معايير التشخيص المعتمدة، وتعلل سبب استبعاد كل خيار خاطئ بدقة متناهية.",
+          ar: "شروحات يوزرا لا تكتفي بذكر الجواب الصحيح، بل تحلل المسار التشخيصي كاملاً، وتوضح معايير التشخيص المعتمدة، وتعلل سبب استبعاد كل خيار خاطئ بدقة متناهية.",
         },
         bullets: {
           en: [
@@ -610,8 +610,8 @@ export const TOURS: Record<string, PageTourDef> = {
           ar: "التقطير السريري واستخلاص الدرر الامتحانية",
         },
         description: {
-          en: "Upload dense medical lecture PDFs (50-100 slides) and watch Rita AI synthesize them into an elegant, high-yield single sheet highlighting diagnostic triads, pathognomonic signs, and key clinical pearls.",
-          ar: "ارفع عروض المحاضرات الطبية الكثيفة (50 إلى 100 شريحة)، ودع ريتا تستخلص منها زبدة المنهج في ورقة واحدة منظمة تبرز الثلاثيات التشخيصية، والعلامات الفارقة، والنقاط الامتحانية الحاسمة.",
+          en: "Upload dense medical lecture PDFs (50-100 slides) and watch Uzyra AI synthesize them into an elegant, high-yield single sheet highlighting diagnostic triads, pathognomonic signs, and key clinical pearls.",
+          ar: "ارفع عروض المحاضرات الطبية الكثيفة (50 إلى 100 شريحة)، ودع يوزرا تستخلص منها زبدة المنهج في ورقة واحدة منظمة تبرز الثلاثيات التشخيصية، والعلامات الفارقة، والنقاط الامتحانية الحاسمة.",
         },
       },
     ],
@@ -694,11 +694,11 @@ export const TOURS: Record<string, PageTourDef> = {
         fallbackSelector: "header, .border-b",
         title: {
           en: "Keep the Day Light: Uzyra Philosophy",
-          ar: "اجعل يومك خفيفاً: فلسفة ريتاجت في تنظيم المذاكرة",
+          ar: "اجعل يومك خفيفاً: فلسفة يوزرا في تنظيم المذاكرة",
         },
         description: {
           en: "Uzyra's to-do planner is built on cognitive pacing: set realistic daily targets (3-5 high-yield tasks) to prevent burnout and maintain long-term momentum.",
-          ar: "مخطط مهام ريتاجت مبني على التوازن الذهني؛ حدد أهدافاً واقعية ومركزة (3 إلى 5 مهام نوعية يومياً) لمنع الإرهاق والحفاظ على الاستمرارية الطويلة.",
+          ar: "مخطط مهام يوزرا مبني على التوازن الذهني؛ حدد أهدافاً واقعية ومركزة (3 إلى 5 مهام نوعية يومياً) لمنع الإرهاق والحفاظ على الاستمرارية الطويلة.",
         },
         bullets: {
           en: [
@@ -758,7 +758,7 @@ export const TOURS: Record<string, PageTourDef> = {
      ========================================================================= */
   "all-in-one": {
     toolKey: "all-in-one",
-    title: { en: "All-in-One Multi-Pass AI Studio", ar: "استوديو ريتا الشامل متعدد المعالجة" },
+    title: { en: "All-in-One Multi-Pass AI Studio", ar: "استوديو يوزرا الشامل متعدد المعالجة" },
     steps: [
       {
         id: "aio-studio-input",
@@ -769,8 +769,8 @@ export const TOURS: Record<string, PageTourDef> = {
           ar: "النقطة الأولى: رفع واحد · حزمة أكاديمية متكاملة بضغطة واحدة",
         },
         description: {
-          en: "Drop a lecture PDF (digital slides or physical document scans) or paste raw text. In one single background pass, Rita AI extracts and generates your complete 4-part study package.",
-          ar: "ارفع ملف المحاضرة PDF (سواء شرائح إلكترونية أو مسح ضوئي بالأوراق) أو الصق النص مباشرة. وبضغطة زر واحدة في الخلفية، تُولّد لك ريتا حزمة دراسية متكاملة من 4 أقسام.",
+          en: "Drop a lecture PDF (digital slides or physical document scans) or paste raw text. In one single background pass, Uzyra AI extracts and generates your complete 4-part study package.",
+          ar: "ارفع ملف المحاضرة PDF (سواء شرائح إلكترونية أو مسح ضوئي بالأوراق) أو الصق النص مباشرة. وبضغطة زر واحدة في الخلفية، تُولّد لك يوزرا حزمة دراسية متكاملة من 4 أقسام.",
         },
         bullets: {
           en: [
@@ -856,7 +856,7 @@ export const TOURS: Record<string, PageTourDef> = {
         },
         description: {
           en: "German articles are the foundation of grammar, case declensions (Nominativ, Akkusativ, Dativ, Genitiv), and clinical precision. Uzyra replaces arbitrary memorization with an instinctive, visual, and audio-backed retention loop.",
-          ar: "أدوات التعريف الألمانية هي حجر الأساس في القواعد، والإعراب (Nominativ, Akkusativ, Dativ, Genitiv)، والدقة الطبية. يستبدل ريتاجت الحفظ العشوائي بنظام بصري وصوتي يرسخ الأداة في الذاكرة فوراً.",
+          ar: "أدوات التعريف الألمانية هي حجر الأساس في القواعد، والإعراب (Nominativ, Akkusativ, Dativ, Genitiv)، والدقة الطبية. يستبدل يوزرا الحفظ العشوائي بنظام بصري وصوتي يرسخ الأداة في الذاكرة فوراً.",
         },
         bullets: {
           en: [

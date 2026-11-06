@@ -179,7 +179,7 @@ export function LessonForm({
       <textarea
         value={form.summary}
         onChange={(event) => patch({ summary: event.target.value })}
-        placeholder="ملخص: شو بتعلّم ريتا في هذا الدرس؟"
+        placeholder="ملخص: شو بتعلّم يوزرا في هذا الدرس؟"
         rows={2}
         className="w-full rounded-xl border-2 border-[#0b0b0f] px-3 py-2 text-sm"
       />

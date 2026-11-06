@@ -103,7 +103,7 @@ export function LessonObjectivesPanel({
       </ul>
       <p className="mt-3 flex items-center gap-1.5 text-xs font-bold text-[var(--pp-muted)]">
         {checking && <Loader2 size={12} className="animate-spin" />}
-        {checking ? "ريتا تراجع إجابتك…" : `النتيجة حتى الآن: ${score}%`}
+        {checking ? "يوزرا تراجع إجابتك…" : `النتيجة حتى الآن: ${score}%`}
       </p>
     </section>
   );

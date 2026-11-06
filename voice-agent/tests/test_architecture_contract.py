@@ -191,7 +191,7 @@ def test_the_deployed_commit_reaches_the_worker():
 
 
 def test_the_reviewer_knows_the_dialect_rules_the_worker_uses():
-    """The AI review judges replies against src/lib/rita-tutor-contract.ts. When Rita's dialect
+    """The AI review judges replies against src/lib/rita-tutor-contract.ts. When Uzyra's dialect
     prompt changes, update that file (and raise RUBRIC_VERSION), then the hash there."""
 
     import hashlib

@@ -40,6 +40,11 @@ class StopTests(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertEqual(classify(text).act, Act.STOP)
 
+    def test_current_and_historical_names_do_not_break_a_stop_command(self):
+        for text in ("خلص يا يوزرا", "stop uzyra", "خلص يا ريتا", "stop rita"):
+            with self.subTest(text=text):
+                self.assertEqual(classify(text).act, Act.STOP)
+
     def test_things_that_only_look_like_stop(self):
         for text in (
             "بس بدي أسأل",  # "but I want to ask"
@@ -192,7 +197,7 @@ if __name__ == "__main__":
 
 
 class RealTurnsFromTheLongConversation(unittest.TestCase):
-    """Turns the old lexicons read as plain content, so Rita answered them as if nothing was wrong."""
+    """Turns the old lexicons read as plain content, so Uzyra answered them as if nothing was wrong."""
 
     def assertAct(self, text, act):
         self.assertEqual(classify(text).act, act, text)

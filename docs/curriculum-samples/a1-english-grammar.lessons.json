@@ -3,11 +3,11 @@
     "image_url": "/curriculum/to-be.svg",
     "lesson": {
       "title": "The verb \"to be\"",
-      "title_ar": "أنا ريتا",
+      "title_ar": "أنا يوزرا",
       "topic": "to be: am / is / are",
       "source_from_page": 2,
       "source_to_page": 2,
-      "summary": "Rita teaches am, is and are with the learner's own life: who they are, how they feel and where they are from, then the negative and yes/no questions with short answers.",
+      "summary": "Uzyra teaches am, is and are with the learner's own life: who they are, how they feel and where they are from, then the negative and yes/no questions with short answers.",
       "objectives": [
         {
           "id": "say-i-am",
@@ -68,7 +68,7 @@
             "phase": "warmup",
             "minutes": 1,
             "steps": [
-              "Greet the learner and say: I am Rita. I am your teacher."
+              "Greet the learner and say: I am Uzyra. I am your teacher."
             ]
           },
           {
@@ -87,7 +87,7 @@
               "Ask the learner to say three sentences about themselves",
               "Ask about a friend: he is / she is",
               "Practise negatives: I'm not tired",
-              "Swap: the learner asks Rita Are you ...? questions"
+              "Swap: the learner asks Uzyra Are you ...? questions"
             ]
           },
           {
@@ -112,7 +112,7 @@
         {
           "word": "am",
           "meaning_ar": "أكون (مع I)",
-          "example": "I am Rita."
+          "example": "I am Uzyra."
         },
         {
           "word": "is",
@@ -136,7 +136,7 @@
       "topic": "subject pronouns",
       "source_from_page": 3,
       "source_to_page": 3,
-      "summary": "Rita teaches I, you, he, she, it, we and they by replacing names with pronouns in short spoken sentences.",
+      "summary": "Uzyra teaches I, you, he, she, it, we and they by replacing names with pronouns in short spoken sentences.",
       "objectives": [
         {
           "id": "he-she",
@@ -262,7 +262,7 @@
       "topic": "a / an",
       "source_from_page": 4,
       "source_to_page": 4,
-      "summary": "Rita teaches when to say a and when to say an by listening to the first sound of the word, and using a/an for jobs.",
+      "summary": "Uzyra teaches when to say a and when to say an by listening to the first sound of the word, and using a/an for jobs.",
       "objectives": [
         {
           "id": "use-a",
@@ -362,7 +362,7 @@
       "topic": "my / your / his / her / our / their",
       "source_from_page": 5,
       "source_to_page": 5,
-      "summary": "Rita teaches my, your, his, her, its, our and their by talking about the learner's family and things.",
+      "summary": "Uzyra teaches my, your, his, her, its, our and their by talking about the learner's family and things.",
       "objectives": [
         {
           "id": "my-your",
@@ -488,7 +488,7 @@
       "topic": "present simple routines",
       "source_from_page": 6,
       "source_to_page": 6,
-      "summary": "Rita teaches the present simple for daily routines: I work, she works, don't/doesn't and do/does questions.",
+      "summary": "Uzyra teaches the present simple for daily routines: I work, she works, don't/doesn't and do/does questions.",
       "objectives": [
         {
           "id": "routine",

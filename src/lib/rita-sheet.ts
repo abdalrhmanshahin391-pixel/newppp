@@ -1,4 +1,4 @@
-// Rita's written sheet. A long answer is spoken as one short sentence, and the details are written
+// Uzyra's written sheet. A long answer is spoken as one short sentence, and the details are written
 // after the line [[SHEET]] (the voice worker never speaks that part; see voice-agent/rita_sheet.py).
 // The page shows the sheet as a tidy page under her words, in the style of the study guide. The
 // sheet uses a few simple lines:
