@@ -324,3 +324,20 @@ export function introSound(): void {
   bell(a, 784, 0.9, 1.4, 0.028);
   bell(a, 1047, 0.95, 1.6, 0.022);
 }
+
+const WORD_NOTES = [659, 784, 880, 988, 1175];
+
+/**
+ * A word tapped on the home page: a soft "pop" (a quick falling sine), then two bell notes a fifth
+ * apart. Each word has its own pitch, so tapping them one after another plays a small tune. Off
+ * when the sound is off.
+ */
+export function wordTapSound(index = 0): void {
+  if (!soundOn()) return;
+  const base = WORD_NOTES[Math.abs(index) % WORD_NOTES.length];
+  whenRunning((a) => {
+    sweep(a, 560, 240, 0.09, 0.035, "sine");
+    bell(a, base, 0.03, 0.45, 0.04);
+    bell(a, base * 1.5, 0.11, 0.6, 0.03);
+  });
+}

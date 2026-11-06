@@ -531,6 +531,14 @@ reading size. The header takes the home page's lower bar (60px, 14px links, 38px
 button, 40px light buttons. Measured at 1180px: stage title 46 to 36, rail 16 to 14, tile name 19 to
 16, header 64 to 60.
 
+### Home hero words
+
+Tapping one of the words around Rita's orb (Guten Morgen, Danke…) plays a small sound from the
+study circle's family (`wordTapSound` in `tech-sound.ts`: a soft falling "pop", then two bell notes a
+fifth apart, each word on its own pitch, so tapping them in turn plays a little tune) and the word
+gives a springy pop (the `scale` property, so its tilt stays). The sound follows the same on/off
+setting as the study page; reduced motion keeps the word still.
+
 ## Home "Under the hood" band
 
 `src/components/home/procreate/UnderTheHood.tsx`, after the lesson path. Speed story for Rita, told in three parts: a scripted mixed-language transcript demo, an overlap timeline, and five capability cells (one is the measured figure).
@@ -554,12 +562,20 @@ many items and very long text; loading and error states.
 
 ## Lesson path (`/rita-lessons`, `LessonPathView`)
 
-A zig-zag road of round stops on white. Each kind of stop has one colour, used for its ring, its pill
-and the legend under the stats card: green «PDF + صوت» (a study lesson: guide + Rita's voice), blue
-«محادثة» (a conversation lesson), orange «تمارين» (an exercises stop: only its look for now, opening it
-does nothing yet) and purple «ملفات» (a resources stop that opens a sheet of files and links). The
-road is grey; the part already walked (up to the current lesson) is blue, and the current lesson
-carries a small bobbing «إنت هون» tag. Stats sit in one quiet card (lessons done, stars, a bar).
+A zig-zag road of round stops on white, with only what the learner needs on arrival: the header
+(back, the language and level, a small «ترتيب حر» pill that opens every lesson in any order, and for
+admins «تعديل المسار»), the title «دروسك مع ريتا» (24/600), and the road. No stars, stats card,
+colour legend or slogan on this page (stars are still kept in the database). Each kind of stop has
+one colour, used for its 4px ring and its small pill: green «PDF + صوت» (a study lesson: guide +
+Rita's voice), blue «محادثة» (a conversation lesson), orange «تمارين» (an exercises stop: only its look
+for now) and purple «ملفات» (a resources stop that opens a sheet of files and links). Stops are 88px,
+196px apart, titles 14/700 and a 11.5px line. The road is a 6px grey line; the part already walked
+(up to the current lesson) is blue, and the current lesson carries a small bobbing «إنت هون» tag.
+
+Decoration only, never about the learner: three small lights travel slowly along the road, faint
+line drawings (a book, a speech bubble, a globe, headphones, a pen, a sparkle) drift beside it, and a
+field of 1px dots fades out behind the map. Under reduced motion the drawings stand still and the
+lights are hidden. The bottom bar keeps «الدرس الحالي» and a 42px «متابعة» button.
 
 Admins get «تعديل المسار»: hold a stop (300 ms) and drop it on another to swap them (it lifts and
 follows the finger, the target grows, and the swap glides into place; the study circle's sounds play
