@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { LanguageGate } from "@/components/language/LanguageGate";
+import { LessonIntro } from "@/components/rita-study/LessonIntro";
 import { StudyPage } from "@/components/rita-study/StudyPage";
 import { useAuth } from "@/hooks/useAuth";
 import { getStudyLesson, type StudyPageResult } from "@/lib/study/study.functions";
@@ -36,6 +36,9 @@ function RitaStudyRoute() {
   const loadFn = useServerFn(getStudyLesson);
   const [result, setResult] = useState<StudyPageResult | null>(null);
   const [error, setError] = useState("");
+  // The entering intro plays over the page while the lesson loads, then leaves.
+  const [introDone, setIntroDone] = useState(false);
+  const finishIntro = useCallback(() => setIntroDone(true), []);
 
   useEffect(() => {
     if (!loading && !user) void navigate({ to: "/login" });
@@ -59,27 +62,39 @@ function RitaStudyRoute() {
       .catch((cause) => setError(cause instanceof Error ? cause.message : "تعذّر فتح الدرس."));
   }, [lesson, loadFn, navigate, preview, user]);
 
-  if (!lesson || error || result?.status === "unavailable") {
+  if (!lesson) {
     return (
       <main
         className="edith-premium flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center"
         dir="rtl"
       >
-        <p className="text-[17px] font-semibold">{error || "هاد الدرس مش متاح."}</p>
+        <p className="text-[17px] font-semibold">هاد الدرس مش متاح.</p>
         <Link to="/rita-lessons" className="rita-btn rita-btn-primary">
           رجوع للدروس
         </Link>
       </main>
     );
   }
-  if (!result || result.status !== "study") {
-    return (
-      <main className="flex min-h-screen items-center justify-center" dir="rtl">
-        <p role="status" className="flex items-center gap-2 text-[15px] text-[var(--pp-muted)]">
-          <Loader2 size={18} className="animate-spin" aria-hidden="true" /> جاري فتح الدرس…
-        </p>
-      </main>
-    );
-  }
-  return <StudyPage key={`${lesson}:${preview ? 1 : 0}`} data={result.data} />;
+  const failed = error || (result?.status === "unavailable" ? "هاد الدرس مش متاح." : "");
+  const data = result?.status === "study" ? result.data : null;
+  return (
+    <>
+      {data && <StudyPage key={`${lesson}:${preview ? 1 : 0}`} data={data} />}
+      {!introDone && (
+        <LessonIntro
+          error={failed}
+          lesson={
+            data
+              ? {
+                  title: data.lesson.title,
+                  titleAr: data.lesson.title_ar,
+                  sections: data.guide.content.sections.length,
+                }
+              : null
+          }
+          onDone={finishIntro}
+        />
+      )}
+    </>
+  );
 }
