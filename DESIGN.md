@@ -397,17 +397,25 @@ until it is linked). The kind can be changed later in the lesson window, tab «�
 The study page's Rita column (`.uz-rc-*`, RitaRealtimeV3 in study mode) follows the ChatGPT / Claude
 chat pages, measured from the owner's reference and scaled ×0.82 so the column keeps that calm,
 large-screen feel. Page #F7F7F6. Before the call: the UZYRA wordmark and Rita's cube big in the
-middle, and the composer at the bottom («احكي مع ريتا…», a «ريتا» tag and a round blue mic that
-starts the call). When the call starts the cube flies down to sit just above the composer
-(FlyingCube). Rita writes without a bubble: a quiet 12px line first (her mark in a 26px white circle,
+middle, and no message field yet: at the bottom a 64px black circle with the white Uzyra mark
+(`HoldToStart`, «اضغط مطوّلاً لتبدأ» under it in 12px #8A8A87). The call starts only by holding it:
+held (pointer, or Space / Enter), it fills with white from the bottom like a liquid in 950ms (a
+slowly turning rounded square makes the wave; the mark turns black where the white covers it) and
+shrinks 6%; let go early and it drains back in 420ms and nothing happens. Full, it shrinks away
+(scale 0.6, fades), a thin 40px ring turns in its place while the call connects (the same 110px
+height, so nothing moves), and once Rita is connected the composer rises into that place (460ms).
+After a failed call the circle comes back empty with «اضغط مطوّلاً لتعيد الاتصال». Reduced motion:
+the liquid is a straight level, no shrinking or rising. When the call starts the cube flies down to
+sit just above the composer (FlyingCube). Rita writes without a bubble: a quiet 12px line first (her mark in a 26px white circle,
 «ريتا», the circle request it answers, and on the newest answer what she is doing now) over a hairline
 #E4E4E1, then 13px text #2B2B2B at 1.95 line height, paragraphs 12px apart, bold #161616. Words in the
 language being learned are small grey tags (#ECECEA, 0.9em). The learner's words sit on the other side
 in a #EBEBEA bubble (radius 15, 8×16 padding, 13px); a circle request shows its label as a small tag
-above the quote. Turns are 26px apart; the report link is a small flag. The composer is one #EBEBEA
-field (radius 26, no border, no shadow): the 16px field on top (16px keeps iPad Safari from zooming),
-then a row with «كلماتي» (and its count) at the start and stop, end call (red), mic and a 38px round
-blue send (#8FB3F5 while empty) at the end. Rita's sheet is a #EFEFED card (radius 16, no shadow)
+above the quote. Turns are 26px apart; the report link is a small flag. The composer copies the
+owner's reference chat box: one #EBEBEA field (radius 28, 16×14×12 padding, no border, no shadow),
+the 16px field on top (16px keeps iPad Safari from zooming), then a 46px row with «كلماتي» (36px tall,
+14px, and its count) at the start and, at the end, stop, end call and mic as plain grey 36px icons
+(end call turns red only on hover) and a 44px round blue send (#6096F0, #A9C4F7 while empty). Rita's sheet is a #EFEFED card (radius 16, no shadow)
 with white table cells, soft guide-tone head pills and a white «انتبه» tile.
 Rita's cube (RitaCube) is a flat black block (no shading, no
 shadow; a touch wider than tall, slightly uneven corners) with two white rounded eyes, alive from
@@ -437,6 +445,18 @@ has already happened, nothing waits for it, and a tap anywhere or Escape closes 
   switcher's own announcement ("Now learning …") stays the spoken part.
 - State and rules: `src/lib/language-splash.ts` (tested); it is started from `setLanguage` in
   `useLearningLanguage`, so every place that changes the language gets it.
+
+## Entering a lesson (`LessonIntro`)
+
+Opening a lesson (`/rita-study`) no longer shows a spinner. The language-change picture in its dark
+form plays instead: UZYRA drawn in fine white lines on deep navy and a hairline opening under it
+(the same `LETTERS` and `.uz-splash` pieces). After 1.5s the lesson itself rolls in under the line:
+a small «الدرس» (12px), its title (22px Inter Tight, white), its Arabic title (15px, grey) when it differs, and one
+small dot per section of its guide lighting up in turn. While the lesson is still loading, the
+hairline breathes. When it is ready it holds 1.4s, then leaves (opacity and a 3% grow, 450ms) over
+the study page, which has been loading underneath. If the lesson cannot open, the message and a
+«رجوع للدروس» pill stay on the same dark page. Reduced motion: no drawing, the words simply show and
+it leaves after 0.9s. It is a `role="status"` region that says the lesson's name.
 
 ## Home scale (`.uz-home`, first screen and header)
 

@@ -41,6 +41,7 @@ import { RitaCube } from "@/components/rita-study/RitaCube";
 import { FlyingCube, StickyScroll } from "@/components/rita-study/RitaColumn";
 import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
 import { UzyraMark } from "@/components/brand/UzyraMark";
+import { HoldToStart } from "@/components/rita/HoldToStart";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
 import { useRitaLesson } from "@/components/rita-lessons/useRitaLesson";
 import { useLessonRun } from "@/components/rita-lessons/useLessonRun";
@@ -1793,35 +1794,23 @@ export function RitaRealtimeV3({
             <p className="uz-rc-word is-small">{stateWord}</p>
           )}
           {!active ? (
-            <button
-              type="button"
-              onClick={() => void startLesson()}
-              disabled={historyLoading || starting}
-              className="uz-rc-bar is-start"
-            >
-              <span className="uz-rc-placeholder">
-                {connectionPhase === "failed"
-                  ? "إعادة الاتصال"
-                  : starting
-                    ? "جاري الاتصال…"
-                    : "احكي مع ريتا…"}
-              </span>
-              <span className="uz-rc-row">
-                <span className="uz-rc-chip-tag">
-                  <UzyraMark className="uz-rc-chip-mark" />
-                  ريتا
-                </span>
-                <span className="uz-rc-send is-live" aria-hidden="true">
-                  {historyLoading || starting ? (
-                    <Loader2 className="animate-spin" size={17} />
-                  ) : (
-                    <Mic size={17} />
-                  )}
-                </span>
-              </span>
-            </button>
+            starting ? (
+              // The circle has filled: a thin ring turns while the call connects.
+              <div className="uz-rc-connecting" role="status" aria-label="جاري الاتصال">
+                <span className="uz-rc-spinner" aria-hidden="true" />
+              </div>
+            ) : (
+              // Before the call there is no message field: the call starts by holding the circle.
+              <HoldToStart
+                onStart={() => void startLesson()}
+                disabled={historyLoading}
+                label={
+                  connectionPhase === "failed" ? "اضغط مطوّلاً لتعيد الاتصال" : "اضغط مطوّلاً لتبدأ"
+                }
+              />
+            )
           ) : (
-            <form onSubmit={sendText} className="uz-rc-bar">
+            <form onSubmit={sendText} className="uz-rc-bar uz-rc-rise">
               <input
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
