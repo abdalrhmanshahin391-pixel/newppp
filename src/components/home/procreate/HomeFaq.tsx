@@ -18,12 +18,12 @@ const QUESTIONS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
-    q: "Which languages does Rita teach?",
+    q: "Which languages does Uzyra teach?",
     a: "English and German. She explains in Arabic (Jordanian by default), and switches to the language you ask for.",
   },
   {
     q: "Do I need to install anything?",
-    a: "No. Rita runs in your browser. Allow the microphone when it asks, and press start.",
+    a: "No. Uzyra runs in your browser. Allow the microphone when it asks, and press start.",
   },
   {
     q: "What happens to the words I ask about?",

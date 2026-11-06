@@ -113,7 +113,7 @@ export function useLanguageResolved(): boolean {
   );
 }
 
-// A live voice conversation belongs to one language; switching in the middle would leave Rita and the
+// A live voice conversation belongs to one language; switching in the middle would leave Uzyra and the
 // page disagreeing, so the switcher asks the learner to end it first.
 let voiceSessionActive = false;
 

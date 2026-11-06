@@ -124,9 +124,9 @@ async function geminiText(apiKey: string, system: string, user: string): Promise
         }),
       },
     );
-    if (res.status === 429) throw new RateLimitedError("Rita is rate limited right now.");
+    if (res.status === 429) throw new RateLimitedError("Uzyra is rate limited right now.");
     if (res.status === 401 || res.status === 403 || res.status === 402) {
-      throw new BlockedError("Rita's question engine needs attention from the site owner.");
+      throw new BlockedError("Uzyra's question engine needs attention from the site owner.");
     }
     const json: any = await res.json().catch(() => ({}));
     if (!res.ok) {

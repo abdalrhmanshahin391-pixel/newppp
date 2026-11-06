@@ -107,7 +107,7 @@ test("a build with no timing or scores gives nulls, not NaN", () => {
   assert.equal(health.firstAudioP50, null);
 });
 
-test("the weakest criterion is where Rita is furthest below the reference", () => {
+test("the weakest criterion is where Uzyra is furthest below the reference", () => {
   const [health] = healthByBuild([
     review({
       scores: {

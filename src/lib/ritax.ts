@@ -4,6 +4,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/legacy-client";
+import { productCopyFields } from "./brand";
 
 export type RitaXLayout = "modal" | "sheet" | "corner" | "bar";
 export type RitaXTheme = "cream" | "mint" | "sky" | "lilac" | "ink" | "sunset";
@@ -39,6 +40,9 @@ export type RitaX = {
   updated_at?: string;
 };
 
+const currentAnnouncementCopy = (row: RitaX): RitaX =>
+  productCopyFields(row, ["name", "title", "body", "eyebrow", "primary_label", "secondary_label"]);
+
 export const RITAX_LAYOUTS: { id: RitaXLayout; name: string; note: string }[] = [
   { id: "modal", name: "Centre pop-up", note: "Big card in the middle, like the Ewa promo" },
   { id: "sheet", name: "Bottom sheet", note: "Slides up from the bottom — great on phones" },
@@ -46,7 +50,13 @@ export const RITAX_LAYOUTS: { id: RitaXLayout; name: string; note: string }[] = 
   { id: "bar", name: "Top bar", note: "Slim strip pinned above the page" },
 ];
 
-export const RITAX_THEMES: { id: RitaXTheme; name: string; bg: string; ink: string; accent: string }[] = [
+export const RITAX_THEMES: {
+  id: RitaXTheme;
+  name: string;
+  bg: string;
+  ink: string;
+  accent: string;
+}[] = [
   { id: "cream", name: "Warm cream", bg: "#fdf6ec", ink: "#2c2620", accent: "#f0a24b" },
   { id: "mint", name: "Fresh mint", bg: "#eef8f1", ink: "#1e3329", accent: "#3fae6f" },
   { id: "sky", name: "Soft sky", bg: "#eef4fb", ink: "#1d2a3a", accent: "#3f8fd1" },
@@ -76,9 +86,7 @@ export function themeOf(a: Pick<RitaX, "theme" | "accent">) {
 export function matchesPage(a: RitaX, pathname: string) {
   const list = (a.pages ?? []).map((p) => p.trim()).filter(Boolean);
   if (!list.length) return true;
-  return list.some((p) =>
-    p.endsWith("*") ? pathname.startsWith(p.slice(0, -1)) : pathname === p,
-  );
+  return list.some((p) => (p.endsWith("*") ? pathname.startsWith(p.slice(0, -1)) : pathname === p));
 }
 
 export function isScheduledNow(a: RitaX, now = Date.now()) {
@@ -141,7 +149,7 @@ export function useLiveRitaX() {
         .order("priority", { ascending: false })
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as RitaX[];
+      return ((data ?? []) as RitaX[]).map(currentAnnouncementCopy);
     },
   });
 }
@@ -155,7 +163,7 @@ export function useAllRitaX() {
         .order("priority", { ascending: false })
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as RitaX[];
+      return ((data ?? []) as RitaX[]).map(currentAnnouncementCopy);
     },
   });
 }
@@ -173,12 +181,17 @@ export async function trackRitaX(id: string, kind: "view" | "click" | "dismiss")
   }
 }
 
-export async function ritaxStats(): Promise<Record<string, { view: number; click: number; dismiss: number }>> {
-  const { data } = await (supabase.from as any)("announcement_events").select("announcement_id,kind");
+export async function ritaxStats(): Promise<
+  Record<string, { view: number; click: number; dismiss: number }>
+> {
+  const { data } = await (supabase.from as any)("announcement_events").select(
+    "announcement_id,kind",
+  );
   const out: Record<string, { view: number; click: number; dismiss: number }> = {};
   for (const row of (data ?? []) as { announcement_id: string; kind: string }[]) {
     const bucket = (out[row.announcement_id] ??= { view: 0, click: 0, dismiss: 0 });
-    if (row.kind === "view" || row.kind === "click" || row.kind === "dismiss") bucket[row.kind] += 1;
+    if (row.kind === "view" || row.kind === "click" || row.kind === "dismiss")
+      bucket[row.kind] += 1;
   }
   return out;
 }

@@ -79,7 +79,7 @@ test("labels name each language in itself; the automatic one follows the page la
 });
 
 test("the hint says what changes, and from when once a conversation is running", () => {
-  assert.match(explanationHint("en", "en", false), /^Rita explains in English\./);
+  assert.match(explanationHint("en", "en", false), /^Uzyra explains in English\./);
   assert.match(explanationHint("en", "en", true), /from her next answer/);
   assert.match(explanationHint("ar", "ar", true), /من ردّها الجاي/);
   assert.match(explanationHint("automatic", "en", false), /language you speak/);

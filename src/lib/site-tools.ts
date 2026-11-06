@@ -105,7 +105,7 @@ export const SECTIONS: SectionDef[] = [
       {
         id: "ai",
         label: { en: "With AI", ar: "مع الذكاء الاصطناعي" },
-        note: { en: "Rita does the heavy lifting.", ar: "ريتا تقوم بالعمل الشاق." },
+        note: { en: "Uzyra does the heavy lifting.", ar: "يوزرا تقوم بالعمل الشاق." },
       },
     ],
   },
@@ -115,7 +115,7 @@ export const SECTIONS: SectionDef[] = [
     title: { en: "Study Room", ar: "غرفة الدراسة" },
     intro: {
       en: "Study with your class, your group and the rest of Uzyra.",
-      ar: "ادرس مع صفك ومجموعتك وبقية طلاب ريتاجت.",
+      ar: "ادرس مع صفك ومجموعتك وبقية طلاب يوزرا.",
     },
     tint: "#f4f4f8",
     ink: "#1d4f20",
@@ -302,7 +302,7 @@ export const TOOLS: ToolDef[] = [
     image: allInOneArt,
     soft: "#f4f4f8",
     ink: "#1d5fd0",
-    name: { en: "All in one Rita AI", ar: "ريتا الشاملة" },
+    name: { en: "All in one Uzyra AI", ar: "يوزرا الشاملة" },
     tag: { en: "One upload · everything", ar: "رفع واحد · كل شيء" },
     line: {
       en: "Upload one lecture and get the study guide, summary, flashcards and questions together.",
@@ -313,7 +313,7 @@ export const TOOLS: ToolDef[] = [
     steps: [
       { en: "Upload the lecture PDF.", ar: "ارفع ملف المحاضرة." },
       { en: "Pick what you want: summary, cards, questions.", ar: "اختر ما تريد: ملخص، بطاقات، أسئلة." },
-      { en: "Wait for Rita to finish — it runs in one pass.", ar: "انتظر ريتا لتنتهي — كل شيء بمرة واحدة." },
+      { en: "Wait for Uzyra to finish — it runs in one pass.", ar: "انتظر يوزرا لتنتهي — كل شيء بمرة واحدة." },
       { en: "Everything lands in your own study space.", ar: "كل شيء يُحفظ في مساحتك الدراسية." },
     ],
   },
@@ -366,7 +366,7 @@ export const TOOLS: ToolDef[] = [
     steps: [
       { en: "Create a subject, then a sub-subject for the lecture.", ar: "أنشئ مادة ثم مادة فرعية للمحاضرة." },
       { en: "Upload the lecture file — your plan must allow it.", ar: "ارفع ملف المحاضرة — يجب أن تسمح خطتك بذلك." },
-      { en: "Rita writes the questions with short notes.", ar: "تكتب ريتا الأسئلة مع ملاحظات قصيرة." },
+      { en: "Uzyra writes the questions with short notes.", ar: "تكتب يوزرا الأسئلة مع ملاحظات قصيرة." },
       { en: "Run the quiz whenever you revise.", ar: "شغّل الاختبار عند كل مراجعة." },
     ],
   },

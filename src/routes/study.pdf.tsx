@@ -15,7 +15,7 @@ export const Route = createFileRoute("/study/pdf")({
       {
         name: "description",
         content:
-          "Turn any lecture PDF, photo or note into a clean, printable Rita summary sheet.",
+          "Turn any lecture PDF, photo or note into a clean, printable Uzyra summary sheet.",
       },
       { property: "og:title", content: "PDF Summaries — Uzyra" },
       {

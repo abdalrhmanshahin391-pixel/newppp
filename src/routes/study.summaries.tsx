@@ -24,7 +24,7 @@ function SummariesPage() {
         what="summaries"
         lines={[
           "Upload a lecture PDF or paste your notes.",
-          "Rita writes a structured one-pager in your course wording.",
+          "Uzyra writes a structured one-pager in your course wording.",
           "Save it, print it, or send it into a flashcard subject.",
         ]}
       />

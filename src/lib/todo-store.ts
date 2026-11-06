@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { usePlan } from "@/hooks/usePlan";
-// Rita to-do storage. Local-first: one debounced localStorage write, an index
+// Uzyra to-do storage. Local-first: one debounced localStorage write, an index
 // by ISO day so a view only touches the days it renders, and a one-off
 // migration from the old "inbox / today / upcoming" boxes to date-driven views.
 

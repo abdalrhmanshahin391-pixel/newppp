@@ -150,7 +150,7 @@ test("the language ring offers the three choices with the current one ticked, an
   assert.equal(languageFromId("make_mcq"), null);
 });
 
-test("a selection in Rita's answers offers only the simple explanation (and the language)", () => {
+test("a selection in Uzyra's answers offers only the simple explanation (and the language)", () => {
   const items = replyRingItems();
   assert.deepEqual(
     items.map((item) => item.id),

@@ -21,7 +21,7 @@ export const Route = createFileRoute("/api/rita/extract")({
         const intent = classifyRitaLearningIntent(spoken);
         if (intent === "none") return Response.json({ learningItems: [], saveRequest: "none" });
         const key = await resolveRitaV3Key("groq", "GROQ_API_KEY");
-        if (!key) return new Response("Rita key unavailable", { status: 503 });
+        if (!key) return new Response("Uzyra key unavailable", { status: 503 });
         try {
           const provider = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/api/rita/extract")({
               messages: [
                 {
                   role: "system",
-                  content: `The deterministic gate classified this exchange as ${intent}. Extract ONLY the word, phrase or sentence the learner asked about (at most ${MAX_ITEMS_PER_TURN}), exactly as it appears in the exchange, with its meaning. Examples: "what does Guten Morgen mean" gives term "Guten Morgen" with the Arabic meaning; "how do we say صباح الخير in German" gives term "Guten Morgen" (the foreign word) with meaning "صباح الخير". Do not add other words from Rita's example sentences. Never extract general-knowledge concepts, people, wars, science, or ordinary conversation. Return JSON with learningItems (objects: term, meaning in the learner's language, language BCP-47 of the term, kind word|sentence, article der|die|das|null, plural string|null); saveRequest none|flashcards|german_lab; destinationName string only if the learner named a subject; rememberDestination boolean only when explicitly requested. If the learner did not ask about a specific word or phrase, learningItems is []. Never imply persistence.`,
+                  content: `The deterministic gate classified this exchange as ${intent}. Extract ONLY the word, phrase or sentence the learner asked about (at most ${MAX_ITEMS_PER_TURN}), exactly as it appears in the exchange, with its meaning. Examples: "what does Guten Morgen mean" gives term "Guten Morgen" with the Arabic meaning; "how do we say صباح الخير in German" gives term "Guten Morgen" (the foreign word) with meaning "صباح الخير". Do not add other words from Uzyra's example sentences. Never extract general-knowledge concepts, people, wars, science, or ordinary conversation. Return JSON with learningItems (objects: term, meaning in the learner's language, language BCP-47 of the term, kind word|sentence, article der|die|das|null, plural string|null); saveRequest none|flashcards|german_lab; destinationName string only if the learner named a subject; rememberDestination boolean only when explicitly requested. If the learner did not ask about a specific word or phrase, learningItems is []. Never imply persistence.`,
                 },
                 { role: "user", content: JSON.stringify({ spoken, reply }) },
               ],

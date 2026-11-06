@@ -75,7 +75,7 @@ export function boundedRitaHistory(
 }
 
 function displayRole(role: RitaConversationRole) {
-  return role === "user" ? "User" : "Rita";
+  return role === "user" ? "User" : "Uzyra";
 }
 
 function localTimestamp(value: string) {
@@ -89,7 +89,7 @@ export function ritaConversationMarkdown(
   sessions: RitaConversationSession[] = [],
 ) {
   const lines = [
-    "# Rita Free Conversation",
+    "# Uzyra Free Conversation",
     "",
     `Title: ${conversation.title}`,
     `Created: ${localTimestamp(conversation.created_at)}`,
@@ -202,7 +202,7 @@ export function ritaConversationPrintHtml(
       message.source !== "voice" ? message.source : "",
       message.delivery_status !== "completed" ? message.delivery_status : "",
     ].filter(Boolean);
-    const who = message.role === "user" ? "You" : "Rita";
+    const who = message.role === "user" ? "You" : "Uzyra";
     const spoken =
       message.role === "assistant" &&
       message.spoken_content &&
@@ -238,7 +238,7 @@ export function ritaConversationDiagnostic(
 ) {
   return {
     schemaVersion: 1,
-    purpose: "Rita free-conversation quality review",
+    purpose: "Uzyra free-conversation quality review",
     privacy: {
       rawAudioIncluded: false,
       credentialsIncluded: false,
@@ -281,5 +281,5 @@ export function ritaConversationFileStem(conversation: Pick<RitaConversation, "t
     .replace(/[^\p{L}\p{N}]+/gu, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 48);
-  return `rita-${title || "conversation"}-${conversation.id.slice(0, 8)}`;
+  return `uzyra-${title || "conversation"}-${conversation.id.slice(0, 8)}`;
 }

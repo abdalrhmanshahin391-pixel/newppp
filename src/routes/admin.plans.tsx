@@ -45,10 +45,10 @@ import { OfferRibbon, discountPercent, offerLive } from "@/components/pricing/of
 export const Route = createFileRoute("/admin/plans")({
   head: () => ({
     meta: [
-      { title: "Rita Prices — Uzyra admin" },
+      { title: "Uzyra Prices — Uzyra admin" },
       { name: "description", content: "Create plans, set their limits and switch features on or off." },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "Rita Prices — Uzyra admin" },
+      { property: "og:title", content: "Uzyra Prices — Uzyra admin" },
       { property: "og:description", content: "Manage Uzyra pricing cards, limits, offers and features." },
     ],
   }),
@@ -356,7 +356,7 @@ function AdminPlansPage() {
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className={label}>Admin</p>
-            <h1 className="mt-2 font-display text-3xl font-black">Rita Prices</h1>
+            <h1 className="mt-2 font-display text-3xl font-black">Uzyra Prices</h1>
             <p className="mt-2 max-w-2xl text-[15px] text-[#4b4a5c]">
               Pick a plan on the left, edit it on the right. Limits are enforced on the server
               before any AI call, and the switches lock the matching tool inside the app.

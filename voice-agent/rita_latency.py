@@ -1,4 +1,4 @@
-"""Privacy-preserving per-turn latency milestones for the Rita worker."""
+"""Privacy-preserving per-turn latency milestones for the Uzyra worker."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ class RitaLatencyRecorder:
         self._last_start_frame_id: str | None = None
         # Details given with a milestone (for example the model's finish reason), per turn.
         self._details: dict[int, dict[str, dict[str, object]]] = {}
-        # Which learner turn Rita is answering, and whether the learner cut her off.
+        # Which learner turn Uzyra is answering, and whether the learner cut her off.
         self.reply_turn = 0
         self.reply_active = False
         self.bot_speaking = False
@@ -90,7 +90,7 @@ class RitaLatencyRecorder:
             after_speech_end_ms=after_speech_end_ms,
             **details,
         ).info(
-            "Rita voice latency milestone event={} turn_id={} monotonic_ms={} after_speech_end_ms={}",
+            "Uzyra voice latency milestone event={} turn_id={} monotonic_ms={} after_speech_end_ms={}",
             event,
             turn,
             monotonic_ms,
@@ -166,7 +166,7 @@ class RitaLatencyRecorder:
             event=event,
             monotonic_ms=round((time.perf_counter_ns() - self.started_ns) / 1_000_000, 2),
             **details,
-        ).info("Rita voice session milestone event={}", event)
+        ).info("Uzyra voice session milestone event={}", event)
 
     def provider_error(self, provider: str, error: object, *, category: str | None = None) -> None:
         """Classify a provider error without recording provider text or user content."""

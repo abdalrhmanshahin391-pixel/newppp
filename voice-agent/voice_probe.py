@@ -1,4 +1,4 @@
-"""One bounded, synthetic Daily audio probe for Rita v3.
+"""One bounded, synthetic Daily audio probe for Uzyra v3.
 
 This is an acoustic transport test, not a human judgment of dialect or an iPad
 speaker measurement. It never prints the Daily token or provider key.
@@ -109,7 +109,7 @@ def start_session(
         "dialect": "ar-JO",
         "mode": "free_conversation",
         "personality": "kind",
-        # The synthetic probe is Rita's canary for the validated onset trimmer.
+        # The synthetic probe is Uzyra's canary for the validated onset trimmer.
         # Normal production sessions remain controlled by the Modal env flag.
         "trimLeadingSilence": True,
     }
@@ -307,7 +307,7 @@ def run(
                 participant_handler.bot_joined_at = time.monotonic()
                 participant_handler.bot_joined.set()
         if not participant_handler.bot_joined.wait(max(0, startup_deadline - time.monotonic())):
-            raise TimeoutError("Rita bot did not join Daily within 120 seconds")
+            raise TimeoutError("Uzyra bot did not join Daily within 120 seconds")
         ready_at = participant_handler.bot_joined_at or time.monotonic()
         deadline = min(ready_at + MAX_VOICE_SECONDS, session_started_at + MAX_STARTUP_SECONDS + MAX_VOICE_SECONDS)
         capture.thread.start()
@@ -341,7 +341,7 @@ def run(
                 if speech_end_offset_ms is not None
                 else end
             )
-            # The remote speaker only contains Rita's audio. Since the prior
+            # The remote speaker only contains Uzyra's audio. Since the prior
             # answer has already gone quiet and `baseline` was captured before
             # this upload, any fresh onset after the input begins belongs to this
             # turn, even when the provider finalizes before the WAV stream drains.

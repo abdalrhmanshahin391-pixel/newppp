@@ -7,11 +7,11 @@ test("reads a plain-text API failure exactly once", async () => {
   const response = {
     text: async () => {
       reads += 1;
-      return "Rita could not hear that clearly.";
+      return "Uzyra could not hear that clearly.";
     },
   } as unknown as Response;
   const payload = await readRitaPayload(response);
-  assert.deepEqual(payload, { error: "Rita could not hear that clearly." });
+  assert.deepEqual(payload, { error: "Uzyra could not hear that clearly." });
   assert.equal(reads, 1);
 });
 

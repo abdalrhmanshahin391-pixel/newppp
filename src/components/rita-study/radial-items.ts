@@ -29,7 +29,7 @@ export type RadialItem = {
   placeholder?: boolean;
   /** Short text drawn in the disc instead of the icon (a language: "ع", "EN"). */
   glyph?: string;
-  /** "reply": an option about Rita's own answer, drawn in dark red like that selection. */
+  /** "reply": an option about Uzyra's own answer, drawn in dark red like that selection. */
   tone?: "reply";
   /** One of a set of choices: true for the chosen one, false for the others. */
   checked?: boolean;
@@ -51,7 +51,7 @@ const ICONS: Record<StudyAction, LucideIcon> = {
   report: AlertTriangle,
 };
 
-/** Short names for the ring (the full wording is still used for Rita's requests). */
+/** Short names for the ring (the full wording is still used for Uzyra's requests). */
 const SHORT: Partial<Record<StudyAction, string>> = {
   explain: "اشرح",
   simplify: "بسّط بمثال",
@@ -65,7 +65,7 @@ const SHORT: Partial<Record<StudyAction, string>> = {
 
 /**
  * What the ring shows for now: only the flashcards and the four-option questions. The explain
- * actions still exist (Rita's voice worker knows them); add them here to bring them back.
+ * actions still exist (Uzyra's voice worker knows them); add them here to bring them back.
  */
 export const RING_ACTIONS: StudyAction[] = ["make_cards", "make_mcq"];
 
@@ -85,7 +85,7 @@ export const KIND_LABEL: Record<SelectionKind, string> = {
   non_text: "",
 };
 
-/** The ring's options for what is selected, then the language Rita explains in. */
+/** The ring's options for what is selected, then the language Uzyra explains in. */
 export function ringItems(options: { actions: StudyAction[] }): RadialItem[] {
   return [
     ...RING_ACTIONS.filter((action) => options.actions.includes(action)).map(actionItem),
@@ -102,8 +102,8 @@ export const WINDOW_ITEM: RadialItem = {
 };
 
 /**
- * The ring for a selection in Rita's own answers (the left column): one option only, explaining
- * that part as to a complete beginner, then the language Rita explains in.
+ * The ring for a selection in Uzyra's own answers (the left column): one option only, explaining
+ * that part as to a complete beginner, then the language Uzyra explains in.
  */
 export function replyRingItems(): RadialItem[] {
   return [{ ...actionItem("explain_reply"), tone: "reply" }, LANGUAGE_ITEM];

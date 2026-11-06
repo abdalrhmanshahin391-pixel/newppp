@@ -37,7 +37,7 @@ const itemBase = {
   prompt: text(240).min(1),
   /** Short instruction in Arabic shown above the question ("اختر الكلمة المناسبة"). */
   instruction_ar: text(120).default(""),
-  /** What Rita says when she reads the question; the prompt when empty. */
+  /** What Uzyra says when she reads the question; the prompt when empty. */
   spoken_prompt: text(240).default(""),
   hint_ar: text(240).default(""),
   hint_en: text(240).default(""),

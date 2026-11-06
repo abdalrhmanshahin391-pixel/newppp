@@ -2,7 +2,7 @@ import type { SummaryBlock } from "@/lib/summaries.functions";
 import { Sparkles, AlertTriangle, Lightbulb, StickyNote, Brain } from "lucide-react";
 
 /**
- * Light Rita palette for the summary sheet. Every accent is a pale tint that
+ * Light Uzyra palette for the summary sheet. Every accent is a pale tint that
  * always carries near-black ink on top, so nothing collapses into itself.
  */
 const INK = "#121117";

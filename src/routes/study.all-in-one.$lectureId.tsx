@@ -324,7 +324,7 @@ function AllInOneWorkspace() {
                     <div className="mt-4 overflow-hidden rounded-[26px] bg-[#ffffff]">
                       <SummaryView
                         content={data.sheet.content}
-                        siteName="Rita"
+                        siteName="Uzyra"
                         authorName={data.sheet.author_name ?? undefined}
                         createdAt={data.sheet.created_at}
                       />

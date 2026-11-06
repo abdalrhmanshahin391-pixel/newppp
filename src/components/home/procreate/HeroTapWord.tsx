@@ -15,7 +15,7 @@ type Word = {
   rot: number;
 };
 
-// Meanings and pronunciation (in Arabic letters) are what Rita's tap-a-word window gives.
+// Meanings and pronunciation (in Arabic letters) are what Uzyra's tap-a-word window gives.
 const WORDS: Word[] = [
   {
     term: "Guten Morgen",
@@ -51,7 +51,7 @@ const WORDS: Word[] = [
   },
 ];
 
-/** First screen: the promise, and Rita's own orb with words you can tap, just like in a call. */
+/** First screen: the promise, and Uzyra's own orb with words you can tap, just like in a call. */
 export function HeroTapWord() {
   const [active, setActive] = useState<number | null>(null);
   const [touched, setTouched] = useState(false);
@@ -61,7 +61,7 @@ export function HeroTapWord() {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const slot = useRef<HTMLDivElement>(null);
 
-  // While Rita "says" the word, feed the orb a gentle, speech-like level.
+  // While Uzyra "says" the word, feed the orb a gentle, speech-like level.
   useEffect(() => {
     if (!speaking) {
       levels.current.output = 0;
@@ -136,7 +136,7 @@ export function HeroTapWord() {
           className="edith-in rh-hero-lead mx-auto mt-5"
           style={{ ...delay(140), color: "var(--pp-muted)" }}
         >
-          Rita is a voice teacher for English and German who explains in Arabic. Every word you ask
+          Uzyra is a voice teacher for English and German who explains in Arabic. Every word you ask
           about can become a flashcard.
         </p>
         <div
@@ -147,7 +147,7 @@ export function HeroTapWord() {
             Start learning
           </StartLearningLink>
           <Link to="/rita" className="rita-btn rita-btn-secondary">
-            Talk to Rita
+            Talk to Uzyra
           </Link>
         </div>
       </div>
@@ -177,7 +177,7 @@ export function HeroTapWord() {
           <VoiceOrb
             levelsRef={levels}
             mode={speaking ? "speaking" : "idle"}
-            label="Rita's voice"
+            label="Uzyra's voice"
             className="w-full"
           />
         </div>
@@ -240,7 +240,7 @@ export function HeroTapWord() {
           </div>
         ) : (
           <p className="pt-6 text-center text-[16px]" style={{ color: "var(--pp-muted)" }}>
-            Tap a word. That is how Rita teaches.
+            Tap a word. That is how Uzyra teaches.
           </p>
         )}
       </div>

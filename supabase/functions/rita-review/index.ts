@@ -1,10 +1,10 @@
-// The AI review of Rita's replies, one conversation at a time, with no timer.
+// The AI review of Uzyra's replies, one conversation at a time, with no timer.
 //
 // When a call ends, the database wakes this function for that call's conversation
 // (public.rita_review_wake, from the trigger on rita_v3_sessions.ended_at). One run reviews up to two
 // replies, a stage at a time, for about a minute; if replies are left it asks the database to wake it
 // again for the same conversation, until every reply and the whole-conversation review are done.
-// Nothing runs while nobody has talked to Rita.
+// Nothing runs while nobody has talked to Uzyra.
 //
 // It needs the service key, which the published site's server does not have; Lovable Cloud gives it
 // to Edge Functions automatically. The engine is the app's own (../_shared/rita-review.core.ts, a

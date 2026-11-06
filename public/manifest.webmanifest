@@ -1,7 +1,7 @@
 {
   "name": "Uzyra",
   "short_name": "Uzyra",
-  "description": "Talk with Rita and study from your own material: flashcards, summaries and practice questions.",
+  "description": "Talk with Uzyra and study from your own material: flashcards, summaries and practice questions.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

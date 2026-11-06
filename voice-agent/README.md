@@ -1,4 +1,4 @@
-# Rita Realtime Voice Engine v3
+# Uzyra Realtime Voice Engine v3
 
 This directory is an independently deployable Pipecat worker. It is not bundled into the
 Cloudflare/Lovable web application.
@@ -8,7 +8,7 @@ Cloudflare/Lovable web application.
 `Daily WebRTC -> Soniox stt-rt-v5 -> Groq openai/gpt-oss-120b -> Cartesia Sonic 3.6 TTS (Layan) -> Daily WebRTC`
 
 Cartesia receives Groq text progressively over one WebSocket context, then receives a cancellation
-message immediately when the learner interrupts. There is no runtime fallback to Rita Legacy,
+message immediately when the learner interrupts. There is no runtime fallback to Uzyra Legacy,
 Deepgram, Gemini, OpenAI TTS, or a slower TTS model.
 
 The Modal production worker is pinned to broad `eu` and uses

@@ -1,4 +1,4 @@
-"""Rita Realtime Voice Engine v3 production worker.
+"""Uzyra Realtime Voice Engine v3 production worker.
 
 Daily WebRTC -> Soniox stt-rt-v5 -> Smart Turn v3 ->
 Groq openai/gpt-oss-120b -> Cartesia Sonic 3.6 TTS -> Daily WebRTC.
@@ -48,6 +48,7 @@ from pipecat.utils.context.llm_context_summarization import (
     LLMContextSummaryConfig,
 )
 
+from brand_identity import FREE_CONVERSATION_OPENER, IDENTITY_PROMPT
 from rita_cartesia_tts import RitaCartesiaTTSService
 from rita_dialect import DIALECT_PROMPT, RitaSpeechCleaner
 from rita_interruption import RitaUserTurnStartStrategy, gate_mode
@@ -172,15 +173,15 @@ How to run it:
 
 
 def opens_lesson(body: dict[str, Any]) -> bool:
-    """True when this call is a curriculum lesson, which Rita opens herself."""
+    """True when this call is a curriculum lesson, which Uzyra opens herself."""
     return bool(lesson_section(body))
 
 
 def opening_message(body: dict[str, Any]) -> dict[str, str]:
-    """The context's first message. In a lesson it is a note to Rita, not a question to the learner:
+    """The context's first message. In a lesson it is a note to Uzyra, not a question to the learner:
     the free-conversation opener made her act as if the learner should choose the topic."""
     if lesson_engine_enabled(body):
-        # The website sends the first step as soon as the call is ready; Rita opens the lesson then.
+        # The website sends the first step as soon as the call is ready; Uzyra opens the lesson then.
         return {
             "role": "system",
             "content": "The call has started. Wait for the website's lesson step, then follow it.",
@@ -190,7 +191,7 @@ def opening_message(body: dict[str, Any]) -> dict[str, str]:
             "role": "system",
             "content": "The call has started. Open the lesson now, as the lesson notes say.",
         }
-    return {"role": "assistant", "content": "Hi, I’m Rita. What would you like to practise?"}
+    return {"role": "assistant", "content": FREE_CONVERSATION_OPENER}
 
 
 def explain_options(state: RitaSessionState) -> dict[str, Any] | None:
@@ -236,14 +237,15 @@ def build_prompt(
     target_block = target_language_prompt(target)
     note = state.turn_note(dialogue=dialogue)
     turn_note = f"{note}\n" if note else ""
-    return f"""You are Rita, RitaJet's realtime language tutor.
+    return f"""{IDENTITY_PROMPT}
+You are the realtime language tutor for this call.
 
 Delivery: {PERSONALITIES.get(personality, PERSONALITIES['kind'])}
 Profile language: {profile_language}. Stable Arabic dialect: {remembered_dialect}.
 Lesson mode: {mode}.{target_block}
 
 PRIORITY WHEN RULES CLASH
-1) Honesty and safety. 2) The REPLY LANGUAGE on the last line. 3) What the learner asked this turn
+1) Honesty, safety and the current assistant identity. 2) The REPLY LANGUAGE on the last line. 3) What the learner asked this turn
 (a TURN NOTE or directive in the session state). 4) The style rules below.
 
 CONVERSATION CONTINUITY
@@ -334,7 +336,7 @@ def saved_conversation_history(body: dict[str, Any]) -> list[dict[str, str]]:
     selected_newest_first: list[dict[str, str]] = []
     characters = 0
     # Budget from newest to oldest so a long conversation never pushes the
-    # immediately preceding turn out of Rita's active context.
+    # immediately preceding turn out of Uzyra's active context.
     for item in reversed(raw[-24:]):
         if not isinstance(item, dict):
             continue
@@ -378,7 +380,7 @@ def stt_language_hints(body: dict[str, Any]) -> list[Language]:
 
 async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str, Any]):
     if TTS_PROVIDER != "cartesia":
-        raise RuntimeError("Rita v3 production is configured only for Cartesia TTS")
+        raise RuntimeError("Uzyra v3 production is configured only for Cartesia TTS")
     if not TTS_VOICE_ID:
         raise RuntimeError("Required Cartesia voice ID is missing")
     latency = RitaLatencyRecorder(session_id, str(body.get("traceId") or ""))
@@ -390,16 +392,16 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
     target = parse_target_language(body)
     ledger = TurnLedger(session_id, learn_language=target["code"] if target else None)
     ledger_meta = {"prompt_hash": ""}
-    logger.bind(session_id=session_id).info("Starting Rita v3 session build={}", build_id())
+    logger.bind(session_id=session_id).info("Starting Uzyra v3 session build={}", build_id())
     router_state = router_mode()
     logger.bind(router=router_state.value, interrupt_gate=gate_mode()).info(
-        "Rita turn-taking configuration"
+        "Uzyra turn-taking configuration"
     )
 
     transport = DailyTransport(
         room_url,
         token,
-        "Rita",
+        "Uzyra",
         DailyParams(
             audio_in_enabled=True,
             audio_out_enabled=True,
@@ -420,7 +422,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             enable_speaker_diarization=False,
             context=SonioxContextObject(
                 general=[
-                    SonioxContextGeneralItem(key="product", value="RitaJet language tutor"),
+                    SonioxContextGeneralItem(key="product", value="Uzyra language tutor"),
                     SonioxContextGeneralItem(key="dialect", value="Jordanian Arabic ar-JO"),
                     SonioxContextGeneralItem(
                         key="mode", value=str(body.get("mode", "free_conversation"))
@@ -432,7 +434,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
                     ),
                 ],
                 terms=[
-                    "RitaJet",
+                    "Uzyra",
                     "German Lab",
                     "Flashcards",
                     "Guten Morgen",
@@ -479,7 +481,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
     )
 
     saved_history = saved_conversation_history(body)
-    # A lesson with exercises: the website's engine sends the steps; Rita follows them.
+    # A lesson with exercises: the website's engine sends the steps; Uzyra follows them.
     lesson_voice = LessonVoice() if lesson_engine_enabled(body) else None
     # An interactive study lesson: the guide is on screen; the website sends the learner's requests.
     study_voice = StudyVoice.from_body(body) if study_enabled(body) else None
@@ -554,7 +556,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         # language was locked, what the turn was read as, and how long the learner's turn was.
         # The fields are in the message itself: Modal's log lines do not show bound extras.
         logger.info(
-            "Rita learner turn language={} language_source={} turn_language={} act={} "
+            "Uzyra learner turn language={} language_source={} turn_language={} act={} "
             "response_type={} words={} how_to_say={}",
             state.active_language,
             state.language_source.value,
@@ -645,7 +647,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
                 {"name": item.processor_name, "duration_ms": round(item.duration_secs * 1000, 2)}
                 for item in report.processor_timings
             ],
-        ).info("Rita worker startup timing")
+        ).info("Uzyra worker startup timing")
 
     @startup_observer.event_handler("on_transport_timing_report")
     async def on_transport_timing_report(observer, report):
@@ -657,7 +659,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
                 else None
             ),
             client_connected_ms=round(report.client_connected_secs * 1000, 2),
-        ).info("Rita transport timing")
+        ).info("Uzyra transport timing")
 
     @user_bot_observer.event_handler("on_latency_measured")
     async def on_user_bot_latency(observer, latency_seconds):
@@ -665,7 +667,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             session_id=session_id,
             turn_id=latency.turn,
             latency_ms=round(latency_seconds * 1000, 2),
-        ).info("Rita user-to-bot speaking signal latency")
+        ).info("Uzyra user-to-bot speaking signal latency")
 
     task = PipelineTask(
         pipeline,
@@ -686,14 +688,14 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
 
     @task.rtvi.event_handler("on_client_ready")
     async def on_client_ready(rtvi):
-        # In a lesson Rita speaks first; in a free conversation she waits for the learner.
+        # In a lesson Uzyra speaks first; in a free conversation she waits for the learner.
         if opens_lesson(body) and not saved_history:
-            logger.info("Rita opens the lesson")
+            logger.info("Uzyra opens the lesson")
             await task.queue_frames([LLMRunFrame()])
 
     @task.rtvi.event_handler("on_client_message")
     async def on_client_message(rtvi, msg):
-        # The learner's "Stop Rita" button: a sure way to interrupt that does not depend on
+        # The learner's "Stop Uzyra" button: a sure way to interrupt that does not depend on
         # the microphone, the noise around them or what the speech recognizer heard.
         if getattr(msg, "type", "") == "rita-learning-count":
             # How many words the learner has in the list on screen ("open the list" needs it).
@@ -704,11 +706,11 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
                 state.learning_count = None
             return
         if getattr(msg, "type", "") == "rita-settings":
-            # "Rita explains in" was changed on the website during the conversation.
+            # "Uzyra explains in" was changed on the website during the conversation.
             value = (getattr(msg, "data", None) or {}).get("explanationLanguage")
             if state.set_site_language(value):
                 logger.info(
-                    "Rita explanation language changed on the website language={} source={}",
+                    "Uzyra explanation language changed on the website language={} source={}",
                     state.active_language,
                     state.language_source.value,
                 )
@@ -721,7 +723,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
                 return
             refresh_prompt()
             logger.info(
-                "Rita lesson step phase={} revision={} action={}",
+                "Uzyra lesson step phase={} revision={} action={}",
                 lesson_voice.phase,
                 data.get("revision"),
                 data.get("action"),
@@ -753,19 +755,19 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
                 refresh_prompt()
             if effects.user_line:
                 context.add_message({"role": "user", "content": effects.user_line})
-                logger.info("Rita study action message={}", message_type)
+                logger.info("Uzyra study action message={}", message_type)
             if effects.ack:
                 await task.rtvi.send_server_message(effects.ack)
             if effects.run_model:
                 await task.queue_frames([LLMRunFrame()])
             return
         if getattr(msg, "type", "") == "rita-stop":
-            logger.info("Rita stopped by the learner's button")
+            logger.info("Uzyra stopped by the learner's button")
             state.topic_paused = True
             await rtvi.interrupt_bot()
 
     def ledger_state() -> dict[str, object]:
-        """What Rita had read from the learner's turn, copied from state that already exists."""
+        """What Uzyra had read from the learner's turn, copied from state that already exists."""
 
         return {
             "lang": state.active_language,
@@ -781,11 +783,11 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
     async def send_ledger(record: dict[str, object]) -> None:
         """One realtime message and one log line per turn; never on the audio path."""
 
-        logger.info("Rita turn ledger {}", json.dumps(record, ensure_ascii=False, separators=(",", ":")))
+        logger.info("Uzyra turn ledger {}", json.dumps(record, ensure_ascii=False, separators=(",", ":")))
         try:
             await task.rtvi.send_server_message(record)
         except Exception as error:  # diagnostics must never disturb the conversation
-            logger.warning("Rita turn ledger could not be sent error={}", type(error).__name__)
+            logger.warning("Uzyra turn ledger could not be sent error={}", type(error).__name__)
 
     @user_aggregator.event_handler("on_user_turn_stopped")
     async def on_user_turn_stopped(aggregator, strategy, message):
@@ -827,7 +829,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
                 if router.last_routed_context_size >= committed_context_size:
                     return
                 logger.warning(
-                    "Rita recovering committed turn that missed the router "
+                    "Uzyra recovering committed turn that missed the router "
                     "context_size={} last_routed_context_size={}",
                     committed_context_size,
                     router.last_routed_context_size,
@@ -845,14 +847,14 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             response_type=state.response_type,
             language=state.active_language,
             dialect=state.active_dialect,
-        ).info("Rita user turn committed")
+        ).info("Uzyra user turn committed")
 
     @assistant_aggregator.event_handler("on_assistant_turn_stopped")
     async def on_assistant_turn_stopped(aggregator, message):
         state.observe_assistant_turn(message.content)
         sheet = sheet_splitter.take_sheet()
         if sheet:
-            # Rita remembers what she wrote, not only what she said, so she can build on it.
+            # Uzyra remembers what she wrote, not only what she said, so she can build on it.
             for item in reversed(context.get_messages()):
                 if item.get("role") == "assistant" and isinstance(item.get("content"), str):
                     item["content"] = f"{item['content'].rstrip()}\n{MARKER_LINE}\n{sheet}"
@@ -891,7 +893,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             trace_id=latency.trace_id or None,
             turn_id=latency.turn,
             spoken_characters=len(message.content),
-        ).info("Rita assistant turn committed")
+        ).info("Uzyra assistant turn committed")
 
     @transport.event_handler("on_first_participant_joined")
     async def on_first_participant_joined(transport, participant):

@@ -8,12 +8,12 @@ export const Route = createFileRoute("/learn/")({
       {
         name: "description",
         content:
-          "Talk to Rita and open every study tool from one place: flashcards, summaries, question bank, planner and German.",
+          "Talk to Uzyra and open every study tool from one place: flashcards, summaries, question bank, planner and German.",
       },
       { property: "og:title", content: "Start Learning — Uzyra Study Hub" },
       {
         property: "og:description",
-        content: "Rita, your flashcards, your plan and every study tool in one place.",
+        content: "Uzyra, your flashcards, your plan and every study tool in one place.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

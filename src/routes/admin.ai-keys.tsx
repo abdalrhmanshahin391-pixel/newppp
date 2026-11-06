@@ -53,7 +53,7 @@ const SINGLE_PROVIDERS: {
 }[] = [
   {
     id: "openai",
-    name: "OpenAI — Rita Live",
+    name: "OpenAI — Uzyra Live",
     tier: "Speech-only billing · cost controlled",
     model: "Mini Transcribe → GPT-4o Mini → Mini TTS",
     color: "from-emerald-400 to-teal-500",
@@ -62,19 +62,19 @@ const SINGLE_PROVIDERS: {
       "Go to platform.openai.com → API keys.",
       "Add a payment method to the OpenAI API project.",
       "Click ‘Create new secret key’, copy the sk-… value.",
-      "Paste a newly generated key here. Rita uses it only on the server; never paste it into chat or source code.",
+      "Paste a newly generated key here. Uzyra uses it only on the server; never paste it into chat or source code.",
     ],
   },
   {
     id: "deepgram",
-    name: "Deepgram — Rita Economic v2 listening",
+    name: "Deepgram — Uzyra Economic v2 listening",
     tier: "Pay as you go · streaming speech recognition",
     model: "Nova-3 · Arabic dialects + English + German",
     color: "from-cyan-400 to-blue-500",
     url: "https://console.deepgram.com/",
     steps: [
       "Create a Deepgram project and add pay-as-you-go credit.",
-      "Create an API key with Member permission so Rita can mint short-lived browser tokens.",
+      "Create an API key with Member permission so Uzyra can mint short-lived browser tokens.",
       "Paste it here. Students receive only 30-second temporary tokens, never this key.",
     ],
   },
@@ -286,9 +286,9 @@ function AiKeysPage() {
       }
       const result = await testOpenAi();
       if (!result.ok) throw new Error(result.message);
-      toast.success(key ? "Rita key saved and pipeline verified" : result.message);
+      toast.success(key ? "Uzyra key saved and pipeline verified" : result.message);
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Could not verify the Rita key");
+      toast.error(error instanceof Error ? error.message : "Could not verify the Uzyra key");
     } finally {
       setBusy(null);
     }
@@ -298,11 +298,11 @@ function AiKeysPage() {
     setBusy("rita-settings");
     try {
       await updateRitaAdmin({ data: ritaSettings });
-      toast.success("Rita voice settings saved");
+      toast.success("Uzyra voice settings saved");
       const result = await getRitaAdmin();
       if (result?.metrics) setRitaMetrics(result.metrics);
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Could not save Rita settings");
+      toast.error(e instanceof Error ? e.message : "Could not save Uzyra settings");
     } finally {
       setBusy(null);
     }
@@ -315,10 +315,10 @@ function AiKeysPage() {
       await updateRitaAdmin({ data: next });
       setRitaSettings(next);
       toast.success(
-        mode === "legacy" ? "Rita Legacy is now selected" : "Rita Economic v2 is now selected",
+        mode === "legacy" ? "Uzyra Legacy is now selected" : "Uzyra Economic v2 is now selected",
       );
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Could not switch Rita pipeline");
+      toast.error(error instanceof Error ? error.message : "Could not switch Uzyra pipeline");
     } finally {
       setBusy(null);
     }
@@ -356,15 +356,15 @@ function AiKeysPage() {
           between them automatically when one is rate-limited.
         </p>
 
-        {/* Archived Rita v2 controls are intentionally not rendered. Rita v3 has one
+        {/* Archived Uzyra v2 controls are intentionally not rendered. Uzyra v3 has one
             dedicated control room at /admin/rita-voice. Keep this page for non-voice AI only. */}
         {false && <>
         <section
           className="mb-6 rounded-3xl border-[3px] border-red-500 bg-[#3d0b16]/70 p-5 shadow-[0_0_48px_-15px_rgba(239,68,68,.8)] md:p-7"
-          aria-label="Rita Economic v2 status"
+          aria-label="Uzyra Economic v2 status"
         >
           <p className="text-xs font-black uppercase tracking-[.2em] text-red-200">
-            🔴 RITA PIPELINE SWITCH — APPLIES TO USERS
+            🔴 UZYRA PIPELINE SWITCH — APPLIES TO USERS
           </p>
           <h2 className="mt-2 text-2xl font-black text-white">
             Deepgram Nova-3 → GPT-4o mini → OpenAI Mini TTS
@@ -379,7 +379,7 @@ function AiKeysPage() {
               onClick={() => void applyRitaPipeline("legacy")}
               className={`rounded-xl border-2 p-4 text-left transition ${ritaSettings.pipelineMode === "legacy" ? "border-red-600 bg-red-100 shadow-md" : "border-red-200 hover:border-red-400"}`}
             >
-              <span className="block text-lg font-black">Rita الحالية — Legacy</span>
+              <span className="block text-lg font-black">Uzyra الحالية — Legacy</span>
               <span className="mt-1 block text-xs font-bold opacity-75">
                 OpenAI transcription → same streaming GPT and PCM voice
               </span>
@@ -390,7 +390,7 @@ function AiKeysPage() {
               onClick={() => void applyRitaPipeline("economic_v2")}
               className={`rounded-xl border-2 p-4 text-left transition ${ritaSettings.pipelineMode === "economic_v2" ? "border-red-600 bg-red-100 shadow-md" : "border-red-200 hover:border-red-400"}`}
             >
-              <span className="block text-lg font-black">Rita Economic v2</span>
+              <span className="block text-lg font-black">Uzyra Economic v2</span>
               <span className="mt-1 block text-xs font-bold opacity-75">
                 Deepgram Nova-3 → streaming GPT → streamed PCM voice
               </span>
@@ -443,11 +443,11 @@ function AiKeysPage() {
               </div>
               <div>
                 <p className="text-[11px] font-black uppercase tracking-[.22em] text-emerald-300">
-                  Required for Rita Live
+                  Required for Uzyra Live
                 </p>
-                <h2 className="mt-1 text-2xl font-black">Add Rita’s OpenAI API key</h2>
+                <h2 className="mt-1 text-2xl font-black">Add Uzyra’s OpenAI API key</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/65">
-                  Rita uses this protected server-side key for GPT-4o Mini tutoring and streamed
+                  Uzyra uses this protected server-side key for GPT-4o Mini tutoring and streamed
                   OpenAI speech. Deepgram handles recognition with its separate protected key.
                   Students never receive either permanent key.
                 </p>
@@ -508,7 +508,7 @@ function AiKeysPage() {
               ) : (
                 <Zap className="h-4 w-4" />
               )}
-              {singleDraft.openai.trim() ? "Save and test Rita" : "Test saved Rita key"}
+              {singleDraft.openai.trim() ? "Save and test Uzyra" : "Test saved Uzyra key"}
             </button>
             {singleStatus.openai && (
               <button
@@ -535,7 +535,7 @@ function AiKeysPage() {
               <b className="text-white">1.</b> Create a fresh key in your OpenAI API project.
             </li>
             <li className="rounded-xl bg-black/20 p-3">
-              <b className="text-white">2.</b> Paste it above, then press Save and test Rita.
+              <b className="text-white">2.</b> Paste it above, then press Save and test Uzyra.
             </li>
             <li className="rounded-xl bg-black/20 p-3">
               <b className="text-white">3.</b> Revoke any key previously shown in chat or
@@ -550,11 +550,11 @@ function AiKeysPage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[.22em] text-emerald-300">
-                Rita voice control room
+                Uzyra voice control room
               </p>
               <h2 className="mt-1 text-xl font-bold">Fast voice, protected margins</h2>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/55">
-                Rita listens locally, sends only real speech, and uses the low-cost chained
+                Uzyra listens locally, sends only real speech, and uses the low-cost chained
                 pipeline. Silence is never billed.
               </p>
             </div>
@@ -594,7 +594,7 @@ function AiKeysPage() {
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <label className="text-xs font-bold text-white/60">
-              Rita voice
+              Uzyra voice
               <select
                 value={ritaSettings.voice}
                 onChange={(event) =>
@@ -642,7 +642,7 @@ function AiKeysPage() {
             ) : (
               <Sliders className="h-4 w-4" />
             )}
-            Save Rita controls
+            Save Uzyra controls
           </button>
         </section>
 
@@ -652,7 +652,7 @@ function AiKeysPage() {
           to="/admin/rita-voice"
           className="mb-6 flex items-center justify-between rounded-3xl border-2 border-[#7ba5f5]/60 bg-[#4a82f3]/10 p-5 text-violet-100 hover:bg-[#4a82f3]/15"
         >
-          <span><strong className="block text-lg">Rita Realtime Voice v3</strong><span className="text-sm text-white/60">Soniox, Groq, Gemini TTS and Pipecat keys are managed in the new clean voice panel.</span></span>
+          <span><strong className="block text-lg">Uzyra Realtime Voice v3</strong><span className="text-sm text-white/60">Soniox, Groq, Gemini TTS and Pipecat keys are managed in the new clean voice panel.</span></span>
           <ExternalLink className="h-5 w-5" />
         </Link>
 

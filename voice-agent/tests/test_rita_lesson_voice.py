@@ -1,4 +1,4 @@
-"""Lessons with exercises: how Rita reads a learner turn against the website's current step."""
+"""Lessons with exercises: how Uzyra reads a learner turn against the website's current step."""
 
 import sys
 from pathlib import Path

@@ -1,4 +1,4 @@
-# Rita: steps the owner still has to do
+# Uzyra: steps the owner still has to do
 
 A running list. Nothing here needs code changes; each step is done in Modal,
 the database (Lovable Cloud / Supabase) or the secrets settings. Never paste
@@ -21,7 +21,7 @@ added since.
      `rita_dialogue_acts.py`, `rita_turn_router.py`, `rita_ui_commands.py`, `rita_dialect.py`
      (Jordanian phrasebank, scripted first greeting, speech cleaner; see `docs/rita-dialect-bank.md`).
    - After: try a normal free conversation on `/rita-live` and confirm sound. Then test
-     by voice: say "خلص" while Rita explains (she should stop and say a short "تمام."),
+     by voice: say "خلص" while Uzyra explains (she should stop and say a short "تمام."),
      answer "إيه" to a question with two options (she should ask "أي واحد…؟"), say
      "أمم…" (she should wait), and tap the new **Stop** button while she speaks.
    - Switches (Modal secret `ritajet-voice`, optional): `RITA_ROUTER_MODE=on|shadow|off`
@@ -79,14 +79,14 @@ added since.
      after asking "شو معنى Haus", this is the first thing to check (the page now shows
      "Could not note that word" instead of failing silently).
    - Test by voice after the Modal redeploy: ask the meaning of a word; open **My words**;
-     say "افتحي القائمة" (Rita says "تفضل." and the list opens); say "حوليهم فلاش كارد"
+     say "افتحي القائمة" (Uzyra says "تفضل." and the list opens); say "حوليهم فلاش كارد"
      (the screen asks for the subject) or "حوليهم فلاش كارد في موضوع X" (saved if exactly one
      subject matches); delete or fix a word with the icons; create a subject or sub-subject
      from the list window.
 
 7. **After merging PR #26 and redeploying Modal: test one real call**
-   - Say "خلص" while Rita explains; answer "إيه" to a two-option question; say "أمم…";
-     tap Stop; say only "مرحبا ريتا" (she should greet you with a scripted, natural greeting); ask
+   - Say "خلص" while Uzyra explains; answer "إيه" to a two-option question; say "أمم…";
+     tap Stop; say only "مرحبا يوزرا" (she should greet you with a scripted, natural greeting); ask
      "كيف أحكي بدي أروح على الحمام بالإنجليزي" (she should answer in Arabic with the English phrase once);
      tap a German or English word in a reply and play fast, slow and precise.
    - Tell me what happened (and, if something sounded wrong, the time of the call), so

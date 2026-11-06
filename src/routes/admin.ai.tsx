@@ -68,7 +68,7 @@ function AiEnginePage() {
             to="/admin/rita-voice"
             className="inline-flex items-center gap-2 rounded-2xl bg-violet-500 px-4 py-3 text-sm font-bold text-white hover:bg-violet-400"
           >
-            <Key className="h-4 w-4" /> Rita Realtime Voice v3
+            <Key className="h-4 w-4" /> Uzyra Realtime Voice v3
           </Link>
           <Link
             to="/admin/ai-keys"

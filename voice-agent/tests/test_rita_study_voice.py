@@ -140,7 +140,7 @@ def test_say_is_bounded_and_needs_text():
     assert handle_study_message(voice, "rita-study-say", "not a dict").say == ""
 
 
-# A part of Rita's own answer the learner did not understand ("explain_reply").
+# A part of Uzyra's own answer the learner did not understand ("explain_reply").
 from rita_study_voice import ACTIONS, MAX_CONTEXT, reply_context  # noqa: E402
 
 

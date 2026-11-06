@@ -60,8 +60,8 @@ export function SiteFooterView({
             </h2>
             <p>
               {ar
-                ? "احكي مع ريتا، وادرس من مادّتك، وراجع اللي تعلّمته."
-                : "Speak with Rita. Study your material. Keep what you learn."}
+                ? "احكي مع يوزرا، وادرس من مادّتك، وراجع اللي تعلّمته."
+                : "Speak with Uzyra. Study your material. Keep what you learn."}
             </p>
             <Link to="/learn" className="uz-footer-start">
               {ar ? "ابدأ التعلّم" : "Start learning"}

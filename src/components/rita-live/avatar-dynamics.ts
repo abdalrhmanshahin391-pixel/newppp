@@ -1,10 +1,10 @@
 /**
- * Motion model for the 3D Rita avatar. Pure and deterministic (seeded): it
- * turns Rita's playback level, the learner's microphone level and the
+ * Motion model for the 3D Uzyra avatar. Pure and deterministic (seeded): it
+ * turns Uzyra's playback level, the learner's microphone level and the
  * conversation mode into a pose. No DOM, no WebGL, so it can be unit tested.
  *
  * Design intent
- * - The mouth follows the loudness of Rita's own voice: a fast envelope opens
+ * - The mouth follows the loudness of Uzyra's own voice: a fast envelope opens
  *   it on syllables and closes it in pauses. Each new syllable picks a slightly
  *   different shape (wide / round) so speech never looks like a flapping hinge.
  * - Gestures change at phrase boundaries (a real pause in her speech), never on
@@ -22,7 +22,7 @@ export type Vec3 = [number, number, number];
 export type AvatarTelemetry = {
   /** Learner microphone level, 0..1. */
   input: number;
-  /** Rita's playback level, 0..1. */
+  /** Uzyra's playback level, 0..1. */
   output: number;
   mode: AvatarMode;
   reducedMotion?: boolean;
@@ -276,7 +276,7 @@ export class AvatarDynamics {
     return this.gesture;
   }
 
-  /** Normalises Rita's level against her recent peak so quiet and loud voices both move the mouth. */
+  /** Normalises Uzyra's level against her recent peak so quiet and loud voices both move the mouth. */
   private normalise(level: number, dt: number) {
     const t = AVATAR_TUNING;
     const gated = level < t.noiseGate ? 0 : clamp01(level);

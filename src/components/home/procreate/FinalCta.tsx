@@ -27,7 +27,7 @@ export function FinalCta() {
             className="rita-btn rita-btn-secondary"
             style={{ background: "#ffffff" }}
           >
-            Talk to Rita
+            Talk to Uzyra
           </Link>
         </div>
       </div>

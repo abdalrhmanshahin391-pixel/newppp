@@ -34,7 +34,7 @@ const MODES = [
 ] as const;
 
 /**
- * The Rita study workspace frame: two large mode buttons on top, a column of
+ * The Uzyra study workspace frame: two large mode buttons on top, a column of
  * big action tiles on the left and one plain white board in the middle.
  */
 export function StudyLayout({

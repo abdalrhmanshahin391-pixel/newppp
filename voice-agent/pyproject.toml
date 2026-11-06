@@ -1,7 +1,7 @@
 [project]
 name = "rita-realtime-voice-agent"
 version = "3.0.0"
-description = "RitaJet realtime multilingual voice tutor"
+description = "Uzyra realtime multilingual voice tutor"
 requires-python = ">=3.11"
 dependencies = [
   "pipecat-ai[cartesia,daily,groq,runner,silero,soniox]==0.0.105",

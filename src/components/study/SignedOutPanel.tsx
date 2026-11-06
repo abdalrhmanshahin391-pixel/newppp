@@ -31,7 +31,7 @@ export function SignedOutPanel({ what }: { what: string }) {
           Sign in to keep {what}
         </h1>
         <p className="mt-3 max-w-[34rem] text-[16px] leading-relaxed text-[#54546a]">
-          Rita saves your decks, plans and progress to your own account, so nothing you build here
+          Uzyra saves your decks, plans and progress to your own account, so nothing you build here
           gets lost.
         </p>
 

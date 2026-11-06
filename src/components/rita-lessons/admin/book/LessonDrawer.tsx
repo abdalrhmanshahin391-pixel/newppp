@@ -60,7 +60,7 @@ export function LessonDrawer({
   initialTab?: DrawerTab;
   /** A ready guide is linked: "preview" opens the study page, as learners will get it. */
   studyLinked?: boolean;
-  /** Red (Rita's lesson) or green (guide + Rita), shown next to the state. */
+  /** Red (Uzyra's lesson) or green (guide + Uzyra), shown next to the state. */
   kind?: LessonKind;
   readiness: LessonReadiness;
   bookPublished: boolean;

@@ -103,8 +103,8 @@ export function LanguagePicker({ onChosen }: { onChosen?: (code: string) => void
           {error === VOICE_SESSION_ERROR
             ? text(
                 ui,
-                "End your conversation with Rita first, then switch language.",
-                "أنهِ محادثتك مع ريتا أولاً، ثم بدّل اللغة.",
+                "End your conversation with Uzyra first, then switch language.",
+                "أنهِ محادثتك مع يوزرا أولاً، ثم بدّل اللغة.",
               )
             : text(
                 ui,

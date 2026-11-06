@@ -8,10 +8,10 @@ export const Route = createFileRoute("/login")({
       { title: "Sign in — Uzyra study tools" },
       {
         name: "description",
-        content: "Sign in to Rita and pick up your flashcards, summaries and quizzes.",
+        content: "Sign in to Uzyra and pick up your flashcards, summaries and quizzes.",
       },
       { property: "og:title", content: "Sign in — Uzyra study tools" },
-      { property: "og:description", content: "Sign in to Rita and pick up where you left off." },
+      { property: "og:description", content: "Sign in to Uzyra and pick up where you left off." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

@@ -66,8 +66,8 @@ function BinaryRain() {
 const DRAG_START_PX = 6;
 
 /**
- * The Uzyra circle over the study area: the Uzyra character (waving, or thinking while Rita works)
- * in front of falling zeros and ones. Tap it to open the menu; drag it anywhere, over Rita
+ * The Uzyra circle over the study area: the Uzyra character (waving, or thinking while Uzyra works)
+ * in front of falling zeros and ones. Tap it to open the menu; drag it anywhere, over Uzyra
  * or over the guide (it never follows the pointer on its own). Its place is kept as a share of the
  * area, so it stays in the same spot when the window or the divider changes. Arrow keys move it
  * while "move" mode is on (no dragging needed).
@@ -89,7 +89,7 @@ export const FloatingOrb = forwardRef<
     moving: boolean;
     onStopMoving: () => void;
     label: string;
-    /** "reply": the selection is in Rita's own answers; the circle takes their dark red. */
+    /** "reply": the selection is in Uzyra's own answers; the circle takes their dark red. */
     tone?: "reply";
   }
 >(function FloatingOrb(

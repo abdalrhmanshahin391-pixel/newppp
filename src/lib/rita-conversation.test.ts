@@ -50,9 +50,9 @@ const messages: RitaConversationMessage[] = [
   },
 ];
 
-test("markdown preserves user/Rita order and readable labels", () => {
+test("markdown preserves user/Uzyra order and readable labels", () => {
   const markdown = ritaConversationMarkdown(conversation, messages);
-  assert.ok(markdown.indexOf("### User") < markdown.indexOf("### Rita"));
+  assert.ok(markdown.indexOf("### User") < markdown.indexOf("### Uzyra"));
   assert.match(markdown, /كيف أحكي/);
   assert.match(markdown, /I need to go to the bathroom/);
 });
@@ -83,7 +83,7 @@ test("resume history is bounded and ignores incomplete assistant drafts", () => 
   assert.equal(history[0].content.length, 30);
 });
 
-test("resume history uses only the spoken part of an interrupted Rita reply", () => {
+test("resume history uses only the spoken part of an interrupted Uzyra reply", () => {
   const history = boundedRitaHistory([
     messages[0],
     {
@@ -101,10 +101,10 @@ test("print document keeps both speakers, in order, with a role label for each",
   const html = ritaConversationPrintHtml(conversation, messages);
   assert.ok(html.indexOf('class="m user"') < html.indexOf('class="m rita"'));
   assert.match(html, /<p class="who">You /);
-  assert.match(html, /<p class="who">Rita /);
+  assert.match(html, /<p class="who">Uzyra /);
   assert.match(html, /كيف أحكي بدي أروح على الحمام/);
   assert.match(html, /I need to go to the bathroom/);
-  assert.match(html, /<title>rita-Bathroom-English-12345678<\/title>/);
+  assert.match(html, /<title>uzyra-Bathroom-English-12345678<\/title>/);
 });
 
 test("print document sets dir=auto per message, marks roles by border, hides its button when printing", () => {

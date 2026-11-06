@@ -28,7 +28,7 @@ service-role key, so the few operations that must read protected rows across all
 Functions, which Lovable Cloud gives the key automatically. Exactly two are approved:
 `supabase/functions/rita-lesson-run` (a learner's lesson run; the app's server functions in
 `src/lib/rita-lesson-run.functions.ts` only forward the learner's token) and
-`supabase/functions/rita-review` (the AI review of Rita's replies; it needs the worker key from
+`supabase/functions/rita-review` (the AI review of Uzyra's replies; it needs the worker key from
 `site_secrets.worker_cron_key` and returns counts only). Both set `verify_jwt = false` in
 `supabase/config.toml`. The engine files they use are copied into `supabase/functions/_shared` by
 `node scripts/sync-lesson-edge.mjs`; a test fails when a copy drifts. Do not add other Edge Functions

@@ -1,4 +1,4 @@
-# Rita's Jordanian speech: how it works and how to add phrases
+# Uzyra's Jordanian speech: how it works and how to add phrases
 
 Where it lives: `voice-agent/rita_dialect.py` (prompt text `DIALECT_PROMPT`, greetings
 `GREETINGS`, watch list `KNOWN_WRONG`). The worker image only carries Python modules, so to
@@ -11,9 +11,9 @@ add a phrase tell Claude (or edit that file) and redeploy the worker.
   (guesses gender; ask "عن شو بدنا نحكي؟").
 - **"How do I say X in English?"** is answered in Arabic: one short sentence, the phrase once in
   quotes, one usage tip. A plain question like this no longer switches the conversation language.
-- **First hello** ("مرحبا ريتا", "hello", "hallo"…) gets a scripted greeting, no model call.
+- **First hello** ("مرحبا يوزرا", "hello", "hallo"…) gets a scripted greeting, no model call.
 - **Speech cleaner** drops `*` and backticks and a full stop after a closing quote before the voice.
-- **Dialect watch**: phrases in `KNOWN_WRONG` are logged as "Rita dialect watch" (never rewritten
+- **Dialect watch**: phrases in `KNOWN_WRONG` are logged as "Uzyra dialect watch" (never rewritten
   mid-speech), so real mistakes can be collected and moved into the prompt.
 
 ## What is not covered

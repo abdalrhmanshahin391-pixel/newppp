@@ -27,7 +27,7 @@ import {
 
 export const Route = createFileRoute("/admin/rita-quality/$issueId")({
   head: () => ({
-    meta: [{ title: "Rita problem — Admin" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Uzyra problem — Admin" }, { name: "robots", content: "noindex" }],
   }),
   component: IssuePage,
 });
@@ -322,7 +322,7 @@ function IssuePage() {
             to="/admin/rita-quality"
             className="inline-flex min-h-[44px] items-center gap-2 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
           >
-            <ArrowLeft size={17} aria-hidden="true" /> Rita quality
+            <ArrowLeft size={17} aria-hidden="true" /> Uzyra quality
           </Link>
           <GuideButton open={guide} onToggle={() => setGuide(!guide)} />
         </div>
@@ -336,7 +336,7 @@ function IssuePage() {
 
         {data.state === "missing" || data.state === "error" ? (
           <p role="alert" className="mt-6 rounded-2xl bg-[var(--pp-grey)] p-5 text-[16px]">
-            This page needs the database migrations from the Rita quality page. Open that page for
+            This page needs the database migrations from the Uzyra quality page. Open that page for
             the list.
           </p>
         ) : null}

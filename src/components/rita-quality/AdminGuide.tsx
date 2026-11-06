@@ -24,7 +24,7 @@ const SEND: Item[] = [
   },
   {
     name: "The same problem keeps coming back",
-    text: "Open the problem on Rita quality and press Download fix file. Send me that file. This is the best one when you want something fixed.",
+    text: "Open the problem on Uzyra quality and press Download fix file. Send me that file. This is the best one when you want something fixed.",
   },
   {
     name: "A fix is live",
@@ -55,7 +55,7 @@ const CONTROLS: Record<"conversations" | "quality" | "issue", Item[]> = {
     { name: "Next step", text: "The one thing to do now. Press its button." },
     {
       name: "Overview",
-      text: "How Rita is doing on the current version, compared with the version before it, and her weak spots.",
+      text: "How Uzyra is doing on the current version, compared with the version before it, and her weak spots.",
     },
     {
       name: "Problems",
@@ -77,7 +77,7 @@ const CONTROLS: Record<"conversations" | "quality" | "issue", Item[]> = {
     },
     {
       name: "Test on current version",
-      text: "Rita answers this problem's old turns again with the version running now. A turn passes only if both of its answers are good.",
+      text: "Uzyra answers this problem's old turns again with the version running now. A turn passes only if both of its answers are good.",
     },
     {
       name: "Reviewer is right / wrong",

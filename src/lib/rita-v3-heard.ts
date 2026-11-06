@@ -69,7 +69,7 @@ export class RitaReplyAccumulator {
   }
 }
 
-/** A VAD start is only an interruption candidate; a brief acknowledgement may not stop Rita. */
+/** A VAD start is only an interruption candidate; a brief acknowledgement may not stop Uzyra. */
 export function wasRitaInterrupted(candidateAtMs: number, botStoppedAtMs: number) {
   return (
     candidateAtMs > 0 && botStoppedAtMs >= candidateAtMs && botStoppedAtMs - candidateAtMs < 1_500
@@ -90,7 +90,7 @@ export function upsertDraftReply<T extends { id: string; text: string }>(
 
 /**
  * Settle a streamed reply once playback ends. The learner sees generated text
- * while Rita speaks; afterwards it is trimmed to what was actually heard if the
+ * while Uzyra speaks; afterwards it is trimmed to what was actually heard if the
  * reply was interrupted, and removed if nothing was heard.
  */
 export function settleDraftReply<
@@ -114,8 +114,8 @@ export function settleDraftReply<
 
 /**
  * The learner's side of one exchange. Soniox ends a segment at every breath, so one question can
- * arrive as several finished pieces and the learner can start speaking again before Rita has
- * answered. Until Rita starts to answer (or the exchange is settled) every piece belongs to the
+ * arrive as several finished pieces and the learner can start speaking again before Uzyra has
+ * answered. Until Uzyra starts to answer (or the exchange is settled) every piece belongs to the
  * same bubble: one id, one start time, the words in order and each word once. After that the next
  * words open a fresh turn that starts from nothing.
  */
@@ -163,7 +163,7 @@ export class LearnerTurn {
     return this.words;
   }
 
-  /** Rita started to answer: whatever the learner says next is a new turn. */
+  /** Uzyra started to answer: whatever the learner says next is a new turn. */
   replyStarted() {
     this.open = false;
     this.assigned = false;

@@ -3,12 +3,12 @@ import type { FixFileExample } from "@/lib/rita-quality";
 
 const WINNER: Record<string, string> = {
   reference: "A good tutor's reply was better",
-  rita: "Rita's reply was better",
+  rita: "Uzyra's reply was better",
   tie: "About equal",
 };
 
 /**
- * One reply behind an issue: what the learner said, what Rita said and what an excellent tutor
+ * One reply behind an issue: what the learner said, what Uzyra said and what an excellent tutor
  * would have said, why it is a problem and the fix. The two buttons record whether the reviewer got
  * it right; the answers feed the "Is the reviewer right?" number and the fix file.
  */
@@ -34,7 +34,7 @@ export function ExampleCard({
       ) : null}
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         <div className="rounded-xl bg-[var(--pp-grey)] p-4">
-          <p className="text-[13px] font-semibold text-[var(--pp-muted)]">Rita said</p>
+          <p className="text-[13px] font-semibold text-[var(--pp-muted)]">Uzyra said</p>
           <p dir="auto" className="mt-1 text-[16px] leading-[1.55]">
             {example.ritaReply ?? "—"}
           </p>

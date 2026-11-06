@@ -28,7 +28,7 @@ export type SelectionRef = { segIds: string[]; exact: string; parts?: string[] }
 
 /**
  * One request at a time: a new one cancels the old one, and a late answer from an old request is
- * never shown as the answer to the new one (each carries its request id). In a call, Rita answers
+ * never shown as the answer to the new one (each carries its request id). In a call, Uzyra answers
  * by voice and in the chat; without a call, "explain" and the like are answered in writing.
  */
 export function useStudyRequests({
@@ -91,7 +91,7 @@ export function useStudyRequests({
     };
   }, [apply, bridge]);
 
-  /** Rita's speaking state, from the call (the study page forwards it). */
+  /** Uzyra's speaking state, from the call (the study page forwards it). */
   const onRitaEvent = useCallback(
     (event: "ready" | "ended" | "speaking" | "quiet") =>
       apply(ritaEventStep(activeRef.current, event)),
@@ -110,7 +110,7 @@ export function useStudyRequests({
     async (action: RitaAction, selection: SelectionRef): Promise<boolean> => {
       const voice = Boolean(bridge.send);
       if (ACTION_INFO[action].voiceOnly && !voice) {
-        toast.message("ابدأ مع ريتا أول، وبعدين اشرحلها بصوتك.");
+        toast.message("ابدأ مع يوزرا أول، وبعدين اشرحلها بصوتك.");
         return false;
       }
       // A new request replaces the old one.
@@ -156,7 +156,7 @@ export function useStudyRequests({
             context: result.context,
           });
           if (!sent) {
-            fail(id, "ريتا مش متصلة. اكبس «ابدأ مع ريتا».");
+            fail(id, "يوزرا مش متصلة. اكبس «ابدأ مع يوزرا».");
             return false;
           }
           update(id, { state: "sent", quote: result.quote });
@@ -183,7 +183,7 @@ export function useStudyRequests({
   );
 
   /**
-   * A part of Rita's own answer, explained as to a complete beginner. Same life as `run`: one
+   * A part of Uzyra's own answer, explained as to a complete beginner. Same life as `run`: one
    * request at a time, by voice in a call and in writing without one.
    */
   const runReply = useCallback(
@@ -239,7 +239,7 @@ export function useStudyRequests({
           context: "context" in result ? result.context : "",
         });
         if (!sent) {
-          fail(id, "ريتا مش متصلة. اكبس «ابدأ مع ريتا».");
+          fail(id, "يوزرا مش متصلة. اكبس «ابدأ مع يوزرا».");
           return false;
         }
         update(id, { state: "sent" });

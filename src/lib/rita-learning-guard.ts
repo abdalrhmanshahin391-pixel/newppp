@@ -1,6 +1,6 @@
 // Keeps the learner's words list accurate. The language model proposes items from an
 // exchange; nothing is accepted unless the term really appears in what the learner asked
-// or in what Rita answered, so an invented or neighbouring word can never slip in.
+// or in what Uzyra answered, so an invented or neighbouring word can never slip in.
 import type { LearningItem } from "./rita-learning.ts";
 import { learningKey } from "./rita-learning.ts";
 

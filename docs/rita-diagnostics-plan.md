@@ -1,13 +1,13 @@
-# خطة تشخيص ريتا وتحسينها مع الوقت (المرجع الثابت)
+# خطة تشخيص يوزرا وتحسينها مع الوقت (المرجع الثابت)
 
 > هاد الملف هو الذاكرة الثابتة للشغل. أي جلسة جديدة تقرأه أول.
 > المصادر: فكرة صاحب المشروع (محلّل آلي بيجمّع المشاكل)، وبحث Perplexity
-> «خطة تشخيص واختبار ريتا» (الصندوق الأسود)، وخطة Hamza «خطة جعل ريتا أفضل مع الوقت»
+> «خطة تشخيص واختبار يوزرا» (الصندوق الأسود)، وخطة Hamza «خطة جعل يوزرا أفضل مع الوقت»
 > (مبنية على الكود عند `69da1bf`)، وتحقق Claude من الكود على `main` بتاريخ 24 أكتوبر 2026.
 
 ## 1. طلبات صاحب المشروع (ما تتغير)
 
-1. **كل محادثة مع ريتا إلها سجل تصليح لحالها**: دفاتر أدوارها، وبلاغاته فيها، وتحليل المحلّل
+1. **كل محادثة مع يوزرا إلها سجل تصليح لحالها**: دفاتر أدوارها، وبلاغاته فيها، وتحليل المحلّل
    إلها، والنسخة اللي اشتغلت عليها. ينزل كملف واحد لهاي المحادثة (زر «ملف التصليح»).
 2. **المحلّل الآلي يستخدم مفتاح OpenAI الموجود**: `resolveRitaOpenAiKey()` في
    `src/lib/rita-voice.server.ts` بيقرأ `admin_ai_keys` (provider=openai, purpose `rita` ثم
@@ -40,8 +40,8 @@
 | # | الفجوة | الدليل |
 |---|---|---|
 | G1 | ما في معرّف دور مشترك | `bot.py` يستعمل `turn_id=latency.turn` (عدّاد)؛ الصفحة `RitaRealtimeV3.tsx` ~992 `turnId.current = crypto.randomUUID()` |
-| G2 | سجل نهاية رد ريتا يكتب دائماً «غير مقاطع» | `bot.py` ~660 `interrupted=False`؛ `AssistantTurnStoppedMessage` في Pipecat 0.0.105 فيها `content` و`timestamp` فقط |
-| G3 | قرارات نهاية الدور بسجل Modal النصي فقط، وحقولها bound extras ما تظهر | سطور «Rita user turn committed» / «Rita assistant turn committed» |
+| G2 | سجل نهاية رد يوزرا يكتب دائماً «غير مقاطع» | `bot.py` ~660 `interrupted=False`؛ `AssistantTurnStoppedMessage` في Pipecat 0.0.105 فيها `content` و`timestamp` فقط |
+| G3 | قرارات نهاية الدور بسجل Modal النصي فقط، وحقولها bound extras ما تظهر | سطور «Uzyra user turn committed» / «Uzyra assistant turn committed» |
 | G4 | ما في هوية نسخة | لا `RITA_GIT_SHA` في `rita-modal-deploy.yml` ولا `modal_app.py`؛ `model_proof` (start.ts) أسماء النماذج فقط |
 | G5 | المتصفح يرسل طلب HTTP لكل حدث | `sendMetric` في `RitaRealtimeV3.tsx`؛ المسار `src/routes/api/rita-v3/session/metrics.ts` يتطلب `Authorization` (`requireRitaUser`) وفيه `ALLOWED_EVENTS` |
 | G6 | مهلة الجملة بدون نقطة مقصوصة 0.45/0.65/0.85 | `rita_turn_policy.py: adaptive_unpunctuated_secs` |
@@ -54,7 +54,7 @@
 - `rita_free_conversation_messages` تحفظ `generated_content` و`spoken_content` و`delivery_status` و`client_message_id`.
 - `voice-agent/rita_latency.py` (`RitaLatencyRecorder`: `turn`، marks لكل دور: speech_start/end، stt_first_final، llm_first_answer_text، tts_first_bytes، worker_first_audio_frame…)، `rita_state.py` (اللغة ومصدرها، act، response_type، task، phrase)، `rita_turn_policy.py` (`last_stop_reason`)، `rita_groq_llm.py` (`finish_reason`).
 - مراقبات Pipecat مستعملة: `UserBotLatencyObserver`, `StartupTimingObserver`, `MetricsLogObserver`, و`enable_turn_tracking=True`.
-- استعادة الدور الضايع بعد المقاطعة (#66/#67): سطر «Rita recovering committed turn that missed the router».
+- استعادة الدور الضايع بعد المقاطعة (#66/#67): سطر «Uzyra recovering committed turn that missed the router».
 - `rita_content_probe.py` (يشتغل بسر Modal بعد #60)، وأرقام `seq` لأحداث الصفحة (#58)، وتصدير المحادثة md/JSON/PDF من `/rita-conversations`.
 - نمط الجدولة الموجود: `pg_cron` + `pg_net` يستدعي مسار API في التطبيق (`/api/public/push-dispatch`). **ما في `supabase/functions` بالمشروع.**
 
@@ -63,7 +63,7 @@
 1. المحلّل **مسار API في التطبيق** (`/api/public/rita-review`) يستدعيه `pg_cron` عبر `pg_net`، محمي بسر في الـheader (مش Edge Function).
 2. إرسال آخر دفعة عند إغلاق الصفحة بـ`fetch(..., { keepalive: true })` مع header المصادقة، لأن `sendBeacon` ما يقدر يرسل `Authorization`.
 3. الدفتر يفصل سبب `period` عن `bounded` (quick)، ويحط الحقول بنص سطر السجل مش extras.
-4. الخصوصية: موافقة «ساعد في تحسين ريتا» (مفعّلة لحساب صاحب المشروع)؛ قرار النص والافتراضي للمتعلمين الآخرين لصاحب المشروع. `store:false` + تنبيه أن OpenAI تحتفظ بسجلات مراقبة الإساءة حتى 30 يوم.
+4. الخصوصية: موافقة «ساعد في تحسين يوزرا» (مفعّلة لحساب صاحب المشروع)؛ قرار النص والافتراضي للمتعلمين الآخرين لصاحب المشروع. `store:false` + تنبيه أن OpenAI تحتفظ بسجلات مراقبة الإساءة حتى 30 يوم.
 
 ## 5. المراحل بالترتيب (PR مستقل لكل مرحلة)
 
@@ -73,7 +73,7 @@
 ### المرحلة 1 — دفتر الدور + المعرّف المشترك (worker + صفحة، بدون migration)
 - `voice-agent/rita_turn_ledger.py`: سجل بالذاكرة لكل دور، يُملأ من الموجود فقط.
 - `turn_ref = f"{session_id}-t-{n}"` مشترك (G1).
-- رسالة RTVI واحدة `{type: "rita-turn-ledger", v: 1, ...}` عند انتهاء أو مقاطعة رد ريتا، أقل من 1KB، بلا نص كامل ولا أسرار. الحقول: `turn_ref`, `build`, `prompt_hash`, `stop_reason` (smart|bounded|period|unpunctuated|short_phrase|timeout|force), `wait_ms`, `user_resumed`, `words`, `route`, `act`, `response_type`, `explain_lang` + source, `learn_lang`, `task`, `llm.first_token_ms`, `llm.finish_reason`, `tts.first_audio_ms`, `interrupted`, `interrupt_after_ms`, `recovered_turn`.
+- رسالة RTVI واحدة `{type: "rita-turn-ledger", v: 1, ...}` عند انتهاء أو مقاطعة رد يوزرا، أقل من 1KB، بلا نص كامل ولا أسرار. الحقول: `turn_ref`, `build`, `prompt_hash`, `stop_reason` (smart|bounded|period|unpunctuated|short_phrase|timeout|force), `wait_ms`, `user_resumed`, `words`, `route`, `act`, `response_type`, `explain_lang` + source, `learn_lang`, `task`, `llm.first_token_ms`, `llm.finish_reason`, `tts.first_audio_ms`, `interrupted`, `interrupt_after_ms`, `recovered_turn`.
 - المقاطعة الحقيقية من `InterruptionFrame` (G2).
 - `RITA_GIT_SHA` من `rita-modal-deploy.yml` + هاش قصير للتعليمات، في الدفتر وفي `model_proof` (G4).
 - حقول سطور السجل بنص الرسالة (G3).
@@ -125,7 +125,7 @@ OpenTelemetry الكامل، الجداول الـ11، مهمة PDF خلفية �
 - [x] المرحلة 2 — اندمجت (#71): طابور محدود + دفعات + `metrics_dropped`، بدون migration
 - [x] المرحلة 3 — اندمجت (#72): زر «في مشكلة بهذا الرد» + جدول `rita_issue_reports` (migration `20261024120000`) + زر «Repair file» لكل محادثة
 - [x] المرحلة 4 — اندمجت (#73): محلل OpenAI لكل دور (بدون سقف تكلفة/توكنز بطلب صاحب المشروع)، مفتاح تشغيل/إيقاف واحد لكل المحادثات (`rita_review_settings`)، جدول `rita_turn_reviews`، cron كل 5 دقائق، التحليل داخل Repair file
-- [~] المرحلة 4ب — فرع `claude/rita-review-compare`: مراجعة v2 — رد مرجعي بدون رؤية رد ريتا، فحص معلومات ولهجة، حكم بالترتيبين، تشخيص، تقييم عام للمحادثة، النتائج داخل Repair file (migration `20261024140000`)
+- [~] المرحلة 4ب — فرع `claude/rita-review-compare`: مراجعة v2 — رد مرجعي بدون رؤية رد يوزرا، فحص معلومات ولهجة، حكم بالترتيبين، تشخيص، تقييم عام للمحادثة، النتائج داخل Repair file (migration `20261024140000`)
 - [x] المرحلة 5أ — اندمجت (#75): تجميع المشاكل في بطاقات (`rita_issues`)، صفحة `/admin/rita-quality` (صحة النسخ، Fix next، المعايير، 👍/👎)، ملف إصلاح لكل مشكلة، دمج، حالة محسوبة (watching/resolved/regressed). migration `20261024150000`
 - [x] المرحلة 5ب — اندمجت (#76): اختبار الإعادة (`rita_replay.py` + نقطة Modal `replay_turns`، حكم جديد بالمراجع، تشغيل تلقائي بعد كل نشر للـworker، حالة «Test still fails»). migration `20261024160000`
 - [x] المرحلة 5ج — اندمجت (#77): فحص المحلل بـ16 حالة ذهبية (أغلاط معروفة وردود سليمة)، زر «Check the reviewer»، تشغيل تلقائي مرة لكل نسخة من معايير المحلل. migration `20261024170000`

@@ -1,5 +1,5 @@
 /**
- * GLSL for the Rita voice orb: a pearl-white sphere whose interior is a slowly
+ * GLSL for the Uzyra voice orb: a pearl-white sphere whose interior is a slowly
  * churning field of soft colour. Original implementation (domain-warped value
  * noise on the sphere surface, soft light, pearly rim, film grain). The only
  * inputs are the numbers produced by orb-dynamics.ts.

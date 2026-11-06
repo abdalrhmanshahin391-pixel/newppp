@@ -22,11 +22,11 @@ const BLOCKER_TEXT = {
   not_study: "الدرس بالتجربة الحالية. الطلاب بياخدوه زي ما هو.",
   no_guide: "الطلاب لسا بياخدوا الدرس الحالي لحد ما تربط دليل جاهز.",
   switch_off: "كل شي جاهز، بس مفتاح «دراسة تفاعلية» مطفي، فالطلاب بياخدوا الدرس الحالي.",
-  "": "الطلاب بيفتحوا هاد الدرس كدراسة تفاعلية: الدليل يمين وريتا يسار.",
+  "": "الطلاب بيفتحوا هاد الدرس كدراسة تفاعلية: الدليل يمين ويوزرا يسار.",
 } as const;
 
 /**
- * The lesson's experience and its study file. The admin chooses "current lesson" or "Rita -
+ * The lesson's experience and its study file. The admin chooses "current lesson" or "Uzyra -
  * interactive study", links one of this book's PDF guides (the learners' copy is printed then),
  * and can switch the whole feature on or off. Learners never see a draft guide.
  */

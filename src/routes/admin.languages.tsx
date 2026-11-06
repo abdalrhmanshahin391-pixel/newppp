@@ -244,7 +244,7 @@ function AdminLanguages() {
       <div className="mx-auto max-w-4xl space-y-6 px-5 pt-6">
         <p className="max-w-[60ch] text-[15px] leading-[1.6] text-[#4b4a5c]">
           كل لغة هنا مساحة منفصلة: بطاقاتها ودروسها ومحادثاتها. اللغة الجديدة بتظهر للطلاب فوراً
-          بدون محتوى، وبتبني محتواها بأدوات المناهج والمجموعات الموجودة. محادثة ريتا الصوتية ما
+          بدون محتوى، وبتبني محتواها بأدوات المناهج والمجموعات الموجودة. محادثة يوزرا الصوتية ما
           بتنفتح للغة إلا بعد ما تجرّبها وتشغّل «الصوت».
         </p>
 
@@ -345,7 +345,7 @@ function AdminLanguages() {
                         void patch(language.code, { voice_enabled: !language.voice_enabled })
                       }
                     />
-                    محادثة ريتا الصوتية
+                    محادثة يوزرا الصوتية
                   </label>
                   <label className="flex min-h-11 items-center gap-2 font-semibold">
                     العلم

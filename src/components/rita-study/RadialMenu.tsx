@@ -56,7 +56,7 @@ export const RadialMenu = forwardRef<
     quote: string;
     meta: string;
     hasSelection: boolean;
-    /** "reply": the selection is in Rita's own answers (dark red quote card). */
+    /** "reply": the selection is in Uzyra's own answers (dark red quote card). */
     tone?: "reply";
     hint: string;
     canReport: boolean;
