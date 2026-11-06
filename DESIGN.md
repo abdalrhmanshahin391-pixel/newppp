@@ -399,11 +399,11 @@ chat pages, measured from the owner's reference and scaled ×0.82 so the column 
 large-screen feel. Page #F7F7F6. Before the call: the UZYRA wordmark and Rita's cube big in the
 middle, and the composer at the bottom («احكي مع ريتا…», a «ريتا» tag and a round blue mic that
 starts the call). When the call starts the cube flies down to sit just above the composer
-(FlyingCube). Rita writes without a bubble: a quiet 13px line first (her mark in a 26px white circle,
+(FlyingCube). Rita writes without a bubble: a quiet 12px line first (her mark in a 26px white circle,
 «ريتا», the circle request it answers, and on the newest answer what she is doing now) over a hairline
-#E4E4E1, then 14px text #2B2B2B at 1.95 line height, paragraphs 12px apart, bold #161616. Words in the
+#E4E4E1, then 13px text #2B2B2B at 1.95 line height, paragraphs 12px apart, bold #161616. Words in the
 language being learned are small grey tags (#ECECEA, 0.9em). The learner's words sit on the other side
-in a #EBEBEA bubble (radius 15, 8×16 padding, 14px); a circle request shows its label as a small tag
+in a #EBEBEA bubble (radius 15, 8×16 padding, 13px); a circle request shows its label as a small tag
 above the quote. Turns are 26px apart; the report link is a small flag. The composer is one #EBEBEA
 field (radius 26, no border, no shadow): the 16px field on top (16px keeps iPad Safari from zooming),
 then a row with «كلماتي» (and its count) at the start and stop, end call (red), mic and a 38px round
@@ -520,9 +520,19 @@ back or close it for good; any corner resizes it (curved mark bottom-right). Min
 the area, place and size remembered. It grows out of the circle and back into it with the circle's
 sounds. No backdrop: the page, the selection and the circle keep working.
 
-Type on the study page follows pro tools: 13px for UI text and 12px for small words (top bar, state
-word, window), 15px for Rita's replies; a thin 46px top bar; the guide fits its pane at most 112% so a
-wide pane gets more room around the sheet instead of bigger type.
+Type on the study page follows pro tools and the owner's UI research (Nov 2026): 13px for UI text and
+12px for small words (top bar, state word, window), 13px for Rita's replies (the owner chose smaller
+than the research's 16–18px; raise `.uz-rc-rita` if it reads small on the iPad); a thin 46px top bar;
+the circle 56px and its options 50px (labels 12px, the quote 14px).
+
+The guide is not a fixed page scaled to its pane any more (that made its text 8px on a phone). Until
+the learner zooms by hand, its frame is as wide as the pane at scale 1 and the sheet reflows to that
+width, at most 640px with grey around it (`SCREEN_CSS` in guide-html.ts; printing and the PDF keep
+their pt sizes). Screen type: title 19px weight 650 (uppercase, as the guide), section titles 15px
+600, text 14px at 1.6, table cells 13px (first column 600), head pills 10.5px 600, cards 13.5px with
+14px titles, the Arabic note 14px; 1px #E4E4EA cell borders; sheet padding 28px (18×16 under 560px,
+where wide matrix tables scroll inside their own section). A pinch or ctrl + wheel still zooms
+around the fingers, and selection keeps working at any zoom.
 
 ## Temporary question design preview
 
@@ -564,7 +574,7 @@ page has an uppercase title over a hairline, a table whose heads are the guide's
 green, blue) with a bold first column on #fafafd, points with small blue squares, examples in italics
 behind a soft blue rule with the key word bold (an English or German word opens the word window), and
 a blue-soft «انتبه / Watch out» card. Each line reads in its own direction (any Arabic: right to
-left). 14px body, 13.5px cells, radius 16, a soft shadow; it rises in once (reduced motion: no
+left). 12.5px body, 12px cells, 10px head pills, 13.5px title, radius 16, no shadow; it rises in once (reduced motion: no
 movement). A sheet the model wrote badly still shows as plain lines. Short answers have no sheet.
 
 ### Explaining a part of Rita's answer

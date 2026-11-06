@@ -311,17 +311,50 @@ function fontOrigin(base: string): string {
 /**
  * The study page shows the guide as one white sheet on a grey page. @page only splits pages when
  * printing, so on screen the sheet is one long page and the learner moves by section.
+ *
+ * On screen the sheet follows the width of its pane (up to 640px) instead of being a fixed page
+ * scaled down to fit: shrinking the whole page made the text unreadable on a phone (8px). The
+ * type is set in px for reading on a screen: calm headings, 14px text, 13px tables. Printing and
+ * the PDF keep the pt sizes above.
  */
 const SCREEN_CSS = `
 @media screen{
 html{background:#f4f4f8}
 body{padding:16px 12px 40px}
-.sheet{width:${PAGE_WIDTH_PT}pt;max-width:none;margin:0 auto;padding:34pt 34pt 40pt;background:#fff;border-radius:6pt;box-shadow:0 1px 2px rgba(18,17,23,.06),0 8px 24px rgba(18,17,23,.08)}
+.sheet{width:auto;max-width:640px;margin:0 auto;padding:28px;background:#fff;border-radius:8px;box-shadow:0 1px 2px rgba(18,17,23,.06),0 8px 24px rgba(18,17,23,.08)}
+.head{gap:12px;padding-bottom:12px;border-bottom-width:1px}
+.head h1{max-width:none;font:650 19px/1.15 "Inter Tight",Arial,sans-serif;letter-spacing:-.005em}
+.brand{gap:6px;font-size:11px}
+.mark{height:18px}
+.intro{margin:16px 2px 0;font-size:14px;line-height:1.6}
+h2.sec{margin:22px 0 10px;font:600 15px/1.2 "Inter Tight",Arial,sans-serif}
+table.grid th{padding:0 2px 5px}
+.pill{min-height:30px;padding:4px 6px;border-radius:8px;font:600 10.5px/1.15 "Inter Tight",Arial,sans-serif;letter-spacing:.03em}
+.pill.tall{min-height:40px}
+table.grid td{border:1px solid #e4e4ea;padding:7px 9px;font-size:13px;line-height:1.4}
+table.grid td.rowlab{font-weight:600}
+table.matrix td{font-size:13px;padding:8px 6px}
+.card{margin-top:14px;border-radius:12px;padding:12px 14px}
+.card h3{margin:0 0 6px;font:650 14px/1.2 "Inter Tight",Arial,sans-serif}
+.card p{margin:5px 0;font-size:13.5px;line-height:1.55}
+.callout{font-size:13.5px;line-height:1.6}
+ul.rules li{padding:8px 3px;border-bottom:1px solid #e4e4ea}
+ul.rules .rule{font-size:13.5px;font-weight:600}
+ul.rules .ex{font-size:13.5px}
+.ar{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font:400 14px/1.8 "Noto Sans Arabic",Arial,sans-serif}
+.ar .tag{left:12px;top:-7px;font-size:9px}
 section.block{scroll-margin-top:16px}
 ::selection{background:#cfe0ff}
 ::highlight(st-sel){background-color:#cfe0ff}
 .st-flash{animation:st-flash 1.2s ease-out}
 @keyframes st-flash{0%{background:#fff3b0}100%{background:transparent}}
+}
+@media screen and (max-width:560px){
+body{padding:10px 8px 32px}
+.sheet{padding:18px 16px}
+.head{flex-wrap:wrap}
+section.block:has(table.matrix){overflow-x:auto}
+table.matrix{min-width:500px}
 }
 @media screen and (prefers-reduced-motion:reduce){.st-flash{animation:none;outline:2px solid #2b6df0}}`;
 

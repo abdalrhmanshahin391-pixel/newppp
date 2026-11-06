@@ -2,15 +2,11 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRe
 import { renderGuideHtml } from "@/lib/guides/guide-html";
 import type { GuideContent } from "@/lib/guides/guide-content";
 
-/** The sheet's width on screen: 439pt plus the page padding (see SCREEN_CSS in guide-html.ts). */
-export const SHEET_PX = Math.round(439 * (4 / 3)) + 24;
+/** The frame's width before it is fitted to its pane (the sheet inside is at most 640px). */
+const START_WIDTH = 664;
 
 const SCALE_MIN = 0.5;
 const SCALE_MAX = 3;
-/** The fitted size follows the pane: the wider the pane, the bigger the sheet. */
-const FIT_MIN = 0.4;
-/** Kept close to the page's real size: a wide pane gets more room around the sheet, not bigger type. */
-const FIT_MAX = 1.12;
 
 export type GuideFrameHandle = {
   document: () => Document | null;
@@ -33,8 +29,10 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
  *
  * The frame is as tall as the whole sheet and never scrolls itself: the box around it scrolls, and
  * size changes use a transform. (Safari loses text selection inside a frame scaled with CSS `zoom`.)
- * Two fingers on a touch screen, or a pinch on a trackpad, zoom around the fingers; until the
- * learner zooms by hand the sheet fits the width of its pane.
+ * Until the learner zooms by hand, the frame is as wide as its pane at its real size (scale 1) and
+ * the sheet inside reflows to that width (at most 640px, grey around it): the text stays readable
+ * on a phone instead of a whole page being shrunk. Two fingers on a touch screen, or a pinch on a
+ * trackpad, then zoom around the fingers from there.
  */
 export const GuideFrame = forwardRef<
   GuideFrameHandle,
@@ -51,6 +49,8 @@ export const GuideFrame = forwardRef<
   const frame = useRef<HTMLIFrameElement | null>(null);
   const hit = useRef<HTMLDivElement | null>(null);
   const scale = useRef(1);
+  /** The frame's own width (its layout width, before the zoom transform). */
+  const width = useRef(START_WIDTH);
   const height = useRef(1200);
   const fitted = useRef(true);
 
@@ -67,7 +67,7 @@ export const GuideFrame = forwardRef<
   /** Where the sheet starts inside the scrolling box (it is centred when narrower). */
   const offsetX = () => {
     const box = scroller.current;
-    return box ? Math.max(0, (box.clientWidth - SHEET_PX * scale.current) / 2) : 0;
+    return box ? Math.max(0, (box.clientWidth - width.current * scale.current) / 2) : 0;
   };
 
   /** Applies a scale; `anchor` is a point in sheet units that stays under the same screen spot. */
@@ -78,7 +78,8 @@ export const GuideFrame = forwardRef<
       const el = frame.current;
       if (!box || !st || !el) return;
       scale.current = next;
-      st.style.width = `${SHEET_PX * next}px`;
+      el.style.width = `${width.current}px`;
+      st.style.width = `${width.current * next}px`;
       st.style.height = `${height.current * next}px`;
       el.style.transform = `scale(${next})`;
       if (anchor) {
@@ -92,9 +93,15 @@ export const GuideFrame = forwardRef<
   const fit = useCallback(() => {
     const box = scroller.current;
     if (!box || !fitted.current || box.clientWidth === 0) return;
-    const top = box.scrollTop / scale.current;
-    apply(clamp((box.clientWidth - 40) / SHEET_PX, FIT_MIN, FIT_MAX));
-    box.scrollTop = top * scale.current;
+    // Keep the same place in the text while the sheet reflows to the new width.
+    const before = Math.max(1, height.current);
+    const ratio = box.scrollTop / (before * scale.current);
+    width.current = box.clientWidth;
+    apply(1);
+    // The new height arrives with the sheet's resize (measure); place the reader again then too.
+    requestAnimationFrame(() => {
+      box.scrollTop = ratio * height.current;
+    });
   }, [apply]);
 
   const measure = useCallback(() => {
@@ -283,7 +290,7 @@ export const GuideFrame = forwardRef<
   return (
     // The sheet is a left-to-right page: the box scrolls left to right whatever the page around it.
     <div ref={scroller} className="st-scroll" dir="ltr">
-      <div ref={stage} className="st-stage" style={{ width: SHEET_PX, height: height.current }}>
+      <div ref={stage} className="st-stage" style={{ width: START_WIDTH, height: height.current }}>
         <iframe
           ref={frame}
           title={`ملف الدرس: ${title}`}
@@ -294,7 +301,7 @@ export const GuideFrame = forwardRef<
           sandbox="allow-same-origin"
           scrolling="no"
           className="st-frame"
-          style={{ width: SHEET_PX, height: height.current }}
+          style={{ width: START_WIDTH, height: height.current }}
           onLoad={handOver}
         />
         <div ref={hit} className="st-hit" />

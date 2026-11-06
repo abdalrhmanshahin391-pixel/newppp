@@ -4632,8 +4632,8 @@ html.rita-app,
   z-index: 20;
   display: grid;
   place-items: center;
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   overflow: hidden;
   border: 3px solid #fff;
   border-radius: 9999px;
@@ -4674,10 +4674,10 @@ html.rita-app,
 .edith-premium .st-orb-char {
   position: absolute;
   left: 50%;
-  bottom: -16px;
-  width: 48px;
+  bottom: -14px;
+  width: 42px;
   /* An explicit height: Safari gives this absolutely placed image no height with "auto". */
-  height: 57px;
+  height: 50px;
   max-width: none;
   transform: translateX(-50%);
   pointer-events: none;
@@ -4812,7 +4812,7 @@ html.rita-app,
   display: -webkit-box;
   margin: 0;
   overflow: hidden;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   line-height: 1.35;
   -webkit-line-clamp: 2;
@@ -4922,8 +4922,8 @@ html.rita-app,
 .st-rad-disc {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 50px;
+  height: 50px;
   border: 2px solid rgb(156 193 255 / 0.55);
   border-radius: 50%;
   background: #0b1638;
@@ -4946,7 +4946,7 @@ html.rita-app,
   white-space: nowrap;
   border-radius: 8px;
   background: rgb(11 22 56 / 0.92);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.25;
   text-align: center;
@@ -5375,7 +5375,7 @@ html.rita-app,
 }
 .uz-rc-rita {
   color: #2b2b2b;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.95;
   letter-spacing: -0.003em;
 }
@@ -5399,7 +5399,7 @@ html.rita-app,
   padding-bottom: 9px;
   border-bottom: 1px solid #e4e4e1;
   color: #6b6b6b;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.3;
 }
 .uz-rc-avatar {
@@ -5430,7 +5430,7 @@ html.rita-app,
   border-radius: 15px;
   background: #ebebea;
   color: #1f1f1f;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .uz-rc-you.is-live {
@@ -8055,7 +8055,7 @@ html.rita-app,
   background: #efefed;
   color: var(--sh-body);
   font-family: "Figtree", "Inter Tight", "Noto Sans Arabic", system-ui, sans-serif;
-  font-size: 13.5px;
+  font-size: 12.5px;
   line-height: 1.55;
   letter-spacing: normal;
   animation: rita-sheet-in 360ms cubic-bezier(0.23, 1, 0.32, 1) both;
@@ -8068,7 +8068,7 @@ html.rita-app,
 }
 .rita-sheet-title {
   color: var(--sh-ink);
-  font-size: 14.5px;
+  font-size: 13.5px;
   font-weight: 650;
   line-height: 1.3;
   letter-spacing: -0.005em;
@@ -8095,8 +8095,8 @@ html.rita-app,
   display: block;
   padding: 5px 8px;
   border-radius: 8px;
-  font-size: 10.5px;
-  font-weight: 650;
+  font-size: 10px;
+  font-weight: 600;
   letter-spacing: 0.03em;
   line-height: 1.2;
   text-align: center;
@@ -8120,7 +8120,7 @@ html.rita-app,
   border-top-width: 0;
   background: #fff;
   color: var(--sh-body);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.35;
   text-align: center;
   vertical-align: middle;
@@ -8161,7 +8161,7 @@ html.rita-app,
   position: relative;
   padding: 5px 0;
   padding-inline-start: 15px;
-  font-size: 13.5px;
+  font-size: 12.5px;
 }
 .rita-sheet-points li:last-child {
   border-bottom: 0;
@@ -8180,7 +8180,7 @@ html.rita-app,
   padding-inline-start: 11px;
   border-inline-start: 2px solid #d4d4d1;
   color: var(--sh-body);
-  font-size: 13.5px;
+  font-size: 12.5px;
   font-style: italic;
 }
 .rita-sheet b,
@@ -8204,7 +8204,7 @@ html.rita-app,
   border-radius: 12px;
   background: #fff;
   box-shadow: inset 0 0 0 1px var(--sh-line);
-  font-size: 13.5px;
+  font-size: 12.5px;
 }
 .rita-sheet-watch-title {
   margin-bottom: 1px;
@@ -8213,7 +8213,7 @@ html.rita-app,
   font-weight: 700;
 }
 .rita-sheet-line {
-  font-size: 13.5px;
+  font-size: 12.5px;
 }
 @media (prefers-reduced-motion: reduce) {
   .rita-sheet {
