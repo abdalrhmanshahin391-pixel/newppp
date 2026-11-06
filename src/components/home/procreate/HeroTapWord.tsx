@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { StartLearningLink } from "@/components/StartLearningLink";
 import { VoiceOrb, type OrbLevels } from "@/components/rita-live/VoiceOrb";
+import { wordTapSound } from "@/components/rita-study/tech-sound";
 
 const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
 
@@ -85,7 +86,14 @@ export function HeroTapWord() {
     [],
   );
 
-  function pick(index: number) {
+  function pick(index: number, chip?: HTMLElement) {
+    // The tap itself lets Safari play the sound; the chip gives a small springy pop.
+    wordTapSound(index);
+    if (chip) {
+      chip.classList.remove("rh-chip-pop");
+      void chip.offsetWidth;
+      chip.classList.add("rh-chip-pop");
+    }
     setActive(index);
     setTouched(true);
     setSpeaking(true);
@@ -188,7 +196,7 @@ export function HeroTapWord() {
             type="button"
             aria-pressed={active === index}
             aria-label={`${item.term}, ${item.lang}. Tap for the meaning.`}
-            onClick={() => pick(index)}
+            onClick={(event) => pick(index, event.currentTarget)}
             className={`rh-chip absolute ${active === index ? "rh-chip-on" : ""}`}
             style={{ ...item.at, "--rot": `${item.rot}deg` } as CSSProperties}
           >

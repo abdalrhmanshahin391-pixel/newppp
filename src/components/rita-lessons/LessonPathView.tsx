@@ -14,7 +14,12 @@ import {
   MessageCircle,
   Pencil,
   Plus,
-  Star,
+  Shuffle,
+  BookOpen,
+  Globe2,
+  Headphones,
+  PenLine,
+  Sparkles,
 } from "lucide-react";
 import type { PathLesson, ReviewSuggestion } from "@/lib/rita-curriculum.functions";
 import {
@@ -32,18 +37,22 @@ import {
   menuOpenSound,
   optionNote,
 } from "@/components/rita-study/tech-sound";
-import { LessonImage, LessonStars } from "./LessonArt";
+import { LessonImage } from "./LessonArt";
 import { PathStopSheet } from "./PathStopSheet";
 
 // Horizontal offsets that make the path zig-zag, as in the lesson map design.
 const ZIGZAG = [0, 64, 90, 64, 0, -64, -90, -64];
 /** Height of one stop on the road; editing leaves a gap between stops for the + buttons. */
-const ROW = 212;
-const ROW_EDITING = 262;
-/** How tall a stop's content is (stars, picture, two title lines, the small line). */
-const STOP_HEIGHT = 206;
+const ROW = 196;
+const ROW_EDITING = 246;
+/** How tall a stop's content is (picture, two title lines, the small line). */
+const STOP_HEIGHT = 184;
 const WIDTH = 360;
-const NODE = 104;
+const NODE = 88;
+/** From the top of a stop to the top of its picture (room for the "you are here" tag). */
+const NODE_TOP = 16;
+/** Faint line drawings beside the road: only decoration, nothing about the learner. */
+const DOODLES = [BookOpen, MessageCircle, Globe2, Headphones, PenLine, Sparkles];
 const FREE_ORDER_KEY = "ritaFreeOrder";
 const HOLD_MS = 300;
 
@@ -141,8 +150,6 @@ export function LessonPathView({
 
   const lessonList = lessons ?? [];
   const current = lessonList.find((lesson) => lesson.state === "current");
-  const totalStars = lessonList.reduce((sum, lesson) => sum + lesson.stars, 0);
-  const completed = lessonList.filter((lesson) => lesson.state === "done").length;
   const currentIndex = nodes.findIndex(
     (node) => node.type === "lesson" && node.lesson.state === "current",
   );
@@ -152,7 +159,7 @@ export function LessonPathView({
     () =>
       nodes.map((_, index) => ({
         x: WIDTH / 2 + ZIGZAG[index % ZIGZAG.length],
-        y: index * row + 40 + NODE / 2,
+        y: index * row + NODE_TOP + NODE / 2,
       })),
     [nodes, row],
   );
@@ -185,7 +192,7 @@ export function LessonPathView({
       return;
     }
     if (node.lesson.state === "locked" && !freeOrder) {
-      setHint("أكمل الدرس الحالي أولاً لفتح هذا الدرس — أو فعّل الوضع الحر.");
+      setHint("أكمل الدرس الحالي أولاً لفتح هذا الدرس — أو فعّل «ترتيب حر» فوق.");
       return;
     }
     onOpenLesson(node.lesson);
@@ -396,76 +403,39 @@ export function LessonPathView({
             <UkFlag />
             <span dir="ltr">English · A1</span>
           </div>
-          {isAdmin ? (
-            <button
-              type="button"
-              onClick={() => {
-                setEditing((value) => !value);
-                setAdding(null);
-              }}
-              aria-pressed={editing}
-              className={`lp-edit ${editing ? "is-on" : ""}`}
-            >
-              {editing ? <Check size={16} /> : <Pencil size={15} />}
-              {editing ? "تم" : "تعديل المسار"}
-            </button>
-          ) : (
-            <span className="w-10" />
-          )}
+          <div className="flex items-center gap-1.5">
+            {!editing && (
+              <button
+                type="button"
+                onClick={toggleFreeOrder}
+                aria-pressed={freeOrder}
+                title={freeOrder ? "الترتيب الحر شغّال: كل الدروس مفتوحة" : "افتح أي درس بترتيب حر"}
+                className={`lp-edit ${freeOrder ? "is-on" : ""}`}
+              >
+                <Shuffle size={14} aria-hidden="true" />
+                ترتيب حر
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditing((value) => !value);
+                  setAdding(null);
+                }}
+                aria-pressed={editing}
+                className={`lp-edit ${editing ? "is-on" : ""}`}
+              >
+                {editing ? <Check size={15} /> : <Pencil size={14} />}
+                {editing ? "تم" : "تعديل المسار"}
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
       <section className="mx-auto max-w-md px-4 pt-7 text-center">
-        <h2 className="text-[30px] font-bold leading-9">دروسك مع ريتا</h2>
-        <p className="mt-1.5 text-sm font-semibold text-[var(--pp-muted)]">
-          تحدّث مع ريتا، حقّق أهداف كل درس، واجمع النجوم.
-        </p>
-        {lessonList.length > 0 && (
-          <div className="lp-stats">
-            <div className="lp-stat">
-              <span className="lp-stat-n">
-                {completed}
-                <span className="lp-stat-of"> / {lessonList.length}</span>
-              </span>
-              <span className="lp-stat-w">دروس خلّصتها</span>
-            </div>
-            <div className="lp-stat">
-              <span className="lp-stat-n">
-                <Star size={18} fill="#FFC83D" stroke="#E8A400" aria-hidden="true" />
-                {totalStars}
-              </span>
-              <span className="lp-stat-w">نجمة</span>
-            </div>
-            <div
-              className="lp-bar"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={lessonList.length}
-              aria-valuenow={completed}
-              aria-label="تقدّمك في الدروس"
-            >
-              <span style={{ width: `${(completed / lessonList.length) * 100}%` }} />
-            </div>
-          </div>
-        )}
-        <div className="lp-legend" aria-label="ألوان المسار">
-          {(Object.keys(LOOK) as Look[]).map((look) => (
-            <span key={look}>
-              <i style={{ background: LOOK[look].color }} />
-              {LOOK[look].word}
-            </span>
-          ))}
-        </div>
-        {!editing && (
-          <button
-            type="button"
-            onClick={toggleFreeOrder}
-            aria-pressed={freeOrder}
-            className="mt-2 min-h-10 rounded-lg px-3 text-xs font-bold text-[var(--pp-muted)] underline decoration-[var(--pp-line)] underline-offset-4 hover:text-[var(--pp-ink)]"
-          >
-            {freeOrder ? "الوضع الحر مفعّل — أوقفه" : "الوضع الحر: افتح أي درس بترتيب حر"}
-          </button>
-        )}
+        <h2 className="lp-heading">دروسك مع ريتا</h2>
         {editing && (
           <p className="lp-edit-hint">
             اضغط مطوّلاً على أي محطة واسحبها فوق ثانية عشان يتبدّلوا. اكبس + لإضافة تمارين أو ملفات.
@@ -529,7 +499,42 @@ export function LessonPathView({
           >
             <path d={road} className="lp-road" />
             {walked && <path d={walked} className="lp-road is-walked" />}
+            {road &&
+              !editing &&
+              [0, 1, 2].map((dot) => (
+                <circle key={dot} r="2.4" className="lp-spark">
+                  <animateMotion
+                    dur={`${Math.max(6, nodes.length * 2.4)}s`}
+                    // Started in the past, so each light is already on the road (never parked at 0,0).
+                    begin={`-${dot * Math.max(2, nodes.length * 0.8)}s`}
+                    repeatCount="indefinite"
+                    path={road}
+                  />
+                </circle>
+              ))}
           </svg>
+          {!editing &&
+            centres.map((centre, index) => {
+              if (index % 2 === 1 || index === centres.length - 1) return null;
+              const Doodle = DOODLES[(index / 2) % DOODLES.length];
+              // Halfway to the next stop, on the side the road is not leaning to.
+              const next = centres[index + 1];
+              const side = (centre.x + next.x) / 2 >= WIDTH / 2 ? -1 : 1;
+              return (
+                <span
+                  key={`doodle-${index}`}
+                  className="lp-doodle"
+                  aria-hidden="true"
+                  style={{
+                    left: WIDTH / 2 + side * 150 - 14,
+                    top: centre.y + row / 2 - 14,
+                    ["--i" as string]: index,
+                  }}
+                >
+                  <Doodle size={28} strokeWidth={1.4} />
+                </span>
+              );
+            })}
 
           {nodes.map((node, index) => {
             const id = idOf(node);
@@ -565,7 +570,7 @@ export function LessonPathView({
                 data-fresh={fresh === id ? "" : undefined}
                 data-shake={shake === id ? "" : undefined}
                 style={{
-                  ["--x" as string]: `${centre.x - 75}px`,
+                  ["--x" as string]: `${centre.x - 85}px`,
                   ["--y" as string]: `${index * row}px`,
                   ["--i" as string]: index,
                   ["--c" as string]: look.color,
@@ -574,11 +579,7 @@ export function LessonPathView({
                 aria-label={`${title} — ${look.word}${locked ? " (مقفل)" : ""}`}
               >
                 {isCurrent && !editing && <span className="lp-here">إنت هون</span>}
-                {lesson ? (
-                  <LessonStars stars={lesson.stars} />
-                ) : (
-                  <span className="block h-[22px]" />
-                )}
+                <span className="block" style={{ height: NODE_TOP - 4 }} aria-hidden="true" />
                 <span className="lp-disc" style={{ width: NODE, height: NODE }}>
                   {isCurrent && !editing && <span className="lp-pulse" aria-hidden="true" />}
                   <span className="absolute inset-0 rounded-full bg-white" />
@@ -590,7 +591,7 @@ export function LessonPathView({
                     />
                   ) : (
                     <span className="lp-face lp-item-face">
-                      <look.Icon size={40} strokeWidth={2.2} aria-hidden="true" />
+                      <look.Icon size={32} strokeWidth={2.1} aria-hidden="true" />
                     </span>
                   )}
                   {locked && (
@@ -685,13 +686,15 @@ export function LessonPathView({
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--pp-line)] bg-white/95 px-4 py-3 backdrop-blur">
           <div className="mx-auto flex max-w-md items-center justify-between gap-4">
             <div className="min-w-0 text-right">
-              <p className="text-xs font-semibold text-[var(--pp-muted)]">الدرس الحالي</p>
-              <p className="truncate text-[15px] font-bold">{current.title || current.title_ar}</p>
+              <p className="text-[11.5px] font-semibold text-[var(--pp-muted)]">الدرس الحالي</p>
+              <p className="truncate text-[14px] font-semibold">
+                {current.title || current.title_ar}
+              </p>
             </div>
             <button
               type="button"
               onClick={() => onOpenLesson(current)}
-              className="rita-btn rita-btn-primary shrink-0"
+              className="rita-btn rita-btn-primary lp-go shrink-0"
             >
               متابعة
             </button>
