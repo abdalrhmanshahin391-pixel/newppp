@@ -5992,7 +5992,8 @@ html.rita-app,
 .uz-rail-item {
   display: inline-flex;
   align-items: center;
-  min-height: 38px;
+  /* 44px stays: the touch target for a finger (scripts/check-learn-navigation.mjs checks it). */
+  min-height: 44px;
   flex-shrink: 0;
   padding: 0 15px;
   border-radius: 999px;

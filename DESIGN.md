@@ -525,7 +525,7 @@ the user's zoom are never changed.
 
 The same calm scale as the home page: the heavy pieces smaller and lighter, nothing shrunk below
 reading size. The header takes the home page's lower bar (60px, 14px links, 38px buttons). Rail:
-14px/600 pills 38px tall, an 11.5rem column from 1024px. Section titles 22/600. "Talk to Rita" stage:
+14px/600 pills (still 44px tall, the touch target), an 11.5rem column from 1024px. Section titles 22/600. "Talk to Rita" stage:
 30px title on phones, 36px from 768px (weight 600), 15px line, 42px button, 320/340px tall, orb
 100px. Tiles: names 16/600 (the lead tile 20), lines 14px, tags 11.5px, 22px corners, 32px go
 button, 40px light buttons. Measured at 1180px: stage title 46 to 36, rail 16 to 14, tile name 19 to
