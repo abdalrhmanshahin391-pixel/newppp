@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";
+import { currentProductCopy, productCopyFields } from "@/lib/brand";
 
 export type OfferCenterOffer = {
   id: string;
@@ -187,10 +188,13 @@ export const getOfferCenterData = createServerFn({ method: "GET" })
     };
 
     return {
-      offers,
-      plans: (plansRes?.data ?? []) as OfferCenterPlan[],
-      codes,
-      announcement,
+      offers: offers.map((offer) => ({
+        ...productCopyFields(offer, ["title", "subtitle", "badge"]),
+        bullets: (offer.bullets ?? []).map(currentProductCopy),
+      })),
+      plans: ((plansRes?.data ?? []) as OfferCenterPlan[]).map((plan) => productCopyFields(plan, ["name"])),
+      codes: codes.map((code) => productCopyFields(code, ["label"])),
+      announcement: productCopyFields(announcement, ["title", "body", "button_label"]),
       offersPageEnabled: settingsRes?.data?.offers_page_enabled ?? true,
     };
   });

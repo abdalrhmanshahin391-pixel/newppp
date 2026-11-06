@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";
 import { z } from "zod";
 import { getSupabasePublicConfig } from "@/integrations/supabase/config";
+import { productCopyFields } from "@/lib/brand";
 
 export type PlanRow = {
   slug: string;
@@ -62,7 +63,7 @@ async function fetchPlans(): Promise<PlanRow[]> {
   const client = createClient(url, publishableKey, { auth: { persistSession: false } });
   const { data, error } = await (client.from as any)("plans").select("*").order("sort");
   if (error) throw new Error(error.message);
-  return (data ?? []) as PlanRow[];
+  return ((data ?? []) as PlanRow[]).map((plan) => productCopyFields(plan, ["name", "tagline"]));
 }
 
 /** Public plan catalogue for the pricing page with in-memory edge caching for sub-millisecond SSR. */
@@ -94,7 +95,12 @@ export const myPlanUsage = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await ((context as any).supabase as any).rpc("my_plan_usage");
     if (error) throw new Error(error.message);
-    return data as PlanUsage;
+    if (!data?.plan) return data as PlanUsage;
+    const usage = data as PlanUsage;
+    return {
+      ...productCopyFields(usage, ["offer_name"]),
+      plan: productCopyFields(usage.plan, ["name", "tagline"]),
+    };
   });
 
 /** Counts locally created flashcards against the plan limit. */

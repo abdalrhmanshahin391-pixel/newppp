@@ -25,6 +25,17 @@ test("older product settings are rebranded without touching URLs, IDs or the ori
   const shown = productCopyFields(row, ["title", "body"]);
   assert.deepEqual(shown, { ...row, title: "يوزرا بتشرح" });
   assert.equal(row.title, "ريتا بتشرح");
+  const plan = {
+    name: "Rita Basic",
+    tagline: "Learn with Rita",
+    slug: "rita-basic",
+    price_cents: 1200,
+  };
+  assert.deepEqual(productCopyFields(plan, ["name", "tagline"]), {
+    ...plan,
+    name: "Uzyra Basic",
+    tagline: "Learn with Uzyra",
+  });
   assert.equal(
     currentProductCopy("https://ritajet.com/rita rita-lesson-run /rita mail@ritajet.com"),
     "https://ritajet.com/rita rita-lesson-run /rita mail@ritajet.com",

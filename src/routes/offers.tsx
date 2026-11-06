@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/legacy-client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { getPublicOfferMeta, claimOfferAction } from "@/lib/offer-center.functions";
+import { currentProductCopy, productCopyFields } from "@/lib/brand";
 
 export const Route = createFileRoute("/offers")({
   head: () => ({
@@ -75,7 +76,10 @@ function OffersPage() {
     queryFn: async () => {
       const { data, error } = await (supabase.rpc as any)("offers_list");
       if (error) throw error;
-      return (data ?? []) as Offer[];
+      return ((data ?? []) as Offer[]).map((offer) => ({
+        ...productCopyFields(offer, ["title", "subtitle", "badge"]),
+        bullets: (offer.bullets ?? []).map(currentProductCopy),
+      }));
     },
   });
 

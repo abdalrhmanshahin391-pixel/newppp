@@ -9,7 +9,7 @@ instructions that kept a separate tutor name.
   `voice-agent/brand_identity.py` mirrors that contract; a regression test compares both.
 - Voice prompts use the same identity in free, curriculum and interactive-study calls. The current
   identity takes precedence over historical self-introductions or names quoted in lesson material.
-- Saved administrative settings, announcements, hub labels and voice lesson briefs are rebranded at
+- Saved administrative settings, announcements, offers, plan display copy, hub labels and voice lesson briefs are rebranded at
   the copy boundary. Database rows, URLs, identifiers and historical conversation messages are not
   rewritten. The compatibility greeting/stop vocabulary still understands the historical name.
 - Model-note cleaners recognize the current name as well as historical notes. The reviewer contract
