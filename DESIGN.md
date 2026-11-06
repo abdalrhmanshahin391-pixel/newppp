@@ -463,20 +463,31 @@ navy (0.8s per letter, 80ms apart; the letters spread from the centre with a tra
 animating the gap) and a hairline opening under it at 0.85s (the same `LETTERS` and `.uz-splash`
 pieces). A soft sound starts with it (filtered noise rising, then an open chord as the line opens;
 generated in `tech-sound.ts`, off when the study page's sound is off; Safari plays it only when the
-tap that opened the lesson woke the sound, so a direct visit is silent). At 1.1s the lesson rolls in
-under the line: «الدرس» (12px), its title (22px Inter Tight, white), its Arabic title (15px, grey)
-when it differs, and one small dot per section of its guide lighting up in turn. While the lesson
-is still loading, the hairline breathes.
+tap that opened the lesson woke the sound, so a direct visit is silent). The lesson's name rolls in
+under the line with the word: at 0.45s when it is already known (the tap in the lessons list hands
+it over), otherwise as soon as it arrives: «الدرس» (12px), its title (22px Inter Tight, white), its
+Arabic title (15px, grey) when it differs, and one small dot per section of its guide once the guide
+is here. Still waiting 0.45s after the word is drawn, a thin 132px bar with a light sliding along it
+and «جاري تجهيز الدرس…» (12px) fade in under the title; it always holds its place, so nothing moves.
+After 12s without the lesson, or on an error, the intro says so with «جرّب كمان مرة» (white pill,
+asks again) and a way back.
+
+Loading: the lesson starts loading the moment it is tapped, or when its card opens
+(`src/lib/study/lesson-entry.ts`), not after the lesson page and sign-in have settled; the page
+reuses that request. A lesson opened once is kept for 5 minutes in the tab (an admin preview for
+15s), and a failed request is never kept. On the server the lesson, the study switch and the admin
+check go out together, so the lesson waits for two database round trips.
 
 Smoothness rules: the study page underneath is not built until the word is drawn and the title has
 started rolling in (`onDrawn`), because building it would stall the line drawing; the intro then
 leaves once the page reports its guide drawn (`pageReady`), after at least 0.7s on the title and at
-most 2.6s (opacity and a 3% grow, 350ms). With the CPU slowed 4x a whole entry takes about 2.2s and
-no frame stalls while the letters draw. The admin's sample page shows the same intro while the sample
-is prepared and the lesson page carries it on from the same moment (`--lintro-t`) instead of drawing
-again. If the lesson cannot open, the message and a way back stay on the same dark page. Reduced
-motion: no drawing, the words simply show and it leaves after 0.5s. It is a `role="status"` region
-that says the lesson's name.
+most 2.6s after the lesson arrived. Leaving, the word, title and bar fade first (150ms), then the
+navy (280ms), so the big letters are never seen half-transparent over the page. With the CPU slowed
+4x a whole entry takes about 2.2s and no frame stalls while the letters draw. The admin's sample page
+shows the same intro (with the bar) while the sample is prepared and the lesson page carries it on
+from the same moment (`--lintro-t`) instead of drawing again. Reduced motion: no drawing, the words
+simply show, the bar slides slowly, and it leaves after 0.5s. It is a `role="status"` region that
+says the lesson's name.
 
 ## Home scale (`.uz-home`, first screen and header)
 
@@ -509,6 +520,16 @@ the user's zoom are never changed.
 - Calm motion and no-JS show the finished window flat. Replay is a 44px button.
 - Content is sample content and says so ("Sample screen", "Sample lessons and words"). No counts, no users, no testimonials.
 - Decorative for assistive tech: `aria-hidden` plus a one-paragraph `sr-only` description.
+
+## Learning home scale (`/learn`, `.uz-learn`)
+
+The same calm scale as the home page: the heavy pieces smaller and lighter, nothing shrunk below
+reading size. The header takes the home page's lower bar (60px, 14px links, 38px buttons). Rail:
+14px/600 pills (still 44px tall, the touch target), an 11.5rem column from 1024px. Section titles 22/600. "Talk to Rita" stage:
+30px title on phones, 36px from 768px (weight 600), 15px line, 42px button, 320/340px tall, orb
+100px. Tiles: names 16/600 (the lead tile 20), lines 14px, tags 11.5px, 22px corners, 32px go
+button, 40px light buttons. Measured at 1180px: stage title 46 to 36, rail 16 to 14, tile name 19 to
+16, header 64 to 60.
 
 ## Home "Under the hood" band
 

@@ -1,11 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useState } from "react";
 import { LanguageGate } from "@/components/language/LanguageGate";
 import { LessonIntro } from "@/components/rita-study/LessonIntro";
 import { StudyPage } from "@/components/rita-study/StudyPage";
 import { useAuth } from "@/hooks/useAuth";
-import { getStudyLesson, type StudyPageResult } from "@/lib/study/study.functions";
+import { forgetLesson, knownLesson, loadLesson } from "@/lib/study/lesson-entry";
+import type { StudyPageResult } from "@/lib/study/study.functions";
 
 type StudySearch = { lesson?: string; preview?: boolean };
 
@@ -29,13 +29,16 @@ export const Route = createFileRoute("/rita-study")({
   ),
 });
 
+/** How long the lesson may take to arrive before the intro offers to try again. */
+const SLOW_MS = 12_000;
+
 function RitaStudyRoute() {
   const { lesson, preview } = Route.useSearch();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const loadFn = useServerFn(getStudyLesson);
   const [result, setResult] = useState<StudyPageResult | null>(null);
   const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
   // The entering intro plays over the page while the lesson loads, then leaves. The page itself is
   // built only once the intro's word is drawn (building it is heavy and would stall the drawing),
   // and the intro leaves once the page says its guide is drawn.
@@ -45,15 +48,30 @@ function RitaStudyRoute() {
   const finishIntro = useCallback(() => setIntroDone(true), []);
   const drawn = useCallback(() => setIntroDrawn(true), []);
   const ready = useCallback(() => setPageReady(true), []);
+  const retry = useCallback(() => {
+    if (lesson) forgetLesson(lesson, Boolean(preview));
+    setError("");
+    setAttempt((value) => value + 1);
+  }, [lesson, preview]);
 
   useEffect(() => {
     if (!loading && !user) void navigate({ to: "/login" });
   }, [loading, navigate, user]);
 
+  // The lesson loads straight away (the request carries the session saved in this browser), or is
+  // already on its way from the tap in the lessons list. It never waits forever: after SLOW_MS the
+  // intro says so and offers to try again.
   useEffect(() => {
-    if (!user || !lesson) return;
-    loadFn({ data: { lessonId: lesson, preview: Boolean(preview) } })
+    if (!lesson) return;
+    let live = true;
+    const slow = window.setTimeout(() => {
+      if (live) setError("الدرس طوّل بالتحميل. تأكد من النت وجرّب كمان مرة.");
+    }, SLOW_MS);
+    loadLesson(lesson, Boolean(preview))
       .then((value) => {
+        if (!live) return;
+        window.clearTimeout(slow);
+        setError("");
         // A lesson that opens as the current lesson (switch off, no guide yet...) goes there.
         if (value.status === "classic") {
           void navigate({
@@ -65,8 +83,16 @@ function RitaStudyRoute() {
         }
         setResult(value);
       })
-      .catch((cause) => setError(cause instanceof Error ? cause.message : "تعذّر فتح الدرس."));
-  }, [lesson, loadFn, navigate, preview, user]);
+      .catch((cause) => {
+        if (!live) return;
+        window.clearTimeout(slow);
+        setError(cause instanceof Error ? cause.message : "تعذّر فتح الدرس.");
+      });
+    return () => {
+      live = false;
+      window.clearTimeout(slow);
+    };
+  }, [attempt, lesson, navigate, preview]);
 
   if (!lesson) {
     return (
@@ -81,8 +107,22 @@ function RitaStudyRoute() {
       </main>
     );
   }
-  const failed = error || (result?.status === "unavailable" ? "هاد الدرس مش متاح." : "");
   const data = result?.status === "study" ? result.data : null;
+  // Signed out: the sign-in page takes over, so no error flashes on the intro first.
+  const failed =
+    !user && !loading
+      ? ""
+      : error || (result?.status === "unavailable" ? "هاد الدرس مش متاح." : "");
+  const known = knownLesson(lesson);
+  const shown = data
+    ? {
+        title: data.lesson.title,
+        titleAr: data.lesson.title_ar,
+        sections: data.guide.content.sections.length,
+      }
+    : known
+      ? { title: known.title, titleAr: known.titleAr, sections: 0 }
+      : null;
   return (
     <>
       {data && (introDrawn || introDone) && (
@@ -91,17 +131,11 @@ function RitaStudyRoute() {
       {!introDone && (
         <LessonIntro
           error={failed}
+          lesson={shown}
+          loaded={Boolean(data)}
           pageReady={pageReady}
           onDrawn={drawn}
-          lesson={
-            data
-              ? {
-                  title: data.lesson.title,
-                  titleAr: data.lesson.title_ar,
-                  sections: data.guide.content.sections.length,
-                }
-              : null
-          }
+          onRetry={error && !result ? retry : undefined}
           onDone={finishIntro}
         />
       )}

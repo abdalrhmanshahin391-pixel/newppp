@@ -13,6 +13,7 @@ import { LessonPathView } from "@/components/rita-lessons/LessonPathView";
 import { LessonSheet } from "@/components/rita-lessons/LessonSheet";
 import type { PathItem } from "@/lib/rita-path-layout";
 import { unlockSound } from "@/components/rita-study/tech-sound";
+import { prefetchLesson, rememberLesson } from "@/lib/study/lesson-entry";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
@@ -64,11 +65,21 @@ function RitaLessonsPage() {
 
   const sheetLesson = lessons?.find((lesson) => lesson.id === openId) ?? null;
 
+  // A study lesson's card is open: start loading the lesson now, so "start" opens it at once.
+  useEffect(() => {
+    if (!sheetLesson || sheetLesson.experience !== "study") return;
+    rememberLesson(sheetLesson.id, { title: sheetLesson.title, titleAr: sheetLesson.title_ar });
+    prefetchLesson(sheetLesson.id);
+  }, [sheetLesson]);
+
   function start(lesson: PathLesson) {
     // The server decided the lesson's real experience: the study page only when it is ready.
     if (lesson.experience === "study") {
-      // This tap is the moment Safari allows sound, so the lesson intro can play its sound.
+      // This tap is the moment Safari allows sound, so the lesson intro can play its sound. The
+      // lesson starts loading now too, before its page exists, and the intro shows its title at once.
       unlockSound();
+      rememberLesson(lesson.id, { title: lesson.title, titleAr: lesson.title_ar });
+      prefetchLesson(lesson.id);
       void navigate({ to: "/rita-study", search: { lesson: lesson.id } });
       return;
     }

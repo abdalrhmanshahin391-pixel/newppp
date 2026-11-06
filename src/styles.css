@@ -5992,12 +5992,13 @@ html.rita-app,
 .uz-rail-item {
   display: inline-flex;
   align-items: center;
+  /* 44px stays: the touch target for a finger (scripts/check-learn-navigation.mjs checks it). */
   min-height: 44px;
   flex-shrink: 0;
-  padding: 0 18px;
+  padding: 0 15px;
   border-radius: 999px;
   color: var(--uz-quiet);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
   text-decoration: none;
@@ -6022,9 +6023,9 @@ html.rita-app,
   outline-offset: 4px;
 }
 .edith-premium .uz-section-title {
-  margin: 0 0 20px;
-  font-size: 28px !important;
-  font-weight: 700;
+  margin: 0 0 16px;
+  font-size: 22px !important;
+  font-weight: 600;
   line-height: 1.2 !important;
   letter-spacing: -0.02em;
 }
@@ -6037,9 +6038,9 @@ html.rita-app,
   display: grid;
   overflow: hidden;
   gap: 8px;
-  min-height: 380px;
-  padding: 32px 28px;
-  border-radius: 24px;
+  min-height: 320px;
+  padding: 28px 24px;
+  border-radius: 22px;
   color: var(--uz-paper);
   background: var(--uz-tile-bg);
   text-decoration: none;
@@ -6055,8 +6056,8 @@ html.rita-app,
 .edith-premium .uz-stage-title {
   margin: 0;
   color: var(--uz-paper);
-  font-size: 36px !important;
-  font-weight: 700;
+  font-size: 30px !important;
+  font-weight: 600;
   line-height: 1.08 !important;
   letter-spacing: -0.03em;
   text-wrap: balance;
@@ -6064,12 +6065,13 @@ html.rita-app,
 .uz-stage-line {
   max-width: 30ch;
   color: var(--uz-on-tile-muted);
-  font-size: 17px;
+  font-size: 15px;
   line-height: 1.6;
 }
 .edith-premium .rita-btn.uz-stage-btn {
-  min-height: 48px;
-  margin-top: 10px;
+  min-height: 42px;
+  margin-top: 8px;
+  font-size: 15px;
   gap: 10px;
   background: var(--uz-paper);
   border-color: var(--uz-paper);
@@ -6077,7 +6079,7 @@ html.rita-app,
 }
 .uz-orb-zone {
   position: relative;
-  height: 230px;
+  height: 190px;
 }
 .uz-orb {
   position: absolute;
@@ -6085,40 +6087,40 @@ html.rita-app,
   top: 50%;
   display: grid;
   place-items: center;
-  width: 120px;
-  height: 120px;
-  margin: -60px 0 0 -60px;
+  width: 100px;
+  height: 100px;
+  margin: -50px 0 0 -50px;
   border-radius: 50%;
   background: var(--uz-paper);
 }
 .uz-orb-waves {
   display: flex;
   align-items: center;
-  gap: 6px;
-  height: 40px;
+  gap: 5px;
+  height: 34px;
 }
 .uz-orb-wave {
   display: block;
-  width: 5px;
-  height: 24px;
+  width: 4px;
+  height: 20px;
   border-radius: 999px;
   background: var(--uz-ink);
 }
 .uz-orb-wave:nth-child(2),
 .uz-orb-wave:nth-child(4) {
-  height: 36px;
+  height: 30px;
 }
 .uz-orb-wave:nth-child(3) {
-  height: 18px;
+  height: 15px;
 }
 .uz-float {
   position: absolute;
-  padding: 8px 14px;
+  padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid var(--uz-on-tile-muted);
   background: var(--uz-tile-bg);
   color: var(--uz-paper);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -6136,11 +6138,11 @@ html.rita-app,
 }
 .uz-lessons {
   display: grid;
-  grid-template-columns: 112px minmax(0, 1fr);
+  grid-template-columns: 96px minmax(0, 1fr);
   align-items: center;
-  gap: 18px;
-  padding: 16px;
-  border-radius: 24px;
+  gap: 16px;
+  padding: 14px;
+  border-radius: 22px;
 }
 .uz-tile,
 .uz-lessons {
@@ -6165,18 +6167,18 @@ html.rita-app,
 .uz-tile {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   height: 100%;
-  padding: 16px 16px 24px;
-  border-radius: 24px;
+  padding: 14px 14px 20px;
+  border-radius: 22px;
 }
 .uz-tile-img {
   position: relative;
   display: block;
   overflow: hidden;
   aspect-ratio: 2 / 1;
-  max-height: 210px;
-  border-radius: 16px;
+  max-height: 180px;
+  border-radius: 14px;
   background: var(--uz-tile-bg);
 }
 .uz-lessons > .uz-tile-img {
@@ -6185,7 +6187,7 @@ html.rita-app,
 }
 .uz-tile[data-lead] .uz-tile-img {
   aspect-ratio: 21 / 9;
-  max-height: 240px;
+  max-height: 200px;
 }
 .uz-tile-img img {
   position: absolute;
@@ -6210,55 +6212,55 @@ html.rita-app,
   align-items: center;
   gap: 4px 10px;
   color: var(--uz-paper);
-  font-size: 19px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
   line-height: 1.3;
   letter-spacing: -0.01em;
   overflow-wrap: anywhere;
 }
 .uz-tile[data-lead] .uz-tile-name {
-  font-size: 24px;
+  font-size: 20px;
 }
 .uz-tile-tag {
   padding: 2px 8px;
   border: 1px solid var(--uz-on-tile-muted);
   border-radius: 999px;
   color: var(--uz-paper);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
 }
 .uz-tile-line {
   max-width: 46ch;
   color: var(--uz-on-tile-muted);
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.6;
   overflow-wrap: anywhere;
 }
 .uz-tile-go {
   position: absolute;
-  inset-inline-end: 20px;
-  bottom: 20px;
+  inset-inline-end: 18px;
+  bottom: 18px;
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 999px;
   background: var(--uz-paper);
   color: var(--uz-ink);
 }
 .uz-tile .uz-tile-text {
-  padding-inline-end: 52px;
+  padding-inline-end: 46px;
 }
 .edith-premium .rita-btn.uz-light-btn {
   align-self: flex-start;
-  min-height: 44px;
-  margin-top: 14px;
-  padding: 0 16px;
+  min-height: 40px;
+  margin-top: 12px;
+  padding: 0 15px;
   gap: 8px;
   background: var(--uz-paper);
   border-color: var(--uz-paper);
   color: var(--uz-ink);
-  font-size: 15px;
+  font-size: 14px;
 }
 .uz-stage {
   touch-action: manipulation;
@@ -6292,32 +6294,32 @@ html.rita-app,
 }
 @media (min-width: 768px) {
   .uz-learn-main {
-    padding: 48px 32px 120px;
+    padding: 36px 28px 96px;
   }
   .uz-stage {
     grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
     align-items: center;
-    padding: 40px 36px;
-    min-height: 420px;
+    padding: 32px 30px;
+    min-height: 340px;
   }
   .uz-orb-zone {
-    height: 300px;
+    height: 250px;
   }
   .edith-premium .uz-stage-title {
-    font-size: 46px !important;
+    font-size: 36px !important;
   }
 }
 @media (min-width: 1024px) {
   .uz-learn-grid {
-    grid-template-columns: 13rem minmax(0, 1fr);
-    gap: 40px;
+    grid-template-columns: 11.5rem minmax(0, 1fr);
+    gap: 32px;
   }
   .uz-rail {
     position: sticky;
     top: 88px;
     flex-direction: column;
     align-self: start;
-    gap: 8px;
+    gap: 4px;
     margin: 0;
     padding: 0;
     overflow: visible;
@@ -6336,11 +6338,11 @@ html.rita-app,
   .uz-lessons {
     grid-template-columns: 1fr;
     align-content: space-between;
-    padding: 16px 16px 24px;
+    padding: 14px 14px 20px;
   }
   .uz-lessons .uz-tile-img {
     aspect-ratio: 2 / 1;
-    max-height: 210px;
+    max-height: 180px;
   }
   .uz-lessons .uz-tile-text {
     padding: 4px 8px 0;
@@ -8315,17 +8317,25 @@ html.rita-app,
   font-size: var(--home-lead);
   line-height: 1.6;
 }
-/* The header on the home page: smaller, lighter links and a lower bar; the links keep a 44px
-   target for touch. */
-.uz-home .rh-bar-inner {
+/* The header on the home page and the learning home (/learn): smaller, lighter links and a lower
+   bar; the links keep a 44px target for touch. The learning home takes the header values only. */
+.uz-learn {
+  --home-nav: 14px;
+  --home-bar-h: 60px;
+  --home-bar-btn-h: 38px;
+}
+.uz-home .rh-bar-inner,
+.uz-learn .rh-bar-inner {
   height: var(--home-bar-h);
 }
-.uz-home .rh-link {
+.uz-home .rh-link,
+.uz-learn .rh-link {
   font-size: var(--home-nav);
   font-weight: 500;
   line-height: 20px;
 }
-.uz-home .rh-btn {
+.uz-home .rh-btn,
+.uz-learn .rh-btn {
   height: var(--home-bar-btn-h);
   padding-inline: 14px;
   font-size: var(--home-nav);
@@ -8354,14 +8364,14 @@ html.rita-app,
 /* Very narrow phones (320–359px): the logo, "Start learning" and the menu button did not fit the
    bar (it ran ~25px past the edge before this change). Tighter spacing keeps them inside. */
 @media (max-width: 359px) {
-  .uz-home .rh-bar-inner {
+  :is(.uz-home, .uz-learn) .rh-bar-inner {
     gap: 8px;
     padding-inline: 12px;
   }
-  .uz-home .rh-actions {
+  :is(.uz-home, .uz-learn) .rh-actions {
     gap: 6px;
   }
-  .uz-home .rh-btn {
+  :is(.uz-home, .uz-learn) .rh-btn {
     padding-inline: 10px;
   }
 }
@@ -8374,9 +8384,6 @@ html.rita-app,
   /* --lintro-t: how far into the entry this intro starts (a later page of the same entry carries
      on instead of drawing again); every delay below subtracts it. */
   animation: uz-sp-in 0.2s ease calc(0s - var(--lintro-t, 0s)) both;
-  transition:
-    opacity 350ms ease,
-    transform 350ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* Quicker than the language splash, and the letters spread with a transform instead of animating
    the gap (which would lay the page out again on every frame). */
@@ -8400,21 +8407,64 @@ html.rita-app,
 .uz-lintro .uz-splash-rule {
   animation: uz-sp-rule 0.5s var(--uz-ease) calc(0.85s - var(--lintro-t, 0s)) both;
 }
+/* Leaving: the word, title and bar fade first (150ms), then the navy itself (280ms), so the big
+   letters are never seen half-transparent over the page. */
 .uz-lintro[data-leaving] {
   opacity: 0;
-  transform: scale(1.03);
   pointer-events: none;
+  transition: opacity 280ms ease 140ms;
 }
-.uz-lintro[data-waiting] .uz-splash-rule {
-  animation:
-    uz-sp-rule 0.5s var(--uz-ease) calc(0.85s - var(--lintro-t, 0s)) both,
-    uz-lintro-breathe 1.6s ease-in-out 1.4s infinite;
+.uz-lintro[data-leaving] > * {
+  opacity: 0;
+  transition: opacity 150ms ease;
 }
-@keyframes uz-lintro-breathe {
-  50% {
-    opacity: 0.35;
-    transform: scaleX(0.7);
+/* Still loading once the word is drawn: a thin bar with a light sliding along it, and one line of
+   words. It always takes its place (only its opacity changes), so nothing moves when it shows. */
+.uz-lintro-load {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 26px;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.uz-lintro-load[data-shown] {
+  opacity: 1;
+}
+.uz-lintro-bar {
+  position: relative;
+  overflow: hidden;
+  width: 132px;
+  height: 2px;
+  border-radius: 2px;
+  background: rgb(243 245 251 / 0.14);
+}
+.uz-lintro-bar > span {
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  border-radius: 2px;
+  background: #f3f5fb;
+  transform: translateX(-100%);
+}
+.uz-lintro-load[data-shown] .uz-lintro-bar > span {
+  animation: uz-lintro-slide 1.15s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes uz-lintro-slide {
+  to {
+    transform: translateX(250%);
   }
+}
+.uz-lintro-load-text {
+  color: var(--uz-muted);
+  font: 400 12px/1.4 "Uzyra Arabic", "Figtree", sans-serif;
+}
+.uz-lintro-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
 }
 .uz-lintro-info {
   display: flex;
@@ -8482,25 +8532,27 @@ html.rita-app,
   font: 600 14px "Uzyra Arabic", "Figtree", sans-serif;
   pointer-events: auto;
 }
+.uz-lintro-back.is-primary {
+  border-color: #f3f5fb;
+  background: #f3f5fb;
+  color: #0a1220;
+  cursor: pointer;
+}
 .uz-lintro-back:focus-visible {
   outline: 2px solid #f3f5fb;
   outline-offset: 3px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .uz-lintro,
   .uz-lintro-info {
     transition: opacity 150ms ease;
-  }
-  .uz-lintro[data-leaving] {
     transform: none;
   }
-  .uz-lintro-info {
-    transform: none;
+  .uz-lintro-load[data-shown] .uz-lintro-bar > span {
+    animation-duration: 2.4s;
   }
   .uz-lintro .uz-splash-letter,
   .uz-lintro .uz-splash-letter path,
   .uz-lintro .uz-splash-rule,
-  .uz-lintro[data-waiting] .uz-splash-rule,
   .uz-lintro-info.is-shown .uz-lintro-dots span {
     animation: none;
   }
