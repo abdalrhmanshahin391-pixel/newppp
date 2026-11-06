@@ -5484,7 +5484,6 @@ html.rita-app,
 .uz-rc-flag:focus-visible,
 .uz-rc-icon:focus-visible,
 .uz-rc-send:focus-visible,
-.uz-rc-bar.is-start:focus-visible,
 .uz-rc-chip:focus-visible,
 .uz-rc-chip-tag.is-button:focus-visible {
   outline: 2px solid var(--rc-blue);
@@ -5521,33 +5520,15 @@ html.rita-app,
   width: 100%;
   max-width: 640px;
   margin: 6px auto 0;
-  padding: 14px 12px 10px;
+  padding: 16px 14px 12px;
   border: 0;
-  border-radius: 26px;
+  border-radius: 28px;
   background: #ebebea;
   text-align: start;
   transition: background-color 150ms ease, box-shadow 200ms ease;
 }
 .uz-rc-bar:focus-within {
   box-shadow: inset 0 0 0 1px #d6d6d3;
-}
-.uz-rc-bar.is-start {
-  cursor: pointer;
-}
-@media (hover: hover) and (pointer: fine) {
-  .uz-rc-bar.is-start:hover {
-    background: #e6e6e4;
-  }
-}
-.uz-rc-bar.is-start:disabled {
-  cursor: default;
-}
-.uz-rc-placeholder {
-  display: block;
-  padding-inline: 6px;
-  color: #6b6b6b;
-  font-size: 15px;
-  line-height: 1.5;
 }
 .uz-rc-input {
   width: 100%;
@@ -5566,24 +5547,21 @@ html.rita-app,
 .uz-rc-row {
   display: flex;
   align-items: center;
-  gap: 2px;
-  min-height: 38px;
+  gap: 4px;
+  min-height: 46px;
 }
 .uz-rc-row-gap {
   flex: 1;
-}
-.uz-rc-bar.is-start .uz-rc-row {
-  justify-content: space-between;
 }
 .uz-rc-chip-tag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
+  height: 36px;
   padding-inline: 8px;
-  border-radius: 9px;
+  border-radius: 10px;
   color: #2b2b2b;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   transition: background-color 150ms ease;
 }
@@ -5613,18 +5591,17 @@ html.rita-app,
   display: grid;
   flex: none;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  margin-inline-start: 4px;
+  width: 44px;
+  height: 44px;
+  margin-inline-start: 6px;
   border-radius: 50%;
-  background: #2b6df0;
+  background: #6096f0;
   color: #fff;
   transition: transform 120ms ease, background-color 150ms ease;
 }
 .uz-rc-send:disabled {
-  background: #8fb3f5;
+  background: #a9c4f7;
 }
-.uz-rc-bar.is-start:active .uz-rc-send,
 .uz-rc-send:not(:disabled):active {
   transform: scale(0.94);
 }
@@ -5632,8 +5609,8 @@ html.rita-app,
   position: relative;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   color: #6b6b6b;
   transition: background-color 150ms ease, color 150ms ease;
@@ -5647,9 +5624,14 @@ html.rita-app,
 .uz-rc-icon:disabled {
   opacity: 0.45;
 }
-.uz-rc-icon[aria-pressed="true"],
-.uz-rc-icon.is-end {
+.uz-rc-icon[aria-pressed="true"] {
   color: #b42318;
+}
+/* Ending the call is a quiet grey icon like the others; it turns red only under the pointer. */
+@media (hover: hover) and (pointer: fine) {
+  .uz-rc-icon.is-end:hover {
+    color: #b42318;
+  }
 }
 @keyframes uz-msg-in {
   from {
@@ -8375,5 +8357,267 @@ html.rita-app,
   }
   .uz-home .rh-btn {
     padding-inline: 10px;
+  }
+}
+
+/* Entering a lesson (LessonIntro): the language splash's picture (.uz-splash, dark), but it stays
+   until the lesson is ready instead of leaving on a timer. The hairline breathes while waiting;
+   then the lesson's title rolls in with one dot per section, and the intro fades away over the
+   study page. */
+.uz-lintro {
+  animation: uz-sp-in 0.25s ease both;
+  transition:
+    opacity 450ms ease,
+    transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.uz-lintro[data-leaving] {
+  opacity: 0;
+  transform: scale(1.03);
+  pointer-events: none;
+}
+.uz-lintro[data-waiting] .uz-splash-rule {
+  animation:
+    uz-sp-rule 0.7s var(--uz-ease) 1.35s both,
+    uz-lintro-breathe 1.6s ease-in-out 2.05s infinite;
+}
+@keyframes uz-lintro-breathe {
+  50% {
+    opacity: 0.35;
+    transform: scaleX(0.7);
+  }
+}
+.uz-lintro-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: min(560px, 88vw);
+  margin-top: 26px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.7s cubic-bezier(0.2, 1, 0.3, 1);
+}
+.uz-lintro-info.is-shown {
+  opacity: 1;
+  transform: none;
+}
+.uz-lintro-label {
+  color: var(--uz-muted);
+  font: 500 12px/1.4 "Noto Sans Arabic", "Figtree", sans-serif;
+}
+.uz-lintro-title {
+  color: var(--uz-line);
+  font: 400 22px/1.25 "Inter Tight", "Figtree", sans-serif;
+  letter-spacing: 0.02em;
+}
+.uz-lintro-ar {
+  color: var(--uz-muted);
+  font: 400 15px/1.6 "Noto Sans Arabic", "Figtree", sans-serif;
+}
+.uz-lintro-dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.uz-lintro-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(243 245 251 / 0.18);
+}
+.uz-lintro-info.is-shown .uz-lintro-dots span {
+  animation: uz-lintro-dot 0.4s ease calc(0.35s + var(--i) * 0.12s) both;
+}
+@keyframes uz-lintro-dot {
+  to {
+    background: #f3f5fb;
+  }
+}
+.uz-lintro-error {
+  color: var(--uz-line);
+  font: 500 16px/1.6 "Noto Sans Arabic", "Figtree", sans-serif;
+}
+.uz-lintro-back {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  margin-top: 10px;
+  padding-inline: 18px;
+  border: 1px solid rgb(243 245 251 / 0.5);
+  border-radius: 999px;
+  color: var(--uz-line);
+  font: 600 14px "Noto Sans Arabic", "Figtree", sans-serif;
+  pointer-events: auto;
+}
+.uz-lintro-back:focus-visible {
+  outline: 2px solid #f3f5fb;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .uz-lintro,
+  .uz-lintro-info {
+    transition: opacity 150ms ease;
+  }
+  .uz-lintro[data-leaving] {
+    transform: none;
+  }
+  .uz-lintro-info {
+    transform: none;
+  }
+  .uz-lintro[data-waiting] .uz-splash-rule,
+  .uz-lintro-info.is-shown .uz-lintro-dots span {
+    animation: none;
+  }
+  .uz-lintro-dots span {
+    background: #f3f5fb;
+  }
+}
+
+/* Starting a call (HoldToStart): a black circle with the Uzyra mark at the bottom of Rita's column,
+   where the message field will be. Held, it fills with white from the bottom like a liquid (a slowly
+   turning rounded square makes the wave); the white mark becomes black where the liquid covers it
+   (difference blend). Full, it shrinks away and a thin ring turns while the call connects; then the
+   message field rises into the same place. */
+.uz-hold {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0 6px;
+}
+.uz-hold-btn {
+  --fill: 0;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 50%;
+  background: #111;
+  box-shadow:
+    0 0 0 1px rgb(17 17 17 / 0.08),
+    0 10px 24px -10px rgb(17 17 17 / 0.45);
+  cursor: pointer;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transform: scale(calc(1 - var(--fill) * 0.06));
+  transition:
+    transform 120ms ease,
+    opacity 260ms ease;
+}
+.uz-hold-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.uz-hold-btn:focus-visible {
+  outline: 2px solid #2b6df0;
+  outline-offset: 4px;
+}
+.uz-hold-liquid {
+  position: absolute;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  /* Empty: just below the circle; full: covering it. */
+  top: calc(100% - var(--fill) * 118%);
+  border-radius: 42%;
+  background: #fff;
+  animation: uz-hold-wave 3.2s linear infinite;
+}
+@keyframes uz-hold-wave {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.uz-hold-mark {
+  position: relative;
+  z-index: 1;
+  width: auto;
+  height: 24px;
+  color: #fff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+.uz-hold-btn[data-done] {
+  transform: scale(0.6);
+  opacity: 0;
+  transition:
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 280ms ease;
+}
+.uz-hold-label {
+  color: #8a8a87;
+  font-size: 12px;
+}
+.uz-rc-connecting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  /* The same height as the circle and its words, so nothing above moves when they swap. */
+  min-height: 110px;
+  padding: 10px 0 6px;
+  color: #8a8a87;
+  font-size: 12px;
+  animation: uz-hold-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.uz-rc-spinner {
+  width: 40px;
+  height: 40px;
+  margin: 12px;
+  border: 1.5px solid rgb(17 17 17 / 0.12);
+  border-top-color: #111;
+  border-radius: 50%;
+  animation: uz-spin 0.9s linear infinite;
+}
+@keyframes uz-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes uz-hold-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+/* The message field rises into the circle's place once Rita is connected. */
+.uz-rc-rise {
+  animation: uz-rc-rise 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes uz-rc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uz-hold-liquid {
+    top: calc(100% - var(--fill) * 100%);
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    animation: none;
+  }
+  .uz-hold-btn,
+  .uz-hold-btn[data-done] {
+    transform: none;
+  }
+  .uz-rc-connecting,
+  .uz-rc-rise {
+    animation: none;
+  }
+  .uz-rc-spinner {
+    animation-duration: 2s;
   }
 }
