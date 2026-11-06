@@ -98,7 +98,7 @@ function AdminCurricula() {
     <main
       dir="rtl"
       className="edith-premium min-h-screen bg-white pb-24 text-[var(--pp-ink)]"
-      style={{ fontFamily: "var(--font-grotesk), 'Noto Sans Arabic', sans-serif" }}
+      style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <header className="border-b border-[var(--pp-line)] bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-5 py-3">

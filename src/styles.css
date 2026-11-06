@@ -10,11 +10,31 @@ body {
 }
 
 @theme {
-  --font-sans: "Nunito", "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-serif: "Nunito", "Manrope", system-ui, sans-serif;
-  --font-display: "Nunito", "Manrope", system-ui, sans-serif;
+  --font-sans: "Uzyra Arabic", "Nunito", "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Uzyra Arabic", "Nunito", "Manrope", system-ui, sans-serif;
+  --font-display: "Uzyra Arabic", "Nunito", "Manrope", system-ui, sans-serif;
   /* Helvetica-style grotesque used by the black home page and its header. */
-  --font-grotesk: "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
+  --font-grotesk: "Uzyra Arabic", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Arabic letters everywhere: Graphik Arabic (Commercial Type, licensed by the owner), served from
+   our own files. It covers only the Arabic ranges, so it sits first in every font stack and Latin
+   text falls through to the stack's own font. Two weights: 500 renders with 400, 600+ with 700. */
+@font-face {
+  font-family: "Uzyra Arabic";
+  src: url("/fonts/arabic/graphik-arabic-400.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F;
+}
+@font-face {
+  font-family: "Uzyra Arabic";
+  src: url("/fonts/arabic/graphik-arabic-700.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F;
 }
 
 /* Rita swirl disc — slow infinite rotation behind the seated character */
@@ -1177,7 +1197,7 @@ no aurora pulse */
     text-align: center;
     font-size: 22px;
     font-weight: 900;
-    font-family: Inter, system-ui, sans-serif;
+    font-family: "Uzyra Arabic", Inter, system-ui, sans-serif;
     color: #111;
   }
 } /* ── Heritage themes ───────────────────────────────────────────────
@@ -2141,9 +2161,9 @@ hairline borders and generous radii.
   --rita-green-deep: #0457cb;
   --rita-green-ink: #ffffff;
   --rita-green-soft: #e7f3ff;
-  --font-grotesk: "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
-  --font-sans: "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
+  --font-grotesk: "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
   /* Deep blue "screen" with a soft light, used inside the iPad and phone shells. */
   --edith-screen:
     radial-gradient(70% 55% at 78% 30%, rgb(125 185 255 / 0.5), transparent 62%),
@@ -2213,7 +2233,7 @@ hairline borders and generous radii.
   --pp-accent-text: #2563eb;
   --pp-accent-soft: #e7eefd;
   --pp-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --pp-display: "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
+  --pp-display: "Uzyra Arabic", "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
   --pro-page: #ffffff;
   --pro-card: #f4f4f8;
   --pro-ink: #121117;
@@ -2222,9 +2242,9 @@ hairline borders and generous radii.
   --rita-green-deep: #2563eb; /* accent words: darker pink so they stay readable on white */
   --rita-green-ink: #121117;
   --rita-green-soft: #e7eefd;
-  --font-grotesk: "Figtree", Helvetica, Arial, sans-serif;
-  --font-display: "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
-  --font-sans: "Figtree", Helvetica, Arial, sans-serif;
+  --font-grotesk: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
+  --font-display: "Uzyra Arabic", "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
+  --font-sans: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
   --wordmark-font: "Figtree", Helvetica, Arial, sans-serif;
   --wordmark-prefix: #ffffff;
   --wordmark-suffix: #ffffff;
@@ -2295,7 +2315,7 @@ body:has(.rh-learn-home) {
   padding-inline: 24px;
   border: 2px solid var(--pp-ink);
   border-radius: 8px;
-  font-family: "Figtree", Helvetica, Arial, sans-serif;
+  font-family: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
   font-size: 18px;
   font-weight: 600;
   line-height: 24px;
@@ -2376,7 +2396,7 @@ body:has(.rh-learn-home) {
   border-radius: 8px;
   background-color: var(--pp-grey);
   color: var(--pp-ink);
-  font-family: "Figtree", Helvetica, Arial, sans-serif;
+  font-family: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
   font-size: 16px;
   font-weight: 600;
 }
@@ -3165,7 +3185,7 @@ body:has(.rh-learn-home) {
   background: #121117;
   color: #fff;
   border-bottom: 1px solid rgb(255 255 255 / 0.1);
-  font-family: "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  font-family: "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
 }
 .rh-bar-inner {
   position: relative;
@@ -3204,7 +3224,7 @@ body:has(.rh-learn-home) {
   background: none;
   cursor: pointer;
   color: rgb(255 255 255 / 0.78);
-  font: 600 16px/24px "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  font: 600 16px/24px "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
   text-decoration: none;
   transition:
     color 160ms ease,
@@ -3243,7 +3263,7 @@ body:has(.rh-learn-home) {
   background: #2b6df0;
   color: #ffffff;
   cursor: pointer;
-  font: 600 15px/1 "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  font: 600 15px/1 "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
   text-decoration: none;
   white-space: nowrap;
   transition:
@@ -3309,7 +3329,7 @@ body:has(.rh-learn-home) {
   background: transparent;
   color: #fff;
   cursor: pointer;
-  font: 600 14px/1 "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  font: 600 14px/1 "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
   transition:
     background-color 160ms ease,
     border-color 160ms ease;
@@ -3375,7 +3395,7 @@ body:has(.rh-learn-home) {
   padding-inline: 12px 8px;
   border: 1.5px solid rgb(255 255 255 / 0.55);
   color: #fff;
-  font: 600 14px/1 "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  font: 600 14px/1 "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
 }
 .rh-lang-choose-text {
   display: none;
@@ -3485,7 +3505,7 @@ body:has(.rh-learn-home) {
   border-radius: 16px;
   background: #fff;
   color: #121117;
-  font-family: "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  font-family: "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
   transform-origin: top right;
   animation: rh-menu-in 160ms var(--rh-ease);
 }
@@ -3641,7 +3661,7 @@ body:has(.rh-learn-home) {
   background: transparent;
   color: #121117;
   cursor: pointer;
-  font: 600 15px/1.2 "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  font: 600 15px/1.2 "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
   text-align: start;
   text-decoration: none;
   transition: background-color 140ms ease;
@@ -3840,10 +3860,10 @@ body:has(.rh-learn-home) {
   --rita-green-deep: #2563eb;
   --rita-green-ink: #121117;
   --rita-green-soft: #e7eefd;
-  --font-grotesk: "Figtree", Helvetica, Arial, sans-serif;
-  --font-display: "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
-  --font-sans: "Figtree", Helvetica, Arial, sans-serif;
-  font-family: "Figtree", Helvetica, Arial, sans-serif;
+  --font-grotesk: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
+  --font-display: "Uzyra Arabic", "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
+  --font-sans: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
+  font-family: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
 }
 .rita-app h1,
 .rita-app h2,
@@ -3870,7 +3890,7 @@ body:has(.rh-learn-home) {
   padding-inline: 22px;
   border: 2px solid var(--pp-ink);
   border-radius: 8px;
-  font-family: "Figtree", Helvetica, Arial, sans-serif;
+  font-family: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
   font-size: 16px;
   font-weight: 600;
   box-shadow: none;
@@ -5824,7 +5844,7 @@ html.rita-app,
   gap: 14px;
 }
 .uz-splash-item b {
-  font-family: "Inter Tight", "Figtree", "Noto Sans Arabic", sans-serif;
+  font-family: "Uzyra Arabic", "Inter Tight", "Figtree", sans-serif;
   font-size: 20px;
   font-weight: 400;
   letter-spacing: 0.24em;
@@ -5928,7 +5948,7 @@ html.rita-app,
   background: #fff;
   color: var(--uz-ink);
   font-family:
-    "Figtree", "Uzyra Footer Arabic", "Noto Sans Arabic", Helvetica, Arial,
+    "Uzyra Arabic", "Figtree", Helvetica, Arial,
     sans-serif;
 }
 .uz-learn-main {
@@ -6385,7 +6405,7 @@ html.rita-app,
   overflow: clip;
   background: #fff;
   color: var(--ua-ink);
-  font-family: "Figtree", Helvetica, Arial, sans-serif;
+  font-family: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
 }
 .ua-back {
   gap: 6px;
@@ -6528,7 +6548,7 @@ html.rita-app,
   padding: 10px 24px;
   border: 2px solid var(--ua-ink);
   border-radius: 8px;
-  font-family: "Figtree", Helvetica, Arial, sans-serif;
+  font-family: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
   font-size: 18px;
   font-weight: 600;
   line-height: 24px;
@@ -7873,20 +7893,6 @@ html.rita-app,
 }
 
 /* Closing signature. Static on arrival; no scroll or startup animation work. */
-@font-face {
-  font-family: "Uzyra Footer Arabic";
-  src: url("/fonts/guides/noto-sans-arabic-arabic-400-normal.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Uzyra Footer Arabic";
-  src: url("/fonts/guides/noto-sans-arabic-arabic-700-normal.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-}
 .uz-footer {
   --uf-ink: #121117;
   --uf-paper: #f2f2f5;
@@ -7898,7 +7904,7 @@ html.rita-app,
   background: var(--uf-ink);
   color: var(--uf-paper);
   color-scheme: dark;
-  font-family: "Figtree", "Uzyra Footer Arabic", Helvetica, Arial, sans-serif;
+  font-family: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
 }
 .uz-footer-inner { max-width: 1400px; margin-inline: auto; padding: 36px 24px 0; }
 .uz-footer-top { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
@@ -7914,7 +7920,7 @@ html.rita-app,
 .uz-footer-up:hover svg { transform: translateY(-3px); }
 .uz-footer-grid { display: grid; gap: 48px; margin-top: 48px; }
 .uz-footer-intro h2 {
-  margin: 0; color: var(--uf-paper); font-family: "Inter Tight", "Figtree", "Uzyra Footer Arabic", Helvetica, Arial, sans-serif;
+  margin: 0; color: var(--uf-paper); font-family: "Uzyra Arabic", "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
   font-size: clamp(34px, 4vw, 46px); font-weight: 600; line-height: 1.08; letter-spacing: -0.035em;
 }
 .uz-footer[dir="rtl"] .uz-footer-intro h2 { letter-spacing: 0; line-height: 1.28; }
@@ -8036,7 +8042,7 @@ html.rita-app,
   border-radius: 16px;
   background: #efefed;
   color: var(--sh-body);
-  font-family: "Figtree", "Inter Tight", "Noto Sans Arabic", system-ui, sans-serif;
+  font-family: "Uzyra Arabic", "Figtree", "Inter Tight", system-ui, sans-serif;
   font-size: 12.5px;
   line-height: 1.55;
   letter-spacing: normal;
@@ -8406,16 +8412,16 @@ html.rita-app,
 }
 .uz-lintro-label {
   color: var(--uz-muted);
-  font: 500 12px/1.4 "Noto Sans Arabic", "Figtree", sans-serif;
+  font: 500 12px/1.4 "Uzyra Arabic", "Figtree", sans-serif;
 }
 .uz-lintro-title {
   color: var(--uz-line);
-  font: 400 22px/1.25 "Inter Tight", "Figtree", sans-serif;
+  font: 400 22px/1.25 "Uzyra Arabic", "Inter Tight", "Figtree", sans-serif;
   letter-spacing: 0.02em;
 }
 .uz-lintro-ar {
   color: var(--uz-muted);
-  font: 400 15px/1.6 "Noto Sans Arabic", "Figtree", sans-serif;
+  font: 400 15px/1.6 "Uzyra Arabic", "Figtree", sans-serif;
 }
 .uz-lintro-dots {
   display: flex;
@@ -8438,7 +8444,7 @@ html.rita-app,
 }
 .uz-lintro-error {
   color: var(--uz-line);
-  font: 500 16px/1.6 "Noto Sans Arabic", "Figtree", sans-serif;
+  font: 500 16px/1.6 "Uzyra Arabic", "Figtree", sans-serif;
 }
 .uz-lintro-back {
   display: inline-flex;
@@ -8449,7 +8455,7 @@ html.rita-app,
   border: 1px solid rgb(243 245 251 / 0.5);
   border-radius: 999px;
   color: var(--uz-line);
-  font: 600 14px "Noto Sans Arabic", "Figtree", sans-serif;
+  font: 600 14px "Uzyra Arabic", "Figtree", sans-serif;
   pointer-events: auto;
 }
 .uz-lintro-back:focus-visible {

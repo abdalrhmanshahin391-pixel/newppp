@@ -141,6 +141,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "dns-prefetch", href: "https://cdn.paddle.com" },
+      // The site's Arabic face (regular), so Arabic text does not first show in the system font.
+      {
+        rel: "preload",
+        as: "font",
+        type: "font/woff2",
+        href: "/fonts/arabic/graphik-arabic-400.woff2",
+        crossOrigin: "anonymous",
+      },
       {
         rel: "preload",
         as: "style",

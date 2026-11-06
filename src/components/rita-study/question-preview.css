@@ -33,9 +33,8 @@
   color: var(--qp-ink);
   color-scheme: light;
   font:
-    400 16px/1.5 "Uzyra Quiz Inter",
-    "Uzyra Footer Arabic",
-    "Noto Sans Arabic",
+    400 16px/1.5 "Uzyra Arabic",
+    "Uzyra Quiz Inter",
     sans-serif;
   text-align: start;
   container: quiz / inline-size;
@@ -441,9 +440,8 @@
   color: #1b2432;
   box-shadow: 0 8px 24px -8px rgb(11 22 38 / 0.2);
   font:
-    400 14px/1.7 "Uzyra Quiz Inter",
-    "Uzyra Footer Arabic",
-    "Noto Sans Arabic",
+    400 14px/1.7 "Uzyra Arabic",
+    "Uzyra Quiz Inter",
     sans-serif;
 }
 .qp-save-menu > div {

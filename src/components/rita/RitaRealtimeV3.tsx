@@ -1699,7 +1699,7 @@ export function RitaRealtimeV3({
       <main
         className="edith-premium uz-rc text-[var(--pp-ink)]"
         data-phase={chatting ? "chat" : "intro"}
-        style={{ fontFamily: "var(--font-grotesk), 'Noto Sans Arabic', sans-serif" }}
+        style={{ fontFamily: "var(--font-grotesk)" }}
       >
         <audio
           ref={botAudio}
@@ -1917,7 +1917,7 @@ export function RitaRealtimeV3({
   return (
     <main
       className="edith-premium min-h-screen bg-white text-[var(--pp-ink)]"
-      style={{ fontFamily: "var(--font-grotesk), 'Noto Sans Arabic', sans-serif" }}
+      style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <audio
         ref={botAudio}

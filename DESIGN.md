@@ -39,7 +39,13 @@ Page `#fff`; dark device screen `linear-gradient(162deg, #26252e, #121117)`.
 ## Type
 
 - Body and UI: Figtree. Headlines: Inter Tight, weight 700, letter-spacing `-0.035em`,
-  `text-wrap: balance`. Arabic falls back to Noto Sans Arabic.
+  `text-wrap: balance`.
+- Arabic: Graphik Arabic (Commercial Type, licensed by the owner), our own files in
+  `public/fonts/arabic` (400 and 700; 500 shows as 400, 600 and up as 700). It is the family
+  "Uzyra Arabic", limited to the Arabic Unicode ranges and first in every font stack, so Arabic
+  letters always use it and Latin letters fall through to Figtree / Inter Tight. Never name another
+  Arabic face (no Noto, no system fallback). The guide sheet and its PDF keep their own embedded
+  Noto Sans Arabic so the page and the PDF stay identical.
 - h1 48/52 on phones, 64/68 from 1024px. h2 line-height 1.08.
 - Body 16px minimum for anything the learner reads or types (no smaller inputs: iOS zooms).
   Helper text 12–14px only for secondary notes.
