@@ -137,7 +137,7 @@ export function RitaHub() {
   return (
     <main
       className="edith-premium min-h-screen bg-white text-[var(--pp-ink)]"
-      style={{ fontFamily: "var(--font-grotesk), 'Noto Sans Arabic', sans-serif" }}
+      style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <div className="rita-cream edith-light edith-premium">
         <ProHeader variant="solid" tone="light" />

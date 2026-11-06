@@ -28,7 +28,7 @@ export function HowItWorksButton({ tool }: { tool: ToolDef }) {
           background: "#ffffff",
           color: "#121117",
           border: "2px solid #121117",
-          fontFamily: "Figtree, Inter, Helvetica, Arial, sans-serif",
+          fontFamily: '"Uzyra Arabic", Figtree, Inter, Helvetica, Arial, sans-serif',
         }}
       >
         <Sparkles size={16} aria-hidden="true" style={{ color: "#2563eb" }} />

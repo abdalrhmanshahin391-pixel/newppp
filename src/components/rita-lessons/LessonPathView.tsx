@@ -380,7 +380,7 @@ export function LessonPathView({
       dir="rtl"
       className="edith-premium lp min-h-screen bg-white pb-32 text-[var(--pp-ink)]"
       data-editing={editing ? "" : undefined}
-      style={{ fontFamily: "var(--font-grotesk), 'Noto Sans Arabic', sans-serif" }}
+      style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <header className="sticky top-0 z-30 border-b border-[var(--pp-line)] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center justify-between gap-2 px-4 py-3">
