@@ -46,7 +46,7 @@ export type ActionInfo = {
 };
 
 export const ACTION_INFO: Record<StudyAction, ActionInfo> = {
-  explain: { label: "اشرح المحدد", primary: true, group: "explain" },
+  explain: { label: "اشرحلي", primary: true, group: "explain" },
   simplify: { label: "بسّط بمثال", primary: true, group: "explain" },
   meaning: { label: "معنى ونطق", primary: false, group: null },
   explain_back: {

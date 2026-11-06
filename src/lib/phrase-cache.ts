@@ -23,8 +23,20 @@ function readIndex(storage: StorageLike): string[] {
   }
 }
 
-export function readExplanation(phrase: string, storage: StorageLike): PhraseExplanation | null {
-  const key = normalizePhrase(phrase);
+/** Context keeps a word's different senses apart; existing context-free entries still work. */
+export function explanationKey(phrase: string, context = ""): string {
+  const term = normalizePhrase(phrase);
+  if (!term) return "";
+  const sentence = context.normalize("NFC").replace(/\s+/g, " ").trim().slice(0, 2400);
+  return sentence ? JSON.stringify([term, sentence]) : term;
+}
+
+export function readExplanation(
+  phrase: string,
+  storage: StorageLike,
+  context = "",
+): PhraseExplanation | null {
+  const key = explanationKey(phrase, context);
   if (!key) return null;
   try {
     const raw = storage.getItem(EXPLAIN_PREFIX + key);
@@ -42,8 +54,9 @@ export function writeExplanation(
   value: PhraseExplanation,
   storage: StorageLike,
   maxEntries = MAX_ENTRIES,
+  context = "",
 ) {
-  const key = normalizePhrase(phrase);
+  const key = explanationKey(phrase, context);
   if (!key) return;
   try {
     storage.setItem(EXPLAIN_PREFIX + key, JSON.stringify(value));
@@ -61,19 +74,30 @@ export function writeExplanation(
 
 const memoryExplanations = new Map<string, PhraseExplanation>();
 
-export function cachedExplanation(phrase: string): PhraseExplanation | null {
-  const key = normalizePhrase(phrase);
+export function cachedExplanation(phrase: string, context = ""): PhraseExplanation | null {
+  const key = explanationKey(phrase, context);
   const inMemory = memoryExplanations.get(key);
   if (inMemory) return inMemory;
   if (typeof window === "undefined") return null;
-  const stored = readExplanation(phrase, window.localStorage);
+  let stored: PhraseExplanation | null = null;
+  try {
+    stored = readExplanation(phrase, window.localStorage, context);
+  } catch {
+    /* Safari can block access to localStorage itself. */
+  }
   if (stored) memoryExplanations.set(key, stored);
   return stored;
 }
 
-export function rememberExplanation(phrase: string, value: PhraseExplanation) {
-  memoryExplanations.set(normalizePhrase(phrase), value);
-  if (typeof window !== "undefined") writeExplanation(phrase, value, window.localStorage);
+export function rememberExplanation(phrase: string, value: PhraseExplanation, context = "") {
+  memoryExplanations.set(explanationKey(phrase, context), value);
+  if (typeof window !== "undefined") {
+    try {
+      writeExplanation(phrase, value, window.localStorage, MAX_ENTRIES, context);
+    } catch {
+      /* Memory remains available when storage is blocked. */
+    }
+  }
 }
 
 // ---------- audio ----------
@@ -108,23 +132,30 @@ export async function getPhraseAudio(
   const job = (async () => {
     try {
       let blob: Blob | null = null;
-      if (typeof caches !== "undefined") {
-        const store = await caches.open(AUDIO_CACHE);
-        const hit = await store.match(await cacheRequest(key));
-        if (hit) blob = await hit.blob();
-        if (!blob) {
-          blob = await fetchAudio();
-          if (blob) {
-            await store
-              .put(
-                await cacheRequest(key),
-                new Response(blob, { headers: { "Content-Type": "audio/mpeg" } }),
-              )
-              .catch(() => undefined);
+      let store: Cache | null = null;
+      try {
+        if (typeof caches !== "undefined") {
+          store = await caches.open(AUDIO_CACHE);
+          const hit = await store.match(await cacheRequest(key));
+          if (hit) blob = await hit.blob();
+        }
+      } catch {
+        /* Private browsing can block Cache Storage. Audio must still work. */
+      }
+      if (!blob) {
+        blob = await fetchAudio();
+        if (blob && store) {
+          try {
+            await store.put(
+              await cacheRequest(key),
+              new Response(blob, {
+                headers: { "Content-Type": blob.type || "audio/mpeg" },
+              }),
+            );
+          } catch {
+            /* Caching is optional; the fetched clip is still playable. */
           }
         }
-      } else {
-        blob = await fetchAudio();
       }
       if (!blob) return null;
       const url = URL.createObjectURL(blob);
@@ -155,18 +186,18 @@ export function stopPhraseAudio() {
 }
 
 /** Plays a URL, replacing anything already playing; resolves when it ends or fails. */
-export function playPhraseUrl(url: string): Promise<void> {
+export function playPhraseUrl(url: string): Promise<boolean> {
   stopPhraseAudio();
   return new Promise((resolve) => {
     const audio = new Audio(url);
     current = audio;
-    const done = () => {
+    const done = (ok: boolean) => {
       if (current === audio) current = null;
-      resolve();
+      resolve(ok);
     };
-    audio.onended = done;
-    audio.onerror = done;
-    audio.onpause = done;
-    audio.play().catch(done);
+    audio.onended = () => done(true);
+    audio.onerror = () => done(false);
+    audio.onpause = () => done(false);
+    audio.play().catch(() => done(false));
   });
 }

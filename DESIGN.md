@@ -1,5 +1,26 @@
 # DESIGN.md — the visual system of Uzyra (formerly EdithLab) / Rita
 
+## Study circle: first two help services
+
+The existing draggable study circle offers «اشرحلي» and «معنى ونطق». Explanation uses a white
+disc with an ink icon; meaning uses the blue action disc. Both inherit the radial opening,
+labels and selection strip. Unsuitable selections leave the service visible but disabled.
+Explanation language is a labelled tool in the selection strip. Practice generation and the
+temporary question preview are no longer entries in this circle.
+
+«اشرحلي» answers only the selected part in one to three short sentences and at most one example.
+It asks no check question and never asks the learner to explain back. The live voice version
+speaks one short sentence, with a tiny written sheet only when needed.
+
+«معنى ونطق» accepts a short English/German word or phrase from the guide. Its non-modal white
+card stays inside the work area (340px maximum, 18px inset, 16px corners, a restrained shadow).
+It shows the phrase, one Arabic meaning for this sentence, and one 44px «اسمع النطق» button.
+Loading, retry and audio failure stay in the card. Escape or its close button dismisses it
+and returns focus to the circle. Closing stops audio. Opening the circle or requesting an
+explanation dismisses the card. Reduced motion removes its entrance. Contextual meanings are
+cached by phrase and context; audio stays shared by phrase. Pronunciation uses the existing
+voice/microphone guard, so the clip is not heard as the learner.
+
 This is the source of truth for every visual change. It was written from the code that is
 already shipped (`src/styles.css`, section "Home page theme", and the Rita components), not
 invented. When a design request conflicts with this file, say so first, then follow the owner's

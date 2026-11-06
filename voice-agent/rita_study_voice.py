@@ -29,9 +29,10 @@ QUIET_STATES = {"practicing", "cards_preview", "challenge", "paused", "ended"}
 
 # Each answer is one short spoken sentence; the details go on the written sheet ([[SHEET]]).
 ACTIONS = {
-    "explain": "Say the core idea in one short sentence. Then a sheet: a title, the rule as short "
-    "points (or a small table when there are forms or cases), two examples and, if there is one, "
-    "the common mistake as a watch-out line.",
+    "explain": "Explain only the selected part in one short, simple spoken sentence. "
+    "If needed, add a tiny sheet with at most two short points and one example. "
+    "No quiz, check question, follow-up question, or request for the learner to explain back. "
+    "Stop after the explanation.",
     "simplify": "Say the idea in the simplest words in one short sentence. Then a sheet with one "
     "solved example, step by step in two or three points.",
     "explain_back": "The learner will now explain the idea in their own words. Ask them to do it in "

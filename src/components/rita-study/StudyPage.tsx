@@ -10,6 +10,8 @@ import { studyMakeCards, studyMakeMcq } from "@/lib/study/study-practice.functio
 import type { StudyCard, StudyMcq } from "@/lib/study/study-practice";
 import type { StudyLessonData } from "@/lib/study/study-types";
 import { PhraseDialog } from "@/components/rita/PhraseDialog";
+import { resolveSelection } from "@/lib/study/study-resolve";
+import { MAX_PHRASE_CHARS } from "@/lib/rita-phrase";
 import { guideSegmentMap, sectionId } from "@/lib/guides/guide-blocks";
 import {
   ACTION_INFO,
@@ -40,6 +42,7 @@ import { readStudyMemory, writeStudyMemory } from "./study-memory";
 import { attachTechSelect, drawSelectionFx } from "./tech-select";
 import { installSoundUnlock, setSoundOn, soundOn } from "./tech-sound";
 import { useStudyRequests } from "./useStudyRequests";
+import "./study-meaning.css";
 
 /** Where the divider was left (share of the width for Rita and the guide), per browser. */
 const SPLIT_KEY = "uzyra-study-split";
@@ -129,7 +132,15 @@ export function StudyPage({
   menuOpenRef.current = menuOpen;
   const [orb, setOrb] = useState<OrbPosition>(() => readStudyMemory(lesson.id).orb ?? DEFAULT_ORB);
   const [movingOrb, setMovingOrb] = useState(false);
-  const [phrase, setPhrase] = useState("");
+  const [phrase, setPhrase] = useState<{ text: string; context: string } | null>(null);
+  const closePhrase = useCallback(() => {
+    setPhrase(null);
+    orbButton.current?.focus({ preventScroll: true });
+  }, []);
+  const phrasePlaying = useCallback(
+    (playing: boolean) => bridge.phrasePlaying?.(playing),
+    [bridge],
+  );
   const work = useRef<HTMLDivElement | null>(null);
   const orbButton = useRef<HTMLButtonElement | null>(null);
   const radial = useRef<RadialHandle | null>(null);
@@ -343,7 +354,15 @@ export function StudyPage({
     [lesson.id, preview, sections, sendFocus],
   );
 
-  const actions: StudyAction[] = selected ? availableActions(selected.kind) : [];
+  const actions: StudyAction[] = selected
+    ? availableActions(selected.kind).filter(
+        (action) =>
+          action !== "meaning" ||
+          (Boolean(selection && /[A-Za-zÀ-ÿ]/.test(selection.exact)) &&
+            (selection?.exact.length ?? 0) <= MAX_PHRASE_CHARS &&
+            selected.kind !== "table_cells"),
+      )
+    : [];
   // Flashcards and questions made from selections. Kept here until it is decided where they show.
   const makeCardsFn = useServerFn(studyMakeCards);
   const makeMcqFn = useServerFn(studyMakeMcq);
@@ -423,7 +442,14 @@ export function StudyPage({
     if (action === "make_cards" || action === "make_mcq") return void practice(action);
     const sel = selectionRef.current;
     if (action === "meaning") {
-      if (sel) setPhrase(sel.exact);
+      if (!sel || !actions.includes("meaning")) return;
+      const resolved = resolveSelection(guide.content, sel, "meaning");
+      if (!resolved.ok) {
+        toast.message("حدّد كلمة أو عبارة قصيرة من الدرس مرة ثانية.");
+        return;
+      }
+      requests.stop();
+      setPhrase({ text: resolved.quote, context: resolved.context });
       setMenuOpen(false);
       return;
     }
@@ -441,10 +467,11 @@ export function StudyPage({
           ? { segIds: sel.segIds, exact: sel.exact, parts: sel.parts }
           : null;
     if (!target || !target.segIds.length) return;
+    setPhrase(null);
     setMenuOpen(false);
-    const ok = await requests.run(action as RitaAction, target);
-    // On a phone, a written answer is in Rita's tab; a spoken one plays while the guide stays open.
-    if (ok && !wide && !bridge.send) setTab("rita");
+    // Show loading and retry in the conversation immediately, including when the request fails.
+    if (!wide && !bridge.send) setTab("rita");
+    await requests.run(action as RitaAction, target);
   }
 
   async function report(note: string) {
@@ -491,6 +518,15 @@ export function StudyPage({
             className="rita-btn rita-btn-soft rita-btn-sm gap-1 !h-8"
           >
             <Square size={12} fill="currentColor" aria-hidden="true" /> وقّف
+          </button>
+        )}
+        {live.state === "failed" && (
+          <button
+            type="button"
+            className="rita-btn rita-btn-soft rita-btn-sm"
+            onClick={() => ringPick(live.action)}
+          >
+            جرّب مرة ثانية
           </button>
         )}
       </div>
@@ -660,10 +696,12 @@ export function StudyPage({
           onMove={moveOrb}
           open={menuOpen}
           onPress={(viaKey) => {
+            setPhrase(null);
             setOpenedByKey(viaKey);
             setMenuOpen((open) => !open);
           }}
           onHoldStart={() => {
+            setPhrase(null);
             setOpenedByKey(false);
             setMenuOpen(true);
           }}
@@ -709,6 +747,9 @@ export function StudyPage({
               : replyProblem || "حدّد كلمة أو جملة من الدرس، وبعدين اكبس على الدائرة."
           }
           canReport={!replySelection && actions.includes("report")}
+          onLanguage={
+            ringMode === "main" && !replySelection ? () => setRingMode("language") : undefined
+          }
           busy={false}
           sound={sound}
           autoFocus={openedByKey}
@@ -740,8 +781,17 @@ export function StudyPage({
             حرّك الدائرة بالأسهم (Shift أسرع)، وEnter أو Esc لما تخلص.
           </p>
         )}
+        {phrase && (
+          <PhraseDialog
+            key={JSON.stringify(phrase)}
+            phrase={phrase.text}
+            context={phrase.context}
+            compact
+            onPlayingChange={phrasePlaying}
+            onClose={closePhrase}
+          />
+        )}
       </div>
-      {phrase && <PhraseDialog phrase={phrase} onClose={() => setPhrase("")} />}
     </div>
   );
 }

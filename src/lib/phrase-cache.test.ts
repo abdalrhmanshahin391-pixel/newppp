@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readExplanation, writeExplanation } from "./phrase-cache.ts";
+import { getPhraseAudio, readExplanation, writeExplanation } from "./phrase-cache.ts";
 
 function fakeStorage() {
   const data = new Map<string, string>();
@@ -52,4 +52,41 @@ test("a stored value without a translation is ignored", () => {
   const storage = fakeStorage();
   storage.setItem("rita.phrase.v1:x", JSON.stringify({ lang: "de", translation_ar: "" }));
   assert.equal(readExplanation("x", storage), null);
+});
+
+test("the same word keeps separate meanings in separate sentences and never uses a dictionary entry", () => {
+  const storage = fakeStorage();
+  const river = { ...sample, lang: "en" as const, translation_ar: "ضفة" };
+  const money = { ...sample, lang: "en" as const, translation_ar: "بنك" };
+  writeExplanation("bank", sample, storage);
+  assert.equal(readExplanation("bank", storage, "We sat on the river bank."), null);
+  writeExplanation("bank", river, storage, 300, "We sat on the river bank.");
+  writeExplanation("bank", money, storage, 300, "She went to the bank.");
+  assert.deepEqual(readExplanation("BANK", storage, "We sat on the river bank."), river);
+  assert.deepEqual(readExplanation("bank", storage, "She went to the bank."), money);
+  assert.deepEqual(readExplanation("bank", storage), sample);
+});
+
+test("blocked browser Cache Storage still fetches playable audio", async () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, "caches");
+  Object.defineProperty(globalThis, "caches", {
+    configurable: true,
+    value: {
+      open: async () => {
+        throw new Error("Storage blocked");
+      },
+    },
+  });
+  try {
+    let fetched = 0;
+    const url = await getPhraseAudio("cache fallback test", "en", "fast", async () => {
+      fetched += 1;
+      return new Blob(["fixture"], { type: "audio/mpeg" });
+    });
+    assert.equal(fetched, 1);
+    assert.ok(url?.startsWith("blob:"));
+  } finally {
+    if (original) Object.defineProperty(globalThis, "caches", original);
+    else Reflect.deleteProperty(globalThis, "caches");
+  }
 });

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Gauge, Loader2, Snail, Target, X, Zap } from "lucide-react";
+import { Gauge, Loader2, Snail, Square, Target, Volume2, X, Zap } from "lucide-react";
 import { explainPhrase } from "@/lib/rita-phrase.functions";
 import { ttsHeaders } from "@/lib/tts-auth";
 import {
@@ -38,11 +38,16 @@ function StyleIcon({ style }: { style: PronounceStyle }) {
  */
 export function PhraseDialog({
   phrase,
+  context = "",
+  compact = false,
   onClose,
   onPlayingChange,
   onWord,
 }: {
   phrase: string;
+  context?: string;
+  /** A non-modal study card with one pronunciation action. */
+  compact?: boolean;
   onClose: () => void;
   onPlayingChange?: (playing: boolean) => void;
   /** Called once per phrase with the word and its meaning, so it lands in the learner's Words list. */
@@ -51,9 +56,9 @@ export function PhraseDialog({
   const explainFn = useServerFn(explainPhrase);
   const text = cleanPhrase(phrase);
   const [explanation, setExplanation] = useState<PhraseExplanation | null>(() =>
-    cachedExplanation(text),
+    cachedExplanation(text, context),
   );
-  const [loading, setLoading] = useState(!cachedExplanation(text));
+  const [loading, setLoading] = useState(!cachedExplanation(text, context));
   const [failed, setFailed] = useState(false);
   const [failReason, setFailReason] = useState("");
   const [saved, setSaved] = useState(false);
@@ -85,7 +90,10 @@ export function PhraseDialog({
   );
 
   useEffect(() => {
-    const known = cachedExplanation(text);
+    const known = cachedExplanation(text, context);
+    setFailed(false);
+    setFailReason("");
+    setExplanation(known);
     if (known) {
       setExplanation(known);
       setLoading(false);
@@ -93,12 +101,11 @@ export function PhraseDialog({
     }
     let cancelled = false;
     setLoading(true);
-    setFailed(false);
-    explainFn({ data: { text } })
+    explainFn({ data: { text, context: context || undefined } })
       .then((result) => {
         if (cancelled) return;
         if (result.ok) {
-          rememberExplanation(text, result.explanation);
+          rememberExplanation(text, result.explanation, context);
           setExplanation(result.explanation);
         } else {
           setFailReason(result.reason);
@@ -110,14 +117,14 @@ export function PhraseDialog({
     return () => {
       cancelled = true;
     };
-  }, [explainFn, text, attempt]);
+  }, [explainFn, text, context, attempt]);
 
   const lang =
     explanation?.lang === "en"
       ? "en"
       : explanation?.lang === "de"
         ? "de"
-        : !explanation && failed
+        : !compact && !explanation && failed
           ? (guessPhraseLang(text) as "de" | "en" | null)
           : null;
 
@@ -150,6 +157,7 @@ export function PhraseDialog({
         if (!headers) return null;
         const response = await fetch("/api/german/tts", {
           method: "POST",
+          signal: AbortSignal.timeout(15_000),
           headers,
           body: JSON.stringify({ text, lang, style }),
         });
@@ -163,13 +171,87 @@ export function PhraseDialog({
       }
       setPlaying(style);
       onPlayingChange?.(true);
-      await playPhraseUrl(url);
+      const played = await playPhraseUrl(url);
       if (mine !== token.current) return;
       setPlaying(null);
+      if (!played) setAudioError(true);
       onPlayingChange?.(false);
     },
     [lang, onPlayingChange, text],
   );
+
+  if (compact)
+    return (
+      <section
+        className="st-meaning"
+        role="dialog"
+        aria-label="معنى ونطق"
+        dir="rtl"
+        aria-busy={loading}
+      >
+        <header className="st-meaning-head">
+          <h2>
+            <Volume2 size={16} aria-hidden="true" /> معنى ونطق
+          </h2>
+          <button ref={closeRef} type="button" onClick={onClose} aria-label="إغلاق معنى ونطق">
+            <X size={18} />
+          </button>
+        </header>
+        <p className="st-meaning-term" dir="auto">
+          {text}
+        </p>
+        <div className="st-meaning-result" role="status" aria-live="polite">
+          {loading ? (
+            <p className="st-meaning-muted">
+              <Loader2 size={16} className="animate-spin" /> عم نجيب المعنى حسب الجملة…
+            </p>
+          ) : failed ? (
+            <p className="st-meaning-muted">
+              تعذّر تحميل المعنى.{" "}
+              <button
+                type="button"
+                className="st-meaning-retry"
+                onClick={() => setAttempt((count) => count + 1)}
+              >
+                جرّب مرة ثانية
+              </button>
+            </p>
+          ) : explanation ? (
+            <>
+              <p className="st-meaning-translation">{explanation.translation_ar}</p>
+              <p className="st-meaning-muted">المعنى بهالجملة</p>
+            </>
+          ) : null}
+        </div>
+        <button
+          className="st-meaning-play"
+          type="button"
+          disabled={loading || !lang || Boolean(busy)}
+          onClick={() => {
+            if (playing) {
+              token.current += 1;
+              stopPhraseAudio();
+              setPlaying(null);
+              onPlayingChange?.(false);
+            } else void play("fast");
+          }}
+        >
+          {busy ? (
+            <Loader2 size={17} className="animate-spin" />
+          ) : playing ? (
+            <Square size={16} />
+          ) : (
+            <Volume2 size={18} />
+          )}
+          {busy ? "عم نجهّز النطق…" : playing ? "إيقاف النطق" : "اسمع النطق"}
+        </button>
+        {audioError && (
+          <p className="st-meaning-muted" role="alert">
+            تعذّر تشغيل الصوت. اضغط «اسمع النطق» للمحاولة مجددًا.
+          </p>
+        )}
+      </section>
+    );
 
   return (
     <div

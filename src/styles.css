@@ -4954,6 +4954,27 @@ html.rita-app,
     border-color 160ms ease,
     box-shadow 220ms ease;
 }
+.st-rad-item:disabled {
+  cursor: default;
+}
+.st-rad-item:disabled .st-rad-disc {
+  border-style: dashed;
+  box-shadow: none;
+  color: #b8c7e8;
+}
+.st-rad-item:disabled .st-rad-label {
+  color: #b8c7e8;
+}
+.st-rad-item[data-service="explain"]:not(:disabled) .st-rad-disc {
+  background: #fff;
+  color: #17376b;
+  border-color: #fff;
+}
+.st-rad-item[data-service="meaning"]:not(:disabled) .st-rad-disc {
+  background: #2b6df0;
+  color: #fff;
+  border-color: #bed4ff;
+}
 .st-rad-item[data-placeholder] .st-rad-disc {
   border-style: dashed;
   color: #9cc1ff;

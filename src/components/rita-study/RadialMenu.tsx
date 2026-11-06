@@ -15,6 +15,7 @@ import {
   Check,
   Eraser,
   Ellipsis,
+  Languages,
   Move,
   PanelLeftClose,
   Volume2,
@@ -60,6 +61,7 @@ export const RadialMenu = forwardRef<
     tone?: "reply";
     hint: string;
     canReport: boolean;
+    onLanguage?: () => void;
     busy: boolean;
     sound: boolean;
     autoFocus: boolean;
@@ -224,8 +226,13 @@ export const RadialMenu = forwardRef<
   );
 
   useEffect(() => {
-    if (shown && props.autoFocus) buttons.current[0]?.focus();
-  }, [shown, props.autoFocus]);
+    if (shown && props.autoFocus) {
+      const first = buttons.current.find((button) => button && !button.disabled);
+      (
+        first ?? containerRef.current?.querySelector<HTMLButtonElement>(".st-rad-tools button")
+      )?.focus();
+    }
+  }, [shown, props.autoFocus, containerRef]);
 
   if (!mounted || !geom || !layout) return null;
   const { cx, cy, w, h } = geom;
@@ -240,16 +247,22 @@ export const RadialMenu = forwardRef<
     }
     const count = visible.length;
     const at = buttons.current.findIndex((node) => node === document.activeElement);
-    const go = (to: number) => {
+    const go = (to: number, step = 1) => {
       event.preventDefault();
-      const next = (to + count) % count;
-      buttons.current[next]?.focus();
-      light(next);
+      for (let offset = 0; offset < count; offset += 1) {
+        const next = (((to + offset * step) % count) + count) % count;
+        const button = buttons.current[next];
+        if (!button || button.disabled) continue;
+        button.focus();
+        light(next);
+        break;
+      }
     };
     if (event.key === "ArrowRight" || event.key === "ArrowDown") go(at + 1);
-    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") go(at < 0 ? count - 1 : at - 1);
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp")
+      go(at < 0 ? count - 1 : at - 1, -1);
     else if (event.key === "Home") go(0);
-    else if (event.key === "End") go(count - 1);
+    else if (event.key === "End") go(count - 1, -1);
   };
 
   const tool = (
@@ -328,6 +341,7 @@ export const RadialMenu = forwardRef<
           )}
         </div>
         <div className="st-rad-tools" role="toolbar" aria-label="أدوات الدائرة">
+          {props.onLanguage && tool("لغة الشرح", Languages, props.onLanguage)}
           {props.hasSelection && tool("امسح التحديد", Eraser, props.onClear)}
           {props.hasSelection &&
             props.canReport &&
@@ -372,12 +386,20 @@ export const RadialMenu = forwardRef<
               aria-checked={item.checked}
               className="st-rad-item"
               disabled={item.disabled || props.busy}
+              title={
+                item.disabled
+                  ? item.id === "meaning"
+                    ? "حدّد كلمة أو عبارة قصيرة بالإنجليزي أو الألماني"
+                    : "حدّد كلمة أو جملة من الدرس"
+                  : item.label
+              }
               data-hot={hot === i ? "" : undefined}
               data-placeholder={item.placeholder ? "" : undefined}
               data-checked={item.checked ? "" : undefined}
               data-tone={item.tone}
+              data-service={item.id === "explain" || item.id === "meaning" ? item.id : undefined}
               data-picked={picked === item.id ? "" : undefined}
-              tabIndex={i === 0 ? 0 : -1}
+              tabIndex={i === visible.findIndex((option) => !option.disabled) ? 0 : -1}
               style={{
                 left: cx,
                 top: cy,

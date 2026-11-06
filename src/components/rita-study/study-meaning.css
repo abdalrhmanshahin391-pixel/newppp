@@ -1,0 +1,128 @@
+/* A small, non-modal card inside the study area: the guide stays usable. */
+.st-meaning {
+  position: absolute;
+  z-index: 24;
+  bottom: 18px;
+  right: 18px;
+  width: min(340px, calc(100% - 36px));
+  max-height: calc(100% - 36px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 18px;
+  border: 1px solid var(--pp-line);
+  border-radius: 16px;
+  background: #fff;
+  color: var(--pp-ink);
+  box-shadow: 0 12px 36px rgb(18 17 23 / 0.16);
+  font-size: 14px;
+  line-height: 1.6;
+  animation: study-meaning-in 180ms var(--pp-ease) both;
+}
+.st-meaning-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.st-meaning-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pp-muted);
+}
+.st-meaning-head button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: -8px -8px -8px 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--pp-muted);
+  cursor: pointer;
+}
+.st-meaning-head button:hover {
+  background: var(--pp-grey);
+  color: var(--pp-ink);
+}
+.st-meaning-term {
+  margin: 18px 0 12px;
+  font-size: 21px;
+  font-weight: 650;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.st-meaning-result {
+  min-height: 64px;
+  margin-bottom: 18px;
+  overflow-wrap: anywhere;
+}
+.st-meaning-translation {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+.st-meaning-muted {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 0;
+  color: var(--pp-muted);
+  font-size: 13px;
+}
+.st-meaning-retry {
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  padding: 0 4px;
+  color: var(--pp-accent-text);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.st-meaning-play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--pp-accent);
+  color: var(--pp-on-accent);
+  font-weight: 600;
+  cursor: pointer;
+}
+.st-meaning-play:hover:not(:disabled) {
+  background: var(--pp-accent-hover);
+}
+.st-meaning-play:disabled {
+  background: var(--pp-grey);
+  color: var(--pp-muted);
+  cursor: default;
+}
+.st-meaning button:focus-visible {
+  outline: 2px solid var(--pp-accent);
+  outline-offset: 3px;
+}
+@keyframes study-meaning-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .st-meaning {
+    animation: none;
+  }
+}

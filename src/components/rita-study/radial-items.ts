@@ -53,7 +53,7 @@ const ICONS: Record<StudyAction, LucideIcon> = {
 
 /** Short names for the ring (the full wording is still used for Rita's requests). */
 const SHORT: Partial<Record<StudyAction, string>> = {
-  explain: "اشرح",
+  explain: "اشرحلي",
   simplify: "بسّط بمثال",
   meaning: "معنى ونطق",
   explain_back: "أنا بشرح",
@@ -64,10 +64,9 @@ const SHORT: Partial<Record<StudyAction, string>> = {
 };
 
 /**
- * What the ring shows for now: only the flashcards and the four-option questions. The explain
- * actions still exist (Rita's voice worker knows them); add them here to bring them back.
+ * The first two study services. Other actions remain available in their own workspaces.
  */
-export const RING_ACTIONS: StudyAction[] = ["make_cards", "make_mcq"];
+export const RING_ACTIONS: StudyAction[] = ["explain", "meaning"];
 
 export function actionItem(action: StudyAction): RadialItem {
   return { id: action, label: SHORT[action] ?? ACTION_INFO[action].label, Icon: ICONS[action] };
@@ -85,13 +84,12 @@ export const KIND_LABEL: Record<SelectionKind, string> = {
   non_text: "",
 };
 
-/** The ring's options for what is selected, then the language Rita explains in. */
+/** Keep both services discoverable; unsuitable selections disable the relevant service. */
 export function ringItems(options: { actions: StudyAction[] }): RadialItem[] {
-  return [
-    ...RING_ACTIONS.filter((action) => options.actions.includes(action)).map(actionItem),
-    LANGUAGE_ITEM,
-    WINDOW_ITEM,
-  ];
+  return RING_ACTIONS.map((action) => ({
+    ...actionItem(action),
+    disabled: !options.actions.includes(action),
+  }));
 }
 
 /** Temporary, local-only preview with three sample questions. Remove after design approval. */

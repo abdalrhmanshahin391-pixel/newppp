@@ -153,7 +153,7 @@ export const resolveStudyRequest = createServerFn({ method: "POST" })
 
 const TEXT_ACTIONS: Partial<Record<StudyAction, string>> = {
   explain:
-    "Explain the selected part for this learner: 3 to 6 short sentences, one example, then optionally one short check question.",
+    "Explain only the selected part in 1 to 3 short, simple sentences. Add at most one tiny example when helpful. No quiz, check question, follow-up question, or request for the learner to explain back. Stop after the explanation.",
   simplify:
     "Give one short solved example of the same idea, simpler than the guide. No long explanation.",
   compare_arabic:
