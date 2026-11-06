@@ -5,12 +5,16 @@ import { introSound } from "@/components/rita-study/tech-sound";
 
 /** How long the word takes to draw; the lesson's lines and the heavy study page wait for it. */
 const DRAWN_MS = 1100;
+/** When a lesson known in advance shows its title (while the word is still drawing). */
+const INFO_AT_MS = 450;
 /** The least time the lesson's title stays before the intro leaves. */
 const HOLD_MS = 700;
-/** The most time the intro waits for the page underneath once the lesson is known. */
+/** The most time the intro waits for the page underneath once the lesson's data is here. */
 const MAX_WAIT_MS = 2600;
-/** The intro's own exit (opacity and a slight grow). */
-const LEAVE_MS = 350;
+/** A wait longer than this shows the loading bar (shorter waits would only flash it). */
+const BAR_AFTER_MS = 450;
+/** The intro's own exit: its words fade first, then the navy. */
+const LEAVE_MS = 420;
 const REDUCED_HOLD_MS = 500;
 /** A second intro mounting this soon after the first (another page of the same entry) continues it. */
 const CONTINUE_MS = 6000;
@@ -33,20 +37,26 @@ export type IntroLesson = { title: string; titleAr: string; sections: number };
 export function LessonIntro({
   lesson,
   error,
+  loaded,
   pageReady = false,
   onDrawn,
+  onRetry,
   onDone,
   backTo = "/rita-lessons",
   backLabel = "رجوع للدروس",
 }: {
-  /** Null while the lesson is loading. */
+  /** What is known of the lesson (from the lessons list, then from its data); null if nothing yet. */
   lesson: IntroLesson | null;
+  /** The lesson's data has arrived (the page underneath can be built). Defaults to `lesson` given. */
+  loaded?: boolean;
   /** A message when the lesson cannot open: shown on the intro with a way back. */
   error: string;
   /** The page underneath has drawn its guide. */
   pageReady?: boolean;
   /** The word is drawn and the lesson shown on it: the page underneath may be built now. */
   onDrawn?: () => void;
+  /** Offered with the error: asks for the lesson again. */
+  onRetry?: () => void;
   onDone?: () => void;
   backTo?: "/rita-lessons" | "/admin";
   backLabel?: string;
@@ -86,7 +96,19 @@ export function LessonIntro({
     return () => window.clearTimeout(timer);
   }, [elapsed, reduced]);
 
+  const hasData = loaded ?? Boolean(lesson);
   const showLesson = drawn && Boolean(lesson) && !error;
+  // A lesson already known (from the tap in the lessons list) shows with the word, while its letters
+  // are still drawing; one only known later rolls in when it arrives.
+  const [early, setEarly] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () => setEarly(true),
+      reduced ? 0 : Math.max(0, INFO_AT_MS - elapsed),
+    );
+    return () => window.clearTimeout(timer);
+  }, [elapsed, reduced]);
+  const infoShown = (drawn || early) && Boolean(lesson) && !error;
   useEffect(() => {
     if (!showLesson) return;
     setShownAt(Date.now());
@@ -102,15 +124,34 @@ export function LessonIntro({
     };
   }, [showLesson]);
 
-  // Shown: once the page is ready and the title has stayed a moment, leave (or stop waiting).
+  const [loadedAt, setLoadedAt] = useState(0);
   useEffect(() => {
-    if (!showLesson || !shownAt || leaving) return;
+    if (hasData) setLoadedAt(Date.now());
+  }, [hasData]);
+
+  // Ready (data here, page drawn, title seen a moment): leave. Data here but the page slow to draw:
+  // leave after MAX_WAIT_MS anyway rather than hold the learner.
+  useEffect(() => {
+    if (!showLesson || !shownAt || !hasData || !loadedAt || leaving) return;
     const hold = reduced ? REDUCED_HOLD_MS : HOLD_MS;
-    const since = Date.now() - shownAt;
-    const wait = pageReady ? Math.max(0, hold - since) : Math.max(0, MAX_WAIT_MS - since);
+    const wait = pageReady
+      ? Math.max(0, hold - (Date.now() - shownAt))
+      : Math.max(0, MAX_WAIT_MS - (Date.now() - loadedAt));
     const timer = window.setTimeout(() => setLeaving(true), wait);
     return () => window.clearTimeout(timer);
-  }, [leaving, pageReady, reduced, showLesson, shownAt]);
+  }, [hasData, leaving, loadedAt, pageReady, reduced, showLesson, shownAt]);
+
+  // Still waiting once the word is drawn: a clear loading bar (not shown for a short wait).
+  const waiting = drawn && !error && !leaving && !(hasData && pageReady);
+  const [barShown, setBarShown] = useState(false);
+  useEffect(() => {
+    if (!waiting) {
+      setBarShown(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setBarShown(true), BAR_AFTER_MS);
+    return () => window.clearTimeout(timer);
+  }, [waiting]);
 
   useEffect(() => {
     if (!leaving) return;
@@ -128,7 +169,6 @@ export function LessonIntro({
     <div
       className="uz-splash uz-lintro"
       data-tone="dark"
-      data-waiting={drawn && !lesson && !error ? "" : undefined}
       data-leaving={leaving ? "" : undefined}
       style={elapsed > 0 ? { ["--lintro-t" as string]: `${elapsed}ms` } : undefined}
       role="status"
@@ -153,13 +193,20 @@ export function LessonIntro({
       {error ? (
         <div className="uz-lintro-info is-shown" dir="rtl">
           <p className="uz-lintro-error">{error}</p>
-          <Link to={backTo} className="uz-lintro-back">
-            {backLabel}
-          </Link>
+          <div className="uz-lintro-actions">
+            {onRetry && (
+              <button type="button" className="uz-lintro-back is-primary" onClick={onRetry}>
+                جرّب كمان مرة
+              </button>
+            )}
+            <Link to={backTo} className="uz-lintro-back">
+              {backLabel}
+            </Link>
+          </div>
         </div>
       ) : (
         lesson && (
-          <div className={`uz-lintro-info${showLesson ? " is-shown" : ""}`} aria-hidden="true">
+          <div className={`uz-lintro-info${infoShown ? " is-shown" : ""}`} aria-hidden="true">
             <p className="uz-lintro-label">الدرس</p>
             <p className="uz-lintro-title" dir="auto">
               {lesson.title}
@@ -178,6 +225,17 @@ export function LessonIntro({
             )}
           </div>
         )
+      )}
+
+      {!error && (
+        <div className="uz-lintro-load" data-shown={barShown ? "" : undefined} aria-hidden="true">
+          <span className="uz-lintro-bar">
+            <span />
+          </span>
+          <span className="uz-lintro-load-text" dir="rtl">
+            جاري تجهيز الدرس…
+          </span>
+        </div>
       )}
     </div>
   );

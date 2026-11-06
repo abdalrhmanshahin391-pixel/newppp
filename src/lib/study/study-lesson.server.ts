@@ -27,33 +27,37 @@ export async function loadStudyLesson(
   preview = false,
 ): Promise<StudyLessonResult> {
   if (!/^[0-9a-f-]{36}$/i.test(lessonId)) return { ok: false, reason: "unavailable" };
-  const { data: lesson, error } = await db
-    .from("rita_lessons")
-    .select(
-      "id, title, title_ar, topic, objectives, status, experience, study_guide_id, curriculum:rita_curricula!inner(status)",
-    )
-    .eq("id", lessonId)
-    .maybeSingle();
+  // The lesson, the study switch and (for a preview) the admin check do not depend on each other:
+  // they go out together, so opening a lesson waits for two database round trips (the lesson, then
+  // its guide); an admin's preview used to wait for three.
+  const [{ data: lesson, error }, switchOn, previewAdmin] = await Promise.all([
+    db
+      .from("rita_lessons")
+      .select(
+        "id, title, title_ar, topic, objectives, status, experience, study_guide_id, curriculum:rita_curricula!inner(status)",
+      )
+      .eq("id", lessonId)
+      .maybeSingle(),
+    studySwitchOn(db),
+    preview ? isAdmin(db, userId) : Promise.resolve(false),
+  ]);
   if (error || !lesson) return { ok: false, reason: error ? "classic" : "unavailable" };
   const published =
     lesson.status === "published" &&
     (lesson.curriculum as { status?: string } | null)?.status === "published";
   // Preview is admin only, even for a published lesson.
-  const admin = !published || preview ? await isAdmin(db, userId) : false;
+  const admin = preview ? previewAdmin : !published ? await isAdmin(db, userId) : false;
   if ((!published || preview) && (!admin || lesson.status === "archived"))
     return { ok: false, reason: "unavailable" };
   const adminPreview = preview && admin;
   if (lesson.experience !== "study" || !lesson.study_guide_id)
     return { ok: false, reason: "classic" };
 
-  const [{ data: guide }, switchOn] = await Promise.all([
-    db
-      .from("rita_lesson_guides")
-      .select("id, title, version, status, content, learner_path, allow_download")
-      .eq("id", lesson.study_guide_id)
-      .maybeSingle(),
-    studySwitchOn(db),
-  ]);
+  const { data: guide } = await db
+    .from("rita_lesson_guides")
+    .select("id, title, version, status, content, learner_path, allow_download")
+    .eq("id", lesson.study_guide_id)
+    .maybeSingle();
   const experience = effectiveExperience({
     experience: lesson.experience,
     guide: guide ? { status: String(guide.status), learner_path: guide.learner_path } : null,
