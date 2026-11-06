@@ -74,7 +74,18 @@ function useWide(min: number): boolean {
  * a draggable divider on wide screens and two tabs on phones. Rita never starts teaching on her own
  * here; the learner reads and asks.
  */
-export function StudyPage({ data }: { data: StudyLessonData }) {
+export function StudyPage({
+  data,
+  onReady,
+}: {
+  data: StudyLessonData;
+  /** The guide has been drawn (the lesson intro over the page may leave now). */
+  onReady?: () => void;
+}) {
+  const readyRef = useRef(onReady);
+  useEffect(() => {
+    readyRef.current = onReady;
+  });
   const { lesson, guide, preview } = data;
   const wide = useWide(900);
   const [tab, setTab] = useState<"guide" | "rita">("guide");
@@ -304,6 +315,8 @@ export function StudyPage({ data }: { data: StudyLessonData }) {
           if (!menuOpenRef.current && doc.getSelection()?.isCollapsed) keepSelection(null);
         }, 120);
       });
+      // The guide is drawn and placed: one more frame, then tell the intro it may leave.
+      requestAnimationFrame(() => readyRef.current?.());
     },
     [bridge, keepSelection, lesson.id, segments],
   );

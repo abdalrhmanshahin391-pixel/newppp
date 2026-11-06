@@ -8371,10 +8371,34 @@ html.rita-app,
    then the lesson's title rolls in with one dot per section, and the intro fades away over the
    study page. */
 .uz-lintro {
-  animation: uz-sp-in 0.25s ease both;
+  /* --lintro-t: how far into the entry this intro starts (a later page of the same entry carries
+     on instead of drawing again); every delay below subtracts it. */
+  animation: uz-sp-in 0.2s ease calc(0s - var(--lintro-t, 0s)) both;
   transition:
-    opacity 450ms ease,
-    transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 350ms ease,
+    transform 350ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Quicker than the language splash, and the letters spread with a transform instead of animating
+   the gap (which would lay the page out again on every frame). */
+.uz-lintro .uz-splash-word {
+  gap: clamp(14px, 4.4vw, 40px);
+  animation: none;
+}
+.uz-lintro .uz-splash-letter {
+  animation: uz-lintro-spread 1.2s cubic-bezier(0.16, 1, 0.3, 1) calc(0.05s - var(--lintro-t, 0s))
+    both;
+}
+@keyframes uz-lintro-spread {
+  from {
+    transform: translateX(calc((2 - var(--i)) * clamp(11px, 3.6vw, 33px)));
+  }
+}
+.uz-lintro .uz-splash-letter path {
+  animation: uz-sp-draw 0.8s cubic-bezier(0.65, 0, 0.35, 1)
+    calc(0.1s + var(--i) * 0.08s - var(--lintro-t, 0s)) both;
+}
+.uz-lintro .uz-splash-rule {
+  animation: uz-sp-rule 0.5s var(--uz-ease) calc(0.85s - var(--lintro-t, 0s)) both;
 }
 .uz-lintro[data-leaving] {
   opacity: 0;
@@ -8383,8 +8407,8 @@ html.rita-app,
 }
 .uz-lintro[data-waiting] .uz-splash-rule {
   animation:
-    uz-sp-rule 0.7s var(--uz-ease) 1.35s both,
-    uz-lintro-breathe 1.6s ease-in-out 2.05s infinite;
+    uz-sp-rule 0.5s var(--uz-ease) calc(0.85s - var(--lintro-t, 0s)) both,
+    uz-lintro-breathe 1.6s ease-in-out 1.4s infinite;
 }
 @keyframes uz-lintro-breathe {
   50% {
@@ -8403,8 +8427,8 @@ html.rita-app,
   opacity: 0;
   transform: translateY(12px);
   transition:
-    opacity 0.6s ease,
-    transform 0.7s cubic-bezier(0.2, 1, 0.3, 1);
+    opacity 0.45s ease,
+    transform 0.55s cubic-bezier(0.2, 1, 0.3, 1);
 }
 .uz-lintro-info.is-shown {
   opacity: 1;
@@ -8435,7 +8459,7 @@ html.rita-app,
   background: rgb(243 245 251 / 0.18);
 }
 .uz-lintro-info.is-shown .uz-lintro-dots span {
-  animation: uz-lintro-dot 0.4s ease calc(0.35s + var(--i) * 0.12s) both;
+  animation: uz-lintro-dot 0.3s ease calc(0.2s + var(--i) * 0.08s) both;
 }
 @keyframes uz-lintro-dot {
   to {
@@ -8473,6 +8497,9 @@ html.rita-app,
   .uz-lintro-info {
     transform: none;
   }
+  .uz-lintro .uz-splash-letter,
+  .uz-lintro .uz-splash-letter path,
+  .uz-lintro .uz-splash-rule,
   .uz-lintro[data-waiting] .uz-splash-rule,
   .uz-lintro-info.is-shown .uz-lintro-dots span {
     animation: none;
@@ -8482,42 +8509,38 @@ html.rita-app,
   }
 }
 
-/* Starting a call (HoldToStart): a black circle with the Uzyra mark at the bottom of Rita's column,
-   where the message field will be. Held, it fills with white from the bottom like a liquid (a slowly
-   turning rounded square makes the wave); the white mark becomes black where the liquid covers it
-   (difference blend). Full, it shrinks away and a thin ring turns while the call connects; then the
-   message field rises into the same place. */
+/* Starting a call (HoldToStart): an 84px black circle with the Uzyra mark at the bottom of Rita's
+   column, where the message field will be. Held, a white disc grows from its centre to the edge
+   (only its transform moves, so it stays smooth while the page works); the white mark turns black
+   where the white covers it (difference blend). Full, it shrinks away and a thin ring turns while
+   the call connects; then the message field rises into the same place. */
 .uz-hold {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 10px 0 6px;
+  padding: 8px 0 6px;
 }
 .uz-hold-btn {
-  --fill: 0;
   position: relative;
   display: grid;
   place-items: center;
-  width: 64px;
-  height: 64px;
+  width: 84px;
+  height: 84px;
   overflow: hidden;
   isolation: isolate;
   border-radius: 50%;
   background: #111;
   box-shadow:
     0 0 0 1px rgb(17 17 17 / 0.08),
-    0 10px 24px -10px rgb(17 17 17 / 0.45);
+    0 12px 28px -12px rgb(17 17 17 / 0.5);
   cursor: pointer;
   touch-action: none;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  transform: scale(calc(1 - var(--fill) * 0.06));
-  transition:
-    transform 120ms ease,
-    opacity 260ms ease;
+  transition: opacity 260ms ease;
 }
 .uz-hold-btn:disabled {
   opacity: 0.4;
@@ -8527,27 +8550,19 @@ html.rita-app,
   outline: 2px solid #2b6df0;
   outline-offset: 4px;
 }
-.uz-hold-liquid {
+.uz-hold-fill {
   position: absolute;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  /* Empty: just below the circle; full: covering it. */
-  top: calc(100% - var(--fill) * 118%);
-  border-radius: 42%;
+  inset: 0;
+  border-radius: 50%;
   background: #fff;
-  animation: uz-hold-wave 3.2s linear infinite;
-}
-@keyframes uz-hold-wave {
-  to {
-    transform: rotate(360deg);
-  }
+  transform: scale(0);
+  will-change: transform;
 }
 .uz-hold-mark {
   position: relative;
   z-index: 1;
   width: auto;
-  height: 24px;
+  height: 30px;
   color: #fff;
   mix-blend-mode: difference;
   pointer-events: none;
@@ -8570,7 +8585,7 @@ html.rita-app,
   gap: 10px;
   justify-content: center;
   /* The same height as the circle and its words, so nothing above moves when they swap. */
-  min-height: 110px;
+  min-height: 128px;
   padding: 10px 0 6px;
   color: #8a8a87;
   font-size: 12px;
@@ -8607,14 +8622,6 @@ html.rita-app,
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .uz-hold-liquid {
-    top: calc(100% - var(--fill) * 100%);
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 0;
-    animation: none;
-  }
   .uz-hold-btn,
   .uz-hold-btn[data-done] {
     transform: none;
