@@ -36,9 +36,15 @@ function RitaStudyRoute() {
   const loadFn = useServerFn(getStudyLesson);
   const [result, setResult] = useState<StudyPageResult | null>(null);
   const [error, setError] = useState("");
-  // The entering intro plays over the page while the lesson loads, then leaves.
+  // The entering intro plays over the page while the lesson loads, then leaves. The page itself is
+  // built only once the intro's word is drawn (building it is heavy and would stall the drawing),
+  // and the intro leaves once the page says its guide is drawn.
   const [introDone, setIntroDone] = useState(false);
+  const [introDrawn, setIntroDrawn] = useState(false);
+  const [pageReady, setPageReady] = useState(false);
   const finishIntro = useCallback(() => setIntroDone(true), []);
+  const drawn = useCallback(() => setIntroDrawn(true), []);
+  const ready = useCallback(() => setPageReady(true), []);
 
   useEffect(() => {
     if (!loading && !user) void navigate({ to: "/login" });
@@ -79,10 +85,14 @@ function RitaStudyRoute() {
   const data = result?.status === "study" ? result.data : null;
   return (
     <>
-      {data && <StudyPage key={`${lesson}:${preview ? 1 : 0}`} data={data} />}
+      {data && (introDrawn || introDone) && (
+        <StudyPage key={`${lesson}:${preview ? 1 : 0}`} data={data} onReady={ready} />
+      )}
       {!introDone && (
         <LessonIntro
           error={failed}
+          pageReady={pageReady}
+          onDrawn={drawn}
           lesson={
             data
               ? {

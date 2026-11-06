@@ -45,7 +45,9 @@ Page `#fff`; dark device screen `linear-gradient(162deg, #26252e, #121117)`.
   "Uzyra Arabic", limited to the Arabic Unicode ranges and first in every font stack, so Arabic
   letters always use it and Latin letters fall through to Figtree / Inter Tight. Never name another
   Arabic face (no Noto, no system fallback). The guide sheet and its PDF keep their own embedded
-  Noto Sans Arabic so the page and the PDF stay identical.
+  Noto Sans Arabic so the page and the PDF stay identical. Any new font file must pass the browser
+  font sanitizer (OTS; Firefox drops a layout table it rejects, which loses the mark placement): the
+  Graphik files were rebuilt with fontTools so their coverage tables are sorted.
 - h1 48/52 on phones, 64/68 from 1024px. h2 line-height 1.08.
 - Body 16px minimum for anything the learner reads or types (no smaller inputs: iOS zooms).
   Helper text 12–14px only for secondary notes.
@@ -403,15 +405,16 @@ until it is linked). The kind can be changed later in the lesson window, tab «�
 The study page's Rita column (`.uz-rc-*`, RitaRealtimeV3 in study mode) follows the ChatGPT / Claude
 chat pages, measured from the owner's reference and scaled ×0.82 so the column keeps that calm,
 large-screen feel. Page #F7F7F6. Before the call: the UZYRA wordmark and Rita's cube big in the
-middle, and no message field yet: at the bottom a 64px black circle with the white Uzyra mark
-(`HoldToStart`, «اضغط مطوّلاً لتبدأ» under it in 12px #8A8A87). The call starts only by holding it:
-held (pointer, or Space / Enter), it fills with white from the bottom like a liquid in 950ms (a
-slowly turning rounded square makes the wave; the mark turns black where the white covers it) and
-shrinks 6%; let go early and it drains back in 420ms and nothing happens. Full, it shrinks away
-(scale 0.6, fades), a thin 40px ring turns in its place while the call connects (the same 110px
-height, so nothing moves), and once Rita is connected the composer rises into that place (460ms).
-After a failed call the circle comes back empty with «اضغط مطوّلاً لتعيد الاتصال». Reduced motion:
-the liquid is a straight level, no shrinking or rising. When the call starts the cube flies down to
+middle, and no message field yet: at the bottom an 84px black circle with the white Uzyra mark
+(30px; `HoldToStart`, «اضغط مطوّلاً لتبدأ» under it in 12px #8A8A87). The call starts only by holding
+it: held (pointer, or Space / Enter), a white disc grows from its centre to the edge in 950ms (only
+its transform moves; the mark turns black where the white covers it) while the circle gives 5%, and
+a soft tone (a root and its fifth) rises in pitch and volume with the fill; let go early and the disc
+shrinks back in 420ms, the tone falls away and nothing happens. Full, a small rising chord plays, the
+circle shrinks away (scale 0.6, fades), a thin 40px ring turns in its place while the call connects
+(the same 128px height, so nothing moves), and once Rita is connected the composer rises into that
+place (460ms). After a failed call the circle comes back empty with «اضغط مطوّلاً لتعيد الاتصال».
+Reduced motion: the circle does not shrink and nothing rises; the disc still grows. When the call starts the cube flies down to
 sit just above the composer (FlyingCube). Rita writes without a bubble: a quiet 12px line first (her mark in a 26px white circle,
 «ريتا», the circle request it answers, and on the newest answer what she is doing now) over a hairline
 #E4E4E1, then 13px text #2B2B2B at 1.95 line height, paragraphs 12px apart, bold #161616. Words in the
@@ -454,15 +457,26 @@ has already happened, nothing waits for it, and a tap anywhere or Escape closes 
 
 ## Entering a lesson (`LessonIntro`)
 
-Opening a lesson (`/rita-study`) no longer shows a spinner. The language-change picture in its dark
-form plays instead: UZYRA drawn in fine white lines on deep navy and a hairline opening under it
-(the same `LETTERS` and `.uz-splash` pieces). After 1.5s the lesson itself rolls in under the line:
-a small «الدرس» (12px), its title (22px Inter Tight, white), its Arabic title (15px, grey) when it differs, and one
-small dot per section of its guide lighting up in turn. While the lesson is still loading, the
-hairline breathes. When it is ready it holds 1.4s, then leaves (opacity and a 3% grow, 450ms) over
-the study page, which has been loading underneath. If the lesson cannot open, the message and a
-«رجوع للدروس» pill stay on the same dark page. Reduced motion: no drawing, the words simply show and
-it leaves after 0.9s. It is a `role="status"` region that says the lesson's name.
+Opening a lesson (`/rita-study`, and the admin's sample at `/admin/study-sample`) shows no spinner.
+The language-change picture in its dark form plays instead: UZYRA drawn in fine white lines on deep
+navy (0.8s per letter, 80ms apart; the letters spread from the centre with a transform, never by
+animating the gap) and a hairline opening under it at 0.85s (the same `LETTERS` and `.uz-splash`
+pieces). A soft sound starts with it (filtered noise rising, then an open chord as the line opens;
+generated in `tech-sound.ts`, off when the study page's sound is off; Safari plays it only when the
+tap that opened the lesson woke the sound, so a direct visit is silent). At 1.1s the lesson rolls in
+under the line: «الدرس» (12px), its title (22px Inter Tight, white), its Arabic title (15px, grey)
+when it differs, and one small dot per section of its guide lighting up in turn. While the lesson
+is still loading, the hairline breathes.
+
+Smoothness rules: the study page underneath is not built until the word is drawn and the title has
+started rolling in (`onDrawn`), because building it would stall the line drawing; the intro then
+leaves once the page reports its guide drawn (`pageReady`), after at least 0.7s on the title and at
+most 2.6s (opacity and a 3% grow, 350ms). With the CPU slowed 4x a whole entry takes about 2.2s and
+no frame stalls while the letters draw. The admin's sample page shows the same intro while the sample
+is prepared and the lesson page carries it on from the same moment (`--lintro-t`) instead of drawing
+again. If the lesson cannot open, the message and a way back stay on the same dark page. Reduced
+motion: no drawing, the words simply show and it leaves after 0.5s. It is a `role="status"` region
+that says the lesson's name.
 
 ## Home scale (`.uz-home`, first screen and header)
 

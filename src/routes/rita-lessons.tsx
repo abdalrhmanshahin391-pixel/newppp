@@ -12,6 +12,7 @@ import {
 import { LessonPathView } from "@/components/rita-lessons/LessonPathView";
 import { LessonSheet } from "@/components/rita-lessons/LessonSheet";
 import type { PathItem } from "@/lib/rita-path-layout";
+import { unlockSound } from "@/components/rita-study/tech-sound";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
@@ -66,6 +67,8 @@ function RitaLessonsPage() {
   function start(lesson: PathLesson) {
     // The server decided the lesson's real experience: the study page only when it is ready.
     if (lesson.experience === "study") {
+      // This tap is the moment Safari allows sound, so the lesson intro can play its sound.
+      unlockSound();
       void navigate({ to: "/rita-study", search: { lesson: lesson.id } });
       return;
     }

@@ -207,3 +207,120 @@ export function confirmSound(): void {
     tone(a, 1568, 0.1, 0.09, 0.04);
   });
 }
+
+// ── Starting a call and entering a lesson ───────────────────────────────────────────────────────
+
+/** A soft sine "bell": quick attack, long fade. */
+function bell(a: AudioContext, freq: number, start: number, length: number, volume: number) {
+  const osc = a.createOscillator();
+  const gain = a.createGain();
+  const at = a.currentTime + start;
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(freq, at);
+  gain.gain.setValueAtTime(0, at);
+  gain.gain.linearRampToValueAtTime(volume, at + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
+  osc.connect(gain).connect(a.destination);
+  osc.start(at);
+  osc.stop(at + length + 0.05);
+}
+
+type HoldVoice = { low: OscillatorNode; high: OscillatorNode; gain: GainNode };
+let holdVoice: HoldVoice | null = null;
+
+/**
+ * Holding the call circle: a soft two-oscillator tone (a root and its fifth, through a gentle
+ * low-pass) whose pitch and volume rise with the fill and fall again as it drains. Called once per
+ * frame with the current fill; at 0 the tone fades out and stops.
+ */
+export function holdTone(fill: number): void {
+  if (fill <= 0 || !soundOn()) {
+    endHoldTone();
+    return;
+  }
+  const a = audio();
+  if (!a) return;
+  if (a.state !== "running") {
+    void a.resume().catch(() => undefined);
+    return;
+  }
+  const now = a.currentTime;
+  if (!holdVoice) {
+    const low = a.createOscillator();
+    const high = a.createOscillator();
+    const filter = a.createBiquadFilter();
+    const gain = a.createGain();
+    low.type = "sine";
+    high.type = "triangle";
+    filter.type = "lowpass";
+    filter.frequency.value = 1600;
+    gain.gain.setValueAtTime(0, now);
+    low.connect(filter);
+    high.connect(filter);
+    filter.connect(gain).connect(a.destination);
+    low.start(now);
+    high.start(now);
+    holdVoice = { low, high, gain };
+  }
+  const freq = 196 * Math.pow(2, fill * 1.5);
+  holdVoice.low.frequency.setTargetAtTime(freq, now, 0.03);
+  holdVoice.high.frequency.setTargetAtTime(freq * 1.5, now, 0.03);
+  holdVoice.gain.gain.setTargetAtTime(0.02 + fill * 0.035, now, 0.05);
+}
+
+/** Fades the hold tone out (let go, drained, or full). */
+export function endHoldTone(): void {
+  const voice = holdVoice;
+  holdVoice = null;
+  const a = ctx;
+  if (!voice || !a) return;
+  const now = a.currentTime;
+  voice.gain.gain.cancelScheduledValues(now);
+  voice.gain.gain.setTargetAtTime(0, now, 0.04);
+  voice.low.stop(now + 0.3);
+  voice.high.stop(now + 0.3);
+}
+
+/** The circle is full and the call starts: a small rising major chord. */
+export function holdDoneSound(): void {
+  endHoldTone();
+  if (!soundOn()) return;
+  whenRunning((a) => {
+    bell(a, 784, 0, 0.5, 0.05);
+    bell(a, 988, 0.06, 0.5, 0.04);
+    bell(a, 1175, 0.12, 0.7, 0.04);
+  });
+}
+
+/**
+ * The UZYRA intro starts drawing: an airy breath (filtered noise sweeping up while the letters
+ * draw) that settles on a soft open chord as the hairline opens. Plays only when the sound is
+ * already awake (a tap on the lesson wakes it), never late.
+ */
+export function introSound(): void {
+  if (!soundOn()) return;
+  const a = ctx;
+  if (!a || a.state !== "running") return;
+  const now = a.currentTime;
+  const length = 1.1;
+  const noise = a.createBuffer(1, Math.ceil(a.sampleRate * length), a.sampleRate);
+  const data = noise.getChannelData(0);
+  for (let i = 0; i < data.length; i += 1) data[i] = Math.random() * 2 - 1;
+  const source = a.createBufferSource();
+  const band = a.createBiquadFilter();
+  const gain = a.createGain();
+  source.buffer = noise;
+  band.type = "bandpass";
+  band.Q.value = 1.2;
+  band.frequency.setValueAtTime(380, now);
+  band.frequency.exponentialRampToValueAtTime(2600, now + length);
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.03, now + 0.35);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + length);
+  source.connect(band).connect(gain).connect(a.destination);
+  source.start(now);
+  source.stop(now + length);
+  bell(a, 523, 0.85, 1.4, 0.035);
+  bell(a, 784, 0.9, 1.4, 0.028);
+  bell(a, 1047, 0.95, 1.6, 0.022);
+}
