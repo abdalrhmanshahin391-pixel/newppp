@@ -51,8 +51,13 @@ ACTIONS = {
     "spelling or position only when the supplied context supports it. Do not re-explain the whole "
     "sentence or list other uses. If no reason is established, say you cannot determine it from "
     "this passage; never guess. No quiz, follow-up question, or request to explain back. No sheet.",
-    "common_mistake": "Name the usual mistake in one short sentence. Then a sheet with the wrong "
-    "form, the right form as an example, and why, as a watch-out line.",
+    "common_mistake": "Warn about exactly ONE possible learner mistake tied to the selected rule "
+    "and guide context in one short spoken sentence. Then a small sheet with three labelled lines "
+    "in the explanation language: Wrong (الغلط), Correct (الصح), Why (السبب). "
+    "Use one minimal incorrect/correct pair differing only in the target mistake, and one simple "
+    "reason. This is a preventive example, not a claim that the learner or selected guide text is "
+    "wrong. Never add a second mistake. If context does not support a clear example, say so briefly "
+    "without inventing one. No quiz, fill-in-the-blank, follow-up question, or request to explain back.",
     "summarize_section": "Say what the section is about in one short sentence. Then a sheet with 3 to "
     "5 short points (a small table if the section has one).",
     "explain_reply": "The learner selected a part of YOUR OWN earlier answer and did not understand "
@@ -212,7 +217,7 @@ class StudyVoice:
             "compare_arabic": "قارنها بالعربي",
             "word_by_word": "فكّك الجملة",
             "why_form": "ليش هيك؟",
-            "common_mistake": "شو الغلطة الشائعة هون",
+            "common_mistake": "انتبه للغلطة",
             "summarize_section": "لخّصلي القسم",
             "explain_reply": "اشرحلي ببساطة",
         }

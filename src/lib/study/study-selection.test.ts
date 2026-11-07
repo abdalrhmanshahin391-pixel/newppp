@@ -86,6 +86,17 @@ test("a selected inflected word carries its sentence into the reason request", (
   assert.ok(result.context.includes("She"));
 });
 
+test("mistake prevention accepts rule contexts and refuses isolated or unusable selections", () => {
+  for (const kind of ["phrase", "sentence", "rule", "table_cells", "arabic_only"] as const)
+    assert.ok(availableActions(kind).includes("common_mistake"), kind);
+  for (const kind of ["word", "non_text", "too_long", "multi_block"] as const)
+    assert.ok(!availableActions(kind).includes("common_mistake"), kind);
+  const result = resolveSelection(guide, { segIds: ["i"], exact: seg("i").text }, "common_mistake");
+  assert.ok(result.ok);
+  assert.equal(result.kind, "rule");
+  assert.ok(result.context.includes(seg("i").text));
+});
+
 test("ST-I03 (pure part): a selection that is not in the guide is refused", () => {
   assert.equal(selectionMatches("most verbs", [seg("s1.r1.c1")]), true);
   const ok = resolveSelection(guide, { segIds: ["s1.r1.c1"], exact: "most verbs" }, "explain");

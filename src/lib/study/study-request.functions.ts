@@ -118,7 +118,9 @@ export async function resolveRequest(
     };
 
   if (
-    (data.action === "word_by_word" || data.action === "why_form") &&
+    (data.action === "word_by_word" ||
+      data.action === "why_form" ||
+      data.action === "common_mistake") &&
     !availableActions(resolved.kind).includes(data.action)
   ) {
     return {
@@ -128,7 +130,9 @@ export async function resolveRequest(
         message:
           data.action === "word_by_word"
             ? "حدّد جملة أو عبارة من الدرس عشان نفكّك تركيبها."
-            : "حدّد كلمة أو صيغة قصيرة من الدرس عشان نشرح ليش استخدمناها هون.",
+            : data.action === "common_mistake"
+              ? "حدّد قاعدة أو جملة من الدرس عشان نعرض غلطة مرتبطة فيها."
+              : "حدّد كلمة أو صيغة قصيرة من الدرس عشان نشرح ليش استخدمناها هون.",
       } as const,
     };
   }
@@ -179,7 +183,7 @@ const TEXT_ACTIONS: Partial<Record<StudyAction, string>> = {
   why_form:
     "Explain why the selected word or form is used HERE, using its surrounding sentence and the guide's rule. Identify the relevant subject, tense, agreement, spelling or position only when the supplied context supports it. Answer in 1 to 3 simple short sentences (e.g. studies: He is singular, and consonant + y changes to ies). Do not explain the whole sentence or list other uses. If the context does not establish a reason, say you cannot determine it from this passage; never guess. No quiz, follow-up question, or request to explain back.",
   common_mistake:
-    "Name the mistake Arabic speakers most often make with this part, the correct form, and why, in 2 to 4 sentences.",
+    "Show exactly ONE possible learner mistake directly tied to the selected rule and supplied guide context. Use three short labelled lines in the explanation language: Wrong (الغلط), Correct (الصح), Why (السبب). Give one minimal incorrect/correct pair differing only in the target mistake and one simple sentence explaining the correction. This is a preventive example: never claim the learner or selected guide text made the mistake. Do not list alternatives or add another error. If the supplied context does not support a clear mistake and correction, say so briefly instead of inventing one. No quiz, fill-in-the-blank, follow-up question, or request to explain back.",
   summarize_section: "Summarize this section only, in 3 to 5 short sentences.",
 };
 

@@ -62,14 +62,20 @@ const SHORT: Partial<Record<StudyAction, string>> = {
   compare_arabic: "بالعربي",
   word_by_word: "فكّك الجملة",
   why_form: "ليش هيك؟",
-  common_mistake: "غلطة شائعة",
+  common_mistake: "انتبه للغلطة",
   summarize_section: "لخّص القسم",
 };
 
 /**
- * The first four study services. Other actions remain available in their own workspaces.
+ * The five focused study services. Other actions remain available in their own workspaces.
  */
-export const RING_ACTIONS: StudyAction[] = ["explain", "meaning", "word_by_word", "why_form"];
+export const RING_ACTIONS: StudyAction[] = [
+  "explain",
+  "meaning",
+  "word_by_word",
+  "why_form",
+  "common_mistake",
+];
 
 export function actionItem(action: StudyAction): RadialItem {
   return { id: action, label: SHORT[action] ?? ACTION_INFO[action].label, Icon: ICONS[action] };
@@ -99,7 +105,9 @@ export function ringItems(options: { actions: StudyAction[] }): RadialItem[] {
           ? "حدّد جملة أو عبارة عشان نوضح تركيبها"
           : action === "why_form"
             ? "حدّد كلمة أو صيغة قصيرة داخل الجملة"
-            : "حدّد كلمة أو جملة من الدرس",
+            : action === "common_mistake"
+              ? "حدّد قاعدة أو جملة من الدرس عشان نعرض غلطة مرتبطة فيها"
+              : "حدّد كلمة أو جملة من الدرس",
   }));
 }
 

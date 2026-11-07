@@ -1,8 +1,8 @@
 # DESIGN.md — the visual system of Uzyra (formerly EdithLab) / Rita
 
-## Study circle: first four help services
+## Study circle: five focused help services
 
-The existing draggable study circle offers «اشرحلي», «معنى ونطق», «فكّك الجملة» and «ليش هيك؟». Explanation uses a white
+The existing draggable study circle offers «اشرحلي», «معنى ونطق», «فكّك الجملة», «ليش هيك؟» and «انتبه للغلطة». Explanation uses a white
 disc with an ink icon; meaning uses the blue action disc. Both inherit the radial opening,
 labels and selection strip. Unsuitable selections leave the service visible but disabled.
 Explanation language is a labelled tool in the selection strip. Practice generation and the
@@ -28,7 +28,17 @@ short line per part; the voice reply gives one short sentence with a small table
 sentence in one to three short sentences (one spoken sentence). It never invents a reason when
 the supplied context is insufficient. Both use the existing request lifecycle and explanation
 language; neither quizzes the learner. Unsuitable actions have a specific accessible hint, and
-the selection strip explains when a word or a sentence should be selected. «انتبه للغلطة» is deferred.
+the selection strip explains when a word or a sentence should be selected.
+
+«انتبه للغلطة» uses the existing outlined triangle and dark service disc, with no error-red
+judgement of the learner. From a selected rule, sentence, phrase or related table cells it gives
+exactly one preventive example: «الغلط»، «الصح»، «السبب», one short line each. The pair differs
+only in the target mistake. It never calls correct selected text wrong, quizzes the learner, or
+invents an example when the guide context is insufficient. Arabic rules are supported too.
+In a call it speaks one short warning and puts the same three lines in a small written sheet.
+All five services share the existing loading, stop, retry and request-replacement behaviour.
+When all five cannot fit around the saved circle position, the existing «المزيد» pagination
+keeps the remaining services reachable; touch targets and labels keep their established sizes.
 
 This is the source of truth for every visual change. It was written from the code that is
 already shipped (`src/styles.css`, section "Home page theme", and the Rita components), not
