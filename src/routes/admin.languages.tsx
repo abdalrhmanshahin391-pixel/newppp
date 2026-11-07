@@ -230,7 +230,7 @@ function AdminLanguages() {
         <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-4">
           <div>
             <p className="text-xs font-semibold text-[var(--pp-accent-text)]">لوحة الإدارة</p>
-            <h1 className="text-[28px] font-bold leading-8">لغات التعلّم</h1>
+            <h1 className="rh-app-title font-semibold">لغات التعلّم</h1>
           </div>
           <Link
             to="/admin"

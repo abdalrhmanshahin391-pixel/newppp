@@ -54,7 +54,7 @@ function AiEnginePage() {
             <Sparkles className="h-6 w-6 text-black" />
           </div>
           <div>
-            <h1 className="text-2xl font-black">AI engine</h1>
+            <h1 className="text-2xl font-semibold">AI engine</h1>
             <p className="text-sm text-white/55">
               Every AI tool on the site and the key it uses right now.
             </p>

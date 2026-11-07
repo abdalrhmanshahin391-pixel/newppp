@@ -131,7 +131,7 @@ function RitaXStudio() {
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-[11px] font-black uppercase tracking-[0.28em] text-primary">RitaX</p>
-            <h1 className="text-3xl font-black tracking-tight text-foreground md:text-4xl">
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
               Announcement studio
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">

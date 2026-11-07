@@ -276,7 +276,7 @@ function PromoCodesPage() {
             <span className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/70 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-[#8a5200]">
               <Tag size={13} /> Admin
             </span>
-            <h1 className="mt-3 font-display text-3xl font-black md:text-4xl">Promo codes</h1>
+            <h1 className="mt-3 font-display text-3xl font-semibold md:text-4xl">Promo codes</h1>
             <p className="mt-1 text-[14.5px] text-[#4b4a5c]">
               Create discount codes that apply directly to checkout across all plans.
             </p>

@@ -285,7 +285,7 @@ function AdminDevicesPage() {
           <div className="h-11 w-11 rounded-2xl bg-primary/10 grid place-items-center">
             <ShieldCheck size={22} className="text-primary" />
           </div>
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight">Device Security</h1>
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">Device Security</h1>
         </div>
         <p className="text-muted-foreground mb-8 max-w-2xl">
           Cap how many devices each account can use, lock accounts that are being shared, and hand

@@ -112,7 +112,7 @@ function AdminGermanCoursePage() {
           <div className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-emerald-700 bg-white border border-emerald-200 rounded-full px-3 py-1">
             <Languages className="w-3 h-3" /> Admin · Deutsch
           </div>
-          <h1 className="mt-3 text-3xl md:text-4xl font-black tracking-tight capitalize text-slate-900">
+          <h1 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight capitalize text-slate-900">
             {course?.title ?? "Loading…"}
           </h1>
           <div className="mt-4 flex flex-wrap items-center gap-2">

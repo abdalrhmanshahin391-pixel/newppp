@@ -356,7 +356,7 @@ function AdminPlansPage() {
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className={label}>Admin</p>
-            <h1 className="mt-2 font-display text-3xl font-black">Rita Prices</h1>
+            <h1 className="mt-2 font-display text-3xl font-semibold">Rita Prices</h1>
             <p className="mt-2 max-w-2xl text-[15px] text-[#4b4a5c]">
               Pick a plan on the left, edit it on the right. Limits are enforced on the server
               before any AI call, and the switches lock the matching tool inside the app.
@@ -1106,7 +1106,7 @@ function PlanPreview({ plan }: { plan: AdminPlan }) {
         <p className="mt-2 text-[19px] font-black">{plan.name || "Untitled plan"}</p>
         {plan.tagline && <p className="text-[13.5px] font-semibold text-[#6a697c]">{plan.tagline}</p>}
         <div className="mt-3 flex items-end gap-2">
-          <p className="font-display text-[30px] font-black leading-none">
+          <p className="font-display text-[26px] font-semibold leading-none">
             {money(plan.price_cents, plan.currency)}
           </p>
           {off > 0 && (
