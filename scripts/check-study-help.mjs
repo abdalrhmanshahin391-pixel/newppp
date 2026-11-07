@@ -230,6 +230,7 @@ if (process.argv.includes("--check")) {
       await page.locator("iframe").waitFor();
       await page.frameLocator("iframe").locator("[data-seg]").first().waitFor();
       await page.getByRole("button", { name: "تحديد عبارة", exact: true }).click();
+      await page.locator('.st-orb[data-state="armed"]').waitFor();
       await menu(page);
       const seen = new Set();
       for (let turn = 0; turn < 8; turn += 1) {
@@ -266,6 +267,7 @@ if (process.argv.includes("--check")) {
       assert.equal(await page.locator(".st-practice-front").innerText(), "works");
       await page.keyboard.press("Escape");
       await page.getByRole("button", { name: "تحديد عبارة", exact: true }).click();
+      await page.locator('.st-orb[data-state="armed"]').waitFor();
       await choose(page, "تمارين اختيار");
       await page.locator(".st-practice-option").first().waitFor();
       await page.locator(".st-practice-option").nth(1).click();
@@ -297,6 +299,7 @@ if (process.argv.includes("--check")) {
     await failure.goto(origin + "/preview?fail");
     await failure.frameLocator("iframe").locator("[data-seg]").first().waitFor();
     await failure.getByRole("button", { name: "تحديد عبارة", exact: true }).click();
+    await failure.locator('.st-orb[data-state="armed"]').waitFor();
     await choose(failure, "فلاش كاردز");
     await failure.getByRole("alert").waitFor();
     await failure.evaluate(() => history.replaceState(null, "", "/preview"));
