@@ -248,7 +248,7 @@ function NewLectureQuizPage() {
           <ArrowLeft size={15} /> Back to Lecture Lab
         </Link>
 
-        <h1 className="mt-4 font-display text-[32px] font-black leading-tight tracking-tight md:text-[38px]">
+        <h1 className="mt-4 font-display text-[28px] font-semibold leading-tight tracking-tight md:text-[34px]">
           New lecture quiz
         </h1>
         <p className="mt-2 text-[15px] text-[#4b4a5c]">

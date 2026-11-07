@@ -107,7 +107,7 @@ function PdfSummaries() {
             </span>
             <h1
               className="mt-6 font-display font-black leading-[1.08] tracking-tight"
-              style={{ fontSize: "clamp(2rem, 4vw, 3.2rem)" }}
+              style={{ fontSize: "clamp(1.75rem, 3vw, 2.5rem)" }}
             >
               Turn a long lecture into one page you actually read
             </h1>
@@ -119,7 +119,7 @@ function PdfSummaries() {
 
           <Link
             to="/summaries/new"
-            className="rita-pill inline-flex h-14 items-center justify-center gap-2 rounded-full px-8 text-[17px] font-semibold"
+            className="rita-pill inline-flex h-12 items-center justify-center gap-2 rounded-full px-6 text-[15px] font-semibold"
           >
             <Plus size={18} /> Create a summary
           </Link>
@@ -135,7 +135,7 @@ function PdfSummaries() {
             </p>
             <Link
               to="/login"
-              className="rita-pill mt-6 inline-flex h-12 items-center rounded-full px-7 text-sm font-semibold"
+              className="rita-pill mt-6 inline-flex h-11 items-center rounded-full px-6 text-[14px] font-semibold"
             >
               Sign in
             </Link>
@@ -164,7 +164,7 @@ function PdfSummaries() {
                 <button
                   type="button"
                   onClick={() => navigate({ to: "/summaries/new" })}
-                  className="rita-pill mt-6 inline-flex h-12 items-center gap-2 rounded-full px-7 text-sm font-semibold"
+                  className="rita-pill mt-6 inline-flex h-11 items-center gap-2 rounded-full px-6 text-[14px] font-semibold"
                 >
                   <Plus size={16} /> Create a summary
                 </button>

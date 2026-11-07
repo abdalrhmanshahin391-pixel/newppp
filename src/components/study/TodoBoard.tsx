@@ -404,7 +404,7 @@ export function TodoBoard() {
               <div className="flex flex-wrap items-center gap-3">
                 <h1
                   className="font-display font-black leading-[1.05] tracking-tight"
-                  style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)" }}
+                  style={{ fontSize: "clamp(1.6rem, 2.6vw, 2.1rem)" }}
                 >
                   {title}
                 </h1>

@@ -32,7 +32,7 @@ export function GameSetup({
     <div className="rounded-[20px] bg-[#f4f4f8] p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[34px] font-bold leading-none tracking-[-0.03em] text-[#121117]">
+          <p className="text-[30px] font-semibold leading-none tracking-[-0.03em] text-[#121117]">
             {pairCount}
             <span className="ml-1.5 text-[14px] font-semibold text-[#4b4a5c]">
               pair{pairCount === 1 ? "" : "s"} ready
@@ -56,7 +56,7 @@ export function GameSetup({
         type="button"
         onClick={onPlay}
         disabled={pairCount === 0}
-        className="rita-pill mt-4 flex h-12 w-full touch-manipulation items-center justify-center gap-2 text-[15px] font-semibold active:scale-[0.98] disabled:opacity-40"
+        className="rita-pill mt-4 flex h-11 w-full touch-manipulation items-center justify-center gap-2 text-[14px] font-semibold active:scale-[0.98] disabled:opacity-40"
       >
         <Play size={16} /> Play {current?.label ?? ""}
       </button>

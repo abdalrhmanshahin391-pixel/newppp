@@ -117,7 +117,7 @@ function SharePage() {
             </span>
             <h1
               className="mt-5 font-display font-black leading-[1.08] tracking-tight"
-              style={{ fontSize: "clamp(2rem, 4vw, 3.2rem)" }}
+              style={{ fontSize: "clamp(1.75rem, 3vw, 2.5rem)" }}
             >
               {mode === "questions"
                 ? "Question sets made by students & doctors"

@@ -310,7 +310,7 @@ export function CardImportSheet({
                 type="button"
                 disabled={!ready}
                 onClick={() => setStep("shape")}
-                className="mt-6 h-12 w-full rounded-full bg-[var(--rita-green)] text-[15.5px] font-semibold text-[color:var(--rita-green-ink)] disabled:opacity-40"
+                className="mt-6 h-11 w-full rounded-full bg-[var(--rita-green)] text-[14px] font-semibold text-[color:var(--rita-green-ink)] disabled:opacity-40"
               >
                 Next — shape the deck
               </button>
@@ -371,7 +371,7 @@ export function CardImportSheet({
                 type="button"
                 disabled={busy}
                 onClick={() => void generate()}
-                className="mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--rita-green)] text-[15.5px] font-semibold text-[color:var(--rita-green-ink)] disabled:opacity-60"
+                className="mt-8 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--rita-green)] text-[14px] font-semibold text-[color:var(--rita-green-ink)] disabled:opacity-60"
               >
                 {busy ? <Loader2 size={17} className="animate-spin" /> : <Sparkles size={17} />}
                 {busy ? "Reading your material…" : "Draft the cards"}
@@ -432,7 +432,7 @@ export function CardImportSheet({
               <button
                 type="button"
                 onClick={save}
-                className="sticky bottom-0 mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--rita-green)] text-[15.5px] font-semibold text-[color:var(--rita-green-ink)]"
+                className="sticky bottom-0 mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--rita-green)] text-[14px] font-semibold text-[color:var(--rita-green-ink)]"
               >
                 <Check size={17} />
                 Add {drafts.length} card{drafts.length === 1 ? "" : "s"}

@@ -122,7 +122,7 @@ function CoverPage({
         <div className="mt-16">
           <h1
             className="font-display font-black leading-[1.05] tracking-tight"
-            style={{ color: INK, fontSize: "clamp(2rem, 5.2vw, 3.4rem)" }}
+            style={{ color: INK, fontSize: "clamp(1.85rem, 3.6vw, 2.6rem)" }}
           >
             {content.title}
           </h1>

@@ -602,7 +602,7 @@ function DeckPicker({
         <header className="flex items-start gap-4 bg-gradient-to-br from-[#f4f4f8] to-[#f4f4f8] px-7 py-6">
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-2xl">🃏</span>
           <div className="min-w-0 flex-1">
-            <h2 className="font-display text-[26px] font-black leading-tight">Add one of your decks</h2>
+            <h2 className="font-display text-[22px] font-semibold leading-tight">Add one of your decks</h2>
             <p className="mt-1 text-[14px] text-[#54546a]">
               Pick a deck below — only the people in here can see it.
             </p>
