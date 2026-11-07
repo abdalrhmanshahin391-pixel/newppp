@@ -75,7 +75,7 @@ function AdminGroups() {
         <Link to="/admin" className="inline-flex items-center gap-1.5 text-sm font-bold text-muted-foreground hover:text-foreground">
           <ArrowLeft size={14} /> Administration Site
         </Link>
-        <h1 className="mt-6 flex items-center gap-2 text-3xl font-black tracking-tight text-foreground">
+        <h1 className="mt-6 flex items-center gap-2 text-3xl font-semibold tracking-tight text-foreground">
           <Users size={26} className="text-primary" /> Groups
         </h1>
         <p className="mt-2 text-muted-foreground">

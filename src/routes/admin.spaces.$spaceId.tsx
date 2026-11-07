@@ -95,7 +95,7 @@ function AdminSpaceDetail() {
           <ArrowLeft size={15} /> All classrooms
         </Link>
 
-        <h1 className="mb-1 text-3xl font-black tracking-tight">
+        <h1 className="mb-1 text-3xl font-semibold tracking-tight">
           {s?.emoji || "🏫"} {s?.name || "Space"}
         </h1>
         <p className="mb-6 text-sm text-muted-foreground">

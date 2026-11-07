@@ -417,7 +417,7 @@ function AdminOfferCenter() {
             >
               <ArrowLeft size={14} /> Administration Site
             </Link>
-            <h1 className="mt-2 flex items-center gap-3 font-display text-3xl font-black md:text-4xl text-[#0b0b0f]">
+            <h1 className="mt-2 flex items-center gap-3 font-display text-3xl font-semibold md:text-4xl text-[#0b0b0f]">
               <Gift className="text-emerald-700" size={32} /> Offer Center
               <span className="text-xl font-bold text-muted-foreground">· مركز العروض</span>
             </h1>

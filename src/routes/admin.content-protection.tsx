@@ -163,7 +163,7 @@ function AdminContentProtection() {
             <ShieldAlert size={13} /> Anti-leak
           </span>
         </div>
-        <h1 className="mt-3 text-3xl md:text-4xl font-black tracking-tight">Content Protection</h1>
+        <h1 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tight">Content Protection</h1>
         <p className="mt-2 text-slate-600 max-w-2xl">
           Every protected page is stamped with the viewer's name, account code, time and IP. Capture attempts
           are detected, logged and scored — repeat offenders lock themselves out automatically.

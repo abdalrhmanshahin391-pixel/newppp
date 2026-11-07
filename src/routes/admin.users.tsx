@@ -224,7 +224,7 @@ function AdminUsersPage() {
       <SiteHeader />
       <main className="mx-auto max-w-5xl px-5 pt-28 pb-20">
         <div className="mb-6">
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-2 inline-flex items-center gap-3">
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight mb-2 inline-flex items-center gap-3">
             <UsersIcon size={30} className="text-primary" /> Users &amp; Roles
           </h1>
           <p className="text-muted-foreground">
