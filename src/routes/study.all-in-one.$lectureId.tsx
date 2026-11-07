@@ -248,7 +248,7 @@ function AllInOneWorkspace() {
           >
             All in one
           </div>
-          <h1 className="mt-3 font-display text-[30px] font-black leading-tight sm:text-[38px]">{data.lecture.title}</h1>
+          <h1 className="mt-3 font-display text-[26px] font-semibold leading-tight sm:text-[32px]">{data.lecture.title}</h1>
           <div className="mt-3 flex flex-wrap gap-2">
             {[
               { l: "Flashcards", v: data.cards.length },

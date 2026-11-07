@@ -37,7 +37,7 @@ function ExamSchedulePage() {
           </span>
           <h1
             className="mt-5 font-display font-black leading-[1.08] tracking-tight"
-            style={{ fontSize: "clamp(1.9rem, 3.6vw, 2.8rem)" }}
+            style={{ fontSize: "clamp(1.75rem, 3vw, 2.5rem)" }}
           >
             Every exam on one calendar
           </h1>

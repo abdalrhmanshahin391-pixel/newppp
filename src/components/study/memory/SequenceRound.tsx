@@ -155,7 +155,7 @@ export function SequenceRound({
         type="button"
         onClick={check}
         disabled={!!checked}
-        className="rita-pill mt-5 h-12 w-full text-[15px] font-semibold disabled:opacity-50"
+        className="rita-pill mt-5 h-11 w-full text-[14px] font-semibold disabled:opacity-50"
       >
         Check order
       </button>

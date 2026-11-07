@@ -277,7 +277,7 @@ function SessionPage() {
                   <button
                     type="button"
                     onClick={() => setFlipped(true)}
-                    className="rita-pill inline-flex h-12 items-center rounded-full px-8 text-[15px] font-semibold"
+                    className="rita-pill inline-flex h-11 items-center rounded-full px-6 text-[14px] font-semibold"
                   >
                     Reveal answer
                   </button>
@@ -288,7 +288,7 @@ function SessionPage() {
 
           {done && (
             <div className="mt-8 rounded-[2rem] bg-white p-10 text-center">
-              <p className="font-display text-[2.4rem] font-black leading-none text-[#121117]">
+              <p className="font-display text-[2rem] font-semibold leading-none text-[#121117]">
                 {known}/{list.length}
               </p>
               <p className="mt-3 text-[15px] text-[#54546a]">
@@ -298,13 +298,13 @@ function SessionPage() {
                 <button
                   type="button"
                   onClick={shuffle}
-                  className="rita-pill inline-flex h-12 items-center rounded-full px-8 text-[15px] font-semibold"
+                  className="rita-pill inline-flex h-11 items-center rounded-full px-6 text-[14px] font-semibold"
                 >
                   Go again, shuffled
                 </button>
                 <Link
                   to="/study"
-                  className="inline-flex h-12 items-center rounded-full border border-black/10 px-8 text-[15px] font-semibold"
+                  className="inline-flex h-11 items-center rounded-full border border-black/10 px-6 text-[14px] font-semibold"
                 >
                   Back to subjects
                 </Link>

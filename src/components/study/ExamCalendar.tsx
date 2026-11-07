@@ -102,7 +102,7 @@ export function ExamCalendar() {
         >
           <ChevronLeft size={20} />
         </button>
-        <h2 className="font-display text-[26px] font-black tracking-tight text-[#121117] md:text-[30px]">
+        <h2 className="font-display text-[22px] font-semibold tracking-tight text-[#121117] md:text-[26px]">
           {monthLabel}
         </h2>
         <button

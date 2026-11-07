@@ -94,7 +94,7 @@ function SubjectPage() {
                 <Link
                   to="/study/session"
                   search={{ ids: ids.join(",") }}
-                  className="rita-pill hidden h-12 items-center gap-2 rounded-full px-7 text-[15px] font-semibold sm:inline-flex"
+                  className="rita-pill hidden h-11 items-center gap-2 rounded-full px-6 text-[14px] font-semibold sm:inline-flex"
                 >
                   <Play size={15} /> Study
                 </Link>
@@ -242,14 +242,14 @@ function AddCards({
         <button
           type="submit"
           disabled={save.isPending}
-          className="rita-pill inline-flex h-12 items-center rounded-full px-8 text-[15px] font-semibold disabled:opacity-40"
+          className="rita-pill inline-flex h-11 items-center rounded-full px-6 text-[14px] font-semibold disabled:opacity-40"
         >
           {save.isPending ? "Saving…" : "Save cards"}
         </button>
         <button
           type="button"
           onClick={onClose}
-          className="inline-flex h-12 items-center rounded-full px-6 text-[15px] font-semibold text-[#6a697c]"
+          className="inline-flex h-11 items-center rounded-full px-6 text-[14px] font-semibold text-[#6a697c]"
         >
           Cancel
         </button>

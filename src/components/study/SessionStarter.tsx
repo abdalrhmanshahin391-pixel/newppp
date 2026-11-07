@@ -64,7 +64,7 @@ export function SessionStarter({
           type="button"
           disabled={empty}
           onClick={() => onStudy?.(false)}
-          className="rita-pill flex h-12 w-full items-center justify-center gap-2 text-[15px] font-semibold disabled:opacity-40"
+          className="rita-pill flex h-11 w-full items-center justify-center gap-2 text-[14px] font-semibold disabled:opacity-40"
         >
           <GraduationCap size={16} className="opacity-80" />
           Study mode
@@ -73,7 +73,7 @@ export function SessionStarter({
           type="button"
           disabled={empty}
           onClick={() => onStudy?.(true)}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-[10px] border-2 border-[#121117] bg-white text-[15px] font-semibold text-[#121117] transition-colors hover:bg-[#f4f4f8] disabled:opacity-40"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-[#121117] bg-white text-[14px] font-semibold text-[#121117] transition-colors hover:bg-[#f4f4f8] disabled:opacity-40"
         >
           <Shuffle size={15} className="opacity-70" />
           Shuffle and study

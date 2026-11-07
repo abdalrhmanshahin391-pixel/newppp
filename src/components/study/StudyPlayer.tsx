@@ -256,7 +256,7 @@ export function StudyPlayer({
             <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#9a9aab]">
               Session finished
             </p>
-            <p className="mt-3 font-display text-[44px] font-black leading-none text-[#121117]">
+            <p className="mt-3 font-display text-[36px] font-semibold leading-none text-[#121117]">
               {known.length}
               <span className="text-[20px] text-[#9a9aab]"> / {total} known</span>
             </p>
@@ -273,7 +273,7 @@ export function StudyPlayer({
                     const ids = new Set(missed);
                     reset(cards.filter((c) => ids.has(c.id)));
                   }}
-                  className="rita-pill h-12 text-[15px] font-semibold"
+                  className="rita-pill h-11 text-[14px] font-semibold"
                 >
                   Study the ones I missed
                 </button>
@@ -281,7 +281,7 @@ export function StudyPlayer({
               <button
                 type="button"
                 onClick={() => reset(cards)}
-                className="flex h-12 items-center justify-center gap-2 rounded-lg border-2 border-[#121117] bg-white text-[14px] font-extrabold text-[#121117] transition-colors hover:bg-black/[0.03]"
+                className="flex h-11 items-center justify-center gap-2 rounded-lg border-[1.5px] border-[#121117] bg-white text-[14px] font-semibold text-[#121117] transition-colors hover:bg-black/[0.03]"
               >
                 <RotateCcw size={16} /> Start again
               </button>

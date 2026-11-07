@@ -245,7 +245,7 @@ function AllInOneUpload() {
           >
             <Wand2 size={13} /> All in one
           </div>
-          <h1 className="mt-3 font-display text-[34px] font-black leading-[1.05] sm:text-[42px]">
+          <h1 className="mt-3 font-display text-[28px] font-semibold leading-[1.1] sm:text-[36px]">
             Drop the lecture. That's it.
           </h1>
           <p className="mt-2 max-w-[54ch] text-[15px] text-[#6a697c]">
