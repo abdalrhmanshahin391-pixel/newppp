@@ -13,6 +13,9 @@ on:
       - "src/lib/learn-images.ts"
       - "scripts/check-learn-navigation.mjs"
       - "scripts/check-question-preview.mjs"
+      - "scripts/check-study-help.mjs"
+      - "src/components/rita-study/StudyPracticePanel.tsx"
+      - "src/components/rita-study/study-practice.css"
       - "src/components/rita-study/QuestionPreview.tsx"
       - "src/components/rita-study/question-preview*"
       - "src/components/rita-study/StudyPage.tsx"
@@ -53,6 +56,8 @@ jobs:
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" BROWSER=webkit node scripts/check-learn-navigation.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" node scripts/check-question-preview.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" BROWSER=webkit node scripts/check-question-preview.mjs
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" node scripts/check-study-help.mjs --check
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" BROWSER=webkit node scripts/check-study-help.mjs --check
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -60,5 +65,6 @@ jobs:
           path: |
             output/learn-preview/
             output/question-preview/
+            output/study-help/
           if-no-files-found: ignore
       - run: bun run build

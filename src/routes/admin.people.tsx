@@ -111,7 +111,7 @@ function PeoplePage() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.28em] text-primary">Admin · Intelligence</p>
-            <h1 className="mt-2 text-3xl md:text-4xl font-black tracking-tight text-foreground">People Intelligence</h1>
+            <h1 className="mt-2 text-3xl md:text-4xl font-semibold tracking-tight text-foreground">People Intelligence</h1>
             <p className="mt-2 text-muted-foreground">
               Everyone who joined Uzyra — growth, activity, money and retention in one console.
             </p>

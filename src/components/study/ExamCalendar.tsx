@@ -92,7 +92,7 @@ export function ExamCalendar() {
   const valid = form.title.trim().length > 0 && form.date.length === 10;
 
   return (
-    <div data-tour="exams-calendar" className="overflow-hidden rounded-[28px] border border-black/[0.07] bg-white">
+    <div className="overflow-hidden rounded-[28px] border border-black/[0.07] bg-white">
       <div className="flex flex-wrap items-center gap-3 border-b border-black/[0.06] px-5 py-4 md:px-7">
         <button
           type="button"
@@ -102,7 +102,7 @@ export function ExamCalendar() {
         >
           <ChevronLeft size={20} />
         </button>
-        <h2 className="font-display text-[26px] font-black tracking-tight text-[#121117] md:text-[30px]">
+        <h2 className="font-display text-[22px] font-semibold tracking-tight text-[#121117] md:text-[26px]">
           {monthLabel}
         </h2>
         <button

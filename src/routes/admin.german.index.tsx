@@ -123,7 +123,7 @@ function AdminGermanPage() {
               <div className="text-[11px] font-bold uppercase tracking-[0.25em] text-emerald-300 flex items-center gap-2">
                 <Languages size={14} /> Deutsch Lernen
               </div>
-              <h1 className="text-3xl md:text-4xl font-black mt-2 bg-gradient-to-r from-emerald-300 to-emerald-500 bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl font-semibold mt-2 bg-gradient-to-r from-emerald-300 to-emerald-500 bg-clip-text text-transparent">
                 German Learning · Courses
               </h1>
               <p className="text-white/60 text-sm mt-2 max-w-xl">

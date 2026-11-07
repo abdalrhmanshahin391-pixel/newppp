@@ -274,7 +274,7 @@ export function TodoBoard() {
     <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
 
-      <div data-tour="todo-header" className="border-b border-black/5">
+      <div className="border-b border-black/5">
         <div className="mx-auto flex max-w-[90rem] items-center gap-3 px-4 py-3 md:px-8">
           <button
             type="button"
@@ -299,7 +299,7 @@ export function TodoBoard() {
       </div>
 
       <div className="mx-auto grid max-w-[90rem] gap-6 px-4 py-6 md:px-8 lg:grid-cols-[16rem_minmax(0,1fr)]">
-        <aside data-tour="todo-nav" className={`${railOpen ? "" : "hidden lg:block"} lg:sticky lg:top-6 lg:self-start`}>
+        <aside className={`${railOpen ? "" : "hidden lg:block"} lg:sticky lg:top-6 lg:self-start`}>
           <div className="flex items-center gap-2 rounded-2xl px-3 py-2.5">
 
             <Search size={16} className="shrink-0 text-[#9a9aab]" />
@@ -399,12 +399,12 @@ export function TodoBoard() {
         </aside>
 
         <main className="min-w-0">
-          <div data-tour="todo-tasks" className="flex max-h-[80vh] min-h-[78vh] flex-col rounded-[28px] bg-white p-5 md:p-8">
+          <div className="flex max-h-[80vh] min-h-[78vh] flex-col rounded-[28px] bg-white p-5 md:p-8">
             <div className="shrink-0">
               <div className="flex flex-wrap items-center gap-3">
                 <h1
                   className="font-display font-black leading-[1.05] tracking-tight"
-                  style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)" }}
+                  style={{ fontSize: "clamp(1.6rem, 2.6vw, 2.1rem)" }}
                 >
                   {title}
                 </h1>

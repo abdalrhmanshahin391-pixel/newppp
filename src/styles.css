@@ -3127,6 +3127,21 @@ body:has(.rh-learn-home) {
   color: var(--pp-on-accent);
   transform: rotate(0deg) translateY(-2px);
 }
+/* A tapped word gives a small springy pop (the independent scale property, so the tilt stays). */
+.edith-premium .rh-chip-pop {
+  animation: rh-chip-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes rh-chip-pop {
+  0% {
+    scale: 0.92;
+  }
+  55% {
+    scale: 1.06;
+  }
+  100% {
+    scale: 1;
+  }
+}
 .edith-premium .rh-ping {
   position: absolute;
   top: -6px;
@@ -3160,7 +3175,8 @@ body:has(.rh-learn-home) {
     animation: none;
     stroke-dashoffset: 0;
   }
-  .edith-premium .rh-ping::after {
+  .edith-premium .rh-ping::after,
+  .edith-premium .rh-chip-pop {
     animation: none;
   }
   .edith-premium .rh-chip,
@@ -3872,6 +3888,22 @@ body:has(.rh-learn-home) {
   letter-spacing: -0.03em;
   text-wrap: balance;
 }
+/* Calm scale (same as the home page): the big named sizes are smaller, so a page title lands at
+   30–44px instead of 48–72px; body sizes (base and below) are untouched, and so is the root size. */
+.rita-app {
+  --text-2xl: 1.375rem;
+  --text-3xl: 1.625rem;
+  --text-4xl: 1.875rem;
+  --text-5xl: 2.25rem;
+  --text-6xl: 2.5rem;
+  --text-7xl: 2.75rem;
+  --text-5xl--line-height: 1.1;
+  --text-6xl--line-height: 1.08;
+  --text-7xl--line-height: 1.05;
+}
+.rita-app h1:is(.font-bold, .font-black, .font-extrabold) {
+  font-weight: 600;
+}
 /* Heavy 800/900 weights become 700, and small tracked capital labels become plain words. */
 .rita-app .font-black,
 .rita-app .font-extrabold {
@@ -3886,12 +3918,12 @@ body:has(.rh-learn-home) {
 
 /* Buttons: 8px corners, 2px ink border, pink fill (same as the home page). */
 .rita-app .rita-btn {
-  height: 48px;
-  padding-inline: 22px;
-  border: 2px solid var(--pp-ink);
+  height: 42px;
+  padding-inline: 20px;
+  border: 1.5px solid var(--pp-ink);
   border-radius: 8px;
   font-family: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   box-shadow: none;
 }
@@ -3915,9 +3947,9 @@ body:has(.rh-learn-home) {
   outline-offset: 3px;
 }
 .rita-app .rita-btn.rita-btn-sm {
-  height: 40px;
-  padding-inline: 16px;
-  font-size: 15px;
+  height: 38px;
+  padding-inline: 14px;
+  font-size: 14px;
 }
 .rita-app .rita-pill {
   background-color: var(--pp-accent);
@@ -3970,10 +4002,10 @@ body:has(.rh-learn-home) {
 .rita-app .rh-rail {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
+  gap: 0.75rem;
   width: 100%;
-  border: 2px solid var(--pp-ink);
-  border-radius: 14px;
+  border: 1.5px solid var(--pp-ink);
+  border-radius: 12px;
   background: #ffffff;
   color: var(--pp-ink);
   text-align: start;
@@ -3984,8 +4016,8 @@ body:has(.rh-learn-home) {
     background-color 160ms ease;
 }
 .rita-app .rh-modetab {
-  min-height: 4rem;
-  padding: 0.75rem 1.1rem;
+  min-height: 3.25rem;
+  padding: 0.55rem 1rem;
 }
 .rita-app .rh-modetab[aria-pressed="true"] {
   background: var(--pp-accent);
@@ -3995,8 +4027,8 @@ body:has(.rh-learn-home) {
   color: var(--pp-on-accent);
 }
 .rita-app .rh-rail {
-  min-height: 4.5rem;
-  padding: 0.9rem 1.1rem;
+  min-height: 3.5rem;
+  padding: 0.65rem 1rem;
 }
 .rita-app .rh-rail:hover,
 .rita-app .rh-modetab:hover {
@@ -4021,8 +4053,10 @@ body:has(.rh-learn-home) {
   cursor: not-allowed;
 }
 /* Below desktop the action column becomes one short scrolling strip, so the learner's own
-   subjects are on screen instead of five big tiles; hints stay for desktop. */
-@media (max-width: 1023px) {
+   subjects are on screen instead of five big tiles; hints stay for desktop. Tablets (up to
+   1279px, iPad landscape included) get the strip too, so the subject list is not squeezed
+   between the tiles and the session panel. */
+@media (max-width: 1279px) {
   .rita-app .rh-rail {
     width: auto;
     flex: 0 0 auto;
@@ -7051,91 +7085,28 @@ html.rita-app,
    mode (admins) a stop is held and dropped on another to swap them; + buttons on the road add
    stops. Stops move with transform only; the swap glides on a spring-like curve.
    =========================================================================== */
-.lp-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 20px;
-  padding: 14px 16px 16px;
-  border: 1px solid var(--pp-line);
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 10px 30px -18px rgb(18 17 23 / 0.25);
-}
-.lp-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-.lp-stat-n {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.lp-heading {
   font-size: 24px;
-  font-weight: 800;
-  line-height: 1.1;
-}
-.lp-stat-of {
-  color: var(--pp-muted);
-  font-size: 16px;
-  font-weight: 700;
-}
-.lp-stat-w {
-  color: var(--pp-muted);
-  font-size: 12.5px;
   font-weight: 600;
-}
-.lp-bar {
-  grid-column: 1 / -1;
-  height: 8px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #eef0f5;
-}
-.lp-bar > span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: #2b6df0;
-  transition: width 400ms cubic-bezier(0.23, 1, 0.32, 1);
-}
-.lp-legend {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px 14px;
-  margin-top: 14px;
-  color: var(--pp-muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-.lp-legend > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.lp-legend i {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 .lp-edit {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 38px;
-  padding-inline: 12px;
-  border: 1.5px solid var(--pp-line);
+  min-height: 36px;
+  padding-inline: 11px;
+  border: 1px solid var(--pp-line);
   border-radius: 999px;
   color: var(--pp-ink);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12.5px;
+  font-weight: 600;
   transition: background-color 150ms ease, color 150ms ease;
 }
 .lp-edit.is-on {
-  border-color: #2b6df0;
-  background: #2b6df0;
+  border-color: var(--pp-ink, #121117);
+  background: var(--pp-ink, #121117);
   color: #fff;
 }
 .lp-edit-hint {
@@ -7148,11 +7119,187 @@ html.rita-app,
   font-weight: 600;
   line-height: 1.6;
 }
+/* The language being learned and the level, in the top bar; a tap opens the other languages. */
+.lp-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding-inline: 10px 8px;
+  border-radius: 999px;
+  color: var(--pp-ink);
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 150ms ease;
+}
+.lp-lang:hover,
+.lp-lang[aria-expanded="true"] {
+  background: var(--pp-grey);
+}
+.lp-lang-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  z-index: 40;
+  display: grid;
+  gap: 2px;
+  width: 240px;
+  padding: 6px;
+  border: 1px solid var(--pp-line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 18px 40px -20px rgb(18 17 23 / 0.35);
+  transform: translateX(-50%);
+  transform-origin: top center;
+  animation: lp-menu-in 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@keyframes lp-menu-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.96);
+  }
+}
+.lp-lang-menu > button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding-inline: 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: start;
+}
+.lp-lang-menu > button:hover,
+.lp-lang-menu > button:focus-visible,
+.lp-lang-menu > button[aria-checked="true"] {
+  background: var(--pp-grey);
+}
+.lp-lang-native {
+  color: var(--pp-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+/* A level's banner across the road, and the «coming soon» one after the last level. */
+.lp-level {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--pp-ink);
+  border-radius: 16px;
+  background: #fff;
+  text-align: start;
+  animation: lp-in 520ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  animation-delay: calc(var(--i) * 55ms);
+}
+.lp-level.is-soon {
+  border-style: dashed;
+  border-color: #c7ccd8;
+  background: var(--pp-grey);
+}
+.lp-level-chip {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--pp-ink);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+}
+.lp-level.is-soon .lp-level-chip {
+  background: #fff;
+  color: var(--pp-muted);
+}
+.lp-level-name {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.lp-level-sub {
+  display: block;
+  color: var(--pp-muted);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.lp-level-go {
+  flex-shrink: 0;
+  min-height: 36px;
+  padding-inline: 12px;
+  border: 1.5px solid var(--pp-ink);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--pp-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: background-color 150ms ease;
+}
+.lp-level-go:hover {
+  background: var(--pp-accent-soft, #e7eefd);
+}
+.lp-level-go:active {
+  transform: scale(0.97);
+}
+/* A level's finish line: a dark flag, a gold trophy once every lesson of the level is done. */
+.lp-finish[data-finished] {
+  --c: #c88a12 !important;
+  --soft: #fff6df !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-lang-menu,
+  .lp-level {
+    animation: none;
+  }
+}
 .lp-road {
   fill: none;
-  stroke: #e6e8ef;
-  stroke-width: 10;
+  stroke: #e9ebf1;
+  stroke-width: 6;
   stroke-linecap: round;
+}
+/* Decoration only (nothing about the learner): small lights travelling along the road, faint line
+   drawings floating beside it, and a fading field of dots behind the whole map. */
+.lp-spark {
+  fill: #8fb0f2;
+  opacity: 0.75;
+}
+.lp-doodle {
+  position: absolute;
+  color: #c7ccd8;
+  opacity: 0.7;
+  pointer-events: none;
+  animation: lp-drift 7s ease-in-out calc(var(--i) * -1.3s) infinite alternate;
+}
+@keyframes lp-drift {
+  from {
+    transform: translateY(-5px) rotate(-5deg);
+  }
+  to {
+    transform: translateY(5px) rotate(5deg);
+  }
+}
+.lp-board::before {
+  content: "";
+  position: absolute;
+  inset: -40px -90px;
+  z-index: -1;
+  background-image: radial-gradient(circle, rgb(18 17 23 / 0.08) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 30%, transparent 78%);
+  mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 30%, transparent 78%);
+  pointer-events: none;
+}
+.lp-board {
+  isolation: isolate;
 }
 .lp-road.is-walked {
   stroke: #2b6df0;
@@ -7165,7 +7312,7 @@ html.rita-app,
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 150px;
+  width: 170px;
   text-align: center;
   transform: translate(var(--x), var(--y));
   transition: transform 460ms cubic-bezier(0.32, 0.72, 0, 1);
@@ -7214,9 +7361,9 @@ html.rita-app,
   display: block;
   width: 100%;
   height: 100%;
-  border: 5px solid var(--c);
+  border: 4px solid var(--c);
   border-radius: 50%;
-  box-shadow: 0 12px 24px -12px color-mix(in srgb, var(--c) 60%, rgb(18 17 23 / 0.4));
+  box-shadow: 0 10px 20px -12px color-mix(in srgb, var(--c) 55%, rgb(18 17 23 / 0.4));
 }
 .lp-face.is-locked {
   border-color: #d5d8e2;
@@ -7231,9 +7378,9 @@ html.rita-app,
 }
 .lp-pulse {
   position: absolute;
-  inset: -9px;
+  inset: -8px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--c) 22%, transparent);
+  background: color-mix(in srgb, var(--c) 18%, transparent);
   animation: lp-pulse 2.4s ease-in-out infinite;
 }
 @keyframes lp-pulse {
@@ -7245,14 +7392,14 @@ html.rita-app,
 .lp-pill {
   position: absolute;
   top: -6px;
-  right: -10px;
-  padding: 2px 8px;
+  right: -12px;
+  padding: 1px 7px;
   border: 2px solid #fff;
   border-radius: 999px;
   background: var(--c);
   color: #fff;
-  font-size: 10.5px;
-  font-weight: 800;
+  font-size: 9.5px;
+  font-weight: 700;
   white-space: nowrap;
 }
 .lp-badge {
@@ -7261,8 +7408,8 @@ html.rita-app,
   left: -2px;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
 }
 .lp-badge.is-lock {
@@ -7281,9 +7428,9 @@ html.rita-app,
   right: -2px;
   display: grid;
   place-items: center;
-  min-width: 28px;
-  height: 28px;
-  padding-inline: 6px;
+  min-width: 24px;
+  height: 24px;
+  padding-inline: 5px;
   border: 3px solid #fff;
   border-radius: 999px;
   background: var(--c);
@@ -7299,32 +7446,32 @@ html.rita-app,
   background: #fff;
 }
 .lp-title {
-  margin-top: 10px;
-  font-size: 15px;
-  font-weight: 800;
+  margin-top: 9px;
+  font-size: 14px;
+  font-weight: 700;
   line-height: 1.3;
 }
 .lp-title.is-locked {
   color: color-mix(in srgb, var(--pp-muted) 75%, transparent);
 }
 .lp-sub {
-  margin-top: 3px;
+  margin-top: 2px;
   color: var(--pp-muted);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11.5px;
+  font-weight: 500;
 }
 .lp-sub.is-accent {
   color: var(--c);
 }
 .lp-here {
   position: absolute;
-  top: -30px;
-  padding: 4px 10px;
+  top: -22px;
+  padding: 3px 9px;
   border-radius: 999px;
   background: var(--pp-ink, #121117);
   color: #fff;
-  font-size: 11.5px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 700;
   white-space: nowrap;
   animation: lp-bob 1.8s ease-in-out infinite;
 }
@@ -7362,6 +7509,11 @@ html.rita-app,
   75% {
     transform: rotate(6deg);
   }
+}
+.edith-premium .rita-btn.lp-go {
+  height: 42px;
+  padding-inline: 22px;
+  font-size: 15px;
 }
 .lp-plus-wrap {
   position: absolute;
@@ -7615,9 +7767,14 @@ html.rita-app,
   }
   .lp-pulse,
   .lp-here,
+  .lp-doodle,
   .lp-node[data-fresh] .lp-disc,
   .lp-node[data-shake] .lp-disc {
     animation: none;
+  }
+  /* The lights on the road move by SVG animation, which CSS cannot pause: they are hidden. */
+  .lp-spark {
+    display: none;
   }
 }
 
@@ -8343,25 +8500,30 @@ html.rita-app,
   font-size: var(--home-lead);
   line-height: 1.6;
 }
-/* The header on the home page and the learning home (/learn): smaller, lighter links and a lower
-   bar; the links keep a 44px target for touch. The learning home takes the header values only. */
-.uz-learn {
+/* The header on the home page, the learning home (/learn) and the app pages (.rita-app): smaller,
+   lighter links and a lower bar; the links keep a 44px target for touch. The others take the
+   header values only. */
+.uz-learn,
+.rita-app {
   --home-nav: 14px;
   --home-bar-h: 60px;
   --home-bar-btn-h: 38px;
 }
 .uz-home .rh-bar-inner,
-.uz-learn .rh-bar-inner {
+.uz-learn .rh-bar-inner,
+.rita-app .rh-bar-inner {
   height: var(--home-bar-h);
 }
 .uz-home .rh-link,
-.uz-learn .rh-link {
+.uz-learn .rh-link,
+.rita-app .rh-link {
   font-size: var(--home-nav);
   font-weight: 500;
   line-height: 20px;
 }
 .uz-home .rh-btn,
-.uz-learn .rh-btn {
+.uz-learn .rh-btn,
+.rita-app .rh-btn {
   height: var(--home-bar-btn-h);
   padding-inline: 14px;
   font-size: var(--home-nav);
@@ -8390,14 +8552,14 @@ html.rita-app,
 /* Very narrow phones (320–359px): the logo, "Start learning" and the menu button did not fit the
    bar (it ran ~25px past the edge before this change). Tighter spacing keeps them inside. */
 @media (max-width: 359px) {
-  :is(.uz-home, .uz-learn) .rh-bar-inner {
+  :is(.uz-home, .uz-learn, .rita-app) .rh-bar-inner {
     gap: 8px;
     padding-inline: 12px;
   }
-  :is(.uz-home, .uz-learn) .rh-actions {
+  :is(.uz-home, .uz-learn, .rita-app) .rh-actions {
     gap: 6px;
   }
-  :is(.uz-home, .uz-learn) .rh-btn {
+  :is(.uz-home, .uz-learn, .rita-app) .rh-btn {
     padding-inline: 10px;
   }
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ComponentType } from "react";
 
 /**
- * Floating extras (announcements, tour, help button, sign-in sheet, toasts)
+ * Floating extras (announcements, sign-in sheet, toasts)
  * are not part of the first painted page. Loading them after the page is
  * interactive keeps the very first download small, so pages open fast.
  */
@@ -11,23 +11,21 @@ export function DeferredOverlays() {
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const [banner, ritax, help, auth, toaster] = await Promise.all([
+      const [banner, ritax, auth, toaster] = await Promise.all([
         import("@/components/PaymentTestModeBanner"),
         import("@/components/RitaXAnnouncements"),
-        import("@/components/tutorials/HowItWorksButton"),
         import("@/components/auth/AuthPanels"),
         import("@/components/ui/sonner"),
       ]).catch((error) => {
         console.warn("Optional tools could not be loaded", error);
         return [];
       });
-      if (!banner || !ritax || !help || !auth || !toaster) return;
+      if (!banner || !ritax || !auth || !toaster) return;
       if (cancelled) return;
       const Toasts = () => <toaster.Toaster richColors position="top-right" />;
       const activeParts = [
         banner.PaymentTestModeBanner,
         ritax.RitaXAnnouncements,
-        help.ToolTutorialLauncher,
         auth.AuthReturn,
         Toasts,
       ];

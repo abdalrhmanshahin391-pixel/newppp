@@ -120,7 +120,7 @@ function SupportPage() {
           <p className="text-muted-foreground">Support is currently unavailable. Please check back soon.</p>
         ) : (
           <>
-            <h1 className="font-display font-black lowercase leading-[1.05]" style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)" }}>
+            <h1 className="font-display font-semibold lowercase leading-[1.1]" style={{ fontSize: "clamp(1.75rem, 3vw, 2.5rem)" }}>
               {pick(lang, settings.intro_title_en, settings.intro_title_ar)}
             </h1>
             <p className="mt-3 max-w-2xl text-muted-foreground leading-relaxed">

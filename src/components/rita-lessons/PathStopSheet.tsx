@@ -136,11 +136,17 @@ export function PathStopSheet({
       >
         <div className="lp-sheet-head">
           <span className="lp-sheet-dot" />
-          <h3>{item.title}</h3>
+          <h3>{item.kind === "finish" ? `خط نهاية ${item.title}` : item.title}</h3>
           <button type="button" onClick={onClose} aria-label="سكّر" className="lp-sheet-x">
             <X size={18} />
           </button>
         </div>
+
+        {item.kind === "finish" && (
+          <p className="lp-sheet-empty">
+            هون بيخلص المستوى {item.title}. اسحبه لمكان ثاني بوضع التعديل لتغيّر وين بيخلص.
+          </p>
+        )}
 
         {item.kind === "exercises" && !admin && (
           <p className="lp-sheet-empty">التمارين جاية قريباً.</p>
@@ -226,26 +232,28 @@ export function PathStopSheet({
                 />
               </>
             )}
-            <div className="lp-sheet-row">
-              <input
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                aria-label="اسم المحطة"
-                maxLength={120}
-              />
-              <button
-                type="button"
-                disabled={busy || !title.trim() || title.trim() === item.title}
-                onClick={() =>
-                  void run(
-                    () => renameFn({ data: { id: item.id, title: title.trim() } }),
-                    "انحفظ الاسم",
-                  )
-                }
-              >
-                احفظ الاسم
-              </button>
-            </div>
+            {item.kind !== "finish" && (
+              <div className="lp-sheet-row">
+                <input
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  aria-label="اسم المحطة"
+                  maxLength={120}
+                />
+                <button
+                  type="button"
+                  disabled={busy || !title.trim() || title.trim() === item.title}
+                  onClick={() =>
+                    void run(
+                      () => renameFn({ data: { id: item.id, title: title.trim() } }),
+                      "انحفظ الاسم",
+                    )
+                  }
+                >
+                  احفظ الاسم
+                </button>
+              </div>
+            )}
             <button
               type="button"
               className="lp-sheet-wide is-danger"

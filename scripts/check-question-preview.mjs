@@ -1,5 +1,5 @@
-// Actual StudyPage / orb / window / quiz. Only server functions, voice and phrase dialog
-// are inert fixtures: this preview cannot log in, call a model, or change a live account.
+// Actual StudyPage / window / quiz, with a fixture-only launcher: the temporary quiz is no
+// longer a production ring action. Server, voice and phrase boundaries remain offline fixtures.
 import { build } from "esbuild";
 import { compile } from "@tailwindcss/node";
 import { readFile, readdir, mkdir, writeFile } from "node:fs/promises";
@@ -11,20 +11,32 @@ const root = process.cwd(),
   out = resolve(root, "output/question-preview");
 await mkdir(out, { recursive: true });
 const entry = `
-import React from 'react';
+import React,{useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {createRootRoute,createRoute,createRouter,RouterProvider,Outlet} from '@tanstack/react-router';
 import i18n from 'i18next';
 import {initReactI18next} from 'react-i18next';
 import {StudyPage} from './src/components/rita-study/StudyPage';
+import {FloatingWindow,WindowDots} from './src/components/rita-study/FloatingWindow';
+import {QuestionPreview} from './src/components/rita-study/QuestionPreview';
 import {SAMPLE_PRESENT_SIMPLE} from './src/lib/guides/guide-samples';
 import {PREVIEW_QUESTIONS} from './src/components/rita-study/question-preview';
 const lang=new URLSearchParams(location.search).get('lang')==='en'?'en':'ar';
 if(new URLSearchParams(location.search).has('stress')) for(const q of PREVIEW_QUESTIONS){q.question.ar='اختار الإجابة المناسبة للنص الطويل. '.repeat(12);q.question.en='Choose an answer for this longer question. '.repeat(12);q.options=q.options.map(x=>x+' '+ 'LongUnbrokenText'.repeat(16));}
 i18n.use(initReactI18next).init({lng:lang,fallbackLng:'en',resources:{ar:{translation:{}},en:{translation:{}}},interpolation:{escapeValue:false}});
 const data={lesson:{id:'question-design-preview',title:'Present simple',title_ar:'المضارع البسيط',topic:'sample',objectives:[]},guide:{id:'sample',title:'Present simple',version:1,content:SAMPLE_PRESENT_SIMPLE,learner_path:'',allow_download:false},preview:true};
+function Preview(){
+ const box=useRef(null),launcher=useRef(null);
+ const [win,setWin]=useState(null);
+ return <div ref={box} className="edith-premium relative h-[100dvh]" dir="rtl">
+  <StudyPage data={data}/>
+  <button ref={launcher} type="button" className="st-top-btn is-soft" style={{position:'absolute',top:8,left:64,zIndex:40,display:win?.shown?'none':undefined}} onClick={()=>{const area=box.current;setWin({shown:true,at:{x:area.clientWidth*.53,y:area.clientHeight*.9}})}}>افتح معاينة الفحص</button>
+  {win&&<FloatingWindow title="Uzyra" variant="questions" origin={win.at} shown={win.shown} onHidden={()=>{setWin(current=>current&&{...current,shown:false});launcher.current?.focus()}}><QuestionPreview/></FloatingWindow>}
+  {win&&!win.shown&&<WindowDots title="Uzyra" onShow={()=>setWin(current=>current&&{...current,shown:true})} onClose={()=>setWin(null)}/>}
+ </div>;
+}
 const r=createRootRoute({component:()=> <Outlet/>});
-const p=createRoute({getParentRoute:()=>r,path:'/preview',component:()=> <StudyPage data={data}/>});
+const p=createRoute({getParentRoute:()=>r,path:'/preview',component:Preview});
 const router=createRouter({routeTree:r.addChildren([p])});
 localStorage.setItem('uzyra-study-sound','off');
 createRoot(document.getElementById('app')).render(<RouterProvider router={router}/>);
@@ -97,6 +109,10 @@ const css =
   `
 .qa-rita{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;font:600 13px Figtree,sans-serif;letter-spacing:.12em}.qa-rita p{font-size:12px;color:#6a697c;letter-spacing:0}.qa-cube{display:flex;gap:12px;align-items:center;justify-content:center;width:96px;height:88px;border-radius:25px 22px 24px 19px;background:#101010;transform:rotate(-3deg)}.qa-cube i{width:12px;height:24px;background:#fff;border-radius:8px}
 `;
+if (process.argv.includes("--build-only")) {
+  console.log("Offline question preview compiled.");
+  process.exit(0);
+}
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
   if (url.pathname === "/client.js") {
@@ -160,9 +176,7 @@ async function answer(p, right = true) {
   await p.locator(".qp-submit").click();
 }
 async function open(p) {
-  await p.locator(".st-orb").waitFor();
-  await p.locator(".st-orb").click();
-  await p.getByRole("menuitem", { name: "معاينة الأسئلة", exact: true }).click();
+  await p.getByRole("button", { name: "افتح معاينة الفحص", exact: true }).click();
   await p.locator(".qp").waitFor();
   await p.evaluate(() => document.fonts.ready);
   await p.waitForTimeout(500);

@@ -23,7 +23,7 @@ export function SessionStarter({
   return (
     <div className="rounded-[20px] bg-white p-5" style={{ border: "2px solid #121117" }}>
       <p className="text-[14px] font-semibold text-[#6a697c]">Session</p>
-      <p className="mt-2 text-[34px] font-bold leading-none tracking-[-0.03em] text-[#121117]">
+      <p className="mt-2 text-[30px] font-semibold leading-none tracking-[-0.03em] text-[#121117]">
         {totalCards}
         <span className="ml-1.5 text-[14px] font-semibold text-[#6a697c]">
           card{totalCards === 1 ? "" : "s"} ready
@@ -64,7 +64,7 @@ export function SessionStarter({
           type="button"
           disabled={empty}
           onClick={() => onStudy?.(false)}
-          className="rita-pill flex h-12 w-full items-center justify-center gap-2 text-[15px] font-semibold disabled:opacity-40"
+          className="rita-pill flex h-11 w-full items-center justify-center gap-2 text-[14px] font-semibold disabled:opacity-40"
         >
           <GraduationCap size={16} className="opacity-80" />
           Study mode
@@ -73,7 +73,7 @@ export function SessionStarter({
           type="button"
           disabled={empty}
           onClick={() => onStudy?.(true)}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-[10px] border-2 border-[#121117] bg-white text-[15px] font-semibold text-[#121117] transition-colors hover:bg-[#f4f4f8] disabled:opacity-40"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-[#121117] bg-white text-[14px] font-semibold text-[#121117] transition-colors hover:bg-[#f4f4f8] disabled:opacity-40"
         >
           <Shuffle size={15} className="opacity-70" />
           Shuffle and study

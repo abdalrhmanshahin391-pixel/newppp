@@ -114,7 +114,7 @@ function SuccessPage() {
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-full border border-white/10 bg-white/[0.06]">
           <CheckCircle2 className="rita-accent h-8 w-8" />
         </div>
-        <h1 className="mt-7 text-[34px] font-bold leading-[1.06] md:text-[40px]">
+        <h1 className="mt-7 text-[28px] font-semibold leading-[1.1] md:text-[34px]">
           {isFree ? "Plan activated!" : "Payment received"}
         </h1>
         <p className="mt-4 text-[16px] leading-[1.6] text-white/50">

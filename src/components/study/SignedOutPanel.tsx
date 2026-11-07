@@ -27,7 +27,7 @@ export function SignedOutPanel({ what }: { what: string }) {
           <RitaFace size={40} />
         </span>
 
-        <h1 className="mt-5 font-display text-[30px] font-black leading-[1.1] tracking-tight md:text-[38px]">
+        <h1 className="mt-5 font-display text-[28px] font-semibold leading-[1.1] tracking-tight md:text-[34px]">
           Sign in to keep {what}
         </h1>
         <p className="mt-3 max-w-[34rem] text-[16px] leading-relaxed text-[#54546a]">

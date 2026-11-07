@@ -191,7 +191,7 @@ export function ArticleGame({
                 key={a}
                 onClick={() => answer(a)}
                 disabled={!!pick}
-                className="rounded-[26px] py-6 font-display text-[clamp(1.4rem,4vw,2rem)] font-black text-white transition active:scale-[0.97] disabled:cursor-default"
+                className="rounded-[22px] py-5 font-display text-[clamp(1.3rem,3.4vw,1.75rem)] font-bold text-white transition active:scale-[0.97] disabled:cursor-default"
                 style={{
                   background: c.bg,
                   opacity: pick && !chosen && !reveal ? 0.35 : 1,

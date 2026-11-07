@@ -223,7 +223,7 @@ function GermanCoursePage() {
               <Languages className="w-3 h-3" /> Deutsch · {course.content_type === "mixed" ? "Words & Sentences" : course.content_type === "words" ? "Words" : "Sentences"}
             </span>
           </div>
-          <h1 className="mt-4 text-4xl md:text-5xl font-black tracking-tight capitalize text-slate-900">
+          <h1 className="mt-4 text-[28px] md:text-[36px] font-semibold tracking-tight capitalize text-slate-900">
             {course.title.split(" ").map((w, i, arr) =>
               i === arr.length - 1 ? (
                 <span key={i} className="bg-clip-text text-transparent bg-[linear-gradient(120deg,#2e7d32,#2b6df0,#7ba5f5)]">{w}</span>

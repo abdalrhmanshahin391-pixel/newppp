@@ -102,13 +102,10 @@ export function PickerBoard({
   }, [groups, q]);
 
   return (
-    <div className={framed ? "rounded-[24px] border-2 border-[#121117] bg-card p-3 sm:p-5" : ""}>
-      <div
-        data-tour="subject-shelf-header"
-        className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 pb-3"
-      >
-        <div className="flex min-w-0 items-center gap-2 rounded-lg border-2 border-[#121117] bg-white px-4 py-3">
-          <Search size={17} className="shrink-0 text-muted-foreground" />
+    <div className={framed ? "rounded-[24px] border-[1.5px] border-[#121117] bg-card p-3 sm:p-5" : ""}>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 pb-3">
+        <div className="flex h-11 min-w-0 items-center gap-2 rounded-lg border-[1.5px] border-[#121117] bg-white px-3.5">
+          <Search size={16} className="shrink-0 text-muted-foreground" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -119,7 +116,7 @@ export function PickerBoard({
         {onNewGroup && (
           <button
             onClick={onNewGroup}
-            className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-lg border-2 border-[#121117] px-5 text-[15px] font-semibold text-white transition hover:bg-[#2260e4]"
+            className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-lg border-[1.5px] border-[#121117] px-4 text-[14px] font-semibold text-white transition hover:bg-[#2260e4]"
             style={{ background: "#2b6df0" }}
           >
             <Plus size={15} /> New
@@ -134,7 +131,7 @@ export function PickerBoard({
           <Loader2 className="animate-spin" size={16} /> Loading…
         </div>
       ) : list.length === 0 ? (
-        <p className="py-8 text-center text-[14px] font-bold text-[#6a697c]">
+        <p className="py-8 text-center text-[13.5px] font-semibold text-[#6a697c]">
           {q ? "Nothing matches that." : emptyHint}
         </p>
       ) : (
@@ -145,7 +142,7 @@ export function PickerBoard({
             return (
               <section
                 key={g.id}
-                className="overflow-hidden rounded-2xl border-2 border-[#121117] bg-card"
+                className="overflow-hidden rounded-2xl border-[1.5px] border-[#121117] bg-card"
               >
                 <header
                   className="flex min-h-20 cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-cream"
@@ -207,7 +204,7 @@ export function PickerBoard({
                         e.stopPropagation();
                         onNewItem(g);
                       }}
-                      className="inline-flex min-h-11 shrink-0 touch-manipulation items-center gap-1.5 rounded-lg border-2 border-[#121117] bg-card px-3 text-[13.5px] font-semibold text-foreground transition hover:bg-[#e7eefd] active:scale-[0.98]"
+                      className="inline-flex min-h-11 shrink-0 touch-manipulation items-center gap-1.5 rounded-lg border-[1.5px] border-[#121117] bg-card px-3 text-[13.5px] font-semibold text-foreground transition hover:bg-[#e7eefd] active:scale-[0.98]"
                     >
                       <Plus size={12} /> {newItemLabel ?? itemNoun}
                     </button>
@@ -319,7 +316,7 @@ export function PickerBoard({
                                 e.stopPropagation();
                                 onAddContent(t, g);
                               }}
-                              className="inline-flex min-h-11 shrink-0 touch-manipulation items-center gap-1.5 rounded-lg border-2 border-[#121117] bg-white px-3 text-[13.5px] font-semibold text-[#121117] transition hover:bg-[#e7eefd] active:scale-[0.98]"
+                              className="inline-flex min-h-11 shrink-0 touch-manipulation items-center gap-1.5 rounded-lg border-[1.5px] border-[#121117] bg-white px-3 text-[13.5px] font-semibold text-[#121117] transition hover:bg-[#e7eefd] active:scale-[0.98]"
                             >
                               <Plus size={12} /> {addLabel}
                             </button>

@@ -113,7 +113,7 @@ function RowMenu({ name, items }: { name: string; items: MenuItem[] }) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-30 mt-1 w-56 origin-top-right rounded-2xl border-2 border-[#121117] bg-white p-1.5 shadow-none animate-[rita-pop_.16s_ease-out]"
+          className="absolute right-0 top-full z-30 mt-1 w-56 origin-top-right rounded-2xl border-[1.5px] border-[#121117] bg-white p-1.5 shadow-none animate-[rita-pop_.16s_ease-out]"
         >
           {items.map((item) => (
             <button
@@ -165,7 +165,7 @@ export function SubjectBoard({
   if (subjects.length === 0) {
     return (
       <div className="grid min-h-[40vh] place-items-center rounded-2xl border-2 border-dashed border-[#dcdce5] bg-[#f4f4f8] text-center">
-        <p className="px-6 text-[16px] font-medium text-[#4b4a5c]">
+        <p className="px-6 text-[14px] font-medium text-[#4b4a5c]">
           No subjects yet — use “Add subject” to start your board.
         </p>
       </div>
@@ -205,7 +205,7 @@ export function SubjectBoard({
                 setOverSubject(null);
               }}
               onClick={() => setOpen(expanded ? null : i)}
-              className={`group relative flex min-h-[72px] w-full cursor-pointer items-center gap-2.5 rounded-[14px] border-2 border-[#121117] py-2 pl-3 pr-1 text-left sm:pl-4 sm:pr-2 transition-colors duration-150 ${
+              className={`group relative flex min-h-[58px] w-full cursor-pointer items-center gap-2.5 rounded-[12px] border-[1.5px] border-[#121117] py-2 pl-3 pr-1 text-left sm:pl-4 sm:pr-2 transition-colors duration-150 ${
                 dropTarget ? "border-dashed" : ""
               } ${selected ? "bg-[#e7eefd]" : "bg-white hover:bg-[#f4f4f8]"}`}
             >
@@ -221,11 +221,11 @@ export function SubjectBoard({
               <span className="min-w-0 flex-1">
                 <span
                   title={subject.name}
-                  className="line-clamp-2 break-words text-[17px] font-bold leading-snug text-[#121117]"
+                  className="line-clamp-2 break-words text-[15px] font-semibold leading-snug text-[#121117]"
                 >
                   {subject.name}
                 </span>
-                <span className="mt-0.5 block text-[13.5px] font-medium text-[#4b4a5c]">
+                <span className="mt-0.5 block text-[12.5px] font-medium text-[#4b4a5c]">
                   {subject.subs.length} sub-topic{subject.subs.length === 1 ? "" : "s"}
                   {countFor && total > 0 ? ` · ${total} card${total === 1 ? "" : "s"}` : ""}
                 </span>
@@ -312,7 +312,7 @@ export function SubjectBoard({
                         setOverSub(null);
                       }}
                       onClick={() => onSelect(subSelected ? null : { kind: "sub", si: i, sj: j })}
-                      className={`group relative flex min-h-[64px] cursor-pointer items-center gap-2.5 rounded-[12px] border-2 py-2 pl-3 pr-1 transition-colors sm:pl-4 sm:pr-2 duration-150 ${
+                      className={`group relative flex min-h-[52px] cursor-pointer items-center gap-2.5 rounded-[10px] border-[1.5px] py-2 pl-3 pr-1 transition-colors sm:pl-4 sm:pr-2 duration-150 ${
                         subDrop ? "border-dashed border-[#121117]" : ""
                       } ${
                         subSelected
@@ -334,12 +334,12 @@ export function SubjectBoard({
                       <span className="min-w-0 flex-1">
                         <span
                           title={sub.name}
-                          className="line-clamp-2 break-words text-[15.5px] font-bold leading-snug text-[#121117]"
+                          className="line-clamp-2 break-words text-[14px] font-semibold leading-snug text-[#121117]"
                         >
                           {sub.name}
                         </span>
                         {countFor && (
-                          <span className="mt-0.5 block text-[13px] font-medium text-[#4b4a5c]">
+                          <span className="mt-0.5 block text-[12px] font-medium text-[#4b4a5c]">
                             {cards} card{cards === 1 ? "" : "s"}
                           </span>
                         )}
@@ -382,7 +382,7 @@ export function SubjectBoard({
                       e.stopPropagation();
                       onAddSub(i);
                     }}
-                    className="flex h-12 items-center gap-2 rounded-xl border-2 border-dashed border-[#bdbdcc] px-3.5 text-[15px] font-semibold text-[#4b4a5c] hover:bg-[#f4f4f8]"
+                    className="flex h-11 items-center gap-2 rounded-xl border-[1.5px] border-dashed border-[#bdbdcc] px-3.5 text-[14px] font-semibold text-[#4b4a5c] hover:bg-[#f4f4f8]"
                   >
                     <Plus size={14} /> Add a sub-subject
                   </button>

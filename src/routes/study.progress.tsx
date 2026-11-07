@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { studyDashboard, type Dashboard } from "@/lib/review.functions";
 import { useAuth } from "@/hooks/useAuth";
-import { useTutorialLang, type TutorialLang } from "@/components/tutorials/tutorial-lang";
+import { usePageLang, type PageLang } from "@/hooks/usePageLang";
 
 export const Route = createFileRoute("/study/progress")({
   head: () => ({
@@ -74,7 +74,7 @@ function MetricCard({
         </span>
       </div>
       <div className="mt-4">
-        <p className="font-display text-[2.2rem] font-black leading-none tracking-tight text-[#121117]">
+        <p className="font-display text-[1.9rem] font-semibold leading-none tracking-tight text-[#121117]">
           {value}
         </p>
         <p className="mt-1.5 text-[13.5px] font-bold text-[#2a2933]">{label}</p>
@@ -88,7 +88,7 @@ function MetricCard({
 
 function ProgressPage() {
   const { user } = useAuth();
-  const [lang, setLang] = useTutorialLang();
+  const [lang, setLang] = usePageLang();
   const isAr = lang === "ar";
   const dashboard = useServerFn(studyDashboard);
 
@@ -160,7 +160,7 @@ function ProgressPage() {
 
         {/* Header Title */}
         <div className="mt-5">
-          <h1 className="font-display text-[2.4rem] md:text-[2.8rem] font-black leading-tight tracking-tight text-[#121117]">
+          <h1 className="font-display text-[2rem] md:text-[2.4rem] font-semibold leading-tight tracking-tight text-[#121117]">
             {isAr ? "تحليلات تقدمي الدراسي والذاكرة" : "My Progress & Memory Analytics"}
           </h1>
           <p className="mt-1 text-[15px] md:text-[16px] font-semibold text-[#54546a]">
@@ -371,7 +371,7 @@ function ProgressPage() {
                   <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">
                     {isAr ? "دقة الاسترجاع الحقيقي" : "True Recall Accuracy"}
                   </p>
-                  <p className="mt-2 font-display text-[3.2rem] font-black leading-none text-[#121117]">
+                  <p className="mt-2 font-display text-[2.4rem] font-semibold leading-none text-[#121117]">
                     {data.retention.total >= 5 ? `${data.retention.percent}%` : "—"}
                   </p>
                 </div>
@@ -393,7 +393,7 @@ function ProgressPage() {
                     {isAr ? "متوسط معامل السهولة (SM-2 Ease)" : "Average Ease Factor (EF)"}
                   </p>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <p className="font-display text-[3.2rem] font-black leading-none text-[#121117]">
+                    <p className="font-display text-[2.4rem] font-semibold leading-none text-[#121117]">
                       {data.stats.avgEase}
                     </p>
                     <span className="text-xs font-bold text-[#6a697c]">
@@ -417,7 +417,7 @@ function ProgressPage() {
                     {isAr ? "وقت المذاكرة والالتزام" : "Revision Time & Consistency"}
                   </p>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <p className="font-display text-[3.2rem] font-black leading-none text-[#121117]">
+                    <p className="font-display text-[2.4rem] font-semibold leading-none text-[#121117]">
                       {data.stats.totalHours}
                     </p>
                     <span className="text-xs font-bold text-[#6a697c]">{isAr ? "ساعة مذاكرة" : "hours studied"}</span>

@@ -117,7 +117,7 @@ function SharePage() {
             </span>
             <h1
               className="mt-5 font-display font-black leading-[1.08] tracking-tight"
-              style={{ fontSize: "clamp(2rem, 4vw, 3.2rem)" }}
+              style={{ fontSize: "clamp(1.75rem, 3vw, 2.5rem)" }}
             >
               {mode === "questions"
                 ? "Question sets made by students & doctors"
@@ -132,7 +132,6 @@ function SharePage() {
 
           {mode === "questions" ? (
             <Link
-              data-tour="share-create-btn"
               to="/share/questions/new"
               className="inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-6 py-3.5 text-[15px] font-black text-white shadow-[0_14px_30px_-16px_rgba(142,198,63,0.9)] transition hover:-translate-y-0.5"
             >
@@ -140,7 +139,6 @@ function SharePage() {
             </Link>
           ) : (
             <Link
-              data-tour="share-create-btn"
               to="/share/new"
               className="inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-6 py-3.5 text-[15px] font-black text-white shadow-[0_14px_30px_-16px_rgba(142,198,63,0.9)] transition hover:-translate-y-0.5"
             >
@@ -150,7 +148,7 @@ function SharePage() {
         </div>
 
         {/* Mode Switcher & Filter Controls Container */}
-        <div data-tour="share-filters-switcher" className="mt-8 space-y-4">
+        <div className="mt-8 space-y-4">
           {/* Mode Switcher: Flashcards vs Questions */}
           <div className="flex items-center gap-2 rounded-full border border-black/[0.08] bg-white p-1.5 w-fit shadow-sm">
             <button
@@ -317,7 +315,7 @@ function SharePage() {
             ) : (deckFeed.data?.decks.length ?? 0) === 0 ? (
               <Empty />
             ) : (
-              <div data-tour="share-deck-grid" className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {deckFeed.data!.decks.map((d) => (
                   <DeckCard key={d.id} deck={d} author={deckFeed.data!.authors[d.owner_id] ?? null} />
                 ))}

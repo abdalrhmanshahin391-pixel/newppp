@@ -251,7 +251,7 @@ function RitaVoiceAdmin() {
             <Link to="/admin/ai-keys" className="text-sm font-bold text-[#2b6df0]">
               ← General AI settings
             </Link>
-            <h1 className="mt-2 text-3xl font-black">Rita Realtime Voice v3</h1>
+            <h1 className="mt-2 text-3xl font-semibold">Rita Realtime Voice v3</h1>
             <p className="mt-1 text-[#54546a]">
               One clean control room for the new voice system only.
             </p>

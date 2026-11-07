@@ -60,7 +60,12 @@ function RitaLessonsPage() {
   }, [pathFn, language]);
 
   useEffect(() => {
-    if (user) void load();
+    if (!user) return;
+    // Another language is another path: clear the old one while the new one loads.
+    setLessons(null);
+    setItems([]);
+    setReviews([]);
+    void load();
   }, [load, user]);
 
   const sheetLesson = lessons?.find((lesson) => lesson.id === openId) ?? null;

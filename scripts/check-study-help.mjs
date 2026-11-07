@@ -2,7 +2,8 @@
 // Server/voice/auth boundaries return explicit fixtures. No account or remote AI is used.
 import { build } from "esbuild";
 import { compile } from "@tailwindcss/node";
-import { readFile, readdir, mkdir } from "node:fs/promises";
+import { readFile, readdir, mkdir, writeFile } from "node:fs/promises";
+import assert from "node:assert/strict";
 import { resolve, extname } from "node:path";
 import { createServer } from "node:http";
 
@@ -180,4 +181,115 @@ if (process.argv.includes("--serve")) {
   await new Promise(() => {});
 }
 
-server.close();
+if (process.argv.includes("--check")) {
+  const pw = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
+  const engine = process.env.BROWSER || "chromium";
+  const browser = await pw[engine].launch({ headless: true });
+  const findings = [];
+  async function menu(page) {
+    await page.locator(".st-orb").click();
+    await page.locator(".st-rad.is-shown").waitFor();
+    await page.getByRole("menu", { name: "شو بدك نعمل؟", exact: true }).waitFor();
+  }
+  async function choose(page, label) {
+    await menu(page);
+    for (let turn = 0; turn < 8; turn += 1) {
+      const item = page.getByRole("menuitem", { name: label, exact: true });
+      if (await item.isVisible()) return item.click();
+      await page.getByRole("menuitem", { name: "المزيد", exact: true }).click();
+    }
+    throw new Error("Unreachable study service: " + label);
+  }
+  try {
+    for (const width of [390, 768, 1280]) {
+      const page = await browser.newPage({
+        viewport: { width, height: 900 },
+        reducedMotion: "reduce",
+      });
+      const errors = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      await page.goto(origin + "/preview");
+      await page.locator("iframe").waitFor();
+      await page.frameLocator("iframe").locator("[data-seg]").first().waitFor();
+      await page.getByRole("button", { name: "تحديد عبارة", exact: true }).click();
+      await menu(page);
+      const seen = new Set();
+      for (let turn = 0; turn < 8; turn += 1) {
+        for (const id of await page
+          .locator("[data-service]")
+          .evaluateAll((items) => items.map((item) => item.dataset.service)))
+          if (id !== "__more") seen.add(id);
+        if (seen.size === 7) break;
+        await page.getByRole("menuitem", { name: "المزيد", exact: true }).click();
+      }
+      assert.deepEqual(
+        [...seen].sort(),
+        [
+          "explain",
+          "meaning",
+          "word_by_word",
+          "why_form",
+          "common_mistake",
+          "make_cards",
+          "make_mcq",
+        ].sort(),
+      );
+      await page.keyboard.press("Escape");
+      await choose(page, "فلاش كاردز");
+      await page.locator(".st-practice-front").waitFor();
+      assert.equal(await page.locator(".st-practice-front").innerText(), "looks after");
+      assert.equal(await page.locator("#study-card-answer").isVisible(), false);
+      await page.getByRole("button", { name: "اكشف الإجابة", exact: true }).click();
+      assert.match(await page.locator("#study-card-answer").innerText(), /يعتني/);
+      await page.getByRole("button", { name: "التالية", exact: true }).click();
+      assert.equal(await page.locator(".st-practice-front").innerText(), "works");
+      assert.equal(await page.locator("#study-card-answer").isVisible(), false);
+      await page.getByRole("button", { name: "إغلاق التدريب", exact: true }).click();
+      await page.getByRole("button", { name: "آخر تدريب", exact: true }).click();
+      assert.equal(await page.locator(".st-practice-front").innerText(), "works");
+      await page.keyboard.press("Escape");
+      await page.getByRole("button", { name: "تحديد عبارة", exact: true }).click();
+      await choose(page, "تمارين اختيار");
+      await page.locator(".st-practice-option").first().waitFor();
+      await page.locator(".st-practice-option").nth(1).click();
+      assert.match(await page.locator(".st-practice-feedback").innerText(), /He works every day/);
+      assert.equal(await page.locator(".st-practice-option:disabled").count(), 4);
+      await page.getByRole("button", { name: "التالي", exact: true }).click();
+      await page.locator(".st-practice-option").nth(2).click();
+      assert.match(await page.locator(".st-practice-feedback").innerText(), /صح/);
+      await page.getByRole("button", { name: "السابق", exact: true }).click();
+      assert.match(
+        await page.locator(".st-practice-option[aria-pressed=true]").innerText(),
+        /He work every day\.\s+إجابتك/,
+      );
+      await page.keyboard.press("Escape");
+      await page.getByRole("button", { name: "آخر تدريب", exact: true }).click();
+      await page.locator(".st-practice-feedback").waitFor();
+      assert.equal(await page.locator(".st-practice-option:disabled").count(), 4);
+      assert.equal(
+        await page.locator(".st-practice").evaluate((el) => el.scrollWidth > el.clientWidth + 1),
+        false,
+      );
+      await page.screenshot({ path: resolve(out, `${engine}-${width}-practice.png`) });
+      assert.deepEqual(errors, []);
+      findings.push({ width, services: [...seen], errors });
+      await page.close();
+    }
+    // A server error must stay visible and offer a usable retry.
+    const failure = await browser.newPage({ viewport: { width: 390, height: 900 } });
+    await failure.goto(origin + "/preview?fail");
+    await failure.frameLocator("iframe").locator("[data-seg]").first().waitFor();
+    await failure.getByRole("button", { name: "تحديد عبارة", exact: true }).click();
+    await choose(failure, "فلاش كاردز");
+    await failure.getByRole("alert").waitFor();
+    await failure.evaluate(() => history.replaceState(null, "", "/preview"));
+    await failure.getByRole("button", { name: "جرّب مرة ثانية", exact: true }).click();
+    await failure.locator(".st-practice-front").waitFor();
+    await failure.close();
+    await writeFile(resolve(out, `${engine}-checks.json`), JSON.stringify(findings, null, 2));
+    console.log(`${engine}: seven services, cards, answers, reopen and retry passed`);
+  } finally {
+    await browser.close();
+    await new Promise((done) => server.close(done));
+  }
+} else server.close();

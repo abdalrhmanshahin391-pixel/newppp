@@ -30,7 +30,7 @@ export function ResultCard({
   return (
     <div className="mx-auto w-full max-w-lg rounded-[24px] border-2 border-[#121117] bg-white p-7 text-center">
       <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#9a9aab]">Round done</p>
-      <h2 className="mt-2 font-display text-[30px] font-black tracking-tight text-[#121117]">
+      <h2 className="mt-2 font-display text-[26px] font-semibold tracking-tight text-[#121117]">
         {acc === 100 ? "Perfect run" : acc >= 80 ? "Strong round" : "Good work"}
       </h2>
 
@@ -51,7 +51,7 @@ export function ResultCard({
           <button
             type="button"
             onClick={onDrillMistakes}
-            className="rita-pill flex h-12 items-center justify-center gap-2 text-[15px] font-semibold"
+            className="rita-pill flex h-11 items-center justify-center gap-2 text-[14px] font-semibold"
           >
             Drill my mistakes ({stats.missedIds.length})
           </button>
@@ -59,7 +59,7 @@ export function ResultCard({
         <button
           type="button"
           onClick={onAgain}
-          className="flex h-12 items-center justify-center gap-2 rounded-lg border-2 border-[#121117] bg-white text-[15px] font-semibold text-[#121117] hover:bg-black/[0.03]"
+          className="flex h-11 items-center justify-center gap-2 rounded-lg border-[1.5px] border-[#121117] bg-white text-[14px] font-semibold text-[#121117] hover:bg-black/[0.03]"
         >
           <RotateCcw size={16} /> Play again
         </button>

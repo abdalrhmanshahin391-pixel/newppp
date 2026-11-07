@@ -66,7 +66,7 @@ export function BuildProgress({
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#6a697c]">
             Building your lecture
           </p>
-          <p className="font-display text-[26px] font-black leading-none text-[#121117]">
+          <p className="font-display text-[24px] font-semibold leading-none text-[#121117]">
             {clock(elapsed)}
           </p>
         </div>

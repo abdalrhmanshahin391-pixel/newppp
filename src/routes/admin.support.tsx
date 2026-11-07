@@ -44,7 +44,7 @@ function AdminSupport() {
         <Link to="/admin" className="inline-flex items-center gap-1.5 text-sm font-bold text-muted-foreground hover:text-foreground">
           <ArrowLeft size={14} /> Administration
         </Link>
-        <h1 className="mt-6 text-3xl font-black tracking-tight">Support Center</h1>
+        <h1 className="mt-6 text-3xl font-semibold tracking-tight">Support Center</h1>
         <p className="mt-2 text-muted-foreground max-w-2xl">
           Read what users send you, decide which contact options appear, and control the whole support page.
         </p>

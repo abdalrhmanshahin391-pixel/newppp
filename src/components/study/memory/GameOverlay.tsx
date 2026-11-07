@@ -127,7 +127,7 @@ export function GameOverlay({
           />
         ) : timeUp ? (
           <div className="mx-auto w-full max-w-lg rounded-[24px] border-2 border-[#121117] bg-white p-8 text-center">
-            <h3 className="font-display text-[26px] font-black tracking-tight text-[#121117]">
+            <h3 className="font-display text-[22px] font-semibold tracking-tight text-[#121117]">
               Time is up
             </h3>
             <p className="mt-2 text-[14px] font-semibold text-[#9a9aab]">
@@ -136,7 +136,7 @@ export function GameOverlay({
             <button
               type="button"
               onClick={() => restart()}
-              className="rita-pill mt-5 h-12 w-full text-[15px] font-semibold"
+              className="rita-pill mt-5 h-11 w-full text-[14px] font-semibold"
             >
               Play again
             </button>

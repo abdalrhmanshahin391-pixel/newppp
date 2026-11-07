@@ -197,7 +197,7 @@ function AdminPaddleSyncPage() {
               <span className="h-2 w-2 rounded-full bg-[#2e7d32] animate-pulse" />
               Live Paddle Catalog Coordination
             </div>
-            <h1 className="mt-2 text-3xl font-black md:text-4xl">
+            <h1 className="mt-2 text-3xl font-semibold md:text-4xl">
               Paddle Catalog Sync Center
             </h1>
             <p className="mt-1 text-sm font-semibold text-[#6a697c]">

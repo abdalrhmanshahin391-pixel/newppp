@@ -3,6 +3,7 @@
 // functions read through RLS, and lesson progress is written only here with the
 // service role so learners cannot award themselves marks.
 import { createServerFn } from "@tanstack/react-start";
+import { CEFR, normalizeLevel, type Level } from "@/lib/rita-path-levels";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";
 import {
@@ -454,6 +455,22 @@ export const adminCreateCurriculum = createServerFn({ method: "POST" })
       .single();
     fail(error, "create book");
     return row as CurriculumRow;
+  });
+
+/** A book's level (A1..C2). Its lessons sit in that level's section of the lesson path. */
+export const adminSetCurriculumLevel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    parseWith(z.object({ curriculumId: uuid, level: z.enum(CEFR) }), data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { error } = await context.supabase
+      .from("rita_curricula")
+      .update({ level: data.level })
+      .eq("id", data.curriculumId);
+    fail(error, "set book level");
+    return { ok: true };
   });
 
 /** Which language a book teaches. Its lessons then show only to learners of that language. */
@@ -1573,7 +1590,7 @@ type PathSourceRow = {
   topic: string;
   image_url: string | null;
   objectives: unknown;
-  curriculum: { kind?: string } | null;
+  curriculum: { kind?: string; level?: string } | null;
 };
 
 export type PathLesson = {
@@ -1598,6 +1615,8 @@ export type PathLesson = {
   experience: "classic" | "study";
   /** Place on the path (the admin's order); null for a lesson not placed yet. */
   path_order: number | null;
+  /** The book's level (A1..C2): the path is cut into one section per level. */
+  level: Level;
 };
 
 /** A finished lesson suggested for review after a week. */
@@ -1623,7 +1642,7 @@ export const getLessonPath = createServerFn({ method: "GET" })
     let query = context.supabase
       .from("rita_lessons")
       .select(
-        "id, title, title_ar, topic, image_url, objectives, path_order, curriculum:rita_curricula!inner(kind, status)",
+        "id, title, title_ar, topic, image_url, objectives, path_order, curriculum:rita_curricula!inner(kind, status, level)",
       )
       .eq("status", "published")
       .eq("curriculum.status", "published");
@@ -1696,6 +1715,7 @@ export const getLessonPath = createServerFn({ method: "GET" })
       (lesson): PathLesson => ({
         id: lesson.id,
         kind: lesson.curriculum?.kind === "vocabulary" ? "vocabulary" : "grammar",
+        level: normalizeLevel(lesson.curriculum?.level),
         title: lesson.title,
         title_ar: lesson.title_ar,
         topic: lesson.topic,

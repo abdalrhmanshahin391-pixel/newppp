@@ -7,9 +7,11 @@ import {
   adminImportCurriculumWindow,
   adminImportLesson,
   adminSetCurriculumLanguage,
+  adminSetCurriculumLevel,
   type CurriculumRow,
   type WindowRow,
 } from "@/lib/rita-curriculum.functions";
+import { CEFR, normalizeLevel } from "@/lib/rita-path-levels";
 import { errorText } from "./book-utils";
 import type { useBookReader } from "./useBookReader";
 
@@ -32,6 +34,7 @@ export function AdvancedTools({
 }) {
   const languages = useLanguageRegistry();
   const languageFn = useServerFn(adminSetCurriculumLanguage);
+  const levelFn = useServerFn(adminSetCurriculumLevel);
   const importWindowFn = useServerFn(adminImportCurriculumWindow);
   const importLessonFn = useServerFn(adminImportLesson);
   const next = nextWindow(book);
@@ -80,6 +83,34 @@ export function AdvancedTools({
               </option>
             ))}
           </select>
+        </label>
+
+        <label className="flex flex-wrap items-center gap-2 font-semibold">
+          مستوى الكتاب
+          <select
+            value={normalizeLevel(book.level)}
+            disabled={Boolean(busy)}
+            onChange={(event) =>
+              void run(
+                "level",
+                () =>
+                  levelFn({
+                    data: { curriculumId: book.id, level: normalizeLevel(event.target.value) },
+                  }),
+                "تغيّر مستوى الكتاب",
+              )
+            }
+            className="rita-select !w-auto"
+          >
+            {CEFR.map((level) => (
+              <option key={level} value={level}>
+                {level}
+              </option>
+            ))}
+          </select>
+          <span className="text-[13px] font-normal text-[var(--pp-muted)]">
+            دروس الكتاب بتظهر بقسم هالمستوى على مسار الدروس.
+          </span>
         </label>
 
         <div className="space-y-2">

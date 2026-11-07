@@ -59,12 +59,12 @@ function JoinBox() {
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && go()}
         placeholder="abc123  or  ritajet.app/join/abc123"
-        className="h-14 flex-1 rounded-2xl border border-black/10 bg-white px-5 font-mono text-[18px] font-black tracking-[0.12em] text-[#121117] placeholder:font-sans placeholder:text-[14px] placeholder:font-semibold placeholder:tracking-normal placeholder:text-[#9a9aab] focus:outline-none focus:ring-2 focus:ring-[#4a82f3]"
+        className="h-12 flex-1 rounded-2xl border border-black/10 bg-white px-4 font-mono text-[16px] font-semibold tracking-[0.12em] text-[#121117] placeholder:font-sans placeholder:text-[14px] placeholder:font-semibold placeholder:tracking-normal placeholder:text-[#9a9aab] focus:outline-none focus:ring-2 focus:ring-[#4a82f3]"
         aria-label="Invite code or link"
       />
       <button
         onClick={go}
-        className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl bg-[#121117] px-7 text-[15px] font-black text-white transition hover:brightness-125"
+        className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[#121117] px-6 text-[14px] font-semibold text-white transition hover:brightness-125"
       >
         <LogIn size={17} /> Join
       </button>
@@ -96,7 +96,7 @@ function SpacesPage() {
               <p className="text-[15px] font-semibold text-[#6a697c]">Classrooms and study groups</p>
               <h1
                 className="mt-4 font-display font-black leading-[1.06] tracking-tight"
-                style={{ fontSize: "clamp(2rem, 4vw, 3.1rem)" }}
+                style={{ fontSize: "clamp(1.75rem, 3vw, 2.5rem)" }}
               >
                 Study together, in one room.
               </h1>
@@ -105,7 +105,7 @@ function SpacesPage() {
                 decks, members and announcements.
               </p>
 
-              <div data-tour="spaces-join" className="mt-7 rounded-[16px] border-2 border-[#121117] bg-[#f4f4f8] p-5">
+              <div className="mt-7 rounded-[16px] border-2 border-[#121117] bg-[#f4f4f8] p-5">
                 <p className="text-[14px] font-semibold text-[#121117]">
                   Have a code? Enter it here
                 </p>
@@ -118,7 +118,6 @@ function SpacesPage() {
 
 
         <Section
-          dataTour="spaces-classrooms"
           icon={<GraduationCap size={16} />}
           title="Classrooms"
           note="A whole class sharing one organised deck library."
@@ -127,7 +126,6 @@ function SpacesPage() {
           loading={spaces.isLoading}
         />
         <Section
-          dataTour="spaces-groups"
           icon={<Users size={16} />}
           title="Study groups"
           note="A small circle where everyone adds decks."
@@ -164,7 +162,6 @@ function Section({
   onCreate,
   items,
   loading,
-  dataTour,
 }: {
   icon: React.ReactNode;
   title: string;
@@ -172,10 +169,9 @@ function Section({
   onCreate: () => void;
   items: ReturnType<typeof useMySpaces>["data"];
   loading: boolean;
-  dataTour?: string;
 }) {
   return (
-    <section className="mt-12" data-tour={dataTour}>
+    <section className="mt-12">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/70 px-4 py-1.5 text-[14px] font-semibold text-[#121117]">

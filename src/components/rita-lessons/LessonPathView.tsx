@@ -6,7 +6,9 @@ import { toast } from "sonner";
 import {
   ArrowRight,
   Check,
+  ChevronDown,
   Dumbbell,
+  Flag,
   FileText,
   FolderOpen,
   Loader2,
@@ -14,7 +16,13 @@ import {
   MessageCircle,
   Pencil,
   Plus,
-  Star,
+  Shuffle,
+  BookOpen,
+  Globe2,
+  Headphones,
+  PenLine,
+  Sparkles,
+  Trophy,
 } from "lucide-react";
 import type { PathLesson, ReviewSuggestion } from "@/lib/rita-curriculum.functions";
 import {
@@ -32,18 +40,39 @@ import {
   menuOpenSound,
   optionNote,
 } from "@/components/rita-study/tech-sound";
-import { LessonImage, LessonStars } from "./LessonArt";
+import { LanguageFlag } from "@/components/language/LanguageFlag";
+import { useDismiss } from "@/components/header/useDismiss";
+import { useLearningLanguage } from "@/hooks/useLearningLanguage";
+import {
+  levelRank,
+  levelRows,
+  normalizeLevel,
+  startLevelKey,
+  statesFrom,
+  type Level,
+  type LevelCount,
+  type LevelRow,
+  type ViewState,
+} from "@/lib/rita-path-levels";
+import { LessonImage } from "./LessonArt";
 import { PathStopSheet } from "./PathStopSheet";
 
 // Horizontal offsets that make the path zig-zag, as in the lesson map design.
 const ZIGZAG = [0, 64, 90, 64, 0, -64, -90, -64];
 /** Height of one stop on the road; editing leaves a gap between stops for the + buttons. */
-const ROW = 212;
-const ROW_EDITING = 262;
-/** How tall a stop's content is (stars, picture, two title lines, the small line). */
-const STOP_HEIGHT = 206;
+const ROW = 196;
+const ROW_EDITING = 246;
+/** How tall a stop's content is (picture, two title lines, the small line). */
+const STOP_HEIGHT = 184;
 const WIDTH = 360;
-const NODE = 104;
+const NODE = 88;
+/** From the top of a stop to the top of its picture (room for the "you are here" tag). */
+const NODE_TOP = 16;
+/** Height of a level's banner row, and of the «coming soon» row after the last level. */
+const BANNER_ROW = 128;
+const SOON_ROW = 112;
+/** Faint line drawings beside the road: only decoration, nothing about the learner. */
+const DOODLES = [BookOpen, MessageCircle, Globe2, Headphones, PenLine, Sparkles];
 const FREE_ORDER_KEY = "ritaFreeOrder";
 const HOLD_MS = 300;
 
@@ -55,6 +84,7 @@ const LOOK: Record<Look, { color: string; soft: string; word: string; Icon: type
   classic: { color: "#2b6df0", soft: "#e7eefd", word: "محادثة", Icon: MessageCircle },
   exercises: { color: "#f08a24", soft: "#fff1e2", word: "تمارين", Icon: Dumbbell },
   resources: { color: "#7c5cff", soft: "#f0ecff", word: "ملفات", Icon: FolderOpen },
+  finish: { color: "#121117", soft: "#f4f4f8", word: "النهاية", Icon: Flag },
 };
 
 type Node = { type: "lesson"; lesson: PathLesson } | { type: "item"; item: PathItem };
@@ -64,19 +94,61 @@ const refOf = (node: Node): PathRef => ({ type: node.type, id: idOf(node) });
 const lookOf = (node: Node): Look =>
   node.type === "item" ? node.item.kind : node.lesson.experience === "study" ? "study" : "classic";
 
-function UkFlag() {
+/** The language being learned and the level the learner is at; a tap switches the language. */
+function PathLanguage({ level }: { level: Level }) {
+  const { language, languages, pending, setLanguage } = useLearningLanguage();
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const close = useCallback(() => setOpen(false), []);
+  useDismiss(open, close, root);
   return (
-    <svg
-      viewBox="0 0 60 40"
-      className="h-6 w-9 overflow-hidden rounded-md shadow-sm"
-      aria-label="English"
-    >
-      <rect width="60" height="40" fill="#1F3F8F" />
-      <path d="M0 0l60 40M60 0L0 40" stroke="#fff" strokeWidth="8" />
-      <path d="M0 0l60 40M60 0L0 40" stroke="#D7263D" strokeWidth="3" />
-      <path d="M30 0v40M0 20h60" stroke="#fff" strokeWidth="12" />
-      <path d="M30 0v40M0 20h60" stroke="#D7263D" strokeWidth="7" />
-    </svg>
+    <div className="relative" ref={root}>
+      <button
+        type="button"
+        className="lp-lang"
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-label={`لغة التعلّم: ${language?.name_ar ?? ""} · المستوى ${level}. غيّر اللغة`}
+        onClick={() => setOpen((value) => !value)}
+      >
+        {language && <LanguageFlag language={language} size={26} />}
+        <span dir="ltr">
+          {language?.name_native ?? "…"} · {level}
+        </span>
+        <ChevronDown size={15} aria-hidden="true" />
+      </button>
+      {open && (
+        <div className="lp-lang-menu" role="menu">
+          {languages.map((item) => {
+            const on = item.code === language?.code;
+            return (
+              <button
+                key={item.code}
+                type="button"
+                role="menuitemradio"
+                aria-checked={on}
+                disabled={pending !== null}
+                onClick={async () => {
+                  if (!on && !(await setLanguage(item.code))) return;
+                  close();
+                }}
+              >
+                <LanguageFlag language={item} size={24} />
+                <span className="min-w-0 flex-1 truncate">{item.name_ar}</span>
+                <span className="lp-lang-native" dir="ltr">
+                  {item.name_native}
+                </span>
+                {pending === item.code ? (
+                  <Loader2 size={15} className="animate-spin" />
+                ) : on ? (
+                  <Check size={15} />
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -139,36 +211,101 @@ export function LessonPathView({
     });
   }
 
+  const { language: learning, languages } = useLearningLanguage();
   const lessonList = lessons ?? [];
-  const current = lessonList.find((lesson) => lesson.state === "current");
-  const totalStars = lessonList.reduce((sum, lesson) => sum + lesson.stars, 0);
-  const completed = lessonList.filter((lesson) => lesson.state === "done").length;
-  const currentIndex = nodes.findIndex(
-    (node) => node.type === "lesson" && node.lesson.state === "current",
+  // Lessons in road order (the server's order), for the level a learner chose to start from.
+  const lessonOrder = useMemo(
+    () => nodes.flatMap((node) => (node.type === "lesson" ? [node.lesson] : [])),
+    [nodes],
   );
+  const [startLevel, setStartLevel] = useState<Level | null>(null);
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(startLevelKey(language));
+      setStartLevel(saved ? normalizeLevel(saved) : null);
+    } catch {
+      setStartLevel(null);
+    }
+  }, [language]);
+  const states = useMemo(
+    () => statesFrom(lessonOrder, (lesson) => lesson.level, startLevel),
+    [lessonOrder, startLevel],
+  );
+  const stateOf = (lesson: PathLesson): ViewState => states.get(lesson.id) ?? lesson.state;
+  const current = lessonOrder.find((lesson) => states.get(lesson.id) === "current");
+  const lowest = lessonOrder.length
+    ? Math.min(...lessonOrder.map((lesson) => levelRank(lesson.level)))
+    : 0;
+  const headerLevel: Level =
+    current?.level ?? startLevel ?? lessonOrder[0]?.level ?? normalizeLevel(null);
+
+  function startFrom(level: Level | null) {
+    try {
+      if (level) window.localStorage.setItem(startLevelKey(language), level);
+      else window.localStorage.removeItem(startLevelKey(language));
+    } catch {
+      /* private mode: the choice lasts until the page closes */
+    }
+    setStartLevel(level);
+    confirmSound();
+  }
+
+  // The road with a banner opening each level and a finish line closing it. While editing only the
+  // banners stay (for orientation); the drawn finish lines and «coming soon» are left out.
+  const allRows = useMemo(
+    () =>
+      levelRows(nodes, (node) => ({
+        level: node.type === "lesson" ? node.lesson.level : null,
+        finishOf:
+          node.type === "item" && node.item.kind === "finish"
+            ? normalizeLevel(node.item.title)
+            : null,
+        done: node.type === "lesson" && states.get(node.lesson.id) === "done",
+      })),
+    [nodes, states],
+  );
+  const rows = useMemo(
+    () => (editing ? allRows.filter((r) => r.type === "banner" || r.type === "node") : allRows),
+    [allRows, editing],
+  );
+  const counts = new Map<Level, LevelCount>();
+  for (const r of allRows) if (r.type === "banner") counts.set(r.level, r.count);
 
   const row = editing ? ROW_EDITING : ROW;
-  const centres = useMemo(
-    () =>
-      nodes.map((_, index) => ({
-        x: WIDTH / 2 + ZIGZAG[index % ZIGZAG.length],
-        y: index * row + 40 + NODE / 2,
-      })),
-    [nodes, row],
-  );
+  const layout = useMemo(() => {
+    let top = 0;
+    let stop = 0;
+    return rows.map((r) => {
+      const h = r.type === "banner" ? BANNER_ROW : r.type === "soon" ? SOON_ROW : row;
+      const isStop = r.type === "node" || r.type === "finish";
+      const x = isStop ? WIDTH / 2 + ZIGZAG[stop++ % ZIGZAG.length] : WIDTH / 2;
+      const y = isStop ? top + NODE_TOP + NODE / 2 : top + h / 2;
+      const entry = { top, h, x, y };
+      top += h;
+      return entry;
+    });
+  }, [rows, row]);
   const segment = (from: { x: number; y: number }, to: { x: number; y: number }) => {
     const midY = (from.y + to.y) / 2;
     return `M${from.x} ${from.y} C${from.x} ${midY} ${to.x} ${midY} ${to.x} ${to.y}`;
   };
-  const road = centres
+  // The road runs through every row but «coming soon», which hangs off its end.
+  const points = layout.filter((_, index) => rows[index].type !== "soon");
+  const currentRow = rows.findIndex(
+    (r) =>
+      r.type === "node" && r.node.type === "lesson" && states.get(r.node.lesson.id) === "current",
+  );
+  const road = points
     .slice(1)
-    .map((point, index) => segment(centres[index], point))
+    .map((point, index) => segment(points[index], point))
     .join(" ");
-  const walked = centres
-    .slice(1, Math.max(0, currentIndex) + 1)
-    .map((point, index) => segment(centres[index], point))
+  const walked = points
+    .slice(1, Math.max(0, currentRow) + 1)
+    .map((point, index) => segment(points[index], point))
     .join(" ");
-  const height = Math.max(1, nodes.length) * row + (editing ? 90 : 30);
+  const last = layout[layout.length - 1];
+  const height = (last ? last.top + last.h : row) + (editing ? 90 : 30);
+  const nodeRows = rows.flatMap((r, index) => (r.type === "node" ? [index] : []));
 
   function open(node: Node) {
     if (editing) {
@@ -176,6 +313,10 @@ export function LessonPathView({
       return;
     }
     if (node.type === "item") {
+      if (node.item.kind === "finish") {
+        showFinish(normalizeLevel(node.item.title));
+        return;
+      }
       if (node.item.kind === "resources") setSheet(node.item);
       else {
         // Exercises: only their look for now.
@@ -184,11 +325,20 @@ export function LessonPathView({
       }
       return;
     }
-    if (node.lesson.state === "locked" && !freeOrder) {
-      setHint("أكمل الدرس الحالي أولاً لفتح هذا الدرس — أو فعّل الوضع الحر.");
+    if (stateOf(node.lesson) === "locked" && !freeOrder) {
+      setHint("أكمل الدرس الحالي أولاً لفتح هذا الدرس — أو فعّل «ترتيب حر» فوق.");
       return;
     }
     onOpenLesson(node.lesson);
+  }
+
+  function showFinish(level: Level) {
+    const count = counts.get(level) ?? { lessons: 0, done: 0 };
+    setHint(
+      count.lessons > 0 && count.done >= count.lessons
+        ? `خلّصت المستوى ${level} كله. برافو!`
+        : `خلّصت ${count.done} من ${count.lessons} دروس بالمستوى ${level}. كمّل للنهاية.`,
+    );
   }
 
   function openReview(review: ReviewSuggestion) {
@@ -276,8 +426,10 @@ export function LessonPathView({
     let best = "";
     let bestIndex = -1;
     let bestDistance = 72;
-    centres.forEach((centre, index) => {
-      const id = idOf(nodes[index]);
+    rows.forEach((r, index) => {
+      if (r.type !== "node") return;
+      const centre = layout[index];
+      const id = idOf(r.node);
       if (id === state.id) return;
       const distance = Math.hypot(centre.x - px, centre.y - py);
       if (distance < bestDistance) {
@@ -329,6 +481,16 @@ export function LessonPathView({
     }
   }
 
+  /** The level of the section a new stop at `index` falls into (the stop before it decides). */
+  function levelAt(index: number): Level {
+    const before = rows.find((r) => r.type === "node" && r.nodeIndex === index - 1);
+    const after = rows.find((r) => r.type === "node" && r.nodeIndex === index);
+    const level =
+      (before?.type === "node" ? before.level : null) ??
+      (after?.type === "node" ? after.level : null);
+    return level ?? lessonOrder[0]?.level ?? normalizeLevel(null);
+  }
+
   async function add(kind: PathItemKind, index: number) {
     setAdding(null);
     setBusy(true);
@@ -337,7 +499,7 @@ export function LessonPathView({
         data: {
           language,
           kind,
-          title: kind === "exercises" ? "تمارين" : "Resources",
+          title: kind === "exercises" ? "تمارين" : kind === "finish" ? levelAt(index) : "Resources",
           list: nodes.map(refOf),
           index,
         },
@@ -359,18 +521,23 @@ export function LessonPathView({
   }
 
   // The + buttons: in the gap between every two stops, and one after the last.
-  const gapY = (index: number) => index * row - (row - STOP_HEIGHT) / 2;
+  const gap = (row - STOP_HEIGHT) / 2;
+  const lastNode = layout[nodeRows[nodeRows.length - 1]];
   const pluses = editing
     ? [
-        ...centres.slice(1).map((point, index) => ({
-          index: index + 1,
-          x: (centres[index].x + point.x) / 2,
-          y: gapY(index + 1),
-        })),
+        ...nodeRows.slice(1).map((rowIndex, index) => {
+          // At a level's edge the + sits above the next level's banner: it adds to the level before.
+          const edge = rows[rowIndex - 1]?.type === "banner" ? rowIndex - 1 : rowIndex;
+          return {
+            index: index + 1,
+            x: (layout[nodeRows[index]].x + layout[edge].x) / 2,
+            y: layout[edge].top - gap,
+          };
+        }),
         {
           index: nodes.length,
-          x: nodes.length ? centres[nodes.length - 1].x : WIDTH / 2,
-          y: nodes.length ? gapY(nodes.length) + 34 : 60,
+          x: lastNode ? lastNode.x : WIDTH / 2,
+          y: lastNode ? lastNode.top + row - gap + 34 : 60,
         },
       ]
     : [];
@@ -392,80 +559,40 @@ export function LessonPathView({
           >
             <ArrowRight size={22} />
           </Link>
-          <div className="flex items-center gap-2 text-sm font-bold">
-            <UkFlag />
-            <span dir="ltr">English · A1</span>
+          <PathLanguage level={headerLevel} />
+          <div className="flex items-center gap-1.5">
+            {!editing && (
+              <button
+                type="button"
+                onClick={toggleFreeOrder}
+                aria-pressed={freeOrder}
+                title={freeOrder ? "الترتيب الحر شغّال: كل الدروس مفتوحة" : "افتح أي درس بترتيب حر"}
+                className={`lp-edit ${freeOrder ? "is-on" : ""}`}
+              >
+                <Shuffle size={14} aria-hidden="true" />
+                ترتيب حر
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditing((value) => !value);
+                  setAdding(null);
+                }}
+                aria-pressed={editing}
+                className={`lp-edit ${editing ? "is-on" : ""}`}
+              >
+                {editing ? <Check size={15} /> : <Pencil size={14} />}
+                {editing ? "تم" : "تعديل المسار"}
+              </button>
+            )}
           </div>
-          {isAdmin ? (
-            <button
-              type="button"
-              onClick={() => {
-                setEditing((value) => !value);
-                setAdding(null);
-              }}
-              aria-pressed={editing}
-              className={`lp-edit ${editing ? "is-on" : ""}`}
-            >
-              {editing ? <Check size={16} /> : <Pencil size={15} />}
-              {editing ? "تم" : "تعديل المسار"}
-            </button>
-          ) : (
-            <span className="w-10" />
-          )}
         </div>
       </header>
 
       <section className="mx-auto max-w-md px-4 pt-7 text-center">
-        <h2 className="text-[30px] font-bold leading-9">دروسك مع ريتا</h2>
-        <p className="mt-1.5 text-sm font-semibold text-[var(--pp-muted)]">
-          تحدّث مع ريتا، حقّق أهداف كل درس، واجمع النجوم.
-        </p>
-        {lessonList.length > 0 && (
-          <div className="lp-stats">
-            <div className="lp-stat">
-              <span className="lp-stat-n">
-                {completed}
-                <span className="lp-stat-of"> / {lessonList.length}</span>
-              </span>
-              <span className="lp-stat-w">دروس خلّصتها</span>
-            </div>
-            <div className="lp-stat">
-              <span className="lp-stat-n">
-                <Star size={18} fill="#FFC83D" stroke="#E8A400" aria-hidden="true" />
-                {totalStars}
-              </span>
-              <span className="lp-stat-w">نجمة</span>
-            </div>
-            <div
-              className="lp-bar"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={lessonList.length}
-              aria-valuenow={completed}
-              aria-label="تقدّمك في الدروس"
-            >
-              <span style={{ width: `${(completed / lessonList.length) * 100}%` }} />
-            </div>
-          </div>
-        )}
-        <div className="lp-legend" aria-label="ألوان المسار">
-          {(Object.keys(LOOK) as Look[]).map((look) => (
-            <span key={look}>
-              <i style={{ background: LOOK[look].color }} />
-              {LOOK[look].word}
-            </span>
-          ))}
-        </div>
-        {!editing && (
-          <button
-            type="button"
-            onClick={toggleFreeOrder}
-            aria-pressed={freeOrder}
-            className="mt-2 min-h-10 rounded-lg px-3 text-xs font-bold text-[var(--pp-muted)] underline decoration-[var(--pp-line)] underline-offset-4 hover:text-[var(--pp-ink)]"
-          >
-            {freeOrder ? "الوضع الحر مفعّل — أوقفه" : "الوضع الحر: افتح أي درس بترتيب حر"}
-          </button>
-        )}
+        <h2 className="lp-heading">دروسك مع ريتا</h2>
         {editing && (
           <p className="lp-edit-hint">
             اضغط مطوّلاً على أي محطة واسحبها فوق ثانية عشان يتبدّلوا. اكبس + لإضافة تمارين أو ملفات.
@@ -505,9 +632,18 @@ export function LessonPathView({
       )}
       {lessons && nodes.length === 0 && !editing && (
         <div className="mx-auto mt-16 max-w-xs text-center">
-          <p className="font-bold text-[var(--pp-ink)]">لا توجد دروس منشورة بعد.</p>
-          <p className="mt-1 text-sm font-semibold text-[var(--pp-muted)]">
-            جرّب محادثة حرة مع ريتا حتى تجهز الدروس:
+          {learning && (
+            <span className="mx-auto mb-3 grid w-fit">
+              <LanguageFlag language={learning} size={40} />
+            </span>
+          )}
+          <p className="font-semibold text-[var(--pp-ink)]">
+            لسا ما في دروس {learning?.name_ar ?? ""} منشورة.
+          </p>
+          <p className="mt-1 text-sm text-[var(--pp-muted)]">
+            {languages.length > 1
+              ? "بتقدر تبدّل اللغة من العلم فوق، أو جرّب محادثة حرة مع ريتا:"
+              : "جرّب محادثة حرة مع ريتا حتى تجهز الدروس:"}
           </p>
           <Link to="/rita-live" className="rita-btn rita-btn-primary mt-4 gap-2 !inline-flex">
             <MessageCircle size={16} /> محادثة حرة مع ريتا
@@ -529,20 +665,96 @@ export function LessonPathView({
           >
             <path d={road} className="lp-road" />
             {walked && <path d={walked} className="lp-road is-walked" />}
+            {road &&
+              !editing &&
+              [0, 1, 2].map((dot) => (
+                <circle key={dot} r="2.4" className="lp-spark">
+                  <animateMotion
+                    dur={`${Math.max(6, nodes.length * 2.4)}s`}
+                    // Started in the past, so each light is already on the road (never parked at 0,0).
+                    begin={`-${dot * Math.max(2, nodes.length * 0.8)}s`}
+                    repeatCount="indefinite"
+                    path={road}
+                  />
+                </circle>
+              ))}
           </svg>
+          {!editing &&
+            nodeRows.map((rowIndex, index) => {
+              const next = layout[rowIndex + 1];
+              if (index % 2 === 1 || !next || rows[rowIndex + 1].type !== "node") return null;
+              const centre = layout[rowIndex];
+              const Doodle = DOODLES[(index / 2) % DOODLES.length];
+              // Halfway to the next stop, on the side the road is not leaning to.
+              const side = (centre.x + next.x) / 2 >= WIDTH / 2 ? -1 : 1;
+              return (
+                <span
+                  key={`doodle-${index}`}
+                  className="lp-doodle"
+                  aria-hidden="true"
+                  style={{
+                    left: WIDTH / 2 + side * 150 - 14,
+                    top: (centre.y + next.y) / 2 - 14,
+                    ["--i" as string]: index,
+                  }}
+                >
+                  <Doodle size={28} strokeWidth={1.4} />
+                </span>
+              );
+            })}
 
-          {nodes.map((node, index) => {
+          {rows.map((r, index) => {
+            const place = layout[index];
+            if (r.type === "banner" || r.type === "soon") {
+              return (
+                <LevelBanner
+                  key={`${r.type}-${r.level}-${index}`}
+                  row={r}
+                  top={place.top}
+                  index={index}
+                  editing={editing}
+                  startLevel={startLevel}
+                  lowest={lowest}
+                  onStart={startFrom}
+                />
+              );
+            }
+            if (r.type === "finish") {
+              return (
+                <FinishStop
+                  key={`finish-${r.level}-${index}`}
+                  level={r.level}
+                  count={r.count}
+                  x={place.x}
+                  top={place.top}
+                  index={index}
+                  onOpen={() => showFinish(r.level)}
+                />
+              );
+            }
+            const node = r.node;
             const id = idOf(node);
-            const centre = centres[index];
+            const centre = place;
             const look = LOOK[lookOf(node)];
             const lesson = node.type === "lesson" ? node.lesson : null;
-            const locked = lesson?.state === "locked";
-            const isCurrent = lesson?.state === "current";
+            const state = lesson ? stateOf(lesson) : null;
+            const locked = state === "locked";
+            const isCurrent = state === "current";
+            const finishLevel =
+              node.type === "item" && node.item.kind === "finish"
+                ? normalizeLevel(node.item.title)
+                : null;
+            const finishCount = finishLevel ? counts.get(finishLevel) : undefined;
+            const finished = Boolean(
+              finishCount && finishCount.lessons > 0 && finishCount.done >= finishCount.lessons,
+            );
             const title = lesson
               ? lesson.title || lesson.title_ar
-              : node.type === "item"
-                ? node.item.title
-                : "";
+              : finishLevel
+                ? `نهاية ${finishLevel}`
+                : node.type === "item"
+                  ? node.item.title
+                  : "";
             return (
               <button
                 key={id}
@@ -565,20 +777,16 @@ export function LessonPathView({
                 data-fresh={fresh === id ? "" : undefined}
                 data-shake={shake === id ? "" : undefined}
                 style={{
-                  ["--x" as string]: `${centre.x - 75}px`,
-                  ["--y" as string]: `${index * row}px`,
+                  ["--x" as string]: `${centre.x - 85}px`,
+                  ["--y" as string]: `${place.top}px`,
                   ["--i" as string]: index,
-                  ["--c" as string]: look.color,
-                  ["--soft" as string]: look.soft,
+                  ["--c" as string]: finished ? "#c88a12" : look.color,
+                  ["--soft" as string]: finished ? "#fff6df" : look.soft,
                 }}
                 aria-label={`${title} — ${look.word}${locked ? " (مقفل)" : ""}`}
               >
                 {isCurrent && !editing && <span className="lp-here">إنت هون</span>}
-                {lesson ? (
-                  <LessonStars stars={lesson.stars} />
-                ) : (
-                  <span className="block h-[22px]" />
-                )}
+                <span className="block" style={{ height: NODE_TOP - 4 }} aria-hidden="true" />
                 <span className="lp-disc" style={{ width: NODE, height: NODE }}>
                   {isCurrent && !editing && <span className="lp-pulse" aria-hidden="true" />}
                   <span className="absolute inset-0 rounded-full bg-white" />
@@ -588,9 +796,13 @@ export function LessonPathView({
                       alt=""
                       className={`lp-face ${locked ? "is-locked" : ""}`}
                     />
+                  ) : finished ? (
+                    <span className="lp-face lp-item-face">
+                      <Trophy size={32} strokeWidth={2.1} aria-hidden="true" />
+                    </span>
                   ) : (
                     <span className="lp-face lp-item-face">
-                      <look.Icon size={40} strokeWidth={2.2} aria-hidden="true" />
+                      <look.Icon size={32} strokeWidth={2.1} aria-hidden="true" />
                     </span>
                   )}
                   {locked && (
@@ -598,7 +810,7 @@ export function LessonPathView({
                       <Lock size={15} />
                     </span>
                   )}
-                  {lesson?.state === "done" && (
+                  {state === "done" && (
                     <span className="lp-badge is-done">
                       <Check size={16} strokeWidth={3} />
                     </span>
@@ -620,6 +832,8 @@ export function LessonPathView({
                   )
                 ) : node.type === "item" && node.item.kind === "resources" ? (
                   <span className="lp-sub">ملفات وروابط</span>
+                ) : finishLevel ? (
+                  <span className="lp-sub">{finishLine(finishCount)}</span>
                 ) : (
                   <span className="lp-sub">قريباً</span>
                 )}
@@ -645,7 +859,7 @@ export function LessonPathView({
               </button>
               {adding === plus.index && (
                 <div className="lp-add" role="menu">
-                  {(["exercises", "resources"] as PathItemKind[]).map((kind) => {
+                  {(["exercises", "resources", "finish"] as PathItemKind[]).map((kind) => {
                     const Icon = LOOK[kind].Icon;
                     return (
                       <button
@@ -661,7 +875,11 @@ export function LessonPathView({
                         <span>
                           <Icon size={18} />
                         </span>
-                        {kind === "exercises" ? "تمارين" : "ملفات وروابط"}
+                        {kind === "exercises"
+                          ? "تمارين"
+                          : kind === "resources"
+                            ? "ملفات وروابط"
+                            : `خط نهاية ${levelAt(plus.index)}`}
                       </button>
                     );
                   })}
@@ -685,13 +903,15 @@ export function LessonPathView({
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--pp-line)] bg-white/95 px-4 py-3 backdrop-blur">
           <div className="mx-auto flex max-w-md items-center justify-between gap-4">
             <div className="min-w-0 text-right">
-              <p className="text-xs font-semibold text-[var(--pp-muted)]">الدرس الحالي</p>
-              <p className="truncate text-[15px] font-bold">{current.title || current.title_ar}</p>
+              <p className="text-[11.5px] font-semibold text-[var(--pp-muted)]">الدرس الحالي</p>
+              <p className="truncate text-[14px] font-semibold">
+                {current.title || current.title_ar}
+              </p>
             </div>
             <button
               type="button"
               onClick={() => onOpenLesson(current)}
-              className="rita-btn rita-btn-primary shrink-0"
+              className="rita-btn rita-btn-primary lp-go shrink-0"
             >
               متابعة
             </button>
@@ -709,5 +929,124 @@ export function LessonPathView({
         />
       )}
     </main>
+  );
+}
+
+function finishLine(count: LevelCount | undefined) {
+  if (!count || count.lessons === 0) return "خط النهاية";
+  return count.done >= count.lessons ? "خلّصت المستوى" : `${count.done} من ${count.lessons} دروس`;
+}
+
+/** The finish line drawn after a level's last lesson (when the admin placed none of their own). */
+function FinishStop({
+  level,
+  count,
+  x,
+  top,
+  index,
+  onOpen,
+}: {
+  level: Level;
+  count: LevelCount;
+  x: number;
+  top: number;
+  index: number;
+  onOpen: () => void;
+}) {
+  const finished = count.lessons > 0 && count.done >= count.lessons;
+  const look = LOOK.finish;
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="lp-node lp-finish"
+      data-finished={finished ? "" : undefined}
+      style={{
+        ["--x" as string]: `${x - 85}px`,
+        ["--y" as string]: `${top}px`,
+        ["--i" as string]: index,
+        ["--c" as string]: look.color,
+        ["--soft" as string]: look.soft,
+      }}
+      aria-label={`نهاية المستوى ${level} — ${finishLine(count)}`}
+    >
+      <span className="block" style={{ height: NODE_TOP - 4 }} aria-hidden="true" />
+      <span className="lp-disc" style={{ width: NODE, height: NODE }}>
+        <span className="absolute inset-0 rounded-full bg-white" />
+        <span className="lp-face lp-item-face">
+          {finished ? (
+            <Trophy size={32} strokeWidth={2.1} aria-hidden="true" />
+          ) : (
+            <Flag size={32} strokeWidth={2.1} aria-hidden="true" />
+          )}
+        </span>
+        <span className="lp-pill">{look.word}</span>
+      </span>
+      <span className="lp-title">نهاية {level}</span>
+      <span className="lp-sub">{finishLine(count)}</span>
+    </button>
+  );
+}
+
+/** A level's banner on the road, or the «coming soon» one after the last level. */
+function LevelBanner({
+  row,
+  top,
+  index,
+  editing,
+  startLevel,
+  lowest,
+  onStart,
+}: {
+  row: Extract<LevelRow<unknown>, { type: "banner" | "soon" }>;
+  top: number;
+  index: number;
+  editing: boolean;
+  startLevel: Level | null;
+  lowest: number;
+  onStart: (level: Level | null) => void;
+}) {
+  const soon = row.type === "soon";
+  const rank = levelRank(row.level);
+  const startedHere = !soon && startLevel === row.level && rank > lowest;
+  const canStart =
+    !soon &&
+    !editing &&
+    rank > lowest &&
+    !startedHere &&
+    row.type === "banner" &&
+    row.count.done < row.count.lessons;
+  const canReset =
+    !soon && !editing && rank === lowest && startLevel !== null && levelRank(startLevel) > lowest;
+  return (
+    <div
+      className={`lp-level ${soon ? "is-soon" : ""}`}
+      style={{ top: top + 12, ["--i" as string]: index }}
+    >
+      <span className="lp-level-chip" dir="ltr">
+        {row.level}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="lp-level-name">المستوى {row.level}</span>
+        <span className="lp-level-sub">
+          {soon
+            ? "قريباً"
+            : row.type === "banner"
+              ? `${row.count.done} من ${row.count.lessons} دروس${startedHere ? " · بدأت من هون" : ""}`
+              : ""}
+        </span>
+      </span>
+      {soon && <Lock size={16} aria-hidden="true" className="shrink-0 text-[var(--pp-muted)]" />}
+      {canStart && (
+        <button type="button" className="lp-level-go" onClick={() => onStart(row.level)}>
+          ابدأ من هون
+        </button>
+      )}
+      {canReset && (
+        <button type="button" className="lp-level-go" onClick={() => onStart(null)}>
+          ابدأ من الأول
+        </button>
+      )}
+    </div>
   );
 }

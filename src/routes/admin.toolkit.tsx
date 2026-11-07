@@ -186,7 +186,7 @@ function AdminToolkit() {
         <Link to="/admin" className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-muted-foreground">
           <ArrowLeft size={15} /> Administration site
         </Link>
-        <h1 className="mb-1 inline-flex items-center gap-3 text-3xl font-black tracking-tight">
+        <h1 className="mb-1 inline-flex items-center gap-3 text-3xl font-semibold tracking-tight">
           <Gift size={26} className="text-primary" /> Free toolkit
         </h1>
         <p className="mb-8 text-sm text-muted-foreground">
