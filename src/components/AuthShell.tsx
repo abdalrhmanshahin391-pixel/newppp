@@ -78,7 +78,7 @@ export function AuthShell({
                 <Sparkles size={13} /> {eyebrow}
               </span>
               <h2
-                className="mt-4 max-w-[15ch] font-display font-black leading-[1.03] tracking-tight text-[#121117]"
+                className="mt-4 max-w-[15ch] font-display font-semibold leading-[1.08] tracking-tight text-[#121117]"
                 style={{ fontSize: "clamp(1.8rem, 2.6vw, 2.5rem)" }}
               >
                 Your whole semester, in one calm workspace.
@@ -115,7 +115,7 @@ export function AuthShell({
             </div>
 
             <h1
-              className="font-display font-black leading-[1.05] tracking-tight text-foreground"
+              className="font-display font-semibold leading-[1.1] tracking-tight text-foreground"
               style={{ fontSize: "clamp(1.9rem, 4vw, 2.4rem)" }}
             >
               {title}
@@ -173,7 +173,7 @@ export const inputClass =
   "w-full rounded-2xl border-2 border-black/[0.07] bg-[#f4f4f8] px-4 h-13 py-3.5 text-[15px] font-medium text-foreground placeholder:font-normal placeholder:text-muted-foreground outline-none transition-all focus:border-[var(--rita-green)] focus:bg-white focus:ring-4 focus:ring-[var(--rita-green-soft)]";
 
 export const buttonClass =
-  "inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--rita-green)] px-8 py-4 text-[17px] font-black text-[color:var(--rita-green-ink)] shadow-[0_16px_30px_-16px_rgba(122,160,44,0.9)] transition-all hover:-translate-y-0.5 hover:bg-[var(--rita-green-deep)] active:translate-y-0 disabled:translate-y-0 disabled:opacity-60";
+  "inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--rita-green)] px-6 py-3 text-[15px] font-semibold text-[color:var(--rita-green-ink)] shadow-[0_16px_30px_-16px_rgba(122,160,44,0.9)] transition-all hover:-translate-y-0.5 hover:bg-[var(--rita-green-deep)] active:translate-y-0 disabled:translate-y-0 disabled:opacity-60";
 
 export function ErrorBox({ message }: { message: string }) {
   return (

@@ -149,7 +149,7 @@ function OffersPage() {
             <span className="inline-flex items-center gap-2 text-[15px] font-semibold text-[#6a697c]">
               <Gift size={16} /> Free toolkit
             </span>
-            <h1 className="mt-5 font-display text-4xl font-black leading-[1.06] tracking-tight md:text-5xl">
+            <h1 className="mt-5 font-display text-4xl font-semibold leading-[1.1] tracking-tight md:text-5xl">
               Get free access
               <br />
               to the study toolkit.

@@ -62,7 +62,7 @@ function CheckoutFallback() {
       <ProHeader variant="solid" />
       <main className="mx-auto grid min-h-[70vh] max-w-[38rem] place-items-center px-6 text-center">
         <div>
-          <h1 className="text-[28px] font-semibold">We could not open the payment form</h1>
+          <h1 className="text-[26px] font-semibold">We could not open the payment form</h1>
           <p className="mt-3 text-[15px] text-muted-foreground">
             Nothing was charged. Refresh this page to try again, or email{" "}
             <a href={`mailto:${SUPPORT_EMAIL}`} className="rita-accent underline">
@@ -308,7 +308,7 @@ function CheckoutPage() {
           <ArrowLeft size={15} /> Back to plans
         </Link>
 
-        <h1 className="mt-7 text-center text-[32px] font-semibold leading-[1.08] md:text-[44px]">
+        <h1 className="mt-7 text-center text-[28px] font-semibold leading-[1.1] md:text-[36px]">
           Secure checkout
         </h1>
         <p className="mx-auto mt-4 max-w-[36rem] text-center text-[15.5px] leading-[1.6] text-muted-foreground md:text-[16.5px]">
