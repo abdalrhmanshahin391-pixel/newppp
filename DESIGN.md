@@ -278,7 +278,7 @@ One main action per panel, hierarchy by weight instead of by frame:
   cut to a few letters); count under the name; one "..." menu per row (rename, add sub-subject, move up/down, remove...).
   Move up/down is the touch way to reorder (native drag does nothing on iPad); the drag handle only shows with a mouse.
   Remove always opens the confirmation dialog.
-- **Action column** (`Add subject`, `Edit`, ...): big tiles from 1024px; below that one short scrolling strip of 44px chips so
+- **Action column** (`Add subject`, `Edit`, ...): big tiles from 1280px; below that (tablets too) one short scrolling strip of 44px chips so
   the learner's subjects are on screen first. Mode tabs are "Study / Edit" on phones.
 - **Memory Lab:** Play is directly under the pair count and says which game it will start ("Play Match"); the four games
   are a 2x2 choice; the two switches say what they do in one line.

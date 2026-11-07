@@ -4053,8 +4053,10 @@ body:has(.rh-learn-home) {
   cursor: not-allowed;
 }
 /* Below desktop the action column becomes one short scrolling strip, so the learner's own
-   subjects are on screen instead of five big tiles; hints stay for desktop. */
-@media (max-width: 1023px) {
+   subjects are on screen instead of five big tiles; hints stay for desktop. Tablets (up to
+   1279px, iPad landscape included) get the strip too, so the subject list is not squeezed
+   between the tiles and the session panel. */
+@media (max-width: 1279px) {
   .rita-app .rh-rail {
     width: auto;
     flex: 0 0 auto;

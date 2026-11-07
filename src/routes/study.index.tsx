@@ -413,7 +413,7 @@ function StudyBoard() {
                         compact: true,
                       },
                       {
-                        label: "Shuffle and study",
+                        label: "Shuffle",
                         icon: <Shuffle size={15} />,
                         onClick: () => startSession(true),
                         disabled: sessionCards.length === 0,
@@ -431,7 +431,7 @@ function StudyBoard() {
                         tone: "solid",
                       },
                       {
-                        label: "Shuffle and study",
+                        label: "Shuffle",
                         icon: <Shuffle size={15} />,
                         onClick: () => startSession(true),
                         tone: "outline",

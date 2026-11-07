@@ -93,8 +93,8 @@ export function StudyLayout({
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-[96rem] gap-6 px-4 pb-28 pt-6 md:px-8 md:pb-24 md:pt-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
-        <aside className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:-mx-8 md:px-8 lg:mx-0 lg:grid lg:content-start lg:gap-2 lg:overflow-visible lg:px-0 lg:pb-0">
+      <div className="mx-auto grid max-w-[96rem] gap-6 px-4 pb-28 pt-6 md:px-8 md:pb-24 md:pt-8 xl:grid-cols-[15rem_minmax(0,1fr)]">
+        <aside className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:-mx-8 md:px-8 xl:mx-0 xl:grid xl:content-start xl:gap-2 xl:overflow-visible xl:px-0 xl:pb-0">
           {rail.map((item) => (
             <RailTile key={item.label} item={item} />
           ))}
