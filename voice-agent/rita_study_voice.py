@@ -40,8 +40,17 @@ ACTIONS = {
     "kindly, without re-teaching everything. No sheet.",
     "compare_arabic": "Say the main difference from Arabic in one short sentence. Then a sheet with a "
     "small table (Arabic | the language being learned) and one pair of examples.",
-    "word_by_word": "Say in one short sentence what the sentence means. Then a sheet with a table: "
-    "word | its job | meaning, one row per word.",
+    "word_by_word": "Say in one short sentence how the selected sentence is structured. "
+    "Then a sheet with a table: part | its role | simple explanation. "
+    "Group meaningful grammatical parts in their original order, covering the whole selection "
+    "in at most 8 parts. Keep verb groups and fixed phrases together, e.g. She | is reading | a book, "
+    "never is | reading. Explain structure, not a dictionary list. "
+    "No quiz, follow-up question, or request for the learner to explain back.",
+    "why_form": "Explain why the selected word or form is used HERE in one simple short sentence, "
+    "using the surrounding sentence and guide rule. Mention the relevant subject, tense, agreement, "
+    "spelling or position only when the supplied context supports it. Do not re-explain the whole "
+    "sentence or list other uses. If no reason is established, say you cannot determine it from "
+    "this passage; never guess. No quiz, follow-up question, or request to explain back. No sheet.",
     "common_mistake": "Name the usual mistake in one short sentence. Then a sheet with the wrong "
     "form, the right form as an example, and why, as a watch-out line.",
     "summarize_section": "Say what the section is about in one short sentence. Then a sheet with 3 to "
@@ -201,7 +210,8 @@ class StudyVoice:
             "simplify": "بسّطلي بمثال",
             "explain_back": "بدي أشرحها بكلامي",
             "compare_arabic": "قارنها بالعربي",
-            "word_by_word": "فصّلها كلمة كلمة",
+            "word_by_word": "فكّك الجملة",
+            "why_form": "ليش هيك؟",
             "common_mistake": "شو الغلطة الشائعة هون",
             "summarize_section": "لخّصلي القسم",
             "explain_reply": "اشرحلي ببساطة",

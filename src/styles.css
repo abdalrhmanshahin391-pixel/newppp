@@ -4975,6 +4975,11 @@ html.rita-app,
   color: #fff;
   border-color: #bed4ff;
 }
+.st-rad-item[data-service="word_by_word"]:not(:disabled) .st-rad-disc {
+  background: #e7eefd;
+  color: #17376b;
+  border-color: #bed4ff;
+}
 .st-rad-item[data-placeholder] .st-rad-disc {
   border-style: dashed;
   color: #9cc1ff;

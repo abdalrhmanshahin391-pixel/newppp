@@ -17,10 +17,10 @@ import i18n from 'i18next';
 import {initReactI18next} from 'react-i18next';
 import {StudyPage} from './src/components/rita-study/StudyPage';
 import {SAMPLE_THIRD_PERSON} from './src/lib/guides/guide-samples';
-import {PREVIEW_QUESTIONS} from './src/components/rita-study/question-preview';
 const lang=new URLSearchParams(location.search).get('lang')==='en'?'en':'ar';
 i18n.use(initReactI18next).init({lng:lang,fallbackLng:'en',resources:{ar:{translation:{}},en:{translation:{}}},interpolation:{escapeValue:false}});
 SAMPLE_THIRD_PERSON.sections.push({kind:'usage',heading:'In context',items:[{label:'Care',example:'She {{looks after}} her little brother.'},{label:'River',example:'We sat on the river {{bank}}.'},{label:'Money',example:'She went to the {{bank}}.'}]});
+SAMPLE_THIRD_PERSON.sections.push({kind:'usage',heading:'Sentence structure',items:[{label:'Reading',example:'She is reading a book.'}]});
 const data={lesson:{id:'question-design-preview',title:'Present simple',title_ar:'المضارع البسيط',topic:'sample',objectives:[]},guide:{id:'sample',title:'Present simple',version:1,content:SAMPLE_THIRD_PERSON,learner_path:'',allow_download:false},preview:true};
 const r=createRootRoute({component:()=> <Outlet/>});
 const p=createRoute({getParentRoute:()=>r,path:'/preview',component:()=> <StudyPage data={data}/>});
@@ -88,7 +88,7 @@ const result = await build({
             contents: names
               .map(
                 (name) =>
-                  `export async function ${name}({data}){await new Promise(r=>setTimeout(r,new URLSearchParams(location.search).has('slow')?6000:900));if(new URLSearchParams(location.search).has('fail')) return {ok:false,reason:'failed',message:'تعذّر تنفيذ الطلب. جرّب مرة ثانية.'};if('${name}'==='explainPhrase')return {ok:true,explanation:{lang:'en',translation_ar:data.text==='bank'?(data.context.includes('Selected (example): We sat')?'ضفة النهر':'بنك'):'يعتني بـ',pronunciation_ar:'',tip_ar:''}};return {ok:true,text:'لما نحكي عن he أو she أو it بالمضارع البسيط، غالبًا بنضيف s للفعل. مثال: He works.'}}`,
+                  `export async function ${name}({data}){await new Promise(r=>setTimeout(r,new URLSearchParams(location.search).has('slow')?6000:900));if(new URLSearchParams(location.search).has('fail')) return {ok:false,reason:'failed',message:'تعذّر تنفيذ الطلب. جرّب مرة ثانية.'};if('${name}'==='explainPhrase')return {ok:true,explanation:{lang:'en',translation_ar:data.text==='bank'?(data.context.includes('Selected (example): We sat')?'ضفة النهر':'بنك'):'يعتني بـ',pronunciation_ar:'',tip_ar:''}};if(data.action==='word_by_word')return {ok:true,text:['She: مين عم يعمل الفعل.','is reading: الفعل عم يصير الآن؛ الجزآن بيشتغلوا مع بعض.','a book: الشي اللي عم تقرأه.'].join(String.fromCharCode(10))};if(data.action==='why_form')return {ok:true,text:'استخدمنا studies لأن الفاعل She. مع study، قبل y حرف ساكن، فبنحوّل y إلى ies.'};return {ok:true,text:'لما نحكي عن he أو she أو it بالمضارع البسيط، غالبًا بنضيف s للفعل. مثال: He works.'}}`,
               )
               .join("\n"),
           };
@@ -170,10 +170,10 @@ const server = createServer(async (req, res) => {
   }
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.end(
-    '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/client.css"></head><body><div style="height:44px;display:flex;align-items:center;gap:10px;padding:4px 12px;background:#eef2fa;font:12px sans-serif" dir="rtl"><span>فحص محلي بردود تجريبية</span><button onclick="qaSelect(\'looks after\')">تحديد عبارة</button><button onclick="qaSelect(\'With he, she and it, the present simple verb changes its ending. The ending depends on the last letters of the verb.\')">تحديد قاعدة</button><button onclick="qaSelect(\'bank\',0)">ضفة النهر</button><button onclick="qaSelect(\'bank\',1)">بنك المال</button></div><div id="app" style="height:calc(100vh - 44px)"></div><script src="/client.js"></script></body></html>',
+    '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/client.css"></head><body><div style="height:44px;display:flex;align-items:center;gap:10px;padding:4px 12px;background:#eef2fa;font:12px sans-serif" dir="rtl"><span>فحص محلي بردود تجريبية</span><button onclick="qaSelect(\'looks after\')">تحديد عبارة</button><button onclick="qaSelect(\'With he, she and it, the present simple verb changes its ending. The ending depends on the last letters of the verb.\')">تحديد قاعدة</button><button onclick="qaSelect(\'She is reading a book.\')">حدّد جملة</button><button onclick="qaSelect(\'studies\')">حدّد studies</button></div><div id="app" style="height:calc(100vh - 44px)"></div><script src="/client.js"></script></body></html>',
   );
 });
-await new Promise((done) => server.listen(4177, "127.0.0.1", done));
+await new Promise((done) => server.listen(4178, "127.0.0.1", done));
 const origin = "http://127.0.0.1:" + server.address().port;
 if (process.argv.includes("--serve")) {
   console.log("Study help preview: " + origin + "/preview");

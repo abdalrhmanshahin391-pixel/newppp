@@ -740,6 +740,17 @@ export function StudyPage({
                   .join(" · ")
           }
           hasSelection={Boolean(selection || replySelection) && ringMode === "main"}
+          selectionHint={
+            ringMode !== "main" || replySelection || !selected
+              ? undefined
+              : selected.kind === "word"
+                ? "لتفكيك التركيب، حدّد جملة أو عبارة."
+                : selected.kind === "sentence"
+                  ? "للمعنى أو سبب الصيغة، حدّد كلمة أو عبارة داخل الجملة."
+                  : selected.kind === "phrase"
+                    ? undefined
+                    : "للخدمات المتخصصة، حدّد كلمة أو جملة واحدة من الدرس."
+          }
           tone={replySelection && ringMode === "main" ? "reply" : undefined}
           hint={
             ringMode === "language"

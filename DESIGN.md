@@ -1,8 +1,8 @@
 # DESIGN.md — the visual system of Uzyra (formerly EdithLab) / Rita
 
-## Study circle: first two help services
+## Study circle: first four help services
 
-The existing draggable study circle offers «اشرحلي» and «معنى ونطق». Explanation uses a white
+The existing draggable study circle offers «اشرحلي», «معنى ونطق», «فكّك الجملة» and «ليش هيك؟». Explanation uses a white
 disc with an ink icon; meaning uses the blue action disc. Both inherit the radial opening,
 labels and selection strip. Unsuitable selections leave the service visible but disabled.
 Explanation language is a labelled tool in the selection strip. Practice generation and the
@@ -20,6 +20,15 @@ and returns focus to the circle. Closing stops audio. Opening the circle or requ
 explanation dismisses the card. Reduced motion removes its entrance. Contextual meanings are
 cached by phrase and context; audio stays shared by phrase. Pronunciation uses the existing
 voice/microphone guard, so the clip is not heard as the learner.
+
+«فكّك الجملة» groups a selected sentence or phrase into meaningful grammatical parts, keeping
+verb groups and fixed expressions together (She | is reading | a book). The text reply gives one
+short line per part; the voice reply gives one short sentence with a small table in its sheet.
+«ليش هيك؟» accepts a selected word or short form and explains its reason in the surrounding
+sentence in one to three short sentences (one spoken sentence). It never invents a reason when
+the supplied context is insufficient. Both use the existing request lifecycle and explanation
+language; neither quizzes the learner. Unsuitable actions have a specific accessible hint, and
+the selection strip explains when a word or a sentence should be selected. «انتبه للغلطة» is deferred.
 
 This is the source of truth for every visual change. It was written from the code that is
 already shipped (`src/styles.css`, section "Home page theme", and the Rita components), not

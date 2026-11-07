@@ -56,6 +56,36 @@ test("ST-U06: the menu only offers what fits the selection", () => {
   assert.ok(ACTION_INFO.explain.primary && ACTION_INFO.simplify.primary);
 });
 
+test("sentence breakdown and form reasoning accept their own selection kinds", () => {
+  assert.ok(availableActions("sentence").includes("word_by_word"));
+  assert.ok(availableActions("phrase").includes("word_by_word"));
+  assert.ok(!availableActions("word").includes("word_by_word"));
+  assert.ok(availableActions("word").includes("why_form"));
+  assert.ok(availableActions("phrase").includes("why_form"));
+  for (const kind of [
+    "sentence",
+    "rule",
+    "arabic_only",
+    "table_cells",
+    "too_long",
+    "non_text",
+  ] as const)
+    assert.ok(!availableActions(kind).includes("why_form"), kind);
+});
+
+test("a selected inflected word carries its sentence into the reason request", () => {
+  const example = all.find(
+    (segment) => segment.role === "example" && segment.text.includes("studies"),
+  );
+  assert.ok(example);
+  const result = resolveSelection(guide, { segIds: [example.seg], exact: "studies" }, "why_form");
+  assert.ok(result.ok);
+  assert.equal(result.quote, "studies");
+  assert.equal(result.kind, "word");
+  assert.ok(result.context.includes(example.text));
+  assert.ok(result.context.includes("She"));
+});
+
 test("ST-I03 (pure part): a selection that is not in the guide is refused", () => {
   assert.equal(selectionMatches("most verbs", [seg("s1.r1.c1")]), true);
   const ok = resolveSelection(guide, { segIds: ["s1.r1.c1"], exact: "most verbs" }, "explain");

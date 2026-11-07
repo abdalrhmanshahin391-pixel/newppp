@@ -34,6 +34,7 @@ export type RadialItem = {
   /** One of a set of choices: true for the chosen one, false for the others. */
   checked?: boolean;
   disabled?: boolean;
+  disabledReason?: string;
 };
 
 const ICONS: Record<StudyAction, LucideIcon> = {
@@ -43,6 +44,7 @@ const ICONS: Record<StudyAction, LucideIcon> = {
   explain_back: RotateCcw,
   compare_arabic: Languages,
   word_by_word: ListTree,
+  why_form: Lightbulb,
   common_mistake: AlertTriangle,
   summarize_section: BookOpenText,
   explain_reply: Lightbulb,
@@ -58,15 +60,16 @@ const SHORT: Partial<Record<StudyAction, string>> = {
   meaning: "معنى ونطق",
   explain_back: "أنا بشرح",
   compare_arabic: "بالعربي",
-  word_by_word: "كلمة كلمة",
+  word_by_word: "فكّك الجملة",
+  why_form: "ليش هيك؟",
   common_mistake: "غلطة شائعة",
   summarize_section: "لخّص القسم",
 };
 
 /**
- * The first two study services. Other actions remain available in their own workspaces.
+ * The first four study services. Other actions remain available in their own workspaces.
  */
-export const RING_ACTIONS: StudyAction[] = ["explain", "meaning"];
+export const RING_ACTIONS: StudyAction[] = ["explain", "meaning", "word_by_word", "why_form"];
 
 export function actionItem(action: StudyAction): RadialItem {
   return { id: action, label: SHORT[action] ?? ACTION_INFO[action].label, Icon: ICONS[action] };
@@ -84,11 +87,19 @@ export const KIND_LABEL: Record<SelectionKind, string> = {
   non_text: "",
 };
 
-/** Keep both services discoverable; unsuitable selections disable the relevant service. */
+/** Keep the services discoverable; unsuitable selections disable the relevant service. */
 export function ringItems(options: { actions: StudyAction[] }): RadialItem[] {
   return RING_ACTIONS.map((action) => ({
     ...actionItem(action),
     disabled: !options.actions.includes(action),
+    disabledReason:
+      action === "meaning"
+        ? "حدّد كلمة أو عبارة قصيرة بالإنجليزي أو الألماني"
+        : action === "word_by_word"
+          ? "حدّد جملة أو عبارة عشان نوضح تركيبها"
+          : action === "why_form"
+            ? "حدّد كلمة أو صيغة قصيرة داخل الجملة"
+            : "حدّد كلمة أو جملة من الدرس",
   }));
 }
 

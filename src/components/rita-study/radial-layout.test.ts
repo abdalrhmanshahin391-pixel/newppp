@@ -4,6 +4,23 @@ import { layoutRadial, nearestSlot } from "./radial-layout.ts";
 
 const area = { width: 1100, height: 760, topReserve: 88 };
 
+test("four study services fit at the saved default with room for the selection guidance", () => {
+  for (const width of [390, 768, 1280]) {
+    const height = 750;
+    const cx = width * 0.53,
+      cy = height * 0.9;
+    const topReserve = width < 560 ? 180 : 120;
+    const layout = layoutRadial({ width, height, cx, cy, count: 4, topReserve });
+    assert.equal(layout.slots.length, 4, `all four services fit at ${width}px`);
+    for (const slot of layout.slots) {
+      assert.ok(cx + slot.x - 52 >= 12);
+      assert.ok(cx + slot.x + 52 <= width - 12);
+      assert.ok(cy + slot.y - 30 >= topReserve + 12);
+      assert.ok(cy + slot.y + 58 <= height - 12);
+    }
+  }
+});
+
 function inside(layout: ReturnType<typeof layoutRadial>, cx: number, cy: number) {
   return layout.slots.every(
     (s) =>

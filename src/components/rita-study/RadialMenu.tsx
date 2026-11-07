@@ -56,6 +56,7 @@ export const RadialMenu = forwardRef<
     items: RadialItem[];
     quote: string;
     meta: string;
+    selectionHint?: string;
     hasSelection: boolean;
     /** "reply": the selection is in Rita's own answers (dark red quote card). */
     tone?: "reply";
@@ -148,7 +149,7 @@ export const RadialMenu = forwardRef<
   }, [mounted, orbKey, measure, containerRef]);
 
   // Which options fit around the ring; the rest wait on a second page behind "more".
-  const topReserve = geom && geom.w < 560 ? 150 : 96;
+  const topReserve = geom && geom.w < 560 ? 180 : 120;
   const base = geom
     ? layoutRadial({
         cx: geom.cx,
@@ -335,6 +336,7 @@ export const RadialMenu = forwardRef<
                 «{props.quote.length > 90 ? `${props.quote.slice(0, 90)}…` : props.quote}»
               </p>
               {props.meta ? <p className="st-rad-meta">{props.meta}</p> : null}
+              {props.selectionHint ? <p className="st-rad-meta">{props.selectionHint}</p> : null}
             </>
           ) : (
             <p className="st-rad-q is-hint">{props.hint}</p>
@@ -387,17 +389,14 @@ export const RadialMenu = forwardRef<
               className="st-rad-item"
               disabled={item.disabled || props.busy}
               title={
-                item.disabled
-                  ? item.id === "meaning"
-                    ? "حدّد كلمة أو عبارة قصيرة بالإنجليزي أو الألماني"
-                    : "حدّد كلمة أو جملة من الدرس"
-                  : item.label
+                item.disabled ? (item.disabledReason ?? "حدّد كلمة أو جملة من الدرس") : item.label
               }
+              aria-description={item.disabled ? item.disabledReason : undefined}
               data-hot={hot === i ? "" : undefined}
               data-placeholder={item.placeholder ? "" : undefined}
               data-checked={item.checked ? "" : undefined}
               data-tone={item.tone}
-              data-service={item.id === "explain" || item.id === "meaning" ? item.id : undefined}
+              data-service={item.id}
               data-picked={picked === item.id ? "" : undefined}
               tabIndex={i === visible.findIndex((option) => !option.disabled) ? 0 : -1}
               style={{
