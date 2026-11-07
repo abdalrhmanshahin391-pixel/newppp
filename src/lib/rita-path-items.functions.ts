@@ -84,14 +84,14 @@ export const adminSavePathLayout = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Adds an exercises or resources stop at `index` of the path the admin sees. */
+/** Adds an exercises, resources or finish-line stop at `index` of the path the admin sees. */
 export const adminAddPathItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     parse(
       z.object({
         language,
-        kind: z.enum(["exercises", "resources"]),
+        kind: z.enum(["exercises", "resources", "finish"]),
         title: z.string().trim().min(1).max(120),
         list: z.array(ref).max(500),
         index: z.number().int().min(0).max(500),

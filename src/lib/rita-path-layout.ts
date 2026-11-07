@@ -2,7 +2,8 @@
 // and path items an admin places between them (rita_path_items: exercises or resources, with a
 // fractional path_order in the same number space). Pure: merging, moving and the orders to save.
 
-export type PathItemKind = "exercises" | "resources";
+/** "finish": the admin's own finish line of a level (its title is the level, e.g. "A1"). */
+export type PathItemKind = "exercises" | "resources" | "finish";
 
 export type PathItem = {
   id: string;
