@@ -17,6 +17,34 @@ BODY = {
 }
 
 
+def test_form_reason_request_uses_the_same_voice_lifecycle():
+    voice = StudyVoice.from_body(BODY)
+    request = voice.take_action({
+        "request_id": "why-form-1",
+        "action": "why_form",
+        "quote": "studies",
+        "context": "He studies English. study -> studies",
+    })
+    assert request is not None and request.action == "why_form"
+    assert "He studies English." in voice.section()
+    assert "ليش هيك؟" in voice.user_line()
+    assert voice.cancel({"request_id": "why-form-1"})
+    assert voice.request is None
+
+
+def test_mistake_prevention_request_preserves_rule_context_and_cancel():
+    voice = StudyVoice.from_body(BODY)
+    request = voice.take_action({
+        "request_id": "mistake-1", "action": "common_mistake",
+        "quote": "add -s", "context": "With he, she or it add -s. He works every day.",
+    })
+    assert request is not None and request.action == "common_mistake"
+    assert "He works every day." in voice.section()
+    assert "انتبه للغلطة" in voice.user_line()
+    assert voice.cancel({"request_id": "mistake-1"})
+    assert voice.request is None
+
+
 def test_only_study_sessions_get_the_section():
     assert study_enabled(BODY)
     assert not study_enabled({"mode": "guided_lesson", "lesson": {"brief": "x"}})

@@ -15,6 +15,7 @@ import {
   Check,
   Eraser,
   Ellipsis,
+  Languages,
   Move,
   PanelLeftClose,
   Volume2,
@@ -55,11 +56,13 @@ export const RadialMenu = forwardRef<
     items: RadialItem[];
     quote: string;
     meta: string;
+    selectionHint?: string;
     hasSelection: boolean;
     /** "reply": the selection is in Rita's own answers (dark red quote card). */
     tone?: "reply";
     hint: string;
     canReport: boolean;
+    onLanguage?: () => void;
     busy: boolean;
     sound: boolean;
     autoFocus: boolean;
@@ -146,7 +149,7 @@ export const RadialMenu = forwardRef<
   }, [mounted, orbKey, measure, containerRef]);
 
   // Which options fit around the ring; the rest wait on a second page behind "more".
-  const topReserve = geom && geom.w < 560 ? 150 : 96;
+  const topReserve = geom && geom.w < 560 ? 180 : 120;
   const base = geom
     ? layoutRadial({
         cx: geom.cx,
@@ -224,8 +227,13 @@ export const RadialMenu = forwardRef<
   );
 
   useEffect(() => {
-    if (shown && props.autoFocus) buttons.current[0]?.focus();
-  }, [shown, props.autoFocus]);
+    if (shown && props.autoFocus) {
+      const first = buttons.current.find((button) => button && !button.disabled);
+      (
+        first ?? containerRef.current?.querySelector<HTMLButtonElement>(".st-rad-tools button")
+      )?.focus();
+    }
+  }, [shown, props.autoFocus, containerRef]);
 
   if (!mounted || !geom || !layout) return null;
   const { cx, cy, w, h } = geom;
@@ -240,16 +248,22 @@ export const RadialMenu = forwardRef<
     }
     const count = visible.length;
     const at = buttons.current.findIndex((node) => node === document.activeElement);
-    const go = (to: number) => {
+    const go = (to: number, step = 1) => {
       event.preventDefault();
-      const next = (to + count) % count;
-      buttons.current[next]?.focus();
-      light(next);
+      for (let offset = 0; offset < count; offset += 1) {
+        const next = (((to + offset * step) % count) + count) % count;
+        const button = buttons.current[next];
+        if (!button || button.disabled) continue;
+        button.focus();
+        light(next);
+        break;
+      }
     };
     if (event.key === "ArrowRight" || event.key === "ArrowDown") go(at + 1);
-    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") go(at < 0 ? count - 1 : at - 1);
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp")
+      go(at < 0 ? count - 1 : at - 1, -1);
     else if (event.key === "Home") go(0);
-    else if (event.key === "End") go(count - 1);
+    else if (event.key === "End") go(count - 1, -1);
   };
 
   const tool = (
@@ -322,12 +336,14 @@ export const RadialMenu = forwardRef<
                 «{props.quote.length > 90 ? `${props.quote.slice(0, 90)}…` : props.quote}»
               </p>
               {props.meta ? <p className="st-rad-meta">{props.meta}</p> : null}
+              {props.selectionHint ? <p className="st-rad-meta">{props.selectionHint}</p> : null}
             </>
           ) : (
             <p className="st-rad-q is-hint">{props.hint}</p>
           )}
         </div>
         <div className="st-rad-tools" role="toolbar" aria-label="أدوات الدائرة">
+          {props.onLanguage && tool("لغة الشرح", Languages, props.onLanguage)}
           {props.hasSelection && tool("امسح التحديد", Eraser, props.onClear)}
           {props.hasSelection &&
             props.canReport &&
@@ -372,12 +388,17 @@ export const RadialMenu = forwardRef<
               aria-checked={item.checked}
               className="st-rad-item"
               disabled={item.disabled || props.busy}
+              title={
+                item.disabled ? (item.disabledReason ?? "حدّد كلمة أو جملة من الدرس") : item.label
+              }
+              aria-description={item.disabled ? item.disabledReason : undefined}
               data-hot={hot === i ? "" : undefined}
               data-placeholder={item.placeholder ? "" : undefined}
               data-checked={item.checked ? "" : undefined}
               data-tone={item.tone}
+              data-service={item.id}
               data-picked={picked === item.id ? "" : undefined}
-              tabIndex={i === 0 ? 0 : -1}
+              tabIndex={i === visible.findIndex((option) => !option.disabled) ? 0 : -1}
               style={{
                 left: cx,
                 top: cy,

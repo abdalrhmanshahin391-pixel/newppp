@@ -29,9 +29,10 @@ QUIET_STATES = {"practicing", "cards_preview", "challenge", "paused", "ended"}
 
 # Each answer is one short spoken sentence; the details go on the written sheet ([[SHEET]]).
 ACTIONS = {
-    "explain": "Say the core idea in one short sentence. Then a sheet: a title, the rule as short "
-    "points (or a small table when there are forms or cases), two examples and, if there is one, "
-    "the common mistake as a watch-out line.",
+    "explain": "Explain only the selected part in one short, simple spoken sentence. "
+    "If needed, add a tiny sheet with at most two short points and one example. "
+    "No quiz, check question, follow-up question, or request for the learner to explain back. "
+    "Stop after the explanation.",
     "simplify": "Say the idea in the simplest words in one short sentence. Then a sheet with one "
     "solved example, step by step in two or three points.",
     "explain_back": "The learner will now explain the idea in their own words. Ask them to do it in "
@@ -39,10 +40,24 @@ ACTIONS = {
     "kindly, without re-teaching everything. No sheet.",
     "compare_arabic": "Say the main difference from Arabic in one short sentence. Then a sheet with a "
     "small table (Arabic | the language being learned) and one pair of examples.",
-    "word_by_word": "Say in one short sentence what the sentence means. Then a sheet with a table: "
-    "word | its job | meaning, one row per word.",
-    "common_mistake": "Name the usual mistake in one short sentence. Then a sheet with the wrong "
-    "form, the right form as an example, and why, as a watch-out line.",
+    "word_by_word": "Say in one short sentence how the selected sentence is structured. "
+    "Then a sheet with a table: part | its role | simple explanation. "
+    "Group meaningful grammatical parts in their original order, covering the whole selection "
+    "in at most 8 parts. Keep verb groups and fixed phrases together, e.g. She | is reading | a book, "
+    "never is | reading. Explain structure, not a dictionary list. "
+    "No quiz, follow-up question, or request for the learner to explain back.",
+    "why_form": "Explain why the selected word or form is used HERE in one simple short sentence, "
+    "using the surrounding sentence and guide rule. Mention the relevant subject, tense, agreement, "
+    "spelling or position only when the supplied context supports it. Do not re-explain the whole "
+    "sentence or list other uses. If no reason is established, say you cannot determine it from "
+    "this passage; never guess. No quiz, follow-up question, or request to explain back. No sheet.",
+    "common_mistake": "Warn about exactly ONE possible learner mistake tied to the selected rule "
+    "and guide context in one short spoken sentence. Then a small sheet with three labelled lines "
+    "in the explanation language: Wrong (الغلط), Correct (الصح), Why (السبب). "
+    "Use one minimal incorrect/correct pair differing only in the target mistake, and one simple "
+    "reason. This is a preventive example, not a claim that the learner or selected guide text is "
+    "wrong. Never add a second mistake. If context does not support a clear example, say so briefly "
+    "without inventing one. No quiz, fill-in-the-blank, follow-up question, or request to explain back.",
     "summarize_section": "Say what the section is about in one short sentence. Then a sheet with 3 to "
     "5 short points (a small table if the section has one).",
     "explain_reply": "The learner selected a part of YOUR OWN earlier answer and did not understand "
@@ -200,8 +215,9 @@ class StudyVoice:
             "simplify": "بسّطلي بمثال",
             "explain_back": "بدي أشرحها بكلامي",
             "compare_arabic": "قارنها بالعربي",
-            "word_by_word": "فصّلها كلمة كلمة",
-            "common_mistake": "شو الغلطة الشائعة هون",
+            "word_by_word": "فكّك الجملة",
+            "why_form": "ليش هيك؟",
+            "common_mistake": "انتبه للغلطة",
             "summarize_section": "لخّصلي القسم",
             "explain_reply": "اشرحلي ببساطة",
         }

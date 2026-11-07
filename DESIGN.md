@@ -1,5 +1,56 @@
 # DESIGN.md — the visual system of Uzyra (formerly EdithLab) / Rita
 
+## Study circle: five help services and two practice tools
+
+The existing draggable study circle offers «اشرحلي», «معنى ونطق», «فكّك الجملة», «ليش هيك؟» and «انتبه للغلطة». Explanation uses a white
+disc with an ink icon; meaning uses the blue action disc. Both inherit the radial opening,
+labels and selection strip. Unsuitable selections leave the service visible but disabled.
+Explanation language is a labelled tool in the selection strip. «فلاش كاردز» and «تمارين اختيار»
+follow the five help services, using the existing stacked-card and checklist icons. The temporary
+question preview is not an entry. All seven are reachable through existing «المزيد» pagination.
+
+Practice reuses the selection-based generators and their authentication, quotas and validation.
+Results open in a single white workspace (maximum 672px), a bottom sheet on phones, with the
+existing typography and blue action colour. Cards reveal their answer and optional note and
+have previous/next controls. Each question has four options; choosing one locks the answer and
+shows the correct choice and reason in text, never colour alone. Navigation retains answers.
+Loading, server errors, empty results and retry remain visible. Retry uses the original selection,
+and duplicate generation is blocked. Closing does not reopen automatically when generation ends;
+«آخر تدريب» in the header reopens it. Results remain only for the current lesson visit. Escape
+or close restores focus to the circle. No new database storage, worker action or transport.
+
+«اشرحلي» answers only the selected part in one to three short sentences and at most one example.
+It asks no check question and never asks the learner to explain back. The live voice version
+speaks one short sentence, with a tiny written sheet only when needed.
+
+«معنى ونطق» accepts a short English/German word or phrase from the guide. Its non-modal white
+card stays inside the work area (340px maximum, 18px inset, 16px corners, a restrained shadow).
+It shows the phrase, one Arabic meaning for this sentence, and one 44px «اسمع النطق» button.
+Loading, retry and audio failure stay in the card. Escape or its close button dismisses it
+and returns focus to the circle. Closing stops audio. Opening the circle or requesting an
+explanation dismisses the card. Reduced motion removes its entrance. Contextual meanings are
+cached by phrase and context; audio stays shared by phrase. Pronunciation uses the existing
+voice/microphone guard, so the clip is not heard as the learner.
+
+«فكّك الجملة» groups a selected sentence or phrase into meaningful grammatical parts, keeping
+verb groups and fixed expressions together (She | is reading | a book). The text reply gives one
+short line per part; the voice reply gives one short sentence with a small table in its sheet.
+«ليش هيك؟» accepts a selected word or short form and explains its reason in the surrounding
+sentence in one to three short sentences (one spoken sentence). It never invents a reason when
+the supplied context is insufficient. Both use the existing request lifecycle and explanation
+language; neither quizzes the learner. Unsuitable actions have a specific accessible hint, and
+the selection strip explains when a word or a sentence should be selected.
+
+«انتبه للغلطة» uses the existing outlined triangle and dark service disc, with no error-red
+judgement of the learner. From a selected rule, sentence, phrase or related table cells it gives
+exactly one preventive example: «الغلط»، «الصح»، «السبب», one short line each. The pair differs
+only in the target mistake. It never calls correct selected text wrong, quizzes the learner, or
+invents an example when the guide context is insufficient. Arabic rules are supported too.
+In a call it speaks one short warning and puts the same three lines in a small written sheet.
+All five services share the existing loading, stop, retry and request-replacement behaviour.
+When all seven cannot fit around the saved circle position, the existing «المزيد» pagination
+keeps the remaining services reachable; touch targets and labels keep their established sizes.
+
 This is the source of truth for every visual change. It was written from the code that is
 already shipped (`src/styles.css`, section "Home page theme", and the Rita components), not
 invented. When a design request conflicts with this file, say so first, then follow the owner's

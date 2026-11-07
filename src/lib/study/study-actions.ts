@@ -23,6 +23,7 @@ export const RITA_ACTIONS = [
   "explain_back",
   "compare_arabic",
   "word_by_word",
+  "why_form",
   "common_mistake",
   "summarize_section",
   // A part of Rita's own answer, explained as to a complete beginner (selected on the left).
@@ -46,7 +47,7 @@ export type ActionInfo = {
 };
 
 export const ACTION_INFO: Record<StudyAction, ActionInfo> = {
-  explain: { label: "اشرح المحدد", primary: true, group: "explain" },
+  explain: { label: "اشرحلي", primary: true, group: "explain" },
   simplify: { label: "بسّط بمثال", primary: true, group: "explain" },
   meaning: { label: "معنى ونطق", primary: false, group: null },
   explain_back: {
@@ -56,8 +57,9 @@ export const ACTION_INFO: Record<StudyAction, ActionInfo> = {
     voiceOnly: true,
   },
   compare_arabic: { label: "قارنها بالعربي", primary: false, group: "explain" },
-  word_by_word: { label: "فصّلها كلمة كلمة", primary: false, group: "explain" },
-  common_mistake: { label: "الغلطة الشائعة", primary: false, group: "explain" },
+  word_by_word: { label: "فكّك الجملة", primary: false, group: "explain" },
+  why_form: { label: "ليش هيك؟", primary: false, group: "explain" },
+  common_mistake: { label: "انتبه للغلطة", primary: false, group: "explain" },
   summarize_section: { label: "لخّصلي القسم", primary: false, group: "explain" },
   explain_reply: { label: "اشرحلي ببساطة", primary: true, group: "explain" },
   make_cards: { label: "بطاقات", primary: true, group: "cards" },
@@ -82,7 +84,8 @@ const AVAILABLE: Record<StudyAction, SelectionKind[]> = {
   meaning: ["word", "phrase", "table_cells"],
   compare_arabic: ["phrase", "sentence", "rule", "table_cells", "arabic_only"],
   word_by_word: ["phrase", "sentence"],
-  common_mistake: ["phrase", "sentence", "rule", "table_cells"],
+  why_form: ["word", "phrase"],
+  common_mistake: ["phrase", "sentence", "rule", "table_cells", "arabic_only"],
   summarize_section: [],
   // Only for a selection in Rita's answers, never for the guide (see reply-selection.ts).
   explain_reply: [],

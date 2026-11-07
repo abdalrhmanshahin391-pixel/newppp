@@ -1,7 +1,7 @@
 // Flashcards and four-option questions from what the learner selected in a study guide. The server
 // checks the lesson and the selection and counts the request (resolveRequest), asks the model, and
-// returns only what passes the checks in study-practice.ts. Nothing is saved yet: where the cards
-// and questions are shown and kept is decided later. Previews by an admin count nothing.
+// returns only what passes the checks in study-practice.ts. The study page displays the results
+// for the current visit; nothing is stored. Previews by an admin count nothing.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";

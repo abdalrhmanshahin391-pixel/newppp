@@ -61,6 +61,7 @@ export function useStudyRequests({
 
   const fail = useCallback(
     (id: string, message: string) => {
+      if (activeRef.current?.id !== id || !isLive(activeRef.current.state)) return;
       clearTimer();
       update(id, { state: "failed", message });
     },
@@ -142,7 +143,7 @@ export function useStudyRequests({
       try {
         if (voice) {
           const result = await resolveFn({ data: payload });
-          if (activeRef.current?.id !== id) return false;
+          if (activeRef.current?.id !== id || !isLive(activeRef.current.state)) return false;
           if (!result.ok) {
             fail(id, result.message);
             if (result.code === "rate_limited") toast.message(result.message);
@@ -165,7 +166,7 @@ export function useStudyRequests({
         }
         bridge.post?.("you", `[${ACTION_INFO[action].label}] «${selection.exact.slice(0, 160)}»`);
         const result = await textFn({ data: { ...payload, channel: "text", language } });
-        if (activeRef.current?.id !== id) return false;
+        if (activeRef.current?.id !== id || !isLive(activeRef.current.state)) return false;
         if (!result.ok) {
           fail(id, result.message);
           if (result.code === "rate_limited") toast.message(result.message);
@@ -220,7 +221,7 @@ export function useStudyRequests({
         const result = voice
           ? await resolveReplyFn({ data: { ...payload, channel: "voice" } })
           : await replyTextFn({ data: { ...payload, channel: "text" } });
-        if (activeRef.current?.id !== id) return false;
+        if (activeRef.current?.id !== id || !isLive(activeRef.current.state)) return false;
         if (!result.ok) {
           fail(id, result.message);
           if (result.code === "rate_limited") toast.message(result.message);

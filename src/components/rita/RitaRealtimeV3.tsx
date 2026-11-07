@@ -106,6 +106,8 @@ function welcomeText(lessonId: string | undefined, study?: boolean) {
  * messages and the speaking state.
  */
 export type StudyBridge = {
+  /** Study pronunciation uses the same mic guard as words tapped in the chat. */
+  phrasePlaying?: (playing: boolean) => void;
   send: ((type: string, data: Record<string, unknown>) => boolean) | null;
   onMessage?: (message: Record<string, unknown>) => void;
   onEvent?: (event: "ready" | "ended" | "speaking" | "quiet") => void;
@@ -1628,7 +1630,7 @@ export function RitaRealtimeV3({
     explanationChanged(explanation.value);
   }, [explanation.value, explanationChanged, studyLessonId]);
 
-  function stopRita() {
+  const stopRita = useCallback(() => {
     cancelFiller();
     try {
       client.current?.sendClientMessage("rita-stop");
@@ -1636,7 +1638,19 @@ export function RitaRealtimeV3({
       /* the voice command still works */
     }
     void metric("stop_button");
-  }
+  }, [cancelFiller, metric]);
+
+  useEffect(() => {
+    if (!studyBridge) return;
+    studyBridge.phrasePlaying = (playing) => {
+      if (playing) stopRita();
+      phrasePlaying(playing);
+    };
+    return () => {
+      studyBridge.phrasePlaying = undefined;
+      phrasePlaying(false);
+    };
+  }, [studyBridge, stopRita, phrasePlaying]);
 
   function toggleMute() {
     if (!readyForSpeech) return;
