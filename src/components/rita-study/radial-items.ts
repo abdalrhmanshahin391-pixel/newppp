@@ -63,11 +63,13 @@ const SHORT: Partial<Record<StudyAction, string>> = {
   word_by_word: "فكّك الجملة",
   why_form: "ليش هيك؟",
   common_mistake: "انتبه للغلطة",
+  make_cards: "فلاش كاردز",
+  make_mcq: "تمارين اختيار",
   summarize_section: "لخّص القسم",
 };
 
 /**
- * The five focused study services. Other actions remain available in their own workspaces.
+ * Five focused help services, followed by the existing practice generators.
  */
 export const RING_ACTIONS: StudyAction[] = [
   "explain",
@@ -75,6 +77,8 @@ export const RING_ACTIONS: StudyAction[] = [
   "word_by_word",
   "why_form",
   "common_mistake",
+  "make_cards",
+  "make_mcq",
 ];
 
 export function actionItem(action: StudyAction): RadialItem {
@@ -107,7 +111,9 @@ export function ringItems(options: { actions: StudyAction[] }): RadialItem[] {
             ? "حدّد كلمة أو صيغة قصيرة داخل الجملة"
             : action === "common_mistake"
               ? "حدّد قاعدة أو جملة من الدرس عشان نعرض غلطة مرتبطة فيها"
-              : "حدّد كلمة أو جملة من الدرس",
+              : action === "make_cards" || action === "make_mcq"
+                ? "حدّد جزءًا من الدرس عشان نجهّز التدريب"
+                : "حدّد كلمة أو جملة من الدرس",
   }));
 }
 

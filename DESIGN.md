@@ -1,12 +1,23 @@
 # DESIGN.md — the visual system of Uzyra (formerly EdithLab) / Rita
 
-## Study circle: five focused help services
+## Study circle: five help services and two practice tools
 
 The existing draggable study circle offers «اشرحلي», «معنى ونطق», «فكّك الجملة», «ليش هيك؟» and «انتبه للغلطة». Explanation uses a white
 disc with an ink icon; meaning uses the blue action disc. Both inherit the radial opening,
 labels and selection strip. Unsuitable selections leave the service visible but disabled.
-Explanation language is a labelled tool in the selection strip. Practice generation and the
-temporary question preview are no longer entries in this circle.
+Explanation language is a labelled tool in the selection strip. «فلاش كاردز» and «تمارين اختيار»
+follow the five help services, using the existing stacked-card and checklist icons. The temporary
+question preview is not an entry. All seven are reachable through existing «المزيد» pagination.
+
+Practice reuses the selection-based generators and their authentication, quotas and validation.
+Results open in a single white workspace (maximum 672px), a bottom sheet on phones, with the
+existing typography and blue action colour. Cards reveal their answer and optional note and
+have previous/next controls. Each question has four options; choosing one locks the answer and
+shows the correct choice and reason in text, never colour alone. Navigation retains answers.
+Loading, server errors, empty results and retry remain visible. Retry uses the original selection,
+and duplicate generation is blocked. Closing does not reopen automatically when generation ends;
+«آخر تدريب» in the header reopens it. Results remain only for the current lesson visit. Escape
+or close restores focus to the circle. No new database storage, worker action or transport.
 
 «اشرحلي» answers only the selected part in one to three short sentences and at most one example.
 It asks no check question and never asks the learner to explain back. The live voice version
@@ -37,7 +48,7 @@ only in the target mistake. It never calls correct selected text wrong, quizzes 
 invents an example when the guide context is insufficient. Arabic rules are supported too.
 In a call it speaks one short warning and puts the same three lines in a small written sheet.
 All five services share the existing loading, stop, retry and request-replacement behaviour.
-When all five cannot fit around the saved circle position, the existing «المزيد» pagination
+When all seven cannot fit around the saved circle position, the existing «المزيد» pagination
 keeps the remaining services reachable; touch targets and labels keep their established sizes.
 
 This is the source of truth for every visual change. It was written from the code that is

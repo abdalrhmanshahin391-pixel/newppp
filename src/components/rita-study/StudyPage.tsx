@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { RitaRealtimeV3, type StudyBridge } from "@/components/rita/RitaRealtimeV3";
 import { studyGuideDownload } from "@/lib/study/study.functions";
 import { studyMakeCards, studyMakeMcq } from "@/lib/study/study-practice.functions";
-import type { StudyCard, StudyMcq } from "@/lib/study/study-practice";
+import { StudyPracticePanel, type PracticeView } from "./StudyPracticePanel";
 import type { StudyLessonData } from "@/lib/study/study-types";
 import { PhraseDialog } from "@/components/rita/PhraseDialog";
 import { resolveSelection } from "@/lib/study/study-resolve";
@@ -18,6 +18,7 @@ import {
   availableActions,
   classifySelection,
   type RitaAction,
+  type PracticeAction,
   type StudyAction,
 } from "@/lib/study/study-actions";
 import { FloatingOrb, type OrbState } from "./FloatingOrb";
@@ -363,48 +364,90 @@ export function StudyPage({
             selected.kind !== "table_cells"),
       )
     : [];
-  // Flashcards and questions made from selections. Kept here until it is decided where they show.
+  // Generated practice stays in this lesson visit; retry uses the original selection.
   const makeCardsFn = useServerFn(studyMakeCards);
   const makeMcqFn = useServerFn(studyMakeMcq);
-  const [making, setMaking] = useState<"make_cards" | "make_mcq" | null>(null);
-  const [made, setMade] = useState<{ cards: StudyCard[]; questions: StudyMcq[] }>({
-    cards: [],
-    questions: [],
-  });
+  const [making, setMaking] = useState<PracticeAction | null>(null);
+  const [practiceView, setPracticeView] = useState<PracticeView | null>(null);
+  const [practiceOpen, setPracticeOpen] = useState(false);
+  const practiceBusy = useRef(false);
+  const practiceVersion = useRef(0);
+  const lastPractice = useRef<{
+    action: PracticeAction;
+    selection: { segIds: string[]; exact: string; parts?: string[] };
+  } | null>(null);
+  useEffect(
+    () => () => {
+      practiceVersion.current += 1;
+    },
+    [],
+  );
 
-  async function practice(action: "make_cards" | "make_mcq") {
-    const sel = selectionRef.current;
-    if (!sel || !sel.segIds.length || making) return;
+  async function practice(action: PracticeAction, retry = false) {
+    if (practiceBusy.current) return;
+    const sel = retry ? lastPractice.current?.selection : selectionRef.current;
+    if (!sel || !sel.segIds.length || (!retry && !actions.includes(action))) return;
+    const saved = {
+      segIds: [...sel.segIds],
+      exact: sel.exact,
+      parts: sel.parts ? [...sel.parts] : undefined,
+    };
+    lastPractice.current = { action, selection: saved };
+    practiceBusy.current = true;
+    const version = ++practiceVersion.current;
+    const requestId = crypto.randomUUID();
     setMenuOpen(false);
+    setPhrase(null);
+    requests.stop();
+    setPracticeOpen(true);
     setMaking(action);
+    setPracticeView({
+      id: requestId,
+      action,
+      status: "loading",
+      cards: [],
+      questions: [],
+      message: "",
+    });
     const input = {
       data: {
         lessonId: lesson.id,
         preview,
-        requestId: crypto.randomUUID(),
-        selection: { segIds: sel.segIds, exact: sel.exact, parts: sel.parts },
+        requestId,
+        selection: saved,
       },
     };
     try {
       if (action === "make_cards") {
         const result = await makeCardsFn(input);
-        if (!result.ok) return void toast.message(result.message);
-        setMade({ cards: result.cards, questions: made.questions });
-        toast.success(
-          `جهّزت ${result.cards.length} ${result.cards.length === 1 ? "بطاقة" : "بطاقات"}`,
-        );
+        if (version !== practiceVersion.current) return;
+        if (!result.ok) {
+          setPracticeView((view) => view && { ...view, status: "error", message: result.message });
+          return;
+        }
+        setPracticeView((view) => view && { ...view, status: "ready", cards: result.cards });
       } else {
         const result = await makeMcqFn(input);
-        if (!result.ok) return void toast.message(result.message);
-        setMade({ cards: made.cards, questions: result.questions });
-        toast.success(
-          `جهّزت ${result.questions.length} ${result.questions.length === 1 ? "سؤال" : "أسئلة"}`,
+        if (version !== practiceVersion.current) return;
+        if (!result.ok) {
+          setPracticeView((view) => view && { ...view, status: "error", message: result.message });
+          return;
+        }
+        setPracticeView(
+          (view) => view && { ...view, status: "ready", questions: result.questions },
         );
       }
     } catch {
-      toast.error("ما زبطت هالمرة. جرّب مرة ثانية.");
+      if (version === practiceVersion.current)
+        setPracticeView(
+          (view) =>
+            view && { ...view, status: "error", message: "ما زبطت هالمرة. جرّب مرة ثانية." },
+        );
     } finally {
-      setMaking(null);
+      if (version === practiceVersion.current) {
+        practiceBusy.current = false;
+        setMaking(null);
+      }
     }
   }
 
@@ -589,6 +632,15 @@ export function StudyPage({
         <h1 className="sr-only">{title}</h1>
         {preview && <p className="sr-only">معاينة أدمن، لا يتم حفظ التقدم.</p>}
         <div className="flex-1" />
+        {practiceView && (
+          <button
+            type="button"
+            className="st-top-btn is-soft !h-11"
+            onClick={() => setPracticeOpen(true)}
+          >
+            {making ? "جاري تجهيز التدريب…" : "آخر تدريب"}
+          </button>
+        )}
         {guide.allow_download && (
           <button
             type="button"
@@ -729,7 +781,15 @@ export function StudyPage({
               ? languageItems(explanation.value)
               : replySelection
                 ? replyRingItems()
-                : ringItems({ actions })
+                : ringItems({ actions }).map((item) =>
+                    making && (item.id === "make_cards" || item.id === "make_mcq")
+                      ? {
+                          ...item,
+                          disabled: true,
+                          disabledReason: "استنّى لحد ما يخلص تجهيز التدريب الحالي",
+                        }
+                      : item,
+                  )
           }
           quote={replySelection?.exact ?? selection?.exact ?? ""}
           meta={
@@ -800,6 +860,18 @@ export function StudyPage({
             compact
             onPlayingChange={phrasePlaying}
             onClose={closePhrase}
+          />
+        )}
+        {practiceView && (
+          <StudyPracticePanel
+            key={practiceView.id}
+            view={practiceView}
+            open={practiceOpen}
+            onOpenChange={setPracticeOpen}
+            onRetry={() => {
+              if (lastPractice.current) void practice(lastPractice.current.action, true);
+            }}
+            onReturnFocus={() => orbButton.current?.focus({ preventScroll: true })}
           />
         )}
       </div>

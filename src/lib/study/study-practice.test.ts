@@ -119,17 +119,37 @@ test("model replies are read with or without a code fence", () => {
   assert.equal(looseText("Grüße, Straße!"), "grusse strasse");
 });
 
-test("the ring shows flashcards, questions and the language", () => {
-  for (const kind of ["word", "phrase", "sentence", "rule", "table_cells", "arabic_only"] as const)
+test("the ring retains practice beside the five help services, disabled for unusable selections", () => {
+  const expected = [
+    "explain",
+    "meaning",
+    "word_by_word",
+    "why_form",
+    "common_mistake",
+    "make_cards",
+    "make_mcq",
+  ];
+  for (const kind of [
+    "word",
+    "phrase",
+    "sentence",
+    "rule",
+    "table_cells",
+    "arabic_only",
+    "too_long",
+    "non_text",
+  ] as const) {
+    const items = ringItems({ actions: availableActions(kind) });
     assert.deepEqual(
-      ringItems({ actions: availableActions(kind) }).map((item) => item.id),
-      ["make_cards", "make_mcq", "lang", "window-demo"],
+      items.map((item) => item.id),
+      expected,
     );
-  // Without a usable selection only the language is offered.
-  assert.deepEqual(
-    ringItems({ actions: availableActions("too_long") }).map((item) => item.id),
-    ["lang", "window-demo"],
-  );
+    for (const id of ["make_cards", "make_mcq"]) {
+      const item = items.find((item) => item.id === id)!;
+      assert.equal(item.disabled, kind === "too_long" || kind === "non_text");
+      assert.ok(item.disabledReason);
+    }
+  }
   assert.equal(ACTION_INFO.make_cards.group, "cards");
   assert.equal(ACTION_INFO.make_mcq.group, "practice");
 });
