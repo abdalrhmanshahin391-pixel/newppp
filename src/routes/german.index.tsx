@@ -79,7 +79,7 @@ function GermanHub() {
     <div className="min-h-screen bg-white text-[#121117]">
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-4 py-14 md:px-8 md:py-20">
-        <div data-tour="german-hero" className="grid items-center gap-10 md:grid-cols-[1.1fr_1fr]">
+        <div className="grid items-center gap-10 md:grid-cols-[1.1fr_1fr]">
           <div>
             <p className="text-[15px] font-semibold text-[#6a697c]">German Lab</p>
             <h1
@@ -113,7 +113,7 @@ function GermanHub() {
           </div>
         </div>
 
-        <div data-tour="german-modes" className="mt-12 grid gap-6 md:grid-cols-2">
+        <div className="mt-12 grid gap-6 md:grid-cols-2">
           {visible.map((c) => (
             <Link
               key={c.to}

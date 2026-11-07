@@ -57,7 +57,8 @@ Page `#fff`; dark device screen `linear-gradient(162deg, #26252e, #121117)`.
 
 - Radius: buttons and inputs 8px, cards 16px, sheets 24px (top corners on phones).
 - Buttons: 2px ink border, blue fill, white text, `.rita-btn` / `.rita-btn-primary` /
-  `.rita-btn-secondary`, small `.rita-btn-sm` (40px). Selects: `.rita-select` (48px).
+  `.rita-btn-secondary`, small `.rita-btn-sm` (40px). Selects: `.rita-select` (48px). On the
+  home page and the app pages the calm scale applies (see "App pages": 42px / 1.5px / 15px).
 - Small choice of two to four options (the live page's "Rita explains in"): `.rita-choice`, radio
   buttons in one row, 44px high, 8px radius, hairline border; the chosen one has a 2px
   `--pp-accent` border, `--pp-accent-soft` fill and `--pp-accent-text`. Arrow keys move the
@@ -260,14 +261,15 @@ with its tools as small sticker chips. Inside a room, each column is a grey pane
 a white card with a 2px ink border, a bare ink icon, its name, one line and an "Open" row. No
 photos or illustrations, no coloured strips, no labels above titles. Locked tools and rooms are
 dashed and say "Coming soon". The Tutorial page was removed (`/tutorial` and `/tour` redirect
-to the home page); the in-page "How it works" tours stay.
+to the home page), and so were the in-page "How it works" tours (Nov 2026): pages explain
+themselves with their own labels and hints, not with an overlay tour.
 
 ## Flashcards workspace (`/study`, `/study/match`, the card player)
 
 One main action per panel, hierarchy by weight instead of by frame:
 
 - **Panels are grey** (`#f4f4f8`, no border): the session panel (`LaunchPanel`, `GameSetup`) and the daily panel.
-  Ink borders (2px) are for things you press: buttons, mode tabs, subject rows, menus. The page board itself has no frame
+  Ink borders (1.5px on the calm scale) are for things you press: buttons, mode tabs, subject rows, menus. The page board itself has no frame
   (`StudyLayout framed={false}`); other study pages keep the framed board.
 - **Session panel:** one solid blue button on top ("Smart review · N" when cards are due, "Study mode" when nothing is due),
   with a one-line hint under it, then two compact outline buttons side by side. The daily panel only shows its own
@@ -276,7 +278,7 @@ One main action per panel, hierarchy by weight instead of by frame:
   cut to a few letters); count under the name; one "..." menu per row (rename, add sub-subject, move up/down, remove...).
   Move up/down is the touch way to reorder (native drag does nothing on iPad); the drag handle only shows with a mouse.
   Remove always opens the confirmation dialog.
-- **Action column** (`Add subject`, `Edit`, ...): big tiles from 1024px; below that one short scrolling strip of 44px chips so
+- **Action column** (`Add subject`, `Edit`, ...): big tiles from 1280px; below that (tablets too) one short scrolling strip of 44px chips so
   the learner's subjects are on screen first. Mode tabs are "Study / Edit" on phones.
 - **Memory Lab:** Play is directly under the pair count and says which game it will start ("Play Match"); the four games
   are a 2x2 choice; the two switches say what they do in one line.
@@ -300,6 +302,20 @@ white page, grey panels, 2px ink borders on anything you press, blue only for th
 labels, no stock illustrations. Question bank, Lecture Lab and All in one follow the same rules:
 the question player, map rail, explanation panel and subject picker are ink-bordered cards with
 the accent for the action.
+
+**Calm scale (Nov 2026, same as the home page).** Smaller, lighter words and more room, not a
+smaller page: the root size and the user's zoom are never touched. In `.rita-app`:
+- Header: 60px bar, 14px links, 38px buttons (the same rule as `.uz-home` / `.uz-learn`).
+- Tailwind's big named sizes are lower (`--text-2xl` … `--text-7xl` = 22 / 26 / 30 / 36 / 40 /
+  44px), so a page title lands at 30–44px instead of 48–72px; base and smaller sizes are
+  unchanged. A bold `h1` is drawn at 600.
+- Buttons: `.rita-btn` 42px, 1.5px border, 15px; `.rita-btn-sm` 38px, 14px.
+- Mode tabs 52px, action tiles 56px (44px chips below 1024px), 1.5px borders, 12px radius.
+- In a page's own markup: titles 30–40px semibold, card titles 14–15px semibold, hints 12px,
+  big numbers 30px semibold, buttons 44px (`h-11`) with a 1.5px border and 14px text; small
+  tick boxes keep their 2px border so they stay visible.
+Pages with fixed pixel sizes (`text-[44px]`, `clamp(...)`) are brought onto this scale one group
+at a time (flashcards first, then the study tools, the German Lab, account / pricing, admin).
 
 ## Lesson builder (`/admin/curricula`)
 

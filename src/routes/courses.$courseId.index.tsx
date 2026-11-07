@@ -598,7 +598,7 @@ function CourseDetailPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
           {/* LEFT — curriculum */}
-          <section data-tour="qb-topics">
+          <section>
 
             <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
               <div>
@@ -835,7 +835,7 @@ function CourseDetailPage() {
                   })()}
 
 
-                  <div data-tour="qb-modes" className="px-5 py-3 space-y-3 text-sm">
+                  <div className="px-5 py-3 space-y-3 text-sm">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Timer className="w-4 h-4 text-primary" />
@@ -884,7 +884,7 @@ function CourseDetailPage() {
                     </div>
                   </div>
 
-                  <div data-tour="qb-start" className="px-5 pb-5 space-y-2">
+                  <div className="px-5 pb-5 space-y-2">
                     <button
                       onClick={() => startSession("study")}
                       className="w-full py-2.5 rounded-xl border border-primary/30 text-primary font-bold text-sm hover:bg-primary/10 transition-colors inline-flex items-center justify-center gap-2"

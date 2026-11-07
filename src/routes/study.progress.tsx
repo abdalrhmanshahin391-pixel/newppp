@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { studyDashboard, type Dashboard } from "@/lib/review.functions";
 import { useAuth } from "@/hooks/useAuth";
-import { useTutorialLang, type TutorialLang } from "@/components/tutorials/tutorial-lang";
+import { usePageLang, type PageLang } from "@/hooks/usePageLang";
 
 export const Route = createFileRoute("/study/progress")({
   head: () => ({
@@ -88,7 +88,7 @@ function MetricCard({
 
 function ProgressPage() {
   const { user } = useAuth();
-  const [lang, setLang] = useTutorialLang();
+  const [lang, setLang] = usePageLang();
   const isAr = lang === "ar";
   const dashboard = useServerFn(studyDashboard);
 

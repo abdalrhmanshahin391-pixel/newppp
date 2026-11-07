@@ -3888,6 +3888,22 @@ body:has(.rh-learn-home) {
   letter-spacing: -0.03em;
   text-wrap: balance;
 }
+/* Calm scale (same as the home page): the big named sizes are smaller, so a page title lands at
+   30–44px instead of 48–72px; body sizes (base and below) are untouched, and so is the root size. */
+.rita-app {
+  --text-2xl: 1.375rem;
+  --text-3xl: 1.625rem;
+  --text-4xl: 1.875rem;
+  --text-5xl: 2.25rem;
+  --text-6xl: 2.5rem;
+  --text-7xl: 2.75rem;
+  --text-5xl--line-height: 1.1;
+  --text-6xl--line-height: 1.08;
+  --text-7xl--line-height: 1.05;
+}
+.rita-app h1:is(.font-bold, .font-black, .font-extrabold) {
+  font-weight: 600;
+}
 /* Heavy 800/900 weights become 700, and small tracked capital labels become plain words. */
 .rita-app .font-black,
 .rita-app .font-extrabold {
@@ -3902,12 +3918,12 @@ body:has(.rh-learn-home) {
 
 /* Buttons: 8px corners, 2px ink border, pink fill (same as the home page). */
 .rita-app .rita-btn {
-  height: 48px;
-  padding-inline: 22px;
-  border: 2px solid var(--pp-ink);
+  height: 42px;
+  padding-inline: 20px;
+  border: 1.5px solid var(--pp-ink);
   border-radius: 8px;
   font-family: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   box-shadow: none;
 }
@@ -3931,9 +3947,9 @@ body:has(.rh-learn-home) {
   outline-offset: 3px;
 }
 .rita-app .rita-btn.rita-btn-sm {
-  height: 40px;
-  padding-inline: 16px;
-  font-size: 15px;
+  height: 38px;
+  padding-inline: 14px;
+  font-size: 14px;
 }
 .rita-app .rita-pill {
   background-color: var(--pp-accent);
@@ -3986,10 +4002,10 @@ body:has(.rh-learn-home) {
 .rita-app .rh-rail {
   display: flex;
   align-items: center;
-  gap: 0.875rem;
+  gap: 0.75rem;
   width: 100%;
-  border: 2px solid var(--pp-ink);
-  border-radius: 14px;
+  border: 1.5px solid var(--pp-ink);
+  border-radius: 12px;
   background: #ffffff;
   color: var(--pp-ink);
   text-align: start;
@@ -4000,8 +4016,8 @@ body:has(.rh-learn-home) {
     background-color 160ms ease;
 }
 .rita-app .rh-modetab {
-  min-height: 4rem;
-  padding: 0.75rem 1.1rem;
+  min-height: 3.25rem;
+  padding: 0.55rem 1rem;
 }
 .rita-app .rh-modetab[aria-pressed="true"] {
   background: var(--pp-accent);
@@ -4011,8 +4027,8 @@ body:has(.rh-learn-home) {
   color: var(--pp-on-accent);
 }
 .rita-app .rh-rail {
-  min-height: 4.5rem;
-  padding: 0.9rem 1.1rem;
+  min-height: 3.5rem;
+  padding: 0.65rem 1rem;
 }
 .rita-app .rh-rail:hover,
 .rita-app .rh-modetab:hover {
@@ -4037,8 +4053,10 @@ body:has(.rh-learn-home) {
   cursor: not-allowed;
 }
 /* Below desktop the action column becomes one short scrolling strip, so the learner's own
-   subjects are on screen instead of five big tiles; hints stay for desktop. */
-@media (max-width: 1023px) {
+   subjects are on screen instead of five big tiles; hints stay for desktop. Tablets (up to
+   1279px, iPad landscape included) get the strip too, so the subject list is not squeezed
+   between the tiles and the session panel. */
+@media (max-width: 1279px) {
   .rita-app .rh-rail {
     width: auto;
     flex: 0 0 auto;
@@ -8315,25 +8333,30 @@ html.rita-app,
   font-size: var(--home-lead);
   line-height: 1.6;
 }
-/* The header on the home page and the learning home (/learn): smaller, lighter links and a lower
-   bar; the links keep a 44px target for touch. The learning home takes the header values only. */
-.uz-learn {
+/* The header on the home page, the learning home (/learn) and the app pages (.rita-app): smaller,
+   lighter links and a lower bar; the links keep a 44px target for touch. The others take the
+   header values only. */
+.uz-learn,
+.rita-app {
   --home-nav: 14px;
   --home-bar-h: 60px;
   --home-bar-btn-h: 38px;
 }
 .uz-home .rh-bar-inner,
-.uz-learn .rh-bar-inner {
+.uz-learn .rh-bar-inner,
+.rita-app .rh-bar-inner {
   height: var(--home-bar-h);
 }
 .uz-home .rh-link,
-.uz-learn .rh-link {
+.uz-learn .rh-link,
+.rita-app .rh-link {
   font-size: var(--home-nav);
   font-weight: 500;
   line-height: 20px;
 }
 .uz-home .rh-btn,
-.uz-learn .rh-btn {
+.uz-learn .rh-btn,
+.rita-app .rh-btn {
   height: var(--home-bar-btn-h);
   padding-inline: 14px;
   font-size: var(--home-nav);
@@ -8362,14 +8385,14 @@ html.rita-app,
 /* Very narrow phones (320–359px): the logo, "Start learning" and the menu button did not fit the
    bar (it ran ~25px past the edge before this change). Tighter spacing keeps them inside. */
 @media (max-width: 359px) {
-  :is(.uz-home, .uz-learn) .rh-bar-inner {
+  :is(.uz-home, .uz-learn, .rita-app) .rh-bar-inner {
     gap: 8px;
     padding-inline: 12px;
   }
-  :is(.uz-home, .uz-learn) .rh-actions {
+  :is(.uz-home, .uz-learn, .rita-app) .rh-actions {
     gap: 6px;
   }
-  :is(.uz-home, .uz-learn) .rh-btn {
+  :is(.uz-home, .uz-learn, .rita-app) .rh-btn {
     padding-inline: 10px;
   }
 }
