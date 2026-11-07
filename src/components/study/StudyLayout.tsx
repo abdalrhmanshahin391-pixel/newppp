@@ -65,7 +65,7 @@ export function StudyLayout({
       <SiteHeader />
 
       <div className="mx-auto max-w-[96rem] px-4 pt-6 md:px-8 md:pt-8">
-        <div data-tour="mode-switch" className="grid grid-cols-2 gap-2 sm:gap-3 md:max-w-[46rem]">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 md:max-w-[40rem]">
           {MODES.map((m) => {
             const on = mode === m.key;
             const Icon = m.icon;
@@ -77,13 +77,13 @@ export function StudyLayout({
                 aria-pressed={on}
                 className="rh-modetab"
               >
-                <Icon size={22} strokeWidth={2} className="shrink-0" aria-hidden="true" />
+                <Icon size={18} strokeWidth={2} className="shrink-0" aria-hidden="true" />
                 <span className="min-w-0">
-                  <span className="block truncate text-[16px] font-bold leading-tight">
+                  <span className="block truncate text-[14.5px] font-semibold leading-tight">
                     <span className="sm:hidden">{m.short}</span>
                     <span className="hidden sm:inline">{m.label}</span>
                   </span>
-                  <span className="rh-hint block truncate text-[13.5px] font-medium text-[var(--pp-muted)]">
+                  <span className="rh-hint block truncate text-[12px] font-medium text-[var(--pp-muted)]">
                     {m.hint}
                   </span>
                 </span>
@@ -93,11 +93,8 @@ export function StudyLayout({
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-[96rem] gap-6 px-4 pb-28 pt-6 md:px-8 md:pb-24 md:pt-8 lg:grid-cols-[17rem_minmax(0,1fr)]">
-        <aside
-          data-tour="study-rail"
-          className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:-mx-8 md:px-8 lg:mx-0 lg:grid lg:content-start lg:gap-3 lg:overflow-visible lg:px-0 lg:pb-0"
-        >
+      <div className="mx-auto grid max-w-[96rem] gap-6 px-4 pb-28 pt-6 md:px-8 md:pb-24 md:pt-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
+        <aside className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:-mx-8 md:px-8 lg:mx-0 lg:grid lg:content-start lg:gap-2 lg:overflow-visible lg:px-0 lg:pb-0">
           {rail.map((item) => (
             <RailTile key={item.label} item={item} />
           ))}
@@ -131,9 +128,9 @@ function RailTile({ item }: { item: RailItem }) {
         {item.icon}
       </span>
       <span className="min-w-0">
-        <span className="block truncate text-[16px] font-bold leading-tight">{item.label}</span>
+        <span className="block truncate text-[14.5px] font-semibold leading-tight">{item.label}</span>
         {item.hint && (
-          <span className="rh-hint block truncate text-[13.5px] font-medium text-[var(--pp-muted)]">
+          <span className="rh-hint block truncate text-[12px] font-medium text-[var(--pp-muted)]">
             {item.hint}
           </span>
         )}
@@ -171,8 +168,8 @@ export function StudyHeading({
     <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4">
       <div className="min-w-0">
         <h1
-          className="font-display font-bold leading-[1.05] tracking-tight"
-          style={{ fontSize: "clamp(2rem, 4.4vw, 3.25rem)" }}
+          className="font-display font-semibold leading-[1.1] tracking-tight"
+          style={{ fontSize: "clamp(1.75rem, 3vw, 2.5rem)" }}
         >
           {title}
         </h1>

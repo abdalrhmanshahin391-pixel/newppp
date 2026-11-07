@@ -231,14 +231,14 @@ function StudyBoard() {
     {
       label: "Add subject",
       hint: "New",
-      icon: <FolderPlus size={20} />,
+      icon: <FolderPlus size={17} />,
       tone: "apricot",
       onClick: () => setAddOpen(true),
     },
     {
       label: "Add sub-subject",
       hint: "Nest",
-      icon: <ListPlus size={20} />,
+      icon: <ListPlus size={17} />,
       tone: "sky",
       onClick: () => {
         if (board.subjects.length === 0) {
@@ -251,7 +251,7 @@ function StudyBoard() {
     {
       label: "Remove",
       hint: "Delete",
-      icon: <Trash2 size={20} />,
+      icon: <Trash2 size={17} />,
       tone: "clay",
       onClick: () => {
         if (!target) {
@@ -265,7 +265,7 @@ function StudyBoard() {
     {
       label: "Edit",
       hint: "Rename",
-      icon: <Pencil size={20} />,
+      icon: <Pencil size={17} />,
       tone: "lilac",
       onClick: () => {
         if (!target) {
@@ -282,7 +282,7 @@ function StudyBoard() {
     {
       label: "Add flashcards",
       hint: target ? target.sub : "Tick a sub-subject",
-      icon: <PlusSquare size={20} />,
+      icon: <PlusSquare size={17} />,
       tone: "mint",
       disabled: !target,
       onClick: () => openCards("create"),
@@ -290,7 +290,7 @@ function StudyBoard() {
     {
       label: "View flashcards",
       hint: target ? `${flash.cards.length} cards` : "Tick a sub-subject",
-      icon: <Layers size={20} />,
+      icon: <Layers size={17} />,
       tone: "lilac",
       disabled: !target,
       onClick: () => openCards("gallery"),
@@ -300,7 +300,7 @@ function StudyBoard() {
           {
             label: "Make cards from material",
             hint: target ? "PDF · text · photos" : "Tick a sub-subject",
-            icon: <Sparkles size={20} />,
+            icon: <Sparkles size={17} />,
             tone: "clay" as const,
             disabled: !target,
             onClick: () => {
@@ -317,7 +317,7 @@ function StudyBoard() {
     {
       label: "Add sub-subject",
       hint: "Nest",
-      icon: <ListPlus size={20} />,
+      icon: <ListPlus size={17} />,
       tone: "sky",
       onClick: () => {
         if (board.subjects.length === 0) {
@@ -330,7 +330,7 @@ function StudyBoard() {
     {
       label: "Edit",
       hint: "Rename",
-      icon: <Pencil size={20} />,
+      icon: <Pencil size={17} />,
       tone: "apricot",
       onClick: () => {
         if (!target) {
@@ -350,8 +350,8 @@ function StudyBoard() {
       activeMode={mode}
       onModeChange={(m) => setMode(m)}
     >
-      <div className="grid min-h-[62vh] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div data-tour="subject-shelf" className="min-w-0">
+      <div className="grid min-h-[62vh] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="min-w-0">
           <PickerBoard
             framed={false}
             accent={ACCENT}
@@ -380,8 +380,8 @@ function StudyBoard() {
           />
         </div>
 
-        <div data-tour="launch-panel" className="grid gap-4 lg:sticky lg:top-4 lg:self-start">
-          <div data-tour="start-session">
+        <div className="grid gap-4 lg:sticky lg:top-4 lg:self-start">
+          <div>
             <LaunchPanel
               accent={ACCENT}
               stat={sessionCards.length}
@@ -464,7 +464,7 @@ function StudyBoard() {
                     type="button"
                     aria-pressed={sessionScope === key}
                     onClick={() => setSessionScope(key)}
-                    className="inline-flex h-11 flex-1 touch-manipulation items-center justify-center gap-1.5 rounded-lg border-2 text-[14px] font-semibold transition-colors duration-150"
+                    className="inline-flex h-10 flex-1 touch-manipulation items-center justify-center gap-1.5 rounded-lg border-[1.5px] text-[13.5px] font-semibold transition-colors duration-150"
                     style={
                       sessionScope === key
                         ? { background: "#e7eefd", color: "#121117", borderColor: "#121117" }
@@ -494,7 +494,7 @@ function StudyBoard() {
                       <button
                         key={p.key}
                         onClick={() => toggle(p.key)}
-                        className="inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-lg border-2 border-[#121117] bg-white px-3 text-[13.5px] font-semibold text-[#121117] hover:bg-[#e7eefd]"
+                        className="inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-lg border-[1.5px] border-[#121117] bg-white px-3 text-[13.5px] font-semibold text-[#121117] hover:bg-[#e7eefd]"
                       >
                         {p.sub} <X size={12} />
                       </button>
@@ -511,7 +511,7 @@ function StudyBoard() {
             </LaunchPanel>
           </div>
 
-          <div data-tour="daily-schedule">
+          <div>
             <DailyPanel
               onReview={(items) => setReviewItems(items)}
               showReview={picked.length > 0}

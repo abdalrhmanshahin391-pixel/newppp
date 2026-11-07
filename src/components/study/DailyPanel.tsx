@@ -45,13 +45,13 @@ export function DailyPanel({
   const current = data?.prefs.retention ?? 0.9;
 
   return (
-    <section className="rounded-[20px] bg-[#f4f4f8] p-5">
-      <p className="text-[14px] font-semibold text-[#6a697c]">Today</p>
+    <section className="rounded-[18px] bg-[#f4f4f8] p-4 md:p-5">
+      <p className="text-[13px] font-semibold text-[#6a697c]">Today</p>
 
-      <p className="mt-2 font-display text-[2.8rem] font-bold leading-none tracking-[-0.03em] text-[#121117]">
+      <p className="mt-2 font-display text-[2.1rem] font-semibold leading-none tracking-[-0.03em] text-[#121117]">
         {due}
       </p>
-      <p className="text-[15px] font-medium text-[#6a697c]">
+      <p className="text-[13.5px] font-medium text-[#6a697c]">
         cards due right now{newToday > 0 && ` · ${newToday} new mixed in`}
       </p>
 
@@ -60,7 +60,7 @@ export function DailyPanel({
           type="button"
           disabled={isLoading || due === 0}
           onClick={() => onReview(queue)}
-          className="mt-4 inline-flex h-12 w-full touch-manipulation items-center justify-center gap-2 rounded-lg border-2 border-[#121117] bg-white text-[15px] font-semibold text-[#121117] transition-colors duration-150 hover:bg-[#e7eefd] active:scale-[0.98] disabled:opacity-50"
+          className="mt-4 inline-flex h-11 w-full touch-manipulation items-center justify-center gap-2 rounded-lg border-[1.5px] border-[#121117] bg-white text-[14px] font-semibold text-[#121117] transition-colors duration-150 hover:bg-[#e7eefd] active:scale-[0.98] disabled:opacity-50"
         >
           <Sparkles size={16} />
           {due === 0 ? "Nothing due — nice" : "Review everything due"}
@@ -68,7 +68,7 @@ export function DailyPanel({
       )}
 
       <div className="mt-5">
-        <div className="flex items-center justify-between text-[14px] font-semibold text-[#4b4a5c]">
+        <div className="flex items-center justify-between text-[13px] font-semibold text-[#4b4a5c]">
           <span>Daily goal</span>
           <span>
             {today}/{goal}
@@ -83,7 +83,7 @@ export function DailyPanel({
             style={{ width: `${pct}%` }}
           />
         </div>
-        <p className="mt-2 text-[13.5px] font-medium text-[#4b4a5c]">
+        <p className="mt-2 text-[12.5px] font-medium text-[#4b4a5c]">
           {left === 0
             ? "Goal met today — nice work."
             : `${left} more card${left === 1 ? "" : "s"} to hit today's goal.`}
@@ -104,7 +104,7 @@ export function DailyPanel({
       {/* What's coming — the forecast that makes the schedule visible */}
       {forecast.length > 0 && (
         <div className="mt-5">
-          <p className="text-[14px] font-semibold text-[#4b4a5c]">Next 30 days</p>
+          <p className="text-[13px] font-semibold text-[#4b4a5c]">Next 30 days</p>
           <div className="mt-2 flex h-14 items-end gap-[3px]">
             {forecast.map((f) => (
               <span
@@ -115,7 +115,7 @@ export function DailyPanel({
               />
             ))}
           </div>
-          <p className="mt-1.5 text-[13.5px] font-medium text-[#4b4a5c]">
+          <p className="mt-1.5 text-[12.5px] font-medium text-[#4b4a5c]">
             Busiest day ahead: {peak} card{peak === 1 ? "" : "s"}.
           </p>
         </div>
@@ -124,10 +124,10 @@ export function DailyPanel({
       {/* True retention */}
       {retention && retention.total >= 5 && (
         <div className="mt-4 rounded-xl bg-white p-3">
-          <p className="font-display text-[1.7rem] font-bold leading-none text-[#121117]">
+          <p className="font-display text-[1.4rem] font-semibold leading-none text-[#121117]">
             {retention.percent}%
           </p>
-          <p className="text-[13.5px] font-medium text-[#4b4a5c]">
+          <p className="text-[12.5px] font-medium text-[#4b4a5c]">
             of the cards that had gone to sleep came back this month.
           </p>
         </div>
@@ -136,7 +136,7 @@ export function DailyPanel({
       <button
         type="button"
         onClick={() => setOpenSettings((v) => !v)}
-        className="mt-4 inline-flex min-h-11 items-center gap-2 text-[15px] font-semibold text-[#121117] hover:underline"
+        className="mt-4 inline-flex min-h-11 items-center gap-2 text-[14px] font-semibold text-[#121117] hover:underline"
       >
         <Target size={15} /> How tight should the schedule be?
       </button>
@@ -166,7 +166,7 @@ export function DailyPanel({
 
       <Link
         to="/study/progress"
-        className="mt-4 inline-flex items-center gap-2 text-[15px] font-semibold text-[#121117] underline underline-offset-4"
+        className="mt-4 inline-flex items-center gap-2 text-[14px] font-semibold text-[#121117] underline underline-offset-4"
       >
         <LineChart size={15} /> See my progress
       </Link>

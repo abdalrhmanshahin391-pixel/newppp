@@ -30,7 +30,6 @@ export function DeckCard({ deck, author }: { deck: SharedDeck; author: DeckAutho
 
   return (
     <Link
-      data-tour="share-deck-card"
       to="/share/$deckId"
       params={{ deckId: deck.id }}
       className="group flex flex-col overflow-hidden rounded-[26px] border border-black/[0.07] bg-white shadow-[0_10px_30px_-24px_rgba(0,0,0,0.45)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_50px_-28px_rgba(0,0,0,0.5)]"

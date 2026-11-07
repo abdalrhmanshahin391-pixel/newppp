@@ -253,7 +253,7 @@ function AllInOneUpload() {
           </p>
         </header>
 
-        <section data-tour="aio-studio-box" className="mt-6 rounded-[28px] border-2 border-[#121117] bg-white p-5 sm:p-6">
+        <section className="mt-6 rounded-[28px] border-2 border-[#121117] bg-white p-5 sm:p-6">
           <div className="flex gap-2">
             {(["pdf", "text"] as const).map((s) => (
               <button
@@ -270,7 +270,6 @@ function AllInOneUpload() {
 
           {source === "pdf" ? (
             <label
-              data-tour="aio-dropzone"
               onClick={(e) => {
                 if (!gate.check({ feature: "feature_all_in_one", kind: "all_in_one_lectures" })) {
                   e.preventDefault();
@@ -371,7 +370,7 @@ function AllInOneUpload() {
               {displayRows.map((r, i) => (
                 <Link
                   key={r.id}
-                  data-tour={r.example && i === 0 ? "aio-sample-card" : undefined}
+                 
                   to="/study/all-in-one/$lectureId"
                   params={{ lectureId: r.id }}
                   className={`group flex aspect-square flex-col justify-between rounded-3xl border bg-white p-4 transition hover:-translate-y-1 hover:shadow-[0_20px_40px_-26px_rgba(0,0,0,0.35)] ${r.example ? "border-[#121117]/25" : "border-[#121117]"}`}
