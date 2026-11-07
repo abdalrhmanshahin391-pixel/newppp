@@ -39,6 +39,8 @@ window.qaSelect=(wanted, occurrence=0)=>{
  while(node=walker.nextNode()){const length=node.textContent.length;if(!start&&from<offset+length)start=[node,from-offset];if(to<=offset+length){end=[node,to-offset];break;}offset+=length;}
  const range=doc.createRange();range.setStart(...start);range.setEnd(...end);el.scrollIntoView({block:'center'});
  const sel=doc.getSelection();sel.removeAllRanges();sel.addRange(range);doc.dispatchEvent(new Event('selectionchange'));
+ const rect=range.getClientRects()[0],frame=document.querySelector('iframe'),box=frame.getBoundingClientRect(),scale=box.width/frame.clientWidth;
+ return {x:box.left+(rect.left+rect.width*.25)*scale,y:box.top+(rect.top+rect.height*.5)*scale};
 };
 
 `;
@@ -186,6 +188,27 @@ if (process.argv.includes("--check")) {
   const engine = process.env.BROWSER || "chromium";
   const browser = await pw[engine].launch({ headless: true });
   const findings = [];
+  async function selectPhrase(page) {
+    await page.getByRole("button", { name: "تحديد عبارة", exact: true }).click();
+    if (engine === "webkit") {
+      // Safari's locked guide frame does not emit the native selection event reliably.
+      // Exercise the same parent-owned selection layer that a learner double-taps instead.
+      const point = await page.evaluate(() => window.qaSelect("looks after"));
+      await page.mouse.dblclick(point.x, point.y);
+    }
+    try {
+      await page.locator('.st-orb[data-state="armed"]').waitFor();
+    } catch (error) {
+      console.log({
+        engine,
+        selection: await page.evaluate(() =>
+          document.querySelector("iframe")?.contentDocument?.getSelection()?.toString(),
+        ),
+      });
+      await page.screenshot({ path: resolve(out, `${engine}-selection-failure.png`) });
+      throw error;
+    }
+  }
   async function menu(page) {
     await page.locator(".st-orb").click();
     await page.locator(".st-rad.is-shown").waitFor();
@@ -229,8 +252,7 @@ if (process.argv.includes("--check")) {
       await page.goto(origin + "/preview");
       await page.locator("iframe").waitFor();
       await page.frameLocator("iframe").locator("[data-seg]").first().waitFor();
-      await page.getByRole("button", { name: "تحديد عبارة", exact: true }).click();
-      await page.locator('.st-orb[data-state="armed"]').waitFor();
+      await selectPhrase(page);
       await menu(page);
       const seen = new Set();
       for (let turn = 0; turn < 8; turn += 1) {
@@ -266,8 +288,7 @@ if (process.argv.includes("--check")) {
       await page.getByRole("button", { name: "آخر تدريب", exact: true }).click();
       assert.equal(await page.locator(".st-practice-front").innerText(), "works");
       await page.keyboard.press("Escape");
-      await page.getByRole("button", { name: "تحديد عبارة", exact: true }).click();
-      await page.locator('.st-orb[data-state="armed"]').waitFor();
+      await selectPhrase(page);
       await choose(page, "تمارين اختيار");
       await page.locator(".st-practice-option").first().waitFor();
       await page.locator(".st-practice-option").nth(1).click();
@@ -298,8 +319,7 @@ if (process.argv.includes("--check")) {
     const failure = await browser.newPage({ viewport: { width: 390, height: 900 } });
     await failure.goto(origin + "/preview?fail");
     await failure.frameLocator("iframe").locator("[data-seg]").first().waitFor();
-    await failure.getByRole("button", { name: "تحديد عبارة", exact: true }).click();
-    await failure.locator('.st-orb[data-state="armed"]').waitFor();
+    await selectPhrase(failure);
     await choose(failure, "فلاش كاردز");
     await failure.getByRole("alert").waitFor();
     await failure.evaluate(() => history.replaceState(null, "", "/preview"));
