@@ -93,7 +93,7 @@ export function MatchSetup({
       <button
         onClick={start}
         disabled={!canStart}
-        className="mt-5 w-full inline-flex items-center justify-center gap-2 h-12 rounded-full bg-blue-600 text-white text-base font-bold shadow disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-700"
+        className="mt-5 w-full inline-flex items-center justify-center gap-2 h-11 rounded-full bg-blue-600 text-white text-[15px] font-semibold shadow disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-700"
       >
         <Play className="w-4 h-4 fill-current" /> Start · 30s
       </button>

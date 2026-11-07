@@ -225,14 +225,14 @@ function ReviewHub() {
               to="/german/$courseId/review/run"
               params={{ courseId }}
               search={{ kind: smartReviewTarget.kind, subjects: smartReviewTarget.ids.join(",") }}
-              className="h-12 rounded-full bg-blue-600 text-white font-bold inline-flex items-center justify-center gap-2 shadow-lg shadow-[#4a82f3]/30 hover:bg-blue-700"
+              className="h-11 rounded-full bg-blue-600 text-white font-semibold inline-flex items-center justify-center gap-2 shadow-lg shadow-[#4a82f3]/30 hover:bg-blue-700"
             >
               <Sparkles className="w-4 h-4" /> Smart Review
             </Link>
           ) : (
             <button
               onClick={() => toast.error("No words or sentences saved yet. Tap + Add first.")}
-              className="h-12 rounded-full bg-[#2b6df0]/50 text-white font-bold inline-flex items-center justify-center gap-2"
+              className="h-11 rounded-full bg-[#2b6df0]/50 text-white font-semibold inline-flex items-center justify-center gap-2"
             >
               <Sparkles className="w-4 h-4" /> Smart Review
             </button>
@@ -242,14 +242,14 @@ function ReviewHub() {
               to="/german/$courseId/exam"
               params={{ courseId }}
               search={{ subjects: examTarget.join(",") }}
-              className="h-12 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold inline-flex items-center justify-center gap-2 shadow-lg shadow-[#c4314f]/30 hover:opacity-95"
+              className="h-11 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 text-white font-semibold inline-flex items-center justify-center gap-2 shadow-lg shadow-[#c4314f]/30 hover:opacity-95"
             >
               <GraduationCap className="w-4 h-4" /> Start Exam
             </Link>
           ) : (
             <button
               onClick={() => toast.error("Add some words or sentences first.")}
-              className="h-12 rounded-full bg-gradient-to-r from-[#c4314f]/60 to-[#d68c0a]/60 text-white font-bold inline-flex items-center justify-center gap-2"
+              className="h-11 rounded-full bg-gradient-to-r from-[#c4314f]/60 to-[#d68c0a]/60 text-white font-semibold inline-flex items-center justify-center gap-2"
             >
               <GraduationCap className="w-4 h-4" /> Start Exam
             </button>

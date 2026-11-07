@@ -179,7 +179,7 @@ export function SpeakLab({ items, onClose }: { items: DeItem[]; onClose: () => v
 
           {result && (
             <div className="mt-7">
-              <div className="font-display text-[44px] font-black leading-none" style={{ color: b!.color }}>
+              <div className="font-display text-[36px] font-semibold leading-none" style={{ color: b!.color }}>
                 {result.score}
               </div>
               <div className="text-[13px] font-black uppercase tracking-[0.18em]" style={{ color: b!.color }}>
