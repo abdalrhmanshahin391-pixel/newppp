@@ -84,7 +84,7 @@ function GermanHub() {
             <p className="text-[15px] font-semibold text-[#6a697c]">German Lab</p>
             <h1
               className="mt-3 font-display font-bold leading-[1.08] tracking-[-0.03em]"
-              style={{ fontSize: "clamp(2rem, 4vw, 3.1rem)" }}
+              style={{ fontSize: "clamp(1.75rem, 3vw, 2.5rem)" }}
             >
               Stop guessing{" "}
               <span style={{ color: ARTICLES[0].color }}>der</span>,{" "}
@@ -99,12 +99,12 @@ function GermanHub() {
           <div
             role="img"
             aria-label="der, die and das tiles in blue, red and green"
-            className="grid grid-cols-3 gap-3 rounded-[20px] border-2 border-[#121117] bg-[#f4f4f8] p-5 sm:gap-4 sm:p-7"
+            className="grid grid-cols-3 gap-3 rounded-[20px] border-[1.5px] border-[#121117] bg-[#f4f4f8] p-5 sm:gap-4 sm:p-7"
           >
             {ARTICLES.map((a) => (
               <span
                 key={a.word}
-                className="grid aspect-[4/5] place-items-center rounded-xl border-2 border-[#121117] bg-white font-display text-[clamp(1.6rem,4vw,2.6rem)] font-bold"
+                className="grid aspect-[4/5] place-items-center rounded-xl border-[1.5px] border-[#121117] bg-white font-display text-[clamp(1.6rem,4vw,2.6rem)] font-bold"
                 style={{ color: a.color }}
               >
                 {a.word}
@@ -118,7 +118,7 @@ function GermanHub() {
             <Link
               key={c.to}
               to={c.to}
-              className="group rounded-[20px] border-2 border-[#121117] bg-white p-7 transition-colors hover:bg-[#f4f4f8]"
+              className="group rounded-[20px] border-[1.5px] border-[#121117] bg-white p-6 transition-colors hover:bg-[#f4f4f8]"
             >
               <div className="flex items-center gap-3">
                 <span className="text-[#121117]">{c.icon}</span>

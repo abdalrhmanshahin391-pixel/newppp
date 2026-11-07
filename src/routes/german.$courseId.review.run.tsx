@@ -123,7 +123,7 @@ function SmartReviewRun() {
         <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-[#ffffff] to-transparent">
           <button
             onClick={() => setPhase("play")}
-            className="block w-full max-w-2xl mx-auto h-14 rounded-full bg-blue-500 text-white text-lg font-bold shadow-lg shadow-[#4a82f3]/30 hover:bg-blue-600"
+            className="block w-full max-w-2xl mx-auto h-12 rounded-full bg-blue-500 text-white text-[15px] font-semibold shadow-lg shadow-[#4a82f3]/30 hover:bg-blue-600"
           >
             Start
           </button>
@@ -166,13 +166,13 @@ function SmartReviewRun() {
           <div className="mt-6 flex gap-2">
             <button
               onClick={() => { setPhase("intro"); setResults([]); }}
-              className="flex-1 h-12 rounded-full bg-white border border-slate-200 text-slate-700 font-bold inline-flex items-center justify-center gap-2"
+              className="flex-1 h-11 rounded-full bg-white border border-slate-200 text-slate-700 font-semibold inline-flex items-center justify-center gap-2"
             >
               <RotateCcw className="w-4 h-4" /> Practice again
             </button>
             <button
               onClick={() => navigate({ to: "/german/$courseId/review", params: { courseId } })}
-              className="flex-1 h-12 rounded-full bg-blue-500 text-white font-bold"
+              className="flex-1 h-11 rounded-full bg-blue-500 text-white font-semibold"
             >
               Done
             </button>

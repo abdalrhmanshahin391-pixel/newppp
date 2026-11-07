@@ -190,7 +190,7 @@ function ExamPage() {
           </div>
           <button
             onClick={() => setStage("shadow")}
-            className="mt-8 inline-flex items-center gap-2 h-14 px-8 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold text-lg shadow-xl shadow-[#c4314f]/40"
+            className="mt-8 inline-flex items-center gap-2 h-12 px-6 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 text-white font-semibold text-[15px] shadow-xl shadow-[#c4314f]/40"
           >
             Start exam <ChevronRight className="w-5 h-5" />
           </button>
@@ -294,7 +294,7 @@ function ExamPage() {
         <Section title="Correct items" icon={<CheckCircle2 className="w-4 h-4 text-emerald-500" />} items={correct} onFlag={toggleFlag} flagged={flaggedIds} empty="No correct items recorded." />
 
         <div className="mt-6 flex gap-2">
-          <button onClick={() => navigate({ to: "/german/$courseId/review", params: { courseId } })} className="flex-1 h-12 rounded-full bg-slate-100 text-slate-800 font-bold hover:bg-slate-200">Back to review</button>
+          <button onClick={() => navigate({ to: "/german/$courseId/review", params: { courseId } })} className="flex-1 h-11 rounded-full bg-slate-100 text-slate-800 font-semibold hover:bg-slate-200">Back to review</button>
           <button
             onClick={() => {
               const ids = Array.from(new Set((flaggedIds.size ? results.filter((r) => flaggedIds.has(r.entry.id)) : wrong).map((r) => r.entry.id)));
@@ -305,11 +305,11 @@ function ExamPage() {
               setTapItems([]);
               setStage("shadow");
             }}
-            className="flex-1 h-12 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700"
+            className="flex-1 h-11 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-700"
           >
             Review misses
           </button>
-          <button onClick={() => window.location.reload()} className="flex-1 h-12 rounded-full bg-blue-600 text-white font-bold hover:bg-blue-700">Retake</button>
+          <button onClick={() => window.location.reload()} className="flex-1 h-11 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700">Retake</button>
         </div>
       </main>
     </div>

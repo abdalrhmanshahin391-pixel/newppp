@@ -94,7 +94,7 @@ function OnePlace() {
       <div className="min-h-screen bg-white text-[#121117]">
         <SiteHeader />
         <main className="mx-auto max-w-2xl px-4 py-20 text-center">
-          <h1 className="font-display text-[26px] font-black">This page is being prepared</h1>
+          <h1 className="font-display text-[24px] font-semibold">This page is being prepared</h1>
           <p className="mt-3 text-[15px] font-semibold text-[#54546a]">
             One Place is not open yet. Meanwhile you can train in the Article, Pronunciation and Build labs.
           </p>

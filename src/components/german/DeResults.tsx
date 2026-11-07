@@ -27,7 +27,7 @@ export function DeResults({
       <div className="mx-auto max-w-3xl">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="font-display text-[30px] font-black leading-tight text-[#121117]">
+            <h2 className="font-display text-[26px] font-semibold leading-tight text-[#121117]">
               {missed.length === 0 ? "Perfect round" : `${rows.length - missed.length} / ${rows.length} right`}
             </h2>
             <p className="mt-1 text-[15px] font-semibold text-[#54546a]">

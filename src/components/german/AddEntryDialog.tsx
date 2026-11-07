@@ -123,7 +123,7 @@ export function AddEntryDialog({
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={`h-12 rounded-xl text-sm font-extrabold transition ${
+              className={`h-11 rounded-xl text-[14px] font-semibold transition ${
                 tab === t ? "bg-card text-primary shadow-sm" : "text-muted-foreground"
               }`}
             >
@@ -207,7 +207,7 @@ export function AddEntryDialog({
                         </button>
                       );
                     })}
-                    {subject.children.length === 0 && <button onClick={() => { setParentId(subject.id); setCreateOpen("subtopic"); }} className="h-14 w-full rounded-xl border border-dashed border-border text-sm font-bold text-muted-foreground">+ Add the first sub-subject</button>}
+                    {subject.children.length === 0 && <button onClick={() => { setParentId(subject.id); setCreateOpen("subtopic"); }} className="h-12 w-full rounded-xl border border-dashed border-border text-[14px] font-semibold text-muted-foreground">+ Add the first sub-subject</button>}
                   </div>
                 </section>
               ))}
@@ -242,7 +242,7 @@ export function AddEntryDialog({
             type="button"
             disabled={!canSave}
             onClick={handleSave}
-            className="h-12 rounded-2xl px-6 font-extrabold"
+            className="h-11 rounded-2xl px-6 font-semibold"
           >
             {saving ? <Loader2 className="size-4 animate-spin" /> : <Languages className="size-4" />}
             {saving ? "Saving…" : "Save entry"}
