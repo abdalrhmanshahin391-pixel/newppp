@@ -191,12 +191,30 @@ if (process.argv.includes("--check")) {
     await page.locator(".st-rad.is-shown").waitFor();
     await page.getByRole("menu", { name: "شو بدك نعمل؟", exact: true }).waitFor();
   }
-  async function choose(page, label) {
-    await menu(page);
+  async function choose(page, label, alreadyOpen = false) {
+    if (!alreadyOpen) await menu(page);
+    const id = label === "فلاش كاردز" ? "make_cards" : "make_mcq";
     for (let turn = 0; turn < 8; turn += 1) {
-      const item = page.getByRole("menuitem", { name: label, exact: true });
-      if (await item.isVisible()) return item.click();
-      await page.getByRole("menuitem", { name: "المزيد", exact: true }).click();
+      const item = page.locator(`[data-service="${id}"]`);
+      if (await item.isVisible()) {
+        assert.match(await item.innerText(), new RegExp(label));
+        return item.click();
+      }
+      const more = page.locator('[data-service="__more"]');
+      try {
+        await more.click();
+      } catch (error) {
+        console.log({
+          label,
+          menu: await page
+            .locator(".st-rad")
+            .innerText()
+            .catch(() => "closed"),
+          errors: await page.locator("[role=alert]").allTextContents(),
+        });
+        await page.screenshot({ path: resolve(out, `${engine}-menu-failure.png`) });
+        throw error;
+      }
     }
     throw new Error("Unreachable study service: " + label);
   }
@@ -234,8 +252,7 @@ if (process.argv.includes("--check")) {
           "make_mcq",
         ].sort(),
       );
-      await page.keyboard.press("Escape");
-      await choose(page, "فلاش كاردز");
+      await choose(page, "فلاش كاردز", true);
       await page.locator(".st-practice-front").waitFor();
       assert.equal(await page.locator(".st-practice-front").innerText(), "looks after");
       assert.equal(await page.locator("#study-card-answer").isVisible(), false);
