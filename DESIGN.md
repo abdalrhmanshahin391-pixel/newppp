@@ -584,6 +584,21 @@ exercises or resources stop, which pops in. Every change is saved at once (`rita
 and undone if saving fails. Lessons keep their integer slots; stops sit between them with fractional
 orders (`rita_path_items`). Motion is transform/opacity and stops under reduced motion.
 
+**Levels (Nov 2026).** A lesson's level is its book's level (`rita_curricula.level`, A1–C2, set by
+the admin under «أدوات متقدمة» → «مستوى الكتاب»). The road is cut into one section per level
+(`src/lib/rita-path-levels.ts`): a white banner with a 1.5px ink border opens each section (a dark
+44px level chip, «المستوى A2» and «2 من 8 دروس»); a finish stop closes it (a dark flag, a gold
+trophy once every lesson of the level is done; tapping it says how far the learner is). The finish is
+drawn after the level's last lesson unless the admin placed their own with + → «خط نهاية A1»; theirs
+is moved like any stop. After the highest level a dashed grey «قريباً» banner names the next one.
+«ابدأ من هون» on a later level's banner lets a learner skip ahead: earlier levels stay open to visit
+and the current lesson moves to the first unfinished lesson of that level (kept on the device, per
+language; «ابدأ من الأول» on the first banner undoes it). The header shows the language's flag, its
+name and the learner's level; a tap opens the other languages. With no lessons yet the page shows
+the language's flag and offers switching language or a free talk with Rita. While editing, only the
+banners stay on the road, and a + at a level's edge sits above the next banner (it adds to the
+level before).
+
 ## Floating window (study page, `FloatingWindow`)
 
 A dark window over the study work area in the manner of iPadOS windows, opened from the circle (the

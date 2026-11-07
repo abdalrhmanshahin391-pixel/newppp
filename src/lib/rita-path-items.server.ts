@@ -36,7 +36,7 @@ export async function pathItemsFor(
     }
     return rows.map((row) => ({
       id: row.id,
-      kind: row.kind === "resources" ? "resources" : "exercises",
+      kind: row.kind === "resources" || row.kind === "finish" ? row.kind : "exercises",
       title: row.title,
       path_order: Number(row.path_order),
       resource_count: counts[row.id] ?? 0,
