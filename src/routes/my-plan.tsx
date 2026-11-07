@@ -163,7 +163,7 @@ function MyPlanPage() {
         <span className="inline-flex items-center gap-2 rounded-full bg-[#121117] px-4 py-1.5 text-[12px] font-black uppercase tracking-[0.16em] text-white">
           <Gauge size={13} /> My plan
         </span>
-        <h1 className="mt-5 font-display text-4xl font-black leading-tight tracking-tight md:text-5xl">
+        <h1 className="mt-5 font-display text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
           {plan.planName}
         </h1>
         <p className="mt-3 max-w-xl text-[16px] font-semibold text-[#54546a]">
@@ -212,7 +212,7 @@ function MyPlanPage() {
             return (
               <div key={m.key} className="rounded-[26px] border border-black/[0.06] bg-white p-6">
                 <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#9a9aab]">{m.label}</p>
-                <p className="mt-2 text-[26px] font-black leading-none">
+                <p className="mt-2 text-[24px] font-semibold leading-none">
                   {cap === null ? "∞" : Math.max(0, cap - used)}
                   <span className="ms-2 text-[13px] font-bold text-[#9a9aab]">
                     {cap === null ? "unlimited" : `left of ${cap}`}

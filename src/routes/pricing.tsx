@@ -206,7 +206,7 @@ function PricingPage() {
             >
                 <div className="p-8 md:p-10">
                   <p className="text-[19px] font-bold md:text-[21px]">Uzyra <span className="rita-accent font-normal">Study</span></p>
-                  <h2 className="mt-5 max-w-[25rem] text-[34px] font-bold leading-[1.06] md:text-[43px]">{b.title}</h2>
+                  <h2 className="mt-5 max-w-[25rem] text-[28px] font-semibold leading-[1.1] md:text-[36px]">{b.title}</h2>
                   <p className="mt-5 max-w-[28rem] text-[16px] leading-[1.6] text-white/50 md:text-[17px]">{b.copy}</p>
                   <button type="button" onClick={() => setKind(b.k)} className="rita-btn rita-btn-primary mt-7 gap-2">
                     {b.cta} <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -312,7 +312,7 @@ function PricingPage() {
                 )}
 
                  <div className="mt-7 flex flex-wrap items-end gap-x-2 gap-y-2">
-                    <span className="text-[48px] font-bold leading-none md:text-[54px]">
+                    <span className="text-[40px] font-semibold leading-none md:text-[46px]">
                     {money(priceCents, p.currency)}
                   </span>
                    <span className="pb-1.5 text-[14px] font-medium text-white/35">
