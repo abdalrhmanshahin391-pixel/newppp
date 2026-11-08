@@ -42,10 +42,31 @@ export type BookCategory = {
   sort: number;
 };
 
+export const BOOK_STATUSES = ["draft", "published", "archived"] as const;
+export type BookStatus = (typeof BOOK_STATUSES)[number];
+
+export type BookTag = { id: string; name_ar: string; name_en: string };
+
+/** A shelf the admin fills by hand, shown during its period (judged by the server's clock). */
+export type BookShelf = {
+  id: string;
+  name_ar: string;
+  name_en: string;
+  visible: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  sort: number;
+  /** The shelf's books, in its order. */
+  book_ids: string[];
+};
+
 export type Book = {
   id: string;
   title: string;
+  /** Another title the book is known by (a translation, the original). */
+  alt_title: string;
   author: string;
+  isbn: string | null;
   description: string;
   category_id: string | null;
   level: BookLevel;
@@ -57,7 +78,14 @@ export type Book = {
   cover_url: string | null;
   file_path: string | null;
   featured: boolean;
+  featured_from: string | null;
+  featured_until: string | null;
+  status: BookStatus;
+  /** Same as status === "published" (kept for older rows and pages). */
   published: boolean;
+  rights_checked: boolean;
+  tag_ids: string[];
+  secondary_category_ids: string[];
   sort: number;
   created_at: string;
 };
@@ -102,7 +130,11 @@ export function toCategory(row: Record<string, unknown>): BookCategory {
   };
 }
 
-export function toBook(row: Record<string, unknown>, coverUrl: string | null): Book {
+export function toBook(
+  row: Record<string, unknown>,
+  coverUrl: string | null,
+  links: { tag_ids?: string[]; secondary_category_ids?: string[] } = {},
+): Book {
   const num = (value: unknown) =>
     value === null || value === undefined || value === "" || !Number.isFinite(Number(value))
       ? null
@@ -110,7 +142,9 @@ export function toBook(row: Record<string, unknown>, coverUrl: string | null): B
   return {
     id: String(row.id),
     title: String(row.title ?? ""),
+    alt_title: String(row.alt_title ?? ""),
     author: String(row.author ?? ""),
+    isbn: row.isbn ? String(row.isbn) : null,
     description: String(row.description ?? ""),
     category_id: row.category_id ? String(row.category_id) : null,
     level: SAFE_LEVEL(row.level),
@@ -121,15 +155,26 @@ export function toBook(row: Record<string, unknown>, coverUrl: string | null): B
     cover_url: coverUrl,
     file_path: row.file_path ? String(row.file_path) : null,
     featured: row.featured === true,
-    published: row.published === true,
+    featured_from: row.featured_from ? String(row.featured_from) : null,
+    featured_until: row.featured_until ? String(row.featured_until) : null,
+    status: BOOK_STATUSES.includes(row.status as BookStatus)
+      ? (row.status as BookStatus)
+      : row.published === true
+        ? "published"
+        : "draft",
+    published: row.status ? row.status === "published" : row.published === true,
+    rights_checked:
+      row.rights_checked === true || (!("rights_checked" in row) && row.published === true),
+    tag_ids: links.tag_ids ?? [],
+    secondary_category_ids: links.secondary_category_ids ?? [],
     sort: Number(row.sort) || 0,
     created_at: String(row.created_at ?? ""),
   };
 }
 
 /**
- * Text for matching: lower case, no accents or Arabic diacritics, the alef forms, taa marbuta and
- * alef maqsura unified, punctuation as spaces.
+ * Text for matching: lower case, no accents, Arabic diacritics or tatweel, the alef forms unified,
+ * punctuation as spaces. The taa marbuta and alef maqsura are kept as they are written.
  */
 export function searchText(text: string): string {
   return text
@@ -137,8 +182,6 @@ export function searchText(text: string): string {
     .replace(/[̀-ͯ]/g, "")
     .replace(/[ً-ٰٟـ]/g, "")
     .replace(/[أإآٱ]/g, "ا")
-    .replace(/ة/g, "ه")
-    .replace(/ى/g, "ي")
     .replace(/ß/g, "ss")
     .toLowerCase()
     .replace(/[^\p{L}\p{N}]+/gu, " ")
@@ -146,10 +189,15 @@ export function searchText(text: string): string {
 }
 
 /** Every word of the query appears at the start of a word in the title or the author. */
-export function matchesQuery(book: Pick<Book, "title" | "author">, query: string): boolean {
+export function matchesQuery(
+  book: Pick<Book, "title" | "author"> & { alt_title?: string; isbn?: string | null },
+  query: string,
+): boolean {
   const words = searchText(query).split(" ").filter(Boolean);
   if (!words.length) return true;
-  const hay = ` ${searchText(`${book.title} ${book.author}`)}`;
+  const isbn = query.replace(/[^0-9Xx]/g, "").toUpperCase();
+  if (isbn.length >= 10 && book.isbn && book.isbn === isbn) return true;
+  const hay = ` ${searchText(`${book.title} ${book.alt_title ?? ""} ${book.author}`)}`;
   return words.every((word) => hay.includes(` ${word}`));
 }
 
@@ -241,4 +289,152 @@ export function searchFromFilters(filters: BookFilters): Record<string, string> 
   if (filters.len) out.len = filters.len;
   if (filters.sort !== "new") out.sort = filters.sort;
   return out;
+}
+
+/** What stops a book from being published (the database checks the same three). */
+export function publishIssues(
+  book: Pick<Book, "title" | "category_id" | "rights_checked">,
+): ("title" | "category" | "rights")[] {
+  const out: ("title" | "category" | "rights")[] = [];
+  if (!book.title.trim()) out.push("title");
+  if (!book.category_id) out.push("category");
+  if (!book.rights_checked) out.push("rights");
+  return out;
+}
+
+/** What is worth adding but never blocks publishing. */
+export function publishWarnings(
+  book: Pick<Book, "cover_path" | "file_path" | "isbn" | "year" | "description">,
+): ("cover" | "pdf" | "isbn" | "year" | "description")[] {
+  const out: ("cover" | "pdf" | "isbn" | "year" | "description")[] = [];
+  if (!book.cover_path) out.push("cover");
+  if (!book.file_path) out.push("pdf");
+  if (!book.isbn) out.push("isbn");
+  if (book.year === null) out.push("year");
+  if (!book.description.trim()) out.push("description");
+  return out;
+}
+
+/** An ISBN as digits (and a final X), or null when it is empty; "invalid" when its shape is wrong. */
+export function normalizeIsbn(text: string): string | null | "invalid" {
+  const digits = text.toUpperCase().replace(/[^0-9X]/g, "");
+  if (!digits) return null;
+  return /^([0-9]{9}[0-9X]|97[89][0-9]{10})$/.test(digits) ? digits : "invalid";
+}
+
+// ---- admin helpers --------------------------------------------------------------------------
+
+export type BookGap = "cover" | "pdf" | "isbn";
+
+export type AdminBookFilter = {
+  q: string;
+  status: BookStatus | "all";
+  /** A category id, "none" for books without one, or "all". */
+  cat: string;
+  level: BookLevel | null;
+  lang: string | null;
+  missing: BookGap | null;
+};
+
+export const NO_ADMIN_FILTER: AdminBookFilter = {
+  q: "",
+  status: "all",
+  cat: "all",
+  level: null,
+  lang: null,
+  missing: null,
+};
+
+export function isAdminFiltering(filter: AdminBookFilter): boolean {
+  return Boolean(
+    filter.q.trim() ||
+    filter.status !== "all" ||
+    filter.cat !== "all" ||
+    filter.level ||
+    filter.lang ||
+    filter.missing,
+  );
+}
+
+const lacks = (book: Book, gap: BookGap) =>
+  gap === "cover" ? !book.cover_path : gap === "pdf" ? !book.file_path : !book.isbn;
+
+/** The admin's book list: every status, filtered; in the categories' order, then the book order. */
+export function adminFilterBooks(
+  books: Book[],
+  categories: BookCategory[],
+  filter: AdminBookFilter,
+): Book[] {
+  const order = new Map(categories.map((c) => [c.id, c.sort]));
+  return books
+    .filter(
+      (book) =>
+        matchesQuery(book, filter.q) &&
+        (filter.status === "all" || book.status === filter.status) &&
+        (filter.cat === "all" ||
+          (filter.cat === "none"
+            ? !book.category_id || !order.has(book.category_id)
+            : book.category_id === filter.cat)) &&
+        (!filter.level || book.level === filter.level) &&
+        (!filter.lang || book.language === filter.lang) &&
+        (!filter.missing || lacks(book, filter.missing)),
+    )
+    .sort(
+      (a, b) =>
+        (order.get(a.category_id ?? "") ?? Infinity) -
+          (order.get(b.category_id ?? "") ?? Infinity) ||
+        a.sort - b.sort ||
+        b.created_at.localeCompare(a.created_at),
+    );
+}
+
+export type QualityReport = {
+  noCover: Book[];
+  noPdf: Book[];
+  noIsbn: Book[];
+  /** Drafts that could not be published yet (missing title, category or the rights check). */
+  notReady: Book[];
+  /** Books that share a title and author (after the search normalisation). */
+  duplicates: Book[][];
+};
+
+/** What the admin should look at: archived books are left out. */
+export function qualityReport(books: Book[]): QualityReport {
+  const live = books.filter((b) => b.status !== "archived");
+  const groups = new Map<string, Book[]>();
+  for (const book of live) {
+    const key = `${searchText(book.title)}|${searchText(book.author)}`;
+    groups.set(key, [...(groups.get(key) ?? []), book]);
+  }
+  return {
+    noCover: live.filter((b) => !b.cover_path),
+    noPdf: live.filter((b) => !b.file_path),
+    noIsbn: live.filter((b) => !b.isbn),
+    notReady: live.filter((b) => b.status === "draft" && publishIssues(b).length > 0),
+    duplicates: [...groups.values()].filter((g) => g.length > 1),
+  };
+}
+
+/** A moment as the value of a datetime-local field (the admin's own time zone), or "". */
+export function toLocalInput(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** A datetime-local value (the admin's time zone) as an ISO moment; empty or invalid → null. */
+export function fromLocalInput(value: string): string | null {
+  if (!value.trim()) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+/** True when a period (either end open) contains the moment. */
+export function inPeriod(from: string | null, until: string | null, at: Date): boolean {
+  const t = at.getTime();
+  if (from && Date.parse(from) > t) return false;
+  if (until && Date.parse(until) <= t) return false;
+  return true;
 }

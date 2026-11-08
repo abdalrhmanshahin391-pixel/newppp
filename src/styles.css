@@ -9540,6 +9540,34 @@ html.rita-app,
   line-height: 1.6;
 }
 
+/* An admin's preview of the library at another moment: a dashed strip only they see. */
+.bk-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  border: 1.5px dashed var(--pp-ink);
+  border-radius: 14px;
+  background: var(--pp-grey);
+  font-size: 14.5px;
+}
+.bk-preview > span {
+  flex: 1;
+  min-width: 0;
+}
+.bk-preview-exit {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* Loading. */
 .bk-skel {
   border-radius: 8px;

@@ -414,12 +414,48 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
 - **Details** (`BookSheet`): a dialog (a bottom sheet on phones) with the book, its facts and
   «ابدأ القراءة», which opens the PDF through a ten-minute signed link (visitors are asked to sign
   in; without a file the button says the file is not ready).
-- **Admin** (`/admin/books`): categories (Arabic and English names, tone, icon, order) and books
-  (cover JPG/PNG/WebP up to 5 MB, PDF up to 50 MB, category, level, language, pages, year,
-  description, published, book of the week — one at a time), with a live preview of the book.
-- Data: `book_categories` and `books` (migration `20261108120000_books_library.sql`), covers in the
-  public `book-covers` bucket, PDFs in the private `book-files` bucket. Everyone reads categories
-  and published books; only admins write.
+- **Manual shelves:** shelves the admin fills by hand come after the book of the week and before
+  «وصل جديداً», in the admin's order, with an indigo tone and a bookmark icon. Only published books
+  show; an empty shelf is left out. A shelf with a period shows only during it (server clock).
+- **Admin preview:** `/books?preview=<ISO time>` shows an admin the library at that moment (shelves
+  and book of the week by their periods) under a dashed strip «معاينة للأدمن» with «اطلع من
+  المعاينة». Readers never see it; the address is ignored for them.
+- **Admin** (`/admin/books`, Arabic, RTL, the `edith-premium` admin look): four underline tabs
+  (`?tab=`):
+  - **الكتب:** a grey filter card (search by title, author, alternate title or ISBN; status,
+    category, level, language and "missing" selects, two per row on phones), the count when
+    filtered and «امسح الفلترة». One list row per book: checkbox, the small book, title, a meta
+    line (category · author · level · pages) and badges (status in words and colour: منشور green,
+    مسودة grey, مؤرشف violet; كتاب الأسبوع gold; بدون PDF red; بدون غلاف / الحقوق مش مراجعة grey),
+    then 44px icon buttons (order arrows inside a category, only while nothing is filtered;
+    publish/draft; edit; delete). Choosing books shows a sticky bar with one action select
+    (publish, back to draft, archive, set the primary category, add or remove a tag) and «طبّق»;
+    books that are not ready are skipped and named in a toast.
+  - **التصنيف:** categories (names, tone, icon, order; deleting one with books asks where they
+    move, inline, never a second window) and tags (Arabic and English names, book count).
+  - **ترتيب المكتبة:** the book of the week (a published book and an optional from/until period;
+    a badge says if it is on show now), manual shelves (name, shown or hidden, period, books in
+    order with arrows), and the preview link with a date and time.
+  - **الاستيراد والجودة:** a CSV import (choose the file, match each field to a column, choose
+    what happens to a book that exists — leave it, update it, or add a copy — then «جرّب بدون
+    حفظ», which shows the counts and a row table with words for every reason, and only then
+    «استورد N كتاب»); the last ten imports; the quality cards (drafts not ready, no PDF, no cover,
+    no ISBN, likely duplicates) with lists that open the editor; and the file-cleanup list with
+    «جرّب تشيلهم هلأ».
+- **Book editor:** one window (a bottom sheet on phones) with five numbered sections — identity
+  (title, alternate title, author, ISBN, language, pages, year, description), classification
+  (primary category, level, secondary categories and tags as toggle chips), files (a hairline card
+  per file with its state and «اختار ملف» / «بدّل», a progress bar while it uploads; files over
+  6 MB go up in resumable parts), availability (draft / published / archived choice and the rights
+  check) and display (book of the week with its period, manual shelves). Beside it: the live book
+  and a readiness card (title, primary category, rights — green tick or red cross with words; then
+  what is worth adding but never blocks). Save and cancel stay at the bottom.
+- Data: `book_categories` and `books` (migration `20261108120000_books_library.sql`), then phase 1
+  (`20261109120000_books_admin_foundation.sql`): status, alternate title, ISBN, rights check,
+  tags, secondary categories, manual shelves, the book-of-the-week period, imports and the
+  file-cleanup list. Covers in the public `book-covers` bucket, PDFs in the private `book-files`
+  bucket. Everyone reads categories and published books; only admins write. The page and the
+  admin keep working on a database that only has the first migration (with a notice for admins).
 
 ## Lesson builder (`/admin/curricula`)
 
