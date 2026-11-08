@@ -45,6 +45,9 @@ on:
       - "voice-agent/rita_study_voice.py"
       - "supabase/tests/**"
       - "scripts/test-study-db.sh"
+      - "scripts/test-books-db.sh"
+      - "supabase/migrations/20261108120000_books_library.sql"
+      - "supabase/migrations/20261108130000_books_public_read.sql"
       - "src/lib/study/**"
       - "src/components/rita-study/**"
       - "src/routes/rita-study.tsx"
@@ -153,3 +156,10 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: postgres
         run: ./scripts/test-study-db.sh
+      - name: Books library permissions (real migrations on isolated Postgres 16)
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: bash scripts/test-books-db.sh
