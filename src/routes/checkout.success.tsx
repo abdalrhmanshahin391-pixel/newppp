@@ -141,7 +141,7 @@ function SuccessPage() {
                 Your payment went through. The plan can take a few seconds to appear — refresh this
                 page in a moment, or open your account.
               </p>
-              <Link to="/my-plan" className="rita-btn rita-btn-secondary gap-2 self-start">
+              <Link to="/settings" search={{ section: "plan" }} className="rita-btn rita-btn-secondary gap-2 self-start">
                 My plan <ArrowRight className="h-4 w-4" />
               </Link>
             </div>

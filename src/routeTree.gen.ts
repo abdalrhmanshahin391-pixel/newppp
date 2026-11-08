@@ -32,6 +32,7 @@ import { Route as RitaConversationsRouteImport } from './routes/rita-conversatio
 import { Route as RitaLessonsRouteImport } from './routes/rita-lessons'
 import { Route as RitaLiveRouteImport } from './routes/rita-live'
 import { Route as RitaStudyRouteImport } from './routes/rita-study'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as StudyRouteImport } from './routes/study'
@@ -258,6 +259,11 @@ const RitaLiveRoute = RitaLiveRouteImport.update({
 const RitaStudyRoute = RitaStudyRouteImport.update({
   id: '/rita-study',
   path: '/rita-study',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -853,6 +859,7 @@ export interface FileRoutesByFullPath {
   '/rita-lessons': typeof RitaLessonsRoute
   '/rita-live': typeof RitaLiveRoute
   '/rita-study': typeof RitaStudyRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/study': typeof StudyRouteWithChildren
@@ -989,6 +996,7 @@ export interface FileRoutesByTo {
   '/rita-lessons': typeof RitaLessonsRoute
   '/rita-live': typeof RitaLiveRoute
   '/rita-study': typeof RitaStudyRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/support': typeof SupportRoute
@@ -1123,6 +1131,7 @@ export interface FileRoutesById {
   '/rita-lessons': typeof RitaLessonsRoute
   '/rita-live': typeof RitaLiveRoute
   '/rita-study': typeof RitaStudyRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/start': typeof StartRoute
   '/study': typeof StudyRouteWithChildren
@@ -1262,6 +1271,7 @@ export interface FileRouteTypes {
     | '/rita-lessons'
     | '/rita-live'
     | '/rita-study'
+    | '/settings'
     | '/sitemap.xml'
     | '/start'
     | '/study'
@@ -1398,6 +1408,7 @@ export interface FileRouteTypes {
     | '/rita-lessons'
     | '/rita-live'
     | '/rita-study'
+    | '/settings'
     | '/sitemap.xml'
     | '/start'
     | '/support'
@@ -1531,6 +1542,7 @@ export interface FileRouteTypes {
     | '/rita-lessons'
     | '/rita-live'
     | '/rita-study'
+    | '/settings'
     | '/sitemap.xml'
     | '/start'
     | '/study'
@@ -1669,6 +1681,7 @@ export interface RootRouteChildren {
   RitaLessonsRoute: typeof RitaLessonsRoute
   RitaLiveRoute: typeof RitaLiveRoute
   RitaStudyRoute: typeof RitaStudyRoute
+  SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StartRoute: typeof StartRoute
   StudyRoute: typeof StudyRouteWithChildren
@@ -1910,6 +1923,13 @@ declare module '@tanstack/react-router' {
       path: '/rita-study'
       fullPath: '/rita-study'
       preLoaderRoute: typeof RitaStudyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -2855,6 +2875,7 @@ const rootRouteChildren: RootRouteChildren = {
   RitaLessonsRoute: RitaLessonsRoute,
   RitaLiveRoute: RitaLiveRoute,
   RitaStudyRoute: RitaStudyRoute,
+  SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StartRoute: StartRoute,
   StudyRoute: StudyRouteWithChildren,

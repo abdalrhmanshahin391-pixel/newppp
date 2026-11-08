@@ -49,7 +49,7 @@ test("the footer renders real navigation and legal destinations in both directio
       "/terms",
       "/privacy-policy",
       "/refund-policy",
-      "/my-plan",
+      "/settings?section=account",
       "/register",
     ]) {
       assert.ok(html.includes(`href="${path}"`), `Missing ${path}`);

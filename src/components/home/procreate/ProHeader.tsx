@@ -1,15 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import {
-  ChevronDown,
-  Gauge,
-  LayoutGrid,
-  LogOut,
-  Menu,
-  ReceiptText,
-  Settings,
-  X,
-} from "lucide-react";
+import { ChevronDown, LayoutGrid, LogOut, Menu, ReceiptText, Settings, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { openWelcome } from "@/lib/auth-dialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -191,13 +182,9 @@ export function ProHeader({
                       </div>
                     </div>
                     <div className="rh-rule" />
-                    <Link to="/profile" className="rh-item">
+                    <Link to="/settings" search={{ section: "account" }} className="rh-item">
                       <Settings size={18} aria-hidden="true" />
-                      {t("cms.header.profileSettings")}
-                    </Link>
-                    <Link to="/my-plan" className="rh-item">
-                      <Gauge size={18} aria-hidden="true" />
-                      My plan
+                      {t("nav.settings")}
                     </Link>
                     <Link to="/pricing" className="rh-item">
                       <ReceiptText size={18} aria-hidden="true" />
@@ -268,13 +255,9 @@ export function ProHeader({
                   </div>
                 </div>
                 <CreditsMeter inline />
-                <Link to="/profile" className="rh-item">
+                <Link to="/settings" search={{ section: "account" }} className="rh-item">
                   <Settings size={18} aria-hidden="true" />
-                  {t("cms.header.profileSettings")}
-                </Link>
-                <Link to="/my-plan" className="rh-item">
-                  <Gauge size={18} aria-hidden="true" />
-                  My plan
+                  {t("nav.settings")}
                 </Link>
                 <InstallAppButton className="rh-item" iconClassName="rh-item-icon" />
                 {isAdmin && (

@@ -412,7 +412,8 @@ function PricingPage() {
               </p>
             </div>
             <Link
-              to="/my-plan"
+              to="/settings"
+              search={{ section: "plan" }}
               className="rita-btn rita-btn-primary ms-auto"
             >
               Open my plan
