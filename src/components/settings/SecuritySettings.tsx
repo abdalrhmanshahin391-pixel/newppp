@@ -12,6 +12,7 @@ function PasswordField({
   onChange,
   current,
   invalid,
+  busy,
   lang,
 }: {
   id: string;
@@ -19,6 +20,7 @@ function PasswordField({
   onChange: (value: string) => void;
   current?: boolean;
   invalid?: boolean;
+  busy?: boolean;
   lang: SettingsLang;
 }) {
   const [show, setShow] = useState(false);
@@ -30,6 +32,7 @@ function PasswordField({
         type={show ? "text" : "password"}
         autoComplete={current ? "current-password" : "new-password"}
         value={value}
+        readOnly={busy}
         aria-invalid={invalid || undefined}
         aria-describedby={
           invalid
@@ -52,6 +55,7 @@ function PasswordField({
             : t(lang, "Show password", "إظهار كلمة المرور")
         }
         aria-pressed={show}
+        disabled={busy}
         onClick={() => setShow(!show)}
       >
         {show ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
@@ -186,6 +190,7 @@ export function SecuritySettings({ lang }: { lang: SettingsLang }) {
           }}
           invalid={invalid === "settings-current-password"}
           current
+          busy={busy}
           lang={lang}
         />
       </SettingsRow>
@@ -200,6 +205,7 @@ export function SecuritySettings({ lang }: { lang: SettingsLang }) {
       >
         <PasswordField
           id="settings-new-password"
+          busy={busy}
           value={password}
           onChange={(value) => {
             setPassword(value);
@@ -216,6 +222,7 @@ export function SecuritySettings({ lang }: { lang: SettingsLang }) {
       >
         <PasswordField
           id="settings-confirm-password"
+          busy={busy}
           value={confirmation}
           onChange={(value) => {
             setConfirmation(value);

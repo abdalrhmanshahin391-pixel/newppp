@@ -191,7 +191,12 @@
 .settings-input[aria-invalid="true"] {
   border-color: #a32a36;
 }
-.settings-inline-error { margin-top: 8px; color: #a32a36; font-size: 13px; line-height: 1.7; }
+.settings-inline-error {
+  margin-top: 8px;
+  color: #a32a36;
+  font-size: 13px;
+  line-height: 1.7;
+}
 .settings-readonly {
   background: var(--pp-grey, #f4f4f8);
   color: var(--pp-muted, #6a697c);
@@ -301,11 +306,11 @@
   position: relative;
 }
 .settings-password .settings-input {
-  padding-inline-end: 48px;
+  padding-right: 48px;
 }
 .settings-password .settings-icon-button {
   position: absolute;
-  inset-inline-end: 2px;
+  right: 2px;
   top: 1px;
 }
 .settings-tag {

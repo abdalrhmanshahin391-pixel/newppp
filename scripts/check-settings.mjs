@@ -216,6 +216,22 @@ try {
       await page.locator("#settings-name").waitFor();
       for (const key of Object.keys(names)) {
         if (key !== "account") await section(page, key, lang);
+        if (key === "security" && lang === "ar") {
+          const input = page.locator("#settings-current-password");
+          const control = page.locator(".settings-password").first().getByRole("button");
+          await input.fill("fixture-visible-password");
+          await control.click();
+          assert.equal(await input.getAttribute("type"), "text");
+          const fieldBox = await input.boundingBox(),
+            buttonBox = await control.boundingBox();
+          assert.ok(buttonBox.x > fieldBox.x + fieldBox.width / 2);
+          assert.ok(
+            await input.evaluate((el) => parseFloat(getComputedStyle(el).paddingRight) >= 48),
+          );
+          await screenshot(page, `${lang}-${width}-visible-password`);
+          await control.click();
+          await input.fill("");
+        }
         assert.equal(
           await page.locator(".settings-content").getAttribute("dir"),
           lang === "ar" ? "rtl" : "ltr",

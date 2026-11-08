@@ -245,6 +245,8 @@ export function ProfileSettings({
             id="settings-name"
             className="settings-input"
             autoComplete="name"
+            dir="auto"
+            readOnly={saving || photoBusy}
             value={draft.name}
             maxLength={150}
             onChange={(event) => update("name", event.target.value)}
@@ -255,6 +257,7 @@ export function ProfileSettings({
             id="settings-username"
             className="settings-input"
             autoComplete="username"
+            readOnly={saving || photoBusy}
             value={draft.username}
             required
             maxLength={80}
@@ -294,6 +297,7 @@ export function ProfileSettings({
             id="settings-phone"
             type="tel"
             autoComplete="tel"
+            readOnly={saving || photoBusy}
             className="settings-input"
             value={draft.phone}
             maxLength={30}
@@ -321,6 +325,8 @@ export function ProfileSettings({
             id="settings-bio"
             className="settings-input settings-textarea"
             maxLength={240}
+            dir="auto"
+            readOnly={saving || photoBusy}
             value={draft.bio}
             aria-describedby="settings-bio-hint"
             onChange={(event) => update("bio", event.target.value)}
