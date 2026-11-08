@@ -54,7 +54,11 @@ export function UpgradeWall({ block, onClose }: { block: GateBlock | null; onClo
               Not now
             </button>
           </div>
-          <Link to="/my-plan" className="mt-3 inline-block text-xs font-bold text-muted-foreground underline">
+          <Link
+            to="/settings"
+            search={{ section: "usage" }}
+            className="mt-3 inline-block text-xs font-bold text-muted-foreground underline"
+          >
             See what's left in my plan
           </Link>
         </div>

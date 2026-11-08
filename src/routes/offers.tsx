@@ -273,7 +273,8 @@ function OfferCard({
               : "This offer is active on your account."}
           </p>
           <Link
-            to="/my-plan"
+            to="/settings"
+            search={{ section: "plan" }}
             className="rita-btn rita-btn-primary mt-4 inline-flex"
           >
             <Sparkles size={15} /> See it in My plan

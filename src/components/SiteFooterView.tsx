@@ -94,7 +94,9 @@ export function SiteFooterView({
             className="uz-footer-legal"
             aria-label={ar ? "الحساب والسياسات" : "Account and policies"}
           >
-            <Link to="/my-plan">{ar ? "خطتي" : "My plan"}</Link>
+            <Link to="/settings" search={{ section: "account" }}>
+              {ar ? "الإعدادات" : "Settings"}
+            </Link>
             <Link to="/register">{ar ? "إنشاء حساب" : "Create account"}</Link>
             <Link to="/terms">{ar ? "الشروط" : "Terms"}</Link>
             <Link to="/privacy-policy">{ar ? "الخصوصية" : "Privacy"}</Link>

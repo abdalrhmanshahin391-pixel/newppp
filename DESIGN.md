@@ -1,5 +1,26 @@
 # DESIGN.md — the visual system of Uzyra (formerly EdithLab) / Rita
 
+## Settings workspace
+
+`/settings?section=account|security|plan|usage|billing` combines profile and plan management.
+The account menu has one Settings entry. `/profile` and `/my-plan` redirect to the corresponding
+section; pricing, offers, checkout and allowance links open the relevant section directly.
+
+Use the existing white, ink and blue app palette and type. A 232px rail stays physically left
+in Arabic and English, separated from the content by a hairline. Labels, descriptions, fields
+and quiet controls form rows, not a grid of decorative cards. Account/security are grouped
+above plan/usage/billing. Local settings search matches Arabic and English terms. Below 900px
+the rail becomes a labelled section picker; forms stack below 560px. Controls are at least
+44px high, inputs 16px, with visible keyboard focus and reduced-motion support.
+
+Profile drafts survive section changes, with a warning before leaving Settings. Security fields
+unmount on section changes. Existing auth, avatar storage, plan allowances and Paddle services
+are reused. Data loads on demand by section, with explicit loading, empty, error and retry states.
+Unknown allowances are never shown as unlimited; extra packs are included in totals. Saved
+cards are distinguished from the payment method attached to a subscription. Invoices open
+Paddle's portal using a fresh session. Confirmation explains that removing a card also stops
+renewal. Provider confirmation precedes local updates; partial failures stay visible.
+
 ## Study circle: five help services and two practice tools
 
 The existing draggable study circle offers «اشرحلي», «معنى ونطق», «فكّك الجملة», «ليش هيك؟» and «انتبه للغلطة». Explanation uses a white

@@ -49,3 +49,7 @@ guides-worker/samples/
 
 # Offline study-service verification
 /output/study-help/
+
+# Offline settings bundles, browser captures and downloaded review artifacts
+/output/settings-preview/
+/output/settings-review/
