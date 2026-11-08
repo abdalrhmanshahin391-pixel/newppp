@@ -78,3 +78,19 @@ test("a timed-out request that actually succeeded is confirmed, and unconfirmed 
     confirmCardRemoval(async () => new Response(null, { status: 503 }), "ctm_own", "pmt_own"),
   );
 });
+
+test("stored provider identifiers cannot change the payment API path", async () => {
+  let path = "";
+  await confirmCardRemoval(
+    async (value) => {
+      path = value;
+      return new Response(null, { status: 204 });
+    },
+    "ctm_own",
+    "../../ctm_foreign/payment-methods/pmt_foreign",
+  );
+  assert.equal(
+    path,
+    "/customers/ctm_own/payment-methods/..%2F..%2Fctm_foreign%2Fpayment-methods%2Fpmt_foreign",
+  );
+});

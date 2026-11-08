@@ -195,7 +195,42 @@ export const saveCheckoutPaymentMethod = createServerFn({ method: "POST" })
     return { ok: true, card: saved };
   });
 
-/** Removes a saved payment method, cancelling auto-renewal so no future charges occur. */
+/** Card rows are user-editable, so their provider IDs are not an ownership proof. */
+async function assertOwnedBillingCustomer(
+  client: BillingClient,
+  userId: string,
+  customerId: string,
+  environment: "live" | "sandbox",
+) {
+  const linked = await client
+    .from("subscriptions")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("paddle_customer_id", customerId)
+    .eq("environment", environment)
+    .limit(1)
+    .maybeSingle();
+  if (linked.error) throw new Error("Could not verify your billing account.");
+  if (linked.data) return;
+  // One-time buyers may have no subscription mapping. Match a current verified
+  // auth email against Paddle, never an editable profile or request field.
+  const auth = await client.auth.getUser();
+  const user = auth.data?.user;
+  if (auth.error || user?.id !== userId || !user.email_confirmed_at || !user.email)
+    throw new Error("Could not verify your billing account.");
+  const { gatewayFetch } = await import("@/lib/paddle.server");
+  const response = await gatewayFetch(environment, `/customers/${encodeURIComponent(customerId)}`, {
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok) throw new Error("Could not verify your billing account.");
+  const body = await response.json();
+  if (
+    typeof body?.data?.email !== "string" ||
+    body.data.email.trim().toLowerCase() !== user.email.trim().toLowerCase()
+  )
+    throw new Error("Billing account not found on your account.");
+}
+
 /** Sync a confirmed provider cancellation using the existing user-scoped RPC. */
 async function syncCancellation(client: BillingClient, userId: string, sub: SubscriptionRow) {
   const { error } = await client.rpc("cancel_user_subscription", {
@@ -241,6 +276,8 @@ export const removeSavedPaymentMethod = createServerFn({ method: "POST" })
     const { gatewayFetch } = await import("@/lib/paddle.server");
     const subEnv = sub?.environment === "live" ? "live" : "sandbox";
     const cardEnv = card.environment === "live" ? "live" : "sandbox";
+    if (card.paddle_customer_id && card.paddle_payment_method_id)
+      await assertOwnedBillingCustomer(client, userId, card.paddle_customer_id, cardEnv);
     const renews = sub && sub.status !== "canceled";
     return applyBillingChange({
       ...(renews
@@ -303,10 +340,16 @@ export const createCustomerPortalSession = createServerFn({ method: "POST" })
       environment = card.data?.environment;
     }
     if (!customerId) return { url: "https://paddle.net" };
+    await assertOwnedBillingCustomer(
+      client,
+      userId,
+      customerId,
+      environment === "live" ? "live" : "sandbox",
+    );
     const { gatewayFetch } = await import("@/lib/paddle.server");
     const response = await gatewayFetch(
       environment === "live" ? "live" : "sandbox",
-      `/customers/${customerId}/portal-sessions`,
+      `/customers/${encodeURIComponent(customerId)}/portal-sessions`,
       {
         method: "POST",
         signal: AbortSignal.timeout(15_000),

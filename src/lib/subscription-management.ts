@@ -47,16 +47,19 @@ type ProviderFetch = (path: string, init?: RequestInit) => Promise<Response>;
 /** An uncertain POST is confirmed by reading provider state, making retries safe. */
 export async function confirmCancellation(fetchProvider: ProviderFetch, subscriptionId: string) {
   try {
-    const response = await fetchProvider(`/subscriptions/${subscriptionId}/cancel`, {
-      method: "POST",
-      body: JSON.stringify({ effective_from: "next_billing_period" }),
-      signal: AbortSignal.timeout(15_000),
-    });
+    const response = await fetchProvider(
+      `/subscriptions/${encodeURIComponent(subscriptionId)}/cancel`,
+      {
+        method: "POST",
+        body: JSON.stringify({ effective_from: "next_billing_period" }),
+        signal: AbortSignal.timeout(15_000),
+      },
+    );
     if (response.ok) return;
   } catch {
     /* A timeout can happen after the provider applied the change. */
   }
-  const response = await fetchProvider(`/subscriptions/${subscriptionId}`, {
+  const response = await fetchProvider(`/subscriptions/${encodeURIComponent(subscriptionId)}`, {
     signal: AbortSignal.timeout(15_000),
   });
   if (response.ok) {
@@ -70,10 +73,13 @@ export async function confirmCardRemoval(
   customerId: string,
   methodId: string,
 ) {
-  const response = await fetchProvider(`/customers/${customerId}/payment-methods/${methodId}`, {
-    method: "DELETE",
-    signal: AbortSignal.timeout(15_000),
-  });
+  const response = await fetchProvider(
+    `/customers/${encodeURIComponent(customerId)}/payment-methods/${encodeURIComponent(methodId)}`,
+    {
+      method: "DELETE",
+      signal: AbortSignal.timeout(15_000),
+    },
+  );
   if (!response.ok && response.status !== 404)
     throw new Error("Card removal was not confirmed by Paddle.");
 }

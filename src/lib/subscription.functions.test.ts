@@ -38,7 +38,11 @@ type Result = { ok: boolean; code?: string; renewalStopped: boolean; cardRemoved
 type Handler = (input: { data: Record<string, string>; context: unknown }) => Promise<Result>;
 const handlers = (await import(
   `data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].text).toString("base64")}`
-)) as { removeSavedPaymentMethod: Handler; cancelSubscription: Handler };
+)) as {
+  removeSavedPaymentMethod: Handler;
+  cancelSubscription: Handler;
+  createCustomerPortalSession: (input: { context: unknown }) => Promise<{ url: string }>;
+};
 const owner = "11111111-1111-4111-8111-111111111111";
 const cardId = "22222222-2222-4222-8222-222222222222";
 
@@ -55,26 +59,39 @@ function setup(providerFails = false, owned = true) {
       id: "row-owned",
       user_id: owner,
       paddle_subscription_id: "sub_owned",
+      paddle_customer_id: "ctm_owned" as string | null,
       status: "active",
       environment: "sandbox",
       cancel_at_period_end: false,
     },
+    providerEmail: "owner@example.com",
     rpcCalls: 0,
     deletes: 0,
     paths: [] as string[],
     environments: [] as string[],
   };
-  const fetchProvider = async (environment: string, path: string) => {
+  const fetchProvider = async (environment: string, path: string, init?: RequestInit) => {
     state.paths.push(path);
     state.environments.push(environment);
-    return providerFails
-      ? new Response("failure", { status: 503 })
-      : new Response(null, { status: 204 });
+    if (providerFails) return new Response("failure", { status: 503 });
+    if (!init?.method && path.startsWith("/customers/"))
+      return Response.json({ data: { email: state.providerEmail } });
+    if (path.endsWith("/portal-sessions"))
+      return Response.json({
+        data: { urls: { general: { overview: "https://customer.paddle.com/fixture" } } },
+      });
+    return new Response(null, { status: 204 });
   };
   (
     globalThis as typeof globalThis & { __settingsBillingGateway?: typeof fetchProvider }
   ).__settingsBillingGateway = fetchProvider;
   const client = {
+    auth: {
+      getUser: async () => ({
+        data: { user: { id: owner, email: "owner@example.com", email_confirmed_at: "2026-01-01" } },
+        error: null,
+      }),
+    },
     from(table: string) {
       const filters: Record<string, unknown> = {};
       let deleting = false;
@@ -159,4 +176,34 @@ test("a subscription outside the authenticated account cannot be cancelled", asy
   );
   assert.deepEqual(state.paths, []);
   assert.equal(state.rpcCalls, 0);
+});
+
+test("a forged provider customer in an owned card row cannot delete a foreign card", async () => {
+  const { state, context } = setup();
+  state.card.paddle_customer_id = "ctm_foreign";
+  state.providerEmail = "someone-else@example.com";
+  await assert.rejects(
+    handlers.removeSavedPaymentMethod({ data: { cardId }, context }),
+    /not found/,
+  );
+  assert.deepEqual(state.paths, ["/customers/ctm_foreign"]);
+  assert.equal(state.rpcCalls, 0);
+  assert.equal(state.deletes, 0);
+});
+
+test("a card row cannot create a portal session for another provider customer", async () => {
+  const { state, context } = setup();
+  state.sub.paddle_customer_id = null;
+  state.card.paddle_customer_id = "ctm_foreign";
+  state.providerEmail = "someone-else@example.com";
+  await assert.rejects(handlers.createCustomerPortalSession({ context }), /not found/);
+  assert.deepEqual(state.paths, ["/customers/ctm_foreign"]);
+});
+
+test("a verified buyer without a customer mapping can open their own payment portal", async () => {
+  const { state, context } = setup();
+  state.sub.paddle_customer_id = null;
+  const result = await handlers.createCustomerPortalSession({ context });
+  assert.equal(result.url, "https://customer.paddle.com/fixture");
+  assert.deepEqual(state.paths, ["/customers/ctm_owned", "/customers/ctm_owned/portal-sessions"]);
 });
