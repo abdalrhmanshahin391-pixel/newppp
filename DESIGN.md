@@ -368,6 +368,38 @@ smaller page: the root size and the user's zoom are never touched. In `.rita-app
 Pages with fixed pixel sizes (`text-[44px]`, `clamp(...)`) are brought onto this scale one group
 at a time (flashcards first, then the study tools, the German Lab, account / pricing, admin).
 
+## Library (`/books`, `/admin/books`)
+
+Real books grouped on shelves, a little more colour than the other app pages but the same calm,
+serious system (white page, ink, the home calm scale). Colour comes from the covers and from each
+category's own tone, used only as a dot on its chip, a small tinted icon square and a thin line
+under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks or hearts.
+
+- **Top:** a small eyebrow, the title (28–38px semibold), one lead line; a 48px search field
+  (1.5px ink border, «/» jumps to it) and a «فلترة» button that opens a grey panel of chips
+  (level A1–C2, language, length short/medium/long, order). Category chips under it, each with its
+  dot and count; the chosen one is ink.
+- **Book of the week:** one grey panel with a soft tint of its category, the book large, a tag,
+  title, author · year, chips (level in ink, pages, about N hours, language), three lines of
+  description and «افتح الكتاب».
+- **Shelves:** «وصل جديداً» (from six books on), then one per category in the admin's order, then
+  «كتب ثانية» for books without a category. A row scrolls sideways with snap; «عرض الكل» filters.
+- **The book object** (`BookObject`): one frame for every book — 2:3 cover with 3/8px corners, the
+  binding's shadow on its left edge, a sheen, page edges under and beside it, a soft shadow on the
+  shelf, the level on a white tag. Only the cover picture changes; without one the cover is cloth in
+  the category tone with the title between two thin rules. Title 14.5/600 (two lines), author 12.5.
+- **Search or filters** replace the shelves with a grid and a count; an empty result says so with
+  «امسح البحث». The filters live in the address (`?q=&cat=&level=&lang=&len=&sort=`).
+- **Details** (`BookSheet`): a dialog (a bottom sheet on phones) with the book, its facts and
+  «ابدأ القراءة», which opens the PDF through a ten-minute signed link (visitors are asked to sign
+  in; without a file the button says the file is not ready).
+- **Admin** (`/admin/books`): categories (Arabic and English names, tone, icon, order) and books
+  (cover JPG/PNG/WebP up to 5 MB, PDF up to 50 MB, category, level, language, pages, year,
+  description, published, book of the week — one at a time), with a live preview of the book.
+- Data: `book_categories` and `books` (migration `20261108120000_books_library.sql`), covers in the
+  public `book-covers` bucket, PDFs in the private `book-files` bucket. Everyone reads categories
+  and published books; only admins write.
+
 ## Lesson builder (`/admin/curricula`)
 
 For one book the admin sees: "Lesson N: pick its topic" (three cards from the pages already read,

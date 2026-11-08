@@ -24,7 +24,10 @@ import { BRAND_NAME } from "@/lib/brand";
 import { StartLearningLink } from "@/components/StartLearningLink";
 import { LanguageMenu } from "@/components/language/LanguageMenu";
 
-const SIMPLE_LINKS: { to: string; label: string }[] = [{ to: "/pricing", label: "Pricing" }];
+const SIMPLE_LINKS: { to: string; label: string }[] = [
+  { to: "/books", label: "Library" },
+  { to: "/pricing", label: "Pricing" },
+];
 
 // The language switcher is rendered once for wide screens and once for phones; each has its own
 // state, so the hidden copy never reacts to presses inside the visible one.
