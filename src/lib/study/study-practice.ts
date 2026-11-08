@@ -68,19 +68,152 @@ function clip(value: unknown, max: number): string {
   return text.length > max ? "" : text;
 }
 
+/**
+ * Like clip, for a meaning or a note: a little too long is cut at a word and ends with "…" instead
+ * of losing the whole card; far too long (over one and a half times the limit) is still dropped.
+ */
+function shorten(value: unknown, max: number): string {
+  const text = String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length <= max) return text;
+  if (text.length > max * 1.5) return "";
+  const cut = text.slice(0, max - 1);
+  const space = cut.lastIndexOf(" ");
+  return `${(space > max / 2 ? cut.slice(0, space) : cut).trim()}…`;
+}
+
+/** The list the model sent: under the expected key, a close name, or the whole reply. */
+function listOf(reply: unknown, keys: string[]): unknown[] | null {
+  if (Array.isArray(reply)) return reply;
+  if (!reply || typeof reply !== "object") return null;
+  for (const key of keys) {
+    const value = (reply as Record<string, unknown>)[key];
+    if (Array.isArray(value)) return value;
+  }
+  return null;
+}
+
 /** Takes the first {...} out of a model reply (with or without a code fence). */
 export function readJson(raw: string): unknown {
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
   const body = (fenced?.[1] ?? raw).trim();
-  const start = body.indexOf("{");
-  const end = body.lastIndexOf("}");
-  if (start < 0 || end <= start) return null;
-  try {
-    return JSON.parse(body.slice(start, end + 1));
-  } catch {
-    return null;
+  // The JSON is the longest piece from an opening { or [ to the last matching closer. Text before
+  // it (a sentence, or a brace in it) is skipped by trying the next opening.
+  const pairs = [
+    ["{", "}"],
+    ["[", "]"],
+  ] as const;
+  // A bare list ("[{...}]") starts with its bracket: try that kind first.
+  const listFirst = body.indexOf("[") >= 0 && body.indexOf("[") < body.indexOf("{");
+  for (const [open, close] of listFirst ? [pairs[1], pairs[0]] : pairs) {
+    const end = body.lastIndexOf(close);
+    let start = body.indexOf(open);
+    while (start >= 0 && start < end) {
+      try {
+        return JSON.parse(body.slice(start, end + 1));
+      } catch {
+        start = body.indexOf(open, start + 1);
+      }
+    }
   }
+  return null;
 }
+
+/** Why asking the model for practice did not give a usable answer. */
+export type PracticeFailure = "busy" | "slow" | "failed" | "no_key";
+
+export type PracticeAsk = {
+  /** The fetch to use (the real one on the server, a fake in tests). */
+  fetch: typeof fetch;
+  key: string | null;
+  system: string;
+  user: string;
+  maxTokens: number;
+  /** The whole budget in ms for both tries (the server function must answer before its limit). */
+  budgetMs?: number;
+  now?: () => number;
+  wait?: (ms: number) => Promise<void>;
+  log?: (message: string) => void;
+};
+
+const PRACTICE_MODEL = "openai/gpt-oss-120b";
+
+/**
+ * Asks the model for flashcards or questions and reads its JSON. No JSON mode: with it the model
+ * often failed the whole request (an error, or an answer cut short) and the learner only saw
+ * "try again"; the JSON is read from the plain answer instead. Little reasoning, room for the
+ * answer. A busy model, an error, a timeout or an answer with no JSON is tried once more while the
+ * budget allows. Every failure is logged with its reason.
+ */
+export async function askPracticeModel(
+  ask: PracticeAsk,
+): Promise<{ ok: true; reply: unknown } | { ok: false; reason: PracticeFailure }> {
+  const now = ask.now ?? Date.now;
+  const wait = ask.wait ?? ((ms: number) => new Promise((done) => setTimeout(done, ms)));
+  const log = ask.log ?? ((message: string) => console.warn(message));
+  if (!ask.key) {
+    log("Practice model: no key");
+    return { ok: false, reason: "no_key" };
+  }
+  const budget = ask.budgetMs ?? 38_000;
+  const started = now();
+  let reason: PracticeFailure = "failed";
+  // Dropped for the second try when the service refuses the request itself (an option it does
+  // not take, for example).
+  let lowReasoning = true;
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    const left = budget - (now() - started);
+    if (attempt > 1 && left < 8_000) break;
+    try {
+      const response = await ask.fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${ask.key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: PRACTICE_MODEL,
+          temperature: 0.2,
+          ...(lowReasoning ? { reasoning_effort: "low" } : {}),
+          max_completion_tokens: ask.maxTokens,
+          messages: [
+            { role: "system", content: ask.system },
+            { role: "user", content: ask.user },
+          ],
+        }),
+        signal: AbortSignal.timeout(Math.min(20_000, left)),
+      });
+      if (!response.ok) {
+        const detail = (await response.text().catch(() => "")).slice(0, 200);
+        reason = response.status === 429 ? "busy" : "failed";
+        log(`Practice model: HTTP ${response.status} (try ${attempt}) ${detail}`);
+        if (response.status === 401 || response.status === 403) break;
+        if (response.status === 400 || response.status === 422) lowReasoning = false;
+      } else {
+        const json = (await response.json()) as {
+          choices?: { message?: { content?: unknown }; finish_reason?: unknown }[];
+        };
+        const choice = json?.choices?.[0];
+        const reply = readJson(String(choice?.message?.content ?? ""));
+        if (reply !== null) return { ok: true, reply };
+        reason = "failed";
+        log(`Practice model: no JSON (try ${attempt}, finish ${String(choice?.finish_reason)})`);
+      }
+    } catch (cause) {
+      const timedOut = cause instanceof Error && /timeout|abort/i.test(cause.name + cause.message);
+      reason = timedOut ? "slow" : "failed";
+      log(`Practice model: ${timedOut ? "timed out" : "request failed"} (try ${attempt})`);
+    }
+    if (attempt === 1) await wait(reason === "busy" ? 1_500 : 400);
+  }
+  return { ok: false, reason };
+}
+
+/** What the learner reads for each failure. */
+export const PRACTICE_FAILURE_TEXT: Record<PracticeFailure, string> = {
+  busy: "ريتا مشغولة شوي. جرّب كمان لحظات.",
+  slow: "تأخر الرد هالمرة. جرّب مرة ثانية.",
+  failed: "ما زبطت هالمرة. جرّب مرة ثانية.",
+  no_key: "التدريب مش متاح هلأ. جرّب كمان شوي.",
+};
 
 /**
  * Keeps only good cards: a front that really is in the lesson text (the selection or the lines
@@ -88,16 +221,16 @@ export function readJson(raw: string): unknown {
  * made up and is dropped.
  */
 export function cleanCards(reply: unknown, lessonText: string, limit: number): StudyCard[] {
-  const list = (reply as { cards?: unknown } | null)?.cards;
-  if (!Array.isArray(list)) return [];
+  const list = listOf(reply, ["cards", "flashcards"]);
+  if (!list) return [];
   const source = ` ${looseText(lessonText)} `;
   const seen = new Set<string>();
   const out: StudyCard[] = [];
   for (const item of list) {
     const card = item as Record<string, unknown> | null;
     const front = clip(card?.front, CARD_LIMITS.front);
-    const back = clip(card?.back, CARD_LIMITS.back);
-    const note = clip(card?.note, CARD_LIMITS.note);
+    const back = shorten(card?.back, CARD_LIMITS.back);
+    const note = shorten(card?.note, CARD_LIMITS.note);
     if (!front || !back) continue;
     const key = looseText(front);
     if (!key || seen.has(key)) continue;
@@ -136,14 +269,14 @@ export function cleanMcqs(
   limit: number,
   random: () => number = Math.random,
 ): StudyMcq[] {
-  const list = (reply as { questions?: unknown } | null)?.questions;
-  if (!Array.isArray(list)) return [];
+  const list = listOf(reply, ["questions", "mcqs", "items"]);
+  if (!list) return [];
   const seen = new Set<string>();
   const out: StudyMcq[] = [];
   for (const item of list) {
     const raw = item as Record<string, unknown> | null;
     const question = clip(raw?.question, MCQ_LIMITS.question);
-    const why = clip(raw?.why, MCQ_LIMITS.why);
+    const why = shorten(raw?.why, MCQ_LIMITS.why);
     const options = Array.isArray(raw?.options)
       ? raw.options.map((option) => clip(option, MCQ_LIMITS.option))
       : [];

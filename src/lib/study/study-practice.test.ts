@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  askPracticeModel,
   cleanCards,
   cleanMcqs,
   looseText,
@@ -181,4 +182,110 @@ test("a selection in Rita's answers offers only the simple explanation (and the 
   // Never offered for a piece of the guide.
   for (const kind of ["word", "sentence", "rule", "table_cells"] as const)
     assert.ok(!availableActions(kind).includes("explain_reply"));
+});
+
+test("model replies are read with prose or a stray brace before the JSON, or as a bare list", () => {
+  assert.deepEqual(readJson('Here you go: {"cards":[]}'), { cards: [] });
+  assert.deepEqual(readJson('Use {curly} words. {"cards":[{"front":"a","back":"b"}]}'), {
+    cards: [{ front: "a", back: "b" }],
+  });
+  assert.deepEqual(readJson('[{"front":"a","back":"b"}]'), [{ front: "a", back: "b" }]);
+  assert.equal(readJson("no json at all"), null);
+});
+
+test("cards: a close key or a bare list is accepted; a slightly long meaning is shortened", () => {
+  const long = "معنى ".repeat(48).trim(); // about 240 characters
+  const cards = cleanCards(
+    { flashcards: [{ front: "Guten Morgen", back: long, note: "" }] },
+    LESSON,
+    5,
+  );
+  assert.equal(cards.length, 1);
+  assert.ok(cards[0].back.length <= 200 && cards[0].back.endsWith("…"));
+  assert.equal(cleanCards([{ front: "Wie geht's", back: "كيفك؟" }], LESSON, 5).length, 1);
+});
+
+type Call = { body: Record<string, unknown> };
+function fakeFetch(responses: (Response | Error)[]) {
+  const calls: Call[] = [];
+  const fn = (async (_url: unknown, init?: RequestInit) => {
+    calls.push({ body: JSON.parse(String(init?.body)) });
+    const next = responses.shift();
+    if (!next) throw new Error("no more responses");
+    if (next instanceof Error) throw next;
+    return next;
+  }) as typeof fetch;
+  return { fn, calls };
+}
+const answer = (content: string) =>
+  new Response(JSON.stringify({ choices: [{ message: { content }, finish_reason: "stop" }] }));
+const base = {
+  key: "k",
+  system: "s",
+  user: "u",
+  maxTokens: 100,
+  wait: async () => undefined,
+  log: () => undefined,
+};
+
+test("practice model: no JSON mode, low reasoning, the JSON read from the answer", async () => {
+  const { fn, calls } = fakeFetch([answer('Sure! {"cards":[]}')]);
+  const result = await askPracticeModel({ ...base, fetch: fn });
+  assert.deepEqual(result, { ok: true, reply: { cards: [] } });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].body.response_format, undefined);
+  assert.equal(calls[0].body.reasoning_effort, "low");
+});
+
+test("practice model: a busy service or an answer without JSON is tried once more", async () => {
+  const waits: number[] = [];
+  const busy = fakeFetch([new Response("slow down", { status: 429 }), answer('{"questions":[]}')]);
+  const ok = await askPracticeModel({
+    ...base,
+    fetch: busy.fn,
+    wait: async (ms) => void waits.push(ms),
+  });
+  assert.equal(ok.ok, true);
+  assert.deepEqual(waits, [1500]);
+  const empty = fakeFetch([answer(""), answer("still nothing")]);
+  assert.deepEqual(await askPracticeModel({ ...base, fetch: empty.fn }), {
+    ok: false,
+    reason: "failed",
+  });
+  assert.equal(empty.calls.length, 2);
+});
+
+test("practice model: a refused request retries without the reasoning option; no key or a bad key stops", async () => {
+  const refused = fakeFetch([new Response("bad", { status: 400 }), answer('{"cards":[]}')]);
+  assert.equal((await askPracticeModel({ ...base, fetch: refused.fn })).ok, true);
+  assert.equal(refused.calls[1].body.reasoning_effort, undefined);
+  const denied = fakeFetch([new Response("no", { status: 401 })]);
+  assert.deepEqual(await askPracticeModel({ ...base, fetch: denied.fn }), {
+    ok: false,
+    reason: "failed",
+  });
+  assert.equal(denied.calls.length, 1);
+  const none = fakeFetch([]);
+  assert.deepEqual(await askPracticeModel({ ...base, key: null, fetch: none.fn }), {
+    ok: false,
+    reason: "no_key",
+  });
+  assert.equal(none.calls.length, 0);
+});
+
+test("practice model: a timeout says slow, and no second try once the budget is spent", async () => {
+  const timeout = Object.assign(new Error("The operation timed out."), { name: "TimeoutError" });
+  let clock = 0;
+  const slow = fakeFetch([timeout, answer('{"cards":[]}')]);
+  const result = await askPracticeModel({
+    ...base,
+    fetch: slow.fn,
+    budgetMs: 25_000,
+    now: () => clock,
+    wait: async () => {
+      clock = 20_000;
+    },
+  });
+  assert.deepEqual(result, { ok: false, reason: "slow" });
+  assert.equal(slow.calls.length, 1);
 });
