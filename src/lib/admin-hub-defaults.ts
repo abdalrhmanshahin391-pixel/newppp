@@ -113,6 +113,13 @@ export const DEFAULT_LAYOUT: HubLayout = {
           icon: "BookOpen",
         },
         {
+          id: "/admin/books",
+          to: "/admin/books",
+          label: "Library (books)",
+          labelAr: "المكتبة (الكتب)",
+          icon: "Library",
+        },
+        {
           id: "/admin/languages",
           to: "/admin/languages",
           label: "Learning languages",

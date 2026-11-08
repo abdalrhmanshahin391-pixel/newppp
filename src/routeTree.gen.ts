@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as BooksRouteImport } from './routes/books'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GermanRouteImport } from './routes/german'
@@ -46,6 +47,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAiRouteImport } from './routes/admin.ai'
 import { Route as AdminAiKeysRouteImport } from './routes/admin.ai-keys'
+import { Route as AdminBooksRouteImport } from './routes/admin.books'
 import { Route as AdminContentProtectionRouteImport } from './routes/admin.content-protection'
 import { Route as AdminCurriculaRouteImport } from './routes/admin.curricula'
 import { Route as AdminDevicesRouteImport } from './routes/admin.devices'
@@ -153,6 +155,11 @@ const IndexRoute = IndexRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BooksRoute = BooksRouteImport.update({
+  id: '/books',
+  path: '/books',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoursesRoute = CoursesRouteImport.update({
@@ -330,6 +337,11 @@ const AdminAiRoute = AdminAiRouteImport.update({
 const AdminAiKeysRoute = AdminAiKeysRouteImport.update({
   id: '/admin/ai-keys',
   path: '/admin/ai-keys',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminBooksRoute = AdminBooksRouteImport.update({
+  id: '/admin/books',
+  path: '/admin/books',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminContentProtectionRoute = AdminContentProtectionRouteImport.update({
@@ -832,6 +844,7 @@ const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/books': typeof BooksRoute
   '/courses': typeof CoursesRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/german': typeof GermanRouteWithChildren
@@ -866,6 +879,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
+  '/admin/books': typeof AdminBooksRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
   '/admin/curricula': typeof AdminCurriculaRoute
   '/admin/devices': typeof AdminDevicesRoute
@@ -969,6 +983,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/books': typeof BooksRoute
   '/courses': typeof CoursesRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/locked': typeof LockedRoute
@@ -1001,6 +1016,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
+  '/admin/books': typeof AdminBooksRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
   '/admin/curricula': typeof AdminCurriculaRoute
   '/admin/devices': typeof AdminDevicesRoute
@@ -1102,6 +1118,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/books': typeof BooksRoute
   '/courses': typeof CoursesRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/german': typeof GermanRouteWithChildren
@@ -1136,6 +1153,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
+  '/admin/books': typeof AdminBooksRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
   '/admin/curricula': typeof AdminCurriculaRoute
   '/admin/devices': typeof AdminDevicesRoute
@@ -1241,6 +1259,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/books'
     | '/courses'
     | '/forgot-password'
     | '/german'
@@ -1275,6 +1294,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/admin/ai'
     | '/admin/ai-keys'
+    | '/admin/books'
     | '/admin/content-protection'
     | '/admin/curricula'
     | '/admin/devices'
@@ -1378,6 +1398,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/books'
     | '/courses'
     | '/forgot-password'
     | '/locked'
@@ -1410,6 +1431,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/admin/ai'
     | '/admin/ai-keys'
+    | '/admin/books'
     | '/admin/content-protection'
     | '/admin/curricula'
     | '/admin/devices'
@@ -1510,6 +1532,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/books'
     | '/courses'
     | '/forgot-password'
     | '/german'
@@ -1544,6 +1567,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/admin/ai'
     | '/admin/ai-keys'
+    | '/admin/books'
     | '/admin/content-protection'
     | '/admin/curricula'
     | '/admin/devices'
@@ -1648,6 +1672,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  BooksRoute: typeof BooksRoute
   CoursesRoute: typeof CoursesRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   GermanRoute: typeof GermanRouteWithChildren
@@ -1682,6 +1707,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AdminAiRoute: typeof AdminAiRoute
   AdminAiKeysRoute: typeof AdminAiKeysRoute
+  AdminBooksRoute: typeof AdminBooksRoute
   AdminContentProtectionRoute: typeof AdminContentProtectionRoute
   AdminCurriculaRoute: typeof AdminCurriculaRoute
   AdminDevicesRoute: typeof AdminDevicesRoute
@@ -1763,6 +1789,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/books': {
+      id: '/books'
+      path: '/books'
+      fullPath: '/books'
+      preLoaderRoute: typeof BooksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/courses': {
@@ -2008,6 +2041,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/ai-keys'
       fullPath: '/admin/ai-keys'
       preLoaderRoute: typeof AdminAiKeysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/books': {
+      id: '/admin/books'
+      path: '/admin/books'
+      fullPath: '/admin/books'
+      preLoaderRoute: typeof AdminBooksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/content-protection': {
@@ -2834,6 +2874,7 @@ const AdminGermanRouteWithChildren = AdminGermanRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  BooksRoute: BooksRoute,
   CoursesRoute: CoursesRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   GermanRoute: GermanRouteWithChildren,
@@ -2869,6 +2910,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   AdminAiRoute: AdminAiRoute,
   AdminAiKeysRoute: AdminAiKeysRoute,
+  AdminBooksRoute: AdminBooksRoute,
   AdminContentProtectionRoute: AdminContentProtectionRoute,
   AdminCurriculaRoute: AdminCurriculaRoute,
   AdminDevicesRoute: AdminDevicesRoute,
