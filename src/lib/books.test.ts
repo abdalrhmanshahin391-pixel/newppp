@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   adminFilterBooks,
-  filterBooks,
   fromLocalInput,
   isAdminFiltering,
   NO_ADMIN_FILTER,
@@ -12,13 +11,18 @@ import {
   normalizeIsbn,
   publishIssues,
   publishWarnings,
-  filtersFromSearch,
-  isFiltering,
+  browseLocal,
+  contextOf,
+  defaultSort,
+  modeOf,
+  NO_BROWSE,
+  searchFromState,
+  seededKey,
+  stateFromSearch,
+  toggleValue,
   lengthOf,
   matchesQuery,
-  NO_FILTERS,
   readingHours,
-  searchFromFilters,
   searchText,
   shelves,
   toBook,
@@ -43,6 +47,7 @@ const book = (id: string, extra: Partial<Book> = {}): Book =>
       ...extra,
     },
     null,
+    { tag_ids: extra.tag_ids, secondary_category_ids: extra.secondary_category_ids },
   );
 
 test("search text forgives case, accents, Arabic diacritics and alef forms; keeps the taa marbuta", () => {
@@ -73,39 +78,53 @@ test("length bands and reading hours", () => {
   assert.equal(readingHours(null), null);
 });
 
-test("filters combine, and the order follows the choice", () => {
+test("browsing: OR inside a group, AND between groups, and the order follows the choice", () => {
   const list = [
     book("1", { title: "Zebra", category_id: CAT_A, level: "A2", pages: 90 }),
     book("2", { title: "Apple", category_id: CAT_A, level: "B1", pages: 400 }),
     book("3", { title: "Mango", category_id: CAT_B, level: "A2", pages: 200, language: "de" }),
+    book("4", { title: "Kiwi", category_id: CAT_B, level: "C1", secondary_category_ids: [CAT_A] }),
   ];
+  const ids = (state: Partial<typeof NO_BROWSE>) =>
+    browseLocal(list, { ...NO_BROWSE, ...state }, { seed: "s" }).items.map((b) => b.id);
+  assert.deepEqual(ids({}), ["4", "3", "2", "1"]);
+  assert.deepEqual(ids({ sort: "title" }), ["2", "4", "3", "1"]);
+  assert.deepEqual(ids({ sort: "short" }), ["1", "3", "4", "2"]);
+  assert.deepEqual(ids({ level: ["A2", "B1"] }), ["3", "2", "1"]);
+  assert.deepEqual(ids({ level: ["A2"], cat: [CAT_A], sort: "new" }), ["1"]);
   assert.deepEqual(
-    filterBooks(list, NO_FILTERS).map((b) => b.id),
-    ["3", "2", "1"],
+    ids({ cat: [CAT_A], sort: "new" }),
+    ["4", "2", "1"],
+    "a secondary category counts",
   );
-  assert.deepEqual(
-    filterBooks(list, { ...NO_FILTERS, sort: "title" }).map((b) => b.id),
-    ["2", "3", "1"],
-  );
-  assert.deepEqual(
-    filterBooks(list, { ...NO_FILTERS, sort: "short" }).map((b) => b.id),
-    ["1", "3", "2"],
-  );
-  assert.deepEqual(
-    filterBooks(list, { ...NO_FILTERS, cat: CAT_A, level: "A2" }).map((b) => b.id),
-    ["1"],
-  );
-  assert.deepEqual(
-    filterBooks(list, { ...NO_FILTERS, lang: "de" }).map((b) => b.id),
-    ["3"],
-  );
-  assert.deepEqual(
-    filterBooks(list, { ...NO_FILTERS, len: "long" }).map((b) => b.id),
-    ["2"],
-  );
-  assert.ok(!isFiltering(NO_FILTERS));
-  assert.ok(isFiltering({ ...NO_FILTERS, q: " x " }));
-  assert.ok(!isFiltering({ ...NO_FILTERS, sort: "title" }));
+  assert.deepEqual(ids({ lang: ["de"] }), ["3"]);
+  assert.deepEqual(ids({ len: ["long"] }), ["2"]);
+  assert.deepEqual(ids({ size: 24, page: 2 }), []);
+});
+
+test("facet counts ignore their own group and follow the others", () => {
+  const list = [
+    book("1", { category_id: CAT_A, level: "A2" }),
+    book("2", { category_id: CAT_A, level: "B1" }),
+    book("3", { category_id: CAT_B, level: "A2" }),
+  ];
+  const { facets, total } = browseLocal(list, { ...NO_BROWSE, level: ["A2"] }, { seed: "" });
+  assert.equal(total, 2);
+  assert.deepEqual(facets.level, { A2: 2, B1: 1 });
+  assert.deepEqual(facets.category, { [CAT_A]: 1, [CAT_B]: 1 });
+});
+
+test("the seeded order is stable for a seed, pins come first, exclusions are hidden", () => {
+  const list = Array.from({ length: 9 }, (_, i) => book(String(i + 1)));
+  const order = (seed: string, pins: string[] = [], excluded: string[] = []) =>
+    browseLocal(list, { ...NO_BROWSE, sort: "discover" }, { seed, pins, excluded }).items.map(
+      (b) => b.id,
+    );
+  assert.deepEqual(order("a"), order("a"));
+  assert.notDeepEqual(order("a"), order("b"));
+  assert.deepEqual(order("a", ["7", "3"]).slice(0, 2), ["7", "3"]);
+  assert.ok(!order("a", [], ["5"]).includes("5"));
+  assert.equal(seededKey("a", "x"), seededKey("a", "x"));
 });
 
 test("shelves follow the category order and leave out empty ones", () => {
@@ -132,29 +151,53 @@ test("shelves follow the category order and leave out empty ones", () => {
   );
 });
 
-test("filters round-trip through the address, and junk is ignored", () => {
-  const filters = filtersFromSearch({
+test("the address round-trips, older single values still work, and junk is ignored", () => {
+  const state = stateFromSearch({
     q: " dracula ",
-    cat: CAT_A,
-    level: "b2",
-    lang: "EN",
-    len: "short",
+    cat: `${CAT_A},${CAT_B},${CAT_A}`,
+    level: "b2,a1,Z9",
+    lang: "EN,de",
+    len: "short,huge",
+    tag: "nope",
     sort: "title",
+    page: "3",
+    size: 48,
   });
-  assert.deepEqual(filters, {
+  assert.deepEqual(state, {
     q: "dracula",
-    cat: CAT_A,
-    level: "B2",
-    lang: "en",
-    len: "short",
+    cat: [CAT_A, CAT_B],
+    level: ["B2", "A1"],
+    lang: ["en", "de"],
+    len: ["short"],
+    tag: [],
     sort: "title",
+    view: null,
+    page: 3,
+    size: 48,
   });
-  assert.deepEqual(filtersFromSearch(searchFromFilters(filters)), filters);
+  assert.deepEqual(stateFromSearch(searchFromState(state)), state);
+  assert.deepEqual(stateFromSearch({ cat: CAT_A, level: "B1" }).cat, [CAT_A]);
   assert.deepEqual(
-    filtersFromSearch({ cat: "x", level: "Z9", len: "huge", sort: "random", lang: "english" }),
-    NO_FILTERS,
+    stateFromSearch({ sort: "random", size: "100", page: "-2", view: "x" }),
+    NO_BROWSE,
   );
-  assert.deepEqual(searchFromFilters(NO_FILTERS), {});
+  assert.deepEqual(searchFromState(NO_BROWSE), {});
+});
+
+test("the mode, the editorial place and the default order follow the state", () => {
+  assert.equal(modeOf(NO_BROWSE), "discover");
+  assert.equal(contextOf(NO_BROWSE), "discover");
+  assert.equal(modeOf({ ...NO_BROWSE, q: "x" }), "search");
+  assert.equal(defaultSort({ ...NO_BROWSE, q: "x" }), "relevance");
+  assert.equal(modeOf({ ...NO_BROWSE, cat: [CAT_A] }), "category");
+  assert.equal(contextOf({ ...NO_BROWSE, cat: [CAT_A], level: ["B1"] }), CAT_A);
+  assert.equal(defaultSort({ ...NO_BROWSE, cat: [CAT_A] }), "discover");
+  assert.equal(modeOf({ ...NO_BROWSE, cat: [CAT_A, CAT_B] }), "all");
+  assert.equal(modeOf({ ...NO_BROWSE, view: "all" }), "all");
+  assert.equal(contextOf({ ...NO_BROWSE, view: "all" }), null);
+  const on = toggleValue({ ...NO_BROWSE, page: 4 }, "level", "B1");
+  assert.deepEqual([on.level, on.page], [["B1"], 1]);
+  assert.deepEqual(toggleValue(on, "level", "B1").level, []);
 });
 
 test("rows from the database are read safely", () => {

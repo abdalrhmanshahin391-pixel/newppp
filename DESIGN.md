@@ -397,20 +397,36 @@ category's own tone, used only as a dot on its chip, a small tinted icon square 
 under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks or hearts.
 
 - **Top:** a small eyebrow, the title (28–38px semibold), one lead line; a 48px search field
-  (1.5px ink border, «/» jumps to it) and a «فلترة» button that opens a grey panel of chips
-  (level A1–C2, language, length short/medium/long, order). Category chips under it, each with its
-  dot and count; the chosen one is ink.
+  (1.5px ink border, «/» jumps to it), an ink «ابحث» button beside it — searching happens only on
+  that button or Enter, never while typing — and a «فلترة» button (icon only on phones) with the
+  number of chosen filters. «فلترة» opens a grey panel of chips: category, level A1–C2, language,
+  length, tags. Several chips in one group widen the list (OR); groups narrow it (AND). Each chip
+  shows how many books it would give (counted with the other groups' choices); a chip that would
+  give none is faded and disabled. A one-line note under the panel says so in words.
+- **Ways in:** a chip row under the top — «اكتشف» (the shelves), «كل الكتب» with the total, then
+  one chip per category with its dot and count (a category on its own). The chosen one is ink.
+  Chosen filters show under it as ink pills, each with its own ×, then «امسح الكل».
 - **Book of the week:** one grey panel with a soft tint of its category, the book large, a tag,
   title, author · year, chips (level in ink, pages, about N hours, language), three lines of
   description and «افتح الكتاب».
-- **Shelves:** «وصل جديداً» (from six books on), then one per category in the admin's order, then
-  «كتب ثانية» for books without a category. A row scrolls sideways with snap; «عرض الكل» filters.
+- **Shelves (اكتشف):** the book of the week, the admin's shelves, «مختارات لك» (12 picks in this
+  visit's order, with «اقتراحات جديدة» on the right of its head to draw new ones; the order stays the
+  same for the whole visit), «وصل جديداً» (from six books on), one per category in the admin's order
+  (12 books, with the full count and «عرض الكل»), then «كتب ثانية» for books without a category. A
+  row scrolls sideways with snap. Pins and exclusions set by the admin apply here and in a
+  category, never in search or «كل الكتب».
 - **The book object** (`BookObject`): one frame for every book — 2:3 cover with 3/8px corners, the
   binding's shadow on its left edge, a sheen, page edges under and beside it, a soft shadow on the
   shelf, the level on a white tag. Only the cover picture changes; without one the cover is cloth in
   the category tone with the title between two thin rules. Title 14.5/600 (two lines), author 12.5.
-- **Search or filters** replace the shelves with a grid and a count; an empty result says so with
-  «امسح البحث». The filters live in the address (`?q=&cat=&level=&lang=&len=&sort=`).
+- **Lists (search, a category, all books):** a head with the title («نتائج «…»», the category
+  with its tinted icon, or «كل الكتب»), the count, and an order select (best match for a search,
+  recommended for a category, newest, by title, shortest). A grid of 24 (or 48) books, then a pager:
+  «السابق», «صفحة X من Y», «التالي», and «بالصفحة 24/48». Moving to another page scrolls to the head;
+  while it loads the old page stays, faded. The pages of one list keep the moment it started, so
+  books added meanwhile never shift them. An empty result says so with «امسح البحث». Everything
+  lives in the address (`?q=&cat=a,b&level=B1,B2&lang=&len=&tag=&sort=&view=all&page=&size=`), so
+  back, refresh and shared links return to the same list.
 - **Details** (`BookSheet`): a dialog (a bottom sheet on phones) with the book, its facts and
   «ابدأ القراءة», which opens the PDF through a ten-minute signed link (visitors are asked to sign
   in; without a file the button says the file is not ready).
@@ -435,7 +451,10 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     move, inline, never a second window) and tags (Arabic and English names, book count).
   - **ترتيب المكتبة:** the book of the week (a published book and an optional from/until period;
     a badge says if it is on show now), manual shelves (name, shown or hidden, period, books in
-    order with arrows), and the preview link with a date and time.
+    order with arrows), pins and exclusions (choose the place — «اكتشف» or one category — then two
+    hairline cards side by side, «مثبّت أول» with order arrows and «مخفي», each rule with its
+    period and an «شغّال هلأ» / «برا مدته» badge; a grey card adds a rule: pin or hide, the book,
+    from/until), and the preview link with a date, a time and an optional picks order.
   - **الاستيراد والجودة:** a CSV import (choose the file, match each field to a column, choose
     what happens to a book that exists — leave it, update it, or add a copy — then «جرّب بدون
     حفظ», which shows the counts and a row table with words for every reason, and only then
@@ -454,8 +473,11 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   (`20261109120000_books_admin_foundation.sql`): status, alternate title, ISBN, rights check,
   tags, secondary categories, manual shelves, the book-of-the-week period, imports and the
   file-cleanup list. Covers in the public `book-covers` bucket, PDFs in the private `book-files`
-  bucket. Everyone reads categories and published books; only admins write. The page and the
-  admin keep working on a database that only has the first migration (with a notice for admins).
+  bucket. Everyone reads categories and published books; only admins write. Phase 2
+  (`20261110120000_books_discovery.sql`): the search copy and its indexes, `books_browse`,
+  `books_discover` and `book_editorial`. The page and the admin keep working on a database that
+  only has the earlier migrations (the lists are then built in the browser, with a dashed notice
+  for admins).
 
 ## Lesson builder (`/admin/curricula`)
 

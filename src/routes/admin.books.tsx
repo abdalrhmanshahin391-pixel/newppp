@@ -175,6 +175,9 @@ function AdminBooks() {
               <ArrangeTab
                 books={data.books}
                 shelves={data.shelves}
+                categories={data.categories}
+                editorial={data.editorial}
+                phase2={data.phase2}
                 featuredId={data.featuredId}
                 phase1={data.phase1}
                 busy={busy}
