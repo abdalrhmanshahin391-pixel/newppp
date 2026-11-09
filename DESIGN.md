@@ -496,6 +496,43 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   The page and the admin keep working on a database that
   only has the earlier migrations (the lists are then built in the browser, with a dashed notice
   for admins).
+- **Reader** (`/books/<book>/read`, migration `20261113120000_books_reader.sql`): the study page's
+  layout for a book — the same top bar (back to «المكتبة», the book's name as a 15px line), Rita on
+  the left and the page on the right with the draggable divider (40/60), two tabs «الكتاب» /
+  «ريتا» on phones, and the floating circle over both.
+  - **The page:** one sheet of paper (4px corners, a hairline ring and a soft deep shadow) on the
+    study grey, with 20px around it (8px on phones). By default the whole page is in view; «على قدّ
+    العرض» fits it to the pane's width instead (remembered per browser), and zoom goes up in five
+    steps. A zoomed page scrolls from the side its lines start on.
+  - **Progress:** a 3px accent line under the top bar grows with the page number.
+  - **Turning:** the page on screen stays (dimmed a little, a small spinner over it) until the next
+    one is ready, then the new picture fades in (180ms ease-out; none with reduced motion). The
+    next and previous pages load behind the current one.
+  - **The bar under the page:** «السابقة» (outlined) · «صفحة [n] من N» (the number is a field) ·
+    «التالية» (ink, the main action), all 44px, laid out in the book's direction; on the other side
+    «على قدّ العرض / الصفحة كاملة», «صغّر», «كبّر» as 44px icons. When the bar is narrower than
+    520px the buttons keep only their arrows. Arrows and Page Up/Down turn pages.
+  - **Selecting:** the page's words lie see-through over the picture, each piece stretched to the
+    width of its words as the browser measures them, so selection matches the picture in Chrome
+    and Safari. Double-click selects a word, dragging selects across lines, and crossing the blank
+    between lines never makes the selection jump (a blank layer under the words while selecting,
+    as pdf.js does). The chosen part stays tinted blue (a CSS highlight) after the browser's own
+    selection goes.
+  - **Hints:** on the first visit an ink pill at the top of the page area says «حدّد أي كلمة أو
+    جملة بإصبعك أو بالماوس، وبعدين اكبس على الدائرة» (× closes it; the first selection retires it
+    for good). A picture-only page carries a small dark pill «صفحة صورة بدون نص، ما بتنحدد».
+  - **The circle:** «اشرحلي», «معنى ونطق», «فكّك الجملة», «ليش هيك؟», «بالعربي», «فلاش كاردز» and
+    «تمارين اختيار». Rita answers in writing in her column (the request as a grey bubble with its
+    tag, her answer under her mark with «صفحة n»); cards and questions open in the lessons' practice
+    window.
+  - The place is saved for the reader and kept in the address (`?page=`). The book's sheet says
+    «ابدأ القراءة» for a prepared book (opens the reader) with «افتح ملف PDF» beside it; an
+    unprepared book opens its PDF as before.
+- **Preparing a book** (admin): in the editor's files section a grey card «القراءة داخل الموقع»
+  says the state in words and offers «جهّز الكتاب للقراءة», «كمّل التجهيز» or «جهّز مرة
+  ثانية»; while it runs, a thin accent progress bar, «جاري تجهيز الصفحات: x من y» and «وقّف».
+  A newly uploaded PDF starts preparing on save. «الاستيراد والجودة» lists the books still waiting
+  under «جاهزية القراءة», each with the same button and bar.
 
 ## Lesson builder (`/admin/curricula`)
 

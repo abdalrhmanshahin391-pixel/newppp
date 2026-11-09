@@ -171,7 +171,8 @@ export const resolveStudyRequest = createServerFn({ method: "POST" })
     };
   });
 
-const TEXT_ACTIONS: Partial<Record<StudyAction, string>> = {
+/** What each written answer does (shared with the book reader, books-study.functions.ts). */
+export const TEXT_ACTIONS: Partial<Record<StudyAction, string>> = {
   explain:
     "Explain only the selected part in 1 to 3 short, simple sentences. Add at most one tiny example when helpful. No quiz, check question, follow-up question, or request for the learner to explain back. Stop after the explanation.",
   simplify:

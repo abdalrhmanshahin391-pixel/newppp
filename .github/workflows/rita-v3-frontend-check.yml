@@ -59,6 +59,9 @@ on:
       - "src/components/books/**"
       - "src/routes/books.tsx"
       - "src/routes/admin.books.tsx"
+      - "src/routes/books_.$bookId.read.tsx"
+      - "src/lib/book-*"
+      - "src/lib/pdf-page-render.ts"
       - "supabase/migrations/*books*"
       - "scripts/test-books-db.sh"
       - ".github/workflows/rita-v3-frontend-check.yml"
@@ -93,6 +96,7 @@ jobs:
           node --test src/lib/rita-path-levels.test.ts
           node --test src/lib/books.test.ts
           node --test src/lib/books-import.test.ts
+          node --test src/lib/books-reader.test.ts
           node --test src/lib/rita-phrase.test.ts
           node --test src/lib/activity-streak.test.ts
           node --test src/lib/learning-language.test.ts

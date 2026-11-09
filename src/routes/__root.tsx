@@ -207,6 +207,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
  * "App pages"): the old tool pages take it through the `.rita-app` scope class.
  */
 const HOME_LOOK_PREFIXES = ["/rita", "/rita-lessons", "/rita-live", "/rita-study", "/learn"];
+/** The book reader (/books/<book>/read) is laid out like the study page, without the footer. */
+const BOOK_READER = /^\/books\/[^/]+\/read\/?$/;
 
 function AppScope({ children }: { children: ReactNode }) {
   const pathname = useRouterState({
@@ -214,6 +216,7 @@ function AppScope({ children }: { children: ReactNode }) {
   });
   const inApp =
     pathname !== "/" &&
+    !BOOK_READER.test(pathname) &&
     !HOME_LOOK_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
   return (
     <div className={inApp ? "rita-app" : undefined} style={{ display: "contents" }}>
@@ -234,6 +237,7 @@ function RootShell({ children }: { children: ReactNode }) {
   const language = boot?.language ?? "en";
   const inApp =
     pathname !== "/" &&
+    !BOOK_READER.test(pathname) &&
     !HOME_LOOK_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(prefix + "/"));
   const theme = String(boot?.settings?.theme ?? "default");
   const dark = [
@@ -484,6 +488,7 @@ function GlobalFooter() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const hidden =
     NO_FOOTER.some((p) => pathname === p || pathname.startsWith(p + "/")) ||
+    BOOK_READER.test(pathname) ||
     /\/(run|exam|match|tap|checkout)(\/|$)/.test(pathname);
   if (hidden) return null;
   return <SiteFooter />;
