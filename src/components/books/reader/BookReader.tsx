@@ -4,10 +4,19 @@
 // it, so a 500 MB book opens as fast as a short one and never freezes the device.
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Group, Panel, Separator } from "react-resizable-panels";
-import { ArrowRight, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  MoveHorizontal,
+  X,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import { PhraseDialog } from "@/components/rita/PhraseDialog";
 import { FloatingOrb, type OrbState } from "@/components/rita-study/FloatingOrb";
 import { RadialMenu, type RadialHandle } from "@/components/rita-study/RadialMenu";
@@ -46,6 +55,25 @@ import "@/components/rita-study/study-meaning.css";
 import "./book-reader.css";
 
 const SPLIT_KEY = "uzyra-book-split";
+/** Per browser: how the page fits ("page": all of it in view; "width": the pane's width). */
+const FIT_KEY = "uzyra-book-fit";
+/** Per browser: the first-visit tip about selecting was seen. */
+const TIP_KEY = "uzyra-book-tip";
+
+function readStore(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+function writeStore(key: string, value: string) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    /* storage can be blocked; it is only a convenience */
+  }
+}
 const ZOOMS = [1, 1.25, 1.5, 2, 2.5];
 const PAGE_STALE_MS = 45 * 60 * 1000; // the picture links last an hour
 
@@ -122,6 +150,12 @@ export function BookReader({
   const total = Math.max(1, book.pageCount);
   const [page, setPage] = useState(() => clampPage(startPage, total));
   const [zoom, setZoom] = useState(0);
+  const [fit, setFit] = useState<"page" | "width">("page");
+  useEffect(() => {
+    if (readStore(FIT_KEY) === "width") setFit("width");
+  }, []);
+  const [tip, setTip] = useState(false);
+  useEffect(() => setTip(readStore(TIP_KEY) !== "1"), []);
   const [jump, setJump] = useState(String(page));
   const memoryKey = `book:${book.id}`;
 
@@ -133,7 +167,10 @@ export function BookReader({
     staleTime: PAGE_STALE_MS,
     gcTime: PAGE_STALE_MS,
     retry: 1,
+    // The page on screen stays while the next arrives (no blank flash between pages).
+    placeholderData: keepPreviousData,
   });
+  const stale = current.isPlaceholderData;
   const lastShape = useRef(1.414);
   if (current.data) lastShape.current = current.data.height / current.data.width;
   useEffect(() => {
@@ -175,17 +212,24 @@ export function BookReader({
 
   // ---- sizes -----------------------------------------------------------------------------------
   const scroller = useRef<HTMLDivElement | null>(null);
-  const [paneWidth, setPaneWidth] = useState(0);
+  const [pane, setPane] = useState({ width: 0, height: 0 });
   useEffect(() => {
     const el = scroller.current;
     if (!el) return;
-    const observer = new ResizeObserver(() => setPaneWidth(el.clientWidth));
+    const read = () => setPane({ width: el.clientWidth, height: el.clientHeight });
+    const observer = new ResizeObserver(read);
     observer.observe(el);
-    setPaneWidth(el.clientWidth);
+    read();
     return () => observer.disconnect();
   }, [wide, tab]);
-  const fitWidth = Math.max(240, Math.min(paneWidth - 32, 980));
-  const pageWidth = Math.round(fitWidth * ZOOMS[zoom]);
+  // Thin margins on a phone, so the page takes the most room it can.
+  const gutter = pane.width < 600 ? 8 : 20;
+  const roomWidth = Math.max(220, pane.width - gutter * 2);
+  const roomHeight = Math.max(220, pane.height - gutter * 2);
+  const shape = current.data ? current.data.height / current.data.width : lastShape.current;
+  const fitted =
+    fit === "page" ? Math.min(roomWidth, roomHeight / shape, 980) : Math.min(roomWidth, 980);
+  const pageWidth = Math.round(fitted * ZOOMS[zoom]);
 
   // ---- the selection ---------------------------------------------------------------------------
   const textLayer = useRef<HTMLDivElement | null>(null);
@@ -195,7 +239,8 @@ export function BookReader({
   const menuOpenRef = useRef(false);
   menuOpenRef.current = menuOpen;
   const pageRef = useRef<ReaderPage | null>(null);
-  pageRef.current = current.data ?? null;
+  // The previous page shown while the next arrives is never the one a selection belongs to.
+  pageRef.current = stale ? null : (current.data ?? null);
 
   const keepPicked = useCallback((next: Picked | null) => {
     pickedRef.current = next;
@@ -222,6 +267,8 @@ export function BookReader({
         const found = pageQuote(selection.toString(), data.text, 0);
         if (!found) return;
         keepPicked({ page: data.page, quote: found.quote, range: range.cloneRange() });
+        setTip(false);
+        writeStore(TIP_KEY, "1");
       }, 120);
     };
     document.addEventListener("selectionchange", onChange);
@@ -429,7 +476,7 @@ export function BookReader({
     (next: number) => {
       const target = clampPage(next, total);
       setPage(target);
-      scroller.current?.scrollTo({ top: 0 });
+      scroller.current?.scrollTo({ top: 0, left: 0 });
     },
     [total],
   );
@@ -461,30 +508,123 @@ export function BookReader({
       : "ما قدرت أفتح الصفحة. تأكد من النت."
     : "";
 
+  const fitLabel = fit === "page" ? "على قدّ العرض" : "الصفحة كاملة";
+  const PrevIcon = rtlBook ? ChevronRight : ChevronLeft;
+  const NextIcon = rtlBook ? ChevronLeft : ChevronRight;
   const bookPane = (
     <div className="bkr-pane" dir="rtl">
-      <div ref={scroller} className="bkr-scroll">
-        {current.data && !current.data.hasText && (
-          <p className="bkr-note">هاي الصفحة صورة بدون نص، فما بتنحدد. كمّل للصفحة الجاية.</p>
-        )}
-        <div className="bkr-stage">
-          <BookPageView
-            ref={textLayer}
-            page={current.data ?? null}
-            ratio={lastShape.current}
-            width={pageWidth}
-            loading={current.isPending}
-            failed={failed}
-            onRetry={() => void current.refetch()}
-          />
-        </div>
+      <div
+        className="bkr-progress"
+        role="progressbar"
+        aria-label="وين وصلت بالكتاب"
+        aria-valuemin={1}
+        aria-valuemax={total}
+        aria-valuenow={page}
+      >
+        <span style={{ transform: `scaleX(${(page / total).toFixed(4)})` }} />
       </div>
-      <nav className="bkr-bar" aria-label="الصفحات" dir="ltr">
-        <div className="bkr-zoom">
+      <div className="relative min-h-0 flex-1">
+        {/* The book's own direction, so a zoomed page starts where its lines start. */}
+        <div
+          ref={scroller}
+          className="bkr-scroll"
+          dir={rtlBook ? "rtl" : "ltr"}
+          style={{ ["--bkr-gutter" as string]: `${gutter}px` }}
+        >
+          <div className="bkr-stage">
+            <BookPageView
+              ref={textLayer}
+              page={current.data ?? null}
+              ratio={lastShape.current}
+              width={pageWidth}
+              stale={stale}
+              loading={current.isPending}
+              failed={failed}
+              onRetry={() => void current.refetch()}
+            />
+          </div>
+        </div>
+        {tip && current.data?.hasText && (
+          <div className="bkr-tip" role="note">
+            <p>حدّد أي كلمة أو جملة بإصبعك أو بالماوس، وبعدين اكبس على الدائرة.</p>
+            <button
+              type="button"
+              aria-label="سكّر التلميح"
+              onClick={() => {
+                setTip(false);
+                writeStore(TIP_KEY, "1");
+              }}
+            >
+              <X size={14} aria-hidden="true" />
+            </button>
+          </div>
+        )}
+      </div>
+      <nav className="bkr-bar" aria-label="الصفحات">
+        <div className="bkr-turn" dir={rtlBook ? "rtl" : "ltr"}>
+          <button
+            type="button"
+            className="bkr-btn"
+            disabled={page <= 1}
+            onClick={() => go(page - 1)}
+            aria-label="الصفحة السابقة"
+          >
+            <PrevIcon size={18} aria-hidden="true" />
+            <span className="bkr-label">السابقة</span>
+          </button>
+          <form onSubmit={submitJump} className="bkr-jump" dir="rtl">
+            <label className="sr-only" htmlFor="bkr-page">
+              رقم الصفحة
+            </label>
+            <span className="bkr-label" aria-hidden="true">
+              صفحة
+            </span>
+            <input
+              id="bkr-page"
+              inputMode="numeric"
+              enterKeyHint="go"
+              value={jump}
+              onChange={(event) => setJump(event.target.value.replace(/\D/g, "").slice(0, 4))}
+              onFocus={(event) => event.target.select()}
+              onBlur={() => setJump(String(page))}
+            />
+            <span>من {total}</span>
+          </form>
+          <button
+            type="button"
+            className="bkr-btn is-primary"
+            disabled={page >= total}
+            onClick={() => go(page + 1)}
+            aria-label="الصفحة التالية"
+          >
+            <span className="bkr-label">التالية</span>
+            <NextIcon size={18} aria-hidden="true" />
+          </button>
+        </div>
+        <div className="bkr-tools" role="group" aria-label="حجم الصفحة">
+          <button
+            type="button"
+            className="bkr-icon"
+            aria-label={fitLabel}
+            title={fitLabel}
+            onClick={() => {
+              const next = fit === "page" ? "width" : "page";
+              setFit(next);
+              setZoom(0);
+              writeStore(FIT_KEY, next);
+            }}
+          >
+            {fit === "page" ? (
+              <MoveHorizontal size={17} aria-hidden="true" />
+            ) : (
+              <Maximize2 size={16} aria-hidden="true" />
+            )}
+          </button>
           <button
             type="button"
             className="bkr-icon"
             aria-label="صغّر"
+            title="صغّر"
             disabled={zoom === 0}
             onClick={() => setZoom((z) => Math.max(0, z - 1))}
           >
@@ -494,52 +634,11 @@ export function BookReader({
             type="button"
             className="bkr-icon"
             aria-label="كبّر"
+            title="كبّر"
             disabled={zoom === ZOOMS.length - 1}
             onClick={() => setZoom((z) => Math.min(ZOOMS.length - 1, z + 1))}
           >
             <ZoomIn size={17} aria-hidden="true" />
-          </button>
-        </div>
-        <div className="bkr-turn" dir={rtlBook ? "rtl" : "ltr"}>
-          <button
-            type="button"
-            className="bkr-icon"
-            aria-label="الصفحة السابقة"
-            disabled={page <= 1}
-            onClick={() => go(page - 1)}
-          >
-            {rtlBook ? (
-              <ChevronRight size={18} aria-hidden="true" />
-            ) : (
-              <ChevronLeft size={18} aria-hidden="true" />
-            )}
-          </button>
-          <form onSubmit={submitJump} className="bkr-jump" dir="rtl">
-            <label className="sr-only" htmlFor="bkr-page">
-              رقم الصفحة
-            </label>
-            <span aria-hidden="true">صفحة</span>
-            <input
-              id="bkr-page"
-              inputMode="numeric"
-              value={jump}
-              onChange={(event) => setJump(event.target.value.replace(/\D/g, "").slice(0, 4))}
-              onBlur={() => setJump(String(page))}
-            />
-            <span>من {total}</span>
-          </form>
-          <button
-            type="button"
-            className="bkr-icon"
-            aria-label="الصفحة الجاية"
-            disabled={page >= total}
-            onClick={() => go(page + 1)}
-          >
-            {rtlBook ? (
-              <ChevronLeft size={18} aria-hidden="true" />
-            ) : (
-              <ChevronRight size={18} aria-hidden="true" />
-            )}
           </button>
         </div>
       </nav>

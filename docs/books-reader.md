@@ -66,5 +66,9 @@
 - `node --test src/lib/books-reader.test.ts` (9 tests, in CI).
 - Browser runs (Chromium and WebKit, iPad 1180×820 and phone 390×844, Supabase mocked in memory):
   preparing a 4-page book (two text pages, a landscape slide with pictures, a picture-only page),
-  the words lying exactly over the picture, selecting across pieces, the circle, a written answer,
-  questions, turning pages, zoom, the saved place, no horizontal scroll, no page errors.
+  the words lying exactly over the picture, the circle, a written answer, questions, turning pages,
+  zoom, the saved place, no horizontal scroll, no page errors. Selecting with the real mouse in
+  both browsers: a double click gives «hound», a drag over two lines gives the two lines' text, a
+  drag across the blank between paragraphs gives «before. The hound» (no jump), and a drag over
+  «hound of the Baskervilles» gives exactly that to the circle. A long press on a real iPad could
+  not be tried here.
