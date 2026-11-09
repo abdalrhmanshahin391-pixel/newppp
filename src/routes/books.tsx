@@ -10,11 +10,17 @@ type LibrarySearch = {
   lang?: string;
   len?: string;
   sort?: string;
+  /** An admin's preview of the library at another moment (ISO time). */
+  preview?: string;
 };
 
 export const Route = createFileRoute("/books")({
-  validateSearch: (search: Record<string, unknown>): LibrarySearch =>
-    searchFromFilters(filtersFromSearch(search)),
+  validateSearch: (search: Record<string, unknown>): LibrarySearch => {
+    const out: LibrarySearch = searchFromFilters(filtersFromSearch(search));
+    const preview = typeof search.preview === "string" ? search.preview : "";
+    if (preview && !Number.isNaN(Date.parse(preview))) out.preview = preview;
+    return out;
+  },
   head: () => ({
     meta: [
       { title: "Library — Uzyra" },
@@ -32,14 +38,15 @@ function BooksRoute() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const filters = filtersFromSearch(search);
+  const preview = search.preview;
   const onFilters = useCallback(
     (next: BookFilters) =>
       void navigate({
         to: "/books",
-        search: searchFromFilters(next) as LibrarySearch,
+        search: { ...searchFromFilters(next), ...(preview ? { preview } : {}) } as LibrarySearch,
         replace: true,
       }),
-    [navigate],
+    [navigate, preview],
   );
-  return <LibraryPage filters={filters} onFilters={onFilters} />;
+  return <LibraryPage filters={filters} onFilters={onFilters} preview={preview} />;
 }

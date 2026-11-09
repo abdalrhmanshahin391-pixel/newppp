@@ -55,6 +55,12 @@ on:
       - "src/lib/rita-review*"
       - "src/lib/rita-tutor-contract.ts"
       - "src/routes/api/rita-v3/review.ts"
+      - "src/lib/books*"
+      - "src/components/books/**"
+      - "src/routes/books.tsx"
+      - "src/routes/admin.books.tsx"
+      - "supabase/migrations/*books*"
+      - "scripts/test-books-db.sh"
       - ".github/workflows/rita-v3-frontend-check.yml"
   workflow_dispatch:
 
@@ -86,6 +92,7 @@ jobs:
           node --test src/lib/learn-home.test.ts
           node --test src/lib/rita-path-levels.test.ts
           node --test src/lib/books.test.ts
+          node --test src/lib/books-import.test.ts
           node --test src/lib/rita-phrase.test.ts
           node --test src/lib/activity-streak.test.ts
           node --test src/lib/learning-language.test.ts
@@ -153,3 +160,14 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: postgres
         run: ./scripts/test-study-db.sh
+      - name: Install pgTAP in the database container
+        run: |
+          docker exec ${{ job.services.postgres.id }} bash -c \
+            "apt-get update -qq && apt-get install -y -qq postgresql-16-pgtap > /dev/null"
+      - name: Library database rules (real migrations on Postgres 16, pgTAP)
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: ./scripts/test-books-db.sh

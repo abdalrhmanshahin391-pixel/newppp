@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, Sparkles, X } from "lucide-react";
+import {
+  BookMarked,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,26 +30,51 @@ import {
   type BookLength,
   type BookSort,
 } from "@/lib/books";
-import { LIBRARY_QUERY_KEY, loadLibrary } from "@/lib/books-data";
+import {
+  ADMIN_LIBRARY_QUERY_KEY,
+  LIBRARY_QUERY_KEY,
+  libraryAt,
+  loadAdminLibrary,
+  loadLibrary,
+} from "@/lib/books-data";
 import { BookObject, CATEGORY_ICON } from "./BookObject";
 import { BookSheet } from "./BookSheet";
 
 /**
- * The library: search and filters on top, the categories as chips, the book of the week, then one
- * shelf per category. Searching or filtering swaps the shelves for a grid of results.
+ * The library: search and filters on top, the categories as chips, the book of the week, the
+ * admin's own shelves, then one shelf per category. Searching or filtering swaps the shelves for a
+ * grid of results. An admin can preview the library at another moment (`preview`, an ISO time).
  */
 export function LibraryPage({
   filters,
   onFilters,
+  preview,
 }: {
   filters: BookFilters;
   onFilters: (next: BookFilters) => void;
+  preview?: string;
 }) {
   const ui = useUiLanguage();
   const t = (en: string, ar: string) => (ui === "ar" ? ar : en);
   const { user, isAdmin } = useAuth();
   const registry = useLanguageRegistry();
-  const query = useQuery({ queryKey: LIBRARY_QUERY_KEY, queryFn: loadLibrary, staleTime: 60_000 });
+  const previewAt = useMemo(() => {
+    const d = preview ? new Date(preview) : null;
+    return d && !Number.isNaN(d.getTime()) ? d : null;
+  }, [preview]);
+  const previewing = Boolean(isAdmin && previewAt);
+  const reader = useQuery({
+    queryKey: LIBRARY_QUERY_KEY,
+    queryFn: () => loadLibrary(),
+    staleTime: 60_000,
+    enabled: !previewing,
+  });
+  const admin = useQuery({
+    queryKey: ADMIN_LIBRARY_QUERY_KEY,
+    queryFn: loadAdminLibrary,
+    enabled: previewing,
+  });
+  const query = previewing ? admin : reader;
   const [open, setOpen] = useState<Book | null>(null);
   const [panel, setPanel] = useState(false);
   const [text, setText] = useState(filters.q);
@@ -66,9 +100,13 @@ export function LibraryPage({
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  const library = query.data;
+  const library = useMemo(
+    () => (previewing && admin.data && previewAt ? libraryAt(admin.data, previewAt) : reader.data),
+    [previewing, admin.data, previewAt, reader.data],
+  );
   const books = useMemo(() => (library?.books ?? []).filter((b) => b.published), [library]);
-  const categories = library?.categories ?? [];
+  const bookById = useMemo(() => new Map(books.map((b) => [b.id, b])), [books]);
+  const categories = useMemo(() => library?.categories ?? [], [library]);
   const byId = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
   const counts = useMemo(() => {
     const map = new Map<string, number>();
@@ -84,7 +122,18 @@ export function LibraryPage({
   const name = (c: BookCategory) => (ui === "ar" ? c.name_ar : c.name_en);
   const filtering = isFiltering(filters);
   const results = useMemo(() => filterBooks(books, filters), [books, filters]);
-  const featured = books.find((b) => b.featured) ?? null;
+  const featured = (library?.featuredId && bookById.get(library.featuredId)) || null;
+  // The admin's shelves: only published books, in the shelf's order; empty shelves are left out.
+  const manual = useMemo(
+    () =>
+      (library?.shelves ?? [])
+        .map((s) => ({
+          shelf: s,
+          books: s.book_ids.map((id) => bookById.get(id)).filter((b): b is Book => Boolean(b)),
+        }))
+        .filter((s) => s.books.length > 0),
+    [library, bookById],
+  );
   const rows = useMemo(() => shelves(categories, books), [categories, books]);
   const loose = books.filter((b) => !b.category_id || !byId.has(b.category_id));
   const fresh = newest(books);
@@ -147,6 +196,23 @@ export function LibraryPage({
     <div className="min-h-screen bg-white text-[var(--pp-ink)]">
       <SiteHeader />
       <main className="bk-page" dir={ui === "ar" ? "rtl" : "ltr"}>
+        {previewing && previewAt && (
+          <div className="bk-preview" role="status">
+            <Eye size={16} aria-hidden="true" />
+            <span>
+              {t("Admin preview of the library at", "معاينة للأدمن: المكتبة بتاريخ")}{" "}
+              <b>
+                {previewAt.toLocaleString(ui === "ar" ? "ar-u-nu-latn" : "en", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+              </b>
+            </span>
+            <Link to="/books" className="bk-preview-exit">
+              {t("Leave preview", "اطلع من المعاينة")}
+            </Link>
+          </div>
+        )}
         <div className="bk-head">
           <div>
             <p className="bk-eyebrow">{t("Uzyra library", "مكتبة Uzyra")}</p>
@@ -363,6 +429,16 @@ export function LibraryPage({
                 languageName={languageName(featured.language)}
                 onOpen={() => setOpen(featured)}
               />
+            )}
+            {manual.map(({ shelf: s, books: list }) =>
+              shelf(
+                `shelf-${s.id}`,
+                ui === "ar" ? s.name_ar : s.name_en,
+                list,
+                CATEGORY_COLORS.indigo,
+                BookMarked,
+                null,
+              ),
             )}
             {books.length >= 6 &&
               shelf(
