@@ -477,8 +477,10 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
 - **Book editor:** one window (a bottom sheet on phones) with five numbered sections — identity
   (title, alternate title, author, ISBN, language, pages, year, description), classification
   (primary category, level, secondary categories and tags as toggle chips), files (a hairline card
-  per file with its state and «اختار ملف» / «بدّل», a progress bar while it uploads; files over
-  6 MB go up in resumable parts), availability (draft / published / archived choice and the rights
+  per file with its state and «اختار ملف» / «بدّل», a progress bar while it uploads; the cover up
+  to 5 MB, the PDF up to 500 MB; files over 6 MB go up in resumable parts, and a failed upload says
+  why in words — over the project's size limit, or no resumable uploads for a file over 50 MB),
+  availability (draft / published / archived choice and the rights
   check) and display (book of the week with its period, manual shelves). Beside it: the live book
   and a readiness card (title, primary category, rights — green tick or red cross with words; then
   what is worth adding but never blocks). Save and cancel stay at the bottom.

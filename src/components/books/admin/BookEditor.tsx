@@ -8,6 +8,7 @@ import { useLanguageRegistry } from "@/hooks/useLearningLanguage";
 import { BookObject } from "@/components/books/BookObject";
 import {
   BOOK_LEVELS,
+  MAX_PDF_BYTES,
   fromLocalInput,
   normalizeIsbn,
   publishIssues,
@@ -30,7 +31,7 @@ import {
 import { Choice, field, label, muted, STATUS_WORDS } from "./admin-ui";
 
 const MAX_COVER = 5 * 1024 * 1024;
-const MAX_PDF = 50 * 1024 * 1024;
+const MAX_PDF = MAX_PDF_BYTES;
 
 const ISSUE_WORDS = { title: "العنوان", category: "التصنيف الأساسي", rights: "مراجعة الحقوق" };
 const WARNING_WORDS = {
@@ -148,7 +149,7 @@ export function BookEditor({
     if (cover && cover.size > MAX_COVER) return setError("صورة الغلاف أكبر من 5 ميغا.");
     if (cover && !/^image\/(jpeg|png|webp)$/.test(cover.type))
       return setError("الغلاف لازم يكون صورة JPG أو PNG أو WebP.");
-    if (pdf && pdf.size > MAX_PDF) return setError("ملف الكتاب أكبر من 50 ميغا.");
+    if (pdf && pdf.size > MAX_PDF) return setError("ملف الكتاب أكبر من 500 ميغا.");
     if (pdf && pdf.type !== "application/pdf") return setError("ملف الكتاب لازم يكون PDF.");
     const from = fromLocalInput(featuredFrom);
     const until = fromLocalInput(featuredUntil);
@@ -425,7 +426,7 @@ export function BookEditor({
               <FilePick
                 id="bk-pdf"
                 title="ملف الكتاب"
-                hint="PDF، لحد 50 ميغا"
+                hint="PDF، لحد 500 ميغا"
                 accept="application/pdf"
                 has={Boolean(book?.file_path)}
                 file={pdf}

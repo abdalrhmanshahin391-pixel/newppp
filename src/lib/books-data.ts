@@ -4,7 +4,7 @@
 //
 // The page keeps working on a database that only has the first library migration
 // (20261108120000): the phase 1 columns and tables are read when they exist (`phase1`).
-import { Upload } from "tus-js-client";
+import { DetailedError, Upload } from "tus-js-client";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 import {
@@ -14,8 +14,12 @@ import {
   newest as newestBooks,
   NO_BROWSE,
   shelves as categoryShelves,
+  DIRECT_MAX_BYTES,
+  RESUMABLE_FROM_BYTES,
   toBook,
   toCategory,
+  uploadProblem,
+  uploadProblemText,
   type Book,
   type BookCategory,
   type BookShelf,
@@ -31,7 +35,7 @@ export const FILES_BUCKET = "book-files";
 export const LIBRARY_QUERY_KEY = ["library"] as const;
 export const ADMIN_LIBRARY_QUERY_KEY = ["library", "admin"] as const;
 /** Above this a file goes up in resumable 6 MB parts (Supabase's advice for large files). */
-export const RESUMABLE_FROM = 6 * 1024 * 1024;
+export const RESUMABLE_FROM = RESUMABLE_FROM_BYTES;
 
 const NOT_APPLIED = /could not find|does not exist|schema cache|PGRST20[0-9]|42P01|42703/i;
 const notApplied = (error: { code?: string; message?: string } | null) =>
@@ -469,24 +473,26 @@ export async function bookFileLink(path: string): Promise<string> {
 
 // ---- files ----------------------------------------------------------------------------------
 
-/**
- * Uploads one file. Up to 6 MB in one request; larger files in resumable 6 MB parts (TUS), which
- * pick up where they stopped if the connection drops. `onProgress` gets 0–1.
- */
-export async function uploadFile(
+/** One plain request (Supabase's standard upload). */
+async function directUpload(bucket: string, path: string, file: File) {
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (error) {
+    const status = Number((error as { statusCode?: string | number }).statusCode) || null;
+    throw new Error(
+      uploadProblemText(uploadProblem(status, error.message), file.size, error.message),
+    );
+  }
+}
+
+/** Resumable 6 MB parts (TUS); rejects with the HTTP status when the server answered. */
+async function resumableUpload(
   bucket: string,
   path: string,
   file: File,
   onProgress?: (share: number) => void,
 ): Promise<void> {
-  if (file.size <= RESUMABLE_FROM) {
-    const { error } = await supabase.storage
-      .from(bucket)
-      .upload(path, file, { contentType: file.type, upsert: false });
-    if (error) throw new Error(error.message);
-    onProgress?.(1);
-    return;
-  }
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   if (!token) throw new Error("لازم تكون مسجّل دخول.");
@@ -504,8 +510,8 @@ export async function uploadFile(
         contentType: file.type,
         cacheControl: "3600",
       },
-      chunkSize: RESUMABLE_FROM,
-      onError: (error) => reject(new Error(error.message)),
+      chunkSize: RESUMABLE_FROM_BYTES,
+      onError: (error) => reject(error),
       onProgress: (sent, total) => onProgress?.(total ? sent / total : 0),
       onSuccess: () => resolve(),
     });
@@ -514,6 +520,38 @@ export async function uploadFile(
       upload.start();
     });
   });
+}
+
+/**
+ * Uploads one file. Up to 6 MB in one request; larger files (book PDFs up to 500 MB) in resumable
+ * 6 MB parts (TUS), which pick up where they stopped if the connection drops. If the project has
+ * no resumable endpoint, files up to 50 MB fall back to one request. `onProgress` gets 0–1.
+ */
+export async function uploadFile(
+  bucket: string,
+  path: string,
+  file: File,
+  onProgress?: (share: number) => void,
+): Promise<void> {
+  if (file.size <= RESUMABLE_FROM_BYTES) {
+    await directUpload(bucket, path, file);
+    onProgress?.(1);
+    return;
+  }
+  try {
+    await resumableUpload(bucket, path, file, onProgress);
+  } catch (cause) {
+    const status =
+      cause instanceof DetailedError ? (cause.originalResponse?.getStatus() ?? null) : null;
+    const message = cause instanceof Error ? cause.message : "";
+    const problem = uploadProblem(status, message);
+    if (problem === "missing" && file.size <= DIRECT_MAX_BYTES) {
+      await directUpload(bucket, path, file);
+      onProgress?.(1);
+      return;
+    }
+    throw new Error(uploadProblemText(problem, file.size, message));
+  }
 }
 
 /** Removes files; any that cannot be removed now go on the cleanup list (retried by the admin). */

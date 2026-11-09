@@ -631,6 +631,42 @@ export function fromLocalInput(value: string): string | null {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
+// ---- uploads -----------------------------------------------------------------------------------
+
+/** Book PDFs up to 500 MB, covers up to 5 MB (the buckets say the same). */
+export const MAX_PDF_BYTES = 500 * 1024 * 1024;
+export const MAX_COVER_BYTES = 5 * 1024 * 1024;
+/** Above this a file goes up in resumable 6 MB parts. */
+export const RESUMABLE_FROM_BYTES = 6 * 1024 * 1024;
+/** The largest file sent in one plain request when resumable uploads are not available. */
+export const DIRECT_MAX_BYTES = 50 * 1024 * 1024;
+
+export type UploadProblem = "missing" | "too_large" | "other";
+
+/**
+ * Why an upload failed: the resumable endpoint is not there ("missing": 404, 405, 501), the file is
+ * over a size limit ("too_large": 413 or Storage's own words), or anything else.
+ */
+export function uploadProblem(status: number | null | undefined, message: string): UploadProblem {
+  if (
+    status === 413 ||
+    /exceed|too large|payload too large|maximum allowed size|entity too large/i.test(message)
+  )
+    return "too_large";
+  if (status === 404 || status === 405 || status === 501) return "missing";
+  return "other";
+}
+
+/** The words an admin sees for an upload that failed. */
+export function uploadProblemText(problem: UploadProblem, size: number, message: string): string {
+  const mb = Math.round(size / (1024 * 1024));
+  if (problem === "too_large")
+    return `الملف (${mb} ميغا) أكبر من الحد المسموح بالمشروع. ارفع «Upload file size limit» بإعدادات التخزين لـ 500 ميغا، أو صغّر الملف.`;
+  if (problem === "missing")
+    return `الرفع على أجزاء مش شغّال بالمشروع، والملف (${mb} ميغا) أكبر من 50 ميغا فما بينرفع بطلب واحد.`;
+  return message || "ما زبط الرفع. جرّب مرة ثانية.";
+}
+
 /** True when a period (either end open) contains the moment. */
 export function inPeriod(from: string | null, until: string | null, at: Date): boolean {
   const t = at.getTime();
