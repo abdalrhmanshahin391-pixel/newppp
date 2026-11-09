@@ -64,6 +64,7 @@ on:
       - "src/lib/pdf-page-render.ts"
       - "supabase/migrations/*books*"
       - "scripts/test-books-db.sh"
+      - "scripts/test-books-public-read-db.sh"
       - ".github/workflows/rita-v3-frontend-check.yml"
   workflow_dispatch:
 
@@ -175,3 +176,10 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: postgres
         run: ./scripts/test-books-db.sh
+      - name: Original library public-read regression (isolated database)
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: bash scripts/test-books-public-read-db.sh

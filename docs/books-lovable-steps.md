@@ -202,3 +202,26 @@ slower points to the network or the plan, not to the queries.
   `select status, count(*) from public.books group by 1;` — published books stay published.
 - The site keeps working if you stop between migrations: each page falls back to what the
   database has.
+
+
+## Visitor-access follow-up (PR #148)
+
+After the phase, PDF-limit and reader migrations above, apply
+`supabase/migrations/20261114120000_books_visitor_access.sql` **last**.
+Phase 1 replaces the original books policy, so the earlier
+`20261108130000_books_public_read.sql` alone is insufficient for the newer library.
+
+The follow-up separates anonymous reader policies from authenticated policies on books,
+shelves, editorial rules and public aggregate counts. It does not grant visitors access to
+`has_role`, private favourites/ratings/events, drafts, PDF objects or write operations.
+`books_read_at` bypasses the protected role lookup for anonymous callers. `books_browse`
+reads private favourites only inside the signed-in favourites branch, rather than referencing
+the private table in every public query plan. Existing authenticated/admin rules remain intact.
+
+Keep the existing phase files unchanged. Apply the four phase files and this follow-up in one
+transaction when using the SQL editor, so an intermediate policy does not reach visitors.
+The bucket's 500 MB limit still requires a compatible project-wide Storage limit; no paid
+plan change is authorized by this migration.
+
+At the owner's request, the continuation of PR #148 does not run tests or UI smoke flows.
+The previous green CI results apply to the earlier commit only, not to this follow-up.
