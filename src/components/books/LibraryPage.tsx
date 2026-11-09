@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BookMarked,
   ChevronLeft,
   ChevronRight,
   Eye,
+  Flame,
+  Heart,
+  Star,
   RefreshCw,
   Search,
   SlidersHorizontal,
@@ -25,6 +28,7 @@ import {
   modeOf,
   newSeed,
   NO_BROWSE,
+  ratingShown,
   readingHours,
   toggleValue,
   type Book,
@@ -35,7 +39,15 @@ import {
   type Facets,
   type PageSize,
 } from "@/lib/books";
-import { browseBooks, LIBRARY_QUERY_KEY, loadCatalog, loadDiscover } from "@/lib/books-data";
+import {
+  browseBooks,
+  LIBRARY_QUERY_KEY,
+  loadCatalog,
+  loadDiscover,
+  loadMine,
+  loadPopular,
+  type Popular,
+} from "@/lib/books-data";
 import { BookObject, CATEGORY_ICON } from "./BookObject";
 import { BookSheet } from "./BookSheet";
 
@@ -99,6 +111,21 @@ export function LibraryPage({
     queryKey: [...LIBRARY_QUERY_KEY, "catalog"],
     queryFn: loadCatalog,
     staleTime: 5 * 60_000,
+  });
+  const queryClient = useQueryClient();
+  const phase3 = Boolean(catalog.data?.phase3);
+  // The two popularity shelves (phase 3) and the signed-in reader's own favourites and ratings.
+  const popular = useQuery({
+    queryKey: [...LIBRARY_QUERY_KEY, "popular", previewIso],
+    queryFn: ({ signal }) => loadPopular(previewIso, signal),
+    enabled: mode === "discover" && phase3,
+    staleTime: 60_000,
+  });
+  const mine = useQuery({
+    queryKey: [...LIBRARY_QUERY_KEY, "mine", user?.id ?? ""],
+    queryFn: loadMine,
+    enabled: Boolean(user) && phase3,
+    staleTime: 60_000,
   });
   const discover = useQuery({
     queryKey: [...LIBRARY_QUERY_KEY, "discover", seed, previewIso],
@@ -202,6 +229,12 @@ export function LibraryPage({
     ["new", t("Newest", "الأحدث")],
     ["title", t("By title", "حسب الاسم")],
     ["short", t("Shortest", "الأقصر")],
+    ...(phase3
+      ? ([
+          ["rating", t("Top rated", "الأعلى تقييماً")],
+          ["trending", t("Trending", "الرائج")],
+        ] as [BrowseSort, string][])
+      : []),
   ];
   const languages = useMemo(() => {
     const fromFacets = facets ? Object.keys(facets.language) : [];
@@ -230,6 +263,15 @@ export function LibraryPage({
         {book.author && (
           <span className="bk-item-author" dir="auto">
             {book.author}
+          </span>
+        )}
+        {phase3 && ratingShown(book) && (
+          <span className="bk-item-rating">
+            <Star size={12} fill="currentColor" aria-hidden="true" />
+            {book.rating_avg?.toFixed(1)}
+            <span className="sr-only">
+              {t(` from ${book.rating_count} ratings`, ` من ${book.rating_count} تقييم`)}
+            </span>
           </span>
         )}
       </button>
@@ -280,9 +322,25 @@ export function LibraryPage({
   const resultTitle =
     mode === "search"
       ? t(`Results for “${state.q}”`, `نتائج «${state.q}»`)
-      : category
-        ? name(category)
-        : t("All books", "كل الكتب");
+      : mode === "favorites"
+        ? t("My favourites", "مفضلتي")
+        : category
+          ? name(category)
+          : t("All books", "كل الكتب");
+  const myState = (book: Book) =>
+    mine.data
+      ? {
+          favorite: mine.data.favorites.includes(book.id),
+          rating: mine.data.ratings[book.id] ?? null,
+        }
+      : null;
+  // After a rating or a favourite: the reader's own lists and the popularity shelves refresh.
+  const changed = () => {
+    void queryClient.invalidateQueries({ queryKey: [...LIBRARY_QUERY_KEY, "mine"] });
+    void queryClient.invalidateQueries({ queryKey: [...LIBRARY_QUERY_KEY, "popular"] });
+    if (mode === "favorites")
+      void queryClient.invalidateQueries({ queryKey: [...LIBRARY_QUERY_KEY, "browse"] });
+  };
   const CategoryIcon = category ? CATEGORY_ICON[category.icon] : null;
   const remove = t("Remove", "شيل");
 
@@ -481,6 +539,17 @@ export function LibraryPage({
             {t("All books", "كل الكتب")}
             {discoverTotal !== undefined && <span className="bk-cat-n">{discoverTotal}</span>}
           </button>
+          {user && phase3 && (
+            <button
+              type="button"
+              className="bk-cat"
+              aria-pressed={mode === "favorites"}
+              onClick={() => fresh({ view: "favorites" })}
+            >
+              <Heart size={15} aria-hidden="true" /> {t("My favourites", "مفضلتي")}
+              {mine.data && <span className="bk-cat-n">{mine.data.favorites.length}</span>}
+            </button>
+          )}
           {categories
             .filter((c) => !discover.data || categoryTotals.get(c.id))
             .map((c) => (
@@ -597,6 +666,7 @@ export function LibraryPage({
               onOpen={setOpen}
               onNewPicks={() => setSeed(newSeed())}
               onAll={(patch) => fresh(patch)}
+              popular={popular.data ?? null}
             />
           )
         ) : (
@@ -695,15 +765,22 @@ export function LibraryPage({
                 <p className="bk-empty-title">
                   {state.page > 1
                     ? t("This page is empty.", "هالصفحة فاضية.")
-                    : t("No book matches.", "ما في كتاب بيطابق.")}
+                    : mode === "favorites" && !state.q && !chosen
+                      ? t("No favourites yet.", "لسا ما في كتب بالمفضلة.")
+                      : t("No book matches.", "ما في كتاب بيطابق.")}
                 </p>
                 <p className="bk-empty-text">
                   {state.page > 1
                     ? t("Go back to the first page.", "ارجع للصفحة الأولى.")
-                    : t(
-                        "Try another word, or clear the filters.",
-                        "جرّب كلمة ثانية، أو امسح الفلترة.",
-                      )}
+                    : mode === "favorites" && !state.q && !chosen
+                      ? t(
+                          "Open a book and press «Add to favourites» to keep it here.",
+                          "افتح أي كتاب واضغط «للمفضلة» عشان يضل هون.",
+                        )
+                      : t(
+                          "Try another word, or clear the filters.",
+                          "جرّب كلمة ثانية، أو امسح الفلترة.",
+                        )}
                 </p>
                 <button
                   type="button"
@@ -728,6 +805,9 @@ export function LibraryPage({
           signedIn={Boolean(user)}
           ui={ui}
           onClose={() => setOpen(null)}
+          phase3={phase3}
+          mine={myState(open)}
+          onChanged={changed}
         />
       )}
     </div>
@@ -754,6 +834,7 @@ function DiscoverShelves({
   onOpen,
   onNewPicks,
   onAll,
+  popular,
 }: {
   data: Awaited<ReturnType<typeof loadDiscover>>;
   fetching: boolean;
@@ -765,6 +846,7 @@ function DiscoverShelves({
   onOpen: (book: Book) => void;
   onNewPicks: () => void;
   onAll: (patch: Partial<BrowseState>) => void;
+  popular: Popular | null;
 }) {
   const t = (en: string, ar: string) => (ui === "ar" ? ar : en);
   const featured = data.featured;
@@ -806,6 +888,26 @@ function DiscoverShelves({
               </button>
             ),
           },
+        )}
+      {popular &&
+        popular.trending.length > 0 &&
+        shelf(
+          "trending",
+          t("Trending this week", "الرائج هالأسبوع"),
+          popular.trending,
+          CATEGORY_COLORS.amber,
+          Flame,
+          { all: () => onAll({ view: "all", sort: "trending" }) },
+        )}
+      {popular &&
+        popular.topRated.length > 0 &&
+        shelf(
+          "top-rated",
+          t("Top rated", "الأعلى تقييماً"),
+          popular.topRated,
+          CATEGORY_COLORS.rose,
+          Star,
+          { all: () => onAll({ view: "all", sort: "rating" }) },
         )}
       {data.total >= 6 &&
         shelf("new", t("New arrivals", "وصل جديداً"), data.newest, CATEGORY_COLORS.sky, Sparkles, {

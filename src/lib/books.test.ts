@@ -6,6 +6,7 @@ import {
   isAdminFiltering,
   NO_ADMIN_FILTER,
   qualityReport,
+  ratingShown,
   toLocalInput,
   inPeriod,
   normalizeIsbn,
@@ -326,4 +327,28 @@ test("datetime-local values round-trip to the minute", () => {
   assert.equal(toLocalInput(null), "");
   assert.equal(fromLocalInput(""), null);
   assert.equal(fromLocalInput("nope"), null);
+});
+
+test("ratings: read safely, shown from three ratings, and «my favourites» is a view of its own", () => {
+  const rated = toBook({ id: "r", title: "T", rating_count: 4, rating_avg: "4.25" }, null);
+  assert.equal(rated.rating_avg, 4.25);
+  assert.ok(ratingShown(rated));
+  assert.ok(!ratingShown(toBook({ id: "s", title: "T", rating_count: 2, rating_avg: 5 }, null)));
+  assert.equal(toBook({ id: "u", title: "T" }, null).rating_avg, null);
+  const fav = stateFromSearch({ view: "favorites", sort: "trending" });
+  assert.equal(modeOf(fav), "favorites");
+  assert.equal(contextOf(fav), null);
+  assert.equal(fav.sort, "trending");
+  assert.deepEqual(searchFromState(fav), { view: "favorites", sort: "trending" });
+  const list = [book("1"), book("2"), book("3")];
+  const result = browseLocal(list, fav, { seed: "", favorites: ["2"] });
+  assert.deepEqual(
+    result.items.map((b) => b.id),
+    ["2"],
+  );
+  assert.equal(
+    result.sort,
+    "new",
+    "without the database numbers the popularity orders fall back to the newest",
+  );
 });

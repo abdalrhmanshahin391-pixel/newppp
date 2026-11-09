@@ -411,7 +411,8 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   description and «افتح الكتاب».
 - **Shelves (اكتشف):** the book of the week, the admin's shelves, «مختارات لك» (12 picks in this
   visit's order, with «اقتراحات جديدة» on the right of its head to draw new ones; the order stays the
-  same for the whole visit), «وصل جديداً» (from six books on), one per category in the admin's order
+  same for the whole visit), «الرائج هالأسبوع» (amber, a flame icon) and «الأعلى تقييماً» (rose, a
+  star icon; only books with at least three ratings, and hidden when none has), «وصل جديداً» (from six books on), one per category in the admin's order
   (12 books, with the full count and «عرض الكل»), then «كتب ثانية» for books without a category. A
   row scrolls sideways with snap. Pins and exclusions set by the admin apply here and in a
   category, never in search or «كل الكتب».
@@ -429,7 +430,15 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   back, refresh and shared links return to the same list.
 - **Details** (`BookSheet`): a dialog (a bottom sheet on phones) with the book, its facts and
   «ابدأ القراءة», which opens the PDF through a ten-minute signed link (visitors are asked to sign
-  in; without a file the button says the file is not ready).
+  in; without a file the button says the file is not ready). With the phase 3 database: a rating
+  line under the facts (a gold star, the average to one decimal and «N تقييم»; with fewer than three
+  ratings it says so in words instead), «للمفضلة» beside «ابدأ القراءة» (a heart; rose tint and
+  «بالمفضلة» when on), and under a hairline «تقييمك»: five 44px star buttons (a radio group, arrow
+  keys move it; tapping the chosen star again removes it, as the hint under them says). Visitors see
+  the same row with «سجّل دخولك لتقيّم», and a tap asks them to sign in.
+- **Cards** show a small gold «★ 4.6» under the author once a book has three ratings.
+- **«مفضلتي»** (signed in): a chip with a heart and the count in the ways-in row; its list is a
+  normal paged list, and an empty one explains how to add books.
 - **Manual shelves:** shelves the admin fills by hand come after the book of the week and before
   «وصل جديداً», in the admin's order, with an indigo tone and a bookmark icon. Only published books
   show; an empty shelf is left out. A shelf with a period shows only during it (server clock).
@@ -455,6 +464,10 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     hairline cards side by side, «مثبّت أول» with order arrows and «مخفي», each rule with its
     period and an «شغّال هلأ» / «برا مدته» badge; a grey card adds a rule: pin or hide, the book,
     from/until), and the preview link with a date, a time and an optional picks order.
+  - **الإحصائيات** (phase 3): «آخر 7 أيام / آخر 30 يوم», four number cards (views, reads,
+    favourites, ratings: label, value 34px/600, what it counts, and the change from the days before
+    in words), «الرائج هالأسبوع» and «الأعلى تقييماً» as numbered hairline lists, the stars
+    spread as five gold bars with count and share, and published books nobody opened as pills.
   - **الاستيراد والجودة:** a CSV import (choose the file, match each field to a column, choose
     what happens to a book that exists — leave it, update it, or add a copy — then «جرّب بدون
     حفظ», which shows the counts and a row table with words for every reason, and only then
@@ -475,7 +488,10 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   file-cleanup list. Covers in the public `book-covers` bucket, PDFs in the private `book-files`
   bucket. Everyone reads categories and published books; only admins write. Phase 2
   (`20261110120000_books_discovery.sql`): the search copy and its indexes, `books_browse`,
-  `books_discover` and `book_editorial`. The page and the admin keep working on a database that
+  `books_discover` and `book_editorial`. Phase 3 (`20261111120000_books_popularity.sql`): events,
+  favourites and ratings (people's own rows), the public numbers per book and per day (no
+  identities), `books_popular`, `books_track`, `books_rate`, `books_favorite` and `books_analytics`.
+  The page and the admin keep working on a database that
   only has the earlier migrations (the lists are then built in the browser, with a dashed notice
   for admins).
 
