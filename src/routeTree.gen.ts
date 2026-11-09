@@ -119,6 +119,7 @@ import { Route as ApiRitaV3ReviewRouteImport } from './routes/api/rita-v3/review
 import { Route as ApiRitaV3ReviewerCheckRouteImport } from './routes/api/rita-v3/reviewer-check'
 import { Route as ApiRitaExtractRouteImport } from './routes/api/rita/extract'
 import { Route as ApiRitaLearningRouteImport } from './routes/api/rita/learning'
+import { Route as BooksBookIdReadRouteImport } from './routes/books_.$bookId.read'
 import { Route as CoursesCourseIdIndexRouteImport } from './routes/courses.$courseId.index'
 import { Route as CoursesCourseIdAddQuestionsRouteImport } from './routes/courses.$courseId.add-questions'
 import { Route as CoursesCourseIdRunRouteImport } from './routes/courses.$courseId.run'
@@ -701,6 +702,11 @@ const ApiRitaLearningRoute = ApiRitaLearningRouteImport.update({
   path: '/api/rita/learning',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BooksBookIdReadRoute = BooksBookIdReadRouteImport.update({
+  id: '/books_/$bookId/read',
+  path: '/books/$bookId/read',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoursesCourseIdIndexRoute = CoursesCourseIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -955,6 +961,7 @@ export interface FileRoutesByFullPath {
   '/api/rita-v3/reviewer-check': typeof ApiRitaV3ReviewerCheckRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
+  '/books/$bookId/read': typeof BooksBookIdReadRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -1091,6 +1098,7 @@ export interface FileRoutesByTo {
   '/api/rita-v3/reviewer-check': typeof ApiRitaV3ReviewerCheckRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
+  '/books/$bookId/read': typeof BooksBookIdReadRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -1231,6 +1239,7 @@ export interface FileRoutesById {
   '/api/rita-v3/reviewer-check': typeof ApiRitaV3ReviewerCheckRoute
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
+  '/books_/$bookId/read': typeof BooksBookIdReadRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -1373,6 +1382,7 @@ export interface FileRouteTypes {
     | '/api/rita-v3/reviewer-check'
     | '/api/rita/extract'
     | '/api/rita/learning'
+    | '/books/$bookId/read'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1509,6 +1519,7 @@ export interface FileRouteTypes {
     | '/api/rita-v3/reviewer-check'
     | '/api/rita/extract'
     | '/api/rita/learning'
+    | '/books/$bookId/read'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1648,6 +1659,7 @@ export interface FileRouteTypes {
     | '/api/rita-v3/reviewer-check'
     | '/api/rita/extract'
     | '/api/rita/learning'
+    | '/books_/$bookId/read'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1774,6 +1786,7 @@ export interface RootRouteChildren {
   ApiRitaV3ReviewerCheckRoute: typeof ApiRitaV3ReviewerCheckRoute
   ApiRitaExtractRoute: typeof ApiRitaExtractRoute
   ApiRitaLearningRoute: typeof ApiRitaLearningRoute
+  BooksBookIdReadRoute: typeof BooksBookIdReadRoute
   ShareQuestionsSetIdRoute: typeof ShareQuestionsSetIdRoute
   ShareQuestionsNewRoute: typeof ShareQuestionsNewRoute
   AdminRitaQualityIndexRoute: typeof AdminRitaQualityIndexRoute
@@ -2560,6 +2573,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRitaLearningRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/books_/$bookId/read': {
+      id: '/books_/$bookId/read'
+      path: '/books/$bookId/read'
+      fullPath: '/books/$bookId/read'
+      preLoaderRoute: typeof BooksBookIdReadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/courses/$courseId/': {
       id: '/courses/$courseId/'
       path: '/'
@@ -2985,6 +3005,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRitaV3ReviewerCheckRoute: ApiRitaV3ReviewerCheckRoute,
   ApiRitaExtractRoute: ApiRitaExtractRoute,
   ApiRitaLearningRoute: ApiRitaLearningRoute,
+  BooksBookIdReadRoute: BooksBookIdReadRoute,
   ShareQuestionsSetIdRoute: ShareQuestionsSetIdRoute,
   ShareQuestionsNewRoute: ShareQuestionsNewRoute,
   AdminRitaQualityIndexRoute: AdminRitaQualityIndexRoute,

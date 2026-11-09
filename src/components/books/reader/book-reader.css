@@ -1,0 +1,180 @@
+/* The book reader (src/components/books/reader). The page sits on the study page's grey, as one
+   sheet of paper; the bar under it turns pages and zooms. */
+
+.bkr-title {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bkr-pane {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  background: #f4f4f8;
+}
+
+.bkr-scroll {
+  position: relative;
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bkr-stage {
+  display: flex;
+  min-width: min-content;
+  justify-content: center;
+  padding: 16px;
+}
+
+.bkr-page {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgb(14 17 22 / 0.06),
+    0 8px 28px rgb(14 17 22 / 0.08);
+  container-type: size;
+}
+
+.bkr-picture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.bkr-page[data-loaded] .bkr-picture {
+  opacity: 1;
+}
+
+/* The page's words, see-through, each piece where it sits on the picture (as pdf.js does). */
+.bkr-text {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  line-height: 1;
+  text-align: initial;
+  forced-color-adjust: none;
+}
+.bkr-text span {
+  position: absolute;
+  color: transparent;
+  font-family: sans-serif;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0 0;
+}
+.bkr-text span::selection {
+  background: rgb(43 109 240 / 0.3);
+  color: transparent;
+}
+::highlight(bkr-pick) {
+  background-color: rgb(43 109 240 / 0.24);
+  color: transparent;
+}
+
+.bkr-wait {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 16px;
+  color: var(--pp-muted);
+  text-align: center;
+  font-size: 14px;
+}
+.bkr-wait.is-failed {
+  color: #8c1a31;
+}
+
+.bkr-note {
+  max-width: 560px;
+  margin: 12px auto -4px;
+  padding: 0 16px;
+  color: var(--pp-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.bkr-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px max(8px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--pp-line);
+  background: #fff;
+}
+.bkr-zoom,
+.bkr-turn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.bkr-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--pp-ink);
+  transition: background-color 120ms ease;
+}
+.bkr-icon:disabled {
+  opacity: 0.35;
+}
+.bkr-icon:active:not(:disabled) {
+  background: var(--pp-grey);
+}
+@media (hover: hover) and (pointer: fine) {
+  .bkr-icon:hover:not(:disabled) {
+    background: var(--pp-grey);
+  }
+}
+.bkr-jump {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--pp-muted);
+  white-space: nowrap;
+}
+.bkr-jump input {
+  width: 4.2ch;
+  height: 36px;
+  border: 1.5px solid var(--pp-line);
+  border-radius: 10px;
+  color: var(--pp-ink);
+  /* 16px stops iPhone Safari from zooming the page when the field is tapped. */
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  outline: none;
+}
+.bkr-jump input:focus-visible {
+  border-color: var(--pp-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bkr-picture {
+    transition: none;
+  }
+}

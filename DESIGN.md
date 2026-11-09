@@ -496,6 +496,29 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   The page and the admin keep working on a database that
   only has the earlier migrations (the lists are then built in the browser, with a dashed notice
   for admins).
+- **Reader** (`/books/<book>/read`, migration `20261113120000_books_reader.sql`): the study page's
+  layout for a book — the same top bar (back to «المكتبة», the book's name as a 15px line), Rita on
+  the left and the page on the right with the draggable divider (40/60), two tabs «الكتاب» /
+  «ريتا» on phones, and the floating circle over both. The page is one sheet of paper on the study
+  grey (6px corners, a soft two-layer shadow), fit to the pane's width (at most 980px) and zoomed in
+  five steps; its picture fades in (180ms ease-out, none with reduced motion) over a spinner. Over
+  the picture lie the page's words in see-through text, each piece where it sits (sized in container
+  units and stretched to its width, as pdf.js does), so the reader selects real text; the chosen
+  part stays tinted blue (a CSS highlight) after the browser's own selection goes. A white bar under
+  the page: zoom out/in on one side, «‹ صفحة [n] من N ›» on the other (44px buttons; arrows and
+  Page Up/Down turn pages, following the book's direction). A page that is only a picture says so
+  in one grey line above it. The circle offers «اشرحلي», «معنى ونطق», «فكّك الجملة», «ليش هيك؟»,
+  «بالعربي», «فلاش كاردز» and «تمارين اختيار»; Rita answers in writing in her column (the
+  learner's request as a grey bubble with its tag, her answer under her mark with «صفحة n»), and
+  the cards and questions open in the same practice window as the lessons. Only the page being
+  read is loaded (the next and previous wait behind it); the place is saved for the reader and kept
+  in the address (`?page=`). The book's sheet says «ابدأ القراءة» for a prepared book (opens the
+  reader) with «افتح ملف PDF» beside it; an unprepared book opens its PDF as before.
+- **Preparing a book** (admin): in the editor's files section a grey card «القراءة داخل الموقع»
+  says the state in words and offers «جهّز الكتاب للقراءة», «كمّل التجهيز» or «جهّز مرة
+  ثانية»; while it runs, a thin accent progress bar, «جاري تجهيز الصفحات: x من y» and «وقّف».
+  A newly uploaded PDF starts preparing on save. «الاستيراد والجودة» lists the books still waiting
+  under «جاهزية القراءة», each with the same button and bar.
 
 ## Lesson builder (`/admin/curricula`)
 
