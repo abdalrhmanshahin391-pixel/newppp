@@ -7,6 +7,9 @@ import {
   NO_ADMIN_FILTER,
   qualityReport,
   ratingShown,
+  uploadProblem,
+  uploadProblemText,
+  MAX_PDF_BYTES,
   toLocalInput,
   inPeriod,
   normalizeIsbn,
@@ -351,4 +354,19 @@ test("ratings: read safely, shown from three ratings, and «my favourites» is a
     "new",
     "without the database numbers the popularity orders fall back to the newest",
   );
+});
+
+test("uploads: PDFs up to 500 MB, and a failed upload says why in words", () => {
+  assert.equal(MAX_PDF_BYTES, 524288000);
+  assert.equal(uploadProblem(404, ""), "missing");
+  assert.equal(uploadProblem(405, "method not allowed"), "missing");
+  assert.equal(uploadProblem(413, ""), "too_large");
+  assert.equal(uploadProblem(400, "The object exceeded the maximum allowed size"), "too_large");
+  assert.equal(uploadProblem(null, "Payload too large"), "too_large");
+  assert.equal(uploadProblem(null, "network error"), "other");
+  assert.equal(uploadProblem(500, ""), "other");
+  const mb = 1024 * 1024;
+  assert.match(uploadProblemText("too_large", 120 * mb, ""), /120 ميغا.*500 ميغا/);
+  assert.match(uploadProblemText("missing", 80 * mb, ""), /80 ميغا.*50 ميغا/);
+  assert.equal(uploadProblemText("other", 1, "network error"), "network error");
 });

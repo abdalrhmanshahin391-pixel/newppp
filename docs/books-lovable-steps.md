@@ -10,6 +10,7 @@
 | 1 — admin and data | `20261109120000_books_admin_foundation.sql` | to apply |
 | 2 — discovery | `20261110120000_books_discovery.sql` | to apply |
 | 3 — popularity | `20261111120000_books_popularity.sql` | to apply |
+| PDFs up to 500 MB | `20261112120000_books_pdf_limit.sql` | to apply |
 
 ## 1. Before you start
 
@@ -25,17 +26,25 @@ Every one of them only adds; each can be run again safely if one stops halfway.
 1. `supabase/migrations/20261109120000_books_admin_foundation.sql`
 2. `supabase/migrations/20261110120000_books_discovery.sql`
 3. `supabase/migrations/20261111120000_books_popularity.sql`
+4. `supabase/migrations/20261112120000_books_pdf_limit.sql` (book PDFs up to 500 MB)
+
+Then raise the project's own limit, which no migration can change: **Supabase → Storage →
+Settings → Upload file size limit → 500 MB** (in Lovable Cloud: the project's storage settings).
+On Supabase's free plan this limit cannot go over 50 MB; then PDFs over 50 MB are refused with a
+clear message in the editor until the plan allows more.
 
 Keep this order. Do not run phase 2 again after phase 3 (it would bring back the older
 `books_browse` beside the new one); running any file again in order is safe.
 
 Text you can give Lovable (or Codex) as is:
 
-> Apply these three Supabase migrations from the repository, in this order, on the live
+> Apply these four Supabase migrations from the repository, in this order, on the live
 > database, without changing them: `supabase/migrations/20261109120000_books_admin_foundation.sql`,
 > then `supabase/migrations/20261110120000_books_discovery.sql`, then
-> `supabase/migrations/20261111120000_books_popularity.sql`. They are additive and safe to run
-> again in this order. Do not create Edge Functions, cron jobs or new tables beyond what the files contain. After
+> `supabase/migrations/20261111120000_books_popularity.sql`, then
+> `supabase/migrations/20261112120000_books_pdf_limit.sql`. They are additive and safe to run
+> again in this order. Also raise the project's Storage "Upload file size limit" to 500 MB and
+> tell me the value it allows. Do not create Edge Functions, cron jobs or new tables beyond what the files contain. After
 > each one, run the verification query from `docs/books-lovable-steps.md` and tell me every row's
 > result.
 
@@ -67,8 +76,7 @@ union all select 'search indexes', (select count(*) = 2 from pg_indexes where sc
 union all select 'editorial table with rls', (select relrowsecurity from pg_class where relnamespace = 'public'::regnamespace and relname = 'book_editorial')
 union all select 'functions', (select count(*) = 2 from pg_proc where pronamespace = 'public'::regnamespace and proname in ('books_browse', 'books_discover'))
 union all select 'search triggers', (select count(*) = 3 from pg_trigger where not tgisinternal and tgname in ('books_search_fill', 'book_tag_links_search', 'book_tags_search'))
-union all select 'visitors can call them', has_function_privilege('anon', 'public.books_browse(text, uuid[], text[], text[], text[], uuid[], text, text, text, timestamptz, integer, integer)', 'execute')
-  and has_function_privilege('anon', 'public.books_discover(text, timestamptz, integer)', 'execute')
+union all select 'visitors can call them', (select bool_and(has_function_privilege('anon', p.oid, 'execute')) from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname in ('books_browse', 'books_discover'))
 union all select 'browse answers', (public.books_browse() ? 'items')
 union all select 'browse counts what discover counts', ((public.books_browse()->>'total')::int = (public.books_discover()->>'total')::int);
 ```
@@ -87,11 +95,23 @@ union all select 'popular answers', (public.books_popular() ? 'top_rated')
 union all select 'cards carry ratings', ((public.books_browse()->'items'->0) is null or (public.books_browse()->'items'->0) ? 'rating_count');
 ```
 
+### PDF limit
+
+```sql
+select 'book PDFs up to 500 MB' as item, (select file_size_limit = 524288000 from storage.buckets where id = 'book-files') as ok
+union all select 'still PDFs only', (select allowed_mime_types = array['application/pdf'] from storage.buckets where id = 'book-files')
+union all select 'still private', (select not public from storage.buckets where id = 'book-files');
+```
+
 ## 4. Storage (phase 1)
 
 - Buckets: `book-covers` (public) and `book-files` (private) exist (Storage → Buckets).
-- In `/admin/books`, edit a book and upload a PDF **over 6 MB**: the progress bar should move in
-  parts and finish. Turn the network off for a few seconds in the middle: it should carry on.
+- In `/admin/books`, edit a book and upload a PDF **over 6 MB** (try one between 60 and 200 MB
+  too): the progress bar should move in parts and finish. Turn the network off for a few seconds
+  in the middle: it should carry on.
+- If a big PDF is refused with «أكبر من الحد المسموح بالمشروع», the project's Upload file size
+  limit is still lower than the file: raise it (step 2). If it says «الرفع على أجزاء مش شغّال»,
+  resumable uploads are off in the project: files up to 50 MB still go up in one request.
 - Replace that book's cover: the new one shows, and the old file disappears from the bucket (or
   shows in «الاستيراد والجودة» → «ملفات قديمة لسا ما انشالت»; press «جرّب تشيلهم هلأ»).
 
