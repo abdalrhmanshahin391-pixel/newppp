@@ -91,25 +91,44 @@ export type Book = {
 };
 
 export type BookLength = "short" | "medium" | "long";
-export type BookSort = "new" | "title" | "short";
+export const BOOK_LENGTHS: BookLength[] = ["short", "medium", "long"];
+export type BrowseSort = "relevance" | "discover" | "new" | "title" | "short";
+export const BROWSE_SORTS: BrowseSort[] = ["relevance", "discover", "new", "title", "short"];
+export const PAGE_SIZES = [24, 48] as const;
+export type PageSize = (typeof PAGE_SIZES)[number];
 
-export type BookFilters = {
+/**
+ * What the reader asked for, as kept in the page address. Each list is OR inside itself; the
+ * lists are AND between each other. `view: "all"` asks for every book without any filter.
+ */
+export type BrowseState = {
   q: string;
-  cat: string | null;
-  level: BookLevel | null;
-  lang: string | null;
-  len: BookLength | null;
-  sort: BookSort;
+  cat: string[];
+  level: BookLevel[];
+  lang: string[];
+  len: BookLength[];
+  tag: string[];
+  sort: BrowseSort | null;
+  view: "all" | null;
+  page: number;
+  size: PageSize;
 };
 
-export const NO_FILTERS: BookFilters = {
+export const NO_BROWSE: BrowseState = {
   q: "",
-  cat: null,
-  level: null,
-  lang: null,
-  len: null,
-  sort: "new",
+  cat: [],
+  level: [],
+  lang: [],
+  len: [],
+  tag: [],
+  sort: null,
+  view: null,
+  page: 1,
+  size: 24,
 };
+
+/** discover: the shelves; search: a query; category: one category; all: everything else. */
+export type LibraryMode = "discover" | "all" | "search" | "category";
 
 const SAFE_COLOR = (value: unknown): CategoryColor =>
   CATEGORY_COLOR_KEYS.includes(value as CategoryColor) ? (value as CategoryColor) : "slate";
@@ -215,31 +234,14 @@ export function readingHours(pages: number | null): number | null {
   return Math.max(1, Math.round((pages * 1.5) / 60));
 }
 
-export function filterBooks(books: Book[], filters: BookFilters): Book[] {
-  const out = books.filter(
-    (book) =>
-      matchesQuery(book, filters.q) &&
-      (!filters.cat || book.category_id === filters.cat) &&
-      (!filters.level || book.level === filters.level) &&
-      (!filters.lang || book.language === filters.lang) &&
-      (!filters.len || lengthOf(book.pages) === filters.len),
-  );
-  return sortBooks(out, filters.sort);
-}
-
-export function sortBooks(books: Book[], sort: BookSort): Book[] {
+export function sortBooks(books: Book[], sort: "new" | "title" | "short"): Book[] {
   const list = [...books];
   if (sort === "title")
     list.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
   else if (sort === "short")
     list.sort((a, b) => (a.pages ?? Infinity) - (b.pages ?? Infinity) || a.sort - b.sort);
-  else list.sort((a, b) => b.created_at.localeCompare(a.created_at));
+  else list.sort((a, b) => b.created_at.localeCompare(a.created_at) || a.id.localeCompare(b.id));
   return list;
-}
-
-/** True when the page should show a list of results instead of the shelves. */
-export function isFiltering(filters: BookFilters): boolean {
-  return Boolean(filters.q.trim() || filters.cat || filters.level || filters.lang || filters.len);
 }
 
 export type Shelf = { category: BookCategory; books: Book[] };
@@ -262,33 +264,197 @@ export function newest(books: Book[], count = 12): Book[] {
   return sortBooks(books, "new").slice(0, count);
 }
 
-/** Reads filters from the page address; anything unknown is ignored. */
-export function filtersFromSearch(search: Record<string, unknown>): BookFilters {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const list = (value: unknown): string[] =>
+  (typeof value === "string" ? value : Array.isArray(value) ? value.join(",") : "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+const unique = <T>(items: T[]) => [...new Set(items)];
+
+/** Reads the page address; anything unknown is ignored (older single-value links still work). */
+export function stateFromSearch(search: Record<string, unknown>): BrowseState {
   const text = (value: unknown) => (typeof value === "string" ? value.trim() : "");
-  const level = text(search.level).toUpperCase();
-  const len = text(search.len);
-  const sort = text(search.sort);
-  const lang = text(search.lang).toLowerCase();
+  const sort = text(search.sort) as BrowseSort;
+  const num = (value: unknown) =>
+    typeof value === "number" ? value : typeof value === "string" ? Number(value.trim()) : NaN;
+  const page = Math.floor(num(search.page));
+  const size = num(search.size);
   return {
     q: text(search.q).slice(0, 80),
-    cat: /^[0-9a-f-]{36}$/i.test(text(search.cat)) ? text(search.cat) : null,
-    level: BOOK_LEVELS.includes(level as BookLevel) ? (level as BookLevel) : null,
-    lang: /^[a-z]{2,3}$/.test(lang) ? lang : null,
-    len: len === "short" || len === "medium" || len === "long" ? len : null,
-    sort: sort === "title" || sort === "short" ? sort : "new",
+    cat: unique(list(search.cat).filter((x) => UUID.test(x))).slice(0, 20),
+    level: unique(
+      list(search.level)
+        .map((x) => x.toUpperCase())
+        .filter((x): x is BookLevel => BOOK_LEVELS.includes(x as BookLevel)),
+    ),
+    lang: unique(
+      list(search.lang)
+        .map((x) => x.toLowerCase())
+        .filter((x) => /^[a-z]{2,3}$/.test(x)),
+    ).slice(0, 20),
+    len: unique(
+      list(search.len).filter((x): x is BookLength => BOOK_LENGTHS.includes(x as BookLength)),
+    ),
+    tag: unique(list(search.tag).filter((x) => UUID.test(x))).slice(0, 20),
+    sort: BROWSE_SORTS.includes(sort) ? sort : null,
+    view: text(search.view) === "all" ? "all" : null,
+    page: Number.isFinite(page) && page > 1 ? Math.min(page, 5000) : 1,
+    size: size === 48 ? 48 : 24,
   };
 }
 
-/** The address search for a set of filters (empty values left out). */
-export function searchFromFilters(filters: BookFilters): Record<string, string> {
-  const out: Record<string, string> = {};
-  if (filters.q.trim()) out.q = filters.q.trim();
-  if (filters.cat) out.cat = filters.cat;
-  if (filters.level) out.level = filters.level;
-  if (filters.lang) out.lang = filters.lang;
-  if (filters.len) out.len = filters.len;
-  if (filters.sort !== "new") out.sort = filters.sort;
+/** The page address for a state (empty values left out; page and size as numbers). */
+export function searchFromState(state: BrowseState): Record<string, string | number> {
+  const out: Record<string, string | number> = {};
+  if (state.q.trim()) out.q = state.q.trim();
+  if (state.cat.length) out.cat = state.cat.join(",");
+  if (state.level.length) out.level = state.level.join(",");
+  if (state.lang.length) out.lang = state.lang.join(",");
+  if (state.len.length) out.len = state.len.join(",");
+  if (state.tag.length) out.tag = state.tag.join(",");
+  if (state.sort) out.sort = state.sort;
+  if (state.view) out.view = state.view;
+  if (state.page > 1) out.page = state.page;
+  if (state.size !== 24) out.size = state.size;
   return out;
+}
+
+/** How many filter values are chosen (the query and the order are not counted). */
+export function filterCount(state: BrowseState): number {
+  return (
+    state.cat.length + state.level.length + state.lang.length + state.len.length + state.tag.length
+  );
+}
+
+export function modeOf(state: BrowseState): LibraryMode {
+  if (state.q.trim()) return "search";
+  if (state.cat.length === 1 && state.view !== "all") return "category";
+  if (state.view === "all" || filterCount(state) > 0) return "all";
+  return "discover";
+}
+
+/** Where the admin's pins and exclusions apply: the discover page, or the one category shown. */
+export function contextOf(state: BrowseState): string | null {
+  const mode = modeOf(state);
+  if (mode === "discover") return "discover";
+  if (mode === "category") return state.cat[0];
+  return null;
+}
+
+/** The sort used when the reader chose none (the database decides the same way). */
+export function defaultSort(state: BrowseState): BrowseSort {
+  const mode = modeOf(state);
+  if (mode === "search") return "relevance";
+  if (mode === "category") return "discover";
+  return "new";
+}
+
+/** Adds or removes one value in one group, back to page 1. */
+export function toggleValue<K extends "cat" | "level" | "lang" | "len" | "tag">(
+  state: BrowseState,
+  key: K,
+  value: BrowseState[K][number],
+): BrowseState {
+  const current = state[key] as string[];
+  const next = current.includes(value as string)
+    ? current.filter((x) => x !== value)
+    : [...current, value as string];
+  return { ...state, [key]: next, page: 1 };
+}
+
+/** A short random seed for the "recommended" order of one visit. */
+export function newSeed(): string {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+/** A stable 32-bit hash (FNV-1a), for the seeded order when the database cannot do it. */
+export function seededKey(seed: string, id: string): number {
+  let h = 0x811c9dc5;
+  const text = `${seed}:${id}`;
+  for (let i = 0; i < text.length; i += 1) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h;
+}
+
+export type Facets = {
+  category: Record<string, number>;
+  level: Record<string, number>;
+  language: Record<string, number>;
+  length: Record<string, number>;
+  tag: Record<string, number>;
+};
+
+export type BrowseResult = {
+  total: number;
+  items: Book[];
+  facets: Facets;
+  asOf: string;
+  sort: BrowseSort;
+};
+
+const count = (map: Record<string, number>, key: string | null) => {
+  if (key) map[key] = (map[key] ?? 0) + 1;
+};
+
+/**
+ * The same browse as the database's books_browse, on books already loaded (used while the
+ * phase 2 migration is not applied). `books` are the published books.
+ */
+export function browseLocal(
+  books: Book[],
+  state: BrowseState,
+  options: { seed: string; pins?: string[]; excluded?: string[] } = { seed: "" },
+): Omit<BrowseResult, "asOf"> {
+  const sort =
+    state.sort && !(state.sort === "relevance" && !state.q.trim())
+      ? state.sort
+      : defaultSort(state);
+  const excluded = new Set(options.excluded ?? []);
+  const found = books.filter((b) => !excluded.has(b.id) && matchesQuery(b, state.q));
+  const m = (b: Book) => ({
+    cat:
+      !state.cat.length ||
+      state.cat.includes(b.category_id ?? "") ||
+      b.secondary_category_ids.some((c) => state.cat.includes(c)),
+    level: !state.level.length || state.level.includes(b.level),
+    lang: !state.lang.length || state.lang.includes(b.language),
+    len: !state.len.length || state.len.includes(lengthOf(b.pages)),
+    tag: !state.tag.length || b.tag_ids.some((t) => state.tag.includes(t)),
+  });
+  const facets: Facets = { category: {}, level: {}, language: {}, length: {}, tag: {} };
+  const hits: Book[] = [];
+  for (const b of found) {
+    const x = m(b);
+    if (x.level && x.lang && x.len && x.tag) {
+      count(facets.category, b.category_id);
+      for (const c of b.secondary_category_ids) count(facets.category, c);
+    }
+    if (x.cat && x.lang && x.len && x.tag) count(facets.level, b.level);
+    if (x.cat && x.level && x.len && x.tag) count(facets.language, b.language);
+    if (x.cat && x.level && x.lang && x.tag) count(facets.length, lengthOf(b.pages));
+    if (x.cat && x.level && x.lang && x.len) for (const t of b.tag_ids) count(facets.tag, t);
+    if (x.cat && x.level && x.lang && x.len && x.tag) hits.push(b);
+  }
+  let ordered: Book[];
+  if (sort === "discover") {
+    const pins = options.pins ?? [];
+    ordered = [...hits].sort((a, b) => {
+      const pa = pins.indexOf(a.id);
+      const pb = pins.indexOf(b.id);
+      if (pa !== pb) return (pa < 0 ? Infinity : pa) - (pb < 0 ? Infinity : pb);
+      return seededKey(options.seed, a.id) - seededKey(options.seed, b.id);
+    });
+  } else if (sort === "relevance") {
+    // Title matches first, then the rest; newest first inside each.
+    const inTitle = (b: Book) =>
+      matchesQuery({ title: `${b.title} ${b.alt_title}`, author: "" }, state.q);
+    ordered = sortBooks(hits, "new").sort((a, b) => Number(inTitle(b)) - Number(inTitle(a)));
+  } else ordered = sortBooks(hits, sort);
+  const start = (state.page - 1) * state.size;
+  return { total: hits.length, items: ordered.slice(start, start + state.size), facets, sort };
 }
 
 /** What stops a book from being published (the database checks the same three). */

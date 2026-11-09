@@ -5,15 +5,24 @@ import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowDown, ArrowUp, ExternalLink, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { fromLocalInput, inPeriod, toLocalInput, type Book, type BookShelf } from "@/lib/books";
+import {
+  fromLocalInput,
+  inPeriod,
+  toLocalInput,
+  type Book,
+  type BookCategory,
+  type BookShelf,
+} from "@/lib/books";
 import {
   deleteShelf,
   saveShelf,
   saveShelfBooks,
   saveShelfOrder,
   setFeatured,
+  type EditorialRule,
   type ShelfInput,
 } from "@/lib/books-data";
+import { EditorialRules, previewSearch } from "./EditorialRules";
 import {
   Badge,
   field,
@@ -22,6 +31,7 @@ import {
   IconButton,
   label,
   muted,
+  Notice,
   periodText,
   sectionTitle,
   type Run,
@@ -30,15 +40,21 @@ import {
 export function ArrangeTab({
   books,
   shelves,
+  categories,
+  editorial,
   featuredId,
   phase1,
+  phase2,
   busy,
   run,
 }: {
   books: Book[];
   shelves: BookShelf[];
+  categories: BookCategory[];
+  editorial: EditorialRule[];
   featuredId: string | null;
   phase1: boolean;
+  phase2: boolean;
   busy: string;
   run: Run;
 }) {
@@ -46,7 +62,22 @@ export function ArrangeTab({
     <div className="space-y-12">
       <FeaturedBook books={books} featuredId={featuredId} phase1={phase1} busy={busy} run={run} />
       {phase1 && <Shelves books={books} shelves={shelves} busy={busy} run={run} />}
-      {phase1 && <Preview />}
+      {phase2 ? (
+        <EditorialRules
+          rules={editorial}
+          books={books}
+          categories={categories}
+          busy={busy}
+          run={run}
+        />
+      ) : (
+        phase1 && (
+          <Notice tone="info">
+            التثبيت والاستبعاد بيشتغلوا بعد تحديث قاعدة البيانات ‏20261110120000 (‏books_discovery).
+          </Notice>
+        )
+      )}
+      {phase1 && <Preview phase2={phase2} />}
     </div>
   );
 }
@@ -540,15 +571,16 @@ function ShelfForm({
   );
 }
 
-function Preview() {
+function Preview({ phase2 }: { phase2: boolean }) {
   const [at, setAt] = useState(() => toLocalInput(new Date().toISOString()));
-  const iso = fromLocalInput(at);
+  const [seed, setSeed] = useState("");
   return (
     <section className="space-y-4">
       <div>
         <h2 className={sectionTitle}>معاينة المكتبة</h2>
         <p className={muted}>
-          شوف المكتبة مثل ما رح تطلع بوقت معيّن: الرفوف وكتاب الأسبوع حسب مددهم. المعاينة إلك بس.
+          شوف المكتبة مثل ما رح تطلع بوقت معيّن: الرفوف وكتاب الأسبوع{phase2 ? " والتثبيت" : ""} حسب
+          مددهم. المعاينة إلك بس.
         </p>
       </div>
       <div className="flex flex-wrap items-end gap-2 rounded-2xl border border-[var(--pp-line)] p-4">
@@ -562,9 +594,22 @@ function Preview() {
             onChange={(e) => setAt(e.target.value)}
           />
         </label>
+        {phase2 && (
+          <label className={`${label} w-44`}>
+            ترتيب المختارات (اختياري)
+            <input
+              className={field}
+              dir="ltr"
+              maxLength={16}
+              placeholder="abc123"
+              value={seed}
+              onChange={(e) => setSeed(e.target.value)}
+            />
+          </label>
+        )}
         <Link
           to="/books"
-          search={iso ? { preview: iso } : {}}
+          search={previewSearch(at, seed)}
           target="_blank"
           className="rita-btn rita-btn-soft gap-2"
         >

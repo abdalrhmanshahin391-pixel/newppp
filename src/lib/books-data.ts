@@ -8,7 +8,12 @@ import { Upload } from "tus-js-client";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 import {
+  browseLocal,
+  contextOf,
   inPeriod,
+  newest as newestBooks,
+  NO_BROWSE,
+  shelves as categoryShelves,
   toBook,
   toCategory,
   type Book,
@@ -16,6 +21,8 @@ import {
   type BookShelf,
   type BookStatus,
   type BookTag,
+  type BrowseResult,
+  type BrowseState,
 } from "@/lib/books";
 import type { ImportRow } from "@/lib/books-import";
 
@@ -55,9 +62,23 @@ export type ImportRecord = {
   result: ImportResult | null;
 };
 
+export type EditorialRule = {
+  id: string;
+  book_id: string;
+  /** "discover", or a category id. */
+  context: string;
+  kind: "pin" | "exclude";
+  position: number;
+  starts_at: string | null;
+  ends_at: string | null;
+};
+
 export type AdminLibrary = Library & {
   trash: { id: string; bucket: string; path: string; reason: string; created_at: string }[];
   imports: ImportRecord[];
+  editorial: EditorialRule[];
+  /** True once the phase 2 migration (search, pages, pins and exclusions) is applied. */
+  phase2: boolean;
 };
 
 export function coverUrl(path: string | null): string | null {
@@ -187,8 +208,8 @@ export async function loadLibrary(options: { admin?: boolean } = {}): Promise<Li
 
 export async function loadAdminLibrary(): Promise<AdminLibrary> {
   const library = await loadLibrary({ admin: true });
-  if (!library.phase1) return { ...library, trash: [], imports: [] };
-  const [trash, imports] = await Promise.all([
+  if (!library.phase1) return { ...library, trash: [], imports: [], editorial: [], phase2: false };
+  const [trash, imports, editorial] = await Promise.all([
     supabase
       .from("book_file_trash")
       .select("id, bucket, path, reason, created_at")
@@ -198,14 +219,216 @@ export async function loadAdminLibrary(): Promise<AdminLibrary> {
       .select("id, created_at, file_name, result")
       .order("created_at", { ascending: false })
       .limit(10),
+    supabase
+      .from("book_editorial")
+      .select("id, book_id, context, kind, position, starts_at, ends_at")
+      .order("position"),
   ]);
   const error = trash.error ?? imports.error;
   if (error) throw new Error(error.message);
+  const phase2 = !notApplied(editorial.error);
+  if (phase2 && editorial.error) throw new Error(editorial.error.message);
   return {
     ...library,
     trash: (trash.data ?? []) as AdminLibrary["trash"],
     imports: (imports.data ?? []) as ImportRecord[],
+    editorial: phase2 ? ((editorial.data ?? []) as EditorialRule[]) : [],
+    phase2,
   };
+}
+
+// ---- reading: discover and browse (phase 2, with a fallback) ---------------------------------
+
+const MISSING_FUNCTION = /PGRST202|42883|could not find the function|function .* does not exist/i;
+const missingFunction = (error: { code?: string; message?: string } | null) =>
+  Boolean(error && MISSING_FUNCTION.test(`${error.code ?? ""} ${error.message ?? ""}`));
+
+/** A book as books_browse / books_discover send it. */
+function fromCard(row: Record<string, unknown>): Book {
+  const ids = (value: unknown) => (Array.isArray(value) ? value.map(String) : []);
+  return toBook(row, coverUrl((row.cover_path as string | null) ?? null), {
+    tag_ids: ids(row.tag_ids),
+    secondary_category_ids: ids(row.secondary_category_ids),
+  });
+}
+
+/** Categories and tags (small lists the filters and chips need). */
+export type Catalog = { categories: BookCategory[]; tags: BookTag[]; ready: boolean };
+
+export async function loadCatalog(): Promise<Catalog> {
+  const [cats, tags] = await Promise.all([
+    supabase
+      .from("book_categories")
+      .select("id, name_ar, name_en, color, icon, sort")
+      .order("sort"),
+    supabase.from("book_tags").select("id, name_ar, name_en").order("name_ar"),
+  ]);
+  if (cats.error) {
+    if (notApplied(cats.error)) return { categories: [], tags: [], ready: false };
+    throw new Error(cats.error.message);
+  }
+  return {
+    categories: (cats.data ?? []).map((row: Record<string, unknown>) => toCategory(row)),
+    tags: tags.error ? [] : ((tags.data ?? []) as BookTag[]),
+    ready: true,
+  };
+}
+
+// The whole library, read once a minute at most, for when the phase 2 calls are missing.
+let fallback: { key: string; at: number; library: Promise<Library> } | null = null;
+function fallbackLibrary(asOf: string | null): Promise<Library> {
+  const key = asOf ?? "now";
+  if (!fallback || fallback.key !== key || Date.now() - fallback.at > 60_000) {
+    const library = loadLibrary({ admin: Boolean(asOf) }).then((lib) =>
+      asOf ? libraryAt(lib, new Date(asOf)) : lib,
+    );
+    fallback = { key, at: Date.now(), library };
+    library.catch(() => {
+      fallback = null;
+    });
+  }
+  return fallback.library;
+}
+
+export type DiscoverResult = {
+  asOf: string;
+  total: number;
+  featured: Book | null;
+  picks: Book[];
+  newest: Book[];
+  loose: Book[];
+  shelves: { id: string; name_ar: string; name_en: string; books: Book[] }[];
+  categories: { id: string; total: number; books: Book[] }[];
+  /** False when this came from the fallback (the phase 2 migration is not applied). */
+  phase2: boolean;
+};
+
+const PER_SHELF = 12;
+
+/**
+ * The discover page: the book of the week, the admin's shelves, picks in this visit's order
+ * (`seed`), the newest books and one shelf per category. `asOf` is an admin's preview time.
+ */
+export async function loadDiscover(
+  seed: string,
+  asOf: string | null,
+  signal?: AbortSignal,
+): Promise<DiscoverResult> {
+  let call = supabase.rpc("books_discover", { p_seed: seed, p_as_of: asOf, p_per: PER_SHELF });
+  if (signal) call = call.abortSignal(signal);
+  const { data, error } = await call;
+  if (error && !missingFunction(error)) throw new Error(error.message);
+  if (!error && data) {
+    const raw = data as {
+      as_of: string;
+      total: number;
+      featured_id: string | null;
+      picks: string[];
+      newest: string[];
+      loose: string[];
+      shelves: { id: string; name_ar: string; name_en: string; ids: string[] }[];
+      categories: { id: string; total: number; ids: string[] }[];
+      books: Record<string, Record<string, unknown>>;
+    };
+    const byId = new Map(Object.entries(raw.books ?? {}).map(([id, row]) => [id, fromCard(row)]));
+    const pick = (ids: string[] | null | undefined) =>
+      (ids ?? []).map((id) => byId.get(id)).filter((b): b is Book => Boolean(b));
+    return {
+      asOf: raw.as_of,
+      total: raw.total ?? 0,
+      featured: raw.featured_id ? (byId.get(raw.featured_id) ?? null) : null,
+      picks: pick(raw.picks),
+      newest: pick(raw.newest),
+      loose: pick(raw.loose),
+      shelves: (raw.shelves ?? []).map((s) => ({ ...s, books: pick(s.ids) })),
+      categories: (raw.categories ?? []).map((c) => ({
+        id: c.id,
+        total: c.total,
+        books: pick(c.ids),
+      })),
+      phase2: true,
+    };
+  }
+  const library = await fallbackLibrary(asOf);
+  const books = library.books.filter((b) => b.published);
+  const byId = new Map(books.map((b) => [b.id, b]));
+  const known = new Set(library.categories.map((c) => c.id));
+  return {
+    asOf: asOf ?? new Date().toISOString(),
+    total: books.length,
+    featured: (library.featuredId && byId.get(library.featuredId)) || null,
+    picks: browseLocal(books, { ...NO_BROWSE, sort: "discover" }, { seed }).items.slice(
+      0,
+      PER_SHELF,
+    ),
+    newest: newestBooks(books, PER_SHELF),
+    loose: books.filter((b) => !b.category_id || !known.has(b.category_id)).slice(0, PER_SHELF),
+    shelves: library.shelves
+      .map((s) => ({
+        id: s.id,
+        name_ar: s.name_ar,
+        name_en: s.name_en,
+        books: s.book_ids.map((id) => byId.get(id)).filter((b): b is Book => Boolean(b)),
+      }))
+      .filter((s) => s.books.length > 0),
+    categories: categoryShelves(library.categories, books).map((row) => ({
+      id: row.category.id,
+      total: row.books.length,
+      books: row.books.slice(0, PER_SHELF),
+    })),
+    phase2: false,
+  };
+}
+
+/**
+ * One page of books for a search, a category or the whole library, with the facet counts.
+ * `asOf` keeps the pages of one browse steady (pass the first page's `asOf` to the next ones).
+ */
+export async function browseBooks(
+  state: BrowseState,
+  options: { seed: string; asOf: string | null; signal?: AbortSignal },
+): Promise<BrowseResult & { phase2: boolean }> {
+  let call = supabase.rpc("books_browse", {
+    p_query: state.q,
+    p_categories: state.cat,
+    p_levels: state.level,
+    p_languages: state.lang,
+    p_lengths: state.len,
+    p_tags: state.tag,
+    p_sort: state.sort,
+    p_context: contextOf(state),
+    p_seed: options.seed,
+    p_as_of: options.asOf,
+    p_limit: state.size,
+    p_offset: (state.page - 1) * state.size,
+  });
+  if (options.signal) call = call.abortSignal(options.signal);
+  const { data, error } = await call;
+  if (error && !missingFunction(error)) throw new Error(error.message);
+  if (!error && data) {
+    const raw = data as {
+      total: number;
+      items: Record<string, unknown>[];
+      facets: BrowseResult["facets"];
+      as_of: string;
+      sort: BrowseResult["sort"];
+    };
+    return {
+      total: raw.total ?? 0,
+      items: (raw.items ?? []).map(fromCard),
+      facets: raw.facets ?? { category: {}, level: {}, language: {}, length: {}, tag: {} },
+      asOf: raw.as_of,
+      sort: raw.sort,
+      phase2: true,
+    };
+  }
+  const library = await fallbackLibrary(options.asOf);
+  const result = browseLocal(
+    library.books.filter((b) => b.published),
+    state,
+    { seed: options.seed },
+  );
+  return { ...result, asOf: options.asOf ?? new Date().toISOString(), phase2: false };
 }
 
 /**
@@ -318,6 +541,7 @@ export function explainBookError(message: string): string {
     featured_period: "نهاية المدة لازم تكون بعد بدايتها.",
     shelves_period: "نهاية مدة الرف لازم تكون بعد بدايتها.",
     import_in_progress: "الاستيراد لسا شغال. استنى شوي.",
+    book_editorial_period: "نهاية مدة القاعدة لازم تكون بعد بدايتها.",
     too_many_rows: "الملف فيه أكثر من 2000 صف.",
     books_isbn_unique: "الـ ISBN لكتاب ثاني.",
     books_isbn_shape: "شكل الـ ISBN غلط.",
@@ -707,4 +931,32 @@ export async function runImport(
   });
   if (error) throw friendly(error);
   return data as ImportResult;
+}
+
+// ---- admin: pins and exclusions (phase 2) -----------------------------------------------------
+
+export type RuleInput = Omit<EditorialRule, "id">;
+
+export async function saveRule(input: RuleInput, id?: string) {
+  const result = id
+    ? await supabase.from("book_editorial").update(input).eq("id", id)
+    : await supabase.from("book_editorial").insert(input);
+  if (result.error) {
+    if (result.error.code === "23505") throw new Error("هالكتاب إله قاعدة بنفس المكان من قبل.");
+    throw friendly(result.error);
+  }
+}
+
+export async function deleteRule(id: string) {
+  const { error } = await supabase.from("book_editorial").delete().eq("id", id);
+  if (error) throw friendly(error);
+}
+
+/** Sets the order of the pins in one place. */
+export async function saveRuleOrder(ids: string[]) {
+  const results = await Promise.all(
+    ids.map((id, position) => supabase.from("book_editorial").update({ position }).eq("id", id)),
+  );
+  const failed = results.find((result) => result.error);
+  if (failed?.error) throw friendly(failed.error);
 }
