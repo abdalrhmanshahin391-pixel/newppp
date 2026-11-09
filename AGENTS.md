@@ -9,34 +9,39 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-## Mandatory Planning Protocol
-1. **Always Plan First**: For every task, inquiry involving changes, bug fix, or feature, create a comprehensive architectural implementation plan first. Do NOT edit code, run modifying commands, or make changes until the plan is approved.
-2. **Senior Architect Standard**: Plans must analyze edge cases, state lifecycles, error states, and invariants thoroughly (Lovable-level architectural review).
-3. **Approval Phrase**: When the plan is ready, conclude with the exact phrase:
-   **"do u want to apply it like lovable"**
-4. **Execution**: Only execute the changes after the user explicitly replies to apply it.
+## Scope and review
+- Follow the owner's current planning and approval requirements. A stricter global/user rule
+  still applies; this file does not remove it. Otherwise use a brief internal plan for routine
+  changes and present a reviewable plan for ambiguous or high-risk work. Plans requiring approval
+  end with exactly: **"do u want to apply it like lovable"**. Wait for approval when required.
+- Preserve requested behavior and acceptance criteria. Make the smallest complete change;
+  expand investigation when evidence requires it. Avoid unrelated refactors or dependency upgrades.
+- Review the diff and run affected checks plus applicable required CI before declaring completion.
+  Report failures and unrun checks; selected passing tests do not establish full correctness.
+  Merge, deploy, publish and production changes require authorization for that action.
 
-## Design Work Protocol
-For any visual or UI change, follow `docs/design-workflow.md` (three rounds: Design Brief,
-build, hard review) and the system in `DESIGN.md`. Use the skills in `.claude/skills/` listed
-there. The Mandatory Planning Protocol above still applies: the Design Brief is the plan, and
-it ends with the approval phrase.
+## Repository constraints
+- Web: React/TypeScript, TanStack Start, Vite, Lovable/Cloudflare, Supabase. CI uses Node 22,
+  Bun and `bun.lock`: `bun install --frozen-lockfile`, `bunx tsc --noEmit`, `bun run build`.
+  Use the risk-specific validation map below; do not assume a universal `test` package script.
+- Keep provider/service-role/worker keys server-side, never in browser code or `VITE_*`.
+  Do not commit credentials, private payloads or sensitive logs. Keep RLS and authorization intact.
+- Prefer in-app server functions. Only two Edge Functions are approved: `rita-lesson-run`
+  (learner-token forwarding) and `rita-review` (worker-key-authorized review, counts only).
+  Both use `verify_jwt = false`; their own authorization must remain. Keep shared engine copies
+  synchronized with `node scripts/sync-lesson-edge.mjs`. New Edge Functions need owner approval.
+- Database work is event-driven. Only `vault-daily-snapshot` may run on a timer; do not add polling
+  or other scheduled jobs. Any new background job needs owner approval.
+- Lovable's Vite wrapper already supplies React/TanStack/Tailwind/Nitro plugins; see
+  `vite.config.ts` before changing build configuration to avoid duplicate plugins.
 
-## Backend: the two approved Edge Functions
-The project rule is to use in-app server functions, not Edge Functions. The published site's server has no
-service-role key, so the few operations that must read protected rows across all users run as Edge
-Functions, which Lovable Cloud gives the key automatically. Exactly two are approved:
-`supabase/functions/rita-lesson-run` (a learner's lesson run; the app's server functions in
-`src/lib/rita-lesson-run.functions.ts` only forward the learner's token) and
-`supabase/functions/rita-review` (the AI review of Rita's replies; it needs the worker key from
-`site_secrets.worker_cron_key` and returns counts only). Both set `verify_jwt = false` in
-`supabase/config.toml`. The engine files they use are copied into `supabase/functions/_shared` by
-`node scripts/sync-lesson-edge.mjs`; a test fails when a copy drifts. Do not add other Edge Functions
-without asking the owner.
-
-## Background work must be event-driven, not polling
-Nothing may wake the database on a timer except the one daily backup
-(`cron.job` name `vault-daily-snapshot`); timed polling is what kept the instance awake and billed
-compute while no one visited. Work that follows a user action starts from a trigger or from the call
-itself — for example the wake trigger on `rita_v3_sessions.ended_at` and the admin's "review now"
-button — and any new background job needs the owner's approval first.
+## Read when relevant
+- For a fix or feature: use [focused-change](.agents/skills/focused-change/SKILL.md).
+- Before choosing validation, or for auth/billing/API/SQL/voice changes:
+  read [the validation map](docs/agent-validation.md).
+- For tool-output handling, sessions, handoffs, or workflow compatibility:
+  read [the workflow reference](docs/agent-workflow.md).
+- For any visual/UI change: read [the design workflow](docs/design-workflow.md), `DESIGN.md`
+  and `PRODUCT.md`; preserve its Design Brief, approval and hard-review requirements.
+  Use only relevant existing design skills, not the entire collection.
+- Only when an optimization trial is approved: read [the pilot protocol](docs/agent-workflow-pilot.md).
