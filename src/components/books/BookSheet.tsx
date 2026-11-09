@@ -10,7 +10,8 @@ import {
   type Book,
   type BookCategory,
 } from "@/lib/books";
-import { bookFileLink, favoriteBook, rateBook, trackBook } from "@/lib/books-data";
+import { useNavigate } from "@tanstack/react-router";
+import { bookFileLink, bookReadable, favoriteBook, rateBook, trackBook } from "@/lib/books-data";
 import { openWelcome } from "@/lib/auth-dialog";
 
 /**
@@ -53,6 +54,18 @@ export function BookSheet({
     setMyRating(mine?.rating ?? null);
     setFavorite(Boolean(mine?.favorite));
   }, [mine?.rating, mine?.favorite]);
+
+  // A prepared book opens in the site's reader, page by page; otherwise its PDF opens.
+  const navigate = useNavigate();
+  const [readable, setReadable] = useState(false);
+  useEffect(() => {
+    let live = true;
+    setReadable(false);
+    if (book.file_path) void bookReadable(book.id).then((yes) => live && setReadable(yes));
+    return () => {
+      live = false;
+    };
+  }, [book.id, book.file_path]);
 
   // Opening the book counts as a view (signed-in readers, once a day).
   useEffect(() => {
@@ -128,13 +141,17 @@ export function BookSheet({
     };
   }, [onClose]);
 
-  async function read() {
+  async function read(pdf = false) {
     if (!book.file_path) return;
     if (!signedIn) {
       openWelcome(window.location.pathname + window.location.search);
       return;
     }
     if (phase3) void trackBook(book.id, "read");
+    if (readable && !pdf) {
+      void navigate({ to: "/books/$bookId/read", params: { bookId: book.id } });
+      return;
+    }
     // Opened now, during the tap (Safari blocks a window opened after waiting); filled when the
     // link is ready.
     const win = window.open("", "_blank");
@@ -253,6 +270,16 @@ export function BookSheet({
                   : t("Sign in to read", "سجّل دخولك واقرأ")
                 : t("The file is not ready yet", "الملف لسا مش جاهز")}
             </button>
+            {readable && signedIn && (
+              <button
+                type="button"
+                className="bk-btn"
+                disabled={opening}
+                onClick={() => void read(true)}
+              >
+                {t("Open the PDF", "افتح ملف PDF")}
+              </button>
+            )}
             {phase3 && (
               <button
                 type="button"

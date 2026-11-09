@@ -465,6 +465,16 @@ export function libraryAt(library: Library, at: Date): Library {
 }
 
 /** A link to the book's PDF that works for ten minutes. */
+/** Whether the book was prepared for reading inside the site (false before the reader migration). */
+export async function bookReadable(bookId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("books")
+    .select("prepared_at")
+    .eq("id", bookId)
+    .maybeSingle();
+  return !error && Boolean((data as { prepared_at?: string | null } | null)?.prepared_at);
+}
+
 export async function bookFileLink(path: string): Promise<string> {
   const { data, error } = await supabase.storage.from(FILES_BUCKET).createSignedUrl(path, 600);
   if (error || !data?.signedUrl) throw new Error("ما قدرنا نفتح الكتاب. جرّب مرة ثانية.");
@@ -880,6 +890,16 @@ export async function deleteBook(book: Book) {
   if (error) throw friendly(error);
   if (book.cover_path) await removeOrRemember(COVERS_BUCKET, [book.cover_path], "book deleted");
   if (book.file_path) await removeOrRemember(FILES_BUCKET, [book.file_path], "book deleted");
+  // The page pictures the reader used (their rows went with the book). Before the reader
+  // migration the bucket does not exist and this finds nothing.
+  for (let round = 0; round < 10; round++) {
+    const { data } = await supabase.storage.from("book-pages").list(book.id, { limit: 1000 });
+    if (!data?.length) break;
+    const { error } = await supabase.storage
+      .from("book-pages")
+      .remove(data.map((item) => `${book.id}/${item.name}`));
+    if (error) break;
+  }
 }
 
 // ---- admin: shelves ---------------------------------------------------------------------------

@@ -1,5 +1,7 @@
 # Library — what to do on the database and in Lovable
 
+> النسخة العربية الكاملة بملف واحد (كل التحديثات بنصّها، الفحص، والتجربة): `docs/books-database-all-steps.md`.
+
 ملف واحد فيه كل اللي لازم تعمله إنت بقاعدة البيانات وبـ Lovable للمكتبة. بنضيف عليه بكل
 مرحلة، وبالآخر بتطبّق كل إشي مرة وحدة بالترتيب. الموقع بضل شغّال قبل ما تطبّق: الصفحة ولوحة
 الأدمن بيرجعوا للنسخة اللي قبل، وبتطلع للأدمن رسالة صغيرة.
@@ -11,6 +13,7 @@
 | 2 — discovery | `20261110120000_books_discovery.sql` | to apply |
 | 3 — popularity | `20261111120000_books_popularity.sql` | to apply |
 | PDFs up to 500 MB | `20261112120000_books_pdf_limit.sql` | to apply |
+| The reader (page by page) | `20261113120000_books_reader.sql` | to apply |
 
 ## 1. Before you start
 
@@ -27,6 +30,7 @@ Every one of them only adds; each can be run again safely if one stops halfway.
 2. `supabase/migrations/20261110120000_books_discovery.sql`
 3. `supabase/migrations/20261111120000_books_popularity.sql`
 4. `supabase/migrations/20261112120000_books_pdf_limit.sql` (book PDFs up to 500 MB)
+5. `supabase/migrations/20261113120000_books_reader.sql` (the reader: pages, place, circle limits)
 
 Then raise the project's own limit, which no migration can change: **Supabase → Storage →
 Settings → Upload file size limit → 500 MB** (in Lovable Cloud: the project's storage settings).
@@ -38,11 +42,12 @@ Keep this order. Do not run phase 2 again after phase 3 (it would bring back the
 
 Text you can give Lovable (or Codex) as is:
 
-> Apply these four Supabase migrations from the repository, in this order, on the live
+> Apply these five Supabase migrations from the repository, in this order, on the live
 > database, without changing them: `supabase/migrations/20261109120000_books_admin_foundation.sql`,
 > then `supabase/migrations/20261110120000_books_discovery.sql`, then
 > `supabase/migrations/20261111120000_books_popularity.sql`, then
-> `supabase/migrations/20261112120000_books_pdf_limit.sql`. They are additive and safe to run
+> `supabase/migrations/20261112120000_books_pdf_limit.sql`, then
+> `supabase/migrations/20261113120000_books_reader.sql`. They are additive and safe to run
 > again in this order. Also raise the project's Storage "Upload file size limit" to 500 MB and
 > tell me the value it allows. Do not create Edge Functions, cron jobs or new tables beyond what the files contain. After
 > each one, run the verification query from `docs/books-lovable-steps.md` and tell me every row's
@@ -103,6 +108,21 @@ union all select 'still PDFs only', (select allowed_mime_types = array['applicat
 union all select 'still private', (select not public from storage.buckets where id = 'book-files');
 ```
 
+### The reader
+
+```sql
+select 'tables' as item, (select count(*) = 3 from information_schema.tables where table_schema = 'public' and table_name in ('book_pages', 'book_reading_progress', 'book_study_requests')) as ok
+union all select 'rls on all three', (select bool_and(relrowsecurity) from pg_class where relnamespace = 'public'::regnamespace and relname in ('book_pages', 'book_reading_progress', 'book_study_requests'))
+union all select 'books.page_count and prepared_at', (select count(*) = 2 from information_schema.columns where table_schema = 'public' and table_name = 'books' and column_name in ('page_count', 'prepared_at'))
+union all select 'new PDF clears pages trigger', exists (select 1 from pg_trigger where tgname = 'books_reader_reset' and not tgisinternal)
+union all select 'pictures bucket is private', (select not public from storage.buckets where id = 'book-pages')
+union all select 'pictures only (WebP or JPEG)', (select allowed_mime_types = array['image/webp', 'image/jpeg'] from storage.buckets where id = 'book-pages')
+union all select 'picture policies', (select count(*) = 2 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname in ('admins manage book pages pictures', 'readers open pages of published books'))
+union all select 'circle limit function', exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'books_take_study_quota')
+union all select 'visitors cannot ask the circle', not has_function_privilege('anon', 'public.books_take_study_quota(uuid, uuid, integer, text, text, integer)', 'execute')
+union all select 'no visitor policy on pages or places', not exists (select 1 from pg_policies where schemaname = 'public' and tablename in ('book_pages', 'book_reading_progress', 'book_study_requests') and ('anon' = any (roles) or 'public' = any (roles)));
+```
+
 ## 4. Storage (phase 1)
 
 - Buckets: `book-covers` (public) and `book-files` (private) exist (Storage → Buckets).
@@ -116,6 +136,20 @@ union all select 'still private', (select not public from storage.buckets where 
   shows in «الاستيراد والجودة» → «ملفات قديمة لسا ما انشالت»; press «جرّب تشيلهم هلأ»).
 
 ## 5. Try it on the live site
+
+The reader (after its migration):
+
+1. In `/admin/books`, edit a published book with a PDF: «القراءة داخل الموقع» → «جهّز الكتاب
+   للقراءة». The bar counts the pages; keep the tab open until it says «جاهز للقراءة داخل الموقع».
+   Try «وقّف» in the middle, then «كمّل التجهيز»: it carries on from where it stopped.
+2. Storage → `book-pages` has a folder with the book's id and one picture per page.
+3. Signed in as a learner, open the book on `/books` → «ابدأ القراءة»: the reader opens on page 1
+   (and «افتح ملف PDF» still opens the file). Turn pages, zoom, leave and come back: it opens on
+   the same page.
+4. Select a word or a sentence on the page → the circle → «اشرحلي»: Rita answers in her column.
+   Try «تمارين اختيار» and «معنى ونطق».
+5. Upload a new PDF for that book: it is not readable in the site until it is prepared again
+   (it starts by itself on save).
 
 Phase 1 (`/admin/books`):
 
@@ -172,8 +206,8 @@ slower points to the network or the plan, not to the queries.
 
 ## Visitor-access follow-up (PR #148)
 
-After all four phase migrations above, apply
-`supabase/migrations/20261113120000_books_visitor_access.sql` **last**.
+After the phase, PDF-limit and reader migrations above, apply
+`supabase/migrations/20261114120000_books_visitor_access.sql` **last**.
 Phase 1 replaces the original books policy, so the earlier
 `20261108130000_books_public_read.sql` alone is insufficient for the newer library.
 

@@ -218,6 +218,67 @@ export async function loadPdfForRenderPreferWorker(file: File): Promise<any> {
   return doc;
 }
 
+/**
+ * Opens a big PDF without reading all of it: pdf.js asks for the parts it needs, from the picked
+ * file (sliced on the device) or from a link (HTTP range requests; a server without them sends the
+ * whole file once). Used to prepare a library book for reading, page by page. Not cached: the
+ * caller destroys the document when done.
+ */
+export async function openPdfInParts(source: File | string): Promise<any> {
+  ensureWorker();
+  const options: Record<string, unknown> = {
+    stopAtErrors: false,
+    isEvalSupported: false,
+    useSystemFonts: true,
+    disableFontFace: true,
+    disableAutoFetch: true,
+    disableStream: true,
+    rangeChunkSize: 1 << 20,
+  };
+  const open = (disableWorker: boolean, timeoutMs: number) => {
+    let task: any;
+    if (typeof source === "string") {
+      task = (pdfjsLib as any).getDocument({ ...options, disableWorker, url: source });
+    } else {
+      const file = source;
+      const first = Math.min(file.size, 1 << 20);
+      const start = async () => {
+        const initial = new Uint8Array(await file.slice(0, first).arrayBuffer());
+        const transport = new (pdfjsLib as any).PDFDataRangeTransport(file.size, initial);
+        transport.requestDataRange = (begin: number, end: number) => {
+          void file
+            .slice(begin, end)
+            .arrayBuffer()
+            .then((buffer) => transport.onDataRange(begin, new Uint8Array(buffer)));
+        };
+        return (pdfjsLib as any).getDocument({ ...options, disableWorker, range: transport, length: file.size });
+      };
+      return start().then((t) => waitFor(t, timeoutMs));
+    }
+    return waitFor(task, timeoutMs);
+  };
+  const waitFor = (task: any, timeoutMs: number) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    return new Promise<any>((resolve, reject) => {
+      timer = setTimeout(() => {
+        try { task.destroy?.(); } catch { /* ignore cleanup failures */ }
+        reject(new Error(`PDF open timed out after ${Math.round(timeoutMs / 1000)}s`));
+      }, timeoutMs);
+      task.promise.then(resolve, reject);
+    }).finally(() => timer && clearTimeout(timer));
+  };
+  try {
+    return await open(false, 60_000);
+  } catch (error) {
+    // Some Safari versions cannot start the worker: try once more on the page itself.
+    try {
+      return await open(true, 90_000);
+    } catch {
+      throw error;
+    }
+  }
+}
+
 /** Text-only PDF.js loader. It never renders pages/canvas, so Canva PDFs with page images stay cheap. */
 export async function loadPdfForText(file: File): Promise<any> {
   return loadPdfForRender(file);
