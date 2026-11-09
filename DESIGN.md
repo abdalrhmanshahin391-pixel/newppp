@@ -397,29 +397,105 @@ category's own tone, used only as a dot on its chip, a small tinted icon square 
 under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks or hearts.
 
 - **Top:** a small eyebrow, the title (28–38px semibold), one lead line; a 48px search field
-  (1.5px ink border, «/» jumps to it) and a «فلترة» button that opens a grey panel of chips
-  (level A1–C2, language, length short/medium/long, order). Category chips under it, each with its
-  dot and count; the chosen one is ink.
+  (1.5px ink border, «/» jumps to it), an ink «ابحث» button beside it — searching happens only on
+  that button or Enter, never while typing — and a «فلترة» button (icon only on phones) with the
+  number of chosen filters. «فلترة» opens a grey panel of chips: category, level A1–C2, language,
+  length, tags. Several chips in one group widen the list (OR); groups narrow it (AND). Each chip
+  shows how many books it would give (counted with the other groups' choices); a chip that would
+  give none is faded and disabled. A one-line note under the panel says so in words.
+- **Ways in:** a chip row under the top — «اكتشف» (the shelves), «كل الكتب» with the total, then
+  one chip per category with its dot and count (a category on its own). The chosen one is ink.
+  Chosen filters show under it as ink pills, each with its own ×, then «امسح الكل».
 - **Book of the week:** one grey panel with a soft tint of its category, the book large, a tag,
   title, author · year, chips (level in ink, pages, about N hours, language), three lines of
   description and «افتح الكتاب».
-- **Shelves:** «وصل جديداً» (from six books on), then one per category in the admin's order, then
-  «كتب ثانية» for books without a category. A row scrolls sideways with snap; «عرض الكل» filters.
+- **Shelves (اكتشف):** the book of the week, the admin's shelves, «مختارات لك» (12 picks in this
+  visit's order, with «اقتراحات جديدة» on the right of its head to draw new ones; the order stays the
+  same for the whole visit), «الرائج هالأسبوع» (amber, a flame icon) and «الأعلى تقييماً» (rose, a
+  star icon; only books with at least three ratings, and hidden when none has), «وصل جديداً» (from six books on), one per category in the admin's order
+  (12 books, with the full count and «عرض الكل»), then «كتب ثانية» for books without a category. A
+  row scrolls sideways with snap. Pins and exclusions set by the admin apply here and in a
+  category, never in search or «كل الكتب».
 - **The book object** (`BookObject`): one frame for every book — 2:3 cover with 3/8px corners, the
   binding's shadow on its left edge, a sheen, page edges under and beside it, a soft shadow on the
   shelf, the level on a white tag. Only the cover picture changes; without one the cover is cloth in
   the category tone with the title between two thin rules. Title 14.5/600 (two lines), author 12.5.
-- **Search or filters** replace the shelves with a grid and a count; an empty result says so with
-  «امسح البحث». The filters live in the address (`?q=&cat=&level=&lang=&len=&sort=`).
+- **Lists (search, a category, all books):** a head with the title («نتائج «…»», the category
+  with its tinted icon, or «كل الكتب»), the count, and an order select (best match for a search,
+  recommended for a category, newest, by title, shortest). A grid of 24 (or 48) books, then a pager:
+  «السابق», «صفحة X من Y», «التالي», and «بالصفحة 24/48». Moving to another page scrolls to the head;
+  while it loads the old page stays, faded. The pages of one list keep the moment it started, so
+  books added meanwhile never shift them. An empty result says so with «امسح البحث». Everything
+  lives in the address (`?q=&cat=a,b&level=B1,B2&lang=&len=&tag=&sort=&view=all&page=&size=`), so
+  back, refresh and shared links return to the same list.
 - **Details** (`BookSheet`): a dialog (a bottom sheet on phones) with the book, its facts and
   «ابدأ القراءة», which opens the PDF through a ten-minute signed link (visitors are asked to sign
-  in; without a file the button says the file is not ready).
-- **Admin** (`/admin/books`): categories (Arabic and English names, tone, icon, order) and books
-  (cover JPG/PNG/WebP up to 5 MB, PDF up to 50 MB, category, level, language, pages, year,
-  description, published, book of the week — one at a time), with a live preview of the book.
-- Data: `book_categories` and `books` (migration `20261108120000_books_library.sql`), covers in the
-  public `book-covers` bucket, PDFs in the private `book-files` bucket. Everyone reads categories
-  and published books; only admins write.
+  in; without a file the button says the file is not ready). With the phase 3 database: a rating
+  line under the facts (a gold star, the average to one decimal and «N تقييم»; with fewer than three
+  ratings it says so in words instead), «للمفضلة» beside «ابدأ القراءة» (a heart; rose tint and
+  «بالمفضلة» when on), and under a hairline «تقييمك»: five 44px star buttons (a radio group, arrow
+  keys move it; tapping the chosen star again removes it, as the hint under them says). Visitors see
+  the same row with «سجّل دخولك لتقيّم», and a tap asks them to sign in.
+- **Cards** show a small gold «★ 4.6» under the author once a book has three ratings.
+- **«مفضلتي»** (signed in): a chip with a heart and the count in the ways-in row; its list is a
+  normal paged list, and an empty one explains how to add books.
+- **Manual shelves:** shelves the admin fills by hand come after the book of the week and before
+  «وصل جديداً», in the admin's order, with an indigo tone and a bookmark icon. Only published books
+  show; an empty shelf is left out. A shelf with a period shows only during it (server clock).
+- **Admin preview:** `/books?preview=<ISO time>` shows an admin the library at that moment (shelves
+  and book of the week by their periods) under a dashed strip «معاينة للأدمن» with «اطلع من
+  المعاينة». Readers never see it; the address is ignored for them.
+- **Admin** (`/admin/books`, Arabic, RTL, the `edith-premium` admin look): four underline tabs
+  (`?tab=`):
+  - **الكتب:** a grey filter card (search by title, author, alternate title or ISBN; status,
+    category, level, language and "missing" selects, two per row on phones), the count when
+    filtered and «امسح الفلترة». One list row per book: checkbox, the small book, title, a meta
+    line (category · author · level · pages) and badges (status in words and colour: منشور green,
+    مسودة grey, مؤرشف violet; كتاب الأسبوع gold; بدون PDF red; بدون غلاف / الحقوق مش مراجعة grey),
+    then 44px icon buttons (order arrows inside a category, only while nothing is filtered;
+    publish/draft; edit; delete). Choosing books shows a sticky bar with one action select
+    (publish, back to draft, archive, set the primary category, add or remove a tag) and «طبّق»;
+    books that are not ready are skipped and named in a toast.
+  - **التصنيف:** categories (names, tone, icon, order; deleting one with books asks where they
+    move, inline, never a second window) and tags (Arabic and English names, book count).
+  - **ترتيب المكتبة:** the book of the week (a published book and an optional from/until period;
+    a badge says if it is on show now), manual shelves (name, shown or hidden, period, books in
+    order with arrows), pins and exclusions (choose the place — «اكتشف» or one category — then two
+    hairline cards side by side, «مثبّت أول» with order arrows and «مخفي», each rule with its
+    period and an «شغّال هلأ» / «برا مدته» badge; a grey card adds a rule: pin or hide, the book,
+    from/until), and the preview link with a date, a time and an optional picks order.
+  - **الإحصائيات** (phase 3): «آخر 7 أيام / آخر 30 يوم», four number cards (views, reads,
+    favourites, ratings: label, value 34px/600, what it counts, and the change from the days before
+    in words), «الرائج هالأسبوع» and «الأعلى تقييماً» as numbered hairline lists, the stars
+    spread as five gold bars with count and share, and published books nobody opened as pills.
+  - **الاستيراد والجودة:** a CSV import (choose the file, match each field to a column, choose
+    what happens to a book that exists — leave it, update it, or add a copy — then «جرّب بدون
+    حفظ», which shows the counts and a row table with words for every reason, and only then
+    «استورد N كتاب»); the last ten imports; the quality cards (drafts not ready, no PDF, no cover,
+    no ISBN, likely duplicates) with lists that open the editor; and the file-cleanup list with
+    «جرّب تشيلهم هلأ».
+- **Book editor:** one window (a bottom sheet on phones) with five numbered sections — identity
+  (title, alternate title, author, ISBN, language, pages, year, description), classification
+  (primary category, level, secondary categories and tags as toggle chips), files (a hairline card
+  per file with its state and «اختار ملف» / «بدّل», a progress bar while it uploads; the cover up
+  to 5 MB, the PDF up to 500 MB; files over 6 MB go up in resumable parts, and a failed upload says
+  why in words — over the project's size limit, or no resumable uploads for a file over 50 MB),
+  availability (draft / published / archived choice and the rights
+  check) and display (book of the week with its period, manual shelves). Beside it: the live book
+  and a readiness card (title, primary category, rights — green tick or red cross with words; then
+  what is worth adding but never blocks). Save and cancel stay at the bottom.
+- Data: `book_categories` and `books` (migration `20261108120000_books_library.sql`), then phase 1
+  (`20261109120000_books_admin_foundation.sql`): status, alternate title, ISBN, rights check,
+  tags, secondary categories, manual shelves, the book-of-the-week period, imports and the
+  file-cleanup list. Covers in the public `book-covers` bucket, PDFs in the private `book-files`
+  bucket. Everyone reads categories and published books; only admins write. Phase 2
+  (`20261110120000_books_discovery.sql`): the search copy and its indexes, `books_browse`,
+  `books_discover` and `book_editorial`. Phase 3 (`20261111120000_books_popularity.sql`): events,
+  favourites and ratings (people's own rows), the public numbers per book and per day (no
+  identities), `books_popular`, `books_track`, `books_rate`, `books_favorite` and `books_analytics`.
+  The page and the admin keep working on a database that
+  only has the earlier migrations (the lists are then built in the browser, with a dashed notice
+  for admins).
 
 ## Lesson builder (`/admin/curricula`)
 

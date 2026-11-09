@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { LibraryPage } from "@/components/books/LibraryPage";
-import { filtersFromSearch, searchFromFilters, type BookFilters } from "@/lib/books";
+import { searchFromState, stateFromSearch, type BrowseState } from "@/lib/books";
 
 type LibrarySearch = {
   q?: string;
@@ -9,12 +9,27 @@ type LibrarySearch = {
   level?: string;
   lang?: string;
   len?: string;
+  tag?: string;
   sort?: string;
+  view?: string;
+  page?: number;
+  size?: number;
+  /** An admin's preview of the library at another moment (ISO time), and its picks order. */
+  preview?: string;
+  seed?: string;
 };
 
 export const Route = createFileRoute("/books")({
-  validateSearch: (search: Record<string, unknown>): LibrarySearch =>
-    searchFromFilters(filtersFromSearch(search)),
+  validateSearch: (search: Record<string, unknown>): LibrarySearch => {
+    const out: LibrarySearch = searchFromState(stateFromSearch(search));
+    const preview = typeof search.preview === "string" ? search.preview : "";
+    if (preview && !Number.isNaN(Date.parse(preview))) {
+      out.preview = preview;
+      const seed = typeof search.seed === "string" ? search.seed : "";
+      if (/^[a-z0-9]{1,16}$/i.test(seed)) out.seed = seed;
+    }
+    return out;
+  },
   head: () => ({
     meta: [
       { title: "Library — Uzyra" },
@@ -31,15 +46,19 @@ export const Route = createFileRoute("/books")({
 function BooksRoute() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const filters = filtersFromSearch(search);
-  const onFilters = useCallback(
-    (next: BookFilters) =>
+  const state = stateFromSearch(search);
+  const { preview, seed } = search;
+  const onState = useCallback(
+    (next: BrowseState) =>
       void navigate({
         to: "/books",
-        search: searchFromFilters(next) as LibrarySearch,
-        replace: true,
+        search: {
+          ...searchFromState(next),
+          ...(preview ? { preview } : {}),
+          ...(preview && seed ? { seed } : {}),
+        } as LibrarySearch,
       }),
-    [navigate],
+    [navigate, preview, seed],
   );
-  return <LibraryPage filters={filters} onFilters={onFilters} />;
+  return <LibraryPage state={state} onState={onState} preview={preview} previewSeed={seed} />;
 }

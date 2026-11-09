@@ -45,9 +45,6 @@ on:
       - "voice-agent/rita_study_voice.py"
       - "supabase/tests/**"
       - "scripts/test-study-db.sh"
-      - "scripts/test-books-db.sh"
-      - "supabase/migrations/20261108120000_books_library.sql"
-      - "supabase/migrations/20261108130000_books_public_read.sql"
       - "src/lib/study/**"
       - "src/components/rita-study/**"
       - "src/routes/rita-study.tsx"
@@ -58,6 +55,13 @@ on:
       - "src/lib/rita-review*"
       - "src/lib/rita-tutor-contract.ts"
       - "src/routes/api/rita-v3/review.ts"
+      - "src/lib/books*"
+      - "src/components/books/**"
+      - "src/routes/books.tsx"
+      - "src/routes/admin.books.tsx"
+      - "supabase/migrations/*books*"
+      - "scripts/test-books-db.sh"
+      - "scripts/test-books-public-read-db.sh"
       - ".github/workflows/rita-v3-frontend-check.yml"
   workflow_dispatch:
 
@@ -89,6 +93,7 @@ jobs:
           node --test src/lib/learn-home.test.ts
           node --test src/lib/rita-path-levels.test.ts
           node --test src/lib/books.test.ts
+          node --test src/lib/books-import.test.ts
           node --test src/lib/rita-phrase.test.ts
           node --test src/lib/activity-streak.test.ts
           node --test src/lib/learning-language.test.ts
@@ -156,10 +161,21 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: postgres
         run: ./scripts/test-study-db.sh
-      - name: Books library permissions (real migrations on isolated Postgres 16)
+      - name: Install pgTAP in the database container
+        run: |
+          docker exec ${{ job.services.postgres.id }} bash -c \
+            "apt-get update -qq && apt-get install -y -qq postgresql-16-pgtap > /dev/null"
+      - name: Library database rules (real migrations on Postgres 16, pgTAP)
         env:
           PGHOST: localhost
           PGPORT: "5432"
           PGUSER: postgres
           PGPASSWORD: postgres
-        run: bash scripts/test-books-db.sh
+        run: ./scripts/test-books-db.sh
+      - name: Original library public-read regression (isolated database)
+        env:
+          PGHOST: localhost
+          PGPORT: "5432"
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: bash scripts/test-books-public-read-db.sh

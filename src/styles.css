@@ -8933,6 +8933,7 @@ html.rita-app,
 .bk-field input {
   flex: 1;
   min-width: 0;
+  width: 100%;
   border: 0;
   outline: 0;
   background: transparent;
@@ -9035,6 +9036,145 @@ html.rita-app,
   border-color: var(--pp-ink);
   background: var(--pp-ink);
   color: #fff;
+}
+.bk-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.bk-opt:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.bk-opt-n {
+  color: var(--pp-muted);
+  font: 500 11.5px "Figtree", sans-serif;
+}
+.bk-opt[aria-pressed="true"] .bk-opt-n {
+  color: rgb(255 255 255 / 0.7);
+}
+.bk-opt .bk-cat-dot {
+  flex: 0 0 auto;
+}
+.bk-panel-note {
+  margin: 0;
+  color: var(--pp-muted);
+  font-size: 13px;
+}
+/* The search button sits beside the field; searching waits for it (or Enter). */
+.bk-go {
+  height: 48px;
+  padding-inline: 18px;
+  border: 1.5px solid var(--pp-ink);
+  border-radius: 14px;
+  background: var(--pp-ink);
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 600;
+  transition: background-color 150ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .bk-go:hover {
+    background: #2b2a35;
+  }
+}
+.bk-go:active {
+  transform: scale(0.98);
+}
+.bk-go:focus-visible {
+  outline: 2px solid var(--pp-accent);
+  outline-offset: 2px;
+}
+@media (max-width: 560px) {
+  .bk-filter-word {
+    display: none;
+  }
+  .bk-filter {
+    padding-inline: 13px;
+  }
+  .bk-go {
+    padding-inline: 14px;
+  }
+}
+/* The chosen filters, each with its own ×, then «امسح الكل». */
+.bk-active {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+.bk-active-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding-inline: 12px 4px;
+  border-radius: 999px;
+  background: var(--pp-ink);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.bk-active-chip button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+.bk-active-chip button:hover {
+  background: rgb(255 255 255 / 0.16);
+}
+.bk-active-chip button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
+.bk-results-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.bk-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--pp-muted);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.bk-sort select {
+  min-height: 40px;
+  padding-inline: 10px 28px;
+  border: 1px solid var(--pp-line);
+  border-radius: 10px;
+  background-color: #fff;
+  color: var(--pp-ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+.bk-grid.is-stale {
+  opacity: 0.55;
+  transition: opacity 150ms ease;
+}
+.bk-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 14px;
+  margin-top: 40px;
+}
+.bk-pager .bk-btn {
+  gap: 4px;
+}
+.bk-pager-n {
+  min-width: 9ch;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
 }
 .bk-reset {
   justify-self: start;
@@ -9262,6 +9402,8 @@ html.rita-app,
 
 /* A book on a shelf: the object, then its title and author. */
 .bk-item {
+  /* Positioned so hidden screen-reader text stays inside its (scrolling) shelf. */
+  position: relative;
   display: grid;
   justify-items: start;
   width: 132px;
@@ -9540,6 +9682,123 @@ html.rita-app,
   line-height: 1.6;
 }
 
+/* Ratings and favourites (phase 3). Gold stars; the average shows from three ratings on. */
+.bk-item-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 2px;
+  color: #8a5a00;
+  font: 600 12px "Figtree", sans-serif;
+}
+.bk-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 0;
+  color: var(--pp-muted);
+  font-size: 14px;
+}
+.bk-rating b {
+  color: var(--pp-ink);
+  font-size: 15px;
+}
+.bk-rating-star {
+  color: #c98a00;
+}
+.bk-rate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--pp-line);
+}
+.bk-rate-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+.bk-stars {
+  display: flex;
+  gap: 2px;
+}
+.bk-star {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  color: #b9b6c4;
+  transition:
+    color 120ms ease,
+    transform 120ms ease;
+}
+.bk-star.is-on {
+  color: #c98a00;
+}
+@media (hover: hover) and (pointer: fine) {
+  .bk-star:hover {
+    background: var(--pp-grey);
+  }
+}
+.bk-star:active {
+  transform: scale(0.92);
+}
+.bk-star:focus-visible {
+  outline: 2px solid var(--pp-ink);
+  outline-offset: -2px;
+}
+.bk-star:disabled {
+  opacity: 0.6;
+}
+.bk-rate-hint {
+  color: var(--pp-muted);
+  font-size: 12.5px;
+}
+.bk-fav[aria-pressed="true"] {
+  border-color: #be123c;
+  background: #fde7ec;
+  color: #9f1239;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bk-star {
+    transition: none;
+  }
+  .bk-star:active {
+    transform: none;
+  }
+}
+
+/* An admin's preview of the library at another moment: a dashed strip only they see. */
+.bk-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  border: 1.5px dashed var(--pp-ink);
+  border-radius: 14px;
+  background: var(--pp-grey);
+  font-size: 14.5px;
+}
+.bk-preview > span {
+  flex: 1;
+  min-width: 0;
+}
+.bk-preview-exit {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 12px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* Loading. */
 .bk-skel {
   border-radius: 8px;
@@ -9637,7 +9896,7 @@ html.rita-app,
     padding: 24px 16px 80px;
   }
   .bk-head {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 18px;
   }
   .bk-kbd {
