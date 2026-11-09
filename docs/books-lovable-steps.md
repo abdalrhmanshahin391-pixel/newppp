@@ -9,7 +9,7 @@
 | Library (first page) | `20261108120000_books_library.sql` | already applied (PR #146) |
 | 1 — admin and data | `20261109120000_books_admin_foundation.sql` | to apply |
 | 2 — discovery | `20261110120000_books_discovery.sql` | to apply |
-| 3 — popularity | (comes with phase 3) | — |
+| 3 — popularity | `20261111120000_books_popularity.sql` | to apply |
 
 ## 1. Before you start
 
@@ -24,13 +24,18 @@ Every one of them only adds; each can be run again safely if one stops halfway.
 
 1. `supabase/migrations/20261109120000_books_admin_foundation.sql`
 2. `supabase/migrations/20261110120000_books_discovery.sql`
+3. `supabase/migrations/20261111120000_books_popularity.sql`
+
+Keep this order. Do not run phase 2 again after phase 3 (it would bring back the older
+`books_browse` beside the new one); running any file again in order is safe.
 
 Text you can give Lovable (or Codex) as is:
 
-> Apply these two Supabase migrations from the repository, in this order, on the live database,
-> without changing them: `supabase/migrations/20261109120000_books_admin_foundation.sql`, then
-> `supabase/migrations/20261110120000_books_discovery.sql`. They are additive and safe to run
-> twice. Do not create Edge Functions, cron jobs or new tables beyond what the files contain. After
+> Apply these three Supabase migrations from the repository, in this order, on the live
+> database, without changing them: `supabase/migrations/20261109120000_books_admin_foundation.sql`,
+> then `supabase/migrations/20261110120000_books_discovery.sql`, then
+> `supabase/migrations/20261111120000_books_popularity.sql`. They are additive and safe to run
+> again in this order. Do not create Edge Functions, cron jobs or new tables beyond what the files contain. After
 > each one, run the verification query from `docs/books-lovable-steps.md` and tell me every row's
 > result.
 
@@ -68,6 +73,20 @@ union all select 'browse answers', (public.books_browse() ? 'items')
 union all select 'browse counts what discover counts', ((public.books_browse()->>'total')::int = (public.books_discover()->>'total')::int);
 ```
 
+### Phase 3
+
+```sql
+select 'tables' as item, (select count(*) = 5 from information_schema.tables where table_schema = 'public' and table_name in ('book_events', 'book_favorites', 'book_ratings', 'book_stats', 'book_daily')) as ok
+union all select 'rls on all five', (select bool_and(relrowsecurity) from pg_class where relnamespace = 'public'::regnamespace and relname in ('book_events', 'book_favorites', 'book_ratings', 'book_stats', 'book_daily'))
+union all select 'counting triggers', (select count(*) = 3 from pg_trigger where not tgisinternal and tgname in ('book_events_count', 'book_favorites_count', 'book_ratings_count'))
+union all select 'functions', (select count(*) = 5 from pg_proc where pronamespace = 'public'::regnamespace and proname in ('books_popular', 'books_track', 'books_rate', 'books_favorite', 'books_analytics'))
+union all select 'one books_browse', (select count(*) = 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'books_browse')
+union all select 'visitors cannot rate', not has_function_privilege('anon', 'public.books_rate(uuid, integer)', 'execute')
+union all select 'no visitor policy on ratings or favourites', not exists (select 1 from pg_policies where schemaname = 'public' and tablename in ('book_ratings', 'book_favorites', 'book_events') and ('anon' = any (roles) or 'public' = any (roles)))
+union all select 'popular answers', (public.books_popular() ? 'top_rated')
+union all select 'cards carry ratings', ((public.books_browse()->'items'->0) is null or (public.books_browse()->'items'->0) ? 'rating_count');
+```
+
 ## 4. Storage (phase 1)
 
 - Buckets: `book-covers` (public) and `book-files` (private) exist (Storage → Buckets).
@@ -102,6 +121,21 @@ Phase 2 (`/books`):
 5. On «اكتشف», «اقتراحات جديدة» changes «مختارات لك»; a refresh keeps the same picks.
 6. In `/admin/books` → «ترتيب المكتبة» → «التثبيت والاستبعاد»: pin a book on «اكتشف» (it comes
    first in «مختارات لك») and hide another (it leaves «اكتشف» but is still found by search).
+
+Phase 3 (signed in as a learner, on `/books`):
+
+1. Open a book: the stars and «للمفضلة» show. Rate it 4; tap the 4th star again: the rating goes.
+2. Add two books to favourites: «مفضلتي» appears in the row with 2; it lists them.
+3. Sign out: the stars say «سجّل دخولك لتقيّم», and a tap asks you to sign in.
+4. In `/admin/books` → «الإحصائيات»: your views, reads, favourites and ratings show for 7 days.
+5. «الأعلى تقييماً» shows only once a book has 3 ratings from 3 different people.
+
+### Speed on the live site (the 700 ms target)
+
+Open `/books` in Chrome → DevTools → Network, filter `rpc`, and reload five times. Note the time
+of `books_discover`, `books_popular` and (after a search) `books_browse`. 95% of them should be
+under 700 ms. The database part alone was 13–75 ms on 1000 books in the tests; anything much
+slower points to the network or the plan, not to the queries.
 
 ## 6. If something fails
 

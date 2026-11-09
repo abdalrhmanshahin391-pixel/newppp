@@ -9402,6 +9402,8 @@ html.rita-app,
 
 /* A book on a shelf: the object, then its title and author. */
 .bk-item {
+  /* Positioned so hidden screen-reader text stays inside its (scrolling) shelf. */
+  position: relative;
   display: grid;
   justify-items: start;
   width: 132px;
@@ -9678,6 +9680,95 @@ html.rita-app,
   color: #4b4a5c;
   font-size: 15px;
   line-height: 1.6;
+}
+
+/* Ratings and favourites (phase 3). Gold stars; the average shows from three ratings on. */
+.bk-item-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 2px;
+  color: #8a5a00;
+  font: 600 12px "Figtree", sans-serif;
+}
+.bk-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 0;
+  color: var(--pp-muted);
+  font-size: 14px;
+}
+.bk-rating b {
+  color: var(--pp-ink);
+  font-size: 15px;
+}
+.bk-rating-star {
+  color: #c98a00;
+}
+.bk-rate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--pp-line);
+}
+.bk-rate-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+.bk-stars {
+  display: flex;
+  gap: 2px;
+}
+.bk-star {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  color: #b9b6c4;
+  transition:
+    color 120ms ease,
+    transform 120ms ease;
+}
+.bk-star.is-on {
+  color: #c98a00;
+}
+@media (hover: hover) and (pointer: fine) {
+  .bk-star:hover {
+    background: var(--pp-grey);
+  }
+}
+.bk-star:active {
+  transform: scale(0.92);
+}
+.bk-star:focus-visible {
+  outline: 2px solid var(--pp-ink);
+  outline-offset: -2px;
+}
+.bk-star:disabled {
+  opacity: 0.6;
+}
+.bk-rate-hint {
+  color: var(--pp-muted);
+  font-size: 12.5px;
+}
+.bk-fav[aria-pressed="true"] {
+  border-color: #be123c;
+  background: #fde7ec;
+  color: #9f1239;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bk-star {
+    transition: none;
+  }
+  .bk-star:active {
+    transform: none;
+  }
 }
 
 /* An admin's preview of the library at another moment: a dashed strip only they see. */

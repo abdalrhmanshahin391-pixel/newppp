@@ -86,14 +86,32 @@ export type Book = {
   rights_checked: boolean;
   tag_ids: string[];
   secondary_category_ids: string[];
+  /** How many readers rated it, and their average (null without ratings). */
+  rating_count: number;
+  rating_avg: number | null;
   sort: number;
   created_at: string;
 };
 
 export type BookLength = "short" | "medium" | "long";
 export const BOOK_LENGTHS: BookLength[] = ["short", "medium", "long"];
-export type BrowseSort = "relevance" | "discover" | "new" | "title" | "short";
-export const BROWSE_SORTS: BrowseSort[] = ["relevance", "discover", "new", "title", "short"];
+export type BrowseSort =
+  "relevance" | "discover" | "new" | "title" | "short" | "rating" | "trending";
+export const BROWSE_SORTS: BrowseSort[] = [
+  "relevance",
+  "discover",
+  "new",
+  "title",
+  "short",
+  "rating",
+  "trending",
+];
+/** A book's average shows from this many ratings (the top-rated shelf uses the same rule). */
+export const MIN_RATINGS = 3;
+
+export function ratingShown(book: Pick<Book, "rating_count" | "rating_avg">): boolean {
+  return book.rating_count >= MIN_RATINGS && book.rating_avg !== null;
+}
 export const PAGE_SIZES = [24, 48] as const;
 export type PageSize = (typeof PAGE_SIZES)[number];
 
@@ -109,7 +127,7 @@ export type BrowseState = {
   len: BookLength[];
   tag: string[];
   sort: BrowseSort | null;
-  view: "all" | null;
+  view: "all" | "favorites" | null;
   page: number;
   size: PageSize;
 };
@@ -128,7 +146,7 @@ export const NO_BROWSE: BrowseState = {
 };
 
 /** discover: the shelves; search: a query; category: one category; all: everything else. */
-export type LibraryMode = "discover" | "all" | "search" | "category";
+export type LibraryMode = "discover" | "all" | "search" | "category" | "favorites";
 
 const SAFE_COLOR = (value: unknown): CategoryColor =>
   CATEGORY_COLOR_KEYS.includes(value as CategoryColor) ? (value as CategoryColor) : "slate";
@@ -186,6 +204,13 @@ export function toBook(
       row.rights_checked === true || (!("rights_checked" in row) && row.published === true),
     tag_ids: links.tag_ids ?? [],
     secondary_category_ids: links.secondary_category_ids ?? [],
+    rating_count: Number(row.rating_count) || 0,
+    rating_avg:
+      row.rating_avg === null ||
+      row.rating_avg === undefined ||
+      !Number.isFinite(Number(row.rating_avg))
+        ? null
+        : Number(row.rating_avg),
     sort: Number(row.sort) || 0,
     created_at: String(row.created_at ?? ""),
   };
@@ -298,7 +323,8 @@ export function stateFromSearch(search: Record<string, unknown>): BrowseState {
     ),
     tag: unique(list(search.tag).filter((x) => UUID.test(x))).slice(0, 20),
     sort: BROWSE_SORTS.includes(sort) ? sort : null,
-    view: text(search.view) === "all" ? "all" : null,
+    view:
+      text(search.view) === "all" ? "all" : text(search.view) === "favorites" ? "favorites" : null,
     page: Number.isFinite(page) && page > 1 ? Math.min(page, 5000) : 1,
     size: size === 48 ? 48 : 24,
   };
@@ -329,6 +355,7 @@ export function filterCount(state: BrowseState): number {
 
 export function modeOf(state: BrowseState): LibraryMode {
   if (state.q.trim()) return "search";
+  if (state.view === "favorites") return "favorites";
   if (state.cat.length === 1 && state.view !== "all") return "category";
   if (state.view === "all" || filterCount(state) > 0) return "all";
   return "discover";
@@ -406,14 +433,21 @@ const count = (map: Record<string, number>, key: string | null) => {
 export function browseLocal(
   books: Book[],
   state: BrowseState,
-  options: { seed: string; pins?: string[]; excluded?: string[] } = { seed: "" },
+  options: { seed: string; pins?: string[]; excluded?: string[]; favorites?: string[] } = {
+    seed: "",
+  },
 ): Omit<BrowseResult, "asOf"> {
-  const sort =
+  // Without the phase 3 numbers in the browser, the popularity orders fall back to the newest.
+  const chosen =
     state.sort && !(state.sort === "relevance" && !state.q.trim())
       ? state.sort
       : defaultSort(state);
+  const sort = chosen === "rating" || chosen === "trending" ? "new" : chosen;
+  const favorites = state.view === "favorites" ? new Set(options.favorites ?? []) : null;
   const excluded = new Set(options.excluded ?? []);
-  const found = books.filter((b) => !excluded.has(b.id) && matchesQuery(b, state.q));
+  const found = books.filter(
+    (b) => !excluded.has(b.id) && (!favorites || favorites.has(b.id)) && matchesQuery(b, state.q),
+  );
   const m = (b: Book) => ({
     cat:
       !state.cat.length ||

@@ -14,8 +14,9 @@ import { ClassifyTab } from "@/components/books/admin/ClassifyTab";
 import { ArrangeTab } from "@/components/books/admin/ArrangeTab";
 import { ImportTab } from "@/components/books/admin/ImportTab";
 import { BookEditor } from "@/components/books/admin/BookEditor";
+import { StatsTab } from "@/components/books/admin/StatsTab";
 
-const TABS = ["books", "classify", "arrange", "import"] as const;
+const TABS = ["books", "classify", "arrange", "import", "stats"] as const;
 type Tab = (typeof TABS)[number];
 
 export const Route = createFileRoute("/admin/books")({
@@ -147,6 +148,9 @@ function AdminBooks() {
               <Tabs.Trigger value="import" className="rita-tab">
                 الاستيراد والجودة
               </Tabs.Trigger>
+              <Tabs.Trigger value="stats" className="rita-tab">
+                الإحصائيات
+              </Tabs.Trigger>
             </Tabs.List>
             <Tabs.Content value="books" className="rita-tab-panel pt-6">
               <BooksTab
@@ -192,6 +196,9 @@ function AdminBooks() {
                   الاستيراد والجودة بيشتغلوا بعد تحديث قاعدة البيانات ‏20261109120000.
                 </Notice>
               )}
+            </Tabs.Content>
+            <Tabs.Content value="stats" className="rita-tab-panel pt-6">
+              {tab === "stats" && <StatsTab />}
             </Tabs.Content>
           </Tabs.Root>
         )}

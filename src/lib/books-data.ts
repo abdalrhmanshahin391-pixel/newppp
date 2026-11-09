@@ -252,25 +252,35 @@ function fromCard(row: Record<string, unknown>): Book {
   });
 }
 
-/** Categories and tags (small lists the filters and chips need). */
-export type Catalog = { categories: BookCategory[]; tags: BookTag[]; ready: boolean };
+/**
+ * Categories and tags (small lists the filters and chips need), and whether the phase 3
+ * numbers (ratings, favourites, trends) are in the database.
+ */
+export type Catalog = {
+  categories: BookCategory[];
+  tags: BookTag[];
+  ready: boolean;
+  phase3: boolean;
+};
 
 export async function loadCatalog(): Promise<Catalog> {
-  const [cats, tags] = await Promise.all([
+  const [cats, tags, stats] = await Promise.all([
     supabase
       .from("book_categories")
       .select("id, name_ar, name_en, color, icon, sort")
       .order("sort"),
     supabase.from("book_tags").select("id, name_ar, name_en").order("name_ar"),
+    supabase.from("book_stats").select("book_id").limit(1),
   ]);
   if (cats.error) {
-    if (notApplied(cats.error)) return { categories: [], tags: [], ready: false };
+    if (notApplied(cats.error)) return { categories: [], tags: [], ready: false, phase3: false };
     throw new Error(cats.error.message);
   }
   return {
     categories: (cats.data ?? []).map((row: Record<string, unknown>) => toCategory(row)),
     tags: tags.error ? [] : ((tags.data ?? []) as BookTag[]),
     ready: true,
+    phase3: !stats.error,
   };
 }
 
@@ -401,6 +411,8 @@ export async function browseBooks(
     p_as_of: options.asOf,
     p_limit: state.size,
     p_offset: (state.page - 1) * state.size,
+    // Sent only when asked: a database without phase 3 does not know it.
+    ...(state.view === "favorites" ? { p_favorites: true } : {}),
   });
   if (options.signal) call = call.abortSignal(options.signal);
   const { data, error } = await call;
@@ -959,4 +971,103 @@ export async function saveRuleOrder(ids: string[]) {
   );
   const failed = results.find((result) => result.error);
   if (failed?.error) throw friendly(failed.error);
+}
+
+// ---- popularity (phase 3) ---------------------------------------------------------------------
+
+export type Popular = { topRated: Book[]; trending: Book[]; phase3: boolean };
+
+/** The two discover shelves: top rated (at least 3 ratings) and trending this week. */
+export async function loadPopular(asOf: string | null, signal?: AbortSignal): Promise<Popular> {
+  let call = supabase.rpc("books_popular", { p_as_of: asOf, p_per: 12 });
+  if (signal) call = call.abortSignal(signal);
+  const { data, error } = await call;
+  if (error) {
+    if (missingFunction(error)) return { topRated: [], trending: [], phase3: false };
+    throw new Error(error.message);
+  }
+  const raw = data as {
+    top_rated: string[];
+    trending: string[];
+    books: Record<string, Record<string, unknown>>;
+  };
+  const byId = new Map(Object.entries(raw.books ?? {}).map(([id, row]) => [id, fromCard(row)]));
+  const pick = (ids: string[] | null | undefined) =>
+    (ids ?? []).map((id) => byId.get(id)).filter((b): b is Book => Boolean(b));
+  return { topRated: pick(raw.top_rated), trending: pick(raw.trending), phase3: true };
+}
+
+export type Mine = { favorites: string[]; ratings: Record<string, number>; phase3: boolean };
+
+/** The signed-in reader's own favourites and ratings. */
+export async function loadMine(): Promise<Mine> {
+  const [favorites, ratings] = await Promise.all([
+    supabase.from("book_favorites").select("book_id"),
+    supabase.from("book_ratings").select("book_id, rating"),
+  ]);
+  const error = favorites.error ?? ratings.error;
+  if (error) {
+    if (notApplied(error)) return { favorites: [], ratings: {}, phase3: false };
+    throw new Error(error.message);
+  }
+  return {
+    favorites: ((favorites.data ?? []) as { book_id: string }[]).map((row) => row.book_id),
+    ratings: Object.fromEntries(
+      ((ratings.data ?? []) as { book_id: string; rating: number }[]).map((row) => [
+        row.book_id,
+        row.rating,
+      ]),
+    ),
+    phase3: true,
+  };
+}
+
+/** Counts that a signed-in reader opened ("view") or started ("read") a book; once a day. */
+export async function trackBook(bookId: string, kind: "view" | "read"): Promise<void> {
+  // Counting must never get in the reader's way: errors are ignored.
+  try {
+    await supabase.rpc("books_track", { p_book: bookId, p_kind: kind });
+  } catch {
+    // ignored
+  }
+}
+
+/** Sets (1–5) or removes (null) the reader's rating; returns the book's new numbers. */
+export async function rateBook(
+  bookId: string,
+  rating: number | null,
+): Promise<{ rating_count: number; rating_avg: number | null }> {
+  const { data, error } = await supabase.rpc("books_rate", { p_book: bookId, p_rating: rating });
+  if (error) throw new Error("ما انحفظ التقييم. جرّب مرة ثانية.");
+  const raw = data as { rating_count: number; rating_avg: number | string | null };
+  return {
+    rating_count: Number(raw.rating_count) || 0,
+    rating_avg: raw.rating_avg === null ? null : Number(raw.rating_avg),
+  };
+}
+
+export async function favoriteBook(bookId: string, on: boolean): Promise<void> {
+  const { error } = await supabase.rpc("books_favorite", { p_book: bookId, p_on: on });
+  if (error) throw new Error("ما انحفظت المفضلة. جرّب مرة ثانية.");
+}
+
+export type Analytics = {
+  days: number;
+  now: { views: number; reads: number; favorites: number; ratings: number };
+  before: { views: number; reads: number; favorites: number; ratings: number };
+  trending: { id: string; title: string; score: number; views: number; reads: number }[];
+  top_rated: { id: string; title: string; score: number; average: number; count: number }[];
+  stars: Record<"1" | "2" | "3" | "4" | "5", number>;
+  unopened_count: number;
+  unopened: { id: string; title: string }[];
+};
+
+/** The admin's numbers for the last 7 or 30 days and the days before them (null before phase 3). */
+export async function loadAnalytics(days: 7 | 30): Promise<Analytics | null> {
+  const { data, error } = await supabase.rpc("books_analytics", { p_days: days });
+  if (error) {
+    if (missingFunction(error)) return null;
+    throw friendly(error);
+  }
+  return data as Analytics;
 }
