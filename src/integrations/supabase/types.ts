@@ -3324,6 +3324,8 @@ export type Database = {
           last_message_at: string | null
           learning_language: string | null
           message_count: number
+          pinned_at: string | null
+          title_is_custom: boolean
           title: string
           updated_at: string
           user_id: string
@@ -3337,6 +3339,8 @@ export type Database = {
           last_message_at?: string | null
           learning_language?: string | null
           message_count?: number
+          pinned_at?: string | null
+          title_is_custom?: boolean
           title?: string
           updated_at?: string
           user_id: string
@@ -3350,6 +3354,8 @@ export type Database = {
           last_message_at?: string | null
           learning_language?: string | null
           message_count?: number
+          pinned_at?: string | null
+          title_is_custom?: boolean
           title?: string
           updated_at?: string
           user_id?: string

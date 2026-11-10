@@ -1,72 +1,73 @@
 import * as Menu from "@radix-ui/react-dropdown-menu";
 import { Loader2, MoreHorizontal } from "lucide-react";
-
-export type ConversationAction = "pdf" | "md" | "json" | "repair" | "delete";
-
-/**
- * The "More" menu of a conversation card: the files, and delete at the bottom. The admin's Repair
- * file is only in the list for admins. One button on the card instead of six.
- */
+import { useUiLanguage } from "@/components/language/useUiLanguage";
+export type ConversationAction =
+  "rename" | "pin" | "transcript" | "pdf" | "md" | "json" | "repair" | "delete";
 export function ConversationMenu({
   title,
   isAdmin,
   busy,
+  pinned = false,
   onAction,
 }: {
   title: string;
   isAdmin: boolean;
   busy: boolean;
+  pinned?: boolean;
   onAction: (action: ConversationAction) => void;
 }) {
+  const ui = useUiLanguage();
+  const t = (en: string, ar: string) => (ui === "ar" ? ar : en);
   return (
-    <Menu.Root>
+    <Menu.Root dir={ui === "ar" ? "rtl" : "ltr"}>
       <Menu.Trigger asChild>
         <button
           type="button"
-          aria-label={`More for ${title}`}
-          aria-busy={busy}
           disabled={busy}
-          className="rita-btn rita-btn-soft rita-btn-icon disabled:opacity-60"
+          aria-label={t(`More for ${title}`, `خيارات ${title}`)}
+          className="rita-btn rita-btn-soft rita-btn-icon disabled:opacity-50"
         >
-          {busy ? (
-            <Loader2 size={18} className="animate-spin" aria-hidden="true" />
-          ) : (
-            <MoreHorizontal size={20} aria-hidden="true" />
-          )}
+          {busy ? <Loader2 size={18} className="animate-spin" /> : <MoreHorizontal size={20} />}
         </button>
       </Menu.Trigger>
       <Menu.Portal>
         <Menu.Content align="end" sideOffset={6} className="edith-premium rita-menu">
-          {isAdmin ? (
-            <>
-              <Menu.Item className="rita-menu-item" onSelect={() => onAction("repair")}>
-                Repair file
-                <small>
-                  The whole conversation with the AI review of every reply. Send it to Claude when
-                  this conversation went wrong.
-                </small>
-              </Menu.Item>
-              <div className="rita-menu-sep" role="separator" />
-            </>
-          ) : null}
-          <Menu.Item className="rita-menu-item" onSelect={() => onAction("pdf")}>
-            PDF
-            <small>To read or print</small>
+          <Menu.Item className="rita-menu-item" onSelect={() => onAction("rename")}>
+            {t("Rename", "تغيير الاسم")}
           </Menu.Item>
-          <Menu.Item className="rita-menu-item" onSelect={() => onAction("md")}>
-            Text for AI
-            <small>The plain transcript</small>
+          <Menu.Item className="rita-menu-item" onSelect={() => onAction("pin")}>
+            {pinned ? t("Unpin", "إلغاء التثبيت") : t("Pin conversation", "تثبيت المحادثة")}
           </Menu.Item>
-          <Menu.Item className="rita-menu-item" onSelect={() => onAction("json")}>
-            JSON
-            <small>The raw data</small>
+          <Menu.Item className="rita-menu-item" onSelect={() => onAction("transcript")}>
+            {t("Read transcript", "اقرأ المحادثة")}
           </Menu.Item>
-          <div className="rita-menu-sep" role="separator" />
+          <Menu.Sub>
+            <Menu.SubTrigger className="rita-menu-item">{t("Export", "تصدير")}</Menu.SubTrigger>
+            <Menu.Portal>
+              <Menu.SubContent sideOffset={6} className="edith-premium rita-menu">
+                <Menu.Item className="rita-menu-item" onSelect={() => onAction("pdf")}>
+                  PDF
+                </Menu.Item>
+                <Menu.Item className="rita-menu-item" onSelect={() => onAction("md")}>
+                  {t("Text for AI", "نص للذكاء الاصطناعي")}
+                </Menu.Item>
+                <Menu.Item className="rita-menu-item" onSelect={() => onAction("json")}>
+                  JSON
+                </Menu.Item>
+                {isAdmin && (
+                  <Menu.Item className="rita-menu-item" onSelect={() => onAction("repair")}>
+                    {t("Repair file", "ملف الإصلاح")}
+                  </Menu.Item>
+                )}
+              </Menu.SubContent>
+            </Menu.Portal>
+          </Menu.Sub>
+          <Menu.Separator className="rita-menu-sep" />
           <Menu.Item
             className="rita-menu-item rita-menu-item-danger"
             onSelect={() => onAction("delete")}
           >
-            Delete conversation
+            {t("Delete conversation", "حذف المحادثة")}
           </Menu.Item>
         </Menu.Content>
       </Menu.Portal>

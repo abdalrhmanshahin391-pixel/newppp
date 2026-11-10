@@ -1,5 +1,15 @@
 # DESIGN.md — the visual system of Uzyra (formerly EdithLab) / Rita
 
+## Conversation history
+
+The conversation page prioritizes resuming a saved conversation. Use a compact title and new-chat
+action, title search, ordering and a remembered list/cards toggle. Rows use a quiet message icon,
+title, last-activity date, message count and an always-visible action menu suitable for touch.
+Pinned conversations precede recent history. Rename and pin are owner-controlled account data.
+Deletion requires a named confirmation with saved-message consequences. Exports live in a submenu.
+Admin review tools sit in a closed disclosure, with no instructional panel on this page.
+Use the existing white, ink and blue tokens, bilingual labels, logical spacing and 44px targets.
+
 ## Settings workspace
 
 `/settings?section=account|security|plan|usage|billing` combines profile and plan management.
