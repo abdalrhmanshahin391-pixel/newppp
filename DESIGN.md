@@ -507,8 +507,10 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   - **Progress:** a 3px accent line under the top bar grows with the page number.
   - **Turning:** instant. The sheet takes the new page's size at once and slides in 24px (220ms,
     `cubic-bezier(0.2, 0.8, 0.2, 1)`; a 120ms fade with reduced motion). Pages read ahead appear
-    sharp straight away; otherwise the page's real lines show faint (8% ink, "ghost text") until
-    its picture is decoded, then it fades in (200ms). A small ring in the sheet's corner appears
+    sharp straight away; otherwise the sheet takes the page's own main colour and shows a
+    blurred preview of the real page (its ThumbHash, 10px blur) — or, on books prepared before
+    the sizes, the page's real lines faint (8% ink, "ghost text") — until its picture is decoded,
+    then it fades in (200ms). Zooming keeps the picture on screen while the bigger size comes. A small ring in the sheet's corner appears
     only after a second; a page that cannot load shows an ink pill «ما قدرت أفتح الصفحة · جرّب
     مرة ثانية» (after one quiet retry), never a broken picture. While flipping fast, the page
     number shows in the middle of the page («12 / 340», from the second quick turn, gone 600ms
@@ -535,7 +537,9 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     unprepared book opens its PDF as before.
 - **Preparing a book** (admin): in the editor's files section a grey card «القراءة داخل الموقع»
   says the state in words and offers «جهّز الكتاب للقراءة», «كمّل التجهيز» or «جهّز مرة
-  ثانية»; while it runs, a thin accent progress bar, «جاري تجهيز الصفحات: x من y» and «وقّف».
+  ثانية»; while it runs, a thin accent progress bar, «صفحة x من y · n صفحة/ثانية · باقي حوالي …»
+  and «وقّف»; a hidden tab adds «التبويب مخفي: المتصفح بيبطّئ التجهيز…». A book prepared before the
+  sizes says «جاهز للقراءة، بس بدون الأحجام الجديدة…» with «حدّث الكتاب».
   A newly uploaded PDF starts preparing on save. «الاستيراد والجودة» lists the books still waiting
   under «جاهزية القراءة», each with the same button and bar.
 

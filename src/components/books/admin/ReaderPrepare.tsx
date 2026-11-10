@@ -1,7 +1,7 @@
 // «جهّز الكتاب للقراءة»: the admin's browser turns the book's PDF into light page pictures and
 // words, so readers open it page by page inside the site (see src/lib/book-prepare.ts). The block
 // sits in the book editor, and the list of books still waiting sits in «الاستيراد والجودة».
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpenCheck, Loader2, Square } from "lucide-react";
 import { toast } from "sonner";
@@ -58,6 +58,29 @@ function Bar({ done, total }: { done: number; total: number }) {
   );
 }
 
+/** " · 6.1 صفحة/ثانية · باقي حوالي 12 دقيقة" once the pace is known. */
+function pace(job: PrepareJob): string {
+  if (!job.perSecond || job.secondsLeft === null) return "";
+  const left =
+    job.secondsLeft < 90
+      ? `${Math.max(1, job.secondsLeft)} ثانية`
+      : `${Math.round(job.secondsLeft / 60)} دقيقة`;
+  return ` · ${job.perSecond.toFixed(1)} صفحة/ثانية · باقي حوالي ${left}`;
+}
+
+/** True while a job runs and this tab is hidden (browsers slow hidden tabs down). */
+function useHiddenTab(running: boolean): boolean {
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    if (!running) return setHidden(false);
+    const read = () => setHidden(document.visibilityState === "hidden");
+    read();
+    document.addEventListener("visibilitychange", read);
+    return () => document.removeEventListener("visibilitychange", read);
+  }, [running]);
+  return hidden;
+}
+
 /** One book's reading state, with the button that prepares it. */
 export function PrepareBlock({
   book,
@@ -76,6 +99,9 @@ export function PrepareBlock({
   const running = isRunning(job);
   const prepared = Boolean(state?.preparedAt) && job?.stage !== "failed";
   const started = !prepared && Boolean(state?.pageCount);
+  // Prepared before the picture sizes existed: "upgrade" makes only the missing sizes.
+  const upgrade = prepared && state?.complete === false && job?.stage !== "done";
+  const hidden = useHiddenTab(running);
   const start = (again: boolean) => {
     if (!book.file_path) return;
     void prepareBook({ bookId: book.id, filePath: book.file_path, file, again });
@@ -95,12 +121,14 @@ export function PrepareBlock({
               ? "جاري فتح الملف…"
               : job!.stage === "finishing"
                 ? "آخر خطوة…"
-                : `جاري تجهيز الصفحات: ${job!.done} من ${job!.total}`
-            : prepared
-              ? `جاهز للقراءة داخل الموقع: ${state?.pageCount ?? job?.total ?? 0} صفحة.`
-              : started
-                ? `تجهّز ${state?.done ?? 0} من ${state?.pageCount} صفحة. كمّل من وين وقفت.`
-                : "القرّاء بيفتحوه صفحة صفحة بدون ما ينزّلوا الملف كله. التجهيز بيصير مرة وحدة من جهازك."}
+                : `صفحة ${job!.done} من ${job!.total}${pace(job!)}`
+            : upgrade
+              ? "جاهز للقراءة، بس بدون الأحجام الجديدة (الصورة المموّهة الفورية وحجم التلفون والتكبير). «حدّث الكتاب» بيضيفهم بس."
+              : prepared
+                ? `جاهز للقراءة داخل الموقع: ${state?.pageCount ?? job?.total ?? 0} صفحة.`
+                : started
+                  ? `تجهّز ${state?.done ?? 0} من ${state?.pageCount} صفحة. كمّل من وين وقفت.`
+                  : "القرّاء بيفتحوه صفحة صفحة بدون ما ينزّلوا الملف كله. التجهيز بيصير مرة وحدة من جهازك."}
         </p>
       )}
       {running && (
@@ -110,6 +138,11 @@ export function PrepareBlock({
             خلّي الصفحة مفتوحة لحد ما يخلص. إذا وقف، بتكمّل بعدين من نفس المكان.
             {job!.scanned > 0 && ` ${job!.scanned} صفحة صور بدون نص.`}
           </p>
+          {hidden && (
+            <p className="text-[14px] text-[#8a5200]" role="alert">
+              التبويب مخفي: المتصفح بيبطّئ التجهيز. ارجع لهالتبويب عشان يكمّل بسرعته.
+            </p>
+          )}
         </>
       )}
       {!running && job?.stage === "stopped" && <p className={muted}>{job.message}</p>}
@@ -126,6 +159,14 @@ export function PrepareBlock({
             onClick={() => stopPreparing(book.id)}
           >
             <Square size={13} fill="currentColor" aria-hidden="true" /> وقّف
+          </button>
+        ) : upgrade ? (
+          <button
+            type="button"
+            className="rita-btn rita-btn-primary gap-2"
+            onClick={() => start(false)}
+          >
+            <BookOpenCheck size={15} aria-hidden="true" /> حدّث الكتاب
           </button>
         ) : prepared ? (
           !compact && (
@@ -174,7 +215,9 @@ export function ReadingQuality({ books, onEdit }: { books: Book[]; onEdit: (book
     (b) =>
       b.file_path &&
       b.status !== "archived" &&
-      (!states.data!.get(b.id)?.preparedAt || isRunning(jobs.get(b.id))),
+      (!states.data!.get(b.id)?.preparedAt ||
+        states.data!.get(b.id)?.complete === false ||
+        isRunning(jobs.get(b.id))),
   );
   return (
     <section className="space-y-3">

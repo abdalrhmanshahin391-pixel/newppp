@@ -47,10 +47,14 @@ import {
   clampPage,
   metaBlock,
   pageQuote,
+  pickTier,
   prefetchPlan,
   signWindow,
+  tierPath,
+  type Tier,
 } from "@/lib/books-reader";
 import {
+  fetchManifest,
   fetchMetaBlock,
   fetchPageWords,
   linksMissing,
@@ -60,6 +64,7 @@ import {
   type PageView,
   type PageWords,
   type ReaderBook,
+  type BookManifest,
 } from "@/lib/book-reader-data";
 import {
   decodePicture,
@@ -114,7 +119,14 @@ function metaQuery(bookId: string, block: number, total: number) {
   };
 }
 
-/** A page ready to show: its light info (40 pages per request) and its signed picture link. */
+/** How the reader's screen asks for pictures: the manifest (if any) and the pixels needed. */
+type Sizing = { manifest: BookManifest | null; need: number };
+
+/**
+ * A page ready to show: its light info and its signed picture link. With a manifest, the light
+ * info is already in memory and the picture is the size that fits the screen (900 / 1400 /
+ * 2200 px); without one, light info is read 40 pages per request and the picture is 1400 px.
+ */
 function viewQuery(
   client: QueryClient,
   bookId: string,
@@ -122,18 +134,45 @@ function viewQuery(
   page: number,
   total: number,
   dir: 1 | -1,
+  sizing: Sizing,
 ) {
+  const { manifest, need } = sizing;
+  const tierOf = (n: number): Tier => {
+    const entry = manifest?.pages[n - 1];
+    return entry ? pickTier(need, entry.tiers) : "std";
+  };
   return {
-    queryKey: ["book-view", bookId, page] as const,
+    queryKey: ["book-view", bookId, page, tierOf(page)] as const,
     queryFn: async (): Promise<PageView> => {
-      const own = await client.ensureQueryData(metaQuery(bookId, metaBlock(page), total));
-      const meta = own.find((m) => m.page === page);
-      if (!meta) throw new Error("missing_page");
-      // Light info already in memory (this block, and any other block read before).
-      const known = (n: number) =>
-        client
-          .getQueryData<PageMeta[]>(["book-meta", bookId, metaBlock(n)])
-          ?.find((m) => m.page === n)?.imagePath;
+      let meta: PageMeta;
+      let known: (n: number) => string | undefined;
+      if (manifest) {
+        const entry = manifest.pages[page - 1];
+        if (!entry) throw new Error("missing_page");
+        meta = {
+          page,
+          width: entry.width,
+          height: entry.height,
+          imagePath: tierPath(bookId, page, tierOf(page), entry.type),
+          hasText: entry.hasText,
+          thumbhash: entry.thumbhash,
+          color: entry.color,
+        };
+        known = (n) => {
+          const other = manifest.pages[n - 1];
+          return other ? tierPath(bookId, n, tierOf(n), other.type) : undefined;
+        };
+      } else {
+        const own = await client.ensureQueryData(metaQuery(bookId, metaBlock(page), total));
+        const found = own.find((m) => m.page === page);
+        if (!found) throw new Error("missing_page");
+        meta = found;
+        // Light info already in memory (this block, and any other block read before).
+        known = (n) =>
+          client
+            .getQueryData<PageMeta[]>(["book-meta", bookId, metaBlock(n)])
+            ?.find((m) => m.page === n)?.imagePath;
+      }
       const nearby = signWindow(page, total, dir);
       // A new batch only when fewer than 10 pages ahead are signed (or on their way).
       const close = Array.from({ length: 10 }, (_, i) => page + (i + 1) * dir)
@@ -143,10 +182,11 @@ function viewQuery(
         ? nearby.map(known).filter((path): path is string => Boolean(path))
         : [];
       const links = await signPagePaths(userId, [meta.imagePath, ...batch]);
-      // The other block of the window is read in the background, for the next batch.
-      for (const block of new Set(nearby.map(metaBlock)))
-        if (block !== metaBlock(page))
-          void client.prefetchQuery(metaQuery(bookId, block, total)).catch(() => undefined);
+      // Without a manifest, the other block of the window is read in the background.
+      if (!manifest)
+        for (const block of new Set(nearby.map(metaBlock)))
+          if (block !== metaBlock(page))
+            void client.prefetchQuery(metaQuery(bookId, block, total)).catch(() => undefined);
       const url = links[meta.imagePath];
       if (!url) throw new Error("no_link");
       return { ...meta, url };
@@ -252,6 +292,54 @@ export function BookReader({
   const [jump, setJump] = useState(String(page));
   const memoryKey = `book:${book.id}`;
 
+  // ---- the manifest (one request: every page's size and preview, the outline) ----------------
+  const manifestOf = useQuery({
+    queryKey: ["book-manifest", book.id] as const,
+    queryFn: () => fetchManifest(book.id),
+    staleTime: Infinity,
+    gcTime: PAGE_STALE_MS,
+  });
+  // Until it answers, pages load the phase 1 way (it is one small request).
+  const manifest = manifestOf.data ?? null;
+  const lastShape = useRef(1.414);
+
+  // ---- sizes -----------------------------------------------------------------------------------
+  const scroller = useRef<HTMLDivElement | null>(null);
+  const [pane, setPane] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const read = () => setPane({ width: el.clientWidth, height: el.clientHeight });
+    const observer = new ResizeObserver(read);
+    observer.observe(el);
+    read();
+    return () => observer.disconnect();
+  }, [wide, tab]);
+  // Thin margins on a phone, so the page takes the most room it can.
+  const gutter = pane.width < 600 ? 8 : 20;
+  const roomWidth = Math.max(220, pane.width - gutter * 2);
+  const roomHeight = Math.max(220, pane.height - gutter * 2);
+  const shape = manifest?.pages[page - 1]
+    ? manifest.pages[page - 1].height / manifest.pages[page - 1].width
+    : lastShape.current;
+  const fitted =
+    fit === "page" ? Math.min(roomWidth, roomHeight / shape, 980) : Math.min(roomWidth, 980);
+  const pageWidth = Math.round(fitted * ZOOMS[zoom]);
+
+  // The picture size asked for: the sheet's width × the screen's density (zoom included).
+  const [density, setDensity] = useState(1);
+  useEffect(() => setDensity(Math.min(3, window.devicePixelRatio || 1)), []);
+  const sizing: Sizing = { manifest, need: pageWidth * density };
+  // The size bucket pages are read ahead in: none until the manifest has answered and the pane is
+  // measured (else the pages ahead would be fetched in the wrong size); a zoom that needs a bigger
+  // size reads the pages ahead again in it.
+  const sizeKey =
+    manifestOf.isPending || !pane.width
+      ? ""
+      : manifest
+        ? pickTier(sizing.need, ["mid", "std", "zoom"])
+        : "std";
+
   // ---- the page, and the pages around it ------------------------------------------------------
   // The reading direction and the last turns decide what is fetched ahead.
   const dirRef = useRef<1 | -1>(1);
@@ -266,13 +354,20 @@ export function BookReader({
     lastPage.current = page;
   }
   const current = useQuery({
-    ...viewQuery(queryClient, book.id, userId, page, total, dirRef.current),
+    ...viewQuery(queryClient, book.id, userId, page, total, dirRef.current, sizing),
+    // The manifest decides the size; wait for its answer (one small request) before the page.
+    enabled: !manifestOf.isPending,
     // The previous page's sheet stays while the new page's info arrives (a few ms when cached).
     placeholderData: keepPreviousData,
   });
-  const view = current.isPlaceholderData ? null : (current.data ?? null);
-  const lastShape = useRef(1.414);
+  // A placeholder of another page is not shown; the same page in another size (zooming) is, so
+  // its picture stays on screen until the new size is in.
+  const view =
+    current.isPlaceholderData && current.data?.page !== page ? null : (current.data ?? null);
   if (current.data) lastShape.current = current.data.height / current.data.width;
+
+  const sizingRef = useRef(sizing);
+  sizingRef.current = sizing;
 
   // The words wait until the reader stays on a page; pages read ahead are already there.
   const [settled, setSettled] = useState(page);
@@ -280,8 +375,11 @@ export function BookReader({
   const words: PageWords | null = wordsOf.data && wordsOf.data.page === page ? wordsOf.data : null;
 
   useEffect(() => {
+    // Turned again before the page on screen came in: the old plan is dropped.
+    let alive = true;
     const timer = window.setTimeout(() => {
       setSettled(page);
+      if (!sizeKey) return;
       const dir = dirRef.current;
       const ahead = aheadCount(turns.current, lastPictureMs());
       const plan = prefetchPlan(page, dir, total, ahead);
@@ -295,25 +393,45 @@ export function BookReader({
             (q.queryKey[0] === "book-view" && !keepViews.has(q.queryKey[2] as number))),
       });
       const wanted = new Set<string>();
-      if (current.data && !current.isPlaceholderData) wanted.add(current.data.url);
+      if (current.data && !current.isPlaceholderData) wanted.add(current.data.imagePath);
+      const sizingNow = sizingRef.current;
+      // The page on screen first: the pages ahead start once its picture is in (or after 1.5 s).
+      const first = queryClient
+        .fetchQuery(viewQuery(queryClient, book.id, userId, page, total, dir, sizingNow))
+        .then((view) => {
+          wanted.add(view.imagePath);
+          return decodePicture(view.imagePath, view.url, "high");
+        })
+        .catch(() => undefined);
+      const onScreen = Promise.race([first, new Promise((done) => window.setTimeout(done, 1500))]);
       for (const n of plan.pictures) {
         const near = n === page + dir || n === page - dir;
-        void queryClient
-          .fetchQuery(viewQuery(queryClient, book.id, userId, n, total, dir))
+        void onScreen
+          .then(() =>
+            alive
+              ? queryClient.fetchQuery(
+                  viewQuery(queryClient, book.id, userId, n, total, dir, sizingNow),
+                )
+              : null,
+          )
           .then((next) => {
-            wanted.add(next.url);
+            if (!next || !alive) return;
+            wanted.add(next.imagePath);
             // The pages right beside are decoded; the ones further ahead only cached.
-            if (near) void decodePicture(next.url, "low").catch(() => undefined);
-            else fetchPicture(next.url);
+            if (near) void decodePicture(next.imagePath, next.url, "low").catch(() => undefined);
+            else fetchPicture(next.imagePath, next.url);
           })
           .catch(() => undefined);
       }
-      window.setTimeout(() => dropPicturesExcept(wanted), 0);
+      void onScreen.then(() => alive && window.setTimeout(() => dropPicturesExcept(wanted), 0));
       for (const n of plan.words) void queryClient.prefetchQuery(wordsQuery(book.id, n));
     }, SETTLE_MS);
-    return () => window.clearTimeout(timer);
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [book.id, page, total, queryClient, userId]);
+  }, [book.id, page, total, queryClient, userId, sizeKey]);
 
   // The place is remembered (for this reader) and kept in the address (for a refresh); leaving
   // the tab or the app saves it at once.
@@ -340,27 +458,6 @@ export function BookReader({
     }, 1200);
     return () => window.clearTimeout(timer);
   }, [book.id, navigate, page, userId]);
-
-  // ---- sizes -----------------------------------------------------------------------------------
-  const scroller = useRef<HTMLDivElement | null>(null);
-  const [pane, setPane] = useState({ width: 0, height: 0 });
-  useEffect(() => {
-    const el = scroller.current;
-    if (!el) return;
-    const read = () => setPane({ width: el.clientWidth, height: el.clientHeight });
-    const observer = new ResizeObserver(read);
-    observer.observe(el);
-    read();
-    return () => observer.disconnect();
-  }, [wide, tab]);
-  // Thin margins on a phone, so the page takes the most room it can.
-  const gutter = pane.width < 600 ? 8 : 20;
-  const roomWidth = Math.max(220, pane.width - gutter * 2);
-  const roomHeight = Math.max(220, pane.height - gutter * 2);
-  const shape = lastShape.current;
-  const fitted =
-    fit === "page" ? Math.min(roomWidth, roomHeight / shape, 980) : Math.min(roomWidth, 980);
-  const pageWidth = Math.round(fitted * ZOOMS[zoom]);
 
   // ---- the selection ---------------------------------------------------------------------------
   const textLayer = useRef<HTMLDivElement | null>(null);

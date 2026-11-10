@@ -278,3 +278,150 @@ export function prefetchPlan(
   const words = [page + dir, page + 2 * dir, page - dir].filter(inside);
   return { pictures, words };
 }
+
+// ---- Picture sizes and the per-book manifest (phase 2) ---------------------------------------
+
+export type Tier = "thumb" | "mid" | "std" | "zoom";
+/** Width in pixels and WebP quality of each size (the 1400 px one is the original size). */
+export const TIERS: Record<Tier, { width: number; quality: number }> = {
+  thumb: { width: 160, quality: 0.6 },
+  mid: { width: 900, quality: 0.75 },
+  std: { width: 1400, quality: 0.8 },
+  zoom: { width: 2200, quality: 0.75 },
+};
+const TIER_DIR: Record<Tier, string> = { thumb: "t/", mid: "m/", std: "", zoom: "z/" };
+/** Manifest flags: the page has words, and which extra sizes exist. */
+export const PAGE_FLAG = { words: 1, thumb: 2, mid: 4, zoom: 8 } as const;
+
+/** Where a size of a page's picture lives: "<book>/<page>.webp", "<book>/t/<page>.webp" … */
+export function tierPath(bookId: string, page: number, tier: Tier, type: "webp" | "jpeg"): string {
+  return `${bookId}/${TIER_DIR[tier]}${page}.${type === "webp" ? "webp" : "jpg"}`;
+}
+
+export type ManifestPage = {
+  page: number;
+  width: number;
+  height: number;
+  hasText: boolean;
+  type: "webp" | "jpeg";
+  tiers: Tier[];
+  thumbhash: string | null;
+  color: string | null;
+};
+
+/** A row of book_pages as the manifest stores it: [w, h, flags, ext, thumbhash, color]. */
+export function manifestEntry(row: {
+  width: number;
+  height: number;
+  has_text: boolean;
+  image_path: string;
+  thumb_path?: string | null;
+  mid_path?: string | null;
+  zoom_path?: string | null;
+  thumbhash?: string | null;
+  color?: string | null;
+}): [number, number, number, string, string | null, string | null] {
+  const flags =
+    (row.has_text ? PAGE_FLAG.words : 0) |
+    (row.thumb_path ? PAGE_FLAG.thumb : 0) |
+    (row.mid_path ? PAGE_FLAG.mid : 0) |
+    (row.zoom_path ? PAGE_FLAG.zoom : 0);
+  const ext = /\.jpe?g$/i.test(row.image_path) ? "j" : "w";
+  return [row.width, row.height, flags, ext, row.thumbhash ?? null, row.color ?? null];
+}
+
+/** Reads a stored manifest back, page 1 first; anything broken is left out. */
+export function readManifest(value: unknown): ManifestPage[] {
+  if (!Array.isArray(value)) return [];
+  const out: ManifestPage[] = [];
+  value.forEach((entry, index) => {
+    if (!Array.isArray(entry) || entry.length < 4) return;
+    const [width, height, flags, ext, thumbhash, color] = entry;
+    if (!(Number(width) > 0 && Number(height) > 0)) return;
+    const f = Number(flags) || 0;
+    const tiers: Tier[] = ["std"];
+    if (f & PAGE_FLAG.thumb) tiers.push("thumb");
+    if (f & PAGE_FLAG.mid) tiers.push("mid");
+    if (f & PAGE_FLAG.zoom) tiers.push("zoom");
+    out.push({
+      page: index + 1,
+      width: Number(width),
+      height: Number(height),
+      hasText: Boolean(f & PAGE_FLAG.words),
+      type: ext === "j" ? "jpeg" : "webp",
+      tiers,
+      thumbhash: typeof thumbhash === "string" ? thumbhash : null,
+      color: typeof color === "string" && /^#[0-9a-f]{6}$/.test(color) ? color : null,
+    });
+  });
+  return out;
+}
+
+/**
+ * The size to show: the smallest one at least 90% of the pixels the sheet needs (its width in CSS
+ * pixels × the screen's density × zoom); the biggest one there is when none is big enough.
+ */
+export function pickTier(needPx: number, have: Tier[]): Tier {
+  const order: Tier[] = ["mid", "std", "zoom"];
+  const usable = order.filter((tier) => have.includes(tier));
+  if (!usable.length) return "std";
+  for (const tier of usable) if (TIERS[tier].width >= needPx * 0.9) return tier;
+  return usable[usable.length - 1];
+}
+
+/** "#rrggbb" from three 0–255 (or 0–1) numbers. */
+export function hexColor(r: number, g: number, b: number): string {
+  const scale = r <= 1 && g <= 1 && b <= 1 ? 255 : 1;
+  return `#${[r, g, b]
+    .map((v) =>
+      Math.max(0, Math.min(255, Math.round(v * scale)))
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+}
+
+export function bytesToBase64(bytes: Uint8Array): string {
+  let text = "";
+  for (const byte of bytes) text += String.fromCharCode(byte);
+  return btoa(text);
+}
+
+export function base64ToBytes(text: string): Uint8Array {
+  const raw = atob(text);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+/** Pages per second over the last 30 pages, and the seconds left; null until there are two. */
+export function prepareRate(
+  finishedAt: number[],
+  left: number,
+): { perSecond: number; secondsLeft: number } | null {
+  const recent = finishedAt.slice(-30);
+  if (recent.length < 2) return null;
+  const span = (recent[recent.length - 1] - recent[0]) / 1000;
+  if (span <= 0) return null;
+  const perSecond = (recent.length - 1) / span;
+  return { perSecond, secondsLeft: Math.round(left / perSecond) };
+}
+
+/** The outline of a PDF as stored: [title, page, level], titles trimmed, pages inside the book. */
+export function cleanOutline(
+  items: { title: string; page: number | null; level: number }[],
+  total: number,
+): [string, number, number][] {
+  return items
+    .filter((item) => item.page !== null && item.page >= 1 && item.page <= total)
+    .map(
+      (item) =>
+        [
+          item.title.replace(/\s+/g, " ").trim().slice(0, 200),
+          item.page!,
+          Math.min(5, item.level),
+        ] as [string, number, number],
+    )
+    .filter(([title]) => title.length > 0)
+    .slice(0, 2000);
+}

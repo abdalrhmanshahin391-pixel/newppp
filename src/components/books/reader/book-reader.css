@@ -89,6 +89,20 @@
   }
 }
 
+/* Until the picture is in: a blurred preview of the real page (a ~25-byte ThumbHash, upscaled; the
+   blur is on this tiny picture only, never on the page picture). */
+.bkr-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: blur(10px);
+  transform: scale(1.04);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 /* Until the picture is in: the page's real lines, faint (not a fake skeleton). */
 .bkr-ghost {
   position: absolute;

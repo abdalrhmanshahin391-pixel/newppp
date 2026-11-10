@@ -1,10 +1,12 @@
 // One book page: its picture, and over it the page's words in see-through text, each piece where
 // it sits on the picture, so the reader selects real text (the way pdf.js lays its text layer).
 //
-// Turning is instant: the sheet takes the new page's size at once (from the light page info),
-// slides in 24 px (220 ms), and shows the page's real line layout as faint "ghost text" until the
-// picture is decoded, then the picture fades in (200 ms). Pages beside the one being read are
-// decoded ahead, so they appear sharp straight away. A spinner shows only after a second.
+// Turning is instant: the sheet takes the new page's size and main colour at once (from the
+// manifest), slides in 24 px (220 ms), and shows a blurred preview of the real page (a ~25-byte
+// ThumbHash, on books prepared with sizes) or its real line layout as faint "ghost text", until
+// the picture is decoded; then the picture fades in (200 ms). Pages beside the one being read are
+// decoded ahead, so they appear sharp straight away. A spinner shows only after a second. Zooming
+// keeps the picture on screen while the bigger size arrives.
 //
 // Sizes are parts of the page box (container units), so zooming or turning the tablet needs no
 // work. Each piece is stretched to the width of its words on the picture, measured once per page
@@ -12,8 +14,9 @@
 import { forwardRef, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Loader2, RotateCcw } from "lucide-react";
 import type { PageView, PageWords } from "@/lib/book-reader-data";
-import { decodePicture, isPictureReady } from "@/lib/book-pictures";
-import { SETTLE_MS } from "@/lib/books-reader";
+import { thumbHashToDataURL } from "thumbhash";
+import { decodePicture, readyPicture } from "@/lib/book-pictures";
+import { SETTLE_MS, base64ToBytes } from "@/lib/books-reader";
 
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 /** Ghost text draws at most this many line pieces (a dense page has thousands). */
@@ -44,11 +47,17 @@ export const BookPageView = forwardRef<
   const box = useRef<HTMLDivElement | null>(null);
   const layer = useRef<HTMLDivElement | null>(null);
   const url = view?.url ?? "";
+  const path = view?.imagePath ?? "";
   const pageRatio = view ? view.height / view.width : ratio;
   const height = width * pageRatio;
 
   // ---- the picture: shown once decoded --------------------------------------------------------
-  const [sharp, setSharp] = useState<{ url: string; fade: boolean } | null>(null);
+  const [sharp, setSharp] = useState<{
+    path: string;
+    src: string;
+    page: number;
+    fade: boolean;
+  } | null>(null);
   const [pictureFailed, setPictureFailed] = useState(false);
   const [slow, setSlow] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -58,17 +67,23 @@ export const BookPageView = forwardRef<
   useEffect(() => {
     setPictureFailed(false);
     setSlow(false);
-    if (!url) return;
-    if (isPictureReady(url)) {
-      setSharp({ url, fade: false });
+    if (!url || !view) return;
+    const pageNumber = view.page;
+    const ready = readyPicture(path);
+    if (ready) {
+      setSharp({ path, src: ready, page: pageNumber, fade: false });
       return;
     }
     let alive = true;
     // While flipping fast, a page is fetched only once the reader stays on it.
     const timer = window.setTimeout(
       () => {
-        decodePicture(url, "high").then(
-          () => alive && setSharp({ url, fade: true }),
+        decodePicture(path, url, "high").then(
+          (src) => {
+            if (!alive) return;
+            // A bigger size of the page already shown replaces it without a fade.
+            setSharp((was) => ({ path, src, page: pageNumber, fade: was?.page !== pageNumber }));
+          },
           () => {
             if (!alive) return;
             // One quiet retry after 1.5 s, then a small "try again".
@@ -85,8 +100,20 @@ export const BookPageView = forwardRef<
       window.clearTimeout(timer);
       window.clearTimeout(spinner);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, attempt]);
-  const ready = Boolean(url && sharp?.url === url);
+  const ready = Boolean(path && sharp?.path === path);
+  // The page's own picture in another size (zooming): it stays until the new size is in.
+  const sameLeaf = Boolean(!ready && sharp && view && sharp.page === view.page);
+  const shown = ready || sameLeaf;
+  const preview = useMemo(() => {
+    if (!view?.thumbhash) return null;
+    try {
+      return thumbHashToDataURL(base64ToBytes(view.thumbhash));
+    } catch {
+      return null;
+    }
+  }, [view?.thumbhash]);
 
   // ---- the slide on every turn --------------------------------------------------------------
   useEffect(() => {
@@ -134,7 +161,7 @@ export const BookPageView = forwardRef<
       span.style.transform = `scaleX(${stretch.toFixed(4)})`;
     });
     // Measured at one width only; a later zoom keeps the same stretch.
-  }, [pieces, ready]);
+  }, [pieces, shown]);
 
   // While selecting, a blank layer under the words keeps the selection from jumping when the
   // pointer crosses the gaps between lines (pdf.js' "endOfContent").
@@ -162,7 +189,7 @@ export const BookPageView = forwardRef<
       window.removeEventListener("pointercancel", stop);
       document.removeEventListener("selectionchange", onChange);
     };
-  }, [ready, mine]);
+  }, [shown, mine]);
 
   const problem = failed || (pictureFailed ? "ما قدرت أفتح الصفحة" : "");
 
@@ -170,11 +197,15 @@ export const BookPageView = forwardRef<
     <div
       ref={box}
       className="bkr-page"
-      style={{ width, height }}
+      style={{ width, height, background: view?.color ?? undefined }}
       data-loaded={ready ? "" : undefined}
     >
-      {/* The page's real lines, faint, until its picture is in. */}
-      {!ready && mine && (
+      {/* A blurred preview of the real page, until its picture is in. */}
+      {!shown && preview && (
+        <img src={preview} alt="" className="bkr-preview" aria-hidden="true" draggable={false} />
+      )}
+      {/* Without a preview: the page's real lines, faint, until its picture is in. */}
+      {!shown && !preview && mine && (
         <div className="bkr-ghost" aria-hidden="true">
           {mine.runs.slice(0, GHOST_MAX).map(([, left, top, w, h], index) => (
             <i
@@ -189,16 +220,16 @@ export const BookPageView = forwardRef<
           ))}
         </div>
       )}
-      {ready && sharp && (
+      {shown && sharp && (
         <img
-          key={sharp.url}
-          src={sharp.url}
+          key={sharp.path}
+          src={sharp.src}
           alt=""
           className={`bkr-picture${sharp.fade ? " is-fading" : ""}`}
           draggable={false}
         />
       )}
-      {ready && mine && (
+      {shown && mine && (
         <div
           ref={(node) => {
             layer.current = node;
@@ -226,7 +257,7 @@ export const BookPageView = forwardRef<
         </div>
       )}
       {view && !view.hasText && ready && <p className="bkr-badge">صفحة صورة بدون نص، ما بتنحدد</p>}
-      {!ready && slow && !problem && (
+      {!shown && slow && !problem && (
         <span className="bkr-spin" role="status" aria-label="جاري تحميل الصفحة">
           <Loader2 size={16} className="animate-spin" aria-hidden="true" />
         </span>

@@ -31,6 +31,9 @@ Every one of them only adds; each can be run again safely if one stops halfway.
 3. `supabase/migrations/20261111120000_books_popularity.sql`
 4. `supabase/migrations/20261112120000_books_pdf_limit.sql` (book PDFs up to 500 MB)
 5. `supabase/migrations/20261113120000_books_reader.sql` (the reader: pages, place, circle limits)
+6. `supabase/migrations/20261114120000_books_visitor_access.sql` (visitors; always after 1–5)
+7. `supabase/migrations/20261115120000_books_reader_tiers.sql` (the reader's page sizes, previews
+   and per-book manifest; then «حدّث الكتاب» on each prepared book)
 
 Then raise the project's own limit, which no migration can change: **Supabase → Storage →
 Settings → Upload file size limit → 500 MB** (in Lovable Cloud: the project's storage settings).
@@ -42,12 +45,14 @@ Keep this order. Do not run phase 2 again after phase 3 (it would bring back the
 
 Text you can give Lovable (or Codex) as is:
 
-> Apply these five Supabase migrations from the repository, in this order, on the live
+> Apply these seven Supabase migrations from the repository, in this order, on the live
 > database, without changing them: `supabase/migrations/20261109120000_books_admin_foundation.sql`,
 > then `supabase/migrations/20261110120000_books_discovery.sql`, then
 > `supabase/migrations/20261111120000_books_popularity.sql`, then
 > `supabase/migrations/20261112120000_books_pdf_limit.sql`, then
-> `supabase/migrations/20261113120000_books_reader.sql`. They are additive and safe to run
+> `supabase/migrations/20261113120000_books_reader.sql`, then
+> `supabase/migrations/20261114120000_books_visitor_access.sql`, then
+> `supabase/migrations/20261115120000_books_reader_tiers.sql`. They are additive and safe to run
 > again in this order. Also raise the project's Storage "Upload file size limit" to 500 MB and
 > tell me the value it allows. Do not create Edge Functions, cron jobs or new tables beyond what the files contain. After
 > each one, run the verification query from `docs/books-lovable-steps.md` and tell me every row's
@@ -121,6 +126,19 @@ union all select 'picture policies', (select count(*) = 2 from pg_policies where
 union all select 'circle limit function', exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'books_take_study_quota')
 union all select 'visitors cannot ask the circle', not has_function_privilege('anon', 'public.books_take_study_quota(uuid, uuid, integer, text, text, integer)', 'execute')
 union all select 'no visitor policy on pages or places', not exists (select 1 from pg_policies where schemaname = 'public' and tablename in ('book_pages', 'book_reading_progress', 'book_study_requests') and ('anon' = any (roles) or 'public' = any (roles)));
+```
+
+### The reader's sizes and manifest
+
+```sql
+select 'page size columns' as item, (select count(*) = 5 from information_schema.columns where table_schema = 'public' and table_name = 'book_pages' and column_name in ('thumb_path', 'mid_path', 'zoom_path', 'thumbhash', 'color')) as ok
+union all select 'size and preview check', exists (select 1 from pg_constraint where conname = 'book_pages_tier_paths')
+union all select 'manifests table with rls', coalesce((select relrowsecurity from pg_class where relnamespace = 'public'::regnamespace and relname = 'book_manifests'), false)
+union all select 'manifest policies', (select count(*) = 2 from pg_policies where schemaname = 'public' and tablename = 'book_manifests' and policyname in ('readers read manifests of published books', 'admins manage book manifests'))
+union all select 'visitors cannot read manifests', not has_table_privilege('anon', 'public.book_manifests', 'select')
+union all select 'no visitor policy on manifests', not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'book_manifests' and ('anon' = any (roles) or 'public' = any (roles)))
+union all select 'new PDF clears the manifest', (select prosrc like '%book_manifests%' from pg_proc where pronamespace = 'public'::regnamespace and proname = 'books_reader_reset')
+union all select 'manifest not on books', not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'books' and column_name = 'manifest');
 ```
 
 ## 4. Storage (phase 1)
@@ -207,7 +225,8 @@ slower points to the network or the plan, not to the queries.
 ## Visitor-access follow-up (PR #148)
 
 After the phase, PDF-limit and reader migrations above, apply
-`supabase/migrations/20261114120000_books_visitor_access.sql` **last**.
+`supabase/migrations/20261114120000_books_visitor_access.sql` after them (the reader's sizes,
+`20261115120000_books_reader_tiers.sql`, does not touch its policies and comes after it).
 Phase 1 replaces the original books policy, so the earlier
 `20261108130000_books_public_read.sql` alone is insufficient for the newer library.
 

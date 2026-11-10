@@ -1,121 +1,147 @@
-# مكتبة Uzyra — كل اللي لازم تعمله بقاعدة البيانات وLovable
+# Uzyra — كل تحديثات قاعدة البيانات اللي لازم تتطبّق (النسخة الكاملة الجديدة)
 
-**ملف واحد لكل شغل المكتبة بقاعدة البيانات:** المكتبة الأولى (#146، بس إذا ناقصة)، المراحل الثلاث
-(#149 و#150 و#151)، حد الـ PDF ‏500 ميغا (#152)، والقارئ (#153، القراءة صفحة صفحة داخل الموقع).
-بالترتيب: قاعدة البيانات وLovable أول، بعدين الفحص، بعدين التجربة على الموقع. نص كل تحديث كامل موجود
-بالملاحق بآخر الملف، فما بتحتاج تدوّر على إشي.
+**هاد الملف بيحل محل الملف القديم.** فيه كل تحديث بقاعدة البيانات من آخر شي طبّقناه لهلأ: تحديثين لمسار
+الدروس (قبل المكتبة)، المكتبة الأولى، تصليح الزوار، المراحل الثلاث، حد الـ PDF، القارئ، تصليح الزوار
+الجديد، و**الجديد هلأ: رقم 11 (أحجام الصفحات والفهرس، المرحلة 2 من خطة القارئ)**. نص كل تحديث كامل بالملاحق بآخر الملف، ومطابق حرف بحرف لملفات المشروع على `main`.
 
-### قائمة كل اللي عليك (وما في غيرها)
+### شو الجديد عن النسخة اللي قبل (بصراحة)
 
-| # | شو | وين | نوعه |
-| --- | --- | --- | --- |
-| 0 | المكتبة الأولى — **بس إذا الخطوة 2 طلّعت `false`** | الملحق 0 | SQL |
-| 1 | المرحلة 1: الإدارة والبيانات | الملحق 1 | SQL |
-| 2 | المرحلة 2: البحث والاكتشاف | الملحق 2 | SQL |
-| 3 | المرحلة 3: التقييم والشعبية | الملحق 3 | SQL |
-| 4 | حد الـ PDF ‏500 ميغا | الملحق 4 | SQL |
-| 5 | القارئ | الملحق 5 | SQL |
-| 6 | الحد العام للرفع 500 ميغا | الخطوة 3 ← «ارفع الحد العام» | إعداد بالتخزين، مش SQL |
-| 7 | تجهيز كل كتاب للقراءة (مرة وحدة لكل كتاب) | `/admin/books` ← «جهّز الكتاب للقراءة» | من لوحة الأدمن، بعد دمج #153 |
+- **انضاف رقم 11 بس** (`20261115120000_books_reader_tiers.sql`): أحجام إضافية لصور الصفحات، معاينة مموّهة
+  صغيرة لكل صفحة، ولونها، وجدول `book_manifests` (فهرس كل كتاب بطلب واحد). كل إشي فيه بيضيف بس، وآمن لو
+  انعاد. الأرقام 1–10 ما تغيّر فيها ولا حرف.
+- **بعد رقم 11** الكتب اللي تجهّزت قبل بتضل تنقرأ عادي (بالحجم القديم). عشان تاخد الأحجام الجديدة والمعاينة،
+  اكبس «حدّث الكتاب» لكل كتاب من `/admin/books` (الخطوة 6).
 
-ما في Edge Functions جديدة، ولا مهام مجدولة (cron)، ولا مفاتيح سرية جديدة (ريتا بتستعمل نفس مفتاح Groq
-الموجود)، ولا إعدادات ثانية بـ Lovable.
+### شو كان جديد بالنسخة اللي قبلها
 
-## قبل كل إشي: شو بيصير لو ما طبّقت لهلأ؟
+- **تحديثين للمكتبة ما كانوا بالملف القديم:** `books_public_read` و`books_visitor_access`. جلسة ثانية على حسابك
+  (الطلب #148) ضافتهم لـ `main` **بعد** ما بعتلك الملف. بدونهم الزوار (مش مسجّلين) ممكن ما يشوفوا المكتبة.
+- **تحديثين لمسار الدروس** (5 و7 نوفمبر، قبل المكتبة). ما حطيتهم بالملف القديم لأنهم مش من المكتبة،
+  ومش متأكد إذا انطبقوا عندك. هلأ موجودين، والاستعلام بالخطوة 0 بيقلك إذا لازمين.
+- **المهم:** رسالة الجلسة الثانية بتقول إنها طبّقت تحديثات على قاعدة البيانات الحقيقية. عشان هيك **ابدأ
+  بالخطوة 0**: بتعرف منها شو انطبق عندك أصلاً، وما بتعيد إشي على الفاضي (مع إنه الإعادة آمنة).
+- **ما تغيّر ولا حرف** بالتحديثات القديمة؛ اللي انضاف بس ملفات جديدة.
 
-الموقع شغّال هلأ وبضل شغّال. كل مرحلة بتشتغل بس لما يتطبّق تحديثها، ولحد هداك الوقت الصفحة
-بترجع للنسخة اللي قبل، وبتطلع للأدمن رسالة صغيرة بتقول شو ناقص:
+### القائمة الكاملة (بالترتيب، ما في غيرها)
 
-| إذا طبّقت لحد… | شو بيشتغل |
-| --- | --- |
-| ولا وحدة | المكتبة الأولى (الرفوف والتصنيفات وكتاب الأسبوع والإدارة القديمة)، البحث والفلترة من المتصفح |
-| المرحلة 1 | + الحالات (مسودة/منشور/مؤرشف)، الحقوق، ISBN، الوسوم، الرفوف اليدوية، الاستيراد، الجودة، الإجراءات الجماعية |
-| المرحلة 2 | + البحث الحقيقي، الفلاتر مع أعدادها، الصفحات، «مختارات لك»، التثبيت والاستبعاد |
-| المرحلة 3 | + التقييم والمفضلة، «الرائج» و«الأعلى تقييماً»، «مفضلتي»، تبويب الإحصائيات |
-| حد الـ PDF + إعداد الحد العام | ملفات PDF لحد 500 ميغا (بدونهم الحد 50 ميغا) |
-| القارئ | + القراءة داخل الموقع صفحة صفحة مع الدائرة (بدونه «ابدأ القراءة» بيفتح ملف الـ PDF مثل هلأ) |
+| # | الملف | شو بيعمل | من وين | نصّه |
+| --- | --- | --- | --- | --- |
+| 1 | `20261105120000_rita_path_items.sql` | مسار الدروس: محطات التمارين والملفات | قبل المكتبة (5 نوفمبر) | الملحق 1 |
+| 2 | `20261107120000_rita_path_finish_stops.sql` | مسار الدروس: خط نهاية كل مستوى | قبل المكتبة (7 نوفمبر) | الملحق 2 |
+| 3 | `20261108120000_books_library.sql` | المكتبة الأولى | #146 | الملحق 3 |
+| 4 | `20261108130000_books_public_read.sql` | تصليح قراءة الزوار للمكتبة الأولى | #148 (جلسة ثانية) | الملحق 4 |
+| 5 | `20261109120000_books_admin_foundation.sql` | المرحلة 1: الإدارة والبيانات | #149 | الملحق 5 |
+| 6 | `20261110120000_books_discovery.sql` | المرحلة 2: البحث والاكتشاف | #150 | الملحق 6 |
+| 7 | `20261111120000_books_popularity.sql` | المرحلة 3: التقييم والشعبية | #151 | الملحق 7 |
+| 8 | `20261112120000_books_pdf_limit.sql` | حد الـ PDF ‏500 ميغا | #152 | الملحق 8 |
+| 9 | `20261113120000_books_reader.sql` | القارئ (صفحة صفحة) | #153 | الملحق 9 |
+| 10 | `20261114120000_books_visitor_access.sql` | وصول الزوار للمكتبة الجديدة — بعد 1–9 دايماً | #148 (جلسة ثانية) | الملحق 10 |
+| 11 | `20261115120000_books_reader_tiers.sql` | القارئ: أحجام الصفحات، المعاينة، الفهرس | المرحلة 2 من خطة القارئ | الملحق 11 |
+
+وكمان، مش SQL:
+
+- **الحد العام للرفع 500 ميغا** (إعداد بالتخزين) — الخطوة 3.
+- **تجهيز كل كتاب للقراءة** من `/admin/books` ← «جهّز الكتاب للقراءة» (مرة لكل كتاب)، وللكتب اللي
+  تجهّزت قبل رقم 11: «حدّث الكتاب» — الخطوة 6.
+
+ما في Edge Functions جديدة، ولا مهام مجدولة (cron)، ولا مفاتيح سرية جديدة.
 
 ---
 
-## الخطوة 1 — نسخة احتياطية وأرقام للمقارنة
+## الخطوة 0 — شو انطبق عندك أصلاً؟ (قراءة بس، ما بيغيّر إشي)
 
-1. خذ نسخة احتياطية: Lovable Cloud → Database → Backups (أو استنى النسخة اليومية `vault-daily-snapshot`).
-2. شغّل هالاستعلام واحفظ النتيجة عشان تقارن بعدين:
+شغّل هالاستعلام بمحرر SQL. كل صف `true` معناه هالتحديث موجود عندك، و`false` معناه لازم تطبّقه.
+
+```sql
+select item, applied from (values
+  (1, '1  مسار الدروس: محطات', to_regclass('public.rita_path_items') is not null),
+  (2, '2  مسار الدروس: خط النهاية', exists (select 1 from pg_constraint where conname = 'rita_path_items_kind_check' and pg_get_constraintdef(oid) like '%finish%')),
+  (3, '3  المكتبة الأولى', to_regclass('public.books') is not null and to_regclass('public.book_categories') is not null),
+  (4, '4  قراءة الزوار (الأولى)', exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'books' and (policyname = 'visitors read published books' or (policyname = 'published books are readable' and qual not like '%has_role%')))),
+  (5, '5  المرحلة 1', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'books' and column_name = 'status')),
+  (6, '6  المرحلة 2', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'books' and column_name = 'search_doc')),
+  (7, '7  المرحلة 3', to_regclass('public.book_ratings') is not null),
+  (8, '8  حد الـ PDF', exists (select 1 from storage.buckets where id = 'book-files' and file_size_limit = 524288000)),
+  (9, '9  القارئ', to_regclass('public.book_pages') is not null),
+  (10, '10 وصول الزوار', exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'books' and policyname = 'visitors read published books')),
+  (11, '11 أحجام الصفحات والفهرس', to_regclass('public.book_manifests') is not null)
+) as t(n, item, applied) order by n;
+```
+
+- إذا الكل `true`: ما في إشي تطبّقه. روح على الخطوة 3 (الحد العام) والخطوة 4 (الفحص) والخطوة 6.
+- إذا في `false`: طبّق **من أول رقم `false` لآخر القائمة بالترتيب** (الخطوة 2). تطبيق تحديث انطبق قبل ما
+  بيضر، كلهم مكتوبين ليتكرّروا بأمان.
+- إذا رقم 1 أو 2 `false` بس الباقي `true`، طبّق 1 و2 بس (مستقلين عن المكتبة).
+
+## الخطوة 1 — نسخة احتياطية
+
+خذ نسخة احتياطية: Lovable Cloud → Database → Backups (أو استنى النسخة اليومية `vault-daily-snapshot`).
+وإذا جدول الكتب موجود، احفظ نتيجة هاد للمقارنة بعدين:
 
 ```sql
 select published, count(*) from public.books group by 1;
 ```
 
-## الخطوة 2 — تأكد إنه جدول المكتبة الأول موجود
+## الخطوة 2 — طبّق اللي ناقص بالترتيب
 
-المراحل الثلاث مبنية على تحديث المكتبة الأول (`20261108120000_books_library.sql` من PR #146).
-شغّل:
+قواعد:
 
-```sql
-select to_regclass('public.books') is not null as books_table,
-       to_regclass('public.book_categories') is not null as categories_table,
-       exists (select 1 from storage.buckets where id = 'book-covers') as covers_bucket,
-       exists (select 1 from storage.buckets where id = 'book-files') as files_bucket;
-```
+- **بالترتيب بس**. **رقم 10 (وصول الزوار) دايماً بعد 1–9**: إذا طبّقت هلأ شي من 3–9، أعد 10 بعده. رقم 11
+  مستقل عن 10 (ما بيلمس سياساته)، فبيجي آخر واحد بالترتيب العادي.
+- **ما تعيد المرحلة 2 (رقم 6) بعد المرحلة 3 (رقم 7) لحالها.** إذا لازم تعيدها، كمّل بعدها 7 و8 و9 و10.
+- كل تحديث بيضيف وما بيمسح بيانات، وآمن لو انعاد أو وقف بالنص.
 
-- إذا الأربعة `true`: كمّل على الخطوة 3.
-- إذا وحدة منهم `false`: طبّق **الملحق 0** أول (تحديث المكتبة الأول)، وبعدين كمّل.
+### الطريقة أ — بإيدك من محرر SQL (الأضمن)
 
-## الخطوة 3 — طبّق التحديثات الخمسة بالترتيب
+1. إذا 1 أو 2 `false`: الصق **الملحق 1** وشغّله، بعدين **الملحق 2**.
+2. للمكتبة: الصق من أول ملحق ناقص (3 أو أكثر) **لحد الملحق 11، كلهم مع بعض بنفس المرة** وشغّلهم مرة
+   وحدة. هيك بيتطبّقوا بعملية وحدة، فإذا وقف إشي ما بينطبق نصّه، والزوار ما بيشوفوا نسخة بالنص.
+   (إذا المحرر ما قبل النص الطويل، طبّقهم واحد واحد بالترتيب: 10 بعد 9، و11 آخر واحد.)
+3. **إذا 1–10 كلهم `true` وبس 11 `false`**: الصق **الملحق 11** لحاله وشغّله. هاد الغالب عندك.
 
-| الترتيب | التحديث | المرحلة | بالملحق |
-| --- | --- | --- | --- |
-| 1 | `20261109120000_books_admin_foundation.sql` | الإدارة والبيانات | الملحق 1 |
-| 2 | `20261110120000_books_discovery.sql` | البحث والاكتشاف | الملحق 2 |
-| 3 | `20261111120000_books_popularity.sql` | التقييم والشعبية | الملحق 3 |
-| 4 | `20261112120000_books_pdf_limit.sql` | حد الـ PDF ‏500 ميغا | الملحق 4 |
-| 5 | `20261113120000_books_reader.sql` | القارئ (صفحات، مكان القراءة، حدود الدائرة) | الملحق 5 |
+### الطريقة ب — تعطيها لـ Lovable
 
-قواعد مهمة:
+انسخ هالنص كما هو، والصق تحته استعلام الخطوة 0:
 
-- **بالترتيب بس.** كل واحد مبني على اللي قبله.
-- كل تحديث **بيضيف وما بيمسح إشي**، ومكتوب ليتكرّر بأمان لو وقف بالنص.
-- **ما تعيد المرحلة 2 بعد المرحلة 3** (بترجّع نسخة قديمة من `books_browse` جنب الجديدة). إعادة أي واحد بالترتيب آمنة.
-- ما في Edge Functions جديدة، ولا مهام مجدولة (cron)، ولا مفاتيح سرية.
-
-### الطريقة أ — تعطيها لـ Lovable (الأسهل)
-
-**انتبه:** ملف القارئ (`20261113120000_books_reader.sql`) موجود بالطلب #153، فبيصير بـ main بس بعد
-ما ندمجه. إذا بدك تطبّق قبل الدمج: أعطِ Lovable الأربعة الأولى، وطبّق **الملحق 5** بإيدك (الطريقة ب)،
-أو استنى الدمج وأعطيه الخمسة مرة وحدة. تطبيقه قبل الدمج ما بيضر: الموقع بيضل يفتح الـ PDF مثل هلأ.
-
-انسخ هالنص كما هو:
-
-> Apply these five Supabase migrations from the repository, in this order, on the live
-> database, without changing them: `supabase/migrations/20261109120000_books_admin_foundation.sql`,
-> then `supabase/migrations/20261110120000_books_discovery.sql`, then
-> `supabase/migrations/20261111120000_books_popularity.sql`, then
-> `supabase/migrations/20261112120000_books_pdf_limit.sql`, then
-> `supabase/migrations/20261113120000_books_reader.sql`. First check that
-> `supabase/migrations/20261108120000_books_library.sql` is already applied (the tables
-> `public.books` and `public.book_categories` exist); if not, apply it first. They are additive
-> and safe to run again in this order. Do not create Edge Functions, cron jobs or new tables
-> beyond what the files contain. After each one, run the verification query for that phase from
-> `docs/books-lovable-steps.md` and tell me every row's result. Also raise the project's Storage
+> First run the read-only status query pasted below on the live database and tell me each row.
+> Then apply, in this order and without changing them, only the migrations whose row is false,
+> from the first false one to the end: `20261105120000_rita_path_items.sql`,
+> `20261107120000_rita_path_finish_stops.sql`, `20261108120000_books_library.sql`,
+> `20261108130000_books_public_read.sql`, `20261109120000_books_admin_foundation.sql`,
+> `20261110120000_books_discovery.sql`, `20261111120000_books_popularity.sql`,
+> `20261112120000_books_pdf_limit.sql`, `20261113120000_books_reader.sql`,
+> `20261114120000_books_visitor_access.sql` (always after the ones before it), then
+> `20261115120000_books_reader_tiers.sql` (all in `supabase/migrations/` on main). Apply the
+> library ones, from the first missing one to the last, in one transaction. They are additive and
+> safe to run again. Do not create Edge Functions, cron jobs or tables beyond what the files
+> contain. Then run the status query again and tell me each row. Also raise the project's Storage
 > "Upload file size limit" to 500 MB and tell me the value it allows.
 
-### الطريقة ب — بإيدك من محرر SQL
+بعدها الصقله استعلامات الخطوة 4 واطلب منه يقلك نتيجة كل صف.
 
-افتح محرر SQL بقاعدة البيانات، والصق **الملحق 1** كامل وشغّله، بعدين **الملحق 2**، بعدين **الملحق 3**، بعدين **الملحق 4**، بعدين **الملحق 5**.
-بعد كل واحد شغّل استعلام الفحص تبعه (الخطوة 4) قبل ما تكمّل.
+## الخطوة 3 — ارفع الحد العام للرفع لـ 500 ميغا (إعداد، مش SQL)
 
-### بعدها — ارفع الحد العام للرفع لـ 500 ميغا (إعداد، مش SQL)
+**Supabase → Storage → Settings → Upload file size limit → 500 MB** (بـ Lovable Cloud: إعدادات التخزين
+بالمشروع، أو اطلبها من Lovable بالنص فوق).
 
-هاد الإعداد ما بيتغيّر من أي تحديث قاعدة بيانات: **Supabase → Storage → Settings → Upload file size
-limit → 500 MB** (بـ Lovable Cloud: إعدادات التخزين بالمشروع، أو اطلبها من Lovable بالنص فوق).
+- بالخطة المجانية ما بيعلى عن 50 ميغا. إذا ضل 50، ملفات الـ PDF الأكبر بترفض برسالة واضحة بالمحرّر
+  («أكبر من الحد المسموح بالمشروع»)، والأصغر بتنرفع عادي.
+- مكان الكتب (`book-files`) صار 500 ميغا بالملحق 8. الحد الفعلي هو الأصغر بين الاثنين.
 
-- بالخطة المجانية لـ Supabase ما بيعلى عن 50 ميغا. إذا ضل 50، ملفات الـ PDF الأكبر بترفض برسالة
-  واضحة بالمحرّر («أكبر من الحد المسموح بالمشروع»)، والأصغر بتضل تنرفع عادي.
-- مكان تخزين الكتب نفسه (`book-files`) صار 500 ميغا بالملحق 4. الحد الفعلي هو الأصغر بين الاثنين.
+## الخطوة 4 — افحص (كل صف لازم يطلع `true`)
 
-## الخطوة 4 — افحص كل مرحلة (كل صف لازم يطلع `true`)
+شغّل الخطوة 0 مرة ثانية: كلها لازم `true`. بعدين هدول:
 
-### بعد المرحلة 1
+### مسار الدروس (1 و2)
+
+```sql
+select 'path tables' as item, (select count(*) = 2 from information_schema.tables where table_schema = 'public' and table_name in ('rita_path_items', 'rita_path_item_resources')) as ok
+union all select 'finish stops allowed', exists (select 1 from pg_constraint where conname = 'rita_path_items_kind_check' and pg_get_constraintdef(oid) like '%finish%')
+union all select 'layout function', exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'rita_set_path_layout')
+union all select 'rls on path tables', (select bool_and(relrowsecurity) from pg_class where relnamespace = 'public'::regnamespace and relname in ('rita_path_items', 'rita_path_item_resources'));
+```
+
+### بعد المرحلة 1 (رقم 5)
 
 ```sql
 select 'books.status' as item, exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'books' and column_name = 'status') as ok
@@ -131,7 +157,7 @@ union all select 'status in step with published', not exists (select 1 from publ
 union all select 'one book of the week at most', (select count(*) <= 1 from public.books where featured);
 ```
 
-### بعد المرحلة 2
+### بعد المرحلة 2 (رقم 6)
 
 ```sql
 select 'pg_trgm installed' as item, exists (select 1 from pg_extension where extname = 'pg_trgm') as ok
@@ -146,7 +172,7 @@ union all select 'browse answers', (public.books_browse() ? 'items')
 union all select 'browse counts what discover counts', ((public.books_browse()->>'total')::int = (public.books_discover()->>'total')::int);
 ```
 
-### بعد المرحلة 3
+### بعد المرحلة 3 (رقم 7)
 
 ```sql
 select 'tables' as item, (select count(*) = 5 from information_schema.tables where table_schema = 'public' and table_name in ('book_events', 'book_favorites', 'book_ratings', 'book_stats', 'book_daily')) as ok
@@ -160,7 +186,7 @@ union all select 'popular answers', (public.books_popular() ? 'top_rated')
 union all select 'cards carry ratings', ((public.books_browse()->'items'->0) is null or (public.books_browse()->'items'->0) ? 'rating_count');
 ```
 
-### بعد تحديث حد الـ PDF
+### بعد حد الـ PDF (رقم 8)
 
 ```sql
 select 'book PDFs up to 500 MB' as item, (select file_size_limit = 524288000 from storage.buckets where id = 'book-files') as ok
@@ -168,7 +194,7 @@ union all select 'still PDFs only', (select allowed_mime_types = array['applicat
 union all select 'still private', (select not public from storage.buckets where id = 'book-files');
 ```
 
-### بعد تحديث القارئ
+### بعد القارئ (رقم 9)
 
 ```sql
 select 'tables' as item, (select count(*) = 3 from information_schema.tables where table_schema = 'public' and table_name in ('book_pages', 'book_reading_progress', 'book_study_requests')) as ok
@@ -183,17 +209,45 @@ union all select 'visitors cannot ask the circle', not has_function_privilege('a
 union all select 'no visitor policy on pages or places', not exists (select 1 from pg_policies where schemaname = 'public' and tablename in ('book_pages', 'book_reading_progress', 'book_study_requests') and ('anon' = any (roles) or 'public' = any (roles)));
 ```
 
+### بعد وصول الزوار (رقم 10)
+
+```sql
+select 'visitors read published books' as item, exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'books' and policyname = 'visitors read published books' and 'anon' = any (roles)) as ok
+union all select 'visitors read visible shelves', exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'book_shelves' and policyname = 'visitors read visible shelves')
+union all select 'visitors read rules in force', exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'book_editorial' and policyname = 'visitors read rules in force')
+union all select 'visitors read public numbers', (select count(*) = 2 from pg_policies where schemaname = 'public' and tablename in ('book_stats', 'book_daily') and 'anon' = any (roles))
+union all select 'signed-in policy kept for books', exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'books' and policyname = 'published books are readable' and 'authenticated' = any (roles))
+union all select 'books_read_at exists', exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'books_read_at')
+union all select 'still one books_browse', (select count(*) = 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'books_browse')
+union all select 'visitors can browse', (select bool_and(has_function_privilege('anon', p.oid, 'execute')) from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname in ('books_browse', 'books_discover', 'books_popular'))
+union all select 'no visitor policy on private rows', not exists (select 1 from pg_policies where schemaname = 'public' and tablename in ('book_ratings', 'book_favorites', 'book_events', 'book_pages', 'book_reading_progress', 'book_study_requests') and ('anon' = any (roles) or 'public' = any (roles)))
+union all select 'browse answers', (public.books_browse() ? 'items');
+```
+
+### بعد أحجام الصفحات والفهرس (رقم 11)
+
+```sql
+select 'page size columns' as item, (select count(*) = 5 from information_schema.columns where table_schema = 'public' and table_name = 'book_pages' and column_name in ('thumb_path', 'mid_path', 'zoom_path', 'thumbhash', 'color')) as ok
+union all select 'size and preview check', exists (select 1 from pg_constraint where conname = 'book_pages_tier_paths')
+union all select 'manifests table with rls', coalesce((select relrowsecurity from pg_class where relnamespace = 'public'::regnamespace and relname = 'book_manifests'), false)
+union all select 'manifest policies', (select count(*) = 2 from pg_policies where schemaname = 'public' and tablename = 'book_manifests' and policyname in ('readers read manifests of published books', 'admins manage book manifests'))
+union all select 'visitors cannot read manifests', not has_table_privilege('anon', 'public.book_manifests', 'select')
+union all select 'no visitor policy on manifests', not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'book_manifests' and ('anon' = any (roles) or 'public' = any (roles)))
+union all select 'new PDF clears the manifest', (select prosrc like '%book_manifests%' from pg_proc where pronamespace = 'public'::regnamespace and proname = 'books_reader_reset')
+union all select 'manifest not on books', not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'books' and column_name = 'manifest');
+```
+
 ملاحظة: إذا طلعت رسالة `unique index not created yet` بالمرحلة 1، معناها في تصنيفين بنفس الاسم.
 غيّر اسم واحد منهم وأعد تشغيل الملحق 1 (آمن).
 
-## الخطوة 5 — تخزين الملفات (المرحلة 1 وحد الـ 500 ميغا)
+## الخطوة 5 — تخزين الملفات
 
 - Buckets: `book-covers` (public) and `book-files` (private) exist (Storage → Buckets).
 - In `/admin/books`, edit a book and upload a PDF **over 6 MB** (try one between 60 and 200 MB
   too): the progress bar should move in parts and finish. Turn the network off for a few seconds
   in the middle: it should carry on.
 - If a big PDF is refused with «أكبر من الحد المسموح بالمشروع», the project's Upload file size
-  limit is still lower than the file: raise it (الخطوة 3 → «ارفع الحد العام»). If it says «الرفع على أجزاء مش شغّال»,
+  limit is still lower than the file: raise it (الخطوة 3). If it says «الرفع على أجزاء مش شغّال»,
   resumable uploads are off in the project: files up to 50 MB still go up in one request.
 - Replace that book's cover: the new one shows, and the old file disappears from the bucket (or
   shows in «الاستيراد والجودة» → «ملفات قديمة لسا ما انشالت»; press «جرّب تشيلهم هلأ»).
@@ -233,7 +287,7 @@ Phase 3 (signed in as a learner, on `/books`):
 4. In `/admin/books` → «الإحصائيات»: your views, reads, favourites and ratings show for 7 days.
 5. «الأعلى تقييماً» shows only once a book has 3 ratings from 3 different people.
 
-القارئ (بعد الملحق 5):
+القارئ (بعد الملحق 9):
 
 1. بـ `/admin/books` عدّل كتاب منشور فيه PDF: «القراءة داخل الموقع» → «جهّز الكتاب للقراءة». الشريط
    بيعدّ الصفحات؛ خلّي الصفحة مفتوحة لحد ما يقول «جاهز للقراءة داخل الموقع». جرّب «وقّف» بالنص،
@@ -246,8 +300,23 @@ Phase 3 (signed in as a learner, on `/books`):
 5. ارفع PDF جديد لنفس الكتاب: ما بيصير يتقرأ بالموقع لحد ما يتجهّز من جديد (التجهيز بيبلّش لحاله
    لما تحفظ).
 
-كل كتاب لازم يتجهّز مرة وحدة من متصفح الأدمن بعد الملحق 5؛ الكتب اللي لسا ما تجهّزت بتطلع
+كل كتاب لازم يتجهّز مرة وحدة من متصفح الأدمن بعد الملحق 9؛ الكتب اللي لسا ما تجهّزت بتطلع
 بـ«الاستيراد والجودة» → «جاهزية القراءة».
+
+أحجام الصفحات والفهرس (بعد الملحق 11):
+
+1. بـ `/admin/books` عدّل كتاب تجهّز قبل: بيطلع «حدّث الكتاب» (والكتاب بيطلع بـ«الاستيراد والجودة» →
+   «جاهزية القراءة»). اكبسه وخلّي الصفحة مفتوحة: السطر بيقول «صفحة x من y · n صفحة/ثانية · باقي حوالي …».
+2. Storage → `book-pages` → مجلد الكتاب: صار فيه `t/` و`m/` و`z/` جنب الصور العادية (على iPad أو تلفون ما
+   بينعمل `z/`؛ جهّز من كمبيوتر للأحجام الكاملة).
+3. Table editor → `book_manifests`: صف للكتاب، فيه `pages` (صف لكل صفحة) و`outline` (فصول الكتاب إذا الـ PDF
+   فيه فهرس).
+4. كمتعلّم، افتح الكتاب ونط لصفحة بعيدة (اكتب رقمها): بتشوف صورة مموّهة للصفحة نفسها فوراً، بعدين بتوضح.
+   كبّر مرتين أو ثلاث: الصفحة ما بتختفي وهي تجيب الحجم الأكبر.
+5. اطلع من القارئ وارجع: الصفحات اللي قريتها بتفتح فوراً من الجهاز. سجّل خروج: بتنمسح من الجهاز.
+
+الزوار (بعد الملحق 10): افتح `/books` بنافذة خاصة (بدون تسجيل دخول): المكتبة بتطلع، البحث والفلاتر
+شغّالين، وما في رسالة خطأ. «ابدأ القراءة» بيطلب تسجيل الدخول.
 
 ## الخطوة 7 — السرعة على الموقع الحقيقي (هدف 700ms)
 
@@ -270,7 +339,140 @@ slower points to the network or the plan, not to the queries.
 
 ---
 
-## الملحق 0 — تحديث المكتبة الأول (بس إذا الخطوة 2 طلّعت `false`)
+## الملحق 1 — مسار الدروس: محطات التمارين والملفات
+
+`supabase/migrations/20261105120000_rita_path_items.sql`
+
+```sql
+-- Extra stops on a learner's lesson path, placed by an admin between the lessons:
+--   'exercises' — a practice stop (only its look for now: opening it does nothing yet);
+--   'resources' — a stop holding files (PDF) and links the learner opens.
+--
+-- Lessons keep their integer rita_lessons.path_order. An item sits in the same number space with
+-- a fractional order (between two lessons, e.g. 3.5), so adding or moving items never renumbers
+-- lessons of other books. One function applies a whole new layout atomically.
+
+create table if not exists public.rita_path_items (
+  id uuid primary key default gen_random_uuid(),
+  language text not null default 'en' check (language ~ '^[a-z]{2,3}(-[a-z0-9]{2,8})?$'),
+  kind text not null check (kind in ('exercises', 'resources')),
+  title text not null check (char_length(btrim(title)) between 1 and 120),
+  path_order numeric not null,
+  created_by uuid references auth.users (id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists rita_path_items_language
+  on public.rita_path_items (language, path_order);
+
+alter table public.rita_path_items enable row level security;
+
+drop policy if exists "path items are readable" on public.rita_path_items;
+create policy "path items are readable" on public.rita_path_items
+  for select to authenticated using (true);
+drop policy if exists "admins manage path items" on public.rita_path_items;
+create policy "admins manage path items" on public.rita_path_items
+  for all to authenticated
+  using (public.has_role(auth.uid(), 'admin'::public.app_role))
+  with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+drop trigger if exists rita_path_items_updated_at on public.rita_path_items;
+create trigger rita_path_items_updated_at before update on public.rita_path_items
+  for each row execute function public.set_updated_at();
+
+-- The files and links of a 'resources' stop. Same shape as rita_lesson_resources; PDFs live in the
+-- same private bucket under path-items/<item id>/ and reach learners only as signed links.
+create table if not exists public.rita_path_item_resources (
+  id uuid primary key default gen_random_uuid(),
+  item_id uuid not null references public.rita_path_items (id) on delete cascade,
+  kind text not null check (kind in ('pdf', 'link', 'video')),
+  title text not null check (char_length(btrim(title)) between 1 and 160),
+  url text check (url is null or (char_length(url) <= 2000 and url ~* '^https://')),
+  file_path text check (file_path is null or char_length(file_path) <= 300),
+  file_name text check (file_name is null or char_length(file_name) <= 200),
+  file_size integer check (file_size is null or file_size between 1 and 15728640),
+  position integer not null default 0 check (position >= 0),
+  created_by uuid references auth.users (id) on delete set null,
+  created_at timestamptz not null default now(),
+  constraint rita_path_item_resources_shape check (
+    (kind = 'pdf' and file_path is not null and url is null)
+    or (kind in ('link', 'video') and url is not null and file_path is null)
+  )
+);
+create index if not exists rita_path_item_resources_item
+  on public.rita_path_item_resources (item_id, position);
+
+alter table public.rita_path_item_resources enable row level security;
+
+drop policy if exists "path item resources are readable" on public.rita_path_item_resources;
+create policy "path item resources are readable" on public.rita_path_item_resources
+  for select to authenticated using (true);
+drop policy if exists "admins manage path item resources" on public.rita_path_item_resources;
+create policy "admins manage path item resources" on public.rita_path_item_resources
+  for all to authenticated
+  using (public.has_role(auth.uid(), 'admin'::public.app_role))
+  with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+-- Learners may read the stored files of path items (signed links are made with their session).
+drop policy if exists "learners read path item files" on storage.objects;
+create policy "learners read path item files" on storage.objects
+  for select to authenticated
+  using (bucket_id = 'rita-lesson-resources' and name like 'path-items/%');
+
+-- Applies a whole path layout at once: integer orders for published lessons, fractional ones for
+-- path items. Admins only; any unknown id rolls the whole change back.
+create or replace function public.rita_set_path_layout(p_lessons jsonb, p_items jsonb)
+returns void
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  item jsonb;
+begin
+  if not public.has_role(auth.uid(), 'admin'::public.app_role) then
+    raise exception 'admin only';
+  end if;
+  if jsonb_typeof(p_lessons) <> 'array' or jsonb_typeof(p_items) <> 'array' then
+    raise exception 'layout must be two jsonb arrays';
+  end if;
+  for item in select * from jsonb_array_elements(p_lessons) loop
+    if (item->>'path_order')::int < 1 then raise exception 'invalid path order'; end if;
+    update public.rita_lessons set path_order = (item->>'path_order')::int
+    where id = (item->>'id')::uuid and status = 'published';
+    if not found then
+      raise exception 'lesson % is not a published lesson', item->>'id';
+    end if;
+  end loop;
+  for item in select * from jsonb_array_elements(p_items) loop
+    update public.rita_path_items set path_order = (item->>'path_order')::numeric
+    where id = (item->>'id')::uuid;
+    if not found then
+      raise exception 'path item % does not exist', item->>'id';
+    end if;
+  end loop;
+end;
+$$;
+
+revoke all on function public.rita_set_path_layout(jsonb, jsonb) from public, anon;
+grant execute on function public.rita_set_path_layout(jsonb, jsonb) to authenticated;
+```
+
+## الملحق 2 — مسار الدروس: خط نهاية كل مستوى
+
+`supabase/migrations/20261107120000_rita_path_finish_stops.sql`
+
+```sql
+-- A level's finish line on the learner's lesson path. The path is cut into one section per level
+-- (a lesson's level is its book's level, rita_curricula.level). The finish of a level is drawn after
+-- its last lesson; an admin can instead place their own finish stop and move it like any other
+-- stop. Its title is the level it closes ("A1" .. "C2").
+alter table public.rita_path_items drop constraint if exists rita_path_items_kind_check;
+alter table public.rita_path_items
+  add constraint rita_path_items_kind_check check (kind in ('exercises', 'resources', 'finish'));
+```
+
+## الملحق 3 — المكتبة الأولى
 
 `supabase/migrations/20261108120000_books_library.sql`
 
@@ -369,7 +571,20 @@ create policy "readers open published book files" on storage.objects
   );
 ```
 
-## الملحق 1 — المرحلة 1: الإدارة والبيانات
+## الملحق 4 — تصليح قراءة الزوار للمكتبة الأولى
+
+`supabase/migrations/20261108130000_books_public_read.sql`
+
+```sql
+-- has_role is executable by authenticated users, not anon. The original shared SELECT policy
+-- called it for visitors too, so /books failed with 42501 even when the library was empty.
+-- Visitors and ordinary users read published metadata. The separate permissive ALL policy
+-- "admins manage books" still lets authenticated admins read drafts and manage the library.
+-- No function grants, write policies, storage policies or existing migration files change.
+alter policy "published books are readable" on public.books using (published);
+```
+
+## الملحق 5 — المرحلة 1: الإدارة والبيانات
 
 `supabase/migrations/20261109120000_books_admin_foundation.sql`
 
@@ -1134,7 +1349,7 @@ grant execute on function public.books_import(uuid, jsonb, text, boolean, text) 
 grant execute on function public.books_require_admin() to authenticated;
 ```
 
-## الملحق 2 — المرحلة 2: البحث والاكتشاف
+## الملحق 6 — المرحلة 2: البحث والاكتشاف
 
 `supabase/migrations/20261110120000_books_discovery.sql`
 
@@ -1652,7 +1867,7 @@ grant select on public.book_editorial to anon, authenticated;
 grant insert, update, delete on public.book_editorial to authenticated;
 ```
 
-## الملحق 3 — المرحلة 3: التقييم والشعبية
+## الملحق 7 — المرحلة 3: التقييم والشعبية
 
 `supabase/migrations/20261111120000_books_popularity.sql`
 
@@ -2337,7 +2552,7 @@ grant execute on function public.books_rate(uuid, integer), public.books_favorit
 grant execute on function public.book_is_published(uuid), public.book_rating_mean() to anon, authenticated;
 ```
 
-## الملحق 4 — حد الـ PDF ‏500 ميغا
+## الملحق 8 — حد الـ PDF ‏500 ميغا
 
 `supabase/migrations/20261112120000_books_pdf_limit.sql`
 
@@ -2354,7 +2569,7 @@ update storage.buckets
     and file_size_limit is distinct from 524288000;
 ```
 
-## الملحق 5 — القارئ (القراءة صفحة صفحة)
+## الملحق 9 — القارئ (صفحة صفحة)
 
 `supabase/migrations/20261113120000_books_reader.sql`
 
@@ -2619,4 +2834,335 @@ $$;
 
 revoke all on function public.books_take_study_quota(uuid, uuid, integer, text, text, integer) from public;
 grant execute on function public.books_take_study_quota(uuid, uuid, integer, text, text, integer) to authenticated;
+```
+
+## الملحق 10 — وصول الزوار للمكتبة الجديدة — بعد 1–9 دايماً
+
+`supabase/migrations/20261114120000_books_visitor_access.sql`
+
+```sql
+-- Run AFTER the library phase 1/2/3 and PDF-limit migrations.
+-- Preserve authenticated/admin policies, but give anon separate reader expressions
+-- which never execute the protected has_role function. No private-user-table grants,
+-- no security-definer functions, no storage policy changes or scheduled work.
+
+alter policy "published books are readable" on public.books to authenticated;
+drop policy if exists "visitors read published books" on public.books;
+create policy "visitors read published books" on public.books
+  for select to anon using (status = 'published');
+
+alter policy "visible shelves are readable" on public.book_shelves to authenticated;
+drop policy if exists "visitors read visible shelves" on public.book_shelves;
+create policy "visitors read visible shelves" on public.book_shelves
+  for select to anon using (visible);
+
+alter policy "readers see rules in force" on public.book_editorial to authenticated;
+drop policy if exists "visitors read rules in force" on public.book_editorial;
+create policy "visitors read rules in force" on public.book_editorial
+  for select to anon using (
+    (starts_at is null or starts_at <= now()) and (ends_at is null or ends_at > now())
+  );
+
+alter policy "numbers of published books are public" on public.book_stats to authenticated;
+drop policy if exists "visitors read published book numbers" on public.book_stats;
+create policy "visitors read published book numbers" on public.book_stats
+  for select to anon using (public.book_is_published(book_id));
+
+alter policy "daily numbers of published books are public" on public.book_daily to authenticated;
+drop policy if exists "visitors read published daily numbers" on public.book_daily;
+create policy "visitors read published daily numbers" on public.book_daily
+  for select to anon using (public.book_is_published(book_id));
+
+-- Visitors may page through a past snapshot but never preview a future one.
+-- CASE keeps anon out of has_role; a boolean OR is not an execution guard.
+create or replace function public.books_read_at(p_as_of timestamptz)
+returns timestamptz
+language sql
+stable
+security invoker
+set search_path = public
+as $$
+  select case
+    when p_as_of is null then now()
+    when auth.uid() is null then least(p_as_of, now())
+    when public.has_role(auth.uid(), 'admin'::public.app_role) then p_as_of
+    else least(p_as_of, now())
+  end
+$$;
+
+create or replace function public.books_browse(
+  p_query text default '',
+  p_categories uuid[] default '{}',
+  p_levels text[] default '{}',
+  p_languages text[] default '{}',
+  p_lengths text[] default '{}',
+  p_tags uuid[] default '{}',
+  p_sort text default null,
+  p_context text default null,
+  p_seed text default '',
+  p_as_of timestamptz default null,
+  p_limit integer default 24,
+  p_offset integer default 0,
+  p_favorites boolean default false
+)
+returns jsonb
+language plpgsql
+stable
+security invoker
+set search_path = public, extensions
+set pg_trgm.word_similarity_threshold = 0.5
+as $$
+declare
+  v_at timestamptz := public.books_read_at(p_as_of);
+  v_q text := btrim(left(public.book_search_norm(coalesce(p_query, '')), 80));
+  v_isbn text := public.book_isbn(p_query);
+  v_tsq tsquery;
+  v_sort text;
+  v_limit integer := case when p_limit = 48 then 48 else 24 end;
+  v_offset integer := least(greatest(coalesce(p_offset, 0), 0), 100000);
+  v_cats uuid[] := coalesce(p_categories, '{}');
+  v_levels text[] := coalesce(p_levels, '{}');
+  v_langs text[] := coalesce(p_languages, '{}');
+  v_lens text[] := coalesce(p_lengths, '{}');
+  v_tags uuid[] := coalesce(p_tags, '{}');
+  v_favorite_ids uuid[] := '{}';
+  v_result jsonb;
+  v_mean numeric := public.book_rating_mean();
+  v_day date := (public.books_read_at(p_as_of) at time zone 'utc')::date;
+begin
+  -- Private favourites are queried only for a signed-in favourites request. Even a
+  -- short-circuited EXISTS in the main query requires table rights at plan time.
+  if coalesce(p_favorites, false) and auth.uid() is not null then
+    select coalesce(array_agg(f.book_id), '{}'::uuid[]) into v_favorite_ids
+    from public.book_favorites f where f.user_id = auth.uid();
+  end if;
+  if v_q <> '' then
+    select to_tsquery('simple', string_agg(quote_literal(w) || ':*', ' & '))
+      into v_tsq
+      from regexp_split_to_table(v_q, ' ') as w
+      where w <> '';
+  end if;
+  if v_isbn is not null and char_length(v_isbn) < 10 then
+    v_isbn := null;
+  end if;
+  v_sort := coalesce(p_sort, case
+    when v_q <> '' then 'relevance'
+    when p_context is not null then 'discover'
+    else 'new'
+  end);
+  if v_sort not in ('relevance', 'discover', 'new', 'title', 'short', 'rating', 'trending') then
+    v_sort := 'new';
+  end if;
+  if v_sort = 'relevance' and v_q = '' then
+    v_sort := 'new';
+  end if;
+
+  with found as (
+    select
+      b,
+      b.id,
+      b.created_at,
+      b.pages,
+      b.title,
+      case
+        when v_q = '' then 0
+        when v_isbn is not null and b.isbn = v_isbn then 3
+        when v_tsq is not null and b.search_doc @@ v_tsq then 1 + ts_rank_cd(b.search_doc, v_tsq)
+        else word_similarity(v_q, b.search_name) * 0.5
+      end as rank,
+      case when v_sort = 'rating' then (
+        select (s.rating_sum + 10 * v_mean) / (s.rating_count + 10)
+        from public.book_stats s where s.book_id = b.id and s.rating_count >= 3)
+      end as score,
+      case when v_sort = 'trending' then (
+        select sum((d.views + 3 * d.reads + 2 * d.favorites) * exp(-ln(2) * (v_day - d.day) / 3.0))
+        from public.book_daily d
+        where d.book_id = b.id and d.day > v_day - 7 and d.day <= v_day)
+      end as trend,
+      (select e.position from public.book_editorial e
+        where e.book_id = b.id and e.kind = 'pin' and e.context = p_context
+          and public.book_in_period(e.starts_at, e.ends_at, v_at)) as pin,
+      (cardinality(v_cats) = 0 or b.category_id = any (v_cats) or exists (
+        select 1 from public.book_secondary_categories s
+        where s.book_id = b.id and s.category_id = any (v_cats))) as m_cat,
+      (cardinality(v_levels) = 0 or b.level = any (v_levels)) as m_level,
+      (cardinality(v_langs) = 0 or b.language = any (v_langs)) as m_lang,
+      (cardinality(v_lens) = 0 or public.book_length(b.pages) = any (v_lens)) as m_len,
+      (cardinality(v_tags) = 0 or exists (
+        select 1 from public.book_tag_links l where l.book_id = b.id and l.tag_id = any (v_tags))) as m_tag
+    from public.books b
+    where b.status = 'published'
+      and b.created_at <= v_at
+      and (not coalesce(p_favorites, false) or b.id = any (v_favorite_ids))
+      and (
+        v_q = ''
+        or (v_tsq is not null and b.search_doc @@ v_tsq)
+        or (v_isbn is not null and b.isbn = v_isbn)
+        or (char_length(v_q) >= 4 and v_q <% b.search_name)
+      )
+      and not exists (
+        select 1 from public.book_editorial e
+        where e.book_id = b.id and e.kind = 'exclude' and e.context = p_context
+          and public.book_in_period(e.starts_at, e.ends_at, v_at))
+  ),
+  hits as (
+    select * from found where m_cat and m_level and m_lang and m_len and m_tag
+  ),
+  ordered as (
+    select h.b, h.id, row_number() over (
+      order by
+        (case when v_sort = 'discover' then coalesce(h.pin, 2147483647) end),
+        (case when v_sort = 'discover' then md5(coalesce(p_seed, '') || ':' || h.id) end),
+        (case when v_sort = 'relevance' then h.rank end) desc,
+        (case when v_sort = 'title' then public.book_key(h.title) end),
+        (case when v_sort = 'short' then coalesce(h.pages, 2147483647) end),
+        (case when v_sort = 'rating' then h.score end) desc nulls last,
+        (case when v_sort = 'trending' then h.trend end) desc nulls last,
+        h.created_at desc,
+        h.id
+    ) as ord
+    from hits h
+  ),
+  page as (
+    select o.b, o.id, o.ord
+    from ordered o
+    where o.ord > v_offset
+    order by o.ord
+    limit v_limit
+  )
+  select jsonb_build_object(
+    'as_of', v_at,
+    'sort', v_sort,
+    'limit', v_limit,
+    'offset', v_offset,
+    'total', (select count(*) from hits),
+    'items', coalesce((
+      select jsonb_agg(public.book_card(p.b) order by p.ord)
+      from page p
+    ), '[]'::jsonb),
+    'facets', jsonb_build_object(
+      'category', coalesce((
+        select jsonb_object_agg(cid, n) from (
+          select cid, count(distinct id) as n from (
+            select f.id, (f.b).category_id as cid from found f
+              where f.m_level and f.m_lang and f.m_len and f.m_tag
+            union all
+            select f.id, s.category_id from found f
+              join public.book_secondary_categories s on s.book_id = f.id
+              where f.m_level and f.m_lang and f.m_len and f.m_tag
+          ) z where cid is not null group by cid
+        ) c), '{}'::jsonb),
+      'level', coalesce((
+        select jsonb_object_agg(k, n) from (
+          select (f.b).level as k, count(*) as n from found f
+            where f.m_cat and f.m_lang and f.m_len and f.m_tag group by 1
+        ) c), '{}'::jsonb),
+      'language', coalesce((
+        select jsonb_object_agg(k, n) from (
+          select (f.b).language as k, count(*) as n from found f
+            where f.m_cat and f.m_level and f.m_len and f.m_tag group by 1
+        ) c), '{}'::jsonb),
+      'length', coalesce((
+        select jsonb_object_agg(k, n) from (
+          select public.book_length(f.pages) as k, count(*) as n from found f
+            where f.m_cat and f.m_level and f.m_lang and f.m_tag group by 1
+        ) c), '{}'::jsonb),
+      'tag', coalesce((
+        select jsonb_object_agg(k, n) from (
+          select l.tag_id as k, count(*) as n from found f
+            join public.book_tag_links l on l.book_id = f.id
+            where f.m_cat and f.m_level and f.m_lang and f.m_len group by 1
+        ) c), '{}'::jsonb)
+    )
+  ) into v_result;
+  return v_result;
+end;
+$$;
+```
+
+## الملحق 11 — القارئ: أحجام الصفحات، المعاينة، الفهرس
+
+`supabase/migrations/20261115120000_books_reader_tiers.sql`
+
+```sql
+-- Library, the reader (page-pane plan, phase 2): more sizes of each page picture, an instant
+-- blurred placeholder, and one small "manifest" per book, all made once when the admin prepares
+-- the book.
+--
+--   book_pages.thumb_path / mid_path / zoom_path   160 / 900 / 2200 px pictures beside the
+--                                                  existing 1400 px one (image_path)
+--   book_pages.thumbhash                           a ~25-byte blurred preview (base64)
+--   book_pages.color                               the page's main colour (#rrggbb)
+--   book_manifests                                 one row per book: every page's size, sizes
+--                                                  available and preview, the outline (chapters)
+--                                                  and the reading direction, read in one request
+--
+-- The manifest lives in its own table, not on `books`: book cards are built from the whole books
+-- row (to_jsonb), and a manifest can be 200 KB. Same readers as the pages: signed-in readers of
+-- published books, and admins. Replacing a book's PDF removes its manifest with its pages.
+-- Everything here only adds, and the file can be run again safely.
+
+alter table public.book_pages add column if not exists thumb_path text;
+alter table public.book_pages add column if not exists mid_path text;
+alter table public.book_pages add column if not exists zoom_path text;
+alter table public.book_pages add column if not exists thumbhash text;
+alter table public.book_pages add column if not exists color text;
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'book_pages_tier_paths') then
+    alter table public.book_pages add constraint book_pages_tier_paths check (
+      (thumb_path is null or char_length(thumb_path) between 3 and 300)
+      and (mid_path is null or char_length(mid_path) between 3 and 300)
+      and (zoom_path is null or char_length(zoom_path) between 3 and 300)
+      and (thumbhash is null or thumbhash ~ '^[A-Za-z0-9+/=]{4,64}$')
+      and (color is null or color ~ '^#[0-9a-f]{6}$')
+    );
+  end if;
+end;
+$$;
+
+create table if not exists public.book_manifests (
+  book_id uuid primary key references public.books (id) on delete cascade,
+  -- [[width, height, flags, ext, thumbhash, color], …] for pages 1..n (flags: 1 words,
+  -- 2 thumb, 4 phone size, 8 zoom size; ext "w" WebP or "j" JPEG).
+  pages jsonb not null check (jsonb_typeof(pages) = 'array'),
+  -- [[title, page, level], …] from the PDF's own outline, or [].
+  outline jsonb not null default '[]'::jsonb check (jsonb_typeof(outline) = 'array'),
+  dir text not null default 'ltr' check (dir in ('ltr', 'rtl')),
+  version integer not null default 1,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.book_manifests enable row level security;
+
+drop policy if exists "readers read manifests of published books" on public.book_manifests;
+create policy "readers read manifests of published books" on public.book_manifests
+  for select to authenticated
+  using (public.book_is_published(book_id) or public.has_role(auth.uid(), 'admin'::public.app_role));
+
+drop policy if exists "admins manage book manifests" on public.book_manifests;
+create policy "admins manage book manifests" on public.book_manifests
+  for all to authenticated
+  using (public.has_role(auth.uid(), 'admin'::public.app_role))
+  with check (public.has_role(auth.uid(), 'admin'::public.app_role));
+
+revoke all on public.book_manifests from anon;
+grant select, insert, update, delete on public.book_manifests to authenticated;
+
+-- A new PDF means new pages: the old pages and manifest go, and the book waits to be prepared.
+create or replace function public.books_reader_reset()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if new.file_path is distinct from old.file_path then
+    delete from public.book_pages where book_id = new.id;
+    delete from public.book_manifests where book_id = new.id;
+    new.prepared_at := null;
+    new.page_count := null;
+  end if;
+  return new;
+end;
+$$;
 ```

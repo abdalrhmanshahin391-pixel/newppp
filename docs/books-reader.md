@@ -68,9 +68,40 @@ From `docs/books-reader-research/` and the plan "A Fast, Smooth and Beautiful Pa
 - **Measured** (Chromium, 80-page book, 250 ms added to every request): next page 64–117 ms
   (before 70–240), a jump to page 40 586–594 ms (before 830), five quick taps — the last page sharp
   0.46 s after the last tap (before 1.4 s after the first); no signing request on a normal turn.
-- **Next (phase 2, a migration and re-preparing):** a per-book manifest, ThumbHash placeholders
-  (a far jump shows a blank sheet for about half a second until then), 160 / 900 / 2200 px tiers,
-  WebP from Safari, the outline, and keeping pictures across visits.
+
+### Sizes, previews and the manifest (the page-pane plan, phase 2)
+
+Migration `20261115120000_books_reader_tiers.sql`, then each book prepared again («حدّث الكتاب»):
+
+- **Four sizes of each page:** 160 px (`t/`, for a later thumbnail strip), 900 px (`m/`, phones),
+  1400 px (the existing picture) and 2200 px (`z/`, zooming on sharp screens). The reader asks for
+  the smallest size at least 90% as wide as the sheet × the screen's density (zoom included). An
+  admin preparing on an iPad or a phone makes 160/900/1400 only (2200 px canvases are what makes
+  Safari close the tab); a computer makes all four.
+- **A preview of every page:** a ThumbHash (~28 characters) and the page's main colour, kept in
+  the row and the manifest. A page not in yet shows its blurred preview (10 px blur) on a sheet of
+  its colour, instead of a blank sheet; books prepared before this keep the ghost text.
+- **One manifest per book** (`book_manifests`, its own table because book cards are built from the
+  whole books row): every page's size, which sizes exist, picture type, preview and colour, the
+  PDF's outline `[[title, page, level]]` and the reading direction. One request when the book
+  opens; without it (older books, or before the migration) pages load the phase 1 way.
+- **Pictures kept across visits:** Cache Storage `uzyra-pages-v1`, keyed by the picture's path (not
+  its signed link, which changes), the last 300 pages, emptied on sign-out. Where it cannot be
+  used (no Cache Storage, or the storage server refuses CORS), pictures load straight from links.
+- **Order:** the page on screen is fetched first; the pages ahead start once it is in (or after
+  1.5 s), so a jump is never queued behind them. Read-ahead waits for the manifest, and a zoom
+  that needs a bigger size reads the pages beside again in that size.
+- **Safari makes WebP:** its canvas cannot, so a worker encodes with libwebp compiled to
+  WebAssembly (`@jsquash/webp`, ~115 KB gzipped, loaded only while preparing). If the worker fails
+  or does not answer in 20 s, pages are made as JPEG as before.
+- **Preparing:** up to 4 uploads at once, rows written 25 at a time, the line says «صفحة x من y ·
+  n صفحة/ثانية · باقي حوالي …», a warning when the tab is hidden (browsers slow hidden tabs), and
+  leaving the page asks first. A book prepared before phase 2 shows «حدّث الكتاب»; resuming counts
+  a page as done only once it has every size.
+- **Measured** (Chromium, 80-page book, 250 ms added to every request): next page 107–119 ms
+  (60–70 ms for the one after), a jump to page 40 566–602 ms with the blurred preview at once; a
+  second visit downloads no picture already read. Sizes on the test book: 160 px 1–5 KB, 900 px
+  4–25 KB, 1400 px 8–47 KB, 2200 px 16–74 KB.
 - The selection is checked on the server against the page's own text (spaces and line breaks do
   not count) and Rita gets the page's text around it, never the browser's text. Written answers
   only in this version (no live voice here).
@@ -85,7 +116,9 @@ From `docs/books-reader-research/` and the plan "A Fast, Smooth and Beautiful Pa
 
 - `scripts/test-books-db.sh`: the reader's 43 pgTAP checks (structure, private bucket, who reads
   pages and pictures, a new PDF clears pages, each reader's place, the circle's limits, deletes).
-- `node --test src/lib/books-reader.test.ts` (9 tests, in CI).
+- `node --test src/lib/books-reader.test.ts` (19 tests, in CI).
+- `supabase/tests/books/60_books_reader_tiers_test.sql`: 22 checks (the new columns and their
+  checks, who reads manifests, a new PDF removes the manifest, deleting the book removes it).
 - Browser runs (Chromium and WebKit, iPad 1180×820 and phone 390×844, Supabase mocked in memory):
   preparing a 4-page book (two text pages, a landscape slide with pictures, a picture-only page),
   the words lying exactly over the picture, the circle, a written answer, questions, turning pages,
