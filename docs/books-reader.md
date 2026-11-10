@@ -107,6 +107,27 @@ Migration `20261115120000_books_reader_tiers.sql`, then each book prepared again
   only in this version (no live voice here).
 - A page with no words (a scan) shows its picture with one line saying it cannot be selected.
 
+### Turning by touch (the page-pane plan, phase 3a)
+
+- Swipe and edge taps, by the plan's rules: touch only (the mouse keeps selecting), a swipe turns
+  past 60 px sideways (more than twice the up/down travel, under 600 ms or faster than 0.4 px/ms),
+  the outer 12% of each side turns on a tap, the book's direction (its manifest's `dir`, else its
+  language) decides which side is "next", and the progress line fills from where the book starts.
+- Selection always wins: nothing starts while text is selected, after a 300 ms long press (how a
+  selection begins on iPhone and iPad), from a button or field, or with the circle's menu open.
+- One deviation from the plan: an edge tap turns even on a word, because a single tap never
+  selects on an iPad and books with narrow margins would otherwise have edges that do not work.
+- Touch events, not pointer events: they keep arriving while the browser scrolls a zoomed page.
+  `touch-action: pan-y pinch-zoom` only while the page is no wider than its pane; a zoomed page
+  scrolls sideways itself and turns only from its edge.
+- Rules in `src/lib/book-gestures.ts` (tested in `book-gestures.test.ts`), wiring in
+  `src/components/books/reader/useTurnGestures.ts`.
+- Checked in Chromium with real touch input (31 checks: swipes both ways, up/down, diagonal, slow
+  drags, a long press, with text selected, edge and middle taps, a mouse click, zoomed in the
+  middle and at the edge, a right-to-left book, the phone's scroll-then-turn, reduced motion) and
+  in WebKit with made-up touch events and real taps (29). The four selection checks still pass in
+  both. Not tried on a real iPad or iPhone.
+
 ## Not in this version
 
 - Reading scanned pages (OCR): they show as pictures only.
