@@ -481,7 +481,7 @@ function RitaConversationsPage() {
           dir={ui === "ar" ? "rtl" : "ltr"}
           className="mt-5 flex flex-wrap items-center justify-between gap-4"
         >
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+          <h1 className="conversation-heading font-semibold tracking-tight">
             {t("My conversations", "محادثاتي")}
           </h1>
           <button

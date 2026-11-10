@@ -13,9 +13,11 @@ import {createRootRoute,createRoute,createRouter,RouterProvider} from '@tanstack
 import i18n from 'i18next';import {initReactI18next} from 'react-i18next';
 import {ConversationLibrary} from './src/components/rita/ConversationLibrary';
 const lang=new URLSearchParams(location.search).get('lang')==='ar'?'ar':'en';
+document.documentElement.lang=lang;
+document.documentElement.dir=lang==='ar'?'rtl':'ltr';
 await i18n.use(initReactI18next).init({lng:lang,resources:{ar:{translation:{}},en:{translation:{}}}});
-const fixtures=['Planning my next trip','English practice · present simple','مراجعة مفردات الجامعة'];
-function Preview(){const [rows,setRows]=useState(new URLSearchParams(location.search).has('empty')?[]:fixtures.map((title,i)=>({id:String(i),title,message_count:12-i,created_at:'2026-11-10T10:00:00Z',last_message_at:'2026-11-10T10:00:00Z',pinned_at:i===1?'2026-11-10T10:00:00Z':null})));return <main className="edith-premium mx-auto max-w-5xl bg-white px-5 py-8 text-[var(--pp-ink)]" dir={lang==='ar'?'rtl':'ltr'}><header className="flex flex-wrap items-center justify-between gap-4"><h1 className="text-3xl font-semibold">{lang==='ar'?'محادثاتي':'My conversations'}</h1><button className="rita-btn rita-btn-primary">{lang==='ar'?'محادثة جديدة':'New conversation'}</button></header><ConversationLibrary userId="offline-fixture" conversations={rows} busy={new URLSearchParams(location.search).has('loading')} isAdmin={false} pendingId="" renderDetails={()=>null} onTranscript={()=>{}} onExport={()=>{}} onRename={async(c,title)=>{if(title==='fail')throw Error('Fixture save failure');setRows(r=>r.map(x=>x.id===c.id?{...x,title}:x));}} onPin={async c=>setRows(r=>r.map(x=>x.id===c.id?{...x,pinned_at:x.pinned_at?null:new Date().toISOString()}:x))} onDelete={async c=>setRows(r=>r.filter(x=>x.id!==c.id))}/></main>}
+const fixtures=['Planning my next trip','English practice · present simple','مراجعة مفردات الجامعة'].map(title=>new URLSearchParams(location.search).has('stress')?title.repeat(4).slice(0,120):title);
+function Preview(){const [rows,setRows]=useState(new URLSearchParams(location.search).has('empty')?[]:fixtures.map((title,i)=>({id:String(i),title,message_count:12-i,created_at:'2026-11-10T10:00:00Z',last_message_at:'2026-11-10T10:00:00Z',pinned_at:i===1?'2026-11-10T10:00:00Z':null})));return <main className="edith-premium mx-auto max-w-5xl bg-white px-5 py-8 text-[var(--pp-ink)]" dir={lang==='ar'?'rtl':'ltr'}><header className="flex flex-wrap items-center justify-between gap-4"><h1 className="conversation-heading font-semibold">{lang==='ar'?'محادثاتي':'My conversations'}</h1><button className="rita-btn rita-btn-primary">{lang==='ar'?'محادثة جديدة':'New conversation'}</button></header><ConversationLibrary userId="offline-fixture" conversations={rows} busy={new URLSearchParams(location.search).has('loading')} isAdmin={false} pendingId="" renderDetails={()=>null} onTranscript={()=>{}} onExport={()=>{}} onRename={async(c,title)=>{if(title==='fail')throw Error('Fixture save failure');setRows(r=>r.map(x=>x.id===c.id?{...x,title}:x));}} onPin={async c=>setRows(r=>r.map(x=>x.id===c.id?{...x,pinned_at:x.pinned_at?null:new Date().toISOString()}:x))} onDelete={async c=>setRows(r=>r.filter(x=>x.id!==c.id))}/></main>}
 const base=createRootRoute();const page=createRoute({getParentRoute:()=>base,path:'/',component:Preview});const router=createRouter({routeTree:base.addChildren([page])});createRoot(document.getElementById('root')).render(<RouterProvider router={router}/>);`;
 const bundle = await build({
   stdin: { contents: entry, loader: "tsx", resolveDir: root },
@@ -37,13 +39,26 @@ const sources = await Promise.all(
   ].map((p) => readFile(resolve(root, p), "utf8")),
 );
 const css = compiler.build([...new Set((sources.join(" ") + entry).match(/[\w!:/.[\]#%(),+-]+/g))]);
-const server = createServer((req, res) => {
+const server = createServer(async (req, res) => {
   if (req.url?.startsWith("/client.js")) {
     res.setHeader("Content-Type", "text/javascript");
     res.end(bundle.outputFiles[0].text);
   } else if (req.url?.startsWith("/client.css")) {
     res.setHeader("Content-Type", "text/css");
     res.end(css);
+  } else if (req.url?.startsWith("/fonts/")) {
+    const publicRoot = resolve(root, "public");
+    const path = resolve(publicRoot, "." + new URL(req.url, "http://localhost").pathname);
+    if (!path.startsWith(publicRoot + "/") && !path.startsWith(publicRoot + "\\")) {
+      res.writeHead(403).end();
+      return;
+    }
+    try {
+      res.setHeader("Content-Type", "font/woff2");
+      res.end(await readFile(path));
+    } catch {
+      res.writeHead(404).end();
+    }
   } else {
     res.setHeader("Content-Type", "text/html;charset=utf-8");
     res.end(

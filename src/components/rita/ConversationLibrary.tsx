@@ -33,6 +33,8 @@ export function ConversationLibrary(props: Props) {
   const [title, setTitle] = useState("");
   const [saving, setSaving] = useState(false);
   const mutationLock = useRef(false);
+  const returnFocus = useRef<HTMLButtonElement | null>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const key = `uzyra-conversations-view:${props.userId}`;
   useEffect(() => {
@@ -80,9 +82,10 @@ export function ConversationLibrary(props: Props) {
   return (
     <div dir={ui === "ar" ? "rtl" : "ltr"}>
       <div className="mt-7 flex flex-wrap items-center gap-3 border-b border-[var(--pp-line)] pb-5">
-        <label className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-xl border border-[var(--pp-line)] px-3 focus-within:ring-2 focus-within:ring-black">
+        <label className="flex min-h-11 min-w-0 basis-full flex-1 items-center sm:basis-0 gap-2 rounded-xl border border-[var(--pp-line)] px-3 focus-within:ring-2 focus-within:ring-black">
           <Search size={18} aria-hidden="true" />
           <input
+            ref={searchInput}
             className="w-full min-w-0 bg-transparent py-2 text-base outline-none"
             aria-label={t("Search conversations", "ابحث في المحادثات")}
             placeholder={t("Search by title…", "ابحث باسم المحادثة…")}
@@ -91,6 +94,7 @@ export function ConversationLibrary(props: Props) {
           />
         </label>
         <select
+          style={{ width: "auto", maxWidth: "100%" }}
           aria-label={t("Sort conversations", "ترتيب المحادثات")}
           className="rita-select min-h-11 text-sm"
           value={sort}
@@ -155,7 +159,7 @@ export function ConversationLibrary(props: Props) {
                     {conversation.title}
                   </span>
                 </Link>
-                <p className="mt-1 text-xs text-[var(--pp-muted)]">
+                <p className="mt-1 text-sm text-[var(--pp-muted)]">
                   {new Intl.DateTimeFormat(ui, { dateStyle: "medium" }).format(
                     new Date(conversation.last_message_at ?? conversation.created_at),
                   )}{" "}
@@ -174,7 +178,8 @@ export function ConversationLibrary(props: Props) {
                 isAdmin={props.isAdmin}
                 busy={props.pendingId === conversation.id || saving}
                 pinned={Boolean(conversation.pinned_at)}
-                onAction={(kind) => {
+                onAction={(kind, trigger) => {
+                  returnFocus.current = trigger;
                   setError("");
                   if (kind === "rename" || kind === "delete") {
                     setTitle(conversation.title);
@@ -240,7 +245,17 @@ export function ConversationLibrary(props: Props) {
           if (!open && !saving) setAction(null);
         }}
       >
-        <DialogContent dir={ui === "ar" ? "rtl" : "ltr"}>
+        <DialogContent
+          dir={ui === "ar" ? "rtl" : "ltr"}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            if (returnFocus.current?.isConnected) {
+              returnFocus.current.focus();
+              return;
+            }
+            searchInput.current?.focus();
+          }}
+        >
           <DialogTitle>
             {action?.kind === "delete"
               ? t("Delete conversation?", "تحذف المحادثة؟")
