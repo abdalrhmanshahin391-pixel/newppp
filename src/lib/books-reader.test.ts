@@ -136,3 +136,51 @@ test("the book circle's limits are the lessons' limits", () => {
     );
   }
 });
+
+test("light page info comes in blocks of 40", async () => {
+  const { metaBlock, blockPages } = await import("./books-reader.ts");
+  assert.equal(metaBlock(1), 0);
+  assert.equal(metaBlock(40), 0);
+  assert.equal(metaBlock(41), 1);
+  assert.deepEqual(blockPages(1, 75), [41, 75]);
+  assert.deepEqual(blockPages(0, 12), [1, 12]);
+});
+
+test("picture links are reused until 10 minutes before they end", async () => {
+  const { linksToSign, pruneLinks } = await import("./books-reader.ts");
+  const now = 1_000_000_000;
+  const cache = {
+    a: { url: "ua", exp: now + 60 * 60 * 1000 },
+    b: { url: "ub", exp: now + 5 * 60 * 1000 },
+  };
+  assert.deepEqual(linksToSign(["a", "b", "c", "c", ""], cache, now), ["b", "c"]);
+  assert.deepEqual(Object.keys(pruneLinks({ ...cache, d: { url: "ud", exp: now - 1 } }, now)), [
+    "a",
+  ]);
+});
+
+test("links are signed for 30 pages ahead and 10 behind, inside the book", async () => {
+  const { signWindow } = await import("./books-reader.ts");
+  const forward = signWindow(5, 100, 1);
+  assert.equal(forward[0], 1);
+  assert.equal(forward.at(-1), 35);
+  const back = signWindow(50, 100, -1);
+  assert.equal(back[0], 20);
+  assert.equal(back.at(-1), 60);
+  assert.deepEqual(signWindow(2, 3, 1), [1, 2, 3]);
+});
+
+test("pictures ahead: 3 normally, 5 while skimming, 1 on a slow connection", async () => {
+  const { aheadCount } = await import("./books-reader.ts");
+  assert.equal(aheadCount([], null), 3);
+  assert.equal(aheadCount([0, 2000, 4000, 6000], 300), 5);
+  assert.equal(aheadCount([0, 2000, 20000, 22000], 300), 3);
+  assert.equal(aheadCount([0, 2000, 4000, 6000], 2000), 1);
+});
+
+test("what is fetched around a settled page follows the reading direction", async () => {
+  const { prefetchPlan } = await import("./books-reader.ts");
+  assert.deepEqual(prefetchPlan(10, 1, 100, 3), { pictures: [11, 12, 13, 9], words: [11, 12, 9] });
+  assert.deepEqual(prefetchPlan(10, -1, 100, 3), { pictures: [9, 8, 7, 11], words: [9, 8, 11] });
+  assert.deepEqual(prefetchPlan(1, 1, 2, 3), { pictures: [2], words: [2] });
+});

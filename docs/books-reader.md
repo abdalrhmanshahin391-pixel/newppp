@@ -46,9 +46,31 @@
 
 ### Reading
 
-- Only the page on screen is loaded, then the next and previous wait in the background (row +
-  picture). Zoom in five steps; arrows / Page Up / Page Down turn pages; the place is saved after a
-  second on a page and kept in the address (`?page=`).
+- Zoom in five steps; arrows / Page Up / Page Down turn pages; the place is saved after a second on
+  a page, at once when the tab is hidden, and kept in the address (`?page=`).
+
+### Loading (the page-pane plan, phase 1)
+
+From `docs/books-reader-research/` and the plan "A Fast, Smooth and Beautiful Page Pane":
+
+- **Light and heavy apart.** A page's light info (size, picture path, has-text) is read 40 pages
+  per request; its words (`text`, `runs`) are read separately, so the picture never waits for them.
+- **Links signed in batches and reused.** The page and the 40 around it (30 ahead, 10 behind) are
+  signed in one `createSignedUrls` call, for 6 hours, kept per tab in `sessionStorage` (per
+  signed-in user; cleared on sign-out; never `localStorage`) and reused until 10 minutes before
+  they end — the same address each time, so the browser can reuse what it fetched. A new batch is
+  signed only when fewer than 10 pages ahead have a link.
+- **Fetched ahead in the reading direction**, once the reader has stayed 150 ms on a page:
+  pictures +3 ahead and 1 behind (+5 while skimming — the last turns under 8 s apart; +1 when the
+  last picture took over 1.5 s), words +2 / −1. The pages right beside are also decoded; at most 3
+  decoded pages are kept (5 on a desktop). Requests for pages flipped past are cancelled. The page
+  shown is fetched with `fetchpriority="high"`, the others low.
+- **Measured** (Chromium, 80-page book, 250 ms added to every request): next page 64–117 ms
+  (before 70–240), a jump to page 40 586–594 ms (before 830), five quick taps — the last page sharp
+  0.46 s after the last tap (before 1.4 s after the first); no signing request on a normal turn.
+- **Next (phase 2, a migration and re-preparing):** a per-book manifest, ThumbHash placeholders
+  (a far jump shows a blank sheet for about half a second until then), 160 / 900 / 2200 px tiers,
+  WebP from Safari, the outline, and keeping pictures across visits.
 - The selection is checked on the server against the page's own text (spaces and line breaks do
   not count) and Rita gets the page's text around it, never the browser's text. Written answers
   only in this version (no live voice here).
