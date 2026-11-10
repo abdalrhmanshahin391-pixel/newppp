@@ -425,3 +425,44 @@ export function cleanOutline(
     .filter(([title]) => title.length > 0)
     .slice(0, 2000);
 }
+
+// ---- the scrubber (phase 3b): the progress line as a slider ------------------------------------
+
+/**
+ * The page under a point of the progress line: x px from the line's left end, the line `width`
+ * px long. The book starts on the left in a left-to-right book and on the right otherwise.
+ */
+export function scrubPage(x: number, width: number, total: number, rtl: boolean): number {
+  const last = Math.max(1, Math.floor(total) || 1);
+  if (!(width > 0)) return 1;
+  const along = Math.min(1, Math.max(0, x / width));
+  const part = rtl ? 1 - along : along;
+  return Math.min(last, Math.max(1, Math.ceil(part * last)));
+}
+
+/** Where a page sits on the line, from the left end, as a part of its length (0–1). */
+export function scrubSpot(page: number, total: number, rtl: boolean): number {
+  const last = Math.max(1, Math.floor(total) || 1);
+  const part = Math.min(1, Math.max(0, page / last));
+  return rtl ? 1 - part : part;
+}
+
+/** The chapter a page is in: the last outline entry starting on or before it, or null. */
+export function chapterAt(outline: [string, number, number][], page: number): string | null {
+  let found: string | null = null;
+  let start = 0;
+  for (const [title, at] of outline) {
+    if (at <= page && at >= start) {
+      found = title;
+      start = at;
+    }
+  }
+  return found;
+}
+
+/** Pages whose little pictures are signed together while scrubbing near `page`. */
+export function scrubWindow(page: number, total: number, around = 20): number[] {
+  const out: number[] = [];
+  for (let n = Math.max(1, page - around); n <= Math.min(total, page + around); n += 1) out.push(n);
+  return out;
+}
