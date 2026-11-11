@@ -504,7 +504,8 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     study grey, with 20px around it (8px on phones). By default the whole page is in view; «على قدّ
     العرض» fits it to the pane's width instead (remembered per browser), and zoom goes up in five
     steps. A zoomed page scrolls from the side its lines start on.
-  - **Progress:** a 3px accent line under the top bar grows with the page number.
+  - **Progress:** a 3px accent line under the top bar grows with the page number, from the side
+    the book starts on.
   - **Turning:** instant. The sheet takes the new page's size at once and slides in 24px (220ms,
     `cubic-bezier(0.2, 0.8, 0.2, 1)`; a 120ms fade with reduced motion). Pages read ahead appear
     sharp straight away; otherwise the sheet takes the page's own main colour and shows a
@@ -515,6 +516,18 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     مرة ثانية» (after one quiet retry), never a broken picture. While flipping fast, the page
     number shows in the middle of the page («12 / 340», from the second quick turn, gone 600ms
     after the last). Phones open fit to width.
+  - **Turning by touch** (touch only; a mouse selects): a sideways swipe across the page turns
+    it — the sheet follows the finger a little (40% of the travel, at most 48px), turns past 60px
+    (sideways more than twice up/down, quicker than 600ms or faster than 0.4px/ms) with the usual
+    slide, or settles back (160ms). A tap on the outer 12% of either side turns too; a page taller
+    than the pane (phones, fit to width) scrolls 85% of the pane first and turns from the bottom.
+    The book's direction decides the sides (in a right-to-left book, swiping right and the left
+    edge go on). No page beyond: a 12px nudge and back (180ms). Selection always wins: nothing
+    turns while text is selected, after a 300ms long press, from a button, or with the circle's
+    menu open; a zoomed page moves inside its box and turns only from its edge. Reduced motion:
+    no following, a short fade for the nudge. On touch screens the first-visit tip adds «اسحب
+    الصفحة أو اكبس على طرفها لتقلب.»
+  - **Progress line** fills from the side the book starts on (left for left-to-right books).
   - **The bar under the page:** «السابقة» (outlined) · «صفحة [n] من N» (the number is a field) ·
     «التالية» (ink, the main action), all 44px, laid out in the book's direction; on the other side
     «على قدّ العرض / الصفحة كاملة», «صغّر», «كبّر» as 44px icons. When the bar is narrower than

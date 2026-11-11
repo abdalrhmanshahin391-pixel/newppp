@@ -81,6 +81,7 @@ import {
 } from "@/lib/books-study.functions";
 import { BookPageView } from "./BookPageView";
 import { BookRitaColumn, type BookAnswer } from "./BookRitaColumn";
+import { useTurnGestures } from "./useTurnGestures";
 import "@/components/rita-study/study-meaning.css";
 import "./book-reader.css";
 
@@ -700,7 +701,8 @@ export function BookReader({
   const orbState: OrbState = busy ? "busy" : picked ? "armed" : "idle";
 
   // ---- moving between pages --------------------------------------------------------------------
-  const rtlBook = /^(ar|fa|ur|he)/.test(book.language);
+  // The book's own direction: from its manifest, else from its language.
+  const rtlBook = manifest ? manifest.dir === "rtl" : /^(ar|fa|ur|he)/.test(book.language);
   // The page number in the middle of the page while flipping fast (from the 2nd quick turn).
   const [toast, setToast] = useState(false);
   const toastTimer = useRef(0);
@@ -740,6 +742,27 @@ export function BookReader({
     return () => window.removeEventListener("keydown", onKey);
   }, [go, page, rtlBook]);
 
+  // Touch: a swipe across the page or a tap on its outer edges turns it (selection always wins).
+  const stage = useRef<HTMLDivElement | null>(null);
+  useTurnGestures({
+    scroller,
+    stage,
+    rtl: rtlBook,
+    page,
+    total,
+    blocked: () => menuOpenRef.current,
+    onTurn: go,
+    layoutKey: `${wide}-${tab}`,
+  });
+  // A page no wider than its pane leaves sideways moves to the swipe (up/down and pinch stay the
+  // browser's); a zoomed, wider page scrolls sideways itself and turns only from its edge.
+  const wider = pageWidth + gutter * 2 > pane.width + 1;
+  const [touchy, setTouchy] = useState(false);
+  useEffect(
+    () => setTouchy(window.matchMedia?.("(hover: none) and (pointer: coarse)").matches ?? false),
+    [],
+  );
+
   function submitJump(event: FormEvent) {
     event.preventDefault();
     go(Number(jump));
@@ -758,6 +781,7 @@ export function BookReader({
     <div className="bkr-pane" dir="rtl">
       <div
         className="bkr-progress"
+        data-dir={rtlBook ? "rtl" : "ltr"}
         role="progressbar"
         aria-label="وين وصلت بالكتاب"
         aria-valuemin={1}
@@ -770,11 +794,11 @@ export function BookReader({
         {/* The book's own direction, so a zoomed page starts where its lines start. */}
         <div
           ref={scroller}
-          className="bkr-scroll"
+          className={`bkr-scroll${wider ? "" : " is-swipe"}`}
           dir={rtlBook ? "rtl" : "ltr"}
           style={{ ["--bkr-gutter" as string]: `${gutter}px` }}
         >
-          <div className="bkr-stage">
+          <div ref={stage} className="bkr-stage">
             <BookPageView
               ref={textLayer}
               view={view}
@@ -796,7 +820,10 @@ export function BookReader({
         )}
         {tip && view?.hasText && (
           <div className="bkr-tip" role="note">
-            <p>حدّد أي كلمة أو جملة بإصبعك أو بالماوس، وبعدين اكبس على الدائرة.</p>
+            <p>
+              حدّد أي كلمة أو جملة بإصبعك أو بالماوس، وبعدين اكبس على الدائرة.
+              {touchy && " اسحب الصفحة أو اكبس على طرفها لتقلب."}
+            </p>
             <button
               type="button"
               aria-label="سكّر التلميح"

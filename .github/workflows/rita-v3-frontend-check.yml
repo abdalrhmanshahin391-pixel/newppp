@@ -98,6 +98,7 @@ jobs:
           node --test src/lib/books.test.ts
           node --test src/lib/books-import.test.ts
           node --test src/lib/books-reader.test.ts
+          node --test src/lib/book-gestures.test.ts
           node --test src/lib/rita-phrase.test.ts
           node --test src/lib/activity-streak.test.ts
           node --test src/lib/learning-language.test.ts
