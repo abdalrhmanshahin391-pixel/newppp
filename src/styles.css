@@ -8397,14 +8397,14 @@ html.rita-app,
 /* A selection in Rita's own answers (the left column) is dark red, so it never reads as a piece of
    the guide (blue). The circle, the quote strip and the one option ("اشرحلي ببساطة") take the same
    dark red while that selection is active. */
-[data-reply-text]::selection,
-[data-reply-text] ::selection {
+.st-reply-pane [data-reply-text]::selection,
+.st-reply-pane [data-reply-text] ::selection {
   background: rgb(142 27 43 / 0.14);
-  color: inherit;
+  color: var(--pp-ink, #18171c);
 }
-::highlight(st-sel-reply) {
+.st-reply-pane ::highlight(st-sel-reply) {
   background-color: rgb(142 27 43 / 0.14);
-  color: inherit;
+  color: var(--pp-ink, #18171c);
 }
 .st-reply-pane[data-tech-selecting] [data-reply-text] {
   -webkit-user-select: none;
