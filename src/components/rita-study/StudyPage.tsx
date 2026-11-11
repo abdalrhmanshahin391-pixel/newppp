@@ -422,7 +422,10 @@ export function StudyPage({
         const result = await makeCardsFn(input);
         if (version !== practiceVersion.current) return;
         if (!result.ok) {
-          setPracticeView((view) => view && { ...view, status: "error", message: result.message });
+          setPracticeView(
+            (view) =>
+              view && { ...view, status: "error", message: result.message, code: result.code },
+          );
           return;
         }
         setPracticeView((view) => view && { ...view, status: "ready", cards: result.cards });
@@ -430,7 +433,10 @@ export function StudyPage({
         const result = await makeMcqFn(input);
         if (version !== practiceVersion.current) return;
         if (!result.ok) {
-          setPracticeView((view) => view && { ...view, status: "error", message: result.message });
+          setPracticeView(
+            (view) =>
+              view && { ...view, status: "error", message: result.message, code: result.code },
+          );
           return;
         }
         setPracticeView(
@@ -441,7 +447,12 @@ export function StudyPage({
       if (version === practiceVersion.current)
         setPracticeView(
           (view) =>
-            view && { ...view, status: "error", message: "ما زبطت هالمرة. جرّب مرة ثانية." },
+            view && {
+              ...view,
+              status: "error",
+              message: "ما زبطت هالمرة. جرّب مرة ثانية.",
+              code: "failed",
+            },
         );
     } finally {
       if (version === practiceVersion.current) {
@@ -871,6 +882,7 @@ export function StudyPage({
             onRetry={() => {
               if (lastPractice.current) void practice(lastPractice.current.action, true);
             }}
+            onSwitch={(action) => void practice(action, true)}
             onReturnFocus={() => orbButton.current?.focus({ preventScroll: true })}
           />
         )}

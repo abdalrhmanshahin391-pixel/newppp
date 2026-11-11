@@ -7,6 +7,9 @@ import {
   looseText,
   maxCards,
   mcqCount,
+  NO_CARDS_TEXT,
+  PRACTICE_FAILURE_TEXT,
+  practiceFailureView,
   readJson,
   shuffleOptions,
 } from "./study-practice.ts";
@@ -288,4 +291,25 @@ test("practice model: a timeout says slow, and no second try once the budget is 
   });
   assert.deepEqual(result, { ok: false, reason: "slow" });
   assert.equal(slow.calls.length, 1);
+});
+
+test("a failed practice request says its real reason and offers the right next step", () => {
+  // Not set up: no retry, and the words say it is a setting, not "try again in a bit".
+  const noKey = practiceFailureView("no_key", "anything the server said");
+  assert.equal(noKey.message, PRACTICE_FAILURE_TEXT.no_key);
+  assert.equal(noKey.retry, false);
+  assert.equal(noKey.alternative, null);
+  assert.ok(!/كمان شوي/.test(noKey.message));
+  // No cards from a rule: questions are offered instead, retrying the same cards is not.
+  const noCards = practiceFailureView("no_cards", "x");
+  assert.equal(noCards.message, NO_CARDS_TEXT);
+  assert.equal(noCards.retry, false);
+  assert.equal(noCards.alternative, "make_mcq");
+  // Everything else keeps the server's own words and a retry.
+  for (const code of ["busy", "slow", "failed", "no_questions", "rate_limited", undefined]) {
+    const view = practiceFailureView(code, "نص السيرفر");
+    assert.equal(view.message, "نص السيرفر");
+    assert.equal(view.retry, true);
+    assert.equal(view.alternative, null);
+  }
 });

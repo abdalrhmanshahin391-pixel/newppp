@@ -43,10 +43,25 @@ function parse(data: unknown) {
   return result.data;
 }
 
-/** One JSON answer from the same model as Rita's written answers (see askPracticeModel). */
-async function askModel(system: string, user: string, maxTokens: number) {
+/**
+ * The model's key, looked up before anything is counted: with no key the learner is told so and
+ * the request does not use up their allowance. Keys saved only in the admin AI page are not
+ * readable by the published site (it has no service-role key); the GROQ_API_KEY secret is.
+ */
+async function practiceKey(): Promise<string | null> {
   const { resolveRitaV3Key } = await import("@/lib/rita-v3.server");
   const key = await resolveRitaV3Key("groq", "GROQ_API_KEY");
+  if (!key)
+    console.warn(
+      "Practice: no Groq key reachable from the website. Set the GROQ_API_KEY secret (a key saved only in the admin AI page cannot be read here).",
+    );
+  return key || null;
+}
+
+const NO_KEY: Failure = { ok: false, code: "no_key", message: PRACTICE_FAILURE_TEXT.no_key };
+
+/** One JSON answer from the same model as Rita's written answers (see askPracticeModel). */
+async function askModel(key: string, system: string, user: string, maxTokens: number) {
   // Wrapped: the platform's fetch must be called on its own, not as a method of another object.
   return askPracticeModel({
     fetch: (input, init) => fetch(input, init),
@@ -62,6 +77,8 @@ export const studyMakeCards = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(parse)
   .handler(async ({ data, context }): Promise<CardsResult> => {
+    const key = await practiceKey();
+    if (!key) return NO_KEY;
     const outcome = await resolveRequest(context, {
       ...data,
       action: "make_cards",
@@ -71,6 +88,7 @@ export const studyMakeCards = createServerFn({ method: "POST" })
     const { quote, context: lessonContext } = outcome.resolved;
     const limit = maxCards(quote);
     const asked = await askModel(
+      key,
       cardsSystemPrompt(limit),
       practiceUserMessage(quote, lessonContext),
       3500,
@@ -87,6 +105,8 @@ export const studyMakeMcq = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(parse)
   .handler(async ({ data, context }): Promise<McqResult> => {
+    const key = await practiceKey();
+    if (!key) return NO_KEY;
     const outcome = await resolveRequest(context, {
       ...data,
       action: "make_mcq",
@@ -96,6 +116,7 @@ export const studyMakeMcq = createServerFn({ method: "POST" })
     const { quote, context: lessonContext } = outcome.resolved;
     const count = mcqCount(quote);
     const asked = await askModel(
+      key,
       mcqSystemPrompt(count),
       practiceUserMessage(quote, lessonContext),
       4000,

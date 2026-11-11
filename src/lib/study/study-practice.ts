@@ -26,7 +26,8 @@ export const CARD_LIMITS = { front: 80, back: 200, note: 120, max: 12 } as const
 export const MCQ_LIMITS = { question: 220, option: 120, why: 220, max: 5 } as const;
 
 /** What the learner sees when the selection has nothing that can be a card. */
-export const NO_CARDS_TEXT = "هاد الجزء قاعدة، ما بتنفع بطاقات. جرّب أسئلة اختيار.";
+export const NO_CARDS_TEXT =
+  "ما قدرت أعمل بطاقات من هاد الجزء. القواعد والشروحات بدون أمثلة ما بتنفع بطاقات.";
 export const NO_MCQ_TEXT = "ما قدرت أعمل أسئلة من هاد الجزء. حدّد جزء أكبر شوي.";
 
 const LETTER = /\p{L}/u;
@@ -212,8 +213,33 @@ export const PRACTICE_FAILURE_TEXT: Record<PracticeFailure, string> = {
   busy: "ريتا مشغولة شوي. جرّب كمان لحظات.",
   slow: "تأخر الرد هالمرة. جرّب مرة ثانية.",
   failed: "ما زبطت هالمرة. جرّب مرة ثانية.",
-  no_key: "التدريب مش متاح هلأ. جرّب كمان شوي.",
+  no_key: "التدريب مش مفعّل على الموقع لسا. هاد إعداد عند الإدارة، وإعادة المحاولة ما بتفيد.",
 };
+
+/** How the practice window shows a failure: the words, and which buttons make sense. */
+export type PracticeFailureView = {
+  message: string;
+  /** "جرّب مرة ثانية" helps (a busy or slow model, a one-off failure). */
+  retry: boolean;
+  /** Something else the learner can do with the same selection instead. */
+  alternative: "make_mcq" | null;
+};
+
+/**
+ * The reason a practice request failed, as the learner reads it. `code` is what the server
+ * function returned; `message` is its own text, used for the cases not named here.
+ */
+export function practiceFailureView(
+  code: string | undefined,
+  message: string,
+): PracticeFailureView {
+  // Not set up on the site: trying again cannot help, so no retry button.
+  if (code === "no_key")
+    return { message: PRACTICE_FAILURE_TEXT.no_key, retry: false, alternative: null };
+  // No cards from this part (a rule or explanation without examples): questions still work.
+  if (code === "no_cards") return { message: NO_CARDS_TEXT, retry: false, alternative: "make_mcq" };
+  return { message, retry: true, alternative: null };
+}
 
 /**
  * Keeps only good cards: a front that really is in the lesson text (the selection or the lines
