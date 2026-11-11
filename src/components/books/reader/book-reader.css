@@ -489,6 +489,160 @@
 .bkr-jump input:focus-visible {
   border-color: var(--pp-accent);
 }
+/* Minutes left in the chapter, after the page number (wide bars only). */
+.bkr-left {
+  color: var(--pp-muted);
+  font-size: 13px;
+}
+@container (max-width: 680px) {
+  .bkr-left {
+    display: none;
+  }
+}
+
+/* Chapter starts on the progress line: hairline ticks in 25% ink. */
+.bkr-progress {
+  position: relative;
+}
+.bkr-tick {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: rgb(14 17 22 / 0.25);
+  pointer-events: none;
+}
+
+/* The contents: a panel above its button (a sheet from the bottom on a phone). */
+.bkr-toc-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+/* On a phone the sheet is a modal step: the page dims a little behind it. */
+@media (max-width: 599px) {
+  .bkr-toc-veil {
+    background: rgb(14 17 22 / 0.2);
+    animation: bkr-fade-in 220ms ease-out;
+  }
+}
+.bkr-toc {
+  position: fixed;
+  z-index: 61;
+  display: flex;
+  max-height: min(70vh, 560px);
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgb(14 17 22 / 0.08),
+    0 18px 48px -16px rgb(14 17 22 / 0.4);
+  transform-origin: bottom center;
+  animation: bkr-toc-in 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  outline: none;
+}
+.bkr-toc.is-sheet {
+  inset-inline: 0;
+  bottom: 0;
+  max-height: 75dvh;
+  border-radius: 16px 16px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: bkr-sheet-in 220ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.bkr-toc-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 6px 6px 6px;
+  padding-inline-start: 16px;
+  border-bottom: 1px solid var(--pp-line);
+}
+.bkr-toc-title {
+  margin: 0;
+  color: var(--pp-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.bkr-toc-left {
+  margin: 2px 0 0;
+  color: var(--pp-muted);
+  font-size: 12.5px;
+}
+.bkr-toc-list {
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+.bkr-toc-list button {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  gap: 12px;
+  padding-block: 8px;
+  padding-inline-end: 12px;
+  border-radius: 10px;
+  color: var(--pp-ink);
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: start;
+}
+.bkr-toc-list button[aria-current="true"] {
+  font-weight: 700;
+}
+.bkr-toc-list button[aria-current="true"]::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--pp-accent);
+}
+.bkr-toc-list button:focus-visible {
+  outline: 2px solid var(--pp-accent);
+  outline-offset: -2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .bkr-toc-list button:hover {
+    background: var(--pp-grey);
+  }
+}
+.bkr-toc-list button:active {
+  background: var(--pp-grey);
+}
+.bkr-toc-name {
+  display: -webkit-box;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.bkr-toc-page {
+  flex: none;
+  color: var(--pp-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+@keyframes bkr-toc-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+@keyframes bkr-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
 /* A narrow bar: the buttons keep their icons, the words go. */
 @container (max-width: 520px) {
   .bkr-label {
@@ -514,7 +668,9 @@
   .bkr-btn {
     transition: none;
   }
-  .bkr-scrub-card {
+  .bkr-scrub-card,
+  .bkr-toc,
+  .bkr-toc.is-sheet {
     animation-name: bkr-fade-in;
   }
 }

@@ -13,6 +13,7 @@ import { linksMissing, signPagePaths } from "@/lib/book-reader-data";
 import {
   base64ToBytes,
   chapterAt,
+  chapterTicks,
   scrubPage,
   scrubSpot,
   scrubWindow,
@@ -45,6 +46,17 @@ export function BookScrubber({
   onScrubbing,
 }: Props) {
   const track = useRef<HTMLDivElement | null>(null);
+  // The line's length, for chapter ticks that keep apart.
+  const [lineWidth, setLineWidth] = useState(0);
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    const read = () => setLineWidth(el.clientWidth);
+    const observer = new ResizeObserver(read);
+    observer.observe(el);
+    read();
+    return () => observer.disconnect();
+  }, []);
   // The page under the pointer and where the pointer is (px from the line's left end).
   const [at, setAt] = useState<{ page: number; x: number; width: number } | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -161,6 +173,10 @@ export function BookScrubber({
   }, [dragging]);
 
   const fill = scrubSpot(page, total, rtl);
+  const ticks = useMemo(
+    () => (manifest ? chapterTicks(manifest.outline, total, lineWidth, rtl) : []),
+    [manifest, total, lineWidth, rtl],
+  );
   const knob = at ? at.x / Math.max(1, at.width) : fill;
   const ratio = entry ? Math.min(1.42, entry.height / entry.width) : 1.3;
   const cardLeft = at ? Math.min(Math.max(at.x - CARD / 2, 8), at.width - CARD - 8) : 0;
@@ -189,6 +205,14 @@ export function BookScrubber({
       >
         <div className="bkr-progress" data-dir={rtl ? "rtl" : "ltr"}>
           <span style={{ transform: `scaleX(${(page / Math.max(1, total)).toFixed(4)})` }} />
+          {ticks.map((part) => (
+            <i
+              key={part}
+              className="bkr-tick"
+              style={{ left: `${(part * 100).toFixed(3)}%` }}
+              aria-hidden="true"
+            />
+          ))}
         </div>
         {dragging && (
           <i className="bkr-scrub-knob" style={{ left: `${(knob * 100).toFixed(2)}%` }} />

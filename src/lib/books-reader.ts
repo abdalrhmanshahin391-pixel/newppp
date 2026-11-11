@@ -466,3 +466,88 @@ export function scrubWindow(page: number, total: number, around = 20): number[] 
   for (let n = Math.max(1, page - around); n <= Math.min(total, page + around); n += 1) out.push(n);
   return out;
 }
+
+// ---- the outline (phase 3c): the contents panel, chapter ticks, minutes left -------------------
+
+/** The index in the outline of the entry a page is in (as chapterAt finds it), or -1. */
+export function outlineIndexAt(outline: [string, number, number][], page: number): number {
+  let found = -1;
+  let start = 0;
+  outline.forEach(([, at], index) => {
+    if (at <= page && at >= start) {
+      found = index;
+      start = at;
+    }
+  });
+  return found;
+}
+
+/**
+ * Where chapter ticks go on the progress line, as parts of its length from the left: the start
+ * of each top-level entry after the first page, keeping at least `minGap` px between ticks.
+ */
+export function chapterTicks(
+  outline: [string, number, number][],
+  total: number,
+  lineWidth: number,
+  rtl: boolean,
+  minGap = 6,
+): number[] {
+  if (!(lineWidth > 0) || total <= 1) return [];
+  const starts = [
+    ...new Set(outline.filter(([, at, level]) => level === 0 && at > 1).map(([, at]) => at)),
+  ]
+    .filter((at) => at <= total)
+    .sort((a, b) => a - b);
+  const out: number[] = [];
+  let last = -Infinity;
+  for (const at of starts) {
+    // A chapter starts where the page before it ends on the line.
+    const part = (at - 1) / total;
+    const px = part * lineWidth;
+    if (px - last < minGap) continue;
+    last = px;
+    out.push(rtl ? 1 - part : part);
+  }
+  return out;
+}
+
+/** The first page after the chapter a page is in (the next outline entry), or total + 1. */
+export function nextChapterStart(
+  outline: [string, number, number][],
+  page: number,
+  total: number,
+): number {
+  let next = total + 1;
+  for (const [, at] of outline) if (at > page && at < next) next = at;
+  return next;
+}
+
+/** Seconds on a page that count towards the reader's pace: 2 s or more, at most 5 min. */
+export function paceSample(seconds: number): number | null {
+  if (!Number.isFinite(seconds) || seconds < 2) return null;
+  return Math.min(300, seconds);
+}
+
+/** The reader's seconds per page from the last 10 samples, or null before 3. */
+export function secondsPerPage(samples: number[]): number | null {
+  const recent = samples.slice(-10);
+  if (recent.length < 3) return null;
+  return recent.reduce((sum, s) => sum + s, 0) / recent.length;
+}
+
+/** "باقي ≈ 6 دقايق بالفصل" and the like, or null when there is nothing to say. */
+export function minutesLeftLabel(
+  pagesLeft: number,
+  perPage: number | null,
+  toEnd: boolean,
+): string | null {
+  if (perPage === null || pagesLeft < 1) return null;
+  const minutes = Math.round((pagesLeft * perPage) / 60);
+  const where = toEnd ? "للآخر" : "بالفصل";
+  if (minutes < 1) return `باقي أقل من دقيقة ${where}`;
+  if (minutes === 1) return `باقي ≈ دقيقة ${where}`;
+  if (minutes === 2) return `باقي ≈ دقيقتين ${where}`;
+  if (minutes <= 10) return `باقي ≈ ${minutes} دقايق ${where}`;
+  return `باقي ≈ ${minutes} دقيقة ${where}`;
+}

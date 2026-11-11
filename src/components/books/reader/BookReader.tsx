@@ -46,9 +46,13 @@ import {
   bookSelectionKind,
   clampPage,
   metaBlock,
+  minutesLeftLabel,
+  nextChapterStart,
+  paceSample,
   pageQuote,
   pickTier,
   prefetchPlan,
+  secondsPerPage,
   signWindow,
   tierPath,
   type Tier,
@@ -81,6 +85,7 @@ import {
 } from "@/lib/books-study.functions";
 import { BookPageView } from "./BookPageView";
 import { BookScrubber } from "./BookScrubber";
+import { BookOutline } from "./BookOutline";
 import { BookRitaColumn, type BookAnswer } from "./BookRitaColumn";
 import { useTurnGestures } from "./useTurnGestures";
 import "@/components/rita-study/study-meaning.css";
@@ -91,6 +96,8 @@ const SPLIT_KEY = "uzyra-book-split";
 const FIT_KEY = "uzyra-book-fit";
 /** Per browser: the first-visit tip about selecting was seen. */
 const TIP_KEY = "uzyra-book-tip";
+/** Per browser: the reader's last seconds per page (for "minutes left in the chapter"). */
+const PACE_KEY = "uzyra-book-pace";
 
 function readStore(key: string): string | null {
   try {
@@ -732,6 +739,7 @@ export function BookReader({
       if (menuOpenRef.current || event.altKey || event.metaKey || event.ctrlKey) return;
       const target = event.target as HTMLElement | null;
       if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+      if (target?.closest?.(".bkr-toc")) return;
       const forward = rtlBook ? "ArrowLeft" : "ArrowRight";
       const back = rtlBook ? "ArrowRight" : "ArrowLeft";
       if (event.key === forward || event.key === "PageDown") go(page + 1);
@@ -765,6 +773,39 @@ export function BookReader({
     () => setTouchy(window.matchMedia?.("(hover: none) and (pointer: coarse)").matches ?? false),
     [],
   );
+
+  // The reader's own pace (seconds per page, kept in this browser), for "minutes left".
+  const [pace, setPace] = useState<number[]>([]);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(PACE_KEY) ?? "[]");
+      if (Array.isArray(saved)) setPace(saved.filter((n) => typeof n === "number").slice(-10));
+    } catch {
+      /* none kept */
+    }
+  }, []);
+  const pageSince = useRef({ page, at: Date.now() });
+  useEffect(() => {
+    const was = pageSince.current;
+    pageSince.current = { page, at: Date.now() };
+    if (was.page === page) return;
+    const sample = paceSample((Date.now() - was.at) / 1000);
+    if (sample === null) return;
+    setPace((list) => {
+      const next = [...list, sample].slice(-10);
+      try {
+        window.localStorage.setItem(PACE_KEY, JSON.stringify(next));
+      } catch {
+        /* not kept */
+      }
+      return next;
+    });
+  }, [page]);
+  const leftLabel = useMemo(() => {
+    if (!manifest?.outline.length) return null;
+    const end = nextChapterStart(manifest.outline, page, total);
+    return minutesLeftLabel(end - page, secondsPerPage(pace), end > total);
+  }, [manifest, page, total, pace]);
 
   function submitJump(event: FormEvent) {
     event.preventDefault();
@@ -868,6 +909,7 @@ export function BookReader({
               onBlur={() => setJump(String(page))}
             />
             <span>من {total}</span>
+            {leftLabel && <span className="bkr-left">· {leftLabel}</span>}
           </form>
           <button
             type="button"
@@ -880,7 +922,10 @@ export function BookReader({
             <NextIcon size={18} aria-hidden="true" />
           </button>
         </div>
-        <div className="bkr-tools" role="group" aria-label="حجم الصفحة">
+        <div className="bkr-tools" role="group" aria-label="أدوات الصفحة">
+          {manifest && (
+            <BookOutline outline={manifest.outline} page={page} onJump={go} left={leftLabel} />
+          )}
           <button
             type="button"
             className="bkr-icon"
