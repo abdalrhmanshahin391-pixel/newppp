@@ -440,6 +440,29 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   «بالمفضلة» when on), and under a hairline «تقييمك»: five 44px star buttons (a radio group, arrow
   keys move it; tapping the chosen star again removes it, as the hint under them says). Visitors see
   the same row with «سجّل دخولك لتقيّم», and a tap asks them to sign in.
+- **Admin on a book without a file** (`BookFileUpload`, shown only to an admin): in the sheet's
+  action row the primary button is «ارفع ملف الكتاب» (an upload icon) in place of the disabled
+  «الملف لسا مش جاهز» that readers and visitors still see. Under the row, after every button, a
+  13px muted note (RTL): «للأدمن: الكتاب لسا بدون ملف. ارفع PDF (لحد 500 ميغا) وبنجهّزه للقراءة
+  تلقائياً.» States: *uploading* — the button turns to a spinner «عم نرفع… 42%» (disabled), a
+  secondary «إلغاء» beside it (it also removes the part already sent), and under the row an 8px
+  rounded bar in the accent colour (`role=progressbar`, a 200ms width transition, none under
+  reduced motion) with the file name and «خلّي الصفحة مفتوحة لحد ما يخلص.»; *error* — the reason in
+  bold #8c1a31 (`role=alert`: not a PDF, empty, over 500 MB, the server's size limit, a lost
+  connection) and the button says «جرّب مرة ثانية»; *done* — the sheet shows «ابدأ القراءة» and
+  the preparing starts by itself. While a file exists but the book is not ready to read in the
+  site, an admin also sees a hairline card «للأدمن · القراءة داخل الموقع» with the preparing
+  progress, «وقّف» and «جهّز الكتاب للقراءة» (the same block as the book editor). The card and the
+  upload are not drawn on a database without the reader migration. Closing the sheet does not stop
+  an upload or the preparing; a browser warning appears if the tab is closed mid-upload.
+- **Starter shelf** (`supabase/starter-books/books.json`, `docs/books-starter-library.md`): 20
+  well-known books with their covers (`public/book-covers/<slug>.webp`, 600×900, the address saved
+  in `cover_path` as `/book-covers/<slug>.webp`, which the page serves as it is) and short Arabic
+  descriptions, in six shelves with a mix of kinds (strategy and wisdom, classic novels, mystery,
+  gothic and horror, adventure and science fiction, fantasy). 19 are public-domain editions
+  (Standard Ebooks); «The Book of Five Rings» is a draft with a drawn cover until the admin uploads
+  a file they have the right to use. Covers are 2:3 and show their own title band: no overlay is
+  added by the page.
 - **Cards** show a small gold «★ 4.6» under the author once a book has three ratings.
 - **«مفضلتي»** (signed in): a chip with a heart and the count in the ways-in row; its list is a
   normal paged list, and an empty one explains how to add books.

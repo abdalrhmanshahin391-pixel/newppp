@@ -808,6 +808,7 @@ export function LibraryPage({
           phase3={phase3}
           mine={myState(open)}
           onChanged={changed}
+          isAdmin={isAdmin}
         />
       )}
     </div>
