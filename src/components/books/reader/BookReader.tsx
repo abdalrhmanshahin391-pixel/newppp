@@ -4,7 +4,12 @@
 // it, so a 500 MB book opens as fast as a short one and never freezes the device.
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import {
@@ -35,13 +40,33 @@ import {
 import { useExplanationLanguage } from "@/hooks/useExplanationLanguage";
 import { MAX_PHRASE_CHARS } from "@/lib/rita-phrase";
 import { availableActions, type PracticeAction, type StudyAction } from "@/lib/study/study-actions";
-import { bookSelectionKind, clampPage, pageQuote } from "@/lib/books-reader";
 import {
-  loadReaderPage,
+  SETTLE_MS,
+  aheadCount,
+  bookSelectionKind,
+  clampPage,
+  metaBlock,
+  pageQuote,
+  prefetchPlan,
+  signWindow,
+} from "@/lib/books-reader";
+import {
+  fetchMetaBlock,
+  fetchPageWords,
+  linksMissing,
   saveReadingPlace,
+  signPagePaths,
+  type PageMeta,
+  type PageView,
+  type PageWords,
   type ReaderBook,
-  type ReaderPage,
 } from "@/lib/book-reader-data";
+import {
+  decodePicture,
+  dropPicturesExcept,
+  fetchPicture,
+  lastPictureMs,
+} from "@/lib/book-pictures";
 import {
   BOOK_TEXT_ACTIONS,
   bookMakeCards,
@@ -75,7 +100,72 @@ function writeStore(key: string, value: string) {
   }
 }
 const ZOOMS = [1, 1.25, 1.5, 2, 2.5];
-const PAGE_STALE_MS = 45 * 60 * 1000; // the picture links last an hour
+/** Pages, words and links stay in memory this long (links are reused for hours). */
+const PAGE_STALE_MS = 45 * 60 * 1000;
+
+// ---- the queries behind a page --------------------------------------------------------------
+
+function metaQuery(bookId: string, block: number, total: number) {
+  return {
+    queryKey: ["book-meta", bookId, block] as const,
+    queryFn: ({ signal }: { signal: AbortSignal }) => fetchMetaBlock(bookId, block, total, signal),
+    staleTime: Infinity,
+    gcTime: PAGE_STALE_MS,
+  };
+}
+
+/** A page ready to show: its light info (40 pages per request) and its signed picture link. */
+function viewQuery(
+  client: QueryClient,
+  bookId: string,
+  userId: string,
+  page: number,
+  total: number,
+  dir: 1 | -1,
+) {
+  return {
+    queryKey: ["book-view", bookId, page] as const,
+    queryFn: async (): Promise<PageView> => {
+      const own = await client.ensureQueryData(metaQuery(bookId, metaBlock(page), total));
+      const meta = own.find((m) => m.page === page);
+      if (!meta) throw new Error("missing_page");
+      // Light info already in memory (this block, and any other block read before).
+      const known = (n: number) =>
+        client
+          .getQueryData<PageMeta[]>(["book-meta", bookId, metaBlock(n)])
+          ?.find((m) => m.page === n)?.imagePath;
+      const nearby = signWindow(page, total, dir);
+      // A new batch only when fewer than 10 pages ahead are signed (or on their way).
+      const close = Array.from({ length: 10 }, (_, i) => page + (i + 1) * dir)
+        .map(known)
+        .filter((path): path is string => Boolean(path));
+      const batch = linksMissing(userId, [meta.imagePath, ...close]).length
+        ? nearby.map(known).filter((path): path is string => Boolean(path))
+        : [];
+      const links = await signPagePaths(userId, [meta.imagePath, ...batch]);
+      // The other block of the window is read in the background, for the next batch.
+      for (const block of new Set(nearby.map(metaBlock)))
+        if (block !== metaBlock(page))
+          void client.prefetchQuery(metaQuery(bookId, block, total)).catch(() => undefined);
+      const url = links[meta.imagePath];
+      if (!url) throw new Error("no_link");
+      return { ...meta, url };
+    },
+    staleTime: PAGE_STALE_MS,
+    gcTime: PAGE_STALE_MS,
+    retry: 1,
+    retryDelay: 1500,
+  };
+}
+
+function wordsQuery(bookId: string, page: number) {
+  return {
+    queryKey: ["book-words", bookId, page] as const,
+    queryFn: ({ signal }: { signal: AbortSignal }) => fetchPageWords(bookId, page, signal),
+    staleTime: PAGE_STALE_MS,
+    gcTime: PAGE_STALE_MS,
+  };
+}
 
 /** What the circle offers on a book page (the lessons' "common mistake" needs a lesson's rule). */
 const BOOK_RING: StudyAction[] = [
@@ -150,52 +240,93 @@ export function BookReader({
   const total = Math.max(1, book.pageCount);
   const [page, setPage] = useState(() => clampPage(startPage, total));
   const [zoom, setZoom] = useState(0);
+  // Phones open fit to width (a whole page is tiny there); a choice made with the button stays.
   const [fit, setFit] = useState<"page" | "width">("page");
   useEffect(() => {
-    if (readStore(FIT_KEY) === "width") setFit("width");
+    const saved = readStore(FIT_KEY);
+    if (saved === "width" || saved === "page") setFit(saved);
+    else if (!window.matchMedia("(min-width: 900px)").matches) setFit("width");
   }, []);
   const [tip, setTip] = useState(false);
   useEffect(() => setTip(readStore(TIP_KEY) !== "1"), []);
   const [jump, setJump] = useState(String(page));
   const memoryKey = `book:${book.id}`;
 
-  // ---- the page and the next one ---------------------------------------------------------------
-  const pageKey = (n: number) => ["book-page", book.id, n] as const;
+  // ---- the page, and the pages around it ------------------------------------------------------
+  // The reading direction and the last turns decide what is fetched ahead.
+  const dirRef = useRef<1 | -1>(1);
+  const lastPage = useRef(page);
+  const turns = useRef<number[]>([]);
+  const [turn, setTurn] = useState(0);
+  const [motion, setMotion] = useState(0);
+  // The last turn came right after another (fast flipping): pictures wait for the reader to stop.
+  const [flipping, setFlipping] = useState(false);
+  if (lastPage.current !== page) {
+    dirRef.current = page > lastPage.current ? 1 : -1;
+    lastPage.current = page;
+  }
   const current = useQuery({
-    queryKey: pageKey(page),
-    queryFn: () => loadReaderPage(book.id, page),
-    staleTime: PAGE_STALE_MS,
-    gcTime: PAGE_STALE_MS,
-    retry: 1,
-    // The page on screen stays while the next arrives (no blank flash between pages).
+    ...viewQuery(queryClient, book.id, userId, page, total, dirRef.current),
+    // The previous page's sheet stays while the new page's info arrives (a few ms when cached).
     placeholderData: keepPreviousData,
   });
-  const stale = current.isPlaceholderData;
+  const view = current.isPlaceholderData ? null : (current.data ?? null);
   const lastShape = useRef(1.414);
   if (current.data) lastShape.current = current.data.height / current.data.width;
-  useEffect(() => {
-    // The next page (and the one before) wait in the background, picture included.
-    for (const n of [page + 1, page - 1]) {
-      if (n < 1 || n > total) continue;
-      void queryClient
-        .prefetchQuery({
-          queryKey: pageKey(n),
-          queryFn: () => loadReaderPage(book.id, n),
-          staleTime: PAGE_STALE_MS,
-        })
-        .then(() => {
-          const next = queryClient.getQueryData<ReaderPage>(pageKey(n));
-          if (next) {
-            const img = new Image();
-            img.decoding = "async";
-            img.src = next.url;
-          }
-        });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [book.id, page, total, queryClient]);
 
-  // The place is remembered (for this reader) and kept in the address (for a refresh).
+  // The words wait until the reader stays on a page; pages read ahead are already there.
+  const [settled, setSettled] = useState(page);
+  const wordsOf = useQuery({ ...wordsQuery(book.id, page), enabled: settled === page });
+  const words: PageWords | null = wordsOf.data && wordsOf.data.page === page ? wordsOf.data : null;
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSettled(page);
+      const dir = dirRef.current;
+      const ahead = aheadCount(turns.current, lastPictureMs());
+      const plan = prefetchPlan(page, dir, total, ahead);
+      const keepWords = new Set([page, ...plan.words]);
+      const keepViews = new Set([page, ...plan.pictures]);
+      // Flipped past: stop what is no longer wanted.
+      void queryClient.cancelQueries({
+        predicate: (q) =>
+          q.queryKey[1] === book.id &&
+          ((q.queryKey[0] === "book-words" && !keepWords.has(q.queryKey[2] as number)) ||
+            (q.queryKey[0] === "book-view" && !keepViews.has(q.queryKey[2] as number))),
+      });
+      const wanted = new Set<string>();
+      if (current.data && !current.isPlaceholderData) wanted.add(current.data.url);
+      for (const n of plan.pictures) {
+        const near = n === page + dir || n === page - dir;
+        void queryClient
+          .fetchQuery(viewQuery(queryClient, book.id, userId, n, total, dir))
+          .then((next) => {
+            wanted.add(next.url);
+            // The pages right beside are decoded; the ones further ahead only cached.
+            if (near) void decodePicture(next.url, "low").catch(() => undefined);
+            else fetchPicture(next.url);
+          })
+          .catch(() => undefined);
+      }
+      window.setTimeout(() => dropPicturesExcept(wanted), 0);
+      for (const n of plan.words) void queryClient.prefetchQuery(wordsQuery(book.id, n));
+    }, SETTLE_MS);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [book.id, page, total, queryClient, userId]);
+
+  // The place is remembered (for this reader) and kept in the address (for a refresh); leaving
+  // the tab or the app saves it at once.
+  const pageNow = useRef(page);
+  pageNow.current = page;
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === "hidden")
+        void saveReadingPlace(userId, book.id, pageNow.current);
+    };
+    document.addEventListener("visibilitychange", onHide);
+    return () => document.removeEventListener("visibilitychange", onHide);
+  }, [book.id, userId]);
   useEffect(() => {
     setJump(String(page));
     const timer = window.setTimeout(() => {
@@ -226,7 +357,7 @@ export function BookReader({
   const gutter = pane.width < 600 ? 8 : 20;
   const roomWidth = Math.max(220, pane.width - gutter * 2);
   const roomHeight = Math.max(220, pane.height - gutter * 2);
-  const shape = current.data ? current.data.height / current.data.width : lastShape.current;
+  const shape = lastShape.current;
   const fitted =
     fit === "page" ? Math.min(roomWidth, roomHeight / shape, 980) : Math.min(roomWidth, 980);
   const pageWidth = Math.round(fitted * ZOOMS[zoom]);
@@ -238,9 +369,9 @@ export function BookReader({
   const [menuOpen, setMenuOpen] = useState(false);
   const menuOpenRef = useRef(false);
   menuOpenRef.current = menuOpen;
-  const pageRef = useRef<ReaderPage | null>(null);
-  // The previous page shown while the next arrives is never the one a selection belongs to.
-  pageRef.current = stale ? null : (current.data ?? null);
+  const pageRef = useRef<PageWords | null>(null);
+  // Only the words of the page on screen can be selected.
+  pageRef.current = words;
 
   const keepPicked = useCallback((next: Picked | null) => {
     pickedRef.current = next;
@@ -472,15 +603,30 @@ export function BookReader({
   const orbState: OrbState = busy ? "busy" : picked ? "armed" : "idle";
 
   // ---- moving between pages --------------------------------------------------------------------
+  const rtlBook = /^(ar|fa|ur|he)/.test(book.language);
+  // The page number in the middle of the page while flipping fast (from the 2nd quick turn).
+  const [toast, setToast] = useState(false);
+  const toastTimer = useRef(0);
   const go = useCallback(
     (next: number) => {
       const target = clampPage(next, total);
+      if (target === pageNow.current) return;
+      const now = Date.now();
+      const quick = turns.current.length > 0 && now - turns.current[turns.current.length - 1] < 400;
+      turns.current = [...turns.current.slice(-5), now];
+      if (quick) setToast(true);
+      setFlipping(quick);
+      window.clearTimeout(toastTimer.current);
+      toastTimer.current = window.setTimeout(() => setToast(false), 600);
+      // Forward comes from the right in a left-to-right book, from the left in a right-to-left one.
+      const forward = target > pageNow.current ? 1 : -1;
+      setMotion(rtlBook ? -forward : forward);
+      setTurn((n) => n + 1);
       setPage(target);
       scroller.current?.scrollTo({ top: 0, left: 0 });
     },
-    [total],
+    [rtlBook, total],
   );
-  const rtlBook = /^(ar|fa|ur|he)/.test(book.language);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (menuOpenRef.current || event.altKey || event.metaKey || event.ctrlKey) return;
@@ -534,17 +680,24 @@ export function BookReader({
           <div className="bkr-stage">
             <BookPageView
               ref={textLayer}
-              page={current.data ?? null}
+              view={view}
+              words={words}
               ratio={lastShape.current}
               width={pageWidth}
-              stale={stale}
-              loading={current.isPending}
+              motion={motion}
+              turn={turn}
+              settle={flipping}
               failed={failed}
               onRetry={() => void current.refetch()}
             />
           </div>
         </div>
-        {tip && current.data?.hasText && (
+        {toast && (
+          <p className="bkr-toast" aria-hidden="true">
+            {page} / {total}
+          </p>
+        )}
+        {tip && view?.hasText && (
           <div className="bkr-tip" role="note">
             <p>حدّد أي كلمة أو جملة بإصبعك أو بالماوس، وبعدين اكبس على الدائرة.</p>
             <button

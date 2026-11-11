@@ -505,9 +505,14 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     العرض» fits it to the pane's width instead (remembered per browser), and zoom goes up in five
     steps. A zoomed page scrolls from the side its lines start on.
   - **Progress:** a 3px accent line under the top bar grows with the page number.
-  - **Turning:** the page on screen stays (dimmed a little, a small spinner over it) until the next
-    one is ready, then the new picture fades in (180ms ease-out; none with reduced motion). The
-    next and previous pages load behind the current one.
+  - **Turning:** instant. The sheet takes the new page's size at once and slides in 24px (220ms,
+    `cubic-bezier(0.2, 0.8, 0.2, 1)`; a 120ms fade with reduced motion). Pages read ahead appear
+    sharp straight away; otherwise the page's real lines show faint (8% ink, "ghost text") until
+    its picture is decoded, then it fades in (200ms). A small ring in the sheet's corner appears
+    only after a second; a page that cannot load shows an ink pill «ما قدرت أفتح الصفحة · جرّب
+    مرة ثانية» (after one quiet retry), never a broken picture. While flipping fast, the page
+    number shows in the middle of the page («12 / 340», from the second quick turn, gone 600ms
+    after the last). Phones open fit to width.
   - **The bar under the page:** «السابقة» (outlined) · «صفحة [n] من N» (the number is a field) ·
     «التالية» (ink, the main action), all 44px, laid out in the book's direction; on the other side
     «على قدّ العرض / الصفحة كاملة», «صغّر», «كبّر» as 44px icons. When the bar is narrower than

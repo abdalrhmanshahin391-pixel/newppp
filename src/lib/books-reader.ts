@@ -186,3 +186,95 @@ export function missingPages(pageCount: number, done: Iterable<number>): number[
   for (let page = 1; page <= pageCount; page++) if (!have.has(page)) out.push(page);
   return out;
 }
+
+// ---- Loading pages fast (the reader) -----------------------------------------------------------
+// Light page info comes in blocks of 40 pages, picture links are signed in batches and reused for
+// hours, and pictures are fetched ahead in the reading direction once the reader settles.
+
+/** Pages per block of light page info (size and picture path), read in one request. */
+export const META_BLOCK = 40;
+/** A signed picture link lasts this long… */
+export const LINK_LIFETIME_S = 6 * 3600;
+/** …and is signed again this long before it ends. */
+export const LINK_MARGIN_MS = 10 * 60 * 1000;
+/** Most paths signed in one call. */
+export const SIGN_BATCH = 50;
+/** Heavy work (the full picture, the words) waits until the page has stayed this long. */
+export const SETTLE_MS = 150;
+
+/** Which block of light page info holds a page, and the pages of a block. */
+export function metaBlock(page: number): number {
+  return Math.floor((Math.max(1, page) - 1) / META_BLOCK);
+}
+export function blockPages(block: number, total: number): [number, number] {
+  const from = block * META_BLOCK + 1;
+  return [from, Math.min(total, from + META_BLOCK - 1)];
+}
+
+export type LinkEntry = { url: string; exp: number };
+
+/** The paths that need a new link: never signed, or ending within the margin. No repeats. */
+export function linksToSign(
+  paths: string[],
+  cache: Record<string, LinkEntry | undefined>,
+  now: number,
+): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const path of paths) {
+    if (!path || seen.has(path)) continue;
+    seen.add(path);
+    const entry = cache[path];
+    if (!entry || entry.exp - LINK_MARGIN_MS <= now) out.push(path);
+  }
+  return out;
+}
+
+/** Drops links that have ended, so the stored list never grows without end. */
+export function pruneLinks(
+  cache: Record<string, LinkEntry>,
+  now: number,
+  max = 2000,
+): Record<string, LinkEntry> {
+  const live = Object.entries(cache)
+    .filter(([, entry]) => entry && entry.exp - LINK_MARGIN_MS > now)
+    .sort((a, b) => b[1].exp - a[1].exp)
+    .slice(0, max);
+  return Object.fromEntries(live);
+}
+
+/** The pages whose links are signed together with this one: 30 ahead and 10 behind. */
+export function signWindow(page: number, total: number, dir: 1 | -1): number[] {
+  const out: number[] = [];
+  for (let step = -10; step <= 30; step++) {
+    const n = page + step * dir;
+    if (n >= 1 && n <= total) out.push(n);
+  }
+  return out.sort((a, b) => a - b);
+}
+
+/**
+ * How many pictures to fetch ahead: 3 normally, 5 while skimming (the last three turns came
+ * less than 8 s apart), 1 on a slow connection (the last picture took over 1.5 s).
+ */
+export function aheadCount(turns: number[], lastPictureMs: number | null): number {
+  if (lastPictureMs !== null && lastPictureMs > 1500) return 1;
+  const recent = turns.slice(-4);
+  if (recent.length >= 4 && recent.every((t, i) => i === 0 || t - recent[i - 1] < 8000)) return 5;
+  return 3;
+}
+
+/** What to fetch around a settled page: pictures ahead and one behind, words two ahead and one behind. */
+export function prefetchPlan(
+  page: number,
+  dir: 1 | -1,
+  total: number,
+  ahead: number,
+): { pictures: number[]; words: number[] } {
+  const inside = (n: number) => n >= 1 && n <= total;
+  const pictures: number[] = [];
+  for (let i = 1; i <= ahead; i++) if (inside(page + i * dir)) pictures.push(page + i * dir);
+  if (inside(page - dir)) pictures.push(page - dir);
+  const words = [page + dir, page + 2 * dir, page - dir].filter(inside);
+  return { pictures, words };
+}

@@ -1,48 +1,127 @@
 // One book page: its picture, and over it the page's words in see-through text, each piece where
 // it sits on the picture, so the reader selects real text (the way pdf.js lays its text layer).
+//
+// Turning is instant: the sheet takes the new page's size at once (from the light page info),
+// slides in 24 px (220 ms), and shows the page's real line layout as faint "ghost text" until the
+// picture is decoded, then the picture fades in (200 ms). Pages beside the one being read are
+// decoded ahead, so they appear sharp straight away. A spinner shows only after a second.
+//
 // Sizes are parts of the page box (container units), so zooming or turning the tablet needs no
 // work. Each piece is stretched to the width of its words on the picture, measured once per page
 // with the browser's own layout (so Safari and Chrome both line up).
 import { forwardRef, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ImageOff, Loader2 } from "lucide-react";
-import type { ReaderPage } from "@/lib/book-reader-data";
+import { Loader2, RotateCcw } from "lucide-react";
+import type { PageView, PageWords } from "@/lib/book-reader-data";
+import { decodePicture, isPictureReady } from "@/lib/book-pictures";
+import { SETTLE_MS } from "@/lib/books-reader";
 
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+/** Ghost text draws at most this many line pieces (a dense page has thousands). */
+const GHOST_MAX = 700;
 
 export const BookPageView = forwardRef<
   HTMLDivElement,
   {
-    page: ReaderPage | null;
-    /** The page's shape while it loads (from the previous page). */
+    view: PageView | null;
+    /** The words of this page, once read (null before). */
+    words: PageWords | null;
+    /** The page's shape while its info loads (from the previous page). */
     ratio: number;
     width: number;
-    /** The page shown is the previous one, kept while the next arrives. */
-    stale: boolean;
-    loading: boolean;
+    /** +1: the new page comes from the right; -1: from the left; 0: no slide. */
+    motion: number;
+    /** Changes on every turn (the slide plays again). */
+    turn: number;
+    /** Flipping fast: fetch the picture only once the reader stays on this page. */
+    settle: boolean;
     failed: string;
     onRetry: () => void;
   }
->(function BookPageView({ page, ratio, width, stale, loading, failed, onRetry }, textRef) {
-  const [shown, setShown] = useState("");
-  // The last picture that finished loading stays under the next one until it is in.
-  const [under, setUnder] = useState<{ url: string; ratio: number } | null>(null);
+>(function BookPageView(
+  { view, words, ratio, width, motion, turn, settle, failed, onRetry },
+  textRef,
+) {
+  const box = useRef<HTMLDivElement | null>(null);
   const layer = useRef<HTMLDivElement | null>(null);
-  const pageRatio = page ? page.height / page.width : ratio;
+  const url = view?.url ?? "";
+  const pageRatio = view ? view.height / view.width : ratio;
   const height = width * pageRatio;
 
+  // ---- the picture: shown once decoded --------------------------------------------------------
+  const [sharp, setSharp] = useState<{ url: string; fade: boolean } | null>(null);
+  const [pictureFailed, setPictureFailed] = useState(false);
+  const [slow, setSlow] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  // Read when the page changes (a later change of "flipping" must not reload the picture).
+  const settleRef = useRef(settle);
+  settleRef.current = settle;
+  useEffect(() => {
+    setPictureFailed(false);
+    setSlow(false);
+    if (!url) return;
+    if (isPictureReady(url)) {
+      setSharp({ url, fade: false });
+      return;
+    }
+    let alive = true;
+    // While flipping fast, a page is fetched only once the reader stays on it.
+    const timer = window.setTimeout(
+      () => {
+        decodePicture(url, "high").then(
+          () => alive && setSharp({ url, fade: true }),
+          () => {
+            if (!alive) return;
+            // One quiet retry after 1.5 s, then a small "try again".
+            if (attempt === 0) window.setTimeout(() => alive && setAttempt(1), 1500);
+            else setPictureFailed(true);
+          },
+        );
+      },
+      settleRef.current ? SETTLE_MS : 0,
+    );
+    const spinner = window.setTimeout(() => alive && setSlow(true), 1000);
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+      window.clearTimeout(spinner);
+    };
+  }, [url, attempt]);
+  const ready = Boolean(url && sharp?.url === url);
+
+  // ---- the slide on every turn --------------------------------------------------------------
+  useEffect(() => {
+    const el = box.current;
+    if (!el || !motion || !el.animate) return;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const animation = reduce
+      ? el.animate([{ opacity: 0.6 }, { opacity: 1 }], { duration: 120, easing: "ease-out" })
+      : el.animate(
+          [
+            { transform: `translateX(${24 * motion}px)`, opacity: 0.5 },
+            { transform: "translateX(0)", opacity: 1 },
+          ],
+          { duration: 220, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" },
+        );
+    return () => animation.cancel();
+    // Plays on each turn only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turn]);
+
+  // ---- the words ----------------------------------------------------------------------------
+  const mine = words && view && words.page === view.page ? words : null;
   const pieces = useMemo(
     () =>
-      page
-        ? page.runs.map(([text, left, top, w, h], index) => ({ key: index, text, left, top, w, h }))
+      mine
+        ? mine.runs.map(([text, left, top, w, h], index) => ({ key: index, text, left, top, w, h }))
         : [],
-    [page],
+    [mine],
   );
 
   // Each piece's natural width at this size, then the stretch that makes it cover its words. The
   // stretch does not change with zoom (the font grows with the page), so this runs once per page.
   useIsoLayoutEffect(() => {
     const el = layer.current;
-    if (!el || !page || !width) return;
+    if (!el || !pieces.length || !width) return;
     const spans = Array.from(el.children).filter(
       (child): child is HTMLSpanElement => child.tagName === "SPAN",
     );
@@ -55,7 +134,7 @@ export const BookPageView = forwardRef<
       span.style.transform = `scaleX(${stretch.toFixed(4)})`;
     });
     // Measured at one width only; a later zoom keeps the same stretch.
-  }, [page, pieces]);
+  }, [pieces, ready]);
 
   // While selecting, a blank layer under the words keeps the selection from jumping when the
   // pointer crosses the gaps between lines (pdf.js' "endOfContent").
@@ -83,37 +162,43 @@ export const BookPageView = forwardRef<
       window.removeEventListener("pointercancel", stop);
       document.removeEventListener("selectionchange", onChange);
     };
-  }, [page]);
+  }, [ready, mine]);
 
-  const ready = Boolean(page && shown === page.url);
-  const keepUnder =
-    under && page && under.url !== page.url && Math.abs(under.ratio - pageRatio) < 0.02;
+  const problem = failed || (pictureFailed ? "ما قدرت أفتح الصفحة" : "");
 
   return (
     <div
+      ref={box}
       className="bkr-page"
       style={{ width, height }}
       data-loaded={ready ? "" : undefined}
-      data-stale={stale ? "" : undefined}
     >
-      {keepUnder && (
-        <img src={under.url} alt="" className="bkr-picture is-under" draggable={false} />
+      {/* The page's real lines, faint, until its picture is in. */}
+      {!ready && mine && (
+        <div className="bkr-ghost" aria-hidden="true">
+          {mine.runs.slice(0, GHOST_MAX).map(([, left, top, w, h], index) => (
+            <i
+              key={index}
+              style={{
+                left: `${left * 100}%`,
+                top: `${(top + h * 0.2) * 100}%`,
+                width: `${w * 100}%`,
+                height: `${h * 60}%`,
+              }}
+            />
+          ))}
+        </div>
       )}
-      {page && (
+      {ready && sharp && (
         <img
-          key={page.url}
-          src={page.url}
+          key={sharp.url}
+          src={sharp.url}
           alt=""
-          className="bkr-picture"
-          decoding="async"
+          className={`bkr-picture${sharp.fade ? " is-fading" : ""}`}
           draggable={false}
-          onLoad={() => {
-            setShown(page.url);
-            setUnder({ url: page.url, ratio: pageRatio });
-          }}
         />
       )}
-      {page && (
+      {ready && mine && (
         <div
           ref={(node) => {
             layer.current = node;
@@ -140,20 +225,25 @@ export const BookPageView = forwardRef<
           <div className="bkr-end" />
         </div>
       )}
-      {page && !page.hasText && ready && <p className="bkr-badge">صفحة صورة بدون نص، ما بتنحدد</p>}
-      {((loading && !keepUnder) || (page && !ready && !keepUnder) || stale) && !failed && (
-        <div className="bkr-wait" role="status" aria-label="جاري تحميل الصفحة">
-          <Loader2 size={20} className="animate-spin" aria-hidden="true" />
-        </div>
+      {view && !view.hasText && ready && <p className="bkr-badge">صفحة صورة بدون نص، ما بتنحدد</p>}
+      {!ready && slow && !problem && (
+        <span className="bkr-spin" role="status" aria-label="جاري تحميل الصفحة">
+          <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+        </span>
       )}
-      {failed && (
-        <div className="bkr-wait is-failed" role="alert">
-          <ImageOff size={22} aria-hidden="true" />
-          <p>{failed}</p>
-          <button type="button" className="rita-btn rita-btn-soft rita-btn-sm" onClick={onRetry}>
-            جرّب مرة ثانية
-          </button>
-        </div>
+      {problem && (
+        <button
+          type="button"
+          className="bkr-retry"
+          onClick={() => {
+            setPictureFailed(false);
+            setAttempt((n) => n + 1);
+            onRetry();
+          }}
+        >
+          <RotateCcw size={14} aria-hidden="true" />
+          {problem} · جرّب مرة ثانية
+        </button>
       )}
     </div>
   );
