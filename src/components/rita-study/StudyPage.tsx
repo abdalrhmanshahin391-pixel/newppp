@@ -172,6 +172,8 @@ export function StudyPage({
     replySelectionRef.current = next;
     setReplySelection(next);
     markReplySelection(next?.range ?? null);
+    if (ritaBox.current)
+      drawSelectionFx(document, next?.range ?? null, { host: ritaBox.current, tone: "reply" });
   }, []);
 
   const keepSelection = useCallback(
@@ -181,6 +183,7 @@ export function StudyPage({
       markSelection(frame.current?.window() ?? null, next?.range ?? null);
       drawSelectionFx(frame.current?.document() ?? null, next?.range ?? null);
       if (next) {
+        if (replySelectionRef.current) document.getSelection()?.removeAllRanges();
         keepReplySelection(null);
         setReplyProblem("");
       }
@@ -190,6 +193,52 @@ export function StudyPage({
 
   // Selecting in Rita's answers. Saved 120ms after it stops changing, before any menu opens (a tap
   // on the circle can clear the browser's selection on a phone, so the copy must exist first).
+  useEffect(() => {
+    const root = ritaBox.current;
+    if (!root) return;
+    const stop = attachTechSelect({
+      doc: document,
+      layer: root,
+      host: root,
+      tone: "reply",
+      scope: "[data-reply-text]",
+      toSheet: (x, y) => ({ x, y }),
+      onChange: (range) => {
+        if (!range) {
+          if (!menuOpenRef.current) keepReplySelection(null);
+          return;
+        }
+        const read = readReplySelection(root);
+        if (read && !("problem" in read)) {
+          frame.current?.document()?.getSelection()?.removeAllRanges();
+          keepSelection(null);
+          setReplyProblem("");
+          keepReplySelection(read);
+        }
+      },
+    });
+    let redrawFrame = 0;
+    const redraw = () => {
+      cancelAnimationFrame(redrawFrame);
+      redrawFrame = requestAnimationFrame(() =>
+        drawSelectionFx(document, replySelectionRef.current?.range ?? null, {
+          host: root,
+          tone: "reply",
+        }),
+      );
+    };
+    root.addEventListener("scroll", redraw, true);
+    const resize = new ResizeObserver(redraw);
+    resize.observe(root);
+    return () => {
+      cancelAnimationFrame(redrawFrame);
+      resize.disconnect();
+      root.removeEventListener("scroll", redraw, true);
+      stop();
+      root.querySelector("#st-fx-reply")?.remove();
+    };
+  }, [keepReplySelection, keepSelection, wide]);
+
   useEffect(() => {
     let picking = 0;
     const onChange = () => {
@@ -626,7 +675,11 @@ export function StudyPage({
   );
 
   const ritaPane = (
-    <div ref={ritaBox} className="flex h-full min-h-0 flex-col bg-white" dir="rtl">
+    <div
+      ref={ritaBox}
+      className="st-reply-pane relative flex h-full min-h-0 flex-col bg-white"
+      dir="rtl"
+    >
       <RitaRealtimeV3
         study={{ lessonId: lesson.id, preview, title: "ريتا", bridge, children: status }}
       />

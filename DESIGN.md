@@ -23,6 +23,15 @@ renewal. Provider confirmation precedes local updates; partial failures stay vis
 
 ## Study circle: five help services and two practice tools
 
+The guide and assistant answers share the same whole-word selection gestures, word boxes,
+connecting strokes and selection sounds. The guide is blue; assistant answers use a translucent
+burgundy tint with the text colour preserved. An answer selection stays within one answer,
+excludes surrounding controls, follows scrolling/resizing and clears when a guide selection wins.
+Finger swipes still scroll before the hold threshold; a second touch cancels selection for zoom.
+Reduced motion disables selection animations. The call-start hold uses a quiet sine pad with a
+small pitch lift and a soft two-note completion; release, cancellation, blur and mute fade the
+hold sound out immediately while its visual fill may drain. Existing hold timing is unchanged.
+
 The existing draggable study circle offers «اشرحلي», «معنى ونطق», «فكّك الجملة», «ليش هيك؟» and «انتبه للغلطة». Explanation uses a white
 disc with an ink icon; meaning uses the blue action disc. Both inherit the radial opening,
 labels and selection strip. Unsuitable selections leave the service visible but disabled.

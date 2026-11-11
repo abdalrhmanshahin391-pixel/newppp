@@ -21,7 +21,7 @@ const MOVE_PX = 8;
 const MAX_FX_WORDS = 90;
 const SVG = "http://www.w3.org/2000/svg";
 
-function caretAt(doc: Document, x: number, y: number): Caret | null {
+function caretAt(doc: Document, x: number, y: number, scope: string): Caret | null {
   const d = doc as Document & {
     caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null;
     caretRangeFromPoint?: (x: number, y: number) => Range | null;
@@ -42,7 +42,8 @@ function caretAt(doc: Document, x: number, y: number): Caret | null {
     }
   }
   if (!node || node.nodeType !== Node.TEXT_NODE) return null;
-  if (!(node.parentElement?.closest(".sheet") ?? null)) return null;
+  if (!(node.parentElement?.closest(scope) ?? null)) return null;
+  if (node.parentElement?.closest("[aria-hidden='true'], input, textarea, select")) return null;
   return { node: node as Text, offset };
 }
 
@@ -151,28 +152,34 @@ function wordBoxes(doc: Document, range: Range): DOMRect[][] {
   return words;
 }
 
-function fxLayer(doc: Document): SVGSVGElement | null {
+type SelectionFxOptions = { host?: HTMLElement; tone?: "guide" | "reply" };
+
+function fxLayer(doc: Document, options: SelectionFxOptions): SVGSVGElement | null {
   if (!doc.body) return null;
   if (!doc.getElementById("st-fx-css")) {
     const style = doc.createElement("style");
     style.id = "st-fx-css";
     style.textContent = `
-#st-fx{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none;z-index:5}
-#st-fx .b{fill:rgba(43,109,240,.09);stroke:#2b6df0;stroke-width:1.3;filter:drop-shadow(0 0 2.5px rgba(61,139,255,.8));transform-box:fill-box;transform-origin:center;animation:stfx-in 200ms cubic-bezier(.23,1,.32,1) backwards}
-#st-fx .l{fill:none;stroke:#3d8bff;stroke-width:1;opacity:.9;stroke-dasharray:1;animation:stfx-draw 260ms ease-out backwards}
-#st-fx .n{fill:#fff;stroke:#2b6df0;stroke-width:1.3;animation:stfx-pop 200ms ease-out backwards}
+.st-selection-fx{--sel-stroke:#2b6df0;--sel-fill:rgba(43,109,240,.09);--sel-glow:rgba(61,139,255,.8);position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none;z-index:5}
+.st-selection-fx[data-tone=reply]{--sel-stroke:#8e1b2b;--sel-fill:rgba(142,27,43,.09);--sel-glow:rgba(142,27,43,.45);width:100%;height:100%;overflow:hidden}
+.st-selection-fx .b{fill:var(--sel-fill);stroke:var(--sel-stroke);stroke-width:1.3;filter:drop-shadow(0 0 2.5px var(--sel-glow));transform-box:fill-box;transform-origin:center;animation:stfx-in 200ms cubic-bezier(.23,1,.32,1) backwards}
+.st-selection-fx .l{fill:none;stroke:var(--sel-stroke);stroke-width:1;opacity:.9;stroke-dasharray:1;animation:stfx-draw 260ms ease-out backwards}
+.st-selection-fx .n{fill:#fff;stroke:var(--sel-stroke);stroke-width:1.3;animation:stfx-pop 200ms ease-out backwards}
 @keyframes stfx-in{from{opacity:0;transform:scale(1.4)}}
 @keyframes stfx-draw{from{stroke-dashoffset:1}}
 @keyframes stfx-pop{from{opacity:0}}
-@media (prefers-reduced-motion:reduce){#st-fx *{animation:none!important}}`;
+@media (prefers-reduced-motion:reduce){.st-selection-fx *{animation:none!important}}`;
     doc.head.appendChild(style);
   }
-  let svg = doc.getElementById("st-fx") as SVGSVGElement | null;
+  const id = options.tone === "reply" ? "st-fx-reply" : "st-fx";
+  let svg = doc.getElementById(id) as SVGSVGElement | null;
   if (!svg) {
     svg = doc.createElementNS(SVG, "svg") as SVGSVGElement;
-    svg.id = "st-fx";
+    svg.id = id;
+    svg.setAttribute("class", "st-selection-fx");
+    svg.setAttribute("data-tone", options.tone ?? "guide");
     svg.setAttribute("aria-hidden", "true");
-    doc.body.appendChild(svg);
+    (options.host ?? doc.body).appendChild(svg);
   }
   return svg;
 }
@@ -181,15 +188,52 @@ function fxLayer(doc: Document): SVGSVGElement | null {
  * Draws (or clears) the glowing word boxes for a selection. Shapes that are already on screen are
  * kept, so only the new words animate in while the learner drags.
  */
-export function drawSelectionFx(doc: Document | null, range: Range | null): void {
+export function drawSelectionFx(
+  doc: Document | null,
+  range: Range | null,
+  options: SelectionFxOptions = {},
+): void {
   if (!doc) return;
-  const svg = fxLayer(doc);
+  const svg = fxLayer(doc, options);
   if (!svg) return;
-  if (!range || range.collapsed) {
+  if (
+    !range ||
+    range.collapsed ||
+    (options.host && !options.host.contains(range.commonAncestorContainer))
+  ) {
     svg.replaceChildren();
     return;
   }
   const words = wordBoxes(doc, range);
+  const hostBox = options.host?.getBoundingClientRect();
+  const offsetX = hostBox ? hostBox.left + options.host!.clientLeft - options.host!.scrollLeft : 0;
+  const offsetY = hostBox ? hostBox.top + options.host!.clientTop - options.host!.scrollTop : 0;
+  // Clip to every scrolling ancestor of the answer: word boxes must not cover the composer
+  // when the selected answer scrolls behind it.
+  if (options.host && hostBox) {
+    let top = hostBox.top,
+      left = hostBox.left,
+      right = hostBox.right,
+      bottom = hostBox.bottom;
+    for (
+      let element = range.startContainer.parentElement;
+      element && element !== options.host;
+      element = element.parentElement
+    ) {
+      const style = doc.defaultView?.getComputedStyle(element);
+      if (
+        style &&
+        /auto|scroll|hidden|clip/.test(style.overflow + style.overflowY + style.overflowX)
+      ) {
+        const box = element.getBoundingClientRect();
+        top = Math.max(top, box.top);
+        left = Math.max(left, box.left);
+        right = Math.min(right, box.right);
+        bottom = Math.min(bottom, box.bottom);
+      }
+    }
+    svg.style.clipPath = `inset(${Math.max(0, top - hostBox.top)}px ${Math.max(0, hostBox.right - right)}px ${Math.max(0, hostBox.bottom - bottom)}px ${Math.max(0, left - hostBox.left)}px)`;
+  }
   const keep = new Map<string, Element>();
   for (const child of [...svg.children]) keep.set(child.getAttribute("data-k") ?? "", child);
   const wanted = new Set<string>();
@@ -201,11 +245,11 @@ export function drawSelectionFx(doc: Document | null, range: Range | null): void
   let previous: DOMRect | null = null;
   words.forEach((rects) => {
     rects.forEach((box, index) => {
-      const x = r(box.left - 2);
-      const y = r(box.top - 1);
+      const x = r(box.left - offsetX - 2);
+      const y = r(box.top - offsetY - 1);
       const w = r(box.width + 4);
       const h = r(box.height + 2);
-      add(`b${x},${y},${w}`, () => {
+      add(`b${x},${y},${w},${h}`, () => {
         const rect = doc.createElementNS(SVG, "rect");
         rect.setAttribute("class", "b");
         rect.setAttribute("x", String(x));
@@ -213,20 +257,20 @@ export function drawSelectionFx(doc: Document | null, range: Range | null): void
         rect.setAttribute("width", String(w));
         rect.setAttribute("height", String(h));
         rect.setAttribute("rx", "2");
-        rect.setAttribute("data-k", `b${x},${y},${w}`);
+        rect.setAttribute("data-k", `b${x},${y},${w},${h}`);
         return rect;
       });
       // A line from this word back to the one before, with a node at each end, when they are
       // apart (another line of text, or a gap): the "circuit" that joins the whole selection.
       if (previous && index === 0) {
-        const x1 = r(previous.right + 2);
-        const y1 = r(previous.top + previous.height / 2);
-        const x2 = r(box.left - 2);
-        const y2 = r(box.top + box.height / 2);
+        const x1 = r(previous.right - offsetX + 2);
+        const y1 = r(previous.top - offsetY + previous.height / 2);
+        const x2 = r(box.left - offsetX - 2);
+        const y2 = r(box.top - offsetY + box.height / 2);
         if (Math.abs(y2 - y1) > 2 || x2 - x1 > 14) {
           // Across lines the wire runs like a circuit trace through the gap between the lines,
           // never over the words: out to the right, down, back to the left, in to the next word.
-          const gapY = r((previous.bottom + box.top) / 2);
+          const gapY = r((previous.bottom + box.top) / 2 - offsetY);
           const points =
             Math.abs(y2 - y1) > 2
               ? `${x1},${y1} ${x1 + 6},${y1} ${x1 + 6},${gapY} ${x2 - 6},${gapY} ${x2 - 6},${y2} ${x2},${y2}`
@@ -272,8 +316,14 @@ export function attachTechSelect(options: {
   layer: HTMLElement;
   toSheet: (clientX: number, clientY: number) => { x: number; y: number };
   onChange: (range: Range | null) => void;
+  /** Assistant answers use the same engine, bounded to a single answer and a different palette. */
+  scope?: string;
+  host?: HTMLElement;
+  tone?: "guide" | "reply";
 }): () => void {
   const { doc, layer, toSheet, onChange } = options;
+  const scope = options.scope ?? ".sheet";
+  const paint = (range: Range | null) => drawSelectionFx(doc, range, options);
   let pressed: {
     id: number;
     type: string;
@@ -285,12 +335,14 @@ export function attachTechSelect(options: {
     count: number;
     range: Range | null;
   } | null = null;
-  let pointers = 0;
+  const pointers = new Set<number>();
+  let suppressClick: { x: number; y: number; until: number } | null = null;
   let lastTap = { at: 0, x: 0, y: 0 };
 
   const wordFrom = (clientX: number, clientY: number) => {
     const point = toSheet(clientX, clientY);
-    const caret = caretAt(doc, point.x, point.y);
+    const caret = caretAt(doc, point.x, point.y, scope);
+    if (caret && options.host && !options.host.contains(caret.node)) return null;
     return caret ? { caret, word: wordAt(caret) } : null;
   };
 
@@ -298,6 +350,10 @@ export function attachTechSelect(options: {
     if (!pressed?.anchor) return;
     const focus = wordFrom(clientX, clientY)?.word;
     if (!focus) return;
+    if (
+      focus.node.parentElement?.closest(scope) !== pressed.anchor.node.parentElement?.closest(scope)
+    )
+      return;
     const range = doc.createRange();
     if (before(doc, focus, pressed.anchor)) {
       range.setStart(focus.node, focus.start);
@@ -311,13 +367,14 @@ export function attachTechSelect(options: {
     const count = (range.toString().match(WORDS) ?? []).length;
     if (count !== pressed.count) blip();
     pressed.count = count;
-    drawSelectionFx(doc, range);
+    paint(range);
   };
 
   const begin = () => {
     if (!pressed?.anchor) return;
     pressed.dragging = true;
     pressed.count = 0;
+    layer.setAttribute("data-tech-selecting", "");
     update(pressed.x, pressed.y);
   };
 
@@ -327,27 +384,39 @@ export function attachTechSelect(options: {
   };
 
   const onDown = (event: PointerEvent) => {
-    pointers += 1;
-    if (pointers > 1) {
+    pointers.add(event.pointerId);
+    if (pointers.size > 1) {
       // A second finger: this is a pinch, not a selection.
-      if (pressed) window.clearTimeout(pressed.timer);
+      if (pressed) {
+        window.clearTimeout(pressed.timer);
+        if (pressed.dragging) {
+          doc.getSelection()?.removeAllRanges();
+          paint(null);
+          onChange(null);
+        }
+      }
       pressed = null;
+      layer.removeAttribute("data-tech-selecting");
       return;
     }
     if (event.button !== 0) return;
+    const anchor = wordFrom(event.clientX, event.clientY)?.word ?? null;
+    // Do not take over the composer, report buttons or other controls in the conversation pane.
+    if (options.host && !anchor) return;
     primeSound();
     pressed = {
       id: event.pointerId,
       type: event.pointerType,
       x: event.clientX,
       y: event.clientY,
-      anchor: wordFrom(event.clientX, event.clientY)?.word ?? null,
+      anchor,
       dragging: false,
       timer: 0,
       count: 0,
       range: null,
     };
     if (event.pointerType === "touch") {
+      if (options.host && pressed.anchor) layer.setAttribute("data-tech-selecting", "");
       if (pressed.anchor) pressed.timer = window.setTimeout(begin, HOLD_MS);
       return;
     }
@@ -369,6 +438,7 @@ export function attachTechSelect(options: {
         if (moved > MOVE_PX) {
           window.clearTimeout(pressed.timer);
           pressed = null;
+          layer.removeAttribute("data-tech-selecting");
         }
         return;
       }
@@ -379,12 +449,14 @@ export function attachTechSelect(options: {
   };
 
   const onUp = (event: PointerEvent) => {
-    pointers = Math.max(0, pointers - 1);
+    pointers.delete(event.pointerId);
+    layer.removeAttribute("data-tech-selecting");
     if (!pressed || pressed.id !== event.pointerId) return;
     window.clearTimeout(pressed.timer);
     const was = pressed;
     pressed = null;
     if (was.dragging) {
+      suppressClick = { x: event.clientX, y: event.clientY, until: performance.now() + 400 };
       if (was.range) finish(was.range);
       return;
     }
@@ -398,25 +470,32 @@ export function attachTechSelect(options: {
       const hit = wordFrom(event.clientX, event.clientY);
       const range = hit ? sentenceRange(doc, hit.caret) : null;
       if (range) {
+        suppressClick = { x: event.clientX, y: event.clientY, until: performance.now() + 400 };
         select(doc, range);
-        drawSelectionFx(doc, range);
+        paint(range);
         finish(range);
         lastTap.at = 0;
         return;
       }
     }
     doc.getSelection()?.removeAllRanges();
-    drawSelectionFx(doc, null);
+    paint(null);
     onChange(null);
   };
 
   const onCancel = (event: PointerEvent) => {
-    pointers = Math.max(0, pointers - 1);
+    pointers.delete(event.pointerId);
+    layer.removeAttribute("data-tech-selecting");
     if (pressed?.id === event.pointerId) {
       window.clearTimeout(pressed.timer);
       const was = pressed;
       pressed = null;
-      if (was.dragging && was.range) finish(was.range);
+      if (was.dragging && was.range) {
+        // A cancelled touch is not a completed selection and must not chirp.
+        paint(null);
+        doc.getSelection()?.removeAllRanges();
+        onChange(null);
+      }
     }
   };
 
@@ -424,9 +503,24 @@ export function attachTechSelect(options: {
   // is selecting.
   const onTouchStart = (event: TouchEvent) => {
     const touch = event.touches[0] as Touch & { touchType?: string };
-    if (event.touches.length === 1 && touch.touchType === "stylus") event.preventDefault();
+    if (pressed?.anchor && event.touches.length === 1 && touch.touchType === "stylus")
+      event.preventDefault();
   };
   const onTouchMove = (event: TouchEvent) => {
+    if (pressed?.dragging) event.preventDefault();
+  };
+  const onClick = (event: MouseEvent) => {
+    if (
+      suppressClick &&
+      performance.now() < suppressClick.until &&
+      Math.hypot(event.clientX - suppressClick.x, event.clientY - suppressClick.y) < 12 &&
+      (event.target as Element | null)?.closest(scope)
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
+  const onContextMenu = (event: MouseEvent) => {
     if (pressed?.dragging) event.preventDefault();
   };
 
@@ -436,12 +530,21 @@ export function attachTechSelect(options: {
   layer.addEventListener("pointercancel", onCancel);
   layer.addEventListener("touchstart", onTouchStart, { passive: false });
   layer.addEventListener("touchmove", onTouchMove, { passive: false });
+  layer.addEventListener("click", onClick, true);
+  layer.addEventListener("contextmenu", onContextMenu);
   return () => {
+    if (pressed) window.clearTimeout(pressed.timer);
+    pressed = null;
+    pointers.clear();
+    layer.removeAttribute("data-tech-selecting");
+    paint(null);
     layer.removeEventListener("pointerdown", onDown);
     layer.removeEventListener("pointermove", onMove);
     layer.removeEventListener("pointerup", onUp);
     layer.removeEventListener("pointercancel", onCancel);
     layer.removeEventListener("touchstart", onTouchStart);
     layer.removeEventListener("touchmove", onTouchMove);
+    layer.removeEventListener("click", onClick, true);
+    layer.removeEventListener("contextmenu", onContextMenu);
   };
 }

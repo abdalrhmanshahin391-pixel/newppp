@@ -18,6 +18,9 @@ import i18n from 'i18next';
 import {initReactI18next} from 'react-i18next';
 import {StudyPage} from './src/components/rita-study/StudyPage';
 import {SAMPLE_THIRD_PERSON} from './src/lib/guides/guide-samples';
+window.qaStarts=0;window.qaAudio=[];
+const NativeAudio=window.AudioContext||window.webkitAudioContext;
+if(NativeAudio)window.AudioContext=class extends NativeAudio{createOscillator(){const node=super.createOscillator();const start=node.start.bind(node),stop=node.stop.bind(node);node.start=(...args)=>{window.qaAudio.push({event:'start',type:node.type});return start(...args)};node.stop=(...args)=>{window.qaAudio.push({event:'stop',type:node.type});return stop(...args)};return node}};
 const lang=new URLSearchParams(location.search).get('lang')==='en'?'en':'ar';
 i18n.use(initReactI18next).init({lng:lang,fallbackLng:'en',resources:{ar:{translation:{}},en:{translation:{}}},interpolation:{escapeValue:false}});
 SAMPLE_THIRD_PERSON.sections.push({kind:'usage',heading:'In context',items:[{label:'Care',example:'She {{looks after}} her little brother.'},{label:'River',example:'We sat on the river {{bank}}.'},{label:'Money',example:'She went to the {{bank}}.'}]});
@@ -27,7 +30,7 @@ const r=createRootRoute({component:()=> <Outlet/>});
 const p=createRoute({getParentRoute:()=>r,path:'/preview',component:()=> <StudyPage data={data}/>});
 const router=createRouter({routeTree:r.addChildren([p])});
 if(new URLSearchParams(location.search).has('fresh')) for(const key of Object.keys(localStorage)) if(key.startsWith('rita.phrase.'))localStorage.removeItem(key);
-localStorage.setItem('uzyra-study-sound','off');
+localStorage.setItem('uzyra-study-sound',new URLSearchParams(location.search).has('interaction')?'on':'off');
 createRoot(document.getElementById('app')).render(<RouterProvider router={router}/>);
 window.qaSelect=(wanted, occurrence=0)=>{
  const doc=document.querySelector('iframe')?.contentDocument;
@@ -68,7 +71,7 @@ const result = await build({
           if (path.endsWith("RitaRealtimeV3"))
             return {
               loader: "tsx",
-              contents: `import React,{useEffect,useState} from 'react'; import {UzyraWordmark} from '@/components/brand/UzyraWordmark'; export function RitaRealtimeV3({study}){const [messages,setMessages]=useState([]);useEffect(()=>{study.bridge.post=(role,text)=>setMessages(m=>[...m,{role,text}]);return()=>{study.bridge.post=undefined}},[study.bridge]);return <div className="qa-rita"><UzyraWordmark size={13} withMark={false}/>{messages.length?messages.map((m,i)=><p className="qa-message" key={i} dir="auto">{m.text}</p>):<><div className="qa-cube"><i/><i/></div><p>معاينة محلية · الردود التجريبية ليست اتصالًا بالخادم</p></>}{study.children}</div>}`,
+              contents: `import React,{useEffect,useState} from 'react'; import {UzyraWordmark} from '@/components/brand/UzyraWordmark';import {HoldToStart} from '@/components/rita/HoldToStart';export function RitaRealtimeV3({study}){const interaction=new URLSearchParams(location.search).has('interaction');const [messages,setMessages]=useState(interaction?[{role:'rita',text:'She studies at night. He watches a film on Fridays.'},{role:'rita',text:'مع الفاعل المفرد نضيف حرفًا إلى نهاية الفعل. هذا مثال آخر للتحديد.'}]:[]);useEffect(()=>{study.bridge.post=(role,text)=>setMessages(m=>[...m,{role,text}]);return()=>{study.bridge.post=undefined}},[study.bridge]);return <div className="qa-rita"><UzyraWordmark size={13} withMark={false}/>{messages.length?messages.map((m,i)=><p data-reply-text="" className="qa-message" key={i} dir="auto">{m.text}</p>):<><div className="qa-cube"><i/><i/></div><p>معاينة محلية · الردود التجريبية ليست اتصالًا بالخادم</p></>}{interaction&&<><button type="button" onClick={()=>{window.qaControl=(window.qaControl||0)+1}}>زر محادثة تجريبي</button><HoldToStart label="اضغط مطوّلاً لتبدأ" onStart={()=>{window.qaStarts++}}/></>}{study.children}</div>}`,
               resolveDir: root,
             };
           if (path.endsWith("tts-auth"))
@@ -116,6 +119,7 @@ const css =
   `
 #app > .edith-premium {height:100%;}
 .qa-rita{overflow:auto;padding:24px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;font:600 13px Figtree,sans-serif;letter-spacing:.12em}.qa-message{width:100%;max-width:480px;font-size:15px!important;line-height:1.8;letter-spacing:0!important}.qa-rita p{font-size:12px;color:#6a697c;letter-spacing:0}.qa-cube{display:flex;gap:12px;align-items:center;justify-content:center;width:96px;height:88px;border-radius:25px 22px 24px 19px;background:#101010;transform:rotate(-3deg)}.qa-cube i{width:12px;height:24px;background:#fff;border-radius:8px}
+.qa-rita:has([data-reply-text]){justify-content:flex-start}.qa-message{flex-shrink:0}
 `;
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, "http://localhost");
@@ -316,6 +320,224 @@ if (process.argv.includes("--check")) {
       await page.close();
     }
     // A server error must stay visible and offer a usable retry.
+    // Shared selection, actual hold component, and actual Web Audio: only auth/voice are fixtures.
+    for (const width of [390, 768, 1280]) {
+      for (const lang of ["ar", "en"]) {
+        const page = await browser.newPage({
+          viewport: { width, height: 900 },
+          reducedMotion: "reduce",
+        });
+        await page.goto(origin + `/preview?interaction&lang=${lang}`);
+        if (width < 900) await page.getByRole("tab", { name: "ريتا", exact: true }).click();
+        const answer = page.locator("[data-reply-text]").first();
+        // A paragraph's centre can be the empty space between wrapped lines on a phone.
+        // Aim at an actual word, as the learner does, rather than double-clicking that gap.
+        const answerPoint = await answer.evaluate((el) => {
+          const range = document.createRange();
+          range.setStart(el.firstChild, 0);
+          range.setEnd(el.firstChild, 3);
+          const rect = range.getBoundingClientRect();
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        });
+        await page.mouse.dblclick(answerPoint.x, answerPoint.y);
+        await page.locator('.st-orb[data-tone="reply"]').waitFor();
+        await page.waitForFunction(() => document.querySelectorAll("#st-fx-reply .b").length > 1);
+        const replyFx = await page
+          .locator("#st-fx-reply .b")
+          .first()
+          .evaluate((el) => ({
+            stroke: getComputedStyle(el).stroke,
+            animation: getComputedStyle(el).animationName,
+          }));
+        assert.equal(replyFx.stroke, "rgb(142, 27, 43)");
+        assert.equal(replyFx.animation, "none");
+        await page.waitForFunction(
+          () => window.qaAudio.filter((e) => e.event === "start").length >= 2,
+        );
+        const replySoundCount = await page.evaluate(
+          () => window.qaAudio.filter((e) => e.event === "start").length,
+        );
+        assert.equal(replySoundCount, 2, "a completed selection has the same two-note cue");
+        assert.match(
+          await page.evaluate(() => getSelection().toString()),
+          /She studies at night\.|He watches a film on Fridays\./,
+        );
+        await page.screenshot({
+          path: resolve(out, `${engine}-${width}-${lang}-reply-selection.png`),
+        });
+        await page.getByRole("button", { name: "زر محادثة تجريبي", exact: true }).click();
+        assert.equal(
+          await page.evaluate(() => window.qaControl),
+          1,
+          "conversation controls remain clickable",
+        );
+        if (width < 900) await page.getByRole("tab", { name: "الدرس", exact: true }).click();
+        const point = await page.evaluate(() => window.qaSelect("looks after"));
+        await page.evaluate(() => {
+          window.qaAudio = [];
+        });
+        await page.mouse.dblclick(point.x, point.y);
+        await page.waitForFunction(
+          () =>
+            document.querySelector("iframe")?.contentDocument.querySelectorAll("#st-fx .b").length >
+            0,
+        );
+        assert.equal(
+          await page.locator('.st-orb[data-tone="reply"]').count(),
+          0,
+          "new guide selection clears reply state",
+        );
+        assert.equal(
+          await page.evaluate(() => window.qaAudio.filter((e) => e.event === "start").length),
+          replySoundCount,
+        );
+        assert.equal(
+          await page
+            .frameLocator("iframe")
+            .locator("#st-fx .b")
+            .first()
+            .evaluate((el) => getComputedStyle(el).stroke),
+          "rgb(43, 109, 240)",
+        );
+        await page.screenshot({
+          path: resolve(out, `${engine}-${width}-${lang}-guide-selection.png`),
+        });
+        if (width < 900) await page.getByRole("tab", { name: "ريتا", exact: true }).click();
+        await page.evaluate(() => {
+          window.qaAudio = [];
+        });
+        const hold = page.getByRole("button", { name: /اضغط مطوّلاً لبدء المكالمة/ });
+        await hold.scrollIntoViewIfNeeded();
+        const box = await hold.boundingBox();
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        await page.mouse.down();
+        await page.waitForFunction(
+          () => window.qaAudio.filter((e) => e.event === "start").length === 2,
+        );
+        await page.mouse.up();
+        await page.waitForTimeout(480);
+        assert.equal(
+          await page.evaluate(() => window.qaStarts),
+          0,
+          "early release does not start a call",
+        );
+        assert.deepEqual(
+          await page.evaluate(() =>
+            window.qaAudio.filter((e) => e.event === "start").map((e) => e.type),
+          ),
+          ["sine", "sine"],
+        );
+        assert.equal(
+          await page.evaluate(() => window.qaAudio.filter((e) => e.event === "stop").length),
+          2,
+        );
+        await hold.focus();
+        await page.keyboard.down("Space");
+        await page.waitForFunction(() => window.qaStarts === 1);
+        await page.keyboard.up("Space");
+        assert.equal(
+          await page.evaluate(() => window.qaStarts),
+          1,
+          "keyboard hold starts exactly once",
+        );
+        findings.push({
+          interaction: true,
+          width,
+          lang,
+          replyFx,
+          replySoundCount,
+          earlyRelease: "passed",
+          keyboardHold: "passed",
+        });
+        await page.close();
+      }
+    }
+    const gestures = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    const pointer = async (type, id, point) => {
+      await gestures.locator(".st-reply-pane").dispatchEvent(type, {
+        pointerId: id,
+        pointerType: "touch",
+        isPrimary: id === 61,
+        button: 0,
+        clientX: point.x,
+        clientY: point.y,
+        bubbles: true,
+      });
+    };
+    const firstWord = async () =>
+      gestures
+        .locator("[data-reply-text]")
+        .first()
+        .evaluate((el) => {
+          const text = el.firstChild,
+            range = document.createRange();
+          range.setStart(text, 0);
+          range.setEnd(text, 3);
+          const box = range.getBoundingClientRect();
+          return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+        });
+    await gestures.goto(origin + "/preview?interaction");
+    await gestures.locator("[data-reply-text]").first().waitFor();
+    await gestures.getByRole("button", { name: "زر محادثة تجريبي", exact: true }).click();
+    let touch = await firstWord();
+    await pointer("pointerdown", 61, touch);
+    await pointer("pointermove", 61, { x: touch.x + 30, y: touch.y + 15 });
+    await gestures.waitForTimeout(300);
+    await pointer("pointerup", 61, touch);
+    assert.equal(
+      await gestures.locator("#st-fx-reply .b").count(),
+      0,
+      "a swipe before hold leaves scrolling available",
+    );
+    assert.equal(await gestures.evaluate(() => window.qaAudio.length), 0);
+    await pointer("pointerdown", 61, touch);
+    await gestures.waitForTimeout(300);
+    await gestures.waitForFunction(() => document.querySelectorAll("#st-fx-reply .b").length > 0);
+    const other = await gestures.locator("[data-reply-text]").nth(1).boundingBox();
+    await pointer("pointermove", 61, {
+      x: other.x + other.width / 2,
+      y: other.y + other.height / 2,
+    });
+    await pointer("pointerup", 61, touch);
+    assert.ok(
+      !/مع الفاعل/.test(await gestures.evaluate(() => getSelection().toString())),
+      "touch selection cannot cross into another answer",
+    );
+    await gestures.reload();
+    await gestures.locator("[data-reply-text]").first().waitFor();
+    await gestures.getByRole("button", { name: "زر محادثة تجريبي", exact: true }).click();
+    touch = await firstWord();
+    await pointer("pointerdown", 61, touch);
+    await pointer("pointerdown", 62, { x: touch.x + 60, y: touch.y });
+    await gestures.waitForTimeout(300);
+    await pointer("pointerup", 62, touch);
+    await pointer("pointerup", 61, touch);
+    assert.equal(
+      await gestures.locator("#st-fx-reply .b").count(),
+      0,
+      "second touch yields to zoom",
+    );
+    assert.equal(await gestures.evaluate(() => window.qaAudio.length), 0);
+    await pointer("pointerdown", 61, touch);
+    await gestures.waitForTimeout(300);
+    const beforeCancel = await gestures.evaluate(
+      () => window.qaAudio.filter((e) => e.event === "start").length,
+    );
+    await pointer("pointercancel", 61, touch);
+    assert.equal(await gestures.locator("#st-fx-reply .b").count(), 0);
+    assert.equal(
+      await gestures.evaluate(() => window.qaAudio.filter((e) => e.event === "start").length),
+      beforeCancel,
+      "cancel does not chirp",
+    );
+    await gestures.close();
+    findings.push({
+      touchSwipe: "passed",
+      touchHold: "passed",
+      singleAnswer: "passed",
+      secondTouch: "passed",
+      pointerCancel: "passed",
+    });
     const failure = await browser.newPage({ viewport: { width: 390, height: 900 } });
     await failure.goto(origin + "/preview?fail");
     await failure.frameLocator("iframe").locator("[data-seg]").first().waitFor();

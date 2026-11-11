@@ -20,6 +20,7 @@ export function soundOn(): boolean {
 }
 
 export function setSoundOn(on: boolean): void {
+  if (!on) endHoldTone();
   try {
     window.localStorage.setItem(KEY, on ? "on" : "off");
   } catch {
@@ -107,14 +108,14 @@ function whenRunning(play: (a: AudioContext) => void) {
   const a = audio();
   if (!a) return;
   if (a.state === "running") {
-    play(a);
+    if (soundOn()) play(a);
     return;
   }
   const asked = performance.now();
   void a
     .resume()
     .then(() => {
-      if (a.state === "running" && performance.now() - asked < STALE_MS) play(a);
+      if (soundOn() && a.state === "running" && performance.now() - asked < STALE_MS) play(a);
     })
     .catch(() => undefined);
 }
@@ -225,16 +226,22 @@ function bell(a: AudioContext, freq: number, start: number, length: number, volu
   osc.stop(at + length + 0.05);
 }
 
-type HoldVoice = { low: OscillatorNode; high: OscillatorNode; gain: GainNode };
+type HoldVoice = {
+  low: OscillatorNode;
+  high: OscillatorNode;
+  gain: GainNode;
+  filter: BiquadFilterNode;
+  overtone: GainNode;
+};
 let holdVoice: HoldVoice | null = null;
 
 /**
- * Holding the call circle: a soft two-oscillator tone (a root and its fifth, through a gentle
- * low-pass) whose pitch and volume rise with the fill and fall again as it drains. Called once per
- * frame with the current fill; at 0 the tone fades out and stops.
+ * A quiet, rounded sine pad while holding the call circle. A small pitch lift communicates
+ * progress without a siren-like sweep. The fifth is mixed well below the root. Nodes are reused
+ * throughout the hold; release fades them out instead of sounding through the visual drain.
  */
 export function holdTone(fill: number): void {
-  if (fill <= 0 || !soundOn()) {
+  if (!Number.isFinite(fill) || fill <= 0 || !soundOn()) {
     endHoldTone();
     return;
   }
@@ -251,21 +258,32 @@ export function holdTone(fill: number): void {
     const filter = a.createBiquadFilter();
     const gain = a.createGain();
     low.type = "sine";
-    high.type = "triangle";
+    high.type = "sine";
+    const overtone = a.createGain();
+    overtone.gain.value = 0.16;
     filter.type = "lowpass";
-    filter.frequency.value = 1600;
+    filter.frequency.value = 650;
+    filter.Q.value = 0.5;
     gain.gain.setValueAtTime(0, now);
     low.connect(filter);
-    high.connect(filter);
+    high.connect(overtone).connect(filter);
     filter.connect(gain).connect(a.destination);
     low.start(now);
     high.start(now);
-    holdVoice = { low, high, gain };
+    holdVoice = { low, high, gain, filter, overtone };
+    high.onended = () => {
+      low.disconnect();
+      high.disconnect();
+      overtone.disconnect();
+      filter.disconnect();
+      gain.disconnect();
+    };
   }
-  const freq = 196 * Math.pow(2, fill * 1.5);
-  holdVoice.low.frequency.setTargetAtTime(freq, now, 0.03);
-  holdVoice.high.frequency.setTargetAtTime(freq * 1.5, now, 0.03);
-  holdVoice.gain.gain.setTargetAtTime(0.02 + fill * 0.035, now, 0.05);
+  const progress = Math.min(1, fill);
+  const freq = 196 * Math.pow(2, progress / 3);
+  holdVoice.low.frequency.setTargetAtTime(freq, now, 0.08);
+  holdVoice.high.frequency.setTargetAtTime(freq * 1.5, now, 0.08);
+  holdVoice.gain.gain.setTargetAtTime(0.012 + progress * 0.008, now, 0.09);
 }
 
 /** Fades the hold tone out (let go, drained, or full). */
@@ -276,19 +294,18 @@ export function endHoldTone(): void {
   if (!voice || !a) return;
   const now = a.currentTime;
   voice.gain.gain.cancelScheduledValues(now);
-  voice.gain.gain.setTargetAtTime(0, now, 0.04);
-  voice.low.stop(now + 0.3);
-  voice.high.stop(now + 0.3);
+  voice.gain.gain.setTargetAtTime(0, now, 0.025);
+  voice.low.stop(now + 0.16);
+  voice.high.stop(now + 0.16);
 }
 
-/** The circle is full and the call starts: a small rising major chord. */
+/** Full circle: a quiet two-note confirmation in the same rounded register. */
 export function holdDoneSound(): void {
   endHoldTone();
   if (!soundOn()) return;
   whenRunning((a) => {
-    bell(a, 784, 0, 0.5, 0.05);
-    bell(a, 988, 0.06, 0.5, 0.04);
-    bell(a, 1175, 0.12, 0.7, 0.04);
+    bell(a, 392, 0, 0.28, 0.018);
+    bell(a, 523.25, 0.07, 0.32, 0.012);
   });
 }
 
