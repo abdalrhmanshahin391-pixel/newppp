@@ -144,6 +144,22 @@ Migration `20261115120000_books_reader_tiers.sql`, then each book prepared again
   inside a 390 px screen, the signing count, and a finger drag (Chromium, real touch input). The
   swipe and selection checks still pass.
 
+### Contents, chapter ticks, minutes left (the page-pane plan, phase 3c)
+
+- From the outline the prepare step stores in the manifest; no database change. Books whose PDF
+  has no outline get none of it (no empty button).
+- `BookOutline.tsx`: a Radix dialog (focus kept inside, Escape and outside taps close, focus back
+  on the button), rendered inside the reader so the colour tokens apply; a panel above the button,
+  a bottom sheet under 600 px. Its arrow keys never reach the reader's page turning.
+- Ticks: `chapterTicks` (top-level starts, at least 6 px apart). Minutes: `paceSample`,
+  `secondsPerPage`, `nextChapterStart`, `minutesLeftLabel`; the pace is kept per browser
+  (`uzyra-book-pace`), never sent anywhere. On an iPad in the split view the bar is about 620 px,
+  so there the minutes show only in the contents panel.
+- Checked in Chromium and WebKit (iPad and phone, 25 checks each): the button only with an
+  outline, the panel's place, the current chapter marked and focused, ↑/↓ without turning, going
+  to a chapter, Escape, focus back, the phone sheet, ticks (and mirrored), no outline, no sideways
+  scroll. The scrubber, swipe and selection checks still pass.
+
 ## Not in this version
 
 - Reading scanned pages (OCR): they show as pictures only.

@@ -288,3 +288,48 @@ test("the scrubber maps the line to pages, by the book's direction", async () =>
   assert.deepEqual(scrubWindow(2, 5, 2), [1, 2, 3, 4]);
   assert.equal(scrubWindow(500, 900).length, 41);
 });
+
+test("the outline gives ticks, the chapter's end and minutes left", async () => {
+  const m = await import("./books-reader.ts");
+  const outline: [string, number, number][] = [
+    ["Part One", 1, 0],
+    ["Chapter 1", 3, 1],
+    ["Chapter 2", 40, 0],
+    ["Part Two", 100, 0],
+  ];
+  assert.equal(m.outlineIndexAt(outline, 2), 0);
+  assert.equal(m.outlineIndexAt(outline, 50), 2);
+  assert.equal(m.outlineIndexAt([["Late", 9, 0]], 2), -1);
+  assert.deepEqual(m.chapterTicks(outline, 200, 1000, false), [0.195, 0.495]);
+  assert.deepEqual(
+    m.chapterTicks(outline, 200, 1000, true).map((x) => Number(x.toFixed(4))),
+    [0.805, 0.505],
+  );
+  // Too close together at this width: only one of them.
+  assert.deepEqual(
+    m.chapterTicks(
+      [
+        ["a", 10, 0],
+        ["b", 11, 0],
+      ],
+      1000,
+      300,
+      false,
+    ),
+    [0.009],
+  );
+  assert.deepEqual(m.chapterTicks(outline, 1, 1000, false), []);
+  assert.equal(m.nextChapterStart(outline, 5, 200), 40);
+  assert.equal(m.nextChapterStart(outline, 150, 200), 201);
+  assert.equal(m.paceSample(1), null);
+  assert.equal(m.paceSample(40), 40);
+  assert.equal(m.paceSample(4000), 300);
+  assert.equal(m.secondsPerPage([30, 60]), null);
+  assert.equal(m.secondsPerPage([30, 60, 90]), 60);
+  assert.equal(m.secondsPerPage([1000, 1000, ...Array(10).fill(30)]), 30);
+  assert.equal(m.minutesLeftLabel(6, 60, false), "باقي ≈ 6 دقايق بالفصل");
+  assert.equal(m.minutesLeftLabel(2, 60, false), "باقي ≈ دقيقتين بالفصل");
+  assert.equal(m.minutesLeftLabel(1, 20, true), "باقي أقل من دقيقة للآخر");
+  assert.equal(m.minutesLeftLabel(30, 60, false), "باقي ≈ 30 دقيقة بالفصل");
+  assert.equal(m.minutesLeftLabel(5, null, false), null);
+});

@@ -538,6 +538,21 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     the first/last page, the arrows still turn one page. The card appears in 120ms (opacity and
     0.96→1 scale; opacity only with reduced motion); the tip and the page-number toast step aside
     while it shows. Books prepared before the sizes show the number and chapter only.
+  - **Contents** (only when the PDF has an outline): a list icon («الفهرس») first among the bar's
+    tools. On an iPad or computer it opens a 320px white panel above the button (14px corners,
+    hairline ring, deep soft shadow; up to 70% of the height, scrolling inside); on a phone a
+    sheet from the bottom (16px top corners, the page dimmed 20% behind it). Title «الفهرس», a
+    muted line «باقي ≈ n دقايق بالفصل» under it when known, ✕. Each row: the title (its own
+    direction, two lines at most), its page in muted tabular figures, 44px tall, sub-entries
+    indented 14px a level (3 at most). The chapter you are in is bold with a 3px accent bar on
+    its start side and opens in view, focused. A tap goes there and closes; Escape, ✕ or a tap
+    outside close; ↑/↓ move between chapters. Opens in 160ms (opacity, 0.97→1 from the button;
+    the sheet rises in 220ms); reduced motion: opacity only.
+  - **Chapter ticks** on the progress line: 1px marks in 25% ink where each top-level chapter
+    starts, at least 6px apart (the rest are left out), mirrored for right-to-left books.
+  - **Minutes left:** «باقي ≈ 6 دقايق بالفصل» (or «للآخر» in the last chapter) after «من N» in the
+    bar when it is wider than 680px, and under the contents' title. From the reader's own pace in
+    this browser: the last 10 pages read for 2 s to 5 min each, shown after 3.
   - **The bar under the page:** «السابقة» (outlined) · «صفحة [n] من N» (the number is a field) ·
     «التالية» (ink, the main action), all 44px, laid out in the book's direction; on the other side
     «على قدّ العرض / الصفحة كاملة», «صغّر», «كبّر» as 44px icons. When the bar is narrower than
