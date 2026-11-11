@@ -8,7 +8,7 @@ import { BookOpenCheck, Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { MAX_PDF_BYTES, pdfFileProblem, type Book } from "@/lib/books";
 import { attachBookPdf, LIBRARY_QUERY_KEY, UPLOAD_CANCELLED } from "@/lib/books-data";
-import { prepareBook } from "@/lib/book-prepare";
+import { isRunning, prepareBook, usePrepareJobs } from "@/lib/book-prepare";
 import { PrepareBlock, useReaderStates } from "./ReaderPrepare";
 
 type Phase = "idle" | "uploading" | "error";
@@ -164,6 +164,7 @@ export function BookReadingAdmin({
 }) {
   const states = useReaderStates();
   const state = states.data?.get(book.id);
+  const job = usePrepareJobs().get(book.id);
   const prepared = Boolean(state?.preparedAt);
   const was = useRef(prepared);
   useEffect(() => {
@@ -171,6 +172,8 @@ export function BookReadingAdmin({
     was.current = prepared;
   }, [prepared, onReady]);
   if (!states.data) return null;
+  // Ready to read (and no job going): nothing to do here, so the card is not drawn.
+  if (prepared && state?.complete !== false && !isRunning(job)) return null;
   return (
     <div className="bk-file-note bk-file-admin" dir="rtl" lang="ar">
       <p className="bk-file-head">
