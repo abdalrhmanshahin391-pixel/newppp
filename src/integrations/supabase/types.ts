@@ -540,6 +540,837 @@ export type Database = {
         }
         Relationships: []
       }
+      book_bookmarks: {
+        Row: {
+          book_id: string
+          created_at: string
+          page: number
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          page: number
+          user_id?: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          page?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_bookmarks_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "book_featured_now"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_bookmarks_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_categories: {
+        Row: {
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          name_ar: string
+          name_en: string
+          sort: number
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name_ar: string
+          name_en: string
+          sort?: number
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name_ar?: string
+          name_en?: string
+          sort?: number
+        }
+        Relationships: []
+      }
+      book_daily: {
+        Row: {
+          book_id: string
+          day: string
+          favorites: number
+          ratings: number
+          reads: number
+          views: number
+        }
+        Insert: {
+          book_id: string
+          day: string
+          favorites?: number
+          ratings?: number
+          reads?: number
+          views?: number
+        }
+        Update: {
+          book_id?: string
+          day?: string
+          favorites?: number
+          ratings?: number
+          reads?: number
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_daily_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "book_featured_now"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_daily_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_editorial: {
+        Row: {
+          book_id: string
+          context: string
+          created_at: string
+          ends_at: string | null
+          id: string
+          kind: string
+          position: number
+          starts_at: string | null
+        }
+        Insert: {
+          book_id: string
+          context: string
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          kind: string
+          position?: number
+          starts_at?: string | null
+        }
+        Update: {
+          book_id?: string
+          context?: string
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          kind?: string
+          position?: number
+          starts_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_editorial_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "book_featured_now"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_editorial_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_events: {
+        Row: {
+          book_id: string
+          created_at: string
+          day: string
+          kind: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          day?: string
+          kind: string
+          user_id?: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          day?: string
+          kind?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_events_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "book_featured_now"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_events_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_favorites: {
+        Row: {
+          book_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          user_id?: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_favorites_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "book_featured_now"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_favorites_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_file_trash: {
+        Row: {
+          bucket: string
+          created_at: string
+          id: string
+          path: string
+          reason: string
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          id?: string
+          path: string
+          reason?: string
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          id?: string
+          path?: string
+          reason?: string
+        }
+        Relationships: []
+      }
+      book_imports: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          file_name: string
+          id: string
+          on_duplicate: string
+          result: Json | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_name?: string
+          id: string
+          on_duplicate?: string
+          result?: Json | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_name?: string
+          id?: string
+          on_duplicate?: string
+          result?: Json | null
+        }
+        Relationships: []
+      }
+      book_manifests: {
+        Row: {
+          book_id: string
+          dir: string
+          outline: Json
+          pages: Json
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          book_id: string
+          dir?: string
+          outline?: Json
+          pages: Json
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          book_id?: string
+          dir?: string
+          outline?: Json
+          pages?: Json
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_manifests_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: true
+            referencedRelation: "book_featured_now"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_manifests_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: true
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_pages: {
+        Row: {
+          book_id: string
+          color: string | null
+          created_at: string
+          fts: unknown
+          has_text: boolean | null
+          height: number
+          image_path: string
+          mid_path: string | null
+          page: number
+          runs: Json
+          text: string
+          thumb_path: string | null
+          thumbhash: string | null
+          width: number
+          zoom_path: string | null
+        }
+        Insert: {
+          book_id: string
+          color?: string | null
+          created_at?: string
+          fts?: unknown
+          has_text?: boolean | null
+          height: number
+          image_path: string
+          mid_path?: string | null
+          page: number
+          runs?: Json
+          text?: string
+          thumb_path?: string | null
+          thumbhash?: string | null
+          width: number
+          zoom_path?: string | null
+        }
+        Update: {
+          book_id?: string
+          color?: string | null
+          created_at?: string
+          fts?: unknown
+          has_text?: boolean | null
+          height?: number
+          image_path?: string
+          mid_path?: string | null
+          page?: number
+          runs?: Json
+          text?: string
+          thumb_path?: string | null
+          thumbhash?: string | null
+          width?: number
+          zoom_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_pages_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "book_featured_now"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_pages_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_ratings: {
+        Row: {
+          book_id: string
+          created_at: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          rating: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_ratings_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "book_featured_now"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_ratings_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_reading_progress: {
+        Row: {
+          book_id: string
+          page: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          page: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          book_id?: string
+          page?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_reading_progress_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "book_featured_now"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_reading_progress_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_secondary_categories: {
+        Row: {
+          book_id: string
+          category_id: string
+        }
+        Insert: {
+          book_id: string
+          category_id: string
+        }
+        Update: {
+          book_id?: string
+          category_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_secondary_categories_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "book_featured_now"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_secondary_categories_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_secondary_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "book_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_shelf_items: {
+        Row: {
+          book_id: string
+          position: number
+          shelf_id: string
+        }
+        Insert: {
+          book_id: string
+          position?: number
+          shelf_id: string
+        }
+        Update: {
+          book_id?: string
+          position?: number
+          shelf_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_shelf_items_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "book_featured_now"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_shelf_items_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_shelf_items_shelf_id_fkey"
+            columns: ["shelf_id"]
+            isOneToOne: false
+            referencedRelation: "book_shelves"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_shelf_items_shelf_id_fkey"
+            columns: ["shelf_id"]
+            isOneToOne: false
+            referencedRelation: "book_shelves_now"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_shelves: {
+        Row: {
+          created_at: string
+          ends_at: string | null
+          id: string
+          name_ar: string
+          name_en: string
+          sort: number
+          starts_at: string | null
+          visible: boolean
+        }
+        Insert: {
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          name_ar: string
+          name_en: string
+          sort?: number
+          starts_at?: string | null
+          visible?: boolean
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          name_ar?: string
+          name_en?: string
+          sort?: number
+          starts_at?: string | null
+          visible?: boolean
+        }
+        Relationships: []
+      }
+      book_stats: {
+        Row: {
+          book_id: string
+          favorite_count: number
+          rating_count: number
+          rating_sum: number
+          reads: number
+          views: number
+        }
+        Insert: {
+          book_id: string
+          favorite_count?: number
+          rating_count?: number
+          rating_sum?: number
+          reads?: number
+          views?: number
+        }
+        Update: {
+          book_id?: string
+          favorite_count?: number
+          rating_count?: number
+          rating_sum?: number
+          reads?: number
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_stats_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: true
+            referencedRelation: "book_featured_now"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_stats_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: true
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_study_requests: {
+        Row: {
+          action: string
+          book_id: string
+          created_at: string
+          page: number
+          quota_group: string
+          request_id: string
+          selection_len: number
+          user_id: string
+        }
+        Insert: {
+          action: string
+          book_id: string
+          created_at?: string
+          page: number
+          quota_group: string
+          request_id: string
+          selection_len?: number
+          user_id: string
+        }
+        Update: {
+          action?: string
+          book_id?: string
+          created_at?: string
+          page?: number
+          quota_group?: string
+          request_id?: string
+          selection_len?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_study_requests_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "book_featured_now"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_study_requests_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_tag_links: {
+        Row: {
+          book_id: string
+          tag_id: string
+        }
+        Insert: {
+          book_id: string
+          tag_id: string
+        }
+        Update: {
+          book_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "book_tag_links_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "book_featured_now"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_tag_links_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_tag_links_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "book_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      book_tags: {
+        Row: {
+          created_at: string
+          id: string
+          name_ar: string
+          name_en: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name_ar: string
+          name_en: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name_ar?: string
+          name_en?: string
+        }
+        Relationships: []
+      }
+      books: {
+        Row: {
+          alt_title: string
+          author: string
+          category_id: string | null
+          cover_path: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          featured: boolean
+          featured_from: string | null
+          featured_until: string | null
+          file_path: string | null
+          id: string
+          import_key: string | null
+          isbn: string | null
+          language: string
+          level: string
+          page_count: number | null
+          pages: number | null
+          prepared_at: string | null
+          published: boolean
+          rights_checked: boolean
+          search_doc: unknown
+          search_name: string
+          sort: number
+          status: string
+          title: string
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          alt_title?: string
+          author?: string
+          category_id?: string | null
+          cover_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          featured?: boolean
+          featured_from?: string | null
+          featured_until?: string | null
+          file_path?: string | null
+          id?: string
+          import_key?: string | null
+          isbn?: string | null
+          language?: string
+          level?: string
+          page_count?: number | null
+          pages?: number | null
+          prepared_at?: string | null
+          published?: boolean
+          rights_checked?: boolean
+          search_doc?: unknown
+          search_name?: string
+          sort?: number
+          status?: string
+          title: string
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          alt_title?: string
+          author?: string
+          category_id?: string | null
+          cover_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          featured?: boolean
+          featured_from?: string | null
+          featured_until?: string | null
+          file_path?: string | null
+          id?: string
+          import_key?: string | null
+          isbn?: string | null
+          language?: string
+          level?: string
+          page_count?: number | null
+          pages?: number | null
+          prepared_at?: string | null
+          published?: boolean
+          rights_checked?: boolean
+          search_doc?: unknown
+          search_name?: string
+          sort?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "books_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "book_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_flags: {
         Row: {
           card_id: string
@@ -3324,7 +4155,9 @@ export type Database = {
           last_message_at: string | null
           learning_language: string | null
           message_count: number
+          pinned_at: string | null
           title: string
+          title_is_custom: boolean
           updated_at: string
           user_id: string
         }
@@ -3337,7 +4170,9 @@ export type Database = {
           last_message_at?: string | null
           learning_language?: string | null
           message_count?: number
+          pinned_at?: string | null
           title?: string
+          title_is_custom?: boolean
           updated_at?: string
           user_id: string
         }
@@ -3350,7 +4185,9 @@ export type Database = {
           last_message_at?: string | null
           learning_language?: string | null
           message_count?: number
+          pinned_at?: string | null
           title?: string
+          title_is_custom?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -4024,6 +4861,89 @@ export type Database = {
           },
         ]
       }
+      rita_path_item_resources: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          id: string
+          item_id: string
+          kind: string
+          position: number
+          title: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          item_id: string
+          kind: string
+          position?: number
+          title: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          item_id?: string
+          kind?: string
+          position?: number
+          title?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_path_item_resources_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "rita_path_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rita_path_items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          language: string
+          path_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          language?: string
+          path_order: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          language?: string
+          path_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rita_replay_runs: {
         Row: {
           cases: Json
@@ -4115,9 +5035,36 @@ export type Database = {
           },
         ]
       }
+      rita_review_runs: {
+        Row: {
+          conversation_id: string
+          lock_until: string | null
+          updated_at: string
+        }
+        Insert: {
+          conversation_id: string
+          lock_until?: string | null
+          updated_at?: string
+        }
+        Update: {
+          conversation_id?: string
+          lock_until?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_review_runs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: true
+            referencedRelation: "rita_free_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rita_review_settings: {
         Row: {
           assign_lock_until: string | null
+          daily_turn_limit: number
           enabled: boolean
           id: boolean
           last_merge_pass_at: string | null
@@ -4126,6 +5073,7 @@ export type Database = {
         }
         Insert: {
           assign_lock_until?: string | null
+          daily_turn_limit?: number
           enabled?: boolean
           id?: boolean
           last_merge_pass_at?: string | null
@@ -4134,6 +5082,7 @@ export type Database = {
         }
         Update: {
           assign_lock_until?: string | null
+          daily_turn_limit?: number
           enabled?: boolean
           id?: boolean
           last_merge_pass_at?: string | null
@@ -4465,6 +5414,7 @@ export type Database = {
           id: string
           issue_id: string | null
           model: string | null
+          partial: Json | null
           reasons: string[]
           reference_reply: string | null
           reference_why: string | null
@@ -4501,6 +5451,7 @@ export type Database = {
           id?: string
           issue_id?: string | null
           model?: string | null
+          partial?: Json | null
           reasons?: string[]
           reference_reply?: string | null
           reference_why?: string | null
@@ -4537,6 +5488,7 @@ export type Database = {
           id?: string
           issue_id?: string | null
           model?: string | null
+          partial?: Json | null
           reasons?: string[]
           reference_reply?: string | null
           reference_why?: string | null
@@ -6891,6 +7843,51 @@ export type Database = {
       }
     }
     Views: {
+      book_featured_now: {
+        Row: {
+          id: string | null
+        }
+        Insert: {
+          id?: string | null
+        }
+        Update: {
+          id?: string | null
+        }
+        Relationships: []
+      }
+      book_shelves_now: {
+        Row: {
+          created_at: string | null
+          ends_at: string | null
+          id: string | null
+          name_ar: string | null
+          name_en: string | null
+          sort: number | null
+          starts_at: string | null
+          visible: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          ends_at?: string | null
+          id?: string | null
+          name_ar?: string | null
+          name_en?: string | null
+          sort?: number | null
+          starts_at?: string | null
+          visible?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          ends_at?: string | null
+          id?: string | null
+          name_ar?: string | null
+          name_en?: string | null
+          sort?: number | null
+          starts_at?: string | null
+          visible?: boolean | null
+        }
+        Relationships: []
+      }
       site_images_public: {
         Row: {
           key: string | null
@@ -7321,6 +8318,120 @@ export type Database = {
           username: string
         }[]
       }
+      book_card: {
+        Args: { b: Database["public"]["Tables"]["books"]["Row"] }
+        Returns: Json
+      }
+      book_in_period: {
+        Args: { p_at: string; p_from: string; p_until: string }
+        Returns: boolean
+      }
+      book_is_published: { Args: { p_book: string }; Returns: boolean }
+      book_isbn: { Args: { p: string }; Returns: string }
+      book_key: { Args: { p: string }; Returns: string }
+      book_length: { Args: { p_pages: number }; Returns: string }
+      book_numbers_add: {
+        Args: {
+          p_book: string
+          p_day: string
+          p_favorites: number
+          p_rating_count: number
+          p_rating_sum: number
+          p_ratings: number
+          p_reads: number
+          p_views: number
+        }
+        Returns: undefined
+      }
+      book_publish_issues: {
+        Args: { b: Database["public"]["Tables"]["books"]["Row"] }
+        Returns: string[]
+      }
+      book_rating_mean: { Args: never; Returns: number }
+      book_search_norm: { Args: { p: string }; Returns: string }
+      books_analytics: { Args: { p_days?: number }; Returns: Json }
+      books_browse: {
+        Args: {
+          p_as_of?: string
+          p_categories?: string[]
+          p_context?: string
+          p_favorites?: boolean
+          p_languages?: string[]
+          p_lengths?: string[]
+          p_levels?: string[]
+          p_limit?: number
+          p_offset?: number
+          p_query?: string
+          p_seed?: string
+          p_sort?: string
+          p_tags?: string[]
+        }
+        Returns: Json
+      }
+      books_bulk_update: {
+        Args: {
+          p_action: string
+          p_category?: string
+          p_ids: string[]
+          p_tag?: string
+        }
+        Returns: Json
+      }
+      books_delete_category: {
+        Args: { p_category: string; p_move_to?: string }
+        Returns: number
+      }
+      books_discover: {
+        Args: { p_as_of?: string; p_per?: number; p_seed?: string }
+        Returns: Json
+      }
+      books_favorite: {
+        Args: { p_book: string; p_on: boolean }
+        Returns: boolean
+      }
+      books_import: {
+        Args: {
+          p_dry_run?: boolean
+          p_file_name?: string
+          p_on_duplicate?: string
+          p_operation: string
+          p_rows: Json
+        }
+        Returns: Json
+      }
+      books_popular: {
+        Args: { p_as_of?: string; p_per?: number }
+        Returns: Json
+      }
+      books_rate: { Args: { p_book: string; p_rating: number }; Returns: Json }
+      books_read_at: { Args: { p_as_of: string }; Returns: string }
+      books_require_admin: { Args: never; Returns: undefined }
+      books_search_pages: {
+        Args: { p_book: string; p_query: string }
+        Returns: {
+          page: number
+          snippet: string
+        }[]
+      }
+      books_set_featured: {
+        Args: { p_book: string; p_from?: string; p_until?: string }
+        Returns: undefined
+      }
+      books_take_study_quota: {
+        Args: {
+          p_action: string
+          p_book: string
+          p_group: string
+          p_page: number
+          p_request: string
+          p_selection_len: number
+        }
+        Returns: Json
+      }
+      books_track: {
+        Args: { p_book: string; p_kind: string }
+        Returns: boolean
+      }
       bump_deck_saves: { Args: { _deck_id: string }; Returns: undefined }
       bump_question_set_saves: { Args: { _set_id: string }; Returns: undefined }
       bump_usage: {
@@ -7516,8 +8627,24 @@ export type Database = {
           transcribed: boolean
         }[]
       }
+      rita_review_claim: {
+        Args: { p_conversation: string; p_seconds: number }
+        Returns: boolean
+      }
+      rita_review_release: {
+        Args: { p_conversation: string }
+        Returns: undefined
+      }
+      rita_review_wake: {
+        Args: { p_conversation: string; p_depth?: number }
+        Returns: undefined
+      }
       rita_set_lesson_path_orders: {
         Args: { p_orders: Json }
+        Returns: undefined
+      }
+      rita_set_path_layout: {
+        Args: { p_items: Json; p_lessons: Json }
         Returns: undefined
       }
       rita_study_take_quota: {
