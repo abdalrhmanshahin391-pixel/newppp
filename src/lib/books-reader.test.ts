@@ -333,3 +333,14 @@ test("the outline gives ticks, the chapter's end and minutes left", async () => 
   assert.equal(m.minutesLeftLabel(30, 60, false), "باقي ≈ 30 دقيقة بالفصل");
   assert.equal(m.minutesLeftLabel(5, null, false), null);
 });
+
+test("milestones are crossed once each", async () => {
+  const { crossedMilestone } = await import("./books-reader.ts");
+  assert.equal(crossedMilestone(24, 25, 100, []), 25);
+  assert.equal(crossedMilestone(25, 26, 100, []), null);
+  assert.equal(crossedMilestone(24, 25, 100, [25]), null);
+  assert.equal(crossedMilestone(10, 60, 100, [25]), 50);
+  assert.equal(crossedMilestone(99, 100, 100, [25, 50, 75]), 100);
+  assert.equal(crossedMilestone(50, 40, 100, []), null);
+  assert.equal(crossedMilestone(1, 2, 4, []), 50);
+});

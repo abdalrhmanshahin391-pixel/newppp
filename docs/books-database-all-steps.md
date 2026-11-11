@@ -2,9 +2,17 @@
 
 **هاد الملف بيحل محل الملف القديم.** فيه كل تحديث بقاعدة البيانات من آخر شي طبّقناه لهلأ: تحديثين لمسار
 الدروس (قبل المكتبة)، المكتبة الأولى، تصليح الزوار، المراحل الثلاث، حد الـ PDF، القارئ، تصليح الزوار
-الجديد، و**الجديد هلأ: رقم 11 (أحجام الصفحات والفهرس، المرحلة 2 من خطة القارئ)**. نص كل تحديث كامل بالملاحق بآخر الملف، ومطابق حرف بحرف لملفات المشروع على `main`.
+الجديد، رقم 11 (أحجام الصفحات والفهرس)، و**الجديد هلأ: رقم 12 (البحث داخل الكتاب والعلامات)**. نص كل تحديث كامل بالملاحق بآخر الملف، ومطابق حرف بحرف لملفات المشروع على `main`.
 
 ### شو الجديد عن النسخة اللي قبل (بصراحة)
+
+- **انضاف رقم 12 بس** (`20261116120000_books_reader_search_bookmarks.sql`): البحث داخل الكتاب (عمود بحث
+  بيعبّى لحاله من نص الصفحة + فهرس سريع + دالة `books_search_pages`)، وجدول `book_bookmarks` (علامات كل
+  قارئ إله بس). بيضيف بس، وآمن لو انعاد. **تطبيقه بيعيد كتابة جدول صفحات الكتب مرة وحدة** (ثواني لكل ألف
+  صفحة)، فطبّقه بوقت هادي.
+- بدون رقم 12 القارئ بيضل شغّال: زر العلامة ما بيطلع، والبحث بيقول «البحث بيشتغل بعد تحديث قاعدة البيانات».
+
+### شو كان جديد بالنسخة اللي قبلها (رقم 11)
 
 - **انضاف رقم 11 بس** (`20261115120000_books_reader_tiers.sql`): أحجام إضافية لصور الصفحات، معاينة مموّهة
   صغيرة لكل صفحة، ولونها، وجدول `book_manifests` (فهرس كل كتاب بطلب واحد). كل إشي فيه بيضيف بس، وآمن لو
@@ -37,6 +45,7 @@
 | 9 | `20261113120000_books_reader.sql` | القارئ (صفحة صفحة) | #153 | الملحق 9 |
 | 10 | `20261114120000_books_visitor_access.sql` | وصول الزوار للمكتبة الجديدة — بعد 1–9 دايماً | #148 (جلسة ثانية) | الملحق 10 |
 | 11 | `20261115120000_books_reader_tiers.sql` | القارئ: أحجام الصفحات، المعاينة، الفهرس | المرحلة 2 من خطة القارئ | الملحق 11 |
+| 12 | `20261116120000_books_reader_search_bookmarks.sql` | القارئ: البحث داخل الكتاب والعلامات | المرحلة 3 من خطة القارئ | الملحق 12 |
 
 وكمان، مش SQL:
 
@@ -64,7 +73,8 @@ select item, applied from (values
   (8, '8  حد الـ PDF', exists (select 1 from storage.buckets where id = 'book-files' and file_size_limit = 524288000)),
   (9, '9  القارئ', to_regclass('public.book_pages') is not null),
   (10, '10 وصول الزوار', exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'books' and policyname = 'visitors read published books')),
-  (11, '11 أحجام الصفحات والفهرس', to_regclass('public.book_manifests') is not null)
+  (11, '11 أحجام الصفحات والفهرس', to_regclass('public.book_manifests') is not null),
+  (12, '12 البحث والعلامات', to_regclass('public.book_bookmarks') is not null)
 ) as t(n, item, applied) order by n;
 ```
 
@@ -87,17 +97,18 @@ select published, count(*) from public.books group by 1;
 قواعد:
 
 - **بالترتيب بس**. **رقم 10 (وصول الزوار) دايماً بعد 1–9**: إذا طبّقت هلأ شي من 3–9، أعد 10 بعده. رقم 11
-  مستقل عن 10 (ما بيلمس سياساته)، فبيجي آخر واحد بالترتيب العادي.
+  و12 مستقلين عن 10 (ما بيلمسوا سياساته)، فبيجوا بالآخر بالترتيب العادي: 11 بعدين 12.
 - **ما تعيد المرحلة 2 (رقم 6) بعد المرحلة 3 (رقم 7) لحالها.** إذا لازم تعيدها، كمّل بعدها 7 و8 و9 و10.
 - كل تحديث بيضيف وما بيمسح بيانات، وآمن لو انعاد أو وقف بالنص.
 
 ### الطريقة أ — بإيدك من محرر SQL (الأضمن)
 
 1. إذا 1 أو 2 `false`: الصق **الملحق 1** وشغّله، بعدين **الملحق 2**.
-2. للمكتبة: الصق من أول ملحق ناقص (3 أو أكثر) **لحد الملحق 11، كلهم مع بعض بنفس المرة** وشغّلهم مرة
+2. للمكتبة: الصق من أول ملحق ناقص (3 أو أكثر) **لحد الملحق 12، كلهم مع بعض بنفس المرة** وشغّلهم مرة
    وحدة. هيك بيتطبّقوا بعملية وحدة، فإذا وقف إشي ما بينطبق نصّه، والزوار ما بيشوفوا نسخة بالنص.
-   (إذا المحرر ما قبل النص الطويل، طبّقهم واحد واحد بالترتيب: 10 بعد 9، و11 آخر واحد.)
-3. **إذا 1–10 كلهم `true` وبس 11 `false`**: الصق **الملحق 11** لحاله وشغّله. هاد الغالب عندك.
+   (إذا المحرر ما قبل النص الطويل، طبّقهم واحد واحد بالترتيب: 10 بعد 9، بعدين 11، بعدين 12.)
+3. **إذا 1–10 كلهم `true` وبس 11 و12 `false`** (هاد الغالب عندك): الصق **الملحق 11** وشغّله، بعدين
+   **الملحق 12** وشغّله.
 
 ### الطريقة ب — تعطيها لـ Lovable
 
@@ -111,7 +122,8 @@ select published, count(*) from public.books group by 1;
 > `20261110120000_books_discovery.sql`, `20261111120000_books_popularity.sql`,
 > `20261112120000_books_pdf_limit.sql`, `20261113120000_books_reader.sql`,
 > `20261114120000_books_visitor_access.sql` (always after the ones before it), then
-> `20261115120000_books_reader_tiers.sql` (all in `supabase/migrations/` on main). Apply the
+> `20261115120000_books_reader_tiers.sql`, then `20261116120000_books_reader_search_bookmarks.sql`
+> (all in `supabase/migrations/` on main). Apply the
 > library ones, from the first missing one to the last, in one transaction. They are additive and
 > safe to run again. Do not create Edge Functions, cron jobs or tables beyond what the files
 > contain. Then run the status query again and tell me each row. Also raise the project's Storage
@@ -237,6 +249,21 @@ union all select 'new PDF clears the manifest', (select prosrc like '%book_manif
 union all select 'manifest not on books', not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'books' and column_name = 'manifest');
 ```
 
+### بعد البحث والعلامات (رقم 12)
+
+```sql
+select 'search column' as item, exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'book_pages' and column_name = 'fts') as ok
+union all select 'search index', exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'book_pages_fts')
+union all select 'search function', exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'books_search_pages')
+union all select 'visitors cannot search', not has_function_privilege('anon', 'public.books_search_pages(uuid, text)', 'execute')
+union all select 'readers can search', has_function_privilege('authenticated', 'public.books_search_pages(uuid, text)', 'execute')
+union all select 'bookmarks table with rls', coalesce((select relrowsecurity from pg_class where relnamespace = 'public'::regnamespace and relname = 'book_bookmarks'), false)
+union all select 'bookmark policies', (select count(*) = 3 from pg_policies where schemaname = 'public' and tablename = 'book_bookmarks')
+union all select 'no visitor policy on bookmarks', not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'book_bookmarks' and ('anon' = any (roles) or 'public' = any (roles)))
+union all select 'visitors cannot read bookmarks', not has_table_privilege('anon', 'public.book_bookmarks', 'select')
+union all select 'every page searchable', not exists (select 1 from public.book_pages where fts is null);
+```
+
 ملاحظة: إذا طلعت رسالة `unique index not created yet` بالمرحلة 1، معناها في تصنيفين بنفس الاسم.
 غيّر اسم واحد منهم وأعد تشغيل الملحق 1 (آمن).
 
@@ -314,6 +341,15 @@ Phase 3 (signed in as a learner, on `/books`):
 4. كمتعلّم، افتح الكتاب ونط لصفحة بعيدة (اكتب رقمها): بتشوف صورة مموّهة للصفحة نفسها فوراً، بعدين بتوضح.
    كبّر مرتين أو ثلاث: الصفحة ما بتختفي وهي تجيب الحجم الأكبر.
 5. اطلع من القارئ وارجع: الصفحات اللي قريتها بتفتح فوراً من الجهاز. سجّل خروج: بتنمسح من الجهاز.
+
+البحث والعلامات (بعد الملحق 12):
+
+1. افتح كتاب متجهّز كمتعلّم → زر الفهرس تحت (أو 🔍 إذا الكتاب ما إله فهرس) → «بحث»: اكتب كلمة من الكتاب
+   واكبس Enter. بتطلع الصفحات اللي فيها، والكلمة بالخط العريض. اكبس على نتيجة: بتروح للصفحة والكلمة
+   معلّمة عليها.
+2. اكبس أيقونة العلامة تحت: بتنعبّى، وبتطلع «انحفظت صفحة n · تراجع»، ونقطة صغيرة زرقا على خط التقدّم.
+   بتبيّن بتبويب «العلامات».
+3. سجّل بحساب ثاني: ما بيشوف علاماتك.
 
 الزوار (بعد الملحق 10): افتح `/books` بنافذة خاصة (بدون تسجيل دخول): المكتبة بتطلع، البحث والفلاتر
 شغّالين، وما في رسالة خطأ. «ابدأ القراءة» بيطلب تسجيل الدخول.
@@ -3165,4 +3201,86 @@ begin
   return new;
 end;
 $$;
+```
+
+## الملحق 12 — القارئ: البحث داخل الكتاب والعلامات
+
+`supabase/migrations/20261116120000_books_reader_search_bookmarks.sql`
+
+```sql
+-- Library, the reader (page-pane plan, phase 3): search inside a book, and bookmarks.
+--
+--   book_pages.fts             the page's words for searching, made by the database from
+--                              book_pages.text ('simple': no language rules, so Arabic and English
+--                              both work; words match whole, upper/lower case aside)
+--   books_search_pages(b, q)   up to 50 pages of book b whose words match q (as a web search box
+--                              reads it), each with a short line around the match; the match is
+--                              wrapped in ⟦ ⟧ for the reader to bold. It runs as the caller, so
+--                              the pages' own rules apply: signed-in readers of published books,
+--                              and admins.
+--   book_bookmarks             the pages each reader marked (their own rows only; published books)
+--
+-- Adding the generated column rewrites book_pages once (seconds per thousand pages). Everything
+-- here only adds, and the file can be run again safely. No Edge Function, no scheduled work.
+
+alter table public.book_pages
+  add column if not exists fts tsvector
+  generated always as (to_tsvector('simple', coalesce(text, ''))) stored;
+
+create index if not exists book_pages_fts on public.book_pages using gin (fts);
+
+create or replace function public.books_search_pages(p_book uuid, p_query text)
+returns table (page integer, snippet text)
+language sql
+stable
+set search_path = public
+as $$
+  with q as (
+    select websearch_to_tsquery('simple', left(coalesce(p_query, ''), 200)) as tsq
+  )
+  select p.page,
+         ts_headline(
+           'simple',
+           p.text,
+           q.tsq,
+           'StartSel=⟦, StopSel=⟧, MaxWords=16, MinWords=6, MaxFragments=1, ShortWord=1'
+         )
+  from public.book_pages p, q
+  where p.book_id = p_book
+    and numnode(q.tsq) > 0
+    and p.fts @@ q.tsq
+  order by p.page
+  limit 50
+$$;
+
+revoke all on function public.books_search_pages(uuid, text) from public, anon;
+grant execute on function public.books_search_pages(uuid, text) to authenticated;
+
+create table if not exists public.book_bookmarks (
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  book_id uuid not null references public.books (id) on delete cascade,
+  page integer not null check (page between 1 and 5000),
+  created_at timestamptz not null default now(),
+  primary key (user_id, book_id, page)
+);
+
+alter table public.book_bookmarks enable row level security;
+
+drop policy if exists "readers read their bookmarks" on public.book_bookmarks;
+create policy "readers read their bookmarks" on public.book_bookmarks
+  for select to authenticated
+  using (user_id = auth.uid());
+
+drop policy if exists "readers add bookmarks" on public.book_bookmarks;
+create policy "readers add bookmarks" on public.book_bookmarks
+  for insert to authenticated
+  with check (user_id = auth.uid() and public.book_is_published(book_id));
+
+drop policy if exists "readers remove their bookmarks" on public.book_bookmarks;
+create policy "readers remove their bookmarks" on public.book_bookmarks
+  for delete to authenticated
+  using (user_id = auth.uid());
+
+revoke all on public.book_bookmarks from anon;
+grant select, insert, delete on public.book_bookmarks to authenticated;
 ```

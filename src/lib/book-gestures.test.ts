@@ -69,3 +69,18 @@ test("a tall page scrolls before it turns", () => {
   assert.equal(tapScrollTo(1, { top: 0, height: 800, client: 800 }), null);
   assert.equal(tapScrollTo(0, at(0)), null);
 });
+
+test("finger zoom: double taps and pinches land on the zoom steps", async () => {
+  const { isDoubleTap, nearestZoom, nextZoom } = await import("./book-gestures.ts");
+  const levels = [1, 1.25, 1.5, 2, 2.5];
+  assert.equal(isDoubleTap({ x: 10, y: 10, t: 0 }, { x: 20, y: 15, t: 250 }), true);
+  assert.equal(isDoubleTap({ x: 10, y: 10, t: 0 }, { x: 20, y: 15, t: 400 }), false);
+  assert.equal(isDoubleTap({ x: 10, y: 10, t: 0 }, { x: 80, y: 15, t: 100 }), false);
+  assert.equal(isDoubleTap(null, { x: 0, y: 0, t: 0 }), false);
+  assert.equal(nearestZoom(levels, 0, 1.6), 2);
+  assert.equal(nearestZoom(levels, 3, 0.4), 0);
+  assert.equal(nearestZoom(levels, 0, 9), 4);
+  assert.equal(nearestZoom(levels, 2, 1.02), 2);
+  assert.equal(nextZoom(levels, 0), 1);
+  assert.equal(nextZoom(levels, 4), 0);
+});
