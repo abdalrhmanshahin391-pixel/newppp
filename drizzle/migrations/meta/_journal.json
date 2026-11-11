@@ -78,6 +78,13 @@
       "when": 1794419419392,
       "tag": "0010_tighten_rita_read_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794435976317,
+      "tag": "0011_tighten_book_link_reads",
+      "breakpoints": true
     }
   ]
 }
