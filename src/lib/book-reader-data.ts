@@ -8,10 +8,13 @@ import {
   blockPages,
   linksToSign,
   pruneLinks,
+  readManifest,
   readRuns,
   type LinkEntry,
+  type ManifestPage,
   type PageRun,
 } from "@/lib/books-reader";
+import { forgetPictures } from "@/lib/book-pictures";
 
 export type ReaderBook = {
   id: string;
@@ -71,7 +74,36 @@ export type PageMeta = {
   height: number;
   imagePath: string;
   hasText: boolean;
+  /** The blurred preview (base64 ThumbHash) and main colour, on books prepared with sizes. */
+  thumbhash?: string | null;
+  color?: string | null;
 };
+
+/** A book's manifest: every page's sizes and preview, its outline and direction (one request). */
+export type BookManifest = {
+  pages: ManifestPage[];
+  outline: [string, number, number][];
+  dir: "ltr" | "rtl";
+};
+
+/** The book's manifest, or null (prepared before the sizes, or a database without them). */
+export async function fetchManifest(bookId: string): Promise<BookManifest | null> {
+  const { data, error } = await supabase
+    .from("book_manifests")
+    .select("pages, outline, dir")
+    .eq("book_id", bookId)
+    .maybeSingle();
+  if (error || !data) return null;
+  const pages = readManifest(data.pages);
+  if (!pages.length) return null;
+  const outline = Array.isArray(data.outline)
+    ? (data.outline as unknown[]).filter(
+        (item): item is [string, number, number] =>
+          Array.isArray(item) && typeof item[0] === "string" && Number(item[1]) > 0,
+      )
+    : [];
+  return { pages, outline, dir: data.dir === "rtl" ? "rtl" : "ltr" };
+}
 
 /** A page ready to show: its light part and a signed link to its picture. */
 export type PageView = PageMeta & { url: string };
@@ -143,7 +175,10 @@ function linkStore(userId: string): Record<string, LinkEntry> {
     // Signing out forgets every stored link in this tab.
     watchingSignOut = true;
     supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_OUT") forgetPageLinks();
+      if (event === "SIGNED_OUT") {
+        forgetPageLinks();
+        void forgetPictures();
+      }
     });
   }
   if (links && linksOwner === userId) return links;

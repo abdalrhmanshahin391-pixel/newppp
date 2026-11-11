@@ -184,3 +184,78 @@ test("what is fetched around a settled page follows the reading direction", asyn
   assert.deepEqual(prefetchPlan(10, -1, 100, 3), { pictures: [9, 8, 7, 11], words: [9, 8, 11] });
   assert.deepEqual(prefetchPlan(1, 1, 2, 3), { pictures: [2], words: [2] });
 });
+
+test("picture sizes live beside the original, each in its folder", async () => {
+  const { tierPath } = await import("./books-reader.ts");
+  assert.equal(tierPath("b", 3, "std", "webp"), "b/3.webp");
+  assert.equal(tierPath("b", 3, "thumb", "webp"), "b/t/3.webp");
+  assert.equal(tierPath("b", 3, "mid", "jpeg"), "b/m/3.jpg");
+  assert.equal(tierPath("b", 3, "zoom", "webp"), "b/z/3.webp");
+});
+
+test("the manifest stores each page in a few bytes and reads back", async () => {
+  const { manifestEntry, readManifest } = await import("./books-reader.ts");
+  const entry = manifestEntry({
+    width: 1400,
+    height: 1812,
+    has_text: true,
+    image_path: "b/1.webp",
+    thumb_path: "b/t/1.webp",
+    mid_path: "b/m/1.webp",
+    zoom_path: null,
+    thumbhash: "AbC=",
+    color: "#fafafa",
+  });
+  assert.deepEqual(entry, [1400, 1812, 7, "w", "AbC=", "#fafafa"]);
+  const old = manifestEntry({ width: 1400, height: 788, has_text: false, image_path: "b/2.jpg" });
+  assert.deepEqual(old, [1400, 788, 0, "j", null, null]);
+  const pages = readManifest([entry, old, "broken", [0, 0, 0, "w"]]);
+  assert.equal(pages.length, 2);
+  assert.deepEqual(pages[0].tiers, ["std", "thumb", "mid"]);
+  assert.equal(pages[1].type, "jpeg");
+  assert.equal(pages[1].page, 2);
+  assert.equal(pages[0].color, "#fafafa");
+});
+
+test("the size shown is the smallest that is sharp enough", async () => {
+  const { pickTier } = await import("./books-reader.ts");
+  const all = ["std", "mid", "zoom"] as const;
+  assert.equal(pickTier(374 * 3, [...all]), "std", "a phone at 3x needs ~1122 px");
+  assert.equal(pickTier(390 * 2, [...all]), "mid", "a phone at 2x is fine with 900");
+  assert.equal(pickTier(600 * 2, [...all]), "std", "an iPad pane at 2x");
+  assert.equal(pickTier(600 * 2 * 2, [...all]), "zoom", "zoomed in on an iPad");
+  assert.equal(pickTier(5000, ["std"]), "std", "an old book has only the original");
+  assert.equal(pickTier(500, ["std", "zoom"]), "std");
+});
+
+test("colours, base64 and the preparing rate", async () => {
+  const { hexColor, bytesToBase64, base64ToBytes, prepareRate } = await import("./books-reader.ts");
+  assert.equal(hexColor(250, 250, 250), "#fafafa");
+  assert.equal(hexColor(1, 0.5, 0), "#ff8000");
+  const bytes = new Uint8Array([1, 2, 250, 255]);
+  assert.deepEqual([...base64ToBytes(bytesToBase64(bytes))], [...bytes]);
+  assert.equal(prepareRate([1000], 10), null);
+  const rate = prepareRate([0, 500, 1000, 1500, 2000], 100);
+  assert.equal(rate?.perSecond, 2);
+  assert.equal(rate?.secondsLeft, 50);
+});
+
+test("the outline keeps titles and pages inside the book", async () => {
+  const { cleanOutline } = await import("./books-reader.ts");
+  assert.deepEqual(
+    cleanOutline(
+      [
+        { title: "  Chapter   One ", page: 1, level: 0 },
+        { title: "Lost", page: null, level: 0 },
+        { title: "Too far", page: 99, level: 1 },
+        { title: "Deep", page: 2, level: 9 },
+        { title: "   ", page: 2, level: 0 },
+      ],
+      10,
+    ),
+    [
+      ["Chapter One", 1, 0],
+      ["Deep", 2, 5],
+    ],
+  );
+});
