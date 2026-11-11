@@ -342,6 +342,9 @@ if (process.argv.includes("--check")) {
           }));
         assert.equal(replyFx.stroke, "rgb(142, 27, 43)");
         assert.equal(replyFx.animation, "none");
+        await page.waitForFunction(
+          () => window.qaAudio.filter((e) => e.event === "start").length >= 2,
+        );
         const replySoundCount = await page.evaluate(
           () => window.qaAudio.filter((e) => e.event === "start").length,
         );
@@ -466,6 +469,7 @@ if (process.argv.includes("--check")) {
         });
     await gestures.goto(origin + "/preview?interaction");
     await gestures.locator("[data-reply-text]").first().waitFor();
+    await gestures.getByRole("button", { name: "زر محادثة تجريبي", exact: true }).click();
     let touch = await firstWord();
     await pointer("pointerdown", 61, touch);
     await pointer("pointermove", 61, { x: touch.x + 30, y: touch.y + 15 });
@@ -492,6 +496,7 @@ if (process.argv.includes("--check")) {
     );
     await gestures.reload();
     await gestures.locator("[data-reply-text]").first().waitFor();
+    await gestures.getByRole("button", { name: "زر محادثة تجريبي", exact: true }).click();
     touch = await firstWord();
     await pointer("pointerdown", 61, touch);
     await pointer("pointerdown", 62, { x: touch.x + 60, y: touch.y });
