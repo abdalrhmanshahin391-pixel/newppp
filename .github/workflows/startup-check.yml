@@ -19,6 +19,10 @@ on:
       - "src/components/rita-study/QuestionPreview.tsx"
       - "src/components/rita-study/question-preview*"
       - "src/components/rita-study/StudyPage.tsx"
+      - "src/components/rita-study/tech-select.ts"
+      - "src/components/rita-study/tech-sound*"
+      - "src/components/rita-study/reply-selection.ts"
+      - "src/components/rita/HoldToStart.tsx"
       - "src/components/rita-study/FloatingWindow.tsx"
       - "src/components/rita-study/radial-items.ts"
       - "public/fonts/quiz/**"
@@ -48,6 +52,8 @@ jobs:
       - run: bunx tsc --noEmit
       - name: Temporary question preview state and existing study regressions
         run: bun test src/components/rita-study/question-preview.test.ts src/components/rita-study/window-geometry.test.ts src/lib/study/study-practice.test.ts
+      - name: Hold audio lifecycle regressions
+        run: node --test src/components/rita-study/tech-sound.test.mjs
       - name: Learning sections in Chromium and WebKit
         run: |
           npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund playwright@1.62.1

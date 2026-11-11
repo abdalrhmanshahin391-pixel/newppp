@@ -67,7 +67,8 @@ export function HoldToStart({
         onStart();
         return;
       }
-      holdTone(next);
+      if (holding.current) holdTone(next);
+      else endHoldTone();
       if (next > 0 || holding.current) frame.current = requestAnimationFrame(tick);
       else last.current = 0;
     },
@@ -86,6 +87,7 @@ export function HoldToStart({
   const release = () => {
     if (!holding.current) return;
     holding.current = false;
+    endHoldTone();
     cancelAnimationFrame(frame.current);
     last.current = 0;
     frame.current = requestAnimationFrame(tick);
@@ -98,6 +100,24 @@ export function HoldToStart({
     },
     [],
   );
+  useEffect(() => {
+    const cancel = () => {
+      holding.current = false;
+      cancelAnimationFrame(frame.current);
+      last.current = 0;
+      paint(0);
+      endHoldTone();
+    };
+    const hidden = () => {
+      if (document.hidden) cancel();
+    };
+    window.addEventListener("blur", cancel);
+    document.addEventListener("visibilitychange", hidden);
+    return () => {
+      window.removeEventListener("blur", cancel);
+      document.removeEventListener("visibilitychange", hidden);
+    };
+  }, []);
   // Shown again after a failed call: empty and ready.
   useEffect(() => {
     if (!disabled) return;
@@ -123,14 +143,18 @@ export function HoldToStart({
         onPointerUp={release}
         onPointerCancel={release}
         onLostPointerCapture={release}
+        onBlur={release}
         onKeyDown={(event) => {
-          if ((event.key === " " || event.key === "Enter") && !event.repeat) {
+          if (event.key === " " || event.key === "Enter") {
             event.preventDefault();
-            press();
+            if (!event.repeat) press();
           }
         }}
         onKeyUp={(event) => {
-          if (event.key === " " || event.key === "Enter") release();
+          if (event.key === " " || event.key === "Enter") {
+            event.preventDefault();
+            release();
+          }
         }}
         onContextMenu={(event) => event.preventDefault()}
         onClick={(event) => event.preventDefault()}
