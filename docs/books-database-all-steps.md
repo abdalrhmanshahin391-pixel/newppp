@@ -1,62 +1,61 @@
-# Uzyra — كل تحديثات قاعدة البيانات اللي لازم تتطبّق (النسخة الكاملة الجديدة)
+# Uzyra — كل اللي لازم تعمله بقاعدة البيانات (من الصفر، بملف واحد)
 
-**هاد الملف بيحل محل الملف القديم.** فيه كل تحديث بقاعدة البيانات من آخر شي طبّقناه لهلأ: تحديثين لمسار
-الدروس (قبل المكتبة)، المكتبة الأولى، تصليح الزوار، المراحل الثلاث، حد الـ PDF، القارئ، تصليح الزوار
-الجديد، و**الجديد هلأ: رقم 11 (أحجام الصفحات والفهرس، المرحلة 2 من خطة القارئ)**. نص كل تحديث كامل بالملاحق بآخر الملف، ومطابق حرف بحرف لملفات المشروع على `main`.
+**هاد الملف بيحل محل كل الملفات اللي قبله.** حكيتلي إنك ما طبّقت ولا إشي، فهون كل تحديث عملناه من أول ما
+بلّشنا: تحديثين لمسار الدروس، والمكتبة كلها، والقارئ بكل مراحله. **12 تحديث بالترتيب**، وكل واحد نصّه كامل
+بالملاحق بآخر الملف، ومطابق حرف بحرف لملفات المشروع.
 
-### شو الجديد عن النسخة اللي قبل (بصراحة)
+### باختصار: شو بدك تعمل (5 خطوات)
 
-- **انضاف رقم 11 بس** (`20261115120000_books_reader_tiers.sql`): أحجام إضافية لصور الصفحات، معاينة مموّهة
-  صغيرة لكل صفحة، ولونها، وجدول `book_manifests` (فهرس كل كتاب بطلب واحد). كل إشي فيه بيضيف بس، وآمن لو
-  انعاد. الأرقام 1–10 ما تغيّر فيها ولا حرف.
-- **بعد رقم 11** الكتب اللي تجهّزت قبل بتضل تنقرأ عادي (بالحجم القديم). عشان تاخد الأحجام الجديدة والمعاينة،
-  اكبس «حدّث الكتاب» لكل كتاب من `/admin/books` (الخطوة 6).
+1. **الخطوة 0:** شغّل استعلام الفحص (قراءة بس) وشوف شو بيطلع.
+2. **الخطوة 1:** خذ نسخة احتياطية.
+3. **الخطوة 2:** الصق ملف `Uzyra-db-ALL.sql` كله بمحرر SQL وشغّله مرة وحدة.
+4. **الخطوة 3:** ارفع حد رفع الملفات لـ 500 ميغا (إعداد، مش SQL).
+5. **الخطوة 4:** شغّل استعلامات الفحص، وكلها لازم تطلع `true`.
 
-### شو كان جديد بالنسخة اللي قبلها
+بعدها، من الموقع: جهّز كل كتاب للقراءة (الخطوة 6).
 
-- **تحديثين للمكتبة ما كانوا بالملف القديم:** `books_public_read` و`books_visitor_access`. جلسة ثانية على حسابك
-  (الطلب #148) ضافتهم لـ `main` **بعد** ما بعتلك الملف. بدونهم الزوار (مش مسجّلين) ممكن ما يشوفوا المكتبة.
-- **تحديثين لمسار الدروس** (5 و7 نوفمبر، قبل المكتبة). ما حطيتهم بالملف القديم لأنهم مش من المكتبة،
-  ومش متأكد إذا انطبقوا عندك. هلأ موجودين، والاستعلام بالخطوة 0 بيقلك إذا لازمين.
-- **المهم:** رسالة الجلسة الثانية بتقول إنها طبّقت تحديثات على قاعدة البيانات الحقيقية. عشان هيك **ابدأ
-  بالخطوة 0**: بتعرف منها شو انطبق عندك أصلاً، وما بتعيد إشي على الفاضي (مع إنه الإعادة آمنة).
-- **ما تغيّر ولا حرف** بالتحديثات القديمة؛ اللي انضاف بس ملفات جديدة.
+ما في Edge Functions جديدة، ولا مهام مجدولة (cron)، ولا مفاتيح سرية. كل التحديثات بتضيف وما بتمسح بيانات،
+وكلها مكتوبة لتنعاد بأمان: إذا انطبق إشي منها قبل (مثلاً Lovable طبّقه لحاله)، إعادته ما بتضر.
 
 ### القائمة الكاملة (بالترتيب، ما في غيرها)
 
-| # | الملف | شو بيعمل | من وين | نصّه |
-| --- | --- | --- | --- | --- |
-| 1 | `20261105120000_rita_path_items.sql` | مسار الدروس: محطات التمارين والملفات | قبل المكتبة (5 نوفمبر) | الملحق 1 |
-| 2 | `20261107120000_rita_path_finish_stops.sql` | مسار الدروس: خط نهاية كل مستوى | قبل المكتبة (7 نوفمبر) | الملحق 2 |
-| 3 | `20261108120000_books_library.sql` | المكتبة الأولى | #146 | الملحق 3 |
-| 4 | `20261108130000_books_public_read.sql` | تصليح قراءة الزوار للمكتبة الأولى | #148 (جلسة ثانية) | الملحق 4 |
-| 5 | `20261109120000_books_admin_foundation.sql` | المرحلة 1: الإدارة والبيانات | #149 | الملحق 5 |
-| 6 | `20261110120000_books_discovery.sql` | المرحلة 2: البحث والاكتشاف | #150 | الملحق 6 |
-| 7 | `20261111120000_books_popularity.sql` | المرحلة 3: التقييم والشعبية | #151 | الملحق 7 |
-| 8 | `20261112120000_books_pdf_limit.sql` | حد الـ PDF ‏500 ميغا | #152 | الملحق 8 |
-| 9 | `20261113120000_books_reader.sql` | القارئ (صفحة صفحة) | #153 | الملحق 9 |
-| 10 | `20261114120000_books_visitor_access.sql` | وصول الزوار للمكتبة الجديدة — بعد 1–9 دايماً | #148 (جلسة ثانية) | الملحق 10 |
-| 11 | `20261115120000_books_reader_tiers.sql` | القارئ: أحجام الصفحات، المعاينة، الفهرس | المرحلة 2 من خطة القارئ | الملحق 11 |
+| # | الملف | شو بيعمل | نصّه |
+| --- | --- | --- | --- |
+| 1 | `20261105120000_rita_path_items.sql` | مسار الدروس: محطات التمارين والملفات | الملحق 1 |
+| 2 | `20261107120000_rita_path_finish_stops.sql` | مسار الدروس: خط نهاية كل مستوى | الملحق 2 |
+| 3 | `20261108120000_books_library.sql` | المكتبة (الكتب، التصنيفات، أماكن الملفات) | الملحق 3 |
+| 4 | `20261108130000_books_public_read.sql` | الزوار بيشوفوا المكتبة (النسخة الأولى) | الملحق 4 |
+| 5 | `20261109120000_books_admin_foundation.sql` | المكتبة، المرحلة 1: الإدارة والبيانات | الملحق 5 |
+| 6 | `20261110120000_books_discovery.sql` | المكتبة، المرحلة 2: البحث والاكتشاف | الملحق 6 |
+| 7 | `20261111120000_books_popularity.sql` | المكتبة، المرحلة 3: التقييم والشعبية | الملحق 7 |
+| 8 | `20261112120000_books_pdf_limit.sql` | حد ملف الـ PDF ‏500 ميغا | الملحق 8 |
+| 9 | `20261113120000_books_reader.sql` | القارئ (صفحة صفحة + الدائرة) | الملحق 9 |
+| 10 | `20261114120000_books_visitor_access.sql` | الزوار بيشوفوا المكتبة الجديدة — دايماً بعد 1–9 | الملحق 10 |
+| 11 | `20261115120000_books_reader_tiers.sql` | القارئ: أحجام الصفحات، المعاينة المموّهة، الفهرس | الملحق 11 |
+| 12 | `20261116120000_books_reader_search_bookmarks.sql` | القارئ: البحث داخل الكتاب والعلامات | الملحق 12 |
+
+ملف `Uzyra-db-ALL.sql` فيه هدول الـ 12 بهالترتيب بالزبط، بعمليتين: (1–2) مسار الدروس، و(3–12) المكتبة
+والقارئ. كل عملية يا بتنطبق كلها يا ما بتنطبق ولا إشي منها، فما بتعلق نصّ نصّ.
 
 وكمان، مش SQL:
 
-- **الحد العام للرفع 500 ميغا** (إعداد بالتخزين) — الخطوة 3.
-- **تجهيز كل كتاب للقراءة** من `/admin/books` ← «جهّز الكتاب للقراءة» (مرة لكل كتاب)، وللكتب اللي
-  تجهّزت قبل رقم 11: «حدّث الكتاب» — الخطوة 6.
-
-ما في Edge Functions جديدة، ولا مهام مجدولة (cron)، ولا مفاتيح سرية جديدة.
+- **حد رفع الملفات العام 500 ميغا** (إعداد بالتخزين) — الخطوة 3.
+- **تجهيز كل كتاب للقراءة** من `/admin/books` ← «جهّز الكتاب للقراءة» (مرة لكل كتاب) — الخطوة 6.
 
 ---
 
-## الخطوة 0 — شو انطبق عندك أصلاً؟ (قراءة بس، ما بيغيّر إشي)
+## الخطوة 0 — شو موجود عندك؟ (قراءة بس، ما بيغيّر إشي)
 
-شغّل هالاستعلام بمحرر SQL. كل صف `true` معناه هالتحديث موجود عندك، و`false` معناه لازم تطبّقه.
+افتح Lovable Cloud → Database → SQL Editor (أو Supabase → SQL Editor)، الصق هاد وشغّله:
 
 ```sql
 select item, applied from (values
+  (-1, 'لازم true: أساسيات المشروع (أدوار المستخدمين)', to_regclass('public.user_roles') is not null and exists (select 1 from pg_proc where proname = 'has_role')),
+  (0, 'لازم true: آخر تحديث قبل شغلنا (مراجعة ريتا 29 أكتوبر)', to_regclass('public.rita_review_runs') is not null),
+  (0, 'لازم true: دالة set_updated_at (بيحتاجها رقم 1)', exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'set_updated_at')),
   (1, '1  مسار الدروس: محطات', to_regclass('public.rita_path_items') is not null),
   (2, '2  مسار الدروس: خط النهاية', exists (select 1 from pg_constraint where conname = 'rita_path_items_kind_check' and pg_get_constraintdef(oid) like '%finish%')),
-  (3, '3  المكتبة الأولى', to_regclass('public.books') is not null and to_regclass('public.book_categories') is not null),
+  (3, '3  المكتبة', to_regclass('public.books') is not null and to_regclass('public.book_categories') is not null),
   (4, '4  قراءة الزوار (الأولى)', exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'books' and (policyname = 'visitors read published books' or (policyname = 'published books are readable' and qual not like '%has_role%')))),
   (5, '5  المرحلة 1', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'books' and column_name = 'status')),
   (6, '6  المرحلة 2', exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'books' and column_name = 'search_doc')),
@@ -64,14 +63,18 @@ select item, applied from (values
   (8, '8  حد الـ PDF', exists (select 1 from storage.buckets where id = 'book-files' and file_size_limit = 524288000)),
   (9, '9  القارئ', to_regclass('public.book_pages') is not null),
   (10, '10 وصول الزوار', exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'books' and policyname = 'visitors read published books')),
-  (11, '11 أحجام الصفحات والفهرس', to_regclass('public.book_manifests') is not null)
+  (11, '11 أحجام الصفحات والفهرس', to_regclass('public.book_manifests') is not null),
+  (12, '12 البحث والعلامات', to_regclass('public.book_bookmarks') is not null)
 ) as t(n, item, applied) order by n;
 ```
 
-- إذا الكل `true`: ما في إشي تطبّقه. روح على الخطوة 3 (الحد العام) والخطوة 4 (الفحص) والخطوة 6.
-- إذا في `false`: طبّق **من أول رقم `false` لآخر القائمة بالترتيب** (الخطوة 2). تطبيق تحديث انطبق قبل ما
-  بيضر، كلهم مكتوبين ليتكرّروا بأمان.
-- إذا رقم 1 أو 2 `false` بس الباقي `true`، طبّق 1 و2 بس (مستقلين عن المكتبة).
+كيف تقرأ النتيجة:
+
+- **أول 3 صفوف (اللي مكتوب عليهم «لازم true»)** لازم يطلعوا `true`. هدول مش من شغلنا، هدول أشياء موجودة
+  بمشروعك من قبل. **إذا واحد منهم `false` وقّف وابعتلي الصورة** وما تكمّل: معناها قاعدة البيانات مش بالحالة
+  اللي بنتوقعها.
+- الباقي (1–12): الطبيعي عندك يطلعوا كلهم `false` (أو كم واحد `true` إذا Lovable طبّقهم لحاله). **بكل
+  الحالات** كمّل للخطوة 2 وطبّق الملف كله: اللي انطبق قبل بينعاد بأمان.
 
 ## الخطوة 1 — نسخة احتياطية
 
@@ -82,37 +85,41 @@ select item, applied from (values
 select published, count(*) from public.books group by 1;
 ```
 
-## الخطوة 2 — طبّق اللي ناقص بالترتيب
+## الخطوة 2 — طبّق التحديثات (ملف واحد)
 
-قواعد:
+### الطريقة أ — بإيدك من محرر SQL (الأضمن، وهاي اللي بنصحك فيها)
 
-- **بالترتيب بس**. **رقم 10 (وصول الزوار) دايماً بعد 1–9**: إذا طبّقت هلأ شي من 3–9، أعد 10 بعده. رقم 11
-  مستقل عن 10 (ما بيلمس سياساته)، فبيجي آخر واحد بالترتيب العادي.
-- **ما تعيد المرحلة 2 (رقم 6) بعد المرحلة 3 (رقم 7) لحالها.** إذا لازم تعيدها، كمّل بعدها 7 و8 و9 و10.
-- كل تحديث بيضيف وما بيمسح بيانات، وآمن لو انعاد أو وقف بالنص.
+1. افتح ملف **`Uzyra-db-ALL.sql`**، انسخ **كل** اللي فيه (Ctrl+A ثم Ctrl+C).
+2. الصقه بمحرر SQL، واكبس **Run** مرة وحدة. ممكن ياخد دقيقة.
+3. إذا خلص بدون خطأ (بتشوف «Success» أو صفوف فاضية/NOTICE بس): تمام، روح للخطوة 3.
+   - الـ NOTICE (مثل `already exists, skipping` أو `does not exist, skipping`) **عادية مش أخطاء**.
+4. إذا طلع **ERROR** (بالأحمر): ولا إشي من العملية اللي فيها الخطأ بينطبق (بترجع لحالها). صوّر الخطأ
+   وابعتلي ياه، وما تعدّل الملف بإيدك.
+5. **إذا المحرر رفض النص لأنه طويل:** طبّق الملاحق واحد واحد بالترتيب من 1 لـ 12 (كل ملحق: انسخ اللي بين
+   ```sql و``` والصقه وشغّله). الترتيب مهم: 10 بعد 9، بعدين 11، بعدين 12.
 
-### الطريقة أ — بإيدك من محرر SQL (الأضمن)
+قواعد لو احتجت تعيد إشي لاحقاً:
 
-1. إذا 1 أو 2 `false`: الصق **الملحق 1** وشغّله، بعدين **الملحق 2**.
-2. للمكتبة: الصق من أول ملحق ناقص (3 أو أكثر) **لحد الملحق 11، كلهم مع بعض بنفس المرة** وشغّلهم مرة
-   وحدة. هيك بيتطبّقوا بعملية وحدة، فإذا وقف إشي ما بينطبق نصّه، والزوار ما بيشوفوا نسخة بالنص.
-   (إذا المحرر ما قبل النص الطويل، طبّقهم واحد واحد بالترتيب: 10 بعد 9، و11 آخر واحد.)
-3. **إذا 1–10 كلهم `true` وبس 11 `false`**: الصق **الملحق 11** لحاله وشغّله. هاد الغالب عندك.
+- **بالترتيب بس.** و**رقم 10 دايماً بعد 1–9**: إذا أعدت أي واحد من 3–9، أعد 10 بعده.
+- **ما تعيد رقم 6 لحاله بعد رقم 7.** إذا أعدته، كمّل بعده 7 و8 و9 و10 و11 و12.
+- إعادة الملف كله من أوله دايماً آمنة.
 
-### الطريقة ب — تعطيها لـ Lovable
+### الطريقة ب — تعطيها لـ Lovable (إذا ما بدك تلصق بإيدك)
 
 انسخ هالنص كما هو، والصق تحته استعلام الخطوة 0:
 
 > First run the read-only status query pasted below on the live database and tell me each row.
-> Then apply, in this order and without changing them, only the migrations whose row is false,
-> from the first false one to the end: `20261105120000_rita_path_items.sql`,
+> If any of the first three rows is false, stop and tell me. Otherwise apply, in this order and
+> without changing them, all of these migrations (each is safe to run again):
+> `20261105120000_rita_path_items.sql`,
 > `20261107120000_rita_path_finish_stops.sql`, `20261108120000_books_library.sql`,
 > `20261108130000_books_public_read.sql`, `20261109120000_books_admin_foundation.sql`,
 > `20261110120000_books_discovery.sql`, `20261111120000_books_popularity.sql`,
 > `20261112120000_books_pdf_limit.sql`, `20261113120000_books_reader.sql`,
 > `20261114120000_books_visitor_access.sql` (always after the ones before it), then
-> `20261115120000_books_reader_tiers.sql` (all in `supabase/migrations/` on main). Apply the
-> library ones, from the first missing one to the last, in one transaction. They are additive and
+> `20261115120000_books_reader_tiers.sql`, then `20261116120000_books_reader_search_bookmarks.sql`
+> (all in `supabase/migrations/` on main). Apply the two lesson-path ones in one transaction and
+> the ten library ones (`20261108…` to `20261116…`) in a second transaction. They are additive and
 > safe to run again. Do not create Edge Functions, cron jobs or tables beyond what the files
 > contain. Then run the status query again and tell me each row. Also raise the project's Storage
 > "Upload file size limit" to 500 MB and tell me the value it allows.
@@ -237,8 +244,23 @@ union all select 'new PDF clears the manifest', (select prosrc like '%book_manif
 union all select 'manifest not on books', not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'books' and column_name = 'manifest');
 ```
 
-ملاحظة: إذا طلعت رسالة `unique index not created yet` بالمرحلة 1، معناها في تصنيفين بنفس الاسم.
-غيّر اسم واحد منهم وأعد تشغيل الملحق 1 (آمن).
+### بعد البحث والعلامات (رقم 12)
+
+```sql
+select 'search column' as item, exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'book_pages' and column_name = 'fts') as ok
+union all select 'search index', exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'book_pages_fts')
+union all select 'search function', exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'books_search_pages')
+union all select 'visitors cannot search', not has_function_privilege('anon', 'public.books_search_pages(uuid, text)', 'execute')
+union all select 'readers can search', has_function_privilege('authenticated', 'public.books_search_pages(uuid, text)', 'execute')
+union all select 'bookmarks table with rls', coalesce((select relrowsecurity from pg_class where relnamespace = 'public'::regnamespace and relname = 'book_bookmarks'), false)
+union all select 'bookmark policies', (select count(*) = 3 from pg_policies where schemaname = 'public' and tablename = 'book_bookmarks')
+union all select 'no visitor policy on bookmarks', not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'book_bookmarks' and ('anon' = any (roles) or 'public' = any (roles)))
+union all select 'visitors cannot read bookmarks', not has_table_privilege('anon', 'public.book_bookmarks', 'select')
+union all select 'every page searchable', not exists (select 1 from public.book_pages where fts is null);
+```
+
+ملاحظة: إذا طلعت رسالة `unique index not created yet` (من رقم 5)، معناها في تصنيفين كتب بنفس الاسم.
+غيّر اسم واحد منهم وأعد تشغيل ملف `Uzyra-db-ALL.sql` كله (آمن).
 
 ## الخطوة 5 — تخزين الملفات
 
@@ -305,6 +327,8 @@ Phase 3 (signed in as a learner, on `/books`):
 
 أحجام الصفحات والفهرس (بعد الملحق 11):
 
+0. إذا طبّقت كل الملف مرة وحدة وبعدين جهّزت كتبك، التجهيز بيعمل الأحجام كلها من أول مرة، و«حدّث الكتاب»
+   ما رح يطلع (هو بس للكتب اللي تجهّزت قبل رقم 11). افحص البنود 2–5 تحت.
 1. بـ `/admin/books` عدّل كتاب تجهّز قبل: بيطلع «حدّث الكتاب» (والكتاب بيطلع بـ«الاستيراد والجودة» →
    «جاهزية القراءة»). اكبسه وخلّي الصفحة مفتوحة: السطر بيقول «صفحة x من y · n صفحة/ثانية · باقي حوالي …».
 2. Storage → `book-pages` → مجلد الكتاب: صار فيه `t/` و`m/` و`z/` جنب الصور العادية (على iPad أو تلفون ما
@@ -314,6 +338,15 @@ Phase 3 (signed in as a learner, on `/books`):
 4. كمتعلّم، افتح الكتاب ونط لصفحة بعيدة (اكتب رقمها): بتشوف صورة مموّهة للصفحة نفسها فوراً، بعدين بتوضح.
    كبّر مرتين أو ثلاث: الصفحة ما بتختفي وهي تجيب الحجم الأكبر.
 5. اطلع من القارئ وارجع: الصفحات اللي قريتها بتفتح فوراً من الجهاز. سجّل خروج: بتنمسح من الجهاز.
+
+البحث والعلامات (بعد الملحق 12):
+
+1. افتح كتاب متجهّز كمتعلّم → زر الفهرس تحت (أو 🔍 إذا الكتاب ما إله فهرس) → «بحث»: اكتب كلمة من الكتاب
+   واكبس Enter. بتطلع الصفحات اللي فيها، والكلمة بالخط العريض. اكبس على نتيجة: بتروح للصفحة والكلمة
+   معلّمة عليها.
+2. اكبس أيقونة العلامة تحت: بتنعبّى، وبتطلع «انحفظت صفحة n · تراجع»، ونقطة صغيرة زرقا على خط التقدّم.
+   بتبيّن بتبويب «العلامات».
+3. سجّل بحساب ثاني: ما بيشوف علاماتك.
 
 الزوار (بعد الملحق 10): افتح `/books` بنافذة خاصة (بدون تسجيل دخول): المكتبة بتطلع، البحث والفلاتر
 شغّالين، وما في رسالة خطأ. «ابدأ القراءة» بيطلب تسجيل الدخول.
@@ -3165,4 +3198,86 @@ begin
   return new;
 end;
 $$;
+```
+
+## الملحق 12 — القارئ: البحث داخل الكتاب والعلامات
+
+`supabase/migrations/20261116120000_books_reader_search_bookmarks.sql`
+
+```sql
+-- Library, the reader (page-pane plan, phase 3): search inside a book, and bookmarks.
+--
+--   book_pages.fts             the page's words for searching, made by the database from
+--                              book_pages.text ('simple': no language rules, so Arabic and English
+--                              both work; words match whole, upper/lower case aside)
+--   books_search_pages(b, q)   up to 50 pages of book b whose words match q (as a web search box
+--                              reads it), each with a short line around the match; the match is
+--                              wrapped in ⟦ ⟧ for the reader to bold. It runs as the caller, so
+--                              the pages' own rules apply: signed-in readers of published books,
+--                              and admins.
+--   book_bookmarks             the pages each reader marked (their own rows only; published books)
+--
+-- Adding the generated column rewrites book_pages once (seconds per thousand pages). Everything
+-- here only adds, and the file can be run again safely. No Edge Function, no scheduled work.
+
+alter table public.book_pages
+  add column if not exists fts tsvector
+  generated always as (to_tsvector('simple', coalesce(text, ''))) stored;
+
+create index if not exists book_pages_fts on public.book_pages using gin (fts);
+
+create or replace function public.books_search_pages(p_book uuid, p_query text)
+returns table (page integer, snippet text)
+language sql
+stable
+set search_path = public
+as $$
+  with q as (
+    select websearch_to_tsquery('simple', left(coalesce(p_query, ''), 200)) as tsq
+  )
+  select p.page,
+         ts_headline(
+           'simple',
+           p.text,
+           q.tsq,
+           'StartSel=⟦, StopSel=⟧, MaxWords=16, MinWords=6, MaxFragments=1, ShortWord=1'
+         )
+  from public.book_pages p, q
+  where p.book_id = p_book
+    and numnode(q.tsq) > 0
+    and p.fts @@ q.tsq
+  order by p.page
+  limit 50
+$$;
+
+revoke all on function public.books_search_pages(uuid, text) from public, anon;
+grant execute on function public.books_search_pages(uuid, text) to authenticated;
+
+create table if not exists public.book_bookmarks (
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  book_id uuid not null references public.books (id) on delete cascade,
+  page integer not null check (page between 1 and 5000),
+  created_at timestamptz not null default now(),
+  primary key (user_id, book_id, page)
+);
+
+alter table public.book_bookmarks enable row level security;
+
+drop policy if exists "readers read their bookmarks" on public.book_bookmarks;
+create policy "readers read their bookmarks" on public.book_bookmarks
+  for select to authenticated
+  using (user_id = auth.uid());
+
+drop policy if exists "readers add bookmarks" on public.book_bookmarks;
+create policy "readers add bookmarks" on public.book_bookmarks
+  for insert to authenticated
+  with check (user_id = auth.uid() and public.book_is_published(book_id));
+
+drop policy if exists "readers remove their bookmarks" on public.book_bookmarks;
+create policy "readers remove their bookmarks" on public.book_bookmarks
+  for delete to authenticated
+  using (user_id = auth.uid());
+
+revoke all on public.book_bookmarks from anon;
+grant select, insert, delete on public.book_bookmarks to authenticated;
 ```

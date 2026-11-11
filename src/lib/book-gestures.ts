@@ -100,3 +100,35 @@ export function tapScrollTo(
     return scroll.top >= max - 2 ? null : Math.min(max, scroll.top + scroll.client * TAP_SCROLL);
   return scroll.top <= 2 ? null : Math.max(0, scroll.top - scroll.client * TAP_SCROLL);
 }
+
+// ---- zooming by finger (behind a switch until tried on a real iPad) -----------------------------
+
+/** Two taps this close in time (ms) and place (px) are a double tap. */
+export const DOUBLE_TAP_MS = 300;
+export const DOUBLE_TAP_SLOP = 30;
+
+export function isDoubleTap(
+  before: { x: number; y: number; t: number } | null,
+  now: { x: number; y: number; t: number },
+): boolean {
+  return Boolean(
+    before &&
+    now.t - before.t <= DOUBLE_TAP_MS &&
+    Math.hypot(now.x - before.x, now.y - before.y) <= DOUBLE_TAP_SLOP,
+  );
+}
+
+/** The zoom step nearest to the current one × a pinch's scale. */
+export function nearestZoom(levels: number[], current: number, scale: number): number {
+  const want = (levels[current] ?? 1) * scale;
+  let best = 0;
+  levels.forEach((level, index) => {
+    if (Math.abs(level - want) < Math.abs(levels[best] - want)) best = index;
+  });
+  return best;
+}
+
+/** A double tap's next zoom step: one up, and back to the first after the last. */
+export function nextZoom(levels: number[], current: number): number {
+  return current >= levels.length - 1 ? 0 : current + 1;
+}

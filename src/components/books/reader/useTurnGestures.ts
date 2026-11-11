@@ -12,6 +12,9 @@ import {
   TAP_SLOP,
   atSwipeEdge,
   dragOffset,
+  isDoubleTap,
+  nearestZoom,
+  nextZoom,
   swipeDirection,
   swipeTurn,
   tapScrollTo,
@@ -33,6 +36,11 @@ type Options = {
   onTurn: (page: number) => void;
   /** Changes when the scroll box is made again (layout switches). */
   layoutKey: unknown;
+  /**
+   * Zooming by finger, when switched on: a double tap off the words goes one zoom step up (back
+   * to the first after the last), and a pinch settles on the nearest step when the fingers lift.
+   */
+  zoom?: { on: boolean; index: number; levels: number[]; set: (index: number) => void };
 };
 
 type Start = {
@@ -69,6 +77,26 @@ export function useTurnGestures(options: Options) {
     if (!box) return;
     let start: Start | null = null;
     let offset = 0;
+    // Finger zoom: the last tap off the words, and a pinch under way.
+    let lastTap: { x: number; y: number; t: number } | null = null;
+    let pinch: { d0: number; cx: number; cy: number; scale: number } | null = null;
+    const zoomOn = () => Boolean(latest.current.zoom?.on);
+    const spread = (list: TouchList) =>
+      Math.hypot(list[0].clientX - list[1].clientX, list[0].clientY - list[1].clientY);
+    const endPinch = () => {
+      const p = pinch;
+      pinch = null;
+      const el = stageEl();
+      if (el) {
+        el.style.transform = "";
+        el.style.transformOrigin = "";
+        el.style.willChange = "";
+      }
+      const zoom = latest.current.zoom;
+      if (!p || !zoom) return;
+      const to = nearestZoom(zoom.levels, zoom.index, p.scale);
+      if (to !== zoom.index) zoom.set(to);
+    };
 
     const stageEl = () => latest.current.stage.current;
     const setOffset = (px: number) => {
@@ -129,6 +157,16 @@ export function useTurnGestures(options: Options) {
     const onStart = (event: TouchEvent) => {
       if (start) window.clearTimeout(start.timer);
       start = null;
+      if (event.touches.length === 2 && zoomOn() && !selecting() && !latest.current.blocked()) {
+        settleBack();
+        const [a, b] = [event.touches[0], event.touches[1]];
+        const el = stageEl();
+        const box2 = el?.getBoundingClientRect();
+        const cx = (a.clientX + b.clientX) / 2 - (box2?.left ?? 0);
+        const cy = (a.clientY + b.clientY) / 2 - (box2?.top ?? 0);
+        pinch = { d0: Math.max(1, spread(event.touches)), cx, cy, scale: 1 };
+        return;
+      }
       if (event.touches.length !== 1) {
         settleBack();
         return;
@@ -159,6 +197,18 @@ export function useTurnGestures(options: Options) {
     };
 
     const onMove = (event: TouchEvent) => {
+      if (pinch) {
+        if (event.touches.length < 2) return;
+        // The page follows the fingers lightly; it settles on a zoom step when they lift.
+        pinch.scale = Math.min(2.5, Math.max(0.5, spread(event.touches) / pinch.d0));
+        const el = stageEl();
+        if (el && !reducedMotion()) {
+          el.style.willChange = "transform";
+          el.style.transformOrigin = `${pinch.cx}px ${pinch.cy}px`;
+          el.style.transform = `scale(${pinch.scale.toFixed(3)})`;
+        }
+        return;
+      }
       const s = start;
       if (!s) return;
       if (event.touches.length !== 1) {
@@ -190,6 +240,10 @@ export function useTurnGestures(options: Options) {
     };
 
     const onEnd = (event: TouchEvent) => {
+      if (pinch) {
+        if (event.touches.length < 2) endPinch();
+        return;
+      }
       const s = start;
       start = null;
       if (!s) return;
@@ -211,7 +265,17 @@ export function useTurnGestures(options: Options) {
         const { left, right, top, bottom, width } = s.page;
         if (s.x < left || s.x > right || s.y < top || s.y > bottom) return;
         const turn = tapTurn(s.x - left, width, rtl);
-        if (!turn) return;
+        if (!turn) {
+          // Off the edges: a double tap off the words zooms (when switched on).
+          const zoom = latest.current.zoom;
+          const tap = { x: s.x, y: s.y, t: performance.now() };
+          const onWords = Boolean((event.target as Element | null)?.closest?.(".bkr-text span"));
+          if (zoom?.on && !onWords && isDoubleTap(lastTap, tap)) {
+            lastTap = null;
+            zoom.set(nextZoom(zoom.levels, zoom.index));
+          } else lastTap = onWords ? null : tap;
+          return;
+        }
         const to = tapScrollTo(turn, {
           top: box.scrollTop,
           height: box.scrollHeight,
@@ -242,12 +306,16 @@ export function useTurnGestures(options: Options) {
     box.addEventListener("touchstart", onStart, { passive: true });
     box.addEventListener("touchmove", onMove, { passive: true });
     box.addEventListener("touchend", onEnd, { passive: true });
-    box.addEventListener("touchcancel", reset, { passive: true });
+    const onCancel = () => {
+      if (pinch) endPinch();
+      reset();
+    };
+    box.addEventListener("touchcancel", onCancel, { passive: true });
     return () => {
       box.removeEventListener("touchstart", onStart);
       box.removeEventListener("touchmove", onMove);
       box.removeEventListener("touchend", onEnd);
-      box.removeEventListener("touchcancel", reset);
+      box.removeEventListener("touchcancel", onCancel);
       if (start) window.clearTimeout(start.timer);
       setOffset(0);
     };

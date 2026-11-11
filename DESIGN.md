@@ -553,6 +553,28 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   - **Minutes left:** «باقي ≈ 6 دقايق بالفصل» (or «للآخر» in the last chapter) after «من N» in the
     bar when it is wider than 680px, and under the contents' title. From the reader's own pace in
     this browser: the last 10 pages read for 2 s to 5 min each, shown after 3.
+  - **The panel** (one button, first among the bar's tools; «الفهرس والبحث» with the list icon, or
+    «بحث وعلامات» with a magnifier when the PDF has no outline) holds three tabs under its title:
+    «الفهرس | بحث | العلامات» (2px ink underline on the chosen one, muted others, a grey count
+    pill on «العلامات»). It opens on the contents, else on search.
+  - **Search:** a 42px field (1.5px line, accent when focused, 16px text), whole words on Enter.
+    Rows: the page's 160px picture at 32×42 (3px corners, hairline), «صفحة n» bold 13px and two
+    muted lines around the match with the word in ink bold. «جاري البحث…», «ما لقيت «…» بهالكتاب.»,
+    «أول 50 صفحة» when capped; before the database has it: «البحث بيشتغل بعد تحديث قاعدة البيانات.»
+    A result goes to its page and marks the word there with the selection's tint until the page
+    turns.
+  - **Bookmarks:** a bookmark icon after the panel's button, filled in the accent when the page is
+    marked (`aria-pressed`). Marking shows an ink note «انحفظت صفحة n · تراجع» over the bottom of
+    the page for 3.5s; marked pages are 5px accent dots (white ring) on the progress line; the
+    «العلامات» tab lists them (picture, «صفحة n», the chapter) with ✕ to remove. Hidden before the
+    database has bookmarks. Below 640px the bar drops the word «صفحة».
+  - **Back where you stopped:** opening at the saved page shows «رجعتك لصفحة n · من الأول» for 4s.
+  - **Milestones:** the first time past 25/50/75% and the last page, the line swells once (400ms;
+    none with reduced motion); the last page also says «خلّصت الكتاب 🎉».
+  - **Zooming by finger** (off until tried on a real iPad; per browser, localStorage
+    `uzyra-book-gesture-zoom` = "1"): a double tap off the words goes one zoom step up (back to the
+    first after the last); a pinch scales the sheet with the fingers and settles on the nearest
+    step; never with text selected.
   - **The bar under the page:** «السابقة» (outlined) · «صفحة [n] من N» (the number is a field) ·
     «التالية» (ink, the main action), all 44px, laid out in the book's direction; on the other side
     «على قدّ العرض / الصفحة كاملة», «صغّر», «كبّر» as 44px icons. When the bar is narrower than

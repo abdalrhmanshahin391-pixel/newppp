@@ -38,17 +38,31 @@ function ReaderRoute() {
   });
   // Where this reader stopped, unless the address names a page (a refresh, a shared link).
   const [start, setStart] = useState<number | null>(page ?? null);
+  // True when the reader is taken back to where they stopped (for «رجعتك لصفحة n»).
+  const [resumed, setResumed] = useState(false);
   useEffect(() => {
     if (start !== null || !user || !book.data?.prepared) return;
     let live = true;
-    void loadReadingPlace(bookId).then((place) => live && setStart(place ?? 1));
+    void loadReadingPlace(bookId).then((place) => {
+      if (!live) return;
+      setResumed(Boolean(place && place > 1));
+      setStart(place ?? 1);
+    });
     return () => {
       live = false;
     };
   }, [book.data?.prepared, bookId, start, user]);
 
   if (book.data && book.data.prepared && start !== null && user)
-    return <BookReader key={bookId} book={book.data} userId={user.id} startPage={start} />;
+    return (
+      <BookReader
+        key={bookId}
+        book={book.data}
+        userId={user.id}
+        startPage={start}
+        resumed={resumed}
+      />
+    );
 
   const message = book.isError
     ? "ما قدرت أفتح الكتاب. تأكد من النت وجرّب كمان مرة."

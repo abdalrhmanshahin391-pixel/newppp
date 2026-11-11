@@ -33,6 +33,10 @@ type Props = {
   onJump: (page: number) => void;
   /** True while the card is shown (the page-number toast hides meanwhile). */
   onScrubbing: (on: boolean) => void;
+  /** The reader's bookmarked pages: small accent dots on the line. */
+  marks?: number[];
+  /** Changes when a milestone is reached: the line pulses once. */
+  pulse?: number;
 };
 
 export function BookScrubber({
@@ -44,7 +48,17 @@ export function BookScrubber({
   manifest,
   onJump,
   onScrubbing,
+  marks = [],
+  pulse = 0,
 }: Props) {
+  // The milestone pulse: a soft 400 ms swell of the line (not with reduced motion).
+  const [pulsing, setPulsing] = useState(false);
+  useEffect(() => {
+    if (!pulse) return;
+    setPulsing(true);
+    const timer = window.setTimeout(() => setPulsing(false), 450);
+    return () => window.clearTimeout(timer);
+  }, [pulse]);
   const track = useRef<HTMLDivElement | null>(null);
   // The line's length, for chapter ticks that keep apart.
   const [lineWidth, setLineWidth] = useState(0);
@@ -184,7 +198,10 @@ export function BookScrubber({
   const showPicture = hasThumb && thumbFailed !== atPage;
 
   return (
-    <div className={`bkr-scrub${dragging ? " is-active" : ""}`} data-dir={rtl ? "rtl" : "ltr"}>
+    <div
+      className={`bkr-scrub${dragging ? " is-active" : ""}${pulsing ? " is-pulse" : ""}`}
+      data-dir={rtl ? "rtl" : "ltr"}
+    >
       <div
         ref={track}
         className="bkr-scrub-hit"
@@ -205,6 +222,14 @@ export function BookScrubber({
       >
         <div className="bkr-progress" data-dir={rtl ? "rtl" : "ltr"}>
           <span style={{ transform: `scaleX(${(page / Math.max(1, total)).toFixed(4)})` }} />
+          {marks.map((n) => (
+            <i
+              key={`m${n}`}
+              className="bkr-mark"
+              style={{ left: `${(scrubSpot(n - 0.5, total, rtl) * 100).toFixed(3)}%` }}
+              aria-hidden="true"
+            />
+          ))}
           {ticks.map((part) => (
             <i
               key={part}

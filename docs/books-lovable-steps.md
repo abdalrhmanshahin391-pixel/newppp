@@ -34,6 +34,8 @@ Every one of them only adds; each can be run again safely if one stops halfway.
 6. `supabase/migrations/20261114120000_books_visitor_access.sql` (visitors; always after 1–5)
 7. `supabase/migrations/20261115120000_books_reader_tiers.sql` (the reader's page sizes, previews
    and per-book manifest; then «حدّث الكتاب» on each prepared book)
+8. `supabase/migrations/20261116120000_books_reader_search_bookmarks.sql` (search inside a book and
+   bookmarks; rewrites `book_pages` once while it adds the search column)
 
 Then raise the project's own limit, which no migration can change: **Supabase → Storage →
 Settings → Upload file size limit → 500 MB** (in Lovable Cloud: the project's storage settings).
@@ -45,14 +47,15 @@ Keep this order. Do not run phase 2 again after phase 3 (it would bring back the
 
 Text you can give Lovable (or Codex) as is:
 
-> Apply these seven Supabase migrations from the repository, in this order, on the live
+> Apply these eight Supabase migrations from the repository, in this order, on the live
 > database, without changing them: `supabase/migrations/20261109120000_books_admin_foundation.sql`,
 > then `supabase/migrations/20261110120000_books_discovery.sql`, then
 > `supabase/migrations/20261111120000_books_popularity.sql`, then
 > `supabase/migrations/20261112120000_books_pdf_limit.sql`, then
 > `supabase/migrations/20261113120000_books_reader.sql`, then
 > `supabase/migrations/20261114120000_books_visitor_access.sql`, then
-> `supabase/migrations/20261115120000_books_reader_tiers.sql`. They are additive and safe to run
+> `supabase/migrations/20261115120000_books_reader_tiers.sql`, then
+> `supabase/migrations/20261116120000_books_reader_search_bookmarks.sql`. They are additive and safe to run
 > again in this order. Also raise the project's Storage "Upload file size limit" to 500 MB and
 > tell me the value it allows. Do not create Edge Functions, cron jobs or new tables beyond what the files contain. After
 > each one, run the verification query from `docs/books-lovable-steps.md` and tell me every row's
@@ -139,6 +142,21 @@ union all select 'visitors cannot read manifests', not has_table_privilege('anon
 union all select 'no visitor policy on manifests', not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'book_manifests' and ('anon' = any (roles) or 'public' = any (roles)))
 union all select 'new PDF clears the manifest', (select prosrc like '%book_manifests%' from pg_proc where pronamespace = 'public'::regnamespace and proname = 'books_reader_reset')
 union all select 'manifest not on books', not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'books' and column_name = 'manifest');
+```
+
+### Search inside a book and bookmarks
+
+```sql
+select 'search column' as item, exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'book_pages' and column_name = 'fts') as ok
+union all select 'search index', exists (select 1 from pg_indexes where schemaname = 'public' and indexname = 'book_pages_fts')
+union all select 'search function', exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname = 'books_search_pages')
+union all select 'visitors cannot search', not has_function_privilege('anon', 'public.books_search_pages(uuid, text)', 'execute')
+union all select 'readers can search', has_function_privilege('authenticated', 'public.books_search_pages(uuid, text)', 'execute')
+union all select 'bookmarks table with rls', coalesce((select relrowsecurity from pg_class where relnamespace = 'public'::regnamespace and relname = 'book_bookmarks'), false)
+union all select 'bookmark policies', (select count(*) = 3 from pg_policies where schemaname = 'public' and tablename = 'book_bookmarks')
+union all select 'no visitor policy on bookmarks', not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'book_bookmarks' and ('anon' = any (roles) or 'public' = any (roles)))
+union all select 'visitors cannot read bookmarks', not has_table_privilege('anon', 'public.book_bookmarks', 'select')
+union all select 'every page searchable', not exists (select 1 from public.book_pages where fts is null);
 ```
 
 ## 4. Storage (phase 1)

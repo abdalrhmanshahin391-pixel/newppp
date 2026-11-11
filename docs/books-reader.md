@@ -160,6 +160,28 @@ Migration `20261115120000_books_reader_tiers.sql`, then each book prepared again
   to a chapter, Escape, focus back, the phone sheet, ticks (and mirrored), no outline, no sideways
   scroll. The scrubber, swipe and selection checks still pass.
 
+### Search, bookmarks, finger zoom, resume, milestones (the page-pane plan, phase 3d–g)
+
+- Migration `20261116120000_books_reader_search_bookmarks.sql`: `book_pages.fts` (generated from
+  `text`, `simple` config, GIN index) and `books_search_pages(book, q)` (security invoker, so the
+  pages' rules apply; `websearch_to_tsquery`; 50 pages; a `ts_headline` line with the match in
+  ⟦ ⟧); `book_bookmarks` (own rows, published books, no visitors). 27 pgTAP checks
+  (`70_books_reader_search_test.sql`).
+- `BookPanel.tsx` (replaces `BookOutline.tsx`): contents, search and bookmarks as tabs. A result
+  marks its words on the page with a CSS highlight (`bkr-found`, whole words, until the page
+  turns). Before the migration the panel says search needs the update and the bookmark icon stays
+  away (`searchBookPages` → "missing", `fetchBookmarks` → null).
+- Bookmarks are optimistic (React Query cache), with «تراجع»; a failure puts them back and says so.
+- Finger zoom is behind a per-browser switch until a real iPad shows selection is unharmed; with it
+  on, `touch-action: pan-y` (the reader takes the pinch) and a pinch settles on the nearest step.
+- Resume chip from the route (`resumed`: opened at the saved place, not page 1, not `?page=`);
+  milestones per browser (`uzyra-book-milestones:<book>`), `crossedMilestone`.
+- Checked in Chromium (57 checks, iPad and phone, finger zoom with real touch input) and WebKit
+  (50): search (results, pictures, the word marked, kept, nothing found, cleared on turning),
+  bookmarks (mark, note, undo, dot, list, remove, go), without the migration, without an outline,
+  the resume chip, milestones once, finger zoom off and on (double tap, pinch, selection wins).
+  The contents, scrubber, swipe and selection checks still pass.
+
 ## Not in this version
 
 - Reading scanned pages (OCR): they show as pictures only.

@@ -14,6 +14,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import {
   ArrowRight,
+  Bookmark,
   ChevronLeft,
   ChevronRight,
   Maximize2,
@@ -46,6 +47,7 @@ import {
   bookSelectionKind,
   clampPage,
   metaBlock,
+  crossedMilestone,
   minutesLeftLabel,
   nextChapterStart,
   paceSample,
@@ -58,11 +60,13 @@ import {
   type Tier,
 } from "@/lib/books-reader";
 import {
+  fetchBookmarks,
   fetchManifest,
   fetchMetaBlock,
   fetchPageWords,
   linksMissing,
   saveReadingPlace,
+  setBookmark,
   signPagePaths,
   type PageMeta,
   type PageView,
@@ -85,7 +89,7 @@ import {
 } from "@/lib/books-study.functions";
 import { BookPageView } from "./BookPageView";
 import { BookScrubber } from "./BookScrubber";
-import { BookOutline } from "./BookOutline";
+import { BookPanel } from "./BookPanel";
 import { BookRitaColumn, type BookAnswer } from "./BookRitaColumn";
 import { useTurnGestures } from "./useTurnGestures";
 import "@/components/rita-study/study-meaning.css";
@@ -98,6 +102,8 @@ const FIT_KEY = "uzyra-book-fit";
 const TIP_KEY = "uzyra-book-tip";
 /** Per browser: the reader's last seconds per page (for "minutes left in the chapter"). */
 const PACE_KEY = "uzyra-book-pace";
+/** Per browser: "1" switches on zooming by finger (double tap, pinch). */
+const ZOOM_KEY = "uzyra-book-gesture-zoom";
 
 function readStore(key: string): string | null {
   try {
@@ -276,10 +282,13 @@ export function BookReader({
   book,
   userId,
   startPage,
+  resumed = false,
 }: {
   book: ReaderBook;
   userId: string;
   startPage: number;
+  /** Opened at the page this reader stopped at (not page 1, not from the address). */
+  resumed?: boolean;
 }) {
   const wide = useWide(900);
   const navigate = useNavigate();
@@ -751,6 +760,10 @@ export function BookReader({
     return () => window.removeEventListener("keydown", onKey);
   }, [go, page, rtlBook]);
 
+  // Zooming by finger (double tap, pinch) stays off until it is tried on a real iPad: switched on
+  // per browser with localStorage "uzyra-book-gesture-zoom" = "1".
+  const [fingerZoom, setFingerZoom] = useState(false);
+  useEffect(() => setFingerZoom(readStore(ZOOM_KEY) === "1"), []);
   // Touch: a swipe across the page or a tap on its outer edges turns it (selection always wins).
   const stage = useRef<HTMLDivElement | null>(null);
   useTurnGestures({
@@ -762,12 +775,97 @@ export function BookReader({
     blocked: () => menuOpenRef.current,
     onTurn: go,
     layoutKey: `${wide}-${tab}`,
+    zoom: { on: fingerZoom, index: zoom, levels: ZOOMS, set: setZoom },
   });
   // A page no wider than its pane leaves sideways moves to the swipe (up/down and pinch stay the
   // browser's); a zoomed, wider page scrolls sideways itself and turns only from its edge.
   const wider = pageWidth + gutter * 2 > pane.width + 1;
   // While the scrubber's card shows, the page-number toast stays away.
   const [scrubbing, setScrubbing] = useState(false);
+
+  // ---- bookmarks, and words found by a search ---------------------------------------------------
+  const marksOf = useQuery({
+    queryKey: ["book-bookmarks", book.id] as const,
+    queryFn: () => fetchBookmarks(book.id),
+    staleTime: Infinity,
+  });
+  // null: the database has no bookmarks yet (or they could not be read) — the icon stays away.
+  const bookmarks = marksOf.data ?? null;
+  const marked = Boolean(bookmarks?.includes(page));
+  // A short ink note over the page ("انحفظت صفحة 12 · تراجع"), gone after 3.5 s.
+  const [note, setNote] = useState<{ text: string; action?: [string, () => void] } | null>(null);
+  const noteTimer = useRef(0);
+  const say = useCallback((text: string, action?: [string, () => void], ms = 3500) => {
+    window.clearTimeout(noteTimer.current);
+    setNote({ text, action });
+    noteTimer.current = window.setTimeout(() => setNote(null), ms);
+  }, []);
+  useEffect(() => () => window.clearTimeout(noteTimer.current), []);
+  const toggleMark = useCallback(
+    (n: number, on: boolean, quiet = false) => {
+      const key = ["book-bookmarks", book.id] as const;
+      const before = queryClient.getQueryData<number[] | null>(key) ?? [];
+      const after = on
+        ? [...new Set([...before, n])].sort((a, b) => a - b)
+        : before.filter((x) => x !== n);
+      queryClient.setQueryData(key, after);
+      setBookmark(book.id, n, on).then(
+        () => {
+          if (quiet) return;
+          say(on ? `انحفظت صفحة ${n}` : `انشالت علامة صفحة ${n}`, [
+            "تراجع",
+            () => toggleMark(n, !on, true),
+          ]);
+        },
+        () => {
+          queryClient.setQueryData(key, before);
+          say("ما زبطت العلامة. تأكد من النت.");
+        },
+      );
+    },
+    [book.id, queryClient, say],
+  );
+  // Back where you stopped: «رجعتك لصفحة 87 · من الأول», for 4 s.
+  useEffect(() => {
+    if (resumed && startPage > 1) say(`رجعتك لصفحة ${startPage}`, ["من الأول", () => go(1)], 4000);
+    // Once, when the reader opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Milestones: the first time past 25 / 50 / 75% and the last page of a book, the progress line
+  // pulses once (kept per browser); the last page also says so.
+  const [pulse, setPulse] = useState(0);
+  const lastSeen = useRef(page);
+  useEffect(() => {
+    const was = lastSeen.current;
+    lastSeen.current = page;
+    if (page <= was || total < 4) return;
+    const key = `uzyra-book-milestones:${book.id}`;
+    let reached: number[] = [];
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(key) ?? "[]");
+      if (Array.isArray(saved)) reached = saved.filter((n) => typeof n === "number");
+    } catch {
+      reached = [];
+    }
+    const now = crossedMilestone(was, page, total, reached);
+    if (now === null) return;
+    try {
+      window.localStorage.setItem(key, JSON.stringify([...reached, now]));
+    } catch {
+      /* not kept */
+    }
+    setPulse((n) => n + 1);
+    if (now === 100) say("خلّصت الكتاب 🎉", undefined, 4000);
+  }, [book.id, page, total, say]);
+
+  const [hit, setHit] = useState<{ page: number; terms: string[] } | null>(null);
+  const jumpTo = useCallback(
+    (n: number, terms?: string[]) => {
+      setHit(terms?.length ? { page: n, terms } : null);
+      go(n);
+    },
+    [go],
+  );
   const [touchy, setTouchy] = useState(false);
   useEffect(
     () => setTouchy(window.matchMedia?.("(hover: none) and (pointer: coarse)").matches ?? false),
@@ -832,12 +930,14 @@ export function BookReader({
         manifest={manifest}
         onJump={go}
         onScrubbing={setScrubbing}
+        marks={bookmarks ?? []}
+        pulse={pulse}
       />
       <div className="relative min-h-0 flex-1">
         {/* The book's own direction, so a zoomed page starts where its lines start. */}
         <div
           ref={scroller}
-          className={`bkr-scroll${wider ? "" : " is-swipe"}`}
+          className={`bkr-scroll${wider ? "" : " is-swipe"}${fingerZoom ? " is-finger-zoom" : ""}`}
           dir={rtlBook ? "rtl" : "ltr"}
           style={{ ["--bkr-gutter" as string]: `${gutter}px` }}
         >
@@ -853,9 +953,27 @@ export function BookReader({
               settle={flipping}
               failed={failed}
               onRetry={() => void current.refetch()}
+              found={hit && hit.page === page ? hit.terms : null}
             />
           </div>
         </div>
+        {note && (
+          <div className="bkr-note" role="status">
+            <span>{note.text}</span>
+            {note.action && (
+              <button
+                type="button"
+                onClick={() => {
+                  const run = note.action?.[1];
+                  setNote(null);
+                  run?.();
+                }}
+              >
+                {note.action[0]}
+              </button>
+            )}
+          </div>
+        )}
         {toast && !scrubbing && (
           <p className="bkr-toast" aria-hidden="true">
             {page} / {total}
@@ -923,8 +1041,27 @@ export function BookReader({
           </button>
         </div>
         <div className="bkr-tools" role="group" aria-label="أدوات الصفحة">
-          {manifest && (
-            <BookOutline outline={manifest.outline} page={page} onJump={go} left={leftLabel} />
+          <BookPanel
+            bookId={book.id}
+            userId={userId}
+            manifest={manifest}
+            page={page}
+            onJump={jumpTo}
+            left={leftLabel}
+            bookmarks={bookmarks}
+            onUnmark={(n) => toggleMark(n, false)}
+          />
+          {bookmarks !== null && (
+            <button
+              type="button"
+              className={`bkr-icon${marked ? " is-on" : ""}`}
+              aria-pressed={marked}
+              aria-label={marked ? `شيل علامة صفحة ${page}` : `علّم صفحة ${page}`}
+              title={marked ? "شيل العلامة" : "علّم هالصفحة"}
+              onClick={() => toggleMark(page, !marked)}
+            >
+              <Bookmark size={17} aria-hidden="true" fill={marked ? "currentColor" : "none"} />
+            </button>
           )}
           <button
             type="button"

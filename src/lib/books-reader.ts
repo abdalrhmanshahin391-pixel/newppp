@@ -551,3 +551,22 @@ export function minutesLeftLabel(
   if (minutes <= 10) return `باقي ≈ ${minutes} دقايق ${where}`;
   return `باقي ≈ ${minutes} دقيقة ${where}`;
 }
+
+/**
+ * The milestone (25, 50, 75 or 100 %) a move from page `from` to `to` crosses first that was not
+ * reached before, or null. 100 is the last page.
+ */
+export function crossedMilestone(
+  from: number,
+  to: number,
+  total: number,
+  reached: number[],
+): number | null {
+  if (to <= from || total < 1) return null;
+  for (const mark of [25, 50, 75, 100]) {
+    if (reached.includes(mark)) continue;
+    const at = mark === 100 ? total : Math.ceil((total * mark) / 100);
+    if (from < at && to >= at) return mark;
+  }
+  return null;
+}

@@ -39,9 +39,11 @@ export const BookPageView = forwardRef<
     settle: boolean;
     failed: string;
     onRetry: () => void;
+    /** Words a search found on this page, marked until the page changes (or null). */
+    found?: string[] | null;
   }
 >(function BookPageView(
-  { view, words, ratio, width, motion, turn, settle, failed, onRetry },
+  { view, words, ratio, width, motion, turn, settle, failed, onRetry, found },
   textRef,
 ) {
   const box = useRef<HTMLDivElement | null>(null);
@@ -190,6 +192,43 @@ export const BookPageView = forwardRef<
       document.removeEventListener("selectionchange", onChange);
     };
   }, [shown, mine]);
+
+  // Words a search found: marked on the page (the same tint as a selection), whole words only.
+  const foundKey = found?.join("\u0000") ?? "";
+  useEffect(() => {
+    const registry = (globalThis as { CSS?: { highlights?: Map<string, unknown> } }).CSS
+      ?.highlights;
+    const Highlight = (globalThis as { Highlight?: new (...ranges: Range[]) => unknown }).Highlight;
+    if (!registry || !Highlight) return;
+    const el = layer.current;
+    if (!el || !foundKey || !shown) {
+      registry.delete("bkr-found");
+      return;
+    }
+    const terms = foundKey.split("\u0000").filter(Boolean);
+    const ranges: Range[] = [];
+    const escape = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(
+      `(?<![\\p{L}\\p{N}])(${terms.map(escape).join("|")})(?![\\p{L}\\p{N}])`,
+      "giu",
+    );
+    for (const span of Array.from(el.querySelectorAll("span"))) {
+      const node = span.firstChild;
+      if (!node || node.nodeType !== Node.TEXT_NODE) continue;
+      const text = node.textContent ?? "";
+      for (const match of text.matchAll(re)) {
+        const range = document.createRange();
+        range.setStart(node, match.index ?? 0);
+        range.setEnd(node, (match.index ?? 0) + match[0].length);
+        ranges.push(range);
+      }
+    }
+    if (ranges.length) registry.set("bkr-found", new Highlight(...ranges));
+    else registry.delete("bkr-found");
+    return () => {
+      registry.delete("bkr-found");
+    };
+  }, [foundKey, shown, pieces]);
 
   const problem = failed || (pictureFailed ? "ما قدرت أفتح الصفحة" : "");
 

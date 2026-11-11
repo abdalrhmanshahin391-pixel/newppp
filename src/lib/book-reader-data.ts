@@ -279,3 +279,108 @@ export async function saveReadingPlace(userId: string, bookId: string, page: num
       { onConflict: "user_id,book_id" },
     );
 }
+
+// ---- searching inside a book, and bookmarks (phase 3) -----------------------------------------
+
+/** A page a search found, with a short line around the match (the match between ⟦ and ⟧). */
+export type PageHit = { page: number; snippet: string };
+
+/** True when the database does not have this yet (the migration is not applied). */
+function notThereYet(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return (
+    error.code === "PGRST202" ||
+    error.code === "PGRST205" ||
+    error.code === "42883" ||
+    error.code === "42P01" ||
+    /does not exist|could not find/i.test(error.message ?? "")
+  );
+}
+
+/** Pages of the book whose words match the query; "missing" before the migration. */
+export async function searchBookPages(
+  bookId: string,
+  query: string,
+  signal?: AbortSignal,
+): Promise<PageHit[] | "missing"> {
+  const call = supabase.rpc as unknown as (
+    fn: string,
+    args: Record<string, unknown>,
+  ) => {
+    abortSignal: (
+      s: AbortSignal,
+    ) => PromiseLike<{ data: unknown; error: { code?: string; message?: string } | null }>;
+  } & PromiseLike<{ data: unknown; error: { code?: string; message?: string } | null }>;
+  const request = call.call(supabase, "books_search_pages", { p_book: bookId, p_query: query });
+  const { data, error } = await (signal ? request.abortSignal(signal) : request);
+  if (notThereYet(error)) return "missing";
+  if (error) throw new Error(error.message ?? "search");
+  return (Array.isArray(data) ? data : [])
+    .map((row) => ({ page: Number(row?.page), snippet: String(row?.snippet ?? "") }))
+    .filter((hit) => hit.page > 0);
+}
+
+/** "A ⟦hound⟧ came" → [["A ", false], ["hound", true], [" came", false]]. */
+export function snippetParts(snippet: string): [string, boolean][] {
+  const out: [string, boolean][] = [];
+  const re = /⟦([^⟧]*)⟧/g;
+  let last = 0;
+  for (let m = re.exec(snippet); m; m = re.exec(snippet)) {
+    if (m.index > last) out.push([snippet.slice(last, m.index), false]);
+    out.push([m[1], true]);
+    last = m.index + m[0].length;
+  }
+  if (last < snippet.length) out.push([snippet.slice(last), false]);
+  return out;
+}
+
+/** The reader's bookmarked pages in a book (sorted); null before the migration. */
+export async function fetchBookmarks(bookId: string): Promise<number[] | null> {
+  const table = supabase.from as unknown as (name: string) => {
+    select: (cols: string) => {
+      eq: (
+        col: string,
+        v: string,
+      ) => {
+        order: (col: string) => PromiseLike<{
+          data: { page: number }[] | null;
+          error: { code?: string; message?: string } | null;
+        }>;
+      };
+    };
+  };
+  const { data, error } = await table
+    .call(supabase, "book_bookmarks")
+    .select("page")
+    .eq("book_id", bookId)
+    .order("page");
+  if (notThereYet(error)) return null;
+  if (error) throw new Error(error.message ?? "bookmarks");
+  return (data ?? []).map((row) => Number(row.page)).filter((n) => n > 0);
+}
+
+/** Marks or unmarks a page for the signed-in reader. */
+export async function setBookmark(bookId: string, page: number, on: boolean): Promise<void> {
+  const table = supabase.from as unknown as (name: string) => {
+    insert: (
+      row: Record<string, unknown>,
+    ) => PromiseLike<{ error: { code?: string; message?: string } | null }>;
+    delete: () => {
+      eq: (
+        col: string,
+        v: string | number,
+      ) => {
+        eq: (
+          col: string,
+          v: string | number,
+        ) => PromiseLike<{ error: { code?: string; message?: string } | null }>;
+      };
+    };
+  };
+  const t = table.call(supabase, "book_bookmarks");
+  const { error } = on
+    ? await t.insert({ book_id: bookId, page })
+    : await t.delete().eq("book_id", bookId).eq("page", page);
+  // Marking a page already marked is fine.
+  if (error && !(on && error.code === "23505")) throw new Error(error.message ?? "bookmark");
+}
