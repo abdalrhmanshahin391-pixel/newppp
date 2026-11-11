@@ -184,10 +184,24 @@ export const bookStudyText = createServerFn({ method: "POST" })
     }
   });
 
-/** One JSON answer from the same model as the lessons' flashcards and questions. */
-async function askModel(system: string, user: string, maxTokens: number) {
+/**
+ * The model's key, looked up before anything is counted: with no key the reader is told so and
+ * the request does not use up their allowance (see the same function for the lessons).
+ */
+async function practiceKey(): Promise<string | null> {
   const { resolveRitaV3Key } = await import("@/lib/rita-v3.server");
   const key = await resolveRitaV3Key("groq", "GROQ_API_KEY");
+  if (!key)
+    console.warn(
+      "Book practice: no Groq key reachable from the website. Set the GROQ_API_KEY secret (a key saved only in the admin AI page cannot be read here).",
+    );
+  return key || null;
+}
+
+const NO_KEY = { ok: false, code: "no_key", message: PRACTICE_FAILURE_TEXT.no_key } as const;
+
+/** One JSON answer from the same model as the lessons' flashcards and questions. */
+async function askModel(key: string, system: string, user: string, maxTokens: number) {
   return askPracticeModel({
     fetch: (input, init) => fetch(input, init),
     key,
@@ -202,10 +216,13 @@ export const bookMakeCards = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => parse(BookInput, data))
   .handler(async ({ data, context }): Promise<BookCardsResult> => {
+    const key = await practiceKey();
+    if (!key) return NO_KEY;
     const outcome = await resolveBookRequest(context, data, "make_cards");
     if ("result" in outcome) return outcome.result;
     const limit = maxCards(outcome.quote);
     const asked = await askModel(
+      key,
       cardsSystemPrompt(limit),
       practiceUserMessage(outcome.quote, outcome.context),
       3500,
@@ -222,10 +239,13 @@ export const bookMakeMcq = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => parse(BookInput, data))
   .handler(async ({ data, context }): Promise<BookMcqResult> => {
+    const key = await practiceKey();
+    if (!key) return NO_KEY;
     const outcome = await resolveBookRequest(context, data, "make_mcq");
     if ("result" in outcome) return outcome.result;
     const count = mcqCount(outcome.quote);
     const asked = await askModel(
+      key,
       mcqSystemPrompt(count),
       practiceUserMessage(outcome.quote, outcome.context),
       4000,

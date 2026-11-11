@@ -36,7 +36,11 @@ existing typography and blue action colour. Cards reveal their answer and option
 have previous/next controls. Each question has four options; choosing one locks the answer and
 shows the correct choice and reason in text, never colour alone. Navigation retains answers.
 Loading, server errors, empty results and retry remain visible. Retry uses the original selection,
-and duplicate generation is blocked. Closing does not reopen automatically when generation ends;
+and duplicate generation is blocked. A failure says its real reason and offers only what can help:
+a service that is not set up on the site («التدريب مش مفعّل على الموقع لسا…») gets a quiet «إغلاق»
+and no retry, and uses none of the learner's allowance; flashcards that cannot be made from a rule
+or explanation without examples say so and offer «اعمل أسئلة اختيار» on the same selection; a busy
+or one-off failure keeps its own words and «جرّب مرة ثانية». Closing does not reopen automatically when generation ends;
 «آخر تدريب» in the header reopens it. Results remain only for the current lesson visit. Escape
 or close restores focus to the circle. No new database storage, worker action or transport.
 

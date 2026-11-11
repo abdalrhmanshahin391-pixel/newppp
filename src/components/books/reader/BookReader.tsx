@@ -647,7 +647,7 @@ export function BookReader({
             view &&
             (result.ok
               ? { ...view, status: "ready", cards: result.cards }
-              : { ...view, status: "error", message: result.message }),
+              : { ...view, status: "error", message: result.message, code: result.code }),
         );
       } else {
         const result = await mcqFn(input);
@@ -657,14 +657,19 @@ export function BookReader({
             view &&
             (result.ok
               ? { ...view, status: "ready", questions: result.questions }
-              : { ...view, status: "error", message: result.message }),
+              : { ...view, status: "error", message: result.message, code: result.code }),
         );
       }
     } catch {
       if (version === practiceVersion.current)
         setPracticeView(
           (view) =>
-            view && { ...view, status: "error", message: "ما زبطت هالمرة. جرّب مرة ثانية." },
+            view && {
+              ...view,
+              status: "error",
+              message: "ما زبطت هالمرة. جرّب مرة ثانية.",
+              code: "failed",
+            },
         );
     } finally {
       if (version === practiceVersion.current) setMaking(null);
@@ -1305,6 +1310,7 @@ export function BookReader({
             onRetry={() => {
               if (lastPractice.current) void practice(lastPractice.current.action, true);
             }}
+            onSwitch={(action) => void practice(action, true)}
             onReturnFocus={() => orbButton.current?.focus({ preventScroll: true })}
           />
         )}
