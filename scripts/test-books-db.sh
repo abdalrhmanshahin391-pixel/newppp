@@ -12,7 +12,10 @@ run() { psql -v ON_ERROR_STOP=1 -q -X -d "${DB}" "$@"; }
 
 run -f supabase/tests/study/00_supabase_stub.sql
 run -f supabase/tests/books/00_books_stub.sql
+STARTER=supabase/migrations/20261117120000_books_starter_library.sql
 for migration in supabase/migrations/*books*.sql; do
+  # The starter shelf is data, not rules: it goes in after the rule tests, which count books.
+  [ "${migration}" = "${STARTER}" ] && continue
   run -f "${migration}"
   # Every library migration must be safe to run twice.
   run -f "${migration}"
@@ -21,7 +24,12 @@ done
 run -c "grant usage on schema public, auth, storage to anon, authenticated;
         grant select, insert, update, delete on all tables in schema public to anon, authenticated;
         grant select on storage.objects to anon, authenticated;"
-for test in supabase/tests/books/[1-9]*_test.sql; do
+for test in supabase/tests/books/[1-7]*_test.sql; do
   echo "== ${test}"
   run -f "${test}"
 done
+# The starter shelf (20 books), run twice like the others, then its own checks.
+run -f "${STARTER}"
+run -f "${STARTER}"
+echo "== supabase/tests/books/80_books_starter_library_test.sql"
+run -f supabase/tests/books/80_books_starter_library_test.sql

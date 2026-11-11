@@ -1,4 +1,12 @@
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { BookOpenText, Heart, Loader2, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { BookObject, CATEGORY_ICON } from "./BookObject";
@@ -14,10 +22,19 @@ import { useNavigate } from "@tanstack/react-router";
 import { bookFileLink, bookReadable, favoriteBook, rateBook, trackBook } from "@/lib/books-data";
 import { openWelcome } from "@/lib/auth-dialog";
 
+// The admin's file upload and reading controls are only for admins: loaded when one needs them.
+const BookFileUpload = lazy(() =>
+  import("./admin/BookFileUpload").then((m) => ({ default: m.BookFileUpload })),
+);
+const BookReadingAdmin = lazy(() =>
+  import("./admin/BookFileUpload").then((m) => ({ default: m.BookReadingAdmin })),
+);
+
 /**
  * A book's details over the library: the book, what it is, its rating, «ابدأ القراءة», and (with
  * the phase 3 database) the reader's own stars and favourite. Opening it and starting to read are
- * counted once a day for a signed-in reader.
+ * counted once a day for a signed-in reader. An admin, on a book without a file, gets
+ * «ارفع ملف الكتاب» in place of the disabled button (readers still see «الملف لسا مش جاهز»).
  */
 export function BookSheet({
   book,
@@ -29,6 +46,7 @@ export function BookSheet({
   phase3 = false,
   mine = null,
   onChanged,
+  isAdmin = false,
 }: {
   book: Book;
   category: BookCategory | null;
@@ -39,6 +57,7 @@ export function BookSheet({
   phase3?: boolean;
   mine?: { favorite: boolean; rating: number | null } | null;
   onChanged?: () => void;
+  isAdmin?: boolean;
 }) {
   const t = (en: string, ar: string) => (ui === "ar" ? ar : en);
   const close = useRef<HTMLButtonElement>(null);
@@ -55,17 +74,22 @@ export function BookSheet({
     setFavorite(Boolean(mine?.favorite));
   }, [mine?.rating, mine?.favorite]);
 
+  // A file the admin just added from this sheet (the list behind it is read again meanwhile).
+  const [uploadedPath, setUploadedPath] = useState<string | null>(null);
+  const filePath = uploadedPath ?? book.file_path;
   // A prepared book opens in the site's reader, page by page; otherwise its PDF opens.
   const navigate = useNavigate();
   const [readable, setReadable] = useState(false);
+  const [recheck, setRecheck] = useState(0);
+  const checkReadable = useCallback(() => setRecheck((n) => n + 1), []);
   useEffect(() => {
     let live = true;
-    setReadable(false);
-    if (book.file_path) void bookReadable(book.id).then((yes) => live && setReadable(yes));
+    if (filePath) void bookReadable(book.id).then((yes) => live && setReadable(yes));
+    else setReadable(false);
     return () => {
       live = false;
     };
-  }, [book.id, book.file_path]);
+  }, [book.id, filePath, recheck]);
 
   // Opening the book counts as a view (signed-in readers, once a day).
   useEffect(() => {
@@ -142,7 +166,7 @@ export function BookSheet({
   }, [onClose]);
 
   async function read(pdf = false) {
-    if (!book.file_path) return;
+    if (!filePath) return;
     if (!signedIn) {
       openWelcome(window.location.pathname + window.location.search);
       return;
@@ -157,7 +181,7 @@ export function BookSheet({
     const win = window.open("", "_blank");
     setOpening(true);
     try {
-      const url = await bookFileLink(book.file_path);
+      const url = await bookFileLink(filePath);
       if (win) win.location.href = url;
       else window.location.assign(url);
     } catch (cause) {
@@ -253,23 +277,29 @@ export function BookSheet({
             </p>
           )}
           <div className="bk-actions">
-            <button
-              type="button"
-              className="bk-btn is-primary"
-              disabled={!book.file_path || opening}
-              onClick={() => void read()}
-            >
-              {opening ? (
-                <Loader2 size={17} className="animate-spin" aria-hidden="true" />
-              ) : (
-                <BookOpenText size={17} aria-hidden="true" />
-              )}
-              {book.file_path
-                ? signedIn
-                  ? t("Start reading", "ابدأ القراءة")
-                  : t("Sign in to read", "سجّل دخولك واقرأ")
-                : t("The file is not ready yet", "الملف لسا مش جاهز")}
-            </button>
+            {isAdmin && !filePath ? (
+              <Suspense fallback={null}>
+                <BookFileUpload book={book} onUploaded={setUploadedPath} />
+              </Suspense>
+            ) : (
+              <button
+                type="button"
+                className="bk-btn is-primary"
+                disabled={!filePath || opening}
+                onClick={() => void read()}
+              >
+                {opening ? (
+                  <Loader2 size={17} className="animate-spin" aria-hidden="true" />
+                ) : (
+                  <BookOpenText size={17} aria-hidden="true" />
+                )}
+                {filePath
+                  ? signedIn
+                    ? t("Start reading", "ابدأ القراءة")
+                    : t("Sign in to read", "سجّل دخولك واقرأ")
+                  : t("The file is not ready yet", "الملف لسا مش جاهز")}
+              </button>
+            )}
             {readable && signedIn && (
               <button
                 type="button"
@@ -293,6 +323,14 @@ export function BookSheet({
               </button>
             )}
           </div>
+          {isAdmin && filePath && !readable && (
+            <Suspense fallback={null}>
+              <BookReadingAdmin
+                book={{ id: book.id, title: book.title, file_path: filePath }}
+                onReady={checkReadable}
+              />
+            </Suspense>
+          )}
           {phase3 && (
             <div className="bk-rate">
               <span className="bk-rate-label" id={`bk-rate-${book.id}`}>
