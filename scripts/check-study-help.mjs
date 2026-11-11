@@ -330,7 +330,16 @@ if (process.argv.includes("--check")) {
         await page.goto(origin + `/preview?interaction&lang=${lang}`);
         if (width < 900) await page.getByRole("tab", { name: "ريتا", exact: true }).click();
         const answer = page.locator("[data-reply-text]").first();
-        await answer.dblclick();
+        // A paragraph's centre can be the empty space between wrapped lines on a phone.
+        // Aim at an actual word, as the learner does, rather than double-clicking that gap.
+        const answerPoint = await answer.evaluate((el) => {
+          const range = document.createRange();
+          range.setStart(el.firstChild, 0);
+          range.setEnd(el.firstChild, 3);
+          const rect = range.getBoundingClientRect();
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        });
+        await page.mouse.dblclick(answerPoint.x, answerPoint.y);
         await page.locator('.st-orb[data-tone="reply"]').waitFor();
         await page.waitForFunction(() => document.querySelectorAll("#st-fx-reply .b").length > 1);
         const replyFx = await page
