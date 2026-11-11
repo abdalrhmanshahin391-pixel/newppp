@@ -15,6 +15,9 @@ on:
       - "voice-agent/bot.py"
       - "voice-agent/tests/test_rita_conversation_history.py"
       - "src/lib/rita-v3-startup*"
+      - "src/lib/rita-v3.server.ts"
+      - "src/lib/rita-provider-key*"
+      - "src/lib/config.server*"
       - "src/lib/rita-voice-connection*"
       - "src/lib/rita-curriculum*"
       - "src/components/rita-lessons/**"
@@ -84,6 +87,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - name: Check startup regressions and types
         run: |
+          node --test src/lib/config.server.test.mjs src/lib/rita-provider-key.test.mjs
           node --test src/lib/rita-v3-startup.test.mjs
           node --test src/lib/rita-voice-connection.test.ts
           node --test src/lib/rita-v3-diagnostics-trace.test.mjs

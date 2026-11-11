@@ -2,7 +2,7 @@ import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Loader2, X } from "lucide-react";
 import type { PracticeAction } from "@/lib/study/study-actions";
-import type { StudyCard, StudyMcq } from "@/lib/study/study-practice";
+import { practiceFailureView, type StudyCard, type StudyMcq } from "@/lib/study/study-practice";
 import "./study-practice.css";
 
 export type PracticeView = {
@@ -12,6 +12,8 @@ export type PracticeView = {
   cards: StudyCard[];
   questions: StudyMcq[];
   message: string;
+  /** Why it failed (the server's code), so the window can say the real reason. */
+  code?: string;
 };
 
 export function StudyPracticePanel({
@@ -19,12 +21,15 @@ export function StudyPracticePanel({
   open,
   onOpenChange,
   onRetry,
+  onSwitch,
   onReturnFocus,
 }: {
   view: PracticeView;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRetry: () => void;
+  /** Makes another kind of practice from the same selection (questions instead of cards). */
+  onSwitch: (action: PracticeAction) => void;
   onReturnFocus: () => void;
 }) {
   const cards = view.action === "make_cards";
@@ -71,16 +76,46 @@ export function StudyPracticePanel({
                 {cards ? "بنجهّز البطاقات…" : "بنجهّز التمارين…"}
               </p>
             )}
-            {view.status === "error" && (
-              <div role="alert">
-                <p className="mb-4" dir="auto">
-                  {view.message}
-                </p>
-                <button type="button" className="rita-btn rita-btn-primary" onClick={onRetry}>
-                  جرّب مرة ثانية
-                </button>
-              </div>
-            )}
+            {view.status === "error" &&
+              (() => {
+                const failure = practiceFailureView(view.code, view.message);
+                return (
+                  <div role="alert">
+                    <p className="mb-4" dir="auto">
+                      {failure.message}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {failure.alternative && (
+                        <button
+                          type="button"
+                          className="rita-btn rita-btn-primary"
+                          onClick={() => onSwitch(failure.alternative!)}
+                        >
+                          اعمل أسئلة اختيار
+                        </button>
+                      )}
+                      {failure.retry && (
+                        <button
+                          type="button"
+                          className="rita-btn rita-btn-primary"
+                          onClick={onRetry}
+                        >
+                          جرّب مرة ثانية
+                        </button>
+                      )}
+                      {!failure.retry && !failure.alternative && (
+                        <button
+                          type="button"
+                          className="rita-btn rita-btn-quiet"
+                          onClick={() => onOpenChange(false)}
+                        >
+                          إغلاق
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             {view.status === "ready" &&
               (cards ? (
                 <Cards

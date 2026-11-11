@@ -4,6 +4,9 @@ import { classifyPipecatStartFailure, sanitizePipecatDiagnostic } from "@/lib/ri
 import { createClient } from "@supabase/supabase-js";
 import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 import { boundedRitaHistory, type RitaConversationMessage } from "@/lib/rita-conversation";
+import { resolveRitaV3Key } from "./rita-provider-key.server";
+
+export { resolveRitaV3Key };
 import {
   resolveTargetLanguage,
   type RegistryLanguage,
@@ -44,25 +47,6 @@ export type RitaV3ReadinessCheck = {
   ok: boolean;
   message: string;
 };
-
-export async function resolveRitaV3Key(provider: string, environmentName: string) {
-  try {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await (supabaseAdmin.from as any)("admin_ai_keys")
-      .select("api_key")
-      .eq("provider", provider)
-      .eq("purpose", "rita")
-      .eq("slot", 1)
-      .maybeSingle();
-    if (error) throw error;
-    const saved = String(data?.api_key ?? "").trim();
-    if (saved) return saved;
-  } catch (error) {
-    console.warn(`Could not read Rita v3 ${provider} key`, error);
-  }
-
-  return String(process.env[environmentName] ?? "").trim();
-}
 
 export async function ritaV3Environment() {
   return {
