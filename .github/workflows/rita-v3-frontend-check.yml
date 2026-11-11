@@ -66,6 +66,10 @@ on:
       - "src/lib/book-*"
       - "src/lib/pdf-page-render.ts"
       - "supabase/migrations/*books*"
+      - "supabase/starter-books/**"
+      - "supabase/tests/books/**"
+      - "public/book-covers/**"
+      - "scripts/build-starter-books-sql.*"
       - "scripts/test-books-db.sh"
       - "scripts/test-books-public-read-db.sh"
       - ".github/workflows/rita-v3-frontend-check.yml"
@@ -101,6 +105,7 @@ jobs:
           node --test src/lib/rita-path-levels.test.ts
           node --test src/lib/books.test.ts
           node --test src/lib/books-import.test.ts
+          node --test src/lib/books-starter.test.ts
           node --test src/lib/books-reader.test.ts
           node --test src/lib/book-gestures.test.ts
           node --test src/lib/rita-phrase.test.ts

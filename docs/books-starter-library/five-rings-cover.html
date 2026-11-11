@@ -1,0 +1,56 @@
+<!doctype html><meta charset="utf-8">
+<style>
+  html,body{margin:0;background:#000}
+  #c{width:1200px;height:1800px;position:relative;overflow:hidden;background:linear-gradient(170deg,#f1e8d4 0%,#e6d9bc 60%,#dccdab 100%)}
+  svg{position:absolute;inset:0}
+  .band{position:absolute;left:41px;right:41px;bottom:62px;height:318px;background:rgba(20,18,16,.84);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center}
+  .t{font:800 84px/1.08 "Inter Display","Inter",sans-serif;letter-spacing:.02em;text-transform:uppercase}
+  .a{font:600 34px/1 "Inter",sans-serif;letter-spacing:.14em;margin-top:34px;text-transform:uppercase;opacity:.95}
+</style>
+<div id="c">
+<svg viewBox="0 0 1200 1800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="rough" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.018 0.022" numOctaves="3" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="26" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.035 0.5" numOctaves="3" seed="3" result="dry"/>
+      <feColorMatrix in="dry" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.62" result="mask"/>
+      <feComposite in="d" in2="mask" operator="in"/>
+    </filter>
+    <filter id="soft"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="11" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="9"/></filter>
+    <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" seed="5"/><feColorMatrix values="0 0 0 0 .35  0 0 0 0 .28  0 0 0 0 .18  0 0 0 .16 0"/></filter>
+    <radialGradient id="vig" cx="50%" cy="42%" r="75%"><stop offset="60%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#3b2a10" stop-opacity=".28"/></radialGradient>
+  </defs>
+  <rect width="1200" height="1800" filter="url(#paper)"/>
+  <rect width="1200" height="1800" fill="url(#vig)"/>
+  <path id="enso" fill="#16130f" filter="url(#rough)"/>
+  <g filter="url(#soft)">
+    <circle cx="600" cy="520" r="40" fill="#9a7b3f"/>
+    <circle cx="600" cy="640" r="40" fill="#3d5a6c"/>
+    <circle cx="600" cy="760" r="40" fill="#c8321f"/>
+    <circle cx="600" cy="880" r="40" fill="#6b7f5e"/>
+    <circle cx="600" cy="1000" r="38" fill="none" stroke="#16130f" stroke-width="9"/>
+  </g>
+  <g transform="translate(930,118)">
+    <rect width="150" height="206" rx="10" fill="#c3281a" filter="url(#soft)"/>
+    <text x="75" y="92" text-anchor="middle" font-family="IPAGothic,IPAPGothic,sans-serif" font-size="84" font-weight="700" fill="#f6e9d6">五</text>
+    <text x="75" y="184" text-anchor="middle" font-family="IPAGothic,IPAPGothic,sans-serif" font-size="84" font-weight="700" fill="#f6e9d6">輪</text>
+  </g>
+</svg>
+<div class="band"><div class="t">The Book of<br>Five Rings</div><div class="a">Miyamoto Musashi</div></div>
+</div>
+<script>
+  // A brush circle: thick where the brush lands, thinning to a dry tail; open at the upper right.
+  const cx=600, cy=760, R=380, start=-58, sweep=322, steps=240;
+  const pts=[], inner=[];
+  for(let i=0;i<=steps;i++){
+    const u=i/steps, a=(start+sweep*u)*Math.PI/180;
+    const w=(i<8? 70+ i*8 : 134)*(1-Math.pow(u,2.2))+16;        // half-thickness profile
+    const wob=Math.sin(u*9+1)*10+Math.sin(u*23)*4;
+    const ro=R+w/2+wob, ri=R-w/2+wob;
+    pts.push([cx+ro*Math.cos(a), cy+ro*Math.sin(a)]);
+    inner.push([cx+ri*Math.cos(a), cy+ri*Math.sin(a)]);
+  }
+  const d='M'+pts.map(p=>p.map(n=>n.toFixed(1)).join(',')).join('L')+'L'+inner.reverse().map(p=>p.map(n=>n.toFixed(1)).join(',')).join('L')+'Z';
+  document.getElementById('enso').setAttribute('d',d);
+</script>

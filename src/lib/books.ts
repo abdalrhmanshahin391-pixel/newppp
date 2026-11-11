@@ -641,6 +641,25 @@ export const RESUMABLE_FROM_BYTES = 6 * 1024 * 1024;
 /** The largest file sent in one plain request when resumable uploads are not available. */
 export const DIRECT_MAX_BYTES = 50 * 1024 * 1024;
 
+/**
+ * A cover that is a file of the site itself ("/book-covers/<name>"), not a picture in the covers
+ * bucket. The starter library's covers are like this; their address is used as it is.
+ */
+export function isSiteCover(path: string | null | undefined): path is string {
+  return typeof path === "string" && /^\/book-covers\/[\w.-]+$/.test(path);
+}
+
+/** Why a chosen file cannot be a book's PDF (in the admin's words), or null when it can. */
+export function pdfFileProblem(file: { name: string; type: string; size: number }): string | null {
+  const looksPdf =
+    file.type === "application/pdf" ||
+    (["", "application/octet-stream"].includes(file.type) && /\.pdf$/i.test(file.name));
+  if (!looksPdf) return "ملف الكتاب لازم يكون PDF.";
+  if (file.size <= 0) return "الملف فاضي.";
+  if (file.size > MAX_PDF_BYTES) return "ملف الكتاب أكبر من 500 ميغا.";
+  return null;
+}
+
 export type UploadProblem = "missing" | "too_large" | "other";
 
 /**

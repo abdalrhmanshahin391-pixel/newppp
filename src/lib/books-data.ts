@@ -16,6 +16,8 @@ import {
   shelves as categoryShelves,
   DIRECT_MAX_BYTES,
   RESUMABLE_FROM_BYTES,
+  isSiteCover,
+  pdfFileProblem,
   toBook,
   toCategory,
   uploadProblem,
@@ -87,6 +89,8 @@ export type AdminLibrary = Library & {
 
 export function coverUrl(path: string | null): string | null {
   if (!path) return null;
+  // A cover that ships with the site (the starter library's) is used as it is.
+  if (isSiteCover(path)) return path;
   return supabase.storage.from(COVERS_BUCKET).getPublicUrl(path).data.publicUrl;
 }
 
@@ -483,11 +487,19 @@ export async function bookFileLink(path: string): Promise<string> {
 
 // ---- files ----------------------------------------------------------------------------------
 
+/** The type sent with a file: a PDF the browser gave no type to still goes up as a PDF. */
+function uploadType(file: File): string {
+  return file.type || (/\.pdf$/i.test(file.name) ? "application/pdf" : "application/octet-stream");
+}
+
+/** The error an upload stopped by the admin ends with. */
+export const UPLOAD_CANCELLED = "upload_cancelled";
+
 /** One plain request (Supabase's standard upload). */
 async function directUpload(bucket: string, path: string, file: File) {
   const { error } = await supabase.storage
     .from(bucket)
-    .upload(path, file, { contentType: file.type, upsert: false });
+    .upload(path, file, { contentType: uploadType(file), upsert: false });
   if (error) {
     const status = Number((error as { statusCode?: string | number }).statusCode) || null;
     throw new Error(
@@ -502,6 +514,7 @@ async function resumableUpload(
   path: string,
   file: File,
   onProgress?: (share: number) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
@@ -517,7 +530,7 @@ async function resumableUpload(
       metadata: {
         bucketName: bucket,
         objectName: path,
-        contentType: file.type,
+        contentType: uploadType(file),
         cacheControl: "3600",
       },
       chunkSize: RESUMABLE_FROM_BYTES,
@@ -525,7 +538,17 @@ async function resumableUpload(
       onProgress: (sent, total) => onProgress?.(total ? sent / total : 0),
       onSuccess: () => resolve(),
     });
+    // Stopping also removes the part already sent, so no half file stays in the bucket.
+    signal?.addEventListener(
+      "abort",
+      () => {
+        void upload.abort(true).catch(() => undefined);
+        reject(new Error(UPLOAD_CANCELLED));
+      },
+      { once: true },
+    );
     void upload.findPreviousUploads().then((previous) => {
+      if (signal?.aborted) return;
       if (previous.length) upload.resumeFromPreviousUpload(previous[0]);
       upload.start();
     });
@@ -542,15 +565,18 @@ export async function uploadFile(
   path: string,
   file: File,
   onProgress?: (share: number) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
+  if (signal?.aborted) throw new Error(UPLOAD_CANCELLED);
   if (file.size <= RESUMABLE_FROM_BYTES) {
     await directUpload(bucket, path, file);
     onProgress?.(1);
     return;
   }
   try {
-    await resumableUpload(bucket, path, file, onProgress);
+    await resumableUpload(bucket, path, file, onProgress, signal);
   } catch (cause) {
+    if (cause instanceof Error && cause.message === UPLOAD_CANCELLED) throw cause;
     const status =
       cause instanceof DetailedError ? (cause.originalResponse?.getStatus() ?? null) : null;
     const message = cause instanceof Error ? cause.message : "";
@@ -815,7 +841,8 @@ export async function saveBook(
     }
     for (const up of done) {
       const old = up.kind === "cover" ? existing?.cover_path : existing?.file_path;
-      if (old) await removeOrRemember(up.bucket, [old], "replaced");
+      // A cover that ships with the site is not in the bucket: nothing to remove.
+      if (old && !isSiteCover(old)) await removeOrRemember(up.bucket, [old], "replaced");
     }
   }
   if (publishAfter) {
@@ -827,6 +854,36 @@ export async function saveBook(
   }
   if (problems.length) throw new Error(`انحفظ الكتاب، بس ما انرفع: ${problems.join(" · ")}`);
   return id;
+}
+
+/**
+ * Adds the PDF to a book that has none (the «ارفع ملف الكتاب» button on its page): the file goes
+ * up, then the book points to it, but only while it still has no file (so two admins never
+ * overwrite each other). If the book cannot point to the new file, the new file is removed.
+ * Returns the file's path in the bucket.
+ */
+export async function attachBookPdf(
+  bookId: string,
+  file: File,
+  onProgress?: (share: number) => void,
+  signal?: AbortSignal,
+): Promise<string> {
+  const problem = pdfFileProblem(file);
+  if (problem) throw new Error(problem);
+  const path = `${bookId}/book-${Date.now()}.pdf`;
+  await uploadFile(FILES_BUCKET, path, file, onProgress, signal);
+  const { data, error } = await supabase
+    .from("books")
+    .update({ file_path: path })
+    .eq("id", bookId)
+    .is("file_path", null)
+    .select("id");
+  if (error || !data?.length) {
+    await removeOrRemember(FILES_BUCKET, [path], "upload not saved");
+    if (error) throw friendly(error);
+    throw new Error("الكتاب إله ملف من قبل، أو انحذف. حدّث الصفحة وجرّب.");
+  }
+  return path;
 }
 
 export async function setBookStatus(book: Book, status: BookStatus, phase1: boolean) {
@@ -888,7 +945,8 @@ export async function saveBookOrder(ids: string[]) {
 export async function deleteBook(book: Book) {
   const { error } = await supabase.from("books").delete().eq("id", book.id);
   if (error) throw friendly(error);
-  if (book.cover_path) await removeOrRemember(COVERS_BUCKET, [book.cover_path], "book deleted");
+  if (book.cover_path && !isSiteCover(book.cover_path))
+    await removeOrRemember(COVERS_BUCKET, [book.cover_path], "book deleted");
   if (book.file_path) await removeOrRemember(FILES_BUCKET, [book.file_path], "book deleted");
   // The page pictures the reader used (their rows went with the book). Before the reader
   // migration the bucket does not exist and this finds nothing.

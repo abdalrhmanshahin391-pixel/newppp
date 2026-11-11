@@ -9571,6 +9571,59 @@ html.rita-app,
   cursor: not-allowed;
   opacity: 0.5;
 }
+/* The admin's file upload on a book without a PDF (BookFileUpload): a note, a progress bar. */
+.bk-file-note {
+  /* after every button of the row, whatever order they were drawn in */
+  order: 9;
+  flex: 1 0 100%;
+  margin-top: 2px;
+  color: #4b4a5c;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.bk-file-note p {
+  margin: 0;
+}
+.bk-file-note p.is-error {
+  color: #8c1a31;
+  font-weight: 600;
+}
+.bk-file-bar {
+  height: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--pp-grey);
+}
+.bk-file-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--pp-accent);
+  transition: width 200ms ease-out;
+}
+.bk-file-admin {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--pp-line);
+  border-radius: 10px;
+  background: #fff;
+}
+.bk-file-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--pp-ink);
+  font-weight: 600;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bk-file-bar i {
+    transition: none;
+  }
+}
+
 .bk-btn:focus-visible,
 .bk-cat:focus-visible,
 .bk-opt:focus-visible,

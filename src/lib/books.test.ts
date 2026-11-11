@@ -9,6 +9,8 @@ import {
   ratingShown,
   uploadProblem,
   uploadProblemText,
+  isSiteCover,
+  pdfFileProblem,
   MAX_PDF_BYTES,
   toLocalInput,
   inPeriod,
@@ -369,4 +371,39 @@ test("uploads: PDFs up to 500 MB, and a failed upload says why in words", () => 
   assert.match(uploadProblemText("too_large", 120 * mb, ""), /120 ميغا.*500 ميغا/);
   assert.match(uploadProblemText("missing", 80 * mb, ""), /80 ميغا.*50 ميغا/);
   assert.equal(uploadProblemText("other", 1, "network error"), "network error");
+});
+
+test("a cover that ships with the site is told apart from one in the bucket", () => {
+  assert.equal(isSiteCover("/book-covers/the-art-of-war.webp"), true);
+  assert.equal(isSiteCover("/book-covers/a_b-1.2.webp"), true);
+  assert.equal(isSiteCover("6f1c/cover-1700000000.jpg"), false);
+  assert.equal(isSiteCover(null), false);
+  assert.equal(isSiteCover(""), false);
+  // Only the site's own folder: not another site, a protocol-relative address or a way up.
+  assert.equal(isSiteCover("//evil.example/x.webp"), false);
+  assert.equal(isSiteCover("https://evil.example/x.webp"), false);
+  assert.equal(isSiteCover("/book-covers/../secret.webp"), false);
+  assert.equal(isSiteCover("/other/x.webp"), false);
+});
+
+test("a chosen file is checked as a book PDF with the words the admin sees", () => {
+  const mb = 1024 * 1024;
+  assert.equal(pdfFileProblem({ name: "a.pdf", type: "application/pdf", size: 3 * mb }), null);
+  // Some systems give no type, or a generic one: the name decides.
+  assert.equal(pdfFileProblem({ name: "A.PDF", type: "", size: 3 * mb }), null);
+  assert.equal(pdfFileProblem({ name: "a.pdf", type: "application/octet-stream", size: mb }), null);
+  assert.match(
+    pdfFileProblem({ name: "a.epub", type: "application/epub+zip", size: mb }) ?? "",
+    /PDF/,
+  );
+  assert.match(pdfFileProblem({ name: "a.docx", type: "", size: mb }) ?? "", /PDF/);
+  assert.match(pdfFileProblem({ name: "a.pdf", type: "application/pdf", size: 0 }) ?? "", /فاضي/);
+  assert.match(
+    pdfFileProblem({ name: "a.pdf", type: "application/pdf", size: MAX_PDF_BYTES + 1 }) ?? "",
+    /500 ميغا/,
+  );
+  assert.equal(
+    pdfFileProblem({ name: "a.pdf", type: "application/pdf", size: MAX_PDF_BYTES }),
+    null,
+  );
 });
