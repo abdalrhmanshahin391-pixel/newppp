@@ -259,3 +259,32 @@ test("the outline keeps titles and pages inside the book", async () => {
     ],
   );
 });
+
+test("the scrubber maps the line to pages, by the book's direction", async () => {
+  const { scrubPage, scrubSpot, chapterAt, scrubWindow } = await import("./books-reader.ts");
+  assert.equal(scrubPage(0, 900, 900, false), 1);
+  assert.equal(scrubPage(450, 900, 900, false), 450);
+  assert.equal(scrubPage(900, 900, 900, false), 900);
+  assert.equal(scrubPage(2000, 900, 900, false), 900);
+  assert.equal(scrubPage(-5, 900, 900, false), 1);
+  assert.equal(scrubPage(0, 900, 900, true), 900);
+  assert.equal(scrubPage(900, 900, 900, true), 1);
+  assert.equal(scrubPage(300, 300, 5000, false), 5000);
+  assert.equal(scrubPage(10, 0, 50, false), 1);
+  assert.equal(scrubSpot(450, 900, false), 0.5);
+  assert.equal(scrubSpot(900, 900, true), 0);
+  const outline: [string, number, number][] = [
+    ["Part One", 1, 0],
+    ["Chapter 1", 3, 1],
+    ["Chapter 2", 40, 1],
+    ["Part Two", 100, 0],
+  ];
+  assert.equal(chapterAt(outline, 2), "Part One");
+  assert.equal(chapterAt(outline, 39), "Chapter 1");
+  assert.equal(chapterAt(outline, 40), "Chapter 2");
+  assert.equal(chapterAt(outline, 500), "Part Two");
+  assert.equal(chapterAt([], 5), null);
+  assert.equal(chapterAt([["Late", 10, 0]], 5), null);
+  assert.deepEqual(scrubWindow(2, 5, 2), [1, 2, 3, 4]);
+  assert.equal(scrubWindow(500, 900).length, 41);
+});

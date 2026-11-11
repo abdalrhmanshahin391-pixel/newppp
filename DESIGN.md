@@ -528,6 +528,16 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     no following, a short fade for the nudge. On touch screens the first-visit tip adds «اسحب
     الصفحة أو اكبس على طرفها لتقلب.»
   - **Progress line** fills from the side the book starts on (left for left-to-right books).
+  - **Scrubber:** the progress line is also a slider (no new bar). A 28px band around it takes
+    the pointer; pressing thickens it to 6px with a 14px accent knob (white ring), and a card
+    follows the pointer under the line: the page's 160px picture shown 120px wide (same sheet
+    corners, hairline ring and shadow; its blurred preview until the picture is in) over an ink
+    pill «صفحة 412 من 900 · <chapter>» (one line, the chapter cut with «…»). The page is fetched
+    only on release; a click jumps; hovering on a computer shows the card without jumping;
+    Escape while dragging goes back. Keyboard: it is a `slider` («صفحة n من N»), Home/End go to
+    the first/last page, the arrows still turn one page. The card appears in 120ms (opacity and
+    0.96→1 scale; opacity only with reduced motion); the tip and the page-number toast step aside
+    while it shows. Books prepared before the sizes show the number and chapter only.
   - **The bar under the page:** «السابقة» (outlined) · «صفحة [n] من N» (the number is a field) ·
     «التالية» (ink, the main action), all 44px, laid out in the book's direction; on the other side
     «على قدّ العرض / الصفحة كاملة», «صغّر», «كبّر» as 44px icons. When the bar is narrower than

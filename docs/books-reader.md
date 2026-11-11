@@ -128,6 +128,22 @@ Migration `20261115120000_books_reader_tiers.sql`, then each book prepared again
   in WebKit with made-up touch events and real taps (29). The four selection checks still pass in
   both. Not tried on a real iPad or iPhone.
 
+### Scrubber (the page-pane plan, phase 3b)
+
+- The progress line is the scrubber (`BookScrubber.tsx`): drag or click it, or hover on a computer.
+  The card shows the page's 160 px picture (ThumbHash first), its number and its chapter from the
+  manifest's outline (`chapterAt`). The full page is fetched only on release.
+- The little pictures' links are signed in one batch for the 41 pages around the pointer and
+  reused (`scrubWindow`, then only when the page under the pointer has no link or 8+ around it are
+  missing): one signing request in the tests for a drag across the whole book.
+- Pointer events with pointer capture (`touch-action: none` on the line's 28 px band only), so
+  the page's swipe and scrolling are untouched. `scrubPage` / `scrubSpot` map the line to pages by
+  the book's direction.
+- Checked in Chromium and WebKit (iPad and phone): hover, drag, release, click, Escape, Home/End,
+  arrows, a right-to-left book, a book without little pictures, a long chapter title, the card
+  inside a 390 px screen, the signing count, and a finger drag (Chromium, real touch input). The
+  swipe and selection checks still pass.
+
 ## Not in this version
 
 - Reading scanned pages (OCR): they show as pictures only.

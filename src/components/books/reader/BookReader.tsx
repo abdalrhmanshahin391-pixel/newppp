@@ -80,6 +80,7 @@ import {
   type BookTextAction,
 } from "@/lib/books-study.functions";
 import { BookPageView } from "./BookPageView";
+import { BookScrubber } from "./BookScrubber";
 import { BookRitaColumn, type BookAnswer } from "./BookRitaColumn";
 import { useTurnGestures } from "./useTurnGestures";
 import "@/components/rita-study/study-meaning.css";
@@ -757,6 +758,8 @@ export function BookReader({
   // A page no wider than its pane leaves sideways moves to the swipe (up/down and pinch stay the
   // browser's); a zoomed, wider page scrolls sideways itself and turns only from its edge.
   const wider = pageWidth + gutter * 2 > pane.width + 1;
+  // While the scrubber's card shows, the page-number toast stays away.
+  const [scrubbing, setScrubbing] = useState(false);
   const [touchy, setTouchy] = useState(false);
   useEffect(
     () => setTouchy(window.matchMedia?.("(hover: none) and (pointer: coarse)").matches ?? false),
@@ -779,17 +782,16 @@ export function BookReader({
   const NextIcon = rtlBook ? ChevronLeft : ChevronRight;
   const bookPane = (
     <div className="bkr-pane" dir="rtl">
-      <div
-        className="bkr-progress"
-        data-dir={rtlBook ? "rtl" : "ltr"}
-        role="progressbar"
-        aria-label="وين وصلت بالكتاب"
-        aria-valuemin={1}
-        aria-valuemax={total}
-        aria-valuenow={page}
-      >
-        <span style={{ transform: `scaleX(${(page / total).toFixed(4)})` }} />
-      </div>
+      <BookScrubber
+        bookId={book.id}
+        userId={userId}
+        page={page}
+        total={total}
+        rtl={rtlBook}
+        manifest={manifest}
+        onJump={go}
+        onScrubbing={setScrubbing}
+      />
       <div className="relative min-h-0 flex-1">
         {/* The book's own direction, so a zoomed page starts where its lines start. */}
         <div
@@ -813,12 +815,12 @@ export function BookReader({
             />
           </div>
         </div>
-        {toast && (
+        {toast && !scrubbing && (
           <p className="bkr-toast" aria-hidden="true">
             {page} / {total}
           </p>
         )}
-        {tip && view?.hasText && (
+        {tip && view?.hasText && !scrubbing && (
           <div className="bkr-tip" role="note">
             <p>
               حدّد أي كلمة أو جملة بإصبعك أو بالماوس، وبعدين اكبس على الدائرة.
