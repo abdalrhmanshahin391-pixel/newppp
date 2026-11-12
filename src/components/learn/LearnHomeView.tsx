@@ -79,8 +79,8 @@ function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): Se
           slot: "wordcraft",
           name: { en: "Wordcraft", ar: "Wordcraft" },
           line: {
-            en: "A word puzzle: slide across the letters to find English words and learn what they mean.",
-            ar: "لغز كلمات: مرّر على الحروف لتلاقي كلمات إنجليزية وتتعلّم معانيها.",
+            en: "Pick easy, medium or hard: find four new English words in the letters and learn what they mean.",
+            ar: "اختار سهل أو متوسط أو صعب: لاقي أربع كلمات إنجليزية جديدة بين الحروف وتعلّم معانيها.",
           },
           to: "/wordcraft",
         },

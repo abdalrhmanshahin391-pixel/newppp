@@ -1,22 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { WordcraftPage } from "@/components/wordcraft/WordcraftPage";
+import { LEVEL_IDS, type Level } from "@/lib/wordcraft/round";
 
-type WordcraftSearch = { p?: string; view?: "review" };
+type WordcraftSearch = { d?: Level };
 
 export const Route = createFileRoute("/wordcraft")({
-  validateSearch: (search: Record<string, unknown>): WordcraftSearch => {
-    const out: WordcraftSearch = {};
-    if (typeof search.p === "string" && /^[a-z]+-\d{1,3}$/.test(search.p)) out.p = search.p;
-    if (search.view === "review") out.view = "review";
-    return out;
-  },
+  validateSearch: (search: Record<string, unknown>): WordcraftSearch =>
+    LEVEL_IDS.includes(search.d as Level) ? { d: search.d as Level } : {},
   head: () => ({
     meta: [
       { title: "Wordcraft — Uzyra" },
       {
         name: "description",
         content:
-          "A word-path game for learning English: slide across the letters, find the hidden words, and learn their meanings.",
+          "A word-path game for learning English: choose a difficulty, slide across the letters to find four new words, and learn what they mean.",
       },
     ],
   }),
@@ -24,6 +21,6 @@ export const Route = createFileRoute("/wordcraft")({
 });
 
 function WordcraftRoute() {
-  const { p, view } = Route.useSearch();
-  return <WordcraftPage puzzleId={p} view={view} />;
+  const { d } = Route.useSearch();
+  return <WordcraftPage level={d} />;
 }

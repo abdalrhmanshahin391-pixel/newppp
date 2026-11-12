@@ -1,17 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-  ammanDay,
-  clock,
-  dailyPick,
-  extendPath,
-  hintTiles,
-  isOpen,
-  parseProgress,
-  tileAt,
-  tilesAlong,
-  type BoardGeometry,
-} from "./game.ts";
+import { clock, extendPath, hintTiles, tileAt, tilesAlong, type BoardGeometry } from "./game.ts";
 
 const none = new Set<number>();
 
@@ -60,51 +49,8 @@ test("a fast swipe passes through the tiles in between, not around corners", () 
   assert.deepEqual(tilesAlong(x0, y0, x2, y2, g), [7]);
 });
 
-test("the daily puzzle follows the day in Amman, the same all day", () => {
-  // 21:30 UTC on the 12th is already the 13th in Amman (UTC+3).
-  assert.equal(ammanDay(new Date("2026-11-12T21:30:00Z")), "2026-11-13");
-  assert.equal(ammanDay(new Date("2026-11-12T20:00:00Z")), "2026-11-12");
-  const ids = Array.from({ length: 25 }, (_, i) => `m-${i}`);
-  assert.equal(dailyPick("2026-11-13", ids), dailyPick("2026-11-13", ids));
-  assert.notEqual(dailyPick("2026-11-13", ids), dailyPick("2026-11-14", ids));
-  const month = new Set(
-    Array.from({ length: 25 }, (_, d) =>
-      dailyPick(`2026-12-${String(d + 1).padStart(2, "0")}`, ids),
-    ),
-  );
-  assert.equal(month.size, 25, "25 days, 25 different puzzles");
-});
-
 test("hints show the word's tiles one by one, never more than the word", () => {
   assert.deepEqual(hintTiles([4, 5, 11], 0), []);
   assert.deepEqual(hintTiles([4, 5, 11], 1), [4]);
   assert.deepEqual(hintTiles([4, 5, 11], 9), [4, 5, 11]);
-});
-
-test("saved progress: broken or odd values give a safe start", () => {
-  assert.deepEqual(parseProgress(null), { solved: {}, review: [], muted: false });
-  assert.deepEqual(parseProgress("{oops"), { solved: {}, review: [], muted: false });
-  const p = parseProgress(
-    JSON.stringify({
-      solved: { "easy-1": { at: "2026-11-12", seconds: "61", hints: 2 }, bad: null },
-      review: ["HOME", "HOME", "<b>", 5],
-      muted: true,
-    }),
-  );
-  assert.deepEqual(p.solved, { "easy-1": { at: "2026-11-12", seconds: 61, hints: 2 } });
-  assert.deepEqual(p.review, ["HOME"]);
-  assert.equal(p.muted, true);
-});
-
-test("levels open one after another inside a pack", () => {
-  const ids = ["easy-1", "easy-2", "easy-3"];
-  const progress = {
-    solved: { "easy-1": { at: "x", seconds: 1, hints: 0 } },
-    review: [],
-    muted: false,
-  };
-  assert.equal(isOpen("easy-1", ids, progress), true);
-  assert.equal(isOpen("easy-2", ids, progress), true);
-  assert.equal(isOpen("easy-3", ids, progress), false);
-  assert.equal(clock(65), "1:05");
 });

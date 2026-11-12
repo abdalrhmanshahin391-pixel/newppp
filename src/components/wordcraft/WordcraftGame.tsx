@@ -23,8 +23,7 @@ import {
 import { RitaFace } from "@/components/brand/RitaBrand";
 import { CATEGORY_COLORS } from "@/lib/books";
 import { checkMove, maskOf, type Path } from "@/lib/wordcraft/engine";
-import { DICTIONARY, type Puzzle } from "@/lib/wordcraft/generate";
-import { BY_WORD } from "@/lib/wordcraft/lexicon";
+import { DICTIONARY, type Round } from "@/lib/wordcraft/round";
 import {
   extendPath,
   hintTiles,
@@ -33,8 +32,7 @@ import {
   type BoardGeometry,
   clock,
 } from "@/lib/wordcraft/game";
-import { nextPuzzle, puzzleName } from "@/lib/wordcraft/packs";
-import type { Progress } from "@/lib/wordcraft/game";
+import { LEVEL_NAMES } from "./levels";
 import { sounds } from "./wordcraft-sound";
 
 type Lang = "en" | "ar";
@@ -49,19 +47,25 @@ const reduced = () =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /**
- * One Wordcraft puzzle: Rita's line, the letter grid, the word slots with their Arabic meanings,
+ * One Wordcraft round: Rita's line, the letter grid, the word slots with their Arabic meanings,
  * and, once every tile is used, the words with their examples to learn from.
  */
 export function WordcraftGame({
-  puzzle,
+  round: puzzle,
   lang,
-  progress,
-  onProgress,
+  muted,
+  onMute,
+  onNext,
+  note,
 }: {
-  puzzle: Puzzle;
+  round: Round;
   lang: Lang;
-  progress: Progress;
-  onProgress: (next: (current: Progress) => Progress) => void;
+  muted: boolean;
+  onMute: () => void;
+  /** Starts a new round at the same level. */
+  onNext: () => void;
+  /** A quiet line under the board (where the words came from, when it matters). */
+  note?: string | null;
 }) {
   const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
   const grid = useMemo(
@@ -95,7 +99,6 @@ export function WordcraftGame({
     moved: boolean;
     startLen: number;
   } | null>(null);
-  const muted = progress.muted;
   const play = useCallback(
     (fn: () => void) => {
       if (!muted) fn();
@@ -136,7 +139,7 @@ export function WordcraftGame({
     setFocus(0);
     started.current = Date.now();
     setSeconds(0);
-  }, [puzzle.id]);
+  }, [puzzle]);
 
   // Letters of a found word travel from the grid into its slot.
   useLayoutEffect(() => {
@@ -190,13 +193,6 @@ export function WordcraftGame({
       "good",
       t("The whole grid is done. Here are your words.", "خلّصت الشبكة كلها. هاي كلماتك."),
     );
-    onProgress((current) => ({
-      ...current,
-      solved: {
-        ...current.solved,
-        [puzzle.id]: { at: new Date().toISOString(), seconds: secs, hints: hintCount },
-      },
-    }));
   }
 
   function submit(candidate: Path) {
@@ -212,8 +208,7 @@ export function WordcraftGame({
       const next = [...solved, result.index];
       setSolved(next);
       setPath([]);
-      const entry = BY_WORD.get(result.word);
-      say("good", `${result.word} = ${entry?.ar ?? ""}`);
+      say("good", `${result.word} = ${puzzle.info[result.index]?.ar ?? ""}`);
       if (typeof navigator !== "undefined") navigator.vibrate?.(10);
       if (next.length === puzzle.words.length) finish();
       else play(sounds.word);
@@ -234,8 +229,8 @@ export function WordcraftGame({
       say(
         "warn",
         t(
-          `${typed} is a real word, but not one of this puzzle's.`,
-          `${typed} كلمة إنجليزية، بس مش من كلمات هاللغز.`,
+          `${typed} is a real word, but not one of this round's.`,
+          `${typed} كلمة إنجليزية، بس مش من كلمات هالجولة.`,
         ),
       );
     else
@@ -243,7 +238,7 @@ export function WordcraftGame({
         "warn",
         t(
           `${typed} is not one of the words. Try again.`,
-          `${typed} مش من كلمات اللغز. جرّب كمان مرة.`,
+          `${typed} مش من كلمات الجولة. جرّب كمان مرة.`,
         ),
       );
   }
@@ -387,7 +382,7 @@ export function WordcraftGame({
     setHints((h) => ({ ...h, [i]: level }));
     setHintCount((n) => n + 1);
     setPath([]);
-    const meaning = BY_WORD.get(puzzle.words[i])?.ar ?? "";
+    const meaning = puzzle.info[i]?.ar ?? "";
     say(
       "info",
       level === 1
@@ -420,7 +415,6 @@ export function WordcraftGame({
   }
 
   const typed = path.map((p) => puzzle.letters[p]).join("");
-  const next = nextPuzzle(puzzle.id);
   /** A path as polyline points in tile units (the line layer's view box is cols × rows). */
   const lineOf = (p: Path) =>
     p
@@ -432,14 +426,18 @@ export function WordcraftGame({
       className="wc-game"
       style={{ ["--wc-cols" as string]: puzzle.cols, ["--wc-rows" as string]: puzzle.rows }}
     >
-      <h1 className="sr-only">{`Wordcraft · ${puzzleName(puzzle, lang)}`}</h1>
+      <h1 className="sr-only">{`Wordcraft · ${LEVEL_NAMES[puzzle.level][lang]}`}</h1>
       <div className="wc-bar">
-        <Link to="/wordcraft" className="wc-icon-btn" aria-label={t("All puzzles", "كل الألغاز")}>
+        <Link
+          to="/wordcraft"
+          className="wc-icon-btn"
+          aria-label={t("Change difficulty", "غيّر الصعوبة")}
+        >
           <ArrowRight size={18} className="ltr:rotate-180" aria-hidden="true" />
         </Link>
         <p className="wc-bar-title">
           <span className="wc-bar-brand">Wordcraft</span>
-          <span className="wc-bar-level">{puzzleName(puzzle, lang)}</span>
+          <span className="wc-bar-level">{LEVEL_NAMES[puzzle.level][lang]}</span>
         </p>
         <div className="wc-bar-tools">
           <button
@@ -475,7 +473,7 @@ export function WordcraftGame({
           <button
             type="button"
             className="wc-icon-btn"
-            onClick={() => onProgress((p) => ({ ...p, muted: !p.muted }))}
+            onClick={onMute}
             aria-pressed={muted}
             aria-label={
               muted ? t("Turn sounds on", "شغّل الأصوات") : t("Mute sounds", "اكتم الأصوات")
@@ -631,26 +629,13 @@ export function WordcraftGame({
       </div>
 
       {done ? (
-        <Summary
-          puzzle={puzzle}
-          lang={lang}
-          seconds={seconds}
-          hints={hintCount}
-          review={progress.review}
-          onReview={(word, add) =>
-            onProgress((p) => ({
-              ...p,
-              review: add ? [...new Set([...p.review, word])] : p.review.filter((w) => w !== word),
-            }))
-          }
-          next={next}
-        />
+        <Summary round={puzzle} lang={lang} seconds={seconds} hints={hintCount} onNext={onNext} />
       ) : (
         <ol className="wc-slots" aria-label={t("Words to find", "الكلمات المطلوبة")}>
           {puzzle.words.map((word, i) => {
             const found = solvedSet.has(i);
             const tone = found ? toneOf(i) : null;
-            const entry = BY_WORD.get(word);
+            const entry = puzzle.info[i];
             return (
               <li
                 key={word}
@@ -684,6 +669,7 @@ export function WordcraftGame({
           })}
         </ol>
       )}
+      {note ? <p className="wc-note-line">{note}</p> : null}
       <span className="sr-only">
         {progressLabel(lang, solved.length, puzzle.words.length, total)}
       </span>
@@ -706,116 +692,69 @@ function speak(word: string) {
   window.speechSynthesis.speak(u);
 }
 
-/** The end of a puzzle: each word with its meaning and an example, and "did you know it?". */
+/** The end of a round: the words you found, each with its meaning and an example. */
 function Summary({
-  puzzle,
+  round,
   lang,
   seconds,
   hints,
-  review,
-  onReview,
-  next,
+  onNext,
 }: {
-  puzzle: Puzzle;
+  round: Round;
   lang: Lang;
   seconds: number;
   hints: number;
-  review: string[];
-  onReview: (word: string, add: boolean) => void;
-  next: Puzzle | null;
+  onNext: () => void;
 }) {
   const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
   const canSpeak = typeof window !== "undefined" && "speechSynthesis" in window;
-  const [answered, setAnswered] = useState<Record<string, boolean>>({});
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), []);
   return (
     <section className="wc-summary" aria-labelledby="wc-summary-title">
       <h2 id="wc-summary-title" ref={heading} tabIndex={-1} className="wc-summary-title">
-        {t("Your words", "كلماتك")}
+        {t("The words you found", "الكلمات اللي لقيتها")}
       </h2>
       <p className="wc-summary-meta">
         {t(`${clock(seconds)} · ${hints} hints`, `${clock(seconds)} · ${hints} تلميح`)}
       </p>
       <ul className="wc-words">
-        {puzzle.words.map((word) => {
-          const e = BY_WORD.get(word);
-          const knew = answered[word];
-          return (
-            <li key={word} className="wc-word">
-              <div className="wc-word-head">
-                <span className="wc-word-en" dir="ltr" lang="en">
-                  {word.toLowerCase()}
-                </span>
-                <span className="wc-word-ar" lang="ar" dir="rtl">
-                  {e?.ar}
-                </span>
-                {canSpeak && (
-                  <button
-                    type="button"
-                    className="wc-icon-btn is-small"
-                    onClick={() => speak(word)}
-                    aria-label={t(`Say ${word.toLowerCase()}`, `اسمع ${word.toLowerCase()}`)}
-                  >
-                    <Volume2 size={16} aria-hidden="true" />
-                  </button>
-                )}
-              </div>
-              <p className="wc-word-ex" dir="ltr" lang="en">
-                {e?.example}
-              </p>
-              <p className="wc-word-ex-ar" dir="rtl" lang="ar">
-                {e?.exampleAr}
-              </p>
-              <div
-                className="wc-knew"
-                role="group"
-                aria-label={t(
-                  `Did you know ${word.toLowerCase()}?`,
-                  `كنت بتعرف ${word.toLowerCase()}؟`,
-                )}
-              >
-                <span>{t("Did you know it?", "كنت بتعرفها؟")}</span>
+        {round.info.map((e) => (
+          <li key={e.word} className="wc-word">
+            <div className="wc-word-head">
+              <span className="wc-word-en" dir="ltr" lang="en">
+                {e.word.toLowerCase()}
+              </span>
+              <span className="wc-word-ar" lang="ar" dir="rtl">
+                {e.ar}
+              </span>
+              {canSpeak && (
                 <button
                   type="button"
-                  aria-pressed={knew === true}
-                  onClick={() => {
-                    setAnswered((a) => ({ ...a, [word]: true }));
-                    onReview(word, false);
-                  }}
+                  className="wc-icon-btn is-small"
+                  onClick={() => speak(e.word)}
+                  aria-label={t(`Say ${e.word.toLowerCase()}`, `اسمع ${e.word.toLowerCase()}`)}
                 >
-                  {t("Yes", "آه")}
+                  <Volume2 size={16} aria-hidden="true" />
                 </button>
-                <button
-                  type="button"
-                  aria-pressed={knew === false || (knew === undefined && review.includes(word))}
-                  onClick={() => {
-                    setAnswered((a) => ({ ...a, [word]: false }));
-                    onReview(word, true);
-                  }}
-                >
-                  {t("Not yet", "لسا")}
-                </button>
-              </div>
-            </li>
-          );
-        })}
+              )}
+            </div>
+            <p className="wc-word-ex" dir="ltr" lang="en">
+              {e.example}
+            </p>
+            <p className="wc-word-ex-ar" dir="rtl" lang="ar">
+              {e.exampleAr}
+            </p>
+          </li>
+        ))}
       </ul>
-      <p className="wc-summary-note">
-        {t(
-          "Words you did not know go to your review list on this device.",
-          "الكلمات اللي ما كنت بتعرفها بتنحفظ بقائمة المراجعة على هالجهاز.",
-        )}
-      </p>
       <div className="wc-summary-actions">
-        {next ? (
-          <Link to="/wordcraft" search={{ p: next.id }} className="rita-btn rita-btn-primary">
-            {t("Next puzzle", "اللغز الجاي")}
-            <ArrowRight size={17} className="rtl:rotate-180" aria-hidden="true" />
-          </Link>
-        ) : null}
+        <button type="button" className="rita-btn rita-btn-primary" onClick={onNext}>
+          {t("New round", "جولة جديدة")}
+          <ArrowRight size={17} className="rtl:rotate-180" aria-hidden="true" />
+        </button>
         <Link to="/wordcraft" className="rita-btn rita-btn-secondary">
-          {t("All puzzles", "كل الألغاز")}
+          {t("Change difficulty", "غيّر الصعوبة")}
         </Link>
       </div>
     </section>

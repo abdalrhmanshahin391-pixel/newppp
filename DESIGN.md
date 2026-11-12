@@ -373,13 +373,17 @@ One main action per panel, hierarchy by weight instead of by frame:
 
 ## Wordcraft (`/wordcraft`)
 
-A word-path puzzle for learning English words (`src/components/wordcraft`, engine in `src/lib/wordcraft`).
+A word-path game for learning English words (`src/components/wordcraft`, engine in `src/lib/wordcraft`).
 
 - **Rules the screen must show:** letters join up, down, left or right (no diagonals), every tile is used once, every
-  puzzle has one answer. The help panel (the "?" button) says this, plus the keyboard keys.
-- **Page:** white, `.edith-premium`, `SiteHeader`. Home = the tile logotype, a dark ink "Today's puzzle" card
-  (the same puzzle for everyone on the Asia/Amman date), then the four packs as rows of 52px level squares
-  (white with a lip = open, ink = solved with a tick, grey with a lock = locked; a pack opens one level at a time).
+  round has one answer. The help panel (the "?" button) says this, plus the keyboard keys.
+- **No levels:** the page asks for a difficulty only: Easy (four 4-letter words, 4 × 4), Medium (four 5-letter words,
+  4 × 5), Hard (5, 6, 6 and 7 letters, 4 × 6, the most tangled of several grids). Three grey cards, each with a
+  small grid of white squares showing its size. Every round is new and random.
+- **Where the words come from:** signed in, Groq suggests words for the level (`wordcraftRound`), the engine keeps
+  the good ones and proves one answer. Signed out, or when the AI cannot help, the round comes from the built-in
+  list and a quiet line under the board says so. The next round is made while the current one is played.
+- **Waiting:** Rita says "Getting your words ready…" and the empty board (the level's size) breathes softly.
 - **Board:** grey `#f4f4f8` panel, 24px corners; tiles are white, 14px corners, a 3px bottom lip, Inter Tight 700.
   The tile size follows the screen (46px floor on phones, 96px cap), the grid is always left to right, even in Arabic.
   The path being traced is the one blue accent (tiles turn blue, a blue connector shows in the gaps); the word
@@ -390,14 +394,15 @@ A word-path puzzle for learning English words (`src/components/wordcraft`, engin
 - **Slots:** one row of small grey boxes per word with its Arabic meaning under it; two columns.
 - **Rita:** `RitaFace` with a speech bubble (a live region): grey for guidance, soft green for a found word,
   soft amber for a miss. Messages say what happened: "right word, but that route blocks the grid", "a real word,
-  not one of this puzzle's", "not one of the words".
+  not one of this round's", "not one of the words".
 - **Input:** drag across tiles, or tap them one by one (tapping the last tile again sends; a tapped word that matches
   sends by itself), or the keyboard (arrows, Space adds, Enter sends, Backspace removes, Escape clears).
   The board has `touch-action: none` and no text selection.
 - **Motion:** letters fly from the board into their slot (320ms, strong ease-out, 30ms stagger); a miss shakes the
-  board (200ms). Both are off with reduced motion. Sounds are short Web Audio tones, quiet, with a mute button.
-- **End of a puzzle:** each word with its meaning, an example and its Arabic, a speak button, and "Did you know it?"
-  (Yes / Not yet; "Not yet" adds it to the review list on this device). Then "Next puzzle" (blue) and "All puzzles".
+  board (200ms). Both are off with reduced motion, and so is the waiting pulse. Sounds are short Web Audio tones,
+  quiet, with a mute button.
+- **End of a round:** "The words you found": each word with its meaning, an example and its Arabic, and a speak
+  button. Then "New round" (blue, same difficulty; the page goes back to the top) and "Change difficulty".
 
 ## App pages (every page except the home design pages)
 

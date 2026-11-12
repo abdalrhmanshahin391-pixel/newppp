@@ -1,5 +1,5 @@
 // Wordcraft's game rules that are not the engine: tracing a path with a finger or keys, finding
-// the tile under the finger, the daily puzzle, hints and the saved progress. No React, no DOM.
+// the tile under the finger, hints and the time shown at the end. No React, no DOM.
 import { adjacent, type Path } from "./engine.ts";
 
 /**
@@ -70,81 +70,14 @@ export function tilesAlong(
   return out;
 }
 
-/** The calendar day in Amman (the same for everyone, whatever the device's clock zone says). */
-export function ammanDay(now: Date): string {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Amman",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
-  return `${get("year")}-${get("month")}-${get("day")}`;
-}
-
-/** Today's puzzle: one of `ids`, the same all day, a different one the next day. */
-export function dailyPick(day: string, ids: string[]): string {
-  const days = Math.floor(Date.parse(`${day}T00:00:00Z`) / 86_400_000);
-  // A fixed shuffle (multiplying by a number coprime with the count) so neighbours differ.
-  const n = ids.length;
-  let step = 7;
-  while (gcd(step, n) !== 1) step++;
-  return ids[(((days * step) % n) + n) % n];
-}
-
-const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a);
-
 /** How many tiles of the word a hint shows after `level` presses (at most the whole word). */
 export function hintTiles(path: Path, level: number): Path {
   return path.slice(0, Math.min(path.length, Math.max(0, level)));
 }
 
-// ---- saved progress (this device) -------------------------------------------------------------
+// ---- the sound setting (this device) --------------------------------------------------------
 
-export type Progress = {
-  /** Solved puzzles: when, how long (seconds) and how many hints. */
-  solved: Record<string, { at: string; seconds: number; hints: number }>;
-  /** Words the learner said they did not know, to review. */
-  review: string[];
-  muted: boolean;
-};
-
-export const EMPTY_PROGRESS: Progress = { solved: {}, review: [], muted: false };
-export const PROGRESS_KEY = "uzyra-wordcraft-v1";
-
-/** Reads saved progress; anything broken or missing gives an empty start. */
-export function parseProgress(raw: string | null): Progress {
-  try {
-    const value = JSON.parse(raw ?? "null");
-    if (!value || typeof value !== "object") return EMPTY_PROGRESS;
-    const solved: Progress["solved"] = {};
-    for (const [id, entry] of Object.entries(value.solved ?? {})) {
-      const e = entry as Record<string, unknown>;
-      if (typeof id === "string" && e && typeof e.at === "string")
-        solved[id] = {
-          at: e.at,
-          seconds: Number(e.seconds) || 0,
-          hints: Number(e.hints) || 0,
-        };
-    }
-    const review = Array.isArray(value.review)
-      ? [
-          ...new Set(
-            value.review.filter((w: unknown) => typeof w === "string" && /^[A-Z]{2,12}$/.test(w)),
-          ),
-        ]
-      : [];
-    return { solved, review: review as string[], muted: value.muted === true };
-  } catch {
-    return EMPTY_PROGRESS;
-  }
-}
-
-/** A puzzle opens once the one before it in its pack is solved (the first is always open). */
-export function isOpen(id: string, packIds: string[], progress: Progress): boolean {
-  const i = packIds.indexOf(id);
-  return i === 0 || (i > 0 && Boolean(progress.solved[packIds[i - 1]]));
-}
+export const MUTE_KEY = "uzyra-wordcraft-muted";
 
 /** "1:05", "12:30": a solve time for people. */
 export function clock(seconds: number): string {
