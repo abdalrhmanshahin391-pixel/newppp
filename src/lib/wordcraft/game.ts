@@ -75,6 +75,27 @@ export function hintTiles(path: Path, level: number): Path {
   return path.slice(0, Math.min(path.length, Math.max(0, level)));
 }
 
+/** A hint's first press shows this many letters; every press after it shows one more. */
+export const FIRST_HINT = 2;
+
+/**
+ * What the next press of the hint button shows: the word being hinted gets one more letter;
+ * once it is whole (or found), the next word in slot order starts with its first two letters.
+ * `hints` is how many letters each word already shows. Null when nothing is left to show.
+ */
+export function nextHint(
+  words: readonly string[],
+  solved: ReadonlySet<number>,
+  hints: Readonly<Record<number, number>>,
+): { word: number; level: number } | null {
+  const open = (w: number) => !solved.has(w) && (hints[w] ?? 0) < words[w].length;
+  const going = words.findIndex((_, w) => open(w) && (hints[w] ?? 0) > 0);
+  if (going >= 0) return { word: going, level: (hints[going] ?? 0) + 1 };
+  const fresh = words.findIndex((_, w) => open(w));
+  if (fresh < 0) return null;
+  return { word: fresh, level: Math.min(words[fresh].length, FIRST_HINT) };
+}
+
 // ---- the sound setting (this device) --------------------------------------------------------
 
 export const MUTE_KEY = "uzyra-wordcraft-muted";

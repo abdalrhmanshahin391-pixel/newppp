@@ -398,9 +398,20 @@ A word-path game for learning English words (`src/components/wordcraft`, engine 
 - **Input:** drag across tiles, or tap them one by one (tapping the last tile again sends; a tapped word that matches
   sends by itself), or the keyboard (arrows, Space adds, Enter sends, Backspace removes, Escape clears).
   The board has `touch-action: none` and no text selection.
-- **Motion:** letters fly from the board into their slot (320ms, strong ease-out, 30ms stagger); a miss shakes the
-  board (200ms). Both are off with reduced motion, and so is the waiting pulse. Sounds are short Web Audio tones,
-  quiet, with a mute button.
+- **Smart hint:** the first press shows a word's first two letters, every press after it one more letter, up to the
+  whole word; then the next word (slot order, found words skipped) starts again with two letters. The letters show
+  numbered on the grid (blue ring) and in the word's boxes (soft blue), so the player still traces the word.
+- **Motion:** the letter just added to the path pops (160ms); a found word's tiles ripple once in order (45ms apart),
+  then its letters fly into the slot (320ms, strong ease-out, 30ms stagger); the letters a hint just showed glow once;
+  a miss shakes the board (200ms); two or more words in a row make Rita's bubble pulse once. All of it is off with
+  reduced motion, and so is the waiting pulse.
+- **Sounds** (Web Audio, no files, mute button): tracing plays a rising pentatonic tune, one note per letter, and a
+  softer lower note when a step is taken back; a found word rings, brighter for two and three in a row (Rita says
+  "Two in a row! 🔥"); the right word on a blocking route plays a two-note "almost"; a miss is a low soft knock; hints
+  chime once per letter shown; undo steps down; a finished round plays a short run. Android phones also vibrate
+  lightly per letter and per word.
+- **Mixed text:** English words inside an Arabic sentence (and Arabic inside English) are wrapped in direction
+  isolates, and Rita's bubble takes the page direction, so "STORY = قصة" never comes out scrambled.
 - **End of a round:** "The words you found": each word with its meaning, an example and its Arabic, and a speak
   button. Then "New round" (blue, same difficulty; the page goes back to the top) and "Change difficulty".
 

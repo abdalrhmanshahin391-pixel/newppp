@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { clock, extendPath, hintTiles, tileAt, tilesAlong, type BoardGeometry } from "./game.ts";
+import {
+  clock,
+  extendPath,
+  hintTiles,
+  nextHint,
+  tileAt,
+  tilesAlong,
+  type BoardGeometry,
+} from "./game.ts";
 
 const none = new Set<number>();
 
@@ -53,4 +61,26 @@ test("hints show the word's tiles one by one, never more than the word", () => {
   assert.deepEqual(hintTiles([4, 5, 11], 0), []);
   assert.deepEqual(hintTiles([4, 5, 11], 1), [4]);
   assert.deepEqual(hintTiles([4, 5, 11], 9), [4, 5, 11]);
+});
+
+test("smart hint: two letters first, then one more per press, then the next word", () => {
+  const words = ["HOUSE", "TREE", "FISH"];
+  const none = new Set<number>();
+  let hints: Record<number, number> = {};
+  const press = (solved = none) => {
+    const h = nextHint(words, solved, hints);
+    if (h) hints = { ...hints, [h.word]: h.level };
+    return h;
+  };
+  assert.deepEqual(press(), { word: 0, level: 2 });
+  assert.deepEqual(press(), { word: 0, level: 3 });
+  assert.deepEqual(press(), { word: 0, level: 4 });
+  assert.deepEqual(press(), { word: 0, level: 5 }, "the whole word");
+  assert.deepEqual(press(), { word: 1, level: 2 }, "then the next word, two letters");
+  // The hinted word is found: the next press moves on, the found one is skipped.
+  assert.deepEqual(press(new Set([1])), { word: 2, level: 2 });
+  assert.deepEqual(press(new Set([1])), { word: 2, level: 3 });
+  assert.deepEqual(press(new Set([1])), { word: 2, level: 4 });
+  assert.equal(press(new Set([1])), null, "every word shown or found: nothing left");
+  assert.equal(nextHint(words, new Set([0, 1, 2]), {}), null);
 });

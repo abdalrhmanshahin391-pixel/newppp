@@ -27,6 +27,7 @@ import { DICTIONARY, type Round } from "@/lib/wordcraft/round";
 import {
   extendPath,
   hintTiles,
+  nextHint,
   tileAt,
   tilesAlong,
   type BoardGeometry,
@@ -42,6 +43,10 @@ type Tone = "info" | "good" | "warn";
 const WORD_TONES = (["teal", "amber", "violet", "rose", "sky", "green"] as const).map(
   (k) => CATEGORY_COLORS[k],
 );
+
+/** English inside an Arabic sentence (and the other way round) keeps its own direction. */
+const ltr = (text: string) => `\u2066${text}\u2069`;
+const auto = (text: string) => `\u2068${text}\u2069`;
 
 const reduced = () =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -74,10 +79,22 @@ export function WordcraftGame({
   );
   const total = puzzle.rows * puzzle.cols;
   const [solved, setSolved] = useState<number[]>([]);
-  const [path, setPath] = useState<Path>([]);
+  const [path, setPathState] = useState<Path>([]);
+  // The path as the pointer handlers see it right now (state only catches up on the next render).
+  const pathRef = useRef<Path>([]);
+  const setPath = (next: Path) => {
+    pathRef.current = next;
+    setPathState(next);
+  };
   const [focus, setFocus] = useState(0);
   const [hints, setHints] = useState<Record<number, number>>({});
   const [hintCount, setHintCount] = useState(0);
+  /** The word just found (its tiles play a small wave) and the letters a hint just showed. */
+  const [fresh, setFresh] = useState<number | null>(null);
+  const [lastHint, setLastHint] = useState<{ word: number; from: number } | null>(null);
+  /** Words found in a row without a miss. */
+  const streak = useRef(0);
+  const bubbleRef = useRef<HTMLParagraphElement>(null);
   const [bubble, setBubble] = useState<{ tone: Tone; text: string }>({
     tone: "info",
     text: t(
@@ -105,6 +122,9 @@ export function WordcraftGame({
     },
     [muted],
   );
+  const buzz = (ms: number) => {
+    if (typeof navigator !== "undefined") navigator.vibrate?.(ms);
+  };
 
   const solvedSet = useMemo(() => new Set(solved), [solved]);
   const usedTiles = useMemo(() => {
@@ -136,6 +156,9 @@ export function WordcraftGame({
     setPath([]);
     setHints({});
     setHintCount(0);
+    setFresh(null);
+    setLastHint(null);
+    streak.current = 0;
     setFocus(0);
     started.current = Date.now();
     setSeconds(0);
@@ -167,8 +190,13 @@ export function WordcraftGame({
     });
   }, [solved]);
 
-  function say(tone: Tone, text: string) {
+  function say(tone: Tone, text: string, pulse = false) {
     setBubble({ tone, text });
+    if (pulse && !reduced())
+      bubbleRef.current?.animate(
+        [{ transform: "scale(1)" }, { transform: "scale(1.04)" }, { transform: "scale(1)" }],
+        { duration: 240, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
+      );
   }
 
   function shake() {
@@ -207,38 +235,53 @@ export function WordcraftGame({
       };
       const next = [...solved, result.index];
       setSolved(next);
+      setFresh(result.index);
       setPath([]);
-      say("good", `${result.word} = ${puzzle.info[result.index]?.ar ?? ""}`);
-      if (typeof navigator !== "undefined") navigator.vibrate?.(10);
-      if (next.length === puzzle.words.length) finish();
-      else play(sounds.word);
+      streak.current += 1;
+      const inRow = streak.current;
+      const meaning = `${ltr(result.word)} = ${auto(puzzle.info[result.index]?.ar ?? "")}`;
+      buzz(12);
+      if (next.length === puzzle.words.length) return finish();
+      play(() => sounds.word(inRow));
+      if (inRow >= 2)
+        say(
+          "good",
+          `${meaning} · ${
+            inRow === 2
+              ? t("Two in a row! 🔥", "كلمتين ورا بعض! 🔥")
+              : t(`${inRow} in a row! 🔥`, `${inRow} كلمات ورا بعض! 🔥`)
+          }`,
+          true,
+        );
+      else say("good", meaning);
       return;
     }
     setPath([]);
-    play(sounds.miss);
+    streak.current = 0;
+    play(result.kind === "blocks" ? sounds.almost : sounds.miss);
     shake();
     if (result.kind === "blocks")
       say(
         "warn",
         t(
-          `${typed} is right, but that route leaves letters you cannot use. Try another way.`,
-          `${typed} صحيحة، بس طريقها بيترك حروف ما بتنفع. جرّب طريق تاني.`,
+          `${ltr(typed)} is right, but that route leaves letters you cannot use. Try another way.`,
+          `${ltr(typed)} صحيحة، بس طريقها بيترك حروف ما بتنفع. جرّب طريق تاني.`,
         ),
       );
     else if (result.kind === "other_word")
       say(
         "warn",
         t(
-          `${typed} is a real word, but not one of this round's.`,
-          `${typed} كلمة إنجليزية، بس مش من كلمات هالجولة.`,
+          `${ltr(typed)} is a real word, but not one of this round's.`,
+          `${ltr(typed)} كلمة إنجليزية، بس مش من كلمات هالجولة.`,
         ),
       );
     else
       say(
         "warn",
         t(
-          `${typed} is not one of the words. Try again.`,
-          `${typed} مش من كلمات الجولة. جرّب كمان مرة.`,
+          `${ltr(typed)} is not one of the words. Try again.`,
+          `${ltr(typed)} مش من كلمات الجولة. جرّب كمان مرة.`,
         ),
       );
   }
@@ -267,6 +310,7 @@ export function WordcraftGame({
     const tile = tileAt(event.clientX, event.clientY, g, 0.92);
     if (tile < 0 || usedTiles.has(tile)) return;
     event.preventDefault();
+    const path = pathRef.current;
     // Tapping the last letter again sends the word (tapping letters one by one).
     if (path.length >= 2 && path[path.length - 1] === tile) return submit(path);
     try {
@@ -288,6 +332,7 @@ export function WordcraftGame({
     setPath(next);
     setFocus(tile);
     play(() => sounds.tick(next.length));
+    buzz(4);
   }
 
   function onPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
@@ -299,16 +344,17 @@ export function WordcraftGame({
     d.x = event.clientX;
     d.y = event.clientY;
     if (!passed.length) return;
-    setPath((current) => {
-      let next = current;
-      for (const tile of passed) next = extendPath(next, tile, puzzle.cols, usedTiles);
-      if (next !== current) {
-        d.moved = true;
-        if (next.length > current.length) play(() => sounds.tick(next.length));
-        setFocus(next[next.length - 1] ?? 0);
-      }
-      return next;
-    });
+    const current = pathRef.current;
+    let next = current;
+    for (const tile of passed) next = extendPath(next, tile, puzzle.cols, usedTiles);
+    if (next === current) return;
+    d.moved = true;
+    if (next.length > current.length) {
+      play(() => sounds.tick(next.length));
+      buzz(4);
+    } else play(() => sounds.back(next.length));
+    setFocus(next[next.length - 1] ?? 0);
+    setPath(next);
   }
 
   function onPointerUp(event: ReactPointerEvent<HTMLDivElement>) {
@@ -317,8 +363,8 @@ export function WordcraftGame({
     drag.current = null;
     if (event.type === "pointercancel") return setPath([]);
     // A drag sends the word when the finger lifts; taps send it once it spells an open word.
-    if (d.moved) return submit(path);
-    autoSubmit(path);
+    if (d.moved) return submit(pathRef.current);
+    autoSubmit(pathRef.current);
   }
 
   function autoSubmit(candidate: Path) {
@@ -357,7 +403,8 @@ export function WordcraftGame({
     }
     if (event.key === "Backspace") {
       event.preventDefault();
-      return setPath((p) => p.slice(0, -1));
+      if (path.length) play(() => sounds.back(path.length - 1));
+      return setPath(path.slice(0, -1));
     }
     if (event.key === "Escape") return setPath([]);
   }
@@ -365,32 +412,35 @@ export function WordcraftGame({
   // ---- tools ---------------------------------------------------------------------------------
 
   /**
-   * A hint shows one more tile of a word, in order (the word already being hinted first), so the
-   * player still traces it: first its start, then the next letter, up to the whole route.
+   * The smart hint: the first press shows a word's first two letters, every press after it one
+   * more letter, up to the whole word; then the next word starts. The letters show on the grid
+   * (numbered, in order) and in the word's boxes, so the player still traces the word.
    */
   function hint() {
-    const started = Object.keys(hints)
-      .map(Number)
-      .find((w) => !solvedSet.has(w) && hints[w] < puzzle.words[w].length);
-    const i =
-      started ??
-      puzzle.words.findIndex(
-        (_, w) => !solvedSet.has(w) && (hints[w] ?? 0) < puzzle.words[w].length,
-      );
-    if (i < 0) return;
-    const level = (hints[i] ?? 0) + 1;
+    const next = nextHint(puzzle.words, solvedSet, hints);
+    if (!next) return;
+    const { word: i, level } = next;
+    const before = hints[i] ?? 0;
     setHints((h) => ({ ...h, [i]: level }));
+    setLastHint({ word: i, from: before });
     setHintCount((n) => n + 1);
     setPath([]);
-    const meaning = puzzle.info[i]?.ar ?? "";
+    play(() => sounds.hint(level - before));
+    const meaning = auto(puzzle.info[i]?.ar ?? "");
+    const whole = level >= puzzle.words[i].length;
     say(
       "info",
-      level === 1
+      before === 0
         ? t(
-            `The word for «${meaning}» starts at the marked letter.`,
-            `كلمة «${meaning}» بتبلّش من الحرف المعلّم.`,
+            `The first two letters of «${meaning}» are marked: start at 1.`,
+            `هاي أول حرفين من كلمة «${meaning}»: ابدأ من رقم 1.`,
           )
-        : t(`Follow the numbers for «${meaning}».`, `اتبع الأرقام لكلمة «${meaning}».`),
+        : whole
+          ? t(
+              `That is the whole word for «${meaning}». Slide along the numbers.`,
+              `هاي كلمة «${meaning}» كاملة. مرّر على الأرقام.`,
+            )
+          : t(`One more letter of «${meaning}».`, `حرف كمان من كلمة «${meaning}».`),
     );
   }
 
@@ -399,9 +449,15 @@ export function WordcraftGame({
     const last = solved[solved.length - 1];
     setSolved(solved.slice(0, -1));
     setPath([]);
+    setFresh(null);
+    streak.current = 0;
+    play(sounds.undo);
     say(
       "info",
-      t(`${puzzle.words[last]} is back on the grid.`, `رجعت ${puzzle.words[last]} للشبكة.`),
+      t(
+        `${ltr(puzzle.words[last])} is back on the grid.`,
+        `رجعت ${ltr(puzzle.words[last])} للشبكة.`,
+      ),
     );
   }
 
@@ -410,6 +466,9 @@ export function WordcraftGame({
     setPath([]);
     setHints({});
     setHintCount(0);
+    setFresh(null);
+    setLastHint(null);
+    streak.current = 0;
     started.current = Date.now();
     say("info", t("A fresh start.", "من أول وجديد."));
   }
@@ -542,7 +601,13 @@ export function WordcraftGame({
 
       <div className="wc-rita" data-tone={bubble.tone}>
         <RitaFace size={44} />
-        <p className="wc-bubble" role="status" aria-live="polite" dir="auto">
+        <p
+          ref={bubbleRef}
+          className="wc-bubble"
+          role="status"
+          aria-live="polite"
+          dir={lang === "ar" ? "rtl" : "ltr"}
+        >
           {bubble.text}
         </p>
       </div>
@@ -587,6 +652,15 @@ export function WordcraftGame({
                   const onPath = path.indexOf(i);
                   const tone = word !== undefined ? toneOf(word) : null;
                   const hint = hinted.get(i);
+                  const hintWord =
+                    hint !== undefined ? puzzle.paths.findIndex((p) => p.includes(i)) : -1;
+                  const hintNew =
+                    hint !== undefined &&
+                    lastHint !== null &&
+                    lastHint.word === hintWord &&
+                    hint > lastHint.from;
+                  const waveAt =
+                    word !== undefined && word === fresh ? puzzle.paths[word].indexOf(i) : -1;
                   return (
                     <button
                       key={i}
@@ -599,9 +673,16 @@ export function WordcraftGame({
                       className="wc-tile"
                       data-state={word !== undefined ? "found" : onPath >= 0 ? "path" : undefined}
                       data-hint={hint ?? undefined}
+                      data-hint-new={hintNew || undefined}
+                      data-last={onPath >= 0 && onPath === path.length - 1 ? "" : undefined}
+                      data-fresh={waveAt >= 0 || undefined}
                       style={
                         tone
-                          ? { ["--t" as string]: tone.c, ["--ts" as string]: tone.soft }
+                          ? {
+                              ["--t" as string]: tone.c,
+                              ["--ts" as string]: tone.soft,
+                              ["--k" as string]: Math.max(0, waveAt),
+                            }
                           : undefined
                       }
                       aria-label={`${puzzle.letters[i]}, ${t("row", "صف")} ${r + 1}, ${t("column", "عمود")} ${c + 1}${
@@ -654,11 +735,19 @@ export function WordcraftGame({
                 }
               >
                 <span className="wc-slot-cells" dir="ltr" aria-hidden="true">
-                  {word.split("").map((letter, k) => (
-                    <span key={k} className="wc-slot-cell" data-slot-cell={`${i}-${k}`}>
-                      {found ? letter : ""}
-                    </span>
-                  ))}
+                  {word.split("").map((letter, k) => {
+                    const shown = !found && k < (hints[i] ?? 0);
+                    return (
+                      <span
+                        key={k}
+                        className="wc-slot-cell"
+                        data-slot-cell={`${i}-${k}`}
+                        data-hinted={shown || undefined}
+                      >
+                        {found || shown ? letter : ""}
+                      </span>
+                    );
+                  })}
                 </span>
                 <span className="wc-slot-clue" lang="ar" dir="rtl">
                   {found && <Check size={14} aria-hidden="true" />}
