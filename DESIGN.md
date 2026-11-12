@@ -371,6 +371,34 @@ One main action per panel, hierarchy by weight instead of by frame:
   text follows the device ("Tap the card to flip, swipe to move" on touch; Space and arrows with a mouse), 56px controls.
 - Every control is at least 44px, every text at least 12px and 4.5:1 (muted text is `#4b4a5c`, not the old light greys).
 
+## Wordcraft (`/wordcraft`)
+
+A word-path puzzle for learning English words (`src/components/wordcraft`, engine in `src/lib/wordcraft`).
+
+- **Rules the screen must show:** letters join up, down, left or right (no diagonals), every tile is used once, every
+  puzzle has one answer. The help panel (the "?" button) says this, plus the keyboard keys.
+- **Page:** white, `.edith-premium`, `SiteHeader`. Home = the tile logotype, a dark ink "Today's puzzle" card
+  (the same puzzle for everyone on the Asia/Amman date), then the four packs as rows of 52px level squares
+  (white with a lip = open, ink = solved with a tick, grey with a lock = locked; a pack opens one level at a time).
+- **Board:** grey `#f4f4f8` panel, 24px corners; tiles are white, 14px corners, a 3px bottom lip, Inter Tight 700.
+  The tile size follows the screen (46px floor on phones, 96px cap), the grid is always left to right, even in Arabic.
+  The path being traced is the one blue accent (tiles turn blue, a blue connector shows in the gaps); the word
+  being traced sits above the board in blue capitals.
+- **Found words:** the soft category colours (`CATEGORY_COLORS`: teal, amber, violet, rose, sky, green) tell the found
+  words apart on the board and in their slots. This is the one place a page uses colours besides the accent, and it is
+  allowed because the colour is never the only sign: the slot also fills with the letters and gets a tick.
+- **Slots:** one row of small grey boxes per word with its Arabic meaning under it; two columns.
+- **Rita:** `RitaFace` with a speech bubble (a live region): grey for guidance, soft green for a found word,
+  soft amber for a miss. Messages say what happened: "right word, but that route blocks the grid", "a real word,
+  not one of this puzzle's", "not one of the words".
+- **Input:** drag across tiles, or tap them one by one (tapping the last tile again sends; a tapped word that matches
+  sends by itself), or the keyboard (arrows, Space adds, Enter sends, Backspace removes, Escape clears).
+  The board has `touch-action: none` and no text selection.
+- **Motion:** letters fly from the board into their slot (320ms, strong ease-out, 30ms stagger); a miss shakes the
+  board (200ms). Both are off with reduced motion. Sounds are short Web Audio tones, quiet, with a mute button.
+- **End of a puzzle:** each word with its meaning, an example and its Arabic, a speak button, and "Did you know it?"
+  (Yes / Not yet; "Not yet" adds it to the review list on this device). Then "Next puzzle" (blue) and "All puzzles".
+
 ## App pages (every page except the home design pages)
 
 Every page outside `/`, `/rita*` and `/learn*` was written with fixed warm colours. They take the

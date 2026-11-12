@@ -74,6 +74,16 @@ function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): Se
       rows: [
         { ...rowOf(tool("flashcards")), chip: chips.flashcards },
         rowOf(tool("memory-lab")),
+        {
+          key: "wordcraft",
+          slot: "wordcraft",
+          name: { en: "Wordcraft", ar: "Wordcraft" },
+          line: {
+            en: "A word puzzle: slide across the letters to find English words and learn what they mean.",
+            ar: "لغز كلمات: مرّر على الحروف لتلاقي كلمات إنجليزية وتتعلّم معانيها.",
+          },
+          to: "/wordcraft",
+        },
         rowOf(tool("pdf-summary")),
         rowOf(tool("all-in-one")),
         rowOf(tool("question-bank")),
