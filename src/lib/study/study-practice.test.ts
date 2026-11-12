@@ -12,6 +12,8 @@ import {
   practiceFailureView,
   readJson,
   shuffleOptions,
+  practiceTitle,
+  PRACTICE_NOTE,
 } from "./study-practice.ts";
 import { ACTION_INFO, availableActions } from "./study-actions.ts";
 import {
@@ -312,4 +314,10 @@ test("a failed practice request says its real reason and offers the right next s
     assert.equal(view.retry, true);
     assert.equal(view.alternative, null);
   }
+});
+
+test("a practice is named by what it makes, with one line on where it came from", () => {
+  assert.equal(practiceTitle({ action: "make_cards" }), "فلاش كاردز");
+  assert.equal(practiceTitle({ action: "make_mcq" }), "تمارين اختيار");
+  assert.match(PRACTICE_NOTE, /الجزء اللي حدّدته/);
 });

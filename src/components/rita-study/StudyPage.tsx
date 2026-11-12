@@ -7,7 +7,8 @@ import { toast } from "sonner";
 import { RitaRealtimeV3, type StudyBridge } from "@/components/rita/RitaRealtimeV3";
 import { studyGuideDownload } from "@/lib/study/study.functions";
 import { studyMakeCards, studyMakeMcq } from "@/lib/study/study-practice.functions";
-import { StudyPracticePanel, type PracticeView } from "./StudyPracticePanel";
+import { StudyPracticeBody, type PracticeView } from "./StudyPracticePanel";
+import { PRACTICE_NOTE, practiceTitle } from "@/lib/study/study-practice";
 import type { StudyLessonData } from "@/lib/study/study-types";
 import { PhraseDialog } from "@/components/rita/PhraseDialog";
 import { resolveSelection } from "@/lib/study/study-resolve";
@@ -123,9 +124,15 @@ export function StudyPage({
   // The ring shows the study options, or the three languages Rita can explain in.
   const [ringMode, setRingMode] = useState<"main" | "language">("main");
   const explanation = useExplanationLanguage();
-  // Temporary question design preview, independent of real generated practice.
-  // Hidden with its X it stays alive, and the ••• at the bottom brings it back.
-  const [win, setWin] = useState<{ at: { x: number; y: number }; shown: boolean } | null>(null);
+  // The floating window: the cards and questions made from a selection, or the temporary question
+  // design preview. Hidden with its X it stays alive, and the ••• at the bottom brings it back;
+  // slid off the right edge, its tab brings it back. `reveal` grows to bring it back from the side.
+  const [win, setWin] = useState<{
+    at: { x: number; y: number };
+    shown: boolean;
+    content: "practice" | "preview";
+    reveal: number;
+  } | null>(null);
   useEffect(() => {
     if (!menuOpen) setRingMode("main");
   }, [menuOpen]);
@@ -418,7 +425,6 @@ export function StudyPage({
   const makeMcqFn = useServerFn(studyMakeMcq);
   const [making, setMaking] = useState<PracticeAction | null>(null);
   const [practiceView, setPracticeView] = useState<PracticeView | null>(null);
-  const [practiceOpen, setPracticeOpen] = useState(false);
   const practiceBusy = useRef(false);
   const practiceVersion = useRef(0);
   const lastPractice = useRef<{
@@ -448,7 +454,7 @@ export function StudyPage({
     setMenuOpen(false);
     setPhrase(null);
     requests.stop();
-    setPracticeOpen(true);
+    openWindow("practice");
     setMaking(action);
     setPracticeView({
       id: requestId,
@@ -511,12 +517,29 @@ export function StudyPage({
     }
   }
 
+  /**
+   * Opens the floating window with this content, growing out of the circle. If it is already open
+   * with it, it is shown again (and comes back if it was slid to the side).
+   */
+  function openWindow(content: "practice" | "preview") {
+    const box = work.current;
+    const at = box ? { x: orb.x * box.clientWidth, y: orb.y * box.clientHeight } : { x: 0, y: 0 };
+    setWin((current) =>
+      current && current.content === content
+        ? {
+            ...current,
+            at: current.shown ? current.at : at,
+            shown: true,
+            reveal: current.reveal + 1,
+          }
+        : { at, shown: true, content, reveal: 0 },
+    );
+  }
+
   function ringPick(id: string) {
     if (id === "window-demo") {
-      const box = work.current;
       setMenuOpen(false);
-      const at = box ? { x: orb.x * box.clientWidth, y: orb.y * box.clientHeight } : { x: 0, y: 0 };
-      setWin({ at, shown: true });
+      openWindow("preview");
       return;
     }
     if (id === "lang") return setRingMode("language");
@@ -700,7 +723,7 @@ export function StudyPage({
           <button
             type="button"
             className="st-top-btn is-soft !h-11"
-            onClick={() => setPracticeOpen(true)}
+            onClick={() => openWindow("practice")}
           >
             {making ? "جاري تجهيز التدريب…" : "آخر تدريب"}
           </button>
@@ -786,21 +809,46 @@ export function StudyPage({
         )}
         {win && (
           <FloatingWindow
-            title={BRAND_NAME}
-            variant="questions"
+            key={win.content}
+            title={
+              win.content === "practice" && practiceView ? practiceTitle(practiceView) : BRAND_NAME
+            }
+            variant={win.content === "practice" ? "practice" : "questions"}
             origin={win.at}
             shown={win.shown}
+            revealSignal={win.reveal}
+            tabLabel={win.content === "practice" ? "أظهر نافذة التدريب" : "أظهر النافذة"}
             onHidden={() => {
               setWin((current) => current && { ...current, shown: false });
               orbButton.current?.focus({ preventScroll: true });
             }}
           >
-            <QuestionPreview />
+            {win.content === "practice" && practiceView ? (
+              <div className="edith-premium st-practice-window" dir="rtl">
+                <p className="st-practice-window-note">{PRACTICE_NOTE}</p>
+                <StudyPracticeBody
+                  key={practiceView.id}
+                  view={practiceView}
+                  onRetry={() => {
+                    if (lastPractice.current) void practice(lastPractice.current.action, true);
+                  }}
+                  onSwitch={(action) => void practice(action, true)}
+                  onClose={() => {
+                    setWin(null);
+                    orbButton.current?.focus({ preventScroll: true });
+                  }}
+                />
+              </div>
+            ) : (
+              <QuestionPreview />
+            )}
           </FloatingWindow>
         )}
         {win && !win.shown && (
           <WindowDots
-            title={BRAND_NAME}
+            title={
+              win.content === "practice" && practiceView ? practiceTitle(practiceView) : BRAND_NAME
+            }
             onShow={() => setWin((current) => current && { ...current, shown: true })}
             onClose={() => setWin(null)}
           />
@@ -924,19 +972,6 @@ export function StudyPage({
             compact
             onPlayingChange={phrasePlaying}
             onClose={closePhrase}
-          />
-        )}
-        {practiceView && (
-          <StudyPracticePanel
-            key={practiceView.id}
-            view={practiceView}
-            open={practiceOpen}
-            onOpenChange={setPracticeOpen}
-            onRetry={() => {
-              if (lastPractice.current) void practice(lastPractice.current.action, true);
-            }}
-            onSwitch={(action) => void practice(action, true)}
-            onReturnFocus={() => orbButton.current?.focus({ preventScroll: true })}
           />
         )}
       </div>

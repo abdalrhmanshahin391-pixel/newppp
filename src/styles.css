@@ -7995,6 +7995,195 @@ html.rita-app,
   top: 8px;
   right: 8px;
 }
+/* Slide Over: the window slides off the right edge on its own layer (only transform moves); a
+   tab stays on the edge to bring it back. The work area clips sideways so nothing scrolls. */
+.st-work {
+  overflow-x: clip;
+}
+.fw-slide {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+/* The frame takes focus when the window comes back from the side (for keyboards and screen
+   readers); it is a container, so it draws no ring of its own. */
+.fw-frame:focus {
+  outline: none;
+}
+/* The » in the bar sends the window to the side (a 44px target around a 28px button). */
+.fw-dock {
+  position: absolute;
+  top: 50%;
+  right: 26px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-top: -14px;
+  border-radius: 8px;
+  color: var(--fw-muted);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease,
+    transform 120ms ease-out;
+}
+.fw-dock::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .fw-dock:hover {
+    background: rgb(255 255 255 / 0.08);
+    color: var(--fw-ink);
+  }
+}
+.fw-dock:active {
+  transform: scale(0.94);
+}
+.fw-dock:focus-visible {
+  outline: 2px solid #5b8cff;
+  outline-offset: 1px;
+}
+.fw[data-max] .fw-dock {
+  right: 44px;
+}
+/* The tab on the right edge: a ghost while the window is pushed out, solid once letting go would
+   send it (or once it is on the side). Its 44×88 target sits inside the edge, away from the
+   browser's own edge swipe. */
+.fw-tab {
+  position: absolute;
+  right: 0;
+  z-index: 19;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 44px;
+  height: 88px;
+  padding-right: 6px;
+  visibility: hidden;
+  opacity: 0;
+  transform: translate3d(14px, 0, 0);
+  pointer-events: none;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  transition:
+    opacity 220ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 220ms cubic-bezier(0.23, 1, 0.32, 1),
+    visibility 0s linear 220ms;
+}
+.fw-tab:is([data-state="hint"], [data-state="armed"], [data-state="on"], [data-state="pulling"]) {
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+.fw-tab[data-state="hint"] {
+  opacity: 0.5;
+}
+.fw-tab:is([data-state="armed"], [data-state="on"]) {
+  opacity: 1;
+}
+.fw-tab[data-state="on"] {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.fw-tab[data-state="pulling"] {
+  opacity: 0;
+  transition-duration: 120ms;
+}
+.fw-tab-pill {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 64px;
+  border-radius: 12px;
+  background: rgb(28 28 30 / 0.74);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  box-shadow:
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.2),
+    0 1px 2px rgb(0 0 0 / 0.2),
+    0 8px 24px -6px rgb(0 0 0 / 0.38);
+  color: rgb(255 255 255 / 0.88);
+  transition:
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    background-color 150ms ease;
+}
+.fw-tab[data-state="armed"] .fw-tab-pill {
+  transform: scale(1.08);
+  background: rgb(28 28 30 / 0.88);
+}
+@media (hover: hover) and (pointer: fine) {
+  .fw-tab[data-state="on"]:hover .fw-tab-pill {
+    transform: translateX(-2px);
+    background: rgb(28 28 30 / 0.88);
+  }
+}
+.fw-tab[data-state="on"]:active .fw-tab-pill {
+  transform: scale(0.96);
+}
+.fw-tab:focus-visible {
+  outline: none;
+}
+.fw-tab:focus-visible .fw-tab-pill {
+  outline: 2px solid #5b8cff;
+  outline-offset: 2px;
+}
+/* On touch screens, a swipe in from the right edge brings the window back too. */
+.fw-edge-zone {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 18;
+  display: none;
+  width: 16px;
+  touch-action: pan-y;
+}
+@media (pointer: coarse) {
+  .fw-edge-zone {
+    display: block;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fw-tab {
+    transform: none;
+    transition:
+      opacity 160ms ease-out,
+      visibility 0s linear 160ms;
+  }
+  .fw-tab-pill {
+    transition: background-color 150ms ease;
+  }
+  .fw-tab[data-state="armed"] .fw-tab-pill {
+    transform: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .fw-tab-pill {
+    background: #1c1c1e;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@media (prefers-contrast: more) {
+  .fw-tab-pill {
+    background: #000;
+    box-shadow: inset 0 0 0 1px #fff;
+  }
+}
+/* Practice (cards and questions) in the window: a light sheet inside the dark frame. */
+.fw.is-practice .fw-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  color: var(--pp-ink);
+}
 /* The three dots at the bottom middle while the window is hidden, and their small menu. */
 .fw-dots-wrap {
   position: absolute;
