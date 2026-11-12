@@ -2,7 +2,13 @@ import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Loader2, X } from "lucide-react";
 import type { PracticeAction } from "@/lib/study/study-actions";
-import { practiceFailureView, type StudyCard, type StudyMcq } from "@/lib/study/study-practice";
+import {
+  PRACTICE_NOTE,
+  practiceFailureView,
+  practiceTitle,
+  type StudyCard,
+  type StudyMcq,
+} from "@/lib/study/study-practice";
 import "./study-practice.css";
 
 export type PracticeView = {
@@ -16,6 +22,7 @@ export type PracticeView = {
   code?: string;
 };
 
+/** The practice in a dialog (the book reader). The lesson page shows the same body in its window. */
 export function StudyPracticePanel({
   view,
   open,
@@ -32,11 +39,6 @@ export function StudyPracticePanel({
   onSwitch: (action: PracticeAction) => void;
   onReturnFocus: () => void;
 }) {
-  const cards = view.action === "make_cards";
-  const [cardIndex, setCardIndex] = useState(0);
-  const [revealed, setRevealed] = useState(false);
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
@@ -51,12 +53,8 @@ export function StudyPracticePanel({
         >
           <header className="st-practice-head">
             <div>
-              <Dialog.Title className="st-practice-title">
-                {cards ? "فلاش كاردز" : "تمارين اختيار"}
-              </Dialog.Title>
-              <Dialog.Description className="st-practice-note">
-                من الجزء اللي حدّدته · متاحة خلال زيارة الدرس الحالية
-              </Dialog.Description>
+              <Dialog.Title className="st-practice-title">{practiceTitle(view)}</Dialog.Title>
+              <Dialog.Description className="st-practice-note">{PRACTICE_NOTE}</Dialog.Description>
             </div>
             <Dialog.Close
               className="rita-btn rita-btn-icon rita-btn-quiet"
@@ -65,88 +63,111 @@ export function StudyPracticePanel({
               <X size={20} aria-hidden="true" />
             </Dialog.Close>
           </header>
-          <div className="st-practice-body" aria-busy={view.status === "loading"}>
-            {view.status === "loading" && (
-              <p role="status" className="st-practice-loading">
-                <Loader2
-                  size={22}
-                  className="animate-spin motion-reduce:animate-none"
-                  aria-hidden="true"
-                />
-                {cards ? "بنجهّز البطاقات…" : "بنجهّز التمارين…"}
-              </p>
-            )}
-            {view.status === "error" &&
-              (() => {
-                const failure = practiceFailureView(view.code, view.message);
-                return (
-                  <div role="alert">
-                    <p className="mb-4" dir="auto">
-                      {failure.message}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {failure.alternative && (
-                        <button
-                          type="button"
-                          className="rita-btn rita-btn-primary"
-                          onClick={() => onSwitch(failure.alternative!)}
-                        >
-                          اعمل أسئلة اختيار
-                        </button>
-                      )}
-                      {failure.retry && (
-                        <button
-                          type="button"
-                          className="rita-btn rita-btn-primary"
-                          onClick={onRetry}
-                        >
-                          جرّب مرة ثانية
-                        </button>
-                      )}
-                      {!failure.retry && !failure.alternative && (
-                        <button
-                          type="button"
-                          className="rita-btn rita-btn-quiet"
-                          onClick={() => onOpenChange(false)}
-                        >
-                          إغلاق
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-            {view.status === "ready" &&
-              (cards ? (
-                <Cards
-                  cards={view.cards}
-                  index={cardIndex}
-                  revealed={revealed}
-                  onReveal={() => setRevealed(!revealed)}
-                  onMove={(next) => {
-                    setCardIndex(next);
-                    setRevealed(false);
-                  }}
-                />
-              ) : (
-                <Questions
-                  questions={view.questions}
-                  index={questionIndex}
-                  answers={answers}
-                  onMove={setQuestionIndex}
-                  onAnswer={(option) =>
-                    setAnswers((current) =>
-                      current[questionIndex] !== undefined
-                        ? current
-                        : { ...current, [questionIndex]: option },
-                    )
-                  }
-                />
-              ))}
-          </div>
+          <StudyPracticeBody
+            view={view}
+            onRetry={onRetry}
+            onSwitch={onSwitch}
+            onClose={() => onOpenChange(false)}
+          />
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  );
+}
+
+/**
+ * The practice itself: getting ready, what went wrong (with the right next step), or the cards and
+ * questions. Shared by the dialog (book reader) and the floating window (lesson page). Mounted
+ * again for each new practice, so its place in the cards starts over.
+ */
+export function StudyPracticeBody({
+  view,
+  onRetry,
+  onSwitch,
+  onClose,
+}: {
+  view: PracticeView;
+  onRetry: () => void;
+  onSwitch: (action: PracticeAction) => void;
+  onClose: () => void;
+}) {
+  const cards = view.action === "make_cards";
+  const [cardIndex, setCardIndex] = useState(0);
+  const [revealed, setRevealed] = useState(false);
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<number, number>>({});
+  return (
+    <div className="st-practice-body" aria-busy={view.status === "loading"}>
+      {view.status === "loading" && (
+        <p role="status" className="st-practice-loading">
+          <Loader2
+            size={22}
+            className="animate-spin motion-reduce:animate-none"
+            aria-hidden="true"
+          />
+          {cards ? "بنجهّز البطاقات…" : "بنجهّز التمارين…"}
+        </p>
+      )}
+      {view.status === "error" &&
+        (() => {
+          const failure = practiceFailureView(view.code, view.message);
+          return (
+            <div role="alert">
+              <p className="mb-4" dir="auto">
+                {failure.message}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {failure.alternative && (
+                  <button
+                    type="button"
+                    className="rita-btn rita-btn-primary"
+                    onClick={() => onSwitch(failure.alternative!)}
+                  >
+                    اعمل أسئلة اختيار
+                  </button>
+                )}
+                {failure.retry && (
+                  <button type="button" className="rita-btn rita-btn-primary" onClick={onRetry}>
+                    جرّب مرة ثانية
+                  </button>
+                )}
+                {!failure.retry && !failure.alternative && (
+                  <button type="button" className="rita-btn rita-btn-quiet" onClick={onClose}>
+                    إغلاق
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+      {view.status === "ready" &&
+        (cards ? (
+          <Cards
+            cards={view.cards}
+            index={cardIndex}
+            revealed={revealed}
+            onReveal={() => setRevealed(!revealed)}
+            onMove={(next) => {
+              setCardIndex(next);
+              setRevealed(false);
+            }}
+          />
+        ) : (
+          <Questions
+            questions={view.questions}
+            index={questionIndex}
+            answers={answers}
+            onMove={setQuestionIndex}
+            onAnswer={(option) =>
+              setAnswers((current) =>
+                current[questionIndex] !== undefined
+                  ? current
+                  : { ...current, [questionIndex]: option },
+              )
+            }
+          />
+        ))}
+    </div>
   );
 }
 

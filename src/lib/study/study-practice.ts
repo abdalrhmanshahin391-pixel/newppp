@@ -353,3 +353,11 @@ Rules:
 export function practiceUserMessage(quote: string, context: string): string {
   return `SELECTED TEXT: «${quote}»\nSTUDY CONTEXT:\n${context}`;
 }
+
+/** The line under a practice's title: where it came from and how long it stays. */
+export const PRACTICE_NOTE = "من الجزء اللي حدّدته · متاحة خلال زيارة الدرس الحالية";
+
+/** A practice's title: «فلاش كاردز» or «تمارين اختيار». */
+export function practiceTitle(view: { action: string }): string {
+  return view.action === "make_cards" ? "فلاش كاردز" : "تمارين اختيار";
+}

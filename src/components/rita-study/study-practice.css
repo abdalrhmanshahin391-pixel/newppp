@@ -142,3 +142,29 @@
     padding: 20px 16px;
   }
 }
+
+/* The same practice inside the floating window on the lesson page (StudyPage). */
+.st-practice-window {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.st-practice-window-note {
+  flex: none;
+  padding: 12px 20px 0;
+  font-size: 13px;
+  color: var(--pp-muted);
+}
+.st-practice-window .st-practice-body {
+  padding: 14px 20px 20px;
+}
+.st-practice-window .st-practice-front {
+  font-size: 21px;
+}
+.st-practice-window :is(button):focus-visible {
+  outline: 2px solid var(--pp-accent);
+  outline-offset: 3px;
+}

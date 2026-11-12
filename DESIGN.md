@@ -950,6 +950,38 @@ back or close it for good; any corner resizes it (curved mark bottom-right). Min
 the area, place and size remembered. It grows out of the circle and back into it with the circle's
 sounds. No backdrop: the page, the selection and the circle keep working.
 
+**Practice opens in this window** (lesson page): «فلاش كاردز» and «تمارين اختيار» made from a
+selection show in it (title: the mark and the practice's name; a 13px muted line «من الجزء اللي
+حدّدته · …»; a white sheet inside the dark frame, 15px text, the cards' front 21px), not in a
+centred dialog with a backdrop. It opens against the right edge (about 460×620 on an iPad or a
+computer; the full width less 8px on a phone), under the circle, which stays reachable. «آخر تدريب»
+in the top bar and a new practice bring it back. The book reader still shows practice in its dialog.
+
+**Slide Over (to the right edge).** As on iPad, the window goes off the right edge and comes back:
+- *Away:* push it past the right edge (a ghost tab, 50% opacity, appears on the edge; it turns solid
+  and grows 8% once letting go would send the window, i.e. when where the flick would carry it puts
+  40% of it past the edge); a flick to the right does the same from anywhere; or the bar's » button
+  (28px, 44px target, muted, left of the X).
+- *Gone:* the window is fully out (shadow too) and inert; a tab stays on the edge, level with where
+  the window was: a 24×64 pill with 12px corners, dark glass (rgb(28 28 30 / 0.74), blur 20px,
+  saturate 180%), a 0.5px light inner edge and a soft shadow, a white «‹» (17px), in a 44×88 target
+  6px in from the edge (away from the browser's own edge swipe). It slides in 14px with a fade
+  (220ms, strong ease-out). Solid #1c1c1e with reduced transparency; black with a white edge with
+  more contrast.
+- *Back:* a tap on the tab (or Enter/Space on it); a pull on the tab to the left (the window follows
+  the finger 1:1, with resistance past its place); or, on touch screens, a swipe in from the right
+  edge (a 16px strip, only while the window is away; it starts after 8px mostly to the left, and a
+  move up or down does nothing). It comes back against the right edge at the same height. A pull
+  that shows less than 40% (counting the flick) goes back to the side.
+- *Motion:* springs that carry the finger's speed (Apple's terms): away 0.32s / damping 0.86, back
+  after a tap 0.40s / 1.0 (no bounce), back after a flick 0.35s / 0.82; a push that does not go
+  springs back 0.30s / 1.0. Flicks are projected with Apple's deceleration (0.998). Only transform
+  moves, on its own layer. Any motion can be caught: a touch on the window or the tab stops it where
+  it is. A pause before letting go is not a flick. No sound for these (they are frequent).
+- *Focus:* sent away from the keyboard, focus moves to the tab; back, it moves into the window.
+- *Reduced motion:* 160ms fades instead of slides; dragging still follows the finger.
+- The work area clips sideways (`overflow-x: clip`), so the page never scrolls sideways.
+
 Type on the study page follows pro tools and the owner's UI research (Nov 2026): 13px for UI text and
 12px for small words (top bar, state word, window), 13px for Rita's replies (the owner chose smaller
 than the research's 16–18px; raise `.uz-rc-rita` if it reads small on the iPad); a thin 46px top bar;

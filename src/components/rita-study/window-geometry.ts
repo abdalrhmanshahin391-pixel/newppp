@@ -117,3 +117,121 @@ export function maximisedRect(area: Size): Rect {
     h: Math.max(120, area.h - EDGE * 2),
   };
 }
+
+// ---- sliding the window off the right edge and back (as iPad's Slide Over) --------------------
+
+/** Room kept beside the window when it comes back against the right edge. */
+export const DOCK_GAP = 8;
+/** Extra travel past the edge, so the window's shadow leaves the screen too. */
+export const OFF_MARGIN = 48;
+/** A window goes to the side when this share of it would end up past the edge. */
+export const TUCK_SHARE = 0.4;
+/** Faster than this (px/s) back the other way, the release keeps the window where it was. */
+export const TURN_BACK_SPEED = 150;
+
+/**
+ * Where a moving finger's flick comes to rest: Apple's scroll deceleration (the function in
+ * "Designing Fluid Interfaces"). 1000 px/s travels about 500 px more.
+ */
+export function project(velocity: number, rate = 0.998): number {
+  return ((velocity / 1000) * rate) / (1 - rate);
+}
+
+/** Resistance past a limit: the further past, the less the window follows. */
+export function rubberband(over: number, dimension: number, constant = 0.55): number {
+  if (over <= 0 || dimension <= 0) return 0;
+  return (over * dimension * constant) / (dimension + constant * over);
+}
+
+/** The x of a window that touches the right edge (less the margin). */
+export function rightLimit(rect: Rect, area: Size): number {
+  return area.w - EDGE - rect.w;
+}
+
+/** How far a window dragged to `x` is pushed past the right edge (0 while it is inside). */
+export function overflowRight(x: number, rect: Rect, area: Size): number {
+  return Math.max(0, x - rightLimit(rect, area));
+}
+
+/**
+ * Whether a released window goes off the right edge: where the flick would carry it, at least
+ * 40% of it past the edge. A release moving back to the left never sends it away.
+ */
+export function shouldTuck(overflow: number, velocityX: number, width: number): boolean {
+  if (velocityX < -TURN_BACK_SPEED) return false;
+  return overflow + Math.max(0, project(velocityX)) > width * TUCK_SHARE;
+}
+
+/** How far right a window at `rect` moves to be fully out of the area, shadow and all. */
+export function tuckedOffset(rect: Rect, area: Size): number {
+  return Math.max(0, area.w - rect.x) + OFF_MARGIN;
+}
+
+/** Where a window comes back from the side: against the right edge, at the same height. */
+export function dockedRect(rect: Rect, area: Size): Rect {
+  return clampRect({ ...rect, x: area.w - EDGE - DOCK_GAP - rect.w }, area);
+}
+
+/**
+ * Whether a window pulled in from the side opens: `shown` px of it are in, and where the flick
+ * would carry it shows at least 40%. A release moving back to the right puts it away again.
+ */
+export function shouldOpen(shown: number, velocityX: number, width: number): boolean {
+  if (velocityX > TURN_BACK_SPEED) return false;
+  return shown + Math.max(0, project(-velocityX)) > width * TUCK_SHARE;
+}
+
+/** The middle of the tab on the right edge: level with the window, kept inside the area. */
+export function tabCenter(rect: Rect, area: Size, half = 44): number {
+  const middle = rect.y + rect.h / 2;
+  return Math.min(Math.max(middle, half + EDGE), Math.max(half + EDGE, area.h - half - EDGE));
+}
+
+/** A finger's speed (px/s) from its recent places: the last 100 ms, 0 when too short to tell. */
+export function velocityOf(samples: { t: number; x: number }[], window = 100): number {
+  if (samples.length < 2) return 0;
+  const last = samples[samples.length - 1];
+  const recent = samples.filter((s) => last.t - s.t <= window);
+  const first = recent[0];
+  const dt = last.t - first.t;
+  if (dt < 8) return 0;
+  return ((last.x - first.x) / dt) * 1000;
+}
+
+/**
+ * A spring in Apple's terms: `response` is about how long it takes (seconds), `damping` 1 settles
+ * without overshoot and less than 1 overshoots. As stiffness and damping for a mass of 1.
+ */
+export function springFrom(response: number, damping: number) {
+  const omega = (2 * Math.PI) / response;
+  return { stiffness: omega * omega, damping: 2 * damping * omega, mass: 1 };
+}
+
+export type SpringParams = { stiffness: number; damping: number; mass: number };
+
+/**
+ * Moves a spring on by `dt` seconds towards `target` (small fixed steps, so a slow frame does not
+ * make it jump). Returns the new place and speed (px/s). Starting with the finger's speed is what
+ * makes the window carry on from a flick without a seam.
+ */
+export function springStep(
+  x: number,
+  v: number,
+  target: number,
+  dt: number,
+  p: SpringParams,
+): [number, number] {
+  const steps = Math.max(1, Math.ceil(dt * 240));
+  const h = dt / steps;
+  for (let i = 0; i < steps; i++) {
+    const a = (-p.stiffness * (x - target) - p.damping * v) / p.mass;
+    v += a * h;
+    x += v * h;
+  }
+  return [x, v];
+}
+
+/** Close enough and slow enough to stop (half a pixel, a crawl). */
+export function springAtRest(x: number, v: number, target: number): boolean {
+  return Math.abs(x - target) < 0.5 && Math.abs(v) < 12;
+}

@@ -288,10 +288,15 @@ if (process.argv.includes("--check")) {
       await page.getByRole("button", { name: "التالية", exact: true }).click();
       assert.equal(await page.locator(".st-practice-front").innerText(), "works");
       assert.equal(await page.locator("#study-card-answer").isVisible(), false);
-      await page.getByRole("button", { name: "إغلاق التدريب", exact: true }).click();
+      // Practice opens in the floating window; its X hides it into the circle and «آخر تدريب»
+      // brings it back where it was.
+      await page.locator(".fw.is-practice .fw-x").click();
+      await page.locator(".fw.is-practice").waitFor({ state: "hidden" });
       await page.getByRole("button", { name: "آخر تدريب", exact: true }).click();
+      await page.locator(".fw.is-practice").waitFor();
       assert.equal(await page.locator(".st-practice-front").innerText(), "works");
-      await page.keyboard.press("Escape");
+      await page.locator(".fw.is-practice .fw-x").click();
+      await page.locator(".fw.is-practice").waitFor({ state: "hidden" });
       await selectPhrase(page);
       await choose(page, "تمارين اختيار");
       await page.locator(".st-practice-option").first().waitFor();
@@ -306,12 +311,15 @@ if (process.argv.includes("--check")) {
         await page.locator(".st-practice-option[aria-pressed=true]").innerText(),
         /He work every day\.\s+إجابتك/,
       );
-      await page.keyboard.press("Escape");
+      await page.locator(".fw.is-practice .fw-x").click();
+      await page.locator(".fw.is-practice").waitFor({ state: "hidden" });
       await page.getByRole("button", { name: "آخر تدريب", exact: true }).click();
       await page.locator(".st-practice-feedback").waitFor();
       assert.equal(await page.locator(".st-practice-option:disabled").count(), 4);
       assert.equal(
-        await page.locator(".st-practice").evaluate((el) => el.scrollWidth > el.clientWidth + 1),
+        await page
+          .locator(".st-practice-window")
+          .evaluate((el) => el.scrollWidth > el.clientWidth + 1),
         false,
       );
       await page.screenshot({ path: resolve(out, `${engine}-${width}-practice.png`) });
