@@ -371,6 +371,51 @@ One main action per panel, hierarchy by weight instead of by frame:
   text follows the device ("Tap the card to flip, swipe to move" on touch; Space and arrows with a mouse), 56px controls.
 - Every control is at least 44px, every text at least 12px and 4.5:1 (muted text is `#4b4a5c`, not the old light greys).
 
+## Wordcraft (`/wordcraft`)
+
+A word-path game for learning English words (`src/components/wordcraft`, engine in `src/lib/wordcraft`).
+
+- **Rules the screen must show:** letters join up, down, left or right (no diagonals), every tile is used once, every
+  round has one answer. The help panel (the "?" button) says this, plus the keyboard keys.
+- **No levels:** the page asks for a difficulty only: Easy (four 4-letter words, 4 × 4), Medium (four 5-letter words,
+  4 × 5), Hard (5, 6, 6 and 7 letters, 4 × 6, the most tangled of several grids). Three grey cards, each with a
+  small grid of white squares showing its size. Every round is new and random.
+- **Where the words come from:** signed in, Groq suggests words for the level (`wordcraftRound`), the engine keeps
+  the good ones and proves one answer. Signed out, or when the AI cannot help, the round comes from the built-in
+  list and a quiet line under the board says so. The next round is made while the current one is played.
+- **Waiting:** the guide says "Getting your words ready…" and the empty board (the level's size) breathes softly.
+- **Board:** grey `#f4f4f8` panel, 24px corners; tiles are white, 14px corners, a 3px bottom lip, Inter Tight 700.
+  The tile size follows the screen (46px floor on phones, 96px cap), the grid is always left to right, even in Arabic.
+  The path being traced is the one blue accent (tiles turn blue, a blue connector shows in the gaps); the word
+  being traced sits above the board in blue capitals.
+- **Found words:** the soft category colours (`CATEGORY_COLORS`: teal, amber, violet, rose, sky, green) tell the found
+  words apart on the board and in their slots. This is the one place a page uses colours besides the accent, and it is
+  allowed because the colour is never the only sign: the slot also fills with the letters and gets a tick.
+- **Slots:** one row of small grey boxes per word with its Arabic meaning under it; two columns.
+- **Guide:** the Uzyra mark (`UzyraMark`, white in a 44px ink circle) with a speech bubble (a live region): grey for
+  guidance, soft green for a found word,
+  soft amber for a miss. Messages say what happened: "right word, but that route blocks the grid", "a real word,
+  not one of this round's", "not one of the words".
+- **Input:** drag across tiles, or tap them one by one (tapping the last tile again sends; a tapped word that matches
+  sends by itself), or the keyboard (arrows, Space adds, Enter sends, Backspace removes, Escape clears).
+  The board has `touch-action: none` and no text selection.
+- **Smart hint:** the first press shows a word's first two letters, every press after it one more letter, up to the
+  whole word; then the next word (slot order, found words skipped) starts again with two letters. The letters show
+  numbered on the grid (blue ring) and in the word's boxes (soft blue), so the player still traces the word.
+- **Motion:** the letter just added to the path pops (160ms); a found word's tiles ripple once in order (45ms apart),
+  then its letters fly into the slot (320ms, strong ease-out, 30ms stagger); the letters a hint just showed glow once;
+  a miss shakes the board (200ms); two or more words in a row make the guide's bubble pulse once. All of it is off with
+  reduced motion, and so is the waiting pulse.
+- **Sounds** (Web Audio, no files, mute button): tracing plays a rising pentatonic tune, one note per letter, and a
+  softer lower note when a step is taken back; a found word rings, brighter for two and three in a row (the guide says
+  "Two in a row! 🔥"); the right word on a blocking route plays a two-note "almost"; a miss is a low soft knock; hints
+  chime once per letter shown; undo steps down; a finished round plays a short run. Android phones also vibrate
+  lightly per letter and per word.
+- **Mixed text:** English words inside an Arabic sentence (and Arabic inside English) are wrapped in direction
+  isolates, and the guide's bubble takes the page direction, so "STORY = قصة" never comes out scrambled.
+- **End of a round:** "The words you found": each word with its meaning, an example and its Arabic, and a speak
+  button. Then "New round" (blue, same difficulty; the page goes back to the top) and "Change difficulty".
+
 ## App pages (every page except the home design pages)
 
 Every page outside `/`, `/rita*` and `/learn*` was written with fixed warm colours. They take the

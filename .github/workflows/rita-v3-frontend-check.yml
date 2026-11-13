@@ -73,6 +73,11 @@ on:
       - "scripts/build-starter-books-sql.*"
       - "scripts/test-books-db.sh"
       - "scripts/test-books-public-read-db.sh"
+      - "src/lib/wordcraft/**"
+      - "src/components/wordcraft/**"
+      - "src/routes/wordcraft.tsx"
+      - "src/components/learn/**"
+      - "src/lib/learn-images.ts"
       - ".github/workflows/rita-v3-frontend-check.yml"
   workflow_dispatch:
 
@@ -143,6 +148,7 @@ jobs:
           node --test src/lib/rita-golden.test.ts
           node --test src/lib/rita-replay.test.ts
           node --test src/routes/api/rita-v3/session/start.source.test.mjs
+          node --test src/lib/wordcraft/engine.test.ts src/lib/wordcraft/round.test.ts src/lib/wordcraft/game.test.ts
           bunx tsc --noEmit
       - name: Study page selection in a real browser
         run: |
