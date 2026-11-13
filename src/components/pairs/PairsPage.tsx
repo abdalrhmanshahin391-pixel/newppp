@@ -8,7 +8,8 @@ import { langKey } from "@/lib/language-scope";
 import { buildPool, MIN_CARDS, type PairCard } from "@/lib/pairs/game";
 import { countCards, readCards, useCardsVersion } from "@/lib/use-flashcards";
 import { useStudySubjects } from "@/lib/use-study-subjects";
-import ritaArt from "@/assets/pairs-rita.webp";
+import { UzyraMark } from "@/components/brand/UzyraMark";
+import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
 import { PairsGame } from "./PairsGame";
 import "./pairs.css";
 
@@ -78,7 +79,7 @@ export function PairsPage() {
   );
 }
 
-/** The big blue card: the name, one line, Rita with two puzzle pieces, and Play. */
+/** The big blue card: the name, one line, the Uzyra logo between two puzzle pieces, and Play. */
 function Hero({ lang, onPlay }: { lang: Lang; onPlay: () => void }) {
   const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
   return (
@@ -92,7 +93,10 @@ function Hero({ lang, onPlay }: { lang: Lang; onPlay: () => void }) {
       </p>
       <div className="pr-stage" aria-hidden="true">
         <Piece className="pr-piece is-left" fill="#8fd16f" shade="#6fb54f" />
-        <img src={ritaArt} alt="" className="pr-rita" width={560} height={560} />
+        <span className="pr-brand">
+          <UzyraMark className="pr-brand-mark" />
+          <UzyraWordmark size={30} withMark={false} className="pr-brand-name" />
+        </span>
         <Piece className="pr-piece is-right" fill="#f8d147" shade="#e3b62a" />
       </div>
       <button type="button" className="pr-play" onClick={onPlay}>

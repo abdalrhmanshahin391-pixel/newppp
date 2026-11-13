@@ -1,7 +1,8 @@
-// Pairs' sounds, made with Web Audio (no files): a soft tap when a card is picked, a bright ring
-// for a right match (higher with every match in a row), a low buzz for a wrong one, a tick in
-// each of the last five seconds, and short tunes for "time's up" and a cleared board. Muted
-// from the game's sound button; nothing plays before the first tap.
+// Pairs' sounds, made with Web Audio (no files). The two that matter most are right and wrong:
+// they play the moment the second card is tapped (the audio is woken on the first touch of the
+// board, so even the first one is not late). Right is a quick rising "ding-ding", higher with every
+// match in a row; wrong is a short low buzz. A tick marks each of the last five seconds, and short
+// tunes mark "time's up" and a cleared board. Muted from the game's sound button.
 let context: AudioContext | null = null;
 
 const MUTE_KEY = "uzyra-pairs-muted";
@@ -63,19 +64,20 @@ const bell = (freq: number, volume: number, start = 0) => {
 };
 
 export const pairsSounds = {
-  pick() {
-    tone(880, 0.07, 0.04, 0, "triangle");
+  /** Wakes the audio on the first touch so the first right / wrong sound is not late. */
+  warm() {
+    audio();
   },
   /** A right match; `streak` is how many in a row (1, 2, 3...). */
   right(streak: number) {
     const lift = Math.pow(2, Math.min(streak - 1, 6) / 12); // a semitone higher per match
-    bell(1046.5 * lift, 0.07);
-    bell(1567.98 * lift, 0.055, 0.07);
+    bell(1046.5 * lift, 0.09);
+    bell(1567.98 * lift, 0.075, 0.06);
     if (streak >= 5) bell(2093 * lift, 0.04, 0.14);
   },
   wrong() {
-    tone(180, 0.22, 0.08, 0, "sawtooth", 120);
-    tone(90, 0.22, 0.05, 0, "square");
+    tone(180, 0.24, 0.09, 0, "sawtooth", 110);
+    tone(90, 0.24, 0.06, 0, "square");
   },
   tick() {
     tone(1400, 0.05, 0.05, 0, "square");

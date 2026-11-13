@@ -82,7 +82,7 @@ export function PairsGame({
   const paused = useRef<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(START_MS / 1000);
   const barRef = useRef<HTMLSpanElement>(null);
-  const coinRef = useRef<HTMLSpanElement>(null);
+  const scoreRef2 = useRef<HTMLSpanElement>(null);
   const over = useRef(false);
 
   useEffect(() => setMuted(readMuted()), []);
@@ -169,39 +169,14 @@ export function PairsGame({
     endAt.current = Date.now() + next;
   };
 
-  /** A coin flies from the matched card to the score. */
-  const flyCoin = (from: HTMLElement | null) => {
-    const to = coinRef.current;
-    if (!from || !to || reduced()) return;
-    const a = from.getBoundingClientRect();
-    const b = to.getBoundingClientRect();
-    const coin = document.createElement("span");
-    coin.className = "pr-coin pr-coin-fly";
-    coin.style.left = `${a.left + a.width / 2 - 14}px`;
-    coin.style.top = `${a.top + a.height / 2 - 14}px`;
-    document.body.appendChild(coin);
-    const dx = b.left + b.width / 2 - (a.left + a.width / 2);
-    const dy = b.top + b.height / 2 - (a.top + a.height / 2);
-    coin
-      .animate(
-        [
-          { transform: "translate(0, 0) scale(1)", opacity: 1 },
-          {
-            transform: `translate(${dx * 0.5}px, ${dy * 0.5 - 40}px) scale(1.15)`,
-            opacity: 1,
-            offset: 0.5,
-          },
-          { transform: `translate(${dx}px, ${dy}px) scale(0.7)`, opacity: 0.9 },
-        ],
-        { duration: 520, easing: "cubic-bezier(0.23, 1, 0.32, 1)" },
-      )
-      .finished.finally(() => {
-        coin.remove();
-        to.animate([{ transform: "scale(1.25)" }, { transform: "scale(1)" }], { duration: 180 });
-      });
+  /** The score gives a small bump when it goes up. */
+  const bumpScore = () => {
+    if (reduced()) return;
+    scoreRef2.current?.animate([{ transform: "scale(1.25)" }, { transform: "scale(1)" }], {
+      duration: 220,
+      easing: "cubic-bezier(0.23, 1, 0.32, 1)",
+    });
   };
-
-  const cellRefs = useRef(new Map<string, HTMLButtonElement | null>());
 
   function choose(side: Side, row: number) {
     if (over.current) return;
@@ -211,7 +186,6 @@ export function PairsGame({
     if (!card) return;
     if (!picked || picked.side === side) {
       setPicked(picked && picked.side === side && picked.row === row ? null : { side, row });
-      play(pairsSounds.pick);
       return;
     }
     const frontRow = side === "front" ? row : picked.row;
@@ -231,7 +205,7 @@ export function PairsGame({
       buzz(12);
       setFlash({ kind: "right", front: frontRow, back: backRow });
       setAnnounce(t(`Right: ${front.front} = ${back.back}`, `صح: ${front.front} = ${back.back}`));
-      flyCoin(cellRefs.current.get(`b${backRow}`) ?? null);
+      bumpScore();
       const out = [`f${frontRow}`, `b${backRow}`];
       setLeaving((l) => [...l, ...out]);
       window.setTimeout(
@@ -298,10 +272,10 @@ export function PairsGame({
           <span className="pr-track-fill" style={{ transform: `scaleX(${progress})` }} />
         </div>
         <span className="pr-score">
-          <span ref={coinRef} className="pr-coin" aria-hidden="true" />
-          <span className="pr-score-n" aria-label={t(`${score} points`, `${score} نقطة`)}>
+          <span ref={scoreRef2} className="pr-score-n">
             {score}
           </span>
+          <span className="pr-score-label">{t("points", "نقطة")}</span>
         </span>
         <button
           type="button"
@@ -339,7 +313,13 @@ export function PairsGame({
         {announce}
       </p>
 
-      <div className="pr-grid" data-size={boardSize(board)}>
+      <div
+        className="pr-grid"
+        data-size={boardSize(board)}
+        onPointerDownCapture={() => {
+          if (!readMuted()) pairsSounds.warm();
+        }}
+      >
         {board.left.map((_, row) => (
           <Fragment key={row}>
             {(["front", "back"] as Side[]).map((side) => {
@@ -356,9 +336,6 @@ export function PairsGame({
               return (
                 <button
                   key={`${key}-${card.id}`}
-                  ref={(el) => {
-                    cellRefs.current.set(key, el);
-                  }}
                   type="button"
                   className="pr-cell"
                   data-state={state}
@@ -424,7 +401,6 @@ function Results({
             : t("Time's up!", "خلص الوقت!")}
         </p>
         <h1 id="pr-result-title" ref={heading} tabIndex={-1} className="pr-result-score">
-          <span className="pr-coin is-big" aria-hidden="true" />
           {result.score}
           <span className="sr-only">{t(" points", " نقطة")}</span>
         </h1>
