@@ -1,6 +1,6 @@
-// Rita's column beside a book: the same look as the study page's (her cube in the middle before
+// Uzyra's column beside a book: the same look as the study page's (her cube in the middle before
 // the first question, then a quiet conversation), with written answers to what the reader asked
-// from the circle. No call here: Rita answers in writing.
+// from the circle. No call here: Uzyra answers in writing.
 import { useRef } from "react";
 import { Loader2, RotateCcw } from "lucide-react";
 import { ChatText } from "@/components/rita/ChatText";
@@ -39,7 +39,7 @@ export function BookRitaColumn({
       style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <p className="sr-only" role="status" aria-live="polite">
-        {busy ? "ريتا بتكتب…" : ""}
+        {busy ? "يوزرا بتكتب…" : ""}
       </p>
       {chatting ? (
         <StickyScroll follow={`${answers.length}:${last?.state}:${last?.text.length ?? 0}`}>
@@ -56,7 +56,7 @@ export function BookRitaColumn({
                       <UzyraMark />
                     </span>
                     <span className="uz-rc-meta-text">
-                      {["ريتا", `صفحة ${answer.page}`, answer.state === "loading" ? "بتكتب…" : ""]
+                      {["يوزرا", `صفحة ${answer.page}`, answer.state === "loading" ? "بتكتب…" : ""]
                         .filter(Boolean)
                         .join(" · ")}
                     </span>
@@ -98,7 +98,7 @@ export function BookRitaColumn({
         {chatting && <p className="uz-rc-word is-small">{hint}</p>}
       </div>
       <FlyingCube chatting={chatting}>
-        <RitaCube levelsRef={levels} mode={busy ? "thinking" : "idle"} label="ريتا" />
+        <RitaCube levelsRef={levels} mode={busy ? "thinking" : "idle"} label="يوزرا" />
       </FlyingCube>
     </main>
   );
