@@ -28,6 +28,9 @@ backups, or bytes left by failures inside the Storage service itself. Do not del
 `storage.objects` metadata in SQL to clean up a binary file; use the Storage API.
 The bucket checks the declared MIME type; validating that bytes are a readable PDF
 belongs in the upload/reader integration, not this database migration.
+The new bucket uses Storage's verified `DISABLED` versioning default. Do not enable
+versioning on it while relying on the two-file storage budget. The read-only check
+also verifies the current-file unique index, including Storage's partial/collated form.
 
 ## Validation
 

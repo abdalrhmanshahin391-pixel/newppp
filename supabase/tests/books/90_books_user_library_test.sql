@@ -5,7 +5,7 @@ begin;
 select no_plan();
 grant select, insert, update, delete on storage.objects to authenticated;
 -- Supabase has this uniqueness rule; the minimal test stub does not.
-create unique index if not exists test_storage_bucket_name on storage.objects(bucket_id, name);
+create unique index if not exists test_storage_bucket_name on storage.objects(bucket_id, name collate "C") where archived_at is null;
 insert into auth.users values
  ('a9000000-0000-4000-8000-000000000001'),
  ('a9000000-0000-4000-8000-000000000002');

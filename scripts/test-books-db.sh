@@ -45,7 +45,7 @@ bash scripts/test-user-books-concurrency.sh "${DB}"
 echo "== read-only user-books deployment checks"
 checks="$(run -At -f supabase/checks/user-books.sql)"
 printf '%s\n' "$checks"
-if [ "$(printf '%s\n' "$checks" | grep -c '|t$')" -ne 30 ]; then
-  echo "Expected all 30 user-books deployment checks to be true" >&2
+if [ "$(printf '%s\n' "$checks" | grep -c '|t$')" -ne 31 ]; then
+  echo "Expected all 31 user-books deployment checks to be true" >&2
   exit 1
 fi

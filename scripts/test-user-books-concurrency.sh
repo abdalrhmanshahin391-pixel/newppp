@@ -10,7 +10,7 @@ trap 'rm -rf -- "$scratch"' EXIT
 run() { psql -v ON_ERROR_STOP=1 -v VERBOSITY=verbose -q -X -d "$DB" "$@"; }
 run <<'SQL'
 grant select, insert, update, delete on storage.objects to authenticated;
-create unique index if not exists test_storage_bucket_name on storage.objects(bucket_id,name);
+create unique index if not exists test_storage_bucket_name on storage.objects(bucket_id,name collate "C") where archived_at is null;
 insert into auth.users values
  ('a9100000-0000-4000-8000-000000000001'),
  ('a9100000-0000-4000-8000-000000000002'),
