@@ -10,13 +10,11 @@ body {
 }
 
 @theme {
-  --font-sans:
-    "Uzyra Arabic", "Nunito", "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Uzyra Arabic", "Nunito", "Manrope", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: "Uzyra Arabic", "Nunito", "Manrope", system-ui, sans-serif;
   --font-display: "Uzyra Arabic", "Nunito", "Manrope", system-ui, sans-serif;
   /* Helvetica-style grotesque used by the black home page and its header. */
-  --font-grotesk:
-    "Uzyra Arabic", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
+  --font-grotesk: "Uzyra Arabic", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
 }
 
 /* Arabic letters everywhere: Graphik Arabic (Commercial Type, licensed by the owner), served from
@@ -2163,15 +2161,9 @@ hairline borders and generous radii.
   --rita-green-deep: #0457cb;
   --rita-green-ink: #ffffff;
   --rita-green-soft: #e7f3ff;
-  --font-grotesk:
-    "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial,
-    sans-serif;
-  --font-display:
-    "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial,
-    sans-serif;
-  --font-sans:
-    "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial,
-    sans-serif;
+  --font-grotesk: "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, "Helvetica Neue", Arial, sans-serif;
   /* Deep blue "screen" with a soft light, used inside the iPad and phone shells. */
   --edith-screen:
     radial-gradient(70% 55% at 78% 30%, rgb(125 185 255 / 0.5), transparent 62%),
@@ -2521,25 +2513,14 @@ body:has(.rh-learn-home) {
   }
 }
 @keyframes rita-ex-fade {
-  from {
-    opacity: 0;
-  }
+  from { opacity: 0; }
 }
 @keyframes rita-ex-rise {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
+  from { opacity: 0; transform: translateY(24px); }
 }
 @keyframes rita-ex-pop {
-  from {
-    opacity: 0;
-    transform: translateY(-50%) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(-50%) scale(1);
-  }
+  from { opacity: 0; transform: translateY(-50%) scale(0.97); }
+  to { opacity: 1; transform: translateY(-50%) scale(1); }
 }
 /* A side window for one item of a list (a lesson in the admin review): full screen on phones,
    a tall panel from the left edge (the end of a right-to-left page) from 640px. */
@@ -2591,12 +2572,8 @@ body:has(.rh-learn-home) {
   padding: 20px;
 }
 @media (min-width: 640px) {
-  .edith-premium .rita-ex-header {
-    padding: 22px 28px 16px;
-  }
-  .edith-premium .rita-ex-body {
-    padding: 24px 28px 28px;
-  }
+  .edith-premium .rita-ex-header { padding: 22px 28px 16px; }
+  .edith-premium .rita-ex-body { padding: 24px 28px 28px; }
 }
 .edith-premium .rita-ex-progress {
   position: relative;
@@ -2614,9 +2591,7 @@ body:has(.rh-learn-home) {
   transform-origin: right;
   transition: transform 250ms var(--pp-ease);
 }
-.edith-premium .rita-ex-progress[dir="ltr"] > span {
-  transform-origin: left;
-}
+.edith-premium .rita-ex-progress[dir="ltr"] > span { transform-origin: left; }
 .edith-premium .rita-ex-prompt {
   font-size: 24px;
   font-weight: 600;
@@ -2626,9 +2601,7 @@ body:has(.rh-learn-home) {
   overflow-wrap: anywhere;
 }
 @media (min-width: 640px) {
-  .edith-premium .rita-ex-prompt {
-    font-size: 28px;
-  }
+  .edith-premium .rita-ex-prompt { font-size: 28px; }
 }
 .edith-premium .rita-ex-prompt.rita-ex-clue {
   text-align: right;
@@ -2647,9 +2620,7 @@ body:has(.rh-learn-home) {
   gap: 10px;
 }
 @media (min-width: 640px) {
-  .edith-premium .rita-ex-options {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  }
+  .edith-premium .rita-ex-options { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 }
 .edith-premium .rita-ex-option {
   display: flex;
@@ -2675,17 +2646,13 @@ body:has(.rh-learn-home) {
     background: var(--pp-grey);
   }
 }
-.edith-premium .rita-ex-option:not(:disabled):active {
-  transform: scale(0.98);
-}
+.edith-premium .rita-ex-option:not(:disabled):active { transform: scale(0.98); }
 .edith-premium .rita-ex-option:focus-visible,
 .edith-premium .rita-ex-tile:focus-visible {
   outline: 2px solid var(--pp-ink);
   outline-offset: 2px;
 }
-.edith-premium .rita-ex-option:disabled {
-  cursor: default;
-}
+.edith-premium .rita-ex-option:disabled { cursor: default; }
 .edith-premium .rita-ex-option[data-state="chosen"] {
   border: 2px solid var(--pp-accent);
   background: var(--pp-accent-soft);
@@ -2755,9 +2722,7 @@ body:has(.rh-learn-home) {
   background: var(--pp-right-soft, #e6f4ea);
   color: var(--pp-right, #1d6b3a);
 }
-.edith-premium .rita-ex-tile:not(:disabled):active {
-  transform: scale(0.96);
-}
+.edith-premium .rita-ex-tile:not(:disabled):active { transform: scale(0.96); }
 .edith-premium .rita-ex-feedback {
   padding: 12px 14px;
   border-radius: 12px;
@@ -2772,9 +2737,7 @@ body:has(.rh-learn-home) {
   background: var(--pp-wrong-soft);
   color: var(--pp-wrong);
 }
-.edith-premium .rita-ex-feedback p + p {
-  color: var(--pp-ink);
-}
+.edith-premium .rita-ex-feedback p + p { color: var(--pp-ink); }
 .edith-premium .rita-ex-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2837,14 +2800,8 @@ body:has(.rh-learn-home) {
   border-bottom: 1px solid var(--pp-line);
   text-align: left;
 }
-.edith-premium .rita-lesson-table th {
-  width: 55%;
-  font-weight: 500;
-  color: var(--pp-muted);
-}
-.edith-premium .rita-lesson-table td {
-  font-weight: 700;
-}
+.edith-premium .rita-lesson-table th { width: 55%; font-weight: 500; color: var(--pp-muted); }
+.edith-premium .rita-lesson-table td { font-weight: 700; }
 .edith-premium .rita-lesson-example {
   display: flex;
   flex-direction: column;
@@ -3229,6 +3186,7 @@ body:has(.rh-learn-home) {
   }
 }
 
+
 /* ===========================================================================
    Top bar and menus (every page). The bar is dark ink; the menus are the white card with
    an ink border from the home page. Colours are explicit so the cream remap cannot touch them.
@@ -3282,14 +3240,7 @@ body:has(.rh-learn-home) {
   background: none;
   cursor: pointer;
   color: rgb(255 255 255 / 0.78);
-  font:
-    600 16px/24px "Uzyra Arabic",
-    "Figtree",
-    "Inter Tight",
-    "Inter",
-    Helvetica,
-    Arial,
-    sans-serif;
+  font: 600 16px/24px "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
   text-decoration: none;
   transition:
     color 160ms ease,
@@ -3328,14 +3279,7 @@ body:has(.rh-learn-home) {
   background: #2b6df0;
   color: #ffffff;
   cursor: pointer;
-  font:
-    600 15px/1 "Uzyra Arabic",
-    "Figtree",
-    "Inter Tight",
-    "Inter",
-    Helvetica,
-    Arial,
-    sans-serif;
+  font: 600 15px/1 "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
   text-decoration: none;
   white-space: nowrap;
   transition:
@@ -3401,14 +3345,7 @@ body:has(.rh-learn-home) {
   background: transparent;
   color: #fff;
   cursor: pointer;
-  font:
-    600 14px/1 "Uzyra Arabic",
-    "Figtree",
-    "Inter Tight",
-    "Inter",
-    Helvetica,
-    Arial,
-    sans-serif;
+  font: 600 14px/1 "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
   transition:
     background-color 160ms ease,
     border-color 160ms ease;
@@ -3474,14 +3411,7 @@ body:has(.rh-learn-home) {
   padding-inline: 12px 8px;
   border: 1.5px solid rgb(255 255 255 / 0.55);
   color: #fff;
-  font:
-    600 14px/1 "Uzyra Arabic",
-    "Figtree",
-    "Inter Tight",
-    "Inter",
-    Helvetica,
-    Arial,
-    sans-serif;
+  font: 600 14px/1 "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
 }
 .rh-lang-choose-text {
   display: none;
@@ -3747,14 +3677,7 @@ body:has(.rh-learn-home) {
   background: transparent;
   color: #121117;
   cursor: pointer;
-  font:
-    600 15px/1.2 "Uzyra Arabic",
-    "Figtree",
-    "Inter Tight",
-    "Inter",
-    Helvetica,
-    Arial,
-    sans-serif;
+  font: 600 15px/1.2 "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
   text-align: start;
   text-decoration: none;
   transition: background-color 140ms ease;
@@ -4046,122 +3969,26 @@ body:has(.rh-learn-home) {
 }
 
 /* Legacy colours, by role. */
-.rita-app
-  :is(
-    [class~="text-[#23201d]"],
-    [class~="text-[#3c372f]"],
-    [class~="text-[#3d3832]"],
-    [class~="text-[#3a352e]"],
-    [class~="text-[#7a4b16]"],
-    [class~="text-[#3d5c14]"],
-    [class~="text-[#2f6318]"],
-    [class~="text-[#215237]"],
-    [class~="text-[#3f2c73]"],
-    [class~="text-[#7d3421]"],
-    [class~="text-[#a8462c]"],
-    [class~="text-[#5a4a2e]"]
-  ) {
-  color: var(--pp-ink) !important;
-}
-.rita-app :is([class~="text-[#4a453d]"], [class~="text-[#57524a]"], [class~="text-[#5c554b]"]) {
-  color: var(--pp-body) !important;
-}
-.rita-app
-  :is(
-    [class~="text-[#6b655c]"],
-    [class~="text-[#6b645b]"],
-    [class~="text-[#6d6355]"],
-    [class~="text-[#6b6357]"],
-    [class~="text-[#6d675e]"],
-    [class~="text-[#6d665c]"],
-    [class~="text-[#7a736a]"],
-    [class~="text-[#8a8175]"],
-    [class~="text-[#8a8376]"],
-    [class~="text-[#8a7f6c]"],
-    [class~="text-[#8a8070]"],
-    [class~="text-[#8c8375]"],
-    [class~="text-[#8b8378]"],
-    [class~="text-[#8b8377]"],
-    [class~="text-[#a29a8d]"],
-    [class~="text-[#a89e90]"],
-    [class~="text-[#a79c8c]"],
-    [class~="text-[#b3aa9c]"],
-    [class~="text-[#b0a696]"]
-  ) {
-  color: var(--pp-muted) !important;
-}
-.rita-app
-  :is(
-    [class~="text-[#c0b7a8]"],
-    [class~="text-[#c7c0b4]"],
-    [class~="text-[#ccc4b6]"],
-    [class~="text-[#d8d0c2]"]
-  ) {
-  color: #9a99ab !important;
-}
-.rita-app :is([class~="text-[#8ec63f]"], [class~="text-[#4c9a2a]"]) {
-  color: var(--pp-accent-text) !important;
-}
-.rita-app :is([class~="text-[#b13636]"], [class~="text-[#d1795e]"]) {
-  color: var(--pp-danger) !important;
-}
-.rita-app
-  :is(
-    [class~="bg-[#fbf5e9]"],
-    [class~="bg-[#faf6ee]"],
-    [class~="bg-[#fbf8f2]"],
-    [class~="bg-[#f7f2e8]"],
-    [class~="bg-[#fdfaf3]"],
-    [class~="bg-[#fafaf9]"],
-    [class~="bg-[#f5f7fb]"],
-    [class~="bg-[#f3ece0]"],
-    [class~="bg-[#e9dfcd]"],
-    [class~="bg-[#f2edfb]"]
-  ) {
-  background-color: var(--pp-grey) !important;
-}
-.rita-app :is([class~="bg-[#23201d]"]) {
-  background-color: var(--pp-ink) !important;
-}
-.rita-app :is([class~="bg-[#8ec63f]"], [class~="bg-[#4c9a2a]"], [class~="bg-[#6ab887]"]) {
-  background-color: var(--pp-accent) !important;
-  color: var(--pp-on-accent);
-}
-.rita-app
-  :is(
-    [class~="bg-[#e6f4d8]"],
-    [class~="bg-[#eaf4e2]"],
-    [class~="bg-[#eef6e9]"],
-    [class~="bg-[#eaf6ee]"],
-    [class~="bg-[#fbeae4]"],
-    [class~="bg-[#f6ddd5]"]
-  ) {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app :is([class~="bg-[#d1795e]"]) {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app :is([class~="border-[#8ec63f]"], [class~="border-[#f0a95c]"]) {
-  border-color: var(--pp-ink) !important;
-}
-.rita-app :is([class~="border-[#3f2c73]"]) {
-  border-color: var(--pp-ink) !important;
-}
+.rita-app :is([class~="text-[#23201d]"], [class~="text-[#3c372f]"], [class~="text-[#3d3832]"], [class~="text-[#3a352e]"], [class~="text-[#7a4b16]"], [class~="text-[#3d5c14]"], [class~="text-[#2f6318]"], [class~="text-[#215237]"], [class~="text-[#3f2c73]"], [class~="text-[#7d3421]"], [class~="text-[#a8462c]"], [class~="text-[#5a4a2e]"]) { color: var(--pp-ink) !important; }
+.rita-app :is([class~="text-[#4a453d]"], [class~="text-[#57524a]"], [class~="text-[#5c554b]"]) { color: var(--pp-body) !important; }
+.rita-app :is([class~="text-[#6b655c]"], [class~="text-[#6b645b]"], [class~="text-[#6d6355]"], [class~="text-[#6b6357]"], [class~="text-[#6d675e]"], [class~="text-[#6d665c]"], [class~="text-[#7a736a]"], [class~="text-[#8a8175]"], [class~="text-[#8a8376]"], [class~="text-[#8a7f6c]"], [class~="text-[#8a8070]"], [class~="text-[#8c8375]"], [class~="text-[#8b8378]"], [class~="text-[#8b8377]"], [class~="text-[#a29a8d]"], [class~="text-[#a89e90]"], [class~="text-[#a79c8c]"], [class~="text-[#b3aa9c]"], [class~="text-[#b0a696]"]) { color: var(--pp-muted) !important; }
+.rita-app :is([class~="text-[#c0b7a8]"], [class~="text-[#c7c0b4]"], [class~="text-[#ccc4b6]"], [class~="text-[#d8d0c2]"]) { color: #9a99ab !important; }
+.rita-app :is([class~="text-[#8ec63f]"], [class~="text-[#4c9a2a]"]) { color: var(--pp-accent-text) !important; }
+.rita-app :is([class~="text-[#b13636]"], [class~="text-[#d1795e]"]) { color: var(--pp-danger) !important; }
+.rita-app :is([class~="bg-[#fbf5e9]"], [class~="bg-[#faf6ee]"], [class~="bg-[#fbf8f2]"], [class~="bg-[#f7f2e8]"], [class~="bg-[#fdfaf3]"], [class~="bg-[#fafaf9]"], [class~="bg-[#f5f7fb]"], [class~="bg-[#f3ece0]"], [class~="bg-[#e9dfcd]"], [class~="bg-[#f2edfb]"]) { background-color: var(--pp-grey) !important; }
+.rita-app :is([class~="bg-[#23201d]"]) { background-color: var(--pp-ink) !important; }
+.rita-app :is([class~="bg-[#8ec63f]"], [class~="bg-[#4c9a2a]"], [class~="bg-[#6ab887]"]) { background-color: var(--pp-accent) !important; color: var(--pp-on-accent); }
+.rita-app :is([class~="bg-[#e6f4d8]"], [class~="bg-[#eaf4e2]"], [class~="bg-[#eef6e9]"], [class~="bg-[#eaf6ee]"], [class~="bg-[#fbeae4]"], [class~="bg-[#f6ddd5]"]) { background-color: var(--pp-accent-soft) !important; }
+.rita-app :is([class~="bg-[#d1795e]"]) { background-color: var(--pp-accent-soft) !important; }
+.rita-app :is([class~="border-[#8ec63f]"], [class~="border-[#f0a95c]"]) { border-color: var(--pp-ink) !important; }
+.rita-app :is([class~="border-[#3f2c73]"]) { border-color: var(--pp-ink) !important; }
 /* A page whose root was painted cream becomes white; panels inside it stay grey. */
-.rita-app :is([class~="min-h-screen"][class~="bg-[#fbf5e9]"]) {
-  background-color: #ffffff !important;
-}
+.rita-app :is([class~="min-h-screen"][class~="bg-[#fbf5e9]"]) { background-color: #ffffff !important; }
 /* Translucent pink (was translucent green). */
-.rita-app :is([class~="bg-[#8ec63f]/20"], [class~="bg-[#4c9a2a]/20"], [class~="bg-[#6ab887]/20"]) {
-  background-color: rgb(255 122 172 / 0.2) !important;
-}
+.rita-app :is([class~="bg-[#8ec63f]/20"], [class~="bg-[#4c9a2a]/20"], [class~="bg-[#6ab887]/20"]) { background-color: rgb(255 122 172 / 0.2) !important; }
 /* Inline styles written as hex or as the rgb() the browser writes back. */
-.rita-app :is([style*="#fbf5e9"], [style*="rgb(251, 245, 233)"]) {
-  background-color: #ffffff !important;
-}
-.rita-app :is([style*="#23201d"], [style*="rgb(35, 32, 29)"]) {
-  color: var(--pp-ink) !important;
-}
+.rita-app :is([style*="#fbf5e9"], [style*="rgb(251, 245, 233)"]) { background-color: #ffffff !important; }
+.rita-app :is([style*="#23201d"], [style*="rgb(35, 32, 29)"]) { color: var(--pp-ink) !important; }
 @media (prefers-reduced-motion: reduce) {
   .rita-app .rita-btn,
   .rita-app .rita-pill {
@@ -4265,350 +4092,119 @@ body:has(.rh-learn-home) {
 }
 
 /* Legacy colours found later (generated from the remaining hex utility classes, by role). */
-.rita-app [class~="bg-[#0ea5e9]"] {
-  background-color: var(--pp-accent) !important;
-  color: var(--pp-on-accent);
-}
-.rita-app [class~="bg-[#10b981]"] {
-  background-color: var(--pp-accent) !important;
-  color: var(--pp-on-accent);
-}
-.rita-app [class~="bg-[#121117]"] {
-  background-color: var(--pp-ink) !important;
-}
-.rita-app [class~="bg-[#23201d]/50"] {
-  background-color: rgb(18 17 23 / 0.5) !important;
-}
-.rita-app [class~="bg-[#23201d]/55"] {
-  background-color: rgb(18 17 23 / 0.55) !important;
-}
-.rita-app [class~="bg-[#2f7d55]"] {
-  background-color: var(--pp-ink) !important;
-}
-.rita-app [class~="bg-[#3f2c73]"] {
-  background-color: var(--pp-ink) !important;
-}
-.rita-app [class~="bg-[#6366f1]"] {
-  background-color: var(--pp-accent) !important;
-  color: var(--pp-on-accent);
-}
-.rita-app [class~="bg-[#6366f1]/15"] {
-  background-color: rgb(255 122 172 / 0.15) !important;
-}
-.rita-app [class~="bg-[#8ec63f]/15"] {
-  background-color: rgb(255 122 172 / 0.15) !important;
-}
-.rita-app [class~="bg-[#b3213f]"] {
-  background-color: var(--pp-danger) !important;
-}
-.rita-app [class~="bg-[#d94a3d]"] {
-  background-color: var(--pp-danger) !important;
-}
-.rita-app [class~="bg-[#d94a4a]"] {
-  background-color: var(--pp-danger) !important;
-}
-.rita-app [class~="bg-[#d94f3d]"] {
-  background-color: var(--pp-danger) !important;
-}
-.rita-app [class~="bg-[#dcdce5]"] {
-  background-color: var(--pp-grey) !important;
-}
-.rita-app [class~="bg-[#e6d9c2]"] {
-  background-color: var(--pp-grey) !important;
-}
-.rita-app [class~="bg-[#eef7e4]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#eef7e8]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#ef4444]"] {
-  background-color: var(--pp-danger) !important;
-}
-.rita-app [class~="bg-[#efe7d8]"] {
-  background-color: var(--pp-grey) !important;
-}
-.rita-app [class~="bg-[#f0e9dc]"] {
-  background-color: var(--pp-grey) !important;
-}
-.rita-app [class~="bg-[#f0ebe1]"] {
-  background-color: var(--pp-grey) !important;
-}
-.rita-app [class~="bg-[#f0f0ec]"] {
-  background-color: var(--pp-grey) !important;
-}
-.rita-app [class~="bg-[#f2ece0]"] {
-  background-color: var(--pp-grey) !important;
-}
-.rita-app [class~="bg-[#f2f8ec]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#f4eddf]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#f4f4f8]"] {
-  background-color: var(--pp-grey) !important;
-}
-.rita-app [class~="bg-[#f4f7f2]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#f4faec]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#f59e0b]"] {
-  background-color: var(--pp-accent) !important;
-  color: var(--pp-on-accent);
-}
-.rita-app [class~="bg-[#f6f1e5]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#f6f1e6]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#f6f1e8]"] {
-  background-color: var(--pp-grey) !important;
-}
-.rita-app [class~="bg-[#f7e2d8]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#f8fcf5]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#faf6ec]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#faf8f3]"] {
-  background-color: var(--pp-grey) !important;
-}
-.rita-app [class~="bg-[#faf8f5]"] {
-  background-color: var(--pp-grey) !important;
-}
-.rita-app [class~="bg-[#fafaf8]"] {
-  background-color: var(--pp-grey) !important;
-}
-.rita-app [class~="bg-[#fbdcdc]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#fbf5e9]/70"] {
-  background-color: rgb(255 229 240 / 0.7) !important;
-}
-.rita-app [class~="bg-[#fbf7ef]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#fcf8f1]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#fdebc9]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#fdf0d8]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#fdf1e2]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#fdf3e6]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="bg-[#2b6df0]"] {
-  background-color: var(--pp-accent) !important;
-  color: var(--pp-on-accent);
-}
-.rita-app [class~="bg-[#e7eefd]"] {
-  background-color: var(--pp-grey) !important;
-}
-.rita-app [class~="bg-[#fffdf8]"] {
-  background-color: var(--pp-accent-soft) !important;
-}
-.rita-app [class~="border-[#121117]"] {
-  border-color: var(--pp-ink) !important;
-}
-.rita-app [class~="border-[#23201d]"] {
-  border-color: var(--pp-ink) !important;
-}
-.rita-app [class~="border-[#3f2c73]/25"] {
-  border-color: rgb(18 17 23 / 0.25) !important;
-}
-.rita-app [class~="border-[#4b9b2e]"] {
-  border-color: var(--pp-ink) !important;
-}
-.rita-app [class~="border-[#4c9a2a]/40"] {
-  border-color: rgb(18 17 23 / 0.4) !important;
-}
-.rita-app [class~="border-[#4c9a2a]/50"] {
-  border-color: rgb(18 17 23 / 0.5) !important;
-}
-.rita-app [class~="border-[#6366f1]"] {
-  border-color: var(--pp-ink) !important;
-}
-.rita-app [class~="border-[#6ab887]"] {
-  border-color: var(--pp-ink) !important;
-}
-.rita-app [class~="border-[#8ec63f]/60"] {
-  border-color: rgb(18 17 23 / 0.6) !important;
-}
-.rita-app [class~="border-[#d1795e]"] {
-  border-color: var(--pp-ink) !important;
-}
-.rita-app [class~="border-[#d1795e]/30"] {
-  border-color: rgb(18 17 23 / 0.3) !important;
-}
-.rita-app [class~="border-[#d1795e]/40"] {
-  border-color: rgb(18 17 23 / 0.4) !important;
-}
-.rita-app [class~="border-[#d94a3d]/25"] {
-  border-color: rgb(18 17 23 / 0.25) !important;
-}
-.rita-app [class~="border-[#dcdce5]"] {
-  border-color: var(--pp-line) !important;
-}
-.rita-app [class~="border-[#e6c9a8]"] {
-  border-color: var(--pp-ink) !important;
-}
-.rita-app [class~="ring-[#23201d]"] {
-  --tw-ring-color: var(--pp-accent) !important;
-}
-.rita-app [class~="ring-[#4c9a2a]/30"] {
-  --tw-ring-color: var(--pp-accent) !important;
-}
-.rita-app [class~="ring-[#6366f1]"] {
-  --tw-ring-color: var(--pp-accent) !important;
-}
-.rita-app [class~="ring-[#6ab887]"] {
-  --tw-ring-color: var(--pp-accent) !important;
-}
-.rita-app [class~="ring-[#8ec63f]"] {
-  --tw-ring-color: var(--pp-accent) !important;
-}
-.rita-app [class~="text-[#0a0a0a]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#121117]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#1e3a8a]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#1f4c6d]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#231f1a]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#2c480e]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#2f6b1c]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#3b3730]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#3c3730]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#3d3833]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#3f6a17]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#3f7c26]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#3f9a63]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#4338ca]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#4a3877]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#4b4a5c]"] {
-  color: var(--pp-body) !important;
-}
-.rita-app [class~="text-[#4b7a33]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#4e7a1f]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#5d574e]"] {
-  color: var(--pp-body) !important;
-}
-.rita-app [class~="text-[#6a697c]"] {
-  color: var(--pp-body) !important;
-}
-.rita-app [class~="text-[#6aa9d8]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#6b6459]"] {
-  color: var(--pp-body) !important;
-}
-.rita-app [class~="text-[#7a6f5e]"] {
-  color: var(--pp-body) !important;
-}
-.rita-app [class~="text-[#7a7164]"] {
-  color: var(--pp-body) !important;
-}
-.rita-app [class~="text-[#8a3b32]"] {
-  color: var(--pp-danger) !important;
-}
-.rita-app [class~="text-[#8a5b12]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#8a6a1f]"] {
-  color: var(--pp-ink) !important;
-}
-.rita-app [class~="text-[#8a8072]"] {
-  color: var(--pp-muted) !important;
-}
-.rita-app [class~="text-[#8a8378]"] {
-  color: var(--pp-muted) !important;
-}
-.rita-app [class~="text-[#8b8375]"] {
-  color: var(--pp-muted) !important;
-}
-.rita-app [class~="text-[#8d8578]"] {
-  color: var(--pp-muted) !important;
-}
-.rita-app [class~="text-[#8f2323]"] {
-  color: var(--pp-danger) !important;
-}
-.rita-app [class~="text-[#a15b47]"] {
-  color: var(--pp-danger) !important;
-}
-.rita-app [class~="text-[#a49a8b]"] {
-  color: var(--pp-muted) !important;
-}
-.rita-app [class~="text-[#b4485f]"] {
-  color: var(--pp-danger) !important;
-}
-.rita-app [class~="text-[#b8b0a4]"] {
-  color: var(--pp-muted) !important;
-}
-.rita-app [class~="text-[#c0392b]/80"] {
-  color: var(--pp-danger) !important;
-}
-.rita-app [class~="text-[#c1392b]"] {
-  color: var(--pp-danger) !important;
-}
-.rita-app [class~="text-[#c2b9aa]"] {
-  color: var(--pp-muted) !important;
-}
-.rita-app [class~="text-[#c6bfb4]"] {
-  color: var(--pp-muted) !important;
-}
-.rita-app [class~="text-[#c8bfae]"] {
-  color: var(--pp-muted) !important;
-}
-.rita-app [class~="text-[#c8c0b2]"] {
-  color: var(--pp-muted) !important;
-}
-.rita-app [class~="text-[#f0a95c]"] {
-  color: var(--pp-ink) !important;
-}
+.rita-app [class~="bg-[#0ea5e9]"] { background-color: var(--pp-accent) !important; color: var(--pp-on-accent); }
+.rita-app [class~="bg-[#10b981]"] { background-color: var(--pp-accent) !important; color: var(--pp-on-accent); }
+.rita-app [class~="bg-[#121117]"] { background-color: var(--pp-ink) !important; }
+.rita-app [class~="bg-[#23201d]/50"] { background-color: rgb(18 17 23 / 0.5) !important; }
+.rita-app [class~="bg-[#23201d]/55"] { background-color: rgb(18 17 23 / 0.55) !important; }
+.rita-app [class~="bg-[#2f7d55]"] { background-color: var(--pp-ink) !important; }
+.rita-app [class~="bg-[#3f2c73]"] { background-color: var(--pp-ink) !important; }
+.rita-app [class~="bg-[#6366f1]"] { background-color: var(--pp-accent) !important; color: var(--pp-on-accent); }
+.rita-app [class~="bg-[#6366f1]/15"] { background-color: rgb(255 122 172 / 0.15) !important; }
+.rita-app [class~="bg-[#8ec63f]/15"] { background-color: rgb(255 122 172 / 0.15) !important; }
+.rita-app [class~="bg-[#b3213f]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#d94a3d]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#d94a4a]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#d94f3d]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#dcdce5]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#e6d9c2]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#eef7e4]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#eef7e8]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#ef4444]"] { background-color: var(--pp-danger) !important; }
+.rita-app [class~="bg-[#efe7d8]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f0e9dc]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f0ebe1]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f0f0ec]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f2ece0]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f2f8ec]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#f4eddf]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#f4f4f8]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f4f7f2]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#f4faec]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#f59e0b]"] { background-color: var(--pp-accent) !important; color: var(--pp-on-accent); }
+.rita-app [class~="bg-[#f6f1e5]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#f6f1e6]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#f6f1e8]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#f7e2d8]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#f8fcf5]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#faf6ec]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#faf8f3]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#faf8f5]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#fafaf8]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#fbdcdc]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#fbf5e9]/70"] { background-color: rgb(255 229 240 / 0.7) !important; }
+.rita-app [class~="bg-[#fbf7ef]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#fcf8f1]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#fdebc9]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#fdf0d8]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#fdf1e2]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#fdf3e6]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="bg-[#2b6df0]"] { background-color: var(--pp-accent) !important; color: var(--pp-on-accent); }
+.rita-app [class~="bg-[#e7eefd]"] { background-color: var(--pp-grey) !important; }
+.rita-app [class~="bg-[#fffdf8]"] { background-color: var(--pp-accent-soft) !important; }
+.rita-app [class~="border-[#121117]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#23201d]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#3f2c73]/25"] { border-color: rgb(18 17 23 / 0.25) !important; }
+.rita-app [class~="border-[#4b9b2e]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#4c9a2a]/40"] { border-color: rgb(18 17 23 / 0.4) !important; }
+.rita-app [class~="border-[#4c9a2a]/50"] { border-color: rgb(18 17 23 / 0.5) !important; }
+.rita-app [class~="border-[#6366f1]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#6ab887]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#8ec63f]/60"] { border-color: rgb(18 17 23 / 0.6) !important; }
+.rita-app [class~="border-[#d1795e]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="border-[#d1795e]/30"] { border-color: rgb(18 17 23 / 0.3) !important; }
+.rita-app [class~="border-[#d1795e]/40"] { border-color: rgb(18 17 23 / 0.4) !important; }
+.rita-app [class~="border-[#d94a3d]/25"] { border-color: rgb(18 17 23 / 0.25) !important; }
+.rita-app [class~="border-[#dcdce5]"] { border-color: var(--pp-line) !important; }
+.rita-app [class~="border-[#e6c9a8]"] { border-color: var(--pp-ink) !important; }
+.rita-app [class~="ring-[#23201d]"] { --tw-ring-color: var(--pp-accent) !important; }
+.rita-app [class~="ring-[#4c9a2a]/30"] { --tw-ring-color: var(--pp-accent) !important; }
+.rita-app [class~="ring-[#6366f1]"] { --tw-ring-color: var(--pp-accent) !important; }
+.rita-app [class~="ring-[#6ab887]"] { --tw-ring-color: var(--pp-accent) !important; }
+.rita-app [class~="ring-[#8ec63f]"] { --tw-ring-color: var(--pp-accent) !important; }
+.rita-app [class~="text-[#0a0a0a]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#121117]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#1e3a8a]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#1f4c6d]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#231f1a]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#2c480e]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#2f6b1c]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3b3730]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3c3730]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3d3833]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3f6a17]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3f7c26]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#3f9a63]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#4338ca]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#4a3877]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#4b4a5c]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#4b7a33]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#4e7a1f]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#5d574e]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#6a697c]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#6aa9d8]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#6b6459]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#7a6f5e]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#7a7164]"] { color: var(--pp-body) !important; }
+.rita-app [class~="text-[#8a3b32]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#8a5b12]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#8a6a1f]"] { color: var(--pp-ink) !important; }
+.rita-app [class~="text-[#8a8072]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#8a8378]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#8b8375]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#8d8578]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#8f2323]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#a15b47]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#a49a8b]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#b4485f]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#b8b0a4]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#c0392b]/80"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#c1392b]"] { color: var(--pp-danger) !important; }
+.rita-app [class~="text-[#c2b9aa]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#c6bfb4]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#c8bfae]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#c8c0b2]"] { color: var(--pp-muted) !important; }
+.rita-app [class~="text-[#f0a95c]"] { color: var(--pp-ink) !important; }
 
 /* Primary actions that were dark pills become the pink button; round chips get 10px corners. */
 .rita-app :is(button, a)[class~="bg-[#23201d]"],
@@ -5633,7 +5229,11 @@ html.rita-app,
 }
 /* RTL: the first box sits on the right, the page; Rita is on the left. */
 .edith-premium .kind-card[data-kind="study"] .kind-pic > i:nth-child(1) {
-  background: repeating-linear-gradient(to bottom, var(--kind-study) 0 2px, transparent 2px 6px);
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--kind-study) 0 2px,
+    transparent 2px 6px
+  );
   opacity: 0.55;
 }
 .edith-premium .kind-card[data-kind="study"] .kind-pic > i:nth-child(2) {
@@ -5955,9 +5555,7 @@ html.rita-app,
   margin-top: 2px;
   border-radius: 7px;
   color: #b0b0ad;
-  transition:
-    color 150ms ease,
-    background-color 150ms ease;
+  transition: color 150ms ease, background-color 150ms ease;
 }
 .uz-rc-flag:hover {
   color: #1f1f1f;
@@ -6007,9 +5605,7 @@ html.rita-app,
   border-radius: 28px;
   background: #ebebea;
   text-align: start;
-  transition:
-    background-color 150ms ease,
-    box-shadow 200ms ease;
+  transition: background-color 150ms ease, box-shadow 200ms ease;
 }
 .uz-rc-bar:focus-within {
   box-shadow: inset 0 0 0 1px #d6d6d3;
@@ -6081,9 +5677,7 @@ html.rita-app,
   border-radius: 50%;
   background: #6096f0;
   color: #fff;
-  transition:
-    transform 120ms ease,
-    background-color 150ms ease;
+  transition: transform 120ms ease, background-color 150ms ease;
 }
 .uz-rc-send:disabled {
   background: #a9c4f7;
@@ -6099,9 +5693,7 @@ html.rita-app,
   height: 36px;
   border-radius: 50%;
   color: #6b6b6b;
-  transition:
-    background-color 150ms ease,
-    color 150ms ease;
+  transition: background-color 150ms ease, color 150ms ease;
 }
 @media (hover: hover) and (pointer: fine) {
   .uz-rc-icon:hover {
@@ -7457,9 +7049,7 @@ html.rita-app,
   color: var(--pp-ink);
   font-size: 12.5px;
   font-weight: 600;
-  transition:
-    background-color 150ms ease,
-    color 150ms ease;
+  transition: background-color 150ms ease, color 150ms ease;
 }
 .lp-edit.is-on {
   border-color: var(--pp-ink, #121117);
@@ -7887,9 +7477,7 @@ html.rita-app,
   background: #fff;
   color: #2b6df0;
   animation: lp-in 360ms cubic-bezier(0.23, 1, 0.32, 1) both;
-  transition:
-    transform 150ms ease,
-    background-color 150ms ease;
+  transition: transform 150ms ease, background-color 150ms ease;
 }
 .lp-plus[aria-expanded="true"] {
   border-style: solid;
@@ -8639,270 +8227,81 @@ html.rita-app,
   color-scheme: dark;
   font-family: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
 }
-.uz-footer-inner {
-  max-width: 1400px;
-  margin-inline: auto;
-  padding: 36px 24px 0;
-}
-.uz-footer-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-}
-.uz-footer-logo {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--uf-paper);
-  text-decoration: none;
-}
-.uz-footer-logo > [role="img"] > svg {
-  height: 1.55em;
-  width: auto;
-  flex-shrink: 0;
-}
+.uz-footer-inner { max-width: 1400px; margin-inline: auto; padding: 36px 24px 0; }
+.uz-footer-top { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.uz-footer-logo { display: inline-flex; align-items: center; min-height: 44px; color: var(--uf-paper); text-decoration: none; }
+.uz-footer-logo > [role="img"] > svg { height: 1.55em; width: auto; flex-shrink: 0; }
 .uz-footer-up {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 8px 0 8px 12px;
-  gap: 12px;
-  border: 0;
-  background: transparent;
-  color: var(--uf-muted);
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
+  padding: 8px 0 8px 12px; gap: 12px; border: 0; background: transparent;
+  color: var(--uf-muted); font: inherit; font-size: 14px; cursor: pointer;
 }
-.uz-footer-up svg {
-  transition: transform 180ms ease;
-}
-.uz-footer-up:hover {
-  color: var(--uf-paper);
-}
-.uz-footer-up:hover svg {
-  transform: translateY(-3px);
-}
-.uz-footer-grid {
-  display: grid;
-  gap: 48px;
-  margin-top: 48px;
-}
+.uz-footer-up svg { transition: transform 180ms ease; }
+.uz-footer-up:hover { color: var(--uf-paper); }
+.uz-footer-up:hover svg { transform: translateY(-3px); }
+.uz-footer-grid { display: grid; gap: 48px; margin-top: 48px; }
 .uz-footer-intro h2 {
-  margin: 0;
-  color: var(--uf-paper);
-  font-family: "Uzyra Arabic", "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
-  font-size: clamp(34px, 4vw, 46px);
-  font-weight: 600;
-  line-height: 1.08;
-  letter-spacing: -0.035em;
+  margin: 0; color: var(--uf-paper); font-family: "Uzyra Arabic", "Inter Tight", "Figtree", Helvetica, Arial, sans-serif;
+  font-size: clamp(34px, 4vw, 46px); font-weight: 600; line-height: 1.08; letter-spacing: -0.035em;
 }
-.uz-footer[dir="rtl"] .uz-footer-intro h2 {
-  letter-spacing: 0;
-  line-height: 1.28;
-}
-.uz-footer-intro p {
-  max-width: 28ch;
-  margin: 18px 0 24px;
-  font-size: 16px;
-  line-height: 1.7;
-  color: var(--uf-muted);
-}
+.uz-footer[dir="rtl"] .uz-footer-intro h2 { letter-spacing: 0; line-height: 1.28; }
+.uz-footer-intro p { max-width: 28ch; margin: 18px 0 24px; font-size: 16px; line-height: 1.7; color: var(--uf-muted); }
 .uz-footer-start {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 48px;
-  gap: 28px;
-  padding: 10px 18px;
-  border: 1px solid var(--uf-paper);
-  border-radius: 8px;
-  background: var(--uf-paper);
-  color: var(--uf-ink);
-  font-size: 15px;
-  font-weight: 600;
-  white-space: nowrap;
-  text-decoration: none;
-  transition:
-    background-color 180ms ease,
-    transform 180ms ease;
+  display: inline-flex; align-items: center; justify-content: space-between; min-height: 48px;
+  gap: 28px; padding: 10px 18px; border: 1px solid var(--uf-paper); border-radius: 8px;
+  background: var(--uf-paper); color: var(--uf-ink); font-size: 15px; font-weight: 600;
+  white-space: nowrap; text-decoration: none; transition: background-color 180ms ease, transform 180ms ease;
 }
-.uz-footer-start:hover {
-  background: #dce7ff;
-}
-.uz-footer-start:active {
-  transform: translateY(1px);
-}
-.uz-footer[dir="rtl"] .uz-footer-start svg {
-  transform: scaleX(-1);
-}
-.uz-footer-links {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 28px 20px;
-}
-.uz-footer-links nav {
-  min-width: 0;
-}
-.uz-footer-links h3 {
-  margin: 0 0 10px;
-  color: var(--uf-paper);
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.6;
-}
-.uz-footer-links ul {
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
+.uz-footer-start:hover { background: #dce7ff; }
+.uz-footer-start:active { transform: translateY(1px); }
+.uz-footer[dir="rtl"] .uz-footer-start svg { transform: scaleX(-1); }
+.uz-footer-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; }
+.uz-footer-links nav { min-width: 0; }
+.uz-footer-links h3 { margin: 0 0 10px; color: var(--uf-paper); font-size: 14px; font-weight: 600; line-height: 1.6; }
+.uz-footer-links ul { padding: 0; margin: 0; list-style: none; }
 .uz-footer-links a {
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-  width: fit-content;
-  max-width: 100%;
-  color: var(--uf-muted);
-  font-size: 15px;
-  line-height: 1.5;
-  text-decoration: none;
-  text-underline-offset: 5px;
-  transition: color 160ms ease;
+  display: flex; align-items: center; min-height: 44px; width: fit-content; max-width: 100%;
+  color: var(--uf-muted); font-size: 15px; line-height: 1.5; text-decoration: none;
+  text-underline-offset: 5px; transition: color 160ms ease;
 }
-.uz-footer-links a:hover {
-  color: var(--uf-paper);
-  text-decoration: underline;
-  text-decoration-color: #8eafff;
-}
+.uz-footer-links a:hover { color: var(--uf-paper); text-decoration: underline; text-decoration-color: #8eafff; }
 .uz-footer-bottom {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 16px 32px;
-  margin-top: 48px;
-  padding-top: 20px;
-  border-top: 1px solid var(--uf-line);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 16px 32px;
+  margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--uf-line);
 }
 .uz-footer-email {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 44px;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  color: var(--uf-paper);
-  font-size: 14px;
-  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 12px; min-height: 44px; max-width: 100%;
+  overflow-wrap: anywhere; color: var(--uf-paper); font-size: 14px; text-decoration: none;
 }
-.uz-footer-email svg {
-  flex-shrink: 0;
-}
-.uz-footer-email:hover {
-  text-decoration: underline;
-  text-underline-offset: 5px;
-}
-.uz-footer-legal {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 22px;
-}
-.uz-footer-legal a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--uf-muted);
-  font-size: 13px;
-  text-decoration: none;
-}
-.uz-footer-legal a:hover {
-  color: var(--uf-paper);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-.uz-footer-copyright {
-  flex-basis: 100%;
-  margin: 0;
-  color: var(--uf-muted);
-  font-size: 12px;
-  line-height: 1.7;
-}
-.uz-footer :is(a, button):focus-visible {
-  outline: 2px solid #8eafff;
-  outline-offset: 5px;
-  border-radius: 4px;
-}
+.uz-footer-email svg { flex-shrink: 0; }
+.uz-footer-email:hover { text-decoration: underline; text-underline-offset: 5px; }
+.uz-footer-legal { display: flex; flex-wrap: wrap; gap: 0 22px; }
+.uz-footer-legal a { display: inline-flex; align-items: center; min-height: 44px; color: var(--uf-muted); font-size: 13px; text-decoration: none; }
+.uz-footer-legal a:hover { color: var(--uf-paper); text-decoration: underline; text-underline-offset: 4px; }
+.uz-footer-copyright { flex-basis: 100%; margin: 0; color: var(--uf-muted); font-size: 12px; line-height: 1.7; }
+.uz-footer :is(a, button):focus-visible { outline: 2px solid #8eafff; outline-offset: 5px; border-radius: 4px; }
 .uz-footer-art {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  max-width: 1520px;
-  margin: 20px auto 0;
-  padding: 30px 14px 0;
-  isolation: isolate;
-  overflow: hidden;
-  pointer-events: none;
+  position: relative; display: flex; align-items: flex-end; justify-content: center;
+  max-width: 1520px; margin: 20px auto 0; padding: 30px 14px 0;
+  isolation: isolate; overflow: hidden; pointer-events: none;
 }
-.uz-footer-signature {
-  position: relative;
-  z-index: 1;
-  margin-bottom: -0.13em;
-  color: #3d3c47;
-  font-size: clamp(68px, 19.4vw, 290px) !important;
-}
-.uz-footer-thread {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  overflow: visible;
-}
-.uz-footer-thread path {
-  stroke: var(--uf-blue);
-  stroke-width: 2;
-  vector-effect: non-scaling-stroke;
-}
+.uz-footer-signature { position: relative; z-index: 1; margin-bottom: -0.13em; color: #3d3c47; font-size: clamp(68px, 19.4vw, 290px) !important; }
+.uz-footer-thread { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; overflow: visible; }
+.uz-footer-thread path { stroke: var(--uf-blue); stroke-width: 2; vector-effect: non-scaling-stroke; }
 @media (min-width: 640px) {
-  .uz-footer-inner {
-    padding: 48px 40px 0;
-  }
-  .uz-footer-links {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 28px 32px;
-  }
-  .uz-footer-grid {
-    gap: 56px;
-    margin-top: 56px;
-  }
-  .uz-footer-art {
-    margin-top: 32px;
-    padding-top: 48px;
-  }
+  .uz-footer-inner { padding: 48px 40px 0; }
+  .uz-footer-links { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 32px; }
+  .uz-footer-grid { gap: 56px; margin-top: 56px; }
+  .uz-footer-art { margin-top: 32px; padding-top: 48px; }
 }
 @media (min-width: 1100px) {
-  .uz-footer-grid {
-    grid-template-columns: minmax(200px, 0.85fr) minmax(0, 2.9fr);
-    gap: 64px;
-    margin-top: 68px;
-  }
-  .uz-footer-links {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 28px;
-  }
-  .uz-footer-bottom {
-    margin-top: 68px;
-  }
-  .uz-footer-legal {
-    margin-inline-start: auto;
-  }
+  .uz-footer-grid { grid-template-columns: minmax(200px, .85fr) minmax(0, 2.9fr); gap: 64px; margin-top: 68px; }
+  .uz-footer-links { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px; }
+  .uz-footer-bottom { margin-top: 68px; }
+  .uz-footer-legal { margin-inline-start: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .uz-footer :is(a, button, svg) {
-    transition: none;
-  }
+  .uz-footer :is(a, button, svg) { transition: none; }
 }
 
 /* The study page's top bar: thin and quiet, small type (13px), as in pro tools. */
@@ -9389,10 +8788,7 @@ html.rita-app,
 }
 .uz-lintro-load-text {
   color: var(--uz-muted);
-  font:
-    400 12px/1.4 "Uzyra Arabic",
-    "Figtree",
-    sans-serif;
+  font: 400 12px/1.4 "Uzyra Arabic", "Figtree", sans-serif;
 }
 .uz-lintro-actions {
   display: flex;
@@ -9420,26 +8816,16 @@ html.rita-app,
 }
 .uz-lintro-label {
   color: var(--uz-muted);
-  font:
-    500 12px/1.4 "Uzyra Arabic",
-    "Figtree",
-    sans-serif;
+  font: 500 12px/1.4 "Uzyra Arabic", "Figtree", sans-serif;
 }
 .uz-lintro-title {
   color: var(--uz-line);
-  font:
-    400 22px/1.25 "Uzyra Arabic",
-    "Inter Tight",
-    "Figtree",
-    sans-serif;
+  font: 400 22px/1.25 "Uzyra Arabic", "Inter Tight", "Figtree", sans-serif;
   letter-spacing: 0.02em;
 }
 .uz-lintro-ar {
   color: var(--uz-muted);
-  font:
-    400 15px/1.6 "Uzyra Arabic",
-    "Figtree",
-    sans-serif;
+  font: 400 15px/1.6 "Uzyra Arabic", "Figtree", sans-serif;
 }
 .uz-lintro-dots {
   display: flex;
@@ -9462,10 +8848,7 @@ html.rita-app,
 }
 .uz-lintro-error {
   color: var(--uz-line);
-  font:
-    500 16px/1.6 "Uzyra Arabic",
-    "Figtree",
-    sans-serif;
+  font: 500 16px/1.6 "Uzyra Arabic", "Figtree", sans-serif;
 }
 .uz-lintro-back {
   display: inline-flex;
@@ -9476,10 +8859,7 @@ html.rita-app,
   border: 1px solid rgb(243 245 251 / 0.5);
   border-radius: 999px;
   color: var(--uz-line);
-  font:
-    600 14px "Uzyra Arabic",
-    "Figtree",
-    sans-serif;
+  font: 600 14px "Uzyra Arabic", "Figtree", sans-serif;
   pointer-events: auto;
 }
 .uz-lintro-back.is-primary {
@@ -9712,9 +9092,7 @@ html.rita-app,
   border-radius: 6px;
   padding: 1px 6px;
   color: var(--pp-muted);
-  font:
-    500 11.5px "Figtree",
-    sans-serif;
+  font: 500 11.5px "Figtree", sans-serif;
 }
 .bk-clear {
   display: grid;
@@ -9753,9 +9131,7 @@ html.rita-app,
   border-radius: 99px;
   background: var(--pp-accent);
   color: #fff;
-  font:
-    700 11.5px "Figtree",
-    sans-serif;
+  font: 700 11.5px "Figtree", sans-serif;
 }
 .bk-panel {
   display: grid;
@@ -9814,9 +9190,7 @@ html.rita-app,
 }
 .bk-opt-n {
   color: var(--pp-muted);
-  font:
-    500 11.5px "Figtree",
-    sans-serif;
+  font: 500 11.5px "Figtree", sans-serif;
 }
 .bk-opt[aria-pressed="true"] .bk-opt-n {
   color: rgb(255 255 255 / 0.7);
@@ -9994,9 +9368,7 @@ html.rita-app,
 }
 .bk-cat-n {
   color: var(--pp-muted);
-  font:
-    500 12px "Figtree",
-    sans-serif;
+  font: 500 12px "Figtree", sans-serif;
 }
 .bk-cat[aria-pressed="true"] .bk-cat-n {
   color: rgb(255 255 255 / 0.7);
@@ -10116,9 +9488,7 @@ html.rita-app,
   border-radius: 6px;
   background: rgb(255 255 255 / 0.94);
   color: var(--pp-ink);
-  font:
-    700 11px "Figtree",
-    sans-serif;
+  font: 700 11px "Figtree", sans-serif;
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.18);
 }
 .bk-book[data-size="sm"] .bk-level {
@@ -10146,18 +9516,12 @@ html.rita-app,
 .bk-cloth-title {
   display: -webkit-box;
   overflow: hidden;
-  font:
-    600 calc(var(--w) * 0.11) / 1.2 "Figtree",
-    "Uzyra Arabic",
-    sans-serif;
+  font: 600 calc(var(--w) * 0.11) / 1.2 "Figtree", "Uzyra Arabic", sans-serif;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
 }
 .bk-cloth-author {
-  font:
-    500 calc(var(--w) * 0.075) / 1.2 "Figtree",
-    "Uzyra Arabic",
-    sans-serif;
+  font: 500 calc(var(--w) * 0.075) / 1.2 "Figtree", "Uzyra Arabic", sans-serif;
   opacity: 0.8;
 }
 .bk-book[data-size="sm"] .bk-cloth-author,
@@ -10207,10 +9571,7 @@ html.rita-app,
   width: 100%;
   margin-top: 22px;
   overflow: hidden;
-  font:
-    600 14.5px / 1.35 "Figtree",
-    "Uzyra Arabic",
-    sans-serif;
+  font: 600 14.5px / 1.35 "Figtree", "Uzyra Arabic", sans-serif;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   text-align: start;
@@ -10220,10 +9581,7 @@ html.rita-app,
   margin-top: 3px;
   overflow: hidden;
   color: var(--pp-muted);
-  font:
-    400 12.5px / 1.35 "Figtree",
-    "Uzyra Arabic",
-    sans-serif;
+  font: 400 12.5px / 1.35 "Figtree", "Uzyra Arabic", sans-serif;
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: start;
@@ -10241,10 +9599,13 @@ html.rita-app,
   overflow: hidden;
   border-radius: 24px;
   background:
-    radial-gradient(120% 140% at 100% 0%, var(--soft) 0%, transparent 58%), var(--pp-grey);
+    radial-gradient(120% 140% at 100% 0%, var(--soft) 0%, transparent 58%),
+    var(--pp-grey);
 }
 [dir="rtl"] .bk-feature {
-  background: radial-gradient(120% 140% at 0% 0%, var(--soft) 0%, transparent 58%), var(--pp-grey);
+  background:
+    radial-gradient(120% 140% at 0% 0%, var(--soft) 0%, transparent 58%),
+    var(--pp-grey);
 }
 .bk-feature-book {
   border-radius: 8px;
@@ -10267,20 +9628,14 @@ html.rita-app,
 .bk-feature-title,
 .bk-sheet-title {
   margin: 12px 0 4px;
-  font:
-    600 clamp(1.5rem, 2.4vw, 1.9rem) / 1.15 "Figtree",
-    "Uzyra Arabic",
-    sans-serif !important;
+  font: 600 clamp(1.5rem, 2.4vw, 1.9rem) / 1.15 "Figtree", "Uzyra Arabic", sans-serif !important;
   letter-spacing: -0.02em;
 }
 .bk-feature-by,
 .bk-sheet-by {
   margin: 0;
   color: #4b4a5c;
-  font:
-    400 15px "Figtree",
-    "Uzyra Arabic",
-    sans-serif;
+  font: 400 15px "Figtree", "Uzyra Arabic", sans-serif;
 }
 .bk-chips {
   display: flex;
@@ -10529,9 +9884,7 @@ html.rita-app,
   gap: 3px;
   margin-top: 2px;
   color: #8a5a00;
-  font:
-    600 12px "Figtree",
-    sans-serif;
+  font: 600 12px "Figtree", sans-serif;
 }
 .bk-rating {
   display: flex;
@@ -10694,12 +10047,16 @@ html.rita-app,
   padding: 30px;
   overflow-y: auto;
   border-radius: 24px;
-  background: radial-gradient(90% 120% at 100% 0%, var(--soft) 0%, transparent 55%), #fff;
+  background:
+    radial-gradient(90% 120% at 100% 0%, var(--soft) 0%, transparent 55%),
+    #fff;
   box-shadow: 0 30px 80px -30px rgb(18 17 23 / 0.6);
   animation: bk-pop 240ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 [dir="rtl"].bk-sheet {
-  background: radial-gradient(90% 120% at 0% 0%, var(--soft) 0%, transparent 55%), #fff;
+  background:
+    radial-gradient(90% 120% at 0% 0%, var(--soft) 0%, transparent 55%),
+    #fff;
 }
 @keyframes bk-pop {
   from {
@@ -10794,29 +10151,11 @@ html.rita-app,
 }
 /* A Latin title or author inside an Arabic page reads left to right but lines up with the page. */
 :is(.bk-page, .bk-sheet)[dir="rtl"]
-  :is(
-    .bk-feature-title,
-    .bk-feature-by,
-    .bk-feature-text,
-    .bk-sheet-title,
-    .bk-sheet-by,
-    .bk-sheet-text,
-    .bk-item-title,
-    .bk-item-author
-  ) {
+  :is(.bk-feature-title, .bk-feature-by, .bk-feature-text, .bk-sheet-title, .bk-sheet-by, .bk-sheet-text, .bk-item-title, .bk-item-author) {
   text-align: right;
 }
 :is(.bk-page, .bk-sheet)[dir="ltr"]
-  :is(
-    .bk-feature-title,
-    .bk-feature-by,
-    .bk-feature-text,
-    .bk-sheet-title,
-    .bk-sheet-by,
-    .bk-sheet-text,
-    .bk-item-title,
-    .bk-item-author
-  ) {
+  :is(.bk-feature-title, .bk-feature-by, .bk-feature-text, .bk-sheet-title, .bk-sheet-by, .bk-sheet-text, .bk-item-title, .bk-item-author) {
   text-align: left;
 }
 /* On the white sheet the chips need their grey; the tint is a calm band across the top. */
