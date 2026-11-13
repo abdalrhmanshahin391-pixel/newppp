@@ -15,7 +15,7 @@ import {
   emptyRitaX,
   ritaxStats,
   useAllRitaX,
-  type Uzyra,
+  type RitaX,
 } from "@/lib/ritax";
 
 export const Route = createFileRoute("/admin/ritax-announcements")({
@@ -52,7 +52,7 @@ function RitaXStudio() {
   const { data: stats } = useQuery({ queryKey: ["ritax-stats"], queryFn: ritaxStats, staleTime: 30_000 });
 
   const [selected, setSelected] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Partial<Uzyra> | null>(null);
+  const [draft, setDraft] = useState<Partial<RitaX> | null>(null);
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
 
@@ -67,8 +67,8 @@ function RitaXStudio() {
     }
   }, [list, draft]);
 
-  const current = useMemo(() => ({ ...emptyRitaX(), ...(draft ?? {}) }) as Uzyra, [draft]);
-  const set = (patch: Partial<Uzyra>) => setDraft((d) => ({ ...(d ?? {}), ...patch }));
+  const current = useMemo(() => ({ ...emptyRitaX(), ...(draft ?? {}) }) as RitaX, [draft]);
+  const set = (patch: Partial<RitaX>) => setDraft((d) => ({ ...(d ?? {}), ...patch }));
 
   async function refresh() {
     await qc.invalidateQueries({ queryKey: ["ritax-all"] });
@@ -76,7 +76,7 @@ function RitaXStudio() {
     await qc.invalidateQueries({ queryKey: ["ritax-stats"] });
   }
 
-  async function save(extra: Partial<Uzyra> = {}) {
+  async function save(extra: Partial<RitaX> = {}) {
     setSaving(true);
     try {
       const payload = { ...current, ...extra };
@@ -87,15 +87,15 @@ function RitaXStudio() {
         const { error } = await (supabase.from as any)("announcements").update(rest).eq("id", selected);
         if (error) throw error;
       } else {
-        const { id: _ignored, ...rest } = payload as Uzyra;
+        const { id: _ignored, ...rest } = payload as RitaX;
         const { data, error } = await (supabase.from as any)("announcements")
           .insert(rest)
           .select("*")
           .maybeSingle();
         if (error) throw error;
         if (data) {
-          setSelected((data as Uzyra).id);
-          setDraft(data as Uzyra);
+          setSelected((data as RitaX).id);
+          setDraft(data as RitaX);
         }
       }
       setDraft((d) => ({ ...(d ?? {}), ...extra }));
@@ -116,7 +116,7 @@ function RitaXStudio() {
     await refresh();
   }
 
-  function duplicate(a: Uzyra) {
+  function duplicate(a: RitaX) {
     const { id, created_at, updated_at, ...rest } = a;
     setSelected(null);
     setDraft({ ...rest, name: `${a.name} copy`, status: "draft" });
@@ -329,7 +329,7 @@ function RitaXStudio() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <span className={LABEL}>Audience</span>
-                  <select className={FIELD} value={current.audience} onChange={(e) => set({ audience: e.target.value as Uzyra["audience"] })}>
+                  <select className={FIELD} value={current.audience} onChange={(e) => set({ audience: e.target.value as RitaX["audience"] })}>
                     {RITAX_AUDIENCES.map((a) => (
                       <option key={a.id} value={a.id}>{a.name}</option>
                     ))}
@@ -337,7 +337,7 @@ function RitaXStudio() {
                 </div>
                 <div>
                   <span className={LABEL}>How often</span>
-                  <select className={FIELD} value={current.frequency} onChange={(e) => set({ frequency: e.target.value as Uzyra["frequency"] })}>
+                  <select className={FIELD} value={current.frequency} onChange={(e) => set({ frequency: e.target.value as RitaX["frequency"] })}>
                     {RITAX_FREQUENCIES.map((f) => (
                       <option key={f.id} value={f.id}>{f.name}</option>
                     ))}
