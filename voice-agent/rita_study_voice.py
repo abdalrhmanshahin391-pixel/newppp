@@ -34,13 +34,15 @@ ACTIONS = {
     "No quiz, check question, follow-up question, or request for the learner to explain back. "
     "Stop after the explanation.",
     "simplify": "Say the idea in the simplest words in one short sentence. Then a sheet with one "
-    "solved example, step by step in two or three points.",
+    "solved example, step by step in two or three points, each step said with \"we\" (نختار، نحط، "
+    "نضيف), never as a command to the learner.",
     "explain_back": "The learner will now explain the idea in their own words. Ask them to do it in "
     "one short sentence, then wait. When they answer, point out only what is missing or wrong, "
     "kindly, without re-teaching everything. No sheet.",
     "compare_arabic": "Say the main difference from Arabic in one short sentence. Then a sheet with a "
     "small table (Arabic | the language being learned) and one pair of examples.",
-    "word_by_word": "Say in one short sentence how the selected sentence is structured. "
+    "word_by_word": "Say in one short sentence how the selected sentence is structured, without "
+    "listing its parts aloud (the parts go only in the table). "
     "Then a sheet with a table: part | its role | simple explanation. "
     "Group meaningful grammatical parts in their original order, covering the whole selection "
     "in at most 8 parts. Keep verb groups and fixed phrases together, e.g. She | is reading | a book, "
@@ -52,7 +54,8 @@ ACTIONS = {
     "sentence or list other uses. If no reason is established, say you cannot determine it from "
     "this passage; never guess. No quiz, follow-up question, or request to explain back. No sheet.",
     "common_mistake": "Warn about exactly ONE possible learner mistake tied to the selected rule "
-    "and guide context in one short spoken sentence. Then a small sheet with three labelled lines "
+    "and guide context in one short spoken sentence, said as a statement (الغلط الشائع إنه …), "
+    "never as a command like حط بالك or انتبه. Then a small sheet with three labelled lines "
     "in the explanation language: Wrong (الغلط), Correct (الصح), Why (السبب). "
     "Use one minimal incorrect/correct pair differing only in the target mistake, and one simple "
     "reason. This is a preventive example, not a claim that the learner or selected guide text is "
@@ -80,8 +83,18 @@ STUDY_CONTRACT = """INTERACTIVE STUDY (the learner reads a guide on screen; you 
 - Explain only from the STUDY CONTEXT the website sends. If the context does not cover the question,
   say so in one sentence and never invent a rule.
 - Stay on this lesson and what it needs. If the learner asks about something else, answer in one
-  sentence and come back. If it happens again, offer to continue in a free conversation after the
-  lesson.
+  short general sentence that names no place, shop or person, then come back with one
+  short line such as "خلّينا نرجع للدرس". No sheet. If it happens again, offer to continue in a free
+  conversation after the lesson.
+- A spoken question about the lesson gets at most two short spoken sentences. A sheet only when the
+  answer truly needs a small table or several forms.
+- A rule this lesson does not teach (another tense, for example): say in one sentence what it is and
+  that it is not part of this lesson. No sheet, no table.
+- "I did not understand": say the idea again in one very simple sentence with one everyday example.
+  No grammar terms and no sheet.
+- Asked to save a word or make cards: you cannot save by voice. Say it without a command and
+  without فيك, e.g. "ما بقدر أحفظها بالصوت، بس بتحديدها واختيار «بطاقات» من الدائرة بتصير بطاقة."
+  Never say anything was saved.
 - Speak one short sentence per request; the details go on the written sheet after [[SHEET]],
   laid out like the guide (title, small table, points, examples, watch-out). Never read the sheet.
 - Explain in the learner's explanation language; examples stay in the language being learned.
@@ -89,6 +102,16 @@ STUDY_CONTRACT = """INTERACTIVE STUDY (the learner reads a guide on screen; you 
 - When the learner is practising, building tiles or looking at cards, stay quiet: silence is not
   your turn.
 - Do not talk when the learner only selects text; wait for a request or a question."""
+
+
+#: Read last, next to the turn note: on the lesson page these rules win over a turn note about length.
+STUDY_TURN_NOTE = (
+    "LESSON PAGE NOTE (overrides any TURN NOTE about length): \"I did not understand\" gets one very "
+    "simple spoken sentence with one everyday example, no [[SHEET]] and no pointer to one. Otherwise speak at most two short "
+    "sentences; anything longer goes on the sheet. Off-topic: one short general sentence that names no place, shop or person, "
+    "then \"خلّينا نرجع للدرس\", no sheet. A rule this lesson does not teach: one sentence saying what it is "
+    "and that it is not part of this lesson, no sheet."
+)
 
 
 def _text(value: Any, limit: int) -> str:
@@ -249,6 +272,13 @@ class StudyVoice:
                 f"{source}:\n{self.request.context}"
             )
         return "\n".join(parts)
+
+
+def study_turn_note(voice: StudyVoice | None) -> str:
+    """The lesson page's note for a spoken turn (empty outside a study lesson or while quiet)."""
+    if voice is None or voice.quiet:
+        return ""
+    return STUDY_TURN_NOTE + "\n"
 
 
 def study_section(body: dict[str, Any], voice: StudyVoice | None) -> str:

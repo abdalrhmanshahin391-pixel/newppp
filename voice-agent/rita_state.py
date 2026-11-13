@@ -324,7 +324,10 @@ class RitaSessionState:
         if act == Act.SIMPLIFY:
             if self.attempt_count >= 2:
                 return "the learner still needs a simpler explanation; change method completely and use one concrete everyday example; do not repeat the previous wording"
-            return "explain the same idea in plain words with one concrete example; do not add a second concept"
+            return (
+                "explain the same idea in plain words with one concrete example; do not add a second "
+                "concept; say it, with no [[SHEET]]"
+            )
         if act == Act.UNDERSTOOD:
             return "the learner understood; do not re-explain; take one small next step"
         if act == Act.CONTINUE:
