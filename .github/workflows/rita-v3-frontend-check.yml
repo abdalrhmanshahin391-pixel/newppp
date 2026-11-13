@@ -72,6 +72,7 @@ on:
       - "public/book-covers/**"
       - "scripts/build-starter-books-sql.*"
       - "scripts/test-books-db.sh"
+      - "scripts/test-user-books-concurrency.sh"
       - "scripts/test-books-public-read-db.sh"
       - "src/lib/wordcraft/**"
       - "src/components/wordcraft/**"
