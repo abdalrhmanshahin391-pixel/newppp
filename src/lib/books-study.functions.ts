@@ -179,7 +179,8 @@ export const bookStudyText = createServerFn({ method: "POST" })
         return { ok: false, code: "failed", message: "تأخرت يوزرا بالرد. جرّب مرة ثانية." };
       const json = await response.json();
       const text = String(json?.choices?.[0]?.message?.content ?? "").trim();
-      if (!text) return { ok: false, code: "failed", message: "تأخرت يوزرا بالرد. جرّب مرة ثانية." };
+      if (!text)
+        return { ok: false, code: "failed", message: "تأخرت يوزرا بالرد. جرّب مرة ثانية." };
       return { ok: true, quote: outcome.quote, text: text.slice(0, 3000) };
     } catch {
       return { ok: false, code: "failed", message: "تأخرت يوزرا بالرد. جرّب مرة ثانية." };
