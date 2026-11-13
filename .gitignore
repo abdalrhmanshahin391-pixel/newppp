@@ -53,3 +53,6 @@ guides-worker/samples/
 # Offline settings bundles, browser captures and downloaded review artifacts
 /output/settings-preview/
 /output/settings-review/
+
+# Offline conversation management preview
+/output/conversations-preview/

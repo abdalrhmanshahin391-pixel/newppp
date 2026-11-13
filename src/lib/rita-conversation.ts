@@ -5,6 +5,8 @@ export type RitaConversationDelivery = "completed" | "interrupted" | "incomplete
 export type RitaConversation = {
   id: string;
   title: string;
+  pinned_at?: string | null;
+  title_is_custom?: boolean;
   language_preference: string;
   dialect_preference: string;
   message_count: number;

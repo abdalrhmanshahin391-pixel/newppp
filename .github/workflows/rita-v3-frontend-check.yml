@@ -184,6 +184,13 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: postgres
         run: ./scripts/test-study-db.sh
+      - name: Conversation ownership and custom-title rules
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: bash scripts/test-conversations-db.sh
       - name: Install pgTAP in the database container
         run: |
           docker exec ${{ job.services.postgres.id }} bash -c \
