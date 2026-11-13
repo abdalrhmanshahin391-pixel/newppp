@@ -185,7 +185,7 @@
   display: grid;
   gap: 14px;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "bar" "help" "rita" "stage" "slots" "note";
+  grid-template-areas: "bar" "help" "guide" "stage" "slots" "note";
 }
 @media (min-width: 1024px) {
   .wc-game {
@@ -193,7 +193,7 @@
     grid-template-areas:
       "bar bar"
       "help help"
-      "stage rita"
+      "stage guide"
       "stage slots"
       "stage note";
     grid-template-rows: auto auto auto auto 1fr;
@@ -302,8 +302,23 @@
   outline: 2px solid var(--pp-ink);
 }
 
-.wc-rita {
-  grid-area: rita;
+/* The guide: the Uzyra mark in a small ink circle, with its speech bubble. */
+.wc-badge {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background: var(--pp-ink);
+  color: #fff;
+}
+.wc-badge-mark {
+  width: 24px;
+  height: auto;
+}
+.wc-guide {
+  grid-area: guide;
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -322,11 +337,11 @@
     background-color 160ms ease,
     color 160ms ease;
 }
-.wc-rita[data-tone="good"] .wc-bubble {
+.wc-guide[data-tone="good"] .wc-bubble {
   background: #e3f4e8;
   color: #0f5132;
 }
-.wc-rita[data-tone="warn"] .wc-bubble {
+.wc-guide[data-tone="warn"] .wc-bubble {
   background: #fdf0dc;
   color: #7a3d06;
 }

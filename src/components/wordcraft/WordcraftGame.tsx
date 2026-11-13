@@ -20,7 +20,7 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
-import { RitaFace } from "@/components/brand/RitaBrand";
+import { UzyraMark } from "@/components/brand/UzyraMark";
 import { CATEGORY_COLORS } from "@/lib/books";
 import { checkMove, maskOf, type Path } from "@/lib/wordcraft/engine";
 import { DICTIONARY, type Round } from "@/lib/wordcraft/round";
@@ -52,7 +52,7 @@ const reduced = () =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /**
- * One Wordcraft round: Rita's line, the letter grid, the word slots with their Arabic meanings,
+ * One Wordcraft round: the guide's line, the letter grid, the word slots with their Arabic meanings,
  * and, once every tile is used, the words with their examples to learn from.
  */
 export function WordcraftGame({
@@ -599,8 +599,10 @@ export function WordcraftGame({
         </div>
       )}
 
-      <div className="wc-rita" data-tone={bubble.tone}>
-        <RitaFace size={44} />
+      <div className="wc-guide" data-tone={bubble.tone}>
+        <span className="wc-badge" aria-hidden="true">
+          <UzyraMark className="wc-badge-mark" />
+        </span>
         <p
           ref={bubbleRef}
           className="wc-bubble"

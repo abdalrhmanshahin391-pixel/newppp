@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowRight } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { RitaFace } from "@/components/brand/RitaBrand";
+import { UzyraMark } from "@/components/brand/UzyraMark";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { MUTE_KEY } from "@/lib/wordcraft/game";
@@ -249,7 +249,7 @@ function Play({
   );
 }
 
-/** While the words are being made: Rita says so, and the empty board holds its place. */
+/** While the words are being made: the guide says so, and the empty board holds its place. */
 function Waiting({ level, lang }: { level: Level; lang: Lang }) {
   const info = LEVELS[level];
   return (
@@ -264,8 +264,10 @@ function Waiting({ level, lang }: { level: Level; lang: Lang }) {
           <span className="wc-bar-level">{LEVEL_NAMES[level][lang]}</span>
         </p>
       </div>
-      <div className="wc-rita" data-tone="info">
-        <RitaFace size={44} />
+      <div className="wc-guide" data-tone="info">
+        <span className="wc-badge" aria-hidden="true">
+          <UzyraMark className="wc-badge-mark" />
+        </span>
         <p className="wc-bubble" role="status">
           {lang === "ar" ? "عم بجهّزلك الكلمات…" : "Getting your words ready…"}
         </p>
