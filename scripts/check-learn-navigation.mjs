@@ -331,23 +331,6 @@ try {
       findings.push({ lang, width, ...state, errors });
       await p.close();
     }
-  if (!baseline) {
-    const slow = await browser.newPage({ viewport: { width: 1180, height: 900 } });
-    await slow.route("**/assets/*.webp", async (route) => {
-      await new Promise((done) => setTimeout(done, 250));
-      await route.continue();
-    });
-    await slow.goto(origin + "/learn#plan");
-    await ready(slow);
-    await slow.locator('[data-learn-row="todo"]').waitFor();
-    assert.equal(await slow.locator('[data-learn-row="todo"]').isVisible(), true);
-    assert.ok(
-      await slow
-        .locator('[data-learn-row="todo"] .uz-tile-img')
-        .evaluate((el) => el.getBoundingClientRect().height > 0),
-    );
-    await slow.close();
-  }
   const p = await browser.newPage({ viewport: { width: 1180, height: 900 } });
   await p.goto(origin + "/learn");
   await ready(p);

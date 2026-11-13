@@ -304,8 +304,12 @@ layout. Real due-card and lesson counts remain optional account data, never inve
   green, the mark on the middle tile), PDF summary (a page with the mark, highlighted lines and a red
   PDF label), All in one (a yellow box with the mark, a card, a page and a question coming out) and
   Question bank (the mark in a question bubble, three answers, one green with a tick), and Lecture
-  Lab (a slide on an easel with the mark and a yellow question note). The other
-  tiles keep the monochrome look until their turn.
+  Lab (a slide on an easel with the mark and a yellow question note). Last round: To-do (a
+  clipboard with the mark, two tasks ticked), Exams (a calendar page with the mark on its red band, a
+  day circled, an A+), Shared decks (three cards and a share arrow), Classrooms (a yellow folder with
+  the mark and a members badge) and German Lab (a "Hallo!" card with the mark, the flag's colours
+  and a "Danke" bubble). Every /learn card is now a game card; the monochrome tiles and their
+  pictures are gone. Text drawn in the pictures stays left to right in Arabic.
 - **Hierarchy:** the conversation stage and Lessons sit together; the other sections retain
   their existing leading tile and smaller tool tiles. Every destination, description and AI
   marker stays. Cards have 24px corners; button styling reuses the existing system in monochrome.

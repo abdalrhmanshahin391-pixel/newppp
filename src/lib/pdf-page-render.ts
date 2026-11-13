@@ -267,15 +267,45 @@ export async function openPdfInParts(source: File | string): Promise<any> {
       task.promise.then(resolve, reject);
     }).finally(() => timer && clearTimeout(timer));
   };
+  // A device where the worker did not start opens on the page itself at once, instead of
+  // waiting a minute for the worker again (Safari on some iPads).
+  if (workerKnownBroken()) return await open(true, 90_000);
   try {
     return await open(false, 60_000);
   } catch (error) {
     // Some Safari versions cannot start the worker: try once more on the page itself.
     try {
-      return await open(true, 90_000);
+      const doc = await open(true, 90_000);
+      rememberWorkerBroken();
+      return doc;
     } catch {
       throw error;
     }
+  }
+}
+
+const NO_WORKER_KEY = "uzyra-pdf-no-worker";
+/** A worker failure is remembered for a week (a browser update may fix it). */
+const NO_WORKER_MS = 7 * 24 * 60 * 60 * 1000;
+let workerBroken: boolean | null = null;
+
+function workerKnownBroken(): boolean {
+  if (workerBroken !== null) return workerBroken;
+  try {
+    const at = Number(window.localStorage.getItem(NO_WORKER_KEY));
+    workerBroken = Number.isFinite(at) && at > 0 && Date.now() - at < NO_WORKER_MS;
+  } catch {
+    workerBroken = false;
+  }
+  return workerBroken;
+}
+
+function rememberWorkerBroken() {
+  workerBroken = true;
+  try {
+    window.localStorage.setItem(NO_WORKER_KEY, String(Date.now()));
+  } catch {
+    /* remembered for this visit only */
   }
 }
 

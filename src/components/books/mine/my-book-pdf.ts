@@ -40,6 +40,56 @@ export async function drawPage(
 
 const making = new Map<string, Promise<string | null>>();
 
+/** Draws page 1 as the small cover picture (a data address), or null. */
+async function drawCover(doc: PdfDoc): Promise<string | null> {
+  const canvas = document.createElement("canvas");
+  await drawPage(doc, 1, canvas, 180);
+  const url = canvas.toDataURL("image/jpeg", 0.82);
+  canvas.width = 0;
+  canvas.height = 0;
+  return url.startsWith("data:image/") ? url : null;
+}
+
+/** Keeps the cover on this device (older covers of the same book go first). */
+function keepCover(book: UserBook, url: string) {
+  try {
+    for (let i = window.localStorage.length - 1; i >= 0; i--) {
+      const k = window.localStorage.key(i);
+      if (k?.startsWith(`uzyra-my-book-cover:${book.id}:`) && k !== coverKey(book))
+        window.localStorage.removeItem(k);
+    }
+    if (url.length < 200_000) window.localStorage.setItem(coverKey(book), url);
+  } catch {
+    /* kept for this visit only */
+  }
+}
+
+/**
+ * Right after an upload: the cover is drawn from the file still on this device (no download),
+ * so it shows at once on the shelf.
+ */
+export async function coverFromFile(book: UserBook, file: File): Promise<void> {
+  const key = coverKey(book);
+  if (making.has(key)) return;
+  const job = (async () => {
+    let doc: PdfDoc = null;
+    try {
+      const { openPdfInParts } = await import("@/lib/pdf-page-render");
+      doc = await openPdfInParts(file);
+      const url = await drawCover(doc);
+      if (url) keepCover(book, url);
+      return url;
+    } catch {
+      return null;
+    } finally {
+      void doc?.destroy?.();
+      making.delete(key);
+    }
+  })();
+  making.set(key, job);
+  await job;
+}
+
 /** Page 1 as a small picture, kept on this device; null when it cannot be drawn. */
 export function myBookCover(book: UserBook): Promise<string | null> {
   const key = coverKey(book);
@@ -54,20 +104,8 @@ export function myBookCover(book: UserBook): Promise<string | null> {
     let doc: PdfDoc = null;
     try {
       doc = await openMyBook(book);
-      const canvas = document.createElement("canvas");
-      await drawPage(doc, 1, canvas, 180);
-      const url = canvas.toDataURL("image/webp", 0.8);
-      try {
-        // Old covers of the same book go first.
-        for (let i = window.localStorage.length - 1; i >= 0; i--) {
-          const k = window.localStorage.key(i);
-          if (k?.startsWith(`uzyra-my-book-cover:${book.id}:`) && k !== key)
-            window.localStorage.removeItem(k);
-        }
-        if (url.length < 200_000) window.localStorage.setItem(key, url);
-      } catch {
-        /* kept for this visit only */
-      }
+      const url = await drawCover(doc);
+      if (url) keepCover(book, url);
       return url;
     } catch {
       return null;

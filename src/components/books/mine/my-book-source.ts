@@ -13,13 +13,7 @@ import {
   type TextItemLike,
   type ViewportLike,
 } from "@/lib/books-reader";
-import {
-  drawWidth,
-  placeKey,
-  snippetAround,
-  textDirection,
-  type UserBook,
-} from "@/lib/user-books";
+import { drawWidth, placeKey, snippetAround, textDirection, type UserBook } from "@/lib/user-books";
 import { openMyBook, type PdfDoc } from "./my-book-pdf";
 
 export type MyBookSource = {
@@ -38,7 +32,6 @@ export type MyBookSource = {
   close(): void;
 };
 
-
 /** Search reads at most this many pages (a private book is at most 50 MB). */
 const SEARCH_PAGES = 800;
 const SEARCH_HITS = 60;
@@ -55,8 +48,6 @@ export function readPlace(bookId: string): number | null {
     return null;
   }
 }
-
-
 
 type OutlineNode = { title?: string; dest?: unknown; items?: OutlineNode[] };
 

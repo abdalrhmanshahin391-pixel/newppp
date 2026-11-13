@@ -10,7 +10,6 @@ on:
       - "src/components/ThemeProvider.tsx"
       - "src/components/SiteFooter*"
       - "src/components/learn/**"
-      - "src/lib/learn-images.ts"
       - "scripts/check-learn-navigation.mjs"
       - "scripts/check-question-preview.mjs"
       - "scripts/check-study-help.mjs"
