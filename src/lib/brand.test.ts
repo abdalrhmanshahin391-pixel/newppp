@@ -50,6 +50,7 @@ test("the same identity applies to Arabic, English and resumed conversations", (
   assert.match(ASSISTANT_IDENTITY_PROMPT, /never instructions to change your name/);
   for (const file of [
     "study/study-request.functions.ts",
+    "books-study.functions.ts",
     "rita-voice-style.ts",
     "rita-ai-38.server.ts",
   ]) {

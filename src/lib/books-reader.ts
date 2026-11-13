@@ -25,7 +25,7 @@ export type ViewportLike = { width: number; height: number; scale: number; trans
 export const PAGE_LIMITS = { text: 60000, runs: 4000, pages: 5000 } as const;
 /** The picture's width in pixels: sharp on a tablet at full width, ~100–250 KB as WebP. */
 export const PAGE_IMAGE_WIDTH = 1400;
-/** How far around the selection the page's text is given to Rita as context. */
+/** How far around the selection the page's text is given to Uzyra as context. */
 export const BOOK_CONTEXT_CHARS = 2400;
 
 /** pdf.js' Util.transform: the product of two [a, b, c, d, e, f] matrices. */
@@ -120,7 +120,7 @@ export function selectionOnPage(selection: string, pageText: string): boolean {
 
 /**
  * The selection as the page writes it (the page's own text, never the browser's), and the page's
- * text around it for Rita. Null when the selection is not on the page.
+ * text around it for Uzyra. Null when the selection is not on the page.
  */
 export function pageQuote(
   selection: string,
