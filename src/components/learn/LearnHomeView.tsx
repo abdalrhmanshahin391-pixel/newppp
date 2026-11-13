@@ -5,6 +5,7 @@ import { ImageSlot } from "@/components/learn/ImageSlot";
 import {
   AllInOneCardArt,
   FlashcardsCardArt,
+  LectureCardArt,
   LessonsCardArt,
   MemoryCardArt,
   PairsCardArt,
@@ -192,6 +193,7 @@ const PLAY: Record<string, Play> = {
   "pdf-summary": { Art: SummaryCardArt, go: { en: "Summarise", ar: "لخّص" } },
   "all-in-one": { Art: AllInOneCardArt, go: { en: "Start", ar: "ابدأ" } },
   "question-bank": { Art: QuestionBankCardArt, go: { en: "Practise", ar: "تدرّب" } },
+  "lecture-lab": { Art: LectureCardArt, go: { en: "Start", ar: "ابدأ" } },
 };
 
 /**

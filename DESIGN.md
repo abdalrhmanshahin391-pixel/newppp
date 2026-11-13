@@ -303,7 +303,8 @@ layout. Real due-card and lesson counts remain optional account data, never inve
   their important parts above the button. Third round: Wordcraft (a letter board, a found word in
   green, the mark on the middle tile), PDF summary (a page with the mark, highlighted lines and a red
   PDF label), All in one (a yellow box with the mark, a card, a page and a question coming out) and
-  Question bank (the mark in a question bubble, three answers, one green with a tick). The other
+  Question bank (the mark in a question bubble, three answers, one green with a tick), and Lecture
+  Lab (a slide on an easel with the mark and a yellow question note). The other
   tiles keep the monochrome look until their turn.
 - **Hierarchy:** the conversation stage and Lessons sit together; the other sections retain
   their existing leading tile and smaller tool tiles. Every destination, description and AI

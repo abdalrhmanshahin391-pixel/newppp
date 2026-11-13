@@ -411,3 +411,42 @@ export function QuestionBankCardArt() {
     </svg>
   );
 }
+
+/** Lecture Lab: a slide on an easel with the mark, and a yellow note of short questions. */
+export function LectureCardArt() {
+  return (
+    <svg
+      viewBox="40 0 280 240"
+      preserveAspectRatio="xMidYMax meet"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <Shadow />
+      <g stroke="#d4e3f7" strokeWidth={8} strokeLinecap="round">
+        <line x1={170} y1={140} x2={136} y2={200} />
+        <line x1={170} y1={140} x2={204} y2={200} />
+      </g>
+      <rect x={80} y={14} width={180} height={126} rx={16} fill="#d4e3f7" />
+      <rect x={80} y={6} width={180} height={126} rx={16} fill="#fff" />
+      <Mark x={102} y={26} h={86} fill="#2b73c7" />
+      <rect x={178} y={34} width={64} height={10} rx={5} fill="#d4e3f7" />
+      <rect x={178} y={56} width={48} height={10} rx={5} fill="#62d27e" />
+      <rect x={178} y={78} width={58} height={10} rx={5} fill="#d4e3f7" />
+      <rect x={178} y={100} width={40} height={10} rx={5} fill="#ffd23f" />
+      <Card x={232} y={92} w={68} h={74} fill="#ffd23f" lip="#e3b800" tilt={10}>
+        <text
+          x={266}
+          y={124}
+          textAnchor="middle"
+          fontFamily={LETTER_FONT}
+          fontSize={24}
+          fontWeight={800}
+          fill="#8a5a00"
+        >
+          ?
+        </text>
+        <rect x={246} y={138} width={40} height={7} rx={3.5} fill="#fff" opacity={0.85} />
+      </Card>
+    </svg>
+  );
+}
