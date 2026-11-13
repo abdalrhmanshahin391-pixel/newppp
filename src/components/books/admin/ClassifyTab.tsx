@@ -116,8 +116,8 @@ function Categories({
       <div>
         <h2 className={sectionTitle}>التصنيفات ({categories.length})</h2>
         <p className={muted}>
-          كل تصنيف رف بالمكتبة، بنفس هالترتيب. اللون والأيقونة بيظهروا عند الرف. ما في تصنيفين بنفس
-          الاسم.
+          كل تصنيف رف بالمكتبة، بنفس هالترتيب. اللون بيظهر عند الرف مع شعار يوزرا. ما في تصنيفين
+          بنفس الاسم.
         </p>
       </div>
       {categories.length > 0 && (
@@ -132,7 +132,7 @@ function Categories({
                 <div className="flex flex-wrap items-center gap-3">
                   <span
                     className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px]"
-                    style={{ background: tone.soft, color: tone.c }}
+                    style={{ background: "#121117", color: "#fff" }}
                   >
                     <Icon size={17} />
                   </span>

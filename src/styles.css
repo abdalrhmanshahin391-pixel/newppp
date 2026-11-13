@@ -10222,3 +10222,28 @@ html.rita-app,
 .bk-sheet .bk-tag {
   background: #fff;
 }
+
+/* Library labels are black and white (the owner's choice): the category colour no longer tints the
+   category buttons' dots, the label in the book sheet and the featured card, the shelf heads and
+   their boards, or the sheet's and featured card's backgrounds. Book covers keep their colours. */
+.bk-cat,
+.bk-cat-dot,
+.bk-shelf,
+.bk-shelf-icon,
+.bk-sheet,
+.bk-feature {
+  --c: #121117 !important;
+  --soft: #f1f1f5 !important;
+}
+.bk-shelf-icon {
+  background: #121117;
+  color: #fff;
+}
+.bk-tag,
+.bk-sheet .bk-tag {
+  background: #121117;
+  color: #fff;
+}
+.bk-cat[aria-pressed="true"] .bk-cat-dot {
+  background: #fff;
+}
