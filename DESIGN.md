@@ -291,6 +291,21 @@ layout. Real due-card and lesson counts remain optional account data, never inve
   (`--uz-on-tile-muted: #b9b9c2`). The selected rail entry uses the existing ink token and white
   text. This exception is local to `/learn`; other screens retain their existing action colour.
   No gradients, image blending, animated shadows or continuous decorative motion.
+- **The two Uzyra cards (game-card look, first pair of the card redesign):** "Free talk with Uzyra"
+  and Lessons are solid blue cards (`#2b73c7`, one colour, no gradient; white text 4.9:1), 32px
+  corners, a big centred title (30–40px, 700), one line, a flat drawing at the bottom and a white
+  button with 16px corners and a 6px `#d5d9e3` lip over the bottom of the drawing. The drawings
+  (`PlayCardArt.tsx`) use the Uzyra mark as the hero: in a white speech bubble with two "typing"
+  bubbles (yellow, green), and on a yellow book cover with a pink ribbon. No characters, no
+  microphone, no stars. Second round, same blue and button: Flashcards (a fanned stack, the mark on
+  the white front card), Memory Lab (a 2 × 2 memory board, two tiles turned to show the mark) and
+  Pairs (a white and a yellow card with the mark leaning together under a green tick). Drawings keep
+  their important parts above the button. Third round: Wordcraft (a letter board, a found word in
+  green, the mark on the middle tile), PDF summary (a page with the mark, highlighted lines and a red
+  PDF label), All in one (a yellow box with the mark, a card, a page and a question coming out) and
+  Question bank (the mark in a question bubble, three answers, one green with a tick), and Lecture
+  Lab (a slide on an easel with the mark and a yellow question note). The other
+  tiles keep the monochrome look until their turn.
 - **Hierarchy:** the conversation stage and Lessons sit together; the other sections retain
   their existing leading tile and smaller tool tiles. Every destination, description and AI
   marker stays. Cards have 24px corners; button styling reuses the existing system in monochrome.

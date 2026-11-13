@@ -6007,9 +6007,7 @@ html.rita-app,
   --uz-out: var(--pp-ease, cubic-bezier(0.22, 1, 0.36, 1));
   background: #fff;
   color: var(--uz-ink);
-  font-family:
-    "Uzyra Arabic", "Figtree", Helvetica, Arial,
-    sans-serif;
+  font-family: "Uzyra Arabic", "Figtree", Helvetica, Arial, sans-serif;
 }
 .uz-learn-main {
   max-width: 1240px;
@@ -6078,7 +6076,7 @@ html.rita-app,
 .uz-rail-item:active {
   transform: scale(0.98);
 }
-.uz-learn :is(.uz-rail-item, .uz-tile, .uz-stage, .uz-lessons):focus-visible {
+.uz-learn :is(.uz-rail-item, .uz-tile, .uz-play):focus-visible {
   outline: 2px solid var(--uz-ink);
   outline-offset: 4px;
 }
@@ -6093,119 +6091,141 @@ html.rita-app,
   display: grid;
   gap: 16px;
 }
-.uz-stage {
-  position: relative;
-  display: grid;
-  overflow: hidden;
-  gap: 8px;
-  min-height: 320px;
-  padding: 28px 24px;
-  border-radius: 22px;
-  color: var(--uz-paper);
-  background: var(--uz-tile-bg);
-  text-decoration: none;
-}
-.uz-stage-text {
+/* The two Uzyra cards (talk and lessons), in the game-card look: one solid blue (white text on it
+   is 4.9:1), a big centred title, one line, the drawing at the bottom, and a white button with a
+   6px lip that sits over the bottom of the drawing. */
+.uz-play {
+  --play: #2b73c7;
+  --play-lip: #d5d9e3;
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 14px;
-  min-width: 0;
+  align-items: center;
+  height: 100%;
+  min-height: 390px;
+  overflow: hidden;
+  padding: 30px 20px 0;
+  border-radius: 32px;
+  background: var(--play);
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 160ms var(--uz-out);
 }
-.edith-premium .uz-stage-title {
+.edith-premium .uz-play-title {
   margin: 0;
-  color: var(--uz-paper);
-  font-size: 30px !important;
-  font-weight: 600;
-  line-height: 1.08 !important;
-  letter-spacing: -0.03em;
+  max-width: 100%;
+  color: #fff;
+  font-family: var(--pp-display);
+  font-size: clamp(30px, 8vw, 40px) !important;
+  font-weight: 700;
+  line-height: 1.15 !important;
+  letter-spacing: -0.02em;
   text-wrap: balance;
+  overflow-wrap: anywhere;
 }
-.uz-stage-line {
-  max-width: 30ch;
-  color: var(--uz-on-tile-muted);
-  font-size: 15px;
-  line-height: 1.6;
+[dir="rtl"] .uz-play-title {
+  letter-spacing: 0;
 }
-.edith-premium .rita-btn.uz-stage-btn {
-  min-height: 42px;
-  margin-top: 8px;
-  font-size: 15px;
-  gap: 10px;
-  background: var(--uz-paper);
-  border-color: var(--uz-paper);
-  color: var(--uz-ink);
+.uz-play-line {
+  max-width: 34ch;
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 1.5;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
-.uz-orb-zone {
+.uz-play-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+  margin-top: 10px;
+}
+.uz-play-pill {
+  max-width: 100%;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--play);
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.uz-play-art {
   position: relative;
-  height: 190px;
+  flex: 1 0 230px;
+  width: 100%;
+  margin-top: 14px;
 }
-.uz-orb {
+.uz-play-art svg {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  display: grid;
-  place-items: center;
-  width: 100px;
-  height: 100px;
-  margin: -50px 0 0 -50px;
-  border-radius: 50%;
-  background: var(--uz-paper);
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  width: 100%;
+  max-width: 440px;
+  height: 100%;
+  max-height: 290px;
+  margin: 0 auto;
+  transition: transform 220ms var(--uz-out);
 }
-.uz-orb-waves {
+.uz-play-btn {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 26px;
   display: flex;
   align-items: center;
-  gap: 5px;
-  height: 34px;
-}
-.uz-orb-wave {
-  display: block;
-  width: 4px;
-  height: 20px;
-  border-radius: 999px;
-  background: var(--uz-ink);
-}
-.uz-orb-wave:nth-child(2),
-.uz-orb-wave:nth-child(4) {
-  height: 30px;
-}
-.uz-orb-wave:nth-child(3) {
-  height: 15px;
-}
-.uz-float {
-  position: absolute;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--uz-on-tile-muted);
-  background: var(--uz-tile-bg);
-  color: var(--uz-paper);
-  font-size: 13px;
-  font-weight: 600;
+  justify-content: center;
+  width: max-content;
+  min-width: 132px;
+  max-width: calc(100% - 48px);
+  height: 56px;
+  margin: 0 auto;
+  padding: 0 30px;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--play);
+  font-size: 20px;
+  font-weight: 700;
   white-space: nowrap;
+  box-shadow: 0 6px 0 var(--play-lip);
+  transition:
+    transform 120ms var(--uz-out),
+    box-shadow 120ms var(--uz-out);
 }
-.uz-float-a {
-  left: 2%;
-  top: 8%;
+.uz-play:active .uz-play-btn {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--play-lip);
 }
-.uz-float-b {
-  right: 0;
-  top: 22%;
+@media (min-width: 768px) {
+  .uz-play {
+    min-height: 430px;
+  }
 }
-.uz-float-c {
-  left: 12%;
-  bottom: 6%;
+@media (hover: hover) and (pointer: fine) {
+  .uz-play:hover {
+    transform: translateY(-2px);
+  }
+  .uz-play:hover .uz-play-art svg {
+    transform: translateY(-4px);
+  }
 }
-.uz-lessons {
-  display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
-  align-items: center;
-  gap: 16px;
-  padding: 14px;
-  border-radius: 22px;
+@media (prefers-reduced-motion: reduce) {
+  .uz-learn :is(.uz-play, .uz-play-art svg, .uz-play-btn) {
+    transition: none;
+  }
+  .uz-play:hover,
+  .uz-play:hover .uz-play-art svg,
+  .uz-play:active .uz-play-btn {
+    transform: none;
+  }
 }
-.uz-tile,
-.uz-lessons {
+.uz-tile {
   position: relative;
   overflow: hidden;
   color: var(--uz-paper);
@@ -6241,10 +6261,6 @@ html.rita-app,
   border-radius: 14px;
   background: var(--uz-tile-bg);
 }
-.uz-lessons > .uz-tile-img {
-  aspect-ratio: 1;
-  max-height: none;
-}
 .uz-tile[data-lead] .uz-tile-img {
   aspect-ratio: 21 / 9;
   max-height: 200px;
@@ -6262,9 +6278,6 @@ html.rita-app,
   gap: 6px;
   min-width: 0;
   padding: 0 8px;
-}
-.uz-lessons .uz-tile-text {
-  padding: 0;
 }
 .uz-tile-name {
   display: flex;
@@ -6311,33 +6324,12 @@ html.rita-app,
 .uz-tile .uz-tile-text {
   padding-inline-end: 46px;
 }
-.edith-premium .rita-btn.uz-light-btn {
-  align-self: flex-start;
-  min-height: 40px;
-  margin-top: 12px;
-  padding: 0 15px;
-  gap: 8px;
-  background: var(--uz-paper);
-  border-color: var(--uz-paper);
-  color: var(--uz-ink);
-  font-size: 14px;
-}
-.uz-stage {
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-.uz-tile,
-.uz-lessons,
-.uz-stage {
+.uz-tile {
   transition: transform 120ms var(--uz-out);
 }
-.uz-tile:active,
-.uz-lessons:active,
-.uz-stage:active {
+.uz-tile:active {
   transform: scale(0.995);
 }
-.uz-stage-btn svg,
-.uz-light-btn svg,
 .uz-tile-go svg {
   transition: transform 150ms var(--uz-out);
 }
@@ -6355,18 +6347,6 @@ html.rita-app,
 @media (min-width: 768px) {
   .uz-learn-main {
     padding: 36px 28px 96px;
-  }
-  .uz-stage {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
-    align-items: center;
-    padding: 32px 30px;
-    min-height: 340px;
-  }
-  .uz-orb-zone {
-    height: 250px;
-  }
-  .edith-premium .uz-stage-title {
-    font-size: 36px !important;
   }
 }
 @media (min-width: 1024px) {
@@ -6395,36 +6375,19 @@ html.rita-app,
   .uz-tiles > [data-lead] {
     grid-column: span 2;
   }
-  .uz-lessons {
-    grid-template-columns: 1fr;
-    align-content: space-between;
-    padding: 14px 14px 20px;
-  }
-  .uz-lessons .uz-tile-img {
-    aspect-ratio: 2 / 1;
-    max-height: 180px;
-  }
-  .uz-lessons .uz-tile-text {
-    padding: 4px 8px 0;
-  }
 }
 @media (hover: hover) and (pointer: fine) {
   .uz-rail-item:not([aria-current="page"]):hover {
     background: var(--uz-card);
     color: var(--uz-ink);
   }
-  .uz-tile:hover,
-  .uz-lessons:hover {
+  .uz-tile:hover {
     transform: translateY(-2px);
   }
-  .uz-stage:hover .uz-stage-btn svg,
-  .uz-tile:hover .uz-tile-go svg,
-  .uz-lessons:hover .uz-light-btn svg {
+  .uz-tile:hover .uz-tile-go svg {
     transform: translateX(3px);
   }
-  [dir="rtl"] .uz-stage:hover .uz-stage-btn svg,
-  [dir="rtl"] .uz-tile:hover .uz-tile-go svg,
-  [dir="rtl"] .uz-lessons:hover .uz-light-btn svg {
+  [dir="rtl"] .uz-tile:hover .uz-tile-go svg {
     transform: translateX(-3px) rotate(180deg);
   }
 }
@@ -6432,16 +6395,7 @@ html.rita-app,
   .uz-panel:not([hidden]) {
     animation: none;
   }
-  .uz-learn
-    :is(
-      .uz-tile,
-      .uz-lessons,
-      .uz-stage,
-      .uz-rail-item,
-      .uz-stage-btn svg,
-      .uz-light-btn svg,
-      .uz-tile-go svg
-    ) {
+  .uz-learn :is(.uz-tile, .uz-rail-item, .uz-tile-go svg) {
     transition: none;
   }
 }

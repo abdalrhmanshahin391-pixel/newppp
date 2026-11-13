@@ -1,7 +1,19 @@
-import { memo, useMemo, useRef } from "react";
+import { memo, useMemo, useRef, type ComponentType, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { ImageSlot } from "@/components/learn/ImageSlot";
+import {
+  AllInOneCardArt,
+  FlashcardsCardArt,
+  LectureCardArt,
+  LessonsCardArt,
+  MemoryCardArt,
+  PairsCardArt,
+  QuestionBankCardArt,
+  SummaryCardArt,
+  TalkCardArt,
+  WordcraftCardArt,
+} from "./PlayCardArt";
 import { useLearnSection } from "./useLearnSection";
 import { TOOLS, type ToolDef } from "@/lib/site-tools";
 
@@ -158,8 +170,78 @@ function SideList({
   );
 }
 
+type Play = { Art: ComponentType; go: Bi; line?: Bi };
+
+/**
+ * Destinations already redesigned as game cards (two or three at a time). The rest keep the
+ * monochrome tile until their turn.
+ */
+const PLAY: Record<string, Play> = {
+  "rita-conversations": {
+    Art: TalkCardArt,
+    go: { en: "Start talking", ar: "ابدأ الحديث" },
+  },
+  "rita-lessons": {
+    Art: LessonsCardArt,
+    go: { en: "Start", ar: "ابدأ" },
+    line: { en: "Short lessons with clear goals.", ar: "دروس قصيرة بأهداف واضحة." },
+  },
+  flashcards: { Art: FlashcardsCardArt, go: { en: "Study", ar: "ادرس" } },
+  "memory-lab": { Art: MemoryCardArt, go: { en: "Play", ar: "العب" } },
+  pairs: { Art: PairsCardArt, go: { en: "Play", ar: "العب" } },
+  wordcraft: { Art: WordcraftCardArt, go: { en: "Play", ar: "العب" } },
+  "pdf-summary": { Art: SummaryCardArt, go: { en: "Summarise", ar: "لخّص" } },
+  "all-in-one": { Art: AllInOneCardArt, go: { en: "Start", ar: "ابدأ" } },
+  "question-bank": { Art: QuestionBankCardArt, go: { en: "Practise", ar: "تدرّب" } },
+  "lecture-lab": { Art: LectureCardArt, go: { en: "Start", ar: "ابدأ" } },
+};
+
+/**
+ * A game card: one solid colour, a big centred title, one line, the drawing at the bottom and a
+ * white button with a lip over the bottom of the drawing.
+ */
+function PlayCard({
+  row,
+  play,
+  lang,
+  lead = false,
+  title,
+}: {
+  row: Row;
+  play: Play;
+  lang: Lang;
+  lead?: boolean;
+  title?: ReactNode;
+}) {
+  return (
+    <Link
+      to={row.to}
+      params={row.params as never}
+      search={row.search as never}
+      data-learn-row={row.key}
+      data-lead={lead || undefined}
+      className="uz-play"
+    >
+      {title ?? <span className="uz-play-title">{row.name[lang]}</span>}
+      <span className="uz-play-line">{(play.line ?? row.line)[lang]}</span>
+      {row.ai || row.chip ? (
+        <span className="uz-play-pills">
+          {row.ai ? <span className="uz-play-pill">AI</span> : null}
+          {row.chip ? <span className="uz-play-pill">{row.chip[lang]}</span> : null}
+        </span>
+      ) : null}
+      <span className="uz-play-art" aria-hidden="true">
+        <play.Art />
+      </span>
+      <span className="uz-play-btn">{play.go[lang]}</span>
+    </Link>
+  );
+}
+
 /** One destination: its picture on black, its name and one line. The first of a section is big. */
 function ToolTile({ row, lang, lead }: { row: Row; lang: Lang; lead: boolean }) {
+  const play = PLAY[row.key];
+  if (play) return <PlayCard row={row} play={play} lang={lang} lead={lead} />;
   return (
     <Link
       to={row.to}
@@ -185,68 +267,25 @@ function ToolTile({ row, lang, lead }: { row: Row; lang: Lang; lead: boolean }) 
   );
 }
 
-const PHRASES = [
-  { text: "Guten Morgen", lang: "de", spot: "uz-float-a" },
-  { text: "How do I say…?", lang: "en", spot: "uz-float-b" },
-  { text: "كيف أحكي؟", lang: "ar", spot: "uz-float-c" },
-];
-
-/** The conversation stage and lessons, using the same flat monochrome surface. */
+/** Uzyra's two cards: free talk (the section's heading) and lessons. */
 function RitaStage({ section, lang }: { section: SectionDef; lang: Lang }) {
   const talk = section.rows.find((row) => row.key === "rita-conversations");
   const lessons = section.rows.find((row) => row.key === "rita-lessons");
-  const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
   return (
     <section aria-labelledby="rita-title" className="uz-pane uz-rita">
       {talk ? (
-        <Link to={talk.to} data-learn-row={talk.key} className="uz-stage">
-          <span className="uz-stage-text">
-            <h2 id="rita-title" className="uz-stage-title">
-              {t("Talk to Uzyra now", "تحدث مع يوزرا الآن")}
+        <PlayCard
+          row={talk}
+          play={PLAY[talk.key]}
+          lang={lang}
+          title={
+            <h2 id="rita-title" className="uz-play-title">
+              {lang === "ar" ? "محادثة حرة مع يوزرا" : "Free talk with Uzyra"}
             </h2>
-            <span className="uz-stage-line">{talk.line[lang]}</span>
-            <span className="rita-btn rita-btn-primary uz-stage-btn">
-              {t("Start talking", "ابدأ الحديث")}
-              <ArrowRight size={18} aria-hidden="true" className="rtl:rotate-180" />
-            </span>
-          </span>
-          <span className="uz-orb-zone" aria-hidden="true">
-            <span className="uz-orb">
-              <span className="uz-orb-waves">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <span key={i} className="uz-orb-wave" />
-                ))}
-              </span>
-            </span>
-            {PHRASES.map((phrase) => (
-              <span
-                key={phrase.text}
-                lang={phrase.lang}
-                dir={phrase.lang === "ar" ? "rtl" : "ltr"}
-                className={`uz-float ${phrase.spot}`}
-              >
-                {phrase.text}
-              </span>
-            ))}
-          </span>
-        </Link>
+          }
+        />
       ) : null}
-      {lessons ? (
-        <Link to={lessons.to} data-learn-row={lessons.key} className="uz-lessons">
-          <ImageSlot slot={lessons.slot} lang={lang} priority />
-          <span className="uz-tile-text">
-            <span className="uz-tile-name">
-              {lessons.name[lang]}
-              {lessons.chip ? <span className="uz-tile-tag">{lessons.chip[lang]}</span> : null}
-            </span>
-            <span className="uz-tile-line">{lessons.line[lang]}</span>
-            <span className="rita-btn uz-light-btn">
-              {t("Open lessons", "افتح الدروس")}
-              <ArrowRight size={17} aria-hidden="true" className="rtl:rotate-180" />
-            </span>
-          </span>
-        </Link>
-      ) : null}
+      {lessons ? <ToolTile row={lessons} lang={lang} lead={false} /> : null}
     </section>
   );
 }
