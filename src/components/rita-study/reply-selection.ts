@@ -1,4 +1,4 @@
-// A selection in Rita's own answers (the left column). Only the text of one answer counts (each is
+// A selection in Uzyra's own answers (the left column). Only the text of one answer counts (each is
 // marked data-reply-text); the learner's words, buttons and the report link do not. The selected
 // text and the answer are read the same way (every text piece joined with a space), so the server
 // can check that the one is inside the other.
@@ -44,7 +44,7 @@ function textIn(scope: Element, range: Range | null): string {
 }
 
 /**
- * The selection when it is in Rita's answers inside `root`; a problem when it is there but not
+ * The selection when it is in Uzyra's answers inside `root`; a problem when it is there but not
  * usable (two answers, or the learner's own words with it); null when it is not in `root`.
  */
 export function readReplySelection(root: Element): ReplySelectionRead {
@@ -54,7 +54,7 @@ export function readReplySelection(root: Element): ReplySelectionRead {
   if (!root.contains(range.startContainer) || !root.contains(range.endContainer)) return null;
   const start = answerOf(range.startContainer);
   const end = answerOf(range.endContainer);
-  if (!start || start !== end) return { problem: "حدّد من رد واحد لريتا." };
+  if (!start || start !== end) return { problem: "حدّد من رد واحد ليوزرا." };
   const exact = textIn(start, range);
   if (!exact) return null;
   return {
@@ -70,7 +70,7 @@ type HighlightWindow = Window & {
   Highlight?: new (...ranges: Range[]) => unknown;
 };
 
-/** Keeps the selected part of Rita's answer marked in dark red after the browser's selection goes. */
+/** Keeps the selected part of Uzyra's answer marked in dark red after the browser's selection goes. */
 export function markReplySelection(range: Range | null): void {
   const target = (typeof window === "undefined" ? null : window) as HighlightWindow | null;
   const highlights = target?.CSS?.highlights;

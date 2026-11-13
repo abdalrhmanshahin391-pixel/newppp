@@ -5,13 +5,13 @@ export const Route = createFileRoute("/register")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Create your Rita account" },
+      { title: "Create your Uzyra account" },
       {
         name: "description",
         content:
-          "Create a Rita account and turn your lectures into flashcards, summaries and quizzes.",
+          "Create a Uzyra account and turn your lectures into flashcards, summaries and quizzes.",
       },
-      { property: "og:title", content: "Create your Rita account" },
+      { property: "og:title", content: "Create your Uzyra account" },
       {
         property: "og:description",
         content: "Turn your lectures into flashcards, summaries and quizzes.",

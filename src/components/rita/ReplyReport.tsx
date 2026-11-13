@@ -5,7 +5,7 @@ import { ISSUE_CATEGORIES, ISSUE_NOTE_LIMIT, type IssueCategory } from "@/lib/ri
 type State = "closed" | "open" | "sending" | "error" | "sent";
 
 /**
- * "Report a problem" under one of Rita's replies. Quiet until opened; then the seven reasons as a
+ * "Report a problem" under one of Uzyra's replies. Quiet until opened; then the seven reasons as a
  * radio group and an optional note, inline under the reply (no window over the conversation). The
  * parent saves the report with the turn record it kept for this reply, so the learner never has to
  * describe what happened or when.

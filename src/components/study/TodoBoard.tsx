@@ -47,7 +47,7 @@ type View =
   | { kind: "project"; id: string }
   | { kind: "label"; name: string };
 
-/** A Todoist-shaped planner in Rita's cream palette — dates drive every view. */
+/** A Todoist-shaped planner in Uzyra's cream palette — dates drive every view. */
 export function TodoBoard() {
   const plan = usePlan();
   const api = useTodos();

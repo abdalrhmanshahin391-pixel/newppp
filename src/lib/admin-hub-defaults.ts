@@ -1,3 +1,4 @@
+import { currentProductCopy } from "./brand";
 import {
   Compass, FileText, MoonStar, Sparkles, Languages, Zap, Settings, Type,
   FolderTree, Users, Smartphone, Ticket, Archive, BookOpen, Video, Package,
@@ -49,8 +50,8 @@ export const DEFAULT_LAYOUT: HubLayout = {
       label: "Announcements & Prices",
       labelAr: "الإعلانات والأسعار",
       tiles: [
-        t("/admin/ritax-announcements", "RitaX Announcements", "Megaphone"),
-        t("/admin/plans", "Rita Prices", "Ticket"),
+        t("/admin/ritax-announcements", "Uzyra Announcements", "Megaphone"),
+        t("/admin/plans", "Uzyra Prices", "Ticket"),
         {
           id: "/admin/offers",
           to: "/admin/offers",
@@ -81,35 +82,35 @@ export const DEFAULT_LAYOUT: HubLayout = {
     {
       id: "ai",
       label: "AI engine",
-      labelAr: "ذكاء ريتا",
+      labelAr: "ذكاء يوزرا",
       tiles: [
         t("/admin/ai", "AI engine", "Sparkles"),
         {
           id: "/admin/rita-voice",
           to: "/admin/rita-voice",
-          label: "Rita Voice v3",
-          labelAr: "صوت ريتا الجديد",
+          label: "Uzyra Voice v3",
+          labelAr: "صوت يوزرا الجديد",
           icon: "KeyRound",
         },
         {
           id: "/admin/rita-quality",
           to: "/admin/rita-quality",
-          label: "Rita quality",
-          labelAr: "جودة ريتا",
+          label: "Uzyra quality",
+          labelAr: "جودة يوزرا",
           icon: "ListChecks",
         },
         {
           id: "/admin/curricula",
           to: "/admin/curricula",
-          label: "Rita lessons & curriculum",
-          labelAr: "مناهج دروس ريتا",
+          label: "Uzyra lessons & curriculum",
+          labelAr: "مناهج دروس يوزرا",
           icon: "GraduationCap",
         },
         {
           id: "/admin/study-sample",
           to: "/admin/study-sample",
-          label: "Try the study page (guide + Rita)",
-          labelAr: "جرّب صفحة الدراسة (ملف + ريتا)",
+          label: "Try the study page (guide + Uzyra)",
+          labelAr: "جرّب صفحة الدراسة (ملف + يوزرا)",
           icon: "BookOpen",
         },
         {
@@ -160,9 +161,15 @@ export function mergeLayout(stored: unknown): HubLayout {
   const groups: HubGroup[] = s.groups
     .map((g) => ({
       id: g.id,
-      label: g.label,
-      labelAr: g.labelAr,
-      tiles: (g.tiles ?? []).filter((x) => x && x.to && (x.custom || allowed.has(x.to))),
+      label: currentProductCopy(g.label),
+      labelAr: g.labelAr ? currentProductCopy(g.labelAr) : g.labelAr,
+      tiles: (g.tiles ?? [])
+        .filter((x) => x && x.to && (x.custom || allowed.has(x.to)))
+        .map((x) => ({
+          ...x,
+          label: currentProductCopy(x.label),
+          labelAr: x.labelAr ? currentProductCopy(x.labelAr) : x.labelAr,
+        })),
     }))
     .filter((g) => g.tiles.length > 0);
 
@@ -178,7 +185,7 @@ export function mergeLayout(stored: unknown): HubLayout {
       continue;
     }
     // A newly shipped group keeps its default position instead of landing last,
-    // so Rita Prices stays at the top of the hub for existing saved layouts.
+    // so Uzyra Prices stays at the top of the hub for existing saved layouts.
     const at = DEFAULT_LAYOUT.groups.indexOf(dg);
     groups.splice(Math.min(at, groups.length), 0, {
       ...dg,

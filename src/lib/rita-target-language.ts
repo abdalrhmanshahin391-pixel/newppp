@@ -1,7 +1,7 @@
 /**
- * Which language Rita teaches in a voice session. A free conversation keeps the language it was
+ * Which language Uzyra teaches in a voice session. A free conversation keeps the language it was
  * started in; otherwise it is the learner's active language. A language is only used when it is
- * in the list, and Rita's voice is only offered for languages an admin has switched voice on for.
+ * in the list, and Uzyra's voice is only offered for languages an admin has switched voice on for.
  */
 
 export type RegistryLanguage = {

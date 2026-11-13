@@ -1,13 +1,13 @@
-"""Rita's side of a lesson with exercises (the website's lesson engine).
+"""Uzyra's side of a lesson with exercises (the website's lesson engine).
 
-The website owns the lesson: its engine decides the step, checks every answer and sends Rita
-the current step ("rita-lesson-step") plus any exact line to say ("rita-lesson-say"). Rita never
+The website owns the lesson: its engine decides the step, checks every answer and sends Uzyra
+the current step ("rita-lesson-step") plus any exact line to say ("rita-lesson-say"). Uzyra never
 moves the lesson, never says whether an answer is right, and never reads an answer key: she
 does not have one.
 
 This module does two things, both pure so they are unit tested:
 
-1. What Rita is told: a fixed LESSON MODE CONTRACT and a short CURRENT LESSON STEP block,
+1. What Uzyra is told: a fixed LESSON MODE CONTRACT and a short CURRENT LESSON STEP block,
    rebuilt from the step the website sent.
 2. What a finished learner turn means for the lesson (`route`): "ready", "no question", "I did
    not understand", pause, hint, repeat, a question, or an answer to the open question. The
@@ -171,14 +171,14 @@ class LessonVoice:
             return LessonRoute("repeat")
         if _matches(raw, NOT_UNDERSTOOD) or _is_question(raw):
             # "مش فاهم" or "ليش is؟" in the middle of an exercise: pause on this question and let
-            # Rita answer; the learner says "كمّل" to come back to the same question.
+            # Uzyra answer; the learner says "كمّل" to come back to the same question.
             return LessonRoute("question", to_model=True)
         if _matches(raw, READY, whole=True) or _short_ready(raw):
             # "تمام" after a result is an acknowledgement, not an answer: nothing to do.
             return LessonRoute("ack")
         return LessonRoute("answer", value=raw[:200])
 
-    # ---------- what Rita is told ----------
+    # ---------- what Uzyra is told ----------
 
     def step_text(self) -> str:
         """The CURRENT LESSON STEP block for the system prompt."""
@@ -294,6 +294,6 @@ _SPACES = re.compile(r"\s+")
 
 
 def clean_say(text: Any) -> str:
-    """A line from the website for Rita to say: plain text, one paragraph, bounded."""
+    """A line from the website for Uzyra to say: plain text, one paragraph, bounded."""
 
     return _SPACES.sub(" ", str(text or "")).strip()[:600]

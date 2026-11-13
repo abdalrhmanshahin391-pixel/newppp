@@ -29,7 +29,7 @@ export type RadialItem = {
   placeholder?: boolean;
   /** Short text drawn in the disc instead of the icon (a language: "ع", "EN"). */
   glyph?: string;
-  /** "reply": an option about Rita's own answer, drawn in dark red like that selection. */
+  /** "reply": an option about Uzyra's own answer, drawn in dark red like that selection. */
   tone?: "reply";
   /** One of a set of choices: true for the chosen one, false for the others. */
   checked?: boolean;
@@ -53,7 +53,7 @@ const ICONS: Record<StudyAction, LucideIcon> = {
   report: AlertTriangle,
 };
 
-/** Short names for the ring (the full wording is still used for Rita's requests). */
+/** Short names for the ring (the full wording is still used for Uzyra's requests). */
 const SHORT: Partial<Record<StudyAction, string>> = {
   explain: "اشرحلي",
   simplify: "بسّط بمثال",
@@ -125,8 +125,8 @@ export const WINDOW_ITEM: RadialItem = {
 };
 
 /**
- * The ring for a selection in Rita's own answers (the left column): one option only, explaining
- * that part as to a complete beginner, then the language Rita explains in.
+ * The ring for a selection in Uzyra's own answers (the left column): one option only, explaining
+ * that part as to a complete beginner, then the language Uzyra explains in.
  */
 export function replyRingItems(): RadialItem[] {
   return [{ ...actionItem("explain_reply"), tone: "reply" }, LANGUAGE_ITEM];

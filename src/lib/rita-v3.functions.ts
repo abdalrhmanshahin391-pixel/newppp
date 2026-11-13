@@ -309,7 +309,7 @@ export const testRitaV3ControlPlane = createServerFn({ method: "GET" })
         ...readiness,
         message: readiness.ok
           ? `${env.agentName} passed every control-plane readiness check.`
-          : "Rita is not ready. Review the failed checks below.",
+          : "Uzyra is not ready. Review the failed checks below.",
       };
     } catch (cause) {
       return {

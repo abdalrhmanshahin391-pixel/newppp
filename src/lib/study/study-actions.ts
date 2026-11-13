@@ -16,7 +16,7 @@ export const SELECTION_KINDS = [
 ] as const;
 export type SelectionKind = (typeof SELECTION_KINDS)[number];
 
-/** Actions Rita answers (the voice worker knows the same names; a test keeps them equal). */
+/** Actions Uzyra answers (the voice worker knows the same names; a test keeps them equal). */
 export const RITA_ACTIONS = [
   "explain",
   "simplify",
@@ -26,12 +26,12 @@ export const RITA_ACTIONS = [
   "why_form",
   "common_mistake",
   "summarize_section",
-  // A part of Rita's own answer, explained as to a complete beginner (selected on the left).
+  // A part of Uzyra's own answer, explained as to a complete beginner (selected on the left).
   "explain_reply",
 ] as const;
 export type RitaAction = (typeof RITA_ACTIONS)[number];
 
-/** Made on the page from the selection, without Rita's call: flashcards and four-option questions. */
+/** Made on the page from the selection, without Uzyra's call: flashcards and four-option questions. */
 export const PRACTICE_ACTIONS = ["make_cards", "make_mcq"] as const;
 export type PracticeAction = (typeof PRACTICE_ACTIONS)[number];
 
@@ -42,7 +42,7 @@ export type ActionInfo = {
   /** Shown first in the menu; the others sit under "More". */
   primary: boolean;
   group: QuotaGroup | null;
-  /** Needs Rita's call (the learner talks back). */
+  /** Needs Uzyra's call (the learner talks back). */
   voiceOnly?: boolean;
 };
 
@@ -87,7 +87,7 @@ const AVAILABLE: Record<StudyAction, SelectionKind[]> = {
   why_form: ["word", "phrase"],
   common_mistake: ["phrase", "sentence", "rule", "table_cells", "arabic_only"],
   summarize_section: [],
-  // Only for a selection in Rita's answers, never for the guide (see reply-selection.ts).
+  // Only for a selection in Uzyra's answers, never for the guide (see reply-selection.ts).
   explain_reply: [],
   make_cards: ALL_TEXT,
   make_mcq: ALL_TEXT,

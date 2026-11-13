@@ -131,7 +131,7 @@ function reviewFields(review: TurnReviewRow) {
     explanation: review.explanation ?? null,
     evidence: review.evidence,
     fix: review.fix ?? (review.suggestion ? { change: review.suggestion } : null),
-    // The comparison: Rita's own reply is the message this sits under.
+    // The comparison: Uzyra's own reply is the message this sits under.
     winner: review.winner ?? null,
     referenceReply: review.reference_reply ?? null,
     referenceWhy: review.reference_why ?? null,
@@ -242,7 +242,7 @@ export function ritaRepairFile(args: {
   const conversationReview = args.conversationReview;
   return {
     schemaVersion: 2,
-    purpose: "Rita conversation repair file",
+    purpose: "Uzyra conversation repair file",
     privacy: { rawAudioIncluded: false, credentialsIncluded: false },
     // Read this first: the counts, then conversationReview, then every message with its review.
     summary: {

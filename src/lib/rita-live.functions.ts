@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Rita's new migration tables are not in the generated Supabase types until the production schema is regenerated. */
+/* eslint-disable @typescript-eslint/no-explicit-any -- Uzyra's new migration tables are not in the generated Supabase types until the production schema is regenerated. */
 import { createServerFn } from "@tanstack/react-start";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";
@@ -47,8 +47,8 @@ export const testRitaLiveKey = createServerFn({ method: "POST" })
           ok: true,
           message:
             source === "environment"
-              ? "Working — Rita is using the protected environment key."
-              : "Working — Rita can reach the low-cost voice pipeline with this saved key.",
+              ? "Working — Uzyra is using the protected environment key."
+              : "Working — Uzyra can reach the low-cost voice pipeline with this saved key.",
         };
       }
       const result = (await response.json().catch(() => null)) as {

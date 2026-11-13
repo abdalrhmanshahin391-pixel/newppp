@@ -1,5 +1,5 @@
 // "Days in a row" for the learning home. A day counts when the learner did anything: reviewed a
-// card, worked on a lesson, or talked to Rita. (The older streak counts only days the daily card
+// card, worked on a lesson, or talked to Uzyra. (The older streak counts only days the daily card
 // goal was met in Smart review, which is why it stayed at 0 for most learners.)
 // Days are UTC calendar days, the same convention as the study-day records.
 

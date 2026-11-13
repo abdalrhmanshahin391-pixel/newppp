@@ -1,12 +1,12 @@
-"""One small record per turn: who decided the learner was done, what Rita understood, how she answered.
+"""One small record per turn: who decided the learner was done, what Uzyra understood, how she answered.
 
 The worker fills it from state it already has (the latency milestones, the turn policy, the session
-state, the router) and sends one RTVI server message when Rita's answer ends or is cut off. The page
+state, the router) and sends one RTVI server message when Uzyra's answer ends or is cut off. The page
 stores it next to the conversation, so a complaint such as "she interrupted me" can be traced to the
 decision, the wait and the build that produced it, and later turned into a test.
 
 Nothing here does work on the audio path: it only copies numbers and short labels that are already
-computed. It never holds what the learner or Rita said, and never a secret.
+computed. It never holds what the learner or Uzyra said, and never a secret.
 """
 
 from __future__ import annotations
@@ -62,7 +62,7 @@ def compact(record: dict[str, Any], limit: int = MAX_BYTES) -> dict[str, Any]:
 
 
 class TurnLedger:
-    """Holds the learner side of each turn until Rita's answer to it ends."""
+    """Holds the learner side of each turn until Uzyra's answer to it ends."""
 
     def __init__(self, session_id: str, *, learn_language: str | None = None, keep: int = 8):
         self._session_id = session_id
@@ -88,7 +88,7 @@ class TurnLedger:
     def unanswered_before(
         self, turn: int, fields: dict[str, Any] | None = None
     ) -> list[dict[str, Any]]:
-        """Records for earlier turns Rita never answered (a silent stop, a hold). Removes them."""
+        """Records for earlier turns Uzyra never answered (a silent stop, a hold). Removes them."""
 
         records: list[dict[str, Any]] = []
         for old in sorted(key for key in self._open if key < turn):
@@ -96,7 +96,7 @@ class TurnLedger:
         return records
 
     def assistant_turn_stopped(self, turn: int, fields: dict[str, Any]) -> dict[str, Any] | None:
-        """The finished record for `turn` once Rita's answer ended or was cut off."""
+        """The finished record for `turn` once Uzyra's answer ended or was cut off."""
 
         if turn not in self._open:
             return None

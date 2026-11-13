@@ -17,7 +17,7 @@ function levelOf(limit: number | null, used: number): Level {
 }
 
 /**
- * "Credits" chip in the top bar: Rita's small orb and what the student has left this month,
+ * "Credits" chip in the top bar: Uzyra's small orb and what the student has left this month,
  * straight from the plan the admin configured. The details open as a white card with an ink
  * border (the same card as the home page). `inline` shows the card in the flow (phone menu).
  */

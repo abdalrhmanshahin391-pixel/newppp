@@ -43,7 +43,7 @@ QUESTION_TOKENS = _set(
 )
 # Politeness and address that may surround a command.
 POLITE_TOKENS = _set(
-    "ريتا", "رتا", "يا", "لو", "سمحتي", "سمحت", "ممكن", "بتقدري", "بتقدر", "فيكي", "فيك", "الان",
+    "يوزرا", "رتا", "يا", "لو", "سمحتي", "سمحت", "ممكن", "بتقدري", "بتقدر", "فيكي", "فيك", "الان",
     "هلا", "هسا", "please", "rita", "can", "could", "you", "bitte", "kannst", "du", "mal", "طيب",
     "تمام", "اوكي", "okay", "ok",
 )

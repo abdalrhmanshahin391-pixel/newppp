@@ -1,4 +1,4 @@
-# DESIGN.md — the visual system of Uzyra (formerly EdithLab) / Rita
+# DESIGN.md — the visual system of Uzyra
 
 ## Conversation history
 
@@ -96,7 +96,7 @@ When all seven cannot fit around the saved circle position, the existing «ال�
 keeps the remaining services reachable; touch targets and labels keep their established sizes.
 
 This is the source of truth for every visual change. It was written from the code that is
-already shipped (`src/styles.css`, section "Home page theme", and the Rita components), not
+already shipped (`src/styles.css`, section "Home page theme", and the Uzyra components), not
 invented. When a design request conflicts with this file, say so first, then follow the owner's
 decision and update this file.
 
@@ -105,14 +105,14 @@ Process for any design request: `docs/design-workflow.md`. Product context: `PRO
 ## Identity
 
 Clean white page, ink text, one blue action colour, dark top bar. Friendly and clear, never
-generic SaaS. Rita herself carries the personality (the orb and the Little Light Wanderer);
+generic SaaS. Uzyra herself carries the personality (the orb and the Little Light Wanderer);
 the page stays calm around her. Arabic and English are both first-class (RTL per paragraph).
 
 ## Where it applies
 
 Scope class `.edith-premium` (home, `/rita`, `/rita-live`, lesson screens, admin curricula).
 Pricing, study and admin keep their own palettes unless the owner asks otherwise. New screens
-on the Rita side must sit inside `.edith-premium` and use its tokens, never raw hex values.
+on the Uzyra side must sit inside `.edith-premium` and use its tokens, never raw hex values.
 
 ## Tokens (use these, do not add look-alikes)
 
@@ -146,7 +146,7 @@ Page `#fff`; dark device screen `linear-gradient(162deg, #26252e, #121117)`.
 - h1 48/52 on phones, 64/68 from 1024px. h2 line-height 1.08.
 - Body 16px minimum for anything the learner reads or types (no smaller inputs: iOS zooms).
   Helper text 12–14px only for secondary notes.
-- Direction follows the content: `dir="auto"` on user/Rita text, per paragraph.
+- Direction follows the content: `dir="auto"` on user/Uzyra text, per paragraph.
 
 ## Shape and spacing
 
@@ -154,18 +154,18 @@ Page `#fff`; dark device screen `linear-gradient(162deg, #26252e, #121117)`.
 - Buttons: 2px ink border, blue fill, white text, `.rita-btn` / `.rita-btn-primary` /
   `.rita-btn-secondary`, small `.rita-btn-sm` (40px). Selects: `.rita-select` (48px). On the
   home page and the app pages the calm scale applies (see "App pages": 42px / 1.5px / 15px).
-- Small choice of two to four options (the live page's "Rita explains in"): `.rita-choice`, radio
+- Small choice of two to four options (the live page's "Uzyra explains in"): `.rita-choice`, radio
   buttons in one row, 44px high, 8px radius, hairline border; the chosen one has a 2px
   `--pp-accent` border, `--pp-accent-soft` fill and `--pp-accent-text`. Arrow keys move the
   choice. Use it instead of a select when every option should stay visible.
   `.rita-choice-stack` stacks the same group in one column for longer labels (the "Report a
-  problem" reasons under a Rita reply, which expand inline, never as a window).
+  problem" reasons under a Uzyra reply, which expand inline, never as a window).
 - Admin quality screens (`/admin/rita-quality`): a row of four number cards (`--pp-grey`, 16px
   radius, value 34px/600, a muted note, and a change line that says "Better by"/"Worse by" in
   words, never colour alone), a list of problem cards (hairline border, title first, one meta
-  line), and Rita's reply beside the reference reply (grey card next to `--pp-accent-soft` card,
+  line), and Uzyra's reply beside the reference reply (grey card next to `--pp-accent-soft` card,
   stacked on phones). Small samples are said out loud, not hidden.
-- Admin tool screens (Rita quality and the admin strip): one blue primary action per view; everything
+- Admin tool screens (Uzyra quality and the admin strip): one blue primary action per view; everything
   else is `.rita-btn-soft` (hairline outline) or `.rita-btn-quiet` (no outline until hovered); icon
   buttons use `.rita-btn-icon` (44px square). Several secondary actions go into a menu (Radix
   DropdownMenu with the `rita-menu` look: 12px radius, 44px rows, a small grey line under each
@@ -207,7 +207,11 @@ that is just a list, text under 12px, low-contrast grey on grey.
 
 ## Name and logo
 
-The site is called **Uzyra** (name only; Rita and ritajet.com stay). The logo is the owner's symbol (five
+The site and its assistant are **Uzyra** in English and **يوزرا** in Arabic, including lessons,
+free conversation, written answers, exports and admin screens. The assistant introduces herself as
+"أنا يوزرا" / "I'm Uzyra" when asked. Historical conversation labels never override this identity.
+Legacy technical identifiers, URLs (including ritajet.com), tables, events and asset paths keep their
+names for compatibility; they are not public assistant names. The logo is the owner's symbol (five
 solid shapes, `UzyraMark`) beside the name in wide-tracked capitals with an A drawn without its crossbar
 (`UzyraWordmark`, Outfit 600, tracking 0.2em). On the dark bar and footer both are **soft white**
 (`#f2f2f5`, token `--uz-logo`), never pure white; on light pages (sign in, register) they take the ink
@@ -221,7 +225,7 @@ content is data (`src/lib/guides/guide-content.ts`); the look is one template
 (`src/lib/guides/guide-html.ts`), so a guide never carries layout or colour.
 
 - **Header:** the title in capitals (Inter Tight 700) on the left; the Uzyra symbol and name on the right
-  in ink (no Rita face); a 1pt hairline under it.
+  in ink (no Uzyra face); a 1pt hairline under it.
 - **Body:** Figtree 10 to 11pt. The taught term is blue (`#2b6df0`), bold, italic. Section headings are
   blue and centred ("Form", "Usage").
 - **Tables:** header cells are pills: neutral (grey), positive (green), negative (red), question (blue).
@@ -256,7 +260,7 @@ footer exclusion.
 
 The study header keeps Back to lessons and optional PDF download. The lesson
 title and admin-preview notice remain available to screen readers. Visible sample
-headings, sample-switch and challenge shortcuts are removed. Idle copy below Rita's
+headings, sample-switch and challenge shortcuts are removed. Idle copy below Uzyra's
 cube is omitted; connecting, failed and active statuses remain visible.
 
 ## Top bar and menus
@@ -265,7 +269,7 @@ One bar for the whole site (`ProHeader`, classes `.rh-bar*`, explicit colours so
 same on the cream pages and on the white ones). Dark ink `#121117`, 64px, no blur, no capsule.
 Links sit next to the logo; the current page gets the hand-drawn blue line from the home
 headline, drawn once. Guests get "Sign in" and one blue "Start learning" button. Signed-in
-users get the Credits chip (Rita's small orb plus what is left; the orb ring turns amber below
+users get the Credits chip (Uzyra's small orb plus what is left; the orb ring turns amber below
 20% and red when used up) and the avatar with a blue ring.
 
 Menus are the white card with a 2px ink border (same as the home word card), 16px radius, no
@@ -277,7 +281,7 @@ motion.
 
 ## Learning home (`/learn`)
 
-One section at a time: Talk to Rita, Study with your own material, Plan, Together and German
+One section at a time: Talk to Uzyra, Study with your own material, Plan, Together and German
 (the last follows the learning-language visibility rule). From 1024px, a sticky section rail
 sits beside the content; below it, a horizontal strip with 44px targets. Arabic mirrors the
 layout. Real due-card and lesson counts remain optional account data, never invented.
@@ -344,7 +348,7 @@ free conversation, shared decks). Do not call it "language" on its own: the site
   and its side-list item on `/learn`, and the footer link, only show for German learners (or before a
   choice).
 - **Admin** (`/admin/languages`, Arabic, RTL): one card per language with its flag, "visible to learners",
-  "Rita voice" and a country menu for the flag (names from `Intl.DisplayNames`), up/down order, counts,
+  "Uzyra voice" and a country menu for the flag (names from `Intl.DisplayNames`), up/down order, counts,
   and an add form with a live flag preview. A language that has content is
   disabled, not deleted.
 
@@ -545,7 +549,7 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   - The book's window: the cover, «كتابك · خاص», pages and size, «اقرأ» (blue), «غيّر الاسم», «احذف الكتاب».
   - Reading (`/books/mine/<book>`): a white top bar (back, name, «n من N»), one page fitted to the screen on
     grey, turned by swipe, a tap on the page's outer thirds, the arrow keys or the bottom slider; the page is
-    kept on the device. No search or Rita tools in your own books yet.
+    kept on the device. No search or Uzyra tools in your own books yet.
 - **Cards** show a small gold «★ 4.6» under the author once a book has three ratings.
 - **«مفضلتي»** (signed in): a chip with a heart and the count in the ways-in row; its list is a
   normal paged list, and an empty one explains how to add books.
@@ -607,9 +611,9 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   only has the earlier migrations (the lists are then built in the browser, with a dashed notice
   for admins).
 - **Reader** (`/books/<book>/read`, migration `20261113120000_books_reader.sql`): the study page's
-  layout for a book — the same top bar (back to «المكتبة», the book's name as a 15px line), Rita on
+  layout for a book — the same top bar (back to «المكتبة», the book's name as a 15px line), Uzyra on
   the left and the page on the right with the draggable divider (40/60), two tabs «الكتاب» /
-  «ريتا» on phones, and the floating circle over both.
+  «يوزرا» on phones, and the floating circle over both.
   - **The page:** one sheet of paper (4px corners, a hairline ring and a soft deep shadow) on the
     study grey, with 20px around it (8px on phones). By default the whole page is in view; «على قدّ
     العرض» fits it to the pane's width instead (remembered per browser), and zoom goes up in five
@@ -699,7 +703,7 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     جملة بإصبعك أو بالماوس، وبعدين اكبس على الدائرة» (× closes it; the first selection retires it
     for good). A picture-only page carries a small dark pill «صفحة صورة بدون نص، ما بتنحدد».
   - **The circle:** «اشرحلي», «معنى ونطق», «فكّك الجملة», «ليش هيك؟», «بالعربي», «فلاش كاردز» and
-    «تمارين اختيار». Rita answers in writing in her column (the request as a grey bubble with its
+    «تمارين اختيار». Uzyra answers in writing in her column (the request as a grey bubble with its
     tag, her answer under her mark with «صفحة n»); cards and questions open in the lessons' practice
     window.
   - The place is saved for the reader and kept in the address (`?page=`). The book's sheet says
@@ -791,7 +795,7 @@ and one button for its next step. A book opens one step at a time (the step is i
    lesson; can be stopped and resumed. "اصنع دليل PDF" makes guides on their own, listed below with
    open / download / make again.
 3. Review: one row per lesson with its kind and a state chip (جاهز / فيه ملاحظات / فيه مشكلة / بدون
-   تمارين / منشور), a filter الكل / درس ريتا / ملف + ريتا; a row opens the lesson in a side window
+   تمارين / منشور), a filter الكل / درس يوزرا / ملف + يوزرا; a row opens the lesson in a side window
    (`.rita-drawer`: full screen on phones, a panel from the left edge from 640px) with tabs for
    exercises, plan, slides, resources and the kind.
 4. Publish: one button publishes the book and every ready lesson; lessons with problems are named
@@ -803,20 +807,20 @@ Rarely needed tools (language, chosen page range, summaries, JSON import) sit in
 
 Every lesson is one of two kinds, and one colour marks it everywhere on the book page (tokens
 `--kind-*` in `src/styles.css`, section "The two lesson kinds"):
-- Red (`--kind-classic` `#d6453a`, text `#a3261c` on `#fdeceb`): "درس ريتا", Rita's lesson with
+- Red (`--kind-classic` `#d6453a`, text `#a3261c` on `#fdeceb`): "درس يوزرا", Uzyra's lesson with
   exercises, as lessons always were. The default for new lessons.
-- Green (`--kind-study` `#1f9d55`, text `#136c3c` on `#e4f5eb`): "ملف + ريتا", the PDF guide on the
-  right and Rita on the left. One press makes it in full: the lesson, its exercises, its guide, then
+- Green (`--kind-study` `#1f9d55`, text `#136c3c` on `#e4f5eb`): "ملف + يوزرا", the PDF guide on the
+  right and Uzyra on the left. One press makes it in full: the lesson, its exercises, its guide, then
   the guide checked and linked, with the steps shown under the row (`.uz-pipe`). Rules:
   `src/lib/study/lesson-maker.ts`.
-The choice is two cards (`.kind-card`, a small picture each: chat lines for red, a page beside Rita
+The choice is two cards (`.kind-card`, a small picture each: chat lines for red, a page beside Uzyra
 for green); a lesson carries a pill (`.lesson-kind`) and its row a 4px edge (`.lesson-row`). A green
 lesson whose guide is not linked says "بدون دليل مربوط" and offers «كمّل» (learners get the red lesson
 until it is linked). The kind can be changed later in the lesson window, tab «الدراسة التفاعلية».
 
-The study page's Rita column (`.uz-rc-*`, RitaRealtimeV3 in study mode) follows the ChatGPT / Claude
+The study page's Uzyra column (`.uz-rc-*`, RitaRealtimeV3 in study mode) follows the ChatGPT / Claude
 chat pages, measured from the owner's reference and scaled ×0.82 so the column keeps that calm,
-large-screen feel. Page #F7F7F6. Before the call: the UZYRA wordmark and Rita's cube big in the
+large-screen feel. Page #F7F7F6. Before the call: the UZYRA wordmark and Uzyra's cube big in the
 middle, and no message field yet: at the bottom an 84px black circle with the white Uzyra mark
 (30px; `HoldToStart`, «اضغط مطوّلاً لتبدأ» under it in 12px #8A8A87). The call starts only by holding
 it: held (pointer, or Space / Enter), a white disc grows from its centre to the edge in 950ms (only
@@ -824,11 +828,11 @@ its transform moves; the mark turns black where the white covers it) while the c
 a soft tone (a root and its fifth) rises in pitch and volume with the fill; let go early and the disc
 shrinks back in 420ms, the tone falls away and nothing happens. Full, a small rising chord plays, the
 circle shrinks away (scale 0.6, fades), a thin 40px ring turns in its place while the call connects
-(the same 128px height, so nothing moves), and once Rita is connected the composer rises into that
+(the same 128px height, so nothing moves), and once Uzyra is connected the composer rises into that
 place (460ms). After a failed call the circle comes back empty with «اضغط مطوّلاً لتعيد الاتصال».
 Reduced motion: the circle does not shrink and nothing rises; the disc still grows. When the call starts the cube flies down to
-sit just above the composer (FlyingCube). Rita writes without a bubble: a quiet 12px line first (her mark in a 26px white circle,
-«ريتا», the circle request it answers, and on the newest answer what she is doing now) over a hairline
+sit just above the composer (FlyingCube). Uzyra writes without a bubble: a quiet 12px line first (her mark in a 26px white circle,
+«يوزرا», the circle request it answers, and on the newest answer what she is doing now) over a hairline
 #E4E4E1, then 13px text #2B2B2B at 1.95 line height, paragraphs 12px apart, bold #161616. Words in the
 language being learned are small grey tags (#ECECEA, 0.9em). The learner's words sit on the other side
 in a #EBEBEA bubble (radius 15, 8×16 padding, 13px); a circle request shows its label as a small tag
@@ -836,14 +840,14 @@ above the quote. Turns are 26px apart; the report link is a small flag. The comp
 owner's reference chat box: one #EBEBEA field (radius 28, 16×14×12 padding, no border, no shadow),
 the 16px field on top (16px keeps iPad Safari from zooming), then a 46px row with «كلماتي» (36px tall,
 14px, and its count) at the start and, at the end, stop, end call and mic as plain grey 36px icons
-(end call turns red only on hover) and a 44px round blue send (#6096F0, #A9C4F7 while empty). Rita's sheet is a #EFEFED card (radius 16, no shadow)
+(end call turns red only on hover) and a 44px round blue send (#6096F0, #A9C4F7 while empty). Uzyra's sheet is a #EFEFED card (radius 16, no shadow)
 with white table cells, soft guide-tone head pills and a white «انتبه» tile.
-Rita's cube (RitaCube) is a flat black block (no shading, no
+Uzyra's cube (RitaCube) is a flat black block (no shading, no
 shadow; a touch wider than tall, slightly uneven corners) with two white rounded eyes, alive from
 springs that overshoot and settle: waiting, it does a small random action every 2–4 s (a hop with
 anticipation, squash and stretch, a double bounce, a lean, a wiggle, a glance) and blinks fast; it
 squashes hard with the learner's voice, rocks with circling eyes while thinking, hops on the beats of
-Rita's voice, and hops on every change of mood; only the blink stays with reduced motion.
+Uzyra's voice, and hops on every change of mood; only the blink stays with reduced motion.
 circle («لغة الشرح» opens three choices, the current one ticked).
 
 ## Language-change splash (`LanguageSplash`)
@@ -913,7 +917,7 @@ the user's zoom are never changed.
 - Lead text 16px (17 from 768), line height 1.6, at most 36rem wide.
 - Hero buttons 42px tall, 15px text, 1.5px border.
 - Header on the home page: bar 60px, links 14px weight 500 (44px target kept), its button 38px.
-- Rita's orb 280px (380 from 768) on a stage 320/360px tall and at most 840px wide; rings 1px.
+- Uzyra's orb 280px (380 from 768) on a stage 320/360px tall and at most 840px wide; rings 1px.
   The orb sits in a positioned wrapper (the orb itself is `position: relative`).
 - Word tags around the orb: 14–17px, weight 600, 1px border, radius 12, a 44px touch area.
 - The hero is `dir="ltr" lang="en"` (its words are English), so punctuation stays right in Arabic.
@@ -926,9 +930,9 @@ the user's zoom are never changed.
   app window stays labelled «Sample screen». Body copy 15–16px; eyebrow labels 13px.
 
 
-`AppWindow.tsx` replaces the old lesson-path strip. A window built from real markup (no screenshots) that starts tilted (desktop only) and flattens as it scrolls to the middle of the screen, then plays a short story once: the path fills, the lesson in progress shows, two words are saved, Rita listens.
+`AppWindow.tsx` replaces the old lesson-path strip. A window built from real markup (no screenshots) that starts tilted (desktop only) and flattens as it scrolls to the middle of the screen, then plays a short story once: the path fills, the lesson in progress shows, two words are saved, Uzyra listens.
 
-- Only `transform` is written on scroll (one rAF, no state); the story uses transitions. The wave on Rita's bar runs four times, then stops (the orb stays the only continuous motion).
+- Only `transform` is written on scroll (one rAF, no state); the story uses transitions. The wave on Uzyra's bar runs four times, then stops (the orb stays the only continuous motion).
 - Calm motion and no-JS show the finished window flat. Replay is a 44px button.
 - Content is sample content and says so ("Sample screen", "Sample lessons and words"). No counts, no users, no testimonials.
 - Decorative for assistive tech: `aria-hidden` plus a one-paragraph `sr-only` description.
@@ -937,7 +941,7 @@ the user's zoom are never changed.
 
 The same calm scale as the home page: the heavy pieces smaller and lighter, nothing shrunk below
 reading size. The header takes the home page's lower bar (60px, 14px links, 38px buttons). Rail:
-14px/600 pills (still 44px tall, the touch target), an 11.5rem column from 1024px. Section titles 22/600. "Talk to Rita" stage:
+14px/600 pills (still 44px tall, the touch target), an 11.5rem column from 1024px. Section titles 22/600. "Talk to Uzyra" stage:
 30px title on phones, 36px from 768px (weight 600), 15px line, 42px button, 320/340px tall, orb
 100px. Tiles: names 16/600 (the lead tile 20), lines 14px, tags 11.5px, 22px corners, 32px go
 button, 40px light buttons. Measured at 1180px: stage title 46 to 36, rail 16 to 14, tile name 19 to
@@ -945,7 +949,7 @@ button, 40px light buttons. Measured at 1180px: stage title 46 to 36, rail 16 to
 
 ### Home hero words
 
-Tapping one of the words around Rita's orb (Guten Morgen, Danke…) plays a small sound from the
+Tapping one of the words around Uzyra's orb (Guten Morgen, Danke…) plays a small sound from the
 study circle's family (`wordTapSound` in `tech-sound.ts`: a soft falling "pop", then two bell notes a
 fifth apart, each word on its own pitch, so tapping them in turn plays a little tune) and the word
 gives a springy pop (the `scale` property, so its tilt stays). The sound follows the same on/off
@@ -953,7 +957,7 @@ setting as the study page; reduced motion keeps the word still.
 
 ## Home "Under the hood" band
 
-`src/components/home/procreate/UnderTheHood.tsx`, after the lesson path. Speed story for Rita, told in three parts: a scripted mixed-language transcript demo, an overlap timeline, and five capability cells (one is the measured figure).
+`src/components/home/procreate/UnderTheHood.tsx`, after the lesson path. Speed story for Uzyra, told in three parts: a scripted mixed-language transcript demo, an overlap timeline, and five capability cells (one is the measured figure).
 
 - Honest numbers only. The one measured figure (about 75 ms) is the voice engine alone, with its date, region and "not end to end" stated next to it. Latency goals are not shown on the page; add an end-to-end figure only when recorded calls back it.
 - Every number is defined where it appears (what is measured, from where to where).
@@ -976,10 +980,10 @@ many items and very long text; loading and error states.
 
 A zig-zag road of round stops on white, with only what the learner needs on arrival: the header
 (back, the language and level, a small «ترتيب حر» pill that opens every lesson in any order, and for
-admins «تعديل المسار»), the title «دروسك مع ريتا» (24/600), and the road. No stars, stats card,
+admins «تعديل المسار»), the title «دروسك مع يوزرا» (24/600), and the road. No stars, stats card,
 colour legend or slogan on this page (stars are still kept in the database). Each kind of stop has
 one colour, used for its 4px ring and its small pill: green «PDF + صوت» (a study lesson: guide +
-Rita's voice), blue «محادثة» (a conversation lesson), orange «تمارين» (an exercises stop: only its look
+Uzyra's voice), blue «محادثة» (a conversation lesson), orange «تمارين» (an exercises stop: only its look
 for now) and purple «ملفات» (a resources stop that opens a sheet of files and links). Stops are 88px,
 196px apart, titles 14/700 and a 11.5px line. The road is a 6px grey line; the part already walked
 (up to the current lesson) is blue, and the current lesson carries a small bobbing «إنت هون» tag.
@@ -1007,7 +1011,7 @@ is moved like any stop. After the highest level a dashed grey «قريباً» b
 and the current lesson moves to the first unfinished lesson of that level (kept on the device, per
 language; «ابدأ من الأول» on the first banner undoes it). The header shows the language's flag, its
 name and the learner's level; a tap opens the other languages. With no lessons yet the page shows
-the language's flag and offers switching language or a free talk with Rita. While editing, only the
+the language's flag and offers switching language or a free talk with Uzyra. While editing, only the
 banners stay on the road, and a + at a level's edge sits above the next banner (it adds to the
 level before).
 
@@ -1057,7 +1061,7 @@ in the top bar and a new practice bring it back. The book reader still shows pra
 - The work area clips sideways (`overflow-x: clip`), so the page never scrolls sideways.
 
 Type on the study page follows pro tools and the owner's UI research (Nov 2026): 13px for UI text and
-12px for small words (top bar, state word, window), 13px for Rita's replies (the owner chose smaller
+12px for small words (top bar, state word, window), 13px for Uzyra's replies (the owner chose smaller
 than the research's 16–18px; raise `.uz-rc-rita` if it reads small on the iPad); a thin 46px top bar;
 the circle 56px and its options 50px (labels 12px, the quote 14px).
 
@@ -1101,7 +1105,7 @@ are inert fixtures. It asserts no outgoing remote requests. Captures at 390/768/
 Arabic/English, navigation, submit locking, scoring and hide/restore are reproducible in Chromium
 and WebKit. Physical iPad/Apple Pencil feel still requires hardware.
 
-## Rita's written sheet (`RitaSheet`)
+## Uzyra's written sheet (`RitaSheet`)
 
 A long answer is said in one short sentence; the details are written under it as a small white
 page in the study guide's style, never read aloud. The model writes them after the line `[[SHEET]]`
@@ -1113,12 +1117,12 @@ a blue-soft «انتبه / Watch out» card. Each line reads in its own directio
 left). 12.5px body, 12px cells, 10px head pills, 13.5px title, radius 16, no shadow; it rises in once (reduced motion: no
 movement). A sheet the model wrote badly still shows as plain lines. Short answers have no sheet.
 
-### Explaining a part of Rita's answer
+### Explaining a part of Uzyra's answer
 
-A part of one of Rita's answers (her words or her sheet) can be selected in the left column. That
+A part of one of Uzyra's answers (her words or her sheet) can be selected in the left column. That
 selection is dark red (#8E1B2B, white text), never the guide's blue, and stays marked when the browser's
 own selection goes. The circle takes a dark red ring, the quote strip a dark red edge with «من جواب
-ريتا», and the ring offers one option only, «اشرحلي ببساطة» (dark red disc), plus the language. She
+يوزرا», and the ring offers one option only, «اشرحلي ببساطة» (dark red disc), plus the language. She
 answers that part as to a complete beginner: one very simple sentence and a small sheet. A selection
-across two answers, or with the learner's own words, shows «حدّد من رد واحد لريتا.» The newest
+across two answers, or with the learner's own words, shows «حدّد من رد واحد ليوزرا.» The newest
 selection wins: selecting in the guide clears the left one, and the other way round.

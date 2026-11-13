@@ -11,7 +11,7 @@ const LABEL: Record<string, string> = {
   reply_language: "Right language",
 };
 
-/** Rita against the reference reply on each of the seven criteria (1 to 5), weakest first. */
+/** Uzyra against the reference reply on each of the seven criteria (1 to 5), weakest first. */
 export function CriteriaBars({ health }: { health: BuildHealth }) {
   const rows = CRITERION_IDS.flatMap((id) =>
     health.criteria[id] ? [{ id, ...health.criteria[id] }] : [],
@@ -23,7 +23,7 @@ export function CriteriaBars({ health }: { health: BuildHealth }) {
         Weak spots
       </h2>
       <p className="mt-1 text-[14px] text-[var(--pp-muted)]">
-        Score out of 5: Rita (blue) next to what a good tutor would say (grey).
+        Score out of 5: Uzyra (blue) next to what a good tutor would say (grey).
       </p>
       <ul className="mt-4 grid gap-4 lg:grid-cols-2">
         {rows.map((row) => (
@@ -31,7 +31,7 @@ export function CriteriaBars({ health }: { health: BuildHealth }) {
             <p className="flex items-baseline justify-between gap-3 text-[15px] font-semibold">
               <span>{LABEL[row.id] ?? row.id}</span>
               <span className="text-[14px] font-normal text-[var(--pp-muted)]">
-                Rita {row.rita} · good tutor {row.reference}
+                Uzyra {row.rita} · good tutor {row.reference}
               </span>
             </p>
             <div className="mt-2 grid gap-1" aria-hidden="true">

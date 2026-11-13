@@ -1,4 +1,4 @@
-// What Rita says during a lesson with exercises, and what the worker is told about each step.
+// What Uzyra says during a lesson with exercises, and what the worker is told about each step.
 // The lines are fixed text built from the lesson content and the engine's step, never written by
 // the model: whether an answer is right, the question and the results are always exactly what the
 // window shows. The model only teaches (the intro and each part's explanation) and answers
@@ -8,7 +8,7 @@ import type { PublicItem } from "./rita-lesson-grader.ts";
 
 export type SpeechLanguage = "ar" | "en";
 
-/** The step as the worker sees it: no answer key, and only what Rita may talk about. */
+/** The step as the worker sees it: no answer key, and only what Uzyra may talk about. */
 export type WorkerStep = {
   revision: number;
   phase: LessonStep["phase"];
@@ -21,9 +21,9 @@ export type WorkerStep = {
 };
 
 export type StepMessage = WorkerStep & {
-  /** An exact line for Rita to say now ("" for none). */
+  /** An exact line for Uzyra to say now ("" for none). */
   say: string;
-  /** "model": Rita teaches this step herself (the intro and each explanation). */
+  /** "model": Uzyra teaches this step herself (the intro and each explanation). */
   action: "model" | "";
 };
 
@@ -101,7 +101,7 @@ function itemLine(item: PublicItem, lang: SpeechLanguage): string {
   }
 }
 
-/** What Rita says about an answer, a hint or speech she could not match. */
+/** What Uzyra says about an answer, a hint or speech she could not match. */
 export function feedbackLine(feedback: Feedback, lang: SpeechLanguage): string {
   const explain = lang === "en" ? feedback.explain_en || feedback.explain_ar : feedback.explain_ar;
   const hint = lang === "en" ? feedback.hint_en || feedback.hint_ar : feedback.hint_ar;

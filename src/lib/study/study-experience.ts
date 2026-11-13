@@ -1,5 +1,5 @@
 // Which experience a lesson really opens with. The admin chooses "classic" (the current lesson) or
-// "study" (the guide on the right, Rita on the left), but a study lesson only opens as one when its
+// "study" (the guide on the right, Uzyra on the left), but a study lesson only opens as one when its
 // guide is ready for learners and the feature switch is on. Anything else falls back to the current
 // lesson, which every lesson still has, so a learner never meets a broken page.
 // Pure: decided on the server, tested with node.

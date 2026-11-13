@@ -1,11 +1,11 @@
-"""Rita's written sheet: the part of a long answer that is shown, never spoken.
+"""Uzyra's written sheet: the part of a long answer that is shown, never spoken.
 
 A long answer is said in one short sentence, and the details (a small table, the rules, examples, a
 "watch out") are written after the marker line [[SHEET]]. The website shows that part as a tidy page
 under her words, in the style of the study guide. This processor sits right after the language
 model: what comes before the marker goes on to the voice as usual; the marker and everything after
 it are held back from the voice. The page already receives the model's whole text (the bot-llm-text
-messages), so it reads the sheet from there; the sheet is also kept so it can be added to Rita's
+messages), so it reads the sheet from there; the sheet is also kept so it can be added to Uzyra's
 memory of the conversation once her turn ends.
 
 The marker can arrive split across stream pieces ("[[SH" + "EET]]"), so a tail that could be the
@@ -27,7 +27,7 @@ from pipecat.frames.frames import (
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 
 MARKER = "[[sheet]]"
-#: How the marker is written into saved text and Rita's memory.
+#: How the marker is written into saved text and Uzyra's memory.
 MARKER_LINE = "[[SHEET]]"
 #: A sheet longer than this is cut (the model was told to keep it short).
 MAX_SHEET_CHARS = 2400
@@ -91,7 +91,7 @@ class SheetSplit:
 class RitaSheetSplitter(FrameProcessor):
     """Place right after the language model, before the word joiner and the speech cleaner.
 
-    `look_below` gives the short line Rita says when an answer was all sheet and no speech.
+    `look_below` gives the short line Uzyra says when an answer was all sheet and no speech.
     """
 
     def __init__(self, *, look_below: Callable[[], str] | None = None, **kwargs):
@@ -101,7 +101,7 @@ class RitaSheetSplitter(FrameProcessor):
         self._look_below = look_below
 
     def take_sheet(self) -> str:
-        """The sheet of the last finished answer, once (for Rita's memory of the conversation)."""
+        """The sheet of the last finished answer, once (for Uzyra's memory of the conversation)."""
         sheet, self._last_sheet = self._last_sheet, ""
         return sheet
 

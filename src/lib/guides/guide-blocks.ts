@@ -126,7 +126,7 @@ export function guideSegmentMap(content: GuideContent): Map<string, GuideSegment
   return new Map(guideSegments(content).map((segment) => [segment.seg, segment]));
 }
 
-/** A short outline for Rita: headings and taught terms, never the whole text. */
+/** A short outline for Uzyra: headings and taught terms, never the whole text. */
 export function guideOutline(content: GuideContent): {
   title: string;
   sections: { id: string; heading: string; terms: string[] }[];

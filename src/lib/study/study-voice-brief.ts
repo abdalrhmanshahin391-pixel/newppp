@@ -1,6 +1,6 @@
-// What Rita's voice worker is told about a study lesson when the call starts: the guide's outline
+// What Uzyra's voice worker is told about a study lesson when the call starts: the guide's outline
 // (headings and taught terms) and the lesson goals, never the guide's text. The guide is on the
-// learner's screen; Rita gets the text of a part only when the learner asks about it. Pure.
+// learner's screen; Uzyra gets the text of a part only when the learner asks about it. Pure.
 import { guideOutline } from "../guides/guide-blocks.ts";
 import type { StudyLessonData } from "./study-types.ts";
 

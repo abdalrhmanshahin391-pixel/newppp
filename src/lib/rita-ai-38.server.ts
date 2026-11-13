@@ -1,13 +1,15 @@
-// Rita AI Model 3.8 — server-only helpers.
+// Uzyra AI Model 3.8 — server-only helpers.
 // The pipeline: 4 pages of text -> Gemini Flash finds question
 // borders -> we CUT each question out locally -> the cut questions go to the
 // Gemini batch endpoint (50% price) -> answers + long explanations come back
 // and are written into the chosen sub-subject.
 
+import { ASSISTANT_IDENTITY_PROMPT } from "./brand.ts";
+
 export const RITA_MODEL = "gemini-2.5-flash";
 export const RITA_CHUNK_PAGES = 2;
 
-/** Rita uses the same protected Gemini key as the other study tools. */
+/** Uzyra uses the same protected Gemini key as the other study tools. */
 export async function resolveRitaKey(supabase: any): Promise<string> {
   void supabase;
   const key = (process.env['GEMINI_API_KEY'] ?? "").trim();
@@ -17,7 +19,7 @@ export async function resolveRitaKey(supabase: any): Promise<string> {
 
 export function ritaKeyError(status: number, body: string): string {
   if (status === 401 || status === 403) {
-    return "Rita's Gemini key was rejected (401/403). The saved key looks like a Google OAuth token — it needs replacing with an AI Studio API key that starts with AIza.";
+    return "Uzyra's Gemini key was rejected (401/403). The saved key looks like a Google OAuth token — it needs replacing with an AI Studio API key that starts with AIza.";
   }
   if (status === 429) return "Gemini is rate limiting right now. Wait a minute and press Resume.";
   return `Gemini error ${status}: ${body.slice(0, 300)}`;
@@ -93,7 +95,8 @@ Rules:
 - Return PLAIN TEXT only. No markdown fences, no JSON, no commentary. If the page holds no text at all, return an empty response.`;
 
 
-export const SOLVER_SYSTEM = `You are Rita, a medical exam tutor. The user gives you ONE complete question block. Solve it and explain it in depth.
+export const SOLVER_SYSTEM = `${ASSISTANT_IDENTITY_PROMPT}
+You are a medical exam tutor. The user gives you ONE complete question block. Solve it and explain it in depth.
 
 Return STRICT JSON only, no markdown fences:
 {

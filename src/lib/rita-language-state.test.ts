@@ -6,7 +6,7 @@ import {
   initialRitaLanguageState,
 } from "./rita-language-state.ts";
 
-test("one borrowed-language turn does not switch Rita", () => {
+test("one borrowed-language turn does not switch Uzyra", () => {
   const initial = initialRitaLanguageState({ language: "ar", dialect: "ar-JO" });
   const once = advanceRitaLanguageState(initial, { language: "en", confidence: 0.9 });
   assert.equal(once.activeLanguage, "ar");

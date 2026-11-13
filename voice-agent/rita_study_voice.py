@@ -1,7 +1,7 @@
-"""Rita's side of an interactive study lesson (the guide on the right, Rita on the left).
+"""Uzyra's side of an interactive study lesson (the guide on the right, Uzyra on the left).
 
 The website owns the study page. The learner reads the guide and picks a part; the website checks
-the part against the guide on its server and sends Rita only that trusted context. Rita never reads
+the part against the guide on its server and sends Uzyra only that trusted context. Uzyra never reads
 the guide aloud, never teaches the whole lesson on her own, and never claims something was saved
 unless the website said so with an exact line ("rita-study-say").
 
@@ -9,7 +9,7 @@ Messages from the website (all start with "rita-study-"; other sessions ignore t
   rita-study-state  {state}                       what the learner is doing; no model call
   rita-study-focus  {section, block_ids, text}    the part in view or last selected; no model call
   rita-study-action {request_id, action, quote, context, langs}
-                                                  one request ("explain", "simplify", ...); Rita
+                                                  one request ("explain", "simplify", ...); Uzyra
                                                   stops anything she was saying and answers it
   rita-study-cancel {request_id}                  stop that request
   rita-study-say    {text}                        an exact line to say (handled by the bot)
@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 STATES = {"loading_doc", "intro", "reading", "acting", "practicing", "cards_preview", "challenge", "paused", "ended"}
-# Rita stays quiet in these states: the learner is busy with something on the screen.
+# Uzyra stays quiet in these states: the learner is busy with something on the screen.
 QUIET_STATES = {"practicing", "cards_preview", "challenge", "paused", "ended"}
 
 # Each answer is one short spoken sentence; the details go on the written sheet ([[SHEET]]).
@@ -67,7 +67,7 @@ ACTIONS = {
     "sentence, then a small sheet: 2 to 4 very simple points and one example.",
 }
 
-#: How many of Rita's own recent answers are searched for the part the learner selected.
+#: How many of Uzyra's own recent answers are searched for the part the learner selected.
 RECENT_REPLIES = 6
 
 MAX_QUOTE = 600
@@ -114,7 +114,7 @@ class StudyRequest:
 
 @dataclass
 class StudyVoice:
-    """What the website last told Rita about the study page."""
+    """What the website last told Uzyra about the study page."""
 
     title: str = ""
     outline: str = ""
@@ -263,7 +263,7 @@ def _loose(text: str) -> str:
 
 
 def reply_context(quote: str, replies: list[str], page_copy: str) -> str:
-    """The answer of Rita's that the selected text comes from: her own copy when she has it (the
+    """The answer of Uzyra's that the selected text comes from: her own copy when she has it (the
     newest of her last answers that contains it), else the page's copy. Cut around the quote."""
     wanted = _loose(quote)
     found = ""
@@ -300,7 +300,7 @@ def handle_study_message(
 ) -> StudyEffects:
     """Decides what a study message does. A session that is not a study lesson ignores them all.
 
-    `recent_replies` are Rita's own last answers in the call: a request about one of her answers
+    `recent_replies` are Uzyra's own last answers in the call: a request about one of her answers
     ("explain_reply") takes its context from there rather than from the page.
     """
     effects = StudyEffects()
@@ -332,7 +332,7 @@ def handle_study_message(
         if request is None:
             effects.ack = {"type": "rita-study-ack", "request_id": data.get("request_id"), "state": "failed"}
         else:
-            # A new request stops anything Rita was saying, then she answers this one.
+            # A new request stops anything Uzyra was saying, then she answers this one.
             effects.interrupt = True
             effects.refresh_prompt = True
             effects.user_line = voice.user_line()

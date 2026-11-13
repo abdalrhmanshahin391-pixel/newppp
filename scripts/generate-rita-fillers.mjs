@@ -15,7 +15,7 @@ const { data, error } = await supabase
   .maybeSingle();
 if (error) throw error;
 const apiKey = String(data?.api_key || process.env.OPENAI_API_KEY || "").trim();
-if (!apiKey) throw new Error("No protected Rita OpenAI key is available.");
+if (!apiKey) throw new Error("No protected Uzyra OpenAI key is available.");
 
 const phrases = {
   ar: ["مم…", "فهمت عليك…", "خليني أشوف…"],
@@ -43,7 +43,7 @@ for (const voice of ["marin", "cedar"]) {
           input: text,
           response_format: "pcm",
           instructions:
-            "A brief, warm, natural conversational acknowledgement from Rita. Never robotic or theatrical.",
+            "A brief, warm, natural conversational acknowledgement from Uzyra. Never robotic or theatrical.",
         }),
       });
       if (!response.ok) throw new Error(`OpenAI filler generation failed (${response.status}).`);
@@ -52,4 +52,4 @@ for (const voice of ["marin", "cedar"]) {
     }
   }
 }
-console.log("Generated Rita filler audio for marin and cedar.");
+console.log("Generated Uzyra filler audio for marin and cedar.");

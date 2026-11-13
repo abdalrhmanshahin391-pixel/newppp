@@ -1,4 +1,4 @@
-// A part of Rita's own answer the learner selected (the left column). Pure, tested with node: the
+// A part of Uzyra's own answer the learner selected (the left column). Pure, tested with node: the
 // selected text must really be inside that answer, short enough, and the answer is cut around it
 // to the same size as a guide context.
 import { MAX_SELECTION_CHARS } from "./study-limits.ts";
@@ -17,11 +17,11 @@ export type ReplyQuoteCheck =
 
 export function checkReplyQuote(quote: string, reply: string): ReplyQuoteCheck {
   const clean = quote.replace(/\s+/g, " ").trim();
-  if (!clean || !LETTER.test(clean)) return { ok: false, message: "حدّد كلمة أو جملة من رد ريتا." };
+  if (!clean || !LETTER.test(clean)) return { ok: false, message: "حدّد كلمة أو جملة من رد يوزرا." };
   if (clean.length > MAX_SELECTION_CHARS) return { ok: false, message: "حدّد جزء أصغر من الرد." };
   const answer = reply.replace(/[ \t]+/g, " ").trim();
   const at = looseText(answer).indexOf(looseText(clean));
-  if (at < 0) return { ok: false, message: "ما لقيت هاد الجزء برد ريتا. حدّده مرة ثانية." };
+  if (at < 0) return { ok: false, message: "ما لقيت هاد الجزء برد يوزرا. حدّده مرة ثانية." };
   if (answer.length <= MAX_REPLY_CONTEXT) return { ok: true, quote: clean, context: answer };
   // `at` is a position in the loose text; close enough to centre the window on the quote.
   const start = Math.max(

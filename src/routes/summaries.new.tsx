@@ -34,12 +34,12 @@ export const Route = createFileRoute("/summaries/new")({
       { title: "New summary — Uzyra study workspace" },
       {
         name: "description",
-        content: "Turn photos of your pages or a lecture PDF into a clean Rita summary sheet.",
+        content: "Turn photos of your pages or a lecture PDF into a clean Uzyra summary sheet.",
       },
       { property: "og:title", content: "New summary — Uzyra study workspace" },
       {
         property: "og:description",
-        content: "Upload pages or a PDF and Rita writes the summary sheet for you.",
+        content: "Upload pages or a PDF and Uzyra writes the summary sheet for you.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

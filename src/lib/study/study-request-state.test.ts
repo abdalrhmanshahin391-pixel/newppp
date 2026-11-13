@@ -19,7 +19,7 @@ const request = (state: RequestState, channel: "voice" | "text" = "voice"): Acti
 });
 const ack = (state: string, id = "r1") => ({ type: "rita-study-ack", request_id: id, state });
 
-test("ST-U09: Rita's acknowledgement moves the current request on", () => {
+test("ST-U09: Uzyra's acknowledgement moves the current request on", () => {
   assert.deepEqual(ackStep(request("sent"), ack("started")), {
     state: "started",
     timer: "first_audio",
@@ -45,13 +45,13 @@ test("ST-U09: an answer about another or a finished request is never applied", (
   assert.equal(ackStep(request("sent"), ack("dancing")), null);
 });
 
-test("Rita's speaking state: quiet after her answer means done; an ended call cancels", () => {
+test("Uzyra's speaking state: quiet after her answer means done; an ended call cancels", () => {
   assert.deepEqual(ritaEventStep(request("started"), "speaking"), {
     state: "started",
     timer: "clear",
   });
   assert.deepEqual(ritaEventStep(request("started"), "quiet"), { state: "done", timer: "clear" });
-  // Quiet before Rita took the request (she was finishing something else) changes nothing.
+  // Quiet before Uzyra took the request (she was finishing something else) changes nothing.
   assert.equal(ritaEventStep(request("sent"), "quiet"), null);
   for (const state of ["resolving", "sent", "started"] as const)
     assert.deepEqual(ritaEventStep(request(state), "ended"), {

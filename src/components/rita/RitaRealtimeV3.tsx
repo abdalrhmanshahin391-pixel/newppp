@@ -72,9 +72,10 @@ import {
 import { MetricQueue } from "@/lib/metric-queue";
 import { ExplanationLanguageControl } from "@/components/rita/ExplanationLanguageControl";
 import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rita-conversation";
+import { ASSISTANT_NAME_AR, BRAND_NAME, FREE_CONVERSATION_OPENER } from "@/lib/brand";
 
 type Persona = "kind" | "direct" | "playful" | "strict";
-/** In a lesson Rita opens the lesson herself as soon as the call starts, so nobody has to say hello. */
+/** In a lesson Uzyra opens the lesson herself as soon as the call starts, so nobody has to say hello. */
 /** A request from the study circle is posted as "[label] «quote»"; this is its label. */
 const REQUEST_LINE = /^\[([^\]]{1,40})\]\s*([\s\S]*)$/;
 
@@ -94,14 +95,15 @@ function YouBubble({ text }: { text: string }) {
 }
 
 function welcomeText(lessonId: string | undefined, study?: boolean) {
-  if (study) return "أنا ريتا. اكبس «ابدأ مع ريتا»، وحدّد أي جزء من الدرس بدك نشتغل عليه.";
+  if (study)
+    return `أنا ${ASSISTANT_NAME_AR}. اكبس «ابدأ مع ${ASSISTANT_NAME_AR}»، وحدّد أي جزء من الدرس بدك نشتغل عليه.`;
   return lessonId
-    ? "Hi, I’m Rita. Press start and I’ll open today’s lesson."
-    : "Hi, I’m Rita. What would you like to practise?";
+    ? `Hi, I’m ${BRAND_NAME}. Press start and I’ll open today’s lesson.`
+    : FREE_CONVERSATION_OPENER;
 }
 
 /**
- * How the study page talks to Rita's call (see src/components/rita-study). Rita fills `send` while
+ * How the study page talks to Uzyra's call (see src/components/rita-study). Uzyra fills `send` while
  * the call is ready and clears it when it ends; the page receives the worker's "rita-study-*"
  * messages and the speaking state.
  */
@@ -111,11 +113,11 @@ export type StudyBridge = {
   send: ((type: string, data: Record<string, unknown>) => boolean) | null;
   onMessage?: (message: Record<string, unknown>) => void;
   onEvent?: (event: "ready" | "ended" | "speaking" | "quiet") => void;
-  /** Set by Rita: adds a line to the chat (the learner's request, or a written answer). */
+  /** Set by Uzyra: adds a line to the chat (the learner's request, or a written answer). */
   post?: (role: "you" | "rita", text: string) => void;
 };
 
-/** An interactive study lesson: Rita sits beside the guide, in a column, without the page chrome. */
+/** An interactive study lesson: Uzyra sits beside the guide, in a column, without the page chrome. */
 export type StudyEmbed = {
   lessonId: string;
   preview?: boolean;
@@ -164,7 +166,7 @@ type PendingMetric = {
 async function authHeaders() {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
-  if (!token) throw new Error("Please sign in before starting Rita.");
+  if (!token) throw new Error("Please sign in before starting Uzyra.");
   return new Headers({ Authorization: `Bearer ${token}`, "Content-Type": "application/json" });
 }
 
@@ -175,7 +177,7 @@ function humanError(error: unknown) {
     const text = String(candidate.info ?? candidate.detail ?? candidate.message ?? "").trim();
     if (text) return text;
   }
-  return "Rita v3 could not start. No old voice system was used.";
+  return "Uzyra v3 could not start. No old voice system was used.";
 }
 
 export function RitaRealtimeV3({
@@ -190,7 +192,7 @@ export function RitaRealtimeV3({
   preview?: boolean;
   /** Admin preview of a built-in lesson with exercises. */
   sample?: SampleKey;
-  /** The study page's column. Without it Rita behaves exactly as before. */
+  /** The study page's column. Without it Uzyra behaves exactly as before. */
   study?: StudyEmbed;
 } = {}) {
   const studyLessonId = study?.lessonId;
@@ -216,7 +218,7 @@ export function RitaRealtimeV3({
   const traceId = useRef("");
   const pendingMetrics = useRef<PendingMetric[]>([]);
   const lastUserText = useRef("");
-  // The learner message Rita is answering and her latest reply, so a turn record from the worker
+  // The learner message Uzyra is answering and her latest reply, so a turn record from the worker
   // can be tied to the two bubbles it belongs to (best effort; the turn reference is the real key).
   const answeredUserMessageId = useRef("");
   const lastReplyMessageId = useRef("");
@@ -260,7 +262,7 @@ export function RitaRealtimeV3({
   const [mood, setMood] = useState<RitaMood>("ready");
   // Live audio levels for the orb. A ref, not state: they change dozens of times per second.
   const orbLevels = useRef<OrbLevels>({ input: 0, output: 0 });
-  // Rita's voice arrives as a remote WebRTC track that the page itself must play.
+  // Uzyra's voice arrives as a remote WebRTC track that the page itself must play.
   const botAudio = useRef<HTMLAudioElement | null>(null);
   const botAudioPlaying = useRef(false);
   const [soundBlocked, setSoundBlocked] = useState(false);
@@ -291,10 +293,10 @@ export function RitaRealtimeV3({
   // The natural defaults. The page no longer asks the learner to pick these.
   const personality: Persona = "kind";
   const mode: LessonMode = "free_conversation";
-  // How Rita is asked to explain (Arabic, English or like the learner speaks); a ref, so a change
+  // How Uzyra is asked to explain (Arabic, English or like the learner speaks); a ref, so a change
   // during a conversation never rebuilds the callbacks that talk to the call.
   const explanation = useExplanationLanguage();
-  // A lesson with exercises during a call: steps go to Rita, and what she hears comes back as
+  // A lesson with exercises during a call: steps go to Uzyra, and what she hears comes back as
   // lesson signals (answers are graded by the server, never by her).
   const sendToRita = useCallback((type: string, data?: unknown) => {
     client.current?.sendClientMessage(type, data);
@@ -339,7 +341,7 @@ export function RitaRealtimeV3({
     if (!loading && !user) void navigate({ to: "/login" });
   }, [loading, navigate, user]);
 
-  // The study page sends its requests through this while Rita is ready, and hears when she is not.
+  // The study page sends its requests through this while Uzyra is ready, and hears when she is not.
   const studyBridge = study?.bridge;
   useEffect(() => {
     if (!studyBridge) return;
@@ -467,7 +469,7 @@ export function RitaRealtimeV3({
                 {
                   id: "welcome",
                   role: "rita",
-                  text: "Hi, I’m Rita. What would you like to practise?",
+                  text: FREE_CONVERSATION_OPENER,
                 },
               ],
         );
@@ -808,7 +810,7 @@ export function RitaRealtimeV3({
   const ensureFreeConversation = useCallback(async () => {
     if (lessonId || studyLessonId) return "";
     if (activeConversationId.current) return activeConversationId.current;
-    if (!user) throw new Error("Please sign in before starting Rita.");
+    if (!user) throw new Error("Please sign in before starting Uzyra.");
     const { data, error: createError } = await supabase
       .from("rita_free_conversations")
       .insert({
@@ -908,7 +910,7 @@ export function RitaRealtimeV3({
       if (!preserveMessages && !activeConversationId.current) {
         setMessages([
           {
-            // The same id as the first welcome, so it is never taken for one of Rita's replies.
+            // The same id as the first welcome, so it is never taken for one of Uzyra's replies.
             id: "welcome",
             role: "rita",
             text: welcomeText(lessonId, Boolean(studyLessonId)),
@@ -945,7 +947,7 @@ export function RitaRealtimeV3({
 
   useEffect(() => () => void endLesson(), [endLesson]);
 
-  // Rita's worker answers "open the list" / "turn them into flashcards" by voice, so it
+  // Uzyra's worker answers "open the list" / "turn them into flashcards" by voice, so it
   // needs to know whether there is anything in the list.
   const wordCount = tray.entries.length;
   useEffect(() => {
@@ -977,7 +979,7 @@ export function RitaRealtimeV3({
     };
   }, []);
 
-  // A silent clip: playing it inside the Start tap lets Safari play Rita's stream later.
+  // A silent clip: playing it inside the Start tap lets Safari play Uzyra's stream later.
   const SILENT_WAV =
     "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
 
@@ -1076,7 +1078,7 @@ export function RitaRealtimeV3({
     setStarting(true);
     setError("");
     setConnectionPhase("connecting");
-    setStatus("Connecting Rita…");
+    setStatus("Connecting Uzyra…");
     try {
       const currentConversationId = await ensureFreeConversation();
       const [{ PipecatClient }, { DailyTransport }] = await Promise.all([
@@ -1129,7 +1131,7 @@ export function RitaRealtimeV3({
           delivery_status: interrupted ? "interrupted" : "completed",
           created_at: new Date().toISOString(),
         });
-        // A word the learner asked about counts even if they cut Rita off; only a spoken
+        // A word the learner asked about counts even if they cut Uzyra off; only a spoken
         // command to the list itself ("open the list", "turn them into flashcards") does not.
         if (!wasCommand && reply) void runExtraction(asked || lastUserText.current, reply);
         if (interrupted) void metric("interrupted");
@@ -1213,7 +1215,7 @@ export function RitaRealtimeV3({
               client.current?.enableMic(false);
               setActive(true);
               setConnectionPhase("waiting");
-              setStatus("Audio connected; waiting for Rita…");
+              setStatus("Audio connected; waiting for Uzyra…");
               setMood("ready");
               if (botReadyTimer.current) clearTimeout(botReadyTimer.current);
               botReadyTimer.current = setTimeout(() => {
@@ -1264,7 +1266,7 @@ export function RitaRealtimeV3({
               activeRef.current = true;
               setConnectionPhase("ready");
               if (!mutedRef.current && !phraseMuted.current) client.current?.enableMic(true);
-              setStatus("Rita is listening");
+              setStatus("Uzyra is listening");
               setMood("listening");
               if (!botReadyMetricRecorded.current) {
                 botReadyMetricRecorded.current = true;
@@ -1365,7 +1367,7 @@ export function RitaRealtimeV3({
               speechEndedAt.current = performance.now();
               void metric("speech_end");
               if (botSpeaking.current) return;
-              setStatus("Rita is thinking…");
+              setStatus("Uzyra is thinking…");
               setMood("thinking");
               scheduleFiller();
             },
@@ -1411,7 +1413,7 @@ export function RitaRealtimeV3({
               firstLlmTokenRecorded.current = false;
               firstRemoteAudioRecorded.current = false;
               interruptCandidateAt.current = 0;
-              setStatus("Rita is answering…");
+              setStatus("Uzyra is answering…");
               void metric("llm_start");
             },
             onBotLlmText: ({ text }) => {
@@ -1451,7 +1453,7 @@ export function RitaRealtimeV3({
               cancelFiller();
               botSpeaking.current = true;
               void metric("bot_speaking_signal");
-              setStatus("Rita is speaking — say stop or tap Stop");
+              setStatus("Uzyra is speaking — say stop or tap Stop");
               setMood("talking");
             },
             onTrackStarted: (track, participant) => {
@@ -1521,10 +1523,10 @@ export function RitaRealtimeV3({
               const microphoneMuted = mutedRef.current || !botReady.current;
               setStatus(
                 !botReady.current
-                  ? "Rita is getting ready…"
+                  ? "Uzyra is getting ready…"
                   : microphoneMuted
                     ? "Microphone muted"
-                    : "Rita is listening",
+                    : "Uzyra is listening",
               );
               setMood(microphoneMuted ? "ready" : "listening");
             },
@@ -1544,7 +1546,7 @@ export function RitaRealtimeV3({
       client.current = pc;
       const headers = await authHeaders();
       if (!isCurrent()) return;
-      setStatus("Waking Rita's voice worker…");
+      setStatus("Waking Uzyra's voice worker…");
       const ready = await pc.startBotAndConnect({
         endpoint: "/api/rita-v3/session/start",
         headers,
@@ -1598,7 +1600,7 @@ export function RitaRealtimeV3({
       void metric("start_call_returned", performance.now() - sessionStartedAt.current);
       setActive(true);
       activeRef.current = true;
-      if (!botReady.current) setStatus("Connected; waiting for Rita…");
+      if (!botReady.current) setStatus("Connected; waiting for Uzyra…");
     } catch (cause) {
       failConnection(cause, "client_start");
     } finally {
@@ -1607,8 +1609,8 @@ export function RitaRealtimeV3({
   }
 
   // A sure way to interrupt: it does not depend on the microphone or on what was heard.
-  // The learner changed "Rita explains in" while talking: tell the worker, which applies it from
-  // Rita's next answer. Before a conversation starts the value is simply sent with the start.
+  // The learner changed "Uzyra explains in" while talking: tell the worker, which applies it from
+  // Uzyra's next answer. Before a conversation starts the value is simply sent with the start.
   const explanationChanged = useCallback(
     (value: ExplanationLanguage) => {
       if (!activeRef.current) return;
@@ -1659,7 +1661,7 @@ export function RitaRealtimeV3({
     mutedRef.current = next;
     setMuted(next);
     if (next) cancelFiller();
-    setStatus(next ? "Microphone muted" : "Rita is listening");
+    setStatus(next ? "Microphone muted" : "Uzyra is listening");
     setMood(next ? "ready" : "listening");
   }
 
@@ -1747,7 +1749,7 @@ export function RitaRealtimeV3({
                   <YouBubble key={message.id} text={message.text} />
                 ) : (
                   <div key={message.id} className="uz-rc-rita uz-msg-in">
-                    {/* Rita's mark and a quiet line: her name, the request it answers, and
+                    {/* Uzyra's mark and a quiet line: her name, the request it answers, and
                         what she is doing now on the newest answer. */}
                     <div className="uz-rc-meta">
                       <span className="uz-rc-avatar" aria-hidden="true">
@@ -1755,7 +1757,7 @@ export function RitaRealtimeV3({
                       </span>
                       <span className="uz-rc-meta-text">
                         {[
-                          "ريتا",
+                          "يوزرا",
                           requestLabel(turns[index - 1]),
                           active && message.id === lastTurn?.id ? stateWord : "",
                         ]
@@ -1803,7 +1805,7 @@ export function RitaRealtimeV3({
 
         <div className="uz-rc-dock">
           <div className="uz-rc-spot is-dock" data-cube-spot="dock" />
-          {/* Once Rita has answered, what she is doing shows beside her newest answer instead. */}
+          {/* Once Uzyra has answered, what she is doing shows beside her newest answer instead. */}
           {chatting && !turns.some((turn) => turn.role === "rita") && (
             <p className="uz-rc-word is-small">{stateWord}</p>
           )}
@@ -1828,8 +1830,8 @@ export function RitaRealtimeV3({
               <input
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
-                placeholder="اكتب لريتا…"
-                aria-label="اكتب لريتا"
+                placeholder="اكتب ليوزرا…"
+                aria-label="اكتب ليوزرا"
                 dir="auto"
                 className="uz-rc-input"
               />
@@ -1852,8 +1854,8 @@ export function RitaRealtimeV3({
                     type="button"
                     onClick={stopRita}
                     className="uz-rc-icon"
-                    aria-label="وقّف ريتا"
-                    title="وقّف ريتا"
+                    aria-label="وقّف يوزرا"
+                    title="وقّف يوزرا"
                   >
                     <Square size={12} fill="currentColor" aria-hidden="true" />
                   </button>
@@ -1911,7 +1913,7 @@ export function RitaRealtimeV3({
                   ? "thinking"
                   : "idle"
             }
-            label={active ? "ريتا معك" : "ريتا"}
+            label={active ? "يوزرا معك" : "يوزرا"}
           />
         </FlyingCube>
 
@@ -1965,7 +1967,7 @@ export function RitaRealtimeV3({
           <VoiceOrb
             levelsRef={orbLevels}
             mode={orbModeFor(active, mood)}
-            label={active ? "Rita is with you" : "Rita, your language tutor"}
+            label={active ? "Uzyra is with you" : "Uzyra, your language tutor"}
             className="h-[min(70vw,360px)] w-[min(70vw,360px)]"
           />
           <h2 className="-mt-4 text-[32px] leading-[36px] text-[var(--pp-ink)]">
@@ -1973,7 +1975,7 @@ export function RitaRealtimeV3({
               ? lessonRun.view.title_ar || lessonRun.view.title
               : lessonId
                 ? lesson.session?.lesson.title || lesson.session?.lesson.title_ar || "Lesson"
-                : "Talk with Rita"}
+                : "Talk with Uzyra"}
           </h2>
           <p className="mt-2 flex items-center gap-2 text-[16px] font-medium text-[var(--pp-muted)]">
             <span
@@ -2133,7 +2135,7 @@ export function RitaRealtimeV3({
                   {historyLoading
                     ? "Loading conversation…"
                     : lessonId
-                      ? "ابدأ الدرس مع ريتا"
+                      ? "ابدأ الدرس مع يوزرا"
                       : "Start talking"}
                 </button>
               </div>
@@ -2142,7 +2144,7 @@ export function RitaRealtimeV3({
                 <input
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
-                  placeholder="Ask Rita anything…"
+                  placeholder="Ask Uzyra anything…"
                   className="w-full border-0 bg-transparent px-3 py-3 text-[18px] text-[var(--pp-ink)] outline-none placeholder:text-[var(--pp-muted)]"
                 />
                 <div className="flex flex-wrap items-center gap-2 border-t border-[var(--pp-line)] pt-3">

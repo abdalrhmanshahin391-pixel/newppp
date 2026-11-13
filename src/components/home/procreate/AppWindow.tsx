@@ -29,14 +29,14 @@ const WORDS: { en: string; ar: string }[] = [
   { en: "You're welcome", ar: "عفوًا" },
 ];
 
-/** Steps of the scripted story: 1 path fills, 2 current lesson, 3 words, 4 Rita listens. */
+/** Steps of the scripted story: 1 path fills, 2 current lesson, 3 words, 4 Uzyra listens. */
 const LAST_STEP = 4;
 const STEP_AT = [0, 250, 1150, 2000, 2900];
 
 const NAV = [
   { label: "Lessons", Icon: BookOpen, on: true },
   { label: "My words", Icon: Languages, on: false },
-  { label: "Talk to Rita", Icon: Mic, on: false },
+  { label: "Talk to Uzyra", Icon: Mic, on: false },
 ];
 
 function PathNode({ index, step }: { index: number; step: number }) {
@@ -88,7 +88,7 @@ function PathNode({ index, step }: { index: number; step: number }) {
 
 /**
  * A product window that starts tilted and flattens as it scrolls into view, then tells a short
- * story: the path fills, the lesson in progress shows, two words are saved, Rita listens. Built
+ * story: the path fills, the lesson in progress shows, two words are saved, Uzyra listens. Built
  * from real markup with sample content (no screenshots, no counts). Calm motion shows the
  * finished window flat.
  */
@@ -174,7 +174,7 @@ export function AppWindow() {
         className={`rita-reveal mx-auto max-w-[40rem] text-center ${head.shown ? "rita-reveal-in" : ""}`}
       >
         <h2 id="window-heading" className="rh-h2" style={ink}>
-          Your lessons, your words, and Rita.
+          Your lessons, your words, and Uzyra.
         </h2>
         <p className="rh-lead2 mt-3" style={muted}>
           One place to pick up where you stopped, keep the words you asked about, and talk it
@@ -186,7 +186,7 @@ export function AppWindow() {
         <p className="sr-only">
           Sample screen. The lessons list shows a path of five A1 lessons. The first two are done,
           the third, Thank you and Please, is in progress. Saved words: Thank you, Please and You're
-          welcome. Rita is ready to listen.
+          welcome. Uzyra is ready to listen.
         </p>
         <div
           ref={frame}
@@ -329,7 +329,7 @@ export function AppWindow() {
                   <Mic size={18} />
                 </span>
                 <span className="text-[14.5px] font-semibold">
-                  {step >= 4 ? "Rita is listening" : "Talk to Rita"}
+                  {step >= 4 ? "Uzyra is listening" : "Talk to Uzyra"}
                 </span>
                 <span className="ms-auto flex h-6 items-center gap-1">
                   {[0, 1, 2, 3, 4].map((bar) => (

@@ -15,17 +15,17 @@ import {
   emptyRitaX,
   ritaxStats,
   useAllRitaX,
-  type RitaX,
+  type Uzyra,
 } from "@/lib/ritax";
 
 export const Route = createFileRoute("/admin/ritax-announcements")({
   head: () => ({
     meta: [
-      { title: "RitaX Announcements — Admin" },
-      { name: "description", content: "Design, schedule and measure RitaX announcements." },
+      { title: "Uzyra Announcements — Admin" },
+      { name: "description", content: "Design, schedule and measure Uzyra announcements." },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "RitaX Announcements — Admin" },
-      { property: "og:description", content: "Design, schedule and measure RitaX announcements." },
+      { property: "og:title", content: "Uzyra Announcements — Admin" },
+      { property: "og:description", content: "Design, schedule and measure Uzyra announcements." },
     ],
   }),
   component: RitaXStudio,
@@ -52,7 +52,7 @@ function RitaXStudio() {
   const { data: stats } = useQuery({ queryKey: ["ritax-stats"], queryFn: ritaxStats, staleTime: 30_000 });
 
   const [selected, setSelected] = useState<string | null>(null);
-  const [draft, setDraft] = useState<Partial<RitaX> | null>(null);
+  const [draft, setDraft] = useState<Partial<Uzyra> | null>(null);
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
 
@@ -67,8 +67,8 @@ function RitaXStudio() {
     }
   }, [list, draft]);
 
-  const current = useMemo(() => ({ ...emptyRitaX(), ...(draft ?? {}) }) as RitaX, [draft]);
-  const set = (patch: Partial<RitaX>) => setDraft((d) => ({ ...(d ?? {}), ...patch }));
+  const current = useMemo(() => ({ ...emptyRitaX(), ...(draft ?? {}) }) as Uzyra, [draft]);
+  const set = (patch: Partial<Uzyra>) => setDraft((d) => ({ ...(d ?? {}), ...patch }));
 
   async function refresh() {
     await qc.invalidateQueries({ queryKey: ["ritax-all"] });
@@ -76,7 +76,7 @@ function RitaXStudio() {
     await qc.invalidateQueries({ queryKey: ["ritax-stats"] });
   }
 
-  async function save(extra: Partial<RitaX> = {}) {
+  async function save(extra: Partial<Uzyra> = {}) {
     setSaving(true);
     try {
       const payload = { ...current, ...extra };
@@ -87,15 +87,15 @@ function RitaXStudio() {
         const { error } = await (supabase.from as any)("announcements").update(rest).eq("id", selected);
         if (error) throw error;
       } else {
-        const { id: _ignored, ...rest } = payload as RitaX;
+        const { id: _ignored, ...rest } = payload as Uzyra;
         const { data, error } = await (supabase.from as any)("announcements")
           .insert(rest)
           .select("*")
           .maybeSingle();
         if (error) throw error;
         if (data) {
-          setSelected((data as RitaX).id);
-          setDraft(data as RitaX);
+          setSelected((data as Uzyra).id);
+          setDraft(data as Uzyra);
         }
       }
       setDraft((d) => ({ ...(d ?? {}), ...extra }));
@@ -116,7 +116,7 @@ function RitaXStudio() {
     await refresh();
   }
 
-  function duplicate(a: RitaX) {
+  function duplicate(a: Uzyra) {
     const { id, created_at, updated_at, ...rest } = a;
     setSelected(null);
     setDraft({ ...rest, name: `${a.name} copy`, status: "draft" });
@@ -130,7 +130,7 @@ function RitaXStudio() {
       <main className="mx-auto max-w-7xl px-5 py-10">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.28em] text-primary">RitaX</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.28em] text-primary">Uzyra</p>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
               Announcement studio
             </h1>
@@ -329,7 +329,7 @@ function RitaXStudio() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <span className={LABEL}>Audience</span>
-                  <select className={FIELD} value={current.audience} onChange={(e) => set({ audience: e.target.value as RitaX["audience"] })}>
+                  <select className={FIELD} value={current.audience} onChange={(e) => set({ audience: e.target.value as Uzyra["audience"] })}>
                     {RITAX_AUDIENCES.map((a) => (
                       <option key={a.id} value={a.id}>{a.name}</option>
                     ))}
@@ -337,7 +337,7 @@ function RitaXStudio() {
                 </div>
                 <div>
                   <span className={LABEL}>How often</span>
-                  <select className={FIELD} value={current.frequency} onChange={(e) => set({ frequency: e.target.value as RitaX["frequency"] })}>
+                  <select className={FIELD} value={current.frequency} onChange={(e) => set({ frequency: e.target.value as Uzyra["frequency"] })}>
                     {RITAX_FREQUENCIES.map((f) => (
                       <option key={f.id} value={f.id}>{f.name}</option>
                     ))}

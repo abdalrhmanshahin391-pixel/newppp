@@ -6,7 +6,7 @@ export const CUBE_PX = 168;
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 /**
- * Holds Rita's cube over the column and moves it to whichever spot is showing: the big one in the
+ * Holds Uzyra's cube over the column and moves it to whichever spot is showing: the big one in the
  * middle before the call (`data-cube-spot="hero"`), the small one just above the message bar once
  * the call starts (`data-cube-spot="dock"`). The move is one transform (translate + scale) with a
  * spring-like curve, so the cube flies down and shrinks in one motion; resizing places it at once.

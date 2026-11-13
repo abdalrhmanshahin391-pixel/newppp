@@ -582,7 +582,7 @@ function RitaConversationsPage() {
                     }`}
                   >
                     <p className="text-xs font-bold uppercase tracking-wide text-[var(--pp-muted)]">
-                      {message.role === "user" ? "You" : "Rita"}
+                      {message.role === "user" ? "You" : "Uzyra"}
                       {message.delivery_status !== "completed"
                         ? ` · ${message.delivery_status}`
                         : ""}

@@ -59,7 +59,7 @@ test("room noise below the gate does not move the orb", () => {
   assert.equal(frame.voiced, false);
 });
 
-test("while Rita speaks the orb is full size and the clouds move fast", () => {
+test("while Uzyra speaks the orb is full size and the clouds move fast", () => {
   const speaking = new OrbDynamics();
   const idle = new OrbDynamics();
   const a = run(speaking, 1.5, 0, 0.5, "speaking");
@@ -70,7 +70,7 @@ test("while Rita speaks the orb is full size and the clouds move fast", () => {
   assert.ok(a.warp > b.warp + 0.3);
 });
 
-test("the orb outline stays still while Rita speaks, only the inside moves", () => {
+test("the orb outline stays still while Uzyra speaks, only the inside moves", () => {
   const quiet = run(new OrbDynamics(), 1.5, 0, 0.15, "speaking");
   const loud = run(new OrbDynamics(), 1.5, 0, 0.95, "speaking");
   assert.ok(Math.abs(quiet.radius - loud.radius) < 0.001);

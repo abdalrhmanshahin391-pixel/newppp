@@ -31,7 +31,7 @@ export function getSupabasePublicConfig(): SupabasePublicConfig {
     throw new Error("VITE_SUPABASE_URL is not a valid URL.");
   }
   if (projectId !== EXPECTED_PROJECT_ID || hostname !== `${projectId}.supabase.co`) {
-    throw new Error("Lovable Cloud project mismatch. RitaJet must use one backend only.");
+    throw new Error("Lovable Cloud project mismatch. Uzyra must use one backend only.");
   }
 
   return { projectId, url, publishableKey };

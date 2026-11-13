@@ -29,7 +29,7 @@ async function textHash(value: string) {
 
 async function signingKey() {
   const root = String(process.env["SUPABASE_SERVICE_ROLE_KEY"] || "").trim();
-  if (!root) throw new Error("Rita speech signing is not configured.");
+  if (!root) throw new Error("Uzyra speech signing is not configured.");
   const material = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(`rita-speech-ticket-v1:${root}`),

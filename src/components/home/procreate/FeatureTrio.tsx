@@ -130,7 +130,7 @@ function StudyPanel() {
 const CARDS = [
   {
     title: "Talk it through",
-    text: "Speak English or German out loud. Rita answers in Arabic, and any foreign word you tap shows its meaning and how to say it.",
+    text: "Speak English or German out loud. Uzyra answers in Arabic, and any foreign word you tap shows its meaning and how to say it.",
     panel: <TalkPanel />,
   },
   {

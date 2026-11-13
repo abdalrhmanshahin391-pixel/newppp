@@ -4,7 +4,7 @@ import test from "node:test";
 
 const sourceUrl = new URL("./start.ts", import.meta.url);
 
-test("Rita v3 starts through Modal without a Pipecat fallback", async () => {
+test("Uzyra v3 starts through Modal without a Pipecat fallback", async () => {
   const source = await readFile(sourceUrl, "utf8");
 
   assert.doesNotMatch(source, /api\.pipecat\.daily\.co/);

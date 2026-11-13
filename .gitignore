@@ -56,3 +56,5 @@ guides-worker/samples/
 
 # Offline conversation management preview
 /output/conversations-preview/
+# Brand identity checks and captures
+/output/brand-identity/

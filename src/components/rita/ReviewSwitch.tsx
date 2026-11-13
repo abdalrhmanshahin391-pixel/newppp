@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 type Ui = "on" | "off";
 
 /**
- * The one switch for Rita's AI analysis: on, every finished conversation is reviewed after the call;
+ * The one switch for Uzyra's AI analysis: on, every finished conversation is reviewed after the call;
  * off, nothing is sent to OpenAI. Only admins can read or change the setting, so for everybody else
  * this renders nothing.
  */

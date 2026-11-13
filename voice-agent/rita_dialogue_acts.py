@@ -1,9 +1,9 @@
 """Deterministic reading of short learner turns.
 
 A voice learner says a lot of very short things: "خلص", "إيه", "أمم… نوب", "مش عارف".
-What they mean depends on the word, on what Rita was just doing, and on the question
+What they mean depends on the word, on what Uzyra was just doing, and on the question
 she last asked. Sending all of that to the language model as an ordinary request is
-what made Rita re-explain after "خلص", pick an option after a bare "إيه", and lose
+what made Uzyra re-explain after "خلص", pick an option after a bare "إيه", and lose
 the topic after "مش عارف".
 
 This module reads such turns with plain dictionaries: no network, no model, no
@@ -23,13 +23,13 @@ from enum import StrEnum
 
 class Act(StrEnum):
     STOP = "stop"  # stop talking / enough
-    WAIT = "wait"  # hold on: pause request while Rita speaks, hesitation when she is idle
+    WAIT = "wait"  # hold on: pause request while Uzyra speaks, hesitation when she is idle
     HESITATION = "hesitation"  # "أمم…", "يعني…": the learner is still thinking
     BACKCHANNEL = "backchannel"  # "آه", "تمام": listening noises and acknowledgements
     YES = "yes"
     NO = "no"
     DONT_KNOW = "dont_know"
-    CORRECTION = "correction"  # "لا قصدي…", "مش هيك": the learner fixes what Rita understood
+    CORRECTION = "correction"  # "لا قصدي…", "مش هيك": the learner fixes what Uzyra understood
     CONTINUE = "continue"  # "كمّل"
     REPEAT = "repeat"  # "عيدي", "شو؟", "again"
     UNDERSTOOD = "understood"  # "فهمت", "got it"
@@ -107,7 +107,7 @@ REQUEST_OR_QUESTION = _set(
     "قولي", "احكي", "اشرحي", "اشرح", "كيف", "ليش", "شو", "ماذا", "why", "how", "what"
 )
 
-# "wait / one moment": a pause request while Rita speaks, plain hesitation when idle.
+# "wait / one moment": a pause request while Uzyra speaks, plain hesitation when idle.
 WAIT_TOKENS = _set(
     "استنى", "استني", "استنوا", "لحظة", "لحظه", "ثانية", "ثانيه", "wait", "moment", "warte",
     "momentchen", "hold",
@@ -127,7 +127,7 @@ BACKCHANNEL_TOKENS = _set(
     "mhm", "mm", "mmhmm", "yeah", "yep", "ok", "okay", "right", "ja", "genau", "uh", "huh",
     "aha", "sure",
 )
-# Said alone these are acknowledgements while Rita talks; after a question they are answers.
+# Said alone these are acknowledgements while Uzyra talks; after a question they are answers.
 AMBIGUOUS_YES = _set("ايه", "اه", "اها", "تمام", "طيب", "ماشي", "اوكي", "اوك", "yeah", "yep",
                      "ok", "okay", "ja", "sure", "right", "صح")
 STRONG_YES = _set("ايوه", "ايوا", "نعم", "اجل", "اكيد", "طبعا", "yes", "definitely", "klar",
@@ -159,7 +159,7 @@ COMPLAINT_PHRASES = _phrases(
     "ما بترد", "بتخبصي", "بتخبص", "الرد مش منطقي", "الجواب مش منطقي", "مش فاهمتني",
     "انت مش فاهمه", "انتي مش فاهمه", "you are not making sense", "audio is choppy",
     "the sound is choppy", "you are not responding", "das audio stockt",
-    # Rita does not understand, or answers something that was not asked.
+    # Uzyra does not understand, or answers something that was not asked.
     "you don t understand", "you do not understand", "you are confused", "you are so confused",
     "you re confused", "you misunderstood", "you didn t understand", "something wrong with you",
     "something is wrong with you", "there s something wrong", "there is something wrong",
@@ -169,7 +169,7 @@ COMPLAINT_PHRASES = _phrases(
     # Audio problems.
     "صوتك مقطع", "الصوت مش واضح", "صوتك مش واضح", "ما بسمعك", "ما عم بسمعك", "i can t hear you",
     "i cannot hear you", "you keep cutting", "the audio is cutting",
-    # Rita talks over the learner.
+    # Uzyra talks over the learner.
     "بتقاطعيني", "بتقاطعني", "ما تقاطعيني", "لا تقاطعيني", "لا تقاطعني", "you keep interrupting",
     "you interrupted me", "don t interrupt", "do not interrupt", "stop interrupting",
     "let me finish", "خليني اخلص",
@@ -215,14 +215,14 @@ UNDERSTOOD_PHRASES = _phrases(
     "i get it", "i understand", "understood", "verstanden", "ich verstehe", "alles klar",
 )
 
-# Words that may surround a short command without changing it ("طيب خلص يا ريتا").
+# Words that may surround a short command without changing it ("طيب خلص يا يوزرا").
 SOFT_TOKENS = _set(
-    "يا", "ريتا", "rita", "لو", "سمحت", "سمحتي", "من", "فضلك", "please", "bitte", "بقى", "بقا",
+    "يا", "يوزرا", "uzyra", "ريتا", "rita", "لو", "سمحت", "سمحتي", "من", "فضلك", "please", "bitte", "بقى", "بقا",
     "هلا", "هلق", "هسا", "الان", "now", "طيب", "اوكي", "ok", "okay", "تمام", "ماشي", "اه",
     "اها", "شكرا", "thanks", "thank", "you", "هيك", "بقول", "قلت", "i", "say", "said",
 )
 
-# A single word while Rita speaks that is still a real interruption (questions).
+# A single word while Uzyra speaks that is still a real interruption (questions).
 QUESTION_INTERRUPTS = _set("ليش", "لماذا", "why", "warum", "كيف", "how", "wieso")
 
 # Negations turn "فهمت" into "I did not understand".
@@ -356,7 +356,7 @@ def _backchannel_or_answer(
     """A bare "إيه/آه/تمام": an answer after a question, otherwise just listening noise."""
 
     if bot_speaking:
-        return Reading(Act.BACKCHANNEL, "acknowledgement while Rita speaks")
+        return Reading(Act.BACKCHANNEL, "acknowledgement while Uzyra speaks")
     ambiguous = _all_in(words, AMBIGUOUS_YES | BACKCHANNEL_TOKENS)
     if awaiting in (Awaiting.YES_NO, Awaiting.CHOICE) and ambiguous:
         return Reading(Act.YES, f"bare yes after {awaiting.value}")
@@ -365,7 +365,7 @@ def _backchannel_or_answer(
     return Reading(Act.BACKCHANNEL, "acknowledgement")
 
 
-# -------------------------------------------------- interruption decisions (Rita talks)
+# -------------------------------------------------- interruption decisions (Uzyra talks)
 
 _INTERRUPTING = frozenset(
     {Act.STOP, Act.WAIT, Act.CORRECTION, Act.REPEAT, Act.NO, Act.UNDERSTOOD}
@@ -373,14 +373,14 @@ _INTERRUPTING = frozenset(
 
 
 # Words that cannot be the start of a longer ordinary word, so an interim (not yet final)
-# transcript of them may already stop Rita. "خلص" and "بس" start "خلصت" and "بس بدي…",
+# transcript of them may already stop Uzyra. "خلص" and "بس" start "خلصت" and "بس بدي…",
 # so they wait for the final transcript unless said twice.
 INTERIM_SAFE_STOP = _set("وقف", "وقفي", "اوقف", "اوقفي", "ستوب", "استوب", "stop", "كفايه", "stopp",
                          "halt", "enough", "genug", "بكفي")
 
 
 def interrupts_speaking_bot(text: str, *, final: bool = True) -> tuple[bool, Reading]:
-    """Should this transcript stop Rita while she is talking?
+    """Should this transcript stop Uzyra while she is talking?
 
     Stop/wait/correction/repeat/no/"understood" interrupt (a single word is enough).
     Listening noises, hesitation, "yes", "continue" and "I don't know" do not. Any other
@@ -409,7 +409,7 @@ def interrupts_speaking_bot(text: str, *, final: bool = True) -> tuple[bool, Rea
     return False, Reading(Act.OTHER, "one unknown word")
 
 
-# ------------------------------------------------------------ Rita's own last question
+# ------------------------------------------------------------ Uzyra's own last question
 
 _CHOICE_SPLIT = re.compile(r"\s*(?:[،,]|\bولا\b|\bأو\b|\bاو\b|\bor\b|\boder\b)\s*", re.IGNORECASE)
 _WH_WORDS = _set(
@@ -427,7 +427,7 @@ class Question:
 
 
 def parse_last_question(assistant_text: str) -> Question:
-    """What did Rita last ask, and what kind of answer does it expect?
+    """What did Uzyra last ask, and what kind of answer does it expect?
 
     CHOICE when the question lists two or more options ("نكمل ولا نغيّر الموضوع؟",
     "الأحداث، الشخصيات، ولا الأفكار؟"), OPEN for what/why/how questions, YES_NO for other
@@ -529,7 +529,7 @@ def _clean_option(part: str) -> str:
 
 
 def clarify_choice(question: Question, language: str) -> str:
-    """The one short question Rita asks after a bare "yes" to a choice."""
+    """The one short question Uzyra asks after a bare "yes" to a choice."""
 
     options = list(question.options[:3])
     if language == "ar" or any("؀" <= ch <= "ۿ" for ch in "".join(options)):

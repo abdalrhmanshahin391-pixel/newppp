@@ -1,4 +1,4 @@
-# Sample curriculum for Rita lessons
+# Sample curriculum for Uzyra lessons
 
 Two small A1 English books for testing the curriculum flow without spending AI credits.
 

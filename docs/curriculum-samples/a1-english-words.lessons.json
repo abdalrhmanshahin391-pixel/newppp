@@ -7,12 +7,12 @@
       "topic": "greetings",
       "source_from_page": 2,
       "source_to_page": 2,
-      "summary": "Rita practises saying hello, asking How are you?, answering, and saying goodbye at different times of day.",
+      "summary": "Uzyra practises saying hello, asking How are you?, answering, and saying goodbye at different times of day.",
       "objectives": [
         {
           "id": "greet",
-          "text": "Greet Rita and ask how she is",
-          "text_ar": "يحيّي ريتا ويسأل عن حالها",
+          "text": "Greet Uzyra and ask how she is",
+          "text_ar": "يحيّي يوزرا ويسأل عن حالها",
           "criteria": "The learner says a greeting (hello / hi / good morning ...) and asks How are you?",
           "check_prompts": [
             "Imagine you meet me in the morning. What do you say?"
@@ -133,7 +133,7 @@
         {
           "word": "How are you?",
           "meaning_ar": "كيف حالك؟",
-          "example": "Hi Rita! How are you?"
+          "example": "Hi Uzyra! How are you?"
         },
         {
           "word": "I'm fine",
@@ -157,7 +157,7 @@
       "topic": "introducing yourself",
       "source_from_page": 3,
       "source_to_page": 3,
-      "summary": "Rita helps the learner introduce themselves: name, country, city, age and job, and ask the same questions back.",
+      "summary": "Uzyra helps the learner introduce themselves: name, country, city, age and job, and ask the same questions back.",
       "objectives": [
         {
           "id": "my-name",
@@ -181,8 +181,8 @@
         },
         {
           "id": "ask-back",
-          "text": "Ask Rita a question about her",
-          "text_ar": "يسأل ريتا سؤالاً عنها",
+          "text": "Ask Uzyra a question about her",
+          "text_ar": "يسأل يوزرا سؤالاً عنها",
           "criteria": "The learner asks a question like What's your name? / Where are you from? / How old are you?",
           "check_prompts": [
             "Now you ask me a question."
@@ -196,7 +196,7 @@
             "phase": "warmup",
             "minutes": 1,
             "steps": [
-              "Say: My name is Rita. I'm from Jordan. Then ask: What's your name?"
+              "Say: My name is Uzyra. I'm from Jordan. Then ask: What's your name?"
             ]
           },
           {
@@ -212,7 +212,7 @@
             "minutes": 3,
             "steps": [
               "Interview the learner with the three questions",
-              "Swap roles: the learner interviews Rita",
+              "Swap roles: the learner interviews Uzyra",
               "Add friend, student, teacher or family: This is my friend, Ali."
             ]
           },
@@ -238,7 +238,7 @@
         {
           "word": "name",
           "meaning_ar": "اسم",
-          "example": "My name is Rita."
+          "example": "My name is Uzyra."
         },
         {
           "word": "What's your name?",
@@ -307,7 +307,7 @@
       "topic": "polite words",
       "source_from_page": 4,
       "source_to_page": 4,
-      "summary": "Rita practises please, thank you, sorry, excuse me and the replies you're welcome and no problem.",
+      "summary": "Uzyra practises please, thank you, sorry, excuse me and the replies you're welcome and no problem.",
       "objectives": [
         {
           "id": "ask-please",
@@ -458,7 +458,7 @@
       "topic": "agreeing and answering",
       "source_from_page": 5,
       "source_to_page": 5,
-      "summary": "Rita practises answering with yes, no, maybe and sure, suggesting with Let's ... and replying Great idea!",
+      "summary": "Uzyra practises answering with yes, no, maybe and sure, suggesting with Let's ... and replying Great idea!",
       "objectives": [
         {
           "id": "yes-no-answer",
@@ -513,8 +513,8 @@
             "phase": "practice",
             "minutes": 3,
             "steps": [
-              "Rita suggests an activity; the learner answers with Great idea! or Maybe later",
-              "Swap: the learner suggests with Let's ... and Rita reacts",
+              "Uzyra suggests an activity; the learner answers with Great idea! or Maybe later",
+              "Swap: the learner suggests with Let's ... and Uzyra reacts",
               "Add right / wrong when you correct something"
             ]
           },
@@ -609,7 +609,7 @@
       "topic": "feelings and being busy",
       "source_from_page": 6,
       "source_to_page": 6,
-      "summary": "Rita practises saying how you feel and whether you are busy or free: tired, happy, hungry, ready, late.",
+      "summary": "Uzyra practises saying how you feel and whether you are busy or free: tired, happy, hungry, ready, late.",
       "objectives": [
         {
           "id": "feeling",

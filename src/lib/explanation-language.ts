@@ -1,7 +1,7 @@
 /**
- * The language Rita explains in, chosen on the website. It is separate from the language being
+ * The language Uzyra explains in, chosen on the website. It is separate from the language being
  * learned (see learning-language.ts): a learner of German can have the explanations in Arabic or in
- * English. "automatic" keeps Rita's old behaviour (she follows the language the learner speaks).
+ * English. "automatic" keeps Uzyra's old behaviour (she follows the language the learner speaks).
  *
  * The choice is a `rita_*` key in localStorage, which the cloud sync already mirrors to the
  * account, so it follows the learner to another device without a database change. It is sent to
@@ -72,14 +72,14 @@ export function explanationLabel(value: ExplanationLanguage, ui: Ui): string {
 export function explanationHint(value: ExplanationLanguage, ui: Ui, live: boolean): string {
   const when = live ? (ui === "ar" ? "من ردّها الجاي" : "from her next answer") : "";
   if (ui === "ar") {
-    if (value === "automatic") return `ريتا بتجاوب بلغة كلامك${live ? ` ${when}` : ""}.`;
+    if (value === "automatic") return `يوزرا بتجاوب بلغة كلامك${live ? ` ${when}` : ""}.`;
     const name = value === "ar" ? "بالعربي" : "بالإنجليزي";
-    return `ريتا بتشرح ${name}${live ? ` ${when}` : ""}. العبارات اللي بتتعلمها بتضل بلغتها.`;
+    return `يوزرا بتشرح ${name}${live ? ` ${when}` : ""}. العبارات اللي بتتعلمها بتضل بلغتها.`;
   }
   if (value === "automatic")
-    return `Rita answers in the language you speak${live ? ` ${when}` : ""}.`;
+    return `Uzyra answers in the language you speak${live ? ` ${when}` : ""}.`;
   const name = value === "ar" ? "Arabic" : "English";
-  return `Rita explains in ${name}${live ? ` ${when}` : ""}. The phrases you learn stay in their own language.`;
+  return `Uzyra explains in ${name}${live ? ` ${when}` : ""}. The phrases you learn stay in their own language.`;
 }
 
 /** Arrow keys move the choice in a radio group; left and right swap in a right-to-left page. */

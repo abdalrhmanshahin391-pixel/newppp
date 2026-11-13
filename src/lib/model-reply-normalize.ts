@@ -101,7 +101,7 @@ function normalizeVocabulary(value: unknown) {
   );
 }
 
-/** The lesson plan the AI writes for Rita (objectives, phases, words). */
+/** The lesson plan the AI writes for Uzyra (objectives, phases, words). */
 export function normalizeLessonDraftReply(raw: unknown): unknown {
   if (!isObj(raw)) return raw;
   const taken = new Set<string>();

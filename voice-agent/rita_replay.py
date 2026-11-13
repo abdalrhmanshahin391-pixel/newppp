@@ -1,12 +1,12 @@
 """Ask the current worker what it would say now to a past learner turn.
 
-The review finds replies that were wrong; a fix is only a fix if Rita now answers those same turns
+The review finds replies that were wrong; a fix is only a fix if Uzyra now answers those same turns
 better. A replay rebuilds the session state the way the live call did (the same state calls for every
 earlier message), builds the system prompt with the worker's own `build_prompt`, asks the same model
 with the same settings, and cleans the reply with the same speech filter. The website then judges the
 new reply against the reference reply (see src/lib/rita-replay.ts).
 
-Only text goes through here: what the learner said and what Rita said. Nothing is stored, and the
+Only text goes through here: what the learner said and what Uzyra said. Nothing is stored, and the
 Groq key stays in Modal's secret. Timing, listening and the voice are not part of a replay.
 """
 
@@ -36,7 +36,7 @@ class ReplayCase:
     #: the session's language when it started ("automatic" unless the profile said otherwise)
     language: str = "automatic"
     dialect: str = "ar-JO"
-    #: set when the turn's language came from the website's "Rita explains in" choice
+    #: set when the turn's language came from the website's "Uzyra explains in" choice
     site_language: str | None = None
     #: the language being learned: {"code", "name", "speechCode"}
     target: dict[str, str] | None = None
@@ -102,7 +102,7 @@ def build_case(case: ReplayCase):
     state = RitaSessionState(active_language=case.language, active_dialect=case.dialect)
     if case.site_language:
         state.set_site_language(case.site_language)
-    # The calls the live pipeline makes: every learner turn and every finished reply of Rita's.
+    # The calls the live pipeline makes: every learner turn and every finished reply of Uzyra's.
     for role, content in case.history:
         if role == "user":
             state.observe_user_turn(content)

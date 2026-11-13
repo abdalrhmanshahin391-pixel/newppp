@@ -35,7 +35,7 @@ class StepError extends Error {
 }
 
 /**
- * Making green lessons (guide + Rita): one lesson is made in full (lesson, exercises, PDF guide, then
+ * Making green lessons (guide + Uzyra): one lesson is made in full (lesson, exercises, PDF guide, then
  * the guide checked and linked), one lesson after the other. Each step looks at what is already saved,
  * so a stopped or closed page carries on where it stopped and nothing is made twice.
  */

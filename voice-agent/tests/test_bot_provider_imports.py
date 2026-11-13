@@ -1,4 +1,4 @@
-"""Regression checks for provider names used while constructing Rita's pipeline."""
+"""Regression checks for provider names used while constructing Uzyra's pipeline."""
 
 import ast
 from pathlib import Path

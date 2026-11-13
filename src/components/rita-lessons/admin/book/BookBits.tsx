@@ -169,7 +169,7 @@ export function BidiText({ text }: { text: string }) {
   return <>{parts}</>;
 }
 
-/** A lesson's kind: red for Rita's lesson, green for the guide + Rita. */
+/** A lesson's kind: red for Uzyra's lesson, green for the guide + Uzyra. */
 export function LessonKindBadge({ kind }: { kind: LessonKind }) {
   return (
     <span className="lesson-kind" data-kind={kind}>

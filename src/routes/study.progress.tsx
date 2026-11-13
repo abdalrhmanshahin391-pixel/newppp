@@ -551,8 +551,8 @@ function ProgressPage() {
                   {weakest.length === 0 ? (
                     <p className="mt-4 text-sm font-bold text-[#9a9aab]">
                       {isAr
-                        ? "راجع بضع بطاقات أخرى وستحدد لك ريتا المواد ذات التذكر المتذبذب."
-                        : "Review a few more cards and Rita will identify topics with fluctuating recall."}
+                        ? "راجع بضع بطاقات أخرى وستحدد لك يوزرا المواد ذات التذكر المتذبذب."
+                        : "Review a few more cards and Uzyra will identify topics with fluctuating recall."}
                     </p>
                   ) : (
                     <ul className="mt-4 grid gap-2.5">

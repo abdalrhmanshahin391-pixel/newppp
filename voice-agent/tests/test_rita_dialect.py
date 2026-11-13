@@ -40,7 +40,7 @@ class HowToSayTests(unittest.TestCase):
                 self.assertTrue(asks_how_to_say(text))
 
     def test_ordinary_turns_are_not(self):
-        for text in ("كيف حالك", "شو الأخبار", "احكي إنجليزي", "مرحبا ريتا"):
+        for text in ("كيف حالك", "شو الأخبار", "احكي إنجليزي", "مرحبا يوزرا"):
             with self.subTest(text=text):
                 self.assertFalse(asks_how_to_say(text))
 
@@ -58,7 +58,7 @@ class HowToSayTests(unittest.TestCase):
 
 class GreetingTests(unittest.TestCase):
     def test_plain_hellos(self):
-        for text in ("مرحبا ريتا.", "أهلين", "hello", "Hallo Rita", "السلام عليكم", "صباح الخير ريتا"):
+        for text in ("مرحبا يوزرا.", "أهلين", "hello", "Hallo Uzyra", "السلام عليكم", "صباح الخير يوزرا"):
             with self.subTest(text=text):
                 self.assertTrue(is_greeting(text))
 
@@ -67,12 +67,12 @@ class GreetingTests(unittest.TestCase):
 
     def test_first_hello_gets_the_scripted_greeting_once(self):
         state = RitaSessionState()
-        state.observe_user_turn("مرحبا ريتا")
-        decision = decide("مرحبا ريتا", state, language="ar")
+        state.observe_user_turn("مرحبا يوزرا")
+        decision = decide("مرحبا يوزرا", state, language="ar")
         self.assertEqual(decision.action, Action.UI)
         self.assertIsNone(decision.command)
         self.assertIn(decision.say, GREETINGS["ar"])
-        self.assertEqual(decision.say, greeting_for("مرحبا ريتا", "ar"))
+        self.assertEqual(decision.say, greeting_for("مرحبا يوزرا", "ar"))
 
     def test_a_later_hello_goes_to_the_model(self):
         state = RitaSessionState()

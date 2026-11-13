@@ -1,5 +1,5 @@
 // The lesson engine: one small state machine that decides where a learner is in a lesson and what
-// comes next. Rita, the page and the model never move the lesson themselves; they send events here
+// comes next. Uzyra, the page and the model never move the lesson themselves; they send events here
 // and show the step that comes back. Pure: no I/O, so every rule below has a unit test.
 //
 // Rules that always hold:
@@ -526,7 +526,7 @@ export function isFinished(state: RunState): boolean {
   return state.phase === "done" && !state.ended_early;
 }
 
-/** What the page and Rita are shown for the current step. Never contains an unanswered answer. */
+/** What the page and Uzyra are shown for the current step. Never contains an unanswered answer. */
 export type LessonStep = {
   step_id: string;
   revision: number;

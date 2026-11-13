@@ -46,7 +46,7 @@ import { installSoundUnlock, setSoundOn, soundOn } from "./tech-sound";
 import { useStudyRequests } from "./useStudyRequests";
 import "./study-meaning.css";
 
-/** Where the divider was left (share of the width for Rita and the guide), per browser. */
+/** Where the divider was left (share of the width for Uzyra and the guide), per browser. */
 const SPLIT_KEY = "uzyra-study-split";
 
 function readSplit(): { rita: number; guide: number } | undefined {
@@ -75,8 +75,8 @@ function useWide(min: number): boolean {
 }
 
 /**
- * "Rita - interactive study": the guide on the right, Rita on the left (always, even in Arabic),
- * a draggable divider on wide screens and two tabs on phones. Rita never starts teaching on her own
+ * "Uzyra - interactive study": the guide on the right, Uzyra on the left (always, even in Arabic),
+ * a draggable divider on wide screens and two tabs on phones. Uzyra never starts teaching on her own
  * here; the learner reads and asks.
  */
 export function StudyPage({
@@ -111,7 +111,7 @@ export function StudyPage({
     [guide.content],
   );
 
-  // One object for the whole visit: Rita fills `send` while her call is ready.
+  // One object for the whole visit: Uzyra fills `send` while her call is ready.
   const bridge = useMemo<StudyBridge>(() => ({ send: null }), []);
   const lastFocus = useRef("");
   const requests = useStudyRequests({ lessonId: lesson.id, preview, bridge });
@@ -121,7 +121,7 @@ export function StudyPage({
   const [selection, setSelection] = useState<PageSelection | null>(null);
   const selectionRef = useRef<PageSelection | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  // The ring shows the study options, or the three languages Rita can explain in.
+  // The ring shows the study options, or the three languages Uzyra can explain in.
   const [ringMode, setRingMode] = useState<"main" | "language">("main");
   const explanation = useExplanationLanguage();
   // The floating window: the cards and questions made from a selection, or the temporary question
@@ -168,7 +168,7 @@ export function StudyPage({
     return { pieces, kind, section };
   }, [segments, selection]);
 
-  // A selection in Rita's own answers (the left column): its own options and its dark red. Only
+  // A selection in Uzyra's own answers (the left column): its own options and its dark red. Only
   // one of the two selections lives at a time; the newest wins.
   const [replySelection, setReplySelection] = useState<ReplySelection | null>(null);
   const replySelectionRef = useRef<ReplySelection | null>(null);
@@ -198,7 +198,7 @@ export function StudyPage({
     [keepReplySelection],
   );
 
-  // Selecting in Rita's answers. Saved 120ms after it stops changing, before any menu opens (a tap
+  // Selecting in Uzyra's answers. Saved 120ms after it stops changing, before any menu opens (a tap
   // on the circle can clear the browser's selection on a phone, so the copy must exist first).
   useEffect(() => {
     const root = ritaBox.current;
@@ -331,7 +331,7 @@ export function StudyPage({
     };
   }, [bridge, current, lesson.id, preview, requests, sections, sendFocus]);
 
-  // The section in view becomes Rita's focus, and where the next visit starts.
+  // The section in view becomes Uzyra's focus, and where the next visit starts.
   const onGuideLoad = useCallback(
     (doc: Document) => {
       const memory = readStudyMemory(lesson.id);
@@ -389,7 +389,7 @@ export function StudyPage({
     [bridge, keepSelection, lesson.id, segments],
   );
 
-  // The section in view (a third of the way down) becomes Rita's focus, and where the next visit
+  // The section in view (a third of the way down) becomes Uzyra's focus, and where the next visit
   // starts. Settles 250ms after the scrolling stops.
   const readingTimer = useRef(0);
   const onGuideScroll = useCallback(
@@ -683,7 +683,7 @@ export function StudyPage({
         />
         {!wide && tab === "guide" && live && liveState && live.channel === "voice" && (
           <div className="absolute inset-x-3 bottom-3 z-30 flex items-center gap-2 rounded-2xl bg-[var(--pp-ink)] px-3 py-2 text-[14px] text-white">
-            <p className="min-w-0 flex-1 truncate">ريتا بتشرح… «{live.quote.slice(0, 40)}»</p>
+            <p className="min-w-0 flex-1 truncate">يوزرا بتشرح… «{live.quote.slice(0, 40)}»</p>
             <button
               type="button"
               onClick={() => setTab("rita")}
@@ -704,7 +704,7 @@ export function StudyPage({
       dir="rtl"
     >
       <RitaRealtimeV3
-        study={{ lessonId: lesson.id, preview, title: "ريتا", bridge, children: status }}
+        study={{ lessonId: lesson.id, preview, title: "يوزرا", bridge, children: status }}
       />
     </div>
   );
@@ -748,7 +748,7 @@ export function StudyPage({
       {/* The circle lives over both sides, so it can sit wherever the learner likes. */}
       <div ref={work} className="st-work relative flex min-h-0 flex-1 flex-col">
         {wide ? (
-          // Rita is always on the left and the guide on the right: the group is laid out left to right.
+          // Uzyra is always on the left and the guide on the right: the group is laid out left to right.
           <Group
             orientation="horizontal"
             dir="ltr"
@@ -766,7 +766,7 @@ export function StudyPage({
             <Panel id="rita" defaultSize="50" minSize={320}>
               {ritaPane}
             </Panel>
-            <Separator className="st-divider" aria-label="غيّر عرض الملف وريتا">
+            <Separator className="st-divider" aria-label="غيّر عرض الملف ويوزرا">
               <span className="st-grip" aria-hidden="true" />
             </Separator>
             <Panel id="guide" defaultSize="50" minSize={320}>
@@ -777,13 +777,13 @@ export function StudyPage({
           <>
             <div
               role="tablist"
-              aria-label="الدرس وريتا"
+              aria-label="الدرس ويوزرا"
               className="flex border-b border-[var(--pp-line)]"
             >
               {(
                 [
                   ["guide", "الدرس"],
-                  ["rita", ritaSpeaking ? "ريتا بتحكي…" : "ريتا"],
+                  ["rita", ritaSpeaking ? "يوزرا بتحكي…" : "يوزرا"],
                 ] as const
               ).map(([value, label]) => (
                 <button
@@ -875,7 +875,7 @@ export function StudyPage({
           onStopMoving={() => setMovingOrb(false)}
           label={
             replySelection
-              ? "اشرحلي هاد الجزء من رد ريتا"
+              ? "اشرحلي هاد الجزء من رد يوزرا"
               : selection
                 ? "شو بدك نعمل بالتحديد؟"
                 : "حدّد جزء من الدرس"
@@ -906,7 +906,7 @@ export function StudyPage({
           quote={replySelection?.exact ?? selection?.exact ?? ""}
           meta={
             replySelection
-              ? "من جواب ريتا"
+              ? "من جواب يوزرا"
               : [sectionLabel, selected?.kind ? KIND_LABEL[selected.kind] : ""]
                   .filter(Boolean)
                   .join(" · ")
@@ -926,7 +926,7 @@ export function StudyPage({
           tone={replySelection && ringMode === "main" ? "reply" : undefined}
           hint={
             ringMode === "language"
-              ? `ريتا بتشرح بـ: ${LANGUAGE_NAMES[explanation.value]}`
+              ? `يوزرا بتشرح بـ: ${LANGUAGE_NAMES[explanation.value]}`
               : replyProblem || "حدّد كلمة أو جملة من الدرس، وبعدين اكبس على الدائرة."
           }
           canReport={!replySelection && actions.includes("report")}

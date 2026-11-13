@@ -48,7 +48,7 @@ function subscribe(onChange: () => void) {
   };
 }
 
-/** The language Rita explains in (see lib/explanation-language). Shared by every page that shows it. */
+/** The language Uzyra explains in (see lib/explanation-language). Shared by every page that shows it. */
 export function useExplanationLanguage() {
   const value = useSyncExternalStore(subscribe, snapshot, () => "automatic" as const);
   const setValue = useCallback((next: ExplanationLanguage) => {

@@ -41,7 +41,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
               requestedLessonId,
               lessonPreview,
             ).catch((error) => {
-              console.warn("Rita lesson could not be loaded", error);
+              console.warn("Uzyra lesson could not be loaded", error);
               return null;
             })
           : null;
@@ -74,7 +74,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
               );
               return loaded.ok ? studyVoiceBrief(loaded.data) : null;
             })().catch((error) => {
-              console.warn("Rita study lesson could not be loaded", error);
+              console.warn("Uzyra study lesson could not be loaded", error);
               return null;
             })
           : null;
@@ -126,7 +126,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
               userId: access.auth.userId,
               accessToken: access.auth.token,
             }).catch((error) => {
-              console.warn("Rita conversation history could not be loaded", error);
+              console.warn("Uzyra conversation history could not be loaded", error);
               return null;
             })
           : null;
@@ -140,7 +140,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             { status: 404 },
           );
         }
-        // The language Rita teaches: the conversation's own, else the learner's active language.
+        // The language Uzyra teaches: the conversation's own, else the learner's active language.
         const target = await loadTargetLanguage({
           userId: access.auth.userId,
           accessToken: access.auth.token,
@@ -151,7 +151,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             {
               ok: false,
               code: "voice_not_available_for_language",
-              message: `Rita's voice is not available for ${target.name} yet.`,
+              message: `Uzyra's voice is not available for ${target.name} yet.`,
             },
             { status: 409 },
           );
@@ -161,7 +161,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
           (await getServerRuntimeSecret("MODAL_START_URL")) || DEFAULT_MODAL_START_URL;
         const modalToken = await getServerRuntimeSecret("MODAL_START_TOKEN");
 
-        console.info("Rita v3 runtime configuration", {
+        console.info("Uzyra v3 runtime configuration", {
           backend: "modal",
           hasModalUrl: Boolean(modalUrl),
           hasModalToken: Boolean(modalToken),
@@ -172,7 +172,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             {
               ok: false,
               code: "modal_not_configured",
-              message: "Rita v3 needs MODAL_START_TOKEN in the Lovable server runtime.",
+              message: "Uzyra v3 needs MODAL_START_TOKEN in the Lovable server runtime.",
               models: RITA_V3_MODELS,
             },
             { status: 503 },
@@ -191,12 +191,12 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             ...(conversationId ? { conversationId } : {}),
           });
         } catch (error) {
-          console.error("Rita v3 session persistence failed", error);
+          console.error("Uzyra v3 session persistence failed", error);
           return Response.json(
             {
               ok: false,
               code: "session_storage_failed",
-              message: "Rita session storage is not ready.",
+              message: "Uzyra session storage is not ready.",
             },
             { status: 503 },
           );
@@ -244,7 +244,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             name,
             valueMs,
             metadata: { ...diagnosticBase, ...metadata },
-          }).catch((error) => console.warn("Rita diagnostic metric failed", { name, error }));
+          }).catch((error) => console.warn("Uzyra diagnostic metric failed", { name, error }));
         await recordStartMetric("start_request_received");
         await recordStartMetric("start_upstream_requested");
         try {
@@ -258,7 +258,7 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             },
             10_000,
           );
-          console.info("Rita Modal start request", {
+          console.info("Uzyra Modal start request", {
             elapsedMs: Math.round(performance.now() - startedAt),
             upstreamStatus: upstream.status,
           });
@@ -321,15 +321,15 @@ export const Route = createFileRoute("/api/rita-v3/session/start")({
             { headers: { "Cache-Control": "no-store" } },
           );
         } catch (error) {
-          console.error("Rita Modal start request failed", {
+          console.error("Uzyra Modal start request failed", {
             elapsedMs: Math.round(performance.now() - startedAt),
             errorName: error instanceof Error ? error.name : "unknown",
           });
           const timedOut = error instanceof DOMException && error.name === "AbortError";
           const code = timedOut ? "modal_start_timeout" : "modal_network_error";
           const message = timedOut
-            ? "Rita's voice worker did not respond in time. Check its deployment health and logs."
-            : "The Rita website could not reach the Modal voice worker. Check its deployment and network status.";
+            ? "Uzyra's voice worker did not respond in time. Check its deployment health and logs."
+            : "The Uzyra website could not reach the Modal voice worker. Check its deployment and network status.";
           await updateRitaV3Session(sessionId, access.auth.userId, access.auth.token, {
             status: "failed",
             error_code: code,

@@ -58,7 +58,7 @@ test("only known plain fields survive, so no spoken text or secret can ride alon
   const meta = ledgerMetadata({
     ...message,
     transcript: "what the learner said",
-    reply: "what Rita said",
+    reply: "what Uzyra said",
     api_key: "sk-secret",
     nested: { a: 1 },
   });

@@ -34,7 +34,7 @@ function compile(gl: WebGL2RenderingContext, type: number, source: string) {
 /**
  * Soft white and pink voice orb (the home page palette) rendered with a single WebGL2 fragment shader. It
  * contracts while the learner speaks, opens up in pauses, and churns quickly
- * while Rita speaks. Falls back to a still gradient disc without WebGL2.
+ * while Uzyra speaks. Falls back to a still gradient disc without WebGL2.
  */
 export function VoiceOrb({ levelsRef, mode, label, className = "" }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -230,7 +230,7 @@ export function VoiceOrb({ levelsRef, mode, label, className = "" }: Props) {
   return (
     <div
       role="img"
-      aria-label={label ?? "Rita voice"}
+      aria-label={label ?? "Uzyra voice"}
       className={`relative aspect-square ${className}`}
     >
       {(fallback || !ready) && (

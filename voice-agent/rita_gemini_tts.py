@@ -1,4 +1,4 @@
-"""Gemini 3.8 Interactions streaming TTS adapter for Rita."""
+"""Gemini 3.8 Interactions streaming TTS adapter for Uzyra."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from rita_latency import RitaLatencyRecorder, first_non_silent_sample_ms
 
 @dataclass
 class RitaGeminiTTSSettings(TTSSettings):
-    """Runtime settings shared by every Rita speech chunk."""
+    """Runtime settings shared by every Uzyra speech chunk."""
 
     style: str = DEFAULT_TTS_STYLE
 

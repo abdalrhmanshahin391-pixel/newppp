@@ -4,7 +4,7 @@
  * good reply, the numbers on the quality page cannot be trusted and the reviewer's rules need work.
  * The check runs the same six-question review (reviewTurn) on each case and compares with `expect`.
  *
- * Every case is a short invented conversation (some are taken from real mistakes Rita made), so no
+ * Every case is a short invented conversation (some are taken from real mistakes Uzyra made), so no
  * learner text is involved. Add a case whenever the reviewer is found to be wrong about a reply.
  */
 import type { DialectIssue, Fact, Ledger, ReviewMessage } from "./rita-review.ts";
@@ -57,7 +57,7 @@ export const GOLDEN_CASES: GoldenCase[] = [
   {
     id: "gender-guess",
     why: "شو حابب guesses the learner's gender (a real mistake).",
-    messages: [u("مرحبا ريتا"), r("أهلين! شو حابب نتعلم اليوم بالألماني؟")],
+    messages: [u("مرحبا يوزرا"), r("أهلين! شو حابب نتعلم اليوم بالألماني؟")],
     expect: {
       verdict: "problem",
       categories: ["wrong_dialect", "other", "weak_explanation"],
@@ -76,7 +76,7 @@ export const GOLDEN_CASES: GoldenCase[] = [
   },
   {
     id: "ignored-question",
-    why: "The learner asked what Rita can explain and got a question back (a real mistake).",
+    why: "The learner asked what Uzyra can explain and got a question back (a real mistake).",
     messages: [u("عن إيش بتقدري تشرحي لي اليوم؟"), r("شو بتحب نتعلم اليوم بالألماني؟")],
     expect: {
       verdict: "problem",
@@ -96,7 +96,7 @@ export const GOLDEN_CASES: GoldenCase[] = [
   },
   {
     id: "wrong-language",
-    why: "The session asked for explanations in English and Rita answered in Arabic.",
+    why: "The session asked for explanations in English and Uzyra answered in Arabic.",
     messages: [u("How do I say I'm tired in German?"), r('بتقول "Ich bin müde". يعني أنا تعبان.')],
     ledger: { lang: "en", lang_src: "site", explain_lang: "en", act: "other", how_to_say: true },
     expect: { verdict: "problem", categories: ["wrong_language", "other"] },
@@ -118,13 +118,13 @@ export const GOLDEN_CASES: GoldenCase[] = [
   },
   {
     id: "pronunciation-from-text",
-    why: "Rita cannot judge pronunciation from a transcript.",
+    why: "Uzyra cannot judge pronunciation from a transcript.",
     messages: [u("Ich habe Hunger"), r("نطقك ممتاز! والـ r طلعت مضبوطة تماماً.")],
     expect: { verdict: "problem", categories: ["wrong_answer", "weak_explanation", "other"] },
   },
   {
     id: "two-questions-joined",
-    why: "Rita must ask at most one question and never two joined by ولا.",
+    why: "Uzyra must ask at most one question and never two joined by ولا.",
     messages: [
       u("بدي أتعلم ألماني"),
       r("حلو! بدك نبدأ بالكلمات؟ ولا بدك نبدأ بالجمل؟ ولا بدك نشوف القواعد؟"),
@@ -154,7 +154,7 @@ export const GOLDEN_CASES: GoldenCase[] = [
   {
     id: "good-greeting",
     why: "A natural Jordanian greeting that fits any gender is fine.",
-    messages: [u("مرحبا ريتا"), r("أهلين! كيف الحال؟ عن شو بدنا نحكي اليوم؟")],
+    messages: [u("مرحبا يوزرا"), r("أهلين! كيف الحال؟ عن شو بدنا نحكي اليوم؟")],
     expect: { verdict: "ok" },
   },
   {

@@ -114,7 +114,7 @@ function ShareNew() {
           <span className="text-5xl">🃏</span>
           <h1 className="mt-4 font-display text-3xl font-black">Sign in to share flashcards</h1>
           <p className="mx-auto mt-2 max-w-md text-sm text-[#54546a]">
-            Rita saves your decks to your account so students across Uzyra can learn from your work.
+            Uzyra saves your decks to your account so students across Uzyra can learn from your work.
           </p>
           <button
             type="button"

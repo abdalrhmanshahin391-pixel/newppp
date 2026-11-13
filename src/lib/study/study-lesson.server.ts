@@ -1,4 +1,4 @@
-// Loads a study lesson for its learner page and for Rita's session, with the caller's own session:
+// Loads a study lesson for its learner page and for Uzyra's session, with the caller's own session:
 // the database rules decide what is visible (a learner sees only published lessons and only the
 // final copy of a linked guide). An admin's preview may open a draft lesson while the switch is off.
 import type { SupabaseClient } from "@supabase/supabase-js";

@@ -592,7 +592,7 @@ export function LessonPathView({
       </header>
 
       <section className="mx-auto max-w-md px-4 pt-7 text-center">
-        <h2 className="lp-heading">دروسك مع ريتا</h2>
+        <h2 className="lp-heading">دروسك مع يوزرا</h2>
         {editing && (
           <p className="lp-edit-hint">
             اضغط مطوّلاً على أي محطة واسحبها فوق ثانية عشان يتبدّلوا. اكبس + لإضافة تمارين أو ملفات.
@@ -642,11 +642,11 @@ export function LessonPathView({
           </p>
           <p className="mt-1 text-sm text-[var(--pp-muted)]">
             {languages.length > 1
-              ? "بتقدر تبدّل اللغة من العلم فوق، أو جرّب محادثة حرة مع ريتا:"
-              : "جرّب محادثة حرة مع ريتا حتى تجهز الدروس:"}
+              ? "بتقدر تبدّل اللغة من العلم فوق، أو جرّب محادثة حرة مع يوزرا:"
+              : "جرّب محادثة حرة مع يوزرا حتى تجهز الدروس:"}
           </p>
           <Link to="/rita-live" className="rita-btn rita-btn-primary mt-4 gap-2 !inline-flex">
-            <MessageCircle size={16} /> محادثة حرة مع ريتا
+            <MessageCircle size={16} /> محادثة حرة مع يوزرا
           </Link>
         </div>
       )}

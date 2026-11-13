@@ -1,4 +1,4 @@
-// OpenAI calls for Rita's curriculum: summarise a ten-page window, write a
+// OpenAI calls for Uzyra's curriculum: summarise a ten-page window, write a
 // lesson, judge a learner's answers against the lesson objectives, and draw the
 // lesson picture. Every reply is strict JSON checked against the zod schemas.
 import {
@@ -374,14 +374,14 @@ async function transcribeOnePage(
 const LESSON_SHAPE = `{
   "title": "short English title", "title_ar": "short Arabic title (2-4 words, friendly)",
   "topic": "the topic", "source_from_page": 1, "source_to_page": 1,
-  "summary": "what Rita teaches, in 2-4 sentences",
+  "summary": "what Uzyra teaches, in 2-4 sentences",
   "objectives": [{
     "id": "kebab-case-id", "text": "Learner can ...", "text_ar": "Arabic version",
     "criteria": "exactly what the learner must say for this to count (observable in speech)",
-    "check_prompts": ["a question Rita asks to check it"], "weight": 1
+    "check_prompts": ["a question Uzyra asks to check it"], "weight": 1
   }],
   "plan": {
-    "phases": [{ "phase": "warmup|teach|practice|check|wrap", "minutes": 2, "steps": ["what Rita does"] }],
+    "phases": [{ "phase": "warmup|teach|practice|check|wrap", "minutes": 2, "steps": ["what Uzyra does"] }],
     "teacher_notes": "common mistakes of Arabic speakers and how to correct them"
   },
   "vocabulary": [{ "word": "word", "meaning_ar": "معنى", "example": "Example sentence." }],
@@ -398,11 +398,11 @@ export async function generateLesson(input: {
   pageText: string;
   previousTitles: string[];
 }): Promise<{ lesson: LessonDraft; model: string }> {
-  const system = `You design one short spoken English lesson that Rita, a friendly voice tutor, teaches to an
+  const system = `You design one short spoken English lesson that Uzyra, a friendly voice tutor, teaches to an
 Arabic-speaking A1 adult. The lesson is spoken only: no reading, writing or pictures.
 Rules:
 - Use only content from the given pages (${input.from}-${input.to}); source pages must stay in that range.
-- Write 3 to 5 objectives. Each objective is something the learner says in English that Rita can hear,
+- Write 3 to 5 objectives. Each objective is something the learner says in English that Uzyra can hear,
   e.g. "makes a sentence about themselves with am". Criteria must be checkable from one spoken answer.
 - Objective ids are lowercase kebab-case and unique.
 - The plan has warmup, teach, practice, check and wrap phases, about 8 minutes in total.
@@ -540,7 +540,7 @@ export async function generateLessonContent(input: {
   pageText: string;
 }): Promise<{ content: LessonContent; model: string }> {
   const system = `You turn one lesson of a language course book into a short interactive lesson with exercises
-for an Arabic-speaking A1 adult. Rita, a voice tutor, explains each part; then the learner answers short
+for an Arabic-speaking A1 adult. Uzyra, a voice tutor, explains each part; then the learner answers short
 exercises in a window on the screen.
 Lesson rules:
 - Use only content from the given pages (${input.from}-${input.to}); never invent rules or words.
@@ -670,7 +670,7 @@ export async function evaluateTurns(input: {
     met_when: objective.criteria,
   }));
   const system = `You are the silent examiner of a spoken English lesson ("${input.lessonTitle}").
-Look ONLY at the learner's lines (role "learner"). Rita's lines only give context.
+Look ONLY at the learner's lines (role "learner"). Uzyra's lines only give context.
 For each objective listed, decide if the learner has now clearly shown it.
 - met is true only if the learner's own words satisfy met_when. Small accent or speech-to-text errors are fine.
 - evidence must be copied word for word from one learner line (at most 20 words). Never paraphrase.
@@ -709,7 +709,7 @@ Keep the same teaching goal; improve the wording so the objective is clearer and
 Rules:
 - The objective is something the learner says in English that a tutor can hear.
 - criteria must be checkable from one spoken answer.
-- check_prompts are questions Rita asks to check it (1-4 short questions).
+- check_prompts are questions Uzyra asks to check it (1-4 short questions).
 - weight stays between 1 and 5 (keep the original weight unless it is clearly wrong).
 Reply with one JSON object shaped like:
 {"text": "Learner can ...", "text_ar": "النسخة العربية", "criteria": "exactly what counts", "check_prompts": ["a question"], "weight": 2}`;
@@ -724,7 +724,7 @@ ${JSON.stringify(input.objective)}`;
   return value;
 }
 
-/** The look of every lesson picture: Rita's world in the home page colours. */
+/** The look of every lesson picture: Uzyra's world in the home page colours. */
 export function lessonImagePrompt(scene: string) {
   return `A single square illustration for a language-learning app lesson, shown inside a round frame.
 Scene: ${scene.slice(0, 300)}
