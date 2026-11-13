@@ -336,7 +336,7 @@ if (process.argv.includes("--check")) {
           reducedMotion: "reduce",
         });
         await page.goto(origin + `/preview?interaction&lang=${lang}`);
-        if (width < 900) await page.getByRole("tab", { name: "ريتا", exact: true }).click();
+        if (width < 900) await page.getByRole("tab", { name: "يوزرا", exact: true }).click();
         const answer = page.locator("[data-reply-text]").first();
         // A paragraph's centre can be the empty space between wrapped lines on a phone.
         // Aim at an actual word, as the learner does, rather than double-clicking that gap.
@@ -410,7 +410,7 @@ if (process.argv.includes("--check")) {
         await page.screenshot({
           path: resolve(out, `${engine}-${width}-${lang}-guide-selection.png`),
         });
-        if (width < 900) await page.getByRole("tab", { name: "ريتا", exact: true }).click();
+        if (width < 900) await page.getByRole("tab", { name: "يوزرا", exact: true }).click();
         await page.evaluate(() => {
           window.qaAudio = [];
         });
