@@ -318,12 +318,13 @@ export function BookReader({
   const total = Math.max(1, book.pageCount);
   const [page, setPage] = useState(() => clampPage(startPage, total));
   const [zoom, setZoom] = useState(0);
-  // Phones open fit to width (a whole page is tiny there); a choice made with the button stays.
-  const [fit, setFit] = useState<"page" | "width">("page");
+  // The page opens as wide as its pane (a whole page fitted to the height left wide empty margins
+  // beside it on a tablet, and its words too small to read); scrolling down reads the rest. "The
+  // whole page" stays one button away, and a choice made with the button is kept.
+  const [fit, setFit] = useState<"page" | "width">("width");
   useEffect(() => {
     const saved = readStore(FIT_KEY);
     if (saved === "width" || saved === "page") setFit(saved);
-    else if (!window.matchMedia("(min-width: 900px)").matches) setFit("width");
   }, []);
   const [tip, setTip] = useState(false);
   useEffect(() => setTip(readStore(TIP_KEY) !== "1"), []);
@@ -354,7 +355,7 @@ export function BookReader({
     return () => observer.disconnect();
   }, [wide, tab]);
   // Thin margins on a phone, so the page takes the most room it can.
-  const gutter = pane.width < 600 ? 8 : 20;
+  const gutter = pane.width < 600 ? 8 : 12;
   const roomWidth = Math.max(220, pane.width - gutter * 2);
   const roomHeight = Math.max(220, pane.height - gutter * 2);
   const shape = manifest?.pages[page - 1]
