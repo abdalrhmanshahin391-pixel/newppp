@@ -132,7 +132,7 @@ function Categories({
                 <div className="flex flex-wrap items-center gap-3">
                   <span
                     className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px]"
-                    style={{ background: tone.soft, color: tone.c }}
+                    style={{ background: "#121117", color: "#fff" }}
                   >
                     <Icon size={17} />
                   </span>
