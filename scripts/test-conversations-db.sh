@@ -12,6 +12,6 @@ alter table public.rita_v3_sessions enable row level security;
 grant usage on schema public, auth to authenticated;
 grant select,insert,update,delete on public.rita_v3_sessions to authenticated;"
 run -f supabase/migrations/20261019120000_rita_free_conversations.sql
-run -f supabase/migrations/20261115120000_conversation_management.sql
-run -f supabase/migrations/20261115120000_conversation_management.sql
+run -f supabase/migrations/20261115130000_conversation_management.sql
+run -f supabase/migrations/20261115130000_conversation_management.sql
 run -f supabase/tests/conversations/management.sql
