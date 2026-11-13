@@ -231,7 +231,7 @@ try {
       await ready(p);
       await capture(p, prefix + "-" + lang + "-" + width + "-rita.png");
       await select(p, "study");
-      await p.locator('[data-learn-row="pdf-summary"] img').evaluate((img) => img.decode());
+      await p.locator('[data-learn-row="lecture-lab"] img').evaluate((img) => img.decode());
       const state = await checks(p);
       await capture(p, prefix + "-" + lang + "-" + width + "-study.png");
       assert.equal(state.overflow, false, "overflow " + lang + " " + width);
@@ -254,7 +254,7 @@ try {
         assert.ok(state.maxEntrance <= 150);
         assert.equal(state.gradients, false);
         await p.evaluate(() => {
-          window.qaImage = document.querySelector('[data-learn-row="pdf-summary"] img');
+          window.qaImage = document.querySelector('[data-learn-row="lecture-lab"] img');
         });
         await select(p, "plan");
         assert.equal(await p.locator("#learn-panel-study").getAttribute("inert"), "");
@@ -262,7 +262,7 @@ try {
         await select(p, "study");
         assert.equal(
           await p.evaluate(
-            () => window.qaImage === document.querySelector('[data-learn-row="pdf-summary"] img'),
+            () => window.qaImage === document.querySelector('[data-learn-row="lecture-lab"] img'),
           ),
           true,
         );
@@ -339,11 +339,11 @@ try {
     });
     await slow.goto(origin + "/learn#study");
     await ready(slow);
-    await slow.locator('[data-learn-row="pdf-summary"]').waitFor();
-    assert.equal(await slow.locator('[data-learn-row="pdf-summary"]').isVisible(), true);
+    await slow.locator('[data-learn-row="lecture-lab"]').waitFor();
+    assert.equal(await slow.locator('[data-learn-row="lecture-lab"]').isVisible(), true);
     assert.ok(
       await slow
-        .locator('[data-learn-row="pdf-summary"] .uz-tile-img')
+        .locator('[data-learn-row="lecture-lab"] .uz-tile-img')
         .evaluate((el) => el.getBoundingClientRect().height > 0),
     );
     await slow.close();

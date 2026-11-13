@@ -134,11 +134,11 @@ export function FlashcardsCardArt() {
       focusable="false"
     >
       <Shadow />
-      <Card x={110} y={36} w={140} h={176} fill="#62d27e" lip="#3fae5c" tilt={-14} />
-      <Card x={110} y={30} w={140} h={176} fill="#ffd23f" lip="#e3b800" tilt={9} />
-      <Card x={110} y={22} w={140} h={180} fill="#fff" lip="#d4e3f7">
-        <Mark x={144} y={44} h={100} fill="#2b73c7" />
-        <rect x={140} y={160} width={80} height={10} rx={5} fill="#d4e3f7" />
+      <Card x={110} y={30} w={140} h={150} fill="#62d27e" lip="#3fae5c" tilt={-14} />
+      <Card x={110} y={24} w={140} h={150} fill="#ffd23f" lip="#e3b800" tilt={9} />
+      <Card x={110} y={16} w={140} h={156} fill="#fff" lip="#d4e3f7">
+        <Mark x={147} y={32} h={92} fill="#2b73c7" />
+        <rect x={140} y={140} width={80} height={10} rx={5} fill="#d4e3f7" />
       </Card>
     </svg>
   );
@@ -203,6 +203,211 @@ export function PairsCardArt() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+const LETTER_FONT = "Inter Tight, Figtree, Helvetica, Arial, sans-serif";
+
+/** Wordcraft: a letter board; a found word is green, the middle tile carries the mark. */
+export function WordcraftCardArt() {
+  const letters = ["W", "O", "R", "K", "", "D", "S", "A", "Y"];
+  const found = new Set([0, 1, 2, 5]);
+  return (
+    <svg
+      viewBox="58 0 244 240"
+      preserveAspectRatio="xMidYMax meet"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <Shadow />
+      <g transform="rotate(-6 180 100)">
+        <rect x={80} y={4} width={200} height={176} rx={24} fill="#f7d9a8" />
+        {letters.map((letter, i) => {
+          const x = 90 + (i % 3) * 62;
+          const y = 14 + Math.floor(i / 3) * 54;
+          const green = found.has(i);
+          return (
+            <Card
+              key={i}
+              x={x}
+              y={y}
+              w={56}
+              h={44}
+              fill={green ? "#62d27e" : "#fff"}
+              lip={green ? "#3fae5c" : "#d4e3f7"}
+            >
+              {i === 4 ? (
+                <Mark x={x + 14} y={y + 5} h={34} fill="#2b73c7" />
+              ) : letter ? (
+                <text
+                  x={x + 28}
+                  y={y + 31}
+                  textAnchor="middle"
+                  fontFamily={LETTER_FONT}
+                  fontSize={26}
+                  fontWeight={800}
+                  fill={green ? "#fff" : "#1d1640"}
+                >
+                  {letter}
+                </text>
+              ) : null}
+            </Card>
+          );
+        })}
+      </g>
+    </svg>
+  );
+}
+
+/** PDF summary: a page with the mark at the top, highlighted lines and a red PDF label. */
+export function SummaryCardArt() {
+  return (
+    <svg
+      viewBox="58 0 244 240"
+      preserveAspectRatio="xMidYMax meet"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <Shadow />
+      <path d="M110 14H222L256 48V182H110Z" fill="#d4e3f7" />
+      <path d="M106 8H218L252 42V176H106Z" fill="#fff" />
+      <path d="M218 8V42H252Z" fill="#d4e3f7" />
+      <Mark x={128} y={24} h={56} fill="#2b73c7" />
+      {[
+        [92, 104, false],
+        [110, 84, true],
+        [128, 110, false],
+        [146, 70, true],
+      ].map(([y, w, hi]) => (
+        <g key={y as number}>
+          {hi ? (
+            <rect
+              x={122}
+              y={(y as number) - 5}
+              width={(w as number) + 8}
+              height={17}
+              rx={4}
+              fill="#ffd23f"
+            />
+          ) : null}
+          <rect x={126} y={y as number} width={w as number} height={8} rx={4} fill="#c9d3e4" />
+        </g>
+      ))}
+      <rect x={84} y={60} width={60} height={30} rx={10} fill="#c9343a" />
+      <rect x={84} y={56} width={60} height={30} rx={10} fill="#ff5a5f" />
+      <text
+        x={114}
+        y={77}
+        textAnchor="middle"
+        fontFamily={LETTER_FONT}
+        fontSize={15}
+        fontWeight={800}
+        fill="#fff"
+      >
+        PDF
+      </text>
+    </svg>
+  );
+}
+
+/** All in one: an open box with the mark on it, and a card and a page coming out of it. */
+export function AllInOneCardArt() {
+  return (
+    <svg
+      viewBox="40 0 280 240"
+      preserveAspectRatio="xMidYMax meet"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <Shadow />
+      <Card x={92} y={10} w={70} h={86} fill="#62d27e" lip="#3fae5c" tilt={-16}>
+        <rect x={105} y={28} width={44} height={8} rx={4} fill="#fff" opacity={0.75} />
+        <rect x={105} y={44} width={32} height={8} rx={4} fill="#fff" opacity={0.75} />
+      </Card>
+      <Card x={198} y={10} w={70} h={86} fill="#ffd23f" lip="#e3b800" tilt={16}>
+        <circle cx={233} cy={42} r={16} fill="#fff" opacity={0.8} />
+        <text
+          x={233}
+          y={49}
+          textAnchor="middle"
+          fontFamily={LETTER_FONT}
+          fontSize={20}
+          fontWeight={800}
+          fill="#a87a00"
+        >
+          ?
+        </text>
+      </Card>
+      <Card x={145} y={2} w={70} h={84} fill="#fff" lip="#d4e3f7">
+        <rect x={158} y={18} width={44} height={8} rx={4} fill="#d4e3f7" />
+        <rect x={158} y={34} width={36} height={8} rx={4} fill="#d4e3f7" />
+        <rect x={158} y={50} width={44} height={8} rx={4} fill="#d4e3f7" />
+      </Card>
+      <path d="M90 72H270L256 92H104Z" fill="#1f5ea8" />
+      <rect x={98} y={88} width={164} height={92} rx={18} fill="#e3b800" />
+      <rect x={98} y={82} width={164} height={92} rx={18} fill="#ffd23f" />
+      <Mark x={159} y={92} h={70} fill="#fff" />
+    </svg>
+  );
+}
+
+/** Question bank: the mark in a question bubble, and three answers, one marked right. */
+export function QuestionBankCardArt() {
+  const answer = (y: number, right: boolean) => (
+    <g key={y}>
+      <rect
+        x={196}
+        y={y + 5}
+        width={118}
+        height={38}
+        rx={19}
+        fill={right ? "#3fae5c" : "#d4e3f7"}
+      />
+      <rect x={196} y={y} width={118} height={38} rx={19} fill={right ? "#62d27e" : "#fff"} />
+      <circle cx={216} cy={y + 19} r={10} fill={right ? "#fff" : "#e3ebf7"} />
+      {right ? (
+        <path
+          d={`M211 ${y + 19}l4 4 8-8`}
+          fill="none"
+          stroke="#3fae5c"
+          strokeWidth={3.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      ) : null}
+      <rect x={234} y={y + 15} width={62} height={8} rx={4} fill={right ? "#fff" : "#d4e3f7"} />
+    </g>
+  );
+  return (
+    <svg
+      viewBox="30 0 300 240"
+      preserveAspectRatio="xMidYMax meet"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <Shadow />
+      <rect x={46} y={18} width={136} height={128} rx={34} fill="#d4e3f7" />
+      <path d="M82 140L68 176L120 140Z" fill="#d4e3f7" />
+      <rect x={46} y={10} width={136} height={128} rx={34} fill="#fff" />
+      <path d="M82 132L68 168L120 132Z" fill="#fff" />
+      <Mark x={84} y={28} h={86} fill="#2b73c7" />
+      <circle cx={170} cy={22} r={18} fill="#e3b800" />
+      <circle cx={170} cy={18} r={18} fill="#ffd23f" />
+      <text
+        x={170}
+        y={26}
+        textAnchor="middle"
+        fontFamily={LETTER_FONT}
+        fontSize={22}
+        fontWeight={800}
+        fill="#8a5a00"
+      >
+        ?
+      </text>
+      {answer(14, false)}
+      {answer(62, true)}
+      {answer(110, false)}
     </svg>
   );
 }

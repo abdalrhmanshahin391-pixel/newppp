@@ -300,7 +300,11 @@ layout. Real due-card and lesson counts remain optional account data, never inve
   microphone, no stars. Second round, same blue and button: Flashcards (a fanned stack, the mark on
   the white front card), Memory Lab (a 2 × 2 memory board, two tiles turned to show the mark) and
   Pairs (a white and a yellow card with the mark leaning together under a green tick). Drawings keep
-  their important parts above the button. The other tiles keep the monochrome look until their turn.
+  their important parts above the button. Third round: Wordcraft (a letter board, a found word in
+  green, the mark on the middle tile), PDF summary (a page with the mark, highlighted lines and a red
+  PDF label), All in one (a yellow box with the mark, a card, a page and a question coming out) and
+  Question bank (the mark in a question bubble, three answers, one green with a tick). The other
+  tiles keep the monochrome look until their turn.
 - **Hierarchy:** the conversation stage and Lessons sit together; the other sections retain
   their existing leading tile and smaller tool tiles. Every destination, description and AI
   marker stays. Cards have 24px corners; button styling reuses the existing system in monochrome.

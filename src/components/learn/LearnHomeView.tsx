@@ -3,11 +3,15 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { ImageSlot } from "@/components/learn/ImageSlot";
 import {
+  AllInOneCardArt,
   FlashcardsCardArt,
   LessonsCardArt,
   MemoryCardArt,
   PairsCardArt,
+  QuestionBankCardArt,
+  SummaryCardArt,
   TalkCardArt,
+  WordcraftCardArt,
 } from "./PlayCardArt";
 import { useLearnSection } from "./useLearnSection";
 import { TOOLS, type ToolDef } from "@/lib/site-tools";
@@ -184,6 +188,10 @@ const PLAY: Record<string, Play> = {
   flashcards: { Art: FlashcardsCardArt, go: { en: "Study", ar: "ادرس" } },
   "memory-lab": { Art: MemoryCardArt, go: { en: "Play", ar: "العب" } },
   pairs: { Art: PairsCardArt, go: { en: "Play", ar: "العب" } },
+  wordcraft: { Art: WordcraftCardArt, go: { en: "Play", ar: "العب" } },
+  "pdf-summary": { Art: SummaryCardArt, go: { en: "Summarise", ar: "لخّص" } },
+  "all-in-one": { Art: AllInOneCardArt, go: { en: "Start", ar: "ابدأ" } },
+  "question-bank": { Art: QuestionBankCardArt, go: { en: "Practise", ar: "تدرّب" } },
 };
 
 /**
