@@ -38,20 +38,20 @@ function rowOf(tool: ToolDef): Row {
 
 const tool = (key: string) => TOOLS.find((t) => t.key === key)!;
 
-/** Every destination in one list: Rita first, then the study tools, grouped by what they are for. */
+/** Every destination in one list: Uzyra first, then the study tools, grouped by what they are for. */
 function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): SectionDef[] {
   return [
     {
       id: "rita",
-      title: { en: "Talk to Rita", ar: "تحدث مع ريتا" },
+      title: { en: "Talk to Uzyra", ar: "تحدث مع يوزرا" },
       rows: [
         {
           key: "rita-conversations",
           slot: "rita-conversations",
           name: { en: "Free conversation", ar: "محادثة حرة" },
           line: {
-            en: "Talk about anything. Rita answers out loud and corrects you gently.",
-            ar: "تحدث عن أي شيء. ريتا ترد بصوتها وتصحح لك بلطف.",
+            en: "Talk about anything. Uzyra answers out loud and corrects you gently.",
+            ar: "تحدث عن أي شيء. يوزرا ترد بصوتها وتصحح لك بلطف.",
           },
           to: "/rita-conversations",
         },
@@ -119,7 +119,7 @@ function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): Se
 }
 
 const RAIL: { id: (typeof SECTION_IDS)[number]; label: Bi }[] = [
-  { id: "rita", label: { en: "Talk to Rita", ar: "تحدث مع ريتا" } },
+  { id: "rita", label: { en: "Talk to Uzyra", ar: "تحدث مع يوزرا" } },
   { id: "study", label: { en: "My study space", ar: "مساحتي الدراسية" } },
   { id: "plan", label: { en: "Plan", ar: "الخطة" } },
   { id: "together", label: { en: "Together", ar: "مع غيري" } },
@@ -202,7 +202,7 @@ function RitaStage({ section, lang }: { section: SectionDef; lang: Lang }) {
         <Link to={talk.to} data-learn-row={talk.key} className="uz-stage">
           <span className="uz-stage-text">
             <h2 id="rita-title" className="uz-stage-title">
-              {t("Talk to Rita now", "تحدث مع ريتا الآن")}
+              {t("Talk to Uzyra now", "تحدث مع يوزرا الآن")}
             </h2>
             <span className="uz-stage-line">{talk.line[lang]}</span>
             <span className="rita-btn rita-btn-primary uz-stage-btn">

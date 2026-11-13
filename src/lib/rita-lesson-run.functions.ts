@@ -34,7 +34,7 @@ export const startLessonRun = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<StartRunResult> => {
     const reply = await callEdge<StartRunResult>("start", data);
     if (reply.ok) return reply.data;
-    // Until the function is deployed the learner keeps Rita's spoken lesson instead of an error
+    // Until the function is deployed the learner keeps Uzyra's spoken lesson instead of an error
     // screen. Only "not reachable" falls back; a real failure stays visible.
     if (reply.unreachable) return { available: false };
     return failed(reply);

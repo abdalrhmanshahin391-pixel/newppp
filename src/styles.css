@@ -10247,3 +10247,9 @@ html.rita-app,
 .bk-cat[aria-pressed="true"] .bk-cat-dot {
   background: #fff;
 }
+
+/* Keep history headings compact against the shared premium display heading rule. */
+.edith-premium h1.conversation-heading {
+  font-size: clamp(1.75rem, 3vw, 2.25rem) !important;
+  line-height: 1.15 !important;
+}

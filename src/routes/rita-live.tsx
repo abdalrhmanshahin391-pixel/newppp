@@ -11,7 +11,7 @@ type RitaLiveSearch = {
 
 export const Route = createFileRoute("/rita-live")({
   head: () => ({
-    meta: [{ title: "Talk with Rita — Uzyra" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Talk with Uzyra — Uzyra" }, { name: "robots", content: "noindex" }],
   }),
   validateSearch: (search: Record<string, unknown>): RitaLiveSearch => {
     const lesson = typeof search.lesson === "string" ? search.lesson.trim() : "";
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/rita-live")({
 
 function RitaLivePage() {
   const { lesson, conversation, preview, sample } = Route.useSearch();
-  // A new key remounts Rita when the learner moves on to the next lesson
+  // A new key remounts Uzyra when the learner moves on to the next lesson
   // (or when the same lesson switches between preview and live mode).
   return (
     <RitaRealtimeV3

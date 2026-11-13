@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { requireRitaV3Access, resolveRitaV3Key } from "@/lib/rita-v3.server";
 
 const FILLERS = {
-  // Only sounds that do not claim to have understood: Rita may still need to ask.
+  // Only sounds that do not claim to have understood: Uzyra may still need to ask.
   ar: ["مم…", "طيب…", "خليني أشوف…"],
   en: ["Mm-hm…", "Okay…", "Let me think."],
   de: ["Mhm…", "Okay…", "Lass mich kurz überlegen."],
@@ -68,7 +68,7 @@ export const Route = createFileRoute("/api/rita-v3/filler")({
                       text: FILLERS[language][index],
                       speech_metadata: {
                         style:
-                          "Rita: warm, close-mic, quick and natural; friendly Jordanian accent for Arabic.",
+                          "Uzyra: warm, close-mic, quick and natural; friendly Jordanian accent for Arabic.",
                       },
                     },
                   ],
@@ -105,7 +105,7 @@ export const Route = createFileRoute("/api/rita-v3/filler")({
           headers: {
             "Content-Type": "audio/l16;codec=pcm;rate=24000",
             "Cache-Control": "private, max-age=31536000, immutable",
-            "X-Rita-Voice": "Gemini-3.8-Flash-Lite/Achernar",
+            "X-Uzyra-Voice": "Gemini-3.8-Flash-Lite/Achernar",
           },
         });
       },

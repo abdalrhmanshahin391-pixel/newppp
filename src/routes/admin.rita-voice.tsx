@@ -25,7 +25,7 @@ import {
 } from "@/lib/rita-v3.functions";
 
 export const Route = createFileRoute("/admin/rita-voice")({
-  head: () => ({ meta: [{ title: "Rita Voice v3 — Admin" }] }),
+  head: () => ({ meta: [{ title: "Uzyra Voice v3 — Admin" }] }),
   component: RitaVoiceAdmin,
 });
 
@@ -189,7 +189,7 @@ function RitaVoiceAdmin() {
   }
 
   async function remove(provider: Provider) {
-    if (!confirm(`Remove the Rita v3 ${provider} key?`)) return;
+    if (!confirm(`Remove the Uzyra v3 ${provider} key?`)) return;
     setBusy(provider);
     setFeedback((current) => ({ ...current, [provider]: undefined }));
     try {
@@ -251,7 +251,7 @@ function RitaVoiceAdmin() {
             <Link to="/admin/ai-keys" className="text-sm font-bold text-[#2b6df0]">
               ← General AI settings
             </Link>
-            <h1 className="mt-2 text-3xl font-semibold">Rita Realtime Voice v3</h1>
+            <h1 className="mt-2 text-3xl font-semibold">Uzyra Realtime Voice v3</h1>
             <p className="mt-1 text-[#54546a]">
               One clean control room for the new voice system only.
             </p>
@@ -274,7 +274,7 @@ function RitaVoiceAdmin() {
           </h2>
           <p className="mt-2 text-sm text-red-800">
             Voice: Layan · Agent: {data?.agentName ?? "ritajet-voice-v3"}. A provider failure
-            produces a visible error; Rita never drops into Legacy.
+            produces a visible error; Uzyra never drops into Legacy.
           </p>
         </section>
 
@@ -305,7 +305,7 @@ function RitaVoiceAdmin() {
           <p>
             Pipecat secret set: <strong>{data?.workerSecretStatus ?? "not checked"}</strong>
             {data?.workerRegion ? ` · ${data.workerRegion}` : ""}. Updating a worker secret requires
-            a Rita worker redeploy.
+            a Uzyra worker redeploy.
           </p>
           <button
             type="button"
@@ -437,7 +437,7 @@ function RitaVoiceAdmin() {
           <p className="mt-2 text-sm text-white/65">
             Keys saved above supply the website control plane. Soniox, Groq, and Google are also
             synchronized automatically to the Pipecat secret set{" "}
-            <code>ritajet-voice-v3-secrets</code>. A successful sync still requires a Rita worker
+            <code>ritajet-voice-v3-secrets</code>. A successful sync still requires a Uzyra worker
             redeploy before an already-running worker uses the replacement value.
           </p>
           <button

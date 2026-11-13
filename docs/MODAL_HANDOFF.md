@@ -1,10 +1,10 @@
-# Rita voice worker on Modal: handoff
+# Uzyra voice worker on Modal: handoff
 
 Branch: `modal-coldstart` (not merged into `main`). Written 2026-10-09 for whoever continues this work.
 No secret values are in this file or in the code. Never commit keys.
 
 ## Why
-The Rita voice worker (Pipecat 0.0.105, `voice-agent/`) ran on Pipecat Cloud with `min_agents = 0`.
+The Uzyra voice worker (Pipecat 0.0.105, `voice-agent/`) ran on Pipecat Cloud with `min_agents = 0`.
 The first session after idle waited ~15s (once 88s, see `src/components/rita/RitaRealtimeV3.tsx` ~line 597):
 container boot, library imports, Silero VAD + Smart Turn v3 model loads, Daily/Soniox connect. The website
 blocked on `/start` for up to 45s. Goal: ~1s join when warm, 2-4s when cold.
@@ -34,7 +34,7 @@ Not fixed by this: Gemini TTS time-to-first-byte (2.3-3.3s in `docs/rita-v3-one-
 - Verified: deploy works, memory snapshot created and restored, wrong token returns 401 (~0.6s warm),
   all provider keys in the Modal secret returned 200 when tested from inside Modal (Daily, Groq, Google/Gemini
   AI Studio key, Soniox on the EU API `api.eu.soniox.com`; the bot uses `wss://stt-rt.eu.soniox.com`).
-- Lovable project "RitaJet Revival" has secrets `RITA_BACKEND=modal`, `MODAL_START_URL`, `MODAL_START_TOKEN`
+- Lovable project "Uzyra Revival" has secrets `RITA_BACKEND=modal`, `MODAL_START_URL`, `MODAL_START_TOKEN`
   (same value as Modal's `RITA_MODAL_TOKEN`). Changes apply to the live app only after Lovable Publish.
 - NOT verified: a real end-to-end call, join time, or the ~1s goal. No numbers exist yet.
 - Contract tests pass locally (`python -m pytest voice-agent/tests/test_architecture_contract.py`, 7 passed).
@@ -44,8 +44,8 @@ Not fixed by this: Gemini TTS time-to-first-byte (2.3-3.3s in `docs/rita-v3-one-
 1. Open a PR from `modal-coldstart` to `main`, let CI run (`rita-v3-worker-check`, `rita-v3-frontend-check`), merge.
 2. In Lovable, Publish. Note: recent Lovable commits showed "Build unsuccessful / Preview is out of date"; check
    the build logs first, the merge will not help if the build is already broken.
-3. Real test: open the site, start a Rita session, allow the microphone, confirm Rita joins and speaks. Measure
-   time from click to Rita joined, cold (after a few idle minutes) and warm. Compare with `RITA_BACKEND` unset.
+3. Real test: open the site, start a Uzyra session, allow the microphone, confirm Uzyra joins and speaks. Measure
+   time from click to Uzyra joined, cold (after a few idle minutes) and warm. Compare with `RITA_BACKEND` unset.
 4. If good: stop Pipecat Cloud (`ritajet-voice-v3`) to avoid paying twice. If bad: unset `RITA_BACKEND`.
 5. Optional later: shrink the 2-3s Gemini TTS first-byte (separate problem).
 

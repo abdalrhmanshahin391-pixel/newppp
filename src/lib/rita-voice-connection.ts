@@ -46,8 +46,8 @@ export function voiceErrorMessage(error: unknown, arabic: boolean): string {
       : "The voice connection failed. Reconnect to continue; your conversation stays on this page.";
   }
   return arabic
-    ? "توقّف اتصال ريتا. اضغط «إعادة الاتصال» للمحاولة من جديد."
-    : "Rita's connection stopped. Reconnect to try again.";
+    ? "توقّف اتصال يوزرا. اضغط «إعادة الاتصال» للمحاولة من جديد."
+    : "Uzyra's connection stopped. Reconnect to try again.";
 }
 
 export function voiceStateWord(phase: VoicePhase, mood: string, muted: boolean): string {
@@ -55,7 +55,7 @@ export function voiceStateWord(phase: VoicePhase, mood: string, muted: boolean):
   if (phase === "connecting") return "بتجهّز الاتصال…";
   if (phase === "waiting") return "بانتظار خدمة الصوت…";
   if (phase === "ended") return "انتهت المكالمة";
-  if (phase === "idle") return "ابدأ مع ريتا";
+  if (phase === "idle") return "ابدأ مع يوزرا";
   if (mood === "talking" || mood === "laughing") return "بتحكي…";
   if (mood === "thinking") return "بتفكر…";
   return muted ? "المايك مسكّر" : "بسمعك…";

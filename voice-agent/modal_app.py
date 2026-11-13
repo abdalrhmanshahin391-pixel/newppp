@@ -1,9 +1,9 @@
-"""Modal deployment for the Rita realtime voice worker.
+"""Modal deployment for the Uzyra realtime voice worker.
 
 A warm, memory-snapshotted container removes the multi-second cold start of the
 Pipecat Cloud worker. The website calls `start_session`; it creates the Daily room,
 spawns the bot in the background and returns the room credentials immediately, so the
-learner joins the room while Rita is still connecting.
+learner joins the room while Uzyra is still connecting.
 
 Deploy: `modal deploy voice-agent/modal_app.py` (from the repository root), or let
 `.github/workflows/rita-modal-deploy.yml` do it when the code reaches main.
@@ -60,7 +60,7 @@ secrets = [modal.Secret.from_name(SECRET_NAME)]
 @app.cls(
     secrets=secrets,
     # The measured warm Cartesia path was ~30 ms faster in EU than US East,
-    # and Rita's Soniox endpoint is EU as well. Broad EU keeps the lower 1.15x
+    # and Uzyra's Soniox endpoint is EU as well. Broad EU keeps the lower 1.15x
     # regional multiplier and a larger capacity pool than a narrow region.
     region="eu",
     min_containers=1,
@@ -517,7 +517,7 @@ async def prepare_voice_probe() -> dict[str, Any]:
 @app.function(secrets=secrets, min_containers=1, scaledown_window=300)
 @modal.fastapi_endpoint(method="POST", docs=False)
 async def start_session(payload: dict[str, Any]):
-    """Create a Daily room, start Rita in the background and return the learner's token."""
+    """Create a Daily room, start Uzyra in the background and return the learner's token."""
     from fastapi import HTTPException
 
     expected = os.environ.get("RITA_MODAL_TOKEN", "").strip()

@@ -28,7 +28,7 @@ session. No production provider logs or real paid call were available in this ru
   draft and guide position for manual reconnection.
 - Late successful startup responses are closed rather than adopted by the next call.
 - The UI shows Arabic actionable errors and a reconnect action instead of internal legacy
-  architecture wording. Waiting/failed states never announce that Rita is listening.
+  architecture wording. Waiting/failed states never announce that Uzyra is listening.
 - Cartesia opening uses a 15-second handshake deadline and at most one retry for timeout
   or network OSError. Authentication errors and cancellation are not retried.
 - Provider failures/retries record bounded provider-specific timing markers; raw

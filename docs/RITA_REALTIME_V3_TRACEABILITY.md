@@ -1,4 +1,4 @@
-# Rita Realtime Voice v3 — implementation traceability
+# Uzyra Realtime Voice v3 — implementation traceability
 
 This file is the audit map between the approved research blueprint and the shipped code. It
 distinguishes implemented behavior from deployment configuration and deliberately deferred work.
@@ -11,7 +11,7 @@ distinguishes implemented behavior from deployment configuration and deliberatel
 - Silero VAD plus Local Smart Turn v3 determine end of turn.
 - Groq `openai/gpt-oss-120b` streams the spoken response.
 - Gemini `gemini-3.8-flash-lite-tts`, voice `Achernar`, streams 24 kHz mono PCM.
-- There is no runtime fallback to the old Rita, Deepgram, OpenAI TTS, or a slower Gemini model.
+- There is no runtime fallback to the old Uzyra, Deepgram, OpenAI TTS, or a slower Gemini model.
 
 ## Conversation intelligence
 
@@ -29,7 +29,7 @@ distinguishes implemented behavior from deployment configuration and deliberatel
 ## Turns, interruption, and perceived speed
 
 - Browser capture requests echo cancellation, noise suppression, automatic gain control, and mono.
-- Harmless backchannels such as “mhm” do not interrupt Rita. Clear commands or meaningful speech do.
+- Harmless backchannels such as “mhm” do not interrupt Uzyra. Clear commands or meaningful speech do.
 - Actual heard bot text—not merely generated text—is committed to chat when playback completes or is
   interrupted, preventing unsaid text from contaminating history.
 - A pre-generated/cached filler is scheduled only after 675 ms and is cancelled when real audio starts.
@@ -49,9 +49,9 @@ distinguishes implemented behavior from deployment configuration and deliberatel
 
 ## Security, cost, and operations
 
-- Provider secrets are server-side. Admin entry stores them in RitaJet and synchronizes worker-only
+- Provider secrets are server-side. Admin entry stores them in Uzyra and synchronizes worker-only
   secrets to the Pipecat secret set when the private control-plane key is present.
-- The public Pipecat key starts only the named agent. User authentication and Rita usage allowances
+- The public Pipecat key starts only the named agent. User authentication and Uzyra usage allowances
   are checked before a session or filler request.
 - Session/event tables use row-level security; provider payload metadata is size-bounded.
 - Pipecat uses `agent-1x`, `min_agents = 0`, and bounded autoscaling. This avoids reserved idle compute

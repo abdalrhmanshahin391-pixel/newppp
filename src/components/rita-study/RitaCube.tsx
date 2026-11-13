@@ -103,12 +103,12 @@ const ACTIONS: Keyframe[][] = [
 ];
 
 /**
- * Rita's face on the study page: a soft black block with two white eyes, clearly alive.
+ * Uzyra's face on the study page: a soft black block with two white eyes, clearly alive.
  *
  * One animation-frame loop drives a few springs (squash, lift, tilt, eyes) and writes two transforms;
  * React state is never touched. Waiting, it does a small random action every few seconds (a hop, a
  * bounce, a lean, a wiggle, a glance) and blinks. While the learner speaks it squashes hard with
- * their voice and the eyes lift; while it thinks it rocks and the eyes circle; while Rita speaks it
+ * their voice and the eyes lift; while it thinks it rocks and the eyes circle; while Uzyra speaks it
  * hops on the beats of her voice. It pauses while the tab is hidden; with reduced motion it only
  * blinks.
  */
@@ -252,7 +252,7 @@ export function RitaCube({
         eyeX.target = Math.cos(t * 2.6) * 0.9;
         eyeY.target = Math.sin(t * 2.6) * 0.45 - 0.25;
       } else if (current === "speaking") {
-        // Hops on the beats of Rita's voice, and stretches up while her voice is loud.
+        // Hops on the beats of Uzyra's voice, and stretches up while her voice is loud.
         const target = Math.min(1, levels.output * 1.5);
         voice += (target - voice) * (1 - Math.exp(-dt / (target > voice ? 0.03 : 0.12)));
         if (beatReady && voice > 0.45) {

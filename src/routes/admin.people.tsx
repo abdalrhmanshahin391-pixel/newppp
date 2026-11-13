@@ -694,7 +694,7 @@ function BackupPanel() {
       const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = `ritajet-people-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `uzyra-people-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(a.href);
       setLog([`Exported ${backup.accounts.length} accounts and ${Object.values(backup.tables).reduce((s, v) => s + v.length, 0)} records.`]);
@@ -800,7 +800,7 @@ function downloadCsv(rows: DirectoryRow[]) {
   const blob = new Blob([[head.join(","), ...body].join("\n")], { type: "text/csv" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `ritajet-people-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `uzyra-people-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
 }

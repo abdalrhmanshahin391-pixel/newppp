@@ -36,7 +36,7 @@ export type Overview = {
   due: number;
   new: number;
   streak: number;
-  /** Days in a row with any learning activity (a card, a lesson or a talk with Rita). */
+  /** Days in a row with any learning activity (a card, a lesson or a talk with Uzyra). */
   activeStreak: number;
   /** Whether anything was done today. */
   activeToday: boolean;
@@ -442,7 +442,7 @@ export const studyOverview = createServerFn({ method: "POST" })
       .map((d: any) => ({ day: d.day, cards: d.cards, goal_met: d.goal_met }))
       .reverse();
 
-    // Any learning activity counts for "days in a row": a reviewed card, lesson work, or a Rita
+    // Any learning activity counts for "days in a row": a reviewed card, lesson work, or a Uzyra
     // talk. Each source is optional: if one cannot be read the others still count.
     const activityStamps: unknown[] = (days ?? [])
       .filter((d: any) => Number(d.cards) > 0)

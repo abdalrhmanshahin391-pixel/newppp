@@ -2,6 +2,9 @@
 -- Test databases only; never applied to the real project.
 alter table storage.buckets add column if not exists file_size_limit bigint;
 alter table storage.buckets add column if not exists allowed_mime_types text[];
+-- Current Storage keeps one current row per name and supports optional versions.
+alter table storage.buckets add column if not exists versioning_status text default 'DISABLED';
+alter table storage.objects add column if not exists archived_at timestamptz;
 
 create or replace function public.set_updated_at()
 returns trigger

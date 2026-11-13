@@ -45,7 +45,7 @@ test("the intro and each new part are taught by the model", () => {
   assert.equal(message.explain?.table.length, 3);
 });
 
-test("a question in the explanation changes nothing Rita must say", () => {
+test("a question in the explanation changes nothing Uzyra must say", () => {
   const explain = go(initialState(C, "s"), { type: "ready" });
   const asked = go(explain, { type: "question" });
   assert.equal(stepMessage(stepOf(C, explain), stepOf(C, asked), "ar"), null);

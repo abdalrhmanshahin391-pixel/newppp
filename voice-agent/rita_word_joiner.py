@@ -69,8 +69,8 @@ class RitaWordJoiner(FrameProcessor):
                     tail, self._held = self._held, ""
                     await self.push_frame(LLMTextFrame(tail), direction)
                 if isinstance(frame, LLMFullResponseEndFrame) and self.repaired_splits:
-                    logger.bind(repaired_splits=self.repaired_splits).info("Rita word joiner repaired split words")
-            except Exception as error:  # noqa: BLE001  joining must never silence Rita
-                logger.bind(error=repr(error)).warning("Rita word joiner failed")
+                    logger.bind(repaired_splits=self.repaired_splits).info("Uzyra word joiner repaired split words")
+            except Exception as error:  # noqa: BLE001  joining must never silence Uzyra
+                logger.bind(error=repr(error)).warning("Uzyra word joiner failed")
                 self._held = ""
         await self.push_frame(frame, direction)

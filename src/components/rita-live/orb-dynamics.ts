@@ -1,5 +1,5 @@
 /**
- * Motion model for the Rita voice orb. Pure and deterministic: it turns raw
+ * Motion model for the Uzyra voice orb. Pure and deterministic: it turns raw
  * microphone / playback levels plus the conversation mode into the handful of
  * numbers the shader needs. No DOM, no WebGL, so it can be unit tested.
  *
@@ -9,7 +9,7 @@
  *   syllables, and a slow "speech activity" one that only releases after a real
  *   pause. A gap between words barely lets the orb grow, a comma lets it grow a
  *   little more, the end of a sentence lets it open fully.
- * - While Rita talks the orb stays at full size and only the clouds inside move,
+ * - While Uzyra talks the orb stays at full size and only the clouds inside move,
  *   faster and wilder with her voice. The orb itself never pulses.
  */
 
@@ -18,7 +18,7 @@ export type OrbMode = "idle" | "listening" | "thinking" | "speaking";
 export type OrbTelemetry = {
   /** Raw microphone level, 0..1 (the transport's local audio level). */
   input: number;
-  /** Raw playback level of Rita's voice, 0..1 (the transport's remote audio level). */
+  /** Raw playback level of Uzyra's voice, 0..1 (the transport's remote audio level). */
   output: number;
   mode: OrbMode;
   reducedMotion?: boolean;
@@ -69,7 +69,7 @@ export const ORB_TUNING = {
   /** Rest sizes per mode. */
   idleRadius: 0.86,
   thinkingRadius: 0.94,
-  /** Rita's voice moves the inside only; the outline stays put. */
+  /** Uzyra's voice moves the inside only; the outline stays put. */
   speakingBoost: 0,
 } as const;
 

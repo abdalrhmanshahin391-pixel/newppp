@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Loader2, MessageCircle, Plus, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowLeft, Loader2, Plus, X } from "lucide-react";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageGate } from "@/components/language/LanguageGate";
@@ -23,7 +23,8 @@ import {
 } from "@/lib/rita-conversation";
 import { saveFile } from "@/lib/save-file";
 import { AdminBar } from "@/components/rita-quality/AdminBar";
-import { ConversationMenu } from "@/components/rita/ConversationMenu";
+import { ConversationLibrary } from "@/components/rita/ConversationLibrary";
+import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { reviewCounts, reviewMark } from "@/lib/rita-quality-next";
 import { ritaRepairFile, ritaRepairFileName } from "@/lib/rita-issue-report";
 import {
@@ -36,7 +37,7 @@ import {
 
 export const Route = createFileRoute("/rita-conversations")({
   head: () => ({
-    meta: [{ title: "Rita conversations — Uzyra" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Conversations — Uzyra" }, { name: "robots", content: "noindex" }],
   }),
   component: () => (
     <LanguageGate>
@@ -50,14 +51,6 @@ type Bundle = {
   messages: RitaConversationMessage[];
   sessions: RitaConversationSession[];
 };
-
-function recentDate(value: string | null, fallback: string) {
-  const date = new Date(value ?? fallback);
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
 
 async function loadBundle(conversation: RitaConversation): Promise<Bundle> {
   const pageSize = 500;
@@ -194,6 +187,8 @@ function printInFrame(html: string) {
 
 function RitaConversationsPage() {
   const navigate = useNavigate();
+  const ui = useUiLanguage();
+  const t = (en: string, ar: string) => (ui === "ar" ? ar : en);
   const { user, isAdmin, loading } = useAuth();
   const [conversations, setConversations] = useState<RitaConversation[]>([]);
   const [busy, setBusy] = useState(true);
@@ -216,9 +211,7 @@ function RitaConversationsPage() {
     setError("");
     let query = supabase
       .from("rita_free_conversations")
-      .select(
-        "id,title,language_preference,dialect_preference,message_count,last_message_at,archived_at,created_at,updated_at",
-      )
+      .select("*")
       .eq("user_id", user.id)
       .is("archived_at", null)
       .order("last_message_at", { ascending: false, nullsFirst: false })
@@ -273,8 +266,6 @@ function RitaConversationsPage() {
       cancelled = true;
     };
   }, [conversations, isAdmin, marksEpoch]);
-
-  const empty = useMemo(() => !busy && conversations.length === 0, [busy, conversations.length]);
 
   async function createConversation() {
     if (!user || creating) return;
@@ -427,18 +418,42 @@ function RitaConversationsPage() {
   }
 
   async function removeConversation(conversation: RitaConversation) {
-    if (!window.confirm(`Delete “${conversation.title}” and all of its saved messages?`)) return;
     const { error: deleteError } = await supabase
       .from("rita_free_conversations")
       .delete()
       .eq("id", conversation.id)
-      .eq("user_id", user?.id ?? "");
+      .eq("user_id", user?.id ?? "")
+      .select("id")
+      .single();
     if (deleteError) {
-      setError(deleteError.message);
-      return;
+      throw new Error(deleteError.message);
     }
+    stopReview.current.add(conversation.id);
     if (selected?.conversation.id === conversation.id) setSelected(null);
-    await refresh();
+    setConversations((current) => current.filter((row) => row.id !== conversation.id));
+  }
+
+  async function updateConversation(
+    conversation: RitaConversation,
+    values: { title?: string; title_is_custom?: boolean; pinned_at?: string | null },
+  ) {
+    if (!user) throw new Error(t("Sign in again.", "سجّل دخولك مرة ثانية."));
+    const { data, error: updateError } = await supabase
+      .from("rita_free_conversations")
+      .update(values)
+      .eq("id", conversation.id)
+      .eq("user_id", user.id)
+      .select("*")
+      .single();
+    if (updateError) throw new Error(updateError.message);
+    setConversations((current) =>
+      current.map((row) => (row.id === conversation.id ? (data as RitaConversation) : row)),
+    );
+    setSelected((current) =>
+      current?.conversation.id === conversation.id
+        ? { ...current, conversation: data as RitaConversation }
+        : current,
+    );
   }
 
   if (loading || !user) {
@@ -456,23 +471,19 @@ function RitaConversationsPage() {
       </div>
       <section className="mx-auto w-full max-w-5xl px-5 pb-20 pt-8 sm:px-8 sm:pt-12">
         <Link
-          to="/learn" hash="rita"
+          to="/learn"
+          hash="rita"
           className="inline-flex items-center gap-2 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
         >
-          <ArrowLeft size={17} /> Rita
+          <ArrowLeft size={17} /> Uzyra
         </Link>
-        <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[13px] font-bold uppercase tracking-[0.16em] text-[var(--pp-muted)]">
-              Free conversation
-            </p>
-            <h1 className="mt-2 text-[38px] leading-tight sm:text-[50px]">
-              Your Rita conversations
-            </h1>
-            <p lang="ar" className="mt-2 text-[18px] font-semibold text-[var(--pp-muted)]">
-              محادثاتك محفوظة وخاصة بحسابك.
-            </p>
-          </div>
+        <div
+          dir={ui === "ar" ? "rtl" : "ltr"}
+          className="mt-5 flex flex-wrap items-center justify-between gap-4"
+        >
+          <h1 className="conversation-heading font-semibold tracking-tight">
+            {t("My conversations", "محادثاتي")}
+          </h1>
           <button
             type="button"
             onClick={() => void createConversation()}
@@ -480,7 +491,7 @@ function RitaConversationsPage() {
             className="rita-btn rita-btn-primary gap-2 disabled:opacity-50"
           >
             {creating ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
-            New conversation
+            {t("New conversation", "محادثة جديدة")}
           </button>
         </div>
 
@@ -489,6 +500,9 @@ function RitaConversationsPage() {
         {error ? (
           <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
+            <button type="button" className="rita-btn ms-3" onClick={() => void refresh()}>
+              {t("Retry", "حاول ثانية")}
+            </button>
           </div>
         ) : null}
 
@@ -498,76 +512,46 @@ function RitaConversationsPage() {
           </div>
         ) : null}
 
-        {empty ? (
-          <div className="mt-8 rounded-2xl bg-[var(--pp-grey)] p-8 text-center sm:p-12">
-            <MessageCircle className="mx-auto text-[var(--pp-muted)]" size={34} />
-            <h2 className="mt-4 text-2xl">No saved conversations yet</h2>
-            <p className="mt-2 text-[var(--pp-muted)]">
-              Start one and every completed turn will save automatically.
-            </p>
-          </div>
-        ) : null}
-
-        <div className="mt-8 grid gap-4">
-          {conversations.map((conversation) => (
-            <article
-              key={conversation.id}
-              className="rounded-2xl border border-[var(--pp-line)] p-5 sm:p-6"
-            >
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <button
-                  type="button"
-                  onClick={() => void openTranscript(conversation)}
-                  className="min-w-0 text-left"
-                >
-                  <h2 className="truncate text-xl font-semibold">{conversation.title}</h2>
-                  <p className="mt-1 text-sm text-[var(--pp-muted)]">
-                    {recentDate(conversation.last_message_at, conversation.created_at)} ·{" "}
-                    {conversation.message_count}{" "}
-                    {conversation.message_count === 1 ? "message" : "messages"}
-                  </p>
-                  {isAdmin ? (
-                    <p className="mt-1 text-[14px] text-[var(--pp-muted)]">
-                      {reviewMark(marks.get(conversation.id))}
-                    </p>
-                  ) : null}
-                </button>
-                <div className="flex items-center gap-2">
-                  <Link
-                    to="/rita-live"
-                    search={{ conversation: conversation.id }}
-                    className="rita-btn rita-btn-primary"
-                  >
-                    Continue
-                  </Link>
-                  <ConversationMenu
-                    title={conversation.title}
-                    isAdmin={isAdmin}
-                    busy={opening === conversation.id}
-                    onAction={(action) =>
-                      action === "delete"
-                        ? void removeConversation(conversation)
-                        : void download(conversation, action === "md" ? "md" : action)
-                    }
-                  />
-                </div>
-              </div>
-              {opening === conversation.id && busyFormat === "repair" ? (
-                <p role="status" className="mt-3 text-[14px] text-[var(--pp-muted)]">
-                  Making the repair file…
+        <ConversationLibrary
+          conversations={conversations}
+          busy={busy}
+          isAdmin={isAdmin}
+          userId={user.id}
+          pendingId={opening}
+          onTranscript={(conversation) => void openTranscript(conversation)}
+          onRename={(conversation, title) =>
+            updateConversation(conversation, { title, title_is_custom: true })
+          }
+          onPin={(conversation) =>
+            updateConversation(conversation, {
+              pinned_at: conversation.pinned_at ? null : new Date().toISOString(),
+            })
+          }
+          onDelete={removeConversation}
+          onExport={(conversation, format) => void download(conversation, format)}
+          renderDetails={(conversation) => (
+            <>
+              {isAdmin && (
+                <p className="mt-2 text-sm text-[var(--pp-muted)]">
+                  {reviewMark(marks.get(conversation.id))}
                 </p>
-              ) : null}
-              {isAdmin && reviews[conversation.id] ? (
+              )}
+              {opening === conversation.id && busyFormat === "repair" && (
+                <p role="status" className="mt-3 text-sm">
+                  {t("Making repair file…", "جارٍ تجهيز ملف الإصلاح…")}
+                </p>
+              )}
+              {isAdmin && reviews[conversation.id] && (
                 <ReviewLine
                   progress={reviews[conversation.id]}
                   onStop={() => stopReview.current.add(conversation.id)}
                   onAgain={() => void runReview(conversation.id)}
                   onDownload={() => void download(conversation, "repair")}
                 />
-              ) : null}
-            </article>
-          ))}
-        </div>
+              )}
+            </>
+          )}
+        />
       </section>
 
       {selected ? (
@@ -598,7 +582,7 @@ function RitaConversationsPage() {
                     }`}
                   >
                     <p className="text-xs font-bold uppercase tracking-wide text-[var(--pp-muted)]">
-                      {message.role === "user" ? "You" : "Rita"}
+                      {message.role === "user" ? "You" : "Uzyra"}
                       {message.delivery_status !== "completed"
                         ? ` · ${message.delivery_status}`
                         : ""}

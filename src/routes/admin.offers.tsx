@@ -74,7 +74,7 @@ function AdminOfferCenter() {
   const [saving, setSaving] = useState(false);
 
   // Form states with sensible defaults so nothing is ever blank
-  const [title, setTitle] = useState("The Rita Toolkit — free right now");
+  const [title, setTitle] = useState("The Uzyra Toolkit — free right now");
   const [subtitle, setSubtitle] = useState(
     "Every study tool that costs us nothing to run, unlocked on your account for three months.",
   );
@@ -100,7 +100,7 @@ function AdminOfferCenter() {
 
   // Announcement state
   const [annEnabled, setAnnEnabled] = useState(false);
-  const [annTitle, setAnnTitle] = useState("🎁 Special Offer: The Rita Toolkit is free right now!");
+  const [annTitle, setAnnTitle] = useState("🎁 Special Offer: The Uzyra Toolkit is free right now!");
   const [annBody, setAnnBody] = useState("Claim your free 3 months access with code YSMU.");
   const [annBtnLabel, setAnnBtnLabel] = useState("Claim offer →");
   const [annStyle, setAnnStyle] = useState<"ribbon" | "strip" | "floating">("ribbon");
@@ -172,7 +172,7 @@ function AdminOfferCenter() {
     setSelectedOfferId(id);
     const o = data?.offers.find((item) => item.id === id);
     if (!o) return;
-    setTitle(o.title || "The Rita Toolkit — free right now");
+    setTitle(o.title || "The Uzyra Toolkit — free right now");
     setSubtitle(o.subtitle || "");
     setBadge(o.badge || "FREE FOR 3 MONTHS");
     setBullets(o.bullets && o.bullets.length > 0 ? [...o.bullets] : []);
@@ -212,7 +212,7 @@ function AdminOfferCenter() {
       if (existing) targetId = existing.id;
     }
 
-    const finalTitle = title.trim() || "The Rita Toolkit — free right now";
+    const finalTitle = title.trim() || "The Uzyra Toolkit — free right now";
     const finalCode = promoCode.trim().toUpperCase() || "YSMU";
     const finalPlan = planSlug || "toolkit";
 
@@ -240,7 +240,7 @@ function AdminOfferCenter() {
         },
         announcement: {
           enabled: annEnabled,
-          title: annTitle.trim() || "🎁 Special Offer: The Rita Toolkit is free right now!",
+          title: annTitle.trim() || "🎁 Special Offer: The Uzyra Toolkit is free right now!",
           body: annBody.trim() || "Claim your free 3 months access with code " + finalCode + ".",
           button_label: annBtnLabel.trim() || "Claim offer →",
           style: annStyle,
@@ -796,7 +796,7 @@ function AdminOfferCenter() {
                       const on = e.target.checked;
                       setAnnEnabled(on);
                       if (on) {
-                        if (!annTitle.trim()) setAnnTitle("🎁 Special Offer: The Rita Toolkit is free right now!");
+                        if (!annTitle.trim()) setAnnTitle("🎁 Special Offer: The Uzyra Toolkit is free right now!");
                         if (!annBody.trim()) setAnnBody("Claim your free 3 months access with code " + (promoCode || "YSMU") + ".");
                       }
                     }}
@@ -886,7 +886,7 @@ function AdminOfferCenter() {
 
                 {/* Title */}
                 <h2 className="mt-4 font-display text-2xl font-black leading-tight text-[#0b0b0f]">
-                  {title || "The Rita Toolkit — free right now"}
+                  {title || "The Uzyra Toolkit — free right now"}
                 </h2>
 
                 {/* Subtitle */}

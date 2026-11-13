@@ -42,7 +42,7 @@ def test_the_prompt_hash_ignores_the_per_turn_state():
     b = bot.build_prompt({}, state, dialogue=True)
     assert a != b
     assert fixed_prompt_hash(a) == fixed_prompt_hash(b)
-    changed = a.replace("You are Rita", "You are Rita2", 1)
+    changed = a.replace("You are Uzyra", "You are Rita2", 1)
     assert fixed_prompt_hash(changed) != fixed_prompt_hash(a)
 
 

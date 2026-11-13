@@ -8,7 +8,7 @@ import {
 } from "@/lib/rita-lesson-speech";
 import type { LessonRunHandle } from "./useLessonRun";
 
-/** Seconds of quiet in an exercise before Rita offers a hint, then a repeat. */
+/** Seconds of quiet in an exercise before Uzyra offers a hint, then a repeat. */
 const NUDGE_HINT_MS = 8_000;
 const NUDGE_REPEAT_MS = 20_000;
 
@@ -22,8 +22,8 @@ export type LessonSignal = {
 type Send = (type: string, data?: unknown) => void;
 
 /**
- * Connects the lesson engine to Rita's voice during a call. Every new step goes to the worker
- * with the exact line Rita should say (or "teach this part"), and every signal Rita hears
+ * Connects the lesson engine to Uzyra's voice during a call. Every new step goes to the worker
+ * with the exact line Uzyra should say (or "teach this part"), and every signal Uzyra hears
  * ("ready", an answer, "hint"…) becomes an engine event or a spoken answer that the server grades.
  * A spoken answer is used only for the step it was heard against, so a late answer can never be
  * counted on the next question.
@@ -37,7 +37,7 @@ export function useLessonVoice({
   learnerActivity,
 }: {
   run: LessonRunHandle;
-  /** The call is up and Rita is ready to hear and speak. */
+  /** The call is up and Uzyra is ready to hear and speak. */
   connected: boolean;
   send: Send;
   language: SpeechLanguage;
@@ -55,7 +55,7 @@ export function useLessonVoice({
     if (!connected) spoken.current = null;
   }, [connected]);
 
-  // Set when Rita is already answering a question that paused the exercise: the pause itself is
+  // Set when Uzyra is already answering a question that paused the exercise: the pause itself is
   // then not announced, so her answer is not interrupted by a second line.
   const quietPause = useRef(false);
 

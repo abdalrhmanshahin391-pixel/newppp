@@ -44,7 +44,7 @@ export const Route = createFileRoute("/api/rita-v3/session/metrics-batch")({
             events,
           });
         } catch (error) {
-          console.error("Rita v3 metric batch storage failed", error);
+          console.error("Uzyra v3 metric batch storage failed", error);
           return Response.json({ ok: false }, { status: 503 });
         }
         return Response.json({

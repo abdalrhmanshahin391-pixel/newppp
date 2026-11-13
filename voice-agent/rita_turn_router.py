@@ -1,23 +1,23 @@
 """Turn router: decide what a finished learner turn needs before the model runs.
 
 Most turns go straight to the language model. A few short ones do not need it, and
-sending them there is what produced the bad replies: "خلص" read as "summarise" (Rita
+sending them there is what produced the bad replies: "خلص" read as "summarise" (Uzyra
 re-explained), a bare "إيه" after "نكمل ولا نغيّر الموضوع؟" read as "continue", and
 "أمم…" answered as if it were a request.
 
 The router sits between the user aggregator and the model. For each finished turn it:
 
-- "stop": Rita says one short, human acknowledgement and goes quiet. No model call.
-- "hold": the learner is only thinking ("أمم…", "استنى"). Rita says nothing and waits.
-- "speak": a bare "yes" to a question that offered options. Rita asks "أي واحد: …؟".
+- "stop": Uzyra says one short, human acknowledgement and goes quiet. No model call.
+- "hold": the learner is only thinking ("أمم…", "استنى"). Uzyra says nothing and waits.
+- "speak": a bare "yes" to a question that offered options. Uzyra asks "أي واحد: …؟".
 - "ui": a first hello (scripted greeting) or a spoken command for the words list ("افتحي القائمة", "حوليهم فلاش كارد"). The page
-  does the work; Rita says one short line and the model is not asked.
+  does the work; Uzyra says one short line and the model is not asked.
 - "pass": everything else goes to the model, with a short note about what the learner's
   turn meant (see RitaSessionState.dialogue_state).
 
 Modes (env RITA_ROUTER_MODE): `on` (default), `shadow` (decide and log only, never change
 what happens), `off` (pass-through). Any error inside the router lets the turn through
-unchanged, so a router bug can never leave Rita silent.
+unchanged, so a router bug can never leave Uzyra silent.
 """
 
 from __future__ import annotations
@@ -76,7 +76,7 @@ ACKS = {
 MAX_CLARIFICATIONS = 2
 
 
-# What Rita says after a list command. The page shows the real result on screen.
+# What Uzyra says after a list command. The page shows the real result on screen.
 UI_SAYS = {
     "open": {"ar": "تفضل.", "en": "Here it is.", "de": "Bitte."},
     "choose": {
@@ -201,7 +201,7 @@ class RitaTurnRouter(FrameProcessor):
             signal=route.signal,
             to_model=route.to_model,
             word_count=len(text.split()),
-        ).info("Rita lesson signal")
+        ).info("Uzyra lesson signal")
         await self.push_frame(
             RTVIServerMessageFrame(
                 data={
@@ -248,13 +248,13 @@ class RitaTurnRouter(FrameProcessor):
                 text, self._state, language=self._language_of_turn(), ack=self._ack
             )
             self.last_action = decision.action.value
-        except Exception as error:  # a router bug must never silence Rita
-            logger.bind(error=repr(error)).warning("Rita router failed; passing the turn through")
+        except Exception as error:  # a router bug must never silence Uzyra
+            logger.bind(error=repr(error)).warning("Uzyra router failed; passing the turn through")
             if self.mode == RouterMode.ON and text is not None and not prepared:
                 try:
                     self._prepare_turn(text)
                 except Exception as inner:
-                    logger.bind(error=repr(inner)).warning("Rita could not prepare the turn")
+                    logger.bind(error=repr(inner)).warning("Uzyra could not prepare the turn")
             await self.push_frame(frame, direction)
             return
 
@@ -268,7 +268,7 @@ class RitaTurnRouter(FrameProcessor):
             awaiting=self._state.awaiting.value,
             word_count=len(text.split()),
             character_count=len(text),
-        ).info("Rita router decision")
+        ).info("Uzyra router decision")
 
         if self.mode == RouterMode.ON and decision.reading.act in {
             Act.COMPLAINT,

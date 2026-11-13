@@ -112,7 +112,7 @@ export const SAMPLE_PUBLIC_DECK: SharedDeck = {
 
 export const SAMPLE_DECK_AUTHOR: DeckAuthor = {
   id: "ritajet-official",
-  username: "ritajet",
+  username: "uzyra",
   full_name: "Uzyra Medical",
   avatar_url: null,
   bio: "Official Uzyra sample clinical study deck",

@@ -10,7 +10,7 @@ type Props = {
   mode: OrbMode;
   label?: string;
   className?: string;
-  /** Stage colour behind Rita. The glow is composited against it. */
+  /** Stage colour behind Uzyra. The glow is composited against it. */
   background?: string;
 };
 
@@ -45,7 +45,7 @@ const BONES = [
 type BoneName = (typeof BONES)[number];
 
 /**
- * Rita as a glowing low-poly 3D figure that talks with her voice: the mouth
+ * Uzyra as a glowing low-poly 3D figure that talks with her voice: the mouth
  * follows her playback level, and she gestures at phrase boundaries. Renders
  * with three.js (loaded on demand). Falls back to the voice orb if WebGL or the
  * model is unavailable, or when the page is opened with `?orb=1`.
@@ -155,7 +155,7 @@ export function RitaAvatar({
       try {
         gltf = await new GLTFLoader().loadAsync(modelUrl);
       } catch (error) {
-        console.warn("Rita avatar model unavailable, using the voice orb", error);
+        console.warn("Uzyra avatar model unavailable, using the voice orb", error);
         renderer.dispose();
         if (!disposed) setFallback(true);
         return;
@@ -209,7 +209,7 @@ export function RitaAvatar({
       for (const name of BONES) {
         const found = root.getObjectByName(name) as InstanceType<typeof THREE.Bone> | undefined;
         if (!found) {
-          console.warn("Rita avatar model is missing bone", name);
+          console.warn("Uzyra avatar model is missing bone", name);
           renderer.dispose();
           if (!disposed) setFallback(true);
           return;
@@ -509,7 +509,7 @@ export function RitaAvatar({
       };
       if (disposed) cleanup();
     })().catch((error) => {
-      console.warn("Rita avatar unavailable, using the voice orb", error);
+      console.warn("Uzyra avatar unavailable, using the voice orb", error);
       if (!disposed) setFallback(true);
     });
 
@@ -527,7 +527,7 @@ export function RitaAvatar({
     <div
       ref={hostRef}
       role="img"
-      aria-label={label ?? "Rita"}
+      aria-label={label ?? "Uzyra"}
       className={`relative aspect-[3/4] transition-opacity duration-500 ${ready ? "opacity-100" : "opacity-0"} ${className}`}
     />
   );

@@ -28,7 +28,7 @@ test("with the switch off and nothing reviewed it says to turn it on", () => {
 test("nothing reviewed yet tells the admin what to do, in order", () => {
   const step = nextStep({ ...base, reviewed: 0 });
   assert.equal(step.kind, "collect");
-  assert.match(step.body, /Talk to Rita/);
+  assert.match(step.body, /Talk to Uzyra/);
 });
 
 test("a problem that came back or a failing test comes before open problems", () => {

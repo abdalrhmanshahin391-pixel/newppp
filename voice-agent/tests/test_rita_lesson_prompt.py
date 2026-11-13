@@ -45,7 +45,13 @@ def load_opening():
     nodes = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in names]
     from rita_lesson_voice import lesson_engine_enabled
 
-    namespace: dict[str, Any] = {"Any": Any, "lesson_engine_enabled": lesson_engine_enabled}
+    from brand_identity import FREE_CONVERSATION_OPENER
+
+    namespace: dict[str, Any] = {
+        "Any": Any,
+        "lesson_engine_enabled": lesson_engine_enabled,
+        "FREE_CONVERSATION_OPENER": FREE_CONVERSATION_OPENER,
+    }
     exec(compile(ast.Module(body=nodes, type_ignores=[]), "bot.py", "exec"), namespace)
     return namespace["opening_message"], namespace["lesson_section"]
 
@@ -60,7 +66,7 @@ def test_a_lesson_does_not_open_with_the_free_conversation_question():
 def test_free_conversation_keeps_its_opener():
     opening_message, _ = load_opening()
     message = opening_message({})
-    assert message == {"role": "assistant", "content": "Hi, I’m Rita. What would you like to practise?"}
+    assert message == {"role": "assistant", "content": "Hi, I’m Uzyra. What would you like to practise?"}
 
 
 def test_rita_speaks_first_in_a_lesson():

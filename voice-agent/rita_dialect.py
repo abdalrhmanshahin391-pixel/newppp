@@ -1,4 +1,4 @@
-"""Natural Jordanian speech for Rita: what the model is told, a scripted greeting, and a cleaner.
+"""Natural Jordanian speech for Uzyra: what the model is told, a scripted greeting, and a cleaner.
 
 Why this exists. Language models understand Arabic dialects better than they write them
 (AL-QASIDA, 2024), so left alone the model invented phrases such as "كيف فيك اليوم؟" (in the
@@ -49,15 +49,15 @@ DIALECT_PROMPT = """JORDANIAN SPEECH (when speaking Arabic)
 
 Examples of the right shape (vary how you introduce a phrase; do not open every answer the same way):
 Learner: كيف أحكي بدي أروح على الحمام بالإنجليزي
-Rita: "I need to go to the bathroom". وبالحكي السريع بتقول "I'm going to the bathroom".
+Uzyra: "I need to go to the bathroom". وبالحكي السريع بتقول "I'm going to the bathroom".
 Learner: صباح الخير بالألماني
-Rita: "Guten Morgen". بتستخدمها لحد الساعة عشرة تقريباً.
+Uzyra: "Guten Morgen". بتستخدمها لحد الساعة عشرة تقريباً.
 Learner: شو بنقول جوعان بالألماني
-Rita: "Ich habe Hunger". حرفياً يعني "عندي جوع".
+Uzyra: "Ich habe Hunger". حرفياً يعني "عندي جوع".
 Learner: شو معنى borrow
-Rita: "Borrow" يعني تاخد شي مؤقت وبترجعه. مثلاً "Can I borrow your pen?"
+Uzyra: "Borrow" يعني تاخد شي مؤقت وبترجعه. مثلاً "Can I borrow your pen?"
 Learner: مش فاهم الفرق
-Rita: عادي، هاي بتلخبط الكل. خلّينا نشوف مثال واحد بس.
+Uzyra: عادي، هاي بتلخبط الكل. خلّينا نشوف مثال واحد بس.
 """
 
 LANGUAGE_NAMES = {"ar": "Arabic", "en": "English", "de": "German"}
@@ -102,7 +102,7 @@ _GREETING_WORDS = frozenset(
     normalize(w)
     for w in (
         "مرحبا", "مرحبتين", "اهلا", "اهلين", "هلا", "هلا والله", "هاي", "السلام", "عليكم", "صباح",
-        "مساء", "الخير", "النور", "ريتا", "يا", "وسهلا", "hello", "hi", "hey", "hallo", "rita",
+        "مساء", "الخير", "النور", "يوزرا", "uzyra", "ريتا", "يا", "وسهلا", "hello", "hi", "hey", "hallo", "rita",
     )
     for w in w.split()
 )
@@ -151,7 +151,7 @@ KNOWN_WRONG = (
 )
 
 
-# Commands Rita should not aim at one gender. "احكيلي" is the same for everyone.
+# Commands Uzyra should not aim at one gender. "احكيلي" is the same for everyone.
 _GENDERED_TELL_ME = re.compile(r"(?<![\w\u0600-\u06ff])(?:خبريني|خبرني)(?![\w\u0600-\u06ff])")
 
 
@@ -177,7 +177,7 @@ LEAK_OPENINGS = (
     "user needs", "user has", "the user", "the learner", "learner wants", "learner asks",
     "learner said", "we should respond", "we should answer", "we should continue",
     "we should reply", "we need to respond", "we need to continue", "we need to answer",
-    "rita should", "assistant should", "need to respond", "learner_act", "directive",
+    "uzyra should", "rita should", "assistant should", "need to respond", "learner_act", "directive",
     "last_question", "topic_paused", "response_type", "teaching_strategy", "respond in arabic",
     "answer in arabic", "reply in arabic",
 )
@@ -336,8 +336,8 @@ class RitaSpeechCleaner(FrameProcessor):
                     await self.push_frame(TTSSpeakFrame(tail), direction)
                 found = scan_dialect("".join(self._raw))
                 if found:
-                    logger.bind(findings=found).warning("Rita dialect watch")
+                    logger.bind(findings=found).warning("Uzyra dialect watch")
                 self._raw = []
-        except Exception as error:  # cleaning must never silence Rita
-            logger.bind(error=repr(error)).warning("Rita speech cleaner failed")
+        except Exception as error:  # cleaning must never silence Uzyra
+            logger.bind(error=repr(error)).warning("Uzyra speech cleaner failed")
         await self.push_frame(frame, direction)

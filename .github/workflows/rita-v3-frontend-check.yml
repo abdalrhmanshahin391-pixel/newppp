@@ -72,6 +72,7 @@ on:
       - "public/book-covers/**"
       - "scripts/build-starter-books-sql.*"
       - "scripts/test-books-db.sh"
+      - "scripts/test-user-books-concurrency.sh"
       - "scripts/test-books-public-read-db.sh"
       - "src/lib/pairs/**"
       - "src/components/pairs/**"
@@ -106,6 +107,8 @@ jobs:
           node --test src/lib/rita-v3-diagnostics-trace.test.mjs
           node --test src/lib/rita-v3-heard.test.ts
           node --test src/lib/rita-conversation.test.ts
+          node --test src/lib/brand.test.ts
+          node --test src/lib/rita-model-notes.test.ts
           node --test src/lib/rita-curriculum.test.ts
           node --test src/lib/rita-slides.test.ts
           node --test src/lib/rita-resources.test.ts
@@ -187,6 +190,13 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: postgres
         run: ./scripts/test-study-db.sh
+      - name: Conversation ownership and custom-title rules
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: bash scripts/test-conversations-db.sh
       - name: Install pgTAP in the database container
         run: |
           docker exec ${{ job.services.postgres.id }} bash -c \

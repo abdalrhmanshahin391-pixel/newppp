@@ -93,7 +93,7 @@ export function TodoDoneView({
           </p>
           <p className="mt-3 text-[13px] font-semibold text-[#6a697c]">
             {todayCount >= goal
-              ? "Goal reached today — Rita is proud of you."
+              ? "Goal reached today — Uzyra is proud of you."
               : `${goal - todayCount} more today keeps the streak alive.`}
           </p>
         </div>

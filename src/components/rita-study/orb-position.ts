@@ -2,7 +2,7 @@
 
 export type OrbPosition = { x: number; y: number };
 
-/** Near the bottom, just on the guide's side of the divider (Rita is on the left). */
+/** Near the bottom, just on the guide's side of the divider (Uzyra is on the left). */
 export const DEFAULT_ORB: OrbPosition = { x: 0.53, y: 0.9 };
 
 /** Keeps the circle fully inside the pane, below the pane's top strip. */

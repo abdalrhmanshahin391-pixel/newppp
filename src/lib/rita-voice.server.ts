@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- Rita's new migration tables are not in the generated Supabase types until the production schema is regenerated. */
+/* eslint-disable @typescript-eslint/no-explicit-any -- Uzyra's new migration tables are not in the generated Supabase types until the production schema is regenerated. */
 import { createClient } from "@supabase/supabase-js";
 import { getSupabasePublicConfig } from "@/integrations/supabase/config";
 
@@ -91,7 +91,7 @@ export async function resolveRitaOpenAiKey(): Promise<string | null> {
       if (saved.length > 20) return saved;
     }
   } catch (error) {
-    console.warn("Rita could not read its OpenAI key", error);
+    console.warn("Uzyra could not read its OpenAI key", error);
   }
   return environmentKey.length > 20 ? environmentKey : null;
 }
@@ -111,7 +111,7 @@ export async function resolveRitaDeepgramKey(): Promise<string | null> {
       if (saved.length > 20) return saved;
     }
   } catch (error) {
-    console.warn("Rita could not read its Deepgram key", error);
+    console.warn("Uzyra could not read its Deepgram key", error);
   }
   return environmentKey.length > 20 ? environmentKey : null;
 }
@@ -303,7 +303,7 @@ export function normalizePersonality(value: unknown): RitaPersonality {
   return RITA_PERSONALITIES.includes(requested) ? requested : "kind";
 }
 
-/** The language Rita explains in: what the website sent, or "automatic" for anything else. */
+/** The language Uzyra explains in: what the website sent, or "automatic" for anything else. */
 export function cleanLanguage(value: unknown) {
   const requested = String(value ?? "automatic").trim();
   return requested === "ar" || requested === "en" || requested === "de" ? requested : "automatic";

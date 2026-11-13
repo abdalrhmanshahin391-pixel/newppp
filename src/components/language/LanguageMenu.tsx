@@ -125,8 +125,8 @@ export function LanguageMenu({
             <p role="alert" className="rh-lang-error">
               {error === VOICE_SESSION_ERROR
                 ? text(
-                    "End your conversation with Rita first, then switch language.",
-                    "أنهِ محادثتك مع ريتا أولاً، ثم بدّل اللغة.",
+                    "End your conversation with Uzyra first, then switch language.",
+                    "أنهِ محادثتك مع يوزرا أولاً، ثم بدّل اللغة.",
                   )
                 : text(
                     "Could not change the language. Try again.",

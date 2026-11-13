@@ -17,7 +17,7 @@ export type AiToolId = (typeof AI_TOOL_IDS)[number];
 
 export const AI_TOOLS: { id: AiToolId; name: string; blurb: string }[] = [
   { id: "aio", name: "All in One", blurb: "Guide, summary, cards and questions from one lecture." },
-  { id: "rita", name: "Rita AI Model 3.8", blurb: "Cuts questions out of a PDF and explains each one." },
+  { id: "rita", name: "Uzyra AI Model 3.8", blurb: "Cuts questions out of a PDF and explains each one." },
   { id: "lecture", name: "Lecture Lab", blurb: "Short questions with two-line notes from a lecture." },
   { id: "questions", name: "Question generator", blurb: "The question maker in the study hub." },
   { id: "archive", name: "Archive solver", blurb: "Solves and explains old archive papers." },
@@ -134,11 +134,11 @@ export async function pingChatKey(
 /** Turns raw provider errors into something a student can read. */
 export function friendlyAiError(error: unknown): string {
   const raw = error instanceof Error ? error.message : String(error);
-  if (/429|quota|rate/i.test(raw)) return "Rita is busy right now — wait a minute and try again.";
+  if (/429|quota|rate/i.test(raw)) return "Uzyra is busy right now — wait a minute and try again.";
   if (/401|403|API key|permission/i.test(raw))
-    return "Rita's AI needs attention from the site owner.";
-  if (/safety|blocked/i.test(raw)) return "Rita couldn't work with that page. Try a different one.";
+    return "Uzyra's AI needs attention from the site owner.";
+  if (/safety|blocked/i.test(raw)) return "Uzyra couldn't work with that page. Try a different one.";
   if (/empty|did not return valid JSON|no candidate/i.test(raw))
-    return "Rita couldn't read that clearly. Try a sharper photo or a bit more text.";
+    return "Uzyra couldn't read that clearly. Try a sharper photo or a bit more text.";
   return "Something went wrong while working on that. Please try again.";
 }

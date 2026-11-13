@@ -23,7 +23,7 @@ GRAMMAR = {
                 "Short answers: Yes, I <b>am</b>. / No, she <b>isn't</b>.",
             ],
             "examples": [
-                ["I am Rita.", "أنا ريتا."],
+                ["I am Uzyra.", "أنا يوزرا."],
                 ["She is my friend.", "هي صديقتي."],
                 ["We are from Jordan.", "نحن من الأردن."],
                 ["It isn't cold today.", "ليس بارداً اليوم."],
@@ -106,7 +106,7 @@ GRAMMAR = {
                 "Ask with <b>whose</b>: Whose bag is this? It's <b>her</b> bag.",
             ],
             "examples": [
-                ["What's your name? My name is Rita.", "ما اسمك؟ اسمي ريتا."],
+                ["What's your name? My name is Uzyra.", "ما اسمك؟ اسمي يوزرا."],
                 ["This is his brother.", "هذا أخوه."],
                 ["Their house is big.", "بيتهم كبير."],
             ],
@@ -158,7 +158,7 @@ VOCAB = {
                 ["goodbye", "مع السلامة", "Goodbye, see you tomorrow."],
                 ["see you later", "أراك لاحقاً", "See you later, Omar!"],
                 ["nice to meet you", "تشرفت بمعرفتك", "Nice to meet you, Lina."],
-                ["How are you?", "كيف حالك؟", "Hi Rita! How are you?"],
+                ["How are you?", "كيف حالك؟", "Hi Uzyra! How are you?"],
                 ["I'm fine", "أنا بخير", "I'm fine, thank you."],
                 ["welcome", "أهلاً وسهلاً", "Welcome to our class!"],
             ],
@@ -169,7 +169,7 @@ VOCAB = {
             "title_ar": "أنا وأنت",
             "icon": "people",
             "words": [
-                ["name", "اسم", "My name is Rita."],
+                ["name", "اسم", "My name is Uzyra."],
                 ["What's your name?", "ما اسمك؟", "What's your name? — I'm Sami."],
                 ["from", "من (بلد)", "I'm from Jordan."],
                 ["Where are you from?", "من أين أنت؟", "Where are you from?"],

@@ -1,4 +1,4 @@
-// The book reader: the same layout as the study page (Rita on the left, the page on the right, a
+// The book reader: the same layout as the study page (Uzyra on the left, the page on the right, a
 // draggable divider on wide screens, two tabs on phones, and the floating circle over both). Only
 // the page being read is loaded (a light picture and its words), with the next one ready behind
 // it, so a 500 MB book opens as fast as a short one and never freezes the device.
@@ -241,7 +241,7 @@ const DISABLED_REASON: Partial<Record<StudyAction, string>> = {
 };
 
 type Picked = { page: number; quote: string; range: Range | null };
-/** An answer in Rita's column, with what is needed to ask again. */
+/** An answer in Uzyra's column, with what is needed to ask again. */
 type Answer = BookAnswer & { action: BookTextAction; full: string };
 
 function readSplit(): { rita: number; book: number } | undefined {
@@ -566,7 +566,7 @@ export function BookReader({
     [memoryKey],
   );
 
-  // ---- Rita's answers --------------------------------------------------------------------------
+  // ---- Uzyra's answers --------------------------------------------------------------------------
   const textFn = useServerFn(bookStudyText);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [phrase, setPhrase] = useState<{ text: string; context: string } | null>(null);
@@ -1173,7 +1173,7 @@ export function BookReader({
             <Panel id="rita" defaultSize="40" minSize={300}>
               {ritaPane}
             </Panel>
-            <Separator className="st-divider" aria-label="غيّر عرض الكتاب وريتا">
+            <Separator className="st-divider" aria-label="غيّر عرض الكتاب ويوزرا">
               <span className="st-grip" aria-hidden="true" />
             </Separator>
             <Panel id="book" defaultSize="60" minSize={340}>
@@ -1184,13 +1184,13 @@ export function BookReader({
           <>
             <div
               role="tablist"
-              aria-label="الكتاب وريتا"
+              aria-label="الكتاب ويوزرا"
               className="flex border-b border-[var(--pp-line)]"
             >
               {(
                 [
                   ["book", "الكتاب"],
-                  ["rita", busy ? "ريتا بتكتب…" : "ريتا"],
+                  ["rita", busy ? "يوزرا بتكتب…" : "يوزرا"],
                 ] as const
               ).map(([value, label]) => (
                 <button
@@ -1256,7 +1256,7 @@ export function BookReader({
                   : undefined
           }
           hint={
-            ringMode === "language" ? `ريتا بتشرح بـ: ${LANGUAGE_NAMES[explanation.value]}` : hint
+            ringMode === "language" ? `يوزرا بتشرح بـ: ${LANGUAGE_NAMES[explanation.value]}` : hint
           }
           canReport={false}
           onLanguage={ringMode === "main" ? () => setRingMode("language") : undefined}

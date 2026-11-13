@@ -39,7 +39,7 @@ export async function resolveRitaV3Key(
       if (saved) return saved;
     } catch {
       // Do not log provider credentials or a raw database error that may contain a payload.
-      sources.warn(`Could not read Rita v3 ${provider} key; checking runtime secrets.`);
+      sources.warn(`Could not read Uzyra v3 ${provider} key; checking runtime secrets.`);
     }
   }
   return (await sources.readRuntimeSecret(environmentName)).trim();

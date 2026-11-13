@@ -13,7 +13,7 @@ const FILL_MS = 950;
 const DRAIN_MS = 420;
 
 /**
- * Starting a call with Rita: a black circle with the Uzyra mark that has to be held. While it is
+ * Starting a call with Uzyra: a black circle with the Uzyra mark that has to be held. While it is
  * held a white disc grows from its centre out to the edge (the mark turns black as the white passes
  * it) and a soft tone rises with it; letting go early shrinks the disc back, the tone falls, and
  * nothing happens, so a call never starts by accident. Full, it plays a small chord, calls `onStart`

@@ -1,12 +1,12 @@
 // How a lesson item is shown to the learner and how an answer is checked. Checking is plain code,
-// never a model: the server decides right or wrong, and Rita only says what it decided.
+// never a model: the server decides right or wrong, and Uzyra only says what it decided.
 // The answer never leaves the server before the learner answers: the public item has the options
 // and tiles in a shuffled order whose ids say nothing about the right order.
 import { GAP, normalizeAnswer, type LessonItem, type ItemTemplate } from "./rita-lesson-content.ts";
 
 export type PublicTile = { id: string; text: string };
 
-/** What the page and Rita may see of an item before it is answered. */
+/** What the page and Uzyra may see of an item before it is answered. */
 export type PublicItem = {
   id: string;
   template: ItemTemplate;

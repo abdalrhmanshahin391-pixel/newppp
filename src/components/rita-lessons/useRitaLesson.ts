@@ -11,7 +11,7 @@ import type { LessonTurn, ObjectiveState } from "@/lib/rita-curriculum";
 export type LessonResult = { score: number; stars: number };
 
 /**
- * Curriculum lesson state inside Rita Live. Evaluations run one at a time:
+ * Curriculum lesson state inside Uzyra Live. Evaluations run one at a time:
  * turns that arrive while a check is running are folded into the next check,
  * so the stored objectives are never overwritten by an older answer.
  * In preview mode (admins only, checked on the server) nothing is saved.

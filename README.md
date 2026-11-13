@@ -1,4 +1,4 @@
-# RitaJet
+# Uzyra
 
 This is an old project I built can you rebuild it to me
 

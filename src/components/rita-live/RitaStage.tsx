@@ -9,7 +9,7 @@ const moodCopy: Record<RitaMood, string> = {
   ready: "Ready for your lesson",
   listening: "I’m listening…",
   thinking: "Let me think…",
-  talking: "Rita is speaking",
+  talking: "Uzyra is speaking",
   laughing: "That was excellent",
 };
 
@@ -73,7 +73,7 @@ export function RitaStage({
   return (
     <aside className="relative isolate flex h-full min-h-0 flex-col overflow-hidden bg-black text-white">
       <header className="relative z-20 flex items-center justify-between px-5 py-5 md:px-8 md:py-7">
-        <span className="text-sm font-semibold tracking-[-.02em] text-white/85">Rita</span>
+        <span className="text-sm font-semibold tracking-[-.02em] text-white/85">Uzyra</span>
         <span className="inline-flex items-center gap-2 text-xs font-medium text-white/50">
           <span
             className={`h-1.5 w-1.5 rounded-full transition-colors duration-300 ${active ? "bg-white" : "bg-white/25"}`}
@@ -86,7 +86,7 @@ export function RitaStage({
         <RitaAvatar
           levelsRef={levels}
           mode={orbModeFor(active, mood)}
-          label={active ? moodCopy[mood] : "Rita, your language tutor"}
+          label={active ? moodCopy[mood] : "Uzyra, your language tutor"}
           className="h-[min(72vh,760px)] max-w-full"
         />
 
@@ -101,7 +101,7 @@ export function RitaStage({
                 value={accentPreference}
                 onChange={(event) => onAccentChange(event.target.value)}
                 className="mt-1 block max-w-48 rounded-full border border-white/12 bg-white/[.04] px-3 py-1.5 text-xs font-semibold normal-case tracking-normal text-white/80 outline-none"
-                aria-label="Rita dialect"
+                aria-label="Uzyra dialect"
               >
                 {ACCENTS.map(([value, label]) => (
                   <option key={value || "automatic"} value={value} className="bg-black">

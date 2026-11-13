@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 const TRUST = [
   { icon: Layers, tone: "#f4f4f8", ink: "#1d5fd0", text: "Flashcards you build once and study forever" },
-  { icon: FileText, tone: "#ffe6a3", ink: "#8a5200", text: "PDF and photo summaries in Rita's colours" },
+  { icon: FileText, tone: "#ffe6a3", ink: "#8a5200", text: "PDF and photo summaries in Uzyra's colours" },
   { icon: ListChecks, tone: "#f4f4f8", ink: "#1a4ba8", text: "A to-do board that keeps the semester calm" },
 ];
 

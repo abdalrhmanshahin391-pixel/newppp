@@ -1,4 +1,4 @@
-"""Deterministic language and teaching state for one Rita voice lesson."""
+"""Deterministic language and teaching state for one Uzyra voice lesson."""
 
 from __future__ import annotations
 
@@ -27,9 +27,9 @@ class LanguageSource(StrEnum):
     #: the learner ordered it in the conversation ("احكي معي بالإنجليزي")
     EXPLICIT = "explicit"
     STABLE_AUTO = "stable-auto"
-    #: nothing chosen yet; Rita follows the language the learner speaks
+    #: nothing chosen yet; Uzyra follows the language the learner speaks
     PROFILE = "profile"
-    #: chosen on the website ("Rita explains in"); only an order or a new choice changes it
+    #: chosen on the website ("Uzyra explains in"); only an order or a new choice changes it
     SITE = "site"
 
 
@@ -43,7 +43,7 @@ _GERMAN_MARKERS = re.compile(
 )
 # Thinking sounds are not words of any language: "Äh. You are so confused" is English.
 _THINKING_SOUNDS = re.compile(r"\b(?:äh+m?|ähm|uh+m?|hmm+)\b", re.IGNORECASE)
-# What the learner asked Rita to do, kept across short follow-ups ("كمّل", "مرة ثانية") so that
+# What the learner asked Uzyra to do, kept across short follow-ups ("كمّل", "مرة ثانية") so that
 # "continue" after "فصّلي كل كلمة" continues the breakdown instead of opening a new topic.
 _TASK_REQUESTS = (
     (
@@ -109,18 +109,18 @@ class RitaSessionState:
     learning_count: int | None = None
     # The learner asked how to say something; the reply stays in their own language.
     asked_how_to_say: bool = False
-    # Rita has already spoken (or been greeted by the scripted hello).
+    # Uzyra has already spoken (or been greeted by the scripted hello).
     assistant_turns: int = 0
     greeted: bool = False
     # The Arabic dialect of the learner's profile, restored when the site choice goes back to automatic.
     site_dialect: str = ""
-    # The reply language changed since Rita last answered (a live site choice or an order): she says
+    # The reply language changed since Uzyra last answered (a live site choice or an order): she says
     # so in one short sentence, in the new language.
     language_changed: bool = False
     _change_pending: bool = False
     # Interpretations explicitly rejected by the learner. Keep this tiny and bounded.
     rejected_interpretations: list[str] = field(default_factory=list)
-    # The request Rita is working on and the phrase she last quoted (for "كمّل", "مرة ثانية").
+    # The request Uzyra is working on and the phrase she last quoted (for "كمّل", "مرة ثانية").
     current_task: str = ""
     current_phrase: str = ""
 
@@ -132,9 +132,9 @@ class RitaSessionState:
             self.consecutive_evidence = 2
 
     def set_site_language(self, value: object) -> bool:
-        """The learner changed "Rita explains in" on the website, possibly mid-conversation.
+        """The learner changed "Uzyra explains in" on the website, possibly mid-conversation.
 
-        It replaces whatever the conversation had set, takes effect from Rita's next answer, and
+        It replaces whatever the conversation had set, takes effect from Uzyra's next answer, and
         asks her to say so once. "automatic" gives the choice back to the language the learner speaks.
         Returns False for a value the worker does not know.
         """
@@ -343,7 +343,7 @@ class RitaSessionState:
         return ""
 
     def turn_note(self, *, dialogue: bool = False) -> str:
-        """The response type as a plain sentence, for types that change how Rita should answer.
+        """The response type as a plain sentence, for types that change how Uzyra should answer.
 
         Empty when the dialogue directive already says it (router on), so the model never reads
         the same instruction twice.
@@ -379,7 +379,7 @@ class RitaSessionState:
         return ""
 
     def reply_language(self) -> str | None:
-        """The language Rita writes explanations in this turn, or None when it is not known yet."""
+        """The language Uzyra writes explanations in this turn, or None when it is not known yet."""
 
         if self.active_language in LANGUAGE_NAMES:
             return self.active_language

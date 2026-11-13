@@ -31,13 +31,13 @@ const speech =
     return inPhrase ? 0.12 + 0.3 * Math.max(0, Math.sin(t * 2 * Math.PI * 4)) : 0;
   };
 
-test("the mouth stays closed when Rita is not speaking", () => {
+test("the mouth stays closed when Uzyra is not speaking", () => {
   const d = new AvatarDynamics(3);
   const pose = run(d, 3, "listening", 0.5);
   assert.ok(pose.mouth.open < 0.02, `open was ${pose.mouth.open}`);
 });
 
-test("the mouth opens with Rita's voice and closes again in a pause", () => {
+test("the mouth opens with Uzyra's voice and closes again in a pause", () => {
   const d = new AvatarDynamics(3);
   let maxOpen = 0;
   run(d, 2, "speaking", speech(10, 0), false, (p) => (maxOpen = Math.max(maxOpen, p.mouth.open)));

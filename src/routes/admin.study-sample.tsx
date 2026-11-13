@@ -20,7 +20,7 @@ export const Route = createFileRoute("/admin/study-sample")({
 });
 
 /**
- * The admin's way in to the study page (the guide on the right, Rita on the left): it makes sure the
+ * The admin's way in to the study page (the guide on the right, Uzyra on the left): it makes sure the
  * hidden practice lesson exists, then opens it as an admin preview, under the lesson intro. "Another guide" switches to a
  * different hand-written sample. Nothing is saved for learners and the AI is never called.
  */

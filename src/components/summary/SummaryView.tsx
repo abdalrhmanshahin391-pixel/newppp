@@ -10,7 +10,7 @@ type Props = {
   createdAt?: string;
 };
 
-/** Rita sheet palette — cream paper, near-black ink, green + pastel accents. */
+/** Uzyra sheet palette — cream paper, near-black ink, green + pastel accents. */
 const PAPER = "#ffffff";
 const CREAM = "#f4f4f8";
 const INK = "#121117";
@@ -20,7 +20,7 @@ const LINE = "#ffd266";
 const GREEN = "#1d5fd0";
 
 /**
- * Multi-page A4-style summary in the Rita look: cream paper, dark ink and
+ * Multi-page A4-style summary in the Uzyra look: cream paper, dark ink and
  * pastel accents only on rules, chips and headers so text always stays legible.
  */
 export function SummaryView({ content, siteName, tagline, authorName, createdAt }: Props) {
