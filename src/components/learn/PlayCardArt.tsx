@@ -241,6 +241,7 @@ export function WordcraftCardArt() {
                 <Mark x={x + 14} y={y + 5} h={34} fill="#2b73c7" />
               ) : letter ? (
                 <text
+                  direction="ltr"
                   x={x + 28}
                   y={y + 31}
                   textAnchor="middle"
@@ -297,6 +298,7 @@ export function SummaryCardArt() {
       <rect x={84} y={60} width={60} height={30} rx={10} fill="#c9343a" />
       <rect x={84} y={56} width={60} height={30} rx={10} fill="#ff5a5f" />
       <text
+        direction="ltr"
         x={114}
         y={77}
         textAnchor="middle"
@@ -328,6 +330,7 @@ export function AllInOneCardArt() {
       <Card x={198} y={10} w={70} h={86} fill="#ffd23f" lip="#e3b800" tilt={16}>
         <circle cx={233} cy={42} r={16} fill="#fff" opacity={0.8} />
         <text
+          direction="ltr"
           x={233}
           y={49}
           textAnchor="middle"
@@ -395,6 +398,7 @@ export function QuestionBankCardArt() {
       <circle cx={170} cy={22} r={18} fill="#e3b800" />
       <circle cx={170} cy={18} r={18} fill="#ffd23f" />
       <text
+        direction="ltr"
         x={170}
         y={26}
         textAnchor="middle"
@@ -435,6 +439,7 @@ export function LectureCardArt() {
       <rect x={178} y={100} width={40} height={10} rx={5} fill="#ffd23f" />
       <Card x={232} y={92} w={68} h={74} fill="#ffd23f" lip="#e3b800" tilt={10}>
         <text
+          direction="ltr"
           x={266}
           y={124}
           textAnchor="middle"
@@ -447,6 +452,235 @@ export function LectureCardArt() {
         </text>
         <rect x={246} y={138} width={40} height={7} rx={3.5} fill="#fff" opacity={0.85} />
       </Card>
+    </svg>
+  );
+}
+
+/** To-do list: a clipboard with the mark at the top, two tasks ticked and one to go, a pencil. */
+export function TodoCardArt() {
+  const row = (y: number, done: boolean, w: number) => (
+    <g key={y}>
+      {done ? (
+        <>
+          <rect x={150} y={y} width={22} height={22} rx={7} fill="#62d27e" />
+          <path
+            d={`M155 ${y + 11}l4 4 8-8`}
+            fill="none"
+            stroke="#fff"
+            strokeWidth={3.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </>
+      ) : (
+        <rect
+          x={151.5}
+          y={y + 1.5}
+          width={19}
+          height={19}
+          rx={6}
+          fill="#fff"
+          stroke="#c9d3e4"
+          strokeWidth={3}
+        />
+      )}
+      <rect x={180} y={y + 7} width={w} height={8} rx={4} fill={done ? "#c9d3e4" : "#e3ebf7"} />
+    </g>
+  );
+  return (
+    <svg
+      viewBox="70 0 220 240"
+      preserveAspectRatio="xMidYMax meet"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <Shadow />
+      <rect x={124} y={16} width={136} height={170} rx={16} fill="#e3b800" />
+      <rect x={124} y={10} width={136} height={170} rx={16} fill="#ffd23f" />
+      <rect x={136} y={28} width={112} height={142} rx={10} fill="#fff" />
+      <rect x={168} y={2} width={48} height={20} rx={8} fill="#d4e3f7" />
+      <Mark x={177} y={34} h={40} fill="#2b73c7" />
+      {row(86, true, 52)}
+      {row(114, true, 40)}
+      {row(142, false, 48)}
+      <g transform="rotate(24 112 100)">
+        <rect x={102} y={44} width={18} height={96} rx={4} fill="#3fae5c" />
+        <rect x={99} y={44} width={18} height={96} rx={4} fill="#62d27e" />
+        <rect x={99} y={36} width={18} height={14} rx={6} fill="#ff6b8a" />
+        <path d="M99 140h18l-9 18Z" fill="#ffe7b0" />
+        <path d="M105 152h6l-3 6Z" fill="#1d1640" />
+      </g>
+    </svg>
+  );
+}
+
+/** Exam schedule: a calendar page with the mark on its band, one day circled, and an A+. */
+export function ExamsCardArt() {
+  const days = [];
+  for (let j = 0; j < 3; j += 1)
+    for (let i = 0; i < 4; i += 1)
+      days.push(
+        <rect
+          key={`${i}-${j}`}
+          x={112 + i * 32}
+          y={86 + j * 26}
+          width={22}
+          height={17}
+          rx={5}
+          fill={i === 2 && j === 1 ? "#ffe1e2" : "#e3ebf7"}
+        />,
+      );
+  return (
+    <svg
+      viewBox="62 0 236 240"
+      preserveAspectRatio="xMidYMax meet"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <Shadow />
+      <rect x={96} y={20} width={160} height={150} rx={18} fill="#d4e3f7" />
+      <rect x={96} y={14} width={160} height={150} rx={18} fill="#fff" />
+      <path d="M114 14H238a18 18 0 0 1 18 18V66H96V32a18 18 0 0 1 18-18Z" fill="#ff5a5f" />
+      <rect x={124} y={2} width={12} height={26} rx={6} fill="#d4e3f7" />
+      <rect x={216} y={2} width={12} height={26} rx={6} fill="#d4e3f7" />
+      <Mark x={163} y={22} h={38} fill="#fff" />
+      {days}
+      <circle cx={187} cy={120} r={18} fill="none" stroke="#ff5a5f" strokeWidth={4.5} />
+      <circle cx={262} cy={58} r={26} fill="#e3b800" />
+      <circle cx={262} cy={53} r={26} fill="#ffd23f" />
+      <text
+        direction="ltr"
+        x={262}
+        y={61}
+        textAnchor="middle"
+        fontFamily={LETTER_FONT}
+        fontSize={21}
+        fontWeight={800}
+        fill="#7a3d00"
+      >
+        A+
+      </text>
+    </svg>
+  );
+}
+
+/** Shared flashcards: three cards passed around, the mark on the front one, a share arrow above. */
+export function SharedCardArt() {
+  return (
+    <svg
+      viewBox="40 0 280 240"
+      preserveAspectRatio="xMidYMax meet"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <Shadow />
+      <Card x={86} y={50} w={88} h={118} fill="#62d27e" lip="#3fae5c" tilt={-16}>
+        <rect x={100} y={70} width={44} height={8} rx={4} fill="#fff" opacity={0.75} />
+      </Card>
+      <Card x={186} y={50} w={88} h={118} fill="#ffd23f" lip="#e3b800" tilt={16}>
+        <rect x={200} y={70} width={44} height={8} rx={4} fill="#fff" opacity={0.8} />
+      </Card>
+      <Card x={134} y={40} w={92} h={128} fill="#fff" lip="#d4e3f7">
+        <Mark x={151} y={56} h={78} fill="#2b73c7" />
+      </Card>
+      <path
+        d="M100 40C130 2 230 2 260 36"
+        fill="none"
+        stroke="#ffd23f"
+        strokeWidth={9}
+        strokeLinecap="round"
+      />
+      <path d="M246 36L270 48L272 22Z" fill="#ffd23f" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Classrooms and groups: a shared folder with the mark, its cards peeking out, and a members badge. */
+export function SpacesCardArt() {
+  return (
+    <svg
+      viewBox="50 0 260 240"
+      preserveAspectRatio="xMidYMax meet"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <Shadow />
+      <Card x={112} y={12} w={76} h={96} fill="#62d27e" lip="#3fae5c" tilt={-10} />
+      <Card x={176} y={12} w={76} h={96} fill="#fff" lip="#d4e3f7" tilt={8}>
+        <rect x={190} y={32} width={44} height={8} rx={4} fill="#d4e3f7" />
+        <rect x={190} y={48} width={32} height={8} rx={4} fill="#d4e3f7" />
+      </Card>
+      <path d="M96 58h56l12 14h104a12 12 0 0 1 12 12v84H96Z" fill="#e3b800" />
+      <path d="M96 72h184v90a12 12 0 0 1-12 12H108a12 12 0 0 1-12-12Z" fill="#ffd23f" />
+      <Mark x={166} y={84} h={68} fill="#fff" />
+      <circle cx={270} cy={64} r={24} fill="#3fae5c" />
+      <circle cx={270} cy={59} r={24} fill="#62d27e" />
+      {[-9, 0, 9].map((dx) => (
+        <circle key={dx} cx={270 + dx} cy={59} r={3.5} fill="#fff" />
+      ))}
+    </svg>
+  );
+}
+
+/** German Lab: a card saying "Hallo!" with the mark, a "Danke" bubble, and the flag's colours. */
+export function GermanCardArt() {
+  return (
+    <svg
+      viewBox="40 0 280 240"
+      preserveAspectRatio="xMidYMax meet"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <Shadow />
+      <Card x={92} y={14} w={160} h={128} fill="#fff" lip="#d4e3f7">
+        <Mark x={112} y={28} h={52} fill="#2b73c7" />
+        <text
+          direction="ltr"
+          x={172}
+          y={116}
+          textAnchor="middle"
+          fontFamily={LETTER_FONT}
+          fontSize={34}
+          fontWeight={800}
+          fill="#1d1640"
+          lang="de"
+        >
+          Hallo!
+        </text>
+      </Card>
+      {[
+        ["#141416", 0],
+        ["#e0262b", 14],
+        ["#ffce00", 28],
+      ].map(([fill, dy]) => (
+        <rect
+          key={fill as string}
+          x={212}
+          y={30 + (dy as number)}
+          width={56}
+          height={12}
+          rx={6}
+          fill={fill as string}
+        />
+      ))}
+      <g>
+        <rect x={232} y={98} width={84} height={40} rx={20} fill="#e3b800" />
+        <rect x={232} y={92} width={84} height={40} rx={20} fill="#ffd23f" />
+        <path d="M250 128L244 148L268 130Z" fill="#ffd23f" />
+        <text
+          direction="ltr"
+          x={274}
+          y={118}
+          textAnchor="middle"
+          fontFamily={LETTER_FONT}
+          fontSize={17}
+          fontWeight={800}
+          fill="#7a3d00"
+          lang="de"
+        >
+          Danke
+        </text>
+      </g>
     </svg>
   );
 }

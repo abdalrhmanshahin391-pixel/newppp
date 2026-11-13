@@ -16,7 +16,7 @@ import {
   renameMyBook,
   retryMyBook,
 } from "@/lib/user-books-data";
-import { myBookCover } from "./my-book-pdf";
+import { coverFromFile, myBookCover } from "./my-book-pdf";
 import "./my-books.css";
 
 type Lang = "en" | "ar";
@@ -67,6 +67,8 @@ export function MyBooksShelf({ ui, userId }: { ui: Lang; userId: string }) {
     setSending(null);
     retryFor.current = null;
     if (!result.ok && result.message) setMessage(result.message);
+    // The cover is drawn from the file still on this device, so it shows at once.
+    if (result.ok) void coverFromFile(result.book, file);
     await refresh();
   };
 

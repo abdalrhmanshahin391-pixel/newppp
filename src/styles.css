@@ -6001,9 +6001,7 @@ html.rita-app,
   --uz-ink: var(--pp-ink, #121117);
   --uz-quiet: var(--pp-muted, #6a697c);
   --uz-card: var(--pp-grey, #f4f4f8);
-  --uz-tile-bg: #000;
   --uz-paper: #f2f2f5;
-  --uz-on-tile-muted: #b9b9c2;
   --uz-out: var(--pp-ease, cubic-bezier(0.22, 1, 0.36, 1));
   background: #fff;
   color: var(--uz-ink);
@@ -6076,7 +6074,7 @@ html.rita-app,
 .uz-rail-item:active {
   transform: scale(0.98);
 }
-.uz-learn :is(.uz-rail-item, .uz-tile, .uz-play):focus-visible {
+.uz-learn :is(.uz-rail-item, .uz-play):focus-visible {
   outline: 2px solid var(--uz-ink);
   outline-offset: 4px;
 }
@@ -6251,15 +6249,6 @@ html.rita-app,
     transform: none;
   }
 }
-.uz-tile {
-  position: relative;
-  overflow: hidden;
-  color: var(--uz-paper);
-  background: var(--uz-tile-bg);
-  text-decoration: none;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
 .uz-tiles {
   display: grid;
   gap: 16px;
@@ -6269,95 +6258,6 @@ html.rita-app,
 }
 .uz-tiles > li {
   min-width: 0;
-}
-.uz-tile {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  height: 100%;
-  padding: 14px 14px 20px;
-  border-radius: 22px;
-}
-.uz-tile-img {
-  position: relative;
-  display: block;
-  overflow: hidden;
-  aspect-ratio: 2 / 1;
-  max-height: 180px;
-  border-radius: 14px;
-  background: var(--uz-tile-bg);
-}
-.uz-tile[data-lead] .uz-tile-img {
-  aspect-ratio: 21 / 9;
-  max-height: 200px;
-}
-.uz-tile-img img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.uz-tile-text {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-  padding: 0 8px;
-}
-.uz-tile-name {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 10px;
-  color: var(--uz-paper);
-  font-size: 16px;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  overflow-wrap: anywhere;
-}
-.uz-tile[data-lead] .uz-tile-name {
-  font-size: 20px;
-}
-.uz-tile-tag {
-  padding: 2px 8px;
-  border: 1px solid var(--uz-on-tile-muted);
-  border-radius: 999px;
-  color: var(--uz-paper);
-  font-size: 11.5px;
-  font-weight: 600;
-}
-.uz-tile-line {
-  max-width: 46ch;
-  color: var(--uz-on-tile-muted);
-  font-size: 14px;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-}
-.uz-tile-go {
-  position: absolute;
-  inset-inline-end: 18px;
-  bottom: 18px;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  background: var(--uz-paper);
-  color: var(--uz-ink);
-}
-.uz-tile .uz-tile-text {
-  padding-inline-end: 46px;
-}
-.uz-tile {
-  transition: transform 120ms var(--uz-out);
-}
-.uz-tile:active {
-  transform: scale(0.995);
-}
-.uz-tile-go svg {
-  transition: transform 150ms var(--uz-out);
 }
 #learn-panel-together .uz-tiles {
   max-width: 760px;
@@ -6407,21 +6307,12 @@ html.rita-app,
     background: var(--uz-card);
     color: var(--uz-ink);
   }
-  .uz-tile:hover {
-    transform: translateY(-2px);
-  }
-  .uz-tile:hover .uz-tile-go svg {
-    transform: translateX(3px);
-  }
-  [dir="rtl"] .uz-tile:hover .uz-tile-go svg {
-    transform: translateX(-3px) rotate(180deg);
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .uz-panel:not([hidden]) {
     animation: none;
   }
-  .uz-learn :is(.uz-tile, .uz-rail-item, .uz-tile-go svg) {
+  .uz-learn :is(.uz-rail-item) {
     transition: none;
   }
 }

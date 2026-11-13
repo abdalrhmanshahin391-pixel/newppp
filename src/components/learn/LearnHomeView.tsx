@@ -1,16 +1,19 @@
 import { memo, useMemo, useRef, type ComponentType, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
-import { ImageSlot } from "@/components/learn/ImageSlot";
 import {
   AllInOneCardArt,
+  ExamsCardArt,
   FlashcardsCardArt,
+  GermanCardArt,
   LectureCardArt,
   LessonsCardArt,
   MemoryCardArt,
   QuestionBankCardArt,
+  SharedCardArt,
+  SpacesCardArt,
   SummaryCardArt,
   TalkCardArt,
+  TodoCardArt,
 } from "./PlayCardArt";
 import { useLearnSection } from "./useLearnSection";
 import { TOOLS, type ToolDef } from "@/lib/site-tools";
@@ -20,7 +23,6 @@ export type Bi = { en: string; ar: string };
 
 type Row = {
   key: string;
-  slot: string;
   name: Bi;
   line: Bi;
   to: string;
@@ -37,7 +39,6 @@ const SECTION_IDS = ["rita", "study", "plan", "together", "german"] as const;
 function rowOf(tool: ToolDef): Row {
   return {
     key: tool.key,
-    slot: tool.key,
     name: tool.name,
     line: tool.line,
     to: tool.to,
@@ -57,7 +58,6 @@ function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): Se
       rows: [
         {
           key: "rita-conversations",
-          slot: "rita-conversations",
           name: { en: "Free conversation", ar: "محادثة حرة" },
           line: {
             en: "Talk about anything. Uzyra answers out loud and corrects you gently.",
@@ -67,7 +67,6 @@ function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): Se
         },
         {
           key: "rita-lessons",
-          slot: "rita-lessons",
           name: { en: "Lessons", ar: "الدروس" },
           line: {
             en: "Short lessons with clear goals. Earn stars as you reach them.",
@@ -154,6 +153,9 @@ type Play = { Art: ComponentType; go: Bi; line?: Bi };
  * Destinations already redesigned as game cards (two or three at a time). The rest keep the
  * monochrome tile until their turn.
  */
+/** A destination added later, before its own drawing is made. */
+const FALLBACK: Play = { Art: FlashcardsCardArt, go: { en: "Open", ar: "افتح" } };
+
 const PLAY: Record<string, Play> = {
   "rita-conversations": {
     Art: TalkCardArt,
@@ -170,6 +172,11 @@ const PLAY: Record<string, Play> = {
   "all-in-one": { Art: AllInOneCardArt, go: { en: "Start", ar: "ابدأ" } },
   "question-bank": { Art: QuestionBankCardArt, go: { en: "Practise", ar: "تدرّب" } },
   "lecture-lab": { Art: LectureCardArt, go: { en: "Start", ar: "ابدأ" } },
+  todo: { Art: TodoCardArt, go: { en: "Plan", ar: "خطّط" } },
+  exams: { Art: ExamsCardArt, go: { en: "Open", ar: "افتح" } },
+  "shared-decks": { Art: SharedCardArt, go: { en: "Browse", ar: "تصفّح" } },
+  spaces: { Art: SpacesCardArt, go: { en: "Open", ar: "افتح" } },
+  "german-lab": { Art: GermanCardArt, go: { en: "Play", ar: "العب" } },
 };
 
 /**
@@ -214,33 +221,9 @@ function PlayCard({
   );
 }
 
-/** One destination: its picture on black, its name and one line. The first of a section is big. */
+/** One destination, as its game card (the first of a section is wider). */
 function ToolTile({ row, lang, lead }: { row: Row; lang: Lang; lead: boolean }) {
-  const play = PLAY[row.key];
-  if (play) return <PlayCard row={row} play={play} lang={lang} lead={lead} />;
-  return (
-    <Link
-      to={row.to}
-      params={row.params as never}
-      search={row.search as never}
-      data-learn-row={row.key}
-      data-lead={lead || undefined}
-      className="uz-tile"
-    >
-      <ImageSlot slot={row.slot} lang={lang} priority={lead} />
-      <span className="uz-tile-text">
-        <span className="uz-tile-name">
-          {row.name[lang]}
-          {row.ai ? <span className="uz-tile-tag">AI</span> : null}
-          {row.chip ? <span className="uz-tile-tag">{row.chip[lang]}</span> : null}
-        </span>
-        <span className="uz-tile-line">{row.line[lang]}</span>
-      </span>
-      <span className="uz-tile-go" aria-hidden="true">
-        <ArrowRight size={18} className="rtl:rotate-180" />
-      </span>
-    </Link>
-  );
+  return <PlayCard row={row} play={PLAY[row.key] ?? FALLBACK} lang={lang} lead={lead} />;
 }
 
 /** Uzyra's two cards: free talk (the section's heading) and lessons. */

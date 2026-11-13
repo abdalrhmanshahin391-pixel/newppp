@@ -81,7 +81,6 @@ on:
       - "src/components/wordcraft/**"
       - "src/routes/wordcraft.tsx"
       - "src/components/learn/**"
-      - "src/lib/learn-images.ts"
       - ".github/workflows/rita-v3-frontend-check.yml"
   workflow_dispatch:
 
