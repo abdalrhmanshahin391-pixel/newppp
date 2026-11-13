@@ -472,6 +472,25 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   (Standard Ebooks); «The Book of Five Rings» is a draft with a drawn cover until the admin uploads
   a file they have the right to use. Covers are 2:3 and show their own title band: no overlay is
   added by the page.
+- **Labels are black and white:** the Uzyra mark replaces every category and shelf icon; the book sheet's
+  category label is a black pill with the white mark and name; shelf heads show the white mark on a small black
+  square; category buttons have black dots; shelf boards and sheet backgrounds lose the category tint. Covers
+  without a picture keep their category's cloth colour.
+- **Your books («كتبك الخاصة»)** (signed in only; migration `20261118120000_books_user_books.sql`): the first shelf
+  of «اكتشف», drawn like any shelf (black mark, title, «1 من 2», a grey «إلك إنت بس» pill). Two books at most,
+  PDF, 50 MB each; the database enforces it (slots 1 and 2, the file only at `<user>/<book>/book.pdf` in the
+  private `user-books` bucket, 10 adds a day). Covers are page 1 drawn in the browser and kept on the device.
+  - Adding: a dashed book-shaped card «+ ضيف كتابك» opens the file picker; the book is added at once with its
+    name from the PDF or the file, and the card shows the share sent and a stop button. A failed upload leaves
+    the book «ما كمل الرفع» (tap it to choose the file again, or delete it).
+  - Two books: the card turns into «الحد كتابين · احذف واحد منهم لتضيف كتاب جديد»; tapping it makes both bins
+    pulse and says so in one line.
+  - Deleting: a 36px bin (44px target) on each cover, and «احذف الكتاب» in the book's window; one confirmation
+    («متأكد بدك تحذف الكتاب؟» with the name; «احذف» red, «لا» focused). The file goes first, then the row.
+  - The book's window: the cover, «كتابك · خاص», pages and size, «اقرأ» (blue), «غيّر الاسم», «احذف الكتاب».
+  - Reading (`/books/mine/<book>`): a white top bar (back, name, «n من N»), one page fitted to the screen on
+    grey, turned by swipe, a tap on the page's outer thirds, the arrow keys or the bottom slider; the page is
+    kept on the device. No search or Rita tools in your own books yet.
 - **Cards** show a small gold «★ 4.6» under the author once a book has three ratings.
 - **«مفضلتي»** (signed in): a chip with a heart and the count in the ways-in row; its list is a
   normal paged list, and an empty one explains how to add books.
