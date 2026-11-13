@@ -72,6 +72,11 @@ on:
       - "scripts/build-starter-books-sql.*"
       - "scripts/test-books-db.sh"
       - "scripts/test-books-public-read-db.sh"
+      - "src/lib/pairs/**"
+      - "src/components/pairs/**"
+      - "src/routes/study.pairs.tsx"
+      - "src/components/learn/**"
+      - "src/lib/learn-images.ts"
       - ".github/workflows/rita-v3-frontend-check.yml"
   workflow_dispatch:
 
@@ -141,6 +146,7 @@ jobs:
           node --test src/lib/rita-golden.test.ts
           node --test src/lib/rita-replay.test.ts
           node --test src/routes/api/rita-v3/session/start.source.test.mjs
+          node --test src/lib/pairs/game.test.ts
           bunx tsc --noEmit
       - name: Study page selection in a real browser
         run: |

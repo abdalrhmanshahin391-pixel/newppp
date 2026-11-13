@@ -371,6 +371,36 @@ One main action per panel, hierarchy by weight instead of by frame:
   text follows the device ("Tap the card to flip, swipe to move" on touch; Space and arrows with a mouse), 56px controls.
 - Every control is at least 44px, every text at least 12px and 4.5:1 (muted text is `#4b4a5c`, not the old light greys).
 
+## Pairs (`/study/pairs`)
+
+A matching game made from the learner's own flashcards (`src/components/pairs`, rules in `src/lib/pairs/game.ts`).
+
+- **Three steps:** the big card (name, one line, Rita with two puzzle pieces, a white "Play" button with a lip that sits
+  over Rita), then "Choose what to play" (the flashcards `PickerBoard`, read-only, with a sticky bar: how many
+  cards are ready and "Start", which needs 5 cards), then the game, then the result.
+- **Game palette (a documented exception, like Wordcraft's word colours):** the big card and the result card use a
+  blue gradient (`#4a9df0` to `#2a5e98`); the clock is green `#6dcf3f`, orange below 30 %, red below 10 %; the
+  score is a gold coin; right is green `#58c43a` on `#e7f8dd`, wrong is red `#e5484d` on `#fde9e9`. "Picked"
+  uses the site accent. Colour is never the only sign: right cards leave, wrong ones shake, and a live region says
+  which.
+- **Board:** two columns, five rows; card fronts in the first column, backs in the second, each column shuffled.
+  Cards are white with a 2px `#e6eaf0` border, a 4px bottom lip and 16px corners, centred text clamped to three
+  lines; one text size for the whole board (set by its longest card). Card height follows the screen so the board
+  fits without scrolling on phones and iPads.
+- **Top bar:** back, a progress track (gold fill, from the reading side), the coin and the score, sound on/off.
+- **Clock:** a bar down the **left** edge of the screen (in Arabic too) that empties from the top, with the seconds
+  in a small pill beside its top. 60 s to start, +2 s for a right match, -2 s for a wrong one, at most 90 s.
+  It pauses while the tab is hidden.
+- **Scoring:** 10 a match, 15 from three in a row, 20 from five in a row. Two cards with the same back are both
+  right. The best score is kept per device and language.
+- **Sounds** (Web Audio, mute button): a soft tap on pick, a bell that rises a semitone with each match in a row, a
+  low buzz for a wrong pair, a tick in each of the last five seconds, a falling three-note "time's up", a run for a
+  cleared board. Android vibrates lightly.
+- **Motion:** new cards scale in (260ms), right cards pop then leave (300ms), wrong cards shake (320ms), a coin flies
+  from the matched card to the score; the puzzle pieces slide in once. All off with reduced motion.
+- **Result:** the blue card with the score, "best on this device", right / wrong / best streak / accuracy, "Play
+  again" and "Change subjects"; under it, the cards that were missed, front = back.
+
 ## App pages (every page except the home design pages)
 
 Every page outside `/`, `/rita*` and `/learn*` was written with fixed warm colours. They take the

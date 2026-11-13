@@ -89,6 +89,7 @@ import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
 import { Route as StudyIndexRouteImport } from './routes/study.index'
 import { Route as StudyExamsRouteImport } from './routes/study.exams'
 import { Route as StudyMatchRouteImport } from './routes/study.match'
+import { Route as StudyPairsRouteImport } from './routes/study.pairs'
 import { Route as StudyPdfRouteImport } from './routes/study.pdf'
 import { Route as StudyProgressRouteImport } from './routes/study.progress'
 import { Route as StudySessionRouteImport } from './routes/study.session'
@@ -551,6 +552,11 @@ const StudyMatchRoute = StudyMatchRouteImport.update({
   path: '/match',
   getParentRoute: () => StudyRoute,
 } as any)
+const StudyPairsRoute = StudyPairsRouteImport.update({
+  id: '/pairs',
+  path: '/pairs',
+  getParentRoute: () => StudyRoute,
+} as any)
 const StudyPdfRoute = StudyPdfRouteImport.update({
   id: '/pdf',
   path: '/pdf',
@@ -927,6 +933,7 @@ export interface FileRoutesByFullPath {
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/study/exams': typeof StudyExamsRoute
   '/study/match': typeof StudyMatchRoute
+  '/study/pairs': typeof StudyPairsRoute
   '/study/pdf': typeof StudyPdfRoute
   '/study/progress': typeof StudyProgressRoute
   '/study/session': typeof StudySessionRoute
@@ -1064,6 +1071,7 @@ export interface FileRoutesByTo {
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/study/exams': typeof StudyExamsRoute
   '/study/match': typeof StudyMatchRoute
+  '/study/pairs': typeof StudyPairsRoute
   '/study/pdf': typeof StudyPdfRoute
   '/study/progress': typeof StudyProgressRoute
   '/study/session': typeof StudySessionRoute
@@ -1205,6 +1213,7 @@ export interface FileRoutesById {
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/study/exams': typeof StudyExamsRoute
   '/study/match': typeof StudyMatchRoute
+  '/study/pairs': typeof StudyPairsRoute
   '/study/pdf': typeof StudyPdfRoute
   '/study/progress': typeof StudyProgressRoute
   '/study/session': typeof StudySessionRoute
@@ -1348,6 +1357,7 @@ export interface FileRouteTypes {
     | '/spaces/$spaceId'
     | '/study/exams'
     | '/study/match'
+    | '/study/pairs'
     | '/study/pdf'
     | '/study/progress'
     | '/study/session'
@@ -1485,6 +1495,7 @@ export interface FileRouteTypes {
     | '/spaces/$spaceId'
     | '/study/exams'
     | '/study/match'
+    | '/study/pairs'
     | '/study/pdf'
     | '/study/progress'
     | '/study/session'
@@ -1625,6 +1636,7 @@ export interface FileRouteTypes {
     | '/spaces/$spaceId'
     | '/study/exams'
     | '/study/match'
+    | '/study/pairs'
     | '/study/pdf'
     | '/study/progress'
     | '/study/session'
@@ -2363,6 +2375,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudyMatchRouteImport
       parentRoute: typeof StudyRoute
     }
+    '/study/pairs': {
+      id: '/study/pairs'
+      path: '/pairs'
+      fullPath: '/study/pairs'
+      preLoaderRoute: typeof StudyPairsRouteImport
+      parentRoute: typeof StudyRoute
+    }
     '/study/pdf': {
       id: '/study/pdf'
       path: '/pdf'
@@ -2853,6 +2872,7 @@ const GermanRouteWithChildren =
 interface StudyRouteChildren {
   StudyExamsRoute: typeof StudyExamsRoute
   StudyMatchRoute: typeof StudyMatchRoute
+  StudyPairsRoute: typeof StudyPairsRoute
   StudyPdfRoute: typeof StudyPdfRoute
   StudyProgressRoute: typeof StudyProgressRoute
   StudySessionRoute: typeof StudySessionRoute
@@ -2870,6 +2890,7 @@ interface StudyRouteChildren {
 const StudyRouteChildren: StudyRouteChildren = {
   StudyExamsRoute: StudyExamsRoute,
   StudyMatchRoute: StudyMatchRoute,
+  StudyPairsRoute: StudyPairsRoute,
   StudyPdfRoute: StudyPdfRoute,
   StudyProgressRoute: StudyProgressRoute,
   StudySessionRoute: StudySessionRoute,

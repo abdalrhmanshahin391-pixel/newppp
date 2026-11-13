@@ -6,6 +6,7 @@ import flashcardsArt from "@/assets/mono-flashcards.webp";
 import germanArt from "@/assets/mono-german.webp";
 import lectureArt from "@/assets/mono-lecturelab.webp";
 import memoryArt from "@/assets/mono-memory.webp";
+import pairsArt from "@/assets/mono-pairs.webp";
 import qbankArt from "@/assets/mono-qbank.webp";
 import shareArt from "@/assets/mono-share.webp";
 import spacesArt from "@/assets/mono-spaces.webp";
@@ -22,6 +23,7 @@ export const LEARN_IMAGES: Record<string, string> = {
   "rita-lessons": ritaLessonsArt,
   flashcards: flashcardsArt,
   "memory-lab": memoryArt,
+  pairs: pairsArt,
   "pdf-summary": summaryArt,
   "all-in-one": allInOneArt,
   "question-bank": qbankArt,
