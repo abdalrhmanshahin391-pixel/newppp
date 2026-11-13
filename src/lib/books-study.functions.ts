@@ -25,7 +25,7 @@ import {
   type StudyCard,
   type StudyMcq,
 } from "@/lib/study/study-practice";
-import { bookSelectionKind, pageQuote } from "@/lib/books-reader";
+import { PAGE_LIMITS, bookSelectionKind, pageQuote } from "@/lib/books-reader";
 
 const NOT_APPLIED = /could not find|does not exist|schema cache|PGRST20[0-9]|42883|42P01/i;
 
@@ -38,6 +38,13 @@ const BookInput = z.object({
   page: z.number().int().min(1).max(5000),
   requestId: z.string().uuid(),
   selection: z.string().min(1).max(4000),
+  /**
+   * A reader's own private book (user_books): its pages are read on the device from the PDF, so
+   * the page's text comes with the request (the server checks the book is theirs and the
+   * selection is in that text).
+   */
+  own: z.boolean().optional(),
+  pageText: z.string().max(PAGE_LIMITS.text).optional(),
 });
 type BookData = z.infer<typeof BookInput>;
 
@@ -65,18 +72,37 @@ async function resolveBookRequest(
   data: BookData,
   action: StudyAction,
 ): Promise<{ quote: string; context: string } | { result: Failure }> {
-  const [{ data: page, error: pageError }, { data: book }] = await Promise.all([
-    context.supabase
-      .from("book_pages")
-      .select("text")
-      .eq("book_id", data.bookId)
-      .eq("page", data.page)
-      .maybeSingle(),
-    context.supabase.from("books").select("title, author").eq("id", data.bookId).maybeSingle(),
-  ]);
-  if (pageError || !page || !book)
-    return { result: { ok: false, code: "unavailable", message: "هاي الصفحة مش متاحة هلأ." } };
-  const found = pageQuote(data.selection, String(page.text ?? ""));
+  const unavailable = {
+    result: { ok: false, code: "unavailable", message: "هاي الصفحة مش متاحة هلأ." } as Failure,
+  };
+  let pageText: string;
+  let book: { title?: unknown; author?: unknown };
+  if (data.own) {
+    // Row level security returns the book only to its owner.
+    const { data: mine } = await context.supabase
+      .from("user_books")
+      .select("title, page_count, status")
+      .eq("id", data.bookId)
+      .maybeSingle();
+    if (!mine || mine.status !== "ready" || !data.pageText?.trim()) return unavailable;
+    if (mine.page_count && data.page > Number(mine.page_count)) return unavailable;
+    pageText = data.pageText;
+    book = { title: mine.title, author: null };
+  } else {
+    const [{ data: page, error: pageError }, { data: found }] = await Promise.all([
+      context.supabase
+        .from("book_pages")
+        .select("text")
+        .eq("book_id", data.bookId)
+        .eq("page", data.page)
+        .maybeSingle(),
+      context.supabase.from("books").select("title, author").eq("id", data.bookId).maybeSingle(),
+    ]);
+    if (pageError || !page || !found) return unavailable;
+    pageText = String(page.text ?? "");
+    book = found;
+  }
+  const found = pageQuote(data.selection, pageText);
   if (!found)
     return {
       result: {
@@ -93,18 +119,30 @@ async function resolveBookRequest(
   if (WRONG_KIND[action] && !availableActions(kind).includes(action))
     return { result: { ok: false, code: "selection", message: WRONG_KIND[action]! } };
 
-  const { data: quota, error } = await context.supabase.rpc("books_take_study_quota", {
-    p_request: data.requestId,
-    p_book: data.bookId,
-    p_page: data.page,
-    p_action: action,
-    p_group: ACTION_INFO[action].group ?? "explain",
-    p_selection_len: found.quote.length,
-  });
+  const { data: quota, error } = await context.supabase.rpc(
+    data.own ? "books_take_my_study_quota" : "books_take_study_quota",
+    {
+      p_request: data.requestId,
+      p_book: data.bookId,
+      p_page: data.page,
+      p_action: action,
+      p_group: ACTION_INFO[action].group ?? "explain",
+      p_selection_len: found.quote.length,
+    },
+  );
   if (error) {
-    // Before the migration is applied nothing is counted (and no page could be read either).
-    if (!NOT_APPLIED.test(`${error.code ?? ""} ${error.message ?? ""}`))
-      console.warn("Book study quota check failed", error.message);
+    const missing = NOT_APPLIED.test(`${error.code ?? ""} ${error.message ?? ""}`);
+    // A private book is only counted once its migration is applied; until then Uzyra says so
+    // (a library book before its migration has no pages to read either).
+    if (data.own && missing)
+      return {
+        result: {
+          ok: false,
+          code: "unavailable",
+          message: "يوزرا لسا مش مفعّلة على كتبك الخاصة. جرّب بعدين.",
+        },
+      };
+    if (!missing) console.warn("Book study quota check failed", error.message);
   } else if (quota && quota.ok === false) {
     if (quota.code === "rate_limited")
       return {

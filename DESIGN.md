@@ -594,9 +594,14 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   - Deleting: a 36px bin (44px target) on each cover, and «احذف الكتاب» in the book's window; one confirmation
     («متأكد بدك تحذف الكتاب؟» with the name; «احذف» red, «لا» focused). The file goes first, then the row.
   - The book's window: the cover, «كتابك · خاص», pages and size, «اقرأ» (blue), «غيّر الاسم», «احذف الكتاب».
-  - Reading (`/books/mine/<book>`): a white top bar (back, name, «n من N»), one page fitted to the screen on
-    grey, turned by swipe, a tap on the page's outer thirds, the arrow keys or the bottom slider; the page is
-    kept on the device. No search or Uzyra tools in your own books yet.
+  - Reading (`/books/mine/<book>`): the same full reader as a library book (Uzyra on the left, the page on
+    the right with the divider; two tabs on phones; slides, the circle, explain / cards / questions, the
+    contents from the PDF's outline, search, bookmarks). The pages are drawn on the device from the PDF
+    (`my-book-source.ts`: one page at a time, at the width the screen needs, the page on screen first);
+    bookmarks and the reading place stay on the device. Uzyra's answers send the page's text with the
+    request; the server checks the book is the reader's own and ready, and counts it in the same
+    allowance as library books (`books_take_my_study_quota`, migration
+    `20261120120000_books_my_book_study.sql`). Before that migration Uzyra says it is not active yet.
 - **Cards** show a small gold «★ 4.6» under the author once a book has three ratings.
 - **«مفضلتي»** (signed in): a chip with a heart and the count in the ways-in row; its list is a
   normal paged list, and an empty one explains how to add books.
