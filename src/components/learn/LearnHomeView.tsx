@@ -1,7 +1,8 @@
 import { memo, useMemo, useRef } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
-import { ImageSlot } from "@/components/learn/ImageSlot";
+import { Logo } from "./CardLogo";
+import { lookFor } from "./card-looks";
+import { TalkArt } from "./art/LearnArt";
 import { useLearnSection } from "./useLearnSection";
 import { TOOLS, type ToolDef } from "@/lib/site-tools";
 
@@ -10,7 +11,6 @@ export type Bi = { en: string; ar: string };
 
 type Row = {
   key: string;
-  slot: string;
   name: Bi;
   line: Bi;
   to: string;
@@ -27,7 +27,6 @@ const SECTION_IDS = ["rita", "study", "plan", "together", "german"] as const;
 function rowOf(tool: ToolDef): Row {
   return {
     key: tool.key,
-    slot: tool.key,
     name: tool.name,
     line: tool.line,
     to: tool.to,
@@ -47,7 +46,6 @@ function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): Se
       rows: [
         {
           key: "rita-conversations",
-          slot: "rita-conversations",
           name: { en: "Free conversation", ar: "محادثة حرة" },
           line: {
             en: "Talk about anything. Rita answers out loud and corrects you gently.",
@@ -57,7 +55,6 @@ function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): Se
         },
         {
           key: "rita-lessons",
-          slot: "rita-lessons",
           name: { en: "Lessons", ar: "الدروس" },
           line: {
             en: "Short lessons with clear goals. Earn stars as you reach them.",
@@ -138,8 +135,22 @@ function SideList({
   );
 }
 
-/** One destination: its picture on black, its name and one line. The first of a section is big. */
+function Pills({ row, lang }: { row: Row; lang: Lang }) {
+  if (!row.ai && !row.chip) return null;
+  return (
+    <span className="gc-pills">
+      {row.ai ? <span className="gc-pill">AI</span> : null}
+      {row.chip ? <span className="gc-pill">{row.chip[lang]}</span> : null}
+    </span>
+  );
+}
+
+/**
+ * One destination as a game card: its own gradient, its name drawn as a logo, one line, an
+ * illustration and a white button over the art. The first card of a section is wider.
+ */
 function ToolTile({ row, lang, lead }: { row: Row; lang: Lang; lead: boolean }) {
+  const look = lookFor(row.key, row.name);
   return (
     <Link
       to={row.to}
@@ -147,63 +158,62 @@ function ToolTile({ row, lang, lead }: { row: Row; lang: Lang; lead: boolean }) 
       search={row.search as never}
       data-learn-row={row.key}
       data-lead={lead || undefined}
-      className="uz-tile"
+      data-tone={look.tone}
+      className="gc"
     >
-      <ImageSlot slot={row.slot} lang={lang} priority={lead} />
-      <span className="uz-tile-text">
-        <span className="uz-tile-name">
-          {row.name[lang]}
-          {row.ai ? <span className="uz-tile-tag">AI</span> : null}
-          {row.chip ? <span className="uz-tile-tag">{row.chip[lang]}</span> : null}
-        </span>
-        <span className="uz-tile-line">{row.line[lang]}</span>
+      <span className="gc-head">
+        <span className="gc-sr">{row.name[lang]}</span>
+        <Logo look={look} lang={lang} />
+        <span className="gc-line">{row.line[lang]}</span>
+        <Pills row={row} lang={lang} />
       </span>
-      <span className="uz-tile-go" aria-hidden="true">
-        <ArrowRight size={18} className="rtl:rotate-180" />
+      <span className="gc-art" aria-hidden="true">
+        <look.Art />
       </span>
+      <span className="gc-btn">{look.go[lang]}</span>
     </Link>
   );
 }
 
 const PHRASES = [
-  { text: "Guten Morgen", lang: "de", spot: "uz-float-a" },
-  { text: "How do I say…?", lang: "en", spot: "uz-float-b" },
-  { text: "كيف أحكي؟", lang: "ar", spot: "uz-float-c" },
+  { text: "Guten Morgen", lang: "de", spot: "gc-float-a" },
+  { text: "How do I say…?", lang: "en", spot: "gc-float-b" },
+  { text: "كيف أحكي؟", lang: "ar", spot: "gc-float-c" },
 ];
 
-/** The conversation stage and lessons, using the same flat monochrome surface. */
+/** The conversation stage (the biggest card) and the lessons card beside it. */
 function RitaStage({ section, lang }: { section: SectionDef; lang: Lang }) {
   const talk = section.rows.find((row) => row.key === "rita-conversations");
   const lessons = section.rows.find((row) => row.key === "rita-lessons");
-  const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
+  const look = talk ? lookFor(talk.key, talk.name) : null;
   return (
     <section aria-labelledby="rita-title" className="uz-pane uz-rita">
-      {talk ? (
-        <Link to={talk.to} data-learn-row={talk.key} className="uz-stage">
-          <span className="uz-stage-text">
-            <h2 id="rita-title" className="uz-stage-title">
-              {t("Talk to Rita now", "تحدث مع ريتا الآن")}
-            </h2>
-            <span className="uz-stage-line">{talk.line[lang]}</span>
-            <span className="rita-btn rita-btn-primary uz-stage-btn">
-              {t("Start talking", "ابدأ الحديث")}
-              <ArrowRight size={18} aria-hidden="true" className="rtl:rotate-180" />
-            </span>
-          </span>
-          <span className="uz-orb-zone" aria-hidden="true">
-            <span className="uz-orb">
-              <span className="uz-orb-waves">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <span key={i} className="uz-orb-wave" />
-                ))}
+      {talk && look ? (
+        <Link
+          to={talk.to}
+          data-learn-row={talk.key}
+          data-tone={look.tone}
+          data-stage
+          className="gc"
+        >
+          <span className="gc-head">
+            <h2 id="rita-title" className="gc-h">
+              <span className="gc-sr">
+                {lang === "ar" ? "تحدث مع ريتا الآن" : "Talk to Rita now"}
               </span>
-            </span>
+              <Logo look={look} lang={lang} />
+            </h2>
+            <span className="gc-line">{talk.line[lang]}</span>
+            <span className="gc-btn">{look.go[lang]}</span>
+          </span>
+          <span className="gc-art" aria-hidden="true">
+            <TalkArt />
             {PHRASES.map((phrase) => (
               <span
                 key={phrase.text}
                 lang={phrase.lang}
                 dir={phrase.lang === "ar" ? "rtl" : "ltr"}
-                className={`uz-float ${phrase.spot}`}
+                className={`gc-float ${phrase.spot}`}
               >
                 {phrase.text}
               </span>
@@ -211,22 +221,7 @@ function RitaStage({ section, lang }: { section: SectionDef; lang: Lang }) {
           </span>
         </Link>
       ) : null}
-      {lessons ? (
-        <Link to={lessons.to} data-learn-row={lessons.key} className="uz-lessons">
-          <ImageSlot slot={lessons.slot} lang={lang} priority />
-          <span className="uz-tile-text">
-            <span className="uz-tile-name">
-              {lessons.name[lang]}
-              {lessons.chip ? <span className="uz-tile-tag">{lessons.chip[lang]}</span> : null}
-            </span>
-            <span className="uz-tile-line">{lessons.line[lang]}</span>
-            <span className="rita-btn uz-light-btn">
-              {t("Open lessons", "افتح الدروس")}
-              <ArrowRight size={17} aria-hidden="true" className="rtl:rotate-180" />
-            </span>
-          </span>
-        </Link>
-      ) : null}
+      {lessons ? <ToolTile row={lessons} lang={lang} lead={false} /> : null}
     </section>
   );
 }
