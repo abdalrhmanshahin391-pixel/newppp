@@ -99,3 +99,28 @@ export function clampPage(page: number, total: number): number {
   if (!Number.isFinite(page)) return 1;
   return Math.min(Math.max(1, Math.round(page)), Math.max(1, total));
 }
+
+// ---- reading one in the full reader (pages drawn on the device) ------------------------------
+
+/** The widths pages are drawn at: the smallest that is at least what the screen needs. */
+const DRAW_WIDTHS = [700, 1100, 1600, 2200];
+export function drawWidth(need: number): number {
+  return DRAW_WIDTHS.find((w) => w >= need) ?? DRAW_WIDTHS[DRAW_WIDTHS.length - 1];
+}
+
+/** Right to left when most of the letters on the first page are Arabic, Persian or Hebrew. */
+export function textDirection(text: string): "ltr" | "rtl" {
+  const rtl = (text.match(/[\u0590-\u08FF\uFB1D-\uFEFF]/g) ?? []).length;
+  const ltr = (text.match(/[A-Za-z\u00C0-\u024F\u0400-\u04FF]/g) ?? []).length;
+  return rtl > ltr ? "rtl" : "ltr";
+}
+
+/** "a ⟦word⟧ in its line": the text around a match, the match marked like the server's search. */
+export function snippetAround(text: string, at: number, length: number): string {
+  const start = Math.max(0, at - 60);
+  const end = Math.min(text.length, at + length + 60);
+  const flat = (part: string) => part.replace(/\s+/g, " ");
+  return `${start > 0 ? "…" : ""}${flat(text.slice(start, at))}⟦${flat(
+    text.slice(at, at + length),
+  )}⟧${flat(text.slice(at + length, end))}${end < text.length ? "…" : ""}`;
+}

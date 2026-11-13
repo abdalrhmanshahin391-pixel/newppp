@@ -92,6 +92,8 @@ import { BookScrubber } from "./BookScrubber";
 import { BookPanel } from "./BookPanel";
 import { BookRitaColumn, type BookAnswer } from "./BookRitaColumn";
 import { useTurnGestures } from "./useTurnGestures";
+import type { MyBookSource } from "@/components/books/mine/my-book-source";
+import { drawWidth } from "@/lib/user-books";
 import "@/components/rita-study/study-meaning.css";
 import "./book-reader.css";
 
@@ -122,6 +124,8 @@ function writeStore(key: string, value: string) {
 const ZOOMS = [1, 1.25, 1.5, 2, 2.5];
 /** Pages, words and links stay in memory this long (links are reused for hours). */
 const PAGE_STALE_MS = 45 * 60 * 1000;
+/** A private book's drawn pages are kept a shorter time (each is a picture in memory). */
+const MINE_STALE_MS = 3 * 60 * 1000;
 
 // ---- the queries behind a page --------------------------------------------------------------
 
@@ -150,8 +154,20 @@ function viewQuery(
   total: number,
   dir: 1 | -1,
   sizing: Sizing,
+  source?: MyBookSource | null,
 ) {
   const { manifest, need } = sizing;
+  // A private book: the page is drawn on the device, in the width the screen needs. Its picture
+  // address lives only while the query is cached (a few minutes), then it is let go.
+  if (source)
+    return {
+      queryKey: ["book-view", bookId, page, String(drawWidth(need))] as const,
+      queryFn: () => source.view(page, need),
+      staleTime: MINE_STALE_MS,
+      gcTime: MINE_STALE_MS,
+      retry: 1,
+      retryDelay: 1500,
+    };
   const tierOf = (n: number): Tier => {
     const entry = manifest?.pages[n - 1];
     return entry ? pickTier(need, entry.tiers) : "std";
@@ -213,10 +229,11 @@ function viewQuery(
   };
 }
 
-function wordsQuery(bookId: string, page: number) {
+function wordsQuery(bookId: string, page: number, source?: MyBookSource | null) {
   return {
     queryKey: ["book-words", bookId, page] as const,
-    queryFn: ({ signal }: { signal: AbortSignal }) => fetchPageWords(bookId, page, signal),
+    queryFn: ({ signal }: { signal: AbortSignal }) =>
+      source ? source.words(page) : fetchPageWords(bookId, page, signal),
     staleTime: PAGE_STALE_MS,
     gcTime: PAGE_STALE_MS,
   };
@@ -283,12 +300,15 @@ export function BookReader({
   userId,
   startPage,
   resumed = false,
+  source = null,
 }: {
   book: ReaderBook;
   userId: string;
   startPage: number;
   /** Opened at the page this reader stopped at (not page 1, not from the address). */
   resumed?: boolean;
+  /** A reader's own private book: pages, words, search, marks and place come from here. */
+  source?: MyBookSource | null;
 }) {
   const wide = useWide(900);
   const navigate = useNavigate();
@@ -298,12 +318,13 @@ export function BookReader({
   const total = Math.max(1, book.pageCount);
   const [page, setPage] = useState(() => clampPage(startPage, total));
   const [zoom, setZoom] = useState(0);
-  // Phones open fit to width (a whole page is tiny there); a choice made with the button stays.
-  const [fit, setFit] = useState<"page" | "width">("page");
+  // The page opens as wide as its pane (a whole page fitted to the height left wide empty margins
+  // beside it on a tablet, and its words too small to read); scrolling down reads the rest. "The
+  // whole page" stays one button away, and a choice made with the button is kept.
+  const [fit, setFit] = useState<"page" | "width">("width");
   useEffect(() => {
     const saved = readStore(FIT_KEY);
     if (saved === "width" || saved === "page") setFit(saved);
-    else if (!window.matchMedia("(min-width: 900px)").matches) setFit("width");
   }, []);
   const [tip, setTip] = useState(false);
   useEffect(() => setTip(readStore(TIP_KEY) !== "1"), []);
@@ -313,7 +334,7 @@ export function BookReader({
   // ---- the manifest (one request: every page's size and preview, the outline) ----------------
   const manifestOf = useQuery({
     queryKey: ["book-manifest", book.id] as const,
-    queryFn: () => fetchManifest(book.id),
+    queryFn: () => (source ? Promise.resolve(source.manifest) : fetchManifest(book.id)),
     staleTime: Infinity,
     gcTime: PAGE_STALE_MS,
   });
@@ -334,7 +355,7 @@ export function BookReader({
     return () => observer.disconnect();
   }, [wide, tab]);
   // Thin margins on a phone, so the page takes the most room it can.
-  const gutter = pane.width < 600 ? 8 : 20;
+  const gutter = pane.width < 600 ? 8 : 12;
   const roomWidth = Math.max(220, pane.width - gutter * 2);
   const roomHeight = Math.max(220, pane.height - gutter * 2);
   const shape = manifest?.pages[page - 1]
@@ -372,7 +393,7 @@ export function BookReader({
     lastPage.current = page;
   }
   const current = useQuery({
-    ...viewQuery(queryClient, book.id, userId, page, total, dirRef.current, sizing),
+    ...viewQuery(queryClient, book.id, userId, page, total, dirRef.current, sizing, source),
     // The manifest decides the size; wait for its answer (one small request) before the page.
     enabled: !manifestOf.isPending,
     // The previous page's sheet stays while the new page's info arrives (a few ms when cached).
@@ -389,7 +410,7 @@ export function BookReader({
 
   // The words wait until the reader stays on a page; pages read ahead are already there.
   const [settled, setSettled] = useState(page);
-  const wordsOf = useQuery({ ...wordsQuery(book.id, page), enabled: settled === page });
+  const wordsOf = useQuery({ ...wordsQuery(book.id, page, source), enabled: settled === page });
   const words: PageWords | null = wordsOf.data && wordsOf.data.page === page ? wordsOf.data : null;
 
   useEffect(() => {
@@ -415,7 +436,7 @@ export function BookReader({
       const sizingNow = sizingRef.current;
       // The page on screen first: the pages ahead start once its picture is in (or after 1.5 s).
       const first = queryClient
-        .fetchQuery(viewQuery(queryClient, book.id, userId, page, total, dir, sizingNow))
+        .fetchQuery(viewQuery(queryClient, book.id, userId, page, total, dir, sizingNow, source))
         .then((view) => {
           wanted.add(view.imagePath);
           return decodePicture(view.imagePath, view.url, "high");
@@ -428,7 +449,7 @@ export function BookReader({
           .then(() =>
             alive
               ? queryClient.fetchQuery(
-                  viewQuery(queryClient, book.id, userId, n, total, dir, sizingNow),
+                  viewQuery(queryClient, book.id, userId, n, total, dir, sizingNow, source),
                 )
               : null,
           )
@@ -442,7 +463,7 @@ export function BookReader({
           .catch(() => undefined);
       }
       void onScreen.then(() => alive && window.setTimeout(() => dropPicturesExcept(wanted), 0));
-      for (const n of plan.words) void queryClient.prefetchQuery(wordsQuery(book.id, n));
+      for (const n of plan.words) void queryClient.prefetchQuery(wordsQuery(book.id, n, source));
     }, SETTLE_MS);
     return () => {
       alive = false;
@@ -457,15 +478,26 @@ export function BookReader({
   pageNow.current = page;
   useEffect(() => {
     const onHide = () => {
-      if (document.visibilityState === "hidden")
-        void saveReadingPlace(userId, book.id, pageNow.current);
+      if (document.visibilityState !== "hidden") return;
+      if (source) source.savePlace(pageNow.current);
+      else void saveReadingPlace(userId, book.id, pageNow.current);
     };
     document.addEventListener("visibilitychange", onHide);
     return () => document.removeEventListener("visibilitychange", onHide);
-  }, [book.id, userId]);
+  }, [book.id, source, userId]);
   useEffect(() => {
     setJump(String(page));
     const timer = window.setTimeout(() => {
+      if (source) {
+        source.savePlace(page);
+        void navigate({
+          to: "/books/mine/$bookId",
+          params: { bookId: book.id },
+          search: { page },
+          replace: true,
+        });
+        return;
+      }
       void saveReadingPlace(userId, book.id, page);
       void navigate({
         to: "/books/$bookId/read",
@@ -475,7 +507,25 @@ export function BookReader({
       });
     }, 1200);
     return () => window.clearTimeout(timer);
-  }, [book.id, navigate, page, userId]);
+  }, [book.id, navigate, page, source, userId]);
+
+  // A private book's drawn pages: their picture addresses go when the reader stops caching them.
+  useEffect(() => {
+    if (!source) return;
+    return queryClient.getQueryCache().subscribe((event) => {
+      const key = event.query.queryKey;
+      if (event.type !== "removed" || key[0] !== "book-view" || key[1] !== book.id) return;
+      const data = event.query.state.data as PageView | undefined;
+      if (data?.imagePath) source.release(data.imagePath);
+    });
+  }, [book.id, queryClient, source]);
+
+  /** What the server needs for a private book: the page's own text, read here from the PDF. */
+  async function ownPage(onPage: number): Promise<{ own?: true; pageText?: string }> {
+    if (!source) return {};
+    const data = await queryClient.ensureQueryData(wordsQuery(book.id, onPage, source));
+    return { own: true, pageText: data.text };
+  }
 
   // ---- the selection ---------------------------------------------------------------------------
   const textLayer = useRef<HTMLDivElement | null>(null);
@@ -598,6 +648,7 @@ export function BookReader({
           selection: quote,
           action,
           language: explanation.value,
+          ...(await ownPage(onPage)),
         },
       });
       if (result.ok) settle({ state: "done", text: result.text });
@@ -618,9 +669,9 @@ export function BookReader({
 
   async function practice(action: PracticeAction, retry = false) {
     if (making) return;
-    const source = retry ? lastPractice.current : picked ? { action, ...picked } : null;
-    if (!source) return;
-    lastPractice.current = { action, quote: source.quote, page: source.page };
+    const origin = retry ? lastPractice.current : picked ? { action, ...picked } : null;
+    if (!origin) return;
+    lastPractice.current = { action, quote: origin.quote, page: origin.page };
     const version = ++practiceVersion.current;
     const requestId = crypto.randomUUID();
     setMenuOpen(false);
@@ -635,10 +686,16 @@ export function BookReader({
       questions: [],
       message: "",
     });
-    const input = {
-      data: { bookId: book.id, page: source.page, requestId, selection: source.quote },
-    };
     try {
+      const input = {
+        data: {
+          bookId: book.id,
+          page: origin.page,
+          requestId,
+          selection: origin.quote,
+          ...(await ownPage(origin.page)),
+        },
+      };
       if (action === "make_cards") {
         const result = await cardsFn(input);
         if (version !== practiceVersion.current) return;
@@ -791,7 +848,7 @@ export function BookReader({
   // ---- bookmarks, and words found by a search ---------------------------------------------------
   const marksOf = useQuery({
     queryKey: ["book-bookmarks", book.id] as const,
-    queryFn: () => fetchBookmarks(book.id),
+    queryFn: () => (source ? Promise.resolve(source.bookmarks()) : fetchBookmarks(book.id)),
     staleTime: Infinity,
   });
   // null: the database has no bookmarks yet (or they could not be read) — the icon stays away.
@@ -814,7 +871,10 @@ export function BookReader({
         ? [...new Set([...before, n])].sort((a, b) => a - b)
         : before.filter((x) => x !== n);
       queryClient.setQueryData(key, after);
-      setBookmark(book.id, n, on).then(
+      (source
+        ? Promise.resolve().then(() => source.setBookmark(n, on))
+        : setBookmark(book.id, n, on)
+      ).then(
         () => {
           if (quiet) return;
           say(on ? `انحفظت صفحة ${n}` : `انشالت علامة صفحة ${n}`, [
@@ -828,7 +888,7 @@ export function BookReader({
         },
       );
     },
-    [book.id, queryClient, say],
+    [book.id, queryClient, say, source],
   );
   // Back where you stopped: «رجعتك لصفحة 87 · من الأول», for 4 s.
   useEffect(() => {
@@ -1055,6 +1115,7 @@ export function BookReader({
             left={leftLabel}
             bookmarks={bookmarks}
             onUnmark={(n) => toggleMark(n, false)}
+            search={source ? source.search : undefined}
           />
           {bookmarks !== null && (
             <button

@@ -594,9 +594,14 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   - Deleting: a 36px bin (44px target) on each cover, and «احذف الكتاب» in the book's window; one confirmation
     («متأكد بدك تحذف الكتاب؟» with the name; «احذف» red, «لا» focused). The file goes first, then the row.
   - The book's window: the cover, «كتابك · خاص», pages and size, «اقرأ» (blue), «غيّر الاسم», «احذف الكتاب».
-  - Reading (`/books/mine/<book>`): a white top bar (back, name, «n من N»), one page fitted to the screen on
-    grey, turned by swipe, a tap on the page's outer thirds, the arrow keys or the bottom slider; the page is
-    kept on the device. No search or Uzyra tools in your own books yet.
+  - Reading (`/books/mine/<book>`): the same full reader as a library book (Uzyra on the left, the page on
+    the right with the divider; two tabs on phones; slides, the circle, explain / cards / questions, the
+    contents from the PDF's outline, search, bookmarks). The pages are drawn on the device from the PDF
+    (`my-book-source.ts`: one page at a time, at the width the screen needs, the page on screen first);
+    bookmarks and the reading place stay on the device. Uzyra's answers send the page's text with the
+    request; the server checks the book is the reader's own and ready, and counts it in the same
+    allowance as library books (`books_take_my_study_quota`, migration
+    `20261120120000_books_my_book_study.sql`). Before that migration Uzyra says it is not active yet.
 - **Cards** show a small gold «★ 4.6» under the author once a book has three ratings.
 - **«مفضلتي»** (signed in): a chip with a heart and the count in the ways-in row; its list is a
   normal paged list, and an empty one explains how to add books.
@@ -662,9 +667,10 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   the left and the page on the right with the draggable divider (40/60), two tabs «الكتاب» /
   «يوزرا» on phones, and the floating circle over both.
   - **The page:** one sheet of paper (4px corners, a hairline ring and a soft deep shadow) on the
-    study grey, with 20px around it (8px on phones). By default the whole page is in view; «على قدّ
-    العرض» fits it to the pane's width instead (remembered per browser), and zoom goes up in five
-    steps. A zoomed page scrolls from the side its lines start on.
+    study grey, with 12px around it (8px on phones). By default the page is as wide as its pane
+    (scroll down for the rest: a whole page fitted to the height left wide empty margins on a tablet
+    and words too small to read); «الصفحة كاملة» shows the whole page instead (remembered per
+    browser), and zoom goes up in five steps. A zoomed page scrolls from the side its lines start on.
   - **Progress:** a 3px accent line under the top bar grows with the page number, from the side
     the book starts on.
   - **Turning:** instant. The sheet takes the new page's size at once and slides in 24px (220ms,
@@ -676,7 +682,7 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     only after a second; a page that cannot load shows an ink pill «ما قدرت أفتح الصفحة · جرّب
     مرة ثانية» (after one quiet retry), never a broken picture. While flipping fast, the page
     number shows in the middle of the page («12 / 340», from the second quick turn, gone 600ms
-    after the last). Phones open fit to width.
+    after the last).
   - **Turning by touch** (touch only; a mouse selects): a sideways swipe across the page turns
     it — the sheet follows the finger a little (40% of the travel, at most 48px), turns past 60px
     (sideways more than twice up/down, quicker than 600ms or faster than 0.4px/ms) with the usual

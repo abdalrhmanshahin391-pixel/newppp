@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   clampPage,
+  drawWidth,
+  snippetAround,
+  textDirection,
   freeSlot,
   titleFromFile,
   USER_BOOK_MAX_BYTES,
@@ -80,3 +83,26 @@ test("pages stay inside the book", () => {
   assert.equal(clampPage(3.4, 10), 3);
   assert.equal(clampPage(5, 0), 1);
 });
+
+test("drawWidth picks the smallest drawing width that is sharp enough", () => {
+  assert.equal(drawWidth(300), 700);
+  assert.equal(drawWidth(700), 700);
+  assert.equal(drawWidth(701), 1100);
+  assert.equal(drawWidth(1500), 1600);
+  assert.equal(drawWidth(9000), 2200);
+});
+
+test("textDirection reads the book's direction from its first page", () => {
+  assert.equal(textDirection("The quick brown fox"), "ltr");
+  assert.equal(textDirection("هذا كتاب عربي عن القواعد"), "rtl");
+  assert.equal(textDirection("كتاب Grammar عن القواعد الإنجليزية"), "rtl");
+  assert.equal(textDirection(""), "ltr");
+});
+
+test("snippetAround marks the match the way the library search does", () => {
+  assert.equal(snippetAround("a big\nhound came", 6, 5), "a big ⟦hound⟧ came");
+  const long = `${"x".repeat(100)}word${"y".repeat(100)}`;
+  const snip = snippetAround(long, 100, 4);
+  assert.ok(snip.startsWith("…") && snip.endsWith("…") && snip.includes("⟦word⟧"));
+});
+

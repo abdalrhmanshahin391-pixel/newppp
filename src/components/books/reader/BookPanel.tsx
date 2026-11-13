@@ -36,6 +36,8 @@ type Props = {
   /** The reader's bookmarked pages, or null before the database has bookmarks. */
   bookmarks: number[] | null;
   onUnmark: (page: number) => void;
+  /** A private book searches its own pages on the device (else the library's search). */
+  search?: (query: string, signal?: AbortSignal) => Promise<PageHit[]>;
 };
 
 /** Moves the focus between the buttons of a list with ↑ / ↓. */
@@ -59,6 +61,7 @@ export function BookPanel({
   left,
   bookmarks,
   onUnmark,
+  search: searchPages,
 }: Props) {
   const outline = useMemo(() => manifest?.outline ?? [], [manifest]);
   const hasContents = outline.length > 0;
@@ -105,7 +108,10 @@ export function BookPanel({
     const controller = new AbortController();
     running.current = controller;
     setFound({ state: "loading", query: q });
-    searchBookPages(bookId, q, controller.signal).then(
+    (searchPages
+      ? searchPages(q, controller.signal)
+      : searchBookPages(bookId, q, controller.signal)
+    ).then(
       (hits) => {
         if (controller.signal.aborted) return;
         setFound(hits === "missing" ? { state: "missing" } : { state: "done", query: q, hits });
