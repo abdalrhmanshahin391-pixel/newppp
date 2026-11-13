@@ -71,6 +71,7 @@ on:
       - "public/book-covers/**"
       - "scripts/build-starter-books-sql.*"
       - "scripts/test-books-db.sh"
+      - "scripts/test-user-books-concurrency.sh"
       - "scripts/test-books-public-read-db.sh"
       - ".github/workflows/rita-v3-frontend-check.yml"
   workflow_dispatch:
