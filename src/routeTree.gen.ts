@@ -120,6 +120,7 @@ import { Route as ApiRitaV3ReviewerCheckRouteImport } from './routes/api/rita-v3
 import { Route as ApiRitaExtractRouteImport } from './routes/api/rita/extract'
 import { Route as ApiRitaLearningRouteImport } from './routes/api/rita/learning'
 import { Route as BooksBookIdReadRouteImport } from './routes/books_.$bookId.read'
+import { Route as BooksMineBookIdRouteImport } from './routes/books_.mine.$bookId'
 import { Route as CoursesCourseIdIndexRouteImport } from './routes/courses.$courseId.index'
 import { Route as CoursesCourseIdAddQuestionsRouteImport } from './routes/courses.$courseId.add-questions'
 import { Route as CoursesCourseIdRunRouteImport } from './routes/courses.$courseId.run'
@@ -707,6 +708,11 @@ const BooksBookIdReadRoute = BooksBookIdReadRouteImport.update({
   path: '/books/$bookId/read',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BooksMineBookIdRoute = BooksMineBookIdRouteImport.update({
+  id: '/books_/mine/$bookId',
+  path: '/books/mine/$bookId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CoursesCourseIdIndexRoute = CoursesCourseIdIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -962,6 +968,7 @@ export interface FileRoutesByFullPath {
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/books/$bookId/read': typeof BooksBookIdReadRoute
+  '/books/mine/$bookId': typeof BooksMineBookIdRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -1099,6 +1106,7 @@ export interface FileRoutesByTo {
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/books/$bookId/read': typeof BooksBookIdReadRoute
+  '/books/mine/$bookId': typeof BooksMineBookIdRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -1240,6 +1248,7 @@ export interface FileRoutesById {
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/books_/$bookId/read': typeof BooksBookIdReadRoute
+  '/books_/mine/$bookId': typeof BooksMineBookIdRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -1383,6 +1392,7 @@ export interface FileRouteTypes {
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/books/$bookId/read'
+    | '/books/mine/$bookId'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1520,6 +1530,7 @@ export interface FileRouteTypes {
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/books/$bookId/read'
+    | '/books/mine/$bookId'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1660,6 +1671,7 @@ export interface FileRouteTypes {
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/books_/$bookId/read'
+    | '/books_/mine/$bookId'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1787,6 +1799,7 @@ export interface RootRouteChildren {
   ApiRitaExtractRoute: typeof ApiRitaExtractRoute
   ApiRitaLearningRoute: typeof ApiRitaLearningRoute
   BooksBookIdReadRoute: typeof BooksBookIdReadRoute
+  BooksMineBookIdRoute: typeof BooksMineBookIdRoute
   ShareQuestionsSetIdRoute: typeof ShareQuestionsSetIdRoute
   ShareQuestionsNewRoute: typeof ShareQuestionsNewRoute
   AdminRitaQualityIndexRoute: typeof AdminRitaQualityIndexRoute
@@ -2580,6 +2593,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BooksBookIdReadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/books_/mine/$bookId': {
+      id: '/books_/mine/$bookId'
+      path: '/books/mine/$bookId'
+      fullPath: '/books/mine/$bookId'
+      preLoaderRoute: typeof BooksMineBookIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/courses/$courseId/': {
       id: '/courses/$courseId/'
       path: '/'
@@ -3006,6 +3026,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRitaExtractRoute: ApiRitaExtractRoute,
   ApiRitaLearningRoute: ApiRitaLearningRoute,
   BooksBookIdReadRoute: BooksBookIdReadRoute,
+  BooksMineBookIdRoute: BooksMineBookIdRoute,
   ShareQuestionsSetIdRoute: ShareQuestionsSetIdRoute,
   ShareQuestionsNewRoute: ShareQuestionsNewRoute,
   AdminRitaQualityIndexRoute: AdminRitaQualityIndexRoute,

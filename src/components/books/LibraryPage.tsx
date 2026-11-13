@@ -50,6 +50,7 @@ import {
 } from "@/lib/books-data";
 import { BookObject, CATEGORY_ICON, UzyraIcon } from "./BookObject";
 import { BookSheet } from "./BookSheet";
+import { MyBooksShelf } from "./mine/MyBooksShelf";
 
 const SEED_KEY = "bk-seed";
 
@@ -629,6 +630,9 @@ export function LibraryPage({
             </button>
           </div>
         )}
+
+        {/* The reader's own books come first (signed in only); the library's shelves follow. */}
+        {mode === "discover" && user ? <MyBooksShelf ui={ui} userId={user.id} /> : null}
 
         {mode === "discover" ? (
           discover.isLoading || (!discover.data && !discover.isError) ? (
