@@ -71,6 +71,7 @@ function IosSheet({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
+        dir="ltr"
         className="rita-install-sheet w-full max-w-sm overflow-hidden rounded-[28px] border p-6 text-[color:var(--pro-ink)]"
         onClick={(e) => e.stopPropagation()}
       >
