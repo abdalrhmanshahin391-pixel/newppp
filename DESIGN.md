@@ -888,8 +888,8 @@ circle shrinks away (scale 0.6, fades), a thin 40px ring turns in its place whil
 (the same 128px height, so nothing moves), and once Uzyra is connected the composer rises into that
 place (460ms). After a failed call the circle comes back empty with «اضغط مطوّلاً لتعيد الاتصال».
 Reduced motion: the circle does not shrink and nothing rises; the disc still grows. When the call starts the cube flies down to
-sit just above the composer (FlyingCube). Uzyra writes without a bubble: a quiet 12px line first (her mark in a 26px white circle,
-«يوزرا», the circle request it answers, and on the newest answer what she is doing now) over a hairline
+sit just above the composer (FlyingCube). Uzyra writes without a bubble: her mark alone in a 26px white circle,
+without a visible assistant name or metadata line, over a hairline
 #E4E4E1, then 13px text #2B2B2B at 1.95 line height, paragraphs 12px apart, bold #161616. Words in the
 language being learned are small grey tags (#ECECEA, 0.9em). The learner's words sit on the other side
 in a #EBEBEA bubble (radius 15, 8×16 padding, 13px); a circle request shows its label as a small tag
@@ -1183,3 +1183,15 @@ own selection goes. The circle takes a dark red ring, the quote strip a dark red
 answers that part as to a complete beginner: one very simple sentence and a small sheet. A selection
 across two answers, or with the learner's own words, shows «حدّد من رد واحد ليوزرا.» The newest
 selection wins: selecting in the guide clears the left one, and the other way round.
+
+
+## Compact Uzyra identity in study controls
+
+The Safari install sheet uses the existing white Uzyra mark inside a 52px ink disc instead of a
+character portrait. The shared 56px draggable study circle uses the same mark (26 by 36px) on ink,
+without character pictures or the binary-rain canvas. Selection colours, drag/hold timing, radial
+menu, keyboard movement and sound behaviour stay unchanged; its busy state dims the mark and
+sets aria-busy. Interactive lesson reply headers show only the mark, without a visible assistant
+name or metadata line. The existing live status remains available to assistive technology.
+Per-reply flag/report controls are absent from both lesson modes; free-conversation reporting stays
+available. Apply the same spacing in RTL and LTR with no new network image requests.

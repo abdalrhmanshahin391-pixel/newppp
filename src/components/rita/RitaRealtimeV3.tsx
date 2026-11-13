@@ -79,10 +79,6 @@ type Persona = "kind" | "direct" | "playful" | "strict";
 /** A request from the study circle is posted as "[label] «quote»"; this is its label. */
 const REQUEST_LINE = /^\[([^\]]{1,40})\]\s*([\s\S]*)$/;
 
-function requestLabel(message: { role: string; text: string } | undefined): string {
-  return message?.role === "you" ? (REQUEST_LINE.exec(message.text)?.[1] ?? "") : "";
-}
-
 /** The learner's words in a soft grey bubble; a circle request shows its label as a small tag. */
 function YouBubble({ text }: { text: string }) {
   const request = REQUEST_LINE.exec(text);
@@ -1744,25 +1740,14 @@ export function RitaRealtimeV3({
                   اكبس لتشغيل الصوت
                 </button>
               )}
-              {turns.map((message, index) =>
+              {turns.map((message) =>
                 message.role === "you" ? (
                   <YouBubble key={message.id} text={message.text} />
                 ) : (
                   <div key={message.id} className="uz-rc-rita uz-msg-in">
-                    {/* Uzyra's mark and a quiet line: her name, the request it answers, and
-                        what she is doing now on the newest answer. */}
                     <div className="uz-rc-meta">
                       <span className="uz-rc-avatar" aria-hidden="true">
                         <UzyraMark />
-                      </span>
-                      <span className="uz-rc-meta-text">
-                        {[
-                          "يوزرا",
-                          requestLabel(turns[index - 1]),
-                          active && message.id === lastTurn?.id ? stateWord : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
                       </span>
                     </div>
                     {/* Marked so a part of the answer can be selected and explained simply. */}
@@ -1773,12 +1758,6 @@ export function RitaRealtimeV3({
                         interruptedAt={message.interruptedAt}
                       />
                     </div>
-                    {canReport(message) && (
-                      <ReplyReport
-                        compact
-                        onSubmit={(category, note) => reportReply(message.id, category, note)}
-                      />
-                    )}
                   </div>
                 ),
               )}
@@ -2094,7 +2073,7 @@ export function RitaRealtimeV3({
                           : "max-w-[94%] text-[18px] leading-9"
                       }
                     />
-                    {canReport(message) && (
+                    {!lessonId && canReport(message) && (
                       <ReplyReport
                         onSubmit={(category, note) => reportReply(message.id, category, note)}
                       />
