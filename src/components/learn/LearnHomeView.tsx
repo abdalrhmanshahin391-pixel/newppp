@@ -1,8 +1,14 @@
-import { memo, useMemo, useRef } from "react";
+import { memo, useMemo, useRef, type ComponentType, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { ImageSlot } from "@/components/learn/ImageSlot";
-import { LessonsCardArt, TalkCardArt } from "./PlayCardArt";
+import {
+  FlashcardsCardArt,
+  LessonsCardArt,
+  MemoryCardArt,
+  PairsCardArt,
+  TalkCardArt,
+} from "./PlayCardArt";
 import { useLearnSection } from "./useLearnSection";
 import { TOOLS, type ToolDef } from "@/lib/site-tools";
 
@@ -159,8 +165,73 @@ function SideList({
   );
 }
 
+type Play = { Art: ComponentType; go: Bi; line?: Bi };
+
+/**
+ * Destinations already redesigned as game cards (two or three at a time). The rest keep the
+ * monochrome tile until their turn.
+ */
+const PLAY: Record<string, Play> = {
+  "rita-conversations": {
+    Art: TalkCardArt,
+    go: { en: "Start talking", ar: "ابدأ الحديث" },
+  },
+  "rita-lessons": {
+    Art: LessonsCardArt,
+    go: { en: "Start", ar: "ابدأ" },
+    line: { en: "Short lessons with clear goals.", ar: "دروس قصيرة بأهداف واضحة." },
+  },
+  flashcards: { Art: FlashcardsCardArt, go: { en: "Study", ar: "ادرس" } },
+  "memory-lab": { Art: MemoryCardArt, go: { en: "Play", ar: "العب" } },
+  pairs: { Art: PairsCardArt, go: { en: "Play", ar: "العب" } },
+};
+
+/**
+ * A game card: one solid colour, a big centred title, one line, the drawing at the bottom and a
+ * white button with a lip over the bottom of the drawing.
+ */
+function PlayCard({
+  row,
+  play,
+  lang,
+  lead = false,
+  title,
+}: {
+  row: Row;
+  play: Play;
+  lang: Lang;
+  lead?: boolean;
+  title?: ReactNode;
+}) {
+  return (
+    <Link
+      to={row.to}
+      params={row.params as never}
+      search={row.search as never}
+      data-learn-row={row.key}
+      data-lead={lead || undefined}
+      className="uz-play"
+    >
+      {title ?? <span className="uz-play-title">{row.name[lang]}</span>}
+      <span className="uz-play-line">{(play.line ?? row.line)[lang]}</span>
+      {row.ai || row.chip ? (
+        <span className="uz-play-pills">
+          {row.ai ? <span className="uz-play-pill">AI</span> : null}
+          {row.chip ? <span className="uz-play-pill">{row.chip[lang]}</span> : null}
+        </span>
+      ) : null}
+      <span className="uz-play-art" aria-hidden="true">
+        <play.Art />
+      </span>
+      <span className="uz-play-btn">{play.go[lang]}</span>
+    </Link>
+  );
+}
+
 /** One destination: its picture on black, its name and one line. The first of a section is big. */
 function ToolTile({ row, lang, lead }: { row: Row; lang: Lang; lead: boolean }) {
+  const play = PLAY[row.key];
+  if (play) return <PlayCard row={row} play={play} lang={lang} lead={lead} />;
   return (
     <Link
       to={row.to}
@@ -186,41 +257,25 @@ function ToolTile({ row, lang, lead }: { row: Row; lang: Lang; lead: boolean }) 
   );
 }
 
-/**
- * The two Uzyra cards: one solid colour, a big centred title, one line, the drawing at the bottom
- * and a white button with a lip over the bottom of the drawing (the game-card look).
- */
+/** Uzyra's two cards: free talk (the section's heading) and lessons. */
 function RitaStage({ section, lang }: { section: SectionDef; lang: Lang }) {
   const talk = section.rows.find((row) => row.key === "rita-conversations");
   const lessons = section.rows.find((row) => row.key === "rita-lessons");
-  const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
   return (
     <section aria-labelledby="rita-title" className="uz-pane uz-rita">
       {talk ? (
-        <Link to={talk.to} data-learn-row={talk.key} className="uz-play">
-          <h2 id="rita-title" className="uz-play-title">
-            {t("Free talk with Uzyra", "محادثة حرة مع يوزرا")}
-          </h2>
-          <span className="uz-play-line">{talk.line[lang]}</span>
-          <span className="uz-play-art" aria-hidden="true">
-            <TalkCardArt />
-          </span>
-          <span className="uz-play-btn">{t("Start talking", "ابدأ الحديث")}</span>
-        </Link>
+        <PlayCard
+          row={talk}
+          play={PLAY[talk.key]}
+          lang={lang}
+          title={
+            <h2 id="rita-title" className="uz-play-title">
+              {lang === "ar" ? "محادثة حرة مع يوزرا" : "Free talk with Uzyra"}
+            </h2>
+          }
+        />
       ) : null}
-      {lessons ? (
-        <Link to={lessons.to} data-learn-row={lessons.key} className="uz-play">
-          <span className="uz-play-title">{lessons.name[lang]}</span>
-          <span className="uz-play-line">
-            {t("Short lessons with clear goals.", "دروس قصيرة بأهداف واضحة.")}
-          </span>
-          {lessons.chip ? <span className="uz-play-pill">{lessons.chip[lang]}</span> : null}
-          <span className="uz-play-art" aria-hidden="true">
-            <LessonsCardArt />
-          </span>
-          <span className="uz-play-btn">{t("Start", "ابدأ")}</span>
-        </Link>
-      ) : null}
+      {lessons ? <ToolTile row={lessons} lang={lang} lead={false} /> : null}
     </section>
   );
 }

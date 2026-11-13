@@ -6137,9 +6137,16 @@ html.rita-app,
   text-wrap: balance;
   overflow-wrap: anywhere;
 }
-.uz-play-pill {
+.uz-play-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
   max-width: 100%;
   margin-top: 10px;
+}
+.uz-play-pill {
+  max-width: 100%;
   padding: 3px 12px;
   border-radius: 999px;
   background: #fff;
