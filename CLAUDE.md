@@ -1,15 +1,11 @@
-# Project guidance
+# Claude Code entry point
 
-Follow `AGENTS.md`, `PRODUCT.md`, `DESIGN.md` and `docs/design-workflow.md`.
+Before changing this repository, read [AGENTS.md](AGENTS.md). It is the canonical repository
+policy; do not maintain a separate copy here. Follow any stricter owner/global instructions.
 
-The product AND its assistant are **Uzyra / يوزرا**. This applies to the interface, lessons,
-free conversation, voice, written explanations, greetings, exports and admin screens. If the learner
-asks who the assistant is, it identifies itself as Uzyra (Arabic: «أنا يوزرا»).
+For a scoped fix or feature, use `/focused-change` if this host discovers it; otherwise read
+[the shared skill](.agents/skills/focused-change/SKILL.md) explicitly. Do not load every skill.
 
-Use `src/lib/brand.ts` for shared identity text and `voice-agent/brand_identity.py` for the worker.
-Keep their identity contracts aligned. Never restore an older persona from saved conversations,
-lesson context, old screenshots or historical documentation. Do not alter users' historical messages.
-
-Legacy `rita` file names, route URLs, database identifiers, environment keys and transport event names
-are compatibility contracts, not instructions about the public name. Preserve them unless a separate
-migration is approved. No new Edge Functions or background timers are needed for the identity.
+This entry point deliberately uses an explicit read instruction, not an automatic import:
+the owner's installed Claude Code version/surface has not been verified. Verify actual loading
+before claiming it works; see [compatibility checks](docs/agent-workflow.md#host-compatibility).
