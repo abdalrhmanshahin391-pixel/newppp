@@ -23,7 +23,8 @@ done
 # Supabase gives these table rights to visitors and signed-in users; row level security decides.
 run -c "grant usage on schema public, auth, storage to anon, authenticated;
         grant select, insert, update, delete on all tables in schema public to anon, authenticated;
-        grant select on storage.objects to anon, authenticated;"
+        grant select on storage.objects to anon, authenticated;
+        grant insert, update, delete on storage.objects to authenticated;"
 for test in supabase/tests/books/[1-7]*_test.sql; do
   echo "== ${test}"
   run -f "${test}"

@@ -12,6 +12,7 @@ import shareArt from "@/assets/mono-share.webp";
 import spacesArt from "@/assets/mono-spaces.webp";
 import summaryArt from "@/assets/mono-summary.webp";
 import todoArt from "@/assets/mono-todo.webp";
+import wordcraftArt from "@/assets/mono-wordcraft.webp";
 
 /**
  * Visual identity for every card on the learning home.  Keeping the catalogue
@@ -24,6 +25,7 @@ export const LEARN_IMAGES: Record<string, string> = {
   flashcards: flashcardsArt,
   "memory-lab": memoryArt,
   pairs: pairsArt,
+  wordcraft: wordcraftArt,
   "pdf-summary": summaryArt,
   "all-in-one": allInOneArt,
   "question-bank": qbankArt,

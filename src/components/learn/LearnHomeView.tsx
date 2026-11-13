@@ -84,6 +84,16 @@ function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): Se
           },
           to: "/study/pairs",
         },
+        {
+          key: "wordcraft",
+          slot: "wordcraft",
+          name: { en: "Wordcraft", ar: "Wordcraft" },
+          line: {
+            en: "Pick easy, medium or hard: find four new English words in the letters and learn what they mean.",
+            ar: "اختار سهل أو متوسط أو صعب: لاقي أربع كلمات إنجليزية جديدة بين الحروف وتعلّم معانيها.",
+          },
+          to: "/wordcraft",
+        },
         rowOf(tool("pdf-summary")),
         rowOf(tool("all-in-one")),
         rowOf(tool("question-bank")),

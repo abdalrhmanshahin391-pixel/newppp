@@ -48,8 +48,9 @@ import {
   loadPopular,
   type Popular,
 } from "@/lib/books-data";
-import { BookObject, CATEGORY_ICON } from "./BookObject";
+import { BookObject, CATEGORY_ICON, UzyraIcon } from "./BookObject";
 import { BookSheet } from "./BookSheet";
+import { MyBooksShelf } from "./mine/MyBooksShelf";
 
 const SEED_KEY = "bk-seed";
 
@@ -285,7 +286,7 @@ export function LibraryPage({
     title: string,
     list: Book[],
     tone: { c: string; soft: string },
-    Icon: typeof Sparkles,
+    Icon: unknown,
     options: { all?: () => void; total?: number; action?: ReactNode } = {},
   ) => {
     const n = options.total ?? list.length;
@@ -297,7 +298,7 @@ export function LibraryPage({
       >
         <div className="bk-shelf-head">
           <span className="bk-shelf-icon" aria-hidden="true">
-            <Icon size={16} strokeWidth={2.2} />
+            <UzyraIcon size={16} />
           </span>
           <h2 className="bk-shelf-title">{title}</h2>
           <span className="bk-shelf-count">
@@ -630,6 +631,9 @@ export function LibraryPage({
           </div>
         )}
 
+        {/* The reader's own books come first (signed in only); the library's shelves follow. */}
+        {mode === "discover" && user ? <MyBooksShelf ui={ui} userId={user.id} /> : null}
+
         {mode === "discover" ? (
           discover.isLoading || (!discover.data && !discover.isError) ? (
             <LoadingShelves />
@@ -820,7 +824,7 @@ type ShelfFn = (
   title: string,
   list: Book[],
   tone: { c: string; soft: string },
-  Icon: typeof Sparkles,
+  Icon: unknown,
   options?: { all?: () => void; total?: number; action?: ReactNode },
 ) => ReactNode;
 

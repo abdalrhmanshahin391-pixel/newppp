@@ -1,30 +1,45 @@
-import { useState } from "react";
-import {
-  BookOpen,
-  Brain,
-  Feather,
-  FlaskConical,
-  Globe2,
-  Heart,
-  Landmark,
-  Mountain,
-  Rocket,
-  Search,
-  type LucideIcon,
-} from "lucide-react";
+import { useState, type ReactElement } from "react";
+import { UzyraMark } from "@/components/brand/UzyraMark";
 import { CATEGORY_COLORS, type Book, type CategoryColor, type CategoryIcon } from "@/lib/books";
 
-export const CATEGORY_ICON: Record<CategoryIcon, LucideIcon> = {
-  book: BookOpen,
-  heart: Heart,
-  flask: FlaskConical,
-  mountain: Mountain,
-  search: Search,
-  rocket: Rocket,
-  landmark: Landmark,
-  brain: Brain,
-  globe: Globe2,
-  feather: Feather,
+/** A small Uzyra mark: the one sign shown for every category and shelf (no per-category icons). */
+export function UzyraIcon({
+  size = 16,
+  className = "",
+}: {
+  size?: number;
+  strokeWidth?: number;
+  className?: string;
+}) {
+  return (
+    <span
+      className={className}
+      style={{ display: "inline-grid", placeItems: "center", width: size, height: size }}
+      aria-hidden="true"
+    >
+      <UzyraMark className="h-full w-auto" />
+    </span>
+  );
+}
+
+type IconComponent = (props: {
+  size?: number;
+  strokeWidth?: number;
+  className?: string;
+}) => ReactElement;
+
+/** Every category shows the Uzyra mark; the saved icon name is kept but no longer drawn. */
+export const CATEGORY_ICON: Record<CategoryIcon, IconComponent> = {
+  book: UzyraIcon,
+  heart: UzyraIcon,
+  flask: UzyraIcon,
+  mountain: UzyraIcon,
+  search: UzyraIcon,
+  rocket: UzyraIcon,
+  landmark: UzyraIcon,
+  brain: UzyraIcon,
+  globe: UzyraIcon,
+  feather: UzyraIcon,
 };
 
 /**

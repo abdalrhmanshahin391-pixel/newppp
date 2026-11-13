@@ -59,6 +59,7 @@ on:
       - "src/lib/rita-tutor-contract.ts"
       - "src/routes/api/rita-v3/review.ts"
       - "src/lib/books*"
+      - "src/lib/user-books*"
       - "src/components/books/**"
       - "src/routes/books.tsx"
       - "src/routes/admin.books.tsx"
@@ -75,6 +76,9 @@ on:
       - "src/lib/pairs/**"
       - "src/components/pairs/**"
       - "src/routes/study.pairs.tsx"
+      - "src/lib/wordcraft/**"
+      - "src/components/wordcraft/**"
+      - "src/routes/wordcraft.tsx"
       - "src/components/learn/**"
       - "src/lib/learn-images.ts"
       - ".github/workflows/rita-v3-frontend-check.yml"
@@ -112,6 +116,7 @@ jobs:
           node --test src/lib/books-import.test.ts
           node --test src/lib/books-starter.test.ts
           node --test src/lib/books-reader.test.ts
+          node --test src/lib/user-books.test.ts
           node --test src/lib/book-gestures.test.ts
           node --test src/lib/rita-phrase.test.ts
           node --test src/lib/activity-streak.test.ts
@@ -147,6 +152,7 @@ jobs:
           node --test src/lib/rita-replay.test.ts
           node --test src/routes/api/rita-v3/session/start.source.test.mjs
           node --test src/lib/pairs/game.test.ts
+          node --test src/lib/wordcraft/engine.test.ts src/lib/wordcraft/round.test.ts src/lib/wordcraft/game.test.ts
           bunx tsc --noEmit
       - name: Study page selection in a real browser
         run: |
