@@ -11,6 +11,16 @@ function audio(): AudioContext | null {
     window.AudioContext ??
     (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!Ctor) return null;
+  // iPhone and iPad mute web sounds while the ring/silent switch is on silent. A game's sounds are
+  // its feedback, so ask Safari (16.4+) to treat them as playback; older browsers ignore this.
+  const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession;
+  if (session && session.type !== "playback") {
+    try {
+      session.type = "playback";
+    } catch {
+      /* not allowed here; the sounds still play when the phone is not on silent */
+    }
+  }
   context ??= new Ctor();
   if (context.state === "suspended") void context.resume().catch(() => undefined);
   return context;
@@ -59,15 +69,22 @@ export const sounds = {
   back(step: number) {
     pluck(note(step) / 2, 0.04, 0, 0.12);
   },
-  /** A word is found; `streak` is how many in a row without a miss (1, 2, 3...). */
+  /**
+   * A word is found; `streak` is how many in a row without a miss (1, 2, 3...). It has to stand
+   * out from the tracing tune that was just playing, so it is louder and lower than the old bells:
+   * a warm major chord under a bright two-note "ding-ding", starting just after the last letter.
+   */
   word(streak: number) {
-    const lift = streak >= 3 ? 1.5 : streak === 2 ? 1.25 : 1;
-    bell(1318.51 * lift, 0.06);
-    bell(1567.98 * lift, 0.05, 0.08);
-    if (streak >= 2) bell(2093 * lift, 0.04, 0.16);
+    const lift = streak >= 3 ? 1.26 : streak === 2 ? 1.12 : 1;
+    const at = 0.04;
+    pluck(523.25 * lift, 0.12, at, 0.36);
+    pluck(659.25 * lift, 0.09, at, 0.36);
+    bell(1046.5 * lift, 0.13, at);
+    bell(1567.98 * lift, 0.11, at + 0.09);
+    if (streak >= 2) bell(2093 * lift, 0.07, at + 0.18);
     if (streak >= 3)
       [2637, 3136, 3520].forEach((f, i) =>
-        tone(f, { volume: 0.02, length: 0.12, start: 0.24 + i * 0.05 }),
+        tone(f, { volume: 0.03, length: 0.12, start: at + 0.26 + i * 0.05 }),
       );
   },
   /** The right word on a route that blocks the grid: close, but not this way. */

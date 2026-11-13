@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as BooksRouteImport } from './routes/books'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as GamesRouteImport } from './routes/games'
 import { Route as GermanRouteImport } from './routes/german'
 import { Route as LockedRouteImport } from './routes/locked'
 import { Route as LoginRouteImport } from './routes/login'
@@ -175,6 +176,11 @@ const CoursesRoute = CoursesRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GermanRoute = GermanRouteImport.update({
@@ -877,6 +883,7 @@ export interface FileRoutesByFullPath {
   '/books': typeof BooksRoute
   '/courses': typeof CoursesRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
+  '/games': typeof GamesRoute
   '/german': typeof GermanRouteWithChildren
   '/locked': typeof LockedRoute
   '/login': typeof LoginRoute
@@ -1021,6 +1028,7 @@ export interface FileRoutesByTo {
   '/books': typeof BooksRoute
   '/courses': typeof CoursesRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
+  '/games': typeof GamesRoute
   '/locked': typeof LockedRoute
   '/login': typeof LoginRoute
   '/mcp': typeof McpRoute
@@ -1161,6 +1169,7 @@ export interface FileRoutesById {
   '/books': typeof BooksRoute
   '/courses': typeof CoursesRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
+  '/games': typeof GamesRoute
   '/german': typeof GermanRouteWithChildren
   '/locked': typeof LockedRoute
   '/login': typeof LoginRoute
@@ -1307,6 +1316,7 @@ export interface FileRouteTypes {
     | '/books'
     | '/courses'
     | '/forgot-password'
+    | '/games'
     | '/german'
     | '/locked'
     | '/login'
@@ -1451,6 +1461,7 @@ export interface FileRouteTypes {
     | '/books'
     | '/courses'
     | '/forgot-password'
+    | '/games'
     | '/locked'
     | '/login'
     | '/mcp'
@@ -1590,6 +1601,7 @@ export interface FileRouteTypes {
     | '/books'
     | '/courses'
     | '/forgot-password'
+    | '/games'
     | '/german'
     | '/locked'
     | '/login'
@@ -1735,6 +1747,7 @@ export interface RootRouteChildren {
   BooksRoute: typeof BooksRoute
   CoursesRoute: typeof CoursesRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  GamesRoute: typeof GamesRoute
   GermanRoute: typeof GermanRouteWithChildren
   LockedRoute: typeof LockedRoute
   LoginRoute: typeof LoginRoute
@@ -1874,6 +1887,13 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/german': {
@@ -2978,6 +2998,7 @@ const rootRouteChildren: RootRouteChildren = {
   BooksRoute: BooksRoute,
   CoursesRoute: CoursesRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  GamesRoute: GamesRoute,
   GermanRoute: GermanRouteWithChildren,
   LockedRoute: LockedRoute,
   LoginRoute: LoginRoute,

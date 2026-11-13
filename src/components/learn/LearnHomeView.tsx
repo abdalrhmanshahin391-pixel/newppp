@@ -8,11 +8,9 @@ import {
   LectureCardArt,
   LessonsCardArt,
   MemoryCardArt,
-  PairsCardArt,
   QuestionBankCardArt,
   SummaryCardArt,
   TalkCardArt,
-  WordcraftCardArt,
 } from "./PlayCardArt";
 import { useLearnSection } from "./useLearnSection";
 import { TOOLS, type ToolDef } from "@/lib/site-tools";
@@ -86,26 +84,6 @@ function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): Se
       rows: [
         { ...rowOf(tool("flashcards")), chip: chips.flashcards },
         rowOf(tool("memory-lab")),
-        {
-          key: "pairs",
-          slot: "pairs",
-          name: { en: "Pairs", ar: "اقرن" },
-          line: {
-            en: "Match your flashcards' fronts and backs against the clock.",
-            ar: "اقرن وجه بطاقاتك مع ظهرها قبل ما يخلص الوقت.",
-          },
-          to: "/study/pairs",
-        },
-        {
-          key: "wordcraft",
-          slot: "wordcraft",
-          name: { en: "Wordcraft", ar: "Wordcraft" },
-          line: {
-            en: "Pick easy, medium or hard: find four new English words in the letters and learn what they mean.",
-            ar: "اختار سهل أو متوسط أو صعب: لاقي أربع كلمات إنجليزية جديدة بين الحروف وتعلّم معانيها.",
-          },
-          to: "/wordcraft",
-        },
         rowOf(tool("pdf-summary")),
         rowOf(tool("all-in-one")),
         rowOf(tool("question-bank")),
@@ -188,8 +166,6 @@ const PLAY: Record<string, Play> = {
   },
   flashcards: { Art: FlashcardsCardArt, go: { en: "Study", ar: "ادرس" } },
   "memory-lab": { Art: MemoryCardArt, go: { en: "Play", ar: "العب" } },
-  pairs: { Art: PairsCardArt, go: { en: "Play", ar: "العب" } },
-  wordcraft: { Art: WordcraftCardArt, go: { en: "Play", ar: "العب" } },
   "pdf-summary": { Art: SummaryCardArt, go: { en: "Summarise", ar: "لخّص" } },
   "all-in-one": { Art: AllInOneCardArt, go: { en: "Start", ar: "ابدأ" } },
   "question-bank": { Art: QuestionBankCardArt, go: { en: "Practise", ar: "تدرّب" } },
