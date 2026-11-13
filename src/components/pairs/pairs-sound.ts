@@ -29,6 +29,16 @@ function audio(): AudioContext | null {
     window.AudioContext ??
     (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!Ctor) return null;
+  // iPhone and iPad mute web sounds while the ring/silent switch is on silent. A game's sounds are
+  // its feedback, so ask Safari (16.4+) to treat them as playback; older browsers ignore this.
+  const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession;
+  if (session && session.type !== "playback") {
+    try {
+      session.type = "playback";
+    } catch {
+      /* not allowed here; the sounds still play when the phone is not on silent */
+    }
+  }
   context ??= new Ctor();
   if (context.state === "suspended") void context.resume().catch(() => undefined);
   return context;

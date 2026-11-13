@@ -16,6 +16,7 @@ import { StartLearningLink } from "@/components/StartLearningLink";
 import { LanguageMenu } from "@/components/language/LanguageMenu";
 
 const SIMPLE_LINKS: { to: string; label: string }[] = [
+  { to: "/games", label: "Games" },
   { to: "/books", label: "Library" },
   { to: "/pricing", label: "Pricing" },
 ];
