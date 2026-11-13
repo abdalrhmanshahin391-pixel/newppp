@@ -6402,15 +6402,16 @@ html.rita-app,
 }
 
 /* ===========================================================================
-   The learning home (/learn). Game cards (one gradient, logo and illustration per destination),
-   immediate local navigation.
+   The learning home (/learn). Flat monochrome cards, immediate local navigation.
    Visited panels reuse their DOM/images; one finite 150ms transition per selection.
    =========================================================================== */
 .uz-learn {
   --uz-ink: var(--pp-ink, #121117);
   --uz-quiet: var(--pp-muted, #6a697c);
   --uz-card: var(--pp-grey, #f4f4f8);
+  --uz-tile-bg: #000;
   --uz-paper: #f2f2f5;
+  --uz-on-tile-muted: #b9b9c2;
   --uz-out: var(--pp-ease, cubic-bezier(0.22, 1, 0.36, 1));
   background: #fff;
   color: var(--uz-ink);
@@ -6483,8 +6484,8 @@ html.rita-app,
 .uz-rail-item:active {
   transform: scale(0.98);
 }
-.uz-learn :is(.uz-rail-item, .gc):focus-visible {
-  outline: 3px solid var(--uz-ink);
+.uz-learn :is(.uz-rail-item, .uz-tile, .uz-play):focus-visible {
+  outline: 2px solid var(--uz-ink);
   outline-offset: 4px;
 }
 .edith-premium .uz-section-title {
@@ -6498,6 +6499,142 @@ html.rita-app,
   display: grid;
   gap: 16px;
 }
+/* The two Uzyra cards (talk and lessons), in the game-card look: one solid blue (white text on it
+   is 4.9:1), a big centred title, one line, the drawing at the bottom, and a white button with a
+   6px lip that sits over the bottom of the drawing. */
+.uz-play {
+  --play: #2b73c7;
+  --play-lip: #d5d9e3;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  min-height: 390px;
+  overflow: hidden;
+  padding: 30px 20px 0;
+  border-radius: 32px;
+  background: var(--play);
+  color: #fff;
+  text-align: center;
+  text-decoration: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 160ms var(--uz-out);
+}
+.edith-premium .uz-play-title {
+  margin: 0;
+  max-width: 100%;
+  color: #fff;
+  font-family: var(--pp-display);
+  font-size: clamp(30px, 8vw, 40px) !important;
+  font-weight: 700;
+  line-height: 1.15 !important;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+[dir="rtl"] .uz-play-title {
+  letter-spacing: 0;
+}
+.uz-play-line {
+  max-width: 34ch;
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 1.5;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.uz-play-pill {
+  max-width: 100%;
+  margin-top: 10px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--play);
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.uz-play-art {
+  position: relative;
+  flex: 1 0 230px;
+  width: 100%;
+  margin-top: 14px;
+}
+.uz-play-art svg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  width: 100%;
+  max-width: 440px;
+  height: 100%;
+  max-height: 290px;
+  margin: 0 auto;
+  transition: transform 220ms var(--uz-out);
+}
+.uz-play-btn {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  min-width: 132px;
+  max-width: calc(100% - 48px);
+  height: 56px;
+  margin: 0 auto;
+  padding: 0 30px;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--play);
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 6px 0 var(--play-lip);
+  transition:
+    transform 120ms var(--uz-out),
+    box-shadow 120ms var(--uz-out);
+}
+.uz-play:active .uz-play-btn {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--play-lip);
+}
+@media (min-width: 768px) {
+  .uz-play {
+    min-height: 430px;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .uz-play:hover {
+    transform: translateY(-2px);
+  }
+  .uz-play:hover .uz-play-art svg {
+    transform: translateY(-4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uz-learn :is(.uz-play, .uz-play-art svg, .uz-play-btn) {
+    transition: none;
+  }
+  .uz-play:hover,
+  .uz-play:hover .uz-play-art svg,
+  .uz-play:active .uz-play-btn {
+    transform: none;
+  }
+}
+.uz-tile {
+  position: relative;
+  overflow: hidden;
+  color: var(--uz-paper);
+  background: var(--uz-tile-bg);
+  text-decoration: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
 .uz-tiles {
   display: grid;
   gap: 16px;
@@ -6508,552 +6645,109 @@ html.rita-app,
 .uz-tiles > li {
   min-width: 0;
 }
+.uz-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  padding: 14px 14px 20px;
+  border-radius: 22px;
+}
+.uz-tile-img {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 2 / 1;
+  max-height: 180px;
+  border-radius: 14px;
+  background: var(--uz-tile-bg);
+}
+.uz-tile[data-lead] .uz-tile-img {
+  aspect-ratio: 21 / 9;
+  max-height: 200px;
+}
+.uz-tile-img img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.uz-tile-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 8px;
+}
+.uz-tile-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  color: var(--uz-paper);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.uz-tile[data-lead] .uz-tile-name {
+  font-size: 20px;
+}
+.uz-tile-tag {
+  padding: 2px 8px;
+  border: 1px solid var(--uz-on-tile-muted);
+  border-radius: 999px;
+  color: var(--uz-paper);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.uz-tile-line {
+  max-width: 46ch;
+  color: var(--uz-on-tile-muted);
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.uz-tile-go {
+  position: absolute;
+  inset-inline-end: 18px;
+  bottom: 18px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--uz-paper);
+  color: var(--uz-ink);
+}
+.uz-tile .uz-tile-text {
+  padding-inline-end: 46px;
+}
+.uz-tile {
+  transition: transform 120ms var(--uz-out);
+}
+.uz-tile:active {
+  transform: scale(0.995);
+}
+.uz-tile-go svg {
+  transition: transform 150ms var(--uz-out);
+}
 #learn-panel-together .uz-tiles {
   max-width: 760px;
 }
-
-/* Game cards: one gradient per destination (deep enough at the top for white text, 4.5:1 or
-   more), the name drawn as a logo, an illustration, and one white button with a lip that sits
-   over the bottom of the art. `--deep` colours the button word and the pills. */
-.gc {
-  --g1: #6a3de8;
-  --g2: #f39a82;
-  --deep: #4a22b8;
-  --lip: #d9d1f3;
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100%;
-  min-height: 392px;
-  overflow: hidden;
-  padding: 26px 18px 0;
-  border-radius: 28px;
-  color: #fff;
-  text-align: center;
-  text-decoration: none;
-  background: linear-gradient(180deg, var(--g1) 0%, var(--g1) 22%, var(--g2) 100%);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22);
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform 160ms var(--uz-out);
-}
-/* A soft light behind the art, like a stage lamp. */
-.gc::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: auto 8% -14% 8%;
-  height: 62%;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, rgb(255 255 255 / 0.24), transparent);
-}
-.gc[data-tone="talk"] {
-  --g1: #6a3de8;
-  --g2: #f39a82;
-  --deep: #4a22b8;
-  --lip: #dcd2f7;
-}
-.gc[data-tone="lessons"] {
-  --g1: #0c7148;
-  --g2: #52cf94;
-  --deep: #0a5c3a;
-  --lip: #c9ecd9;
-}
-.gc[data-tone="cards"] {
-  --g1: #1c64d4;
-  --g2: #0a3a8f;
-  --deep: #134fae;
-  --lip: #cddcf6;
-}
-.gc[data-tone="memory"] {
-  --g1: #5427cf;
-  --g2: #a27cff;
-  --deep: #4a1fc0;
-  --lip: #ddd2fb;
-}
-.gc[data-tone="summary"] {
-  --g1: #c2410c;
-  --g2: #f2608e;
-  --deep: #b23a0b;
-  --lip: #f7d6c8;
-}
-.gc[data-tone="allinone"] {
-  --g1: #3730a3;
-  --g2: #7f70f4;
-  --deep: #3730a3;
-  --lip: #d6d3f4;
-}
-.gc[data-tone="qbank"] {
-  --g1: #0f766e;
-  --g2: #1e40af;
-  --deep: #0f6a63;
-  --lip: #c8e6e3;
-}
-.gc[data-tone="lecture"] {
-  --g1: #be185d;
-  --g2: #fb8340;
-  --deep: #a8154f;
-  --lip: #f6d0de;
-}
-.gc[data-tone="todo"] {
-  --g1: #4d7c0f;
-  --g2: #19a35a;
-  --deep: #3f660c;
-  --lip: #d6e7c4;
-}
-.gc[data-tone="exams"] {
-  --g1: #c81e1e;
-  --g2: #f97b2c;
-  --deep: #b41b1b;
-  --lip: #f7d0d0;
-}
-.gc[data-tone="shared"] {
-  --g1: #0e7490;
-  --g2: #2350d6;
-  --deep: #0c6680;
-  --lip: #c9e4ec;
-}
-.gc[data-tone="spaces"] {
-  --g1: #7c3aed;
-  --g2: #ec5aa6;
-  --deep: #6a2fd0;
-  --lip: #e2d4fb;
-}
-.gc[data-tone="german"] {
-  --g1: #1b1b1f;
-  --g2: #d49a12;
-  --deep: #8f1717;
-  --lip: #efd6d6;
-  background: linear-gradient(180deg, #1b1b1f 0%, #1b1b1f 20%, #8f1717 62%, #d49a12 100%);
-}
-.gc-sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-.gc-head {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  max-width: 36ch;
-  min-width: 0;
-}
-.edith-premium .gc-h {
-  margin: 0;
-  font-size: inherit !important;
-  line-height: inherit !important;
-  letter-spacing: normal;
-}
-.gc-line {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  color: rgb(255 255 255 / 0.95);
-  font-size: 14.5px;
-  font-weight: 500;
-  line-height: 1.5;
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.22);
-  overflow-wrap: anywhere;
-}
-.gc-pills {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-  max-width: 100%;
-}
-.gc-pill {
-  max-width: 100%;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: #fff;
-  color: var(--deep);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-.gc-art {
-  position: relative;
-  flex: 1 1 auto;
-  width: 100%;
-  min-height: 200px;
-  margin-top: 6px;
-}
-/* The art fills the space left under the words (scaled to fit, anchored at the bottom). Its
-   ground sits 40px above the card's edge, so the button covers only its lowest strip. */
-.gc-svg {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 40px;
-  display: block;
-  width: 100%;
-  height: calc(100% - 40px);
-  overflow: visible;
-  transition: transform 220ms var(--uz-out);
-}
-.gc-btn {
-  position: absolute;
-  bottom: 22px;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: max-content;
-  max-width: calc(100% - 48px);
-  min-width: 148px;
-  height: 52px;
-  margin: 0 auto;
-  padding: 0 28px;
-  border-radius: 999px;
-  background: #fff;
-  color: var(--deep);
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1;
-  white-space: nowrap;
-  box-shadow:
-    0 5px 0 var(--lip),
-    0 12px 20px -8px rgb(0 0 0 / 0.4);
-  transition:
-    transform 120ms var(--uz-out),
-    box-shadow 120ms var(--uz-out);
-}
-.gc:active .gc-btn {
-  transform: translateY(3px);
-  box-shadow:
-    0 2px 0 var(--lip),
-    0 6px 12px -6px rgb(0 0 0 / 0.4);
-}
-
-/* The logos. Every name starts from the same heavy display face; the style adds the rest. */
-.gc-logo {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 4px 8px;
-  max-width: 100%;
-  color: #fff;
-  font-family: "Uzyra Arabic", "Inter Tight", "Figtree", sans-serif;
-  font-size: 30px;
-  font-weight: 800;
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-  text-shadow: 0 3px 0 rgb(0 0 0 / 0.16);
-  overflow-wrap: anywhere;
-}
-[dir="rtl"] .gc-logo {
-  letter-spacing: 0;
-}
-.gc-deco {
-  flex: none;
-  width: 0.8em;
-  height: 0.8em;
-  fill: #ffd43b;
-  filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.18));
-}
-.gc-logo[data-style="script"] {
-  font-size: 36px;
-  font-style: italic;
-  letter-spacing: -0.035em;
-  transform: rotate(-3deg);
-  text-shadow:
-    0 3px 0 rgb(40 10 100 / 0.35),
-    0 0 26px rgb(255 255 255 / 0.5);
-}
-[dir="rtl"] .gc-logo[data-style="script"] {
-  font-style: normal;
-  letter-spacing: 0;
-  transform: rotate(3deg);
-}
-.gc-logo[data-style="star"] .gc-star {
-  width: 0.9em;
-  height: 0.9em;
-  transform: translateY(-0.35em) rotate(12deg);
-}
-.gc-logo[data-style="bold"] {
-  text-shadow:
-    0 2px 0 var(--deep),
-    0 4px 0 var(--deep),
-    0 6px 0 rgb(0 0 0 / 0.22),
-    0 10px 18px rgb(0 0 0 / 0.2);
-}
-.gc-logo[data-style="tiles"] {
-  gap: 6px 10px;
-  font-size: 22px;
-  text-shadow: none;
-}
-.gc-word {
-  display: inline-flex;
-  gap: 4px;
-  white-space: nowrap;
-}
-.gc-tile {
-  display: inline-grid;
-  place-items: center;
-  min-width: 1.2em;
-  height: 1.4em;
-  padding: 0 0.14em;
-  border-radius: 0.26em;
-  background: #fff;
-  color: #1d1640;
-  box-shadow: 0 0.16em 0 rgb(0 0 0 / 0.24);
-  text-transform: uppercase;
-  transform: rotate(-4deg);
-}
-[dir="rtl"] .gc-tile {
-  padding: 0 0.4em;
-}
-.gc-tile:nth-child(5n + 1) {
-  background: #41d27a;
-}
-.gc-tile:nth-child(5n + 2) {
-  background: #ffd43b;
-  transform: rotate(3deg);
-}
-.gc-tile:nth-child(5n + 3) {
-  background: #ff9cc3;
-  transform: rotate(-2deg);
-}
-.gc-tile:nth-child(5n + 4) {
-  background: #7fd6ff;
-  transform: rotate(4deg);
-}
-.gc-word:nth-child(2) .gc-tile:nth-child(5n + 1) {
-  background: #ffd43b;
-}
-.gc-logo[data-style="marker"] .gc-ink,
-.gc-logo[data-style="bubble"] .gc-ink,
-.gc-logo[data-style="stamp"] .gc-ink {
-  text-shadow: none;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}
-.gc-logo[data-style="marker"] .gc-ink {
-  padding: 0 0.28em;
-  border-radius: 0.14em;
-  color: #3d1400;
-  background: linear-gradient(transparent 10%, #ffd43b 10%, #ffd43b 92%, transparent 92%);
-  transform: rotate(-2deg);
-}
-.gc-logo[data-style="bubble"] .gc-ink {
-  position: relative;
-  padding: 0.16em 0.55em 0.2em;
-  border-radius: 0.7em;
-  background: #fff;
-  color: var(--deep);
-  box-shadow: 0 4px 0 rgb(0 0 0 / 0.16);
-}
-.gc-logo[data-style="bubble"] .gc-ink::after {
-  content: "";
-  position: absolute;
-  bottom: -0.32em;
-  inset-inline-start: 0.9em;
-  border-top: 0.38em solid #fff;
-  border-inline-end: 0.38em solid transparent;
-}
-.gc-logo[data-style="wave"] .gc-bars {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.09em;
-  height: 0.9em;
-}
-.gc-bars i {
-  display: block;
-  width: 0.12em;
-  height: 0.5em;
-  border-radius: 99px;
-  background: #ffd43b;
-  box-shadow: 0 2px 0 rgb(0 0 0 / 0.18);
-}
-.gc-bars i:nth-child(2) {
-  height: 0.85em;
-}
-.gc-bars i:nth-child(3) {
-  height: 0.65em;
-}
-.gc-bars i:nth-child(4) {
-  height: 0.35em;
-}
-.gc-logo[data-style="check"] .gc-tick {
-  width: 0.95em;
-  height: 0.95em;
-  fill: #ffd43b;
-}
-.gc-tick path {
-  fill: none;
-  stroke: #3f660c;
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.gc-logo[data-style="stamp"] .gc-ink {
-  padding: 0.12em 0.5em 0.14em;
-  border-top: 0.26em solid #ff5a5f;
-  border-radius: 0.3em;
-  background: #fff;
-  color: #b41b1b;
-  box-shadow: 0 4px 0 rgb(0 0 0 / 0.18);
-  transform: rotate(2deg);
-}
-.gc-link {
-  display: inline-flex;
-  align-items: center;
-}
-.gc-link i {
-  display: block;
-  width: 0.5em;
-  height: 0.3em;
-  border: 0.08em solid #ffd43b;
-  border-radius: 99px;
-}
-.gc-link i + i {
-  margin-inline-start: -0.16em;
-}
-.gc-logo[data-style="retro"] {
-  text-shadow:
-    3px 3px 0 #ff7eb0,
-    6px 6px 0 #4cc6ff;
-}
-.gc-logo[data-style="flag"] {
-  flex-direction: column;
-  gap: 6px;
-}
-.gc-flag {
-  display: flex;
-  gap: 4px;
-}
-.gc-flag i {
-  display: block;
-  width: 1.1em;
-  height: 0.2em;
-  border-radius: 99px;
-  background: #141416;
-  box-shadow: 0 0 0 1.5px rgb(255 255 255 / 0.7);
-}
-.gc-flag i:nth-child(2) {
-  background: #e0262b;
-}
-.gc-flag i:nth-child(3) {
-  background: #ffce00;
-}
-
-/* The first card of a section is wider and a little louder. */
-.gc[data-lead] .gc-logo {
-  font-size: 36px;
-}
-.gc[data-lead] .gc-logo[data-style="tiles"] {
-  font-size: 26px;
-}
-
-/* The conversation stage: the biggest card. On phones it stacks; from 768px the words sit on one
-   side and the microphone on the other. Its button sits under the words, not over the art. */
-.gc[data-stage] {
-  min-height: 440px;
-  padding-bottom: 8px;
-  background: linear-gradient(160deg, var(--g1) 0%, var(--g1) 26%, var(--g2) 100%);
-}
-.gc[data-stage] .gc-logo {
-  font-size: 40px;
-}
-.gc[data-stage] .gc-btn {
-  position: static;
-  margin: 8px 0 0;
-}
-.gc[data-stage] .gc-art {
-  min-height: 220px;
-}
-.gc[data-stage] .gc-svg {
-  bottom: 10px;
-  height: calc(100% - 10px);
-}
-.gc-float {
-  position: absolute;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: #fff;
-  color: var(--deep);
-  font-size: 13px;
-  font-weight: 700;
-  white-space: nowrap;
-  box-shadow: 0 3px 0 rgb(0 0 0 / 0.14);
-}
-.gc-float-a {
-  left: 4%;
-  top: 6%;
-  transform: rotate(-4deg);
-}
-.gc-float-b {
-  right: 2%;
-  top: 30%;
-  transform: rotate(3deg);
-}
-.gc-float-c {
-  left: 8%;
-  bottom: 24%;
-  transform: rotate(2deg);
-}
-
 @media (min-width: 640px) {
   .uz-tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  /* A lone card takes the row; two or six fill their rows evenly, so no card is left alone. */
-  .uz-tiles[data-count="1"] > li {
+  .uz-tiles > [data-lead] {
     grid-column: 1 / -1;
   }
 }
 @media (min-width: 768px) {
   .uz-learn-main {
     padding: 36px 28px 96px;
-  }
-  .gc {
-    min-height: 404px;
-  }
-  .gc[data-stage] {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-    align-items: center;
-    gap: 12px;
-    min-height: 380px;
-    padding: 32px 30px;
-    text-align: start;
-  }
-  .gc[data-stage] .gc-head {
-    align-items: flex-start;
-  }
-  .gc[data-stage] .gc-logo {
-    justify-content: flex-start;
-    font-size: 46px;
-  }
-  .gc[data-stage] .gc-art {
-    align-self: stretch;
-    min-height: 280px;
-    margin: 0;
-  }
-  .gc[data-stage] .gc-svg {
-    bottom: 0;
-    height: 100%;
-  }
-  .gc[data-stage]::before {
-    inset: 10% -4% -10% 44%;
-    height: auto;
-  }
-  [dir="rtl"] .gc[data-stage]::before {
-    inset: 10% 44% -10% -4%;
   }
 }
 @media (min-width: 1024px) {
@@ -7082,56 +6776,28 @@ html.rita-app,
   .uz-tiles > [data-lead] {
     grid-column: span 2;
   }
-  /* Six tools: the lead card takes two columns and two rows, the other five fill a 3x3 grid. */
-  .uz-tiles[data-count="6"] > [data-lead] {
-    grid-row: span 2;
-  }
-  .uz-tiles[data-count="6"] > [data-lead] .gc {
-    padding-top: 40px;
-  }
-  .uz-tiles[data-count="6"] > [data-lead] .gc-logo {
-    font-size: 56px;
-  }
-  .uz-tiles[data-count="6"] > [data-lead] .gc-line {
-    font-size: 17px;
-  }
-  .uz-tiles[data-count="6"] > [data-lead] .gc-svg {
-    bottom: 52px;
-    height: calc(100% - 76px);
-  }
-  .uz-tiles[data-count="1"] > li {
-    grid-column: 1 / -1;
-  }
-  .gc[data-stage] {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-  .gc[data-stage] .gc-logo {
-    font-size: 42px;
-  }
 }
 @media (hover: hover) and (pointer: fine) {
   .uz-rail-item:not([aria-current="page"]):hover {
     background: var(--uz-card);
     color: var(--uz-ink);
   }
-  .gc:hover {
-    transform: translateY(-3px);
+  .uz-tile:hover {
+    transform: translateY(-2px);
   }
-  .gc:hover .gc-svg {
-    transform: translateY(-5px);
+  .uz-tile:hover .uz-tile-go svg {
+    transform: translateX(3px);
+  }
+  [dir="rtl"] .uz-tile:hover .uz-tile-go svg {
+    transform: translateX(-3px) rotate(180deg);
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .uz-panel:not([hidden]) {
     animation: none;
   }
-  .uz-learn :is(.gc, .gc-svg, .gc-btn, .uz-rail-item) {
+  .uz-learn :is(.uz-tile, .uz-rail-item, .uz-tile-go svg) {
     transition: none;
-  }
-  .gc:hover,
-  .gc:hover .gc-svg,
-  .gc:active .gc-btn {
-    transform: none;
   }
 }
 
@@ -11163,4 +10829,35 @@ html.rita-app,
 }
 .bk-sheet .bk-tag {
   background: #fff;
+}
+
+/* Library labels are black and white (the owner's choice): the category colour no longer tints the
+   category buttons' dots, the label in the book sheet and the featured card, the shelf heads and
+   their boards, or the sheet's and featured card's backgrounds. Book covers keep their colours. */
+.bk-cat,
+.bk-cat-dot,
+.bk-shelf,
+.bk-shelf-icon,
+.bk-sheet,
+.bk-feature {
+  --c: #121117 !important;
+  --soft: #f1f1f5 !important;
+}
+.bk-shelf-icon {
+  background: #121117;
+  color: #fff;
+}
+.bk-tag,
+.bk-sheet .bk-tag {
+  background: #121117;
+  color: #fff;
+}
+.bk-cat[aria-pressed="true"] .bk-cat-dot {
+  background: #fff;
+}
+
+/* Keep history headings compact against the shared premium display heading rule. */
+.edith-premium h1.conversation-heading {
+  font-size: clamp(1.75rem, 3vw, 2.25rem) !important;
+  line-height: 1.15 !important;
 }

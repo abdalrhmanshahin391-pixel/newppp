@@ -71,7 +71,7 @@ test("every schema is a valid strict structured-output schema", () => {
   }
 });
 
-test("the contract is versioned and says what Rita's own prompt says", () => {
+test("the contract is versioned and says what Uzyra's own prompt says", () => {
   assert.ok(Number.isInteger(RUBRIC_VERSION) && RUBRIC_VERSION >= 2);
   assert.match(DIALECT_PROMPT_HASH, /^[0-9a-f]{12}$/);
   for (const phrase of [
@@ -172,7 +172,7 @@ test("a diagnosis and a conversation review are checked too", () => {
 
 // ---------------------------------------------------------------------------- merging
 
-test("scores are mapped back to Rita and the reference whichever order they were shown in", () => {
+test("scores are mapped back to Uzyra and the reference whichever order they were shown in", () => {
   const merged = mergeJudgements([
     { ritaIs: "a", result: judgement("b", 2, 5) },
     { ritaIs: "b", result: judgement("a", 5, 2) },
@@ -196,7 +196,7 @@ test("when the two orders disagree the result is a tie (the model just liked the
   assert.equal(merged?.criteria.teaching.reference, 4);
 });
 
-test("Rita wins only when both orders say so; a tie in one order is not a win", () => {
+test("Uzyra wins only when both orders say so; a tie in one order is not a win", () => {
   assert.equal(
     mergeJudgements([
       { ritaIs: "a", result: judgement("a", 5, 2) },
@@ -312,7 +312,7 @@ const messages = [
   { role: "user", content: "later message" },
 ];
 
-test("the reference writer never sees Rita's reply or anything after it", () => {
+test("the reference writer never sees Uzyra's reply or anything after it", () => {
   const prompt = referencePrompt({
     messages,
     replyIndex: 3,
@@ -327,7 +327,7 @@ test("the reference writer never sees Rita's reply or anything after it", () => 
 test("the judge sees two unlabeled replies, the facts check sees the reply, the state is plain", () => {
   const judge = judgePrompt({ messages, replyIndex: 3, a: "reply one", b: "reply two" });
   assert.ok(judge.includes("<reply_a>\nreply one") && judge.includes("<reply_b>\nreply two"));
-  assert.ok(!/reference|Rita's reply/i.test(judge));
+  assert.ok(!/reference|Uzyra's reply/i.test(judge));
   assert.ok(factsPrompt({ messages, replyIndex: 3 }).includes("<reply_to_check>\nشو حابب نتعلم"));
   assert.ok(dialectPrompt({ messages, replyIndex: 3 }).includes("شو حابب"));
   assert.equal(stateLines(null), "(no turn record)");

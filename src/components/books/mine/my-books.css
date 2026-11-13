@@ -1,0 +1,424 @@
+/* «كتبك الخاصة»: the reader's own books, as a library shelf (same head, row and board), in black
+   and white like the library's labels. */
+.my-shelf .bk-shelf-head {
+  flex-wrap: wrap;
+}
+.my-private {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--pp-grey);
+  color: var(--pp-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.my-item {
+  position: relative;
+}
+.my-open {
+  display: grid;
+  justify-items: start;
+  width: 100%;
+  text-align: start;
+  border-radius: 10px;
+  -webkit-tap-highlight-color: transparent;
+}
+.my-open:focus-visible,
+.my-add:focus-visible,
+.my-bin:focus-visible,
+.my-progress-x:focus-visible {
+  outline: 3px solid var(--pp-accent);
+  outline-offset: 4px;
+}
+
+/* The bin on the cover: always there, one tap from deleting (with a confirmation). */
+.my-bin {
+  position: absolute;
+  top: -10px;
+  inset-inline-end: -10px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1.5px solid var(--pp-ink);
+  background: #fff;
+  color: var(--pp-ink);
+  box-shadow: 0 4px 10px -4px rgb(18 17 23 / 0.4);
+  transition:
+    transform 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    background-color 120ms ease;
+}
+.my-bin::before {
+  /* A 44px target around the 36px button. */
+  content: "";
+  position: absolute;
+  inset: -4px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .my-bin:hover {
+    background: var(--pp-ink);
+    color: #fff;
+  }
+}
+.my-bin:active {
+  transform: scale(0.92);
+}
+/* "Delete one to add another": both bins call for attention for a moment. */
+.my-item[data-point] .my-bin {
+  background: var(--pp-ink);
+  color: #fff;
+  animation: my-point 600ms ease-in-out 3;
+}
+@keyframes my-point {
+  50% {
+    transform: scale(1.18);
+    box-shadow: 0 0 0 8px rgb(18 17 23 / 0.12);
+  }
+}
+
+.my-unfinished {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 132px;
+  aspect-ratio: 2 / 3;
+  border-radius: 3px 8px 8px 3px;
+  background: rgb(255 255 255 / 0.78);
+  color: var(--pp-ink);
+  pointer-events: none;
+}
+
+/* The add card: a book-shaped dashed box. */
+.my-add {
+  display: grid;
+  justify-items: start;
+  text-align: start;
+  width: 132px;
+  -webkit-tap-highlight-color: transparent;
+}
+.my-add-box {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  width: 132px;
+  aspect-ratio: 2 / 3;
+  padding: 10px;
+  border-radius: 3px 8px 8px 3px;
+  border: 2px dashed #c9c9d4;
+  background: #fafafc;
+  color: var(--pp-ink);
+  text-align: center;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.my-add-label {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+@media (hover: hover) and (pointer: fine) {
+  .my-add:hover .my-add-box {
+    border-color: var(--pp-ink);
+    background: #fff;
+  }
+}
+.my-add:active .my-add-box {
+  transform: scale(0.98);
+}
+.my-add[data-full] .my-add-box {
+  color: var(--pp-muted);
+}
+.my-add .bk-item-title {
+  color: var(--pp-muted);
+  font-weight: 500;
+  font-size: 13px;
+}
+.my-add.is-sending .my-add-box {
+  border-style: solid;
+  border-color: var(--pp-ink);
+  background: #fff;
+}
+
+/* Upload progress: the share, a bar, and a stop button. */
+.my-progress {
+  position: absolute;
+  inset-inline: 10px;
+  bottom: 10px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 6px 16px -8px rgb(18 17 23 / 0.45);
+}
+.my-add-box .my-progress {
+  position: static;
+  width: 100%;
+  box-shadow: none;
+  padding: 0;
+}
+.my-item .my-progress {
+  top: auto;
+  bottom: auto;
+  top: 40%;
+  inset-inline: 8px;
+  width: auto;
+}
+.my-progress-n {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.my-progress-track {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  height: 6px;
+  border-radius: 99px;
+  background: #e6e6ee;
+  overflow: hidden;
+}
+.my-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--pp-ink);
+  transform-origin: left;
+  transition: transform 200ms ease-out;
+}
+[dir="rtl"] .my-progress-fill {
+  transform-origin: right;
+}
+.my-progress-x {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  color: var(--pp-ink);
+}
+.my-progress-x:hover {
+  background: var(--pp-grey);
+}
+
+.my-message {
+  min-height: 0;
+  margin: -6px 0 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--pp-ink);
+}
+.my-message:empty {
+  display: none;
+}
+
+/* The book's window. */
+.my-sheet .bk-tag svg {
+  flex: none;
+}
+.my-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+.my-read {
+  min-width: 140px;
+}
+.my-danger {
+  border-color: #b42318;
+  color: #b42318;
+}
+.my-danger:hover {
+  background: #fdecea;
+}
+.my-danger.is-solid {
+  background: #b42318;
+  border-color: #b42318;
+  color: #fff;
+}
+.my-danger.is-solid:hover {
+  background: #912018;
+}
+.my-rename {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+.my-rename input {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  padding-inline: 14px;
+  border: 1.5px solid var(--pp-ink);
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+/* The delete confirmation. */
+.my-confirm-back {
+  z-index: 70;
+}
+.my-confirm {
+  width: min(400px, 100%);
+  padding: 24px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 30px 80px -30px rgb(18 17 23 / 0.6);
+  animation: bk-pop 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.my-confirm-title {
+  font-size: 19px;
+  font-weight: 700;
+}
+.my-confirm-name {
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.my-confirm-line {
+  margin-top: 6px;
+  color: var(--pp-muted);
+  font-size: 14px;
+}
+.my-confirm-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my-item[data-point] .my-bin,
+  .my-confirm {
+    animation: none;
+  }
+  .my-bin,
+  .my-add-box,
+  .my-progress-fill {
+    transition: none;
+  }
+}
+
+/* Reading your own book. */
+.my-reader {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100dvh;
+  background: #f4f4f8;
+  color: var(--pp-ink);
+}
+.my-reader-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  padding-top: calc(8px + env(safe-area-inset-top));
+  background: #fff;
+  border-bottom: 1px solid var(--pp-line);
+}
+.my-reader-back {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+}
+.my-reader-back:hover {
+  background: var(--pp-grey);
+}
+.my-reader-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 16px;
+  font-weight: 700;
+}
+.my-reader-page {
+  flex: none;
+  color: var(--pp-muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.my-reader-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+}
+.my-reader-page-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  background: #fff;
+  box-shadow: 0 10px 30px -14px rgb(18 17 23 / 0.45);
+}
+.my-reader-spin {
+  position: absolute;
+  color: var(--pp-muted);
+}
+.my-reader-turn {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.92);
+  border: 1px solid var(--pp-line);
+  box-shadow: 0 4px 12px -6px rgb(18 17 23 / 0.35);
+}
+.my-reader-turn.is-prev {
+  left: 10px;
+}
+.my-reader-turn.is-next {
+  right: 10px;
+}
+.my-reader-turn:disabled {
+  opacity: 0.3;
+}
+.my-reader-turn:focus-visible,
+.my-reader-back:focus-visible {
+  outline: 3px solid var(--pp-accent);
+  outline-offset: 2px;
+}
+@media (hover: none) {
+  .my-reader-turn {
+    display: none;
+  }
+}
+.my-reader-slider {
+  padding: 10px 20px calc(12px + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid var(--pp-line);
+}
+.my-reader-slider input {
+  width: 100%;
+  accent-color: var(--pp-ink);
+}
+.my-reader-problem {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  max-width: 340px;
+  padding: 20px;
+  text-align: center;
+}

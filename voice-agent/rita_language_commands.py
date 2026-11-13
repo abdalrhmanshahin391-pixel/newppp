@@ -1,4 +1,4 @@
-"""Spoken or typed requests to change the language Rita answers in.
+"""Spoken or typed requests to change the language Uzyra answers in.
 
 Only a request in the shape of an order locks the language: "احكي معي بالإنجليزي",
 "اشرحلي بالعربي", "speak English", "explain dative in English", "sprich Deutsch". A learner who

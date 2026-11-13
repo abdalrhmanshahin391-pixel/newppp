@@ -18,6 +18,6 @@ export const MAX_NOTE_CHARS = 1000;
 /** The kind words a learner sees at a limit: never an error, and reading keeps working. */
 export function limitMessage(scope: "minute" | "day"): string {
   return scope === "minute"
-    ? "اشتغلت كثير هالدقيقة 👏 ريتا بترجعلك بعد دقيقة. القراءة والصوت العادي شغّالين."
+    ? "اشتغلت كثير هالدقيقة 👏 يوزرا بترجعلك بعد دقيقة. القراءة والصوت العادي شغّالين."
     : "اشتغلت كثير اليوم 👏 هالإجراء بيرجع بكرا. القراءة والصوت العادي شغّالين.";
 }

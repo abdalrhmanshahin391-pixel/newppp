@@ -14,12 +14,12 @@ export const Route = createFileRoute("/summaries/$summaryId")({
       { title: "Summary sheet — Uzyra" },
       {
         name: "description",
-        content: "A printable one-page Rita summary built from your own study material.",
+        content: "A printable one-page Uzyra summary built from your own study material.",
       },
       { property: "og:title", content: "Summary sheet — Uzyra" },
       {
         property: "og:description",
-        content: "A printable one-page Rita summary built from your own study material.",
+        content: "A printable one-page Uzyra summary built from your own study material.",
       },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary" },
@@ -102,7 +102,7 @@ function SummaryViewer() {
       {data && (
         <SummaryView
           content={data.content}
-          siteName="Rita"
+          siteName="Uzyra"
           tagline={settings.tagline}
           authorName={data.author_name ?? undefined}
           createdAt={data.created_at}

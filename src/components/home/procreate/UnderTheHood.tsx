@@ -19,7 +19,7 @@ type Lang = "en" | "ar" | "de";
 type Word = { text: string; lang: Lang };
 
 const HEARD: Word[] = [
-  { text: "Rita,", lang: "en" },
+  { text: "Uzyra,", lang: "en" },
   { text: "how", lang: "en" },
   { text: "do", lang: "en" },
   { text: "I", lang: "en" },
@@ -160,13 +160,13 @@ function LiveTranscript() {
       </div>
 
       <p className="sr-only">
-        You say: {HEARD_TEXT} Rita replies: {REPLY_TEXT}
+        You say: {HEARD_TEXT} Uzyra replies: {REPLY_TEXT}
       </p>
 
       <div aria-hidden="true" className="mt-6 grid gap-5 md:grid-cols-2">
         <div className="min-h-[7.5rem]">
           <p className="text-[14px] font-semibold" style={muted}>
-            What Rita hears, as you speak
+            What Uzyra hears, as you speak
           </p>
           <p className="mt-2 text-[18px] font-medium leading-[1.5] md:text-[20px]" style={ink}>
             <Heard words={HEARD.slice(0, heard)} partialLast={!finishing} />
@@ -177,7 +177,7 @@ function LiveTranscript() {
           style={{ borderColor: "var(--pp-line)" }}
         >
           <p className="text-[14px] font-semibold" style={muted}>
-            Rita's reply, already on its way
+            Uzyra's reply, already on its way
           </p>
           <p className="mt-2 text-[18px] font-medium leading-[1.5] md:text-[20px]" style={ink}>
             <Heard words={REPLY.slice(0, replied)} partialLast={false} />
@@ -187,7 +187,7 @@ function LiveTranscript() {
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-[44rem] text-[15px] leading-[1.55]" style={muted}>
-          A dashed word is still being heard and can change. Rita starts to answer before the
+          A dashed word is still being heard and can change. Uzyra starts to answer before the
           question is over, and Arabic, English and German can sit in one sentence.
         </p>
         <button
@@ -214,7 +214,7 @@ type Lane = { label: string; bars: Bar[] };
 
 const OVERLAP: Lane[] = [
   { label: "You speak", bars: [{ from: 0, to: 38, tone: "ink" }] },
-  { label: "Rita listens", bars: [{ from: 1, to: 40, tone: "soft" }] },
+  { label: "Uzyra listens", bars: [{ from: 1, to: 40, tone: "soft" }] },
   { label: "Decides your turn is over", bars: [{ from: 36, to: 46, tone: "soft" }] },
   { label: "Thinks of the answer", bars: [{ from: 44, to: 66, tone: "soft" }] },
   { label: "Speaks", bars: [{ from: 52, to: 100, tone: "accent" }] },
@@ -287,7 +287,7 @@ function TurnTimeline() {
       </div>
 
       <p className="mt-5 text-[15px] font-semibold" style={ink}>
-        Rita: the steps overlap
+        Uzyra: the steps overlap
       </p>
       <div className="mt-3">
         <LaneRows lanes={OVERLAP} shown={shown} />
@@ -331,7 +331,7 @@ function SpecGrid() {
   return (
     <ul className="grid gap-4 md:grid-cols-3">
       <Spec icon={<AudioLines size={22} />} title="Hears words as you say them">
-        Speech is recognised in a continuous stream, so Rita does not wait for you to stop before
+        Speech is recognised in a continuous stream, so Uzyra does not wait for you to stop before
         she starts to understand.
       </Spec>
       <Spec icon={<Pause size={22} />} title="A pause is not the end">
@@ -392,7 +392,7 @@ export function UnderTheHood() {
           Fast enough to <span className="rita-accent">talk to.</span>
         </h2>
         <p className="rh-lead2 mx-auto mt-3 max-w-[640px]" style={muted}>
-          Rita does not wait for you to finish, then think, then speak. Listening, deciding and
+          Uzyra does not wait for you to finish, then think, then speak. Listening, deciding and
           speaking overlap, so a reply can begin while she is still shaping the end of it.
         </p>
       </header>

@@ -43,6 +43,7 @@ import { Route as ToolkitRouteImport } from './routes/toolkit'
 import { Route as TourRouteImport } from './routes/tour'
 import { Route as TutorialRouteImport } from './routes/tutorial'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as WordcraftRouteImport } from './routes/wordcraft'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
@@ -89,6 +90,7 @@ import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
 import { Route as StudyIndexRouteImport } from './routes/study.index'
 import { Route as StudyExamsRouteImport } from './routes/study.exams'
 import { Route as StudyMatchRouteImport } from './routes/study.match'
+import { Route as StudyPairsRouteImport } from './routes/study.pairs'
 import { Route as StudyPdfRouteImport } from './routes/study.pdf'
 import { Route as StudyProgressRouteImport } from './routes/study.progress'
 import { Route as StudySessionRouteImport } from './routes/study.session'
@@ -120,6 +122,7 @@ import { Route as ApiRitaV3ReviewerCheckRouteImport } from './routes/api/rita-v3
 import { Route as ApiRitaExtractRouteImport } from './routes/api/rita/extract'
 import { Route as ApiRitaLearningRouteImport } from './routes/api/rita/learning'
 import { Route as BooksBookIdReadRouteImport } from './routes/books_.$bookId.read'
+import { Route as BooksMineBookIdRouteImport } from './routes/books_.mine.$bookId'
 import { Route as CoursesCourseIdIndexRouteImport } from './routes/courses.$courseId.index'
 import { Route as CoursesCourseIdAddQuestionsRouteImport } from './routes/courses.$courseId.add-questions'
 import { Route as CoursesCourseIdRunRouteImport } from './routes/courses.$courseId.run'
@@ -317,6 +320,11 @@ const TutorialRoute = TutorialRouteImport.update({
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WordcraftRoute = WordcraftRouteImport.update({
+  id: '/wordcraft',
+  path: '/wordcraft',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Char91DotmcpChar93ListToolsRoute =
@@ -551,6 +559,11 @@ const StudyMatchRoute = StudyMatchRouteImport.update({
   path: '/match',
   getParentRoute: () => StudyRoute,
 } as any)
+const StudyPairsRoute = StudyPairsRouteImport.update({
+  id: '/pairs',
+  path: '/pairs',
+  getParentRoute: () => StudyRoute,
+} as any)
 const StudyPdfRoute = StudyPdfRouteImport.update({
   id: '/pdf',
   path: '/pdf',
@@ -705,6 +718,11 @@ const ApiRitaLearningRoute = ApiRitaLearningRouteImport.update({
 const BooksBookIdReadRoute = BooksBookIdReadRouteImport.update({
   id: '/books_/$bookId/read',
   path: '/books/$bookId/read',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BooksMineBookIdRoute = BooksMineBookIdRouteImport.update({
+  id: '/books_/mine/$bookId',
+  path: '/books/mine/$bookId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoursesCourseIdIndexRoute = CoursesCourseIdIndexRouteImport.update({
@@ -888,6 +906,7 @@ export interface FileRoutesByFullPath {
   '/tour': typeof TourRoute
   '/tutorial': typeof TutorialRoute
   '/welcome': typeof WelcomeRoute
+  '/wordcraft': typeof WordcraftRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/ai': typeof AdminAiRoute
@@ -927,6 +946,7 @@ export interface FileRoutesByFullPath {
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/study/exams': typeof StudyExamsRoute
   '/study/match': typeof StudyMatchRoute
+  '/study/pairs': typeof StudyPairsRoute
   '/study/pdf': typeof StudyPdfRoute
   '/study/progress': typeof StudyProgressRoute
   '/study/session': typeof StudySessionRoute
@@ -962,6 +982,7 @@ export interface FileRoutesByFullPath {
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/books/$bookId/read': typeof BooksBookIdReadRoute
+  '/books/mine/$bookId': typeof BooksMineBookIdRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -1027,6 +1048,7 @@ export interface FileRoutesByTo {
   '/tour': typeof TourRoute
   '/tutorial': typeof TutorialRoute
   '/welcome': typeof WelcomeRoute
+  '/wordcraft': typeof WordcraftRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/ai': typeof AdminAiRoute
@@ -1064,6 +1086,7 @@ export interface FileRoutesByTo {
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/study/exams': typeof StudyExamsRoute
   '/study/match': typeof StudyMatchRoute
+  '/study/pairs': typeof StudyPairsRoute
   '/study/pdf': typeof StudyPdfRoute
   '/study/progress': typeof StudyProgressRoute
   '/study/session': typeof StudySessionRoute
@@ -1099,6 +1122,7 @@ export interface FileRoutesByTo {
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/books/$bookId/read': typeof BooksBookIdReadRoute
+  '/books/mine/$bookId': typeof BooksMineBookIdRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -1166,6 +1190,7 @@ export interface FileRoutesById {
   '/tour': typeof TourRoute
   '/tutorial': typeof TutorialRoute
   '/welcome': typeof WelcomeRoute
+  '/wordcraft': typeof WordcraftRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/ai': typeof AdminAiRoute
@@ -1205,6 +1230,7 @@ export interface FileRoutesById {
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/study/exams': typeof StudyExamsRoute
   '/study/match': typeof StudyMatchRoute
+  '/study/pairs': typeof StudyPairsRoute
   '/study/pdf': typeof StudyPdfRoute
   '/study/progress': typeof StudyProgressRoute
   '/study/session': typeof StudySessionRoute
@@ -1240,6 +1266,7 @@ export interface FileRoutesById {
   '/api/rita/extract': typeof ApiRitaExtractRoute
   '/api/rita/learning': typeof ApiRitaLearningRoute
   '/books_/$bookId/read': typeof BooksBookIdReadRoute
+  '/books_/mine/$bookId': typeof BooksMineBookIdRoute
   '/courses/$courseId/add-questions': typeof CoursesCourseIdAddQuestionsRoute
   '/courses/$courseId/run': typeof CoursesCourseIdRunRoute
   '/german/$courseId/exam': typeof GermanCourseIdExamRoute
@@ -1309,6 +1336,7 @@ export interface FileRouteTypes {
     | '/tour'
     | '/tutorial'
     | '/welcome'
+    | '/wordcraft'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin/ai'
@@ -1348,6 +1376,7 @@ export interface FileRouteTypes {
     | '/spaces/$spaceId'
     | '/study/exams'
     | '/study/match'
+    | '/study/pairs'
     | '/study/pdf'
     | '/study/progress'
     | '/study/session'
@@ -1383,6 +1412,7 @@ export interface FileRouteTypes {
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/books/$bookId/read'
+    | '/books/mine/$bookId'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1448,6 +1478,7 @@ export interface FileRouteTypes {
     | '/tour'
     | '/tutorial'
     | '/welcome'
+    | '/wordcraft'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin/ai'
@@ -1485,6 +1516,7 @@ export interface FileRouteTypes {
     | '/spaces/$spaceId'
     | '/study/exams'
     | '/study/match'
+    | '/study/pairs'
     | '/study/pdf'
     | '/study/progress'
     | '/study/session'
@@ -1520,6 +1552,7 @@ export interface FileRouteTypes {
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/books/$bookId/read'
+    | '/books/mine/$bookId'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1586,6 +1619,7 @@ export interface FileRouteTypes {
     | '/tour'
     | '/tutorial'
     | '/welcome'
+    | '/wordcraft'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin/ai'
@@ -1625,6 +1659,7 @@ export interface FileRouteTypes {
     | '/spaces/$spaceId'
     | '/study/exams'
     | '/study/match'
+    | '/study/pairs'
     | '/study/pdf'
     | '/study/progress'
     | '/study/session'
@@ -1660,6 +1695,7 @@ export interface FileRouteTypes {
     | '/api/rita/extract'
     | '/api/rita/learning'
     | '/books_/$bookId/read'
+    | '/books_/mine/$bookId'
     | '/courses/$courseId/add-questions'
     | '/courses/$courseId/run'
     | '/german/$courseId/exam'
@@ -1728,6 +1764,7 @@ export interface RootRouteChildren {
   TourRoute: typeof TourRoute
   TutorialRoute: typeof TutorialRoute
   WelcomeRoute: typeof WelcomeRoute
+  WordcraftRoute: typeof WordcraftRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AdminAiRoute: typeof AdminAiRoute
@@ -1787,6 +1824,7 @@ export interface RootRouteChildren {
   ApiRitaExtractRoute: typeof ApiRitaExtractRoute
   ApiRitaLearningRoute: typeof ApiRitaLearningRoute
   BooksBookIdReadRoute: typeof BooksBookIdReadRoute
+  BooksMineBookIdRoute: typeof BooksMineBookIdRoute
   ShareQuestionsSetIdRoute: typeof ShareQuestionsSetIdRoute
   ShareQuestionsNewRoute: typeof ShareQuestionsNewRoute
   AdminRitaQualityIndexRoute: typeof AdminRitaQualityIndexRoute
@@ -2039,6 +2077,13 @@ declare module '@tanstack/react-router' {
       path: '/welcome'
       fullPath: '/welcome'
       preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wordcraft': {
+      id: '/wordcraft'
+      path: '/wordcraft'
+      fullPath: '/wordcraft'
+      preLoaderRoute: typeof WordcraftRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/list-tools': {
@@ -2363,6 +2408,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudyMatchRouteImport
       parentRoute: typeof StudyRoute
     }
+    '/study/pairs': {
+      id: '/study/pairs'
+      path: '/pairs'
+      fullPath: '/study/pairs'
+      preLoaderRoute: typeof StudyPairsRouteImport
+      parentRoute: typeof StudyRoute
+    }
     '/study/pdf': {
       id: '/study/pdf'
       path: '/pdf'
@@ -2578,6 +2630,13 @@ declare module '@tanstack/react-router' {
       path: '/books/$bookId/read'
       fullPath: '/books/$bookId/read'
       preLoaderRoute: typeof BooksBookIdReadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/books_/mine/$bookId': {
+      id: '/books_/mine/$bookId'
+      path: '/books/mine/$bookId'
+      fullPath: '/books/mine/$bookId'
+      preLoaderRoute: typeof BooksMineBookIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/courses/$courseId/': {
@@ -2853,6 +2912,7 @@ const GermanRouteWithChildren =
 interface StudyRouteChildren {
   StudyExamsRoute: typeof StudyExamsRoute
   StudyMatchRoute: typeof StudyMatchRoute
+  StudyPairsRoute: typeof StudyPairsRoute
   StudyPdfRoute: typeof StudyPdfRoute
   StudyProgressRoute: typeof StudyProgressRoute
   StudySessionRoute: typeof StudySessionRoute
@@ -2870,6 +2930,7 @@ interface StudyRouteChildren {
 const StudyRouteChildren: StudyRouteChildren = {
   StudyExamsRoute: StudyExamsRoute,
   StudyMatchRoute: StudyMatchRoute,
+  StudyPairsRoute: StudyPairsRoute,
   StudyPdfRoute: StudyPdfRoute,
   StudyProgressRoute: StudyProgressRoute,
   StudySessionRoute: StudySessionRoute,
@@ -2946,6 +3007,7 @@ const rootRouteChildren: RootRouteChildren = {
   TourRoute: TourRoute,
   TutorialRoute: TutorialRoute,
   WelcomeRoute: WelcomeRoute,
+  WordcraftRoute: WordcraftRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
@@ -3006,6 +3068,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRitaExtractRoute: ApiRitaExtractRoute,
   ApiRitaLearningRoute: ApiRitaLearningRoute,
   BooksBookIdReadRoute: BooksBookIdReadRoute,
+  BooksMineBookIdRoute: BooksMineBookIdRoute,
   ShareQuestionsSetIdRoute: ShareQuestionsSetIdRoute,
   ShareQuestionsNewRoute: ShareQuestionsNewRoute,
   AdminRitaQualityIndexRoute: AdminRitaQualityIndexRoute,

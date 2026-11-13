@@ -1,17 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { useAuth } from "@/hooks/useAuth";
-
+import { productCopyFields } from "./brand";
 
 export type AnnouncementStyle =
-  | "ribbon"
-  | "floating"
-  | "spotlight"
-  | "modal"
-  | "marquee"
-  | "toast"
-  | "strip"
-  | "inline";
+  "ribbon" | "floating" | "spotlight" | "modal" | "marquee" | "toast" | "strip" | "inline";
 
 export type PopupTrigger = "open" | "delay" | "scroll" | "exit";
 export type PopupFrequency = "always" | "once" | "session" | "daily";
@@ -85,7 +78,6 @@ export const ANNOUNCEMENT_STYLES: { id: AnnouncementStyle; name: string; note: s
   { id: "modal", name: "Modal popup", note: "Centred popup over the page" },
 ];
 
-
 export const ACCENTS = ["#e11d48", "#58cc02", "#1cb0f6", "#f59e0b", "#8b5cf6", "#0f172a"];
 
 export function isLive(a: Announcement, now = Date.now()) {
@@ -105,7 +97,9 @@ export function useAnnouncements() {
         try {
           const { data, error } = await (supabase.rpc as any)("my_announcements");
           if (!error && Array.isArray(data) && data.length > 0) {
-            return data as Announcement[];
+            return (data as Announcement[]).map((row) =>
+              productCopyFields(row, ["title", "body", "href_label"]),
+            );
           }
         } catch {
           // fallback to direct table query below
@@ -119,11 +113,12 @@ export function useAnnouncements() {
         .order("created_at", { ascending: false });
 
       if (error) return [];
-      return (data ?? []) as Announcement[];
+      return ((data ?? []) as Announcement[]).map((row) =>
+        productCopyFields(row, ["title", "body", "href_label"]),
+      );
     },
   });
 }
-
 
 /** Admin view: every announcement, regardless of audience. */
 export function useAllAnnouncements() {
@@ -135,7 +130,9 @@ export function useAllAnnouncements() {
         .order("sort", { ascending: true })
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Announcement[];
+      return ((data ?? []) as Announcement[]).map((row) =>
+        productCopyFields(row, ["title", "body", "href_label"]),
+      );
     },
   });
 }

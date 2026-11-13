@@ -173,7 +173,7 @@ function AdminPaddleSyncPage() {
             </Link>
             <span>/</span>
             <Link to="/admin/plans" className="hover:text-[#121117]">
-              Rita Prices
+              Uzyra Prices
             </Link>
             <span>/</span>
             <span className="text-[#121117]">Paddle Sync Center</span>

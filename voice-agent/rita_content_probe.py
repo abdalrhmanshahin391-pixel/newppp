@@ -29,7 +29,7 @@ SENTENCE_END = re.compile(r"[.!?؟]+(?:\s|$)")
 class Case:
     id: str
     text: str
-    site_language: str = "automatic"  # what "Rita explains in" is set to: automatic | ar | en
+    site_language: str = "automatic"  # what "Uzyra explains in" is set to: automatic | ar | en
     forbid: tuple[str, ...] = ()
     require: tuple[str, ...] = ()
     max_sentences: int | None = None

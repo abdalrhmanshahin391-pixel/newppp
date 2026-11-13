@@ -178,30 +178,6 @@ export function ColorAndIcon({
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="الأيقونة">
-        {CATEGORY_ICONS.map((icon) => {
-          const Icon = CATEGORY_ICON[icon];
-          return (
-            <button
-              key={icon}
-              type="button"
-              role="radio"
-              aria-checked={value.icon === icon}
-              aria-label={icon}
-              onClick={() => onChange({ ...value, icon })}
-              className="grid h-11 w-11 place-items-center rounded-xl border-[1.5px]"
-              style={{
-                borderColor:
-                  value.icon === icon ? CATEGORY_COLORS[value.color].c : "var(--pp-line)",
-                color: CATEGORY_COLORS[value.color].c,
-                background: value.icon === icon ? CATEGORY_COLORS[value.color].soft : "#fff",
-              }}
-            >
-              <Icon size={18} />
-            </button>
-          );
-        })}
-      </div>
     </div>
   );
 }

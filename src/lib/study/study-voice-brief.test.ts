@@ -30,7 +30,7 @@ const data = (patch: Partial<StudyLessonData> = {}): StudyLessonData => ({
   ...patch,
 });
 
-test("ST-V06 (site side): Rita gets the outline and the goals, never the guide's text", () => {
+test("ST-V06 (site side): Uzyra gets the outline and the goals, never the guide's text", () => {
   const brief = studyVoiceBrief(data());
   assert.equal(brief.lessonId, "l1");
   assert.equal(brief.title, "Third person -s");

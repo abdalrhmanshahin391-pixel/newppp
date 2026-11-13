@@ -41,7 +41,7 @@ async def run(user_text, assistant_text, *, ack=True):
     state.observe_assistant_turn(assistant_text)
     context = LLMContext(
         [
-            {"role": "system", "content": "You are Rita."},
+            {"role": "system", "content": "You are Uzyra."},
             {"role": "assistant", "content": assistant_text},
             {"role": "user", "content": user_text},
         ]
@@ -72,7 +72,7 @@ async def run_lesson(user_text, phase="practice"):
         }
     )
     context = LLMContext(
-        [{"role": "system", "content": "You are Rita."}, {"role": "user", "content": user_text}]
+        [{"role": "system", "content": "You are Uzyra."}, {"role": "user", "content": user_text}]
     )
     router = RitaTurnRouter(
         state=state,

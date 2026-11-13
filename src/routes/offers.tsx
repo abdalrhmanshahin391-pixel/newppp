@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/legacy-client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { getPublicOfferMeta, claimOfferAction } from "@/lib/offer-center.functions";
+import { currentProductCopy, productCopyFields } from "@/lib/brand";
 
 export const Route = createFileRoute("/offers")({
   head: () => ({
@@ -75,7 +76,10 @@ function OffersPage() {
     queryFn: async () => {
       const { data, error } = await (supabase.rpc as any)("offers_list");
       if (error) throw error;
-      return (data ?? []) as Offer[];
+      return ((data ?? []) as Offer[]).map((offer) => ({
+        ...productCopyFields(offer, ["title", "subtitle", "badge"]),
+        bullets: (offer.bullets ?? []).map(currentProductCopy),
+      }));
     },
   });
 
@@ -156,7 +160,7 @@ function OffersPage() {
             </h1>
             <p className="mt-5 max-w-lg text-[17px] leading-relaxed text-muted-foreground">
               Flashcards, one-page summaries and practice questions land in your account the moment you
-              tap. No card, one per student, and it works right away in every Rita mode.
+              tap. No card, one per student, and it works right away in every Uzyra mode.
             </p>
           </div>
         </section>

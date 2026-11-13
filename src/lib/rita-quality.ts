@@ -1,5 +1,5 @@
 /**
- * The numbers and rules behind /admin/rita-quality: how healthy Rita is on each build, which issue
+ * The numbers and rules behind /admin/rita-quality: how healthy Uzyra is on each build, which issue
  * to fix next, whether a fix worked, and the file handed over for fixing. Pure functions over the
  * rows the page reads; nothing here talks to the network.
  *
@@ -84,7 +84,7 @@ export type BuildHealth = {
   lastSeen: string | null;
   reviewed: number;
   problemRate: number;
-  /** Rita's average score as a share of the reference reply's (100 = as good as the reference). */
+  /** Uzyra's average score as a share of the reference reply's (100 = as good as the reference). */
   quality: number | null;
   referenceWon: number;
   ritaWon: number;
@@ -375,7 +375,7 @@ export function issueFixFile(args: {
   const disagreed = examples.filter((example) => example.ownerAgrees === false);
   return {
     schemaVersion: 1,
-    purpose: "Rita issue fix file",
+    purpose: "Uzyra issue fix file",
     privacy: { rawAudioIncluded: false, credentialsIncluded: false },
     generatedAt: args.generatedAt ?? new Date().toISOString(),
     issue: {
@@ -391,7 +391,7 @@ export function issueFixFile(args: {
       createdAt: issue.created_at,
     },
     howToUse:
-      "Each example has Rita's reply and the reference reply an excellent tutor would give. Fix the cause so Rita answers like the reference, then mark the issue fixed on the page; later reviews decide whether it worked.",
+      "Each example has Uzyra's reply and the reference reply an excellent tutor would give. Fix the cause so Uzyra answers like the reference, then mark the issue fixed on the page; later reviews decide whether it worked.",
     numbers: {
       examples: examples.length,
       byBuild: args.byBuild,

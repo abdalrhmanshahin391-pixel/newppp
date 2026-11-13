@@ -99,7 +99,7 @@ export const Route = createFileRoute("/api/rita/learning")({
             { headers: { "Cache-Control": "no-store" } },
           );
         } catch (error) {
-          console.error("Rita destination list failed", error);
+          console.error("Uzyra destination list failed", error);
           return failure("Could not load your subjects.", 503);
         }
       },
@@ -280,7 +280,7 @@ export const Route = createFileRoute("/api/rita/learning")({
           }
           return Response.json({ saved: rows.length, skipped: germanItems.length - rows.length });
         } catch (error) {
-          console.error("Rita learning save failed", error);
+          console.error("Uzyra learning save failed", error);
           return failure("Could not save those items. Please try again.", 503);
         }
       },

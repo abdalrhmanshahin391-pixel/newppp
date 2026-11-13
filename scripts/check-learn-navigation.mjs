@@ -215,9 +215,8 @@ async function checks(p) {
           (a) => Number(a.effect.getTiming().duration) + Number(a.effect.getTiming().delay),
         ),
       ),
-      // Game cards: every card has its gradient (the monochrome tiles had none).
-      gradients: [...pane.querySelectorAll(".gc")].every((x) =>
-        getComputedStyle(x).backgroundImage.includes("gradient"),
+      gradients: [...pane.querySelectorAll(".uz-tile,.uz-stage,.uz-lessons")].some(
+        (x) => getComputedStyle(x).backgroundImage !== "none",
       ),
     };
   }, paneSelector);
@@ -232,7 +231,7 @@ try {
       await ready(p);
       await capture(p, prefix + "-" + lang + "-" + width + "-rita.png");
       await select(p, "study");
-      await p.locator('[data-learn-row="flashcards"] svg').first().waitFor();
+      await p.locator('[data-learn-row="flashcards"] img').evaluate((img) => img.decode());
       const state = await checks(p);
       await capture(p, prefix + "-" + lang + "-" + width + "-study.png");
       assert.equal(state.overflow, false, "overflow " + lang + " " + width);
@@ -253,9 +252,9 @@ try {
         );
         assert.equal(state.infinite, 0);
         assert.ok(state.maxEntrance <= 150);
-        assert.equal(state.gradients, true);
+        assert.equal(state.gradients, false);
         await p.evaluate(() => {
-          window.qaImage = document.querySelector('[data-learn-row="flashcards"] svg');
+          window.qaImage = document.querySelector('[data-learn-row="flashcards"] img');
         });
         await select(p, "plan");
         assert.equal(await p.locator("#learn-panel-study").getAttribute("inert"), "");
@@ -263,7 +262,7 @@ try {
         await select(p, "study");
         assert.equal(
           await p.evaluate(
-            () => window.qaImage === document.querySelector('[data-learn-row="flashcards"] svg'),
+            () => window.qaImage === document.querySelector('[data-learn-row="flashcards"] img'),
           ),
           true,
         );
@@ -332,6 +331,23 @@ try {
       findings.push({ lang, width, ...state, errors });
       await p.close();
     }
+  if (!baseline) {
+    const slow = await browser.newPage({ viewport: { width: 1180, height: 900 } });
+    await slow.route("**/assets/*.webp", async (route) => {
+      await new Promise((done) => setTimeout(done, 250));
+      await route.continue();
+    });
+    await slow.goto(origin + "/learn#study");
+    await ready(slow);
+    await slow.locator('[data-learn-row="flashcards"]').waitFor();
+    assert.equal(await slow.locator('[data-learn-row="flashcards"]').isVisible(), true);
+    assert.ok(
+      await slow
+        .locator('[data-learn-row="flashcards"] .uz-tile-img')
+        .evaluate((el) => el.getBoundingClientRect().height > 0),
+    );
+    await slow.close();
+  }
   const p = await browser.newPage({ viewport: { width: 1180, height: 900 } });
   await p.goto(origin + "/learn");
   await ready(p);

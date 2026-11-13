@@ -46,7 +46,7 @@ export function HealthStrip({ builds }: { builds: BuildHealth[] }) {
     {
       label: "Quality",
       value: current.quality === null ? "—" : `${whole(current.quality)}%`,
-      note: "How close Rita is to a good tutor",
+      note: "How close Uzyra is to a good tutor",
       delta: change(whole(current.quality), whole(previous?.quality ?? null)),
       unit: " points",
     },
@@ -79,7 +79,7 @@ export function HealthStrip({ builds }: { builds: BuildHealth[] }) {
     <section aria-labelledby="health-title">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="health-title" className="text-[20px] font-semibold">
-          How Rita is doing
+          How Uzyra is doing
         </h2>
         <p className="text-[14px] text-[var(--pp-muted)]">
           Version <span className="font-mono">{current.build.slice(0, 7)}</span>

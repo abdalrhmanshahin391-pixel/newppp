@@ -1,4 +1,4 @@
-// Rita AI Model 3.8 — server-side worker.
+// Uzyra AI Model 3.8 — server-side worker.
 //
 // Everything after the upload happens here, on a schedule, so a run keeps
 // going after the student closes the page: borders -> cut -> batch -> import.
@@ -309,7 +309,7 @@ export async function runRitaWorker(maxSubmit = 2): Promise<{ handled: number; j
   let handled = 0;
 
   try {
-    // Rita uses the same protected Gemini key as every text/vision study tool.
+    // Uzyra uses the same protected Gemini key as every text/vision study tool.
     const apiKey = await resolveRitaKey(admin);
 
     const { data: waiting } = await admin

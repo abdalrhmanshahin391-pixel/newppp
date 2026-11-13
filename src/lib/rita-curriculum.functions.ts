@@ -1,4 +1,4 @@
-// Server functions for Rita's curriculum lessons.
+// Server functions for Uzyra's curriculum lessons.
 // Admin functions check the admin role and then use the service role. Learner
 // functions read through RLS, and lesson progress is written only here with the
 // service role so learners cannot award themselves marks.
@@ -1609,7 +1609,7 @@ export type PathLesson = {
   slide_count: number;
   resource_count: number;
   /**
-   * The experience the lesson really opens with: "study" (guide + Rita) only when the admin chose it,
+   * The experience the lesson really opens with: "study" (guide + Uzyra) only when the admin chose it,
    * a guide is linked and ready for learners, and the switch is on. Otherwise "classic".
    */
   experience: "classic" | "study";

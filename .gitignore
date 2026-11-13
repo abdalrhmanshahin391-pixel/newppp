@@ -53,3 +53,10 @@ guides-worker/samples/
 # Offline settings bundles, browser captures and downloaded review artifacts
 /output/settings-preview/
 /output/settings-review/
+
+# Offline conversation management preview
+/output/conversations-preview/
+# Brand identity checks and captures
+/output/brand-identity/
+# Sanitized, local-only workflow evaluation records (never credentials or private payloads)
+/output/agent-workflow-pilot/

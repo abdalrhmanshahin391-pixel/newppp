@@ -1,6 +1,6 @@
-"""Rita-specific user-turn start strategy.
+"""Uzyra-specific user-turn start strategy.
 
-The default VAD strategy interrupts on any sound. Rita waits for transcript evidence
+The default VAD strategy interrupts on any sound. Uzyra waits for transcript evidence
 while she is speaking, so short acknowledgements such as "mhm" or "آه" do not kill a useful
 answer, while commands such as "خلص", "وقفي" or "stop" stop her even as a single word.
 Outside bot speech the first transcript starts the turn.
@@ -84,10 +84,10 @@ class RitaUserTurnStartStrategy(BaseUserTurnStartStrategy):
             interrupt, reading = interrupts_speaking_bot(text, final=final)
         if not interrupt:
             logger.bind(text=text, reading=str(reading), final=final).debug(
-                "Rita kept listening while speaking"
+                "Uzyra kept listening while speaking"
             )
             return
         logger.bind(text=text, reading=str(reading), final=final).info(
-            "Rita confirmed a true interruption"
+            "Uzyra confirmed a true interruption"
         )
         await self.trigger_user_turn_started()

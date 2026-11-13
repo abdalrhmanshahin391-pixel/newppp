@@ -59,6 +59,7 @@ on:
       - "src/lib/rita-tutor-contract.ts"
       - "src/routes/api/rita-v3/review.ts"
       - "src/lib/books*"
+      - "src/lib/user-books*"
       - "src/components/books/**"
       - "src/routes/books.tsx"
       - "src/routes/admin.books.tsx"
@@ -71,7 +72,16 @@ on:
       - "public/book-covers/**"
       - "scripts/build-starter-books-sql.*"
       - "scripts/test-books-db.sh"
+      - "scripts/test-user-books-concurrency.sh"
       - "scripts/test-books-public-read-db.sh"
+      - "src/lib/pairs/**"
+      - "src/components/pairs/**"
+      - "src/routes/study.pairs.tsx"
+      - "src/lib/wordcraft/**"
+      - "src/components/wordcraft/**"
+      - "src/routes/wordcraft.tsx"
+      - "src/components/learn/**"
+      - "src/lib/learn-images.ts"
       - ".github/workflows/rita-v3-frontend-check.yml"
   workflow_dispatch:
 
@@ -97,6 +107,8 @@ jobs:
           node --test src/lib/rita-v3-diagnostics-trace.test.mjs
           node --test src/lib/rita-v3-heard.test.ts
           node --test src/lib/rita-conversation.test.ts
+          node --test src/lib/brand.test.ts
+          node --test src/lib/rita-model-notes.test.ts
           node --test src/lib/rita-curriculum.test.ts
           node --test src/lib/rita-slides.test.ts
           node --test src/lib/rita-resources.test.ts
@@ -107,6 +119,7 @@ jobs:
           node --test src/lib/books-import.test.ts
           node --test src/lib/books-starter.test.ts
           node --test src/lib/books-reader.test.ts
+          node --test src/lib/user-books.test.ts
           node --test src/lib/book-gestures.test.ts
           node --test src/lib/rita-phrase.test.ts
           node --test src/lib/activity-streak.test.ts
@@ -141,6 +154,8 @@ jobs:
           node --test src/lib/rita-golden.test.ts
           node --test src/lib/rita-replay.test.ts
           node --test src/routes/api/rita-v3/session/start.source.test.mjs
+          node --test src/lib/pairs/game.test.ts
+          node --test src/lib/wordcraft/engine.test.ts src/lib/wordcraft/round.test.ts src/lib/wordcraft/game.test.ts
           bunx tsc --noEmit
       - name: Study page selection in a real browser
         run: |
@@ -175,6 +190,13 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: postgres
         run: ./scripts/test-study-db.sh
+      - name: Conversation ownership and custom-title rules
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: postgres
+        run: bash scripts/test-conversations-db.sh
       - name: Install pgTAP in the database container
         run: |
           docker exec ${{ job.services.postgres.id }} bash -c \

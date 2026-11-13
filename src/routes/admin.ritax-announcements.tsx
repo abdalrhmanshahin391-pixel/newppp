@@ -21,11 +21,11 @@ import {
 export const Route = createFileRoute("/admin/ritax-announcements")({
   head: () => ({
     meta: [
-      { title: "RitaX Announcements — Admin" },
-      { name: "description", content: "Design, schedule and measure RitaX announcements." },
+      { title: "Uzyra Announcements — Admin" },
+      { name: "description", content: "Design, schedule and measure Uzyra announcements." },
       { name: "robots", content: "noindex" },
-      { property: "og:title", content: "RitaX Announcements — Admin" },
-      { property: "og:description", content: "Design, schedule and measure RitaX announcements." },
+      { property: "og:title", content: "Uzyra Announcements — Admin" },
+      { property: "og:description", content: "Design, schedule and measure Uzyra announcements." },
     ],
   }),
   component: RitaXStudio,
@@ -130,7 +130,7 @@ function RitaXStudio() {
       <main className="mx-auto max-w-7xl px-5 py-10">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.28em] text-primary">RitaX</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.28em] text-primary">Uzyra</p>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
               Announcement studio
             </h1>

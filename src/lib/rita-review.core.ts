@@ -504,7 +504,7 @@ export async function reviewConversation(
     else retryable.set(row.turn_key, row);
   }
 
-  // Every reply once: turn records, reports, and Rita's replies without a record.
+  // Every reply once: turn records, reports, and Uzyra's replies without a record.
   const plan = (all: boolean) =>
     planTurns({
       candidates: pickCandidates({
@@ -726,7 +726,7 @@ export async function reviewConversation(
         summary.stopped = message;
         stop = message;
       }
-      if (!(error instanceof TimeUp)) console.error("Rita issue grouping failed", error);
+      if (!(error instanceof TimeUp)) console.error("Uzyra issue grouping failed", error);
     }
   }
 
@@ -743,7 +743,7 @@ export async function reviewConversation(
       if (error instanceof TimeUp) summary.finalPending = true;
       else {
         if (isServiceProblem(error)) summary.stopped = message;
-        console.error("Rita conversation review failed", error);
+        console.error("Uzyra conversation review failed", error);
       }
     }
   }
@@ -956,7 +956,7 @@ async function assignProblems(
       } catch (error) {
         // A service problem stops the run; one unreadable answer only leaves this problem for later.
         if (isServiceProblem(error)) throw error;
-        console.error("Rita issue grouping skipped a problem", error);
+        console.error("Uzyra issue grouping skipped a problem", error);
       }
     }
   } finally {
@@ -1053,7 +1053,7 @@ export async function runScheduledReview(db: ReviewDb, budgetMs = 75_000) {
     try {
       await proposeMerges(db);
     } catch (error) {
-      console.error("Rita merge proposals failed", error);
+      console.error("Uzyra merge proposals failed", error);
     }
   }
   return { enabled: true as const, ...total };

@@ -1,6 +1,6 @@
-# Rita Realtime v3 — quality verification
+# Uzyra Realtime v3 — quality verification
 
-This is an executable acceptance protocol, not a claim that production voice quality has passed. It follows the 35-page Rita Realtime Voice Engine Research Blueprint (especially its benchmark and launch-gate sections), with the later product decisions overriding its alternatives: **Gemini 3.8 Flash-Lite TTS only; no automatic legacy fallback**.
+This is an executable acceptance protocol, not a claim that production voice quality has passed. It follows the 35-page Uzyra Realtime Voice Engine Research Blueprint (especially its benchmark and launch-gate sections), with the later product decisions overriding its alternatives: **Gemini 3.8 Flash-Lite TTS only; no automatic legacy fallback**.
 
 ## Evidence and privacy
 
@@ -10,7 +10,7 @@ Start with local unit tests and mocks. Do not run paid provider sweeps until an 
 
 ## Reproducible corpus
 
-The primary corpus has 910 cases: 150 Jordanian/Levantine, 80 MSA, 100 English, 100 German, 150 Arabic/German/English code-switching, 80 thinking pauses, 100 harmless backchannels during Rita's speech, 100 true interruptions, and 50 noise/echo cases. Add 100 ordinary knowledge questions, 100 translation/vocabulary requests, 20 real save/idempotency cases, 20 twenty-turn language-stability sessions, 20 two-failed-attempt teaching cases, 12 provider failures, and 20 uncertain pronunciation clips.
+The primary corpus has 910 cases: 150 Jordanian/Levantine, 80 MSA, 100 English, 100 German, 150 Arabic/German/English code-switching, 80 thinking pauses, 100 harmless backchannels during Uzyra's speech, 100 true interruptions, and 50 noise/echo cases. Add 100 ordinary knowledge questions, 100 translation/vocabulary requests, 20 real save/idempotency cases, 20 twenty-turn language-stability sessions, 20 two-failed-attempt teaching cases, 12 provider failures, and 20 uncertain pronunciation clips.
 
 Run the same cases on iPad Safari, one Android device, and desktop, with good and weak networks. Tag cold and warm starts separately. Preserve the same recorded stimulus, device/network profile, and review rubric for every baseline/challenger comparison. For Jordanian output, at least 50 clips receive 1–5 ratings from **three Jordanian-fluent reviewers** for naturalness, dialect fidelity, and intelligibility; reviewers are blind to configuration.
 
@@ -24,9 +24,9 @@ Before the full corpus, run a 24-scenario pilot on iPad Safari, Android, and des
 6. English request: “Let's practice English.” — switch immediately; no Arabic filler.
 7. A 2-second thinking pause: “Ich möchte … [pause] morgen nach Berlin fahren” — do not answer during the pause.
 8. Self-correction: “بدي أروح يوم الخميس… لا، الجمعة” — final intent is Friday.
-9. A short acknowledgement during Rita speech: “مم” — Rita continues and the reply is not logged as interrupted.
-10. A true interruption during Rita speech: “استني، مش فاهم” — audible speech stops promptly and Rita handles the new question.
-11. Speaker echo while Rita talks — no false learner turn.
+9. A short acknowledgement during Uzyra speech: “مم” — Uzyra continues and the reply is not logged as interrupted.
+10. A true interruption during Uzyra speech: “استني، مش فاهم” — audible speech stops promptly and Uzyra handles the new question.
+11. Speaker echo while Uzyra talks — no false learner turn.
 12. Background conversation — do not treat another voice as the learner's command.
 13. “شو صار بحرب المغول؟” — answer the history question; create no vocabulary item.
 14. “ترجم: أنا بدي أروح عالجامعة” — correct translation and valid hidden learning JSON.
@@ -37,7 +37,7 @@ Before the full corpus, run a 24-scenario pilot on iPad Safari, Android, and des
 19. Repeat the pronunciation attempt twice unsuccessfully — change teaching method instead of repeating identical feedback.
 20. Noisy pronunciation clip — say uncertainty and ask for a retry, not a confident negative judgement.
 21. A 5-word answer and a 40-word answer — verify first-clause timing and natural prosody; no bad cut inside Arabic or German grammar.
-22. Cancel midway through a long Rita answer — no later audio and no unheard text in the visible chat or remembered context.
+22. Cancel midway through a long Uzyra answer — no later audio and no unheard text in the visible chat or remembered context.
 23. Disable Soniox, Groq, or Gemini in an isolated test account — show the specific error; no legacy voice starts.
 24. Start, exit, and start again after idle — no stale audio/chat, no leaked session, and record cold/warm startup separately.
 
@@ -49,7 +49,7 @@ One turn has a stable `turnId`. Log speech start/end, Soniox partial/final, turn
 
 ## Launch gates
 
-- On good networks, last user audio to first genuinely audible Rita audio: p50 < 1,500 ms, p95 < 2,500 ms. Clear-speech turn decision: p50 < 450 ms.
+- On good networks, last user audio to first genuinely audible Uzyra audio: p50 < 1,500 ms, p95 < 2,500 ms. Clear-speech turn decision: p50 < 450 ms.
 - True interruption audible stop: p50 < 200 ms, p95 < 400 ms. Premature end during thinking pauses < 3%; harmless backchannels classified as interruptions < 3%.
 - Explicit language changes work on the first turn. Borrowed target-language words do not change the conversation language. No unwanted switch in each 20-turn stability case. Jordanian ratings average at least 4/5 on all three dimensions.
 - Human-reviewed intent understanding is at least 95% across the 910 speech cases; target-language terms are correctly captured in at least 95% of the code-switch cases. Report WER and semantic term recall separately by language so aggregate scores cannot mask Jordanian failures.

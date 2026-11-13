@@ -7,9 +7,9 @@ self.addEventListener('push', (event) => {
   try {
     payload = event.data ? event.data.json() : {};
   } catch (_) {
-    payload = { title: 'RitaJet', body: event.data ? event.data.text() : '' };
+    payload = { title: 'Uzyra', body: event.data ? event.data.text() : '' };
   }
-  const title = payload.title || 'RitaJet';
+  const title = payload.title || 'Uzyra';
   const options = {
     body: payload.body || '',
     icon: '/favicon.png',

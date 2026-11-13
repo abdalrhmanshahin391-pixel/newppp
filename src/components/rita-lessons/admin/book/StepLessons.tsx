@@ -40,7 +40,7 @@ const keyOf = (item: TopicSuggestion) => `${item.topic}:${item.from_page}-${item
 
 /**
  * Step 2: the lessons. The reading summaries suggest the book's lessons; the admin keeps the ones
- * wanted (and can rename a topic) and picks their kind: red (Rita's lesson) or green (guide + Rita).
+ * wanted (and can rename a topic) and picks their kind: red (Uzyra's lesson) or green (guide + Uzyra).
  * One button then writes each lesson and its exercises, one after the other, with progress; a green
  * lesson also gets its PDF guide, checked and linked. It can be stopped and started again; finished
  * lessons are not redone.
@@ -489,7 +489,7 @@ export function StepLessons({
   );
 }
 
-/** The kind of the new lessons: two cards, red for Rita's lesson and green for the guide + Rita. */
+/** The kind of the new lessons: two cards, red for Uzyra's lesson and green for the guide + Uzyra. */
 function KindChoice({
   value,
   studyReady,
@@ -534,7 +534,7 @@ function KindChoice({
       </div>
       {!studyReady && (
         <p className="text-[13.5px] text-[var(--pp-muted)]">
-          «ملف + ريتا» بده تحديث قاعدة البيانات (الدراسة التفاعلية). لحد هداك الدروس الجديدة حمرا.
+          «ملف + يوزرا» بده تحديث قاعدة البيانات (الدراسة التفاعلية). لحد هداك الدروس الجديدة حمرا.
         </p>
       )}
     </div>

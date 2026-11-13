@@ -210,7 +210,7 @@ export async function askPracticeModel(
 
 /** What the learner reads for each failure. */
 export const PRACTICE_FAILURE_TEXT: Record<PracticeFailure, string> = {
-  busy: "ريتا مشغولة شوي. جرّب كمان لحظات.",
+  busy: "يوزرا مشغولة شوي. جرّب كمان لحظات.",
   slow: "تأخر الرد هالمرة. جرّب مرة ثانية.",
   failed: "ما زبطت هالمرة. جرّب مرة ثانية.",
   no_key: "التدريب مش مفعّل على الموقع لسا. هاد إعداد عند الإدارة، وإعادة المحاولة ما بتفيد.",

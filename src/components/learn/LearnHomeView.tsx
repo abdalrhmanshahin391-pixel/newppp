@@ -1,8 +1,8 @@
 import { memo, useMemo, useRef } from "react";
 import { Link } from "@tanstack/react-router";
-import { Logo } from "./CardLogo";
-import { lookFor } from "./card-looks";
-import { TalkArt } from "./art/LearnArt";
+import { ArrowRight } from "lucide-react";
+import { ImageSlot } from "@/components/learn/ImageSlot";
+import { LessonsCardArt, TalkCardArt } from "./PlayCardArt";
 import { useLearnSection } from "./useLearnSection";
 import { TOOLS, type ToolDef } from "@/lib/site-tools";
 
@@ -11,6 +11,7 @@ export type Bi = { en: string; ar: string };
 
 type Row = {
   key: string;
+  slot: string;
   name: Bi;
   line: Bi;
   to: string;
@@ -27,6 +28,7 @@ const SECTION_IDS = ["rita", "study", "plan", "together", "german"] as const;
 function rowOf(tool: ToolDef): Row {
   return {
     key: tool.key,
+    slot: tool.key,
     name: tool.name,
     line: tool.line,
     to: tool.to,
@@ -37,24 +39,26 @@ function rowOf(tool: ToolDef): Row {
 
 const tool = (key: string) => TOOLS.find((t) => t.key === key)!;
 
-/** Every destination in one list: Rita first, then the study tools, grouped by what they are for. */
+/** Every destination in one list: Uzyra first, then the study tools, grouped by what they are for. */
 function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): SectionDef[] {
   return [
     {
       id: "rita",
-      title: { en: "Talk to Rita", ar: "تحدث مع ريتا" },
+      title: { en: "Talk to Uzyra", ar: "تحدث مع يوزرا" },
       rows: [
         {
           key: "rita-conversations",
+          slot: "rita-conversations",
           name: { en: "Free conversation", ar: "محادثة حرة" },
           line: {
-            en: "Talk about anything. Rita answers out loud and corrects you gently.",
-            ar: "تحدث عن أي شيء. ريتا ترد بصوتها وتصحح لك بلطف.",
+            en: "Talk about anything. Uzyra answers out loud and corrects you gently.",
+            ar: "تحدث عن أي شيء. يوزرا ترد بصوتها وتصحح لك بلطف.",
           },
           to: "/rita-conversations",
         },
         {
           key: "rita-lessons",
+          slot: "rita-lessons",
           name: { en: "Lessons", ar: "الدروس" },
           line: {
             en: "Short lessons with clear goals. Earn stars as you reach them.",
@@ -71,6 +75,26 @@ function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): Se
       rows: [
         { ...rowOf(tool("flashcards")), chip: chips.flashcards },
         rowOf(tool("memory-lab")),
+        {
+          key: "pairs",
+          slot: "pairs",
+          name: { en: "Pairs", ar: "اقرن" },
+          line: {
+            en: "Match your flashcards' fronts and backs against the clock.",
+            ar: "اقرن وجه بطاقاتك مع ظهرها قبل ما يخلص الوقت.",
+          },
+          to: "/study/pairs",
+        },
+        {
+          key: "wordcraft",
+          slot: "wordcraft",
+          name: { en: "Wordcraft", ar: "Wordcraft" },
+          line: {
+            en: "Pick easy, medium or hard: find four new English words in the letters and learn what they mean.",
+            ar: "اختار سهل أو متوسط أو صعب: لاقي أربع كلمات إنجليزية جديدة بين الحروف وتعلّم معانيها.",
+          },
+          to: "/wordcraft",
+        },
         rowOf(tool("pdf-summary")),
         rowOf(tool("all-in-one")),
         rowOf(tool("question-bank")),
@@ -96,7 +120,7 @@ function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): Se
 }
 
 const RAIL: { id: (typeof SECTION_IDS)[number]; label: Bi }[] = [
-  { id: "rita", label: { en: "Talk to Rita", ar: "تحدث مع ريتا" } },
+  { id: "rita", label: { en: "Talk to Uzyra", ar: "تحدث مع يوزرا" } },
   { id: "study", label: { en: "My study space", ar: "مساحتي الدراسية" } },
   { id: "plan", label: { en: "Plan", ar: "الخطة" } },
   { id: "together", label: { en: "Together", ar: "مع غيري" } },
@@ -135,22 +159,8 @@ function SideList({
   );
 }
 
-function Pills({ row, lang }: { row: Row; lang: Lang }) {
-  if (!row.ai && !row.chip) return null;
-  return (
-    <span className="gc-pills">
-      {row.ai ? <span className="gc-pill">AI</span> : null}
-      {row.chip ? <span className="gc-pill">{row.chip[lang]}</span> : null}
-    </span>
-  );
-}
-
-/**
- * One destination as a game card: its own gradient, its name drawn as a logo, one line, an
- * illustration and a white button over the art. The first card of a section is wider.
- */
+/** One destination: its picture on black, its name and one line. The first of a section is big. */
 function ToolTile({ row, lang, lead }: { row: Row; lang: Lang; lead: boolean }) {
-  const look = lookFor(row.key, row.name);
   return (
     <Link
       to={row.to}
@@ -158,70 +168,59 @@ function ToolTile({ row, lang, lead }: { row: Row; lang: Lang; lead: boolean }) 
       search={row.search as never}
       data-learn-row={row.key}
       data-lead={lead || undefined}
-      data-tone={look.tone}
-      className="gc"
+      className="uz-tile"
     >
-      <span className="gc-head">
-        <span className="gc-sr">{row.name[lang]}</span>
-        <Logo look={look} lang={lang} />
-        <span className="gc-line">{row.line[lang]}</span>
-        <Pills row={row} lang={lang} />
+      <ImageSlot slot={row.slot} lang={lang} priority={lead} />
+      <span className="uz-tile-text">
+        <span className="uz-tile-name">
+          {row.name[lang]}
+          {row.ai ? <span className="uz-tile-tag">AI</span> : null}
+          {row.chip ? <span className="uz-tile-tag">{row.chip[lang]}</span> : null}
+        </span>
+        <span className="uz-tile-line">{row.line[lang]}</span>
       </span>
-      <span className="gc-art" aria-hidden="true">
-        <look.Art />
+      <span className="uz-tile-go" aria-hidden="true">
+        <ArrowRight size={18} className="rtl:rotate-180" />
       </span>
-      <span className="gc-btn">{look.go[lang]}</span>
     </Link>
   );
 }
 
-const PHRASES = [
-  { text: "Guten Morgen", lang: "de", spot: "gc-float-a" },
-  { text: "How do I say…?", lang: "en", spot: "gc-float-b" },
-  { text: "كيف أحكي؟", lang: "ar", spot: "gc-float-c" },
-];
-
-/** The conversation stage (the biggest card) and the lessons card beside it. */
+/**
+ * The two Uzyra cards: one solid colour, a big centred title, one line, the drawing at the bottom
+ * and a white button with a lip over the bottom of the drawing (the game-card look).
+ */
 function RitaStage({ section, lang }: { section: SectionDef; lang: Lang }) {
   const talk = section.rows.find((row) => row.key === "rita-conversations");
   const lessons = section.rows.find((row) => row.key === "rita-lessons");
-  const look = talk ? lookFor(talk.key, talk.name) : null;
+  const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
   return (
     <section aria-labelledby="rita-title" className="uz-pane uz-rita">
-      {talk && look ? (
-        <Link
-          to={talk.to}
-          data-learn-row={talk.key}
-          data-tone={look.tone}
-          data-stage
-          className="gc"
-        >
-          <span className="gc-head">
-            <h2 id="rita-title" className="gc-h">
-              <span className="gc-sr">
-                {lang === "ar" ? "تحدث مع ريتا الآن" : "Talk to Rita now"}
-              </span>
-              <Logo look={look} lang={lang} />
-            </h2>
-            <span className="gc-line">{talk.line[lang]}</span>
-            <span className="gc-btn">{look.go[lang]}</span>
+      {talk ? (
+        <Link to={talk.to} data-learn-row={talk.key} className="uz-play">
+          <h2 id="rita-title" className="uz-play-title">
+            {t("Free talk with Uzyra", "محادثة حرة مع يوزرا")}
+          </h2>
+          <span className="uz-play-line">{talk.line[lang]}</span>
+          <span className="uz-play-art" aria-hidden="true">
+            <TalkCardArt />
           </span>
-          <span className="gc-art" aria-hidden="true">
-            <TalkArt />
-            {PHRASES.map((phrase) => (
-              <span
-                key={phrase.text}
-                lang={phrase.lang}
-                dir={phrase.lang === "ar" ? "rtl" : "ltr"}
-                className={`gc-float ${phrase.spot}`}
-              >
-                {phrase.text}
-              </span>
-            ))}
-          </span>
+          <span className="uz-play-btn">{t("Start talking", "ابدأ الحديث")}</span>
         </Link>
       ) : null}
-      {lessons ? <ToolTile row={lessons} lang={lang} lead={false} /> : null}
+      {lessons ? (
+        <Link to={lessons.to} data-learn-row={lessons.key} className="uz-play">
+          <span className="uz-play-title">{lessons.name[lang]}</span>
+          <span className="uz-play-line">
+            {t("Short lessons with clear goals.", "دروس قصيرة بأهداف واضحة.")}
+          </span>
+          {lessons.chip ? <span className="uz-play-pill">{lessons.chip[lang]}</span> : null}
+          <span className="uz-play-art" aria-hidden="true">
+            <LessonsCardArt />
+          </span>
+          <span className="uz-play-btn">{t("Start", "ابدأ")}</span>
+        </Link>
+      ) : null}
     </section>
   );
 }

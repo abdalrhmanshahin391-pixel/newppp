@@ -28,7 +28,7 @@ export type FlashCard = {
 
 const db = (t: string) => (supabase.from as any)(t);
 
-/** Accent set pulled from Rita's swirl artwork. */
+/** Accent set pulled from Uzyra's swirl artwork. */
 export const SUBJECT_COLORS = {
   apricot: { dot: "#f6b352", soft: "#fdeed6" },
   sky: { dot: "#7cb8e8", soft: "#e2eff9" },

@@ -247,7 +247,7 @@ class RitaBoundedTurnStopStrategy(TurnAnalyzerUserTurnStopStrategy):
             self.last_resume_count, self._resume_count = self._resume_count, 0
             self._fired_path = self._fired_wait_ms = None
             logger.bind(stop_reason=self.last_stop_reason).info(
-                "Rita turn stop reason={} path={} wait_ms={} resumed={} word_count={}",
+                "Uzyra turn stop reason={} path={} wait_ms={} resumed={} word_count={}",
                 self.last_stop_reason,
                 self.last_stop_path,
                 self.last_wait_ms,

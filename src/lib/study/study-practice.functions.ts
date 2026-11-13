@@ -60,7 +60,7 @@ async function practiceKey(): Promise<string | null> {
 
 const NO_KEY: Failure = { ok: false, code: "no_key", message: PRACTICE_FAILURE_TEXT.no_key };
 
-/** One JSON answer from the same model as Rita's written answers (see askPracticeModel). */
+/** One JSON answer from the same model as Uzyra's written answers (see askPracticeModel). */
 async function askModel(key: string, system: string, user: string, maxTokens: number) {
   // Wrapped: the platform's fetch must be called on its own, not as a method of another object.
   return askPracticeModel({

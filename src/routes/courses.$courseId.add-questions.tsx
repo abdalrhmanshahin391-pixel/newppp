@@ -253,7 +253,7 @@ function AddQuestionsPage() {
         setFile(null);
       }
 
-      toast.success("Rita has it — you can close this page, the questions arrive on their own.");
+      toast.success("Uzyra has it — you can close this page, the questions arrive on their own.");
       await refreshSoon();
       kickWorker({ data: undefined } as any).then(refreshSoon).catch(() => {});
     } catch (e: any) {
@@ -333,7 +333,7 @@ function AddQuestionsPage() {
               </Step>
 
               <div className="mt-8">
-                <Step n={2} title="What are you giving Rita?">
+                <Step n={2} title="What are you giving Uzyra?">
                   <div className="flex flex-wrap gap-2">
                     <ModeTab on={mode === "pdf"} onClick={() => setMode("pdf")} icon={<FileUp size={15} />} label="PDF" />
                     <ModeTab on={mode === "photos"} onClick={() => setMode("photos")} icon={<Camera size={15} />} label="Paper photos" />

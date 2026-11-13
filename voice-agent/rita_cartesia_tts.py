@@ -1,4 +1,4 @@
-"""Cartesia Sonic streaming TTS adapter for Rita's live voice pipeline.
+"""Cartesia Sonic streaming TTS adapter for Uzyra's live voice pipeline.
 
 The service deliberately uses Cartesia's WebSocket implementation supplied by
 Pipecat.  A single socket stays open for the lesson; Pipecat maps an LLM turn
@@ -29,7 +29,7 @@ from rita_connection_retry import open_with_retry
 
 
 class RitaCartesiaTTSService(CartesiaTTSService):
-    """Low-latency, interruption-safe Cartesia TTS for the Rita worker."""
+    """Low-latency, interruption-safe Cartesia TTS for the Uzyra worker."""
 
     SAMPLE_RATE = 24_000
     MODEL = "sonic-3.6"
@@ -81,9 +81,9 @@ class RitaCartesiaTTSService(CartesiaTTSService):
         self._idle_monitor_task = None
 
     def set_turn_language(self, language: str) -> None:
-        """Choose the synthesis language for the next Rita response.
+        """Choose the synthesis language for the next Uzyra response.
 
-        This is intentionally called only after Rita's deterministic session
+        This is intentionally called only after Uzyra's deterministic session
         state commits a user turn, so one German learning word cannot turn an
         otherwise Jordanian reply into a German Cartesia context.
         """
@@ -91,7 +91,7 @@ class RitaCartesiaTTSService(CartesiaTTSService):
         self._rita_language = self._LANGUAGE_CODES.get(language, "ar")
 
     def _build_msg(self, *args, **kwargs):
-        """Pin each Cartesia context to Rita's stable response language."""
+        """Pin each Cartesia context to Uzyra's stable response language."""
 
         message = json.loads(super()._build_msg(*args, **kwargs))
         message["language"] = self._rita_language
@@ -157,7 +157,7 @@ class RitaCartesiaTTSService(CartesiaTTSService):
 
         Cartesia's 2026 API sends ``flush_done`` as a boundary acknowledgement
         before the final ``done`` event. Pipecat 0.0.105 predates that message
-        type and reports it as a provider error, which can leave Rita's audio
+        type and reports it as a provider error, which can leave Uzyra's audio
         context unfinished. A flush acknowledgement carries no audio and must
         not stop, remove, or otherwise mutate the active context.
 

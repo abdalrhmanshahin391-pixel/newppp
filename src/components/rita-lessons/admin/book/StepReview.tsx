@@ -116,7 +116,7 @@ export function StepReview({
         </h2>
         <p className="mt-1 text-[15px] text-[var(--pp-muted)]">
           افتح كل درس وشوف تمارينه. «فيه ملاحظات» يعني المراجعة الثانية لقت شي يستاهل نظرة. «فيه
-          مشكلة» يعني ما بينفع ينشر قبل ما يتصلّح. الأحمر درس ريتا، والأخضر ملف + ريتا.
+          مشكلة» يعني ما بينفع ينشر قبل ما يتصلّح. الأحمر درس يوزرا، والأخضر ملف + يوزرا.
         </p>
       </div>
 
@@ -148,7 +148,7 @@ export function StepReview({
           {unfinished.length > 0 && (
             <div className="flex flex-wrap items-center gap-3 rounded-xl bg-[#fff6e5] p-3 text-[14px] text-[#6b4100]">
               <p className="min-w-0 flex-1">
-                {unfinished.length} درس أخضر بدون دليل مربوط. لحد ما ينربط، الطلاب بياخدوه كدرس ريتا
+                {unfinished.length} درس أخضر بدون دليل مربوط. لحد ما ينربط، الطلاب بياخدوه كدرس يوزرا
                 العادي.
               </p>
               {maker.running ? (

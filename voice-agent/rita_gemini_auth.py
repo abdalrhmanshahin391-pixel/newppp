@@ -1,4 +1,4 @@
-"""Private, bounded Gemini TTS authentication diagnostics for Rita."""
+"""Private, bounded Gemini TTS authentication diagnostics for Uzyra."""
 
 from __future__ import annotations
 

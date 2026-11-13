@@ -1,4 +1,4 @@
-// How one study request moves on (see useStudyRequests): what Rita's acknowledgements and her
+// How one study request moves on (see useStudyRequests): what Uzyra's acknowledgements and her
 // speaking state do to it. Pure, so the rules are tested with node: an answer about another request
 // is ignored, a late one never lands on a newer request, and a call that ends stops a live request.
 import type { RitaAction } from "./study-actions.ts";
@@ -14,12 +14,12 @@ export type ActiveRequest = {
   message?: string;
 };
 
-/** Waits for Rita's "started" before saying she is late; then for her first words. */
+/** Waits for Uzyra's "started" before saying she is late; then for her first words. */
 export const ACK_MS = 3_000;
 export const FIRST_AUDIO_MS = 8_000;
 
-export const LATE_MESSAGE = "تأخرت ريتا بالرد. جرّب مرة ثانية.";
-export const REFUSED_MESSAGE = "ريتا ما قدرت تجاوب على هالطلب. جرّب مرة ثانية.";
+export const LATE_MESSAGE = "تأخرت يوزرا بالرد. جرّب مرة ثانية.";
+export const REFUSED_MESSAGE = "يوزرا ما قدرت تجاوب على هالطلب. جرّب مرة ثانية.";
 
 export function isLive(state: RequestState): boolean {
   return state === "resolving" || state === "sent" || state === "started";
@@ -32,7 +32,7 @@ export type RequestStep = {
   timer: "clear" | "first_audio" | "keep";
 };
 
-/** Rita's "rita-study-ack" about a request. Null when it is not about the current request. */
+/** Uzyra's "rita-study-ack" about a request. Null when it is not about the current request. */
 export function ackStep(
   current: ActiveRequest | null,
   message: Record<string, unknown>,
@@ -47,7 +47,7 @@ export function ackStep(
   return null;
 }
 
-/** Rita's speaking state from the call. Null when it changes nothing. */
+/** Uzyra's speaking state from the call. Null when it changes nothing. */
 export function ritaEventStep(
   current: ActiveRequest | null,
   event: "ready" | "ended" | "speaking" | "quiet",

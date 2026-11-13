@@ -61,7 +61,7 @@ export function classifyPipecatStartFailure(
     return {
       code: "agent_not_found",
       message:
-        "The Pipecat agent ritajet-voice-v3 is not deployed. Provider keys alone cannot start Rita.",
+        "The Pipecat agent ritajet-voice-v3 is not deployed. Provider keys alone cannot start Uzyra.",
       retryable: false,
       upstreamStatus: status,
       requestId: requestId || null,
@@ -75,7 +75,7 @@ export function classifyPipecatStartFailure(
   ) {
     return {
       code: "agent_unhealthy",
-      message: `The Rita voice worker is deployed but is not healthy yet. ${raw}`,
+      message: `The Uzyra voice worker is deployed but is not healthy yet. ${raw}`,
       retryable: true,
       upstreamStatus: status,
       requestId: requestId || null,
@@ -88,7 +88,7 @@ export function classifyPipecatStartFailure(
   ) {
     return {
       code: "secrets_not_ready",
-      message: `The deployed Rita worker is missing a required provider secret. ${raw}`,
+      message: `The deployed Uzyra worker is missing a required provider secret. ${raw}`,
       retryable: false,
       upstreamStatus: status,
       requestId: requestId || null,
@@ -124,7 +124,7 @@ export function classifyPipecatStartFailure(
   if (status === 429 || normalized.includes("capacity")) {
     return {
       code: "capacity_unavailable",
-      message: "Rita's voice worker has no capacity right now. Retry in a moment.",
+      message: "Uzyra's voice worker has no capacity right now. Retry in a moment.",
       retryable: true,
       upstreamStatus: status,
       requestId: requestId || null,
@@ -134,7 +134,7 @@ export function classifyPipecatStartFailure(
     return {
       code: "cold_start_timeout",
       message:
-        "Rita's voice worker took too long to wake up. Retry once; if it repeats, check the deployment logs.",
+        "Uzyra's voice worker took too long to wake up. Retry once; if it repeats, check the deployment logs.",
       retryable: true,
       upstreamStatus: status,
       requestId: requestId || null,
@@ -142,7 +142,7 @@ export function classifyPipecatStartFailure(
   }
   return {
     code: status >= 500 ? "pipecat_start_failed" : "pipecat_request_rejected",
-    message: `Pipecat could not start Rita. ${raw}`,
+    message: `Pipecat could not start Uzyra. ${raw}`,
     retryable: status >= 500,
     upstreamStatus: status,
     requestId: requestId || null,

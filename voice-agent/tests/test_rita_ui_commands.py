@@ -20,7 +20,7 @@ class ReadCommandTests(unittest.TestCase):
         for text in (
             "افتحي القائمة",
             "افتحي القايمة لو سمحتي",
-            "ريتا افتحي قائمة الكلمات",
+            "يوزرا افتحي قائمة الكلمات",
             "open the list",
             "show me the list",
             "öffne die Liste",
@@ -84,7 +84,7 @@ class PipelineTests(unittest.TestCase):
             state = RitaSessionState()
             context = LLMContext(
                 [
-                    {"role": "system", "content": "You are Rita."},
+                    {"role": "system", "content": "You are Uzyra."},
                     {"role": "user", "content": "حوليهم فلاش كارد في موضوع الأفعال"},
                 ]
             )

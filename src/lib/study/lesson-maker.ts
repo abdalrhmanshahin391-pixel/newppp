@@ -1,4 +1,4 @@
-// The green lesson (guide + Rita), made in one press: the lesson, its exercises, its PDF guide, then
+// The green lesson (guide + Uzyra), made in one press: the lesson, its exercises, its PDF guide, then
 // the guide checked and linked. These rules say which steps are still missing and what the step line
 // shows; the two kinds' names and colours live with the book page. Pure, so they are unit tested
 // with node. The state comes from the database each time, so a closed page resumes where it stopped.
@@ -82,17 +82,17 @@ export type BookRow = {
 
 export type LessonKind = "classic" | "study";
 
-/** The two kinds, as the admin sees them: red for Rita's lesson, green for the guide + Rita. */
+/** The two kinds, as the admin sees them: red for Uzyra's lesson, green for the guide + Uzyra. */
 export const KIND_TEXT: Record<LessonKind, { name: string; short: string; about: string }> = {
   classic: {
-    name: "درس ريتا",
-    short: "ريتا",
-    about: "ريتا بتشرح وبتعطي تمارين، مثل ما كانت الدروس دايماً.",
+    name: "درس يوزرا",
+    short: "يوزرا",
+    about: "يوزرا بتشرح وبتعطي تمارين، مثل ما كانت الدروس دايماً.",
   },
   study: {
-    name: "ملف + ريتا",
-    short: "ملف + ريتا",
-    about: "دليل PDF يمين وريتا يسار. بينصنع الدرس وتمارينه ودليله وبينربط لحاله.",
+    name: "ملف + يوزرا",
+    short: "ملف + يوزرا",
+    about: "دليل PDF يمين ويوزرا يسار. بينصنع الدرس وتمارينه ودليله وبينربط لحاله.",
   },
 };
 

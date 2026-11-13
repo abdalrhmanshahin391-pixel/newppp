@@ -159,12 +159,12 @@ if __name__ == "__main__":
 
 
 class SiteChosenExplanationLanguage(unittest.TestCase):
-    """"Rita explains in" on the website: sent at the start, changeable during the conversation."""
+    """"Uzyra explains in" on the website: sent at the start, changeable during the conversation."""
 
     def test_a_site_choice_is_not_flipped_by_what_the_learner_speaks(self):
         state = RitaSessionState(active_language="ar")
         self.assertEqual(state.language_source, LanguageSource.SITE)
-        for text in ("Ich habe Hunger und möchte essen", "Wie geht es dir heute", "Guten Morgen Rita"):
+        for text in ("Ich habe Hunger und möchte essen", "Wie geht es dir heute", "Guten Morgen Uzyra"):
             state.observe_user_turn(text)
         self.assertEqual(state.active_language, "ar")
         self.assertEqual(state.language_source, LanguageSource.SITE)

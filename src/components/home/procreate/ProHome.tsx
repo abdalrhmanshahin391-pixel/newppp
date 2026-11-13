@@ -12,7 +12,7 @@ const UnderTheHood = lazy(() =>
 const HomeFaq = lazy(() => import("./HomeFaq").then((m) => ({ default: m.HomeFaq })));
 const FinalCta = lazy(() => import("./FinalCta").then((m) => ({ default: m.FinalCta })));
 
-/** Home page: white surface, ink text, blue actions. Rita first, then the story bands and the questions. */
+/** Home page: white surface, ink text, blue actions. Uzyra first, then the story bands and the questions. */
 export function ProHome() {
   return (
     <main

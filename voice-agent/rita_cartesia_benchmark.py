@@ -1,4 +1,4 @@
-"""Bounded Cartesia WebSocket TTFA benchmark for Rita.
+"""Bounded Cartesia WebSocket TTFA benchmark for Uzyra.
 
 The benchmark intentionally bypasses Daily, Soniox, Groq, and Pipecat.  It
 measures one thing only: first text sent on an already-open Cartesia WebSocket
@@ -320,7 +320,7 @@ def build_ws_message(
     add_timestamps: bool = False,
     add_phoneme_timestamps: bool = False,
 ) -> dict[str, Any]:
-    """Build the same raw-PCM Sonic 3.6 request contract used by Rita."""
+    """Build the same raw-PCM Sonic 3.6 request contract used by Uzyra."""
 
     message: dict[str, Any] = {
         "transcript": transcript,

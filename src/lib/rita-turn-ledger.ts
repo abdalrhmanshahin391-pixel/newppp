@@ -1,5 +1,5 @@
 /**
- * The worker sends one small "turn ledger" record when Rita's answer ends or is cut off: who decided
+ * The worker sends one small "turn ledger" record when Uzyra's answer ends or is cut off: who decided
  * the learner had finished, how long it waited, what was read from the turn, how she answered. The
  * page keeps it next to the conversation (as a `turn_ledger` event) so a complaint can be traced to
  * a decision and a build. Only known, short, plain fields are kept, so nothing unexpected (and
@@ -41,7 +41,7 @@ const TEXT_FIELDS = [
 
 const BOOLEAN_FIELDS = ["answered", "interrupted", "how_to_say"] as const;
 
-/** The conversation, the learner's message and Rita's reply this turn belongs to (best effort). */
+/** The conversation, the learner's message and Uzyra's reply this turn belongs to (best effort). */
 export type TurnLinks = {
   conversationId?: string | null;
   userMessageId?: string | null;

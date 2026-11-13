@@ -222,7 +222,7 @@ export function LearningTray({ tray }: { tray: Tray }) {
 
         {!entries.length ? (
           <p className="py-10 text-center text-[var(--pp-muted)]">
-            Ask Rita what a word or phrase means, or how to say something. It will appear here.
+            Ask Uzyra what a word or phrase means, or how to say something. It will appear here.
           </p>
         ) : (
           <>
