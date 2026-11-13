@@ -75,6 +75,16 @@ function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): Se
         { ...rowOf(tool("flashcards")), chip: chips.flashcards },
         rowOf(tool("memory-lab")),
         {
+          key: "pairs",
+          slot: "pairs",
+          name: { en: "Pairs", ar: "اقرن" },
+          line: {
+            en: "Match your flashcards' fronts and backs against the clock.",
+            ar: "اقرن وجه بطاقاتك مع ظهرها قبل ما يخلص الوقت.",
+          },
+          to: "/study/pairs",
+        },
+        {
           key: "wordcraft",
           slot: "wordcraft",
           name: { en: "Wordcraft", ar: "Wordcraft" },
