@@ -1177,3 +1177,42 @@ export async function loadAnalytics(days: 7 | 30): Promise<Analytics | null> {
   }
   return data as Analytics;
 }
+
+export type RecentRead = { book: Book; page: number; at: string };
+
+/**
+ * The library books this reader opened most recently (up to `limit`), newest first, with the page
+ * they stopped at (their reading place on the account). Empty before the reader migration.
+ */
+export async function loadRecentReads(limit = 5): Promise<RecentRead[]> {
+  const { data: places, error } = await supabase
+    .from("book_reading_progress")
+    .select("book_id, page, updated_at")
+    .order("updated_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    if (notApplied(error)) return [];
+    throw new Error(error.message);
+  }
+  const rows = (places ?? []) as { book_id: string; page: number; updated_at: string }[];
+  if (!rows.length) return [];
+  const { data: books, error: booksError } = await supabase
+    .from("books")
+    .select(BOOK_COLUMNS)
+    .in(
+      "id",
+      rows.map((row) => row.book_id),
+    );
+  if (booksError) throw new Error(booksError.message);
+  const byId = new Map(
+    ((books ?? []) as Record<string, unknown>[]).map((row) => [
+      String(row.id),
+      toBook(row, coverUrl((row.cover_path as string | null) ?? null)),
+    ]),
+  );
+  // A book that is no longer published (or was deleted) drops out.
+  return rows.flatMap((row) => {
+    const book = byId.get(row.book_id);
+    return book && book.published ? [{ book, page: row.page, at: row.updated_at }] : [];
+  });
+}

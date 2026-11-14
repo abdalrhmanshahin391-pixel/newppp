@@ -13,7 +13,14 @@ import {
   type TextItemLike,
   type ViewportLike,
 } from "@/lib/books-reader";
-import { drawWidth, placeKey, snippetAround, textDirection, type UserBook } from "@/lib/user-books";
+import {
+  drawWidth,
+  placeKey,
+  readAtKey,
+  snippetAround,
+  textDirection,
+  type UserBook,
+} from "@/lib/user-books";
 import { openMyBook, type OpenedBook, type OpenStage, type PdfDoc } from "./my-book-pdf";
 
 /** What `?debug=1` shows on the reader: where the time went, measured on this device. */
@@ -316,6 +323,9 @@ export async function openPdfBookSource(
     savePlace(page) {
       try {
         window.localStorage.setItem(placeKey(book.id), String(page));
+        // For «آخر كتب قرأتها»: one of the reader's own books was read just now.
+        if (target.kind === "mine")
+          window.localStorage.setItem(readAtKey(book.id), String(Date.now()));
       } catch {
         /* kept for this visit only */
       }

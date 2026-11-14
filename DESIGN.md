@@ -617,8 +617,14 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   category label is a black pill with the white mark and name; shelf heads show the white mark on a small black
   square; category buttons have black dots; shelf boards and sheet backgrounds lose the category tint. Covers
   without a picture keep their category's cloth colour.
-- **Your books («كتبك الخاصة»)** (signed in only; migration `20261118120000_books_user_books.sql`): the first shelf
-  of «اكتشف», drawn like any shelf (black mark, title, «1 من 2», a grey «إلك إنت بس» pill). Two books at most,
+- **Recently read («آخر كتب قرأتها»)** (signed in only): the first shelf of «اكتشف», drawn like any shelf, with a
+  grey pill «كتبك المرفوعة: 1 من 2 · إلك إنت بس». One row: the reader's own books (always) and the five library
+  books they read most recently (`book_reading_progress`, on the account), newest first (`recent-reads.ts`); an
+  own book counts from when it was last read on this device (else from its upload). Under each cover «صفحة 34 من
+  80» with a 3px ink bar of how far they got. A library book opens straight at its page; an own book carries a
+  small lock on its cover's top corner (the bin on the other) and opens its window as before. With nothing read
+  and no book of their own, the row holds only «ضيف كتابك» and «الكتب اللي بتقرأها بتطلع هون.»
+- **Your books** (migration `20261118120000_books_user_books.sql`) live in that row. Two books at most,
   PDF, 50 MB each; the database enforces it (slots 1 and 2, the file only at `<user>/<book>/book.pdf` in the
   private `user-books` bucket, 10 adds a day). Covers are page 1 drawn in the browser and kept on the device.
   - Adding: a dashed book-shaped card «+ ضيف كتابك» opens the file picker; the book is added at once with its

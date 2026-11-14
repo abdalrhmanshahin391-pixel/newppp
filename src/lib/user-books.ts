@@ -92,6 +92,8 @@ export function userBookError(
 
 /** Where a reader stopped in one of their books (kept on the device). */
 export const placeKey = (bookId: string) => `uzyra-my-book-page:${bookId}`;
+/** When the reader last read one of their own books, on this device (ms since 1970). */
+export const readAtKey = (bookId: string) => `uzyra-my-book-read-at:${bookId}`;
 /**
  * Where the device copy of a book's file is kept (a same-site address the browser's cache uses as
  * a name; nothing is served there). A new file under the same book gets a new name.

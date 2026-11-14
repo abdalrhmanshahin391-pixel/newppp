@@ -60,6 +60,7 @@ on:
       - "src/routes/api/rita-v3/review.ts"
       - "src/lib/books*"
       - "src/lib/user-books*"
+      - "src/lib/recent-reads*"
       - "src/components/books/**"
       - "src/routes/books.tsx"
       - "src/routes/admin.books.tsx"
@@ -120,6 +121,7 @@ jobs:
           node --test src/lib/books-starter.test.ts
           node --test src/lib/books-reader.test.ts
           node --test src/lib/user-books.test.ts
+          node --test src/lib/recent-reads.test.ts
           node --test src/lib/pdf-stream-polyfills.test.ts
           node --test src/lib/book-gestures.test.ts
           node --test src/lib/rita-phrase.test.ts
