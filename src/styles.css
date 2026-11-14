@@ -7,7 +7,10 @@
 [data-uz-contour-surface] {
   isolation: isolate;
 }
+/* Hedwig draws them at 5% on a warm off-white (#f7f7f5); on Uzyra's pure white that all but
+   disappears, so they are a little stronger and a touch thicker (1.5 units ≈ 1.2px on screen). */
 .uz-page-contours {
+  --uz-contour-opacity: 0.09;
   position: fixed;
   inset: 0;
   z-index: -1;
@@ -16,9 +19,10 @@
   pointer-events: none;
   user-select: none;
   color: inherit;
-  opacity: 0.05;
+  opacity: var(--uz-contour-opacity);
 }
 .uz-page-contours path {
+  stroke-width: 1.5;
   stroke-dasharray: 1;
   animation: uz-contour-draw 2.4s cubic-bezier(0.65, 0, 0.35, 1) var(--contour-delay) backwards;
 }
@@ -187,6 +191,11 @@ body {
 .rita-cream.bg-black,
 .rita-cream .bg-black {
   background-color: var(--pro-page) !important;
+}
+/* The home page sits on its route's white surface, so the shared contours behind it show through
+   (its own white covered them). The bands and cards inside keep their backgrounds. */
+main.uz-home.bg-black {
+  background-color: transparent !important;
 }
 .rita-cream.bg-\[\#0c0c0e\],
 .rita-cream .bg-\[\#0c0c0e\],

@@ -4,8 +4,10 @@
 
 Shared route backgrounds use nine faint SVG contours, based on the public Hedwig home-page
 background inspected on 13 November 2026 (https://www.hedwig-ai.com/). Match its 1440 × 1000
-geometry, 1px strokes at 5% opacity, horizontal sine morph at 12 updates/second and staggered
-2.4-second draw. Inherit each page's foreground colour, including dark pages. Paint above the
+geometry, horizontal sine morph at 12 updates/second and staggered 2.4-second draw. Hedwig's
+1px at 5% sits on a warm off-white; on Uzyra's pure white that vanished, so the strokes are 1.5
+units (about 1.2px) at 9% (`--uz-contour-opacity`; 12% was tried and crowded the hero's orbit
+rings). The home page's own white is transparent so the lines show behind the hero. Inherit each page's foreground colour, including dark pages. Paint above the
 route's existing background but below content in an isolated stacking context; never overprint
 opaque book/PDF sheets, cards or menus. The route boundary owns one backdrop and replaces it
 on navigation, without changing page colours or adding scroll/selection handlers.
