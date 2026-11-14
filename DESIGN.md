@@ -1,23 +1,16 @@
 # DESIGN.md — the visual system of Uzyra
 
-## Ambient contours and the home cube
+## The home cube
 
-Shared route backgrounds use nine faint SVG contours, based on the public Hedwig home-page
-background inspected on 13 November 2026 (https://www.hedwig-ai.com/). Match its 1440 × 1000
-geometry, horizontal sine morph at 12 updates/second and staggered 2.4-second draw. Hedwig's
-1px at 5% sits on a warm off-white; on Uzyra's pure white that vanished, so the strokes are 1.5
-units (about 1.2px) at 9% (`--uz-contour-opacity`; 12% was tried and crowded the hero's orbit
-rings). The home page's own white is transparent so the lines show behind the hero. Inherit each page's foreground colour, including dark pages. Paint above the
-route's existing background but below content in an isolated stacking context; never overprint
-opaque book/PDF sheets, cards or menus. The route boundary owns one backdrop and replaces it
-on navigation, without changing page colours or adding scroll/selection handlers.
+No background lines: the Hedwig-style animated contours were removed (Nov 2026) at the owner's
+request; they were too visible and redrew a full-screen layer 12 times a second on every page.
 
 The home hero reuses the flat ink Uzyra cube with white eyes, no shadow or texture. Keep the
 existing four orbit rings, their centre, word positions and tap/save actions. The cube reacts to
 word taps; it and its level driver stop offscreen or in hidden tabs. Reduced motion makes the
-hero cube and contours static. The backdrop also cancels its frame loop in hidden documents.
-Use `scripts/check-home-contours.mjs` for isolated Chromium/WebKit component checks, screenshots
-and phone/tablet videos; it uses local account/reader fixtures, not production voice or database.
+hero cube static. Use `scripts/check-home-cube.mjs` for isolated Chromium/WebKit component checks,
+screenshots and phone/tablet videos; it uses local account/reader fixtures, not production voice or
+database.
 
 ## Conversation history
 

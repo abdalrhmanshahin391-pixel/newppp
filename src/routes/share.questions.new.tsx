@@ -51,7 +51,7 @@ export const Route = createFileRoute("/share/questions/new")({
   component: NewQuestionSetPage,
 });
 
-export function NewQuestionSetPage() {
+function NewQuestionSetPage() {
   const { space: spaceIdParam, source: initialSource } = Route.useSearch();
   const { user, loading } = useAuth();
   const navigate = useNavigate();

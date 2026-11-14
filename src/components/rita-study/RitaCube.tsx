@@ -188,11 +188,36 @@ export function RitaCube({
       return since < 0.045 ? since / 0.045 : 1 - (since - 0.045) / 0.065;
     };
 
+    // Seen on screen? Off screen (a closed tab of the reader, scrolled away) it does no work.
+    let onScreen = true;
+    const seen =
+      typeof IntersectionObserver === "undefined"
+        ? null
+        : new IntersectionObserver(([entry]) => {
+            onScreen = entry.isIntersecting;
+            last = performance.now();
+          });
+    seen?.observe(bodyEl);
+    let lastBody = "";
+    let lastEyes = "";
+    /** Writes a transform only when it changed (an unchanged write still costs a style pass). */
+    const put = (bodyTransform: string, eyesTransform: string) => {
+      if (bodyTransform !== lastBody) bodyEl.style.transform = lastBody = bodyTransform;
+      if (eyesTransform !== lastEyes) eyesEl.style.transform = lastEyes = eyesTransform;
+    };
+
     const draw = (now: number) => {
       raf = requestAnimationFrame(draw);
+      if (!visible || !onScreen) {
+        last = now;
+        return;
+      }
+      // Calm (waiting or thinking, no hop playing) it moves slowly: 30 frames a second are
+      // enough and halve the work; listening and speaking follow the voice at full rate.
+      const calm = (modeRef.current === "idle" || modeRef.current === "thinking") && !action;
+      if (calm && now - last < 30) return;
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      if (!visible) return;
       clock += dt;
       const t = clock;
       const current = modeRef.current;
@@ -212,8 +237,7 @@ export function RitaCube({
       const shut = blinkAmount(t);
 
       if (reduced.matches) {
-        bodyEl.style.transform = "none";
-        eyesEl.style.transform = `scaleY(${(1 - shut * 0.92).toFixed(3)})`;
+        put("none", `scaleY(${(1 - shut * 0.92).toFixed(3)})`);
         return;
       }
 
@@ -286,12 +310,12 @@ export function RitaCube({
       const ey = eyeY.step(dt);
       const sy = 1 - q;
       const sx = 1 + q * 0.75;
-      bodyEl.style.transform =
+      put(
         `translateY(${y.toFixed(2)}%) rotate(${r.toFixed(2)}deg) ` +
-        `scale(${sx.toFixed(4)}, ${sy.toFixed(4)})`;
-      eyesEl.style.transform =
-        `translate(${(ex * 22).toFixed(2)}%, ${(ey * 30).toFixed(2)}%) ` +
-        `scaleY(${(1 - shut * 0.92).toFixed(3)})`;
+          `scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`,
+        `translate(${(ex * 22).toFixed(1)}%, ${(ey * 30).toFixed(1)}%) ` +
+          `scaleY(${(1 - shut * 0.92).toFixed(2)})`,
+      );
     };
     raf = requestAnimationFrame(draw);
 
@@ -302,6 +326,7 @@ export function RitaCube({
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       cancelAnimationFrame(raf);
+      seen?.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [levelsRef, active]);

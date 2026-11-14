@@ -5,11 +5,9 @@ on:
       - "src/routes/__root.tsx"
       - "src/router.tsx"
       - "src/styles.css"
-      - "src/components/brand/PageContours.tsx"
-      - "src/components/brand/contour-paths*"
       - "src/components/home/procreate/HeroTapWord.tsx"
       - "src/components/rita-study/RitaCube.tsx"
-      - "scripts/check-home-contours.mjs"
+      - "scripts/check-home-cube.mjs"
       - "src/i18n/**"
       - "src/components/LanguageProvider*"
       - "src/components/ThemeProvider.tsx"
@@ -58,14 +56,12 @@ jobs:
         run: bun test src/components/rita-study/question-preview.test.ts src/components/rita-study/window-geometry.test.ts src/lib/study/study-practice.test.ts
       - name: Hold audio lifecycle regressions
         run: node --test src/components/rita-study/tech-sound.test.mjs
-      - name: Contour geometry invariants
-        run: node --test src/components/brand/contour-paths.test.ts
       - name: Learning sections in Chromium and WebKit
         run: |
           npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund playwright@1.62.1
           npx --prefix "$RUNNER_TEMP/pw" playwright install --with-deps chromium webkit
-          PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" node scripts/check-home-contours.mjs
-          PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" BROWSER=webkit node scripts/check-home-contours.mjs
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" node scripts/check-home-cube.mjs
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" BROWSER=webkit node scripts/check-home-cube.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" node scripts/check-study-help.mjs --check
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" BROWSER=webkit node scripts/check-study-help.mjs --check
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" node scripts/check-learn-navigation.mjs
