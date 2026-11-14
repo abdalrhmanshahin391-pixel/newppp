@@ -2,6 +2,7 @@ name: Rita content probe
 
 # Asks the real model a fixed set of questions with the worker's real prompt and checks what it
 # writes (wrong German rules, numbered lists, the wrong reply language, forced follow-ups).
+# The second step plays whole free conversations and measures how long each spoken reply is.
 # Run it by hand after a prompt change: Actions > Rita content probe > Run workflow.
 # The requests run inside Modal, so GitHub only needs the existing Modal deployment
 # credentials. GROQ_API_KEY stays in the private `ritajet-voice` Modal secret.
@@ -15,7 +16,7 @@ permissions:
 jobs:
   content-probe:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
     env:
       MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
       MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
@@ -36,3 +37,7 @@ jobs:
       - name: Run the content probe inside Modal
         working-directory: voice-agent
         run: modal run modal_app.py::content_probe
+      - name: Hold the free conversations inside Modal (how long Uzyra talks)
+        if: always()
+        working-directory: voice-agent
+        run: modal run modal_app.py::talk_probe
