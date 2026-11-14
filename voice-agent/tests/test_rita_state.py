@@ -92,7 +92,8 @@ def test_asking_for_every_word_is_an_explain_request_with_room_to_answer():
     state = RitaSessionState()
     state.observe_user_turn("فصّلي كل كلمة في الجمل")
     assert state.response_type == ResponseType.EXPLAIN
-    assert "up to five short spoken sentences" in state.turn_note()
+    assert "at most two short spoken sentences" in state.turn_note()
+    assert "[[SHEET]]" in state.turn_note()
 
 
 def test_the_note_is_left_out_when_the_dialogue_directive_already_says_it():

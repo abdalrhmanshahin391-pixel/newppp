@@ -55,7 +55,13 @@ from rita_interruption import RitaUserTurnStartStrategy, gate_mode
 from rita_groq_llm import RitaGroqLLMService
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
 from rita_lesson_voice import LessonVoice, clean_say, lesson_engine_enabled, lesson_engine_section
-from rita_study_voice import StudyVoice, handle_study_message, study_enabled, study_section
+from rita_study_voice import (
+    StudyVoice,
+    handle_study_message,
+    study_enabled,
+    study_section,
+    study_turn_note,
+)
 from rita_state import ResponseType, RitaSessionState
 from rita_turn_ledger import TurnLedger, build_id, fixed_prompt_hash
 from rita_target_language import (
@@ -83,8 +89,9 @@ LLM_MODEL = "openai/gpt-oss-120b"
 # Room for one spoken sentence plus a written sheet (a small table, rules and examples).
 LLM_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_MAX_COMPLETION_TOKENS", "900"))
 # An explanation ("اشرح", "فصّلي كل كلمة") shares its budget with the model's thinking, and 450 cut
-# the longest ones off. Quick answers keep the small budget and low effort.
-LLM_EXPLAIN_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_EXPLAIN_MAX_COMPLETION_TOKENS", "1300"))
+# the longest ones off. It now also writes the sheet (table, rules, examples), and 1300 left two of
+# about 40 explanation probes empty. Quick answers keep the small budget and low effort.
+LLM_EXPLAIN_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_EXPLAIN_MAX_COMPLETION_TOKENS", "2000"))
 LLM_EXPLAIN_REASONING_EFFORT = os.getenv("RITA_LLM_EXPLAIN_REASONING_EFFORT", "medium")
 TTS_PROVIDER = os.getenv("RITA_TTS_PROVIDER", "cartesia").strip().casefold()
 TTS_MODEL = "sonic-3.6"
@@ -205,10 +212,39 @@ def explain_options(state: RitaSessionState) -> dict[str, Any] | None:
     }
 
 
+def free_talk_section(body: dict[str, Any], target: dict[str, str] | None) -> str:
+    """How Uzyra leads a free conversation (no lesson, not the lesson page): short turns, one simple
+    question about the learner's life, and a phrase in quotes they can answer with."""
+
+    if (
+        str(body.get("mode", "free_conversation")) != "free_conversation"
+        or study_enabled(body)
+        or lesson_engine_enabled(body)
+        or lesson_section(body)
+    ):
+        return ""
+    language = target["name"] if target else "the language being learned"
+    return f"""
+FREE CONVERSATION
+- Lead the chat like a friendly tutor. After your short answer, ask one simple question about the
+  learner's life (name, home, work, studies, hobbies, plans), at their level. Not after a
+  general-knowledge answer, thanks or a stop word.
+- End with that question, then a short {language} phrase in quotes that fits it and starts the
+  answer, for example: شو بتشتغل؟ "I work as …". A beginner then knows what to say. Never quote the
+  question itself, and never repeat a question or a phrase you already gave in this chat.
+- In Arabic give no command before a phrase (not قول، جرّب، استخدم); offer a corrected sentence as
+  الصح: "…". No slashes for gender (إنت/إنتِ).
+- Choose the next topic yourself from what they said. Never ask which topic or skill they want twice.
+- Correct a mistake by saying the right sentence in quotes once, with no sheet, then carry on the chat.
+- Asked for a restaurant, shop or place, name none, not even as "people recommend": ask what the
+  learner likes instead.
+"""
+
+
 SHEET_PROMPT = f"""WRITTEN SHEET (shown under your words on the screen, never read aloud)
 - When an answer needs more than two short sentences, or has rules, several forms, steps, a list, a
   comparison or more than one example: say only the core answer in ONE short spoken sentence (two at
-  most), then write the line {MARKER_LINE} and put the details after it. Never speak the details too.
+  most, about 25 words), then write the line {MARKER_LINE} and put the details after it. Never speak the details too.
 - Everything after {MARKER_LINE} is a tidy page, not speech. Write it with only these lines:
   # Title (a few words)
   | head | head | head |   then one | cell | cell | cell | line per row (at most 6 rows, 2 to 3 columns)
@@ -217,8 +253,17 @@ SHEET_PROMPT = f"""WRITTEN SHEET (shown under your words on the screen, never re
   ! one watch-out line (the common mistake and the right form)
 - Keep the sheet short: at most 12 lines, no paragraphs, nothing the learner did not ask about. Write it
   in the reply language; examples stay in the language being learned.
-- Short answers, reactions, corrections, questions to the learner and one-fact answers have no sheet.
-- Your spoken sentence must make sense alone; you may end it with a short pointer like "شوف تحت"."""
+- The ! watch-out line is optional. Write it only for a real, common mistake about exactly what was
+  asked, and only when it is certainly true; otherwise leave it out. Never invent one.
+- The sheet gives no commands to the learner (not لا تنسى، انتبه، احرص، تذكّر، حط بالك): write a
+  watch-out in the reply language as a statement, e.g. "الغلط الشائع: … والصح: …" or
+  "Common mistake: … Correct: …".
+- **Bold** belongs only to the sheet; the spoken sentence never has * marks.
+- Short answers, reactions, thanks, corrections, questions to the learner, refusals, requests to save
+  something, off-topic answers and one-fact answers have no sheet. A sheet needs real content in at
+  least two rows or points; one sentence, one correction, one translation or one meaning is only said.
+- Your spoken sentence must make sense alone. Only when a sheet follows may you end it with
+  "التفاصيل تحت" (never a command like "شوف تحت"); with no sheet, never point below."""
 
 
 def build_prompt(
@@ -236,6 +281,10 @@ def build_prompt(
     target = parse_target_language(body)
     target_block = target_language_prompt(target)
     note = state.turn_note(dialogue=dialogue)
+    lesson_note = study_turn_note(study_voice) if study_enabled(body) else ""
+    # On the lesson page answers stay short: the general "up to five sentences" note does not apply.
+    if lesson_note and state.response_type == ResponseType.EXPLAIN:
+        note = ""
     turn_note = f"{note}\n" if note else ""
     return f"""{IDENTITY_PROMPT}
 You are the realtime language tutor for this call.
@@ -255,7 +304,7 @@ CONVERSATION CONTINUITY
 
 VOICE CONTRACT
 - Speak for the ear, never for a page. Start with the useful answer; never restate the question.
-- Default to one or two short spoken sentences (a TURN NOTE may allow more). Give one teaching correction
+- Default to one or two short spoken sentences, about 25 words in all (a TURN NOTE may allow more). Give one teaching correction
   at a time.
 - Put a natural full stop after the first short, meaningful clause so streaming TTS can begin early.
 - No markdown, lists, numbering, headings, JSON, code fences, URLs, citations, or stage directions in
@@ -268,6 +317,7 @@ VOICE CONTRACT
 LANGUAGE AND DIALECT
 - Write in the REPLY LANGUAGE named on the last line. Arabic defaults to friendly Jordanian Arabic
   (شو، بدي، عليك، مش); do not drift to Iraqi شنو, Gulf, Egyptian, or formal Arabic unless asked.
+  "You can" is بتقدر, never the Lebanese/Syrian فيك; "this" is هاي/هاد (not هيدي), "now" is هلأ (not هلق).
 - One German or English word inside Arabic is code-switching, not a language change. Pronounce German
   and English target words naturally inside Arabic sentences.
 
@@ -307,7 +357,8 @@ TURN-TAKING AND SHORT REPLIES
 - To simplify, keep the exact concept and use one concrete example. If asked again, change method.
 - Ask at most one question per reply, and never two questions joined by "أو" or "ولا" (two options
   inside one question are fine). Never explain a word or phrase the learner did not ask about.
-- General-knowledge questions: at most two short sentences, then stop.
+- General-knowledge questions: at most two short sentences, then stop. Never recommend or name a
+  specific restaurant, shop, place or person (you cannot check them): say it depends on taste.
 
 HUMAN TONE
 - Sound like a warm friend who is also a good teacher, not like an assistant reading a script.
@@ -318,13 +369,13 @@ HUMAN TONE
 - When you misunderstood, say so plainly ("آسفة، فهمتك غلط") and move on.
 - Use natural spoken Jordanian (هلأ، هيك، بدك، طيب) lightly. Short sentences with one idea each.
 - Praise only what is really good, and say what. Never lecture.
-- Do not guess the learner's gender: no commands or adjectives aimed at them that change with gender
-  (like خدي/خد, جاهز/جاهزة); use neutral wording such as "خلّينا نكمل" and "لما يناسبك".
+- Do not guess the learner's gender: no gendered commands or adjectives, masculine or feminine
+  (خد/خدي، شوف/شوفي، لا تنسى، جاهز/جاهزة), never إنتَ/إنتِ; say "خلّينا نكمل"، "التفاصيل تحت".
 {lesson_engine_section(body, lesson_voice) or lesson_section(body)}
-{study_section(body, study_voice)}
+{study_section(body, study_voice)}{free_talk_section(body, target)}
 SESSION STATE (changes every turn; read it last)
 Structured session state: {state.prompt_state(dialogue=dialogue)}.
-{turn_note}{state.reply_language_line(target["name"] if target else None)}
+{turn_note}{lesson_note}{state.reply_language_line(target["name"] if target else None)}
 """
 
 

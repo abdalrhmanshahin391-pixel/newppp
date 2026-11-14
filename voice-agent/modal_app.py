@@ -125,6 +125,15 @@ async def diagnose_content_probe() -> dict[str, Any]:
     return await run_probe()
 
 
+@app.function(secrets=secrets, timeout=600, region="eu")
+async def diagnose_talk_probe(runs: int = 2) -> dict[str, Any]:
+    """Hold the fixed free conversations with the production LLM using Modal's private secret."""
+
+    from rita_talk_probe import run_probe
+
+    return await run_probe(runs)
+
+
 @app.function(secrets=secrets, timeout=45)
 async def diagnose_cartesia_tts() -> dict[str, Any]:
     """Privately verify Layan produces Arabic and German PCM; never return audio or secrets."""
@@ -296,6 +305,17 @@ def content_probe() -> None:
     from rita_content_probe import print_result
 
     failed = print_result(diagnose_content_probe.remote())
+    if failed:
+        raise SystemExit(min(failed, 125))
+
+
+@app.local_entrypoint()
+def talk_probe(runs: int = 2) -> None:
+    """Play the free conversations in Modal and fail the command when any reply is too long."""
+
+    from rita_talk_probe import print_result
+
+    failed = print_result(diagnose_talk_probe.remote(runs))
     if failed:
         raise SystemExit(min(failed, 125))
 

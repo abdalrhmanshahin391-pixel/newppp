@@ -31,6 +31,8 @@ class Case:
     text: str
     site_language: str = "automatic"  # what "Uzyra explains in" is set to: automatic | ar | en
     forbid: tuple[str, ...] = ()
+    #: checked only in what is spoken (before the sheet marker); the written sheet may use them
+    forbid_spoken: tuple[str, ...] = ()
     require: tuple[str, ...] = ()
     max_sentences: int | None = None
     language: str | None = None  # "latin" or "arabic": the language most of the reply is written in
@@ -107,7 +109,7 @@ CASES: tuple[Case, ...] = (
         "no-list-in-speech",
         "Give me five German verbs for the kitchen.",
         site_language="en",
-        forbid=(NUMBERED_OR_BULLET, r"\*\*"),
+        forbid_spoken=(NUMBERED_OR_BULLET, r"\*\*"),
         language="latin",
     ),
     Case(
@@ -147,11 +149,16 @@ def check_reply(case: Case, reply: str) -> list[str]:
         found = re.search(pattern, reply)
         if found:
             problems.append(f"forbidden: {found.group(0).strip()[:60]!r}")
+    spoken = re.split(r"(?i)\[\[sheet\]\]", reply, maxsplit=1)[0]
+    for pattern in case.forbid_spoken:
+        found = re.search(pattern, spoken)
+        if found:
+            problems.append(f"forbidden in speech: {found.group(0).strip()[:60]!r}")
     for pattern in case.require:
         if not re.search(pattern, reply):
             problems.append(f"missing: {pattern}")
-    if case.max_sentences is not None and count_sentences(reply) > case.max_sentences:
-        problems.append(f"{count_sentences(reply)} sentences (at most {case.max_sentences})")
+    if case.max_sentences is not None and count_sentences(spoken) > case.max_sentences:
+        problems.append(f"{count_sentences(spoken)} spoken sentences (at most {case.max_sentences})")
     if case.language == "latin" and language_share(reply, LATIN) < 0.7:
         problems.append("not written mostly in Latin letters")
     if case.language == "arabic" and language_share(reply, ARABIC) < 0.3:

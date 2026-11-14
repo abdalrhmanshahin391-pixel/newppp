@@ -324,7 +324,10 @@ class RitaSessionState:
         if act == Act.SIMPLIFY:
             if self.attempt_count >= 2:
                 return "the learner still needs a simpler explanation; change method completely and use one concrete everyday example; do not repeat the previous wording"
-            return "explain the same idea in plain words with one concrete example; do not add a second concept"
+            return (
+                "explain the same idea in plain words with one concrete example; do not add a second "
+                "concept; say it, with no [[SHEET]]"
+            )
         if act == Act.UNDERSTOOD:
             return "the learner understood; do not re-explain; take one small next step"
         if act == Act.CONTINUE:
@@ -360,16 +363,19 @@ class RitaSessionState:
             if self.attempt_count >= 2:
                 return (
                     "TURN NOTE: THE LEARNER IS STILL CONFUSED. Change method completely: one concrete "
-                    "everyday example, no grammar terms, none of your previous wording."
+                    "everyday example, no grammar terms, none of your previous wording. At most three short "
+                    "sentences."
                 )
             return (
                 "TURN NOTE: THE LEARNER IS CONFUSED. Explain the same idea again in plain words with "
-                "ONE concrete everyday example. No grammar terms. Do not repeat your previous wording."
+                "ONE concrete everyday example. No grammar terms. Do not repeat your previous wording. "
+                "At most three short sentences."
             )
         if self.response_type == ResponseType.EXPLAIN:
             return (
-                "TURN NOTE: THE LEARNER ASKED FOR AN EXPLANATION. This overrides the usual length: up to "
-                "five short spoken sentences, still no lists. Cover exactly what they asked, nothing more."
+                "TURN NOTE: THE LEARNER ASKED FOR AN EXPLANATION. Say the core idea in at most two short "
+                "spoken sentences (about 25 words in all), then write [[SHEET]] and put the rules, forms and examples there. "
+                "Cover exactly what they asked, nothing more."
             )
         if self.response_type == ResponseType.EMPATHY:
             return (
@@ -394,7 +400,7 @@ class RitaSessionState:
         if language is None:
             line = "REPLY LANGUAGE: the language of the learner's last turn."
         else:
-            line = f"REPLY LANGUAGE: {LANGUAGE_NAMES[language].upper()}. Write every explanation in {LANGUAGE_NAMES[language]}."
+            line = f"REPLY LANGUAGE: {LANGUAGE_NAMES[language].upper()}. Write all your own words (explanations, questions, reactions) in {LANGUAGE_NAMES[language]}, even when the learner practises in another language."
             if self.language_source == LanguageSource.EXPLICIT:
                 line += " The learner asked for this; keep it until they ask for another language."
             elif self.language_source == LanguageSource.SITE:

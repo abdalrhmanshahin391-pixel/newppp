@@ -96,3 +96,11 @@ def test_structured_probe_result_prints_without_exposing_secret(capsys):
     assert "PASS good" in output
     assert "FAIL bad" in output
     assert "1 of 2 cases passed" in output
+
+
+def test_bold_and_rows_belong_to_the_sheet_not_to_speech():
+    from rita_content_probe import CASES, check_reply
+
+    case = next(item for item in CASES if item.id == "no-list-in-speech")
+    assert check_reply(case, "Five verbs: kochen, backen. [[SHEET]]\n# Verbs\n- **kochen** = to cook") == []
+    assert check_reply(case, "Five verbs: **kochen**, backen.")
