@@ -2,8 +2,9 @@
 // timer or on the server). The PDF is opened in parts (see openPdfInParts), and page by page, in
 // one pass: drawn once (2200 px on a computer, 1400 px on an iPad or phone, to spare memory) and
 // saved in every size the reader uses — 160 px (scrubber, previews), 900 px (phones), 1400 px
-// (the original size) and 2200 px (zoom, when drawn that large) — as WebP (through a WebAssembly
-// encoder in a worker where the browser cannot make WebP, as Safari; JPEG if that fails too),
+// (the original size) and 2200 px (zoom, when drawn that large) — as WebP (through WebAssembly
+// encoders in up to three workers where the browser cannot make WebP, as Safari; JPEG if that
+// fails too). A page's sizes are encoded at the same time, and the next page is drawn meanwhile;
 // with a ~25-byte ThumbHash and the page's main colour for an instant blurred placeholder, and its
 // words with their places. Rows are written 25 at a time. When every page is in, one manifest per
 // book (sizes, previews, the PDF's outline, the reading direction) is written and
@@ -156,52 +157,76 @@ function smallDevice(): boolean {
   );
 }
 
-// The WebAssembly WebP encoder, in one worker, made on first need.
-let worker: Worker | null = null;
+// The WebAssembly WebP encoder, in a few workers (made on first need), so a page's sizes are
+// encoded at the same time and the next page is drawn meanwhile.
+type Encoder = { worker: Worker; busy: number };
+let encoders: Encoder[] = [];
 let workerBroken = false;
 let jobId = 0;
 const waiting = new Map<number, (out: ArrayBuffer | null) => void>();
 
+function poolSize(): number {
+  const cores = Number(typeof navigator === "undefined" ? 0 : navigator.hardwareConcurrency) || 4;
+  return Math.max(1, Math.min(3, cores - 1));
+}
+
+function giveUpOnWorkers() {
+  workerBroken = true;
+  for (const done of waiting.values()) done(null);
+  waiting.clear();
+  for (const { worker } of encoders) worker.terminate();
+  encoders = [];
+}
+
+/** The least busy encoder, adding one while there are fewer than poolSize(). */
+function freeEncoder(): Encoder {
+  const idle = encoders.find((e) => e.busy === 0);
+  if (idle) return idle;
+  if (encoders.length < poolSize()) {
+    const worker = new Worker(new URL("./webp-encode.worker.ts", import.meta.url), {
+      type: "module",
+    });
+    worker.onmessage = (event: MessageEvent<{ id: number; out?: ArrayBuffer; error?: string }>) => {
+      waiting.get(event.data.id)?.(event.data.out ?? null);
+      waiting.delete(event.data.id);
+    };
+    worker.onerror = giveUpOnWorkers;
+    const made = { worker, busy: 0 };
+    encoders.push(made);
+    return made;
+  }
+  return encoders.reduce((a, b) => (b.busy < a.busy ? b : a));
+}
+
 function wasmWebp(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null> {
   if (workerBroken) return Promise.resolve(null);
   try {
-    if (!worker) {
-      worker = new Worker(new URL("./webp-encode.worker.ts", import.meta.url), { type: "module" });
-      worker.onmessage = (
-        event: MessageEvent<{ id: number; out?: ArrayBuffer; error?: string }>,
-      ) => {
-        waiting.get(event.data.id)?.(event.data.out ?? null);
-        waiting.delete(event.data.id);
-      };
-      worker.onerror = () => {
-        workerBroken = true;
-        for (const done of waiting.values()) done(null);
-        waiting.clear();
-      };
-    }
     const ctx = canvas.getContext("2d");
     if (!ctx) return Promise.resolve(null);
     const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const encoder = freeEncoder();
     const id = ++jobId;
+    encoder.busy += 1;
     return new Promise((resolve) => {
       // A worker that never answers (its WebAssembly would not load) must not stall the book:
-      // after 20 s the page is made the other way and the worker is not used again.
+      // after 30 s the page is made the other way and the workers are not used again.
       const stuck = window.setTimeout(() => {
-        workerBroken = true;
         waiting.delete(id);
+        giveUpOnWorkers();
         resolve(null);
-      }, 20_000);
+      }, 30_000);
       waiting.set(id, (out) => {
         window.clearTimeout(stuck);
+        encoder.busy = Math.max(0, encoder.busy - 1);
         resolve(out ? new Blob([out], { type: "image/webp" }) : null);
       });
-      worker!.postMessage(
+      encoder.worker.postMessage(
         { id, width: canvas.width, height: canvas.height, data: pixels.data.buffer, quality },
         [pixels.data.buffer],
       );
     });
   } catch {
-    workerBroken = true;
+    giveUpOnWorkers();
     return Promise.resolve(null);
   }
 }
@@ -215,6 +240,9 @@ function forceWasm(): boolean {
   }
 }
 
+/** Whether this browser's canvas makes WebP (null until the first page tells). */
+let nativeWebp: boolean | null = null;
+
 /** One size as WebP (the canvas's own, else WebAssembly), or JPEG when neither works. */
 async function encode(
   canvas: HTMLCanvasElement,
@@ -222,7 +250,10 @@ async function encode(
   allowJpeg: boolean,
 ): Promise<{ blob: Blob; type: "webp" | "jpeg" } | null> {
   for (const q of [quality, quality - 0.15, quality - 0.3]) {
-    let webp = forceWasm() ? null : await toBlob(canvas, "image/webp", q);
+    // Safari answers "image/webp" with a PNG: after the first try it is not asked again (making
+    // that PNG cost as much as the WebP itself).
+    let webp = nativeWebp === false || forceWasm() ? null : await toBlob(canvas, "image/webp", q);
+    if (webp) nativeWebp ??= webp.type === "image/webp";
     if (!webp || webp.type !== "image/webp") webp = await wasmWebp(canvas, q);
     if (!webp) break;
     if (webp.size <= MAX_PICTURE_BYTES) return { blob: webp, type: "webp" };
@@ -257,26 +288,48 @@ function free(...canvases: (HTMLCanvasElement | null)[]) {
   }
 }
 
+type Pictures = { type: "webp" | "jpeg"; pictures: Partial<Record<Tier, Blob>> };
+
 type Drawn = {
   /** The 1400 px picture's size (the size readers' pages are measured in). */
   width: number;
   height: number;
-  type: "webp" | "jpeg";
-  pictures: Partial<Record<Tier, Blob>>;
+  /** The sizes, still being encoded (the next page is drawn meanwhile). */
+  finish: Promise<Pictures>;
   thumbhash: string | null;
   color: string | null;
   text: string;
   runs: ReturnType<typeof pageTextFromItems>["runs"];
 };
 
-/** The page in every size, its blurred preview and colour, and its words. */
+/** Every size at once: the original decides the type, and the others must match it. */
+async function encodeAll(
+  pageNumber: number,
+  std: HTMLCanvasElement,
+  extras: [Tier, HTMLCanvasElement][],
+): Promise<Pictures> {
+  const [main, ...others] = await Promise.all([
+    encode(std, TIERS.std.quality, true),
+    ...extras.map(([tier, canvas]) => encode(canvas, TIERS[tier].quality, true)),
+  ]);
+  if (!main) throw new Error(`Page ${pageNumber} could not be turned into a picture.`);
+  const pictures: Partial<Record<Tier, Blob>> = { std: main.blob };
+  extras.forEach(([tier], i) => {
+    const out = others[i];
+    if (out && out.type === main.type) pictures[tier] = out.blob;
+  });
+  return { type: main.type, pictures };
+}
+
+/** Draws the page in every size and reads its words; the sizes finish encoding afterwards. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function drawPage(doc: any, pageNumber: number, withTiers: boolean): Promise<Drawn> {
+export async function drawPage(doc: any, pageNumber: number, withTiers: boolean): Promise<Drawn> {
   const page = await doc.getPage(pageNumber);
   let big: HTMLCanvasElement | null = null;
   let std: HTMLCanvasElement | null = null;
   let mid: HTMLCanvasElement | null = null;
   let thumb: HTMLCanvasElement | null = null;
+  const release = () => free(big, std !== big ? std : null, mid, thumb);
   try {
     const base = page.getViewport({ scale: 1 });
     const drawWidth = withTiers && !smallDevice() ? TIERS.zoom.width : TIERS.std.width;
@@ -291,24 +344,15 @@ async function drawPage(doc: any, pageNumber: number, withTiers: boolean): Promi
     ctx.fillRect(0, 0, big.width, big.height);
     await page.render({ canvasContext: ctx, viewport, canvas: big }).promise;
 
-    const pictures: Partial<Record<Tier, Blob>> = {};
     std = big.width > TIERS.std.width + 2 ? scaled(big, TIERS.std.width) : big;
-    const main = await encode(std, TIERS.std.quality, true);
-    if (!main) throw new Error(`Page ${pageNumber} could not be turned into a picture.`);
-    pictures.std = main.blob;
+    const extras: [Tier, HTMLCanvasElement][] = [];
     let thumbhash: string | null = null;
     let color: string | null = null;
     if (withTiers) {
-      // Extra sizes in the same type as the original (all WebP, or all JPEG).
-      const extra = async (canvas: HTMLCanvasElement, tier: Tier) => {
-        const out = await encode(canvas, TIERS[tier].quality, main.type === "jpeg");
-        if (out && out.type === main.type) pictures[tier] = out.blob;
-      };
-      if (big !== std) await extra(big, "zoom");
+      if (big !== std) extras.push(["zoom", big]);
       mid = scaled(std, TIERS.mid.width);
-      await extra(mid, "mid");
       thumb = scaled(mid, TIERS.thumb.width);
-      await extra(thumb, "thumb");
+      extras.push(["mid", mid], ["thumb", thumb]);
       // ThumbHash wants at most 100 px on a side.
       const tiny = scaled(
         thumb,
@@ -326,17 +370,28 @@ async function drawPage(doc: any, pageNumber: number, withTiers: boolean): Promi
     }
     const width = std.width;
     const height = std.height;
+    // The canvases are let go once every size is made.
+    const finish = encodeAll(pageNumber, std, extras);
+    void finish.then(release, release);
 
-    // Words are measured on the page itself, so they fit every size.
-    const content = await page.getTextContent({ includeMarkedContent: false });
-    const words = pageTextFromItems(
-      content.items ?? [],
-      page.getViewport({ scale: width / base.width }),
-    );
-    return { width, height, type: main.type, pictures, thumbhash, color, ...words };
-  } finally {
-    free(big, std !== big ? std : null, mid, thumb);
+    try {
+      // Words are measured on the page itself, so they fit every size.
+      const content = await page.getTextContent({ includeMarkedContent: false });
+      const words = pageTextFromItems(
+        content.items ?? [],
+        page.getViewport({ scale: width / base.width }),
+      );
+      return { width, height, finish, thumbhash, color, ...words };
+    } catch (error) {
+      await finish.catch(() => null);
+      throw error;
+    } finally {
+      page.cleanup?.();
+    }
+  } catch (error) {
+    release();
     page.cleanup?.();
+    throw error;
   }
 }
 
@@ -527,7 +582,8 @@ export async function prepareBook(options: {
       scanned: doneRows.filter((row) => !row.has_text).length,
     });
 
-    // One page is drawn while up to four upload; rows are written 25 at a time.
+    // One page is drawn while the ones before it encode and upload (up to four, two on an iPad);
+    // rows are written 25 at a time.
     const uploads = new Set<Promise<void>>();
     const finished: number[] = [];
     let rows: Record<string, unknown>[] = [];
@@ -543,13 +599,14 @@ export async function prepareBook(options: {
       if (stop.signal.aborted || failure) break;
       const drawn = await drawPage(doc, pageNumber, withTiers);
       const upload = (async () => {
+        const made = await drawn.finish;
         const paths: Partial<Record<Tier, string>> = {};
         await Promise.all(
-          (Object.entries(drawn.pictures) as [Tier, Blob][]).map(async ([tier, blob]) => {
-            const path = tierPath(bookId, pageNumber, tier, drawn.type);
+          (Object.entries(made.pictures) as [Tier, Blob][]).map(async ([tier, blob]) => {
+            const path = tierPath(bookId, pageNumber, tier, made.type);
             const { error } = await supabase.storage.from(PAGES_BUCKET).upload(path, blob, {
               upsert: true,
-              contentType: drawn.type === "webp" ? "image/webp" : "image/jpeg",
+              contentType: made.type === "webp" ? "image/webp" : "image/jpeg",
               cacheControl: "31536000",
             });
             if (error) throw new Error(error.message);
@@ -588,7 +645,8 @@ export async function prepareBook(options: {
       });
       uploads.add(upload);
       void upload.finally(() => uploads.delete(upload));
-      if (uploads.size >= 4) await Promise.race(uploads);
+      // Pages still encoding or uploading: fewer on an iPad or phone, to spare memory.
+      if (uploads.size >= (smallDevice() ? 2 : 4)) await Promise.race(uploads);
     }
     await Promise.all(uploads);
     // Rows already uploaded are kept even when stopping, so "continue" skips them.

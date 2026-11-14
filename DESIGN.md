@@ -795,7 +795,10 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   and «وقّف»; a hidden tab adds «التبويب مخفي: المتصفح بيبطّئ التجهيز…». A book prepared before the
   sizes says «جاهز للقراءة، بس بدون الأحجام الجديدة…» with «حدّث الكتاب».
   A newly uploaded PDF starts preparing on save. «الاستيراد والجودة» lists the books still waiting
-  under «جاهزية القراءة», each with the same button and bar.
+  under «جاهزية القراءة», each with the same button and bar. On Safari the page sizes are made by
+  up to three WebP workers at once while the next page is drawn (about twice as fast as one by
+  one); pdf.js' page words need `src/lib/pdf-stream-polyfills.ts` there (without it preparing
+  stopped at page 0 with «undefined is not a function (near '...n of e...')»).
 
 ## Lesson builder (`/admin/curricula`)
 

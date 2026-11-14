@@ -8,6 +8,7 @@ import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import workerUrl from "pdfjs-dist/legacy/build/pdf.worker.min.mjs?url";
+import { installStreamPolyfills } from "@/lib/pdf-stream-polyfills";
 
 // pdfjs-dist v6 uses very new JS APIs that iPad Safari (and many current
 // browsers) do not ship yet: Math.sumPrecise and Map/WeakMap
@@ -41,6 +42,7 @@ import workerUrl from "pdfjs-dist/legacy/build/pdf.worker.min.mjs?url";
       };
     }
   }
+  installStreamPolyfills(globalThis);
 })();
 
 /** The PDF.js worker runs in its own JS realm, so it needs the same polyfills.
@@ -68,6 +70,7 @@ for (const C of [Map, WeakMap]) {
     };
   }
 }
+(${installStreamPolyfills.toString()})(globalThis);
 const pdfjsWorker = await import(${JSON.stringify(abs)});
 globalThis.pdfjsWorker = pdfjsWorker;
 export const WorkerMessageHandler = pdfjsWorker.WorkerMessageHandler;
