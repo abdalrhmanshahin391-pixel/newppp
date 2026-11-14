@@ -44,6 +44,7 @@ import { readStudyMemory, writeStudyMemory } from "./study-memory";
 import { attachTechSelect, drawSelectionFx } from "./tech-select";
 import { installSoundUnlock, setSoundOn, soundOn } from "./tech-sound";
 import { useStudyRequests } from "./useStudyRequests";
+import { playVoiceLine, prepareVoiceLine, warmVoiceLines, type VoiceCue } from "./voice-lines";
 import "./study-meaning.css";
 
 /** Where the divider was left (share of the width for Uzyra and the guide), per browser. */
@@ -135,12 +136,18 @@ export function StudyPage({
   } | null>(null);
   useEffect(() => {
     if (!menuOpen) setRingMode("main");
+    // The circle's recorded lines are decoded the first time it opens, ready for a quick answer.
+    else warmVoiceLines();
   }, [menuOpen]);
   const menuOpenRef = useRef(false);
   menuOpenRef.current = menuOpen;
   const [orb, setOrb] = useState<OrbPosition>(() => readStudyMemory(lesson.id).orb ?? DEFAULT_ORB);
   const [movingOrb, setMovingOrb] = useState(false);
-  const [phrase, setPhrase] = useState<{ text: string; context: string } | null>(null);
+  const [phrase, setPhrase] = useState<{
+    text: string;
+    context: string;
+    cue?: VoiceCue | null;
+  } | null>(null);
   const closePhrase = useCallback(() => {
     setPhrase(null);
     orbButton.current?.focus({ preventScroll: true });
@@ -448,6 +455,7 @@ export function StudyPage({
       parts: sel.parts ? [...sel.parts] : undefined,
     };
     lastPractice.current = { action, selection: saved };
+    const cue = prepareVoiceLine(action);
     practiceBusy.current = true;
     const version = ++practiceVersion.current;
     const requestId = crypto.randomUUID();
@@ -483,6 +491,7 @@ export function StudyPage({
           );
           return;
         }
+        playVoiceLine(cue);
         setPracticeView((view) => view && { ...view, status: "ready", cards: result.cards });
       } else {
         const result = await makeMcqFn(input);
@@ -494,6 +503,7 @@ export function StudyPage({
           );
           return;
         }
+        playVoiceLine(cue);
         setPracticeView(
           (view) => view && { ...view, status: "ready", questions: result.questions },
         );
@@ -575,7 +585,11 @@ export function StudyPage({
         return;
       }
       requests.stop();
-      setPhrase({ text: resolved.quote, context: resolved.context });
+      setPhrase({
+        text: resolved.quote,
+        context: resolved.context,
+        cue: prepareVoiceLine("meaning"),
+      });
       setMenuOpen(false);
       return;
     }
@@ -966,10 +980,11 @@ export function StudyPage({
         )}
         {phrase && (
           <PhraseDialog
-            key={JSON.stringify(phrase)}
+            key={`${phrase.text}\n${phrase.context}`}
             phrase={phrase.text}
             context={phrase.context}
             compact
+            onReady={() => playVoiceLine(phrase.cue)}
             onPlayingChange={phrasePlaying}
             onClose={closePhrase}
           />

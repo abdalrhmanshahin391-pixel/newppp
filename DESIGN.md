@@ -50,6 +50,17 @@ connecting strokes and selection sounds. The guide is blue; assistant answers us
 burgundy tint with the text colour preserved. An answer selection stays within one answer,
 excludes surrounding controls, follows scrolling/resizing and clears when a guide selection wins.
 Finger swipes still scroll before the hold threshold; a second touch cancels selection for zoom.
+
+**Uzyra's recorded lines.** Every circle action (lessons and books) has two short spoken lines in
+Jordanian Arabic («البطاقات جاهزة.», «هاي الفكرة ببساطة.», …), recorded once with Uzyra's call voice
+(Cartesia, Layan, sonic-3.6; `voice-agent/uzyra_voice_lines.py`, made again by the content-probe
+workflow's «voice-lines» task) and served from `public/sounds/uzyra/` (24 files, ~540 KB). They never
+read the answer and avoid masculine or feminine "you" forms. `voice-lines.ts` picks the line when
+the action is chosen and decodes it while the answer is written (all lines are decoded the first
+time the circle opens); it plays in the same moment the answer, the cards, the questions or the
+meaning card shows, starting from the voice (the files' ~0.13 s of silence is skipped), and a line
+not ready within 250 ms is dropped rather than played late. The two lines take turns; the circle's
+sound switch silences them; nothing plays on a failure or during a call (Uzyra speaks then).
 Reduced motion disables selection animations. The call-start hold uses a quiet sine pad with a
 small pitch lift and a soft two-note completion; release, cancellation, blur and mute fade the
 hold sound out immediately while its visual fill may drain. Existing hold timing is unchanged.

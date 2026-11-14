@@ -358,3 +358,52 @@ export function wordTapSound(index = 0): void {
     bell(a, base * 1.5, 0.11, 0.6, 0.03);
   });
 }
+
+// ---- Uzyra's recorded lines (voice-lines.ts) ----------------------------------------------------
+
+/** Decodes a recorded line on the shared sound context (works before the sound is awake). */
+export async function decodeClip(data: ArrayBuffer): Promise<AudioBuffer | null> {
+  const a = audio();
+  if (!a) return null;
+  try {
+    return await a.decodeAudioData(data);
+  } catch {
+    return null;
+  }
+}
+
+let clip: AudioBufferSourceNode | null = null;
+
+/** Seconds of near-silence at the start of a decoded line (the voice starts there, not before). */
+export function leadingSilence(buffer: AudioBuffer, floor = 0.012): number {
+  const data = buffer.getChannelData(0);
+  const limit = Math.min(data.length, Math.floor(buffer.sampleRate * 0.5));
+  for (let i = 0; i < limit; i++)
+    if (Math.abs(data[i]) > floor) return Math.max(0, i / buffer.sampleRate - 0.012);
+  return 0;
+}
+
+/** Plays a decoded line now (a line still playing stops first); false when the sound is off. */
+export function playClip(buffer: AudioBuffer, volume = 0.9, from = 0): boolean {
+  if (!soundOn()) return false;
+  let started = false;
+  whenRunning((a) => {
+    try {
+      clip?.stop();
+    } catch {
+      /* already ended */
+    }
+    const source = a.createBufferSource();
+    const gain = a.createGain();
+    gain.gain.value = volume;
+    source.buffer = buffer;
+    source.connect(gain).connect(a.destination);
+    source.onended = () => {
+      if (clip === source) clip = null;
+    };
+    source.start(0, from);
+    clip = source;
+    started = true;
+  });
+  return started;
+}
