@@ -35,7 +35,6 @@ import {
   WARN_TONE,
   type Run,
 } from "./admin-ui";
-import { ReadingQuality } from "./ReaderPrepare";
 
 type OnDuplicate = "skip" | "update" | "create";
 
@@ -67,7 +66,6 @@ export function ImportTab({
     <div className="space-y-12">
       <Importer library={library} run={run} />
       <Quality books={library.books} onEdit={onEdit} />
-      <ReadingQuality books={library.books} onEdit={onEdit} />
       <Trash library={library} busy={busy} run={run} />
     </div>
   );

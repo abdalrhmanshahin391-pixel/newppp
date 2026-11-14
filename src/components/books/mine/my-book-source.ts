@@ -14,7 +14,7 @@ import {
   type ViewportLike,
 } from "@/lib/books-reader";
 import { drawWidth, placeKey, snippetAround, textDirection, type UserBook } from "@/lib/user-books";
-import { openMyBook, type OpenStage, type PdfDoc } from "./my-book-pdf";
+import { openMyBook, type OpenedBook, type OpenStage, type PdfDoc } from "./my-book-pdf";
 
 /** What `?debug=1` shows on the reader: where the time went, measured on this device. */
 export type MyBookDebug = {
@@ -33,6 +33,8 @@ export type MyBookDebug = {
 };
 
 export type MyBookSource = {
+  /** A reader's own book (place and bookmarks on this device), or a library book (on the server). */
+  kind: "mine" | "library";
   /** Every page's size (the first page's for all; the true one comes with each page) and outline. */
   manifest: BookManifest;
   total: number;
@@ -97,17 +99,45 @@ async function readOutline(doc: PdfDoc, total: number): Promise<[string, number,
 /** The widest page drawing when pdf.js runs on the page itself (smaller drawings stall less). */
 const PAGE_MODE_MAX_WIDTH = 1100;
 
-/** Opens the book; throws when the file cannot be read. */
-export async function openMyBookSource(
+/** What a PDF book needs to be read: how to open its file, and what to do once it is open. */
+export type PdfBookTarget = {
+  id: string;
+  kind: MyBookSource["kind"];
+  open: (onStage?: (stage: OpenStage) => void) => Promise<OpenedBook>;
+  /** Called a little after the first page shows, when the file came from the network. */
+  keepCopy?: (link: string) => void;
+};
+
+/** Opens one of the reader's own books; throws when the file cannot be read. */
+export function openMyBookSource(
   book: UserBook,
+  options: { onStage?: (stage: OpenStage) => void; debug?: boolean } = {},
+): Promise<MyBookSource> {
+  return openPdfBookSource(
+    {
+      id: book.id,
+      kind: "mine",
+      open: (onStage) => openMyBook(book, onStage),
+      keepCopy: (link) =>
+        void import("./my-book-file").then(({ keepMyBookFileFrom }) =>
+          keepMyBookFileFrom(book, link),
+        ),
+    },
+    options,
+  );
+}
+
+/** Opens any PDF book as a page source for the reader; throws when the file cannot be read. */
+export async function openPdfBookSource(
+  target: PdfBookTarget,
   {
     onStage,
     debug: measure = false,
   }: { onStage?: (stage: OpenStage) => void; debug?: boolean } = {},
 ): Promise<MyBookSource> {
+  const book = { id: target.id };
   const began = performance.now();
-  const { doc, from, link }: { doc: PdfDoc; from: "device" | "network"; link: string | null } =
-    await openMyBook(book, onStage);
+  const { doc, from, link }: OpenedBook = await target.open(onStage);
   const { pdfMode } = await import("@/lib/pdf-page-render");
   const onPage = pdfMode() === "page";
   const debug: MyBookDebug = {
@@ -177,14 +207,8 @@ export async function openMyBookSource(
     .catch(() => [] as BookManifest["outline"]);
   // Read from the network: once the first page is on screen and things are quiet, a copy of the
   // whole file is kept on this device, so the next visit opens from here.
-  if (from === "network" && link)
-    void shown.then(() =>
-      setTimeout(() => {
-        void import("./my-book-file").then(({ keepMyBookFileFrom }) =>
-          keepMyBookFileFrom(book, link),
-        );
-      }, 2500),
-    );
+  const keep = target.keepCopy;
+  if (from === "network" && link && keep) void shown.then(() => setTimeout(() => keep(link), 2500));
 
   // One page is drawn at a time; the reader asks for the page on screen first.
   let queue: Promise<unknown> = Promise.resolve();
@@ -277,6 +301,7 @@ export async function openMyBookSource(
   };
 
   return {
+    kind: target.kind,
     manifest,
     total,
     view,

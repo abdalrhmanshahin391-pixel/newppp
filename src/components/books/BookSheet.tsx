@@ -1,7 +1,6 @@
 import {
   lazy,
   Suspense,
-  useCallback,
   useEffect,
   useRef,
   useState,
@@ -19,15 +18,12 @@ import {
   type BookCategory,
 } from "@/lib/books";
 import { useNavigate } from "@tanstack/react-router";
-import { bookFileLink, bookReadable, favoriteBook, rateBook, trackBook } from "@/lib/books-data";
+import { bookFileLink, favoriteBook, rateBook, trackBook } from "@/lib/books-data";
 import { openWelcome } from "@/lib/auth-dialog";
 
-// The admin's file upload and reading controls are only for admins: loaded when one needs them.
+// The admin's file upload is only for admins: loaded when one needs it.
 const BookFileUpload = lazy(() =>
   import("./admin/BookFileUpload").then((m) => ({ default: m.BookFileUpload })),
-);
-const BookReadingAdmin = lazy(() =>
-  import("./admin/BookFileUpload").then((m) => ({ default: m.BookReadingAdmin })),
 );
 
 /**
@@ -77,19 +73,8 @@ export function BookSheet({
   // A file the admin just added from this sheet (the list behind it is read again meanwhile).
   const [uploadedPath, setUploadedPath] = useState<string | null>(null);
   const filePath = uploadedPath ?? book.file_path;
-  // A prepared book opens in the site's reader, page by page; otherwise its PDF opens.
+  // Any book with a file opens in the site's reader, straight from its PDF (nothing to prepare).
   const navigate = useNavigate();
-  const [readable, setReadable] = useState(false);
-  const [recheck, setRecheck] = useState(0);
-  const checkReadable = useCallback(() => setRecheck((n) => n + 1), []);
-  useEffect(() => {
-    let live = true;
-    if (filePath) void bookReadable(book.id).then((yes) => live && setReadable(yes));
-    else setReadable(false);
-    return () => {
-      live = false;
-    };
-  }, [book.id, filePath, recheck]);
 
   // Opening the book counts as a view (signed-in readers, once a day).
   useEffect(() => {
@@ -172,7 +157,7 @@ export function BookSheet({
       return;
     }
     if (phase3) void trackBook(book.id, "read");
-    if (readable && !pdf) {
+    if (!pdf) {
       void navigate({ to: "/books/$bookId/read", params: { bookId: book.id } });
       return;
     }
@@ -300,7 +285,7 @@ export function BookSheet({
                   : t("The file is not ready yet", "الملف لسا مش جاهز")}
               </button>
             )}
-            {readable && signedIn && (
+            {filePath && signedIn && (
               <button
                 type="button"
                 className="bk-btn"
@@ -323,14 +308,6 @@ export function BookSheet({
               </button>
             )}
           </div>
-          {isAdmin && filePath && !readable && (
-            <Suspense fallback={null}>
-              <BookReadingAdmin
-                book={{ id: book.id, title: book.title, file_path: filePath }}
-                onReady={checkReadable}
-              />
-            </Suspense>
-          )}
           {phase3 && (
             <div className="bk-rate">
               <span className="bk-rate-label" id={`bk-rate-${book.id}`}>

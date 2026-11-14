@@ -29,9 +29,6 @@ import {
   type SaveProgress,
 } from "@/lib/books-data";
 import { Choice, field, label, muted, STATUS_WORDS } from "./admin-ui";
-import { PrepareBlock, useReaderStates } from "./ReaderPrepare";
-import { supabase } from "@/integrations/supabase/legacy-client";
-import { prepareBook } from "@/lib/book-prepare";
 
 const MAX_COVER = 5 * 1024 * 1024;
 const MAX_PDF = MAX_PDF_BYTES;
@@ -97,7 +94,6 @@ export function BookEditor({
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState<SaveProgress>({});
   const [error, setError] = useState("");
-  const readerStates = useReaderStates();
 
   useEffect(() => {
     if (!cover) return;
@@ -190,20 +186,6 @@ export function BookEditor({
         }
       }
       toast.success(book ? "انحفظ الكتاب" : "انضاف الكتاب");
-      // A new PDF is prepared for reading straight away, from the file on this device.
-      if (pdf && readerStates.data) {
-        const { data: saved } = await supabase
-          .from("books")
-          .select("file_path")
-          .eq("id", id)
-          .single();
-        if (saved?.file_path) {
-          void prepareBook({ bookId: id, filePath: saved.file_path, file: pdf });
-          toast.message(
-            "بلّشنا نجهّز الكتاب للقراءة. خلّي الصفحة مفتوحة، وبتشوف التقدّم بـ«الاستيراد والجودة».",
-          );
-        }
-      }
       await onSaved();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "ما انحفظ الكتاب.");
@@ -458,16 +440,6 @@ export function BookEditor({
               )}
               {book && (cover || pdf) && (
                 <p className={muted}>الملف القديم بينشال بس بعد ما ينحفظ الجديد.</p>
-              )}
-              {book && readerStates.data && (
-                <div className="grid gap-2 rounded-xl bg-[var(--pp-grey)] p-3">
-                  <p className="text-[15px] font-semibold">القراءة داخل الموقع</p>
-                  {pdf ? (
-                    <p className={muted}>لما تحفظ، بنبلّش نجهّز الملف الجديد للقراءة.</p>
-                  ) : (
-                    <PrepareBlock book={book} state={readerStates.data.get(book.id)} />
-                  )}
-                </div>
               )}
             </fieldset>
 

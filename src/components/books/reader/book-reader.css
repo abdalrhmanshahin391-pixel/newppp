@@ -330,9 +330,20 @@
   user-select: text;
   -webkit-user-select: text;
 }
+/* The browser's own selection is not shown: the lessons' word boxes are (tech-select.ts). */
 .bkr-text span::selection {
-  background: rgb(43 109 240 / 0.3);
+  background: transparent;
   color: transparent;
+}
+/* The word boxes' layer covers the page (it is clipped to the page's box). */
+.bkr-text > .st-selection-fx {
+  width: 100%;
+  height: 100%;
+}
+.bkr-text[data-tech-selecting] span {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 /* Under the words: catches the pointer between lines while selecting, so the selection follows
    the text instead of jumping (pdf.js' endOfContent). */
@@ -348,7 +359,7 @@
   top: 0;
 }
 ::highlight(bkr-pick) {
-  background-color: rgb(43 109 240 / 0.24);
+  background-color: transparent;
   color: transparent;
 }
 

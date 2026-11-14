@@ -41,7 +41,8 @@ const BookInput = z.object({
   /**
    * A reader's own private book (user_books): its pages are read on the device from the PDF, so
    * the page's text comes with the request (the server checks the book is theirs and the
-   * selection is in that text).
+   * selection is in that text). A library book read from its PDF sends the page's text too, and a
+   * selection in one of Uzyra's answers sends that answer.
    */
   own: z.boolean().optional(),
   pageText: z.string().max(PAGE_LIMITS.text).optional(),
@@ -98,11 +99,19 @@ async function resolveBookRequest(
         .maybeSingle(),
       context.supabase.from("books").select("title, author").eq("id", data.bookId).maybeSingle(),
     ]);
-    if (pageError || !page || !found) return unavailable;
-    pageText = String(page.text ?? "");
+    if (pageError || !found) return unavailable;
+    // A library book read straight from its PDF has no prepared pages: its page's text comes with
+    // the request, as for a private book (row level security returned the book, so it is
+    // published, or the reader is an admin).
+    if (page) pageText = String(page.text ?? "");
+    else if (data.pageText?.trim()) pageText = data.pageText;
+    else return unavailable;
     book = found;
   }
-  const found = pageQuote(data.selection, pageText);
+  // A selection in one of Uzyra's answers comes with that answer as its text (as in the lessons).
+  const found =
+    pageQuote(data.selection, pageText) ??
+    (data.pageText && data.pageText !== pageText ? pageQuote(data.selection, data.pageText) : null);
   if (!found)
     return {
       result: {

@@ -1,11 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Loader2 } from "lucide-react";
+import type { OpenStage } from "@/components/books/mine/my-book-pdf";
+import type { MyBookSource } from "@/components/books/mine/my-book-source";
+import { BookOpening } from "@/components/books/reader/BookOpening";
 import { BookReader } from "@/components/books/reader/BookReader";
+import { openLibraryBookSource } from "@/components/books/reader/library-book-source";
 import { useAuth } from "@/hooks/useAuth";
-import { bookFileLink } from "@/lib/books-data";
-import { loadReaderBook, loadReadingPlace } from "@/lib/book-reader-data";
+import { loadReaderBook, loadReadingPlace, type ReaderBook } from "@/lib/book-reader-data";
+import { clampPage } from "@/lib/user-books";
 
 type ReaderSearch = { page?: number };
 
@@ -36,12 +40,18 @@ function ReaderRoute() {
     enabled: Boolean(user),
     staleTime: 60_000,
   });
+  // A book with a file is read straight from its PDF (its words can be selected at once, and
+  // nothing has to be prepared first); a book prepared before, with no file, reads its pictures.
+  const filePath = book.data?.filePath ?? null;
+  const fromPdf = Boolean(filePath);
+  const canRead = Boolean(book.data && (filePath || book.data.prepared));
+
   // Where this reader stopped, unless the address names a page (a refresh, a shared link).
   const [start, setStart] = useState<number | null>(page ?? null);
   // True when the reader is taken back to where they stopped (for «رجعتك لصفحة n»).
   const [resumed, setResumed] = useState(false);
   useEffect(() => {
-    if (start !== null || !user || !book.data?.prepared) return;
+    if (start !== null || !user || !canRead) return;
     let live = true;
     void loadReadingPlace(bookId).then((place) => {
       if (!live) return;
@@ -51,9 +61,59 @@ function ReaderRoute() {
     return () => {
       live = false;
     };
-  }, [book.data?.prepared, bookId, start, user]);
+  }, [canRead, bookId, start, user]);
 
-  if (book.data && book.data.prepared && start !== null && user)
+  // The PDF is opened once per visit, and closed (its drawn pages let go) on leaving.
+  const [source, setSource] = useState<MyBookSource | null>(null);
+  const [openFailed, setOpenFailed] = useState(false);
+  const [stage, setStage] = useState<OpenStage | null>(null);
+  useEffect(() => {
+    if (!filePath || !user) return;
+    let live = true;
+    let opened: MyBookSource | null = null;
+    setOpenFailed(false);
+    openLibraryBookSource(
+      { id: bookId, filePath },
+      { onStage: (next) => live && setStage(next) },
+    ).then(
+      (s) => {
+        if (!live) return s.close();
+        opened = s;
+        setSource(s);
+      },
+      () => live && setOpenFailed(true),
+    );
+    return () => {
+      live = false;
+      opened?.close();
+      setSource(null);
+    };
+  }, [bookId, filePath, user]);
+
+  const reader: ReaderBook | null = useMemo(
+    () =>
+      book.data && source
+        ? {
+            ...book.data,
+            language: book.data.language || (source.manifest.dir === "rtl" ? "ar" : ""),
+            pageCount: source.total,
+          }
+        : null,
+    [book.data, source],
+  );
+
+  if (fromPdf && reader && source && start !== null && user)
+    return (
+      <BookReader
+        key={bookId}
+        book={reader}
+        userId={user.id}
+        startPage={clampPage(start, source.total)}
+        resumed={resumed}
+        source={source}
+      />
+    );
+  if (!fromPdf && book.data && book.data.prepared && start !== null && user)
     return (
       <BookReader
         key={bookId}
@@ -66,11 +126,13 @@ function ReaderRoute() {
 
   const message = book.isError
     ? "ما قدرت أفتح الكتاب. تأكد من النت وجرّب كمان مرة."
-    : book.data === null
+    : book.data === null || (book.data && !canRead)
       ? "هاد الكتاب مش متاح."
-      : book.data && !book.data.prepared
-        ? "هاد الكتاب لسا مش جاهز للقراءة هون. بتقدر تفتح ملف الـ PDF."
+      : openFailed
+        ? "ما قدرت أفتح ملف الكتاب. تأكد من النت وجرّب كمان مرة."
         : "";
+  if (!message && fromPdf)
+    return <BookOpening title={book.data?.title ?? ""} status={openingLine(stage)} />;
 
   return (
     <div
@@ -84,18 +146,6 @@ function ReaderRoute() {
             <Link to="/books" className="rita-btn rita-btn-soft gap-2">
               <ArrowRight size={15} aria-hidden="true" /> المكتبة
             </Link>
-            {book.data && !book.data.prepared && book.data.filePath && (
-              <button
-                type="button"
-                className="rita-btn rita-btn-primary"
-                onClick={() => {
-                  const path = book.data?.filePath;
-                  if (path) void bookFileLink(path).then((url) => window.location.assign(url));
-                }}
-              >
-                افتح ملف PDF
-              </button>
-            )}
           </div>
         </div>
       ) : (
@@ -107,4 +157,14 @@ function ReaderRoute() {
       )}
     </div>
   );
+}
+
+/** One line under the cube while the book opens. */
+function openingLine(stage: OpenStage | null): string {
+  if (stage?.step === "file")
+    return stage.share !== null && stage.share > 0 && stage.share < 1
+      ? `عم بنزّل الكتاب… ${Math.round(stage.share * 100)}%`
+      : "عم بفتح الكتاب…";
+  if (stage?.step === "page") return "عم بجهّز أول صفحة…";
+  return "عم بفتح الكتاب…";
 }

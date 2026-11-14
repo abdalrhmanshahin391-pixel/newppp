@@ -1,15 +1,13 @@
 // «ارفع ملف الكتاب»: the admin adds the PDF to a book that has none, from the book's own page in
 // the library (the starter shelf's books come without files). The file goes up in resumable parts,
-// the book points to it, and the book is prepared for reading straight away (as in the editor).
+// the book points to it, and it can be read in the site at once (straight from the PDF).
 // Learners never see this: the sheet shows it only to an admin.
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { BookOpenCheck, Loader2, Upload, X } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { MAX_PDF_BYTES, pdfFileProblem, type Book } from "@/lib/books";
 import { attachBookPdf, LIBRARY_QUERY_KEY, UPLOAD_CANCELLED } from "@/lib/books-data";
-import { isRunning, prepareBook, usePrepareJobs } from "@/lib/book-prepare";
-import { PrepareBlock, useReaderStates } from "./ReaderPrepare";
 
 type Phase = "idle" | "uploading" | "error";
 
@@ -23,7 +21,6 @@ export function BookFileUpload({
   onUploaded: (path: string) => void;
 }) {
   const queryClient = useQueryClient();
-  const readerStates = useReaderStates();
   const input = useRef<HTMLInputElement>(null);
   const stop = useRef<AbortController | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
@@ -61,12 +58,6 @@ export function BookFileUpload({
       const path = await attachBookPdf(book.id, file, setShare, controller.signal);
       void queryClient.invalidateQueries({ queryKey: LIBRARY_QUERY_KEY });
       toast.success(`انرفع ملف «${book.title}».`);
-      // Prepared for reading straight away, from the file on this device. The job lives in its own
-      // module, so it goes on even if this sheet is closed.
-      if (readerStates.data) {
-        void prepareBook({ bookId: book.id, filePath: path, file });
-        toast.message("بلّشنا نجهّز الكتاب للقراءة. خلّي الصفحة مفتوحة لحد ما يخلص.");
-      }
       onUploaded(path);
     } catch (cause) {
       const text = cause instanceof Error ? cause.message : "";
@@ -145,41 +136,10 @@ export function BookFileUpload({
         ) : (
           <p>
             للأدمن: الكتاب لسا بدون ملف. ارفع PDF (لحد {Math.round(MAX_PDF_BYTES / 1024 / 1024)}{" "}
-            ميغا) وبنجهّزه للقراءة تلقائياً.
+            ميغا) وبيصير يتقرأ داخل الموقع على طول.
           </p>
         )}
       </div>
     </>
-  );
-}
-
-/** For an admin, on a book that has a file: whether it is ready to read in the site, and the button that prepares it. */
-export function BookReadingAdmin({
-  book,
-  onReady,
-}: {
-  book: Pick<Book, "id" | "title" | "file_path">;
-  /** The book became ready to read while the sheet was open. */
-  onReady: () => void;
-}) {
-  const states = useReaderStates();
-  const state = states.data?.get(book.id);
-  const job = usePrepareJobs().get(book.id);
-  const prepared = Boolean(state?.preparedAt);
-  const was = useRef(prepared);
-  useEffect(() => {
-    if (prepared && !was.current) onReady();
-    was.current = prepared;
-  }, [prepared, onReady]);
-  if (!states.data) return null;
-  // Ready to read (and no job going): nothing to do here, so the card is not drawn.
-  if (prepared && state?.complete !== false && !isRunning(job)) return null;
-  return (
-    <div className="bk-file-note bk-file-admin" dir="rtl" lang="ar">
-      <p className="bk-file-head">
-        <BookOpenCheck size={15} aria-hidden="true" /> للأدمن · القراءة داخل الموقع
-      </p>
-      <PrepareBlock book={book} state={state} />
-    </div>
   );
 }

@@ -468,19 +468,9 @@ export function libraryAt(library: Library, at: Date): Library {
   };
 }
 
-/** A link to the book's PDF that works for ten minutes. */
-/** Whether the book was prepared for reading inside the site (false before the reader migration). */
-export async function bookReadable(bookId: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("books")
-    .select("prepared_at")
-    .eq("id", bookId)
-    .maybeSingle();
-  return !error && Boolean((data as { prepared_at?: string | null } | null)?.prepared_at);
-}
-
-export async function bookFileLink(path: string): Promise<string> {
-  const { data, error } = await supabase.storage.from(FILES_BUCKET).createSignedUrl(path, 600);
+/** A signed link to the book's file; the reader asks for one that lasts a long reading session. */
+export async function bookFileLink(path: string, seconds = 600): Promise<string> {
+  const { data, error } = await supabase.storage.from(FILES_BUCKET).createSignedUrl(path, seconds);
   if (error || !data?.signedUrl) throw new Error("ما قدرنا نفتح الكتاب. جرّب مرة ثانية.");
   return data.signedUrl;
 }

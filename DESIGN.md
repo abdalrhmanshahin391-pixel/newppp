@@ -581,11 +581,8 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   reduced motion) with the file name and «خلّي الصفحة مفتوحة لحد ما يخلص.»; *error* — the reason in
   bold #8c1a31 (`role=alert`: not a PDF, empty, over 500 MB, the server's size limit, a lost
   connection) and the button says «جرّب مرة ثانية»; *done* — the sheet shows «ابدأ القراءة» and
-  the preparing starts by itself. While a file exists but the book is not ready to read in the
-  site, an admin also sees a hairline card «للأدمن · القراءة داخل الموقع» with the preparing
-  progress, «وقّف» and «جهّز الكتاب للقراءة» (the same block as the book editor). The card and the
-  upload are not drawn on a database without the reader migration. Closing the sheet does not stop
-  an upload or the preparing; a browser warning appears if the tab is closed mid-upload.
+  the book can be read at once. Closing the sheet does not stop an upload; a browser warning
+  appears if the tab is closed mid-upload.
 - **Starter shelf** (`supabase/starter-books/books.json`, `docs/books-starter-library.md`): 20
   well-known books with their covers (`public/book-covers/<slug>.webp`, 600×900, the address saved
   in `cover_path` as `/book-covers/<slug>.webp`, which the page serves as it is) and short Arabic
@@ -775,10 +772,13 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     520px the buttons keep only their arrows. Arrows and Page Up/Down turn pages.
   - **Selecting:** the page's words lie see-through over the picture, each piece stretched to the
     width of its words as the browser measures them, so selection matches the picture in Chrome
-    and Safari. Double-click selects a word, dragging selects across lines, and crossing the blank
-    between lines never makes the selection jump (a blank layer under the words while selecting,
-    as pdf.js does). The chosen part stays tinted blue (a CSS highlight) after the browser's own
-    selection goes.
+    and Safari. Selecting is the lessons' own (`tech-select.ts`): a pen or mouse presses on a
+    word and drags, a finger holds a quarter of a second then drags (a plain swipe still turns or
+    scrolls), a double tap picks the sentence and a single tap clears. Every selected word gets
+    a thin glowing blue box (#2b6df0) joined to the next by a wire, each new word makes a short
+    «تي» and the end a chirp; the browser's own selection colour is hidden. In Uzyra's answers
+    (left column) the same selection is dark red (#8e1b2b), the circle and its ring turn red, and
+    a request about it sends that answer as the text (as in the lessons).
   - **Hints:** on the first visit an ink pill at the top of the page area says «حدّد أي كلمة أو
     جملة بإصبعك أو بالماوس، وبعدين اكبس على الدائرة» (× closes it; the first selection retires it
     for good). A picture-only page carries a small dark pill «صفحة صورة بدون نص، ما بتنحدد».
@@ -787,18 +787,18 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     tag, her answer under her mark with «صفحة n»); cards and questions open in the lessons' practice
     window.
   - The place is saved for the reader and kept in the address (`?page=`). The book's sheet says
-    «ابدأ القراءة» for a prepared book (opens the reader) with «افتح ملف PDF» beside it; an
-    unprepared book opens its PDF as before.
-- **Preparing a book** (admin): in the editor's files section a grey card «القراءة داخل الموقع»
-  says the state in words and offers «جهّز الكتاب للقراءة», «كمّل التجهيز» or «جهّز مرة
-  ثانية»; while it runs, a thin accent progress bar, «صفحة x من y · n صفحة/ثانية · باقي حوالي …»
-  and «وقّف»; a hidden tab adds «التبويب مخفي: المتصفح بيبطّئ التجهيز…». A book prepared before the
-  sizes says «جاهز للقراءة، بس بدون الأحجام الجديدة…» with «حدّث الكتاب».
-  A newly uploaded PDF starts preparing on save. «الاستيراد والجودة» lists the books still waiting
-  under «جاهزية القراءة», each with the same button and bar. On Safari the page sizes are made by
-  up to three WebP workers at once while the next page is drawn (about twice as fast as one by
-  one); pdf.js' page words need `src/lib/pdf-stream-polyfills.ts` there (without it preparing
-  stopped at page 0 with «undefined is not a function (near '...n of e...')»).
+    «ابدأ القراءة» for any book with a file (opens the reader) with «افتح ملف PDF» beside it.
+- **Read straight from the PDF** (`library-book-source.ts`, the same page source as a reader's own
+  books): a library book is read from its PDF, opened in parts from a 12-hour signed link, each
+  page drawn on the device with its words (selectable from the first page). There is nothing to
+  prepare: a book can be read as soon as its file is saved. While it opens, the reader's layout
+  shows Uzyra's cube with «عم بفتح الكتاب…» / «عم بنزّل الكتاب… n%» / «عم بجهّز أول صفحة…». The
+  place and bookmarks stay on the reader's account; a selection sends the page's own text to
+  Uzyra. After the first page shows, the file is kept on the device (Cache Storage
+  `uzyra-library-books`, books up to 50 MB, the three most recent), so the next open does not use
+  the network. A book with only prepared pictures and no file still reads its pictures. pdf.js'
+  page words need `src/lib/pdf-stream-polyfills.ts` on Safari (without it: «undefined is not a
+  function (near '...n of e...')»).
 
 ## Lesson builder (`/admin/curricula`)
 

@@ -1,5 +1,12 @@
 # Library — the reader
 
+> **Update (Nov 2026):** library books are now read straight from their PDF (pdf.js on the
+> reader's device, opened in parts; `src/components/books/reader/library-book-source.ts`), the
+> same way as a reader's own books. Preparing pages as pictures was removed (it failed on Safari
+> and its many uploads timed out the database); a book can be read as soon as its file is saved.
+> Books prepared earlier that have no file still read their pictures. The sections below describe
+> the original prepared-pictures design.
+
 ملخص: القارئ بيقرأ الكتاب جوّا الموقع صفحة صفحة، بنفس تصميم الدراسة التفاعلية (ريتا عالشمال
 والصفحة عاليمين، والدائرة فوقهم). ما بينزل ملف الـ PDF أبداً: بس الصفحة اللي بيقرأها (صورة خفيفة
 ~٥٠–١٠٠ كيلو) واللي بعدها. فوق الصورة في نص شفاف بنفس مكان الكلمات، فبيقدر يحدد كلمة أو جملة
