@@ -48,3 +48,9 @@ def test_free_talk_leads_with_a_question_and_a_phrase_but_not_in_a_lesson():
     assert "FREE CONVERSATION" in section and "English phrase" in section
     assert bot.free_talk_section({"mode": "free_conversation", "study": {"lessonId": "l1"}}, None) == ""
     assert bot.free_talk_section({"mode": "lesson"}, None) == ""
+
+
+def test_a_phrase_in_quotes_is_not_counted_as_a_sentence():
+    reply = 'حلو، فهمت إنك من الأردن. من وين تعلمت إنجليزي؟ "At school."'
+    assert measure(reply)["sentences"] == 2
+    assert check_turn(Turn("x", sheet="no"), reply) == []

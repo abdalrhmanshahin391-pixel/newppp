@@ -372,7 +372,7 @@ class RitaSessionState:
         if self.response_type == ResponseType.EXPLAIN:
             return (
                 "TURN NOTE: THE LEARNER ASKED FOR AN EXPLANATION. Say the core idea in at most two short "
-                "spoken sentences, then write [[SHEET]] and put the rules, forms and examples there. "
+                "spoken sentences (about 25 words in all), then write [[SHEET]] and put the rules, forms and examples there. "
                 "Cover exactly what they asked, nothing more."
             )
         if self.response_type == ResponseType.EMPATHY:

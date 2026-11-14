@@ -32,12 +32,13 @@ SENTENCE_END = re.compile(r"[.!?؟]+(?:[\"'”»]?)(?:\s|$)")
 QUESTION = re.compile(r"[?؟]")
 WORD = re.compile(r"\S+")
 
-#: A normal reply: at most this many spoken words and sentences.
+#: A normal reply: at most this many spoken words and sentences (a short reaction such as "أهلاً!"
+#: is a sentence too, so a reaction, a correction and a question fit in three).
 MAX_WORDS = 30
-MAX_SENTENCES = 2
+MAX_SENTENCES = 3
 #: "I did not understand": one plain sentence and one example may need a little more.
 MAX_WORDS_SIMPLIFY = 40
-MAX_SENTENCES_SIMPLIFY = 3
+MAX_SENTENCES_SIMPLIFY = 4
 MAX_SHEET_LINES = 12
 
 
@@ -69,7 +70,7 @@ TALKS: tuple[Talk, ...] = (
             Turn("مرحبا، بدي أتعلم إنجليزي", sheet="no"),
             Turn("بعرف شوي إنجليزي", sheet="no"),
             Turn("I'm Abdulrahman", sheet="no"),
-            Turn("طب شو معنى هاد الحكي؟", sheet="no"),
+            Turn("طب شو معنى هاد الحكي؟"),
             Turn("I'm Abdulrahman, I'm from Jordan", sheet="no"),
             Turn("تعلمت من المدرسة", sheet="no"),
             Turn("I'm learning English just to have fun", sheet="no"),
@@ -133,8 +134,15 @@ def heard(spoken: str) -> str:
     return (speech.feed(spoken) + speech.pending).strip()
 
 
+#: A phrase in quotes ("I'm from …") is the learner's line to say, not one of Uzyra's sentences.
+QUOTED = re.compile(r"[\"“„«][^\"“”„«»]{1,120}[\"”“»]")
+
+
 def count_sentences(text: str) -> int:
-    parts = [part for part in SENTENCE_END.split(text.strip()) if part.strip()]
+    """Uzyra's own sentences; a quoted phrase counts as part of the sentence around it."""
+
+    bare = QUOTED.sub("PHRASE", text.strip())
+    parts = [part for part in SENTENCE_END.split(bare) if part.strip() and part.strip() != "PHRASE"]
     return len(parts) or (1 if text.strip() else 0)
 
 
