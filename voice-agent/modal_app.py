@@ -134,6 +134,18 @@ async def diagnose_talk_probe(runs: int = 2) -> dict[str, Any]:
     return await run_probe(runs)
 
 
+@app.function(secrets=secrets, timeout=300)
+async def make_voice_lines() -> dict[str, Any]:
+    """Record the study circle's short lines with Uzyra's call voice (see uzyra_voice_lines)."""
+
+    from uzyra_voice_lines import render_lines
+
+    api_key = os.environ.get("CARTESIA_API_KEY", "").strip()
+    if not api_key:
+        return {"files": {}, "problems": ["secret_missing"]}
+    return await render_lines(api_key)
+
+
 @app.function(secrets=secrets, timeout=45)
 async def diagnose_cartesia_tts() -> dict[str, Any]:
     """Privately verify Layan produces Arabic and German PCM; never return audio or secrets."""
@@ -318,6 +330,27 @@ def talk_probe(runs: int = 2) -> None:
     failed = print_result(diagnose_talk_probe.remote(runs))
     if failed:
         raise SystemExit(min(failed, 125))
+
+
+@app.local_entrypoint()
+def voice_lines(out: str = "../public/sounds/uzyra") -> None:
+    """Write the study circle's lines into the site and fail when any is missing."""
+
+    import base64
+
+    from uzyra_voice_lines import line_files
+
+    result = make_voice_lines.remote()
+    folder = Path(out)
+    folder.mkdir(parents=True, exist_ok=True)
+    for name, data in sorted(result.get("files", {}).items()):
+        (folder / name).write_bytes(base64.b64decode(data))
+        print(f"{name}: {len(base64.b64decode(data))} bytes")
+    missing = [name for name, _ in line_files() if name not in result.get("files", {})]
+    for problem in result.get("problems", []):
+        print("problem:", problem)
+    if missing:
+        raise SystemExit(f"{len(missing)} lines missing: {', '.join(missing)}")
 
 
 @app.local_entrypoint()

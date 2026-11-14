@@ -4,17 +4,29 @@ name: Rita content probe
 # writes (wrong German rules, numbered lists, the wrong reply language, forced follow-ups).
 # The second step plays whole free conversations and measures how long each spoken reply is.
 # Run it by hand after a prompt change: Actions > Rita content probe > Run workflow.
+# Task "voice-lines" instead records the study circle's short spoken lines with Uzyra's call
+# voice (voice-agent/uzyra_voice_lines.py, CARTESIA_API_KEY from the same Modal secret) and
+# commits them to the branch it runs on (public/sounds/uzyra/).
 # The requests run inside Modal, so GitHub only needs the existing Modal deployment
 # credentials. GROQ_API_KEY stays in the private `ritajet-voice` Modal secret.
 
 on:
   workflow_dispatch:
+    inputs:
+      task:
+        description: "probe (the content and talk probes) or voice-lines (record the circle's lines)"
+        type: choice
+        options:
+          - probe
+          - voice-lines
+        default: probe
 
 permissions:
   contents: read
 
 jobs:
   content-probe:
+    if: inputs.task != 'voice-lines'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
@@ -41,3 +53,40 @@ jobs:
         if: always()
         working-directory: voice-agent
         run: modal run modal_app.py::talk_probe
+
+  voice-lines:
+    if: inputs.task == 'voice-lines'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check Modal credentials
+        run: |
+          if [ -z "$MODAL_TOKEN_ID" ] || [ -z "$MODAL_TOKEN_SECRET" ]; then
+            echo "MODAL_TOKEN_ID / MODAL_TOKEN_SECRET are missing."
+            exit 1
+          fi
+      - name: Install Modal CLI
+        run: python -m pip install --disable-pip-version-check modal
+      - name: Record the lines inside Modal
+        working-directory: voice-agent
+        run: modal run modal_app.py::voice_lines --out ../public/sounds/uzyra
+      - name: Commit them to this branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/sounds/uzyra
+          if git diff --cached --quiet; then
+            echo "No change in the lines."
+            exit 0
+          fi
+          git commit -m "Uzyra's circle lines, recorded with her call voice"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

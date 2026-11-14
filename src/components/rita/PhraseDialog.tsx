@@ -43,6 +43,7 @@ export function PhraseDialog({
   onClose,
   onPlayingChange,
   onWord,
+  onReady,
 }: {
   phrase: string;
   context?: string;
@@ -52,8 +53,12 @@ export function PhraseDialog({
   onPlayingChange?: (playing: boolean) => void;
   /** Called once per phrase with the word and its meaning, so it lands in the learner's Words list. */
   onWord?: (item: LearningItem) => void;
+  /** Called once, the moment the meaning shows (Uzyra's recorded line plays then). */
+  onReady?: () => void;
 }) {
   const explainFn = useServerFn(explainPhrase);
+  const readyRef = useRef(onReady);
+  readyRef.current = onReady;
   const text = cleanPhrase(phrase);
   const [explanation, setExplanation] = useState<PhraseExplanation | null>(() =>
     cachedExplanation(text, context),
@@ -97,6 +102,7 @@ export function PhraseDialog({
     if (known) {
       setExplanation(known);
       setLoading(false);
+      readyRef.current?.();
       return;
     }
     let cancelled = false;
@@ -106,6 +112,7 @@ export function PhraseDialog({
         if (cancelled) return;
         if (result.ok) {
           rememberExplanation(text, result.explanation, context);
+          readyRef.current?.();
           setExplanation(result.explanation);
         } else {
           setFailReason(result.reason);

@@ -33,6 +33,12 @@ import { installSoundUnlock, setSoundOn, soundOn } from "@/components/rita-study
 import { attachTechSelect, drawSelectionFx } from "@/components/rita-study/tech-select";
 import { readReplySelection } from "@/components/rita-study/reply-selection";
 import {
+  playVoiceLine,
+  prepareVoiceLine,
+  warmVoiceLines,
+  type VoiceCue,
+} from "@/components/rita-study/voice-lines";
+import {
   KIND_LABEL,
   LANGUAGE_NAMES,
   actionItem,
@@ -705,6 +711,11 @@ export function BookReader({
     }
   }, [keepPicked, page]);
 
+  // The circle's lines are decoded the first time it opens, so a quick answer finds its line.
+  useEffect(() => {
+    if (menuOpen) warmVoiceLines(BOOK_RING);
+  }, [menuOpen]);
+
   const kind = picked ? bookSelectionKind(picked.quote) : null;
   const actions: StudyAction[] = kind
     ? availableActions(kind).filter(
@@ -741,7 +752,11 @@ export function BookReader({
   // ---- Uzyra's answers --------------------------------------------------------------------------
   const textFn = useServerFn(bookStudyText);
   const [answers, setAnswers] = useState<Answer[]>([]);
-  const [phrase, setPhrase] = useState<{ text: string; context: string } | null>(null);
+  const [phrase, setPhrase] = useState<{
+    text: string;
+    context: string;
+    cue: VoiceCue | null;
+  } | null>(null);
 
   async function ask(
     action: BookTextAction,
@@ -750,6 +765,8 @@ export function BookReader({
     replace?: string,
     reply?: string,
   ) {
+    // Uzyra's line for this action is made ready while the answer is written.
+    const cue = prepareVoiceLine(action);
     const id = crypto.randomUUID();
     const entry: Answer = {
       id,
@@ -780,8 +797,10 @@ export function BookReader({
           ...(await ownPage(onPage, reply)),
         },
       });
-      if (result.ok) settle({ state: "done", text: result.text });
-      else settle({ state: "failed", text: result.message });
+      if (result.ok) {
+        playVoiceLine(cue);
+        settle({ state: "done", text: result.text });
+      } else settle({ state: "failed", text: result.message });
     } catch {
       settle({ state: "failed", text: "ما زبطت هالمرة. جرّب مرة ثانية." });
     }
@@ -805,6 +824,7 @@ export function BookReader({
     if (making) return;
     const origin = retry ? lastPractice.current : picked ? { action, ...picked } : null;
     if (!origin) return;
+    const cue = prepareVoiceLine(action);
     lastPractice.current = {
       action,
       quote: origin.quote,
@@ -838,6 +858,7 @@ export function BookReader({
       if (action === "make_cards") {
         const result = await cardsFn(input);
         if (version !== practiceVersion.current) return;
+        if (result.ok) playVoiceLine(cue);
         setPracticeView(
           (view) =>
             view &&
@@ -848,6 +869,7 @@ export function BookReader({
       } else {
         const result = await mcqFn(input);
         if (version !== practiceVersion.current) return;
+        if (result.ok) playVoiceLine(cue);
         setPracticeView(
           (view) =>
             view &&
@@ -890,6 +912,7 @@ export function BookReader({
       setPhrase({
         text: sel.quote,
         context: from ? (pageQuote(sel.quote, from, 600)?.context ?? "") : "",
+        cue: prepareVoiceLine("meaning"),
       });
       setMenuOpen(false);
       return;
@@ -1497,9 +1520,10 @@ export function BookReader({
         )}
         {phrase && (
           <PhraseDialog
-            key={JSON.stringify(phrase)}
+            key={`${phrase.text}\n${phrase.context}`}
             phrase={phrase.text}
             context={phrase.context}
+            onReady={() => playVoiceLine(phrase.cue)}
             compact
             onClose={() => {
               setPhrase(null);

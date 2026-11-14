@@ -21,6 +21,7 @@ import {
   type ActiveRequest,
   type RequestStep,
 } from "@/lib/study/study-request-state";
+import { playVoiceLine, prepareVoiceLine } from "./voice-lines";
 
 export type { ActiveRequest };
 
@@ -114,6 +115,9 @@ export function useStudyRequests({
         toast.message("ابدأ مع يوزرا أول، وبعدين اشرحلها بصوتك.");
         return false;
       }
+      // In writing (no call), Uzyra's short recorded line plays the moment her answer shows; in a
+      // call she says the answer herself.
+      const cue = voice ? null : prepareVoiceLine(action);
       // A new request replaces the old one.
       const previous = activeRef.current;
       if (previous && isLive(previous.state)) {
@@ -172,6 +176,7 @@ export function useStudyRequests({
           if (result.code === "rate_limited") toast.message(result.message);
           return false;
         }
+        playVoiceLine(cue);
         if ("text" in result) bridge.post?.("rita", result.text);
         update(id, { state: "done" });
         return true;
@@ -191,6 +196,7 @@ export function useStudyRequests({
     async (selection: { exact: string; reply: string }): Promise<boolean> => {
       const action = "explain_reply" as const;
       const voice = Boolean(bridge.send);
+      const cue = voice ? null : prepareVoiceLine(action);
       const previous = activeRef.current;
       if (previous && isLive(previous.state)) {
         if (previous.channel === "voice")
@@ -229,6 +235,7 @@ export function useStudyRequests({
         }
         bridge.post?.("you", `[${label}] «${selection.exact.slice(0, 160)}»`);
         if (!voice) {
+          playVoiceLine(cue);
           if ("text" in result) bridge.post?.("rita", result.text);
           update(id, { state: "done" });
           return true;
@@ -256,6 +263,7 @@ export function useStudyRequests({
 
   const report = useCallback(
     async (selection: SelectionRef, note: string) => {
+      const cue = prepareVoiceLine("report");
       try {
         const result = await resolveFn({
           data: {
@@ -268,8 +276,10 @@ export function useStudyRequests({
             note: note || undefined,
           },
         });
-        if (result.ok) toast.success("وصل البلاغ. شكرًا!");
-        else toast.error(result.message);
+        if (result.ok) {
+          playVoiceLine(cue);
+          toast.success("وصل البلاغ. شكرًا!");
+        } else toast.error(result.message);
         return result.ok;
       } catch {
         toast.error("ما وصل البلاغ. جرّب مرة ثانية.");
