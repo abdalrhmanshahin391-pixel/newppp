@@ -470,6 +470,26 @@ A matching game made from the learner's own flashcards (`src/components/pairs`, 
 - **Result:** the blue card with the score, "best on this device", right / wrong / best streak / accuracy, "Play
   again" and "Change subjects"; under it, the cards that were missed, front = back.
 
+## Repeat (`/repeat`)
+
+A speaking game on `/games` (`src/components/repeat`, matching and sentences in `src/lib/repeat`).
+
+- **Flow:** an intro (title «كرر», one line, the card drawing, three step pills, a teal "Start" button with a lip;
+  the tap wakes the audio and asks for the microphone), then ten cards, then a result list.
+- **A card:** white, 24px corners, on a soft blue wash. Uzyra says the sentence (label «Uzyra عم تحكي…», words
+  near-black `#14141f`); then the microphone opens (a soft tick, label «كرر العبارة…» in Uzyra blue with a pulsing
+  red dot) and the words turn grey `#a7acbd`. Each word turns near-black the moment it is heard, in order, and
+  stays black. All said: a green tick `#1f9d57`, «أحسنت! إجابة صحيحة» / «رائع», a two-note ding, and after 1.1 s
+  the card stays above (with its Arabic meaning) and the next one rises in below (420ms, fade only with reduced
+  motion). Silence (8 s before the first word, 3.5 s after the last) leaves the card «لسا مش كاملة» with ▶ to try
+  again.
+- **Controls** (always left to right, as on a player): ↺ hear it again, ⏸ pause / ▶ try again, ⏭ skip (only after
+  the first try). «إظهار الترجمة» shows the Arabic. A fixed bottom bar: progress track and "n/10 · m:ss".
+- **Voice:** the site's speech model through `/api/german/tts` with `lang: "en"`, kept in Cache Storage
+  (`uzyra-repeat-voice`) so each sentence is fetched once; guests get the browser voice. **Hearing:** the browser's
+  live speech recogniser (`en-US`); without one, a recorded clip is transcribed once by `/api/german/score`
+  (`language: "en"`). Matching forgives contractions, numbers, sound-alike words and near spellings of long words.
+
 ## Wordcraft (`/wordcraft`)
 
 A word-path game for learning English words (`src/components/wordcraft`, engine in `src/lib/wordcraft`).
