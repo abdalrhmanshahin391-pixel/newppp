@@ -8622,8 +8622,8 @@ html.rita-app,
 }
 /* Uzyra sits in the original orbit centre; the rings and word-chip geometry stay intact. */
 .uz-home .rh-hero-cube {
-  width: clamp(164px, 22vw, 220px);
-  height: clamp(164px, 22vw, 220px);
+  width: clamp(144px, 22vw, 220px);
+  height: clamp(144px, 22vw, 220px);
 }
 .uz-home .rh-chip {
   padding: 0.375rem 0.85rem;
