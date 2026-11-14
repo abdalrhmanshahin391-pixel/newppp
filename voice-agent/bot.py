@@ -211,6 +211,29 @@ def explain_options(state: RitaSessionState) -> dict[str, Any] | None:
     }
 
 
+def free_talk_section(body: dict[str, Any], target: dict[str, str] | None) -> str:
+    """How Uzyra leads a free conversation (no lesson, not the lesson page): short turns, one simple
+    question about the learner's life, and a phrase in quotes they can answer with."""
+
+    if (
+        str(body.get("mode", "free_conversation")) != "free_conversation"
+        or study_enabled(body)
+        or lesson_engine_enabled(body)
+        or lesson_section(body)
+    ):
+        return ""
+    language = target["name"] if target else "the language being learned"
+    return f"""
+FREE CONVERSATION
+- Lead the chat like a friendly tutor. After your short answer, ask one simple question about the
+  learner's life (name, home, work, studies, hobbies, plans), at their level.
+- With that question, give in quotes a short {language} phrase they could start the answer with,
+  e.g. "I'm from …". A beginner then knows what to say.
+- Choose the next topic yourself from what they said. Never ask which topic or skill they want twice.
+- Correct a mistake by saying the right sentence in quotes once, then carry on the chat.
+"""
+
+
 SHEET_PROMPT = f"""WRITTEN SHEET (shown under your words on the screen, never read aloud)
 - When an answer needs more than two short sentences, or has rules, several forms, steps, a list, a
   comparison or more than one example: say only the core answer in ONE short spoken sentence (two at
@@ -230,7 +253,8 @@ SHEET_PROMPT = f"""WRITTEN SHEET (shown under your words on the screen, never re
   "Common mistake: … Correct: …".
 - **Bold** belongs only to the sheet; the spoken sentence never has * marks.
 - Short answers, reactions, thanks, corrections, questions to the learner, refusals, requests to save
-  something, off-topic answers and one-fact answers have no sheet.
+  something, off-topic answers and one-fact answers have no sheet. A sheet needs real content in at
+  least two rows or points; one sentence, one correction, one translation or one meaning is only said.
 - Your spoken sentence must make sense alone. Only when a sheet follows may you end it with
   "التفاصيل تحت" (never a command like "شوف تحت"); with no sheet, never point below."""
 
@@ -326,7 +350,8 @@ TURN-TAKING AND SHORT REPLIES
 - To simplify, keep the exact concept and use one concrete example. If asked again, change method.
 - Ask at most one question per reply, and never two questions joined by "أو" or "ولا" (two options
   inside one question are fine). Never explain a word or phrase the learner did not ask about.
-- General-knowledge questions: at most two short sentences, then stop.
+- General-knowledge questions: at most two short sentences, then stop. Never invent names of places,
+  shops or people.
 
 HUMAN TONE
 - Sound like a warm friend who is also a good teacher, not like an assistant reading a script.
@@ -340,7 +365,7 @@ HUMAN TONE
 - Do not guess the learner's gender: no gendered commands or adjectives, masculine or feminine
   (خد/خدي، شوف/شوفي، لا تنسى، جاهز/جاهزة), never إنتَ/إنتِ; say "خلّينا نكمل"، "التفاصيل تحت".
 {lesson_engine_section(body, lesson_voice) or lesson_section(body)}
-{study_section(body, study_voice)}
+{study_section(body, study_voice)}{free_talk_section(body, target)}
 SESSION STATE (changes every turn; read it last)
 Structured session state: {state.prompt_state(dialogue=dialogue)}.
 {turn_note}{lesson_note}{state.reply_language_line(target["name"] if target else None)}

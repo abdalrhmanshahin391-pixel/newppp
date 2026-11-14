@@ -371,8 +371,9 @@ class RitaSessionState:
             )
         if self.response_type == ResponseType.EXPLAIN:
             return (
-                "TURN NOTE: THE LEARNER ASKED FOR AN EXPLANATION. This overrides the usual length: up to "
-                "five short spoken sentences, still no lists. Cover exactly what they asked, nothing more."
+                "TURN NOTE: THE LEARNER ASKED FOR AN EXPLANATION. Say the core idea in at most two short "
+                "spoken sentences, then write [[SHEET]] and put the rules, forms and examples there. "
+                "Cover exactly what they asked, nothing more."
             )
         if self.response_type == ResponseType.EMPATHY:
             return (
@@ -397,7 +398,7 @@ class RitaSessionState:
         if language is None:
             line = "REPLY LANGUAGE: the language of the learner's last turn."
         else:
-            line = f"REPLY LANGUAGE: {LANGUAGE_NAMES[language].upper()}. Write every explanation in {LANGUAGE_NAMES[language]}."
+            line = f"REPLY LANGUAGE: {LANGUAGE_NAMES[language].upper()}. Write all your own words (explanations, questions, reactions) in {LANGUAGE_NAMES[language]}, even when the learner practises in another language."
             if self.language_source == LanguageSource.EXPLICIT:
                 line += " The learner asked for this; keep it until they ask for another language."
             elif self.language_source == LanguageSource.SITE:

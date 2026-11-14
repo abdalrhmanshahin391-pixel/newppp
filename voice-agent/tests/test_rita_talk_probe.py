@@ -39,3 +39,12 @@ def test_a_missing_key_fails_every_reply(capsys):
     result = {"outcome": "secret_missing", "passed": 0, "failed": 28, "talks": []}
     assert print_result(result) == 28
     assert "GROQ_API_KEY" in capsys.readouterr().err
+
+
+def test_free_talk_leads_with_a_question_and_a_phrase_but_not_in_a_lesson():
+    import bot
+
+    section = bot.free_talk_section({"mode": "free_conversation"}, {"name": "English", "code": "en"})
+    assert "FREE CONVERSATION" in section and "English phrase" in section
+    assert bot.free_talk_section({"mode": "free_conversation", "study": {"lessonId": "l1"}}, None) == ""
+    assert bot.free_talk_section({"mode": "lesson"}, None) == ""
