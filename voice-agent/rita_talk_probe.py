@@ -32,13 +32,14 @@ SENTENCE_END = re.compile(r"[.!?؟]+(?:[\"'”»]?)(?:\s|$)")
 QUESTION = re.compile(r"[?؟]")
 WORD = re.compile(r"\S+")
 
-#: A normal reply: at most this many spoken words and sentences (a short reaction such as "أهلاً!"
-#: is a sentence too, so a reaction, a correction and a question fit in three).
+#: A normal reply: at most this many spoken words and sentences. Length is measured in words; a short
+#: reaction ("ممتاز!"), the corrected sentence, a question and a phrase to answer with are four short
+#: sentences in about 20 words.
 MAX_WORDS = 30
-MAX_SENTENCES = 3
+MAX_SENTENCES = 4
 #: "I did not understand": one plain sentence and one example may need a little more.
 MAX_WORDS_SIMPLIFY = 40
-MAX_SENTENCES_SIMPLIFY = 4
+MAX_SENTENCES_SIMPLIFY = 5
 MAX_SHEET_LINES = 12
 
 
@@ -235,7 +236,8 @@ async def play(client, talk: Talk) -> list[dict[str, Any]]:
         params, state = turn_request(talk, history, turn.text)
         try:
             response = await client.chat.completions.create(**params)
-            raw = (response.choices[0].message.content or "").strip()
+            choice = response.choices[0]
+            raw = (choice.message.content or "").strip()
         except Exception as error:  # a network or quota problem fails the turn, never passes it
             out.append({"text": turn.text, "problems": [f"request error: {type(error).__name__}"]})
             break
@@ -244,7 +246,16 @@ async def play(client, talk: Talk) -> list[dict[str, Any]]:
             {
                 "text": turn.text,
                 "type": str(getattr(state.response_type, "value", state.response_type)),
-                "problems": check_turn(turn, raw),
+                "problems": check_turn(turn, raw)
+                + (
+                    []
+                    if raw
+                    else [
+                        f"stopped: {choice.finish_reason}, used"
+                        f" {getattr(response.usage, 'completion_tokens', '?')} of"
+                        f" {params['max_completion_tokens']} tokens"
+                    ]
+                ),
                 **m,
             }
         )
