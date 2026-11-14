@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { SiteHeader } from "@/components/SiteHeader";
-import { PairsCardArt, WordcraftCardArt } from "@/components/learn/PlayCardArt";
+import { PairsCardArt, RepeatCardArt, WordcraftCardArt } from "@/components/learn/PlayCardArt";
 
 type Lang = "en" | "ar";
 
@@ -28,9 +28,20 @@ const GAMES = [
       ar: "اقرن وجه بطاقاتك مع ظهرها قبل ما يخلص الوقت.",
     },
   },
+  {
+    key: "repeat",
+    to: "/repeat",
+    tone: "teal",
+    Art: RepeatCardArt,
+    name: { en: "Repeat", ar: "كرر" },
+    line: {
+      en: "Uzyra says a sentence, you say it back. Every word you get right turns black.",
+      ar: "Uzyra بتحكي جملة وإنت بتكررها. كل كلمة بتلفظها صح بتصير سودا.",
+    },
+  },
 ] as const;
 
-/** /games: the two games as big game cards, one under the other in the middle of the page. */
+/** /games: the games as big game cards, one under the other in the middle of the page. */
 export function GamesPage() {
   const { i18n } = useTranslation();
   const lang: Lang = (i18n.language ?? "").startsWith("ar") ? "ar" : "en";

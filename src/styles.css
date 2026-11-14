@@ -6199,6 +6199,9 @@ html.rita-app,
 .uz-play[data-tone="violet"] {
   --play: #7a3fc6;
 }
+.uz-play[data-tone="teal"] {
+  --play: #0f7466;
+}
 /* /games: the game cards one under the other, centred, wider than tall like the reference cards. */
 .uz-games {
   max-width: 760px;

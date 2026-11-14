@@ -177,6 +177,60 @@ export function MemoryCardArt() {
   );
 }
 
+/**
+ * Repeat: two sentence cards, one above the other. The top one is said (dark words, a green tick);
+ * the bottom one is being said: its first words dark, the rest grey, Uzyra's mark speaking beside it.
+ */
+export function RepeatCardArt() {
+  const bars = (x: number, y: number, dark: number, widths: number[]) => {
+    let at = x;
+    return widths.map((w, i) => {
+      const bar = (
+        <rect
+          key={`${y}-${i}`}
+          x={at}
+          y={y}
+          width={w}
+          height={12}
+          rx={6}
+          fill={i < dark ? "#1d1640" : "#c9cedb"}
+        />
+      );
+      at += w + 8;
+      return bar;
+    });
+  };
+  return (
+    <svg
+      viewBox="44 0 272 240"
+      preserveAspectRatio="xMidYMax meet"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <Shadow />
+      <Card x={70} y={20} w={220} h={78} fill="#fff" lip="#d4e3f7">
+        {bars(92, 53, 3, [30, 52, 64])}
+      </Card>
+      <circle cx={284} cy={24} r={20} fill="#3fae5c" />
+      <circle cx={284} cy={20} r={20} fill="#62d27e" />
+      <path
+        d="M275 20l6 6 12-12"
+        fill="none"
+        stroke="#fff"
+        strokeWidth={5.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Card x={70} y={116} w={220} h={78} fill="#fff" lip="#d4e3f7">
+        {bars(92, 149, 2, [30, 52, 64])}
+      </Card>
+      <rect x={34 + 12} y={170} width={58} height={44} rx={22} fill="#ffd23f" />
+      <path d="M62 210l-10 14 22-10z" fill="#ffd23f" />
+      <Mark x={64} y={176} h={32} fill="#1d1640" />
+    </svg>
+  );
+}
+
 /** Pairs: two matching cards leaning together, a green tick above them. */
 export function PairsCardArt() {
   return (

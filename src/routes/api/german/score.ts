@@ -37,10 +37,14 @@ export const Route = createFileRoute("/api/german/score")({
           return new Response("Recording too long", { status: 413 });
         }
 
+        // German by default; the Repeat game sends "en". The file keeps its own extension
+        // (Safari records m4a, Chrome webm) so the speech model reads it right.
+        const language = form.get("language") === "en" ? "en" : "de";
+        const ext = /\.(wav|webm|m4a|mp4|ogg|mp3)$/i.exec(audio.name)?.[1] ?? "wav";
         const upstream = new FormData();
         upstream.append("model", "openai/gpt-4o-transcribe");
-        upstream.append("file", audio, "recording.wav");
-        upstream.append("language", "de");
+        upstream.append("file", audio, `recording.${ext.toLowerCase()}`);
+        upstream.append("language", language);
 
         try {
           const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
