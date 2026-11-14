@@ -57,7 +57,7 @@ export const Route = createFileRoute("/share/questions/$setId")({
   component: QuestionSetDetailPage,
 });
 
-export function QuestionSetDetailPage() {
+function QuestionSetDetailPage() {
   const { setId } = Route.useParams();
   const { user } = useAuth();
   const navigate = useNavigate();

@@ -1,4 +1,4 @@
-// Real hero, cube, learning panels and shared route backdrop; account boundary is a signed-in fixture.
+// Real hero, cube and learning panels; account boundary is a signed-in fixture.
 // No live account, voice provider, database, or remote website is contacted.
 import assert from "node:assert/strict";
 import { build } from "esbuild";
@@ -8,13 +8,12 @@ import { resolve, relative, extname } from "node:path";
 import { createServer } from "node:http";
 
 const root = process.cwd(),
-  out = resolve(root, "output/study-help/contour-cube");
+  out = resolve(root, "output/study-help/home-cube");
 await mkdir(out, { recursive: true });
 const entry = `
 import React from 'react';import {createRoot} from 'react-dom/client';
 import {createRootRoute,createRoute,createRouter,RouterProvider,Outlet,Link} from '@tanstack/react-router';
 import {HeroTapWord} from './src/components/home/procreate/HeroTapWord';
-import {PageContours} from './src/components/brand/PageContours';
 import {LearnSections} from './src/components/learn/LearnHomeView';
 import {UzyraWordmark} from './src/components/brand/UzyraWordmark';
 const lang=new URLSearchParams(location.search).get('lang')==='ar'?'ar':'en';
@@ -22,8 +21,8 @@ function Header(){return <header className="qa-header"><UzyraWordmark size={22}/
 function Home(){return <main className="uz-home rita-cream edith-light edith-premium relative min-h-screen overflow-hidden bg-black text-white" style={{fontFamily:'var(--font-grotesk)'}}><Header/><HeroTapWord/><div className="qa-tail">Uzyra · Learn at your pace</div></main>}
 function Learn(){return <div className="edith-premium edith-light uz-learn min-h-screen"><Header/><main className="uz-learn-main"><LearnSections lang={lang} showGerman={true} chips={{flashcards:null,lessons:null}}/></main></div>}
 function Reader(){return <main className="edith-premium qa-reader"><Header/><div className="qa-reader-grid"><section><h1>{lang==='ar'?'اسأل يوزرا':'Ask Uzyra'}</h1><p>{lang==='ar'?'حدّد النص واقرأ بهدوء.':'Select the text and read at your pace.'}</p><button>Open menu</button><details><summary>Reader menu</summary><button>Bookmark</button></details><textarea aria-label="Ask Uzyra" placeholder="Ask Uzyra"/></section><article className="qa-paper"><h2>THIRD PERSON -S AND -ES</h2><p>With he, she and it, the present simple verb changes its ending.</p><p>She studies at night and watches a film on Fridays.</p></article></div></main>}
-const r=createRootRoute({component:()=> <PageContours><Outlet/></PageContours>});
-const pages=[['/',Home],['/learn',Learn],['/reader',Reader],['/dark',()=> <main className="qa-dark edith-premium"><Header/><h1>Uzyra at night</h1><p>Calm contours, with the page’s existing dark background intact.</p></main>]].map(([path,component])=>createRoute({getParentRoute:()=>r,path,component}));
+const r=createRootRoute({component:()=> <Outlet/>});
+const pages=[['/',Home],['/learn',Learn],['/reader',Reader],['/dark',()=> <main className="qa-dark edith-premium"><Header/><h1>Uzyra at night</h1><p>The page’s own dark background.</p></main>]].map(([path,component])=>createRoute({getParentRoute:()=>r,path,component}));
 const router=createRouter({routeTree:r.addChildren(pages)});createRoot(document.getElementById('app')).render(<RouterProvider router={router}/>);
 `;
 const result = await build({
@@ -158,7 +157,7 @@ try {
     const page = await context.newPage();
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(origin + "/?lang=" + lang);
-    await page.locator(".uz-page-contours path").last().waitFor();
+    await page.locator(".rh-hero-cube .uz-cube").waitFor();
     await page.evaluate(() => document.fonts.ready);
     assert.ok(
       await page.evaluate(() =>
@@ -171,31 +170,11 @@ try {
       "production fonts load",
     );
     await page.waitForTimeout(4000);
-    assert.equal(await page.locator(".uz-page-contours").count(), 1);
-    assert.equal(await page.locator(".uz-page-contours path").count(), 9);
+    assert.equal(await page.locator(".uz-page-contours").count(), 0, "no background lines");
     assert.equal(await page.locator(".rh-rings span").count(), 4);
     assert.equal(await page.locator(".rh-hero-cube .uz-cube").count(), 1);
     assert.equal(await page.locator("canvas").count(), 0);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-    const before = await page.locator(".uz-page-contours path").first().getAttribute("d");
-    await page.waitForTimeout(1000);
-    assert.notEqual(await page.locator(".uz-page-contours path").first().getAttribute("d"), before);
-    const updates = await page.evaluate(
-      () =>
-        new Promise((done) => {
-          let changes = 0;
-          const observer = new MutationObserver((records) => (changes += records.length));
-          observer.observe(document.querySelector(".uz-page-contours path"), {
-            attributes: true,
-            attributeFilter: ["d"],
-          });
-          setTimeout(() => {
-            observer.disconnect();
-            done(changes);
-          }, 1200);
-        }),
-    );
-    assert.ok(updates >= 6 && updates <= 16, "12Hz path updates: " + updates);
     const positions = await page.evaluate(() => {
       const box = document.querySelector(".rh-hero-cube").getBoundingClientRect();
       const ring = document.querySelector(".rh-rings span").getBoundingClientRect();
@@ -228,11 +207,6 @@ try {
     await page.evaluate(() => scrollTo(0, 0));
     await page.getByRole("link", { name: "Learn", exact: true }).click();
     await page.locator(".uz-rail").waitFor();
-    assert.equal(
-      await page.locator(".uz-page-contours").count(),
-      1,
-      "one background after route replacement",
-    );
     await page.screenshot({
       path: resolve(out, engine + "-learn-" + width + "-" + lang + ".png"),
       fullPage: false,
@@ -245,10 +219,6 @@ try {
       await page.locator(".qa-paper").evaluate((el) => getComputedStyle(el).backgroundColor),
       "rgb(255, 255, 255)",
     );
-    assert.equal(
-      await page.locator(".uz-page-contours").evaluate((el) => getComputedStyle(el).pointerEvents),
-      "none",
-    );
     await page.screenshot({
       path: resolve(out, engine + "-reader-" + width + "-" + lang + ".png"),
       fullPage: false,
@@ -258,54 +228,19 @@ try {
       await page.locator(".qa-dark").evaluate((el) => getComputedStyle(el).backgroundColor),
       "rgb(18, 17, 23)",
     );
-    assert.equal(
-      await page.locator(".uz-page-contours").evaluate((el) => getComputedStyle(el).color),
-      "rgb(255, 255, 255)",
-    );
     await page.getByRole("link", { name: "Home", exact: true }).click();
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.waitForTimeout(100);
-    const still = await page.locator(".uz-page-contours").innerHTML();
-    await page.waitForTimeout(500);
-    assert.equal(
-      await page.locator(".uz-page-contours").innerHTML(),
-      still,
-      "reduced motion is static",
-    );
     assert.equal(
       await page.locator(".uz-cube-body").evaluate((el) => getComputedStyle(el).transform),
       "none",
     );
     await page.emulateMedia({ reducedMotion: "no-preference" });
-    await page.waitForTimeout(300);
-    // Deterministically exercise the visibility event contract; this is not a real background-tab benchmark.
-    await page.evaluate(() => {
-      Object.defineProperty(document, "hidden", { configurable: true, value: true });
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
-    const hidden = await page.locator(".uz-page-contours").innerHTML();
-    await page.waitForTimeout(300);
-    assert.equal(
-      await page.locator(".uz-page-contours").innerHTML(),
-      hidden,
-      "hidden document stops path updates",
-    );
-    await page.evaluate(() => {
-      delete document.hidden;
-      document.dispatchEvent(new Event("visibilitychange"));
-    });
-    await page.waitForTimeout(300);
-    assert.notEqual(
-      await page.locator(".uz-page-contours").innerHTML(),
-      hidden,
-      "visible document resumes",
-    );
     findings.push({
       engine,
       width,
       height,
       lang,
-      pathUpdatesIn1200ms: updates,
       acceptance: "passed",
     });
     await context.close();

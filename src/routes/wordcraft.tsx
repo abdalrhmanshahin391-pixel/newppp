@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { WordcraftPage } from "@/components/wordcraft/WordcraftPage";
-import { LEVEL_IDS, type Level } from "@/lib/wordcraft/round";
+import type { Level } from "@/lib/wordcraft/round";
+
+// The level names only: importing them from the game would put the whole game in every page.
+const LEVEL_IDS: readonly Level[] = ["easy", "medium", "hard"];
 
 type WordcraftSearch = { d?: Level };
 

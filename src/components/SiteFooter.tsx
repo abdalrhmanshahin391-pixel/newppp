@@ -1,7 +1,7 @@
 import { useLang } from "@/components/LanguageProvider";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useLearningLanguage } from "@/hooks/useLearningLanguage";
-import { SUPPORT_EMAIL } from "@/lib/legal-content";
+import { SUPPORT_EMAIL } from "@/lib/support-contact";
 import { footerColumns } from "@/lib/footer-links";
 import { SiteFooterView } from "./SiteFooterView";
 

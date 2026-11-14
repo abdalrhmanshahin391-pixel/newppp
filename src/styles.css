@@ -2,38 +2,6 @@
 @source "../src";
 @import "tw-animate-css";
 
-/* Shared ambient contours. Isolation paints the negative layer ABOVE the route's own background
-   and BELOW its content. Opaque documents/cards stay opaque, and no input can hit this SVG. */
-[data-uz-contour-surface] {
-  isolation: isolate;
-}
-/* Hedwig draws them at 5% on a warm off-white (#f7f7f5); on Uzyra's pure white that all but
-   disappears, so they are a little stronger and a touch thicker (1.5 units ≈ 1.2px on screen). */
-.uz-page-contours {
-  --uz-contour-opacity: 0.09;
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  user-select: none;
-  color: inherit;
-  opacity: var(--uz-contour-opacity);
-}
-.uz-page-contours path {
-  stroke-width: 1.5;
-  stroke-dasharray: 1;
-  animation: uz-contour-draw 2.4s cubic-bezier(0.65, 0, 0.35, 1) var(--contour-delay) backwards;
-}
-@keyframes uz-contour-draw {
-  from { stroke-dashoffset: 1; }
-  to { stroke-dashoffset: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .uz-page-contours path { animation: none; }
-}
-
 html,
 body {
   width: 100%;
@@ -191,11 +159,6 @@ body {
 .rita-cream.bg-black,
 .rita-cream .bg-black {
   background-color: var(--pro-page) !important;
-}
-/* The home page sits on its route's white surface, so the shared contours behind it show through
-   (its own white covered them). The bands and cards inside keep their backgrounds. */
-main.uz-home.bg-black {
-  background-color: transparent !important;
 }
 .rita-cream.bg-\[\#0c0c0e\],
 .rita-cream .bg-\[\#0c0c0e\],
@@ -8548,6 +8511,13 @@ html.rita-app,
    lighter instead of shrinking everything. Only inside the home page (.uz-home); the shared
    header, buttons and other pages keep their sizes. The root font size and the user's zoom are
    never touched. Values: owner's UI research (Nov 2026), stage 1 = headline, header and hero. */
+/* Home sections below the hero: the browser skips their layout, painting and animations until they
+   come near the screen (content-visibility), so the first screen is all the work at load and the
+   page stays light while scrolled. The size placeholder keeps the scrollbar steady. */
+.uz-home > section ~ section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
 .uz-home {
   --home-h1: clamp(2.25rem, calc(1.25rem + 3vw), 4rem); /* 36px at 390, ~51 at 1024, ~63 at 1440 */
   --home-lead: 16px;
