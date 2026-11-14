@@ -55,7 +55,13 @@ from rita_interruption import RitaUserTurnStartStrategy, gate_mode
 from rita_groq_llm import RitaGroqLLMService
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
 from rita_lesson_voice import LessonVoice, clean_say, lesson_engine_enabled, lesson_engine_section
-from rita_study_voice import StudyVoice, handle_study_message, study_enabled, study_section
+from rita_study_voice import (
+    StudyVoice,
+    handle_study_message,
+    study_enabled,
+    study_section,
+    study_turn_note,
+)
 from rita_state import ResponseType, RitaSessionState
 from rita_turn_ledger import TurnLedger, build_id, fixed_prompt_hash
 from rita_target_language import (
@@ -217,8 +223,16 @@ SHEET_PROMPT = f"""WRITTEN SHEET (shown under your words on the screen, never re
   ! one watch-out line (the common mistake and the right form)
 - Keep the sheet short: at most 12 lines, no paragraphs, nothing the learner did not ask about. Write it
   in the reply language; examples stay in the language being learned.
-- Short answers, reactions, corrections, questions to the learner and one-fact answers have no sheet.
-- Your spoken sentence must make sense alone; you may end it with a short pointer like "شوف تحت"."""
+- The ! watch-out line is optional. Write it only for a real, common mistake about exactly what was
+  asked, and only when it is certainly true; otherwise leave it out. Never invent one.
+- The sheet gives no commands to the learner (not لا تنسى، انتبه، احرص، تذكّر، حط بالك): write a
+  watch-out in the reply language as a statement, e.g. "الغلط الشائع: … والصح: …" or
+  "Common mistake: … Correct: …".
+- **Bold** belongs only to the sheet; the spoken sentence never has * marks.
+- Short answers, reactions, thanks, corrections, questions to the learner, refusals, requests to save
+  something, off-topic answers and one-fact answers have no sheet.
+- Your spoken sentence must make sense alone. Only when a sheet follows may you end it with
+  "التفاصيل تحت" (never a command like "شوف تحت"); with no sheet, never point below."""
 
 
 def build_prompt(
@@ -236,6 +250,10 @@ def build_prompt(
     target = parse_target_language(body)
     target_block = target_language_prompt(target)
     note = state.turn_note(dialogue=dialogue)
+    lesson_note = study_turn_note(study_voice) if study_enabled(body) else ""
+    # On the lesson page answers stay short: the general "up to five sentences" note does not apply.
+    if lesson_note and state.response_type == ResponseType.EXPLAIN:
+        note = ""
     turn_note = f"{note}\n" if note else ""
     return f"""{IDENTITY_PROMPT}
 You are the realtime language tutor for this call.
@@ -268,6 +286,7 @@ VOICE CONTRACT
 LANGUAGE AND DIALECT
 - Write in the REPLY LANGUAGE named on the last line. Arabic defaults to friendly Jordanian Arabic
   (شو، بدي، عليك، مش); do not drift to Iraqi شنو, Gulf, Egyptian, or formal Arabic unless asked.
+  "You can" is بتقدر, never the Lebanese/Syrian فيك.
 - One German or English word inside Arabic is code-switching, not a language change. Pronounce German
   and English target words naturally inside Arabic sentences.
 
@@ -318,13 +337,13 @@ HUMAN TONE
 - When you misunderstood, say so plainly ("آسفة، فهمتك غلط") and move on.
 - Use natural spoken Jordanian (هلأ، هيك، بدك، طيب) lightly. Short sentences with one idea each.
 - Praise only what is really good, and say what. Never lecture.
-- Do not guess the learner's gender: no commands or adjectives aimed at them that change with gender
-  (like خدي/خد, جاهز/جاهزة); use neutral wording such as "خلّينا نكمل" and "لما يناسبك".
+- Do not guess the learner's gender: no gendered commands or adjectives, masculine or feminine
+  (خد/خدي، شوف/شوفي، لا تنسى، جاهز/جاهزة), never إنتَ/إنتِ; say "خلّينا نكمل"، "التفاصيل تحت".
 {lesson_engine_section(body, lesson_voice) or lesson_section(body)}
 {study_section(body, study_voice)}
 SESSION STATE (changes every turn; read it last)
 Structured session state: {state.prompt_state(dialogue=dialogue)}.
-{turn_note}{state.reply_language_line(target["name"] if target else None)}
+{turn_note}{lesson_note}{state.reply_language_line(target["name"] if target else None)}
 """
 
 
