@@ -19,7 +19,7 @@ import {LearnSections} from './src/components/learn/LearnHomeView';
 import {UzyraWordmark} from './src/components/brand/UzyraWordmark';
 const lang=new URLSearchParams(location.search).get('lang')==='ar'?'ar':'en';
 function Header(){return <header className="qa-header"><UzyraWordmark size={22}/><nav><Link to="/">Home</Link><Link to="/learn">Learn</Link><Link to="/reader">Reader</Link><Link to="/dark">Dark</Link></nav></header>}
-function Home(){return <main className="uz-home rita-cream edith-light edith-premium relative min-h-screen overflow-hidden bg-black text-white"><Header/><HeroTapWord/><div className="qa-tail">Uzyra · Learn at your pace</div></main>}
+function Home(){return <main className="uz-home rita-cream edith-light edith-premium relative min-h-screen overflow-hidden bg-black text-white" style={{fontFamily:'var(--font-grotesk)'}}><Header/><HeroTapWord/><div className="qa-tail">Uzyra · Learn at your pace</div></main>}
 function Learn(){return <div className="edith-premium edith-light uz-learn min-h-screen"><Header/><main className="uz-learn-main"><LearnSections lang={lang} showGerman={true} chips={{flashcards:null,lessons:null}}/></main></div>}
 function Reader(){return <main className="edith-premium qa-reader"><Header/><div className="qa-reader-grid"><section><h1>{lang==='ar'?'اسأل يوزرا':'Ask Uzyra'}</h1><p>{lang==='ar'?'حدّد النص واقرأ بهدوء.':'Select the text and read at your pace.'}</p><button>Open menu</button><details><summary>Reader menu</summary><button>Bookmark</button></details><textarea aria-label="Ask Uzyra" placeholder="Ask Uzyra"/></section><article className="qa-paper"><h2>THIRD PERSON -S AND -ES</h2><p>With he, she and it, the present simple verb changes its ending.</p><p>She studies at night and watches a film on Fridays.</p></article></div></main>}
 const r=createRootRoute({component:()=> <PageContours><Outlet/></PageContours>});
@@ -72,6 +72,8 @@ const css =
   compiler.build([...tokens]) +
   `
 body{margin:0}.qa-header{height:64px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;background:#121117;color:white;position:relative;z-index:3;font:500 14px Figtree,sans-serif}.qa-header nav{display:flex;gap:16px}.qa-tail{height:110vh;padding:100px 24px;text-align:center;color:#6a697c}
+/* Match ProHome's explicit font and its floating ProHeader; the navigation labels are test controls. */
+.uz-home .qa-header{position:fixed;inset:0 0 auto;z-index:50}
 .qa-reader{min-height:100dvh;background:#f4f4f8;color:#121117}.qa-reader-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;padding:40px}.qa-reader section{padding:24px}.qa-reader h1{font-size:32px!important}.qa-reader p{margin-block:24px}.qa-reader button,.qa-reader summary{min-height:44px;padding:10px;border:1px solid;border-radius:8px}.qa-reader textarea{display:block;margin-top:24px;border:1px solid;padding:16px;width:100%;font-size:16px;background:white}.qa-paper{background:white;padding:40px;border:1px solid #dcdce5;border-radius:12px;min-height:70vh}.qa-paper h2{font-size:28px!important}.qa-dark{min-height:100vh;background:#121117;color:white}.qa-dark>h1,.qa-dark>p{margin:40px}.qa-dark>h1{font-size:48px!important}
 @media(max-width:600px){.qa-header{padding:0 16px}.qa-header nav{gap:8px;font-size:12px}.qa-reader-grid{grid-template-columns:1fr;padding:16px}.qa-paper{padding:24px}}
 `;
