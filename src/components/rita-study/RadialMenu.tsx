@@ -14,7 +14,6 @@ import {
   ArrowLeftRight,
   Check,
   Eraser,
-  Ellipsis,
   Languages,
   Move,
   PanelLeftClose,
@@ -23,8 +22,16 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { layoutRadial, nearestSlot } from "./radial-layout";
 import type { RadialItem } from "./radial-items";
+import {
+  arcPath,
+  fitWheel,
+  polar,
+  sliceAngle,
+  sliceAt,
+  slicePath,
+  WHEEL_TICKS,
+} from "./wheel-layout";
 import { ReportForm } from "./ReportForm";
 import { confirmSound, menuCloseSound, menuOpenSound, optionNote } from "./tech-sound";
 
@@ -37,13 +44,22 @@ export type RadialHandle = {
 
 type Geometry = { cx: number; cy: number; w: number; h: number; left: number; top: number };
 
-const MORE: RadialItem = { id: "__more", label: "المزيد", Icon: Ellipsis };
+/** The colour of a slice without one of its own (the circle's blue). */
+const DEFAULT_COLOR = "156 193 255";
+
+/** Reads the circle's own centre, without the shift the wheel gave it. */
+function orbShift(orb: HTMLElement): { x: number; y: number } {
+  const [x = "0", y = "0"] = (orb.style.translate || "").split(/\s+/);
+  return { x: parseFloat(x) || 0, y: parseFloat(y) || 0 };
+}
 
 /**
- * The round menu: the options open out around the circle like petals, joined to it by thin wires,
- * each playing a note as you pass over it. Tap the circle then an option, or hold the circle, slide
- * to an option and let go. Keys: arrows move between options, Enter chooses, Esc closes. It picks
- * the part of the ring that stays on screen, and moves extra options to a second page.
+ * The study wheel: the options are slices of one whole wheel that grows out of the circle, each
+ * always in the same place and colour (the same eight in the lessons and the books). Near an edge
+ * or a corner the circle slides inwards until the whole wheel fits, and slides back on closing.
+ * Tap the circle then a slice, or hold the circle and move towards a slice and let go (only the
+ * direction counts, as on a game controller's wheel). Keys: arrows go round, Enter chooses, Esc
+ * closes. Every slice plays its note as it lights up.
  */
 export const RadialMenu = forwardRef<
   RadialHandle,
@@ -80,7 +96,6 @@ export const RadialMenu = forwardRef<
   const [mounted, setMounted] = useState(false);
   const [shown, setShown] = useState(false);
   const [geom, setGeom] = useState<Geometry | null>(null);
-  const [page, setPage] = useState(0);
   const [hot, setHot] = useState(-1);
   const [picked, setPicked] = useState("");
   const [reporting, setReporting] = useState(false);
@@ -99,7 +114,6 @@ export const RadialMenu = forwardRef<
     if (open) {
       window.clearTimeout(closeTimer.current);
       setMounted(true);
-      setPage(0);
       setHot(-1);
       hotRef.current = -1;
       setPicked("");
@@ -128,9 +142,10 @@ export const RadialMenu = forwardRef<
     if (!container || !orb) return;
     const c = container.getBoundingClientRect();
     const o = orb.getBoundingClientRect();
+    const shift = orbShift(orb);
     setGeom({
-      cx: o.left + o.width / 2 - c.left,
-      cy: o.top + o.height / 2 - c.top,
+      cx: o.left + o.width / 2 - c.left - shift.x,
+      cy: o.top + o.height / 2 - c.top - shift.y,
       w: c.width,
       h: c.height,
       left: c.left,
@@ -148,45 +163,31 @@ export const RadialMenu = forwardRef<
     return () => observer.disconnect();
   }, [mounted, orbKey, measure, containerRef]);
 
-  // Which options fit around the ring; the rest wait on a second page behind "more".
+  // The whole wheel, moved inwards when the circle is near an edge (the circle follows it).
   const topReserve = geom && geom.w < 560 ? 180 : 120;
-  const base = geom
-    ? layoutRadial({
-        cx: geom.cx,
-        cy: geom.cy,
-        width: geom.w,
-        height: geom.h,
-        count: items.length,
-        topReserve,
-      })
+  const fit = geom
+    ? fitWheel({ cx: geom.cx, cy: geom.cy, width: geom.w, height: geom.h, top: topReserve })
     : null;
-  const paged = Boolean(base && items.length > base.capacity);
-  const per = paged && base ? Math.max(1, base.capacity - 1) : items.length;
-  const pages = Math.max(1, Math.ceil(items.length / Math.max(per, 1)));
-  const visible = useMemo(
-    () => (paged ? [...items.slice(page * per, (page + 1) * per), MORE] : items),
-    [paged, items, page, per],
-  );
-  const layout =
-    geom && paged
-      ? layoutRadial({
-          cx: geom.cx,
-          cy: geom.cy,
-          width: geom.w,
-          height: geom.h,
-          count: visible.length,
-          topReserve,
-        })
-      : base;
+  const visible = items;
+
+  // The circle slides to the wheel's centre while it is open, and back when it closes.
+  const shiftX = fit && geom ? fit.cx - geom.cx : 0;
+  const shiftY = fit && geom ? fit.cy - geom.cy : 0;
+  useEffect(() => {
+    const orb = orbRef.current;
+    if (!orb) return;
+    orb.style.translate = open && (shiftX || shiftY) ? `${shiftX}px ${shiftY}px` : "";
+  }, [open, shiftX, shiftY, orbRef]);
+  useEffect(() => {
+    const orb = orbRef.current;
+    return () => {
+      if (orb) orb.style.translate = "";
+    };
+  }, [orbRef]);
 
   const choose = useCallback(
     (item: RadialItem) => {
       if (item.disabled) return;
-      if (item.id === MORE.id) {
-        optionNote(4);
-        setPage((value) => (value + 1) % pages);
-        return;
-      }
       confirmSound();
       if (item.placeholder) {
         toast("هاد خيار تجريبي، بتعبيه لما تقرر شو بدك فيه.");
@@ -197,7 +198,7 @@ export const RadialMenu = forwardRef<
       props.onPick(item.id);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [pages, onClose, props.onPick],
+    [onClose, props.onPick],
   );
 
   const light = useCallback((index: number) => {
@@ -207,23 +208,28 @@ export const RadialMenu = forwardRef<
     if (index >= 0) optionNote(index);
   }, []);
 
+  // Held on the circle: the direction from the wheel's centre picks the slice.
+  const sliceUnder = useCallback(
+    (x: number, y: number) => {
+      if (!geom || !fit) return -1;
+      return sliceAt(x - geom.left - fit.cx, y - geom.top - fit.cy, visible.length, fit.r0 * 0.62);
+    },
+    [geom, fit, visible.length],
+  );
+
   useImperativeHandle(
     ref,
     () => ({
-      hover: (x, y) => {
-        if (!geom || !layout) return;
-        light(nearestSlot(layout.slots, x - geom.left - geom.cx, y - geom.top - geom.cy));
-      },
+      hover: (x, y) => light(sliceUnder(x, y)),
       release: (x, y) => {
-        if (!geom || !layout) return;
-        const index = nearestSlot(layout.slots, x - geom.left - geom.cx, y - geom.top - geom.cy);
+        const index = sliceUnder(x, y);
         hotRef.current = -1;
         setHot(-1);
         const item = index >= 0 ? visible[index] : null;
         if (item) choose(item);
       },
     }),
-    [geom, layout, light, visible, choose],
+    [sliceUnder, light, visible, choose],
   );
 
   useEffect(() => {
@@ -235,9 +241,12 @@ export const RadialMenu = forwardRef<
     }
   }, [shown, props.autoFocus, containerRef]);
 
-  if (!mounted || !geom || !layout) return null;
-  const { cx, cy, w, h } = geom;
-  const radius = layout.radius;
+  if (!mounted || !geom || !fit) return null;
+  const { cx, cy, r0, r1 } = fit;
+  const half = r1 + WHEEL_TICKS;
+  const size = half * 2;
+  const count = visible.length;
+  const hotItem = hot >= 0 ? visible[hot] : null;
 
   const onKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "Escape") {
@@ -297,36 +306,9 @@ export const RadialMenu = forwardRef<
         className="st-rad-scrim"
         onPointerDown={onClose}
         style={{
-          background: `radial-gradient(circle at ${cx}px ${cy}px, rgb(8 16 40 / 0.62) 0, rgb(8 16 40 / 0.4) ${radius + 70}px, rgb(8 16 40 / 0) ${radius + 200}px)`,
+          background: `radial-gradient(circle at ${cx}px ${cy}px, rgb(6 12 32 / 0.66) 0, rgb(6 12 32 / 0.46) ${half + 40}px, rgb(6 12 32 / 0) ${half + 260}px)`,
         }}
       />
-      <svg className="st-rad-lines" width={w} height={h} aria-hidden="true">
-        <circle cx={cx} cy={cy} r={radius} className="st-rad-orbit" />
-        {layout.slots.slice(0, visible.length).map((slot, i) => (
-          <line
-            key={`s${i}`}
-            className="st-rad-spoke"
-            x1={cx}
-            y1={cy}
-            x2={cx + slot.x}
-            y2={cy + slot.y}
-            pathLength={1}
-            style={{ ["--i" as string]: i }}
-          />
-        ))}
-        {!still &&
-          shown &&
-          layout.slots.slice(0, visible.length).map((slot, i) => (
-            <circle key={`b${i}`} r="2.2" className="st-rad-bit" cx={cx} cy={cy}>
-              <animateMotion
-                dur="2.2s"
-                begin={`${0.5 + i * 0.23}s`}
-                repeatCount="indefinite"
-                path={`M0,0 L${slot.x},${slot.y}`}
-              />
-            </circle>
-          ))}
-      </svg>
 
       <div className="st-rad-top">
         <div className="st-rad-quote">
@@ -372,21 +354,55 @@ export const RadialMenu = forwardRef<
         </div>
       )}
 
-      <div className="st-rad-ring" role="menu" aria-label="شو بدك نعمل؟">
+      <div
+        className="st-wheel"
+        role="menu"
+        aria-label="شو بدك نعمل؟"
+        style={{
+          left: cx - half,
+          top: cy - half,
+          width: size,
+          height: size,
+          ["--r0" as string]: `${r0}px`,
+          ["--r1" as string]: `${r1}px`,
+        }}
+      >
+        {/* The outer dial: a hairline ring with fine ticks, a long one at each slice's middle. */}
+        <svg className="st-wheel-dial" width={size} height={size} aria-hidden="true">
+          <circle cx={half} cy={half} r={r1 + 14} className="st-wheel-hair" />
+          {Array.from({ length: 120 }, (_, k) => {
+            const a = k * 3;
+            const major = count > 0 && a % (360 / count) === 0;
+            const from = polar(half, half, r1 + 9, a);
+            const to = polar(half, half, r1 + (major ? 20 : 14), a);
+            return (
+              <line
+                key={k}
+                x1={from.x}
+                y1={from.y}
+                x2={to.x}
+                y2={to.y}
+                className={major ? "st-wheel-tick is-major" : "st-wheel-tick"}
+              />
+            );
+          })}
+        </svg>
+
         {visible.map((item, i) => {
-          const slot = layout.slots[i];
-          if (!slot) return null;
           const Icon = item.Icon;
+          const middle = sliceAngle(i, count);
+          const spot = polar(half, half, (r0 + r1) / 2 + 4, middle);
           return (
             <button
-              key={`${page}-${item.id}`}
+              key={item.id}
               ref={(node) => {
                 buttons.current[i] = node;
               }}
               type="button"
               role={item.checked === undefined ? "menuitem" : "menuitemradio"}
               aria-checked={item.checked}
-              className="st-rad-item"
+              aria-label={item.label}
+              className="st-wedge"
               disabled={item.disabled || props.busy}
               title={
                 item.disabled ? (item.disabledReason ?? "حدّد كلمة أو جملة من الدرس") : item.label
@@ -400,10 +416,8 @@ export const RadialMenu = forwardRef<
               data-picked={picked === item.id ? "" : undefined}
               tabIndex={i === visible.findIndex((option) => !option.disabled) ? 0 : -1}
               style={{
-                left: cx,
-                top: cy,
-                ["--x" as string]: `${slot.x.toFixed(1)}px`,
-                ["--y" as string]: `${slot.y.toFixed(1)}px`,
+                clipPath: `path("${slicePath(half, half, r0, r1, i, count)}")`,
+                ["--c" as string]: item.color ?? DEFAULT_COLOR,
                 ["--i" as string]: i,
               }}
               onPointerEnter={(event) => {
@@ -418,24 +432,82 @@ export const RadialMenu = forwardRef<
               }}
               onClick={() => choose(item)}
             >
-              <span className="st-rad-disc">
-                {item.glyph ? (
-                  <span className="st-rad-glyph" aria-hidden="true">
-                    {item.glyph}
-                  </span>
-                ) : (
-                  <Icon size={22} aria-hidden="true" />
-                )}
-                {item.checked && (
-                  <span className="st-rad-tick" aria-hidden="true">
-                    <Check size={11} strokeWidth={3} />
-                  </span>
-                )}
+              <span className="st-wedge-in" style={{ left: spot.x, top: spot.y }}>
+                <span className="st-wedge-icon">
+                  {item.glyph ? (
+                    <span className="st-rad-glyph" aria-hidden="true">
+                      {item.glyph}
+                    </span>
+                  ) : (
+                    <Icon size={20} aria-hidden="true" />
+                  )}
+                  {item.checked && (
+                    <span className="st-rad-tick" aria-hidden="true">
+                      <Check size={10} strokeWidth={3} />
+                    </span>
+                  )}
+                </span>
+                <span className="st-wedge-label">{item.label}</span>
               </span>
-              <span className="st-rad-label">{item.label}</span>
             </button>
           );
         })}
+
+        {/* Seams between the slices, the rims, each slice's own light, and the pointer. */}
+        <svg className="st-wheel-lines" width={size} height={size} aria-hidden="true">
+          <circle cx={half} cy={half} r={r1} className="st-wheel-edge" />
+          <circle cx={half} cy={half} r={r0} className="st-wheel-edge is-inner" />
+          {visible.map((item, i) => {
+            const edge = sliceAngle(i, count) - 180 / count;
+            const a = polar(half, half, r0, edge);
+            const b = polar(half, half, r1, edge);
+            return (
+              <line key={`s${i}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} className="st-wheel-seam" />
+            );
+          })}
+          {visible.map((item, i) => {
+            const middle = sliceAngle(i, count);
+            const spread = 180 / count - 3;
+            return (
+              <path
+                key={`r${i}`}
+                d={arcPath(half, half, r1 - 2, middle - spread, middle + spread)}
+                className="st-wheel-rim"
+                data-hot={hot === i ? "" : undefined}
+                data-off={item.disabled ? "" : undefined}
+                style={{ ["--c" as string]: item.color ?? DEFAULT_COLOR, ["--i" as string]: i }}
+              />
+            );
+          })}
+          {hotItem && (
+            <path
+              d={arcPath(half, half, r0 + 5, -18, 18)}
+              className="st-wheel-pointer"
+              style={{
+                ["--c" as string]: hotItem.color ?? DEFAULT_COLOR,
+                transform: `rotate(${sliceAngle(hot, count)}deg)`,
+                transformOrigin: `${half}px ${half}px`,
+              }}
+            />
+          )}
+          <circle cx={half} cy={half} r={r0 - 8} className="st-wheel-orbit" />
+        </svg>
+
+        {/* The name of the slice under the finger (or why it is dimmed), above the wheel. */}
+        <p
+          className="st-wheel-name"
+          data-shown={hotItem ? "" : undefined}
+          data-off={hotItem?.disabled ? "" : undefined}
+          style={{ ["--c" as string]: hotItem?.color ?? DEFAULT_COLOR }}
+          aria-hidden="true"
+        >
+          <span className="st-wheel-dot" />
+          {hotItem
+            ? hotItem.disabled
+              ? (hotItem.disabledReason ?? hotItem.label)
+              : hotItem.label
+            : ""}
+        </p>
       </div>
     </div>
   );

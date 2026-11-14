@@ -218,32 +218,28 @@ if (process.argv.includes("--check")) {
     await page.locator(".st-rad.is-shown").waitFor();
     await page.getByRole("menu", { name: "شو بدك نعمل؟", exact: true }).waitFor();
   }
+  // The wheel's slices are ring pieces (clip-path): a click goes to the slice's own icon, not to
+  // the middle of its box (which is the circle).
   async function choose(page, label, alreadyOpen = false) {
     if (!alreadyOpen) await menu(page);
     const id = label === "فلاش كاردز" ? "make_cards" : "make_mcq";
-    for (let turn = 0; turn < 8; turn += 1) {
-      const item = page.locator(`[data-service="${id}"]`);
-      if (await item.isVisible()) {
-        assert.match(await item.innerText(), new RegExp(label));
-        return item.click();
-      }
-      const more = page.locator('[data-service="__more"]');
-      try {
-        await more.click();
-      } catch (error) {
-        console.log({
-          label,
-          menu: await page
-            .locator(".st-rad")
-            .innerText()
-            .catch(() => "closed"),
-          errors: await page.locator("[role=alert]").allTextContents(),
-        });
-        await page.screenshot({ path: resolve(out, `${engine}-menu-failure.png`) });
-        throw error;
-      }
+    const item = page.locator(`[data-service="${id}"]`);
+    try {
+      assert.match(await item.getAttribute("aria-label"), new RegExp(label));
+      const box = await item.locator(".st-wedge-in").boundingBox();
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    } catch (error) {
+      console.log({
+        label,
+        menu: await page
+          .locator(".st-rad")
+          .innerText()
+          .catch(() => "closed"),
+        errors: await page.locator("[role=alert]").allTextContents(),
+      });
+      await page.screenshot({ path: resolve(out, `${engine}-menu-failure.png`) });
+      throw error;
     }
-    throw new Error("Unreachable study service: " + label);
   }
   try {
     for (const width of [390, 768, 1280]) {
@@ -258,26 +254,26 @@ if (process.argv.includes("--check")) {
       await page.frameLocator("iframe").locator("[data-seg]").first().waitFor();
       await selectPhrase(page);
       await menu(page);
-      const seen = new Set();
-      for (let turn = 0; turn < 8; turn += 1) {
-        for (const id of await page
+      // One whole wheel: the eight slices, always in the same order (clockwise from the top).
+      const seen = new Set(
+        await page
           .locator("[data-service]")
-          .evaluateAll((items) => items.map((item) => item.dataset.service)))
-          if (id !== "__more") seen.add(id);
-        if (seen.size === 7) break;
-        await page.getByRole("menuitem", { name: "المزيد", exact: true }).click();
-      }
+          .evaluateAll((items) => items.map((item) => item.dataset.service)),
+      );
       assert.deepEqual(
-        [...seen].sort(),
+        await page
+          .locator("[data-service]")
+          .evaluateAll((items) => items.map((item) => item.dataset.service)),
         [
           "explain",
           "meaning",
-          "word_by_word",
-          "why_form",
-          "common_mistake",
           "make_cards",
           "make_mcq",
-        ].sort(),
+          "compare_arabic",
+          "why_form",
+          "word_by_word",
+          "common_mistake",
+        ],
       );
       await choose(page, "فلاش كاردز", true);
       await page.locator(".st-practice-front").waitFor();
@@ -298,7 +294,7 @@ if (process.argv.includes("--check")) {
       await page.locator(".fw.is-practice .fw-x").click();
       await page.locator(".fw.is-practice").waitFor({ state: "hidden" });
       await selectPhrase(page);
-      await choose(page, "تمارين اختيار");
+      await choose(page, "تمارين");
       await page.locator(".st-practice-option").first().waitFor();
       await page.locator(".st-practice-option").nth(1).click();
       assert.match(await page.locator(".st-practice-feedback").innerText(), /He works every day/);
@@ -557,7 +553,7 @@ if (process.argv.includes("--check")) {
     await failure.locator(".st-practice-front").waitFor();
     await failure.close();
     await writeFile(resolve(out, `${engine}-checks.json`), JSON.stringify(findings, null, 2));
-    console.log(`${engine}: seven services, cards, answers, reopen and retry passed`);
+    console.log(`${engine}: eight wheel slices, cards, answers, reopen and retry passed`);
   } finally {
     await browser.close();
     await new Promise((done) => server.close(done));

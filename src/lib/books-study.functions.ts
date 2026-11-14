@@ -30,7 +30,13 @@ import { PAGE_LIMITS, bookSelectionKind, pageQuote } from "@/lib/books-reader";
 const NOT_APPLIED = /could not find|does not exist|schema cache|PGRST20[0-9]|42883|42P01/i;
 
 /** The written answers a book page offers (the rest of the lessons' list needs a lesson). */
-export const BOOK_TEXT_ACTIONS = ["explain", "word_by_word", "why_form", "compare_arabic"] as const;
+export const BOOK_TEXT_ACTIONS = [
+  "explain",
+  "word_by_word",
+  "why_form",
+  "compare_arabic",
+  "common_mistake",
+] as const;
 export type BookTextAction = (typeof BOOK_TEXT_ACTIONS)[number];
 
 const BookInput = z.object({
@@ -64,6 +70,7 @@ const WRONG_KIND: Partial<Record<StudyAction, string>> = {
   word_by_word: "حدّد جملة أو عبارة من الصفحة عشان نفكّك تركيبها.",
   why_form: "حدّد كلمة أو صيغة قصيرة من الصفحة عشان نشرح ليش استخدمها الكاتب هون.",
   compare_arabic: "حدّد عبارة أو جملة من الصفحة عشان نقارنها بالعربي.",
+  common_mistake: "حدّد جملة أو عبارة من الصفحة عشان نعرض غلطة مرتبطة فيها.",
 };
 
 /** Checks the page and the selection and counts the request; the page's own quote and context. */

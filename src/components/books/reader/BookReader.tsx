@@ -41,6 +41,8 @@ import {
 import {
   KIND_LABEL,
   LANGUAGE_NAMES,
+  RING_ACTIONS,
+  WHEEL_REASONS,
   actionItem,
   languageFromId,
   languageItems,
@@ -247,23 +249,8 @@ function wordsQuery(bookId: string, page: number, source?: MyBookSource | null) 
   };
 }
 
-/** What the circle offers on a book page (the lessons' "common mistake" needs a lesson's rule). */
-const BOOK_RING: StudyAction[] = [
-  "explain",
-  "meaning",
-  "word_by_word",
-  "why_form",
-  "compare_arabic",
-  "make_cards",
-  "make_mcq",
-];
-
-const DISABLED_REASON: Partial<Record<StudyAction, string>> = {
-  meaning: "حدّد كلمة أو عبارة قصيرة بالإنجليزي أو الألماني",
-  word_by_word: "حدّد جملة أو عبارة عشان نوضح تركيبها",
-  why_form: "حدّد كلمة أو صيغة قصيرة داخل الجملة",
-  compare_arabic: "حدّد عبارة أو جملة من الصفحة",
-};
+/** The wheel on a book page: the same eight slices, places and colours as in the lessons. */
+const BOOK_RING: StudyAction[] = RING_ACTIONS;
 
 /**
  * What the reader selected: on the page, or (with `reply`) in one of Uzyra's answers, whose whole
@@ -935,7 +922,7 @@ export function BookReader({
           disabledReason:
             making && (action === "make_cards" || action === "make_mcq")
               ? "استنّى لحد ما يخلص تجهيز التدريب الحالي"
-              : (DISABLED_REASON[action] ?? "حدّد كلمة أو جملة من الصفحة"),
+              : (WHEEL_REASONS[action] ?? "حدّد كلمة أو جملة من الصفحة"),
         }));
 
   const busy = answers.some((a) => a.state === "loading") || Boolean(making);

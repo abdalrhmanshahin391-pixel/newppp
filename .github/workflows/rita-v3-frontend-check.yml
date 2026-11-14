@@ -144,6 +144,7 @@ jobs:
           node --test src/lib/study/study-link.test.ts
           node --test src/lib/study/study-selection.test.ts
           node --test src/components/rita-study/orb-position.test.ts
+          node --test src/components/rita-study/wheel-layout.test.ts
           node --test src/components/rita-study/study-memory.test.ts
           node --test src/lib/study/study-request-state.test.ts
           node --test src/lib/study/study-access.test.ts
