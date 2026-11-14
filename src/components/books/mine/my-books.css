@@ -310,3 +310,54 @@
     transition: none;
   }
 }
+
+/* «آخر كتب قرأتها»: a library book read lately, and how far the reader got. */
+.my-recent {
+  display: grid;
+  justify-items: start;
+  text-align: start;
+  border-radius: 10px;
+  -webkit-tap-highlight-color: transparent;
+}
+.my-recent:focus-visible {
+  outline: 3px solid var(--pp-accent);
+  outline-offset: 4px;
+}
+.my-read-line {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  max-width: 180px;
+}
+.my-read-track {
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--pp-line, #e3e3ea);
+}
+.my-read-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--pp-ink, #18171c);
+  transform-origin: left center;
+}
+[dir="rtl"] .my-read-fill {
+  transform-origin: right center;
+}
+/* An own book is marked private by a small lock on the cover's top corner (the bin is on the other). */
+.my-lock {
+  position: absolute;
+  top: 8px;
+  inset-inline-start: 8px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgb(18 17 23 / 0.78);
+  color: #fff;
+  pointer-events: none;
+}

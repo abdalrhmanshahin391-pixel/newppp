@@ -1,13 +1,18 @@
-// «كتبك الخاصة»: the reader's own PDFs, at the top of the library, styled like any other shelf.
+// «آخر كتب قرأتها»: at the top of the library, one row with the reader's own PDFs (always, two at
+// most, marked private) and the library books they read most recently (five at most), newest
+// first, each with how far they got; a tap on a library book goes straight back to its page.
 // Adding is one tap (choose a PDF; it uploads at once, its name taken from the file); deleting is
-// the bin on the cover or in the book's window, with one confirmation. Two books at most: with
-// two, the add card says to delete one first and points at the bins.
+// the bin on the cover or in the book's window, with one confirmation. With two own books, the add
+// card says to delete one first and points at the bins.
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, Lock, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { BookObject, UzyraIcon } from "@/components/books/BookObject";
-import { megabytes, USER_BOOK_SLOTS, type UserBook } from "@/lib/user-books";
+import type { Book, CategoryColor } from "@/lib/books";
+import { loadRecentReads, type RecentRead } from "@/lib/books-data";
+import { mergeRecent, readShare } from "@/lib/recent-reads";
+import { megabytes, readAtKey, USER_BOOK_SLOTS, type UserBook } from "@/lib/user-books";
 import {
   addMyBook,
   deleteMyBook,
@@ -18,16 +23,36 @@ import {
 } from "@/lib/user-books-data";
 import { forgetMyBookFile, keepMyBookFile } from "./my-book-file";
 import { coverFromFile, myBookCover } from "./my-book-pdf";
+import { readPlace } from "./my-book-source";
 import "./my-books.css";
 
 type Lang = "en" | "ar";
 type Sending = { share: number; stop: AbortController; retryOf?: string } | null;
 
-export function MyBooksShelf({ ui, userId }: { ui: Lang; userId: string }) {
+export function MyBooksShelf({
+  ui,
+  userId,
+  colorOf,
+}: {
+  ui: Lang;
+  userId: string;
+  /** A library book's shelf colour (its category's). */
+  colorOf?: (book: Book) => CategoryColor | undefined;
+}) {
   const t = (en: string, ar: string) => (ui === "ar" ? ar : en);
   const queryClient = useQueryClient();
   const books = useQuery({ queryKey: MY_BOOKS_QUERY_KEY, queryFn: loadMyBooks, staleTime: 30_000 });
   const list = books.data ?? [];
+  // The library books read most recently (their place is kept on the account): read again every
+  // time the library shows, so coming back from a book puts it first.
+  const recent = useQuery({
+    queryKey: ["library", "recent-reads", userId],
+    queryFn: () => loadRecentReads(5),
+    staleTime: 0,
+  });
+  // Own books' reading times and places live on this device: read once mounted (not on the server).
+  const [onDevice, setOnDevice] = useState(false);
+  useEffect(() => setOnDevice(true), []);
   const input = useRef<HTMLInputElement>(null);
   const retryFor = useRef<UserBook | null>(null);
   const [sending, setSending] = useState<Sending>(null);
@@ -43,8 +68,23 @@ export function MyBooksShelf({ ui, userId }: { ui: Lang; userId: string }) {
     return () => window.clearTimeout(timer);
   }, [pointBins]);
 
-  // The database does not have private books yet: nothing to show.
-  if (books.data === null || books.isError) return null;
+  const reads = recent.data ?? [];
+  const ownReady = !(books.data === null || books.isError);
+  // Without own books (the database lacks them) and nothing read yet: nothing to show.
+  if (!ownReady && !reads.length) return null;
+  const mineAt = (book: UserBook) => {
+    const created = Date.parse(book.created_at) || 0;
+    if (!onDevice) return created;
+    try {
+      return Number(window.localStorage.getItem(readAtKey(book.id))) || created;
+    } catch {
+      return created;
+    }
+  };
+  const row = mergeRecent<UserBook, RecentRead>(
+    (ownReady ? list : []).map((book) => ({ item: book, at: mineAt(book) })),
+    reads.map((read) => ({ item: read, at: Date.parse(read.at) || 0 })),
+  );
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: MY_BOOKS_QUERY_KEY });
   const full = list.length >= USER_BOOK_SLOTS.length;
@@ -95,7 +135,7 @@ export function MyBooksShelf({ ui, userId }: { ui: Lang; userId: string }) {
     }
   };
 
-  const count = books.isLoading ? null : list.length;
+  const count = books.isLoading || !ownReady ? null : list.length;
   return (
     <section className="bk-shelf my-shelf" aria-labelledby="my-books-title">
       <div className="bk-shelf-head">
@@ -103,15 +143,17 @@ export function MyBooksShelf({ ui, userId }: { ui: Lang; userId: string }) {
           <UzyraIcon size={16} />
         </span>
         <h2 id="my-books-title" className="bk-shelf-title">
-          {t("Your books", "كتبك الخاصة")}
+          {t("Recently read", "آخر كتب قرأتها")}
         </h2>
         {count !== null && (
-          <span className="bk-shelf-count">{t(`${count} of 2`, `${count} من 2`)}</span>
+          <span className="my-private">
+            <Lock size={12} aria-hidden="true" />
+            {t(
+              `Your uploads: ${count} of 2 · only you can see them`,
+              `كتبك المرفوعة: ${count} من 2 · إلك إنت بس`,
+            )}
+          </span>
         )}
-        <span className="my-private">
-          <Lock size={12} aria-hidden="true" />
-          {t("Only you can see them", "إلك إنت بس")}
-        </span>
       </div>
 
       <input
@@ -127,9 +169,32 @@ export function MyBooksShelf({ ui, userId }: { ui: Lang; userId: string }) {
       />
 
       <div className="bk-row my-row">
-        {list.map((book) => {
+        {row.map((entry) => {
+          if (entry.kind === "library") {
+            const { book, page } = entry.item;
+            return (
+              <Link
+                key={`lib-${book.id}`}
+                to="/books/$bookId/read"
+                params={{ bookId: book.id }}
+                className="bk-item my-recent"
+                aria-label={t(
+                  `${book.title}: continue from page ${page}`,
+                  `${book.title}: كمّل من صفحة ${page}`,
+                )}
+              >
+                <BookObject book={book} color={colorOf?.(book)} />
+                <span className="bk-item-title" dir="auto">
+                  {book.title}
+                </span>
+                <ReadLine page={page} total={book.pages} ui={ui} />
+              </Link>
+            );
+          }
+          const book = entry.item;
           const unfinished = book.status !== "ready";
           const retrying = sending?.retryOf === book.id;
+          const place = onDevice && !unfinished ? readPlace(book.id) : null;
           return (
             <div key={book.id} className="bk-item my-item" data-point={pointBins || undefined}>
               <button
@@ -149,14 +214,22 @@ export function MyBooksShelf({ ui, userId }: { ui: Lang; userId: string }) {
                 <span className="bk-item-title" dir="auto">
                   {book.title}
                 </span>
-                <span className="bk-item-author">
-                  {unfinished
-                    ? t("Upload not finished", "ما كمل الرفع")
-                    : book.page_count
+                {unfinished ? (
+                  <span className="bk-item-author">{t("Upload not finished", "ما كمل الرفع")}</span>
+                ) : place ? (
+                  <ReadLine page={place} total={book.page_count} ui={ui} />
+                ) : (
+                  <span className="bk-item-author">
+                    {book.page_count
                       ? t(`${book.page_count} pages`, `${book.page_count} صفحة`)
                       : t("Private", "خاص")}
-                </span>
+                  </span>
+                )}
               </button>
+              <span className="my-lock" title={t("Private", "خاص")}>
+                <Lock size={11} aria-hidden="true" />
+                <span className="sr-only">{t("Private", "خاص")}</span>
+              </span>
               {retrying && sending ? (
                 <Progress share={sending.share} onStop={() => sending.stop.abort()} ui={ui} />
               ) : unfinished ? (
@@ -183,7 +256,7 @@ export function MyBooksShelf({ ui, userId }: { ui: Lang; userId: string }) {
             </span>
             <span className="bk-item-title">{t("Adding your book…", "عم نضيف كتابك…")}</span>
           </div>
-        ) : !books.isLoading ? (
+        ) : !books.isLoading && ownReady ? (
           <button
             type="button"
             className="bk-item my-add"
@@ -218,7 +291,10 @@ export function MyBooksShelf({ ui, userId }: { ui: Lang; userId: string }) {
               "You have two books. To add a new one, delete one of them (the bin on its cover).",
               "عندك كتابين. لتضيف كتاب جديد، احذف واحد منهم (السلة على الغلاف).",
             )
-          : message}
+          : message ||
+            (!row.length && !books.isLoading && !recent.isLoading
+              ? t("The books you read show up here.", "الكتب اللي بتقرأها بتطلع هون.")
+              : "")}
       </p>
       <div className="bk-board" aria-hidden="true" />
 
@@ -247,6 +323,29 @@ export function MyBooksShelf({ ui, userId }: { ui: Lang; userId: string }) {
         />
       )}
     </section>
+  );
+}
+
+/** "Page 34 of 80" with a thin bar of how far the reader got. */
+function ReadLine({ page, total, ui }: { page: number; total: number | null; ui: Lang }) {
+  const share = readShare(page, total);
+  return (
+    <span className="my-read-line">
+      {share !== null && (
+        <span className="my-read-track" aria-hidden="true">
+          <span className="my-read-fill" style={{ transform: `scaleX(${share})` }} />
+        </span>
+      )}
+      <span className="bk-item-author">
+        {total
+          ? ui === "ar"
+            ? `صفحة ${page} من ${total}`
+            : `Page ${page} of ${total}`
+          : ui === "ar"
+            ? `صفحة ${page}`
+            : `Page ${page}`}
+      </span>
+    </span>
   );
 }
 

@@ -631,8 +631,14 @@ export function LibraryPage({
           </div>
         )}
 
-        {/* The reader's own books come first (signed in only); the library's shelves follow. */}
-        {mode === "discover" && user ? <MyBooksShelf ui={ui} userId={user.id} /> : null}
+        {/* «آخر كتب قرأتها» first (signed in only: own books and recent reads); the shelves follow. */}
+        {mode === "discover" && user ? (
+          <MyBooksShelf
+            ui={ui}
+            userId={user.id}
+            colorOf={(book) => (book.category_id ? byId.get(book.category_id)?.color : undefined)}
+          />
+        ) : null}
 
         {mode === "discover" ? (
           discover.isLoading || (!discover.data && !discover.isError) ? (
