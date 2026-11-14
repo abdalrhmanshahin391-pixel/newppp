@@ -66,6 +66,7 @@ on:
       - "src/routes/books_.$bookId.read.tsx"
       - "src/lib/book-*"
       - "src/lib/pdf-page-render.ts"
+      - "src/lib/pdf-stream-polyfills*"
       - "supabase/migrations/*books*"
       - "supabase/starter-books/**"
       - "supabase/tests/books/**"
@@ -119,6 +120,7 @@ jobs:
           node --test src/lib/books-starter.test.ts
           node --test src/lib/books-reader.test.ts
           node --test src/lib/user-books.test.ts
+          node --test src/lib/pdf-stream-polyfills.test.ts
           node --test src/lib/book-gestures.test.ts
           node --test src/lib/rita-phrase.test.ts
           node --test src/lib/activity-streak.test.ts
