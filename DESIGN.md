@@ -606,6 +606,17 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     request; the server checks the book is the reader's own and ready, and counts it in the same
     allowance as library books (`books_take_my_study_quota`, migration
     `20261120120000_books_my_book_study.sql`). Before that migration Uzyra says it is not active yet.
+  - Opening (`BookOpening.tsx`): the reader's own layout at once (top bar, Uzyra's column at the saved split
+    beside an empty sheet that breathes), with Uzyra's cube thinking in its usual place and one line under it:
+    «عم بفتح الكتاب…», «عم بنزّل الكتاب… 40%», «عم بجهّز أول صفحة…». The reader then takes its place with the
+    cube where it was. No spinner screen.
+  - Speed: the file is kept on the device (Cache Storage, `my-book-file.ts`) right after an upload, or
+    downloaded in the background once the first page is on screen; later visits open from the device. It goes
+    when the book is deleted. The outline is read after the first page. pdf.js uses one shared worker, given
+    10 s to start; otherwise it runs on the page (remembered for a day), with drawings capped at 1100 px and a
+    short pause between them so taps and selection get through.
+  - `?debug=1` on the address shows a small panel: worker or page, file from device or network, times to open
+    and to the first page, the slowest drawing, and words found per page (0 means nothing to select).
 - **Cards** show a small gold «★ 4.6» under the author once a book has three ratings.
 - **«مفضلتي»** (signed in): a chip with a heart and the count in the ways-in row; its list is a
   normal paged list, and an empty one explains how to add books.

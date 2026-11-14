@@ -92,6 +92,12 @@ export function userBookError(
 
 /** Where a reader stopped in one of their books (kept on the device). */
 export const placeKey = (bookId: string) => `uzyra-my-book-page:${bookId}`;
+/**
+ * Where the device copy of a book's file is kept (a same-site address the browser's cache uses as
+ * a name; nothing is served there). A new file under the same book gets a new name.
+ */
+export const myBookFileKey = (book: Pick<UserBook, "id" | "file_path">) =>
+  `/__uzyra-my-book/${encodeURIComponent(book.id)}?file=${encodeURIComponent(book.file_path)}`;
 export const coverKey = (book: Pick<UserBook, "id" | "updated_at">) =>
   `uzyra-my-book-cover:${book.id}:${book.updated_at}`;
 

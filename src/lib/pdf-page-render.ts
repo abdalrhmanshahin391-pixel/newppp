@@ -224,8 +224,11 @@ export async function loadPdfForRenderPreferWorker(file: File): Promise<any> {
  * whole file once). Used to prepare a library book for reading, page by page. Not cached: the
  * caller destroys the document when done.
  */
-export async function openPdfInParts(source: File | string): Promise<any> {
-  ensureWorker();
+export async function openPdfInParts(
+  source: Blob | string,
+  { onProgress }: { onProgress?: (loaded: number, total: number) => void } = {},
+): Promise<any> {
+  const { worker } = await sharedPdfWorker();
   const options: Record<string, unknown> = {
     stopAtErrors: false,
     isEvalSupported: false,
@@ -234,59 +237,116 @@ export async function openPdfInParts(source: File | string): Promise<any> {
     disableAutoFetch: true,
     disableStream: true,
     rangeChunkSize: 1 << 20,
+    // One worker for every document: starting pdf.js' worker is the slow part on a tablet.
+    worker,
   };
-  const open = (disableWorker: boolean, timeoutMs: number) => {
-    let task: any;
-    if (typeof source === "string") {
-      task = (pdfjsLib as any).getDocument({ ...options, disableWorker, url: source });
-    } else {
-      const file = source;
-      const first = Math.min(file.size, 1 << 20);
-      const start = async () => {
-        const initial = new Uint8Array(await file.slice(0, first).arrayBuffer());
-        const transport = new (pdfjsLib as any).PDFDataRangeTransport(file.size, initial);
-        transport.requestDataRange = (begin: number, end: number) => {
-          void file
-            .slice(begin, end)
-            .arrayBuffer()
-            .then((buffer) => transport.onDataRange(begin, new Uint8Array(buffer)));
-        };
-        return (pdfjsLib as any).getDocument({ ...options, disableWorker, range: transport, length: file.size });
-      };
-      return start().then((t) => waitFor(t, timeoutMs));
-    }
-    return waitFor(task, timeoutMs);
-  };
-  const waitFor = (task: any, timeoutMs: number) => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    return new Promise<any>((resolve, reject) => {
-      timer = setTimeout(() => {
-        try { task.destroy?.(); } catch { /* ignore cleanup failures */ }
-        reject(new Error(`PDF open timed out after ${Math.round(timeoutMs / 1000)}s`));
-      }, timeoutMs);
-      task.promise.then(resolve, reject);
-    }).finally(() => timer && clearTimeout(timer));
-  };
-  // A device where the worker did not start opens on the page itself at once, instead of
-  // waiting a minute for the worker again (Safari on some iPads).
-  if (workerKnownBroken()) return await open(true, 90_000);
+  let task: any;
+  if (typeof source === "string") {
+    task = (pdfjsLib as any).getDocument({ ...options, url: source });
+  } else {
+    const file = source;
+    const first = Math.min(file.size, 1 << 20);
+    const initial = new Uint8Array(await file.slice(0, first).arrayBuffer());
+    const transport = new (pdfjsLib as any).PDFDataRangeTransport(file.size, initial);
+    transport.requestDataRange = (begin: number, end: number) => {
+      void file
+        .slice(begin, end)
+        .arrayBuffer()
+        .then((buffer) => transport.onDataRange(begin, new Uint8Array(buffer)));
+    };
+    task = (pdfjsLib as any).getDocument({ ...options, range: transport, length: file.size });
+  }
+  if (onProgress)
+    task.onProgress = ({ loaded, total }: { loaded: number; total: number }) =>
+      onProgress(Number(loaded) || 0, Number(total) || 0);
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    return await open(false, 60_000);
-  } catch (error) {
-    // Some Safari versions cannot start the worker: try once more on the page itself.
-    try {
-      const doc = await open(true, 90_000);
-      rememberWorkerBroken();
-      return doc;
-    } catch {
-      throw error;
-    }
+    return await new Promise<any>((resolve, reject) => {
+      timer = setTimeout(() => {
+        try {
+          task.destroy?.();
+        } catch {
+          /* ignore cleanup failures */
+        }
+        reject(new Error("PDF open timed out after 60s"));
+      }, 60_000);
+      task.promise.then(resolve, reject);
+    });
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 
+/** Where pdf.js does its work: its own worker thread, or the page itself (slower, it can stall). */
+export type PdfMode = "worker" | "page";
+
+/** How long pdf.js' worker may take to start before the page itself is used instead. */
+const WORKER_START_MS = 10_000;
+let shared: Promise<{ worker: any; mode: PdfMode }> | null = null;
+let sharedMode: PdfMode | null = null;
+
+/** The mode the shared worker ended up in (null before the first document is opened). */
+export function pdfMode(): PdfMode | null {
+  return sharedMode;
+}
+
+/**
+ * pdf.js v6 has no "disableWorker" option any more: a worker that never answers makes every open
+ * wait. So the worker is started once, given a few seconds, and kept for every document. If it
+ * does not answer, pdf.js runs on the page itself, and that is remembered for a day so the next
+ * visit does not wait again.
+ */
+function sharedPdfWorker(): Promise<{ worker: any; mode: PdfMode }> {
+  if (shared) return shared;
+  shared = (async () => {
+    ensureWorker();
+    const PDFWorker = (pdfjsLib as any).PDFWorker;
+    const onThePage = async () => {
+      // With the worker's code loaded here, pdf.js sets up its "fake" worker on the page at once.
+      if (!(globalThis as any).pdfjsWorker) {
+        const module = await import(/* @vite-ignore */ (pdfjsLib as any).GlobalWorkerOptions.workerSrc);
+        (globalThis as any).pdfjsWorker ??= module;
+      }
+      const worker = new PDFWorker({ name: "uzyra-page" });
+      await worker.promise;
+      return { worker, mode: "page" as const };
+    };
+    let result: { worker: any; mode: PdfMode };
+    if (workerKnownBroken()) {
+      result = await onThePage();
+    } else {
+      const worker = new PDFWorker({ name: "uzyra" });
+      const started = await Promise.race([
+        worker.promise.then(
+          () => true,
+          () => false,
+        ),
+        new Promise<boolean>((done) => setTimeout(() => done(false), WORKER_START_MS)),
+      ]);
+      const real = started && typeof Worker !== "undefined" && worker.port instanceof Worker;
+      if (real) result = { worker, mode: "worker" };
+      else if (started) {
+        // pdf.js itself fell back to the page (the worker reported an error).
+        rememberWorkerBroken();
+        result = { worker, mode: "page" };
+      } else {
+        worker.destroy();
+        rememberWorkerBroken();
+        result = await onThePage();
+      }
+    }
+    sharedMode = result.mode;
+    return result;
+  })();
+  shared.catch(() => {
+    shared = null;
+  });
+  return shared;
+}
+
 const NO_WORKER_KEY = "uzyra-pdf-no-worker";
-/** A worker failure is remembered for a week (a browser update may fix it). */
-const NO_WORKER_MS = 7 * 24 * 60 * 60 * 1000;
+/** A worker failure is remembered for a day (a browser update or a better network may fix it). */
+const NO_WORKER_MS = 24 * 60 * 60 * 1000;
 let workerBroken: boolean | null = null;
 
 function workerKnownBroken(): boolean {

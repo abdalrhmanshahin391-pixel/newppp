@@ -917,3 +917,45 @@
     animation-name: bkr-fade-in;
   }
 }
+
+/* While a book opens (BookOpening): an empty sheet where the page will be, breathing softly. */
+.bkr-opening-page {
+  width: min(78%, 620px);
+  aspect-ratio: 1 / 1.414;
+  max-height: calc(100% - 64px);
+  margin: 32px auto;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(14 17 22 / 0.06), 0 8px 28px rgb(14 17 22 / 0.06);
+  animation: bkr-opening 1.6s ease-in-out infinite alternate;
+}
+@keyframes bkr-opening {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bkr-opening-page {
+    animation: none;
+    opacity: 0.8;
+  }
+}
+
+/* `?debug=1` on a private book: where the time went, measured on this device. */
+.bkr-debug {
+  position: fixed;
+  inset-inline-start: 8px;
+  bottom: 8px;
+  z-index: 80;
+  max-width: min(92vw, 360px);
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgb(14 17 22 / 0.86);
+  color: #fff;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  pointer-events: none;
+  white-space: pre-wrap;
+}

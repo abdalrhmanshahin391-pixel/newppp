@@ -7,9 +7,45 @@ import { myBookLink } from "@/lib/user-books-data";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PdfDoc = any;
 
-export async function openMyBook(book: UserBook): Promise<PdfDoc> {
-  const { openPdfInParts } = await import("@/lib/pdf-page-render");
-  return openPdfInParts(await myBookLink(book));
+/** What opening a book is doing, for the screen shown meanwhile. */
+export type OpenStage =
+  { step: "link" } | { step: "file"; share: number | null } | { step: "page" };
+
+export type OpenedBook = {
+  doc: PdfDoc;
+  /** Where the file came from: this device's copy, or the network. */
+  from: "device" | "network";
+  /** The signed link, when the file came from the network (for keeping a copy afterwards). */
+  link: string | null;
+};
+
+/** Opens the book from this device's copy if there is one, else from a signed link. */
+export async function openMyBook(
+  book: UserBook,
+  onStage?: (stage: OpenStage) => void,
+): Promise<OpenedBook> {
+  const [{ openPdfInParts }, { keptMyBookFile }] = await Promise.all([
+    import("@/lib/pdf-page-render"),
+    import("./my-book-file"),
+  ]);
+  const kept = await keptMyBookFile(book);
+  if (kept) {
+    try {
+      onStage?.({ step: "page" });
+      return { doc: await openPdfInParts(kept), from: "device", link: null };
+    } catch {
+      // A damaged copy: read it from the network instead (and keep a fresh copy later).
+    }
+  }
+  onStage?.({ step: "link" });
+  const link = await myBookLink(book);
+  onStage?.({ step: "file", share: null });
+  const doc = await openPdfInParts(link, {
+    onProgress: (loaded, total) =>
+      onStage?.({ step: "file", share: total > 0 ? Math.min(1, loaded / total) : null }),
+  });
+  onStage?.({ step: "page" });
+  return { doc, from: "network", link };
 }
 
 /** Draws one page into the canvas at `cssWidth` (sharp on high-density screens). */
@@ -103,7 +139,7 @@ export function myBookCover(book: UserBook): Promise<string | null> {
   const job = (async () => {
     let doc: PdfDoc = null;
     try {
-      doc = await openMyBook(book);
+      doc = (await openMyBook(book)).doc;
       const url = await drawCover(doc);
       if (url) keepCover(book, url);
       return url;
