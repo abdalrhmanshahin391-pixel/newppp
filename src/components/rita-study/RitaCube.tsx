@@ -116,10 +116,13 @@ export function RitaCube({
   levelsRef,
   mode,
   label,
+  active = true,
 }: {
   levelsRef: MutableRefObject<OrbLevels>;
   mode: OrbMode;
   label: string;
+  /** The home hero pauses offscreen, in hidden tabs, and for reduced motion. */
+  active?: boolean;
 }) {
   const body = useRef<HTMLDivElement>(null);
   const eyes = useRef<HTMLDivElement>(null);
@@ -130,6 +133,11 @@ export function RitaCube({
     const bodyEl = body.current;
     const eyesEl = eyes.current;
     if (!bodyEl || !eyesEl) return;
+    if (!active) {
+      bodyEl.style.transform = "none";
+      eyesEl.style.transform = "none";
+      return;
+    }
     const dynamics = new OrbDynamics();
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     const rand = (min: number, max: number) => min + Math.random() * (max - min);
@@ -296,7 +304,7 @@ export function RitaCube({
       cancelAnimationFrame(raf);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [levelsRef]);
+  }, [levelsRef, active]);
 
   return (
     <div className="uz-cube" role="img" aria-label={label}>

@@ -1,5 +1,22 @@
 # DESIGN.md — the visual system of Uzyra
 
+## Ambient contours and the home cube
+
+Shared route backgrounds use nine faint SVG contours, based on the public Hedwig home-page
+background inspected on 13 November 2026 (https://www.hedwig-ai.com/). Match its 1440 × 1000
+geometry, 1px strokes at 5% opacity, horizontal sine morph at 12 updates/second and staggered
+2.4-second draw. Inherit each page's foreground colour, including dark pages. Paint above the
+route's existing background but below content in an isolated stacking context; never overprint
+opaque book/PDF sheets, cards or menus. The route boundary owns one backdrop and replaces it
+on navigation, without changing page colours or adding scroll/selection handlers.
+
+The home hero reuses the flat ink Uzyra cube with white eyes, no shadow or texture. Keep the
+existing four orbit rings, their centre, word positions and tap/save actions. The cube reacts to
+word taps; it and its level driver stop offscreen or in hidden tabs. Reduced motion makes the
+hero cube and contours static. The backdrop also cancels its frame loop in hidden documents.
+Use `scripts/check-home-contours.mjs` for isolated Chromium/WebKit component checks, screenshots
+and phone/tablet videos; it uses local account/reader fixtures, not production voice or database.
+
 ## Conversation history
 
 The conversation page prioritizes resuming a saved conversation. Use a compact title and new-chat

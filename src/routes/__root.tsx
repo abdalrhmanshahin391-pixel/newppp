@@ -10,6 +10,7 @@ import {
   type ErrorRouteComponent,
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
+import { PageContours } from "@/components/brand/PageContours";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -393,7 +394,9 @@ function RootComponent() {
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <NavigationBar />
           <AppScope>
-            <Outlet />
+            <PageContours>
+              <Outlet />
+            </PageContours>
           </AppScope>
           <GlobalFooter />
           <DeferredOverlays />
