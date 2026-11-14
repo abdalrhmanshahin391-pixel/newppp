@@ -68,7 +68,20 @@ for (const directory of [
     for (const token of text.match(/[\w!:/.[\]#%(),+-]+/g) || []) tokens.add(token);
   }
 }
+const fonts = [
+  ["Figtree", "figtree-latin-400-normal.woff2", 400],
+  ["Figtree", "figtree-latin-600-normal.woff2", 600],
+  ["Figtree", "figtree-latin-700-normal.woff2", 700],
+  ["Inter Tight", "inter-tight-latin-600-normal.woff2", 600],
+  ["Inter Tight", "inter-tight-latin-700-normal.woff2", 700],
+]
+  .map(
+    ([family, file, weight]) =>
+      `@font-face{font-family:"${family}";src:url("/fonts/guides/${file}") format("woff2");font-weight:${weight};font-display:swap}`,
+  )
+  .join("\n");
 const css =
+  fonts +
   compiler.build([...tokens]) +
   `
 body{margin:0}.qa-header{height:64px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;background:#121117;color:white;position:relative;z-index:3;font:500 14px Figtree,sans-serif}.qa-header nav{display:flex;gap:16px}.qa-tail{height:110vh;padding:100px 24px;text-align:center;color:#6a697c}
@@ -147,6 +160,16 @@ try {
     await page.goto(origin + "/?lang=" + lang);
     await page.locator(".uz-page-contours path").last().waitFor();
     await page.evaluate(() => document.fonts.ready);
+    assert.ok(
+      await page.evaluate(() =>
+        ["Figtree", "Inter Tight"].every((family) =>
+          [...document.fonts].some(
+            (face) => face.family.includes(family) && face.status === "loaded",
+          ),
+        ),
+      ),
+      "production fonts load",
+    );
     await page.waitForTimeout(4000);
     assert.equal(await page.locator(".uz-page-contours").count(), 1);
     assert.equal(await page.locator(".uz-page-contours path").count(), 9);
