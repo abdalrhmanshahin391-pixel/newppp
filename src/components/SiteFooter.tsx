@@ -1,6 +1,5 @@
 import { useLang } from "@/components/LanguageProvider";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { useLearningLanguage } from "@/hooks/useLearningLanguage";
 import { SUPPORT_EMAIL } from "@/lib/support-contact";
 import { footerColumns } from "@/lib/footer-links";
 import { SiteFooterView } from "./SiteFooterView";
@@ -9,12 +8,11 @@ import { SiteFooterView } from "./SiteFooterView";
 export function SiteFooter() {
   const { lang } = useLang();
   const settings = useSiteSettings();
-  const learning = useLearningLanguage();
   const ar = lang === "ar";
   return (
     <SiteFooterView
       ar={ar}
-      columns={footerColumns(ar, learning.code, settings.offers_page_enabled)}
+      columns={footerColumns(ar, settings.offers_page_enabled)}
       supportEmail={SUPPORT_EMAIL}
       year={new Date().getFullYear()}
     />

@@ -6262,9 +6262,6 @@ html.rita-app,
 .uz-tiles > li {
   min-width: 0;
 }
-#learn-panel-together .uz-tiles {
-  max-width: 760px;
-}
 @media (min-width: 640px) {
   .uz-tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6303,6 +6300,13 @@ html.rita-app,
   }
   .uz-tiles > [data-lead] {
     grid-column: span 2;
+  }
+}
+/* The study space (four) and Together (two): equal cards, two to a row at every width from a
+   tablet up, so a section never ends with one lonely card. */
+@media (min-width: 640px) {
+  .uz-tiles[data-even] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (hover: hover) and (pointer: fine) {

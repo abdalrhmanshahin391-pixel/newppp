@@ -19,7 +19,7 @@ function render(ar: boolean) {
     <RouterContextProvider router={router}>
       <SiteFooterView
         ar={ar}
-        columns={footerColumns(ar, "de", true)}
+        columns={footerColumns(ar, true)}
         supportEmail="support@example.com"
         year={2026}
       />
@@ -37,10 +37,9 @@ test("the footer renders real navigation and legal destinations in both directio
       "/rita-live",
       "/rita-lessons",
       "/study",
-      "/study/match",
-      "/study/pdf",
+      "/study/lectures",
       "/study/todo",
-      "/german",
+      "/study/exams",
       "/spaces",
       "/share",
       "/pricing",
@@ -60,10 +59,11 @@ test("the footer renders real navigation and legal destinations in both directio
   }
 });
 
-test("account-sensitive links retain the original visibility rules", () => {
-  const destinations = (language: string | null, offers: boolean) =>
-    footerColumns(false, language, offers).flatMap((column) => column.links.map((link) => link.to));
-  assert.ok(destinations("de", true).includes("/german"));
-  assert.ok(!destinations("en", false).includes("/german"));
-  assert.ok(!destinations("en", false).includes("/offers"));
+test("the offers link follows its setting, and the retired tools are not linked", () => {
+  const destinations = (offers: boolean) =>
+    footerColumns(false, offers).flatMap((column) => column.links.map((link) => link.to));
+  assert.ok(destinations(true).includes("/offers"));
+  assert.ok(!destinations(false).includes("/offers"));
+  for (const gone of ["/german", "/study/match", "/study/pdf", "/study/all-in-one"])
+    assert.ok(!destinations(true).includes(gone), gone);
 });

@@ -1,17 +1,12 @@
 import { memo, useMemo, useRef, type ComponentType, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
-  AllInOneCardArt,
   ExamsCardArt,
   FlashcardsCardArt,
-  GermanCardArt,
   LectureCardArt,
   LessonsCardArt,
-  MemoryCardArt,
-  QuestionBankCardArt,
   SharedCardArt,
   SpacesCardArt,
-  SummaryCardArt,
   TalkCardArt,
   TodoCardArt,
 } from "./PlayCardArt";
@@ -34,7 +29,7 @@ type Row = {
 
 type SectionDef = { id: string; title: Bi; rows: Row[] };
 
-const SECTION_IDS = ["rita", "study", "plan", "together", "german"] as const;
+const SECTION_IDS = ["rita", "study", "together"] as const;
 
 function rowOf(tool: ToolDef): Row {
   return {
@@ -49,7 +44,10 @@ function rowOf(tool: ToolDef): Row {
 
 const tool = (key: string) => TOOLS.find((t) => t.key === key)!;
 
-/** Every destination in one list: Uzyra first, then the study tools, grouped by what they are for. */
+/**
+ * Every destination in one list, in three sections: Uzyra, the learner's own study space (cards,
+ * lectures and their plan, four equal cards) and studying with others.
+ */
 function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): SectionDef[] {
   return [
     {
@@ -79,30 +77,18 @@ function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): Se
     },
     {
       id: "study",
-      title: { en: "Study with your own material", ar: "ادرس بمادتك الخاصة" },
+      title: { en: "Study and plan with your own material", ar: "ادرس ونظّم وقتك بمادتك الخاصة" },
       rows: [
         { ...rowOf(tool("flashcards")), chip: chips.flashcards },
-        rowOf(tool("memory-lab")),
-        rowOf(tool("pdf-summary")),
-        rowOf(tool("all-in-one")),
-        rowOf(tool("question-bank")),
         rowOf(tool("lecture-lab")),
+        rowOf(tool("todo")),
+        rowOf(tool("exams")),
       ],
-    },
-    {
-      id: "plan",
-      title: { en: "Plan your time", ar: "نظّم وقتك" },
-      rows: [rowOf(tool("todo")), rowOf(tool("exams"))],
     },
     {
       id: "together",
       title: { en: "Study together", ar: "ادرس مع غيرك" },
       rows: [rowOf(tool("shared-decks")), rowOf(tool("spaces"))],
-    },
-    {
-      id: "german",
-      title: { en: "German", ar: "الألمانية" },
-      rows: [rowOf(tool("german-lab"))],
     },
   ];
 }
@@ -110,9 +96,7 @@ function buildSections(chips: { flashcards: Bi | null; lessons: Bi | null }): Se
 const RAIL: { id: (typeof SECTION_IDS)[number]; label: Bi }[] = [
   { id: "rita", label: { en: "Talk to Uzyra", ar: "تحدث مع يوزرا" } },
   { id: "study", label: { en: "My study space", ar: "مساحتي الدراسية" } },
-  { id: "plan", label: { en: "Plan", ar: "الخطة" } },
   { id: "together", label: { en: "Together", ar: "مع غيري" } },
-  { id: "german", label: { en: "German", ar: "الألمانية" } },
 ];
 
 function SideList({
@@ -167,16 +151,11 @@ const PLAY: Record<string, Play> = {
     line: { en: "Short lessons with clear goals.", ar: "دروس قصيرة بأهداف واضحة." },
   },
   flashcards: { Art: FlashcardsCardArt, go: { en: "Study", ar: "ادرس" } },
-  "memory-lab": { Art: MemoryCardArt, go: { en: "Play", ar: "العب" } },
-  "pdf-summary": { Art: SummaryCardArt, go: { en: "Summarise", ar: "لخّص" } },
-  "all-in-one": { Art: AllInOneCardArt, go: { en: "Start", ar: "ابدأ" } },
-  "question-bank": { Art: QuestionBankCardArt, go: { en: "Practise", ar: "تدرّب" } },
   "lecture-lab": { Art: LectureCardArt, go: { en: "Start", ar: "ابدأ" } },
   todo: { Art: TodoCardArt, go: { en: "Plan", ar: "خطّط" } },
   exams: { Art: ExamsCardArt, go: { en: "Open", ar: "افتح" } },
   "shared-decks": { Art: SharedCardArt, go: { en: "Browse", ar: "تصفّح" } },
   spaces: { Art: SpacesCardArt, go: { en: "Open", ar: "افتح" } },
-  "german-lab": { Art: GermanCardArt, go: { en: "Play", ar: "العب" } },
 };
 
 /**
@@ -256,10 +235,11 @@ const Section = memo(function Section({ section, lang }: { section: SectionDef; 
       <h2 id={`${section.id}-title`} className="uz-section-title">
         {section.title[lang]}
       </h2>
-      <ul className="uz-tiles" data-count={section.rows.length}>
-        {section.rows.map((row, index) => (
-          <li key={row.key} data-lead={index === 0 || undefined}>
-            <ToolTile row={row} lang={lang} lead={index === 0} />
+      {/* Equal cards, two to a row: no wide first card, so the grid stays even. */}
+      <ul className="uz-tiles" data-count={section.rows.length} data-even="">
+        {section.rows.map((row) => (
+          <li key={row.key}>
+            <ToolTile row={row} lang={lang} lead={false} />
           </li>
         ))}
       </ul>
@@ -271,19 +251,14 @@ const Section = memo(function Section({ section, lang }: { section: SectionDef; 
 // Only the current panel is visible or keyboard reachable.
 export function LearnSections({
   lang,
-  showGerman,
   chips,
 }: {
   lang: Lang;
-  showGerman: boolean;
   chips: { flashcards: Bi | null; lessons: Bi | null };
 }) {
   const sections = useMemo(() => buildSections(chips), [chips]);
-  const rail = useMemo(
-    () => (showGerman ? RAIL : RAIL.filter((entry) => entry.id !== "german")),
-    [showGerman],
-  );
-  const ids: readonly string[] = useMemo(() => rail.map((entry) => entry.id), [rail]);
+  const rail = RAIL;
+  const ids: readonly string[] = SECTION_IDS;
   const { active, visited, choose } = useLearnSection(ids);
   const content = useRef<HTMLDivElement>(null);
 
