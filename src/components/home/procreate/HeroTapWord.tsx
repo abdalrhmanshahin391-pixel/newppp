@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { StartLearningLink } from "@/components/StartLearningLink";
-import { VoiceOrb, type OrbLevels } from "@/components/rita-live/VoiceOrb";
+import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
+import { RitaCube } from "@/components/rita-study/RitaCube";
 import { wordTapSound } from "@/components/rita-study/tech-sound";
 
 const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
@@ -52,7 +53,7 @@ const WORDS: Word[] = [
   },
 ];
 
-/** First screen: the promise, and Uzyra's own orb with words you can tap, just like in a call. */
+/** First screen: Uzyra's cube and the same orbiting words you can tap in a call. */
 export function HeroTapWord() {
   const [active, setActive] = useState<number | null>(null);
   const [touched, setTouched] = useState(false);
@@ -61,10 +62,31 @@ export function HeroTapWord() {
   const levels = useRef<OrbLevels>({ input: 0, output: 0 });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const slot = useRef<HTMLDivElement>(null);
+  const cube = useRef<HTMLDivElement>(null);
+  const [animateCube, setAnimateCube] = useState(false);
 
-  // While Uzyra "says" the word, feed the orb a gentle, speech-like level.
   useEffect(() => {
-    if (!speaking) {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let inView = true;
+    const sync = () => setAnimateCube(inView && !document.hidden && !reduced.matches);
+    const observer = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      sync();
+    });
+    if (cube.current) observer.observe(cube.current);
+    document.addEventListener("visibilitychange", sync);
+    reduced.addEventListener("change", sync);
+    sync();
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", sync);
+      reduced.removeEventListener("change", sync);
+    };
+  }, []);
+
+  // React to word taps without running a second idle loop or rendering a WebGL sphere.
+  useEffect(() => {
+    if (!speaking || !animateCube) {
       levels.current.output = 0;
       return;
     }
@@ -77,7 +99,7 @@ export function HeroTapWord() {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [speaking]);
+  }, [speaking, animateCube]);
 
   useEffect(
     () => () => {
@@ -179,14 +201,15 @@ export function HeroTapWord() {
           ))}
         </div>
 
-        {/* The wrapper places the orb (the orb itself is position: relative, so it cannot be
-            centred with absolute classes of its own; in Arabic it slid to one side). */}
-        <div className="rh-hero-orb pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <VoiceOrb
+        <div
+          ref={cube}
+          className="rh-hero-cube pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+        >
+          <RitaCube
             levelsRef={levels}
             mode={speaking ? "speaking" : "idle"}
-            label="Uzyra's voice"
-            className="w-full"
+            label="Uzyra"
+            active={animateCube}
           />
         </div>
 

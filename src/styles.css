@@ -2,6 +2,34 @@
 @source "../src";
 @import "tw-animate-css";
 
+/* Shared ambient contours. Isolation paints the negative layer ABOVE the route's own background
+   and BELOW its content. Opaque documents/cards stay opaque, and no input can hit this SVG. */
+[data-uz-contour-surface] {
+  isolation: isolate;
+}
+.uz-page-contours {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+  color: inherit;
+  opacity: 0.05;
+}
+.uz-page-contours path {
+  stroke-dasharray: 1;
+  animation: uz-contour-draw 2.4s cubic-bezier(0.65, 0, 0.35, 1) var(--contour-delay) backwards;
+}
+@keyframes uz-contour-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uz-page-contours path { animation: none; }
+}
+
 html,
 body {
   width: 100%;
@@ -8519,7 +8547,6 @@ html.rita-app,
   --home-nav: 14px;
   --home-bar-h: 60px;
   --home-bar-btn-h: 38px;
-  --home-orb: 280px;
   --home-chip: clamp(14px, 1.5vw, 17px);
   --home-h2: clamp(1.75rem, calc(1.2rem + 1.4vw), 2.25rem); /* 28px on phones, 36 from ~1200 */
   --home-h3: 17px;
@@ -8527,7 +8554,6 @@ html.rita-app,
 @media (min-width: 768px) {
   .uz-home {
     --home-lead: 17px;
-    --home-orb: 380px;
     --home-h3: 18px;
   }
 }
@@ -8594,9 +8620,10 @@ html.rita-app,
   padding-inline: 14px;
   font-size: var(--home-nav);
 }
-/* Rita's orb and the words around it. */
-.uz-home .rh-hero-orb {
-  width: var(--home-orb);
+/* Uzyra sits in the original orbit centre; the rings and word-chip geometry stay intact. */
+.uz-home .rh-hero-cube {
+  width: clamp(144px, 22vw, 220px);
+  height: clamp(144px, 22vw, 220px);
 }
 .uz-home .rh-chip {
   padding: 0.375rem 0.85rem;
