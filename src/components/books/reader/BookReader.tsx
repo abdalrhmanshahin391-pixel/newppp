@@ -282,9 +282,13 @@ export function BookReader({
   startPage: number;
   /** Opened at the page this reader stopped at (not page 1, not from the address). */
   resumed?: boolean;
-  /** A reader's own private book: pages, words, search, marks and place come from here. */
+  /**
+   * A book read straight from its PDF: pages, words and search come from here. For a reader's own
+   * book ("mine") the marks and place stay on the device; a library book keeps them on the account.
+   */
   source?: MyBookSource | null;
 }) {
+  const onDevice = source?.kind === "mine" ? source : null;
   const wide = useWide(900);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -468,17 +472,17 @@ export function BookReader({
   useEffect(() => {
     const onHide = () => {
       if (document.visibilityState !== "hidden") return;
-      if (source) source.savePlace(pageNow.current);
+      if (onDevice) onDevice.savePlace(pageNow.current);
       else void saveReadingPlace(userId, book.id, pageNow.current);
     };
     document.addEventListener("visibilitychange", onHide);
     return () => document.removeEventListener("visibilitychange", onHide);
-  }, [book.id, source, userId]);
+  }, [book.id, onDevice, userId]);
   useEffect(() => {
     setJump(String(page));
     const timer = window.setTimeout(() => {
-      if (source) {
-        source.savePlace(page);
+      if (onDevice) {
+        onDevice.savePlace(page);
         void navigate({
           to: "/books/mine/$bookId",
           params: { bookId: book.id },
@@ -496,7 +500,7 @@ export function BookReader({
       });
     }, 1200);
     return () => window.clearTimeout(timer);
-  }, [book.id, navigate, page, source, userId]);
+  }, [book.id, navigate, onDevice, page, userId]);
 
   // A private book's drawn pages: their picture addresses go when the reader stops caching them.
   useEffect(() => {
@@ -509,11 +513,11 @@ export function BookReader({
     });
   }, [book.id, queryClient, source]);
 
-  /** What the server needs for a private book: the page's own text, read here from the PDF. */
+  /** What the server needs for a book read from its PDF: the page's own text, read here. */
   async function ownPage(onPage: number): Promise<{ own?: true; pageText?: string }> {
     if (!source) return {};
     const data = await queryClient.ensureQueryData(wordsQuery(book.id, onPage, source));
-    return { own: true, pageText: data.text };
+    return source.kind === "mine" ? { own: true, pageText: data.text } : { pageText: data.text };
   }
 
   // ---- the selection ---------------------------------------------------------------------------
@@ -837,7 +841,7 @@ export function BookReader({
   // ---- bookmarks, and words found by a search ---------------------------------------------------
   const marksOf = useQuery({
     queryKey: ["book-bookmarks", book.id] as const,
-    queryFn: () => (source ? Promise.resolve(source.bookmarks()) : fetchBookmarks(book.id)),
+    queryFn: () => (onDevice ? Promise.resolve(onDevice.bookmarks()) : fetchBookmarks(book.id)),
     staleTime: Infinity,
   });
   // null: the database has no bookmarks yet (or they could not be read) — the icon stays away.
@@ -860,8 +864,8 @@ export function BookReader({
         ? [...new Set([...before, n])].sort((a, b) => a - b)
         : before.filter((x) => x !== n);
       queryClient.setQueryData(key, after);
-      (source
-        ? Promise.resolve().then(() => source.setBookmark(n, on))
+      (onDevice
+        ? Promise.resolve().then(() => onDevice.setBookmark(n, on))
         : setBookmark(book.id, n, on)
       ).then(
         () => {
@@ -877,7 +881,7 @@ export function BookReader({
         },
       );
     },
-    [book.id, queryClient, say, source],
+    [book.id, onDevice, queryClient, say],
   );
   // Back where you stopped: «رجعتك لصفحة 87 · من الأول», for 4 s.
   useEffect(() => {
