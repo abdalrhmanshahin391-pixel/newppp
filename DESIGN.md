@@ -85,6 +85,15 @@ language choice and «في غلط بالدرس؟» are tools in the selection st
 four slices in the same wheel. In Uzyra's answers (dark red) the explain slice becomes «اشرحلي
 ببساطة» and the others dim. Reduced motion keeps only fades.
 
+**On a book page the wheel has three slices** (same look, places from the top): «ترجملي»
+(blue, Languages icon), «معنى ونطق», «فلاش كاردز». The other five stay in the lessons only.
+«ترجملي» is a faithful, professional translation of the selection into standard Arabic (English
+for an Arabic book): every sentence in order, nothing added, no explanation; it takes up to 3000
+characters (a paragraph or two), where the other slices stop at 600. On a selection in Uzyra's
+answers the top slice is «اشرحلي» again (dark red). The book's flashcards open in the same floating
+window as the lessons (grows from the circle, moves, slides off the right edge with a tab, X hides
+it and ••• brings it back), with its own saved place (`uzyra-window-rect:book-practice`).
+
 Practice reuses the selection-based generators and their authentication, quotas and validation.
 Results open in a single white workspace (maximum 672px), a bottom sheet on phones, with the
 existing typography and blue action colour. Cards reveal their answer and optional note and

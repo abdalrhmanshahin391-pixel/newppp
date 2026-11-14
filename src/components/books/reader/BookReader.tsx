@@ -17,6 +17,7 @@ import {
   Bookmark,
   ChevronLeft,
   ChevronRight,
+  Languages,
   Maximize2,
   MoveHorizontal,
   X,
@@ -26,7 +27,9 @@ import {
 import { PhraseDialog } from "@/components/rita/PhraseDialog";
 import { FloatingOrb, type OrbState } from "@/components/rita-study/FloatingOrb";
 import { RadialMenu, type RadialHandle } from "@/components/rita-study/RadialMenu";
-import { StudyPracticePanel, type PracticeView } from "@/components/rita-study/StudyPracticePanel";
+import { StudyPracticeBody, type PracticeView } from "@/components/rita-study/StudyPracticePanel";
+import { FloatingWindow, WindowDots } from "@/components/rita-study/FloatingWindow";
+import { practiceTitle } from "@/lib/study/study-practice";
 import { DEFAULT_ORB, snapToEdge, type OrbPosition } from "@/components/rita-study/orb-position";
 import { readStudyMemory, writeStudyMemory } from "@/components/rita-study/study-memory";
 import { installSoundUnlock, setSoundOn, soundOn } from "@/components/rita-study/tech-sound";
@@ -41,7 +44,7 @@ import {
 import {
   KIND_LABEL,
   LANGUAGE_NAMES,
-  RING_ACTIONS,
+  WHEEL_COLORS,
   WHEEL_REASONS,
   actionItem,
   languageFromId,
@@ -55,6 +58,7 @@ import {
   SETTLE_MS,
   aheadCount,
   bookSelectionKind,
+  canTranslate,
   clampPage,
   metaBlock,
   crossedMilestone,
@@ -249,8 +253,23 @@ function wordsQuery(bookId: string, page: number, source?: MyBookSource | null) 
   };
 }
 
-/** The wheel on a book page: the same eight slices, places and colours as in the lessons. */
-const BOOK_RING: StudyAction[] = RING_ACTIONS;
+/**
+ * The wheel on a book page: three slices. At the top "translate" (a faithful translation of the
+ * selection; on a selection in Uzyra's own answers it is "explain" again), then meaning and
+ * pronunciation, then flashcards. The other study options belong to the lessons.
+ */
+const BOOK_RING: StudyAction[] = ["explain", "meaning", "make_cards"];
+const TRANSLATE_ITEM: RadialItem = {
+  id: "translate",
+  label: "ترجملي",
+  Icon: Languages,
+  color: WHEEL_COLORS.explain,
+};
+const BOOK_PRACTICE_NOTE = "من الجزء اللي حدّدته · بتضل هون طول ما الكتاب مفتوح";
+const BOOK_REASONS: Partial<Record<string, string>> = {
+  ...WHEEL_REASONS,
+  translate: "حدّد كلمة أو جملة أو فقرة من الصفحة",
+};
 
 /**
  * What the reader selected: on the page, or (with `reply`) in one of Uzyra's answers, whose whole
@@ -700,7 +719,7 @@ export function BookReader({
 
   // The circle's lines are decoded the first time it opens, so a quick answer finds its line.
   useEffect(() => {
-    if (menuOpen) warmVoiceLines(BOOK_RING);
+    if (menuOpen) warmVoiceLines([...BOOK_RING, "translate"]);
   }, [menuOpen]);
 
   const kind = picked ? bookSelectionKind(picked.quote) : null;
@@ -758,7 +777,7 @@ export function BookReader({
     const entry: Answer = {
       id,
       action,
-      label: actionItem(action).label,
+      label: action === "translate" ? TRANSLATE_ITEM.label : actionItem(action).label,
       quote: quote.length > 160 ? `${quote.slice(0, 157)}…` : quote,
       page: onPage,
       state: "loading",
@@ -798,7 +817,22 @@ export function BookReader({
   const mcqFn = useServerFn(bookMakeMcq);
   const [making, setMaking] = useState<PracticeAction | null>(null);
   const [practiceView, setPracticeView] = useState<PracticeView | null>(null);
-  const [practiceOpen, setPracticeOpen] = useState(false);
+  // The floating window the cards show in (as in the lessons): it grows out of the circle, moves,
+  // slides off the right edge with a tab to bring it back, and its X hides it (••• brings it back).
+  const [win, setWin] = useState<{
+    at: { x: number; y: number };
+    shown: boolean;
+    reveal: number;
+  } | null>(null);
+  const openWindow = useCallback(() => {
+    const box = work.current;
+    const at = box ? { x: orb.x * box.clientWidth, y: orb.y * box.clientHeight } : { x: 0, y: 0 };
+    setWin((current) =>
+      current
+        ? { at: current.shown ? current.at : at, shown: true, reveal: current.reveal + 1 }
+        : { at, shown: true, reveal: 0 },
+    );
+  }, [orb.x, orb.y]);
   const lastPractice = useRef<{
     action: PracticeAction;
     quote: string;
@@ -822,7 +856,7 @@ export function BookReader({
     const requestId = crypto.randomUUID();
     setMenuOpen(false);
     setPhrase(null);
-    setPracticeOpen(true);
+    openWindow();
     setMaking(action);
     setPracticeView({
       id: requestId,
@@ -890,8 +924,15 @@ export function BookReader({
       setRingMode("main");
       return;
     }
-    const action = id as StudyAction;
     const sel = pickedRef.current;
+    if (id === "translate") {
+      if (!sel || sel.reply || !canTranslate(sel.quote)) return;
+      setMenuOpen(false);
+      setPhrase(null);
+      void ask("translate", sel.quote, sel.page);
+      return;
+    }
+    const action = id as StudyAction;
     if (!sel || !actions.includes(action)) return;
     if (action === "make_cards" || action === "make_mcq") return void practice(action);
     if (action === "meaning") {
@@ -914,16 +955,22 @@ export function BookReader({
   const items: RadialItem[] =
     ringMode === "language"
       ? languageItems(explanation.value)
-      : BOOK_RING.map((action) => ({
-          ...actionItem(action),
-          disabled:
-            !actions.includes(action) ||
-            (Boolean(making) && (action === "make_cards" || action === "make_mcq")),
-          disabledReason:
-            making && (action === "make_cards" || action === "make_mcq")
-              ? "استنّى لحد ما يخلص تجهيز التدريب الحالي"
-              : (WHEEL_REASONS[action] ?? "حدّد كلمة أو جملة من الصفحة"),
-        }));
+      : BOOK_RING.map((action) => {
+          const item = action === "explain" && !picked?.reply ? TRANSLATE_ITEM : actionItem(action);
+          return {
+            ...item,
+            disabled:
+              item === TRANSLATE_ITEM
+                ? !picked || !canTranslate(picked.quote)
+                : !actions.includes(action) || (Boolean(making) && action === "make_cards"),
+            disabledReason:
+              making && action === "make_cards"
+                ? "استنّى لحد ما يخلص تجهيز التدريب الحالي"
+                : kind === "too_long" && item !== TRANSLATE_ITEM
+                  ? "التحديد كبير على هاد. حدّد جملة أو فقرة قصيرة"
+                  : (BOOK_REASONS[item.id] ?? "حدّد كلمة أو جملة من الصفحة"),
+          };
+        });
 
   const busy = answers.some((a) => a.state === "loading") || Boolean(making);
   const orbState: OrbState = busy ? "busy" : picked ? "armed" : "idle";
@@ -1358,11 +1405,7 @@ export function BookReader({
           {book.title}
         </p>
         {practiceView && (
-          <button
-            type="button"
-            className="st-top-btn is-soft !h-11"
-            onClick={() => setPracticeOpen(true)}
-          >
+          <button type="button" className="st-top-btn is-soft !h-11" onClick={openWindow}>
             {making ? "جاري تجهيز التدريب…" : "آخر تدريب"}
           </button>
         )}
@@ -1465,11 +1508,9 @@ export function BookReader({
           selectionHint={
             ringMode !== "main" || !kind
               ? undefined
-              : kind === "word"
-                ? "لتفكيك التركيب، حدّد جملة أو عبارة."
-                : kind === "sentence"
-                  ? "للمعنى أو سبب الصيغة، حدّد كلمة أو عبارة داخل الجملة."
-                  : undefined
+              : kind === "sentence" || kind === "rule" || kind === "multi_block"
+                ? "للمعنى والنطق، حدّد كلمة أو عبارة قصيرة."
+                : undefined
           }
           hint={
             ringMode === "language" ? `يوزرا بتشرح بـ: ${LANGUAGE_NAMES[explanation.value]}` : hint
@@ -1518,17 +1559,42 @@ export function BookReader({
             }}
           />
         )}
-        {practiceView && (
-          <StudyPracticePanel
-            key={practiceView.id}
-            view={practiceView}
-            open={practiceOpen}
-            onOpenChange={setPracticeOpen}
-            onRetry={() => {
-              if (lastPractice.current) void practice(lastPractice.current.action, true);
+        {win && practiceView && (
+          <FloatingWindow
+            title={practiceTitle(practiceView)}
+            variant="practice"
+            place="book-practice"
+            origin={win.at}
+            shown={win.shown}
+            revealSignal={win.reveal}
+            tabLabel="أظهر نافذة البطاقات"
+            onHidden={() => {
+              setWin((current) => current && { ...current, shown: false });
+              orbButton.current?.focus({ preventScroll: true });
             }}
-            onSwitch={(action) => void practice(action, true)}
-            onReturnFocus={() => orbButton.current?.focus({ preventScroll: true })}
+          >
+            <div className="edith-premium st-practice-window" dir="rtl">
+              <p className="st-practice-window-note">{BOOK_PRACTICE_NOTE}</p>
+              <StudyPracticeBody
+                key={practiceView.id}
+                view={practiceView}
+                onRetry={() => {
+                  if (lastPractice.current) void practice(lastPractice.current.action, true);
+                }}
+                onSwitch={(action) => void practice(action, true)}
+                onClose={() => {
+                  setWin(null);
+                  orbButton.current?.focus({ preventScroll: true });
+                }}
+              />
+            </div>
+          </FloatingWindow>
+        )}
+        {win && !win.shown && practiceView && (
+          <WindowDots
+            title={practiceTitle(practiceView)}
+            onShow={() => setWin((current) => current && { ...current, shown: true })}
+            onClose={() => setWin(null)}
           />
         )}
       </div>

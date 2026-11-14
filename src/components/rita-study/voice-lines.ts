@@ -19,6 +19,7 @@ const LINES: Record<string, number> = {
   summarize_section: 2,
   explain_reply: 2,
   report: 2,
+  translate: 2,
 };
 
 /** A line that is not decoded by the time its answer shows is dropped, never played late. */

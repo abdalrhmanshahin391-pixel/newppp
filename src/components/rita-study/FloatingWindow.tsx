@@ -49,12 +49,17 @@ type Variant = "questions" | "practice";
 /** The tab on the right edge: not there, a hint while the window is pushed out, or in use. */
 type TabState = "off" | "hint" | "armed" | "on" | "pulling";
 
-const storageKey = (variant?: Variant) =>
-  variant === "practice" ? "uzyra-window-rect:practice" : "uzyra-window-rect";
+/** Where the window's place is kept: per kind, or under `place` (the book reader keeps its own). */
+const storageKey = (variant?: Variant, place?: string) =>
+  place
+    ? `uzyra-window-rect:${place}`
+    : variant === "practice"
+      ? "uzyra-window-rect:practice"
+      : "uzyra-window-rect";
 
-function readSaved(variant?: Variant): Rect | null {
+function readSaved(variant?: Variant, place?: string): Rect | null {
   try {
-    const raw = JSON.parse(window.localStorage.getItem(storageKey(variant)) ?? "null");
+    const raw = JSON.parse(window.localStorage.getItem(storageKey(variant, place)) ?? "null");
     if (raw && [raw.x, raw.y, raw.w, raw.h].every((n) => Number.isFinite(n))) return raw as Rect;
   } catch {
     /* blocked or broken storage: open in the middle */
@@ -62,9 +67,9 @@ function readSaved(variant?: Variant): Rect | null {
   return null;
 }
 
-function save(rect: Rect, variant?: Variant) {
+function save(rect: Rect, variant?: Variant, place?: string) {
   try {
-    window.localStorage.setItem(storageKey(variant), JSON.stringify(rect));
+    window.localStorage.setItem(storageKey(variant, place), JSON.stringify(rect));
   } catch {
     /* the place is remembered for this visit only */
   }
@@ -94,6 +99,7 @@ export function FloatingWindow({
   onHidden,
   revealSignal = 0,
   tabLabel = "أظهر النافذة",
+  place,
   children,
 }: {
   title: string;
@@ -109,6 +115,8 @@ export function FloatingWindow({
   revealSignal?: number;
   /** The tab's name for screen readers and keyboards. */
   tabLabel?: string;
+  /** Keeps this window's place apart from the others' ("book-practice"). */
+  place?: string;
   children: ReactNode;
 }) {
   const holder = useRef<HTMLDivElement>(null);
@@ -224,7 +232,7 @@ export function FloatingWindow({
         const h = Math.min(620, area.h - EDGE * 2);
         initial = dockedRect({ w, h, x: 0, y: (area.h - h) / 2 }, area);
       } else initial = defaultRect(area);
-      return clampRect(current ?? readSaved(variant) ?? initial, area);
+      return clampRect(current ?? readSaved(variant, place) ?? initial, area);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [area.w, area.h]);
@@ -351,7 +359,7 @@ export function FloatingWindow({
       setTucked(false);
       setTab("off");
       const settle = () => {
-        save(home, variant);
+        save(home, variant, place);
         if (focus) frame.current?.focus({ preventScroll: true });
       };
       if (reducedMotion()) {
@@ -362,7 +370,7 @@ export function FloatingWindow({
       springSlide(0, Math.min(0, velocity), velocity < -200 ? FLICK_SPRING : OPEN_SPRING, settle);
     },
 
-    [placeNow, setSlide, setTab, springSlide, stopSpring, variant],
+    [placeNow, setSlide, setTab, springSlide, stopSpring, variant, place],
   );
 
   // New content while on the side: the window comes back by itself.
@@ -379,7 +387,7 @@ export function FloatingWindow({
       const back = clampRect(before.current ?? defaultRect(area), area);
       setRect(back);
       setMax(false);
-      save(back, variant);
+      save(back, variant, place);
     } else {
       before.current = rect;
       setRect(maximisedRect(area));
@@ -453,7 +461,7 @@ export function FloatingWindow({
       el.removeEventListener("pointercancel", onUp);
       setActive("");
       rectRef.current = latest;
-      save(latest, variant);
+      save(latest, variant, place);
       if (kind !== "move" || slide.current <= 0) return;
       // The release itself counts: a pause before letting go means no flick.
       samples.push({ t: up.timeStamp, x: up.clientX });
