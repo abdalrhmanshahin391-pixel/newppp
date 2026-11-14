@@ -96,8 +96,8 @@ import type { MyBookSource } from "@/components/books/mine/my-book-source";
 import { drawWidth } from "@/lib/user-books";
 import "@/components/rita-study/study-meaning.css";
 import "./book-reader.css";
+import { readSplit, SPLIT_KEY, useWide } from "./reader-layout";
 
-const SPLIT_KEY = "uzyra-book-split";
 /** Per browser: how the page fits ("page": all of it in view; "width": the pane's width). */
 const FIT_KEY = "uzyra-book-fit";
 /** Per browser: the first-visit tip about selecting was seen. */
@@ -261,31 +261,6 @@ type Picked = { page: number; quote: string; range: Range | null };
 /** An answer in Uzyra's column, with what is needed to ask again. */
 type Answer = BookAnswer & { action: BookTextAction; full: string };
 
-function readSplit(): { rita: number; book: number } | undefined {
-  try {
-    const raw = JSON.parse(window.localStorage.getItem(SPLIT_KEY) ?? "null") as unknown;
-    if (!raw || typeof raw !== "object") return undefined;
-    const { rita, book } = raw as Record<string, unknown>;
-    if (typeof rita !== "number" || typeof book !== "number") return undefined;
-    if (!(rita > 10 && book > 10 && Math.abs(rita + book - 100) < 1)) return undefined;
-    return { rita, book };
-  } catch {
-    return undefined;
-  }
-}
-
-function useWide(min: number): boolean {
-  const [wide, setWide] = useState(true);
-  useEffect(() => {
-    const query = window.matchMedia(`(min-width: ${min}px)`);
-    const update = () => setWide(query.matches);
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, [min]);
-  return wide;
-}
-
 /** Marks the reader's selection so it stays visible after the browser's own selection goes. */
 function markPicked(range: Range | null) {
   const registry = (globalThis as { CSS?: { highlights?: Map<string, unknown> } }).CSS?.highlights;
@@ -338,6 +313,20 @@ export function BookReader({
     staleTime: Infinity,
     gcTime: PAGE_STALE_MS,
   });
+  // A private book's outline is read after its first page is on screen: it joins the manifest then.
+  useEffect(() => {
+    if (!source) return;
+    let live = true;
+    void source.outlineLater.then((outline) => {
+      if (!live || !outline.length) return;
+      queryClient.setQueryData<BookManifest>(["book-manifest", book.id], (old) =>
+        old ? { ...old, outline } : old,
+      );
+    });
+    return () => {
+      live = false;
+    };
+  }, [book.id, queryClient, source]);
   // Until it answers, pages load the phase 1 way (it is one small request).
   const manifest = manifestOf.data ?? null;
   const lastShape = useRef(1.414);

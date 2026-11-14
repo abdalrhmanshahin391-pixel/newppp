@@ -16,6 +16,7 @@ import {
   renameMyBook,
   retryMyBook,
 } from "@/lib/user-books-data";
+import { forgetMyBookFile, keepMyBookFile } from "./my-book-file";
 import { coverFromFile, myBookCover } from "./my-book-pdf";
 import "./my-books.css";
 
@@ -67,8 +68,12 @@ export function MyBooksShelf({ ui, userId }: { ui: Lang; userId: string }) {
     setSending(null);
     retryFor.current = null;
     if (!result.ok && result.message) setMessage(result.message);
-    // The cover is drawn from the file still on this device, so it shows at once.
-    if (result.ok) void coverFromFile(result.book, file);
+    // The cover is drawn from the file still on this device, so it shows at once; the file is
+    // kept here too, so the book opens without downloading it again.
+    if (result.ok) {
+      void coverFromFile(result.book, file);
+      void keepMyBookFile(result.book, file);
+    }
     await refresh();
   };
 
@@ -76,6 +81,7 @@ export function MyBooksShelf({ ui, userId }: { ui: Lang; userId: string }) {
     setBusy(true);
     try {
       await deleteMyBook(book);
+      void forgetMyBookFile(book.id);
       setConfirm(null);
       setOpen(null);
       setMessage("");

@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { BookOpening } from "@/components/books/reader/BookOpening";
 import { BookReader } from "@/components/books/reader/BookReader";
+import type { OpenStage } from "@/components/books/mine/my-book-pdf";
 import {
   openMyBookSource,
   readPlace,
@@ -14,12 +15,15 @@ import type { ReaderBook } from "@/lib/book-reader-data";
 import { clampPage } from "@/lib/user-books";
 import { loadMyBook } from "@/lib/user-books-data";
 
-type MineSearch = { page?: number };
+type MineSearch = { page?: number; debug?: 1 };
 
 export const Route = createFileRoute("/books_/mine/$bookId")({
   validateSearch: (search: Record<string, unknown>): MineSearch => {
     const page = Math.floor(Number(search.page));
-    return Number.isFinite(page) && page >= 1 && page <= 5000 ? { page } : {};
+    return {
+      ...(Number.isFinite(page) && page >= 1 && page <= 5000 ? { page } : {}),
+      ...(String(search.debug) === "1" ? { debug: 1 as const } : {}),
+    };
   },
   head: () => ({
     meta: [{ title: "Your book — Uzyra" }, { name: "robots", content: "noindex" }],
@@ -33,7 +37,10 @@ export const Route = createFileRoute("/books_/mine/$bookId")({
  */
 function MyBookRoute() {
   const { bookId } = Route.useParams();
-  const { page } = Route.useSearch();
+  const search = Route.useSearch();
+  const { page } = search;
+  // Read once: the reader rewrites the address with the page number as pages turn.
+  const [debug] = useState(Boolean(search.debug));
   const navigate = useNavigate();
   const ui = useUiLanguage();
   const { user, loading } = useAuth();
@@ -50,12 +57,16 @@ function MyBookRoute() {
   // The file is opened once per visit, and closed (its pictures let go) on leaving.
   const [source, setSource] = useState<MyBookSource | null>(null);
   const [openFailed, setOpenFailed] = useState(false);
+  const [stage, setStage] = useState<OpenStage | null>(null);
   useEffect(() => {
     if (!ready) return;
     let live = true;
     let opened: MyBookSource | null = null;
     setOpenFailed(false);
-    openMyBookSource(ready).then(
+    openMyBookSource(ready, {
+      onStage: (next) => live && setStage(next),
+      debug: Boolean(debug),
+    }).then(
       (s) => {
         if (!live) return s.close();
         opened = s;
@@ -95,14 +106,17 @@ function MyBookRoute() {
 
   if (reader && source && user)
     return (
-      <BookReader
-        key={reader.id}
-        book={reader}
-        userId={user.id}
-        startPage={clampPage(start.page, source.total)}
-        resumed={start.resumed}
-        source={source}
-      />
+      <>
+        <BookReader
+          key={reader.id}
+          book={reader}
+          userId={user.id}
+          startPage={clampPage(start.page, source.total)}
+          resumed={start.resumed}
+          source={source}
+        />
+        {debug && <DebugPanel source={source} />}
+      </>
     );
 
   const missing = book.isError || book.data === null || (book.data && book.data.status !== "ready");
@@ -115,21 +129,58 @@ function MyBookRoute() {
         ? "ما قدرت أفتح ملف الكتاب. تأكد من النت وجرّب كمان مرة."
         : "The book's file could not be opened. Check the connection and try again."
       : "";
+  if (!message)
+    return <BookOpening title={book.data?.title ?? ""} status={openingLine(stage, ui === "ar")} />;
   return (
     <div
       className="edith-premium grid min-h-[100dvh] place-items-center bg-[#f4f4f8] p-6 text-[var(--pp-ink)]"
       dir={ui === "ar" ? "rtl" : "ltr"}
     >
-      {message ? (
-        <div className="grid max-w-sm justify-items-center gap-4 text-center">
-          <p className="text-[16px]">{message}</p>
-          <Link to="/books" className="bk-btn">
-            {ui === "ar" ? "المكتبة" : "The library"}
-          </Link>
-        </div>
-      ) : (
-        <Loader2 size={24} className="animate-spin text-[var(--pp-muted)]" aria-label="…" />
-      )}
+      <div className="grid max-w-sm justify-items-center gap-4 text-center">
+        <p className="text-[16px]">{message}</p>
+        <Link to="/books" className="bk-btn">
+          {ui === "ar" ? "المكتبة" : "The library"}
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/** One line under the cube while the book opens. */
+function openingLine(stage: OpenStage | null, ar: boolean): string {
+  if (stage?.step === "file")
+    return stage.share !== null && stage.share > 0 && stage.share < 1
+      ? ar
+        ? `عم بنزّل الكتاب… ${Math.round(stage.share * 100)}%`
+        : `Downloading the book… ${Math.round(stage.share * 100)}%`
+      : ar
+        ? "عم بنزّل الكتاب…"
+        : "Downloading the book…";
+  if (stage?.step === "page") return ar ? "عم بجهّز أول صفحة…" : "Getting the first page ready…";
+  return ar ? "عم بفتح الكتاب…" : "Opening the book…";
+}
+
+/** `?debug=1`: where the time went on this device, so a slow book can be explained. */
+function DebugPanel({ source }: { source: MyBookSource }) {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const timer = window.setInterval(() => tick((n) => n + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const d = source.debug;
+  const words = Object.entries(d.words)
+    .slice(-6)
+    .map(([p, n]) => `${p}:${n}`)
+    .join(" ");
+  return (
+    <div className="bkr-debug" dir="ltr" aria-hidden="true">
+      {[
+        `pdf.js: ${d.mode === "worker" ? "worker ✓" : d.mode === "page" ? "ON THE PAGE (slow)" : "?"}`,
+        `file: ${d.from}${d.from === "network" ? ` · parts ${d.parts}` : ""}`,
+        `open ${d.openMs} ms · first page ${d.firstPageMs ?? "…"} ms`,
+        `slowest page drawing ${d.slowestDrawMs} ms`,
+        `words per page: ${words || "…"}`,
+      ].join("\n")}
     </div>
   );
 }

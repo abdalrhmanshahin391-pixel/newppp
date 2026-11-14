@@ -6,6 +6,7 @@ import {
   snippetAround,
   textDirection,
   freeSlot,
+  myBookFileKey,
   titleFromFile,
   USER_BOOK_MAX_BYTES,
   userBookError,
@@ -106,3 +107,13 @@ test("snippetAround marks the match the way the library search does", () => {
   assert.ok(snip.startsWith("…") && snip.endsWith("…") && snip.includes("⟦word⟧"));
 });
 
+test("the device copy of a book's file is named by the book and the file", () => {
+  const a = myBookFileKey({ id: "b1", file_path: "u/b1/one.pdf" });
+  assert.equal(a, "/__uzyra-my-book/b1?file=u%2Fb1%2Fone.pdf");
+  assert.notEqual(
+    myBookFileKey({ id: "b1", file_path: "u/b1/two.pdf" }),
+    a,
+    "a new file, a new name",
+  );
+  assert.equal(new URL(a, "https://ritajet.com").pathname, "/__uzyra-my-book/b1");
+});

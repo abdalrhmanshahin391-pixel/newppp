@@ -14,7 +14,23 @@ import {
   type ViewportLike,
 } from "@/lib/books-reader";
 import { drawWidth, placeKey, snippetAround, textDirection, type UserBook } from "@/lib/user-books";
-import { openMyBook, type PdfDoc } from "./my-book-pdf";
+import { openMyBook, type OpenStage, type PdfDoc } from "./my-book-pdf";
+
+/** What `?debug=1` shows on the reader: where the time went, measured on this device. */
+export type MyBookDebug = {
+  /** pdf.js on its own worker thread, or on the page itself (slower; it can stall the screen). */
+  mode: "worker" | "page" | "?";
+  from: "device" | "network";
+  /** The server answers parts of the file (206), the whole file (200), or the check failed. */
+  parts: string;
+  /** Milliseconds: the file opened; the first page drawn; its words read. */
+  openMs: number;
+  firstPageMs: number | null;
+  /** Selectable words found on each page read so far. */
+  words: Record<number, number>;
+  /** The page drawings that took longest, in milliseconds. */
+  slowestDrawMs: number;
+};
 
 export type MyBookSource = {
   /** Every page's size (the first page's for all; the true one comes with each page) and outline. */
@@ -30,6 +46,9 @@ export type MyBookSource = {
   /** The picture of `path` is no longer cached by the reader: its address can go. */
   release(path: string): void;
   close(): void;
+  /** The book's outline, read after the first page is on screen (an outline can be long). */
+  outlineLater: Promise<BookManifest["outline"]>;
+  debug: MyBookDebug;
 };
 
 /** Search reads at most this many pages (a private book is at most 50 MB). */
@@ -75,9 +94,40 @@ async function readOutline(doc: PdfDoc, total: number): Promise<[string, number,
   return cleanOutline(flat, total);
 }
 
+/** The widest page drawing when pdf.js runs on the page itself (smaller drawings stall less). */
+const PAGE_MODE_MAX_WIDTH = 1100;
+
 /** Opens the book; throws when the file cannot be read. */
-export async function openMyBookSource(book: UserBook): Promise<MyBookSource> {
-  const doc: PdfDoc = await openMyBook(book);
+export async function openMyBookSource(
+  book: UserBook,
+  {
+    onStage,
+    debug: measure = false,
+  }: { onStage?: (stage: OpenStage) => void; debug?: boolean } = {},
+): Promise<MyBookSource> {
+  const began = performance.now();
+  const { doc, from, link }: { doc: PdfDoc; from: "device" | "network"; link: string | null } =
+    await openMyBook(book, onStage);
+  const { pdfMode } = await import("@/lib/pdf-page-render");
+  const onPage = pdfMode() === "page";
+  const debug: MyBookDebug = {
+    mode: pdfMode() ?? "?",
+    from,
+    parts: from === "device" ? "device copy" : "…",
+    openMs: Math.round(performance.now() - began),
+    firstPageMs: null,
+    words: {},
+    slowestDrawMs: 0,
+  };
+  if (measure && link)
+    void fetch(link, { headers: { Range: "bytes=0-1" } })
+      .then((r) => {
+        debug.parts = `${r.status}${r.headers.get("content-range") ? " +range" : ""}`;
+        return r.body?.cancel();
+      })
+      .catch(() => {
+        debug.parts = "check failed";
+      });
   const total = Math.max(1, Number(doc.numPages) || 1);
   const first = await doc.getPage(1);
   const base = first.getViewport({ scale: 1 });
@@ -91,6 +141,7 @@ export async function openMyBookSource(book: UserBook): Promise<MyBookSource> {
       const viewport = pdfPage.getViewport({ scale: 1 }) as ViewportLike;
       const content = await pdfPage.getTextContent();
       const { text, runs } = pageTextFromItems(content.items as TextItemLike[], viewport);
+      debug.words[page] = runs.length;
       return { page, text, runs };
     })();
     words.set(page, job);
@@ -100,9 +151,10 @@ export async function openMyBookSource(book: UserBook): Promise<MyBookSource> {
     return job;
   };
 
-  const [outline, firstWords] = await Promise.all([
-    readOutline(doc, total),
+  // The first page's words decide the book's direction; a slow page does not hold the book up.
+  const firstWords = await Promise.race([
     readWords(1).catch(() => null),
+    new Promise<null>((done) => setTimeout(() => done(null), 1500)),
   ]);
   const shape: Omit<ManifestPage, "page"> = {
     width: base.width,
@@ -115,9 +167,24 @@ export async function openMyBookSource(book: UserBook): Promise<MyBookSource> {
   };
   const manifest: BookManifest = {
     pages: Array.from({ length: total }, (_, i) => ({ page: i + 1, ...shape })),
-    outline,
+    outline: [],
     dir: textDirection(firstWords?.text ?? ""),
   };
+  let firstShown: () => void = () => undefined;
+  const shown = new Promise<void>((done) => (firstShown = done));
+  const outlineLater = shown
+    .then(() => readOutline(doc, total))
+    .catch(() => [] as BookManifest["outline"]);
+  // Read from the network: once the first page is on screen and things are quiet, a copy of the
+  // whole file is kept on this device, so the next visit opens from here.
+  if (from === "network" && link)
+    void shown.then(() =>
+      setTimeout(() => {
+        void import("./my-book-file").then(({ keepMyBookFileFrom }) =>
+          keepMyBookFileFrom(book, link),
+        );
+      }, 2500),
+    );
 
   // One page is drawn at a time; the reader asks for the page on screen first.
   let queue: Promise<unknown> = Promise.resolve();
@@ -126,16 +193,29 @@ export async function openMyBookSource(book: UserBook): Promise<MyBookSource> {
   let closed = false;
 
   const view = (page: number, need: number): Promise<PageView> => {
-    const width = drawWidth(need);
+    const width = onPage ? Math.min(PAGE_MODE_MAX_WIDTH, drawWidth(need)) : drawWidth(need);
     const path = `mine/${book.id}/${page}/${width}`;
     const running = drawing.get(path);
     if (running) return running;
-    const job = queue.then(async (): Promise<PageView> => {
+    // The page's words (needed anyway to select on it) say whether it has any text at all. They
+    // are read beside the drawing, never holding the next page's drawing up.
+    const text = readWords(page).catch(() => null);
+    const hasText = async () => {
+      const found = await Promise.race([
+        text,
+        new Promise<"slow">((done) => setTimeout(() => done("slow"), 1200)),
+      ]);
+      return found === "slow" || found === null || found.runs.length > 0;
+    };
+    const drawn = queue.then(async (): Promise<Omit<PageView, "hasText">> => {
       if (closed) throw new Error("closed");
+      // On the page itself, a breath between drawings lets taps and selection through.
+      if (onPage) await new Promise((done) => setTimeout(done, 16));
+      const started = performance.now();
       const pdfPage = await doc.getPage(page);
       const size = pdfPage.getViewport({ scale: 1 });
       const known = urls.get(path);
-      const meta = { page, width: size.width, height: size.height, imagePath: path, hasText: true };
+      const meta = { page, width: size.width, height: size.height, imagePath: path };
       if (known) return { ...meta, url: known };
       const viewport = pdfPage.getViewport({ scale: width / size.width });
       const canvas = document.createElement("canvas");
@@ -155,9 +235,15 @@ export async function openMyBookSource(book: UserBook): Promise<MyBookSource> {
       if (!blob) throw new Error("no_picture");
       const url = URL.createObjectURL(blob);
       urls.set(path, url);
+      debug.slowestDrawMs = Math.max(debug.slowestDrawMs, Math.round(performance.now() - started));
+      if (debug.firstPageMs === null) {
+        debug.firstPageMs = Math.round(performance.now() - began);
+        firstShown();
+      }
       return { ...meta, url };
     });
-    queue = job.catch(() => undefined);
+    queue = drawn.catch(() => undefined);
+    const job = drawn.then(async (picture) => ({ ...picture, hasText: await hasText() }));
     drawing.set(path, job);
     void job.finally(() => drawing.delete(path)).catch(() => undefined);
     return job;
@@ -216,8 +302,11 @@ export async function openMyBookSource(book: UserBook): Promise<MyBookSource> {
       // The reader's picture cache may still be decoding from it for a moment.
       window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
     },
+    outlineLater,
+    debug,
     close() {
       closed = true;
+      firstShown();
       for (const url of urls.values()) URL.revokeObjectURL(url);
       urls.clear();
       void doc.destroy?.();

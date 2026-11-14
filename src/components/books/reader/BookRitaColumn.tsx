@@ -23,14 +23,17 @@ export function BookRitaColumn({
   answers,
   onRetry,
   hint,
+  thinking = false,
 }: {
   answers: BookAnswer[];
   onRetry: (answer: BookAnswer) => void;
   hint: string;
+  /** The cube thinks without an answer on the way (the book is still opening). */
+  thinking?: boolean;
 }) {
   const levels = useRef<OrbLevels>({ input: 0, output: 0 });
   const chatting = answers.length > 0;
-  const busy = answers.some((answer) => answer.state === "loading");
+  const busy = thinking || answers.some((answer) => answer.state === "loading");
   const last = answers[answers.length - 1];
   return (
     <main
@@ -39,7 +42,7 @@ export function BookRitaColumn({
       style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <p className="sr-only" role="status" aria-live="polite">
-        {busy ? "يوزرا بتكتب…" : ""}
+        {thinking ? hint : busy ? "يوزرا بتكتب…" : ""}
       </p>
       {chatting ? (
         <StickyScroll follow={`${answers.length}:${last?.state}:${last?.text.length ?? 0}`}>
@@ -90,7 +93,9 @@ export function BookRitaColumn({
         <div className="uz-rc-hero">
           <UzyraWordmark size={12} withMark={false} className="uz-rc-brand" />
           <div className="uz-rc-spot is-hero" data-cube-spot="hero" />
-          <p className="uz-rc-word">{hint}</p>
+          <p className="uz-rc-word" dir="auto">
+            {hint}
+          </p>
         </div>
       )}
       <div className="uz-rc-dock">
