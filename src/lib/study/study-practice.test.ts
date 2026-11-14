@@ -125,15 +125,17 @@ test("model replies are read with or without a code fence", () => {
   assert.equal(looseText("Grüße, Straße!"), "grusse strasse");
 });
 
-test("the ring retains practice beside the five help services, disabled for unusable selections", () => {
+test("the wheel keeps its eight slices in fixed places, practice disabled for unusable selections", () => {
+  // Clockwise from the top; the same in the lessons and the books.
   const expected = [
     "explain",
     "meaning",
-    "word_by_word",
-    "why_form",
-    "common_mistake",
     "make_cards",
     "make_mcq",
+    "compare_arabic",
+    "why_form",
+    "word_by_word",
+    "common_mistake",
   ];
   for (const kind of [
     "word",
@@ -176,14 +178,13 @@ test("the language ring offers the three choices with the current one ticked, an
   assert.equal(languageFromId("make_mcq"), null);
 });
 
-test("a selection in Uzyra's answers offers only the simple explanation (and the language)", () => {
+test("a selection in Uzyra's answers keeps the wheel: the explain slice explains simply, the rest dim", () => {
   const items = replyRingItems();
-  assert.deepEqual(
-    items.map((item) => item.id),
-    ["explain_reply", "lang"],
-  );
+  assert.equal(items.length, 8);
+  assert.equal(items[0]!.id, "explain_reply");
   assert.equal(items[0]!.tone, "reply");
   assert.equal(items[0]!.label, "اشرحلي ببساطة");
+  assert.ok(items.slice(1).every((item) => item.disabled && item.disabledReason));
   // Never offered for a piece of the guide.
   for (const kind of ["word", "sentence", "rule", "table_cells"] as const)
     assert.ok(!availableActions(kind).includes("explain_reply"));

@@ -65,12 +65,25 @@ Reduced motion disables selection animations. The call-start hold uses a quiet s
 small pitch lift and a soft two-note completion; release, cancellation, blur and mute fade the
 hold sound out immediately while its visual fill may drain. Existing hold timing is unchanged.
 
-The existing draggable study circle offers «اشرحلي», «معنى ونطق», «فكّك الجملة», «ليش هيك؟» and «انتبه للغلطة». Explanation uses a white
-disc with an ink icon; meaning uses the blue action disc. Both inherit the radial opening,
-labels and selection strip. Unsuitable selections leave the service visible but disabled.
-Explanation language is a labelled tool in the selection strip. «فلاش كاردز» and «تمارين اختيار»
-follow the five help services, using the existing stacked-card and checklist icons. The temporary
-question preview is not an entry. All seven are reachable through existing «المزيد» pagination.
+**The study wheel** (`RadialMenu.tsx`, `wheel-layout.ts`) is the same in the lessons and the books:
+one whole wheel of eight touching slices that grows out of the circle, each slice always in the same
+place and colour so the hand learns it. Clockwise from the top: «اشرحلي» (blue 110 168 255), «معنى
+ونطق» (teal 62 224 200), «فلاش كاردز» (amber 255 201 92), «تمارين» (violet 183 155 255), «بالعربي»
+(green 126 224 143), «ليش هيك؟» (pink 255 143 200), «فكّك الجملة» (sky 95 214 255), «انتبه للغلطة»
+(coral 255 138 122). The slices are dark navy glass (#0a1330 → #13224f from the centre out) with
+hairline #9cc1ff seams; each has its icon in its colour and a thin rim light of that colour. The slice
+under the finger glows in its colour from the rim inwards, its rim thickens and glows, a short
+pointer arc on the inner ring turns to it, and a pill above the wheel names it (or, for a dimmed
+slice, says what to select). A slice that does not suit the selection stays in its place, dimmed:
+the number and the places never change. Around the wheel, a hairline dial with fine ticks (a long
+one at each slice's middle) turns into place as it opens; a dashed ring turns slowly round the
+circle. Near an edge or a corner the circle slides inwards (340ms) until the whole wheel fits, and
+slides back on closing; on a phone the wheel shrinks (104–142px radius) but stays whole. Hold the
+circle and move towards a slice and let go: only the direction counts (a short move up is
+«اشرحلي»); tapping a slice, and arrows/Enter/Esc work too, and every slice plays its note. The
+language choice and «في غلط بالدرس؟» are tools in the selection strip; the language choices open as
+four slices in the same wheel. In Uzyra's answers (dark red) the explain slice becomes «اشرحلي
+ببساطة» and the others dim. Reduced motion keeps only fades.
 
 Practice reuses the selection-based generators and their authentication, quotas and validation.
 Results open in a single white workspace (maximum 672px), a bottom sheet on phones, with the
@@ -114,9 +127,7 @@ exactly one preventive example: «الغلط»، «الصح»، «السبب», 
 only in the target mistake. It never calls correct selected text wrong, quizzes the learner, or
 invents an example when the guide context is insufficient. Arabic rules are supported too.
 In a call it speaks one short warning and puts the same three lines in a small written sheet.
-All five services share the existing loading, stop, retry and request-replacement behaviour.
-When all seven cannot fit around the saved circle position, the existing «المزيد» pagination
-keeps the remaining services reachable; touch targets and labels keep their established sizes.
+All the services share the existing loading, stop, retry and request-replacement behaviour.
 
 This is the source of truth for every visual change. It was written from the code that is
 already shipped (`src/styles.css`, section "Home page theme", and the Uzyra components), not
@@ -1216,7 +1227,7 @@ movement). A sheet the model wrote badly still shows as plain lines. Short answe
 A part of one of Uzyra's answers (her words or her sheet) can be selected in the left column. That
 selection is dark red (#8E1B2B, white text), never the guide's blue, and stays marked when the browser's
 own selection goes. The circle takes a dark red ring, the quote strip a dark red edge with «من جواب
-يوزرا», and the ring offers one option only, «اشرحلي ببساطة» (dark red disc), plus the language. She
+يوزرا», and the wheel's explain slice becomes «اشرحلي ببساطة» (the other slices dim). She
 answers that part as to a complete beginner: one very simple sentence and a small sheet. A selection
 across two answers, or with the learner's own words, shows «حدّد من رد واحد ليوزرا.» The newest
 selection wins: selecting in the guide clears the left one, and the other way round.
