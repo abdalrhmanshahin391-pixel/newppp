@@ -89,8 +89,9 @@ LLM_MODEL = "openai/gpt-oss-120b"
 # Room for one spoken sentence plus a written sheet (a small table, rules and examples).
 LLM_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_MAX_COMPLETION_TOKENS", "900"))
 # An explanation ("اشرح", "فصّلي كل كلمة") shares its budget with the model's thinking, and 450 cut
-# the longest ones off. Quick answers keep the small budget and low effort.
-LLM_EXPLAIN_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_EXPLAIN_MAX_COMPLETION_TOKENS", "1300"))
+# the longest ones off. It now also writes the sheet (table, rules, examples), and 1300 left two of
+# about 40 explanation probes empty. Quick answers keep the small budget and low effort.
+LLM_EXPLAIN_MAX_COMPLETION_TOKENS = int(os.getenv("RITA_LLM_EXPLAIN_MAX_COMPLETION_TOKENS", "2000"))
 LLM_EXPLAIN_REASONING_EFFORT = os.getenv("RITA_LLM_EXPLAIN_REASONING_EFFORT", "medium")
 TTS_PROVIDER = os.getenv("RITA_TTS_PROVIDER", "cartesia").strip().casefold()
 TTS_MODEL = "sonic-3.6"
@@ -230,7 +231,7 @@ FREE CONVERSATION
   general-knowledge answer, thanks or a stop word.
 - End with that question, then a short {language} phrase in quotes that fits it and starts the
   answer, for example: شو بتشتغل؟ "I work as …". A beginner then knows what to say. Never quote the
-  question itself and never repeat a phrase you already gave.
+  question itself, and never repeat a question or a phrase you already gave in this chat.
 - In Arabic give no command before a phrase (not قول، جرّب، استخدم); offer a corrected sentence as
   الصح: "…". No slashes for gender (إنت/إنتِ).
 - Choose the next topic yourself from what they said. Never ask which topic or skill they want twice.
