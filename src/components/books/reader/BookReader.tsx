@@ -30,6 +30,8 @@ import { StudyPracticePanel, type PracticeView } from "@/components/rita-study/S
 import { DEFAULT_ORB, snapToEdge, type OrbPosition } from "@/components/rita-study/orb-position";
 import { readStudyMemory, writeStudyMemory } from "@/components/rita-study/study-memory";
 import { installSoundUnlock, setSoundOn, soundOn } from "@/components/rita-study/tech-sound";
+import { attachTechSelect, drawSelectionFx } from "@/components/rita-study/tech-select";
+import { readReplySelection } from "@/components/rita-study/reply-selection";
 import {
   KIND_LABEL,
   LANGUAGE_NAMES,
@@ -257,9 +259,23 @@ const DISABLED_REASON: Partial<Record<StudyAction, string>> = {
   compare_arabic: "حدّد عبارة أو جملة من الصفحة",
 };
 
-type Picked = { page: number; quote: string; range: Range | null };
+/**
+ * What the reader selected: on the page, or (with `reply`) in one of Uzyra's answers, whose whole
+ * text then stands for the page's text in the request (as in the lessons).
+ */
+type Picked = { page: number; quote: string; range: Range | null; reply?: string };
 /** An answer in Uzyra's column, with what is needed to ask again. */
-type Answer = BookAnswer & { action: BookTextAction; full: string };
+type Answer = BookAnswer & { action: BookTextAction; full: string; reply?: string };
+
+/**
+ * The lessons' "electronic" selection boxes: blue on the page, dark red in Uzyra's answers. They
+ * stay drawn after the browser's own selection goes (a tap on the circle can clear it).
+ */
+function paintPicked(next: Picked | null, page: HTMLElement | null, replies: HTMLElement | null) {
+  if (page) drawSelectionFx(document, next && !next.reply ? next.range : null, { host: page });
+  if (replies)
+    drawSelectionFx(document, next?.reply ? next.range : null, { host: replies, tone: "reply" });
+}
 
 /** Marks the reader's selection so it stays visible after the browser's own selection goes. */
 function markPicked(range: Range | null) {
@@ -513,11 +529,19 @@ export function BookReader({
     });
   }, [book.id, queryClient, source]);
 
-  /** What the server needs for a book read from its PDF: the page's own text, read here. */
-  async function ownPage(onPage: number): Promise<{ own?: true; pageText?: string }> {
+  /**
+   * What the server needs besides the selection: for a book read from its PDF, the page's own
+   * text (read here); for a selection in Uzyra's answer, that answer's text instead.
+   */
+  async function ownPage(
+    onPage: number,
+    reply?: string,
+  ): Promise<{ own?: true; pageText?: string }> {
+    const own = source?.kind === "mine" ? { own: true as const } : {};
+    if (reply) return { ...own, pageText: reply.slice(0, 60000) };
     if (!source) return {};
     const data = await queryClient.ensureQueryData(wordsQuery(book.id, onPage, source));
-    return source.kind === "mine" ? { own: true, pageText: data.text } : { pageText: data.text };
+    return { ...own, pageText: data.text };
   }
 
   // ---- the selection ---------------------------------------------------------------------------
@@ -531,10 +555,12 @@ export function BookReader({
   // Only the words of the page on screen can be selected.
   pageRef.current = words;
 
+  const ritaBox = useRef<HTMLDivElement | null>(null);
   const keepPicked = useCallback((next: Picked | null) => {
     pickedRef.current = next;
     setPicked(next);
-    markPicked(next?.range ?? null);
+    markPicked(next && !next.reply ? next.range : null);
+    paintPicked(next, textLayer.current, ritaBox.current);
   }, []);
 
   useEffect(() => {
@@ -548,7 +574,9 @@ export function BookReader({
         const layer = textLayer.current;
         const data = pageRef.current;
         if (!selection || selection.isCollapsed || !selection.rangeCount || !layer || !data) {
-          if (!menuOpenRef.current && selection?.isCollapsed) keepPicked(null);
+          // A selection in an answer is kept by its own engine (above).
+          if (!menuOpenRef.current && selection?.isCollapsed && !pickedRef.current?.reply)
+            keepPicked(null);
           return;
         }
         const range = selection.getRangeAt(0);
@@ -568,9 +596,110 @@ export function BookReader({
     };
   }, [keepPicked]);
 
-  // A new page: the old selection goes with the old page.
+  // The page's words: the lessons' selection (press and drag with a pen or mouse, hold then drag
+  // with a finger, double tap for the sentence), with its boxes and sounds.
+  const [layerEl, setLayerEl] = useState<HTMLDivElement | null>(null);
+  // The page view hands its layer over on every render (null, then the same element): only a
+  // real change is kept, or the reader would render again and again.
+  const setTextLayer = useCallback((node: HTMLDivElement | null) => {
+    textLayer.current = node;
+    if (node) setLayerEl((was) => (was === node ? was : node));
+    else queueMicrotask(() => !textLayer.current && setLayerEl(null));
+  }, []);
   useEffect(() => {
-    if (pickedRef.current && pickedRef.current.page !== page) {
+    const layer = layerEl;
+    if (!layer) return;
+    const stop = attachTechSelect({
+      doc: document,
+      layer,
+      host: layer,
+      scope: "[data-book-text]",
+      toSheet: (x, y) => ({ x, y }),
+      onChange: (range) => {
+        if (!range) {
+          if (!menuOpenRef.current && !pickedRef.current?.reply) keepPicked(null);
+          return;
+        }
+        const data = pageRef.current;
+        const found = data ? pageQuote(range.toString(), data.text, 0) : null;
+        if (!data || !found) return;
+        keepPicked({ page: data.page, quote: found.quote, range: range.cloneRange() });
+        setTip(false);
+        writeStore(TIP_KEY, "1");
+      },
+    });
+    // Still selected (a re-render made the layer again): its boxes come back.
+    paintPicked(pickedRef.current, layer, null);
+    return () => {
+      stop();
+      layer.querySelector("#st-fx")?.remove();
+    };
+  }, [keepPicked, layerEl]);
+
+  // Uzyra's answers: the same selection in her dark red, as in the lessons.
+  const [replyEl, setReplyEl] = useState<HTMLDivElement | null>(null);
+  const setRitaBox = useCallback((node: HTMLDivElement | null) => {
+    ritaBox.current = node;
+    setReplyEl(node);
+  }, []);
+  useEffect(() => {
+    const root = replyEl;
+    if (!root) return;
+    const stop = attachTechSelect({
+      doc: document,
+      layer: root,
+      host: root,
+      tone: "reply",
+      scope: "[data-reply-text]",
+      toSheet: (x, y) => ({ x, y }),
+      onChange: (range) => {
+        if (!range) {
+          if (!menuOpenRef.current && pickedRef.current?.reply) keepPicked(null);
+          return;
+        }
+        const read = readReplySelection(root);
+        if (!read || "problem" in read) return;
+        const answer = (range.startContainer.parentElement?.closest("[data-answer-page]") ??
+          null) as HTMLElement | null;
+        keepPicked({
+          page: Number(answer?.dataset.answerPage) || pageNow.current,
+          quote: read.exact,
+          range: read.range,
+          reply: read.reply,
+        });
+      },
+    });
+    let redrawFrame = 0;
+    const redraw = () => {
+      cancelAnimationFrame(redrawFrame);
+      redrawFrame = requestAnimationFrame(() => {
+        const now = pickedRef.current;
+        if (now?.reply) paintPicked(now, null, root);
+      });
+    };
+    root.addEventListener("scroll", redraw, true);
+    const resize = new ResizeObserver(redraw);
+    resize.observe(root);
+    return () => {
+      cancelAnimationFrame(redrawFrame);
+      resize.disconnect();
+      root.removeEventListener("scroll", redraw, true);
+      stop();
+      root.querySelector("#st-fx-reply")?.remove();
+    };
+  }, [keepPicked, replyEl]);
+
+  // The page's boxes follow a zoom or a new size of the pane.
+  useEffect(() => {
+    const now = pickedRef.current;
+    if (!now || now.reply) return;
+    const frame = requestAnimationFrame(() => paintPicked(now, textLayer.current, null));
+    return () => cancelAnimationFrame(frame);
+  }, [pageWidth, zoom, wide, tab]);
+
+  // A new page: the old selection goes with the old page (a selection in an answer stays).
+  useEffect(() => {
+    if (pickedRef.current && !pickedRef.current.reply && pickedRef.current.page !== page) {
       document.getSelection()?.removeAllRanges();
       keepPicked(null);
     }
@@ -614,7 +743,13 @@ export function BookReader({
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [phrase, setPhrase] = useState<{ text: string; context: string } | null>(null);
 
-  async function ask(action: BookTextAction, quote: string, onPage: number, replace?: string) {
+  async function ask(
+    action: BookTextAction,
+    quote: string,
+    onPage: number,
+    replace?: string,
+    reply?: string,
+  ) {
     const id = crypto.randomUUID();
     const entry: Answer = {
       id,
@@ -625,6 +760,7 @@ export function BookReader({
       state: "loading",
       text: "",
       full: quote,
+      reply,
     };
     setAnswers((list) =>
       replace ? list.map((a) => (a.id === replace ? entry : a)) : [...list, entry].slice(-30),
@@ -641,7 +777,7 @@ export function BookReader({
           selection: quote,
           action,
           language: explanation.value,
-          ...(await ownPage(onPage)),
+          ...(await ownPage(onPage, reply)),
         },
       });
       if (result.ok) settle({ state: "done", text: result.text });
@@ -657,14 +793,24 @@ export function BookReader({
   const [making, setMaking] = useState<PracticeAction | null>(null);
   const [practiceView, setPracticeView] = useState<PracticeView | null>(null);
   const [practiceOpen, setPracticeOpen] = useState(false);
-  const lastPractice = useRef<{ action: PracticeAction; quote: string; page: number } | null>(null);
+  const lastPractice = useRef<{
+    action: PracticeAction;
+    quote: string;
+    page: number;
+    reply?: string;
+  } | null>(null);
   const practiceVersion = useRef(0);
 
   async function practice(action: PracticeAction, retry = false) {
     if (making) return;
     const origin = retry ? lastPractice.current : picked ? { action, ...picked } : null;
     if (!origin) return;
-    lastPractice.current = { action, quote: origin.quote, page: origin.page };
+    lastPractice.current = {
+      action,
+      quote: origin.quote,
+      page: origin.page,
+      reply: origin.reply,
+    };
     const version = ++practiceVersion.current;
     const requestId = crypto.randomUUID();
     setMenuOpen(false);
@@ -686,7 +832,7 @@ export function BookReader({
           page: origin.page,
           requestId,
           selection: origin.quote,
-          ...(await ownPage(origin.page)),
+          ...(await ownPage(origin.page, origin.reply)),
         },
       };
       if (action === "make_cards") {
@@ -740,10 +886,10 @@ export function BookReader({
     if (!sel || !actions.includes(action)) return;
     if (action === "make_cards" || action === "make_mcq") return void practice(action);
     if (action === "meaning") {
-      const data = pageRef.current;
+      const from = sel.reply ?? pageRef.current?.text;
       setPhrase({
         text: sel.quote,
-        context: data ? (pageQuote(sel.quote, data.text, 600)?.context ?? "") : "",
+        context: from ? (pageQuote(sel.quote, from, 600)?.context ?? "") : "",
       });
       setMenuOpen(false);
       return;
@@ -751,7 +897,7 @@ export function BookReader({
     if ((BOOK_TEXT_ACTIONS as readonly string[]).includes(action)) {
       setMenuOpen(false);
       setPhrase(null);
-      void ask(action as BookTextAction, sel.quote, sel.page);
+      void ask(action as BookTextAction, sel.quote, sel.page, undefined, sel.reply);
     }
   }
 
@@ -1001,7 +1147,7 @@ export function BookReader({
         >
           <div ref={stage} className="bkr-stage">
             <BookPageView
-              ref={textLayer}
+              ref={setTextLayer}
               view={view}
               words={words}
               ratio={lastShape.current}
@@ -1167,13 +1313,17 @@ export function BookReader({
 
   const hint = "حدّد كلمة أو جملة من الصفحة، وبعدين اكبس على الدائرة.";
   const ritaPane = (
-    <div className="flex h-full min-h-0 flex-col bg-white" dir="rtl">
+    <div
+      ref={setRitaBox}
+      className="st-reply-pane relative flex h-full min-h-0 flex-col bg-white"
+      dir="rtl"
+    >
       <BookRitaColumn
         answers={answers}
         hint={hint}
         onRetry={(answer) => {
           const found = answers.find((a) => a.id === answer.id);
-          if (found) void ask(found.action, found.full, found.page, found.id);
+          if (found) void ask(found.action, found.full, found.page, found.id, found.reply);
         }}
       />
     </div>
@@ -1271,6 +1421,7 @@ export function BookReader({
         <FloatingOrb
           ref={orbButton}
           state={orbState}
+          tone={picked?.reply ? "reply" : undefined}
           position={orb}
           onMove={moveOrb}
           open={menuOpen}
@@ -1293,6 +1444,7 @@ export function BookReader({
         <RadialMenu
           ref={radial}
           open={menuOpen}
+          tone={picked?.reply && ringMode === "main" ? "reply" : undefined}
           containerRef={work}
           orbRef={orbButton}
           orbKey={`${orb.x.toFixed(3)},${orb.y.toFixed(3)},${wide ? "w" : "n"},${tab}`}

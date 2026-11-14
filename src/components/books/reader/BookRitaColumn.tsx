@@ -53,7 +53,7 @@ export function BookRitaColumn({
                   <span className="uz-rc-tag">{answer.label}</span>
                   <span dir="auto">«{answer.quote}»</span>
                 </div>
-                <div className="uz-rc-rita uz-msg-in">
+                <div className="uz-rc-rita uz-msg-in" data-answer-page={answer.page}>
                   <div className="uz-rc-meta">
                     <span className="uz-rc-avatar" aria-hidden="true">
                       <UzyraMark />

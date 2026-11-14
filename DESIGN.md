@@ -772,10 +772,13 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     520px the buttons keep only their arrows. Arrows and Page Up/Down turn pages.
   - **Selecting:** the page's words lie see-through over the picture, each piece stretched to the
     width of its words as the browser measures them, so selection matches the picture in Chrome
-    and Safari. Double-click selects a word, dragging selects across lines, and crossing the blank
-    between lines never makes the selection jump (a blank layer under the words while selecting,
-    as pdf.js does). The chosen part stays tinted blue (a CSS highlight) after the browser's own
-    selection goes.
+    and Safari. Selecting is the lessons' own (`tech-select.ts`): a pen or mouse presses on a
+    word and drags, a finger holds a quarter of a second then drags (a plain swipe still turns or
+    scrolls), a double tap picks the sentence and a single tap clears. Every selected word gets
+    a thin glowing blue box (#2b6df0) joined to the next by a wire, each new word makes a short
+    «تي» and the end a chirp; the browser's own selection colour is hidden. In Uzyra's answers
+    (left column) the same selection is dark red (#8e1b2b), the circle and its ring turn red, and
+    a request about it sends that answer as the text (as in the lessons).
   - **Hints:** on the first visit an ink pill at the top of the page area says «حدّد أي كلمة أو
     جملة بإصبعك أو بالماوس، وبعدين اكبس على الدائرة» (× closes it; the first selection retires it
     for good). A picture-only page carries a small dark pill «صفحة صورة بدون نص، ما بتنحدد».

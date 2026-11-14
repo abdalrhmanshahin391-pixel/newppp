@@ -279,6 +279,7 @@ export const BookPageView = forwardRef<
           dir="ltr"
           lang="und"
           data-book-text=""
+          data-seg=""
         >
           {pieces.map((piece) => (
             <span
