@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Download, Share, PlusSquare, X } from "lucide-react";
-import { RitaFace } from "@/components/brand/RitaBrand";
+import { UzyraMark } from "@/components/brand/UzyraMark";
 
 type BIPEvent = Event & {
   prompt: () => Promise<void>;
@@ -11,7 +11,7 @@ function isStandalone() {
   if (typeof window === "undefined") return false;
   return (
     window.matchMedia?.("(display-mode: standalone)").matches ||
-    (window.navigator as any).standalone === true
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true
   );
 }
 
@@ -71,12 +71,15 @@ function IosSheet({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
+        dir="ltr"
         className="rita-install-sheet w-full max-w-sm overflow-hidden rounded-[28px] border p-6 text-[color:var(--pro-ink)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <RitaFace size={52} />
+            <span className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-full bg-[var(--pp-ink)] text-white">
+              <UzyraMark className="h-8 w-6" title="Uzyra" />
+            </span>
             <div>
               <p className="text-[17px] font-black leading-tight">Keep Uzyra one tap away</p>
               <p className="mt-1 text-[13px] text-[color:var(--pro-muted)]">

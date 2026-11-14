@@ -1,73 +1,16 @@
 import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { clampOrb, type OrbPosition } from "./orb-position";
+import { UzyraMark } from "@/components/brand/UzyraMark";
 
 export type OrbState = "idle" | "armed" | "busy";
 
 const SIZE = 56;
 /** Holding still on the circle this long starts "slide to an option" (see RadialMenu). */
 const HOLD_MS = 320;
-const CELL = 7;
-
-/**
- * Zeros and ones falling slowly behind the character, in the site's blues on deep navy. A small
- * canvas at about 12 frames a second; it stops when the tab is hidden and stands still (drawn once)
- * with reduced motion.
- */
-function BinaryRain() {
-  const canvas = useRef<HTMLCanvasElement | null>(null);
-  useEffect(() => {
-    const el = canvas.current;
-    const g = el?.getContext("2d");
-    if (!el || !g) return;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    el.width = SIZE * dpr;
-    el.height = SIZE * dpr;
-    g.scale(dpr, dpr);
-    const columns = Math.ceil(SIZE / CELL);
-    const rows = Math.ceil(SIZE / CELL) + 1;
-    // Each column: its own offset and speed, and a fixed pattern of digits.
-    const cols = Array.from({ length: columns }, (_, i) => ({
-      y: ((i * 37) % 23) * 1.3,
-      speed: 0.35 + ((i * 13) % 7) / 14,
-      digits: Array.from({ length: rows + 4 }, (_, j) => ((i * 7 + j * 3) % 5 < 2 ? "1" : "0")),
-    }));
-    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let frame = 0;
-    let last = 0;
-    const draw = () => {
-      g.fillStyle = "#0b1638";
-      g.fillRect(0, 0, SIZE, SIZE);
-      g.font = `700 ${CELL}px ui-monospace, Menlo, monospace`;
-      g.textAlign = "center";
-      cols.forEach((col, i) => {
-        for (let j = 0; j < rows; j += 1) {
-          const y = ((j * CELL + col.y) % (rows * CELL)) - CELL / 2;
-          const head = j === Math.floor(col.y / CELL) % rows;
-          g.fillStyle = head ? "#9cc1ff" : j % 3 === 0 ? "#2b6df0" : "#1d4fb8";
-          g.globalAlpha = head ? 0.95 : 0.55;
-          g.fillText(col.digits[(j + i) % col.digits.length], i * CELL + CELL / 2, y + CELL);
-        }
-      });
-      g.globalAlpha = 1;
-    };
-    const tick = (now: number) => {
-      frame = requestAnimationFrame(tick);
-      if (document.hidden || now - last < 80) return;
-      last = now;
-      for (const col of cols) col.y += col.speed * 2;
-      draw();
-    };
-    draw();
-    if (!still) frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, []);
-  return <canvas ref={canvas} className="st-orb-rain" aria-hidden="true" />;
-}
 const DRAG_START_PX = 6;
 
 /**
- * The Uzyra circle over the study area: the Uzyra character (waving, or thinking while Uzyra works)
- * in front of falling zeros and ones. Tap it to open the menu; drag it anywhere, over Uzyra
+ * The Uzyra mark over the study area. Tap it to open the menu; drag it anywhere, over Uzyra
  * or over the guide (it never follows the pointer on its own). Its place is kept as a share of the
  * area, so it stays in the same spot when the window or the divider changes. Arrow keys move it
  * while "move" mode is on (no dragging needed).
@@ -153,6 +96,7 @@ export const FloatingOrb = forwardRef<
       }}
       type="button"
       aria-label={label}
+      aria-busy={state === "busy" || undefined}
       aria-keyshortcuts={moving ? "ArrowUp ArrowDown ArrowLeft ArrowRight Escape" : undefined}
       data-state={state}
       data-tone={tone}
@@ -268,14 +212,7 @@ export const FloatingOrb = forwardRef<
         );
       }}
     >
-      <BinaryRain />
-      <img
-        src={state === "busy" ? "/brand-uzyra-think.png" : "/brand-uzyra-wave.png"}
-        alt=""
-        aria-hidden="true"
-        draggable={false}
-        className="st-orb-char"
-      />
+      <UzyraMark className="st-orb-logo" />
       {state === "armed" && <span className="st-orb-dot" aria-hidden="true" />}
     </button>
   );
