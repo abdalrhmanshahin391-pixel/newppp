@@ -944,9 +944,7 @@ export function StudyPage({
               : replyProblem || "حدّد كلمة أو جملة من الدرس، وبعدين اكبس على الدائرة."
           }
           canReport={!replySelection && actions.includes("report")}
-          onLanguage={
-            ringMode === "main" && !replySelection ? () => setRingMode("language") : undefined
-          }
+          onLanguage={ringMode === "main" ? () => setRingMode("language") : undefined}
           busy={false}
           sound={sound}
           autoFocus={openedByKey}
