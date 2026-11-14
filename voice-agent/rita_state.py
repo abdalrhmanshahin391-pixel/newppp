@@ -363,11 +363,13 @@ class RitaSessionState:
             if self.attempt_count >= 2:
                 return (
                     "TURN NOTE: THE LEARNER IS STILL CONFUSED. Change method completely: one concrete "
-                    "everyday example, no grammar terms, none of your previous wording."
+                    "everyday example, no grammar terms, none of your previous wording. At most three short "
+                    "sentences."
                 )
             return (
                 "TURN NOTE: THE LEARNER IS CONFUSED. Explain the same idea again in plain words with "
-                "ONE concrete everyday example. No grammar terms. Do not repeat your previous wording."
+                "ONE concrete everyday example. No grammar terms. Do not repeat your previous wording. "
+                "At most three short sentences."
             )
         if self.response_type == ResponseType.EXPLAIN:
             return (
