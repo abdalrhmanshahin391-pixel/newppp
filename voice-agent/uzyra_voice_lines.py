@@ -6,7 +6,8 @@ made once with Cartesia (the same Layan voice and model as the live call) and ke
 the site (`public/sounds/uzyra/<action>-<n>.mp3`), so nothing is generated while learners use it.
 
 Make them again: Actions > Rita content probe > Run workflow with task "voice-lines" on a branch;
-the workflow writes the files and commits them to that branch.
+the workflow writes the files and commits them to that branch. "only" (action names, comma
+separated) records just those actions, so the lines already in the site keep their takes.
 """
 
 from __future__ import annotations
@@ -34,20 +35,33 @@ LINES: dict[str, tuple[str, ...]] = {
     "summarize_section": ("هاد الملخّص.", "لخّصت القسم."),
     "explain_reply": ("بشكل أبسط.", "خلّيني أبسّطها أكثر."),
     "report": ("وصلت الملاحظة، شكراً.", "سجّلت الملاحظة، شكراً."),
+    "translate": ("هاي الترجمة.", "ترجمتها كاملة."),
 }
 
 
-def line_files() -> list[tuple[str, str]]:
-    """(file name, text) for every line, in a fixed order."""
+def only_actions(only: str = "") -> set[str]:
+    """The actions named in "only" (comma separated); every action when it is empty."""
 
+    named = {part.strip() for part in only.split(",") if part.strip()}
+    unknown = named - set(LINES)
+    if unknown:
+        raise ValueError(f"unknown actions: {', '.join(sorted(unknown))}")
+    return named or set(LINES)
+
+
+def line_files(only: str = "") -> list[tuple[str, str]]:
+    """(file name, text) for every line (or only those actions' lines), in a fixed order."""
+
+    wanted = only_actions(only)
     return [
         (f"{action}-{index + 1}.mp3", text)
         for action, texts in LINES.items()
+        if action in wanted
         for index, text in enumerate(texts)
     ]
 
 
-async def render_lines(api_key: str) -> dict[str, Any]:
+async def render_lines(api_key: str, only: str = "") -> dict[str, Any]:
     """Every line as MP3 (base64), made with Uzyra's call voice; never returns the key."""
 
     import aiohttp
@@ -60,7 +74,7 @@ async def render_lines(api_key: str) -> dict[str, Any]:
     files: dict[str, str] = {}
     problems: list[str] = []
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=60)) as http:
-        for name, text in line_files():
+        for name, text in line_files(only):
             body = {
                 "model_id": MODEL,
                 "transcript": text,

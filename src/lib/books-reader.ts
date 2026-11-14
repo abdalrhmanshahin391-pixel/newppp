@@ -166,6 +166,17 @@ export function bookSelectionKind(exact: string): SelectionKind {
   return "sentence";
 }
 
+/**
+ * "Translate" takes far more than the other options: a whole paragraph or two (up to 3000
+ * characters, about half a page), in any language with letters.
+ */
+export const MAX_TRANSLATE_CHARS = 3000;
+
+export function canTranslate(exact: string): boolean {
+  const text = exact.replace(/\s+/g, " ").trim();
+  return Boolean(text) && LETTER.test(text) && text.length <= MAX_TRANSLATE_CHARS;
+}
+
 /** The page the reader asked for, kept inside the book. */
 export function clampPage(page: unknown, pageCount: number): number {
   const n = Math.floor(Number(page));

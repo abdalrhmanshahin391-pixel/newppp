@@ -6,7 +6,7 @@ from uzyra_voice_lines import LINES, line_files
 
 ACTIONS = {
     "make_cards", "make_mcq", "explain", "meaning", "word_by_word", "why_form",
-    "compare_arabic", "simplify", "common_mistake", "summarize_section", "explain_reply", "report",
+    "compare_arabic", "simplify", "common_mistake", "summarize_section", "explain_reply", "report", "translate",
 }
 
 
@@ -25,5 +25,15 @@ def test_lines_are_short_and_never_name_the_learner_by_gender():
 
 def test_file_names_are_stable():
     names = [name for name, _ in line_files()]
-    assert len(names) == len(set(names)) == 24
+    assert len(names) == len(set(names)) == 26
     assert names[0] == "make_cards-1.mp3"
+
+
+def test_only_records_the_named_actions():
+    assert [name for name, _ in line_files("translate")] == ["translate-1.mp3", "translate-2.mp3"]
+    try:
+        line_files("nope")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("an unknown action must be refused")

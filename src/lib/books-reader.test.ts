@@ -344,3 +344,15 @@ test("milestones are crossed once each", async () => {
   assert.equal(crossedMilestone(50, 40, 100, []), null);
   assert.equal(crossedMilestone(1, 2, 4, []), 50);
 });
+
+test("translate takes a paragraph or two, far more than the other options", async () => {
+  const { canTranslate, MAX_TRANSLATE_CHARS, bookSelectionKind } =
+    await import("./books-reader.ts");
+  const paragraph =
+    "Marley was dead, to begin with. There is no doubt whatever about that. ".repeat(12);
+  assert.equal(bookSelectionKind(paragraph), "too_long");
+  assert.ok(canTranslate(paragraph));
+  assert.ok(canTranslate("ذهب الولد إلى المدرسة."));
+  assert.ok(!canTranslate("x".repeat(MAX_TRANSLATE_CHARS + 1)));
+  assert.ok(!canTranslate("  12 34 "));
+});
