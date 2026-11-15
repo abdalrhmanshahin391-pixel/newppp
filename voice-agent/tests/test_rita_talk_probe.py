@@ -116,3 +116,10 @@ def test_a_named_place_and_a_reused_phrase_are_caught():
     assert repeated_phrase(lead, 'حلو! شو بتشتغل؟ "I work as …"', {"i like"}) == []
     assert repeated_phrase(lead, 'حلو! شو بتشتغل؟ "I like …"', {"i like"})
     assert repeated_phrase(lead, 'حلو! شو بتحب؟ "I\'m from Jordan"', set())
+
+
+def test_a_pointer_to_a_missing_sheet_is_caught():
+    assert "points to a sheet that is not there" in check_turn(Turn("x"), "مثال: I am happy. التفاصيل تحت.")
+    assert "points to a sheet that is not there" not in check_turn(
+        Turn("x"), "am مع I. التفاصيل تحت [[SHEET]]\n# am\n- I am"
+    )

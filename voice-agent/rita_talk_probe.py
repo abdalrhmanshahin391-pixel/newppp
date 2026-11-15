@@ -97,7 +97,7 @@ TALKS: tuple[Talk, ...] = (
             Turn("ما فهمت ولا اشي", sheet="no", simplify=True),
             Turn("آه هلأ فهمت، شكراً", sheet="no"),
             Turn("I like play football with my friends", sheet="no", lead=True, fix=("playing", "to play")),
-            Turn("كيف بقول بحب أطبخ مع أمي؟", sheet="no"),
+            Turn("كيف بقول بحب أطبخ مع أمي؟", sheet="no", forbid=("بتقوليها", "تقوليها", "قوليها")),
         ),
     ),
     Talk(
@@ -210,6 +210,8 @@ def check_turn(turn: Turn, raw: str, site_language: str = "") -> list[str]:
         problems.append(f"the mistake was not corrected (expected {turn.fix[0]!r})")
     if site_language == "ar" and not ARABIC.search(spoken):
         problems.append("no Arabic for an Arabic speaker")
+    if not m["sheet_lines"] and re.search(r"التفاصيل تحت|details below|see below", spoken, re.IGNORECASE):
+        problems.append("points to a sheet that is not there")
     for word in turn.forbid:
         if word in spoken:
             problems.append(f"says {word!r}, which this turn must not")
