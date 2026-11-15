@@ -26,6 +26,7 @@ def test_free_lesson_and_study_prompts_keep_the_same_current_identity():
     nodes = [node for node in ast.parse(source).body if isinstance(node, ast.FunctionDef) and node.name in names]
 
     class State:
+        response_type = None
         def turn_note(self, **_): return ""
         def prompt_state(self, **_): return "test"
         def reply_language_line(self, *_): return "REPLY LANGUAGE: Arabic"
@@ -40,6 +41,8 @@ def test_free_lesson_and_study_prompts_keep_the_same_current_identity():
         "study_section": lambda body, _: "STUDY" if body.get("study") else "",
         "study_turn_note": lambda _: "",
         "free_talk_section": lambda body, _: "",
+        "is_free_talk": lambda body: not body.get("lesson") and not body.get("study"),
+        "FREE_TALK_TURN_NOTE": "FREE TALK NOTE",
         "ResponseType": type("RT", (), {"EXPLAIN": "explain"}),
         "study_enabled": lambda body: bool(body.get("study")),
         "lesson_engine_enabled": lambda body: bool(body.get("lesson")),

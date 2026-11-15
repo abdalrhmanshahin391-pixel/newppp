@@ -23,6 +23,8 @@ class LanguageCommand(NamedTuple):
     explain: bool = False
 
 
+# "I want to / I'd like to / I love to", before a first-person verb: a wish, not an order.
+_WISH = r"(?:^|\s)(?:بدي|بدنا|حاب|حابب|حابه|حابة|بحب|نفسي|اريد|بتمني|ودي)"
 _TALK = r"(?:احكي|احكو|تحكي|حكي|تكلم|تكلمي|كلمني|كلمينا|جاوب|جاوبي|رد|ردي)"
 _EXPLAIN = r"(?:اشرح|اشرحي|تشرح|تشرحي|شرح|فسر|فسري|تفسر|تفسري)"
 # "اشرحلي" glues the pronoun on; "احكي معي" keeps it apart.
@@ -69,7 +71,12 @@ def detect_language_command(text: str, *, how_to_say: bool = False) -> LanguageC
         return _from_arabic(explain.group(1))._replace(explain=True)
     if not how_to_say:
         talk = re.search(rf"(?:^|\s){_TALK}{_ME}{_BY}{lang}\b", arabic)
-        if talk:
+        # "بدي أحكي ألماني شوي" is the learner wanting to practise (I want to speak German), not
+        # an order to Uzyra; "بدي تحكي معي بالألماني" (you speak) still is one.
+        wish = talk and talk.group(0).strip().startswith("احكي") and re.search(
+            rf"{_WISH}\s+$", arabic[: talk.start() + 1]
+        )
+        if talk and not wish:
             return _from_arabic(talk.group(1))
 
     english = re.sub(r"\s+", " ", (text or "").casefold()).strip()

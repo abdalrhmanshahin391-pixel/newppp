@@ -54,3 +54,91 @@ def test_a_phrase_in_quotes_is_not_counted_as_a_sentence():
     reply = 'حلو، فهمت إنك من الأردن. من وين تعلمت إنجليزي؟ "At school."'
     assert measure(reply)["sentences"] == 2
     assert check_turn(Turn("x", sheet="no"), reply) == []
+
+
+def test_a_chat_turn_needs_a_question_and_a_phrase_to_answer_with():
+    lead = Turn("x", sheet="no", lead=True)
+    assert check_turn(lead, 'حلو! من وين إنت؟ "I\'m from …"') == []
+    assert "a chat turn without a question and a phrase in quotes" in check_turn(lead, "حلو كثير.")
+
+
+def test_a_right_sentence_is_not_corrected_and_a_wrong_one_is():
+    right = Turn("I'm Abdulrahman", sheet="no", right=True)
+    assert "corrected a sentence that was already right" in check_turn(right, 'صح: "I am Abdulrahman".')
+    assert "corrected a sentence that was already right" in check_turn(right, 'الصح: "My name is Abdulrahman".')
+    assert check_turn(right, 'حلو يا عبدالرحمن! من وين إنت؟ "I\'m from …"') == []
+    wrong = Turn("I like play football", sheet="no", fix=("playing",))
+    assert check_turn(wrong, 'الصح: "I like playing football".') == []
+    assert any("not corrected" in p for p in check_turn(wrong, "حلو! شو كمان بتحب؟"))
+
+
+def test_an_arabic_speaker_gets_arabic_words():
+    assert "no Arabic for an Arabic speaker" in check_turn(Turn("x"), "Okay, ich höre jetzt auf.", "ar")
+    assert check_turn(Turn("x"), "تمام.", "ar") == []
+    assert check_turn(Turn("x"), "Okay.", "en") == []
+
+
+def test_free_talk_gets_the_short_message_note_but_lessons_and_books_do_not():
+    import bot
+    from rita_state import RitaSessionState
+
+    state = RitaSessionState(active_language="ar", active_dialect="ar-JO")
+    state.observe_user_turn("مرحبا")
+    free = bot.build_prompt({"mode": "free_conversation"}, state)
+    assert "FREE TALK NOTE" in free
+    # read last, after the free-conversation rules and right before the session's reply language
+    assert free.index("FREE TALK NOTE") > free.index("FREE CONVERSATION")
+    assert "FREE TALK NOTE" not in bot.build_prompt({"mode": "free_conversation", "study": {"lessonId": "l1"}}, state)
+    assert "FREE TALK NOTE" not in bot.build_prompt({"mode": "lesson", "lesson": {"brief": "x"}}, state)
+
+
+def test_an_explanation_in_free_talk_follows_the_short_note_not_the_long_one():
+    import bot
+    from rita_state import RitaSessionState
+
+    state = RitaSessionState(active_language="ar", active_dialect="ar-JO")
+    state.observe_user_turn("اشرحلي متى بستعمل am و is و are")
+    prompt = bot.build_prompt({"mode": "free_conversation"}, state)
+    assert "FREE TALK NOTE" in prompt
+    assert "THE LEARNER ASKED FOR AN EXPLANATION" not in prompt
+
+
+def test_a_question_inside_the_phrase_to_say_is_not_one_of_uzyras_questions():
+    assert measure('أكيد، شو حابب تحكي بالألماني؟ "Wie geht es dir?"')["questions"] == 1
+
+
+def test_a_named_place_and_a_reused_phrase_are_caught():
+    from rita_talk_probe import repeated_phrase
+
+    turn = Turn("شو أحسن مطعم؟", forbid=("مشهور",))
+    assert any("must not" in p for p in check_turn(turn, 'مطعم "X" مشهور. شو بتحب تاكل؟ "Ich mag …"'))
+    lead = Turn("I'm from Jordan", lead=True)
+    assert repeated_phrase(lead, 'حلو! شو بتشتغل؟ "I work as …"', {"i like"}) == []
+    assert repeated_phrase(lead, 'حلو! شو بتشتغل؟ "I like …"', {"i like"})
+    assert repeated_phrase(lead, 'حلو! شو بتحب؟ "I\'m from Jordan"', set())
+
+
+def test_a_pointer_to_a_missing_sheet_is_caught():
+    assert "points to a sheet that is not there" in check_turn(Turn("x"), "مثال: I am happy. التفاصيل تحت.")
+    assert "points to a sheet that is not there" not in check_turn(
+        Turn("x"), "am مع I. التفاصيل تحت [[SHEET]]\n# am\n- I am"
+    )
+
+
+def test_free_talk_lists_the_phrases_already_given_and_lists_go_on_the_sheet():
+    import bot
+    from rita_state import ResponseType, RitaSessionState
+
+    state = RitaSessionState(active_language="ar", active_dialect="ar-JO")
+    state.observe_user_turn("مرحبا")
+    state.observe_assistant_turn('أهلاً! شو بتحب تعمل؟ "I like …"')
+    state.observe_assistant_turn('حلو! من وين إنت؟ "I\'m from …"')
+    state.observe_user_turn("تمام")
+    prompt = bot.build_prompt({"mode": "free_conversation"}, state)
+    assert "Phrases you already gave" in prompt and "I like …" in prompt and "I'm from …" in prompt
+    assert "Phrases you already gave" not in bot.build_prompt({"mode": "lesson", "lesson": {"brief": "x"}}, state)
+    for text in ("أعطيني خمس كلمات عن المطبخ", "شو الفرق بين der و die و das؟", "give me five words about food"):
+        state.observe_user_turn(text)
+        assert state.response_type == ResponseType.EXPLAIN, text
+    state.observe_user_turn("بعرف شوي إنجليزي")
+    assert state.response_type != ResponseType.EXPLAIN

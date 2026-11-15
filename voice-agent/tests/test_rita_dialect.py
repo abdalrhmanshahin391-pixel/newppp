@@ -296,3 +296,13 @@ class NeutralWordingTests(unittest.TestCase):
         from rita_dialect import neutral_wording
 
         self.assertEqual(neutral_wording(speech.feed("حلو، خبريني أكثر. ")), "حلو، احكيلي أكثر. ")
+
+
+class NeutralSayItTests(unittest.TestCase):
+    def test_the_feminine_you_say_it_becomes_the_plain_form(self):
+        from rita_dialect import neutral_wording
+
+        self.assertEqual(neutral_wording("بتقوليها لما تحكي عن الطبخ"), "بتقولها لما تحكي عن الطبخ")
+        self.assertEqual(neutral_wording("كيف تقوليه؟"), "كيف تقوله؟")
+        for text in ("بتقولها", "قولي", "تقولين", "مقولية"):
+            self.assertEqual(neutral_wording(text), text)

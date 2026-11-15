@@ -7,7 +7,11 @@ does, and the next learner line follows. Each reply is split at the sheet marker
 is what the learner hears, the part after it is the written sheet (tables and rules) on the page.
 
 What is checked, per reply (plain rules, no grading model):
-- the spoken part is short (words and sentences), with at most one question;
+- the spoken part is a short chat message, as on the lesson page (words and sentences), with at most
+  one question;
+- a chat turn ends with one question and a phrase in quotes to answer with;
+- a right sentence is not "corrected", and a wrong one is (the right form appears);
+- an Arabic speaker gets Arabic explanations, even while practising German or English;
 - a turn that asks for rules, a comparison or a list gets a sheet; chat, thanks and stop words do not;
 - the sheet stays within its limits.
 
@@ -32,15 +36,21 @@ SENTENCE_END = re.compile(r"[.!?؟]+(?:[\"'”»]?)(?:\s|$)")
 QUESTION = re.compile(r"[?؟]")
 WORD = re.compile(r"\S+")
 
-#: A normal reply: at most this many spoken words and sentences. Length is measured in words; a short
-#: reaction ("ممتاز!"), the corrected sentence, a question and a phrase to answer with are four short
-#: sentences in about 20 words.
-MAX_WORDS = 30
-MAX_SENTENCES = 4
-#: "I did not understand": one plain sentence and one example may need a little more.
-MAX_WORDS_SIMPLIFY = 40
-MAX_SENTENCES_SIMPLIFY = 5
+#: A normal reply is a short chat message, as on the lesson page: one reaction or answer, one question
+#: and a phrase in quotes to answer with, about 20 spoken words (the phrase counts as words, not as a
+#: sentence of Uzyra's).
+MAX_WORDS = 24
+MAX_SENTENCES = 3
+#: "I did not understand": one plain sentence with one example.
+MAX_WORDS_SIMPLIFY = 30
+MAX_SENTENCES_SIMPLIFY = 3
 MAX_SHEET_LINES = 12
+#: A correction line, in Arabic or English ("الصح: …", "صح: …", "The correct sentence is …").
+CORRECTION = re.compile(
+    r"(?:الصح|الصحيح|صح)\s*[:：]|correct (?:sentence|form|way)|you should say|should be",
+    re.IGNORECASE,
+)
+ARABIC = re.compile(r"[\u0600-\u06FF]")
 
 
 @dataclass(frozen=True)
@@ -49,6 +59,14 @@ class Turn:
     #: "yes": this turn needs a sheet; "no": it must not have one; "any": either is fine
     sheet: str = "any"
     simplify: bool = False
+    #: a chat turn: the reply ends with one question and a phrase in quotes to answer with
+    lead: bool = False
+    #: the learner's sentence is already right: no correction line
+    right: bool = False
+    #: the learner's sentence is wrong: the reply must contain one of these (the right form)
+    fix: tuple[str, ...] = ()
+    #: the reply must contain none of these (a named place, for example)
+    forbid: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -68,18 +86,18 @@ TALKS: tuple[Talk, ...] = (
         "ar",
         EN,
         (
-            Turn("مرحبا، بدي أتعلم إنجليزي", sheet="no"),
-            Turn("بعرف شوي إنجليزي", sheet="no"),
-            Turn("I'm Abdulrahman", sheet="no"),
-            Turn("طب شو معنى هاد الحكي؟"),
-            Turn("I'm Abdulrahman, I'm from Jordan", sheet="no"),
-            Turn("تعلمت من المدرسة", sheet="no"),
-            Turn("I'm learning English just to have fun", sheet="no"),
+            Turn("مرحبا، بدي أتعلم إنجليزي", sheet="no", lead=True),
+            Turn("بعرف شوي إنجليزي", sheet="no", lead=True),
+            Turn("I'm Abdulrahman", sheet="no", lead=True, right=True),
+            Turn("طب شو معنى هاد الحكي؟", sheet="no"),
+            Turn("I'm Abdulrahman, I'm from Jordan", sheet="no", lead=True, right=True),
+            Turn("تعلمت من المدرسة", sheet="no", lead=True),
+            Turn("I'm learning English just to have fun", sheet="no", lead=True, right=True),
             Turn("اشرحلي متى بستعمل am و is و are", sheet="yes"),
-            Turn("ما فهمت ولا اشي", simplify=True),
+            Turn("ما فهمت ولا اشي", sheet="no", simplify=True),
             Turn("آه هلأ فهمت، شكراً", sheet="no"),
-            Turn("I like play football with my friends", sheet="no"),
-            Turn("كيف بقول بحب أطبخ مع أمي؟", sheet="no"),
+            Turn("I like play football with my friends", sheet="no", lead=True, fix=("playing", "to play")),
+            Turn("كيف بقول بحب أطبخ مع أمي؟", sheet="no", forbid=("بتقوليها", "تقوليها", "قوليها")),
         ),
     ),
     Talk(
@@ -87,15 +105,15 @@ TALKS: tuple[Talk, ...] = (
         "ar",
         DE,
         (
-            Turn("بدي أحكي ألماني شوي", sheet="no"),
-            Turn("Ich heiße Abdulrahman", sheet="no"),
-            Turn("Ich komme aus Jordanien", sheet="no"),
+            Turn("بدي أحكي ألماني شوي", sheet="no", lead=True),
+            Turn("Ich heiße Abdulrahman", sheet="no", lead=True, right=True),
+            Turn("Ich komme aus Jordanien", sheet="no", lead=True, right=True),
             Turn("شو الفرق بين der و die و das؟", sheet="yes"),
             Turn("اوكي", sheet="no"),
-            Turn("Ich habe gestern Fußball gespielt", sheet="no"),
+            Turn("Ich habe gestern Fußball gespielt", sheet="no", lead=True, right=True),
             Turn("اشرحلي الـ Perfekt", sheet="yes"),
             Turn("خلص كفاية", sheet="no"),
-            Turn("شو أحسن مطعم بعمان؟", sheet="no"),
+            Turn("شو أحسن مطعم بعمان؟", sheet="no", forbid=("مشهور", "مطعم \"", "مطعم “", "مطعم «")),
             Turn("أعطيني خمس كلمات عن المطبخ", sheet="yes"),
         ),
     ),
@@ -104,11 +122,11 @@ TALKS: tuple[Talk, ...] = (
         "en",
         EN,
         (
-            Turn("Hi, I want to practise speaking English", sheet="no"),
-            Turn("I am work in a bank", sheet="no"),
+            Turn("Hi, I want to practise speaking English", sheet="no", lead=True),
+            Turn("I am work in a bank", sheet="no", lead=True, fix=("I work in a bank", "I work at a bank", "I'm working in a bank", "I am working in a bank")),
             Turn("Can you explain when to use the present perfect and the past simple?", sheet="yes"),
             Turn("ok thanks", sheet="no"),
-            Turn("I have been to London last year", sheet="no"),
+            Turn("I have been to London last year", sheet="no", lead=True, fix=("I went to London", "I was in London")),
             Turn("What does 'break a leg' mean?", sheet="no"),
         ),
     ),
@@ -129,10 +147,10 @@ def split_reply(raw: str) -> tuple[str, str]:
 def heard(spoken: str) -> str:
     """What the voice says: the same cleaner as the worker (markdown marks dropped)."""
 
-    from rita_dialect import SpeechTextFilter
+    from rita_dialect import SpeechTextFilter, neutral_wording
 
     speech = SpeechTextFilter()
-    return (speech.feed(spoken) + speech.pending).strip()
+    return neutral_wording(speech.feed(spoken) + speech.pending).strip()
 
 
 #: A phrase in quotes ("I'm from …") is the learner's line to say, not one of Uzyra's sentences.
@@ -154,19 +172,21 @@ def measure(raw: str) -> dict[str, Any]:
     return {
         "words": len(WORD.findall(voice)),
         "sentences": count_sentences(voice),
-        "questions": len(QUESTION.findall(voice)),
+        # A question mark inside the phrase in quotes ("How are you?") is the learner's line.
+        "questions": len(QUESTION.findall(QUOTED.sub("PHRASE", voice))),
         "sheet_lines": len(sheet_lines),
         "spoken": voice,
         "sheet": sheet,
     }
 
 
-def check_turn(turn: Turn, raw: str) -> list[str]:
+def check_turn(turn: Turn, raw: str, site_language: str = "") -> list[str]:
     """What is wrong with this reply (an empty list means it passes)."""
 
     if not raw.strip():
         return ["empty reply"]
     m = measure(raw)
+    spoken = m["spoken"]
     words = MAX_WORDS_SIMPLIFY if turn.simplify else MAX_WORDS
     sentences = MAX_SENTENCES_SIMPLIFY if turn.simplify else MAX_SENTENCES
     problems: list[str] = []
@@ -182,7 +202,42 @@ def check_turn(turn: Turn, raw: str) -> list[str]:
         problems.append("a sheet on a chat turn")
     if m["sheet_lines"] > MAX_SHEET_LINES:
         problems.append(f"sheet has {m['sheet_lines']} lines (at most {MAX_SHEET_LINES})")
+    if turn.lead and not (m["questions"] and QUOTED.search(spoken)):
+        problems.append("a chat turn without a question and a phrase in quotes")
+    if turn.right and CORRECTION.search(spoken):
+        problems.append("corrected a sentence that was already right")
+    if turn.fix and not any(form.casefold() in raw.casefold() for form in turn.fix):
+        problems.append(f"the mistake was not corrected (expected {turn.fix[0]!r})")
+    if site_language == "ar" and not ARABIC.search(spoken):
+        problems.append("no Arabic for an Arabic speaker")
+    if not m["sheet_lines"] and re.search(r"التفاصيل تحت|details below|see below", spoken, re.IGNORECASE):
+        problems.append("points to a sheet that is not there")
+    for word in turn.forbid:
+        if word in spoken:
+            problems.append(f"says {word!r}, which this turn must not")
     return problems
+
+
+def phrases(text: str) -> list[str]:
+    """The phrases in quotes, folded for comparison."""
+
+    return [re.sub(r"[\W_]+", " ", p).strip().casefold() for p in QUOTED.findall(text)]
+
+
+def repeated_phrase(turn: Turn, spoken: str, earlier: set[str]) -> list[str]:
+    """A chat turn's phrase must start the answer to the new question: not an old phrase, not the
+    learner's own sentence."""
+
+    if not turn.lead:
+        return []
+    own = phrases(spoken)
+    if not own:
+        return []
+    learner = re.sub(r"[\W_]+", " ", turn.text).strip().casefold()
+    last = own[-1]
+    if last and (last in earlier or last == learner):
+        return ["the phrase to answer with repeats an earlier one"]
+    return []
 
 
 def turn_request(talk: Talk, history: list[tuple[str, str]], text: str):
@@ -232,6 +287,7 @@ async def play(client, talk: Talk) -> list[dict[str, Any]]:
 
     history: list[tuple[str, str]] = []
     out: list[dict[str, Any]] = []
+    earlier: set[str] = set()
     for turn in talk.turns:
         params, state = turn_request(talk, history, turn.text)
         try:
@@ -246,7 +302,8 @@ async def play(client, talk: Talk) -> list[dict[str, Any]]:
             {
                 "text": turn.text,
                 "type": str(getattr(state.response_type, "value", state.response_type)),
-                "problems": check_turn(turn, raw)
+                "problems": check_turn(turn, raw, talk.site_language)
+                + repeated_phrase(turn, m["spoken"], earlier)
                 + (
                     []
                     if raw
@@ -260,6 +317,7 @@ async def play(client, talk: Talk) -> list[dict[str, Any]]:
             }
         )
         history.extend([("user", turn.text), ("assistant", raw)])
+        earlier.update(phrases(m["spoken"]))
     return out
 
 
