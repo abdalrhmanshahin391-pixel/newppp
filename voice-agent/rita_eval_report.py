@@ -120,7 +120,11 @@ def report(result: dict[str, Any]) -> str:
     if rows:
         lines += ["", f"## Worst {min(WORST, len(rows))} replies", ""]
         for row in rows[:WORST]:
-            lines.append(f"**{row['talk']}#{row['turn']}** ({row.get('kind')}, reply type {row.get('type')}): {_cut(row['text'], 120)}")
+            run = f" run {row['run']}" if result.get("runs", 1) > 1 else ""
+            lines.append(
+                f"**{row['talk']}#{row['turn']}{run}** ({row.get('kind')}, reply type {row.get('type')}):"
+                f" {_cut(row['text'], 120)}"
+            )
             lines.append(f"- Uzyra: {_cut(row.get('spoken', ''))}")
             if row.get("sheet"):
                 lines.append(f"- Sheet: {_cut(row['sheet'], 140)}")
