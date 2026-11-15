@@ -306,3 +306,18 @@ class NeutralSayItTests(unittest.TestCase):
         self.assertEqual(neutral_wording("كيف تقوليه؟"), "كيف تقوله؟")
         for text in ("بتقولها", "قولي", "تقولين", "مقولية"):
             self.assertEqual(neutral_wording(text), text)
+
+
+def test_a_phonetic_transcription_is_not_spoken():
+    from rita_dialect import SpeechTextFilter
+
+    def spoken(chunks):
+        f = SpeechTextFilter()
+        return "".join(f.feed(c) for c in chunks) + f.pending
+
+    assert spoken(['"Comfortable" بتنطق /ˈkʌm.fɚ.tə.bəl/، يعني كَم‑فر‑تبل.']) == '"Comfortable" بتنطق يعني كَم‑فر‑تبل.'
+    # Split across streamed pieces, the same result.
+    assert spoken(['"Wednesday" بتنطق /ˈwen', 'z.deɪ/ يعني وِنز‑دي.']) == '"Wednesday" بتنطق يعني وِنز‑دي.'
+    # A slash that is not a transcription stays.
+    assert spoken(["Use he/she here."]) == "Use he/she here."
+    assert spoken(["a / b"]) == "a / b"

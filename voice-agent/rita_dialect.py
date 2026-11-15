@@ -201,6 +201,12 @@ def _probe(buffer: str) -> str:
     return "keep"
 
 
+#: Phonetic (IPA) letters: a /…/ span that holds one is a transcription the voice would spell out.
+_PHONETIC = frozenset("ˈˌəɪʊɔæɑɒʌːθðʃʒŋɚɝɛɜɐ")
+#: The longest /…/ span held back while it might be a transcription.
+_MAX_SLASH = 48
+
+
 class SpeechTextFilter:
     """Clean-up that works on any slicing of a streamed reply: markdown marks, a stop after a
     closing quote, and self-notes. Only text that starts like a leaked note is ever held back,
@@ -218,6 +224,8 @@ class SpeechTextFilter:
         self._num = ""  # up to two digits at the start of a sentence, held while they might be "1."
         self._num_mark = ""  # the "." or ")" that followed them
         self._list_next: int | None = None  # the number a spoken list would continue with
+        self._slash = ""  # a "/…" span held while it might be a phonetic transcription
+        self._skip_comma = False  # drop the comma that followed a dropped transcription
 
     @property
     def pending(self) -> str:
@@ -225,7 +233,8 @@ class SpeechTextFilter:
 
         held, self._probe = self._probe, ""
         digits, self._num, self._num_mark = self._num + self._num_mark, "", ""
-        return digits + held if held and _probe(held) != "leak" else digits
+        slash, self._slash = self._slash, ""
+        return (digits + held if held and _probe(held) != "leak" else digits) + slash
 
     def _emit(self, out: list[str], text: str) -> None:
         for ch in text:
@@ -271,10 +280,40 @@ class SpeechTextFilter:
         self._emit(out, held)
         return False
 
+    def _take_slash(self, ch: str, out: list[str]) -> bool:
+        """Hold "/…/" and drop it when it is a phonetic transcription (/ˈkʌm.fər.tə.bəl/): the voice
+        would read the symbols one by one. Any other slash ("and/or") is let through unchanged.
+        Returns True when `ch` was used up here."""
+
+        if not self._slash:
+            if ch != "/":
+                return False
+            self._slash = ch
+            return True
+        self._slash += ch
+        if ch == "/":
+            span, self._slash = self._slash, ""
+            if any(letter in _PHONETIC for letter in span):
+                self._skip_comma = True
+                return True
+            self._emit(out, span)
+            return True
+        if ch == "\n" or len(self._slash) > _MAX_SLASH:
+            span, self._slash = self._slash, ""
+            self._emit(out, span)
+        return True
+
     def feed(self, text: str) -> str:
         out: list[str] = []
         for ch in text:
             if ch in "*`":
+                continue
+            if self._skip_comma:
+                # The space before the transcription was already spoken: drop the comma and spaces after it.
+                if ch in " ،,":
+                    continue
+                self._skip_comma = False
+            if self._take_slash(ch, out):
                 continue
             # A heading mark or a lone underscore at the start of a line is markdown, not speech.
             if ch in "#_" and (not self._tail or self._tail[-1] in " \n"):
