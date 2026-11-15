@@ -8,6 +8,10 @@
 //   once at the end instead.
 // Sounds go through one Web Audio context, woken by the "Start" tap (iPad needs a tap first).
 import { ttsHeaders } from "@/lib/tts-auth";
+import type { RepeatLang } from "@/lib/repeat/match";
+
+/** The recogniser's and the browser voice's language tag. */
+const SPEECH_TAG: Record<RepeatLang, string> = { en: "en-US", de: "de-DE" };
 
 const CACHE = "uzyra-repeat-voice";
 const MAX_KEPT = 240;
@@ -47,19 +51,21 @@ export function wakeAudio(): void {
 // ---------- Uzyra's voice --------------------------------------------------------------------
 
 const loading = new Map<string, Promise<AudioBuffer | null>>();
-const cacheUrl = (text: string) => `/__repeat-voice/${encodeURIComponent(text)}`;
+// English keeps the address it always had, so sentences already kept are not fetched again.
+const cacheUrl = (text: string, lang: RepeatLang) =>
+  `/__repeat-voice/${lang === "en" ? "" : `${lang}/`}${encodeURIComponent(text)}`;
 
-async function fetchVoice(text: string): Promise<ArrayBuffer | null> {
+async function fetchVoice(text: string, lang: RepeatLang): Promise<ArrayBuffer | null> {
   try {
     const store = "caches" in window ? await caches.open(CACHE) : null;
-    const kept = await store?.match(cacheUrl(text));
+    const kept = await store?.match(cacheUrl(text, lang));
     if (kept) return await kept.arrayBuffer();
     const headers = await ttsHeaders();
     if (!headers) return null;
     const response = await fetch("/api/german/tts", {
       method: "POST",
       headers,
-      body: JSON.stringify({ text, lang: "en", style: "fast" }),
+      body: JSON.stringify({ text, lang, style: "fast" }),
     });
     if (!response.ok) return null;
     const data = await response.arrayBuffer();
@@ -71,7 +77,7 @@ async function fetchVoice(text: string): Promise<ArrayBuffer | null> {
           await store.delete(old);
         }
         await store.put(
-          cacheUrl(text),
+          cacheUrl(text, lang),
           new Response(data.slice(0), { headers: { "Content-Type": "audio/mpeg" } }),
         );
       })().catch(() => undefined);
@@ -83,11 +89,15 @@ async function fetchVoice(text: string): Promise<ArrayBuffer | null> {
 }
 
 /** Starts getting a sentence's audio ready (call for the next card while this one plays). */
-export function prepareSentence(text: string): Promise<AudioBuffer | null> {
-  const known = loading.get(text);
+export function prepareSentence(
+  text: string,
+  lang: RepeatLang = "en",
+): Promise<AudioBuffer | null> {
+  const id = `${lang}:${text}`;
+  const known = loading.get(id);
   if (known) return known;
   const job = (async () => {
-    const data = await fetchVoice(text);
+    const data = await fetchVoice(text, lang);
     const c = audio();
     if (!data || !c) return null;
     try {
@@ -96,10 +106,10 @@ export function prepareSentence(text: string): Promise<AudioBuffer | null> {
       return null;
     }
   })();
-  loading.set(text, job);
+  loading.set(id, job);
   // A failure is not remembered: the next try asks again.
   void job.then((buffer) => {
-    if (!buffer) loading.delete(text);
+    if (!buffer) loading.delete(id);
   });
   return job;
 }
@@ -114,16 +124,17 @@ function soundStart(buffer: AudioBuffer): number {
   return 0;
 }
 
-function browserVoice(text: string, signal: AbortSignal): Promise<void> {
+function browserVoice(text: string, signal: AbortSignal, lang: RepeatLang): Promise<void> {
   return new Promise((resolve) => {
     if (!("speechSynthesis" in window)) return resolve();
     const synth = window.speechSynthesis;
     synth.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
+    utterance.lang = SPEECH_TAG[lang];
     utterance.rate = 0.95;
-    const english = synth.getVoices().find((v) => v.lang?.toLowerCase().startsWith("en-us"));
-    if (english) utterance.voice = english;
+    const tag = SPEECH_TAG[lang].toLowerCase();
+    const voice = synth.getVoices().find((v) => v.lang?.toLowerCase().replace("_", "-") === tag);
+    if (voice) utterance.voice = voice;
     let done = false;
     const finish = () => {
       if (done) return;
@@ -144,11 +155,15 @@ function browserVoice(text: string, signal: AbortSignal): Promise<void> {
 }
 
 /** Says the sentence; resolves when it has finished (or was stopped). */
-export async function speakSentence(text: string, signal: AbortSignal): Promise<void> {
-  const buffer = await prepareSentence(text);
+export async function speakSentence(
+  text: string,
+  signal: AbortSignal,
+  lang: RepeatLang = "en",
+): Promise<void> {
+  const buffer = await prepareSentence(text, lang);
   if (signal.aborted) return;
   const c = audio();
-  if (!buffer || !c) return browserVoice(text, signal);
+  if (!buffer || !c) return browserVoice(text, signal, lang);
   await new Promise<void>((resolve) => {
     const source = c.createBufferSource();
     const gain = c.createGain();
@@ -278,6 +293,8 @@ export function listen(opts: {
   onEnd: (why: HearingEnd) => void;
   /** For the clip mode: how long to record at most. */
   maxMs: number;
+  /** The language the learner speaks. */
+  lang?: RepeatLang;
 }): Hearing {
   const Live = recogniser();
   if (Live) return listenLive(Live, opts);
@@ -286,7 +303,7 @@ export function listen(opts: {
 
 function listenLive(
   Live: new () => Recognition,
-  opts: { onHeard: (text: string) => void; onEnd: (why: HearingEnd) => void },
+  opts: { onHeard: (text: string) => void; onEnd: (why: HearingEnd) => void; lang?: RepeatLang },
 ): Hearing {
   let stopped = false;
   let ended = false;
@@ -301,7 +318,7 @@ function listenLive(
   const begin = () => {
     const rec = new Live();
     current = rec;
-    rec.lang = "en-US";
+    rec.lang = SPEECH_TAG[opts.lang ?? "en"];
     rec.continuous = true;
     rec.interimResults = true;
     rec.maxAlternatives = 1;
@@ -361,6 +378,7 @@ function listenClip(opts: {
   onHeard: (text: string) => void;
   onEnd: (why: HearingEnd) => void;
   maxMs: number;
+  lang?: RepeatLang;
 }): Hearing {
   let recorder: MediaRecorder | null = null;
   let stream: MediaStream | null = null;
@@ -397,7 +415,7 @@ function listenClip(opts: {
         const form = new FormData();
         const ext = type.includes("mp4") ? "m4a" : type.includes("ogg") ? "ogg" : "webm";
         form.append("audio", clip, `recording.${ext}`);
-        form.append("language", "en");
+        form.append("language", opts.lang ?? "en");
         const response = await fetch("/api/german/score", {
           method: "POST",
           headers: { Authorization: headers.Authorization },

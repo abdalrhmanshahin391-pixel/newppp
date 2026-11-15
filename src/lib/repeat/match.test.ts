@@ -59,3 +59,36 @@ test("a round is ten different sentences, and every sentence can be matched", ()
     assert.ok(count >= 2 && count <= 6, sentence.en);
   }
 });
+
+// ---- German ----------------------------------------------------------------------------------
+
+const saidDe = (sentence: string, heard: string) =>
+  wordsSaid(sentenceWords(sentence, "de"), heard, "de");
+
+test("German: the whole sentence turns black; the first words alone stay partial", () => {
+  assert.ok(allSaid(saidDe("Ich lerne Deutsch", "ich lerne deutsch")));
+  assert.deepEqual(saidDe("Das Wasser ist kalt", "das wasser"), [true, true, false, false]);
+});
+
+test("German: geht's, umlauts written out, numbers and das/dass count", () => {
+  assert.ok(allSaid(saidDe("Wie geht's?", "wie geht es")));
+  assert.ok(allSaid(saidDe("Ich bin müde", "ich bin muede")));
+  assert.ok(allSaid(saidDe("Wir essen um 7", "wir essen um sieben")));
+  assert.ok(allSaid(saidDe("Das ist gut", "dass ist gut")));
+  assert.ok(allSaid(saidDe("Übung macht den Meister", "übung macht den meister")));
+  assert.ok(sameWord("gerne", "gern", "de"));
+  assert.ok(!sameWord("ich", "ach", "de"));
+});
+
+test("every German sentence can be matched, and has its Arabic meaning", async () => {
+  const { SENTENCES_DE, sentencesFor } = await import("./sentences.ts");
+  assert.ok(SENTENCES_DE.length >= 70);
+  assert.equal(new Set(SENTENCES_DE.map((s) => s.en)).size, SENTENCES_DE.length);
+  assert.equal(sentencesFor("de"), SENTENCES_DE);
+  for (const sentence of SENTENCES_DE) {
+    assert.ok(sentence.ar.trim(), sentence.en);
+    assert.ok(allSaid(saidDe(sentence.en, sentence.en)), sentence.en);
+    const count = sentence.en.split(/\s+/).length;
+    assert.ok(count >= 1 && count <= 6, sentence.en);
+  }
+});

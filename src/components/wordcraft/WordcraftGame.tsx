@@ -23,7 +23,7 @@ import {
 import { UzyraMark } from "@/components/brand/UzyraMark";
 import { CATEGORY_COLORS } from "@/lib/books";
 import { checkMove, maskOf, type Path } from "@/lib/wordcraft/engine";
-import { DICTIONARY, type Round } from "@/lib/wordcraft/round";
+import { dictionaryFor, displayWord, type Round } from "@/lib/wordcraft/round";
 import {
   extendPath,
   hintTiles,
@@ -226,7 +226,14 @@ export function WordcraftGame({
   function submit(candidate: Path) {
     if (candidate.length < 2) return;
     const used = maskOf([...usedTiles]);
-    const result = checkMove(grid, puzzle.words, solvedSet, used, candidate, DICTIONARY);
+    const result = checkMove(
+      grid,
+      puzzle.words,
+      solvedSet,
+      used,
+      candidate,
+      dictionaryFor(puzzle.lang),
+    );
     const typed = candidate.map((p) => puzzle.letters[p]).join("");
     if (result.kind === "locked") {
       fly.current = {
@@ -273,7 +280,7 @@ export function WordcraftGame({
         "warn",
         t(
           `${ltr(typed)} is a real word, but not one of this round's.`,
-          `${ltr(typed)} كلمة إنجليزية، بس مش من كلمات هالجولة.`,
+          `${ltr(typed)} كلمة ${puzzle.lang === "de" ? "ألمانية" : "إنجليزية"}، بس مش من كلمات هالجولة.`,
         ),
       );
     else
@@ -383,7 +390,7 @@ export function WordcraftGame({
       setFocus(to);
       tileRefs.current[to]?.focus();
     };
-    // The grid is English, left to right, whatever the page direction.
+    // The grid is English or German, left to right, whatever the page direction.
     if (event.key === "ArrowRight" && c < puzzle.cols - 1) return move(focus + 1);
     if (event.key === "ArrowLeft" && c > 0) return move(focus - 1);
     if (event.key === "ArrowDown" && r < puzzle.rows - 1) return move(focus + puzzle.cols);
@@ -774,11 +781,11 @@ function progressLabel(lang: Lang, found: number, words: number, tiles: number) 
     : `${found} of ${words} words found on a grid of ${tiles} letters.`;
 }
 
-function speak(word: string) {
+function speak(word: string, lang: Round["lang"]) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(word.toLowerCase());
-  u.lang = "en-US";
+  u.lang = lang === "de" ? "de-DE" : "en-US";
   u.rate = 0.9;
   window.speechSynthesis.speak(u);
 }
@@ -813,8 +820,8 @@ function Summary({
         {round.info.map((e) => (
           <li key={e.word} className="wc-word">
             <div className="wc-word-head">
-              <span className="wc-word-en" dir="ltr" lang="en">
-                {e.word.toLowerCase()}
+              <span className="wc-word-en" dir="ltr" lang={round.lang ?? "en"}>
+                {displayWord(e.word, e.example, round.lang)}
               </span>
               <span className="wc-word-ar" lang="ar" dir="rtl">
                 {e.ar}
@@ -823,14 +830,17 @@ function Summary({
                 <button
                   type="button"
                   className="wc-icon-btn is-small"
-                  onClick={() => speak(e.word)}
-                  aria-label={t(`Say ${e.word.toLowerCase()}`, `اسمع ${e.word.toLowerCase()}`)}
+                  onClick={() => speak(e.word, round.lang)}
+                  aria-label={t(
+                    `Say ${displayWord(e.word, e.example, round.lang)}`,
+                    `اسمع ${displayWord(e.word, e.example, round.lang)}`,
+                  )}
                 >
                   <Volume2 size={16} aria-hidden="true" />
                 </button>
               )}
             </div>
-            <p className="wc-word-ex" dir="ltr" lang="en">
+            <p className="wc-word-ex" dir="ltr" lang={round.lang ?? "en"}>
               {e.example}
             </p>
             <p className="wc-word-ex-ar" dir="rtl" lang="ar">
