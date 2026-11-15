@@ -51,6 +51,13 @@ CORRECTION = re.compile(
     re.IGNORECASE,
 )
 ARABIC = re.compile(r"[\u0600-\u06FF]")
+#: The stock follow-up that ignores what was just asked ("what do you do in your free time?").
+STOCK_QUESTION = re.compile(
+    r"وقت فراغ|الوقت الفاضي|بالموسيقى|موسيقى|free time|music|Freizeit|Musik|هواي|hobby",
+    re.IGNORECASE,
+)
+#: Phonetic symbols are read aloud letter by letter; pronunciation is written in plain letters.
+PHONETIC = re.compile(r"[θðʃʒŋəɪʊɔæɑːˈ]")
 
 
 @dataclass(frozen=True)
@@ -227,6 +234,10 @@ def check_turn(turn: Turn, raw: str, site_language: str = "") -> list[str]:
         problems.append("no Arabic for an Arabic speaker")
     if not m["sheet_lines"] and re.search(r"التفاصيل تحت|details below|see below", spoken, re.IGNORECASE):
         problems.append("points to a sheet that is not there")
+    if not turn.lead and STOCK_QUESTION.search(spoken) and not STOCK_QUESTION.search(turn.text):
+        problems.append("a stock question about hobbies instead of the topic")
+    if PHONETIC.search(spoken):
+        problems.append("phonetic symbols in the spoken part")
     for word in turn.forbid:
         if word in spoken:
             problems.append(f"says {word!r}, which this turn must not")
