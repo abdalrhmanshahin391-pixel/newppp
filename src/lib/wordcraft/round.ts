@@ -7,7 +7,12 @@
 //   4. no word twice, and never a word with its plural.
 // No React, no DOM, no network: the server function and the browser both use it.
 import { buildOnce, difficulty, hiddenWords, rng, type Built, type Path } from "./engine.ts";
-import { EXTRA_WORDS, LEXICON } from "./lexicon.ts";
+import { EXTRA_WORDS, LEXICON, type Entry } from "./lexicon.ts";
+import { EXTRA_WORDS_DE, LEXICON_DE } from "./lexicon-de.ts";
+
+/** The language of a round's words: the learner's learning language (English unless German). */
+export type WordLang = "en" | "de";
+export const WORD_LANGS: WordLang[] = ["en", "de"];
 
 export type Level = "easy" | "medium" | "hard";
 export const LEVEL_IDS: Level[] = ["easy", "medium", "hard"];
@@ -65,6 +70,8 @@ export type Round = {
   info: RoundWord[];
   /** Where the words came from. */
   source: "ai" | "list";
+  /** The words' language (absent on rounds made before German: English). */
+  lang?: WordLang;
 };
 
 /** Words that never go in a learner's puzzle, whatever the AI suggests. */
@@ -76,11 +83,60 @@ const BLOCKED = new Set(
   ).split(" "),
 );
 
+const BLOCKED_DE = new Set(
+  (
+    "TOD TOT TOTE TÖTEN MORD MÖRDER WAFFE WAFFEN BOMBE KRIEG BLUT SCHIESSEN PISTOLE GEWEHR BIER WEIN " +
+    "SCHNAPS WODKA DROGE DROGEN BETRUNKEN NACKT SEX DUMM IDIOT HÖLLE TERROR ANGRIFF SCHWEIN CASINO"
+  ).split(" "),
+);
+
 /** Every word the game recognises as "a real word" (the built-in list and common words). */
 export const DICTIONARY: ReadonlySet<string> = new Set([
   ...LEXICON.map((e) => e.word),
   ...EXTRA_WORDS,
 ]);
+export const DICTIONARY_DE: ReadonlySet<string> = new Set([
+  ...LEXICON_DE.map((e) => e.word),
+  ...EXTRA_WORDS_DE,
+]);
+
+/** One language's words and rules. */
+type Pack = {
+  lexicon: readonly Entry[];
+  dictionary: ReadonlySet<string>;
+  blocked: ReadonlySet<string>;
+  /** The letters a word may use. */
+  letters: RegExp;
+};
+const PACKS: Record<WordLang, Pack> = {
+  en: { lexicon: LEXICON, dictionary: DICTIONARY, blocked: BLOCKED, letters: /^[A-Z]+$/ },
+  de: {
+    lexicon: LEXICON_DE,
+    dictionary: DICTIONARY_DE,
+    blocked: BLOCKED_DE,
+    letters: /^[A-ZÄÖÜ]+$/,
+  },
+};
+
+/** The dictionary of a round's language. */
+export const dictionaryFor = (lang: WordLang | undefined): ReadonlySet<string> =>
+  PACKS[lang ?? "en"].dictionary;
+
+/**
+ * How a word is written outside the board: English in lower case; German as the example writes it
+ * (nouns keep their capital: "Haus", "lesen"), else in lower case.
+ */
+export function displayWord(word: string, example: string, lang: WordLang | undefined): string {
+  if (lang !== "de") return word.toLowerCase();
+  const found = example
+    .split(/[^\p{L}]+/u)
+    .find((token) => token.toUpperCase() === word && token.length === word.length);
+  return found ?? word.toLowerCase();
+}
+
+/** The learning language as a round language: German for German, English for everything else. */
+export const wordLang = (code: string | null | undefined): WordLang =>
+  code === "de" ? "de" : "en";
 
 /** The first word of an Arabic meaning, without marks: "صغير جداً" and "صغير السن" share "صغير". */
 export function clueKey(ar: string): string {
@@ -93,17 +149,25 @@ export function clueKey(ar: string): string {
     .split(/\s+/)[0];
 }
 
-export const isPlural = (a: string, b: string) =>
-  a === `${b}S` || a === `${b}ES` || b === `${a}S` || b === `${a}ES`;
+// English adds S / ES; German adds E, N, EN, ER, S or NEN (Frage / Fragen, Kind / Kinder).
+const PLURAL_ENDINGS: Record<WordLang, string[]> = {
+  en: ["S", "ES"],
+  de: ["E", "N", "EN", "ER", "S", "NEN"],
+};
+export const isPlural = (a: string, b: string, lang: WordLang = "en") =>
+  PLURAL_ENDINGS[lang].some((end) => a === `${b}${end}` || b === `${a}${end}`);
 
 const ARABIC = /[؀-ۿ]/;
 const text = (value: unknown, max: number) =>
   typeof value === "string" ? value.replace(/\s+/g, " ").trim().slice(0, max) : "";
 
-/** The example has to use the word (or a form of it: "draws" for DRAW, "made" is not checked). */
-function usesWord(example: string, word: string): boolean {
+/**
+ * The example has to use the word (or a form of it: "draws" for DRAW, "made" is not checked).
+ * The word start is found by letters, not \b, so a German Ö or Ü at the start still counts.
+ */
+export function usesWord(example: string, word: string): boolean {
   const stem = word.length > 4 ? word.slice(0, word.length - 2) : word.slice(0, 3);
-  return new RegExp(`\\b${stem}`, "i").test(example);
+  return new RegExp(`(^|[^\\p{L}])${stem}`, "iu").test(example);
 }
 
 /**
@@ -111,7 +175,8 @@ function usesWord(example: string, word: string): boolean {
  * meaning and an example that uses the word. Repeats, plurals of an earlier word and a second
  * word with the same Arabic meaning are dropped.
  */
-export function cleanCandidates(reply: unknown, level: Level): RoundWord[] {
+export function cleanCandidates(reply: unknown, level: Level, lang: WordLang = "en"): RoundWord[] {
+  const pack = PACKS[lang];
   const lengths = new Set(LEVELS[level].lengths);
   const list =
     reply && typeof reply === "object" && Array.isArray((reply as { words?: unknown }).words)
@@ -128,10 +193,10 @@ export function cleanCandidates(reply: unknown, level: Level): RoundWord[] {
     const ar = text(raw.ar, 40);
     const example = text(raw.example, 160);
     const exampleAr = text(raw.exampleAr, 200);
-    if (!/^[A-Z]+$/.test(word) || !lengths.has(word.length) || BLOCKED.has(word)) continue;
+    if (!pack.letters.test(word) || !lengths.has(word.length) || pack.blocked.has(word)) continue;
     if (!ARABIC.test(ar) || !example || !ARABIC.test(exampleAr) || !usesWord(example, word))
       continue;
-    if (out.some((o) => o.word === word || isPlural(o.word, word))) continue;
+    if (out.some((o) => o.word === word || isPlural(o.word, word, lang))) continue;
     const key = clueKey(ar);
     if (!key || keys.has(key)) continue;
     keys.add(key);
@@ -141,30 +206,36 @@ export function cleanCandidates(reply: unknown, level: Level): RoundWord[] {
 }
 
 /** The built-in list's words for a level (used when the AI cannot help, and for guests). */
-export function listCandidates(level: Level): RoundWord[] {
+export function listCandidates(level: Level, lang: WordLang = "en"): RoundWord[] {
   const info = LEVELS[level];
-  return LEXICON.filter(
-    (e) => info.lengths.includes(e.word.length) && info.listLevels.includes(e.level),
-  ).map(({ word, ar, example, exampleAr }) => ({ word, ar, example, exampleAr }));
+  return PACKS[lang].lexicon
+    .filter((e) => info.lengths.includes(e.word.length) && info.listLevels.includes(e.level))
+    .map(({ word, ar, example, exampleAr }) => ({ word, ar, example, exampleAr }));
 }
 
 /** Too many other real words in the grid, or a long one, would send the player the wrong way. */
-function misleading(built: Built): boolean {
-  const hidden = hiddenWords(built.grid, DICTIONARY, new Set(built.words));
+function misleading(built: Built, dictionary: ReadonlySet<string>): boolean {
+  const hidden = hiddenWords(built.grid, dictionary, new Set(built.words));
   return (
     hidden.length > Math.ceil(built.grid.letters.length / 6) || hidden.some((w) => w.length >= 5)
   );
 }
 
 /** Four words that fit the level's lengths, chosen at random among the candidates. */
-function pickWords(pool: RoundWord[], lengths: number[], random: () => number): RoundWord[] | null {
+function pickWords(
+  pool: RoundWord[],
+  lengths: number[],
+  random: () => number,
+  lang: WordLang,
+): RoundWord[] | null {
   const chosen: RoundWord[] = [];
   for (const length of lengths) {
     const options = pool.filter(
       (c) =>
         c.word.length === length &&
         !chosen.some(
-          (o) => o.word === c.word || isPlural(o.word, c.word) || clueKey(o.ar) === clueKey(c.ar),
+          (o) =>
+            o.word === c.word || isPlural(o.word, c.word, lang) || clueKey(o.ar) === clueKey(c.ar),
         ),
     );
     if (!options.length) return null;
@@ -183,12 +254,14 @@ export function buildRound(
   level: Level,
   source: Round["source"],
   random: () => number = rng(Date.now() % 2 ** 31),
+  lang: WordLang = "en",
 ): Round | null {
   const info = LEVELS[level];
+  const dictionary = PACKS[lang].dictionary;
   const made: { built: Built; words: RoundWord[]; score: number }[] = [];
-  const unknown = (w: string) => (DICTIONARY.has(w) ? 1 : 3);
+  const unknown = (w: string) => (dictionary.has(w) ? 1 : 3);
   for (let attempt = 0; attempt < 120 && made.length < 5; attempt++) {
-    const words = pickWords(candidates, info.lengths, random);
+    const words = pickWords(candidates, info.lengths, random, lang);
     if (!words) return null;
     const built = buildOnce(
       info.rows,
@@ -196,7 +269,7 @@ export function buildRound(
       words.map((w) => w.word),
       random,
     );
-    if (!built || misleading(built)) continue;
+    if (!built || misleading(built, dictionary)) continue;
     made.push({ built, words, score: difficulty(built, unknown).score });
   }
   if (!made.length) return null;
@@ -217,17 +290,23 @@ export function buildRound(
     paths: built.paths,
     info: built.words.map((w) => pick.words.find((x) => x.word === w)!),
     source,
+    lang,
   };
 }
 
 /** A round from the built-in list (always possible: the list is large enough for every level). */
-export function listRound(level: Level, random?: () => number, avoid: string[] = []): Round {
-  const all = listCandidates(level);
+export function listRound(
+  level: Level,
+  random?: () => number,
+  avoid: string[] = [],
+  lang: WordLang = "en",
+): Round {
+  const all = listCandidates(level, lang);
   const fresh = all.filter((c) => !avoid.includes(c.word));
   // Skip recently seen words when enough are left for a grid.
   const round =
-    buildRound(fresh.length >= 24 ? fresh : all, level, "list", random) ??
-    buildRound(all, level, "list", random);
+    buildRound(fresh.length >= 24 ? fresh : all, level, "list", random, lang) ??
+    buildRound(all, level, "list", random, lang);
   if (!round) throw new Error("wordcraft_list_round_failed");
   return round;
 }
@@ -277,7 +356,19 @@ export const THEMES = [
   "technology and phones",
 ];
 
-export function roundSystemPrompt(): string {
+export function roundSystemPrompt(lang: WordLang = "en"): string {
+  if (lang === "de")
+    return [
+      "You choose German words for a word puzzle played by Arabic-speaking learners of German.",
+      'Reply with JSON only, no other text: {"words":[{"word":"...","ar":"...","example":"...","exampleAr":"..."}]}',
+      "Rules for every word:",
+      "- a real, common German word in its dictionary form, letters A-Z and Ä Ö Ü only (never ß): no names, places, brands, abbreviations or hyphens;",
+      "- nouns in the singular, verbs in the infinitive; not violent, sexual, religious, political, about alcohol or drugs, or rude;",
+      "- every word has a different meaning from the others;",
+      '- "ar": its meaning in one or two Arabic words (Modern Standard Arabic), different for every word;',
+      '- "example": a short, simple German sentence (at most 10 words) that uses the word;',
+      '- "exampleAr": the Arabic translation of that sentence.',
+    ].join("\n");
   return [
     "You choose English words for a word puzzle played by Arabic-speaking learners of English.",
     'Reply with JSON only, no other text: {"words":[{"word":"...","ar":"...","example":"...","exampleAr":"..."}]}',

@@ -5,6 +5,7 @@ on:
     paths:
       - "src/lib/repeat/**"
       - "src/lib/library-language*"
+      - "src/lib/text-language*"
       - "src/lib/voice-line-files.test.ts"
       - "public/sounds/uzyra/**"
       - "src/components/rita/RitaRealtimeV3.tsx"
@@ -131,6 +132,7 @@ jobs:
           node --test src/lib/rita-phrase.test.ts
           node --test src/lib/repeat/match.test.ts
           node --test src/lib/library-language.test.ts
+          node --test src/lib/text-language.test.ts
           node --test src/lib/voice-line-files.test.ts
           node --test src/lib/activity-streak.test.ts
           node --test src/lib/learning-language.test.ts
