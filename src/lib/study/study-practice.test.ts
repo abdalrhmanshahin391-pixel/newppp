@@ -20,6 +20,7 @@ import {
   languageFromId,
   languageItems,
   replyRingItems,
+  RULE_NO_CARDS,
   ringItems,
 } from "../../components/rita-study/radial-items.ts";
 
@@ -152,12 +153,17 @@ test("the wheel keeps its eight slices in fixed places, practice disabled for un
       items.map((item) => item.id),
       expected,
     );
-    for (const id of ["make_cards", "make_mcq"]) {
-      const item = items.find((item) => item.id === id)!;
-      assert.equal(item.disabled, kind === "too_long" || kind === "non_text");
-      assert.ok(item.disabledReason);
-    }
+    const unusable = kind === "too_long" || kind === "non_text";
+    const mcq = items.find((item) => item.id === "make_mcq")!;
+    assert.equal(mcq.disabled, unusable);
+    assert.ok(mcq.disabledReason);
+    // A rule or an Arabic explanation makes no flashcards (questions still test it).
+    const cards = items.find((item) => item.id === "make_cards")!;
+    assert.equal(cards.disabled, unusable || kind === "rule" || kind === "arabic_only");
+    assert.ok(cards.disabledReason);
   }
+  const rule = ringItems({ actions: availableActions("rule"), kind: "rule" });
+  assert.equal(rule.find((item) => item.id === "make_cards")!.disabledReason, RULE_NO_CARDS);
   assert.equal(ACTION_INFO.make_cards.group, "cards");
   assert.equal(ACTION_INFO.make_mcq.group, "practice");
 });

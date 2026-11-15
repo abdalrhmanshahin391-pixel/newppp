@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fitWheel, sliceAt, slicePath, WHEEL_CHIP, WHEEL_TICKS } from "./wheel-layout.ts";
+import {
+  fitWheel,
+  heldSlice,
+  sliceAt,
+  slicePath,
+  WHEEL_CHIP,
+  WHEEL_TICKS,
+} from "./wheel-layout.ts";
 
 test("a short move picks the slice it points at, clockwise from the top", () => {
   assert.equal(sliceAt(0, -40, 8, 20), 0); // up: the first slice
@@ -47,4 +54,19 @@ test("a 390px phone keeps the full-size wheel, whole", () => {
 test("a slice is a closed ring piece", () => {
   const d = slicePath(100, 100, 40, 120, 0, 8);
   assert.match(d, /^M[-\d.]+ [-\d.]+ A120 120 0 0 1 .* L.* A40 40 0 0 0 .* Z$/);
+});
+
+test("a held finger let go where it was pressed picks nothing, even when the wheel slid inwards", () => {
+  // The circle against the left edge of a narrow column: the wheel's centre moves right.
+  const fit = fitWheel({ cx: 20, cy: 400, width: 500, height: 900, top: 120 });
+  assert.ok(fit.cx > 120);
+  const pressed = { x: 20, y: 400 };
+  // Measured from the wheel's new centre, the unmoved finger would point at a slice ...
+  assert.notEqual(sliceAt(pressed.x - fit.cx, pressed.y - fit.cy, 8, fit.r0 * 0.62), -1);
+  // ... measured from where it was pressed, it picks nothing.
+  assert.equal(heldSlice(pressed, pressed, 8, fit.r0), -1);
+  assert.equal(heldSlice({ x: 25, y: 404 }, pressed, 8, fit.r0), -1);
+  // Moving up past the dead zone picks the top slice; right picks the third (90°).
+  assert.equal(heldSlice({ x: 20, y: 340 }, pressed, 8, fit.r0), 0);
+  assert.equal(heldSlice({ x: 90, y: 400 }, pressed, 8, fit.r0), 2);
 });

@@ -130,12 +130,19 @@ export const KIND_LABEL: Record<SelectionKind, string> = {
   non_text: "",
 };
 
+/** Why the flashcards slice is dimmed for a rule or an explanation: say what to do instead. */
+export const RULE_NO_CARDS = "القواعد ما بتنعمل بطاقات. جرّب «تمارين»، أو حدّد جملة مثال لحالها";
+
 /** The wheel's eight slices; a slice that does not suit the selection stays, dimmed. */
-export function ringItems(options: { actions: StudyAction[] }): RadialItem[] {
+export function ringItems(options: { actions: StudyAction[]; kind?: SelectionKind }): RadialItem[] {
+  const ruleLike = options.kind === "rule" || options.kind === "arabic_only";
   return RING_ACTIONS.map((action) => ({
     ...actionItem(action),
     disabled: !options.actions.includes(action),
-    disabledReason: WHEEL_REASONS[action] ?? "حدّد كلمة أو جملة",
+    disabledReason:
+      action === "make_cards" && ruleLike
+        ? RULE_NO_CARDS
+        : (WHEEL_REASONS[action] ?? "حدّد كلمة أو جملة"),
   }));
 }
 

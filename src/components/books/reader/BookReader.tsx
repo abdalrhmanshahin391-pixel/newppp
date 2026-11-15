@@ -1529,8 +1529,8 @@ export function BookReader({
             setOpenedByKey(false);
             setMenuOpen(true);
           }}
-          onHoldMove={(x, y) => radial.current?.hover(x, y)}
-          onHoldEnd={(x, y) => radial.current?.release(x, y)}
+          onHoldMove={(x, y, from) => radial.current?.hover(x, y, from)}
+          onHoldEnd={(x, y, from) => radial.current?.release(x, y, from)}
           moving={movingOrb}
           onStopMoving={() => setMovingOrb(false)}
           label={picked ? "شو بدك نعمل بالتحديد؟" : "حدّد جزء من الصفحة"}
