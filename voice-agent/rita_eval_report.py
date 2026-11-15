@@ -145,6 +145,18 @@ def _key(row: dict[str, Any]) -> tuple[str, int]:
     return (row["talk"], row["turn"])
 
 
+def _categories(result: dict[str, Any]) -> dict[str, int]:
+    """Failures per category; an older run without categories gets them from its problem texts."""
+
+    from rita_talk_eval import category
+
+    counts: dict[str, int] = {}
+    for row in result.get("rows", []):
+        for name in row.get("categories") or sorted({category(p) for p in row.get("problems", [])}):
+            counts[name] = counts.get(name, 0) + 1
+    return counts
+
+
 def compare(a: dict[str, Any], b: dict[str, Any]) -> str:
     """A → B: totals, problem counts and every turn that changed from pass to fail or back."""
 
@@ -155,8 +167,7 @@ def compare(a: dict[str, Any], b: dict[str, Any]) -> str:
         fa = f"{_pct(sa['pass_rate'])} ({sa['first_word_ms_median']} ms)" if sa else "-"
         fb = f"{_pct(sb['pass_rate'])} ({sb['first_word_ms_median']} ms)" if sb else "-"
         lines.append(f"| {name} | {fa} | {fb} |")
-    ca = a.get("breakdown", {}).get("categories", {})
-    cb = b.get("breakdown", {}).get("categories", {})
+    ca, cb = _categories(a), _categories(b)
     if ca or cb:
         lines += ["", "| Problem | A | B |", "| --- | --- | --- |"]
         for name in sorted(set(ca) | set(cb), key=lambda n: -(ca.get(n, 0) + cb.get(n, 0))):
