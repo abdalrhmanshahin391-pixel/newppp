@@ -121,7 +121,7 @@ TALKS: tuple[Talk, ...] = (
         EN,
         (
             Turn("Hi, I want to practise speaking English", sheet="no", lead=True),
-            Turn("I am work in a bank", sheet="no", lead=True, fix=("I work in a bank", "I'm working in a bank", "I am working in a bank")),
+            Turn("I am work in a bank", sheet="no", lead=True, fix=("I work in a bank", "I work at a bank", "I'm working in a bank", "I am working in a bank")),
             Turn("Can you explain when to use the present perfect and the past simple?", sheet="yes"),
             Turn("ok thanks", sheet="no"),
             Turn("I have been to London last year", sheet="no", lead=True, fix=("I went to London",)),
@@ -170,7 +170,8 @@ def measure(raw: str) -> dict[str, Any]:
     return {
         "words": len(WORD.findall(voice)),
         "sentences": count_sentences(voice),
-        "questions": len(QUESTION.findall(voice)),
+        # A question mark inside the phrase in quotes ("How are you?") is the learner's line.
+        "questions": len(QUESTION.findall(QUOTED.sub("PHRASE", voice))),
         "sheet_lines": len(sheet_lines),
         "spoken": voice,
         "sheet": sheet,

@@ -230,11 +230,14 @@ FREE_TALK_TURN_NOTE = (
     "about 20 spoken words, never more than two short sentences of your own plus the phrase in quotes. "
     "A chat turn: one short reaction or answer, one simple question, then the phrase in quotes. "
     "\"What does that mean?\" is about your own last question or phrase: its meaning in one sentence, then "
-    "the same phrase again in quotes (repeating it here is right). \"I did not understand\": one very simple sentence with one everyday example, no "
-    f"{MARKER_LINE} and no pointer to one. Asked for rules, a comparison or a list: one spoken sentence, "
-    f"then {MARKER_LINE} with the details. A real mistake: الصح: \"…\" in one line, then carry on the chat; "
-    "a sentence that is already right gets no الصح line. "
-    "Thanks, okay or a stop word: one short acknowledgement only."
+    "the same phrase again in quotes (repeating it here is right). "
+    "\"I did not understand\": take ONE piece only (for am/is/are: only \"I am\"), one very simple sentence "
+    f"with one example, then stop; the other pieces wait. No {MARKER_LINE}, no pointer to one, no list. "
+    "Asked for rules, a comparison or a list (several words, forms or examples): one spoken sentence, "
+    f"then {MARKER_LINE} with the details, and no question after it. "
+    "A real mistake: the right sentence in quotes once, after الصح: in Arabic or Correct: in English (never "
+    "both, never \"The correct sentence is\"), then carry on the chat; a sentence that is already right gets "
+    "no correction. Thanks, okay or a stop word: one short acknowledgement only."
 )
 
 
@@ -249,7 +252,7 @@ def free_talk_section(body: dict[str, Any], target: dict[str, str] | None) -> st
 FREE CONVERSATION
 - Lead the chat like a friendly tutor. After your short answer, ask one simple question about the
   learner's life (name, home, work, studies, hobbies, plans), at their level. Not after a
-  general-knowledge answer, thanks or a stop word.
+  general-knowledge answer, an explanation with a sheet, thanks or a stop word.
 - End with that question, then a short {language} phrase in quotes that fits it and starts the
   answer, for example: شو بتشتغل؟ "I work as …". A beginner then knows what to say. Never quote the
   question itself, and never repeat a question or a phrase you already gave in this chat.
@@ -259,7 +262,7 @@ FREE CONVERSATION
 - Correct only a real mistake. A sentence that is already right gets a few words of praise and no
   الصح line: "I'm" and "I am" are both right, and so are "I'm Abdulrahman" and "Ich heiße …". Never
   rewrite a right sentence into another one ("My name is …" for "I'm …" is not a correction).
-- A real mistake: الصح: "…" once, with no sheet, then carry on the chat.
+- A real mistake: الصح: "…" (Correct: "…" in English) once, with no sheet, then carry on the chat.
 - Asked for a restaurant, shop or place, name none, not even as "people recommend": ask what the
   learner likes instead.
 """

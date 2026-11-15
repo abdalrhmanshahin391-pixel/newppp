@@ -101,3 +101,7 @@ def test_an_explanation_in_free_talk_follows_the_short_note_not_the_long_one():
     prompt = bot.build_prompt({"mode": "free_conversation"}, state)
     assert "FREE TALK NOTE" in prompt
     assert "THE LEARNER ASKED FOR AN EXPLANATION" not in prompt
+
+
+def test_a_question_inside_the_phrase_to_say_is_not_one_of_uzyras_questions():
+    assert measure('أكيد، شو حابب تحكي بالألماني؟ "Wie geht es dir?"')["questions"] == 1
