@@ -126,7 +126,7 @@ TALKS: tuple[Talk, ...] = (
             Turn("I am work in a bank", sheet="no", lead=True, fix=("I work in a bank", "I work at a bank", "I'm working in a bank", "I am working in a bank")),
             Turn("Can you explain when to use the present perfect and the past simple?", sheet="yes"),
             Turn("ok thanks", sheet="no"),
-            Turn("I have been to London last year", sheet="no", lead=True, fix=("I went to London",)),
+            Turn("I have been to London last year", sheet="no", lead=True, fix=("I went to London", "I was in London")),
             Turn("What does 'break a leg' mean?", sheet="no"),
         ),
     ),
