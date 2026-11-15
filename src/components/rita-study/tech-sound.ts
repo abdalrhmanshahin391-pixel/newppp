@@ -407,3 +407,57 @@ export function playClip(buffer: AudioBuffer, volume = 0.9, from = 0): boolean {
   });
   return started;
 }
+
+/** A soft bell (sine with a quiet overtone): the right answer. */
+function answerBell(a: AudioContext, freq: number, start: number, volume: number) {
+  for (const [ratio, share, length] of [
+    [1, 1, 0.42],
+    [2.76, 0.3, 0.18],
+  ] as const) {
+    const osc = a.createOscillator();
+    const gain = a.createGain();
+    const t = a.currentTime + start;
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq * ratio, t);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(volume * share, t + 0.006);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + length);
+    osc.connect(gain).connect(a.destination);
+    osc.start(t);
+    osc.stop(t + length + 0.02);
+  }
+}
+
+/** A practice question answered right: a quick rising "ding-ding". */
+export function rightAnswerSound(): void {
+  whenRunning((a) => {
+    answerBell(a, 1046.5, 0, 0.09);
+    answerBell(a, 1567.98, 0.07, 0.075);
+  });
+}
+
+/** Answered wrong: a short, low, soft buzz (not harsh: the learner is still learning). */
+export function wrongAnswerSound(): void {
+  whenRunning((a) => {
+    const t = a.currentTime;
+    const osc = a.createOscillator();
+    const gain = a.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(220, t);
+    osc.frequency.exponentialRampToValueAtTime(130, t + 0.26);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.12, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+    osc.connect(gain).connect(a.destination);
+    osc.start(t);
+    osc.stop(t + 0.3);
+  });
+}
+
+/** Every question of a set answered: a short rising tune, brighter when most were right. */
+export function quizDoneSound(share: number): void {
+  whenRunning((a) => {
+    const notes = share >= 0.8 ? [523.25, 659.25, 783.99, 1046.5] : [523.25, 659.25, 783.99];
+    notes.forEach((freq, index) => answerBell(a, freq, index * 0.09, 0.06));
+  });
+}

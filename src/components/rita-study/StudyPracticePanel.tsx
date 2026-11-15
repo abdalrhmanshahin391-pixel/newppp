@@ -1,17 +1,20 @@
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Loader2, X } from "lucide-react";
+import { Check, Loader2, MessageCircleQuestion, RotateCcw, X } from "lucide-react";
 import type { PracticeAction } from "@/lib/study/study-actions";
 import {
   PRACTICE_NOTE,
   cardStyleLabel,
   practiceFailureView,
   practiceTitle,
+  quizScore,
+  retryWrong,
   type CardStyle,
   type StudyCard,
   type StudyMcq,
 } from "@/lib/study/study-practice";
 import { PracticeSave } from "./PracticeSave";
+import { quizDoneSound, rightAnswerSound, wrongAnswerSound } from "./tech-sound";
 import "./study-practice.css";
 
 export type PracticeView = {
@@ -95,6 +98,7 @@ export function StudyPracticeBody({
   onSwitch,
   onStyle,
   onClose,
+  onExplain,
 }: {
   view: PracticeView;
   onRetry: () => void;
@@ -102,6 +106,8 @@ export function StudyPracticeBody({
   /** Makes (or shows again) the cards of another style from the same selection. */
   onStyle?: (style: CardStyle) => void;
   onClose: () => void;
+  /** Asks Uzyra to explain a practice question more (the lesson page, where Uzyra is). */
+  onExplain?: (question: StudyMcq, chosen: number | undefined) => void;
 }) {
   const cards = view.action === "make_cards";
   const [cardIndex, setCardIndex] = useState(0);
@@ -190,6 +196,12 @@ export function StudyPracticeBody({
                   : { ...current, [questionIndex]: option },
               )
             }
+            onRetryWrong={() => {
+              const again = retryWrong(view.questions, answers);
+              setAnswers(again.answers);
+              setQuestionIndex(again.first);
+            }}
+            onExplain={onExplain}
           />
         ))}
       {view.status === "ready" && view.source && (
@@ -340,58 +352,166 @@ function Cards({
   );
 }
 
+const LETTERS = ["أ", "ب", "ج", "د"];
+
+/**
+ * The practice questions: progress dots on top (filled green or red once answered), the question,
+ * four options with letters. Answering plays a short right or wrong sound (the study sound switch
+ * mutes it), marks the right option green and a wrong pick red, and opens "why": the right answer,
+ * why it is right and, for a wrong pick, what that option got wrong. When every question is
+ * answered: the score, and "try the wrong ones again".
+ */
 function Questions({
   questions,
   index,
   answers,
   onMove,
   onAnswer,
+  onRetryWrong,
+  onExplain,
 }: {
   questions: StudyMcq[];
   index: number;
   answers: Record<number, number>;
   onMove: (index: number) => void;
   onAnswer: (option: number) => void;
+  onRetryWrong: () => void;
+  /** Ask Uzyra to explain this question more (only where Uzyra is on the page). */
+  onExplain?: (question: StudyMcq, chosen: number | undefined) => void;
 }) {
   const question = questions[index];
   if (!question) return <p>ما في تمارين لهالجزء. حدّد جزءًا ثانيًا من الدرس.</p>;
   const chosen = answers[index];
   const answered = chosen !== undefined;
+  const right = answered && chosen === question.answer;
+  const score = quizScore(questions, answers);
+  const wrongReason = answered && !right ? question.whyNot?.[chosen] : "";
   return (
     <>
-      <p className="st-practice-note" role="status">
-        السؤال {index + 1} من {questions.length}
-      </p>
+      <div className="st-quiz-top">
+        <p className="st-practice-note" role="status">
+          السؤال {index + 1} من {questions.length}
+        </p>
+        <ol className="st-quiz-dots" aria-label="الأسئلة">
+          {questions.map((item, dot) => {
+            const pick = answers[dot];
+            const state = pick === undefined ? "open" : pick === item.answer ? "right" : "wrong";
+            return (
+              <li key={dot}>
+                <button
+                  type="button"
+                  className="st-quiz-dot"
+                  data-state={state}
+                  aria-current={dot === index ? "step" : undefined}
+                  aria-label={`السؤال ${dot + 1}${state === "right" ? "، صح" : state === "wrong" ? "، غلط" : ""}`}
+                  onClick={() => onMove(dot)}
+                />
+              </li>
+            );
+          })}
+        </ol>
+      </div>
       <fieldset className="st-practice-question">
         <legend dir="auto">{question.question}</legend>
         <div className="st-practice-options">
-          {question.options.map((option, optionIndex) => (
-            <button
-              key={optionIndex}
-              type="button"
-              dir="auto"
-              className="st-practice-option"
-              disabled={answered}
-              aria-pressed={chosen === optionIndex}
-              onClick={() => onAnswer(optionIndex)}
-            >
-              <span>{option}</span>
-              {answered && optionIndex === question.answer && <strong>الإجابة الصحيحة</strong>}
-              {answered && chosen === optionIndex && chosen !== question.answer && (
-                <strong>إجابتك</strong>
-              )}
-            </button>
-          ))}
+          {question.options.map((option, optionIndex) => {
+            const state = !answered
+              ? undefined
+              : optionIndex === question.answer
+                ? "right"
+                : optionIndex === chosen
+                  ? "wrong"
+                  : "rest";
+            return (
+              <button
+                key={optionIndex}
+                type="button"
+                className="st-practice-option st-quiz-option"
+                data-state={state}
+                disabled={answered}
+                aria-pressed={chosen === optionIndex}
+                onClick={() => {
+                  if (optionIndex === question.answer) rightAnswerSound();
+                  else wrongAnswerSound();
+                  const next = { ...answers, [index]: optionIndex };
+                  const after = quizScore(questions, next);
+                  if (after.done)
+                    window.setTimeout(() => quizDoneSound(after.right / after.total), 520);
+                  onAnswer(optionIndex);
+                }}
+              >
+                <span className="st-quiz-letter" aria-hidden="true">
+                  {state === "right" ? (
+                    <Check size={16} strokeWidth={3} />
+                  ) : state === "wrong" ? (
+                    <X size={16} strokeWidth={3} />
+                  ) : (
+                    LETTERS[optionIndex]
+                  )}
+                </span>
+                <span className="st-quiz-text" dir="auto">
+                  {option}
+                </span>
+                {state === "right" && <span className="sr-only">الإجابة الصحيحة</span>}
+                {state === "wrong" && <span className="sr-only">إجابتك</span>}
+              </button>
+            );
+          })}
         </div>
       </fieldset>
       {answered && (
-        <div className="st-practice-feedback" role="status">
-          <p className="font-semibold">{chosen === question.answer ? "صح!" : "الإجابة الصحيحة:"}</p>
-          {chosen !== question.answer && <p dir="auto">{question.options[question.answer]}</p>}
-          <p dir="auto" className="mt-2">
-            {question.why}
+        <section className="st-quiz-why" data-state={right ? "right" : "wrong"} role="status">
+          <p className="st-quiz-verdict">
+            {right ? "صح، برافو!" : "مش هيك. الصح:"}
+            {!right && (
+              <span className="st-quiz-right" dir="auto">
+                {question.options[question.answer]}
+              </span>
+            )}
           </p>
-        </div>
+          {question.why && (
+            <div className="st-quiz-reason">
+              <span className="st-quiz-label">ليش؟</span>
+              <p dir="auto">{question.why}</p>
+            </div>
+          )}
+          {wrongReason && (
+            <div className="st-quiz-reason is-wrong">
+              <span className="st-quiz-label">ليش «{question.options[chosen]}» غلط؟</span>
+              <p dir="auto">{wrongReason}</p>
+            </div>
+          )}
+          {onExplain && (
+            <button
+              type="button"
+              className="rita-btn rita-btn-soft st-quiz-more"
+              onClick={() => onExplain(question, chosen)}
+            >
+              <MessageCircleQuestion size={18} aria-hidden="true" />
+              اشرحلي أكثر
+            </button>
+          )}
+        </section>
+      )}
+      {score.done && (
+        <section className="st-quiz-score" aria-live="polite">
+          <p>
+            <strong>
+              {score.right} من {score.total}
+            </strong>{" "}
+            {score.right === score.total
+              ? "كلهم صح!"
+              : score.right >= score.total / 2
+                ? "ممتاز، ضايل شوي."
+                : "ولا يهمك، جرّب مرة ثانية."}
+          </p>
+          {score.right < score.total && (
+            <button type="button" className="rita-btn rita-btn-primary" onClick={onRetryWrong}>
+              <RotateCcw size={18} aria-hidden="true" />
+              عيد اللي غلطت فيهم
+            </button>
+          )}
+        </section>
       )}
       <nav className="st-practice-nav" aria-label="التنقل بين الأسئلة">
         <button

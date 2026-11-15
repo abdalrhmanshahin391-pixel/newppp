@@ -11,6 +11,7 @@ import { StudyPracticeBody, type PracticeView } from "./StudyPracticePanel";
 import {
   PRACTICE_NOTE,
   cardStylesFor,
+  questionForUzyra,
   practiceTitle,
   type CardStyle,
   type StudyCard,
@@ -895,6 +896,11 @@ export function StudyPage({
                   }}
                   onSwitch={(action) => void practice(action, true)}
                   onStyle={(style) => void practice("make_cards", true, style)}
+                  onExplain={(question, chosen) => {
+                    // Uzyra explains it in the conversation (by voice in a call).
+                    if (!wide && !bridge.send) setTab("rita");
+                    void requests.runReply(questionForUzyra(question, chosen));
+                  }}
                   onClose={() => {
                     setWin(null);
                     orbButton.current?.focus({ preventScroll: true });
