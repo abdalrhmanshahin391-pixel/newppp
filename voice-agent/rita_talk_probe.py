@@ -200,15 +200,16 @@ def fold(text: str) -> str:
     return re.sub("[أإآ]", "ا", text).replace("ى", "ي").replace("ة", "ه")
 
 
-def check_turn(turn: Turn, raw: str, site_language: str = "") -> list[str]:
-    """What is wrong with this reply (an empty list means it passes)."""
+def check_turn(turn: Turn, raw: str, site_language: str = "", max_words: int | None = None) -> list[str]:
+    """What is wrong with this reply (an empty list means it passes). `max_words` replaces the fixed
+    length limit (a reference chat sets its own)."""
 
     if not raw.strip():
         return ["empty reply"]
     m = measure(raw)
     spoken = m["spoken"]
-    words = MAX_WORDS_SIMPLIFY if turn.simplify else MAX_WORDS
-    sentences = MAX_SENTENCES_SIMPLIFY if turn.simplify else MAX_SENTENCES
+    words = max_words or (MAX_WORDS_SIMPLIFY if turn.simplify else MAX_WORDS)
+    sentences = 99 if max_words else (MAX_SENTENCES_SIMPLIFY if turn.simplify else MAX_SENTENCES)
     problems: list[str] = []
     if m["words"] > words:
         problems.append(f"spoken {m['words']} words (at most {words})")

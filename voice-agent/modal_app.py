@@ -134,15 +134,22 @@ async def diagnose_talk_probe(runs: int = 2) -> dict[str, Any]:
     return await run_probe(runs)
 
 
-@app.function(secrets=secrets, timeout=1800, region="eu")
+@app.function(secrets=secrets, timeout=3600, region="eu")
 async def diagnose_talk_eval(
-    model: str = "", effort: str = "", split: str = "dev", runs: int = 1
+    model: str = "",
+    effort: str = "",
+    split: str = "dev",
+    runs: int = 1,
+    reference: dict[str, Any] | None = None,
+    history: str = "reference",
+    judge: str = "",
 ) -> dict[str, Any]:
-    """Grade the free conversations on Jordanian learners' questions (text only, no voice)."""
+    """Grade the free conversations on Jordanian learners' questions, or on another app's chat
+    (`reference`, the JSON itself), text only, no voice."""
 
     from rita_talk_eval import run_eval
 
-    return await run_eval(model, effort, split, runs)
+    return await run_eval(model, effort, split, runs, reference, history, judge)
 
 
 @app.function(secrets=secrets, timeout=300)
@@ -344,14 +351,33 @@ def talk_probe(runs: int = 2) -> None:
 
 
 @app.local_entrypoint()
-def talk_eval(model: str = "", effort: str = "", split: str = "dev", runs: int = 1, out: str = "") -> None:
-    """Play the learners' conversations with any Groq model; print every reply, keep the JSON."""
+def talk_eval(
+    model: str = "",
+    effort: str = "",
+    split: str = "dev",
+    runs: int = 1,
+    reference: str = "",
+    history: str = "reference",
+    judge: str = "",
+    out: str = "",
+    report: str = "",
+) -> None:
+    """Play the learners' conversations (or a reference chat from evals/references) with any Groq
+    model; print every reply, keep the JSON, write a readable report."""
 
+    from rita_eval_report import report as render
     from rita_talk_eval import print_eval
 
-    result = diagnose_talk_eval.remote(model, effort, split, runs)
+    ref = None
+    if reference:
+        from rita_eval_reference import load_reference
+
+        ref = load_reference(reference)
+    result = diagnose_talk_eval.remote(model, effort, split, runs, ref, history, judge)
     if out:
         Path(out).write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding="utf-8")
+    if report and result.get("outcome") == "ok":
+        Path(report).write_text(render(result), encoding="utf-8")
     print_eval(result)
     if result.get("outcome") != "ok":
         raise SystemExit(1)

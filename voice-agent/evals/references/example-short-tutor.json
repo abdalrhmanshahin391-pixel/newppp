@@ -1,0 +1,26 @@
+{
+  "name": "example-short-tutor",
+  "source": "Written by hand to show the format; not taken from any app.",
+  "site_language": "ar",
+  "target": {"code": "de", "name": "German", "speechCode": "de"},
+  "notes": "Very short replies: the answer first, a correction in one line, a question only now and then.",
+  "conversations": [
+    {
+      "id": "cafe",
+      "turns": [
+        {"learner": "بدي أتدرب كيف أطلب قهوة", "reply": "يلا! أنا بالكاونتر: \"Was darf es sein?\"", "expect": {"free_language": true}},
+        {"learner": "Ich möchte ein Kaffee", "reply": "الصح: \"Ich möchte einen Kaffee.\" Kaffee مذكر، فبتصير einen.", "expect": {"fix": ["einen Kaffee"]}},
+        {"learner": "شو يعني zum Mitnehmen؟", "reply": "يعني تاخذه معك، مش تشربه هون.", "expect": {"must": ["تاخذ", "معك"]}},
+        {"learner": "Danke!", "reply": "Bitte schön! 😊", "expect": {"right": true, "free_language": true}}
+      ]
+    },
+    {
+      "id": "doctor",
+      "turns": [
+        {"learner": "كيف بسأل المريض وين بوجعك؟", "reply": "\"Wo tut es Ihnen weh?\" مع المريض دايماً Sie.", "expect": {"must": ["weh"]}},
+        {"learner": "Wo tut es Ihnen weh?", "reply": "ممتاز، صح 100%.", "expect": {"right": true}},
+        {"learner": "اشرحلي ليش Ihnen", "reply": "لأنه wehtun بياخذ Dativ، وSie بالـ Dativ بتصير Ihnen.\n[[SHEET]]\n# wehtun + Dativ\n| Nominativ | Dativ |\n| du | dir |\n| Sie | Ihnen |", "expect": {"sheet": "yes"}}
+      ]
+    }
+  ]
+}

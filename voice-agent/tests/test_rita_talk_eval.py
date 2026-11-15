@@ -93,3 +93,136 @@ def test_narrow_spaces_from_the_model_do_not_hide_a_correction():
 def test_the_stock_question_is_caught_with_or_without_the_article():
     for reply in ("تمام. شو بتحب تعمل وقت الفراغ؟", "تمام. شو بتعمل وقت فراغك؟"):
         assert any("stock question" in p for p in check_turn(Turn("شو يعني Termin؟"), reply))
+
+
+# --- reference chats, style, diagnostics, judge, report ------------------------------------------
+
+import json as _json
+
+import pytest
+
+from rita_eval_reference import load_reference, parse_reference
+from rita_eval_report import compare, report
+from rita_eval_style import gaps, limits, profile
+from rita_talk_eval import breakdown, category, judge_row, layer, spread, turn_kind
+
+
+def test_the_example_reference_loads_and_keeps_each_reply_with_its_turn():
+    ref = parse_reference(load_reference("example-short-tutor"))
+    assert [t.id for t in ref.talks] == ["ref-cafe", "ref-doctor"]
+    assert len(ref.replies["ref-cafe"]) == len(ref.talks[0].turns)
+    assert ref.talks[0].turns[1].fix == ("einen Kaffee",)
+
+
+def test_a_malformed_reference_is_refused_with_a_reason():
+    with pytest.raises(ValueError, match="target"):
+        parse_reference({"conversations": []})
+    with pytest.raises(ValueError, match="no conversation"):
+        parse_reference({"target": {"code": "de", "name": "German"}, "conversations": [{"turns": []}]})
+
+
+def test_style_profile_and_gaps_name_the_difference():
+    ours = profile(['أهلا! شو بتشتغل؟ "I work as a doctor."'] * 4)
+    theirs = profile(["تمام، صح."] * 4)
+    assert ours["question_rate"] == 1.0 and theirs["question_rate"] == 0.0
+    found = gaps(ours, theirs)
+    assert any(g.startswith("asks a question") for g in found)
+    assert any(g.startswith("length") for g in found)
+    assert limits(theirs)["max_words"] >= 8
+
+
+def test_problems_get_a_category_and_turns_a_kind():
+    assert category("spoken 30 words (at most 24)") == "length"
+    assert category("points to a sheet that is not there") == "pointer"
+    assert category("no sheet where rules or a list were asked for") == "sheet"
+    assert category("the mistake was not corrected (expected 'x')") == "correction"
+    assert turn_kind(Turn("x", fix=("y",))) == "mistake to correct"
+    assert turn_kind(Turn("x", simplify=True)) == "did not understand"
+
+
+def test_a_missing_sheet_on_a_turn_the_router_did_not_mark_as_explanation_is_the_routers_fault():
+    rules = Turn("اشرحلي", sheet="yes")
+    missing = ["no sheet where rules or a list were asked for"]
+    assert layer(rules, "answer_short", missing) == "router"
+    assert layer(rules, "explain", missing) == "model"
+    assert layer(rules, "explain", []) == ""
+    assert layer(rules, "explain", ["request error: X"]) == "service"
+
+
+def test_breakdown_and_spread_over_runs():
+    rows = [
+        {"split": "dev", "run": 1, "kind": "chat", "problems": [], "categories": [], "layer": ""},
+        {"split": "dev", "run": 1, "kind": "chat", "problems": ["x"], "categories": ["length"], "layer": "model"},
+        {"split": "dev", "run": 2, "kind": "chat", "problems": [], "categories": [], "layer": ""},
+        {"split": "dev", "run": 2, "kind": "chat", "problems": [], "categories": [], "layer": ""},
+    ]
+    b = breakdown(rows)
+    assert b["categories"] == {"length": 1} and b["kinds"]["chat"]["passed"] == 3
+    s = spread(rows, "dev", 2, 2)
+    assert s["runs"] == [0.5, 1.0] and s["range"] == 0.5
+
+
+def _recording_client(reply: str, seen: list):
+    async def stream():
+        yield _Chunk(choices=[SimpleNamespace(delta=SimpleNamespace(content=reply), finish_reason="stop")])
+
+    async def create(**params):
+        seen.append(params["messages"])
+        return stream()
+
+    return SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+
+
+def test_reference_history_gives_each_turn_the_other_apps_earlier_replies():
+    ref = parse_reference(load_reference("example-short-tutor"))
+    talk, replies = ref.talks[0], ref.replies["ref-cafe"]
+    seen: list = []
+    rows = asyncio.run(
+        play(_recording_client("Uzyra says this.", seen), talk, "reference", "", "", asyncio.Semaphore(1),
+             reference=replies, history_mode="reference", max_words=12)
+    )
+    second_turn_history = [m["content"] for m in seen[1] if m["role"] == "assistant"]
+    assert replies[0] in second_turn_history and "Uzyra says this." not in second_turn_history
+    assert rows[1]["reference"] == replies[1]
+    assert all("raw" in r and "layer" in r and "kind" in r for r in rows)
+
+
+def test_the_judge_reply_is_parsed_and_a_broken_one_counts_as_no_score():
+    async def create(**params):
+        text = 'Sure: {"correct": 5, "dialect": 4, "helpful": 3, "fit": 2, "better": "reference", "why": "too long"}'
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=text))])
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    row = {"text": "x", "raw": "y", "reference": "z"}
+    out = asyncio.run(judge_row(client, "openai/gpt-oss-120b", row, "", "German"))
+    assert out == {"correct": 5, "dialect": 4, "helpful": 3, "fit": 2, "better": "reference", "why": "too long"}
+
+    async def broken(**params):
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="no json here"))])
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=broken)))
+    assert asyncio.run(judge_row(client, "x", {"text": "x", "raw": "y"}, "", "German")) == {}
+
+
+def _result(passed_second: bool) -> dict:
+    rows = [
+        {"talk": "t", "turn": 1, "run": 1, "split": "dev", "text": "a", "spoken": "ok", "sheet": "", "problems": [],
+         "categories": [], "layer": "", "kind": "chat", "type": "answer_short"},
+        {"talk": "t", "turn": 2, "run": 1, "split": "dev", "text": "b", "spoken": "long", "sheet": "",
+         "problems": [] if passed_second else ["spoken 30 words (at most 24)"],
+         "categories": [] if passed_second else ["length"], "layer": "" if passed_second else "model",
+         "kind": "chat", "type": "answer_short", "reference": "short"},
+    ]
+    summary = {"total": 2, "passed": 2 if passed_second else 1, "failed": 0 if passed_second else 1,
+               "pass_rate": 1.0 if passed_second else 0.5, "first_word_ms_median": 200, "first_word_ms_p90": 300,
+               "words_mean": 10}
+    return {"model": "m", "effort": "", "by_split": {"dev": summary}, "spread": {"dev": {"runs": [summary["pass_rate"]]}},
+            "breakdown": breakdown(rows), "rows": rows, "style": {}}
+
+
+def test_report_and_compare_are_readable():
+    text = report(_result(False))
+    assert "## Where it goes wrong" in text and "| length | 1 |" in text and "Reference: short" in text
+    diff = compare(_result(False), _result(True))
+    assert "1 turns fixed, 0 turns broken" in diff and "## Fixed in B" in diff
+    _json.dumps(_result(False))  # results stay JSON

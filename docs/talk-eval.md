@@ -17,6 +17,61 @@ The log prints every reply. The artifact `rita-talk-eval` holds the same rows as
 time to the first written word. Locally:
 `modal run modal_app.py::talk_eval --split dev` (from `voice-agent/`).
 
+## Modes (inputs of task `talk-eval`)
+
+| Input | What it does |
+| --- | --- |
+| `split` | `dev`, `holdout` or `all` lines of the built-in corpus |
+| `runs` | plays the same lines 1-3 times; the report gives each run and the range. One run can move ±8 points, so compare means. |
+| `reference` | plays another app's chat from `voice-agent/evals/references/<name>.json` instead of the corpus (see the README there) |
+| `judge` | a Groq model (e.g. `openai/gpt-oss-120b`) scores every reply 1-5. With a reference it also says which reply is better. It costs about as many requests again. |
+| `model`, `effort` | the model and thinking level being tested |
+
+### The report
+
+The report is on the run's summary page (Actions → the run). The same report, plus every reply as
+JSON, is in the `rita-talk-eval` artifact. It has these sections:
+
+- **Score:** passed per part, each run, the first written word, mean length.
+- **Where it goes wrong:** failures per problem (length, correction, content, off-topic question,
+  sheet, language, …). Each failure gets a **layer**:
+  - **router:** the turn was given the wrong reply type, for example rules asked for and not marked
+    as an explanation. Fix the turn router, not the prompt.
+  - **model:** the prompt fit the turn and the model did not follow it. Fix the prompt, or try
+    another model or thinking level.
+  - **service:** the request failed.
+- **Kind of turn:** the pass rate for mistakes to correct, right sentences, word questions,
+  rules or lists, "did not understand", role plays and chat.
+- **Style against the reference** (reference runs only): length, questions, phrases in quotes,
+  corrections, sheets, lists, emoji and Arabic share for both, with the biggest gaps in words. The
+  reference also sets the length limit (its long replies plus 15%).
+- **Judge** (when asked): the mean scores and, against a reference, how often each reply was
+  better.
+- **Worst 10 replies:** Uzyra's reply next to the reference, with the problems, the layer and the
+  judge's reason.
+
+Each row in the JSON also keeps the reply type the router chose, whether the explanation budget
+was used, the thinking level, why the stream ended, the raw model text and how many characters
+the speech cleaner removed.
+
+### Reference history
+
+By default, each turn of a reference chat is played with the **other app's** earlier replies in the
+history. Both apps then answer every turn in the same context, and the replies can be compared one
+to one. Set `history` to `own` locally (`--history own`) to feed Uzyra's own replies back and see
+how a whole chat drifts.
+
+### Comparing two runs
+
+`python voice-agent/rita_eval_report.py A.json B.json` compares two runs: two branches (two prompt
+versions), two models or two thinking levels. It prints the totals, the problem counts, and the
+turns that went from fail to pass or back, with both replies.
+
+### The judge is a help, not a verdict
+
+The judge is a model grading a model, usually of the same family, so it can favour its own way of
+writing. Its scores show where to read first; the replies are still read before any change.
+
 ## The corpus
 
 `voice-agent/rita_talk_eval_corpus.py` holds 32 conversations, 122 turns. They are written by hand
