@@ -83,3 +83,8 @@ def test_a_conversation_is_played_turn_by_turn_with_timing():
 def test_print_reports_a_missing_key(capsys):
     result = {"outcome": "secret_missing", "summary": {"failed": 7}}
     assert rita_talk_eval.print_eval(result) == 7
+
+
+def test_narrow_spaces_from_the_model_do_not_hide_a_correction():
+    turn = Turn("Ich bin 25 Jahre", fix=("Jahre alt",))
+    assert check_turn(turn, 'الصح: "Ich bin 25 Jahre alt".') == []

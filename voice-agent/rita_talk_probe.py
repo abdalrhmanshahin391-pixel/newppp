@@ -196,7 +196,7 @@ def measure(raw: str) -> dict[str, Any]:
 def fold(text: str) -> str:
     """Case, Arabic letter variants and the tatweel folded, so «إقامة» matches «اقامة»."""
 
-    text = text.casefold().replace("\u0640", "")
+    text = re.sub(r"[\u00a0\u2007\u202f\s]+", " ", text.casefold().replace("\u0640", ""))
     return re.sub("[أإآ]", "ا", text).replace("ى", "ي").replace("ة", "ه")
 
 
@@ -226,7 +226,7 @@ def check_turn(turn: Turn, raw: str, site_language: str = "") -> list[str]:
         problems.append("a chat turn without a question and a phrase in quotes")
     if turn.right and CORRECTION.search(spoken):
         problems.append("corrected a sentence that was already right")
-    if turn.fix and not any(form.casefold() in raw.casefold() for form in turn.fix):
+    if turn.fix and not any(fold(form) in fold(raw) for form in turn.fix):
         problems.append(f"the mistake was not corrected (expected {turn.fix[0]!r})")
     if turn.must and not any(fold(form) in fold(raw) for form in turn.must):
         problems.append(f"missing the expected content (one of {', '.join(map(repr, turn.must[:3]))})")

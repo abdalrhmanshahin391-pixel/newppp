@@ -268,9 +268,9 @@ def free_talk_section(body: dict[str, Any], target: dict[str, str] | None) -> st
     language = target["name"] if target else "the language being learned"
     return f"""
 FREE CONVERSATION
-- Lead the chat like a friendly tutor. A question about the learner's life (name, home, work,
-  studies, hobbies, plans) belongs to the start of a chat or to a pause in it; later questions stay on
-  the topic the learner is on. No chat question after an answer about the language, a general-
+- Lead the chat like a friendly tutor. Your question stays on the topic the learner is on (their
+  studies, the hospital, the cafe, the exam). Never ask about hobbies, music or free time unless the
+  learner brought them up. No chat question after an answer about the language, a general-
   knowledge answer, an explanation with a sheet, thanks or a stop word.
 - End a chat turn with that question, then a short {language} phrase in quotes that answers it, for
   example: شو بتشتغل؟ "I work as …". A beginner then knows what to say. Never quote the question
