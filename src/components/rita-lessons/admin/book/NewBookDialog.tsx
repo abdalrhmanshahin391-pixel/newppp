@@ -31,7 +31,8 @@ export function NewBookDialog({
   const savePagesFn = useServerFn(adminSaveCurriculumPages);
   const registry = useLanguageRegistry();
   const [kind, setKind] = useState<"grammar" | "vocabulary">("grammar");
-  const [language, setLanguage] = useState("en");
+  // No default: a preset English once sent new German books to English learners.
+  const [language, setLanguage] = useState("");
   const [title, setTitle] = useState("");
   const [titleAr, setTitleAr] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -43,6 +44,10 @@ export function NewBookDialog({
     setError("");
     if (!file || !title.trim()) {
       setError("اختار ملف PDF واكتب اسم الكتاب.");
+      return;
+    }
+    if (!language) {
+      setError("اختار لغة الكتاب: الدروس بتطلع لمتعلّمي هاللغة بس.");
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
@@ -57,6 +62,23 @@ export function NewBookDialog({
       const doc = await loadPdfForText(file);
       const pageCount = Number(doc.numPages || 0);
       if (!pageCount) throw new Error("الملف ما فيه صفحات.");
+      // Before anything is saved: do the first pages read as the language chosen?
+      const sample: string[] = [];
+      for (let page = 1; page <= Math.min(pageCount, 6); page += 1)
+        sample.push((await getPageTextDetailed(doc, page)).text);
+      const { guessTextLanguage, languageMismatch } = await import("@/lib/text-language");
+      const guess = guessTextLanguage(sample.join("\n"));
+      if (languageMismatch(language, guess)) {
+        const chosenName = registry.all.find((l) => l.code === language)?.name_ar ?? language;
+        const guessName = registry.all.find((l) => l.code === guess.code)?.name_ar ?? guess.code;
+        const proceed = window.confirm(
+          `اخترت «${chosenName}» بس أول صفحات الكتاب شكلها ${guessName}. دروسه بتطلع لمتعلّمي ${chosenName} بس. متأكد؟`,
+        );
+        if (!proceed) {
+          setProgress("");
+          return;
+        }
+      }
       setProgress("رفع الملف…");
       const path = `books/${crypto.randomUUID()}.pdf`;
       const upload = await supabase.storage
@@ -157,9 +179,13 @@ export function NewBookDialog({
               </span>
               <select
                 value={language}
+                required
                 onChange={(event) => setLanguage(event.target.value)}
                 className="rita-select mt-1"
               >
+                <option value="" disabled>
+                  اختار لغة الكتاب…
+                </option>
                 {registry.all.map((item) => (
                   <option key={item.code} value={item.code}>
                     {item.name_ar} · {item.name_native}

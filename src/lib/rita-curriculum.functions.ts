@@ -438,7 +438,8 @@ export const adminCreateCurriculum = createServerFn({ method: "POST" })
         kind: kindSchema,
         title: z.string().trim().min(1).max(160),
         title_ar: z.string().trim().max(160).default(""),
-        target_language: languageCodeSchema.default("en"),
+        // Required: a default once made new German books show to English learners.
+        target_language: languageCodeSchema,
         page_count: z.number().int().min(1).max(5_000),
         pdf_path: z.string().trim().max(400).nullable().default(null),
       }),
@@ -471,6 +472,68 @@ export const adminSetCurriculumLevel = createServerFn({ method: "POST" })
       .eq("id", data.curriculumId);
     fail(error, "set book level");
     return { ok: true };
+  });
+
+/**
+ * Does each book's language match its pages? For every book that is not archived: the language it
+ * is set to and a guess from the text of its first pages and its lessons' titles and words (see
+ * text-language.ts). A book set to English whose pages read as German shows its lessons to the
+ * wrong learners, so the admin page flags it.
+ */
+export const adminCurriculumLanguageCheck = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { guessTextLanguage, languageMismatch } = await import("@/lib/text-language");
+    const db = context.supabase;
+    const books = await db
+      .from("rita_curricula")
+      .select("id, title, status, target_language")
+      .neq("status", "archived")
+      .order("created_at");
+    fail(books.error, "books");
+    const rows = (books.data ?? []) as {
+      id: string;
+      title: string;
+      status: string;
+      target_language: string;
+    }[];
+    return Promise.all(
+      rows.map(async (book) => {
+        const [pages, lessons] = await Promise.all([
+          db
+            .from("rita_curriculum_pages")
+            .select("text")
+            .eq("curriculum_id", book.id)
+            .order("page_no")
+            .limit(12),
+          db
+            .from("rita_lessons")
+            .select("title, vocabulary")
+            .eq("curriculum_id", book.id)
+            .neq("status", "archived")
+            .limit(40),
+        ]);
+        const text = [
+          ...((pages.data ?? []) as { text: string | null }[]).map((p) => p.text ?? ""),
+          ...((lessons.data ?? []) as { title: string; vocabulary: unknown }[]).map(
+            (l) => `${l.title} ${JSON.stringify(l.vocabulary ?? "")}`,
+          ),
+        ]
+          .join("\n")
+          .slice(0, 30_000);
+        const guess = guessTextLanguage(text);
+        return {
+          id: book.id,
+          title: book.title,
+          status: book.status,
+          language: book.target_language,
+          guess: guess.code,
+          markers: { en: guess.en, de: guess.de },
+          mismatch: languageMismatch(book.target_language, guess),
+        };
+      }),
+    );
   });
 
 /** Which language a book teaches. Its lessons then show only to learners of that language. */
