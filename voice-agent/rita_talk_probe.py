@@ -67,6 +67,12 @@ class Turn:
     fix: tuple[str, ...] = ()
     #: the reply must contain none of these (a named place, for example)
     forbid: tuple[str, ...] = ()
+    #: the reply must contain one of these (the right word or fact the learner asked for)
+    must: tuple[str, ...] = ()
+    #: the learner asked for another language: a reply without Arabic is fine
+    free_language: bool = False
+    #: what a good reply does, for the person reading the results (not checked)
+    want: str = ""
 
 
 @dataclass(frozen=True)
@@ -180,6 +186,13 @@ def measure(raw: str) -> dict[str, Any]:
     }
 
 
+def fold(text: str) -> str:
+    """Case, Arabic letter variants and the tatweel folded, so «إقامة» matches «اقامة»."""
+
+    text = text.casefold().replace("\u0640", "")
+    return re.sub("[أإآ]", "ا", text).replace("ى", "ي").replace("ة", "ه")
+
+
 def check_turn(turn: Turn, raw: str, site_language: str = "") -> list[str]:
     """What is wrong with this reply (an empty list means it passes)."""
 
@@ -208,7 +221,9 @@ def check_turn(turn: Turn, raw: str, site_language: str = "") -> list[str]:
         problems.append("corrected a sentence that was already right")
     if turn.fix and not any(form.casefold() in raw.casefold() for form in turn.fix):
         problems.append(f"the mistake was not corrected (expected {turn.fix[0]!r})")
-    if site_language == "ar" and not ARABIC.search(spoken):
+    if turn.must and not any(fold(form) in fold(raw) for form in turn.must):
+        problems.append(f"missing the expected content (one of {', '.join(map(repr, turn.must[:3]))})")
+    if site_language == "ar" and not turn.free_language and not ARABIC.search(spoken):
         problems.append("no Arabic for an Arabic speaker")
     if not m["sheet_lines"] and re.search(r"التفاصيل تحت|details below|see below", spoken, re.IGNORECASE):
         problems.append("points to a sheet that is not there")

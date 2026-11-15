@@ -134,6 +134,17 @@ async def diagnose_talk_probe(runs: int = 2) -> dict[str, Any]:
     return await run_probe(runs)
 
 
+@app.function(secrets=secrets, timeout=1800, region="eu")
+async def diagnose_talk_eval(
+    model: str = "", effort: str = "", split: str = "dev", runs: int = 1
+) -> dict[str, Any]:
+    """Grade the free conversations on Jordanian learners' questions (text only, no voice)."""
+
+    from rita_talk_eval import run_eval
+
+    return await run_eval(model, effort, split, runs)
+
+
 @app.function(secrets=secrets, timeout=300)
 async def make_voice_lines(only: str = "") -> dict[str, Any]:
     """Record the study circle's short lines with Uzyra's call voice (see uzyra_voice_lines)."""
@@ -330,6 +341,20 @@ def talk_probe(runs: int = 2) -> None:
     failed = print_result(diagnose_talk_probe.remote(runs))
     if failed:
         raise SystemExit(min(failed, 125))
+
+
+@app.local_entrypoint()
+def talk_eval(model: str = "", effort: str = "", split: str = "dev", runs: int = 1, out: str = "") -> None:
+    """Play the learners' conversations with any Groq model; print every reply, keep the JSON."""
+
+    from rita_talk_eval import print_eval
+
+    result = diagnose_talk_eval.remote(model, effort, split, runs)
+    if out:
+        Path(out).write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding="utf-8")
+    print_eval(result)
+    if result.get("outcome") != "ok":
+        raise SystemExit(1)
 
 
 @app.local_entrypoint()
