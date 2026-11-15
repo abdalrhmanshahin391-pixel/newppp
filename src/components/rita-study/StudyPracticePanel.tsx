@@ -460,7 +460,11 @@ function Questions({
         </div>
       </fieldset>
       {answered && (
-        <section className="st-quiz-why" data-state={right ? "right" : "wrong"} role="status">
+        <section
+          className="st-practice-feedback st-quiz-why"
+          data-state={right ? "right" : "wrong"}
+          role="status"
+        >
           <p className="st-quiz-verdict">
             {right ? "صح، برافو!" : "مش هيك. الصح:"}
             {!right && (
