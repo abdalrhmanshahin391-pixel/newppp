@@ -51,9 +51,8 @@ import {UzyraWordmark} from "./src/components/brand/UzyraWordmark";
   `
 const q=new URLSearchParams(location.search),lang=q.get("lang")==="ar"?"ar":"en";
 function Shell(){
- const [german,setGerman]=usePreviewState(true);
  const chips=q.has("stress")?{flashcards:{en:"1000 due "+"W".repeat(70),ar:"١٠٠٠ مستحقة "+"كلمةطويلة".repeat(12)},lessons:{en:"1000 of 1000 done",ar:"١٠٠٠ من ١٠٠٠ منجزة"}}:{flashcards:null,lessons:null};
- return <div className="edith-premium uz-learn"><header className="qa-header"><UzyraWordmark size={24}/><span>{lang==="ar"?"ابدأ التعلّم":"Start learning"}</span></header><main className="uz-learn-main"><LearnSections lang={lang} showGerman={german} chips={chips}/></main><footer className="qa-footer"><button onClick={()=>setGerman(x=>!x)}>Test language availability</button></footer></div>;
+ return <div className="edith-premium uz-learn"><header className="qa-header"><UzyraWordmark size={24}/><span>{lang==="ar"?"ابدأ التعلّم":"Start learning"}</span></header><main className="uz-learn-main"><LearnSections lang={lang} showGerman={true} chips={chips}/></main></div>;
 }
 const rootRoute=createRootRoute({component:()=> <Outlet/>});
 const pageRoute=createRoute({getParentRoute:()=>rootRoute,path:"/learn",component:Shell});
@@ -256,7 +255,20 @@ try {
         await p.evaluate(() => {
           window.qaImage = document.querySelector('[data-learn-row="lecture-lab"] svg');
         });
-        await select(p, "plan");
+        // Three sections only: the retired tools and the German section are gone.
+        assert.deepEqual(
+          await p
+            .locator(".uz-rail a")
+            .evaluateAll((links) => links.map((a) => a.getAttribute("href"))),
+          ["#rita", "#study", "#together"],
+        );
+        assert.deepEqual(
+          await p
+            .locator("#learn-panel-study [data-learn-row]")
+            .evaluateAll((rows) => rows.map((row) => row.getAttribute("data-learn-row"))),
+          ["flashcards", "lecture-lab", "todo", "exams"],
+        );
+        await select(p, "together");
         assert.equal(await p.locator("#learn-panel-study").getAttribute("inert"), "");
         assert.equal(await p.locator("#learn-panel-study").isVisible(), false);
         await select(p, "study");
@@ -269,8 +281,8 @@ try {
         await p.goBack();
         await p.waitForFunction(
           () =>
-            location.hash === "#plan" &&
-            document.querySelector("[aria-current=page]")?.getAttribute("href") === "#plan",
+            location.hash === "#together" &&
+            document.querySelector("[aria-current=page]")?.getAttribute("href") === "#together",
         );
         await p.goForward();
         await p.waitForFunction(
@@ -283,7 +295,7 @@ try {
         await p.waitForFunction(
           () => document.querySelector("[aria-current=page]")?.getAttribute("href") === "#study",
         );
-        for (const id of ["plan", "together", "german", "rita", "study", "rita", "plan", "study"])
+        for (const id of ["together", "rita", "study", "rita", "together", "study"])
           await select(p, id);
         await p.locator('.uz-rail a[href="#rita"]').focus();
         await p.keyboard.press("Enter");
@@ -297,7 +309,7 @@ try {
         if (width >= 1024) {
           await select(p, "study");
           await p.evaluate(() => scrollTo(0, 350));
-          await select(p, "plan");
+          await select(p, "together");
           assert.ok(
             await p
               .locator(".uz-learn-grid")
@@ -305,9 +317,9 @@ try {
             "short-panel scroll correction",
           );
         }
-        await select(p, "german");
-        await p.getByRole("button", { name: "Test language availability" }).click();
-        assert.equal(await p.locator('.uz-rail a[href="#german"]').count(), 0);
+        // An old link to a removed section opens the first one.
+        await p.goto(origin + "/learn?lang=" + lang + "#german");
+        await ready(p);
         await p.waitForFunction(
           () => document.querySelector("[aria-current=page]")?.getAttribute("href") === "#rita",
         );
@@ -318,7 +330,7 @@ try {
         );
         assert.equal((await checks(p)).overflow, false, "stress overflow");
         await p.emulateMedia({ reducedMotion: "reduce" });
-        await select(p, "plan");
+        await select(p, "together");
         assert.equal((await checks(p)).maxEntrance, 0);
         await p.setViewportSize({ width: 320, height: 800 });
         await select(p, "study");
@@ -360,7 +372,7 @@ try {
       true,
     );
   });
-  for (const id of ["study", "plan", "together", "rita", "study", "rita", "plan", "study"])
+  for (const id of ["study", "together", "rita", "study", "rita", "together", "study"])
     await select(p, id);
   await p.waitForTimeout(180);
   const samples = await p.evaluate(() => window.qaSamples);
@@ -381,7 +393,7 @@ try {
         p = await context.newPage();
       await p.goto(origin + "/learn?lang=ar");
       await ready(p);
-      for (const id of ["study", "plan", "together", "rita", "study"]) {
+      for (const id of ["study", "together", "rita", "study"]) {
         await select(p, id);
         await p.waitForTimeout(650);
       }

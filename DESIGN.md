@@ -324,8 +324,12 @@ motion.
 
 ## Learning home (`/learn`)
 
-One section at a time: Talk to Uzyra, Study with your own material, Plan, Together and German
-(the last follows the learning-language visibility rule). From 1024px, a sticky section rail
+One section at a time, three sections: Talk to Uzyra (free talk and Lessons), My study space
+(Flashcards, Lecture Lab, To-do and Exams: four equal cards, two to a row from 640px, one below)
+and Together (Shared decks and Spaces, the same two-to-a-row grid). Memory Lab, PDF summary, All
+in one, Question bank and the German section are retired from the hub, the header menu and the
+footer (`RETIRED_TOOLS` in `site-tools.ts`); their pages and saved work stay at their own
+addresses. An old `#plan` or `#german` link opens the first section. From 1024px, a sticky section rail
 sits beside the content; below it, a horizontal strip with 44px targets. Arabic mirrors the
 layout. Real due-card and lesson counts remain optional account data, never invented.
 
@@ -353,8 +357,8 @@ layout. Real due-card and lesson counts remain optional account data, never inve
   the mark and a members badge) and German Lab (a "Hallo!" card with the mark, the flag's colours
   and a "Danke" bubble). Every /learn card is now a game card; the monochrome tiles and their
   pictures are gone. Text drawn in the pictures stays left to right in Arabic.
-- **Hierarchy:** the conversation stage and Lessons sit together; the other sections retain
-  their existing leading tile and smaller tool tiles. Every destination, description and AI
+- **Hierarchy:** the conversation stage and Lessons sit together; the other sections are even
+  grids of equal cards (no wide leading card), so no section ends with a lone card. Every destination, description and AI
   marker stays. Cards have 24px corners; button styling reuses the existing system in monochrome.
 - **Navigation:** selection is immediate, followed by one interruptible-by-replacement 150ms
   entrance (opacity .85 to 1, translateY 2px to 0); no tile delays. Reduced motion removes it.
@@ -406,9 +410,8 @@ free conversation, shared decks). Do not call it "language" on its own: the site
 - **Gates** (`LanguageGate`, `GermanOnlyGate`): a signed-in learner who has not chosen a language sees the
   chooser card in place of flashcards, Memory Lab, lessons and shared decks. A learner of another
   language who opens the German Lab sees a short notice with "Switch to Deutsch" and "Back to learning"
-  (title in `rh-app-title`, grey panel, no dead end). Guests see the pages as before. The German section
-  and its side-list item on `/learn`, and the footer link, only show for German learners (or before a
-  choice).
+  (title in `rh-app-title`, grey panel, no dead end). Guests see the pages as before. The German section,
+  its side-list item on `/learn` and the footer link were retired (the German Lab page itself stays).
 - **Admin** (`/admin/languages`, Arabic, RTL): one card per language with its flag, "visible to learners",
   "Uzyra voice" and a country menu for the flag (names from `Intl.DisplayNames`), up/down order, counts,
   and an add form with a live flag preview. A language that has content is

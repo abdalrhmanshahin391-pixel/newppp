@@ -212,9 +212,15 @@ export const TOOLS: ToolDef[] = [
     sample: true,
     steps: [
       { en: "Pick the subject you want to play with.", ar: "اختر المادة التي تريد اللعب بها." },
-      { en: "Choose a game: match, speed round or recall.", ar: "اختر لعبة: مطابقة، سرعة، أو استرجاع." },
+      {
+        en: "Choose a game: match, speed round or recall.",
+        ar: "اختر لعبة: مطابقة، سرعة، أو استرجاع.",
+      },
       { en: "Tap the two halves that belong together.", ar: "اضغط على الجزئين المتطابقين." },
-      { en: "Your score shows which pairs still need work.", ar: "نتيجتك تُظهر الأزواج التي تحتاج تدريبًا." },
+      {
+        en: "Your score shows which pairs still need work.",
+        ar: "نتيجتك تُظهر الأزواج التي تحتاج تدريبًا.",
+      },
     ],
   },
   {
@@ -236,7 +242,10 @@ export const TOOLS: ToolDef[] = [
     cta: { en: "Create summary", ar: "أنشئ ملخصًا" },
     demo: "summary",
     steps: [
-      { en: "Upload the lecture PDF or paste your notes.", ar: "ارفع ملف المحاضرة أو الصق ملاحظاتك." },
+      {
+        en: "Upload the lecture PDF or paste your notes.",
+        ar: "ارفع ملف المحاضرة أو الصق ملاحظاتك.",
+      },
       { en: "Choose how short the summary should be.", ar: "اختر طول الملخص المطلوب." },
       { en: "Read the sheet, edit any line you want.", ar: "اقرأ الورقة وعدّل أي سطر تريده." },
       { en: "Save it to your summaries or print it.", ar: "احفظها في ملخصاتك أو اطبعها." },
@@ -265,7 +274,10 @@ export const TOOLS: ToolDef[] = [
       { en: "Write a task and give it a day.", ar: "اكتب مهمة وحدد لها يومًا." },
       { en: "Star what matters most today.", ar: "ضع نجمة على الأهم اليوم." },
       { en: "Tick it off when it's done.", ar: "علّم عليها عند الانتهاء." },
-      { en: "Select several tasks to move or delete them at once.", ar: "حدد عدة مهام لنقلها أو حذفها معًا." },
+      {
+        en: "Select several tasks to move or delete them at once.",
+        ar: "حدد عدة مهام لنقلها أو حذفها معًا.",
+      },
     ],
   },
   {
@@ -288,7 +300,10 @@ export const TOOLS: ToolDef[] = [
     demo: "calendar",
     steps: [
       { en: "Add an exam with its subject and date.", ar: "أضف امتحانًا مع المادة والتاريخ." },
-      { en: "The calendar shows the countdown for each one.", ar: "التقويم يعرض العد التنازلي لكل امتحان." },
+      {
+        en: "The calendar shows the countdown for each one.",
+        ar: "التقويم يعرض العد التنازلي لكل امتحان.",
+      },
       { en: "Open a day to see everything planned for it.", ar: "افتح يومًا لرؤية كل ما فيه." },
     ],
   },
@@ -312,8 +327,14 @@ export const TOOLS: ToolDef[] = [
     demo: "allinone",
     steps: [
       { en: "Upload the lecture PDF.", ar: "ارفع ملف المحاضرة." },
-      { en: "Pick what you want: summary, cards, questions.", ar: "اختر ما تريد: ملخص، بطاقات، أسئلة." },
-      { en: "Wait for Uzyra to finish — it runs in one pass.", ar: "انتظر يوزرا لتنتهي — كل شيء بمرة واحدة." },
+      {
+        en: "Pick what you want: summary, cards, questions.",
+        ar: "اختر ما تريد: ملخص، بطاقات، أسئلة.",
+      },
+      {
+        en: "Wait for Uzyra to finish — it runs in one pass.",
+        ar: "انتظر يوزرا لتنتهي — كل شيء بمرة واحدة.",
+      },
       { en: "Everything lands in your own study space.", ar: "كل شيء يُحفظ في مساحتك الدراسية." },
     ],
   },
@@ -364,9 +385,18 @@ export const TOOLS: ToolDef[] = [
     demo: "lecture",
     sample: true,
     steps: [
-      { en: "Create a subject, then a sub-subject for the lecture.", ar: "أنشئ مادة ثم مادة فرعية للمحاضرة." },
-      { en: "Upload the lecture file — your plan must allow it.", ar: "ارفع ملف المحاضرة — يجب أن تسمح خطتك بذلك." },
-      { en: "Uzyra writes the questions with short notes.", ar: "تكتب يوزرا الأسئلة مع ملاحظات قصيرة." },
+      {
+        en: "Create a subject, then a sub-subject for the lecture.",
+        ar: "أنشئ مادة ثم مادة فرعية للمحاضرة.",
+      },
+      {
+        en: "Upload the lecture file — your plan must allow it.",
+        ar: "ارفع ملف المحاضرة — يجب أن تسمح خطتك بذلك.",
+      },
+      {
+        en: "Uzyra writes the questions with short notes.",
+        ar: "تكتب يوزرا الأسئلة مع ملاحظات قصيرة.",
+      },
       { en: "Run the quiz whenever you revise.", ar: "شغّل الاختبار عند كل مراجعة." },
     ],
   },
@@ -391,8 +421,14 @@ export const TOOLS: ToolDef[] = [
     steps: [
       { en: "Open a deck you own and press share.", ar: "افتح مجموعة تملكها واضغط شارك." },
       { en: "Choose everyone, or only one classroom.", ar: "اختر الجميع أو صفًا واحدًا فقط." },
-      { en: "Save any deck you like into your own subjects.", ar: "احفظ أي مجموعة تعجبك في موادك." },
-      { en: "You can unshare or delete your deck at any time.", ar: "يمكنك إلغاء المشاركة أو الحذف في أي وقت." },
+      {
+        en: "Save any deck you like into your own subjects.",
+        ar: "احفظ أي مجموعة تعجبك في موادك.",
+      },
+      {
+        en: "You can unshare or delete your deck at any time.",
+        ar: "يمكنك إلغاء المشاركة أو الحذف في أي وقت.",
+      },
     ],
   },
   {
@@ -415,7 +451,10 @@ export const TOOLS: ToolDef[] = [
     demo: "spaces",
     steps: [
       { en: "Create a classroom or join one with its code.", ar: "أنشئ صفًا أو انضم بالرمز." },
-      { en: "Add decks into folders so members find them.", ar: "أضف المجموعات في مجلدات ليجدها الأعضاء." },
+      {
+        en: "Add decks into folders so members find them.",
+        ar: "أضف المجموعات في مجلدات ليجدها الأعضاء.",
+      },
       { en: "Post an announcement for everyone inside.", ar: "انشر إعلانًا لكل الأعضاء." },
       { en: "Owners can remove decks and members.", ar: "يمكن للمالك إزالة المجموعات والأعضاء." },
     ],
@@ -440,16 +479,40 @@ export const TOOLS: ToolDef[] = [
     demo: "german",
     sample: true,
     steps: [
-      { en: "Save a word once with its article and meaning.", ar: "احفظ الكلمة مرة واحدة مع أداتها ومعناها." },
-      { en: "The same word appears in all three German modes.", ar: "تظهر الكلمة نفسها في الأنماط الثلاثة." },
-      { en: "Play der/die/das, practise the sound, build sentences.", ar: "العب der/die/das، تدرّب على اللفظ، ابنِ جملًا." },
-      { en: "Words that a mode cannot use are skipped with a note.", ar: "الكلمات غير الصالحة لنمط تُستثنى مع ملاحظة." },
+      {
+        en: "Save a word once with its article and meaning.",
+        ar: "احفظ الكلمة مرة واحدة مع أداتها ومعناها.",
+      },
+      {
+        en: "The same word appears in all three German modes.",
+        ar: "تظهر الكلمة نفسها في الأنماط الثلاثة.",
+      },
+      {
+        en: "Play der/die/das, practise the sound, build sentences.",
+        ar: "العب der/die/das، تدرّب على اللفظ، ابنِ جملًا.",
+      },
+      {
+        en: "Words that a mode cannot use are skipped with a note.",
+        ar: "الكلمات غير الصالحة لنمط تُستثنى مع ملاحظة.",
+      },
     ],
   },
 ];
 
+/**
+ * Tools taken off the site's menus, hub and footer (their pages and saved work stay reachable by
+ * their own address).
+ */
+export const RETIRED_TOOLS: readonly string[] = [
+  "memory-lab",
+  "pdf-summary",
+  "all-in-one",
+  "question-bank",
+  "german-lab",
+];
+
 export function toolsOf(section: SectionId) {
-  return TOOLS.filter((t) => t.section === section);
+  return TOOLS.filter((t) => t.section === section && !RETIRED_TOOLS.includes(t.key));
 }
 
 export function sectionOf(key: SectionId) {

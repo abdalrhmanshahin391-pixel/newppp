@@ -1,12 +1,6 @@
-import { showsGermanLab } from "./learning-language";
-
 export type FooterColumn = { heading: string; links: { label: string; to: string }[] };
 
-export function footerColumns(
-  ar: boolean,
-  learningLanguage: string | null,
-  offersEnabled: boolean,
-): FooterColumn[] {
+export function footerColumns(ar: boolean, offersEnabled: boolean): FooterColumn[] {
   return [
     {
       heading: ar ? "يوزرا" : "Uzyra",
@@ -14,25 +8,15 @@ export function footerColumns(
         { label: ar ? "تحدّث مع يوزرا" : "Talk to Uzyra", to: "/rita" },
         { label: ar ? "محادثة حيّة" : "Live conversation", to: "/rita-live" },
         { label: ar ? "دروس يوزرا" : "Uzyra's lessons", to: "/rita-lessons" },
-        ...(showsGermanLab(learningLanguage)
-          ? [{ label: ar ? "الألمانية" : "German Lab", to: "/german" }]
-          : []),
       ],
     },
     {
       heading: ar ? "أدوات الدراسة" : "Study tools",
       links: [
         { label: ar ? "البطاقات" : "Flashcards", to: "/study" },
-        { label: ar ? "مختبر الذاكرة" : "Memory Lab", to: "/study/match" },
-        { label: ar ? "ملخّصات PDF" : "PDF summaries", to: "/study/pdf" },
-        { label: ar ? "قائمة المهام" : "To-do list", to: "/study/todo" },
-      ],
-    },
-    {
-      heading: ar ? "مع الذكاء الاصطناعي" : "With AI",
-      links: [
-        { label: ar ? "الكل في واحد" : "All in one", to: "/study/all-in-one" },
         { label: ar ? "مختبر المحاضرات" : "Lecture Lab", to: "/study/lectures" },
+        { label: ar ? "قائمة المهام" : "To-do list", to: "/study/todo" },
+        { label: ar ? "جدول الامتحانات" : "Exam schedule", to: "/study/exams" },
       ],
     },
     {

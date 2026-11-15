@@ -4,7 +4,6 @@ import { useLessonPath } from "@/components/learn/useLessonPath";
 import { useAuth } from "@/hooks/useAuth";
 import { useLearningLanguage } from "@/hooks/useLearningLanguage";
 import { LanguageChooserCard } from "@/components/language/LanguagePicker";
-import { showsGermanLab } from "@/lib/learning-language";
 import { useStudyOverview } from "@/lib/use-review";
 import { lessonsDone } from "@/lib/learn-home";
 import { LearnSections, type Bi } from "./LearnHomeView";
@@ -38,7 +37,7 @@ export function LearnHome() {
             <LanguageChooserCard />
           </div>
         ) : null}
-        <LearnSections lang={lang} showGerman={showsGermanLab(learning.code)} chips={chips} />
+        <LearnSections lang={lang} chips={chips} />
       </main>
     </div>
   );
