@@ -54,3 +54,50 @@ def test_a_phrase_in_quotes_is_not_counted_as_a_sentence():
     reply = 'حلو، فهمت إنك من الأردن. من وين تعلمت إنجليزي؟ "At school."'
     assert measure(reply)["sentences"] == 2
     assert check_turn(Turn("x", sheet="no"), reply) == []
+
+
+def test_a_chat_turn_needs_a_question_and_a_phrase_to_answer_with():
+    lead = Turn("x", sheet="no", lead=True)
+    assert check_turn(lead, 'حلو! من وين إنت؟ "I\'m from …"') == []
+    assert "a chat turn without a question and a phrase in quotes" in check_turn(lead, "حلو كثير.")
+
+
+def test_a_right_sentence_is_not_corrected_and_a_wrong_one_is():
+    right = Turn("I'm Abdulrahman", sheet="no", right=True)
+    assert "corrected a sentence that was already right" in check_turn(right, 'صح: "I am Abdulrahman".')
+    assert "corrected a sentence that was already right" in check_turn(right, 'الصح: "My name is Abdulrahman".')
+    assert check_turn(right, 'حلو يا عبدالرحمن! من وين إنت؟ "I\'m from …"') == []
+    wrong = Turn("I like play football", sheet="no", fix=("playing",))
+    assert check_turn(wrong, 'الصح: "I like playing football".') == []
+    assert any("not corrected" in p for p in check_turn(wrong, "حلو! شو كمان بتحب؟"))
+
+
+def test_an_arabic_speaker_gets_arabic_words():
+    assert "no Arabic for an Arabic speaker" in check_turn(Turn("x"), "Okay, ich höre jetzt auf.", "ar")
+    assert check_turn(Turn("x"), "تمام.", "ar") == []
+    assert check_turn(Turn("x"), "Okay.", "en") == []
+
+
+def test_free_talk_gets_the_short_message_note_but_lessons_and_books_do_not():
+    import bot
+    from rita_state import RitaSessionState
+
+    state = RitaSessionState(active_language="ar", active_dialect="ar-JO")
+    state.observe_user_turn("مرحبا")
+    free = bot.build_prompt({"mode": "free_conversation"}, state)
+    assert "FREE TALK NOTE" in free
+    # read last, after the free-conversation rules and right before the session's reply language
+    assert free.index("FREE TALK NOTE") > free.index("FREE CONVERSATION")
+    assert "FREE TALK NOTE" not in bot.build_prompt({"mode": "free_conversation", "study": {"lessonId": "l1"}}, state)
+    assert "FREE TALK NOTE" not in bot.build_prompt({"mode": "lesson", "lesson": {"brief": "x"}}, state)
+
+
+def test_an_explanation_in_free_talk_follows_the_short_note_not_the_long_one():
+    import bot
+    from rita_state import RitaSessionState
+
+    state = RitaSessionState(active_language="ar", active_dialect="ar-JO")
+    state.observe_user_turn("اشرحلي متى بستعمل am و is و are")
+    prompt = bot.build_prompt({"mode": "free_conversation"}, state)
+    assert "FREE TALK NOTE" in prompt
+    assert "THE LEARNER ASKED FOR AN EXPLANATION" not in prompt
