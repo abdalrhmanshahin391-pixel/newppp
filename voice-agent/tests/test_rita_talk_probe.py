@@ -105,3 +105,14 @@ def test_an_explanation_in_free_talk_follows_the_short_note_not_the_long_one():
 
 def test_a_question_inside_the_phrase_to_say_is_not_one_of_uzyras_questions():
     assert measure('أكيد، شو حابب تحكي بالألماني؟ "Wie geht es dir?"')["questions"] == 1
+
+
+def test_a_named_place_and_a_reused_phrase_are_caught():
+    from rita_talk_probe import repeated_phrase
+
+    turn = Turn("شو أحسن مطعم؟", forbid=("مشهور",))
+    assert any("must not" in p for p in check_turn(turn, 'مطعم "X" مشهور. شو بتحب تاكل؟ "Ich mag …"'))
+    lead = Turn("I'm from Jordan", lead=True)
+    assert repeated_phrase(lead, 'حلو! شو بتشتغل؟ "I work as …"', {"i like"}) == []
+    assert repeated_phrase(lead, 'حلو! شو بتشتغل؟ "I like …"', {"i like"})
+    assert repeated_phrase(lead, 'حلو! شو بتحب؟ "I\'m from Jordan"', set())

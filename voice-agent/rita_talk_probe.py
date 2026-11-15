@@ -65,6 +65,8 @@ class Turn:
     right: bool = False
     #: the learner's sentence is wrong: the reply must contain one of these (the right form)
     fix: tuple[str, ...] = ()
+    #: the reply must contain none of these (a named place, for example)
+    forbid: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -111,7 +113,7 @@ TALKS: tuple[Talk, ...] = (
             Turn("Ich habe gestern Fußball gespielt", sheet="no", lead=True, right=True),
             Turn("اشرحلي الـ Perfekt", sheet="yes"),
             Turn("خلص كفاية", sheet="no"),
-            Turn("شو أحسن مطعم بعمان؟", sheet="no"),
+            Turn("شو أحسن مطعم بعمان؟", sheet="no", forbid=("مشهور", "مطعم \"", "مطعم “", "مطعم «")),
             Turn("أعطيني خمس كلمات عن المطبخ", sheet="yes"),
         ),
     ),
@@ -208,7 +210,32 @@ def check_turn(turn: Turn, raw: str, site_language: str = "") -> list[str]:
         problems.append(f"the mistake was not corrected (expected {turn.fix[0]!r})")
     if site_language == "ar" and not ARABIC.search(spoken):
         problems.append("no Arabic for an Arabic speaker")
+    for word in turn.forbid:
+        if word in spoken:
+            problems.append(f"says {word!r}, which this turn must not")
     return problems
+
+
+def phrases(text: str) -> list[str]:
+    """The phrases in quotes, folded for comparison."""
+
+    return [re.sub(r"[\W_]+", " ", p).strip().casefold() for p in QUOTED.findall(text)]
+
+
+def repeated_phrase(turn: Turn, spoken: str, earlier: set[str]) -> list[str]:
+    """A chat turn's phrase must start the answer to the new question: not an old phrase, not the
+    learner's own sentence."""
+
+    if not turn.lead:
+        return []
+    own = phrases(spoken)
+    if not own:
+        return []
+    learner = re.sub(r"[\W_]+", " ", turn.text).strip().casefold()
+    last = own[-1]
+    if last and (last in earlier or last == learner):
+        return ["the phrase to answer with repeats an earlier one"]
+    return []
 
 
 def turn_request(talk: Talk, history: list[tuple[str, str]], text: str):
@@ -258,6 +285,7 @@ async def play(client, talk: Talk) -> list[dict[str, Any]]:
 
     history: list[tuple[str, str]] = []
     out: list[dict[str, Any]] = []
+    earlier: set[str] = set()
     for turn in talk.turns:
         params, state = turn_request(talk, history, turn.text)
         try:
@@ -273,6 +301,7 @@ async def play(client, talk: Talk) -> list[dict[str, Any]]:
                 "text": turn.text,
                 "type": str(getattr(state.response_type, "value", state.response_type)),
                 "problems": check_turn(turn, raw, talk.site_language)
+                + repeated_phrase(turn, m["spoken"], earlier)
                 + (
                     []
                     if raw
@@ -286,6 +315,7 @@ async def play(client, talk: Talk) -> list[dict[str, Any]]:
             }
         )
         history.extend([("user", turn.text), ("assistant", raw)])
+        earlier.update(phrases(m["spoken"]))
     return out
 
 

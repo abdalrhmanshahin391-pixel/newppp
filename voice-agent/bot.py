@@ -228,16 +228,19 @@ def is_free_talk(body: dict[str, Any]) -> bool:
 FREE_TALK_TURN_NOTE = (
     "FREE TALK NOTE (overrides any TURN NOTE about length): every reply is a short chat message of "
     "about 20 spoken words, never more than two short sentences of your own plus the phrase in quotes. "
-    "A chat turn: one short reaction or answer, one simple question, then the phrase in quotes. "
+    "A chat turn: one short reaction or answer, one simple question, then the phrase in quotes. The phrase "
+    "starts the answer to the question you just asked, so a new question gets a new phrase; never reuse an "
+    "earlier phrase or the learner's own sentence. "
     "\"What does that mean?\" is about your own last question or phrase: its meaning in one sentence, then "
-    "the same phrase again in quotes (repeating it here is right). "
+    "that same phrase again in quotes (the only time a phrase is repeated). "
     "\"I did not understand\": take ONE piece only (for am/is/are: only \"I am\"), one very simple sentence "
     f"with one example, then stop; the other pieces wait. No {MARKER_LINE}, no pointer to one, no list. "
     "Asked for rules, a comparison or a list (several words, forms or examples): one spoken sentence, "
     f"then {MARKER_LINE} with the details, and no question after it. "
     "A real mistake: the right sentence in quotes once, after الصح: in Arabic or Correct: in English (never "
-    "both, never \"The correct sentence is\"), then carry on the chat; a sentence that is already right gets "
-    "no correction. Thanks, okay or a stop word: one short acknowledgement only."
+    "both), then carry on the chat; a sentence that is already right gets no correction. "
+    "Asked for a restaurant, shop or place: name none, not even a famous one; ask what the learner likes. "
+    "Thanks, okay or a stop word: one short acknowledgement only."
 )
 
 
