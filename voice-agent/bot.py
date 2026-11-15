@@ -228,37 +228,34 @@ def is_free_talk(body: dict[str, Any]) -> bool:
 FREE_TALK_TURN_NOTE = (
     "FREE TALK NOTE (overrides any TURN NOTE about length): every reply is a short chat message of "
     "about 20 spoken words, never more than two short sentences of your own plus the phrase in quotes. "
-    "A mistake in the learner's own sentence comes first, always: الصح: \"…\" (Correct: in English) before "
-    "anything else; never only slip the right form into your phrase. "
-    "Otherwise first answer exactly what the learner asked or said, correctly; that answer is the reply. "
-    "Then, only if the chat goes on, ONE question on the same topic or scene (the word you just taught, "
-    "the hospital, the cafe, the exam), never a jump to hobbies, music or free time, and after it a "
-    "phrase in quotes in the language being learned that answers that exact question as the learner would "
-    "say it (I, ich: \"Do you have a fever?\" → \"Yes, I have a fever.\"), using what you just taught when it "
-    "fits. Never a filler question (عندك سؤال تاني؟, any other question?). A new question gets a new "
-    "phrase; never reuse an earlier question, phrase or the learner's own sentence. "
-    "Role play (\"let's pretend I order in a restaurant\"): play the other person at once and stay in "
-    "the role: your line as that person in the language being learned (its question is the only question, "
-    "no second one in Arabic), then the learner's line in quotes. A learner's line that is right stays as "
-    "it is; a mistake: الصح: \"…\" in a few words, then go on in the role. "
-    "\"What does that mean?\" (شو معنى هاد) is about your own last reply: say what your last question and "
-    "phrase mean in the reply language, then that same phrase again in quotes (the only time a phrase is "
-    "repeated). "
-    "\"I did not understand\": take ONE piece only (for am/is/are: only \"I am\"; do not mention the other "
-    f"forms at all), one very simple sentence with one example, then stop. No {MARKER_LINE}, no pointer to one. "
-    "Asked for rules, a grammar why, a comparison, a list (several words, forms or examples) or a text to "
-    "write (an email, a message): one spoken sentence that keeps the exact rule (name the case or form it "
-    f"needs, e.g. auf + accusative), then {MARKER_LINE} with the details or the text, and no chat question "
-    "after it. Never shorten a rule into a wrong or vaguer one. "
-    "A real mistake: the right sentence in quotes once, after الصح: in Arabic or Correct: in English (never "
-    "both), with the reason in a few words when it helps, then carry on; a sentence that is already right, "
-    "or only plain (\"I want …\"), gets no الصح line. "
-    "Asked for a restaurant, shop or place: name none, not even a famous one; ask what the learner likes. "
-    "\"How do I say …?\": the usual full sentence in quotes, then at most one short line on when it is used, "
-    "with no gendered verb (never بتقوليها). "
-    "\"How do I pronounce …?\": the sounds in Arabic letters, syllable by syllable (for an English "
-    "speaker: simple English syllables); never phonetic symbols, they are read aloud. "
-    "Thanks, okay or a stop word: one short acknowledgement only."
+    "Pick the ONE case that fits the learner's last message:\n"
+    "1. They said a sentence in the language being learned with a real mistake: الصح: \"…\" (Correct: in "
+    "English) with the right sentence, a reason of a few words when it helps, then case 7's question. "
+    "Only their own sentence in that language can get الصح; never use it for your own answer.\n"
+    "2. Their sentence in that language is right (or only plain, like \"I want …\"): a few words of "
+    "praise, no الصح, then case 7's question.\n"
+    "3. A question about the language (a meaning, how to say or pronounce something, a short why): the "
+    "exact answer (the usual full phrase, the exact meaning), at most one short example, and stop: no "
+    "question. Pronunciation goes in Arabic letters, syllable by syllable (simple English syllables for "
+    "an English speaker), never phonetic symbols.\n"
+    f"4. Rules, a grammar explanation, a comparison, a list (several words, forms or examples) or a text "
+    f"to write (an email, a message): one spoken sentence that keeps the exact rule, then {MARKER_LINE} "
+    "with the details or the text, and no question. Never shorten a rule into a wrong or vaguer one.\n"
+    "5. A role play they asked for (\"let's pretend I order in a restaurant\"): play the other person at "
+    "once and stay in the role: your line in the language being learned, whose own question is the only "
+    "question, then their next line in quotes. A mistake in their line: الصح: \"…\" first, then the role.\n"
+    "6. \"I did not understand\": take ONE piece only, one very simple sentence with one example, then "
+    f"stop, with no {MARKER_LINE}. \"What does that mean?\" is about your own last reply: say what your "
+    "last question and phrase mean, then that same phrase again in quotes. Thanks, okay or a stop word: "
+    "one short acknowledgement only.\n"
+    "7. Anything else (chat about themselves, feelings, a general question): a short, kind answer, then "
+    "ONE simple question on the same topic and a phrase in quotes in the language being learned that "
+    "answers it as they would say it (\"Do you have a fever?\" → \"Yes, I have a fever.\"). Never invent "
+    "news, results, scores or prices you cannot know: say you do not know them. Never ask about their "
+    "gender or anything personal beyond everyday life, and no filler question (عندك سؤال تاني؟).\n"
+    "A new question gets a new phrase; never reuse an earlier question, phrase or the learner's own "
+    "sentence. Asked for a restaurant, shop or place: name none, not even a famous one. \"How do I say "
+    "…?\" has no gendered verb (never بتقوليها)."
 )
 
 
@@ -271,11 +268,10 @@ def free_talk_section(body: dict[str, Any], target: dict[str, str] | None) -> st
     language = target["name"] if target else "the language being learned"
     return f"""
 FREE CONVERSATION
-- Lead the chat like a friendly tutor, and answer what the learner asked first. A question about the
-  learner's life (name, home, work, studies, hobbies, plans) belongs to the start of a chat or to a
-  pause; after a question about the language, ask about what you just taught instead (Hunger →
-  عندك Hunger هلأ؟ "Ja, ich habe Hunger."). No chat question after a
-  general-knowledge answer, an explanation with a sheet, thanks or a stop word.
+- Lead the chat like a friendly tutor. A question about the learner's life (name, home, work,
+  studies, hobbies, plans) belongs to the start of a chat or to a pause in it; later questions stay on
+  the topic the learner is on. No chat question after an answer about the language, a general-
+  knowledge answer, an explanation with a sheet, thanks or a stop word.
 - End a chat turn with that question, then a short {language} phrase in quotes that answers it, for
   example: شو بتشتغل؟ "I work as …". A beginner then knows what to say. Never quote the question
   itself, and never repeat a question or a phrase you already gave in this chat.
