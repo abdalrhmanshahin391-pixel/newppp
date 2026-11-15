@@ -212,30 +212,65 @@ def explain_options(state: RitaSessionState) -> dict[str, Any] | None:
     }
 
 
-def free_talk_section(body: dict[str, Any], target: dict[str, str] | None) -> str:
-    """How Uzyra leads a free conversation (no lesson, not the lesson page): short turns, one simple
-    question about the learner's life, and a phrase in quotes they can answer with."""
+def is_free_talk(body: dict[str, Any]) -> bool:
+    """A free conversation: no lesson, not the lesson page or a book."""
 
-    if (
+    return not (
         str(body.get("mode", "free_conversation")) != "free_conversation"
         or study_enabled(body)
         or lesson_engine_enabled(body)
         or lesson_section(body)
-    ):
+    )
+
+
+#: Read last, next to the turn note: in a free conversation every reply is a short chat message, as on
+#: the lesson page and in the books (where the same kind of note keeps answers to two sentences).
+FREE_TALK_TURN_NOTE = (
+    "FREE TALK NOTE (overrides any TURN NOTE about length): every reply is a short chat message of "
+    "about 20 spoken words, never more than two short sentences of your own plus the phrase in quotes. "
+    "A chat turn: one short reaction or answer, one simple question, then the phrase in quotes. The phrase "
+    "starts the answer to the question you just asked, so a new question gets a new phrase; never reuse an "
+    "earlier phrase or the learner's own sentence. "
+    "\"What does that mean?\" (شو معنى هاد) is about your own last reply: say what your last question and "
+    "phrase mean in the reply language, then that same phrase again in quotes (the only time a phrase is "
+    "repeated). "
+    "\"I did not understand\": take ONE piece only (for am/is/are: only \"I am\"; do not mention the other "
+    f"forms at all), one very simple sentence with one example, then stop. No {MARKER_LINE}, no pointer to one. "
+    "Asked for rules, a grammar why, a comparison or a list (several words, forms or examples): one spoken "
+    "sentence that keeps the exact rule (name the case or form it needs, e.g. auf + accusative), then "
+    f"{MARKER_LINE} with the details, and no chat question after it. Never shorten a rule into a wrong or "
+    "vaguer one. "
+    "A real mistake: the right sentence in quotes once, after الصح: in Arabic or Correct: in English (never "
+    "both), then carry on the chat; a sentence that is already right gets no correction. "
+    "Asked for a restaurant, shop or place: name none, not even a famous one; ask what the learner likes. "
+    "\"How do I say …?\": the sentence in quotes, then at most one short line on when it is used, with no "
+    "gendered verb (never بتقوليها). "
+    "Thanks, okay or a stop word: one short acknowledgement only."
+)
+
+
+def free_talk_section(body: dict[str, Any], target: dict[str, str] | None) -> str:
+    """How Uzyra leads a free conversation (no lesson, not the lesson page): short turns, one simple
+    question about the learner's life, and a phrase in quotes they can answer with."""
+
+    if not is_free_talk(body):
         return ""
     language = target["name"] if target else "the language being learned"
     return f"""
 FREE CONVERSATION
 - Lead the chat like a friendly tutor. After your short answer, ask one simple question about the
   learner's life (name, home, work, studies, hobbies, plans), at their level. Not after a
-  general-knowledge answer, thanks or a stop word.
+  general-knowledge answer, an explanation with a sheet, thanks or a stop word.
 - End with that question, then a short {language} phrase in quotes that fits it and starts the
   answer, for example: شو بتشتغل؟ "I work as …". A beginner then knows what to say. Never quote the
   question itself, and never repeat a question or a phrase you already gave in this chat.
 - In Arabic give no command before a phrase (not قول، جرّب، استخدم); offer a corrected sentence as
   الصح: "…". No slashes for gender (إنت/إنتِ).
 - Choose the next topic yourself from what they said. Never ask which topic or skill they want twice.
-- Correct a mistake by saying the right sentence in quotes once, with no sheet, then carry on the chat.
+- Correct only a real mistake. A sentence that is already right gets a few words of praise and no
+  الصح line: "I'm" and "I am" are both right, and so are "I'm Abdulrahman" and "Ich heiße …". Never
+  rewrite a right sentence into another one ("My name is …" for "I'm …" is not a correction).
+- A real mistake: الصح: "…" (Correct: "…" in English) once, with no sheet, then carry on the chat.
 - Asked for a restaurant, shop or place, name none, not even as "people recommend": ask what the
   learner likes instead.
 """
@@ -282,7 +317,15 @@ def build_prompt(
     target_block = target_language_prompt(target)
     note = state.turn_note(dialogue=dialogue)
     lesson_note = study_turn_note(study_voice) if study_enabled(body) else ""
-    # On the lesson page answers stay short: the general "up to five sentences" note does not apply.
+    # A free conversation keeps every answer to a short chat message, like the lesson page.
+    if not lesson_note and is_free_talk(body):
+        lesson_note = FREE_TALK_TURN_NOTE + "\n"
+        given = getattr(state, "given_phrases", None)
+        if given:
+            listed = ", ".join(f'"{phrase}"' for phrase in given)
+            lesson_note += f"Phrases you already gave (a new question needs a new one): {listed}.\n"
+    # On the lesson page and in free talk answers stay short: the explanation note (two sentences
+    # and a sheet) gives way to the page's own note.
     if lesson_note and state.response_type == ResponseType.EXPLAIN:
         note = ""
     turn_note = f"{note}\n" if note else ""

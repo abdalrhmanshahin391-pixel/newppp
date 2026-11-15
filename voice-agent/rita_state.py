@@ -123,6 +123,8 @@ class RitaSessionState:
     # The request Uzyra is working on and the phrase she last quoted (for "كمّل", "مرة ثانية").
     current_task: str = ""
     current_phrase: str = ""
+    #: The phrases in quotes Uzyra already gave in this call (newest last), so a new question gets a new one.
+    given_phrases: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         self.site_dialect = self.site_dialect or self.active_dialect
@@ -237,6 +239,12 @@ class RitaSessionState:
         elif re.search(
             r"(?:اشرح|ليش|لماذا|فصل|تفصيل|كل كلمه|كل كلمة|وضح|why|explain|warum|in detail|word by word|break (?:it )?down)",
             lowered,
+        ) or re.search(
+            # A comparison or a list of words, phrases or examples belongs on the sheet too.
+            r"(?:الفرق بين|فرق بين|difference between|unterschied zwischen|"
+            r"(?:اعطيني|أعطيني|اعطني|أعطني|عطيني)\s+(?:\S+\s+){0,2}(?:كلمات|جمل|امثله|أمثلة|امثلة)|"
+            r"give me (?:\w+ ){0,2}(?:words|phrases|examples|sentences)|gib mir (?:\w+ ){0,2}(?:wörter|beispiele|sätze))",
+            lowered,
         ):
             self.response_type = ResponseType.EXPLAIN
         elif re.search(r"(?:احفظ|حط|ضيف|flashcard|german lab)", lowered):
@@ -295,6 +303,10 @@ class RitaSessionState:
         quoted = [q.strip() for q in _QUOTED.findall(text) if _LATIN.search(q)]
         if quoted:
             self.current_phrase = quoted[-1].replace('"', "'")
+            for phrase in quoted:
+                clean = phrase.replace('"', "'")[:80]
+                if clean and clean not in self.given_phrases:
+                    self.given_phrases = (self.given_phrases + [clean])[-12:]
         question = parse_last_question(text)
         self.last_question = question.text
         self.awaiting = question.awaiting
