@@ -9,6 +9,7 @@ import { adminCurriculumOverview, adminExercisesSummary } from "@/lib/rita-curri
 import { BooksGrid } from "@/components/rita-lessons/admin/book/BooksGrid";
 import { BookWorkspace } from "@/components/rita-lessons/admin/book/BookWorkspace";
 import { NewBookDialog } from "@/components/rita-lessons/admin/book/NewBookDialog";
+import { LanguageCheck } from "@/components/rita-lessons/admin/book/LanguageCheck";
 import { ErrorBox } from "@/components/rita-lessons/admin/book/BookBits";
 import { errorText } from "@/components/rita-lessons/admin/book/book-utils";
 
@@ -161,15 +162,18 @@ function AdminCurricula() {
             onChanged={refresh}
           />
         ) : overview ? (
-          <BooksGrid
-            books={overview.curricula}
-            windows={overview.windows}
-            lessons={overview.lessons}
-            missingText={overview.missingText}
-            exercises={exercises}
-            onOpen={open}
-            onNew={() => setNewBookOpen(true)}
-          />
+          <>
+            <LanguageCheck onChanged={() => void refresh()} />
+            <BooksGrid
+              books={overview.curricula}
+              windows={overview.windows}
+              lessons={overview.lessons}
+              missingText={overview.missingText}
+              exercises={exercises}
+              onOpen={open}
+              onNew={() => setNewBookOpen(true)}
+            />
+          </>
         ) : null}
       </div>
 
