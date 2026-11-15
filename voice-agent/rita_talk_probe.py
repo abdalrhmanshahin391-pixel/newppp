@@ -53,7 +53,7 @@ CORRECTION = re.compile(
 ARABIC = re.compile(r"[\u0600-\u06FF]")
 #: The stock follow-up that ignores what was just asked ("what do you do in your free time?").
 STOCK_QUESTION = re.compile(
-    r"وقت فراغ|الوقت الفاضي|بالموسيقى|موسيقى|free time|music|Freizeit|Musik|هواي|hobby",
+    r"وقت (?:ال)?فراغ|(?:ال)?وقت الفاضي|موسيقى|free time|music|Freizeit|Musik|هواي|hobby",
     re.IGNORECASE,
 )
 #: Phonetic symbols are read aloud letter by letter; pronunciation is written in plain letters.

@@ -88,3 +88,8 @@ def test_print_reports_a_missing_key(capsys):
 def test_narrow_spaces_from_the_model_do_not_hide_a_correction():
     turn = Turn("Ich bin 25 Jahre", fix=("Jahre alt",))
     assert check_turn(turn, 'الصح: "Ich bin 25 Jahre alt".') == []
+
+
+def test_the_stock_question_is_caught_with_or_without_the_article():
+    for reply in ("تمام. شو بتحب تعمل وقت الفراغ؟", "تمام. شو بتعمل وقت فراغك؟"):
+        assert any("stock question" in p for p in check_turn(Turn("شو يعني Termin؟"), reply))
