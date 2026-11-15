@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useActiveLanguage } from "@/lib/language-scope";
 import { isGermanItem, type LearningItem, type SaveTarget } from "@/lib/rita-learning";
 import {
   addItems,
   chunks,
   editItem,
+  entriesIn,
   loadList,
   removeItem,
   removeItems,
@@ -63,8 +65,14 @@ export function useLearningTray(userId: string | undefined) {
   } | null>(null);
   const destinationsRef = useRef(EMPTY);
   const loadedDestinations = useRef(false);
+  // Every language's words are stored; the tray shows, counts and saves only the active
+  // language's. The others wait until the learner switches back to their language.
+  const active = useActiveLanguage();
+  const visible = useMemo(() => entriesIn(entries, active), [entries, active]);
   const entriesRef = useRef<ListEntry[]>([]);
-  entriesRef.current = entries;
+  entriesRef.current = visible;
+  const activeRef = useRef(active);
+  activeRef.current = active;
 
   // The list belongs to the signed-in user and survives reloads and new calls.
   useEffect(() => {
@@ -108,7 +116,15 @@ export function useLearningTray(userId: string | undefined) {
   const add = useCallback((items: LearningItem[], source: string) => {
     if (!items.length) return;
     setEntries((current) => addItems(current, items, source));
-    setLatest(`Added: ${items.map((item) => item.term).join(", ")}`);
+    const here = entriesIn(items, activeRef.current);
+    const elsewhere = items.filter((item) => !here.includes(item));
+    const parts: string[] = [];
+    if (here.length) parts.push(`Added: ${here.map((item) => item.term).join(", ")}`);
+    if (elsewhere.length)
+      parts.push(
+        `Kept for its own language: ${elsewhere.map((item) => item.term).join(", ")} (switch language to see it)`,
+      );
+    setLatest(parts.join(" · "));
   }, []);
   const flash = useCallback((text: string) => setLatest(text), []);
   const remove = useCallback((id: string) => setEntries((c) => removeItem(c, id)), []);
@@ -117,7 +133,11 @@ export function useLearningTray(userId: string | undefined) {
       setEntries((current) => editItem(current, id, patch)),
     [],
   );
-  const clearAll = useCallback(() => setEntries([]), []);
+  // Clears the words of the language on screen; another language's words stay.
+  const clearAll = useCallback(() => {
+    const ids = entriesRef.current.map((entry) => entry.id);
+    setEntries((current) => removeItems(current, ids));
+  }, []);
 
   const setTarget = useCallback((next: SaveTarget) => {
     setTargetState(next);
@@ -175,7 +195,10 @@ export function useLearningTray(userId: string | undefined) {
   /** Saves words to one subject, in requests the server accepts, and reports exactly what happened. */
   const saveItems = useCallback(
     async (kind: SaveTarget, id: string, label: string, chosen: ListEntry[] | LearningItem[]) => {
-      const eligible = kind === "german_lab" ? chosen.filter(isGermanItem) : chosen;
+      // Never save a word into another language's subjects (the server offers only the active
+      // language's subjects and stamps them with it).
+      const inLanguage = entriesIn<ListEntry | LearningItem>(chosen, activeRef.current);
+      const eligible = kind === "german_lab" ? inLanguage.filter(isGermanItem) : inLanguage;
       const left = chosen.length - eligible.length;
       if (!eligible.length) {
         setNotice({
@@ -183,7 +206,9 @@ export function useLearningTray(userId: string | undefined) {
           text:
             kind === "german_lab"
               ? "German Lab keeps only German words. None of these are German."
-              : "There is nothing to save.",
+              : inLanguage.length < chosen.length
+                ? "These words belong to another language. Switch to it to save them."
+                : "There is nothing to save.",
         });
         return;
       }
@@ -228,7 +253,12 @@ export function useLearningTray(userId: string | undefined) {
           `Saved ${saved} ${kind === "flashcards" ? "flashcard" : "word"}${saved === 1 ? "" : "s"} to “${label}”.`,
         ];
         if (skipped) parts.push(`${skipped} already there.`);
-        if (left) parts.push(`${left} non-German stayed in your list.`);
+        if (left)
+          parts.push(
+            kind === "german_lab"
+              ? `${left} non-German stayed in your list.`
+              : `${left} from another language stayed in your list.`,
+          );
         setNotice({ tone: "ok", text: parts.join(" ") });
       } catch (cause) {
         // Words that were saved before the failure are gone from the list; the rest stay.
@@ -331,7 +361,7 @@ export function useLearningTray(userId: string | undefined) {
   );
 
   return {
-    entries,
+    entries: visible,
     open,
     target,
     destinationId,

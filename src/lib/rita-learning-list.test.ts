@@ -4,6 +4,7 @@ import {
   addItems,
   chunks,
   editItem,
+  entriesIn,
   loadList,
   removeItem,
   removeItems,
@@ -150,4 +151,25 @@ test("a spoken subject name picks one subject or none", () => {
   assert.equal(matchSubject(arabic, "الافعال")?.id, "v");
   assert.equal(matchSubject(arabic, "افعال")?.id, "v");
   assert.equal(matchSubject(arabic, "اسماء")?.id, "n");
+});
+
+test("the tray shows one language's words and keeps the others for later", () => {
+  const hello = { ...guten, term: "Hello", meaning: "مرحبا", language: "en-US" };
+  const list = addItems([], [guten, hello, haus], "asked");
+  assert.deepEqual(
+    entriesIn(list, "de").map((e) => e.term),
+    ["Guten Morgen", "Haus"],
+  );
+  assert.deepEqual(
+    entriesIn(list, "en").map((e) => e.term),
+    ["Hello"],
+  );
+  assert.equal(entriesIn(list, "fr").length, 0);
+  assert.equal(entriesIn(list, null).length, 3, "no language chosen yet: every word shows");
+  // Removing the German words leaves the English one in the stored list.
+  const ids = entriesIn(list, "de").map((e) => e.id);
+  assert.deepEqual(
+    removeItems(list, ids).map((e) => e.term),
+    ["Hello"],
+  );
 });

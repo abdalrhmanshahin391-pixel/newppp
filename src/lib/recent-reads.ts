@@ -20,6 +20,17 @@ export function mergeRecent<Mine, Library>(
   );
 }
 
+/**
+ * The library books read in one learning language (all of them with none chosen, or when the
+ * learner asked to see every language). Own PDFs are not filtered: they are always in the row.
+ */
+export function readsIn<R extends { book: { language: string } }>(
+  reads: R[],
+  language: string | null,
+): R[] {
+  return language ? reads.filter((read) => read.book.language === language) : reads;
+}
+
 /** How far into a book the reader is (0–1), or null without a page count. */
 export function readShare(page: number | null, total: number | null): number | null {
   if (!page || !total || total < 1) return null;

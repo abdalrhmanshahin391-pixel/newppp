@@ -417,6 +417,32 @@ free conversation, shared decks). Do not call it "language" on its own: the site
   and an add form with a live flag preview. A language that has content is
   disabled, not deleted.
 
+### Language map (what follows the learning language)
+
+Kept per language, so switching shows the other language's own copy (nothing is deleted):
+
+| Feature | How it is kept apart |
+| --- | --- |
+| Flashcards, their subjects board, the due counter | `rita_@<code>_` keys (`langKey`, `scopedKey`); review counts only the active set |
+| Pairs, practice questions, Memory Lab | the same per-language keys (`rita_@<code>_mem_`, `_q_`) |
+| Conversation word tray (`useLearningTray`) | one stored list, shown and saved per language (`entriesIn`); another language's words wait for it |
+| Words saved by Uzyra to subjects | the server offers only the active language's subjects and stamps the language on the row |
+| Lessons, free conversation, shared decks | the language column on the rows (lesson books must name their language) |
+| Games (Wordcraft, Repeat) | English or German word lists and sentences, chosen by the learning language |
+| Library shelves and «آخر كتب قرأتها» | books in the learning language first; "every language" shows all. Own PDFs always show |
+| Home page examples | English or German words for the learner's language (mixed for guests) |
+
+Shared by every language, on purpose: the to-do list, exams, study spaces, Lecture Lab (they belong
+to the learner's studies, not to a language), the streak and study days (one learner, one habit), and
+the explanation language (Arabic or English, the site's own language).
+
+The flashcards page says whose cards are on screen in one quiet line under the board's top
+(`LanguageScopeNote`: flag, "Your German cards · each language keeps its own"). Cards made before
+languages existed live under the learner's first language. `language-switch.browser.test.ts` saves
+English and German content side by side, switches back and forth in Chromium and checks each
+language sees only its own cards, subjects and tray words, and that a save sends no other language's
+word.
+
 ## Study rooms (/learn and the room pages)
 
 Same system as the home page, inside `.edith-premium`: white page, Inter Tight titles, one

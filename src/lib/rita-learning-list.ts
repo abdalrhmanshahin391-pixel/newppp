@@ -40,6 +40,22 @@ export function addItems(
   return next.slice(-MAX_LIST);
 }
 
+/** "de" for "de", "DE" or "de-AT": the part of a language code that names the language. */
+export function baseLanguage(code: string): string {
+  return code.toLowerCase().split("-")[0];
+}
+
+/**
+ * The words of one learning language. The list keeps every language's words; the tray shows and
+ * saves only the active one's, so the others wait until the learner switches back. With no
+ * language chosen yet, every word shows.
+ */
+export function entriesIn<E extends { language: string }>(list: E[], active: string | null): E[] {
+  if (!active) return list;
+  const want = baseLanguage(active);
+  return list.filter((entry) => baseLanguage(entry.language) === want);
+}
+
 export function removeItem(list: ListEntry[], id: string): ListEntry[] {
   return list.filter((entry) => entry.id !== id);
 }
