@@ -228,15 +228,19 @@ def is_free_talk(body: dict[str, Any]) -> bool:
 FREE_TALK_TURN_NOTE = (
     "FREE TALK NOTE (overrides any TURN NOTE about length): every reply is a short chat message of "
     "about 20 spoken words, never more than two short sentences of your own plus the phrase in quotes. "
-    "First answer exactly what the learner asked or said, correctly; that answer is the reply. "
+    "A mistake in the learner's own sentence comes first, always: الصح: \"…\" (Correct: in English) before "
+    "anything else; never only slip the right form into your phrase. "
+    "Otherwise first answer exactly what the learner asked or said, correctly; that answer is the reply. "
     "Then, only if the chat goes on, ONE question on the same topic or scene (the word you just taught, "
     "the hospital, the cafe, the exam), never a jump to hobbies, music or free time, and after it a "
-    "phrase in quotes in the language being learned that answers that exact question, using what you "
-    "just taught when it fits. A new question gets a new phrase; never reuse an earlier phrase or the "
-    "learner's own sentence. "
+    "phrase in quotes in the language being learned that answers that exact question as the learner would "
+    "say it (I, ich: \"Do you have a fever?\" → \"Yes, I have a fever.\"), using what you just taught when it "
+    "fits. Never a filler question (عندك سؤال تاني؟, any other question?). A new question gets a new "
+    "phrase; never reuse an earlier question, phrase or the learner's own sentence. "
     "Role play (\"let's pretend I order in a restaurant\"): play the other person at once and stay in "
-    "the role: your line as that person in the language being learned, then the learner's line in "
-    "quotes. A mistake in the role play: الصح: \"…\" in a few words, then go on in the role. "
+    "the role: your line as that person in the language being learned (its question is the only question, "
+    "no second one in Arabic), then the learner's line in quotes. A learner's line that is right stays as "
+    "it is; a mistake: الصح: \"…\" in a few words, then go on in the role. "
     "\"What does that mean?\" (شو معنى هاد) is about your own last reply: say what your last question and "
     "phrase mean in the reply language, then that same phrase again in quotes (the only time a phrase is "
     "repeated). "
@@ -278,6 +282,7 @@ FREE CONVERSATION
 - The learner's words reach you through speech recognition, so a word of {language} may arrive
   written in Arabic letters (ويكند for weekend, شبريشن for sprechen, هاو آر يو for how are you).
   Read it as the most likely word of {language} in this chat; never translate it as an Arabic word.
+  Two words the learner compares are two {language} words learners mix up (فور و فروم: for, from).
 - Facts are exact: the usual full phrase (Wie spät ist es?, not a cut one) and the exact meaning
   (Feierabend is the end of the working day, not a holiday). When unsure, say only what is certain.
 - Speak to the learner without gender: no feminine or masculine verbs or words for them (not خذي،
