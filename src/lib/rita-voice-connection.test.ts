@@ -3,6 +3,8 @@ import test from "node:test";
 import {
   VoiceAttempt,
   guardVoiceCallbacks,
+  failureCode,
+  isRecoverableVoiceError,
   voiceErrorMessage,
   voiceStateWord,
 } from "./rita-voice-connection.ts";
@@ -71,4 +73,45 @@ test("provider errors become actionable copy without exposing raw URLs or creden
   assert.doesNotMatch(voiceErrorMessage(raw, true), /private|wss:|legacy/);
   assert.match(voiceErrorMessage(new Error("401 unauthorized"), true), /إعدادات/);
   assert.match(voiceErrorMessage(new Error("Microphone permission denied"), true), /ميكروفون/);
+});
+
+test("the start route's refusal codes name the real reason", () => {
+  const says = (raw: string) => voiceErrorMessage(new Error(raw), true);
+  assert.match(
+    says("voice_not_available_for_language: Uzyra's voice is not available"),
+    /مش متاح لهاي اللغة/,
+  );
+  assert.match(
+    says(
+      "rita_daily_limit: Uzyra voice is unavailable because its usage safety limit has been reached.",
+    ),
+    /حد الاستخدام/,
+  );
+  assert.match(says("unauthorized: Unauthorized"), /سجّل دخول/);
+  assert.match(says("session_storage_failed: Uzyra session storage is not ready."), /مش جاهزة/);
+  assert.match(
+    says("conversation_unavailable: This conversation is not available."),
+    /محادثة جديدة/,
+  );
+  // A refusal that is a network failure keeps the network wording.
+  assert.match(
+    says("modal_network_error: The Uzyra website could not reach the Modal voice worker."),
+    /تعذّر الاتصال/,
+  );
+});
+
+test("only an error marked fatal: false is survived", () => {
+  assert.equal(isRecoverableVoiceError({ error: "TTS hiccup", fatal: false }), true);
+  assert.equal(isRecoverableVoiceError({ error: "pipeline stopped", fatal: true }), false);
+  assert.equal(isRecoverableVoiceError({ message: "no flag" }), false);
+  assert.equal(isRecoverableVoiceError(undefined), false);
+});
+
+test("diagnostics keep the refusal code or a coarse kind, never the text", () => {
+  assert.equal(
+    failureCode(new Error("voice_not_available_for_language: not for German")),
+    "voice_not_available_for_language",
+  );
+  assert.equal(failureCode(new Error("Voice readiness timeout")), "timeout");
+  assert.equal(failureCode(new Error("Something odd with private details")), "other");
 });
