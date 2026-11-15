@@ -356,3 +356,12 @@ test("translate takes a paragraph or two, far more than the other options", asyn
   assert.ok(!canTranslate("x".repeat(MAX_TRANSLATE_CHARS + 1)));
   assert.ok(!canTranslate("  12 34 "));
 });
+
+test("a whole paragraph can still make flashcards; the other options keep the shorter limit", async () => {
+  const { bookSelectionKind, canMakeCards, MAX_CARDS_CHARS } = await import("./books-reader.ts");
+  const paragraph = "Some people were sitting on the bench outside the door. ".repeat(14);
+  assert.equal(bookSelectionKind(paragraph), "too_long");
+  assert.ok(canMakeCards(paragraph));
+  assert.ok(!canMakeCards("x ".repeat(MAX_CARDS_CHARS)));
+  assert.ok(!canMakeCards("مرحبا بك في الكتاب"), "an Arabic-only selection makes no cards");
+});

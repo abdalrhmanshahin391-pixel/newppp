@@ -172,6 +172,17 @@ export function bookSelectionKind(exact: string): SelectionKind {
  */
 export const MAX_TRANSLATE_CHARS = 3000;
 
+/**
+ * Flashcards take a whole paragraph too (its important words, or its sentences): up to 1500
+ * characters, in the language being learned. Other options keep the shorter limit.
+ */
+export const MAX_CARDS_CHARS = 1500;
+
+export function canMakeCards(exact: string): boolean {
+  const text = exact.replace(/\s+/g, " ").trim();
+  return Boolean(text) && LATIN.test(text) && text.length <= MAX_CARDS_CHARS;
+}
+
 export function canTranslate(exact: string): boolean {
   const text = exact.replace(/\s+/g, " ").trim();
   return Boolean(text) && LETTER.test(text) && text.length <= MAX_TRANSLATE_CHARS;

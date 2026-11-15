@@ -29,7 +29,12 @@ import { FloatingOrb, type OrbState } from "@/components/rita-study/FloatingOrb"
 import { RadialMenu, type RadialHandle } from "@/components/rita-study/RadialMenu";
 import { StudyPracticeBody, type PracticeView } from "@/components/rita-study/StudyPracticePanel";
 import { FloatingWindow, WindowDots } from "@/components/rita-study/FloatingWindow";
-import { practiceTitle } from "@/lib/study/study-practice";
+import {
+  cardStylesFor,
+  practiceTitle,
+  type CardStyle,
+  type StudyCard,
+} from "@/lib/study/study-practice";
 import { DEFAULT_ORB, snapToEdge, type OrbPosition } from "@/components/rita-study/orb-position";
 import { readStudyMemory, writeStudyMemory } from "@/components/rita-study/study-memory";
 import { installSoundUnlock, setSoundOn, soundOn } from "@/components/rita-study/tech-sound";
@@ -66,6 +71,7 @@ import {
   nextChapterStart,
   paceSample,
   pageQuote,
+  canMakeCards,
   pickTier,
   prefetchPlan,
   secondsPerPage,
@@ -724,12 +730,16 @@ export function BookReader({
 
   const kind = picked ? bookSelectionKind(picked.quote) : null;
   const actions: StudyAction[] = kind
-    ? availableActions(kind).filter(
-        (action) =>
-          BOOK_RING.includes(action) &&
-          (action !== "meaning" ||
-            (/[A-Za-zÀ-ÿ]/.test(picked!.quote) && picked!.quote.length <= MAX_PHRASE_CHARS)),
-      )
+    ? [
+        ...availableActions(kind).filter(
+          (action) =>
+            BOOK_RING.includes(action) &&
+            (action !== "meaning" ||
+              (/[A-Za-zÀ-ÿ]/.test(picked!.quote) && picked!.quote.length <= MAX_PHRASE_CHARS)),
+        ),
+        // A long paragraph still makes cards (its important words or its sentences).
+        ...(kind === "too_long" && canMakeCards(picked!.quote) ? (["make_cards"] as const) : []),
+      ]
     : [];
 
   // ---- the circle ------------------------------------------------------------------------------
@@ -838,20 +848,45 @@ export function BookReader({
     quote: string;
     page: number;
     reply?: string;
+    /** The cards already made for this selection, per style: switching back is instant. */
+    cards?: Partial<Record<CardStyle, StudyCard[]>>;
   } | null>(null);
   const practiceVersion = useRef(0);
 
-  async function practice(action: PracticeAction, retry = false) {
+  async function practice(action: PracticeAction, retry = false, wanted?: CardStyle) {
     if (making) return;
     const origin = retry ? lastPractice.current : picked ? { action, ...picked } : null;
     if (!origin) return;
-    const cue = prepareVoiceLine(action);
+    // The same selection keeps the cards it already has; a new one starts empty.
+    const made = retry ? (lastPractice.current?.cards ?? {}) : {};
     lastPractice.current = {
       action,
       quote: origin.quote,
       page: origin.page,
       reply: origin.reply,
+      cards: made,
     };
+    const styles = action === "make_cards" ? cardStylesFor(origin.quote) : undefined;
+    const style = styles ? (wanted && styles.includes(wanted) ? wanted : styles[0]) : undefined;
+    const counts = () =>
+      Object.fromEntries(Object.entries(made).map(([key, list]) => [key, list?.length ?? 0]));
+    if (style && made[style]) {
+      setPracticeView({
+        id: crypto.randomUUID(),
+        action,
+        status: "ready",
+        cards: made[style]!,
+        questions: [],
+        message: "",
+        source: { title: book.title, quote: origin.quote },
+        style,
+        styles,
+        counts: counts(),
+      });
+      openWindow();
+      return;
+    }
+    const cue = prepareVoiceLine(action);
     const version = ++practiceVersion.current;
     const requestId = crypto.randomUUID();
     setMenuOpen(false);
@@ -866,6 +901,9 @@ export function BookReader({
       questions: [],
       message: "",
       source: { title: book.title, quote: origin.quote },
+      style,
+      styles,
+      counts: counts(),
     });
     try {
       const input = {
@@ -874,6 +912,7 @@ export function BookReader({
           page: origin.page,
           requestId,
           selection: origin.quote,
+          ...(style ? { style } : {}),
           ...(await ownPage(origin.page, origin.reply)),
         },
       };
@@ -881,11 +920,12 @@ export function BookReader({
         const result = await cardsFn(input);
         if (version !== practiceVersion.current) return;
         if (result.ok) playVoiceLine(cue);
+        if (result.ok && style) made[style] = result.cards;
         setPracticeView(
           (view) =>
             view &&
             (result.ok
-              ? { ...view, status: "ready", cards: result.cards }
+              ? { ...view, status: "ready", cards: result.cards, counts: counts() }
               : { ...view, status: "error", message: result.message, code: result.code }),
         );
       } else {
@@ -967,7 +1007,7 @@ export function BookReader({
             disabledReason:
               making && action === "make_cards"
                 ? "استنّى لحد ما يخلص تجهيز التدريب الحالي"
-                : kind === "too_long" && item !== TRANSLATE_ITEM
+                : kind === "too_long" && item !== TRANSLATE_ITEM && !actions.includes(action)
                   ? "التحديد كبير على هاد. حدّد جملة أو فقرة قصيرة"
                   : (BOOK_REASONS[item.id] ?? "حدّد كلمة أو جملة من الصفحة"),
           };
@@ -1583,6 +1623,7 @@ export function BookReader({
                   if (lastPractice.current) void practice(lastPractice.current.action, true);
                 }}
                 onSwitch={(action) => void practice(action, true)}
+                onStyle={(style) => void practice("make_cards", true, style)}
                 onClose={() => {
                   setWin(null);
                   orbButton.current?.focus({ preventScroll: true });

@@ -322,3 +322,46 @@ test("a practice is named by what it makes, with one line on where it came from"
   assert.equal(practiceTitle({ action: "make_mcq" }), "تمارين اختيار");
   assert.match(PRACTICE_NOTE, /الجزء اللي حدّدته/);
 });
+
+test("card styles: a short selection is one card, a paragraph starts with its important words", async () => {
+  const { cardStylesFor, cardStyleLabel } = await import("./study-practice.ts");
+  assert.deepEqual(cardStylesFor("on the bench"), ["terms"]);
+  assert.deepEqual(cardStylesFor("Some people were sitting on the bench outside the door."), [
+    "terms",
+    "sentences",
+  ]);
+  assert.equal(cardStyleLabel("terms"), "كلمات مهمة");
+  assert.equal(cardStyleLabel("sentences"), "جمل كاملة");
+});
+
+test("word cards hold a word or a short expression from the text; sentence cards may be long", async () => {
+  const { cleanCards, cardsSystemPrompt, maxCards } = await import("./study-practice.ts");
+  const text =
+    "Some people were sitting on the bench outside the door, and they looked at me with pity because I was going to the castle of the Count.";
+  const reply = {
+    cards: [
+      { front: "bench", back: "مقعد طويل", note: "sitting on the bench" },
+      { front: "outside the door", back: "برا الباب", note: "" },
+      { front: "looked at me with pity because I was going", back: "طلعوا فيّ بشفقة", note: "" },
+      { front: "castle", back: "قلعة", note: "" },
+      { front: "dragon", back: "تنين", note: "" },
+    ],
+  };
+  assert.deepEqual(
+    cleanCards(reply, text, 12, "terms").map((c) => c.front),
+    ["bench", "outside the door", "castle"],
+    "a sentence-long front and a word that is not in the text are dropped",
+  );
+  const sentence = {
+    cards: [{ front: text, back: "ناس كانوا قاعدين على المقعد برا الباب…", note: "" }],
+  };
+  assert.equal(cleanCards(sentence, text, 8, "sentences").length, 1, "a long sentence is kept");
+  assert.equal(
+    cleanCards(sentence, text, 8).length,
+    0,
+    "the original limits still apply without a style",
+  );
+  assert.match(cardsSystemPrompt(6, "terms"), /IMPORTANT WORDS AND EXPRESSIONS/);
+  assert.match(cardsSystemPrompt(6, "sentences"), /whole sentences/);
+  assert.equal(maxCards("One. Two three. Four five six.", "sentences"), 3);
+});

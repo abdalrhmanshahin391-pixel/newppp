@@ -4,8 +4,10 @@ import { Loader2, X } from "lucide-react";
 import type { PracticeAction } from "@/lib/study/study-actions";
 import {
   PRACTICE_NOTE,
+  cardStyleLabel,
   practiceFailureView,
   practiceTitle,
+  type CardStyle,
   type StudyCard,
   type StudyMcq,
 } from "@/lib/study/study-practice";
@@ -23,6 +25,10 @@ export type PracticeView = {
   code?: string;
   /** Where it was made (the lesson or book title) and the selected text, for saving it. */
   source?: { title: string; quote: string };
+  /** Flashcards: the style on screen, the styles this selection offers, and the cards each made. */
+  style?: CardStyle;
+  styles?: CardStyle[];
+  counts?: Partial<Record<CardStyle, number>>;
 };
 
 /** The practice in a dialog (the book reader). The lesson page shows the same body in its window. */
@@ -87,11 +93,14 @@ export function StudyPracticeBody({
   view,
   onRetry,
   onSwitch,
+  onStyle,
   onClose,
 }: {
   view: PracticeView;
   onRetry: () => void;
   onSwitch: (action: PracticeAction) => void;
+  /** Makes (or shows again) the cards of another style from the same selection. */
+  onStyle?: (style: CardStyle) => void;
   onClose: () => void;
 }) {
   const cards = view.action === "make_cards";
@@ -99,18 +108,31 @@ export function StudyPracticeBody({
   const [revealed, setRevealed] = useState(false);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
+  const styles = cards && onStyle && view.styles && view.styles.length > 1 ? view.styles : null;
   return (
     <div className="st-practice-body" aria-busy={view.status === "loading"}>
-      {view.status === "loading" && (
-        <p role="status" className="st-practice-loading">
-          <Loader2
-            size={22}
-            className="animate-spin motion-reduce:animate-none"
-            aria-hidden="true"
-          />
-          {cards ? "بنجهّز البطاقات…" : "بنجهّز التمارين…"}
-        </p>
+      {styles && view.style && (
+        <StyleSwitch
+          styles={styles}
+          value={view.style}
+          counts={view.counts ?? {}}
+          busy={view.status === "loading"}
+          onChange={onStyle!}
+        />
       )}
+      {view.status === "loading" &&
+        (cards ? (
+          <CardsLoading style={view.style} />
+        ) : (
+          <p role="status" className="st-practice-loading">
+            <Loader2
+              size={22}
+              className="animate-spin motion-reduce:animate-none"
+              aria-hidden="true"
+            />
+            بنجهّز التمارين…
+          </p>
+        ))}
       {view.status === "error" &&
         (() => {
           const failure = practiceFailureView(view.code, view.message);
@@ -178,6 +200,76 @@ export function StudyPracticeBody({
           source={view.source}
         />
       )}
+    </div>
+  );
+}
+
+/**
+ * «كلمات مهمة | جمل كاملة»: a segmented switch; the blue pill slides to the chosen side. Each side
+ * shows how many cards it made once it has made them.
+ */
+function StyleSwitch({
+  styles,
+  value,
+  counts,
+  busy,
+  onChange,
+}: {
+  styles: CardStyle[];
+  value: CardStyle;
+  counts: Partial<Record<CardStyle, number>>;
+  busy: boolean;
+  onChange: (style: CardStyle) => void;
+}) {
+  const at = Math.max(0, styles.indexOf(value));
+  return (
+    <div
+      role="radiogroup"
+      aria-label="نوع البطاقات"
+      className="st-styles"
+      style={{ "--st-styles-n": styles.length, "--st-styles-at": at } as React.CSSProperties}
+    >
+      <span className="st-styles-pill" aria-hidden="true" />
+      {styles.map((style) => {
+        const count = counts[style];
+        const chosen = style === value;
+        return (
+          <button
+            key={style}
+            type="button"
+            role="radio"
+            aria-checked={chosen}
+            disabled={busy && !chosen}
+            className="st-styles-option"
+            onClick={() => {
+              if (!chosen) onChange(style);
+            }}
+          >
+            {cardStyleLabel(style)}
+            {count !== undefined && <span className="st-styles-count">{count}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** While the cards are made: three shimmering card shapes and what is being picked. */
+function CardsLoading({ style }: { style?: CardStyle }) {
+  return (
+    <div className="st-cards-loading" role="status">
+      <p className="st-cards-loading-text">
+        {style === "sentences"
+          ? "بنجهّز الجمل ومعانيها…"
+          : style === "terms"
+            ? "بنطلّع الكلمات المهمة…"
+            : "بنجهّز البطاقات…"}
+      </p>
+      <div className="st-cards-skeleton" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
     </div>
   );
 }

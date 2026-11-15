@@ -1266,6 +1266,20 @@ their pt sizes). Screen type: title 19px weight 650 (uppercase, as the guide), s
 where wide matrix tables scroll inside their own section). A pinch or ctrl + wheel still zooms
 around the fingers, and selection keeps working at any zoom.
 
+## Flashcards from a selection: important words or whole sentences
+
+A selection of more than four words offers two kinds of cards, chosen on a segmented switch at the
+top of the practice window: «كلمات مهمة» (each important word or short expression, at most five
+words, with its meaning in this text and the bit of text it came from under the meaning) and «جمل
+كاملة» (each sentence with its meaning, the original way, now up to 220 characters a side). It
+starts on «كلمات مهمة». The switch is a grey 14px-radius track with a blue pill that slides under the
+chosen side (transform only, 240ms strong ease-out, none with reduced motion); the chosen side's
+text turns white and each side shows how many cards it made. Switching asks for the other kind
+once; switching back is instant (the cards are kept for that selection). While cards are made the
+window shows what is being picked («بنطلّع الكلمات المهمة…») over three shimmering card shapes.
+A word or short phrase is one card either way: no switch. In books, cards now take a whole paragraph
+(up to 1500 characters, `canMakeCards`); the other options keep the 600-character limit.
+
 ## Saving practice (lessons and books)
 
 Under the cards or questions in the practice window, a quiet grey row «احفظ البطاقات في الفلاش
