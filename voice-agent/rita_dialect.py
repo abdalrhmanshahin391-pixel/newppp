@@ -155,10 +155,15 @@ KNOWN_WRONG = (
 _GENDERED_TELL_ME = re.compile(r"(?<![\w\u0600-\u06ff])(?:خبريني|خبرني)(?![\w\u0600-\u06ff])")
 
 
-def neutral_wording(text: str) -> str:
-    """Swap the gendered "tell me" for a neutral one; the model still writes it now and then."""
+# "You say it" to a woman only (بتقوليها، تقوليه); the plain form is the one used for everyone.
+_GENDERED_SAY = re.compile(r"(?<![\w\u0621-\u064a])(ب?)تقولي(ها|ه)(?![\w\u0621-\u064a])")
 
-    return _GENDERED_TELL_ME.sub("احكيلي", text)
+
+def neutral_wording(text: str) -> str:
+    """Swap gendered "tell me" / "you say it" for neutral ones; the model still writes them now and then."""
+
+    text = _GENDERED_TELL_ME.sub("احكيلي", text)
+    return _GENDERED_SAY.sub(lambda m: f"{m.group(1)}تقول{m.group(2)}", text)
 
 
 def scan_dialect(text: str) -> list[str]:

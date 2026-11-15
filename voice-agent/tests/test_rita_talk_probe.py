@@ -123,3 +123,22 @@ def test_a_pointer_to_a_missing_sheet_is_caught():
     assert "points to a sheet that is not there" not in check_turn(
         Turn("x"), "am مع I. التفاصيل تحت [[SHEET]]\n# am\n- I am"
     )
+
+
+def test_free_talk_lists_the_phrases_already_given_and_lists_go_on_the_sheet():
+    import bot
+    from rita_state import ResponseType, RitaSessionState
+
+    state = RitaSessionState(active_language="ar", active_dialect="ar-JO")
+    state.observe_user_turn("مرحبا")
+    state.observe_assistant_turn('أهلاً! شو بتحب تعمل؟ "I like …"')
+    state.observe_assistant_turn('حلو! من وين إنت؟ "I\'m from …"')
+    state.observe_user_turn("تمام")
+    prompt = bot.build_prompt({"mode": "free_conversation"}, state)
+    assert "Phrases you already gave" in prompt and "I like …" in prompt and "I'm from …" in prompt
+    assert "Phrases you already gave" not in bot.build_prompt({"mode": "lesson", "lesson": {"brief": "x"}}, state)
+    for text in ("أعطيني خمس كلمات عن المطبخ", "شو الفرق بين der و die و das؟", "give me five words about food"):
+        state.observe_user_turn(text)
+        assert state.response_type == ResponseType.EXPLAIN, text
+    state.observe_user_turn("بعرف شوي إنجليزي")
+    assert state.response_type != ResponseType.EXPLAIN

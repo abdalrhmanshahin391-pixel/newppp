@@ -147,10 +147,10 @@ def split_reply(raw: str) -> tuple[str, str]:
 def heard(spoken: str) -> str:
     """What the voice says: the same cleaner as the worker (markdown marks dropped)."""
 
-    from rita_dialect import SpeechTextFilter
+    from rita_dialect import SpeechTextFilter, neutral_wording
 
     speech = SpeechTextFilter()
-    return (speech.feed(spoken) + speech.pending).strip()
+    return neutral_wording(speech.feed(spoken) + speech.pending).strip()
 
 
 #: A phrase in quotes ("I'm from …") is the learner's line to say, not one of Uzyra's sentences.

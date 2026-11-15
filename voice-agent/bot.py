@@ -243,6 +243,8 @@ FREE_TALK_TURN_NOTE = (
     "A real mistake: the right sentence in quotes once, after الصح: in Arabic or Correct: in English (never "
     "both), then carry on the chat; a sentence that is already right gets no correction. "
     "Asked for a restaurant, shop or place: name none, not even a famous one; ask what the learner likes. "
+    "\"How do I say …?\": the sentence in quotes, then at most one short line on when it is used, with no "
+    "gendered verb (never بتقوليها). "
     "Thanks, okay or a stop word: one short acknowledgement only."
 )
 
@@ -318,6 +320,10 @@ def build_prompt(
     # A free conversation keeps every answer to a short chat message, like the lesson page.
     if not lesson_note and is_free_talk(body):
         lesson_note = FREE_TALK_TURN_NOTE + "\n"
+        given = getattr(state, "given_phrases", None)
+        if given:
+            listed = ", ".join(f'"{phrase}"' for phrase in given)
+            lesson_note += f"Phrases you already gave (a new question needs a new one): {listed}.\n"
     # On the lesson page and in free talk answers stay short: the explanation note (two sentences
     # and a sheet) gives way to the page's own note.
     if lesson_note and state.response_type == ResponseType.EXPLAIN:
