@@ -644,6 +644,7 @@ export function LibraryPage({
           <MyBooksShelf
             ui={ui}
             userId={user.id}
+            language={learning && !everyLanguage ? learning : null}
             colorOf={(book) => (book.category_id ? byId.get(book.category_id)?.color : undefined)}
           />
         ) : null}

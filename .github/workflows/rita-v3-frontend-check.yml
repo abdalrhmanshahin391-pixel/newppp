@@ -6,6 +6,13 @@ on:
       - "src/lib/repeat/**"
       - "src/lib/library-language*"
       - "src/lib/text-language*"
+      - "src/lib/rita-learning*"
+      - "src/lib/language-scope.ts"
+      - "src/lib/use-flashcards.ts"
+      - "src/lib/use-study-subjects.ts"
+      - "src/components/rita/useLearningTray.ts"
+      - "src/components/language/**"
+      - "src/routes/study.index.tsx"
       - "src/lib/voice-line-files.test.ts"
       - "public/sounds/uzyra/**"
       - "src/components/rita/RitaRealtimeV3.tsx"
@@ -133,6 +140,7 @@ jobs:
           node --test src/lib/repeat/match.test.ts
           node --test src/lib/library-language.test.ts
           node --test src/lib/text-language.test.ts
+          node --test src/lib/rita-learning-list.test.ts
           node --test src/lib/voice-line-files.test.ts
           node --test src/lib/activity-streak.test.ts
           node --test src/lib/learning-language.test.ts
@@ -176,6 +184,10 @@ jobs:
           npx --prefix "$RUNNER_TEMP/pw" playwright install --with-deps chromium
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" \
             node --test src/components/rita-study/selection.browser.test.ts
+      - name: Switching learning language in a real browser (cards, subjects, word tray)
+        run: |
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" \
+            node --test src/components/language/language-switch.browser.test.ts
       - name: Build site
         run: bun run build
 

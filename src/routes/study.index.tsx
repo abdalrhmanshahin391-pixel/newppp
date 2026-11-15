@@ -1,4 +1,5 @@
 import { LanguageGate } from "@/components/language/LanguageGate";
+import { LanguageScopeNote } from "@/components/language/LanguageScopeNote";
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -352,6 +353,7 @@ function StudyBoard() {
     >
       <div className="grid min-h-[62vh] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="min-w-0">
+          <LanguageScopeNote />
           <PickerBoard
             framed={false}
             accent={ACCENT}

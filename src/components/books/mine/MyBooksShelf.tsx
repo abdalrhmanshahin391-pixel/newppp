@@ -11,7 +11,7 @@ import { BookOpen, Lock, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react
 import { BookObject, UzyraIcon } from "@/components/books/BookObject";
 import type { Book, CategoryColor } from "@/lib/books";
 import { loadRecentReads, type RecentRead } from "@/lib/books-data";
-import { mergeRecent, readShare } from "@/lib/recent-reads";
+import { mergeRecent, readShare, readsIn } from "@/lib/recent-reads";
 import { megabytes, readAtKey, USER_BOOK_SLOTS, type UserBook } from "@/lib/user-books";
 import {
   addMyBook,
@@ -33,9 +33,15 @@ export function MyBooksShelf({
   ui,
   userId,
   colorOf,
+  language = null,
 }: {
   ui: Lang;
   userId: string;
+  /**
+   * The learning language whose library books the row shows (null: every language). Own PDFs
+   * always show.
+   */
+  language?: string | null;
   /** A library book's shelf colour (its category's). */
   colorOf?: (book: Book) => CategoryColor | undefined;
 }) {
@@ -47,7 +53,8 @@ export function MyBooksShelf({
   // time the library shows, so coming back from a book puts it first.
   const recent = useQuery({
     queryKey: ["library", "recent-reads", userId],
-    queryFn: () => loadRecentReads(5),
+    // More than five, so after keeping one language's books the row can still hold five.
+    queryFn: () => loadRecentReads(20),
     staleTime: 0,
   });
   // Own books' reading times and places live on this device: read once mounted (not on the server).
@@ -68,7 +75,7 @@ export function MyBooksShelf({
     return () => window.clearTimeout(timer);
   }, [pointBins]);
 
-  const reads = recent.data ?? [];
+  const reads = readsIn(recent.data ?? [], language);
   const ownReady = !(books.data === null || books.isError);
   // Without own books (the database lacks them) and nothing read yet: nothing to show.
   if (!ownReady && !reads.length) return null;

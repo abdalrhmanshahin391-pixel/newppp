@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mergeRecent, readShare } from "./recent-reads.ts";
+import { mergeRecent, readShare, readsIn } from "./recent-reads.ts";
 
 test("own books and recently read library books share one row, newest first", () => {
   const row = mergeRecent(
@@ -39,4 +39,13 @@ test("how far into a book", () => {
   assert.equal(readShare(90, 80), 1);
   assert.equal(readShare(null, 80), null);
   assert.equal(readShare(3, null), null);
+});
+
+test("recent library books follow the learning language", () => {
+  const reads = [{ book: { id: "a", language: "en" } }, { book: { id: "b", language: "de" } }];
+  assert.deepEqual(
+    readsIn(reads, "de").map((r) => r.book.id),
+    ["b"],
+  );
+  assert.equal(readsIn(reads, null).length, 2);
 });
