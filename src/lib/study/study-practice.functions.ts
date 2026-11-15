@@ -31,6 +31,8 @@ const PracticeInput = z.object({
     exact: z.string().max(4000),
     parts: z.array(z.string().max(4000)).max(12).optional(),
   }),
+  /** Flashcards only: the selection's important words, or its whole sentences. */
+  style: z.enum(["terms", "sentences"]).optional(),
 });
 
 type Failure = { ok: false; code: string; message: string; retryAfter?: number };
@@ -86,16 +88,17 @@ export const studyMakeCards = createServerFn({ method: "POST" })
     });
     if ("result" in outcome) return outcome.result as Failure;
     const { quote, context: lessonContext } = outcome.resolved;
-    const limit = maxCards(quote);
+    const style = data.style;
+    const limit = maxCards(quote, style);
     const asked = await askModel(
       key,
-      cardsSystemPrompt(limit),
+      cardsSystemPrompt(limit, style),
       practiceUserMessage(quote, lessonContext),
       3500,
     );
     if (!asked.ok)
       return { ok: false, code: asked.reason, message: PRACTICE_FAILURE_TEXT[asked.reason] };
-    const cards = cleanCards(asked.reply, `${quote}\n${lessonContext}`, limit);
+    const cards = cleanCards(asked.reply, `${quote}\n${lessonContext}`, limit, style);
     if (!cards.length) return { ok: false, code: "no_cards", message: NO_CARDS_TEXT };
     return { ok: true, cards };
   });

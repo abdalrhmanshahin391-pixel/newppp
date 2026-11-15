@@ -76,7 +76,8 @@ const stubs: Plugin = {
 };
 
 const ENTRY = `
-import { createElement as h, useEffect } from "react";
+import { createElement as h, useEffect, useState } from "react";
+import { StudyPracticeBody } from "@/components/rita-study/StudyPracticePanel";
 import { createRoot } from "react-dom/client";
 import { setLanguageScope } from "@/lib/language-scope";
 import { PracticeSave } from "@/components/rita-study/PracticeSave";
@@ -101,10 +102,37 @@ function Tray() {
   return null;
 }
 
+// The «كلمات مهمة | جمل كاملة» switch: switching asks for the other style, shows the loading cards,
+// then the new cards with their count.
+function Styles() {
+  const [view, setView] = useState({
+    id: "a", action: "make_cards", status: "ready", questions: [], message: "",
+    cards: [{ front: "bench", back: "مقعد طويل", note: "sitting on the bench" }],
+    style: "terms", styles: ["terms", "sentences"], counts: { terms: 1 },
+  });
+  return h(StudyPracticeBody, {
+    view,
+    onRetry() {}, onSwitch() {}, onClose() {},
+    onStyle(style) {
+      window.styleAsked = style;
+      setView((v) => ({ ...v, id: "b", style, status: "loading", cards: [] }));
+      setTimeout(() => setView((v) => ({
+        ...v, id: "c", status: "ready",
+        cards: [
+          { front: "Some people were sitting on the bench.", back: "ناس كانوا قاعدين على المقعد.", note: "" },
+          { front: "They looked at me.", back: "طلعوا فيّ.", note: "" },
+        ],
+        counts: { ...v.counts, sentences: 2 },
+      })), 600);
+    },
+  });
+}
+
 function App() {
   return h("div", { dir: "rtl" },
     h("section", { id: "cards" }, h(PracticeSave, { kind: "cards", cards, questions: [], source })),
     h("section", { id: "questions" }, h(PracticeSave, { kind: "questions", cards: [], questions, source })),
+    h("section", { id: "styles" }, h(Styles)),
     h(Tray));
 }
 setLanguageScope({ active: "de", legacy: "de" });
@@ -120,6 +148,8 @@ async function bundle(): Promise<string> {
     alias: { "@": `${ROOT}src` },
     define: { "process.env.NODE_ENV": '"production"' },
     plugins: [stubs],
+    // Styles are not part of this check (the screenshots cover them).
+    loader: { ".css": "empty" },
     write: false,
     logLevel: "silent",
   });
@@ -210,6 +240,22 @@ test("practice saves to Lecture Lab and the flashcards board, and the tray saves
       assert.equal(q.options.filter((o) => o.is_correct).length, 1);
       assert.equal(q.point_ref, "I am happy");
     }
+
+    // The card-style switch: two choices, the first chosen; the other asks for its cards.
+    const styles = page.locator("#styles");
+    const options = styles.locator(".st-styles-option");
+    assert.equal(await options.first().textContent(), "كلمات مهمة1");
+    await styles.getByRole("radio", { name: /جمل كاملة/ }).click();
+    await styles.getByText("بنجهّز الجمل ومعانيها…").waitFor();
+    await styles.getByText("Some people were sitting on the bench.").waitFor();
+    assert.equal(
+      await page.evaluate(() => (window as never as { styleAsked: string }).styleAsked),
+      "sentences",
+    );
+    assert.equal(
+      await styles.locator(".st-styles-option[aria-checked=true]").textContent(),
+      "جمل كاملة2",
+    );
 
     // The word tray saves onto the same board, and another copy of the board on the page sees it.
     await page.evaluate(async () => {

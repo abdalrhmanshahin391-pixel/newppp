@@ -25,7 +25,13 @@ import {
   type StudyCard,
   type StudyMcq,
 } from "@/lib/study/study-practice";
-import { PAGE_LIMITS, bookSelectionKind, canTranslate, pageQuote } from "@/lib/books-reader";
+import {
+  PAGE_LIMITS,
+  bookSelectionKind,
+  canMakeCards,
+  canTranslate,
+  pageQuote,
+} from "@/lib/books-reader";
 
 const NOT_APPLIED = /could not find|does not exist|schema cache|PGRST20[0-9]|42883|42P01/i;
 
@@ -52,6 +58,8 @@ const BookInput = z.object({
    * selection in one of Uzyra's answers sends that answer.
    */
   own: z.boolean().optional(),
+  /** Flashcards only: the selection's important words, or its whole sentences. */
+  style: z.enum(["terms", "sentences"]).optional(),
   pageText: z.string().max(PAGE_LIMITS.text).optional(),
 });
 type BookData = z.infer<typeof BookInput>;
@@ -134,11 +142,18 @@ async function resolveBookRequest(
       return {
         result: { ok: false, code: "selection", message: "التحديد كبير. حدّد فقرة أو فقرتين." },
       };
-  } else if (kind === "too_long")
+  } else if (kind === "too_long" && !(action === "make_cards" && canMakeCards(found.quote)))
     return { result: { ok: false, code: "selection", message: "التحديد كبير. حدّد جزء أصغر." } };
+  // A long paragraph is fine for cards (checked just above); other kind rules do not apply to it.
+  const longCards = kind === "too_long" && action === "make_cards";
   if (kind === "non_text")
     return { result: { ok: false, code: "selection", message: "حدّد كلمة أو جملة من الصفحة." } };
-  if (action !== "translate" && WRONG_KIND[action] && !availableActions(kind).includes(action))
+  if (
+    action !== "translate" &&
+    !longCards &&
+    WRONG_KIND[action] &&
+    !availableActions(kind).includes(action)
+  )
     return { result: { ok: false, code: "selection", message: WRONG_KIND[action]! } };
 
   const { data: quota, error } = await context.supabase.rpc(
@@ -307,16 +322,17 @@ export const bookMakeCards = createServerFn({ method: "POST" })
     if (!key) return NO_KEY;
     const outcome = await resolveBookRequest(context, data, "make_cards");
     if ("result" in outcome) return outcome.result;
-    const limit = maxCards(outcome.quote);
+    const style = data.style;
+    const limit = maxCards(outcome.quote, style);
     const asked = await askModel(
       key,
-      cardsSystemPrompt(limit),
+      cardsSystemPrompt(limit, style),
       practiceUserMessage(outcome.quote, outcome.context),
       3500,
     );
     if (!asked.ok)
       return { ok: false, code: asked.reason, message: PRACTICE_FAILURE_TEXT[asked.reason] };
-    const cards = cleanCards(asked.reply, `${outcome.quote}\n${outcome.context}`, limit);
+    const cards = cleanCards(asked.reply, `${outcome.quote}\n${outcome.context}`, limit, style);
     if (!cards.length) return { ok: false, code: "no_cards", message: NO_CARDS_TEXT };
     return { ok: true, cards };
   });

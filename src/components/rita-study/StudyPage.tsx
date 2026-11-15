@@ -8,7 +8,13 @@ import { RitaRealtimeV3, type StudyBridge } from "@/components/rita/RitaRealtime
 import { studyGuideDownload } from "@/lib/study/study.functions";
 import { studyMakeCards, studyMakeMcq } from "@/lib/study/study-practice.functions";
 import { StudyPracticeBody, type PracticeView } from "./StudyPracticePanel";
-import { PRACTICE_NOTE, practiceTitle } from "@/lib/study/study-practice";
+import {
+  PRACTICE_NOTE,
+  cardStylesFor,
+  practiceTitle,
+  type CardStyle,
+  type StudyCard,
+} from "@/lib/study/study-practice";
 import type { StudyLessonData } from "@/lib/study/study-types";
 import { PhraseDialog } from "@/components/rita/PhraseDialog";
 import { resolveSelection } from "@/lib/study/study-resolve";
@@ -437,6 +443,8 @@ export function StudyPage({
   const lastPractice = useRef<{
     action: PracticeAction;
     selection: { segIds: string[]; exact: string; parts?: string[] };
+    /** The cards already made for this selection, per style: switching back is instant. */
+    cards?: Partial<Record<CardStyle, StudyCard[]>>;
   } | null>(null);
   useEffect(
     () => () => {
@@ -445,7 +453,7 @@ export function StudyPage({
     [],
   );
 
-  async function practice(action: PracticeAction, retry = false) {
+  async function practice(action: PracticeAction, retry = false, wanted?: CardStyle) {
     if (practiceBusy.current) return;
     const sel = retry ? lastPractice.current?.selection : selectionRef.current;
     if (!sel || !sel.segIds.length || (!retry && !actions.includes(action))) return;
@@ -454,7 +462,29 @@ export function StudyPage({
       exact: sel.exact,
       parts: sel.parts ? [...sel.parts] : undefined,
     };
-    lastPractice.current = { action, selection: saved };
+    // The same selection keeps the cards it already has; a new one starts empty.
+    const made = retry ? (lastPractice.current?.cards ?? {}) : {};
+    lastPractice.current = { action, selection: saved, cards: made };
+    const styles = action === "make_cards" ? cardStylesFor(saved.exact) : undefined;
+    const style = styles ? (wanted && styles.includes(wanted) ? wanted : styles[0]) : undefined;
+    const counts = () =>
+      Object.fromEntries(Object.entries(made).map(([key, list]) => [key, list?.length ?? 0]));
+    if (style && made[style]) {
+      setPracticeView({
+        id: crypto.randomUUID(),
+        action,
+        status: "ready",
+        cards: made[style]!,
+        questions: [],
+        message: "",
+        source: { title, quote: saved.exact },
+        style,
+        styles,
+        counts: counts(),
+      });
+      openWindow("practice");
+      return;
+    }
     const cue = prepareVoiceLine(action);
     practiceBusy.current = true;
     const version = ++practiceVersion.current;
@@ -472,6 +502,9 @@ export function StudyPage({
       questions: [],
       message: "",
       source: { title, quote: saved.exact },
+      style,
+      styles,
+      counts: counts(),
     });
     const input = {
       data: {
@@ -479,6 +512,7 @@ export function StudyPage({
         preview,
         requestId,
         selection: saved,
+        ...(style ? { style } : {}),
       },
     };
     try {
@@ -493,7 +527,10 @@ export function StudyPage({
           return;
         }
         playVoiceLine(cue);
-        setPracticeView((view) => view && { ...view, status: "ready", cards: result.cards });
+        if (style) made[style] = result.cards;
+        setPracticeView(
+          (view) => view && { ...view, status: "ready", cards: result.cards, counts: counts() },
+        );
       } else {
         const result = await makeMcqFn(input);
         if (version !== practiceVersion.current) return;
@@ -848,6 +885,7 @@ export function StudyPage({
                     if (lastPractice.current) void practice(lastPractice.current.action, true);
                   }}
                   onSwitch={(action) => void practice(action, true)}
+                  onStyle={(style) => void practice("make_cards", true, style)}
                   onClose={() => {
                     setWin(null);
                     orbButton.current?.focus({ preventScroll: true });
