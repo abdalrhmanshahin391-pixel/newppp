@@ -1706,15 +1706,22 @@ export function RitaRealtimeV3({
     message.id !== "welcome" &&
     (!active || message.id !== newestReplyId || ledgerReplies.has(message.id));
 
-  if (study) {
+  // Free conversation (no lesson) uses the same chat as the lessons and books: Uzyra's mark over
+  // her answers, the learner's words in a grey bubble, the same composer and hold-to-start; the
+  // big voice orb is only for spoken lessons now.
+  const freeTalk = !study && !lessonId && !sample;
+
+  if (study || freeTalk) {
     const turns = groupTurns(messages).filter((message) => message.id !== "welcome");
     const chatting = active || starting || turns.length > 0;
     const stateWord = voiceStateWord(historyLoading ? "connecting" : connectionPhase, mood, muted);
     const lastTurn = turns[turns.length - 1];
-    return (
-      <main
-        className="edith-premium uz-rc text-[var(--pp-ink)]"
+    const Column = study ? "main" : "div";
+    const column = (
+      <Column
+        className={`edith-premium uz-rc text-[var(--pp-ink)]${freeTalk ? " uz-rc-page" : ""}`}
         data-phase={chatting ? "chat" : "intro"}
+        dir={freeTalk ? "rtl" : undefined}
         style={{ fontFamily: "var(--font-grotesk)" }}
       >
         <audio
@@ -1786,7 +1793,7 @@ export function RitaRealtimeV3({
                 caption,
                 [...messages].reverse().find((m) => m.role === "you")?.text,
               ) && <ChatText text={caption} className="uz-rc-you is-live" />}
-              {study.children}
+              {study?.children}
               {error && (
                 <p className="uz-rc-error" role="alert" dir="auto">
                   {error}
@@ -1798,7 +1805,20 @@ export function RitaRealtimeV3({
           <div className="uz-rc-hero">
             <UzyraWordmark size={12} withMark={false} className="uz-rc-brand" />
             <div className="uz-rc-spot is-hero" data-cube-spot="hero" />
-            {connectionPhase !== "idle" && <p className="uz-rc-word">{stateWord}</p>}
+            {freeTalk && (
+              <>
+                <h1 className="uz-rc-title">محادثة حرة</h1>
+                <p className="uz-rc-lead">احكي عن أي إشي. يوزرا بترد بصوتها وبتصحّحلك بلطف.</p>
+                <div className="uz-rc-explain">
+                  <ExplanationLanguageControl ui="ar" live={active} onChange={explanationChanged} />
+                </div>
+              </>
+            )}
+            {/* "Ended" before anything was said is noise (the page also ends any leftover call
+                when it loads), so the intro shows only a call that is starting or failed. */}
+            {connectionPhase !== "idle" && connectionPhase !== "ended" && (
+              <p className="uz-rc-word">{stateWord}</p>
+            )}
             {error && <p className="uz-rc-error">{error}</p>}
           </div>
         )}
@@ -1926,6 +1946,34 @@ export function RitaRealtimeV3({
           />
         )}
         <LearningTray tray={tray} />
+      </Column>
+    );
+    if (study) return column;
+    // The free conversation fills the page under the site's top bar: a quiet row with the way back
+    // and whether the conversation is saved, then the chat column.
+    return (
+      <main className="edith-premium uz-rc-shell">
+        <div className="rita-cream edith-light edith-premium">
+          <ProHeader variant="solid" tone="light" />
+        </div>
+        <div className="uz-rc-top" dir="rtl">
+          <Link to="/rita-conversations" className="uz-rc-back">
+            <ArrowLeft size={16} aria-hidden="true" />
+            محادثاتي
+          </Link>
+          {saveState !== "idle" ? (
+            <p role="status" className={`uz-rc-saved${saveState === "failed" ? " is-failed" : ""}`}>
+              {saveState === "saving" ? "عم تنحفظ المحادثة…" : null}
+              {saveState === "saved" ? "المحادثة محفوظة" : null}
+              {saveState === "failed" ? (
+                <button type="button" onClick={() => void retryFailedWrites()}>
+                  ما انحفظت · أعد المحاولة
+                </button>
+              ) : null}
+            </p>
+          ) : null}
+        </div>
+        {column}
       </main>
     );
   }

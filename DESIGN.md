@@ -1004,6 +1004,12 @@ for green); a lesson carries a pill (`.lesson-kind`) and its row a 4px edge (`.l
 lesson whose guide is not linked says "بدون دليل مربوط" and offers «كمّل» (learners get the red lesson
 until it is linked). The kind can be changed later in the lesson window, tab «الدراسة التفاعلية».
 
+The free conversation (`/rita-live` without a lesson) uses this same column as a full page
+(`.uz-rc-shell`): the site's top bar, a quiet row with «محادثاتي» (back) and whether the conversation is
+saved (12px #8B8D98, red with «أعد المحاولة» when it failed), then the column. Its intro adds «محادثة حرة»
+(22px bold), one 14px line and the "Uzyra explains in" choice under the cube. No voice orb; the orb
+stays only on spoken lessons with exercises (`/rita-live?lesson=`).
+
 The study page's Uzyra column (`.uz-rc-*`, RitaRealtimeV3 in study mode) follows the ChatGPT / Claude
 chat pages, measured from the owner's reference and scaled ×0.82 so the column keeps that calm,
 large-screen feel. Page #F7F7F6. Before the call: the UZYRA wordmark and Uzyra's cube big in the

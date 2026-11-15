@@ -242,3 +242,21 @@ class SiteChosenExplanationLanguage(unittest.TestCase):
         self.assertEqual(state.reply_language(), "en")
         prompt = bot.build_prompt({}, state, dialogue=True)
         self.assertIn("REPLY LANGUAGE: ENGLISH", prompt)
+
+
+class WishesAreNotOrders(unittest.TestCase):
+    """"I want to speak German" is the learner practising; "I want you to speak German" is an order."""
+
+    def test_wanting_to_speak_a_language_keeps_the_reply_language(self):
+        for text in ("بدي أحكي ألماني شوي", "بدي احكي انجليزي", "حابب أحكي معك بالألماني", "نفسي أحكي إنجليزي"):
+            with self.subTest(text=text):
+                self.assertIsNone(language_of(text))
+
+    def test_asking_uzyra_to_speak_a_language_still_changes_it(self):
+        for text, language in (
+            ("بدي تحكي معي بالألماني", "de"),
+            ("احكي معي بالإنجليزي", "en"),
+            ("بدي اياك تحكي معي انجليزي", "en"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(language_of(text), language)
