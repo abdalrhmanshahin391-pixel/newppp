@@ -10,6 +10,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { boardId, boardPlace } from "@/lib/rita-learning-tree";
 import type { useLearningTray } from "./useLearningTray";
 
 type Tray = ReturnType<typeof useLearningTray>;
@@ -197,7 +198,11 @@ function Picker({
 export function LearningTray({ tray }: { tray: Tray }) {
   if (!tray.open) return null;
   const { entries, target } = tray;
-  const flashSelected = tray.flashOptions.find((option) => option.id === tray.destinationId);
+  // A new sub-subject goes into the chosen subject (or the subject of the chosen sub-subject).
+  const flashPlace = boardPlace(tray.destinationId);
+  const flashSelected = flashPlace
+    ? tray.flashOptions.find((option) => option.id === boardId(flashPlace.subject))
+    : undefined;
 
   return (
     <div

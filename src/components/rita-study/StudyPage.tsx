@@ -471,6 +471,7 @@ export function StudyPage({
       cards: [],
       questions: [],
       message: "",
+      source: { title, quote: saved.exact },
     });
     const input = {
       data: {

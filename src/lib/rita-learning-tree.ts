@@ -65,3 +65,43 @@ export function matchSubject(options: SubjectOption[], spoken: string): SubjectO
   const contains = options.filter((option) => foldName(option.label).includes(wanted));
   return contains.length === 1 ? contains[0] : null;
 }
+
+// ------------------------------------------------------------------ the flashcards board
+// The flashcards page keeps a two-level board (subject → sub-subject) per learning language; the
+// word tray saves there too, so its words show up on that page. A place is named, not numbered,
+// so moving subjects around on the board never sends words to the wrong one.
+
+export type BoardSubject = { name: string; subs: { name: string }[] };
+
+/** The id of a subject (no sub) or of a sub-subject on the board. */
+export function boardId(subject: string, sub?: string | null): string {
+  return `board:${JSON.stringify(sub ? [subject, sub] : [subject])}`;
+}
+
+/** The subject and sub-subject an id names, or null for an id that is not a board place. */
+export function boardPlace(id: string): { subject: string; sub: string | null } | null {
+  if (!id.startsWith("board:")) return null;
+  try {
+    const parts = JSON.parse(id.slice(6)) as unknown;
+    if (!Array.isArray(parts) || !parts.length || parts.some((p) => typeof p !== "string"))
+      return null;
+    return { subject: parts[0] as string, sub: (parts[1] as string | undefined) ?? null };
+  } catch {
+    return null;
+  }
+}
+
+/** The board as picker options: each subject, then its sub-subjects as "Subject / Sub". */
+export function boardOptions(subjects: BoardSubject[]): SubjectOption[] {
+  return subjects.flatMap((subject) => [
+    { id: boardId(subject.name), label: subject.name, depth: 0 },
+    ...subject.subs.map((sub) => ({
+      id: boardId(subject.name, sub.name),
+      label: `${subject.name} / ${sub.name}`,
+      depth: 1,
+    })),
+  ]);
+}
+
+/** Cards saved to a whole subject go to its sub-subject with this name (made when missing). */
+export const BOARD_GENERAL_SUB = "General";

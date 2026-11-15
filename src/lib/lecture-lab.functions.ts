@@ -135,6 +135,70 @@ export const lqAddSubtopic = createServerFn({ method: "POST" })
   });
 
 
+/**
+ * Saves questions made in a lesson or a book (the practice window) into one of the learner's own
+ * sub-subjects, as a small lecture they can run like any other. Nothing is generated here, so no
+ * quota is used; the questions are checked again (four options, exactly one right).
+ */
+export const lqSaveStudyQuestions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        subtopicId: z.string().uuid(),
+        title: z.string().trim().min(1).max(160),
+        sourceName: z.string().trim().max(200).optional(),
+        questions: z
+          .array(
+            z.object({
+              stem: z.string().trim().min(1).max(600),
+              options: z
+                .array(
+                  z.object({
+                    letter: z.string().trim().min(1).max(1),
+                    body: z.string().trim().min(1).max(300),
+                    is_correct: z.boolean(),
+                  }),
+                )
+                .length(4)
+                .refine((options) => options.filter((o) => o.is_correct).length === 1, {
+                  message: "Every question needs exactly one right answer.",
+                }),
+              explanation: z.string().trim().max(600),
+              point_ref: z.string().trim().max(200).nullable(),
+            }),
+          )
+          .min(1)
+          .max(20),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const supabase = (context as any).supabase;
+    const userId = (context as any).userId as string;
+    const { data: sub, error: subError } = await supabase
+      .from("lq_subtopics")
+      .select("id, user_id")
+      .eq("id", data.subtopicId)
+      .maybeSingle();
+    if (subError) throw new Error(subError.message || "Could not check that sub-subject.");
+    if (!sub) throw new Error("That sub-subject is gone. Pick or create one again.");
+    if (sub.user_id !== userId) {
+      throw new Error("The example subjects are read-only. Pick or create your own sub-subject.");
+    }
+    const { data: lectureId, error } = await supabase.rpc("save_lq_generation", {
+      _subtopic_id: data.subtopicId,
+      _title: data.title,
+      _source_name: data.sourceName ?? "",
+      _difficulty: "mixed",
+      _key_points: [],
+      _questions: data.questions,
+      _lecture_id: null,
+    });
+    if (error) throw new Error(error.message || "The questions could not be saved.");
+    return { lectureId: lectureId as string, saved: data.questions.length };
+  });
+
 export const lqEnsureDefault = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

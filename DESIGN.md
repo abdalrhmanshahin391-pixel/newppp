@@ -1260,6 +1260,29 @@ their pt sizes). Screen type: title 19px weight 650 (uppercase, as the guide), s
 where wide matrix tables scroll inside their own section). A pinch or ctrl + wheel still zooms
 around the fingers, and selection keeps working at any zoom.
 
+## Saving practice (lessons and books)
+
+Under the cards or questions in the practice window, a quiet grey row «احفظ البطاقات في الفلاش
+كاردز» / «احفظ الأسئلة في مختبر المحاضرات» opens a small panel in the same window (`PracticeSave`):
+a ticked list of everything made (all ticked; «شيل الكل / اختار الكل»), one muted line saying where
+it goes, then «المادة» and «المادة الفرعية» as native 44px selects, each with a blue «+ مادة جديدة» /
+«+ فرعية جديدة» that turns into a name field with «أضف» right there. «احفظ N بطاقات/أسئلة» is the one
+blue button; «إلغاء» beside it. After saving the row becomes a green line with a check, the place
+(«انحفظ 2 بطاقات في "Dracula words / Chapter 1"»), «افتح» and «احفظ بمكان ثاني».
+
+- Questions go to Lecture Lab as one small lecture named after the lesson or book and the start of
+  the selection (`lqSaveStudyQuestions`, through `save_lq_generation`; no quota, nothing generated).
+  The read-only example shelf is never offered. Each question keeps four options, one right.
+- Cards go to the flashcards page's own board (the learning language's), the meaning on the back
+  with the note under it; a card whose front is already in that sub-subject is skipped.
+- Uzyra's word tray saves flashcards onto the same board (subjects and sub-subjects by name,
+  "General" when a whole subject is chosen), so the words show on `/study`. German Lab keeps its
+  own subjects on the account. Two copies of the board on one page re-read each other's saves.
+
+Verification: `practice-save.browser.test.ts` (Chromium) saves cards and questions through the
+real panel with new subjects, saves the same cards again (nothing doubled), and saves tray words
+onto the board.
+
 ## Temporary question design preview
 
 The circle's «معاينة الأسئلة» item replaces the old Hello world demo. It opens the existing

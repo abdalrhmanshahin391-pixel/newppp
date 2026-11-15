@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useActiveLanguage } from "@/lib/language-scope";
-import { isGermanItem, type LearningItem, type SaveTarget } from "@/lib/rita-learning";
+import {
+  flashcardFaces,
+  isGermanItem,
+  type LearningItem,
+  type SaveTarget,
+} from "@/lib/rita-learning";
+import { useStudySubjects } from "@/lib/use-study-subjects";
+import { CARD_LIMIT, readCards, writeCards } from "@/lib/use-flashcards";
+import { newCards } from "@/lib/study/practice-save";
 import {
   addItems,
   chunks,
@@ -14,8 +22,11 @@ import {
   type ListEntry,
 } from "@/lib/rita-learning-list";
 import {
+  BOARD_GENERAL_SUB,
+  boardId,
+  boardOptions,
+  boardPlace,
   matchSubject,
-  subjectOptions,
   type FlashSubject,
   type SubjectOption,
 } from "@/lib/rita-learning-tree";
@@ -35,6 +46,10 @@ async function headers() {
   const token = data.session?.access_token;
   if (!token) throw new Error("Please sign in first.");
   return new Headers({ Authorization: `Bearer ${token}`, "Content-Type": "application/json" });
+}
+
+function newCardId() {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function errorText(cause: unknown) {
@@ -90,9 +105,14 @@ export function useLearningTray(userId: string | undefined) {
     return () => clearTimeout(timer);
   }, [latest]);
 
+  // Flashcards are saved on the flashcards page's own board (the learning language's), so the
+  // words show up there. German Lab keeps its own subjects on the account.
+  const board = useStudySubjects();
+  const boardRef = useRef(board);
+  boardRef.current = board;
   const flashOptions: SubjectOption[] = useMemo(
-    () => subjectOptions(destinations.flashSubjects),
-    [destinations.flashSubjects],
+    () => boardOptions(board.subjects),
+    [board.subjects],
   );
   const germanSubtopicOptions = useMemo(
     () =>
@@ -162,13 +182,37 @@ export function useLearningTray(userId: string | undefined) {
       const clean = name.trim();
       if (!clean) return null;
       setNotice(null);
+      if (kind === "flash_subject") {
+        // A subject or sub-subject on the flashcards board; an existing name is simply chosen.
+        const current = boardRef.current;
+        const parent = parentId ? boardPlace(parentId) : null;
+        if (parentId && !parent) return null;
+        if (!parent) {
+          if (!current.subjects.some((subject) => subject.name === clean))
+            current.addSubject(clean);
+          const id = boardId(clean);
+          setDestinationId(id);
+          setSuggestedName("");
+          setNotice({ tone: "ok", text: `“${clean}” is on your flashcards board.` });
+          return id;
+        }
+        const at = current.subjects.findIndex((subject) => subject.name === parent.subject);
+        if (at < 0) {
+          setNotice({ tone: "error", text: "That subject is no longer on your flashcards board." });
+          return null;
+        }
+        if (!current.subjects[at].subs.some((sub) => sub.name === clean)) current.addSub(at, clean);
+        const id = boardId(parent.subject, clean);
+        setDestinationId(id);
+        setSuggestedName("");
+        setNotice({ tone: "ok", text: `“${parent.subject} / ${clean}” is ready.` });
+        return id;
+      }
       try {
         const body =
-          kind === "flash_subject"
-            ? { action: "create_flash_subject", name: clean, parentId: parentId ?? null }
-            : kind === "german_subject"
-              ? { action: "create_german_subject", name: clean }
-              : { action: "create_german_subtopic", name: clean, subjectId: parentId };
+          kind === "german_subject"
+            ? { action: "create_german_subject", name: clean }
+            : { action: "create_german_subtopic", name: clean, subjectId: parentId };
         const response = await fetch("/api/rita/learning", {
           method: "POST",
           headers: await headers(),
@@ -218,7 +262,32 @@ export function useLearningTray(userId: string | undefined) {
       let skipped = 0;
       const done: string[] = [];
       try {
-        for (const batch of chunks(eligible)) {
+        if (kind === "flashcards") {
+          // Straight onto the flashcards board; a card already in that sub-subject is skipped.
+          const place = boardPlace(id);
+          const current = boardRef.current;
+          const at = place ? current.subjects.findIndex((s) => s.name === place.subject) : -1;
+          if (!place || at < 0) throw new Error("Choose a subject on your flashcards board.");
+          const sub = place.sub ?? BOARD_GENERAL_SUB;
+          if (!current.subjects[at].subs.some((s) => s.name === sub)) {
+            if (place.sub)
+              throw new Error("That sub-subject is no longer on your flashcards board.");
+            current.addSub(at, sub);
+          }
+          const existing = readCards(place.subject, sub);
+          const { add, skipped: already } = newCards(existing, eligible.map(flashcardFaces));
+          const kept = add.slice(0, Math.max(0, CARD_LIMIT - existing.length));
+          if (kept.length)
+            writeCards(place.subject, sub, [
+              ...existing,
+              ...kept.map((card) => ({ id: newCardId(), ...card })),
+            ]);
+          saved = kept.length;
+          skipped = already + (add.length - kept.length);
+          for (const item of eligible)
+            if ("id" in item && typeof item.id === "string") done.push(item.id);
+        }
+        for (const batch of kind === "flashcards" ? [] : chunks(eligible)) {
           const response = await fetch("/api/rita/learning", {
             method: "POST",
             headers: await headers(),
@@ -277,8 +346,7 @@ export function useLearningTray(userId: string | undefined) {
   const destinationLabel = useCallback(
     (kind: SaveTarget, id: string) =>
       kind === "flashcards"
-        ? (subjectOptions(destinationsRef.current.flashSubjects).find((o) => o.id === id)?.label ??
-          "")
+        ? (boardOptions(boardRef.current.subjects).find((o) => o.id === id)?.label ?? "")
         : (() => {
             const sub = destinationsRef.current.germanSubtopics.find((s) => s.id === id);
             const parent = destinationsRef.current.germanSubjects.find(
@@ -320,7 +388,7 @@ export function useLearningTray(userId: string | undefined) {
         if (wanted) {
           const options =
             kind === "flashcards"
-              ? subjectOptions(payload.flashSubjects)
+              ? boardOptions(boardRef.current.subjects)
               : payload.germanSubtopics.map((item) => ({
                   id: item.id,
                   depth: 0,

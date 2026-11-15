@@ -707,7 +707,7 @@ export function RitaRealtimeV3({
       const payload = await current().loadDestinations();
       const options =
         requestedTarget === "flashcards"
-          ? subjectOptions(payload.flashSubjects)
+          ? current().flashOptions
           : payload.germanSubtopics.map((item) => ({
               id: item.id,
               depth: 0,
