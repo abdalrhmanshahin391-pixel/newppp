@@ -4,6 +4,7 @@ import { StartLearningLink } from "@/components/StartLearningLink";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
 import { RitaCube } from "@/components/rita-study/RitaCube";
 import { wordTapSound } from "@/components/rita-study/tech-sound";
+import { useActiveLanguage } from "@/lib/language-scope";
 
 const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
 
@@ -18,7 +19,8 @@ type Word = {
 };
 
 // Meanings and pronunciation (in Arabic letters) are what Uzyra's tap-a-word window gives.
-const WORDS: Word[] = [
+// Guests see both languages; a learner who has chosen one sees only that language's words.
+const MIXED: Word[] = [
   {
     term: "Guten Morgen",
     lang: "German",
@@ -53,8 +55,32 @@ const WORDS: Word[] = [
   },
 ];
 
+const PLACES = MIXED.map(({ at, rot }) => ({ at, rot }));
+const placed = (words: Omit<Word, "at" | "rot">[]): Word[] =>
+  words.map((word, i) => ({ ...word, ...PLACES[i] }));
+
+const GERMAN: Word[] = placed([
+  { term: "Guten Morgen", lang: "German", meaning: "صباح الخير", say: "غوتن مورغن" },
+  { term: "Danke", lang: "German", meaning: "شكراً", say: "دانكه" },
+  { term: "Wie geht's?", lang: "German", meaning: "كيف حالك؟", say: "في غيتس" },
+  { term: "Freut mich", lang: "German", meaning: "فرصة سعيدة", say: "فرويت ميش" },
+]);
+
+const ENGLISH: Word[] = placed([
+  { term: "Good morning", lang: "English", meaning: "صباح الخير", say: "غود مورنينغ" },
+  { term: "Thank you", lang: "English", meaning: "شكراً", say: "ثانك يو" },
+  { term: "How are you?", lang: "English", meaning: "كيف حالك؟", say: "هاو آر يو" },
+  { term: "Nice to meet you", lang: "English", meaning: "فرصة سعيدة", say: "نايس تو ميت يو" },
+]);
+
+/** The words for a learning language (both languages before one is chosen, and for guests). */
+function heroWords(code: string | null | undefined): Word[] {
+  return code === "de" ? GERMAN : code === "en" ? ENGLISH : MIXED;
+}
+
 /** First screen: Uzyra's cube and the same orbiting words you can tap in a call. */
 export function HeroTapWord() {
+  const WORDS = heroWords(useActiveLanguage());
   const [active, setActive] = useState<number | null>(null);
   const [touched, setTouched] = useState(false);
   const [added, setAdded] = useState<Set<number>>(new Set());

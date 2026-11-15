@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "src/lib/repeat/**"
+      - "src/lib/library-language*"
       - "src/lib/text-language*"
       - "src/lib/voice-line-files.test.ts"
       - "public/sounds/uzyra/**"
@@ -130,6 +131,7 @@ jobs:
           node --test src/lib/book-gestures.test.ts
           node --test src/lib/rita-phrase.test.ts
           node --test src/lib/repeat/match.test.ts
+          node --test src/lib/library-language.test.ts
           node --test src/lib/text-language.test.ts
           node --test src/lib/voice-line-files.test.ts
           node --test src/lib/activity-streak.test.ts

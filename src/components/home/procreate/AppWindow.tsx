@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { BookOpen, Check, Languages, Lock, Mic, RotateCcw } from "lucide-react";
 import { useReveal } from "@/hooks/useReveal";
+import { useActiveLanguage } from "@/lib/language-scope";
 
 const ink = { color: "var(--pp-ink)" } as const;
 const muted = { color: "var(--pp-muted)" } as const;
@@ -12,21 +13,36 @@ function prefersCalm() {
   );
 }
 
-/** Sample lessons of the A1 path. The first two are finished, the third is the one in progress. */
-const LESSONS = [
+/**
+ * Sample lessons of the A1 path. The first two are finished, the third is the one in progress.
+ * German learners see German samples; everyone else the English ones.
+ */
+const LESSONS_EN = [
   "Hello & Goodbye",
   "Me & You",
   "Thank you & Please",
   "Yes, No & Great idea!",
   "I'm busy",
 ];
+const LESSONS_DE = [
+  "Hallo & Tschüss",
+  "Ich & du",
+  "Danke & Bitte",
+  "Ja, nein & Gute Idee!",
+  "Keine Zeit",
+];
 const CURRENT = 2;
 const DONE = 2;
 
-const WORDS: { en: string; ar: string }[] = [
+const WORDS_EN: { en: string; ar: string }[] = [
   { en: "Thank you", ar: "شكرًا" },
   { en: "Please", ar: "من فضلك" },
   { en: "You're welcome", ar: "عفوًا" },
+];
+const WORDS_DE: { en: string; ar: string }[] = [
+  { en: "Danke", ar: "شكرًا" },
+  { en: "Bitte", ar: "من فضلك" },
+  { en: "Gern geschehen", ar: "عفوًا" },
 ];
 
 /** Steps of the scripted story: 1 path fills, 2 current lesson, 3 words, 4 Uzyra listens. */
@@ -94,6 +110,9 @@ function PathNode({ index, step }: { index: number; step: number }) {
  */
 export function AppWindow() {
   const head = useReveal<HTMLDivElement>();
+  const german = useActiveLanguage() === "de";
+  const LESSONS = german ? LESSONS_DE : LESSONS_EN;
+  const WORDS = german ? WORDS_DE : WORDS_EN;
   const stage = useRef<HTMLDivElement | null>(null);
   const frame = useRef<HTMLDivElement | null>(null);
   const timers = useRef<number[]>([]);
@@ -185,8 +204,8 @@ export function AppWindow() {
       <div ref={stage} className="mt-8 md:mt-10" style={{ perspective: "1600px" } as CSSProperties}>
         <p className="sr-only">
           Sample screen. The lessons list shows a path of five A1 lessons. The first two are done,
-          the third, Thank you and Please, is in progress. Saved words: Thank you, Please and You're
-          welcome. Uzyra is ready to listen.
+          the third, {LESSONS[CURRENT]}, is in progress. Saved words:{" "}
+          {WORDS.map((word) => word.en).join(", ")}. Uzyra is ready to listen.
         </p>
         <div
           ref={frame}
@@ -245,7 +264,7 @@ export function AppWindow() {
                   className="mt-1 text-[17px] font-semibold leading-tight md:text-[18px]"
                   style={ink}
                 >
-                  Thank you &amp; Please
+                  {LESSONS[CURRENT]}
                 </p>
                 <div className="mt-3 flex items-center gap-3">
                   <div

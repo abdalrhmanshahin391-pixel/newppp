@@ -9814,6 +9814,28 @@ html.rita-app,
   line-height: 1.6;
 }
 
+/* Above the discover shelves: which language they show, and the switch to every language. */
+.bk-lang-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0 0 12px;
+  color: #4b4a5c;
+  font-size: 15px;
+  font-weight: 600;
+}
+.bk-lang-switch {
+  min-height: 40px;
+  padding-inline: 10px;
+  border-radius: 8px;
+  color: var(--pp-accent-text, #2b73c7);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* Ratings and favourites (phase 3). Gold stars; the average shows from three ratings on. */
 .bk-item-rating {
   display: inline-flex;

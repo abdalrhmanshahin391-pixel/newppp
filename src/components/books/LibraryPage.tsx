@@ -19,6 +19,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguageRegistry } from "@/hooks/useLearningLanguage";
+import { useActiveLanguage } from "@/lib/language-scope";
+import { booksIn, discoverIn } from "@/lib/library-language";
 import {
   BOOK_LENGTHS,
   BOOK_LEVELS,
@@ -201,6 +203,12 @@ export function LibraryPage({
     return found ? (ui === "ar" ? found.name_ar : found.name_native) : code.toUpperCase();
   };
   const name = (c: { name_ar: string; name_en: string }) => (ui === "ar" ? c.name_ar : c.name_en);
+  // The shelves show the learner's learning language first (a German learner sees German books);
+  // one tap shows every language. With no book in that language, every language is shown.
+  const learning = useActiveLanguage();
+  const [everyLanguage, setEveryLanguage] = useState(false);
+  const learningCount = learning && discover.data ? booksIn(discover.data, learning) : 0;
+  const showLearning = Boolean(learning) && !everyLanguage && learningCount > 0;
   const go = (patch: Partial<BrowseState>) => onState({ ...state, page: 1, ...patch });
   const fresh = (patch: Partial<BrowseState> = {}) =>
     onState({ ...NO_BROWSE, size: state.size, ...patch });
@@ -665,19 +673,60 @@ export function LibraryPage({
               )}
             </div>
           ) : (
-            <DiscoverShelves
-              data={discover.data}
-              fetching={discover.isFetching}
-              byId={byId}
-              ui={ui}
-              shelf={shelf}
-              name={name}
-              languageName={languageName}
-              onOpen={setOpen}
-              onNewPicks={() => setSeed(newSeed())}
-              onAll={(patch) => fresh(patch)}
-              popular={popular.data ?? null}
-            />
+            <>
+              {learning && (
+                <p className="bk-lang-note" data-lang-note={showLearning ? "only" : "all"}>
+                  {showLearning
+                    ? t(
+                        `Books in ${languageName(learning)}`,
+                        `كتب بال${languageName(learning).replace(/^ال/, "")}`,
+                      )
+                    : learningCount === 0
+                      ? t(
+                          `No books in ${languageName(learning)} yet: these are in other languages.`,
+                          `لسا ما في كتب بال${languageName(learning).replace(/^ال/, "")} بالمكتبة، هاي كتب بلغات ثانية.`,
+                        )
+                      : t("Books in every language", "كتب بكل اللغات")}
+                  {learningCount > 0 && (
+                    <button
+                      type="button"
+                      className="bk-lang-switch"
+                      onClick={() => setEveryLanguage((value) => !value)}
+                    >
+                      {showLearning
+                        ? t("Show every language", "اعرض كل اللغات")
+                        : t(
+                            `Only ${languageName(learning)}`,
+                            `بس ال${languageName(learning).replace(/^ال/, "")}`,
+                          )}
+                    </button>
+                  )}
+                </p>
+              )}
+              <DiscoverShelves
+                data={
+                  showLearning && learning ? discoverIn(discover.data, learning) : discover.data
+                }
+                fetching={discover.isFetching}
+                byId={byId}
+                ui={ui}
+                shelf={shelf}
+                name={name}
+                languageName={languageName}
+                onOpen={setOpen}
+                onNewPicks={() => setSeed(newSeed())}
+                onAll={(patch) => fresh(patch)}
+                popular={
+                  popular.data && showLearning && learning
+                    ? {
+                        ...popular.data,
+                        trending: popular.data.trending.filter((b) => b.language === learning),
+                        topRated: popular.data.topRated.filter((b) => b.language === learning),
+                      }
+                    : (popular.data ?? null)
+                }
+              />
+            </>
           )
         ) : (
           <section className="bk-results" aria-busy={browse.isFetching}>
