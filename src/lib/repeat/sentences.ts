@@ -1,6 +1,8 @@
-// Repeat: the sentences the game says and the learner repeats. Short, everyday English, from
-// two to six words, each with its Arabic meaning. A round takes ten at random.
+// Repeat: the sentences the game says and the learner repeats. Short, everyday English or German
+// (the learner's learning language), from two to six words, each with its Arabic meaning. A round
+// takes ten at random.
 
+/** `en` is the sentence itself (English or German, by the list it is in), `ar` its meaning. */
 export type RepeatSentence = { en: string; ar: string };
 
 export const ROUND_SIZE = 10;
@@ -87,6 +89,94 @@ export const SENTENCES: readonly RepeatSentence[] = [
   { en: "Turn off the lights", ar: "أطفئ الأنوار." },
   { en: "Good luck tomorrow", ar: "حظًا موفقًا غدًا." },
 ];
+
+export const SENTENCES_DE: readonly RepeatSentence[] = [
+  { en: "Guten Morgen", ar: "صباح الخير." },
+  { en: "Wie geht's?", ar: "كيف الحال؟" },
+  { en: "Mir geht es gut", ar: "أنا بخير." },
+  { en: "Ich heiße Ali", ar: "اسمي علي." },
+  { en: "Ich komme aus Jordanien", ar: "أنا من الأردن." },
+  { en: "Ich lerne Deutsch", ar: "أنا أتعلم الألمانية." },
+  { en: "Sprechen Sie Englisch?", ar: "هل تتكلم الإنجليزية؟" },
+  { en: "Ich verstehe das nicht", ar: "لا أفهم هذا." },
+  { en: "Bitte sprechen Sie langsam", ar: "من فضلك تكلم ببطء." },
+  { en: "Wie spät ist es?", ar: "كم الساعة؟" },
+  { en: "Wo ist der Bahnhof?", ar: "أين محطة القطار؟" },
+  { en: "Können Sie mir helfen?", ar: "هل يمكنك مساعدتي؟" },
+  { en: "Ich habe Hunger", ar: "أنا جائع." },
+  { en: "Ich habe Durst", ar: "أنا عطشان." },
+  { en: "Das Wasser ist kalt", ar: "الماء بارد." },
+  { en: "Der Kaffee ist heiß", ar: "القهوة ساخنة." },
+  { en: "Wie viel kostet das?", ar: "بكم هذا؟" },
+  { en: "Das ist zu teuer", ar: "هذا غالٍ جدًا." },
+  { en: "Ich möchte ein Wasser", ar: "أريد ماءً." },
+  { en: "Vielen Dank", ar: "شكرًا جزيلًا." },
+  { en: "Bitte schön", ar: "تفضل / عفوًا." },
+  { en: "Entschuldigung", ar: "عذرًا." },
+  { en: "Bis morgen", ar: "إلى الغد." },
+  { en: "Schönes Wochenende", ar: "عطلة نهاية أسبوع سعيدة." },
+  { en: "Freut mich", ar: "تشرفت بمعرفتك." },
+  { en: "Ich bin müde", ar: "أنا متعب." },
+  { en: "Es regnet heute", ar: "إنها تمطر اليوم." },
+  { en: "Die Sonne scheint", ar: "الشمس مشرقة." },
+  { en: "Mach das Fenster auf", ar: "افتح النافذة." },
+  { en: "Mach die Tür zu", ar: "أغلق الباب." },
+  { en: "Ich bin gleich zurück", ar: "سأعود حالًا." },
+  { en: "Warte auf mich", ar: "انتظرني." },
+  { en: "Der Bus ist spät", ar: "الحافلة متأخرة." },
+  { en: "Ich habe eine Frage", ar: "لدي سؤال." },
+  { en: "Mach dir keine Sorgen", ar: "لا تقلق." },
+  { en: "Mein Handy ist kaputt", ar: "هاتفي معطل." },
+  { en: "Nimm dir Zeit", ar: "خذ وقتك." },
+  { en: "Das war ein langer Tag", ar: "كان يومًا طويلًا." },
+  { en: "Ich bin deiner Meinung", ar: "أنا أتفق معك." },
+  { en: "Das Zimmer ist sauber", ar: "الغرفة نظيفة." },
+  { en: "Wo wohnst du?", ar: "أين تسكن؟" },
+  { en: "Ich wohne in Amman", ar: "أسكن في عمّان." },
+  { en: "Der Himmel ist blau", ar: "السماء زرقاء." },
+  { en: "Alles Gute zum Geburtstag", ar: "عيد ميلاد سعيد." },
+  { en: "Fahr vorsichtig", ar: "قد بحذر." },
+  { en: "Ich vermisse meine Familie", ar: "أشتاق لعائلتي." },
+  { en: "Das ist mein Freund", ar: "هذا صديقي." },
+  { en: "Der Test war leicht", ar: "كان الاختبار سهلًا." },
+  { en: "Ich brauche einen Arzt", ar: "أحتاج طبيبًا." },
+  { en: "Stimmt so", ar: "احتفظ بالباقي." },
+  { en: "Lass mich nachdenken", ar: "دعني أفكر." },
+  { en: "Tut mir leid", ar: "أنا آسف." },
+  { en: "Ich habe keine Zeit", ar: "ليس لدي وقت." },
+  { en: "Ich bin bereit", ar: "أنا جاهز." },
+  { en: "Der Film beginnt bald", ar: "سيبدأ الفيلم قريبًا." },
+  { en: "Einen schönen Tag noch", ar: "أتمنى لك يومًا سعيدًا." },
+  { en: "Ich finde es nicht", ar: "لا أجده." },
+  { en: "Die Katze schläft", ar: "القطة نائمة." },
+  { en: "Setzen Sie sich bitte", ar: "تفضل بالجلوس." },
+  { en: "Wir sind fast da", ar: "اقتربنا من الوصول." },
+  { en: "Deine Schuhe gefallen mir", ar: "أعجبني حذاؤك." },
+  { en: "Übung macht den Meister", ar: "التمرين يصنع الإتقان." },
+  { en: "Ich bin stolz auf dich", ar: "أنا فخور بك." },
+  { en: "Fangen wir noch mal an", ar: "لنبدأ من جديد." },
+  { en: "Das Baby weint", ar: "الطفل يبكي." },
+  { en: "Mach das Licht aus", ar: "أطفئ الضوء." },
+  { en: "Viel Glück morgen", ar: "حظًا موفقًا غدًا." },
+  { en: "Ich trinke gern Tee", ar: "أحب شرب الشاي." },
+  { en: "Wir essen um sieben", ar: "نأكل في السابعة." },
+  { en: "Mein Bruder ist Lehrer", ar: "أخي معلم." },
+  { en: "Das Essen ist lecker", ar: "الطعام لذيذ." },
+  { en: "Ich spiele gern Fußball", ar: "أحب لعب كرة القدم." },
+  { en: "Wo ist die Toilette?", ar: "أين الحمام؟" },
+  { en: "Ich nehme den Zug", ar: "سآخذ القطار." },
+  { en: "Heute ist Montag", ar: "اليوم الاثنين." },
+  { en: "Ich lese ein Buch", ar: "أقرأ كتابًا." },
+  { en: "Das Wetter ist schön", ar: "الطقس جميل." },
+  { en: "Hast du Geschwister?", ar: "هل لديك إخوة؟" },
+  { en: "Ich arbeite im Büro", ar: "أعمل في المكتب." },
+  { en: "Bis später", ar: "أراك لاحقًا." },
+];
+
+/** The sentences for a learning language: German for German learners, else English. */
+export function sentencesFor(lang: "en" | "de"): readonly RepeatSentence[] {
+  return lang === "de" ? SENTENCES_DE : SENTENCES;
+}
 
 /** Ten different sentences in a random order (`random` is for tests). */
 export function pickRound(

@@ -1,7 +1,11 @@
 // Repeat: which words of the sentence the learner has said so far. Pure: no DOM.
 // Words are matched in order (the learner reads the sentence from the start), forgiving small
 // slips of the speech recogniser: contractions ("I'm" = "I am"), numbers ("10" = "ten"),
-// common homophones ("hear" = "here") and near spellings of longer words.
+// common homophones ("hear" = "here") and near spellings of longer words. German has its own
+// rules: "geht's" = "geht es", German numbers, ä = ae (and ö, ü, ß), "das" = "dass".
+
+/** The language of the sentence being repeated. */
+export type RepeatLang = "en" | "de";
 
 /** One word of the sentence as shown on the card, with the spoken forms it stands for. */
 export type SentenceWord = {
@@ -109,17 +113,81 @@ const SOUND_ALIKE = [
   ["mr", "mister"],
   ["mrs", "missus"],
 ];
-const ALIKE = new Map<string, Set<string>>();
-for (const group of SOUND_ALIKE) {
-  for (const word of group) {
-    const set = ALIKE.get(word) ?? new Set<string>();
-    group.forEach((other) => set.add(other));
-    ALIKE.set(word, set);
+const CONTRACTIONS_DE: Record<string, string[]> = {
+  "geht's": ["geht", "es"],
+  "gibt's": ["gibt", "es"],
+  "wie's": ["wie", "es"],
+  "hab's": ["habe", "es"],
+  "ist's": ["ist", "es"],
+  "war's": ["war", "es"],
+  "hab'": ["habe"],
+};
+
+const NUMBERS_DE = [
+  "null",
+  "eins",
+  "zwei",
+  "drei",
+  "vier",
+  "fuenf",
+  "sechs",
+  "sieben",
+  "acht",
+  "neun",
+  "zehn",
+  "elf",
+  "zwoelf",
+  "dreizehn",
+  "vierzehn",
+  "fuenfzehn",
+  "sechzehn",
+  "siebzehn",
+  "achtzehn",
+  "neunzehn",
+  "zwanzig",
+];
+
+// German words the recogniser cannot tell apart (written with ae / oe / ue / ss, see below).
+const SOUND_ALIKE_DE = [
+  ["das", "dass"],
+  ["seid", "seit"],
+  ["wieder", "wider"],
+  ["mehr", "meer"],
+  ["wahr", "war"],
+  ["viel", "fiel"],
+  ["ist", "isst"],
+  ["man", "mann"],
+  ["stadt", "statt"],
+  ["rad", "rat"],
+  ["hab", "habe"],
+  ["gern", "gerne"],
+  ["heute", "heut"],
+  ["okay", "ok"],
+];
+
+function alikeMap(groups: string[][]) {
+  const map = new Map<string, Set<string>>();
+  for (const group of groups) {
+    for (const word of group) {
+      const set = map.get(word) ?? new Set<string>();
+      group.forEach((other) => set.add(other));
+      map.set(word, set);
+    }
   }
+  return map;
 }
+const ALIKE: Record<RepeatLang, Map<string, Set<string>>> = {
+  en: alikeMap(SOUND_ALIKE),
+  de: alikeMap(SOUND_ALIKE_DE),
+};
+
+/** "Müde" and "muede", "Straße" and "Strasse" are the same spoken word. */
+const plainGerman = (word: string) =>
+  word.replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss");
 
 /** Lower-case spoken tokens of a piece of text. */
-export function spokenTokens(text: string): string[] {
+export function spokenTokens(text: string, lang: RepeatLang = "en"): string[] {
+  if (lang === "de") return germanTokens(text);
   const out: string[] = [];
   const cleaned = text
     .toLowerCase()
@@ -148,12 +216,37 @@ export function spokenTokens(text: string): string[] {
   return out;
 }
 
+function germanTokens(text: string): string[] {
+  const out: string[] = [];
+  const cleaned = text
+    .toLowerCase()
+    .replace(/[’‘`]/g, "'")
+    .replace(/[^\p{L}\p{N}'\s-]/gu, " ")
+    .replace(/-/g, " ");
+  for (const raw of cleaned.split(/\s+/)) {
+    const word = raw.replace(/^'+/, "");
+    if (!word) continue;
+    const expanded = CONTRACTIONS_DE[word] ?? CONTRACTIONS_DE[word.replace(/'+$/, "")];
+    if (expanded) {
+      out.push(...expanded);
+      continue;
+    }
+    const bare = word.replace(/'/g, "");
+    if (/^\d+$/.test(bare) && Number(bare) <= 20) {
+      out.push(NUMBERS_DE[Number(bare)]);
+      continue;
+    }
+    if (bare) out.push(plainGerman(bare));
+  }
+  return out;
+}
+
 /** The sentence split into the words shown on the card. */
-export function sentenceWords(sentence: string): SentenceWord[] {
+export function sentenceWords(sentence: string, lang: RepeatLang = "en"): SentenceWord[] {
   return sentence
     .split(/\s+/)
     .filter(Boolean)
-    .map((text) => ({ text, keys: spokenTokens(text) }));
+    .map((text) => ({ text, keys: spokenTokens(text, lang) }));
 }
 
 function distance(a: string, b: string): number {
@@ -172,11 +265,16 @@ function distance(a: string, b: string): number {
 }
 
 /** Whether a heard token counts as the expected one. */
-export function sameWord(expected: string, heard: string): boolean {
+export function sameWord(expected: string, heard: string, lang: RepeatLang = "en"): boolean {
   if (expected === heard) return true;
-  if (ALIKE.get(expected)?.has(heard)) return true;
-  // Plural / -s slips ("game" for "games") on longer words.
-  if (expected.length >= 4 && (expected === `${heard}s` || heard === `${expected}s`)) return true;
+  if (ALIKE[lang].get(expected)?.has(heard)) return true;
+  // Plural / ending slips ("game" for "games"; German "-e", "-n", "-en") on longer words.
+  const endings = lang === "de" ? ["e", "n", "en", "s"] : ["s"];
+  if (
+    expected.length >= 4 &&
+    endings.some((end) => expected === `${heard}${end}` || heard === `${expected}${end}`)
+  )
+    return true;
   // Near spellings only on longer words: short words must be exact ("I" is not "a").
   if (expected.length < 5) return false;
   return distance(expected, heard) <= (expected.length >= 8 ? 2 : 1);
@@ -190,8 +288,12 @@ const LOOK_AHEAD = 3;
  * found, in order, in the heard text; a missed word does not stop later words from counting, so
  * a learner who stumbles in the middle still sees the end turn black.
  */
-export function wordsSaid(words: SentenceWord[], heard: string): boolean[] {
-  const tokens = spokenTokens(heard);
+export function wordsSaid(
+  words: SentenceWord[],
+  heard: string,
+  lang: RepeatLang = "en",
+): boolean[] {
+  const tokens = spokenTokens(heard, lang);
   let at = 0;
   return words.map((word) => {
     if (!word.keys.length) return true;
@@ -199,7 +301,7 @@ export function wordsSaid(words: SentenceWord[], heard: string): boolean[] {
     for (const key of word.keys) {
       let found = -1;
       for (let i = cursor; i < Math.min(tokens.length, cursor + LOOK_AHEAD + 1); i += 1) {
-        if (sameWord(key, tokens[i])) {
+        if (sameWord(key, tokens[i], lang)) {
           found = i;
           break;
         }

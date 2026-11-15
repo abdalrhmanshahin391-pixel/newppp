@@ -207,3 +207,54 @@ test("the built-in list: no repeats, no clashing meanings, nothing blocked", () 
   assert.equal(new Set(LEXICON.map((e) => e.ar)).size, LEXICON.length, "every meaning differs");
   for (const banned of ["KILL", "GUN", "WAR", "DEAD"]) assert.equal(BY_WORD.has(banned), false);
 });
+
+// ---- German ----------------------------------------------------------------------------------
+
+test("German rounds from the built-in list: every level, many seeds, always one answer", async () => {
+  const { DICTIONARY_DE } = await import("./round.ts");
+  for (const level of LEVEL_IDS)
+    for (let seed = 1; seed <= 25; seed++) {
+      const round = listRound(level, rng(seed), [], "de");
+      assert.equal(round.lang, "de");
+      assert.equal(validRound(round), true);
+      const grid = { rows: round.rows, cols: round.cols, letters: round.letters };
+      assert.equal(covers(grid, round.words, 0, 2).count, 1, "exactly one answer");
+      const hidden = hiddenWords(grid, DICTIONARY_DE, new Set(round.words));
+      assert.ok(hidden.every((w) => w.length < 5), `no long decoy: ${hidden}`);
+      assert.equal(new Set(round.info.map((w) => clueKey(w.ar))).size, 4);
+    }
+});
+
+test("the German list: good words, meanings that differ, examples that use the word", async () => {
+  const { LEXICON_DE, BY_WORD_DE } = await import("./lexicon-de.ts");
+  const { usesWord } = await import("./round.ts");
+  assert.ok(LEXICON_DE.length >= 200);
+  assert.equal(BY_WORD_DE.size, LEXICON_DE.length, "no word twice");
+  assert.equal(new Set(LEXICON_DE.map((e) => clueKey(e.ar))).size, LEXICON_DE.length);
+  for (const e of LEXICON_DE) {
+    assert.match(e.word, /^[A-ZÄÖÜ]{4,7}$/, e.word);
+    assert.ok(e.ar && e.exampleAr, e.word);
+    assert.ok(usesWord(e.example, e.word), `${e.word}: ${e.example}`);
+  }
+  for (const level of LEVEL_IDS) assert.ok(listCandidates(level, "de").length >= 24, level);
+});
+
+test("German AI words: umlauts kept, ß and English refused, German plurals dropped", async () => {
+  const { cleanCandidates, roundSystemPrompt, displayWord } = await import("./round.ts");
+  const reply = {
+    words: [
+      { word: "Löwen", ar: "أسود", example: "Die Löwen schlafen.", exampleAr: "الأسود نايمة." },
+      { word: "Löwe", ar: "أسد", example: "Der Löwe schläft.", exampleAr: "الأسد نايم." },
+      { word: "Größe", ar: "حجم", example: "Die Größe passt.", exampleAr: "الحجم مناسب." },
+      { word: "Bier", ar: "بيرة", example: "Ein Bier, bitte.", exampleAr: "بيرة." },
+      { word: "Kinder", ar: "أطفال", example: "Die Kinder spielen.", exampleAr: "الأطفال بيلعبوا." },
+      { word: "Tasse", ar: "فنجان", example: "Die Tasse ist voll.", exampleAr: "الفنجان مليان." },
+    ],
+  };
+  const words = cleanCandidates(reply, "medium", "de").map((w) => w.word);
+  assert.deepEqual(words, ["LÖWEN", "TASSE"], "LÖWE is LÖWEN's singular, GRÖSSE has ß, BIER is blocked");
+  assert.match(roundSystemPrompt("de"), /German words/);
+  assert.equal(displayWord("HAUS", "Das Haus ist groß.", "de"), "Haus");
+  assert.equal(displayWord("LESEN", "Ich lese gern.", "de"), "lesen");
+  assert.equal(displayWord("HOUSE", "The house is big.", "en"), "house");
+});

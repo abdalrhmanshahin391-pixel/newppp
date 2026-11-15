@@ -14,14 +14,18 @@ import {
   roundSystemPrompt,
   roundUserMessage,
   THEMES,
+  WORD_LANGS,
   type Level,
   type Round,
+  type WordLang,
 } from "./round";
 
 const RoundInput = z.object({
   level: z.enum(LEVEL_IDS as [Level, ...Level[]]),
+  /** The learner's learning language: the words are German for German, else English. */
+  lang: z.enum(WORD_LANGS as [WordLang, ...WordLang[]]).default("en"),
   avoid: z
-    .array(z.string().regex(/^[A-Z]{2,12}$/))
+    .array(z.string().regex(/^[A-ZÄÖÜ]{2,12}$/))
     .max(60)
     .default([]),
 });
@@ -55,7 +59,7 @@ export const wordcraftRound = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }): Promise<RoundResult> => {
     const fallback = (reason: NonNullable<RoundResult["fallback"]>): RoundResult => ({
-      round: listRound(data.level, undefined, data.avoid),
+      round: listRound(data.level, undefined, data.avoid, data.lang),
       fallback: reason,
     });
     if (tooSoon(String(context.userId))) return fallback("too_soon");
@@ -69,16 +73,16 @@ export const wordcraftRound = createServerFn({ method: "POST" })
     const asked = await askPracticeModel({
       fetch: (input, init) => fetch(input, init),
       key,
-      system: roundSystemPrompt(),
+      system: roundSystemPrompt(data.lang),
       user: roundUserMessage(data.level, theme, data.avoid),
       maxTokens: 3000,
       budgetMs: 25_000,
     });
     if (!asked.ok) return fallback(asked.reason);
-    const candidates = cleanCandidates(asked.reply, data.level).filter(
+    const candidates = cleanCandidates(asked.reply, data.level, data.lang).filter(
       (c) => !data.avoid.includes(c.word),
     );
-    const round = buildRound(candidates, data.level, "ai");
+    const round = buildRound(candidates, data.level, "ai", undefined, data.lang);
     if (!round) {
       console.warn(
         `Wordcraft: ${candidates.length} usable AI words for ${data.level} made no good grid.`,

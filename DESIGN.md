@@ -502,7 +502,17 @@ A speaking game on `/games` (`src/components/repeat`, matching and sentences in 
   live speech recogniser (`en-US`); without one, a recorded clip is transcribed once by `/api/german/score`
   (`language: "en"`). Matching forgives contractions, numbers, sound-alike words and near spellings of long words.
 
+- **German:** a German learner (learning language `de`) gets German sentences (`SENTENCES_DE`, 80,
+  with Arabic meanings), the German voice and `de-DE` listening; the matcher reads "geht's" as
+  "geht es", ä as ae (ö, ü, ß too), German numbers and das/dass. Nothing is fetched before the
+  account's language is known.
+
 ## Wordcraft (`/wordcraft`)
+
+German learners get German words: a hand-picked list of about 245 A1–B1 words (`lexicon-de.ts`,
+Ä Ö Ü as letters of their own, no ß), German AI words, German decoys (`DICTIONARY_DE`), German
+plural rules, a German voice and nouns shown with their capital ("Haus"). Recent words are kept
+per language.
 
 A word-path game for learning English words (`src/components/wordcraft`, engine in `src/lib/wordcraft`).
 

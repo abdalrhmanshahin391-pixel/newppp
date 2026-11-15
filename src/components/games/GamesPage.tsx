@@ -2,10 +2,12 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PairsCardArt, RepeatCardArt, WordcraftCardArt } from "@/components/learn/PlayCardArt";
+import { useActiveLanguage } from "@/lib/language-scope";
 
 type Lang = "en" | "ar";
 
-const GAMES = [
+/** The games, worded for the learner's learning language (German or English words). */
+const gamesFor = (german: boolean) => [
   {
     key: "wordcraft",
     to: "/wordcraft",
@@ -13,8 +15,8 @@ const GAMES = [
     Art: WordcraftCardArt,
     name: { en: "Wordcraft", ar: "Wordcraft" },
     line: {
-      en: "Find the English words hidden in the letters, and learn what they mean.",
-      ar: "لاقي الكلمات الإنجليزية المخبّاية بين الحروف وتعلّم معانيها.",
+      en: `Find the ${german ? "German" : "English"} words hidden in the letters, and learn what they mean.`,
+      ar: `لاقي الكلمات ${german ? "الألمانية" : "الإنجليزية"} المخبّاية بين الحروف وتعلّم معانيها.`,
     },
   },
   {
@@ -35,16 +37,17 @@ const GAMES = [
     Art: RepeatCardArt,
     name: { en: "Repeat", ar: "كرر" },
     line: {
-      en: "Uzyra says a sentence, you say it back. Every word you get right turns black.",
-      ar: "Uzyra بتحكي جملة وإنت بتكررها. كل كلمة بتلفظها صح بتصير سودا.",
+      en: `Uzyra says a ${german ? "German" : "English"} sentence, you say it back. Every word you get right turns black.`,
+      ar: `Uzyra بتحكي جملة ${german ? "بالألماني" : "بالإنجليزي"} وإنت بتكررها. كل كلمة بتلفظها صح بتصير سودا.`,
     },
   },
-] as const;
+];
 
 /** /games: the games as big game cards, one under the other in the middle of the page. */
 export function GamesPage() {
   const { i18n } = useTranslation();
   const lang: Lang = (i18n.language ?? "").startsWith("ar") ? "ar" : "en";
+  const GAMES = gamesFor(useActiveLanguage() === "de");
   return (
     <div
       className="edith-premium edith-light uz-learn min-h-screen"

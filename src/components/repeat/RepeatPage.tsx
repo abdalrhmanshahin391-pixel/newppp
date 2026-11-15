@@ -5,8 +5,9 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
 import { RepeatCardArt } from "@/components/learn/PlayCardArt";
-import { allSaid, mergeSaid, sentenceWords, wordsSaid } from "@/lib/repeat/match";
-import { pickRound, type RepeatSentence } from "@/lib/repeat/sentences";
+import { allSaid, mergeSaid, sentenceWords, wordsSaid, type RepeatLang } from "@/lib/repeat/match";
+import { pickRound, ROUND_SIZE, sentencesFor, type RepeatSentence } from "@/lib/repeat/sentences";
+import { useActiveLanguage, useLanguageResolved } from "@/lib/language-scope";
 import {
   askForMicrophone,
   hearingMode,
@@ -26,16 +27,34 @@ type Result = { sentence: RepeatSentence; result: "right" | "skipped" };
 /** Repeat: Uzyra says a sentence, the learner says it back, each word turns black as it is said. */
 export function RepeatPage() {
   const lang = useUiLanguage();
+  // The sentences follow the learning language: German learners repeat German sentences.
+  const speech: RepeatLang = useActiveLanguage() === "de" ? "de" : "en";
+  const newRound = useCallback(
+    () => pickRound(ROUND_SIZE, Math.random, sentencesFor(speech)),
+    [speech],
+  );
   const [step, setStep] = useState<Step>("intro");
-  const [round, setRound] = useState<RepeatSentence[]>(() => pickRound());
+  const [round, setRound] = useState<RepeatSentence[]>(newRound);
+  // Another learning language is another set of sentences: back to the start with them.
+  const madeFor = useRef(speech);
+  useEffect(() => {
+    if (madeFor.current === speech) return;
+    madeFor.current = speech;
+    setRound(newRound());
+    setResults(null);
+    setStep("intro");
+  }, [newRound, speech]);
   const [results, setResults] = useState<{ list: Result[]; seconds: number } | null>(null);
   const [blocked, setBlocked] = useState(false);
   const [starting, setStarting] = useState(false);
 
-  // The first two sentences start loading while the learner reads the intro.
+  // The first two sentences start loading while the learner reads the intro (once the account's
+  // language is known, so a German learner never fetches English sentences).
+  const resolved = useLanguageResolved();
   useEffect(() => {
-    round.slice(0, 2).forEach((sentence) => void prepareSentence(sentence.en));
-  }, [round]);
+    if (!resolved) return;
+    round.slice(0, 2).forEach((sentence) => void prepareSentence(sentence.en, speech));
+  }, [resolved, round, speech]);
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -57,8 +76,9 @@ export function RepeatPage() {
   if (step === "play") {
     return (
       <RepeatGame
-        key={round.map((s) => s.en).join("|")}
+        key={`${speech}|${round.map((s) => s.en).join("|")}`}
         lang={lang}
+        speech={speech}
         round={round}
         onFinished={(list, seconds) => {
           setResults({ list, seconds });
@@ -73,7 +93,13 @@ export function RepeatPage() {
       <SiteHeader />
       <main className="rp-page" dir={lang === "ar" ? "rtl" : "ltr"}>
         {step === "intro" ? (
-          <Intro lang={lang} blocked={blocked} starting={starting} onStart={() => void start()} />
+          <Intro
+            lang={lang}
+            speech={speech}
+            blocked={blocked}
+            starting={starting}
+            onStart={() => void start()}
+          />
         ) : (
           results && (
             <End
@@ -81,7 +107,7 @@ export function RepeatPage() {
               results={results.list}
               seconds={results.seconds}
               onAgain={() => {
-                setRound(pickRound());
+                setRound(newRound());
                 setResults(null);
                 wakeAudio();
                 setStep("play");
@@ -96,11 +122,13 @@ export function RepeatPage() {
 
 function Intro({
   lang,
+  speech,
   blocked,
   starting,
   onStart,
 }: {
   lang: Lang;
+  speech: RepeatLang;
   blocked: boolean;
   starting: boolean;
   onStart: () => void;
@@ -114,8 +142,8 @@ function Intro({
       </h1>
       <p className="rp-hero-line">
         {t(
-          "Uzyra says a sentence, you say it back. Every word you say right turns black.",
-          "Uzyra بتحكي جملة، وإنت بتكررها بصوتك. كل كلمة بتلفظها صح بتصير سودا.",
+          `Uzyra says a sentence in ${speech === "de" ? "German" : "English"}, you say it back. Every word you say right turns black.`,
+          `Uzyra بتحكي جملة ${speech === "de" ? "بالألماني" : "بالإنجليزي"}، وإنت بتكررها بصوتك. كل كلمة بتلفظها صح بتصير سودا.`,
         )}
       </p>
       <span className="rp-hero-art" aria-hidden="true">
@@ -218,10 +246,13 @@ const NEXT_AFTER_MS = 1100;
 
 function RepeatGame({
   lang,
+  speech,
   round,
   onFinished,
 }: {
   lang: Lang;
+  /** The language of the sentences (the learner's learning language). */
+  speech: RepeatLang;
   round: RepeatSentence[];
   onFinished: (results: Result[], seconds: number) => void;
 }) {
@@ -287,7 +318,7 @@ function RepeatGame({
     (at: number) => {
       const current = newRun();
       const live = () => run.current === current && !current.abort.signal.aborted;
-      const words = sentenceWords(round[at].en);
+      const words = sentenceWords(round[at].en, speech);
       setPhase("listening");
       setTried(true);
       setProblem(null);
@@ -303,10 +334,11 @@ function RepeatGame({
         ];
       };
       current.hearing = listen({
+        lang: speech,
         maxMs: 3000 + words.length * 800,
         onHeard: (text) => {
           if (!live()) return;
-          const next = mergeSaid(saidRef.current, wordsSaid(words, text));
+          const next = mergeSaid(saidRef.current, wordsSaid(words, text, speech));
           if (next.some((s, i) => s !== saidRef.current[i])) {
             saidRef.current = next;
             setSaid(next);
@@ -330,22 +362,22 @@ function RepeatGame({
       });
       if (hearingMode() === "live") silence(FIRST_WORD_MS);
     },
-    [advance, newRun, round],
+    [advance, newRun, round, speech],
   );
 
   const say = useCallback(
     (at: number) => {
       const current = newRun();
-      saidRef.current = sentenceWords(round[at].en).map(() => false);
+      saidRef.current = sentenceWords(round[at].en, speech).map(() => false);
       setSaid(saidRef.current);
       setPhase("speaking");
       const next = round[at + 1];
-      if (next) void prepareSentence(next.en);
-      void speakSentence(round[at].en, current.abort.signal).then(() => {
+      if (next) void prepareSentence(next.en, speech);
+      void speakSentence(round[at].en, current.abort.signal, speech).then(() => {
         if (run.current === current && !current.abort.signal.aborted) hear(at);
       });
     },
-    [hear, newRun, round],
+    [hear, newRun, round, speech],
   );
 
   // Each new card: Uzyra says it, then listens.
@@ -385,7 +417,7 @@ function RepeatGame({
   }, [stopRun]);
 
   const sentence = round[index];
-  const words = useMemo(() => sentenceWords(sentence.en), [sentence]);
+  const words = useMemo(() => sentenceWords(sentence.en, speech), [sentence, speech]);
   const progress = (done.length + (phase === "right" ? 1 : 0)) / round.length;
   const praiseLine = [t("Well done! That's right", "أحسنت! إجابة صحيحة"), t("Great", "رائع")][
     praise % 2

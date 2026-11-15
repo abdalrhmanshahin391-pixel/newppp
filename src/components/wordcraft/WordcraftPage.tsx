@@ -6,14 +6,17 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { UzyraMark } from "@/components/brand/UzyraMark";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { useAuth } from "@/hooks/useAuth";
+import { useActiveLanguage, useLanguageResolved } from "@/lib/language-scope";
 import { MUTE_KEY } from "@/lib/wordcraft/game";
 import {
   LEVEL_IDS,
   LEVELS,
   listRound,
   validRound,
+  wordLang,
   type Level,
   type Round,
+  type WordLang,
 } from "@/lib/wordcraft/round";
 import { wordcraftRound } from "@/lib/wordcraft/wordcraft.functions";
 import { LEVEL_LINES, LEVEL_NAMES } from "./levels";
@@ -23,7 +26,9 @@ import "./wordcraft.css";
 type Lang = "en" | "ar";
 type Source = "ai" | "list" | "guest";
 
-const SEEN_KEY = "uzyra-wordcraft-seen";
+/** Recent words per language (English keeps the key it always had). */
+const seenKey = (words: WordLang) =>
+  words === "de" ? "uzyra-wordcraft-seen:de" : "uzyra-wordcraft-seen";
 
 function read(key: string): string | null {
   try {
@@ -41,11 +46,13 @@ function write(key: string, value: string) {
 }
 
 /** Words from recent rounds on this device, so the next rounds ask for other ones. */
-function seenWords(): string[] {
+function seenWords(words: WordLang): string[] {
   try {
-    const list = JSON.parse(read(SEEN_KEY) ?? "[]");
+    const list = JSON.parse(read(seenKey(words)) ?? "[]");
     return Array.isArray(list)
-      ? list.filter((w): w is string => typeof w === "string" && /^[A-Z]{2,12}$/.test(w)).slice(-60)
+      ? list
+          .filter((w): w is string => typeof w === "string" && /^[A-ZÄÖÜ]{2,12}$/.test(w))
+          .slice(-60)
       : [];
   } catch {
     return [];
@@ -55,6 +62,10 @@ function seenWords(): string[] {
 /** Wordcraft: choose a difficulty, then play rounds of four new words. */
 export function WordcraftPage({ level }: { level?: Level }) {
   const lang = useUiLanguage();
+  // The words follow the learning language: German learners get German words.
+  const words = wordLang(useActiveLanguage());
+  // Rounds wait for the account's language, so a German learner never gets an English first round.
+  const resolved = useLanguageResolved();
   const [muted, setMuted] = useState(false);
   useEffect(() => setMuted(read(MUTE_KEY) === "1"), []);
   const toggleMute = useCallback(() => {
@@ -67,10 +78,19 @@ export function WordcraftPage({ level }: { level?: Level }) {
     <div className="edith-premium min-h-screen bg-white text-[var(--pp-ink)]">
       <SiteHeader />
       <main className="wc" dir={lang === "ar" ? "rtl" : "ltr"}>
-        {level ? (
-          <Play key={level} level={level} lang={lang} muted={muted} onMute={toggleMute} />
+        {level && !resolved ? (
+          <Waiting level={level} lang={lang} />
+        ) : level ? (
+          <Play
+            key={`${level}:${words}`}
+            level={level}
+            lang={lang}
+            words={words}
+            muted={muted}
+            onMute={toggleMute}
+          />
         ) : (
-          <Picker lang={lang} />
+          <Picker lang={lang} words={words} />
         )}
       </main>
     </div>
@@ -90,7 +110,7 @@ function Logotype() {
   );
 }
 
-function Picker({ lang }: { lang: Lang }) {
+function Picker({ lang, words }: { lang: Lang; words: WordLang }) {
   const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
   const { user, loading } = useAuth();
   return (
@@ -101,8 +121,8 @@ function Picker({ lang }: { lang: Lang }) {
         </h1>
         <p className="wc-lede">
           {t(
-            "Every round has four new English words hidden in the letters. Slide across the letters to find them: every letter is used once, and there is one answer.",
-            "كل جولة فيها أربع كلمات إنجليزية جديدة مخبّاية بين الحروف. مرّر إصبعك عالحروف لتلاقيها: كل حرف بينستخدم مرة وحدة، وإلها حل واحد بس.",
+            `Every round has four new ${words === "de" ? "German" : "English"} words hidden in the letters. Slide across the letters to find them: every letter is used once, and there is one answer.`,
+            `كل جولة فيها أربع كلمات ${words === "de" ? "ألمانية" : "إنجليزية"} جديدة مخبّاية بين الحروف. مرّر إصبعك عالحروف لتلاقيها: كل حرف بينستخدم مرة وحدة، وإلها حل واحد بس.`,
           )}
         </p>
       </header>
@@ -155,11 +175,13 @@ function Picker({ lang }: { lang: Lang }) {
 function Play({
   level,
   lang,
+  words,
   muted,
   onMute,
 }: {
   level: Level;
   lang: Lang;
+  words: WordLang;
   muted: boolean;
   onMute: () => void;
 }) {
@@ -178,27 +200,31 @@ function Play({
 
   /** One round: from the AI for a signed-in learner, else (or when anything fails) the list. */
   const make = useCallback(async (): Promise<{ round: Round; source: Source }> => {
-    const avoid = seenWords();
-    if (!user) return { round: listRound(level, undefined, avoid), source: "guest" };
+    const avoid = seenWords(words);
+    if (!user) return { round: listRound(level, undefined, avoid, words), source: "guest" };
     try {
-      const result = await ask({ data: { level, avoid: avoid.slice(-40) } });
-      if (validRound(result.round) && result.round.level === level)
+      const result = await ask({ data: { level, lang: words, avoid: avoid.slice(-40) } });
+      if (
+        validRound(result.round) &&
+        result.round.level === level &&
+        (result.round.lang ?? "en") === words
+      )
         return { round: result.round, source: result.round.source };
     } catch {
       /* the list below */
     }
-    return { round: listRound(level, undefined, avoid), source: "list" };
-  }, [ask, level, user]);
+    return { round: listRound(level, undefined, avoid, words), source: "list" };
+  }, [ask, level, user, words]);
 
   const show = useCallback(
     (next: { round: Round; source: Source }) => {
       if (!alive.current) return;
-      write(SEEN_KEY, JSON.stringify([...seenWords(), ...next.round.words].slice(-60)));
+      write(seenKey(words), JSON.stringify([...seenWords(words), ...next.round.words].slice(-60)));
       setCurrent(next);
       // The next round is made while this one is played (a little later: one AI round at a time).
       prepared.current = new Promise((done) => setTimeout(done, 4_000)).then(make);
     },
-    [make],
+    [make, words],
   );
 
   useEffect(() => {
