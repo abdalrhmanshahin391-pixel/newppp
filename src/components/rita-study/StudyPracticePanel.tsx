@@ -9,6 +9,7 @@ import {
   type StudyCard,
   type StudyMcq,
 } from "@/lib/study/study-practice";
+import { PracticeSave } from "./PracticeSave";
 import "./study-practice.css";
 
 export type PracticeView = {
@@ -20,6 +21,8 @@ export type PracticeView = {
   message: string;
   /** Why it failed (the server's code), so the window can say the real reason. */
   code?: string;
+  /** Where it was made (the lesson or book title) and the selected text, for saving it. */
+  source?: { title: string; quote: string };
 };
 
 /** The practice in a dialog (the book reader). The lesson page shows the same body in its window. */
@@ -167,6 +170,14 @@ export function StudyPracticeBody({
             }
           />
         ))}
+      {view.status === "ready" && view.source && (
+        <PracticeSave
+          kind={cards ? "cards" : "questions"}
+          cards={view.cards}
+          questions={view.questions}
+          source={view.source}
+        />
+      )}
     </div>
   );
 }

@@ -173,3 +173,25 @@ test("the tray shows one language's words and keeps the others for later", () =>
     ["Hello"],
   );
 });
+
+test("the flashcards board as tray destinations, named so reordering never misplaces words", async () => {
+  const { boardId, boardOptions, boardPlace } = await import("./rita-learning-tree.ts");
+  const options = boardOptions([
+    { name: "Deutsch", subs: [{ name: "Tiere" }, { name: "Essen" }] },
+    { name: "Verbs", subs: [] },
+  ]);
+  assert.deepEqual(
+    options.map((o) => [o.label, o.depth]),
+    [
+      ["Deutsch", 0],
+      ["Deutsch / Tiere", 1],
+      ["Deutsch / Essen", 1],
+      ["Verbs", 0],
+    ],
+  );
+  assert.deepEqual(boardPlace(boardId("Deutsch", "Tiere")), { subject: "Deutsch", sub: "Tiere" });
+  assert.deepEqual(boardPlace(boardId("A / B")), { subject: "A / B", sub: null });
+  assert.equal(boardPlace("3f1c-uuid"), null);
+  assert.equal(boardPlace("board:not json"), null);
+  assert.equal(matchSubject(options, "tiere")?.label, "Deutsch / Tiere");
+});

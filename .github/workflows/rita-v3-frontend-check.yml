@@ -12,6 +12,9 @@ on:
       - "src/lib/use-study-subjects.ts"
       - "src/components/rita/useLearningTray.ts"
       - "src/components/language/**"
+      - "src/components/rita/**"
+      - "src/lib/study/**"
+      - "src/lib/lecture-lab.functions.ts"
       - "src/routes/study.index.tsx"
       - "src/lib/voice-line-files.test.ts"
       - "public/sounds/uzyra/**"
@@ -141,6 +144,7 @@ jobs:
           node --test src/lib/library-language.test.ts
           node --test src/lib/text-language.test.ts
           node --test src/lib/rita-learning-list.test.ts
+          node --test src/lib/study/practice-save.test.ts
           node --test src/lib/voice-line-files.test.ts
           node --test src/lib/activity-streak.test.ts
           node --test src/lib/learning-language.test.ts
@@ -188,6 +192,10 @@ jobs:
         run: |
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" \
             node --test src/components/language/language-switch.browser.test.ts
+      - name: Saving practice and tray words in a real browser (Lecture Lab, flashcards board)
+        run: |
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" \
+            node --test src/components/rita-study/practice-save.browser.test.ts
       - name: Build site
         run: bun run build
 

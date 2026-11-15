@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SAMPLE_SUBJECTS, type SampleSubject } from "@/lib/study-sample-data";
 import { ensureSampleFlashcards } from "@/lib/demo-seed";
 import { isSampleLanguage, useActiveLanguage } from "@/lib/language-scope";
 import { scopedKey } from "@/lib/learning-language";
 
 export const FLASHCARD_SUBJECTS_KEY = "rita_study_subjects";
+
+/** Fired on `window` when one copy of a board saves, so other copies on the page read it again. */
+const BOARD_CHANGED_EVENT = "rita-board-changed";
+let nextInstance = 0;
 export const QUESTION_SUBJECTS_KEY = "rita_question_subjects";
 
 export type Selection =
@@ -58,6 +62,11 @@ export function useStudySubjects(baseKey: string = FLASHCARD_SUBJECTS_KEY) {
   // The key the current `subjects` were read from. Nothing is written until it matches the key in
   // use, so a language switch can never save one language's board under another's key.
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  // Several parts of a page can hold the same board (the word tray beside a lesson, the save panel
+  // in its window). Each one re-reads it when another saves, so none writes over the other's change.
+  const instance = useRef(0);
+  if (!instance.current) instance.current = ++nextInstance;
+  const fromOutside = useRef(false);
 
   useEffect(() => {
     setSubjects(load(baseKey, language));
@@ -65,13 +74,34 @@ export function useStudySubjects(baseKey: string = FLASHCARD_SUBJECTS_KEY) {
   }, [baseKey, language, storageKey]);
 
   useEffect(() => {
+    // A board just read again from storage is not saved back (that would echo forever).
+    if (fromOutside.current) {
+      fromOutside.current = false;
+      return;
+    }
     if (loadedKey !== storageKey) return;
     try {
       window.localStorage.setItem(storageKey, JSON.stringify(subjects));
+      window.dispatchEvent(
+        new CustomEvent(BOARD_CHANGED_EVENT, {
+          detail: { key: storageKey, from: instance.current },
+        }),
+      );
     } catch {
       /* ignore */
     }
   }, [subjects, loadedKey, storageKey]);
+
+  useEffect(() => {
+    const reload = (event: Event) => {
+      const detail = (event as CustomEvent<{ key: string; from: number }>).detail;
+      if (!detail || detail.key !== storageKey || detail.from === instance.current) return;
+      fromOutside.current = true;
+      setSubjects(load(baseKey, language));
+    };
+    window.addEventListener(BOARD_CHANGED_EVENT, reload);
+    return () => window.removeEventListener(BOARD_CHANGED_EVENT, reload);
+  }, [baseKey, language, storageKey]);
 
   const addSubject = useCallback((name: string) => {
     setSubjects((s) => [...s, { name, subs: [] }]);

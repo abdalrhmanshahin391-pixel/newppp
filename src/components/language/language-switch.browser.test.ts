@@ -227,17 +227,20 @@ test("English and German keep their own cards, subjects and tray words", async (
     await until(`v.cards.join() === "der Hund" && v.tray.join() === "Hund"`);
     assert.match((await view()).latest, /Kept for its own language: Goodbye/);
 
-    // Saving the German tray sends only German words, and the English one stays for later.
-    await kit("tray.setDestinationId", "deck-1");
-    await until(`v.destination === "deck-1"`);
+    // Saving the German tray puts only German words on the German board (the flashcards page's own
+    // board), and the English one stays for later.
+    const deck = `board:${JSON.stringify(["Deutsch", "Basics"])}`;
+    await kit("tray.setDestinationId", deck);
+    await until(`v.destination === ${JSON.stringify(deck)}`);
     await kit("tray.save");
     await until(`v.tray.length === 0`);
-    assert.equal(saves.length, 1);
-    assert.deepEqual(
-      saves[0].map((item) => item.language),
-      ["de"],
-      "a German save carries no English word",
+    const onBoard = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem("rita_@de_fc_deutsch_basics") || "[]").map(
+        (card: { front: string }) => card.front,
+      ),
     );
+    assert.deepEqual(onBoard, ["Hund"], "a German save carries no English word");
+    assert.equal(saves.length, 0, "flashcards no longer go to a separate list on the server");
 
     // Back to English: its card and both English tray words are where they were.
     await kit("setLanguage", "en");

@@ -865,6 +865,7 @@ export function BookReader({
       cards: [],
       questions: [],
       message: "",
+      source: { title: book.title, quote: origin.quote },
     });
     try {
       const input = {

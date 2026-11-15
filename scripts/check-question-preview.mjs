@@ -81,6 +81,11 @@ const result = await build({
             "resolveStudyRequest",
             "studyExplainReplyText",
             "studyExplainText",
+            // The practice window's «احفظ» panel (Lecture Lab); never called in the preview.
+            "lqBoard",
+            "lqAddSubject",
+            "lqAddSubtopic",
+            "lqSaveStudyQuestions",
           ];
           return {
             contents: names
