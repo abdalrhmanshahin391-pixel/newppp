@@ -580,6 +580,13 @@ at a time (flashcards first, then the study tools, the German Lab, account / pri
 
 ## Library (`/books`, `/admin/books`)
 
+**Learning language:** the discover shelves show the books in the learner's learning language
+(`discoverIn` in `library-language.ts`; empty shelves drop out), under a line «كتب بالألمانية» with
+«اعرض كل اللغات». With no book in that language the shelves show every language with «لسا ما في كتب
+بالألمانية بالمكتبة، هاي كتب بلغات ثانية.». Search, categories and filters are unchanged. The home page
+follows the same language for a learner who has chosen one (the tap-a-word hero, the saved words, the
+sample lesson window, the voice band's first bubble); guests see both languages.
+
 Real books grouped on shelves, a little more colour than the other app pages but the same calm,
 serious system (white page, ink, the home calm scale). Colour comes from the covers and from each
 category's own tone, used only as a dot on its chip, a small tinted icon square and a thin line

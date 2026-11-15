@@ -1,11 +1,18 @@
 import { Link } from "@tanstack/react-router";
 import type { CSSProperties } from "react";
 import { useReveal } from "@/hooks/useReveal";
+import { useActiveLanguage } from "@/lib/language-scope";
 
 const d = (ms: number) => ({ "--rh-d": `${ms}ms` }) as CSSProperties;
 
-const PHRASES = [
-  { text: "Guten Morgen", lang: "de", style: { left: "2%", top: "10%" }, delay: 0 },
+// The first bubble is in the learner's learning language (German before one is chosen).
+const phrasesFor = (code: string | null) => [
+  {
+    text: code === "en" ? "Good morning" : "Guten Morgen",
+    lang: code === "en" ? "en" : "de",
+    style: { left: "2%", top: "10%" },
+    delay: 0,
+  },
   { text: "How do I say…?", lang: "en", style: { right: "0%", top: "14%" }, delay: 1500 },
   { text: "كيف أحكي؟", lang: "ar", style: { left: "10%", bottom: "8%" }, delay: 3000 },
 ];
@@ -14,6 +21,7 @@ const PHRASES = [
  * cream theme re-colours white utility classes. */
 export function VoiceBand() {
   const { ref, shown } = useReveal<HTMLDivElement>();
+  const PHRASES = phrasesFor(useActiveLanguage());
   return (
     <section className="mx-auto w-full max-w-[1240px] px-5 pb-16 md:px-8 md:pb-24">
       <div
@@ -29,8 +37,8 @@ export function VoiceBand() {
               <span style={{ color: "var(--pp-accent)" }}>Say it better next time.</span>
             </h2>
             <p className="rh-lead2 mt-4 max-w-[30rem]" style={{ color: "rgba(255,255,255,0.72)" }}>
-              Uzyra waits while you think, stops when you say stop, and corrects one thing at a time.
-              It feels like talking to a patient teacher, not sitting an exam.
+              Uzyra waits while you think, stops when you say stop, and corrects one thing at a
+              time. It feels like talking to a patient teacher, not sitting an exam.
             </p>
             <div className="mt-6">
               <Link to="/rita" className="rita-btn rita-btn-primary">

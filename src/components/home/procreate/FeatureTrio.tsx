@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { useReveal } from "@/hooks/useReveal";
+import { useActiveLanguage } from "@/lib/language-scope";
 
 const ink = { color: "var(--pp-ink)" } as const;
 const muted = { color: "var(--pp-muted)" } as const;
@@ -46,12 +47,28 @@ function TalkPanel() {
   );
 }
 
-function WordsPanel() {
-  const rows = [
+// Saved words in the learner's language (both languages before one is chosen).
+const SAVED_WORDS: Record<"de" | "en" | "mixed", string[][]> = {
+  de: [
+    ["Guten Morgen", "صباح الخير"],
+    ["leihen", "يستعير"],
+    ["das Haus", "البيت"],
+  ],
+  en: [
+    ["Good morning", "صباح الخير"],
+    ["borrow", "يستعير"],
+    ["the house", "البيت"],
+  ],
+  mixed: [
     ["Guten Morgen", "صباح الخير"],
     ["borrow", "يستعير"],
     ["das Haus", "البيت"],
-  ];
+  ],
+};
+
+function WordsPanel() {
+  const code = useActiveLanguage();
+  const rows = SAVED_WORDS[code === "de" || code === "en" ? code : "mixed"];
   return (
     <Panel>
       {rows.map(([term, meaning]) => (
