@@ -288,3 +288,16 @@ def test_answers_only_turns_must_not_ask_and_the_learner_led_reference_loads():
 def test_a_correction_in_bold_still_counts():
     turn = Turn("Ich möchte ein Kaffee", fix=("einen Kaffee",))
     assert check_turn(turn, 'الصح: "Ich möchte **einen** Kaffee".', "ar") == []
+
+
+def test_a_plain_arabic_chat_gets_no_english_phrase_and_the_everyday_reference_loads():
+    turn = Turn("كنت بدي أحكي معك بموضوع اليوم.", arabic=True)
+    assert check_turn(turn, "أكيد، شو صار معك اليوم؟", "ar") == []
+    mixed = check_turn(turn, 'حلو، عن شو بدنا نحكي اليوم؟ "Let\'s talk about your day".', "ar")
+    assert [category(p) for p in mixed] == ["language"]
+    assert turn_kind(turn) == "plain Arabic chat"
+    # A word the learner said themselves may come back.
+    assert check_turn(Turn("شو يعني weekend", arabic=True), "weekend يعني آخر الأسبوع.", "ar") == []
+    ref = parse_reference(load_reference("jordanian-everyday"))
+    turns = ref.talks[0].turns
+    assert len(turns) == 7 and all(t.arabic for t in turns)

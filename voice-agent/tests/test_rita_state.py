@@ -30,7 +30,7 @@ def test_repeated_pronunciation_changes_strategy():
     state.observe_user_turn("مرة ثانية، لسا غلط")
     assert state.attempt_count >= 2
     assert state.response_type == ResponseType.CORRECTION
-    assert "change-method" in state.prompt_state()
+    assert "change method" in state.prompt_state()
 
 
 def test_understood_resets_teaching_loop():
@@ -263,3 +263,21 @@ def test_the_turn_that_sets_answers_only_is_confirmed_once():
     assert "JUST TOLD YOU" in state.turn_note()
     state.observe_user_turn("كيف بحكي بدي أشرب مي بالألماني")
     assert "JUST TOLD YOU" not in state.turn_note() and "ANSWERS ONLY" in state.turn_note()
+
+
+def test_why_asks_for_an_explanation_only_about_language():
+    for text in ("ليش بنقول is مع it؟", "why do we say went?"):
+        state = RitaSessionState()
+        state.observe_user_turn(text)
+        assert state.response_type == ResponseType.EXPLAIN, text
+    for text in ("ليش ما رحت عالشغل اليوم", "ليش هيك صار معي"):
+        state = RitaSessionState()
+        state.observe_user_turn(text)
+        assert state.response_type != ResponseType.EXPLAIN, text
+
+
+def test_asking_why_she_mixes_languages_is_a_wish_for_arabic_not_a_question_to_explain():
+    state = RitaSessionState(active_language="ar")
+    state.observe_user_turn("أنا بحاول أفهم ليش إنتِ بتحكي جملة عربي وجملة إنجليزي، يعني بحكي معك بالعربي.")
+    assert state.response_type != ResponseType.EXPLAIN
+    assert state.arabic_only and "JUST ASKED FOR ARABIC ONLY" in state.prompt_state(dialogue=True)

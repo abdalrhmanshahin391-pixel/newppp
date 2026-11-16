@@ -159,10 +159,15 @@ _GENDERED_TELL_ME = re.compile(r"(?<![\w\u0600-\u06ff])(?:خبريني|خبرن�
 _GENDERED_SAY = re.compile(r"(?<![\w\u0621-\u064a])(ب?)تقولي(ها|ه)(?![\w\u0621-\u064a])")
 
 
+# "You" marked for one gender (إنتِ، إنتي، إنتَ); the plain written إنت does not pick one.
+_GENDERED_YOU = re.compile(r"(?<![\w\u0621-\u064a])([وف]?[إا]نت)(?:\u0650|\u064e|ي)(?![\w\u0621-\u064a])")
+
+
 def neutral_wording(text: str) -> str:
-    """Swap gendered "tell me" / "you say it" for neutral ones; the model still writes them now and then."""
+    """Swap gendered "tell me" / "you say it" / "you" for neutral ones; the model still writes them."""
 
     text = _GENDERED_TELL_ME.sub("احكيلي", text)
+    text = _GENDERED_YOU.sub(r"\1", text)
     return _GENDERED_SAY.sub(lambda m: f"{m.group(1)}تقول{m.group(2)}", text)
 
 

@@ -56,10 +56,11 @@ def test_a_phrase_in_quotes_is_not_counted_as_a_sentence():
     assert check_turn(Turn("x", sheet="no"), reply) == []
 
 
-def test_a_chat_turn_needs_a_question_and_a_phrase_to_answer_with():
+def test_a_chat_turn_needs_a_question_but_not_a_phrase():
     lead = Turn("x", sheet="no", lead=True)
     assert check_turn(lead, 'حلو! من وين إنت؟ "I\'m from …"') == []
-    assert "a chat turn without a question and a phrase in quotes" in check_turn(lead, "حلو كثير.")
+    assert check_turn(lead, "حلو! من وين إنت؟") == []
+    assert "a chat turn without a question" in check_turn(lead, "حلو كثير.")
 
 
 def test_a_right_sentence_is_not_corrected_and_a_wrong_one_is():
@@ -99,8 +100,9 @@ def test_an_explanation_in_free_talk_follows_the_short_note_not_the_long_one():
     state = RitaSessionState(active_language="ar", active_dialect="ar-JO")
     state.observe_user_turn("اشرحلي متى بستعمل am و is و are")
     prompt = bot.build_prompt({"mode": "free_conversation"}, state)
-    assert "FREE TALK NOTE" in prompt
-    assert "THE LEARNER ASKED FOR AN EXPLANATION" not in prompt
+    # An explanation keeps its own note (core sentence + sheet), not the 20-word chat note.
+    assert "THE LEARNER ASKED FOR AN EXPLANATION" in prompt
+    assert "FREE TALK NOTE" not in prompt.split("SESSION STATE", 1)[1]
 
 
 def test_a_question_inside_the_phrase_to_say_is_not_one_of_uzyras_questions():
@@ -135,8 +137,9 @@ def test_free_talk_lists_the_phrases_already_given_and_lists_go_on_the_sheet():
     state.observe_assistant_turn('حلو! من وين إنت؟ "I\'m from …"')
     state.observe_user_turn("تمام")
     prompt = bot.build_prompt({"mode": "free_conversation"}, state)
-    assert "Phrases you already gave" in prompt and "I like …" in prompt and "I'm from …" in prompt
-    assert "Phrases you already gave" not in bot.build_prompt({"mode": "lesson", "lesson": {"brief": "x"}}, state)
+    # The list of phrases already given went with the rule that forced a phrase into every reply.
+    assert "Phrases you already gave" not in prompt
+    assert "Not every turn" in prompt
     for text in ("أعطيني خمس كلمات عن المطبخ", "شو الفرق بين der و die و das؟", "give me five words about food"):
         state.observe_user_turn(text)
         assert state.response_type == ResponseType.EXPLAIN, text

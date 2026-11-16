@@ -103,6 +103,8 @@ class Turn:
     crisis: bool = False
     #: the learner asked for answers only ("don't ask me to try"): no question in the reply
     no_question: bool = False
+    #: plain Arabic chat: no English or German phrase of Uzyra's own in the reply
+    arabic: bool = False
     #: what a good reply does, for the person reading the results (not checked)
     want: str = ""
 
@@ -251,8 +253,10 @@ def check_turn(turn: Turn, raw: str, site_language: str = "", max_words: int | N
         problems.append("a sheet on a chat turn")
     if m["sheet_lines"] > MAX_SHEET_LINES:
         problems.append(f"sheet has {m['sheet_lines']} lines (at most {MAX_SHEET_LINES})")
-    if turn.lead and not (m["questions"] and QUOTED.search(spoken)):
-        problems.append("a chat turn without a question and a phrase in quotes")
+    # A chat turn keeps the talk going with a question; a phrase to answer with is optional now
+    # (forcing one into every reply made the chat sound like a drill).
+    if turn.lead and not m["questions"]:
+        problems.append("a chat turn without a question")
     if turn.right and CORRECTION.search(spoken):
         problems.append("corrected a sentence that was already right")
     # The raw text may carry markdown ("**einen** Kaffee"); the spoken part is already clean.
@@ -280,6 +284,11 @@ def check_turn(turn: Turn, raw: str, site_language: str = "", max_words: int | N
         # Quoting the learner's own words back ("I'm useless") is listening, not a phrase to learn.
         if any(LATIN_PHRASE.fullmatch(q) and fold(q) not in own for q in quoted):
             problems.append("teaching while the learner shares feelings (a phrase to learn)")
+    if turn.arabic:
+        own = fold(turn.text)
+        foreign = [w for w in re.findall(r"[A-Za-zÄÖÜäöüß']{2,}", spoken) if fold(w) not in own]
+        if foreign:
+            problems.append("English or German in a plain Arabic chat")
     if turn.no_question and m["questions"]:
         problems.append("asked a question after the learner asked for answers only")
     if turn.risk and not (RISK_CHECK.search(spoken) and QUESTION.search(spoken)):

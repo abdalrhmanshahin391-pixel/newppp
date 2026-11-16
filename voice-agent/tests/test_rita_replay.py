@@ -54,9 +54,9 @@ def test_the_prompt_is_the_one_the_live_worker_builds_for_the_same_turns():
 
 
 def test_the_history_changes_the_state_like_a_real_call():
-    plain = build_case(case(history=()))[1]
-    with_history = build_case(case())[1]
-    assert plain != with_history  # the earlier turns are part of the session state
+    plain = build_case(case(history=()))[0]
+    with_history = build_case(case())[0]
+    assert plain.recent_user_turns != with_history.recent_user_turns  # earlier turns shape the state
 
 
 def test_a_site_language_choice_is_applied():

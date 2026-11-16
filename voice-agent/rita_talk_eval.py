@@ -66,7 +66,7 @@ CATEGORIES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("correction", ("not corrected", "already right")),
     ("content", ("expected content",)),
     ("forbidden", ("which this turn must not",)),
-    ("language", ("no Arabic",)),
+    ("language", ("no Arabic", "plain Arabic chat")),
     ("sheet", ("sheet",)),
     ("phonetic", ("phonetic",)),
     ("repeat", ("repeats",)),
@@ -89,6 +89,8 @@ def turn_kind(turn: Turn) -> str:
         return "feelings"
     if turn.no_question:
         return "answers only"
+    if turn.arabic:
+        return "plain Arabic chat"
     if turn.simplify:
         return "did not understand"
     if turn.fix:
