@@ -1,0 +1,16 @@
+.library-showcase {
+  margin-top: 2rem;
+  padding: clamp(.25rem, 1vw, .85rem);
+  background: #fff;
+  border: 1px solid #dedee1;
+  border-radius: 16px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .library-showcase-in { animation: shelf-arrive 420ms ease-out both; }
+  @keyframes shelf-arrive { from { transform: translateY(10px); } to { transform: none; } }
+}
+.library-showcase-scroll { overflow-x: auto; direction: ltr; border-radius: 10px; }
+.library-showcase-scroll:focus-visible { outline: 2px solid #315fc9; }
+.library-showcase-scroll img { display: block; width: 100%; min-width: 720px; max-width: none; height: auto; }
+.library-showcase-action { margin-top: 1.25rem; text-align: center; }
+.library-showcase-action a { display: inline-block; padding: .75rem 1.25rem; background: #161619; color: #fff; border-radius: .65rem; }
