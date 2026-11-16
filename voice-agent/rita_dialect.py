@@ -354,14 +354,30 @@ class SpeechTextFilter:
         return "".join(out)
 
 
+#: Said after a reply to a learner who spoke of disappearing or harm, when the reply itself gave no
+#: real help: safety does not depend on the model following its note. No gender for the learner.
+HELP_LINE = "رقم الطوارئ 911 موجود هلأ، أو أي حدا بتثق فيه. أنا هون معك."
+_HELP_GIVEN = re.compile(r"911|٩١١")
+
+
+def help_line_for(reply: str, needed: bool) -> str:
+    """The help line to add after this reply, or "" when it is not needed or already there."""
+
+    return HELP_LINE if needed and not _HELP_GIVEN.search(reply) else ""
+
+
 class RitaSpeechCleaner(FrameProcessor):
     """Place between the language model and the voice. The text frame is changed in place so
-    the page's live chat (which reads the same frames) is never shown the text twice."""
+    the page's live chat (which reads the same frames) is never shown the text twice.
 
-    def __init__(self, **kwargs):
+    `help_needed` says whether this reply answers a learner who spoke of disappearing or harm; if
+    the reply gave no real help, HELP_LINE follows it, as text, so it is spoken, shown and kept."""
+
+    def __init__(self, help_needed=None, **kwargs):
         super().__init__(**kwargs)
         self._filter = SpeechTextFilter()
         self._raw: list[str] = []
+        self._help_needed = help_needed
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
@@ -378,6 +394,11 @@ class RitaSpeechCleaner(FrameProcessor):
                 tail = self._filter.pending
                 if tail:
                     await self.push_frame(TTSSpeakFrame(tail), direction)
+                needed = bool(self._help_needed and self._help_needed())
+                line = help_line_for("".join(self._raw), needed)
+                if line:
+                    logger.info("Uzyra added the help line after a reply that gave none")
+                    await self.push_frame(LLMTextFrame(" " + line), direction)
                 found = scan_dialect("".join(self._raw))
                 if found:
                     logger.bind(findings=found).warning("Uzyra dialect watch")

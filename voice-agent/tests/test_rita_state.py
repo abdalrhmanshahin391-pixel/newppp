@@ -221,3 +221,15 @@ def test_a_push_back_on_the_questions_gets_its_own_instruction():
         state.observe_user_turn(line)
         assert state.response_type.value == "feelings", line
         assert "PUSH BACK" in state.turn_note(), line
+
+
+def test_help_is_needed_only_on_feelings_turns_after_talk_of_harm():
+    state = RitaSessionState()
+    state.observe_user_turn("تعبان كتير")
+    assert not state.help_needed()
+    state.observe_user_turn("أحياناً بفكر أختفي")
+    assert state.help_needed()
+    state.observe_user_turn("ما بدي أحكي لحدا")
+    assert state.help_needed()
+    state.observe_user_turn("اه، يلا نكمل")
+    assert not state.help_needed()

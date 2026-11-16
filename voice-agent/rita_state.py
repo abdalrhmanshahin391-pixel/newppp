@@ -315,6 +315,12 @@ class RitaSessionState:
         else:
             self.response_type = ResponseType.ANSWER_SHORT
 
+    def help_needed(self) -> bool:
+        """This reply answers a learner who spoke of disappearing or harm in a feelings turn: it must
+        point to real help (the speech cleaner adds the help line when the model gave none)."""
+
+        return self.response_type == ResponseType.FEELINGS and (self.harm_signal or self.harm_seen)
+
     def _still_listening(self, lowered: str) -> bool:
         """The turn after a feeling stays a listening turn while the learner keeps talking about it in
         Arabic: not a sentence in the language being learned, not a word question, not "let's go on"."""

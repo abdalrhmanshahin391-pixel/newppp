@@ -238,6 +238,13 @@ async def play(
             sent = model_params(params, model, effort)
             reply = await ask(client, sent)
             raw = reply["raw"]
+            # The live worker adds the help line after a reply that gave none (rita_dialect); the
+            # eval hears the same reply, and marks that the line was added.
+            from rita_dialect import help_line_for
+
+            added = help_line_for(raw, state.help_needed()) if raw else ""
+            if added:
+                raw = f"{raw} {added}"
             kind_of_reply = str(getattr(state.response_type, "value", state.response_type))
             row: dict[str, Any] = {
                 "talk": talk.id,
@@ -254,6 +261,7 @@ async def play(
                 "first_ms": reply.get("first_ms"),
                 "total_ms": reply.get("total_ms"),
                 "finish": reply.get("finish", ""),
+                "help_added": bool(added),
             }
             if reference is not None:
                 row["reference"] = reference[index - 1] if index - 1 < len(reference) else ""
@@ -550,6 +558,8 @@ def print_eval(result: dict[str, Any]) -> int:
         timing = f"{row.get('first_ms') or '-'}ms"
         run = f" r{row['run']}" if result.get("runs", 1) > 1 else ""
         print(f"{mark} {row['talk']}#{row['turn']}{run} [{row['type']}] {timing} L: {row['text']}")
+        if row.get("help_added"):
+            print("     (help line added by the worker: the model gave no help)")
         if "spoken" in row:
             print(f"     S: {row['spoken']}")
             for line in row["sheet"].splitlines()[:8]:

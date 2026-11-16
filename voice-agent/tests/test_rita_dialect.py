@@ -188,6 +188,18 @@ class CleanerInAPipelineTests(unittest.TestCase):
 
         self.assertEqual(asyncio.run(go()), "هو “Guten Morgen.”")
 
+    def test_after_talk_of_harm_a_reply_without_help_gets_the_help_line(self):
+        async def go(needed: bool, text: str):
+            frames = [LLMFullResponseStartFrame(), LLMTextFrame(text), LLMFullResponseEndFrame()]
+            down, _ = await run_test(RitaSpeechCleaner(help_needed=lambda: needed), frames_to_send=frames)
+            return "".join(f.text for f in down if isinstance(f, LLMTextFrame))
+
+        said = asyncio.run(go(True, "مفهوم، ما في مشكلة."))
+        self.assertTrue(said.startswith("مفهوم، ما في مشكلة.") and "911" in said)
+        # Not added when the reply already gave it, nor when no help is needed.
+        self.assertEqual(asyncio.run(go(True, "اتصل على ٩١١ هلأ.")), "اتصل على ٩١١ هلأ.")
+        self.assertEqual(asyncio.run(go(False, "مفهوم.")), "مفهوم.")
+
     def test_a_leaked_note_never_reaches_the_voice(self):
         async def go():
             frames = [
