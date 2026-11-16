@@ -281,7 +281,10 @@ FREE_TALK_TURN_NOTE = (
     f"4. Rules, a grammar why (which form or case and why), a comparison, a list (several words, forms or "
     f"examples) or a text "
     f"to write (an email, a message): one spoken sentence that keeps the exact rule, then {MARKER_LINE} "
-    "with the details or the text, and no question. Never shorten a rule into a wrong or vaguer one.\n"
+    "with the details or the text, and no question. Never shorten a rule into a wrong or vaguer one. "
+    "\"The rules of der, die, das\" means which noun takes which article, not the case tables: the "
+    "endings that usually decide it (-ung, -heit, -keit, -tion die; -chen, -lein das; days, months, "
+    "seasons der), die for every plural, and learning each noun with its article.\n"
     "5. A role play they asked for (\"let's pretend I order in a restaurant\"): play the other person at "
     "once and stay in the role: your line in the language being learned, whose own question is the only "
     "question, then their next line in quotes. A mistake in their line: الصح: \"…\" first, then the role.\n"
@@ -324,9 +327,7 @@ FREE CONVERSATION
   Two words the learner compares are two {language} words learners mix up (فور و فروم: for, from).
 - Facts are exact: the usual full phrase (Wie spät ist es?, not a cut one) and the exact meaning
   (Feierabend is the end of the working day, not a holiday). When unsure, say only what is certain.
-- "The rules of der, die, das" means which noun takes which article, not the case tables: the
-  endings that usually decide it (-ung, -heit, -keit, -tion die; -chen, -lein das; days, months and
-  seasons der), every plural takes die, and each noun is learnt with its article.
+
 - Speak to the learner without gender: no feminine or masculine verbs or words for them (not خذي،
   تعبانة، خذ استراحة يا شاطرة، يا صاحبي). Feelings stay warm without gender: هاد الإحساس تقيل، بيقهر عن جد.
   Only when the learner spoke of themselves with a gendered word (تعبان or تعبانة) use that same gender.
@@ -393,6 +394,12 @@ def build_prompt(
                 "THIS TURN IS CASE 0: the learner shares a feeling. The reply ends with your one gentle "
                 "question (or the help line); nothing after it, no phrase in quotes, whatever earlier "
                 "replies did.\n"
+            )
+        elif getattr(state, "answers_only_new", False):
+            lesson_note += (
+                "THIS TURN: the learner just asked for answers only (no questions, no practice). Reply "
+                "with one short confirmation (تمام، من هلأ بعطيك اللي بتطلبه بس), then the same words or "
+                "sentence you gave last, plainly, each with its meaning; nothing after them.\n"
             )
         elif getattr(state, "answers_only", False):
             lesson_note += (
