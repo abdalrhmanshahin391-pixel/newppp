@@ -90,10 +90,10 @@ class GreetingTests(unittest.TestCase):
 class PromptTests(unittest.TestCase):
     def test_prompt_teaches_the_dialect_and_the_answer_shape(self):
         prompt = build_prompt({}, RitaSessionState(), dialogue=True)
-        self.assertIn("JORDANIAN SPEECH", prompt)
-        self.assertIn("هيك (not هكذا)", prompt)
+        self.assertIn("natural spoken Jordanian", prompt)
+        self.assertIn("هكذا", prompt.split("Never formal", 1)[1][:80])
         self.assertIn("REPLY LANGUAGE", prompt)
-        self.assertIn("I need to go to the bathroom", prompt)
+        self.assertIn("Can I have the bill, please?", prompt)
 
 
 class WatchTests(unittest.TestCase):
@@ -273,21 +273,23 @@ class PromptWithoutContradictionsTests(unittest.TestCase):
     def test_the_language_comes_from_one_place(self):
         self.assertNotIn("answer in turn_language", self.prompt)
         self.assertNotIn("Never answer fully in English", self.prompt)
-        self.assertIn("Write in the REPLY LANGUAGE named on the last line", self.prompt)
+        self.assertEqual(self.prompt.count("REPLY LANGUAGE:"), 1)
 
     def test_it_says_which_rule_wins(self):
-        self.assertIn("PRIORITY WHEN RULES CLASH", self.prompt)
-        self.assertIn("a TURN NOTE may allow more", self.prompt)
+        self.assertIn("When rules clash: safety and honesty first", self.prompt)
+        self.assertIn("or a\n  TURN NOTE says otherwise", self.prompt)
 
     def test_the_gendered_word_is_not_planted_as_an_example(self):
         self.assertNotIn("خبريني", self.prompt)
 
-    def test_german_cases_are_stated_correctly(self):
-        self.assertIn("do not all take the dative", self.prompt)
-        self.assertIn("hoffen takes auf + accusative", self.prompt)
+    def test_the_prompt_is_short(self):
+        # The old prompt was about 3,500 words and contradicted itself; the new one is a third of that.
+        self.assertLess(len(self.prompt.split()), 1200)
 
     def test_examples_do_not_all_open_with_the_same_word(self):
-        self.assertEqual(self.prompt.count("بنقولها"), 1)
+        replies = [line.split(":", 1)[1].split()[0] for line in self.prompt.splitlines() if line.startswith("Uzyra:")]
+        self.assertGreaterEqual(len(replies), 4)
+        self.assertEqual(len(set(replies)), len(replies))
 
 
 class NeutralWordingTests(unittest.TestCase):
@@ -296,6 +298,23 @@ class NeutralWordingTests(unittest.TestCase):
 
         self.assertEqual(neutral_wording("أوكي، خبريني عن يومك"), "أوكي، احكيلي عن يومك")
         self.assertEqual(neutral_wording("خبرني شو صار"), "احكيلي شو صار")
+
+    def test_a_you_marked_for_one_gender_loses_the_mark(self):
+        from rita_dialect import neutral_wording
+
+        # From the live chat: "أهلاً، تمام، إنتِ كيف؟" to a man.
+        self.assertEqual(neutral_wording("أهلاً، تمام، إنتِ كيف؟"), "أهلاً، تمام، إنت كيف؟")
+        self.assertEqual(neutral_wording("وانتي شو رأيك؟"), "وانتي شو رأيك؟".replace("انتي", "انت"))
+        self.assertEqual(neutral_wording("إنتَ جاي؟"), "إنت جاي؟")
+        self.assertEqual(neutral_wording("إنتو كيفكم؟"), "إنتو كيفكم؟")
+
+    def test_would_like_to_aimed_at_one_gender_becomes_neutral(self):
+        from rita_dialect import neutral_wording
+
+        # From the eval: "شو حابّة تحكي اليوم؟" to a man.
+        self.assertEqual(neutral_wording("أكيد، احكيلي شو حابّة تحكي اليوم؟"), "أكيد، احكيلي شو بدك تحكي اليوم؟")
+        self.assertEqual(neutral_wording("حابب نكمل؟"), "بدك نكمل؟")
+        self.assertEqual(neutral_wording("أنا حابة نكمل"), "أنا حابة نكمل")
 
     def test_other_words_are_left_alone(self):
         from rita_dialect import neutral_wording

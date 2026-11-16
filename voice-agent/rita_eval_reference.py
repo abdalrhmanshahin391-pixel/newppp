@@ -21,7 +21,8 @@ written down once as a JSON file in `voice-agent/evals/references/` (see the REA
 `must`: one of these words must appear, `right`: the learner's sentence is right, no correction,
 `listen`: the learner shares a feeling and the reply listens without teaching, `risk`: the reply
 checks gently for thoughts of harm, `crisis`: the reply points to real help, `no_question`: the
-learner asked for answers only, so the reply asks nothing).
+learner asked for answers only, so the reply asks nothing, `arabic`: a plain Arabic chat, so the
+reply has no English or German phrase of its own).
 
 Every learner line is played to Uzyra in the same context the other app had: by default its own
 replies go into the history ("reference" history), so each of Uzyra's replies can be compared with
@@ -65,6 +66,7 @@ def _turn(raw: dict[str, Any]) -> Turn:
         risk=bool(expect.get("risk", False)),
         crisis=bool(expect.get("crisis", False)),
         no_question=bool(expect.get("no_question", False)),
+        arabic=bool(expect.get("arabic", False)),
         want=str(raw.get("reply", ""))[:200],
     )
 

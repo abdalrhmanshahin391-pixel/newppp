@@ -449,20 +449,25 @@ def parse_last_question(assistant_text: str) -> Question:
         if len(options) == 2:
             return Question(f"{previous}؟ {body}؟"[:200], Awaiting.CHOICE, options)
 
+    # Only a real "A ولا B" is a choice: a word before a comma ("تمام، شو كان موضوعك؟",
+    # "أهلاً، تمام، إنت كيف؟") is a reaction, not an option.
     parts = [part.strip() for part in _CHOICE_SPLIT.split(structural_body) if part.strip()]
+    parts = [part for part in parts if not _is_filler(part)]
     first_word = tokens(body)[:1]
     asks_what = bool(first_word) and first_word[0] in _WH_WORDS
-    if asks_what and len(parts) >= 3:
+    if not _OR_WORD.search(structural_body):
+        parts = []
+    elif asks_what and len(parts) >= 3:
         parts = parts[1:]  # "شو بتحب أكتر، القهوة ولا الشاي؟": the first part is the question
-    elif asks_what and not _OR_WORD.search(body):
-        parts = []  # "شو بتحب تاكل، بيتزا؟" is an open question, not a list of options
     # A list of options is short phrases; the first part may carry the question verb.
     if len(parts) >= 2 and all(len(part.split()) <= 6 for part in parts):
         options = tuple(_clean_option(part) for part in parts if _clean_option(part))
         if len(options) >= 2:
             return Question(question[:160], Awaiting.CHOICE, options[:4])
-    first = tokens(body)[:1]
-    if first and first[0] in _WH_WORDS:
+    # The question itself is the last clause: "تمام، شو كان موضوع اليوم؟", "إنت كيف؟".
+    clauses = [c for c in re.split(r"[،,]", structural_body) if c.strip() and not _is_filler(c)]
+    words = tokens(clauses[-1] if clauses else body)
+    if asks_what or (words and (words[0] in _WH_WORDS or words[-1] in _WH_WORDS)):
         return Question(question[:160], Awaiting.OPEN)
     return Question(question[:160], Awaiting.YES_NO)
 
@@ -520,6 +525,20 @@ _OR_WORD = re.compile(r"(?:\bولا\b|\bأو\b|\bاو\b|\bor\b|\boder\b)", re.IG
 
 
 _OPTION_FILLERS = re.compile(r"^(?:(?:أها|اها|آه|اه|طيب|يعني|ممتاز|تمام|حلو|okay|ok|so|well)[\s،,]+)+", re.I)
+
+
+_FILLER_WORDS = _set(
+    "أها", "اها", "آه", "اه", "طيب", "يعني", "ممتاز", "تمام", "حلو", "أهلا", "اهلا", "أهلاً", "اهلاً",
+    "مرحبا", "هلا", "أوكي", "اوكي", "أكيد", "okay", "ok", "so", "well", "great", "sure", "hi", "hello",
+    "alright", "gut", "super", "hallo", "ja",
+)
+
+
+def _is_filler(part: str) -> bool:
+    """A comma part made only of reaction words ("تمام", "أهلاً"), never an option."""
+
+    words = tokens(part)
+    return bool(words) and all(word in _FILLER_WORDS for word in words)
 
 
 def _clean_option(part: str) -> str:

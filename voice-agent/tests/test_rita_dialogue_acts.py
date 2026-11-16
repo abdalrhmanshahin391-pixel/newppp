@@ -186,6 +186,19 @@ class QuestionTests(unittest.TestCase):
         q = parse_last_question('هل تقول "Excuse me?" أو تشرح المعنى؟')
         self.assertNotEqual(q.options, ('"Excuse me', '"'))
 
+    def test_a_reaction_before_a_comma_is_not_an_option(self):
+        # From the live chat: these were read as choices, so a plain "إيه" got "أي واحد: …؟".
+        q = parse_last_question("أهلاً، تمام، إنت كيف؟")
+        self.assertEqual((q.awaiting, q.options), (Awaiting.OPEN, ()))
+        q = parse_last_question("تمام، شو كان موضوع اليوم؟")
+        self.assertEqual((q.awaiting, q.options), (Awaiting.OPEN, ()))
+        q = parse_last_question("حلو، بتحب القهوة؟")
+        self.assertEqual((q.awaiting, q.options), (Awaiting.YES_NO, ()))
+
+    def test_a_reaction_before_a_real_choice_is_dropped_from_the_options(self):
+        q = parse_last_question("تمام، بدك نكمل ولا نغيّر الموضوع؟")
+        self.assertEqual((q.awaiting, q.options), (Awaiting.CHOICE, ("نكمل", "نغيّر الموضوع")))
+
     def test_clarification_follows_the_language(self):
         q = parse_last_question("Tea or coffee?")
         self.assertEqual(clarify_choice(q, "en"), "Which one: Tea or coffee?")

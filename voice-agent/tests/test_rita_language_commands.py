@@ -150,7 +150,7 @@ class ReplyLanguageLine(unittest.TestCase):
         body = {"targetLanguage": {"code": "de", "name": "German", "speechCode": "de"}}
         text = bot.build_prompt(body, state, dialogue=True)
         self.assertTrue(text.rstrip().endswith("do not translate them unless asked."))
-        self.assertGreater(text.index("REPLY LANGUAGE: ENGLISH"), text.index("Structured session state:"))
+        self.assertGreater(text.index("REPLY LANGUAGE: ENGLISH"), text.index("SESSION STATE"))
         self.assertNotIn("Never answer fully in English", text)
 
 

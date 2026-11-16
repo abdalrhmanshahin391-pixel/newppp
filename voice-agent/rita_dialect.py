@@ -159,10 +159,21 @@ _GENDERED_TELL_ME = re.compile(r"(?<![\w\u0600-\u06ff])(?:خبريني|خبرن�
 _GENDERED_SAY = re.compile(r"(?<![\w\u0621-\u064a])(ب?)تقولي(ها|ه)(?![\w\u0621-\u064a])")
 
 
+# "You" marked for one gender (إنتِ، إنتي، إنتَ); the plain written إنت does not pick one.
+_GENDERED_YOU = re.compile(r"(?<![\w\u0621-\u064a])([وف]?[إا]نت)(?:\u0650|\u064e|ي)(?![\w\u0621-\u064a])")
+
+
+# "Would you like to" to one gender (حابّة تحكي، حابب نكمل) becomes the neutral بدك; Uzyra's own
+# "أنا حابة" is left alone.
+_GENDERED_WOULD_LIKE = re.compile(r"(?<![\w\u0621-\u064a])(?<!أنا )(?<!انا )حاب(?:\u0651)?(?:ة|ب)(?=\s+[تن])")
+
+
 def neutral_wording(text: str) -> str:
-    """Swap gendered "tell me" / "you say it" for neutral ones; the model still writes them now and then."""
+    """Swap gendered "tell me" / "you say it" / "you" for neutral ones; the model still writes them."""
 
     text = _GENDERED_TELL_ME.sub("احكيلي", text)
+    text = _GENDERED_YOU.sub(r"\1", text)
+    text = _GENDERED_WOULD_LIKE.sub("بدك", text)
     return _GENDERED_SAY.sub(lambda m: f"{m.group(1)}تقول{m.group(2)}", text)
 
 
@@ -373,11 +384,14 @@ class RitaSpeechCleaner(FrameProcessor):
     `help_needed` says whether this reply answers a learner who spoke of disappearing or harm; if
     the reply gave no real help, HELP_LINE follows it, as text, so it is spoken, shown and kept."""
 
-    def __init__(self, help_needed=None, **kwargs):
+    def __init__(self, help_needed=None, raw: bool = False, **kwargs):
         super().__init__(**kwargs)
         self._filter = SpeechTextFilter()
         self._raw: list[str] = []
         self._help_needed = help_needed
+        #: free conversation: the model's words are spoken as written; no word is swapped and no
+        #: line is added (only markdown marks the voice would read are dropped)
+        self._raw_mode = raw
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
@@ -387,14 +401,15 @@ class RitaSpeechCleaner(FrameProcessor):
                 self._raw = []
             elif isinstance(frame, LLMTextFrame):
                 self._raw.append(frame.text)
-                frame.text = neutral_wording(self._filter.feed(frame.text))
+                cleaned = self._filter.feed(frame.text)
+                frame.text = cleaned if self._raw_mode else neutral_wording(cleaned)
                 if not frame.text:
                     return  # everything in it is being held back or dropped
             elif isinstance(frame, LLMFullResponseEndFrame):
                 tail = self._filter.pending
                 if tail:
                     await self.push_frame(TTSSpeakFrame(tail), direction)
-                needed = bool(self._help_needed and self._help_needed())
+                needed = bool(not self._raw_mode and self._help_needed and self._help_needed())
                 line = help_line_for("".join(self._raw), needed)
                 if line:
                     logger.info("Uzyra added the help line after a reply that gave none")

@@ -33,8 +33,12 @@ reference's style (length, questions, corrections, sheets, Arabic share) as the 
 appear), `right` (the learner's sentence is right: no correction), `forbid`, `sheet`
 (`yes`/`no`/`any`), `free_language` (a reply without Arabic is fine), `listen` (a feeling: no teaching), `risk` (a gentle
 question about thoughts of harm), `crisis` (real help), `no_question` (the learner asked for answers
-only: no question).
+only: no question), `arabic` (a plain Arabic chat: no English or German phrase of Uzyra's own).
 
 Keep a chat's own words; do not tidy them. Leave out names and personal details of real people.
 `example-short-tutor.json` shows the format; its replies are written by hand and do not come from
-any app.
+any app. `jordanian-everyday.json` is the same kind: the learner lines come from a chat on the live
+site (speech recognition errors kept), and the replies are written by hand as the target.
+
+Run references with history `own` to see how Uzyra holds a whole chat with her own replies; the
+default `reference` history only shows each reply in the other app's context.

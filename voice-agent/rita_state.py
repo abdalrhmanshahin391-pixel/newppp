@@ -34,6 +34,15 @@ ANSWERS_ONLY_OFF = re.compile(
     r"اسألني|اسأليني|إسألني|إسأليني|خلينا نتمرن|خلينا نتدرب|بدي أتمرن|بدي اتمرن|اختبرني|اختبريني|"
     r"\bquiz me\b|\bask me\b|\btest me\b"
 )
+#: The learner wants Arabic only, with no English or German mixed in ("احكي معي عربي", "ليش بتخلطي");
+#: it holds for the rest of the call until they ask for another language or for a phrase.
+ARABIC_ONLY_ON = re.compile(
+    r"(?:احكي|احكيلي|احكوا|حاكيني|حكيني|كلميني)\s+(?:معي\s+|معاي\s+)?(?:عربي|بالعربي)|"
+    r"(?:عربي|بالعربي)\s+(?:بس|فقط)|بتخلط|بتخلطي|ليش\s+(?:عم\s+)?(?:تخلط|تخلطي|بتدخل|بتحطي)|"
+    r"جمل[ةه]\s+عربي\s+و\s*جمل[ةه]\s+(?:إنجليزي|انجليزي|انجلش)|(?:بحكي|عم بحكي)\s+معك\s+(?:بالعربي|عربي)|"
+    r"بلاش\s+(?:إنجليزي|انجليزي|انجلش|إنجلش)|بدون\s+(?:إنجليزي|انجليزي|انجلش)|"
+    r"\b(?:speak|talk)\s+(?:to me\s+)?(?:in\s+)?arabic(?:\s+only)?\b"
+)
 #: The learner pushes back on Uzyra's questions ("what are these questions", "why do you keep asking").
 PUSHBACK = re.compile(
     r"(?:شو|شوف|شوفي|شوفو|ليش)\s+(?:هاي|هدول|كل)?\s*(?:ال|هال)?(?:أسئلة|اسئلة)|بتسألني|بتسأليني|بطّل تسأل|بطل تسأل|"
@@ -158,6 +167,10 @@ class RitaSessionState:
     answers_only: bool = False
     #: the learner set that wish on this very turn
     answers_only_new: bool = False
+    #: the learner asked for Arabic only: no other language mixed into Uzyra's own words
+    arabic_only: bool = False
+    #: the learner asked for it on this very turn
+    arabic_only_new: bool = False
     correction_budget: int = 1
     last_feedback_signature: str = ""
     response_type: ResponseType = ResponseType.ANSWER_SHORT
@@ -297,6 +310,11 @@ class RitaSessionState:
         elif ANSWERS_ONLY_ON.search(lowered):
             self.answers_only = True
         self.answers_only_new = self.answers_only and not was
+        self.arabic_only_new = bool(ARABIC_ONLY_ON.search(lowered)) and not self.arabic_only
+        if ARABIC_ONLY_ON.search(lowered):
+            self.arabic_only = True
+        elif self.arabic_only and self.active_language not in ("ar", None):
+            self.arabic_only = False  # they asked for another language since
         self.harm_seen = self.harm_seen or self.harm_signal
         pronunciation = bool(re.search(r"(?:كيف تنطق|نطق|pronounc|aussprach)", lowered))
         correction_retry = bool(
@@ -316,9 +334,19 @@ class RitaSessionState:
             self.response_type = ResponseType.FEELINGS
         elif pronunciation:
             self.response_type = ResponseType.PRONUNCIATION_DRILL
+        elif self.arabic_only_new:
+            self.response_type = ResponseType.ANSWER_SHORT  # agree in one line, not an explanation
         elif re.search(
-            r"(?:اشرح|ليش|لماذا|فصل|تفصيل|كل كلمه|كل كلمة|وضح|why|explain|warum|in detail|word by word|break (?:it )?down)",
+            r"(?:اشرح|فصل|تفصيل|كل كلمه|كل كلمة|وضح|explain|in detail|word by word|break (?:it )?down)",
             lowered,
+        ) or (
+            # "ليش" / "why" is an everyday question; it asks for an explanation only about language.
+            re.search(r"(?:ليش|لماذا|\bwhy\b|warum)", lowered)
+            and re.search(
+                r"(?:[a-zäöüß]{2,}|بنقول|بتقول|بنحكي|بتنكتب|بتصير|بنحط|قاعد[ةه]|كلم[ةه]|جمل[ةه]|فعل|"
+                r"\b(?:say|word|sentence|grammar|verb|tense|sagt|wort|satz)\b)",
+                re.sub(r"\b(?:why|warum)\b", "", lowered),
+            )
         ) or re.search(
             # A comparison or a list of words, phrases or examples belongs on the sheet too.
             r"(?:الفرق بين|فرق بين|difference between|unterschied zwischen|"
@@ -420,12 +448,12 @@ class RitaSessionState:
             return how_to_say_directive(self.reply_language())
         act, awaiting = self.last_act, self.awaiting
         if act == Act.YES and awaiting == Awaiting.YES_NO:
-            return "the learner answered YES to last_question"
+            return "the learner answered YES to your last question"
         if act == Act.NO:
             if awaiting == Awaiting.CHOICE:
                 return "the learner refused every option; ask one short open question about what they want"
             if awaiting == Awaiting.YES_NO:
-                return "the learner answered NO to last_question"
+                return "the learner answered NO to your last question"
             return "the learner said no; accept it, do not argue or explain, offer one short alternative"
         if act == Act.DONT_KNOW:
             return "the learner does not know; pick the simplest option yourself in one short sentence and continue; do not ask again"
@@ -438,8 +466,10 @@ class RitaSessionState:
             if self.attempt_count >= 2:
                 return "the learner still needs a simpler explanation; change method completely and use one concrete everyday example; do not repeat the previous wording"
             return (
-                "explain the same idea in plain words with one concrete example; do not add a second "
-                "concept; say it, with no [[SHEET]]"
+                "the learner did not understand your last reply: start with a short sorry (آسفة، لخبطتك), "
+                "then say what you meant again in plainer, "
+                "shorter words (one concrete example only if it was a teaching point); do not add a "
+                "second concept; no [[SHEET]]"
             )
         if act == Act.UNDERSTOOD:
             return "the learner understood; do not re-explain; take one small next step"
@@ -453,7 +483,7 @@ class RitaSessionState:
         if act == Act.REPEAT:
             return "repeat your last reply, shorter and simpler"
         if act == Act.UNCLEAR:
-            return "the answer does not fit last_question; ask one short clarification of at most eight words"
+            return "the answer does not fit your last question; ask one short clarification of at most eight words"
         if act == Act.BACKCHANNEL:
             return "the learner only acknowledged; answer in one short sentence or continue naturally"
         return ""
@@ -603,17 +633,30 @@ class RitaSessionState:
         return "; ".join(parts)
 
     def prompt_state(self, *, dialogue: bool = False) -> str:
-        strategy = (
-            "normal"
-            if self.attempt_count < 2
-            else "change-method: slower model, minimal pair, syllable isolation, or new analogy"
-        )
-        base = (
-            f"response_type={self.response_type}; active_language={self.active_language}; "
-            f"turn_language={self.current_turn_language}; dialect={self.active_dialect}; "
-            f"language_source={self.language_source}; evidence={self.consecutive_evidence}; "
-            f"attempt_count={self.attempt_count}; understood={self.understood}; "
-            f"frustration={self.frustration_signal}; correction_budget={self.correction_budget}; "
-            f"teaching_strategy={strategy}; last_feedback={self.last_feedback_signature or 'none'}"
-        )
-        return f"{base}; {self.dialogue_state()}" if dialogue else base
+        """This turn's instructions in plain words, or "".
+
+        The raw state (last question, options, topic, last feedback, counters) is no longer sent:
+        the model echoed it back (a misheard topic, an "إنتِ" it had written) instead of listening.
+        """
+
+        lines: list[str] = []
+        directive = self.turn_directive() if dialogue else ""
+        if directive:
+            lines.append(f"TURN NOTE: {directive}.")
+        elif self.attempt_count >= 2 and self.response_type == ResponseType.CORRECTION:
+            lines.append(
+                "TURN NOTE: the same correction did not work twice: change method (a slower example, a "
+                "minimal pair, one syllable at a time); do not repeat your last feedback."
+            )
+        if self.arabic_only_new:
+            lines.append(
+                "TURN NOTE: THE LEARNER JUST ASKED FOR ARABIC ONLY. Agree in one short line (معك حق، من هلأ "
+                "عربي بس); do not explain why you mixed languages. From now on, no English or German in "
+                "your own words."
+            )
+        elif self.arabic_only:
+            lines.append(
+                "THE LEARNER ASKED FOR ARABIC ONLY: every word of yours is Jordanian Arabic, with no English "
+                "or German mixed in. Only when they ask how to say something, give that one phrase."
+            )
+        return "\n".join(lines)
