@@ -156,6 +156,8 @@ class RitaSessionState:
     pushback_signal: bool = False
     #: the learner asked for answers only: no questions until they ask to be asked again
     answers_only: bool = False
+    #: the learner set that wish on this very turn
+    answers_only_new: bool = False
     correction_budget: int = 1
     last_feedback_signature: str = ""
     response_type: ResponseType = ResponseType.ANSWER_SHORT
@@ -289,10 +291,12 @@ class RitaSessionState:
         self.hopeless_signal = bool(HOPELESS.search(lowered)) and not self.harm_signal
         feelings = feelings or self.harm_signal
         self.pushback_signal = bool(PUSHBACK.search(lowered))
+        was = self.answers_only
         if ANSWERS_ONLY_OFF.search(lowered):
             self.answers_only = False
         elif ANSWERS_ONLY_ON.search(lowered):
             self.answers_only = True
+        self.answers_only_new = self.answers_only and not was
         self.harm_seen = self.harm_seen or self.harm_signal
         pronunciation = bool(re.search(r"(?:كيف تنطق|نطق|pronounc|aussprach)", lowered))
         correction_retry = bool(
@@ -465,7 +469,13 @@ class RitaSessionState:
         if dialogue and self.turn_directive():
             return ""
         note = self._type_note()
-        if self.answers_only and self.response_type != ResponseType.FEELINGS:
+        if self.answers_only_new and self.response_type != ResponseType.FEELINGS:
+            note = (note + " " if note else "") + (
+                "TURN NOTE: THE LEARNER JUST TOLD YOU HOW THEY WANT TO LEARN: answers only, no questions "
+                "or practice prompts. Confirm it in one short line (تمام، من هلأ بعطيك اللي بتطلبه بس), "
+                "then give again what you were giving, without any question."
+            )
+        elif self.answers_only and self.response_type != ResponseType.FEELINGS:
             note = (note + " " if note else "") + (
                 "TURN NOTE: THE LEARNER ASKED FOR ANSWERS ONLY, earlier in this call: give exactly what "
                 "they ask, then stop. No question at all, no phrase for them to answer with, no جرّب or "

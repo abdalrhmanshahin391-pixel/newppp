@@ -255,3 +255,11 @@ def test_why_do_you_ask_is_not_a_wish_for_answers_only():
     state = RitaSessionState()
     state.observe_user_turn("ليش بتسألني كل هالأسئلة؟")
     assert not state.answers_only
+
+
+def test_the_turn_that_sets_answers_only_is_confirmed_once():
+    state = RitaSessionState()
+    state.observe_user_turn("ما تسأليني جرب، بس أعطيني اللي بقولك إياه")
+    assert "JUST TOLD YOU" in state.turn_note()
+    state.observe_user_turn("كيف بحكي بدي أشرب مي بالألماني")
+    assert "JUST TOLD YOU" not in state.turn_note() and "ANSWERS ONLY" in state.turn_note()
