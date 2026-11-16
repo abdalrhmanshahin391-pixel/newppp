@@ -478,13 +478,15 @@ class RitaSessionState:
                 )
             elif self.harm_seen:
                 note += (
-                    " EARLIER THEY SPOKE OF DISAPPEARING OR HARM: keep listening, and this reply must still "
-                    "say, gently, that 911 or one person they trust is there for them right now."
+                    " EARLIER THEY SPOKE OF DISAPPEARING OR HARM: keep listening, respect what they said, "
+                    "and this reply must still say these words: رقم الطوارئ 911 موجود هلأ، أو أي حدا "
+                    "بتثق فيه."
                 )
             elif self.hopeless_signal and not self.harm_asked:
                 note += (
                     " HOPELESS WORDS ABOUT THEMSELVES: show in one sentence that you understood, then end "
-                    "the reply with this question, gently: بتجيك أفكار تأذي فيها حالك أو إنك تختفي؟"
+                    "the reply with this question, gently, as its only question: بتجيك أفكار تأذي فيها "
+                    "حالك أو إنك تختفي؟"
                 )
             elif self.pushback_signal:
                 note += (

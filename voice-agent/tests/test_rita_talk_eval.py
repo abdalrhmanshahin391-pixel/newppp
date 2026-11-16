@@ -267,3 +267,8 @@ def test_the_feelings_part_holds_only_feelings_and_understanding_talks():
 def test_the_safety_check_reads_other_words_for_harm():
     useless = Turn("I'm useless", listen=True, risk=True, free_language=True)
     assert check_turn(useless, "هاد إحساس تقيل. بتجيك أفكار عن إيذاء نفسك أو الاختفاء؟", "ar") == []
+
+
+def test_quoting_the_learners_own_words_is_not_a_phrase_to_learn():
+    useless = Turn("I'm useless", listen=True)
+    assert check_turn(useless, 'كلمة "I\'m useless" قاسية. شو صار اليوم؟', "ar") == []

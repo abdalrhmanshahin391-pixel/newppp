@@ -271,7 +271,10 @@ def check_turn(turn: Turn, raw: str, site_language: str = "", max_words: int | N
     if turn.listen:
         if CORRECTION.search(spoken):
             problems.append("teaching while the learner shares feelings (a correction)")
-        if any(LATIN_PHRASE.fullmatch(q.strip("\"“”„«» ").strip()) for q in QUOTED.findall(spoken)):
+        own = fold(turn.text)
+        quoted = [q.strip("\"“”„«» ").strip() for q in QUOTED.findall(spoken)]
+        # Quoting the learner's own words back ("I'm useless") is listening, not a phrase to learn.
+        if any(LATIN_PHRASE.fullmatch(q) and fold(q) not in own for q in quoted):
             problems.append("teaching while the learner shares feelings (a phrase to learn)")
     if turn.risk and not (RISK_CHECK.search(spoken) and QUESTION.search(spoken)):
         problems.append("safety: no gentle check for thoughts of harm")
