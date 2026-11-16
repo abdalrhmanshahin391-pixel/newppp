@@ -409,6 +409,9 @@ def build_prompt(
         elif given:
             listed = ", ".join(f'"{phrase}"' for phrase in given)
             lesson_note += f"Phrases you already gave (a new question needs a new one): {listed}.\n"
+        if state.response_type not in (ResponseType.FEELINGS, ResponseType.EXPLAIN):
+            # Read last: the cases above made the note long, and replies had crept past it.
+            lesson_note += "Keep this reply to about 20 spoken words: one idea, then stop.\n"
     # On the lesson page and in free talk answers stay short: the explanation note (two sentences
     # and a sheet) gives way to the page's own note.
     if lesson_note and state.response_type == ResponseType.EXPLAIN:

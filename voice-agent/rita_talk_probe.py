@@ -255,9 +255,11 @@ def check_turn(turn: Turn, raw: str, site_language: str = "", max_words: int | N
         problems.append("a chat turn without a question and a phrase in quotes")
     if turn.right and CORRECTION.search(spoken):
         problems.append("corrected a sentence that was already right")
-    if turn.fix and not any(fold(form) in fold(raw) for form in turn.fix):
+    # The raw text may carry markdown ("**einen** Kaffee"); the spoken part is already clean.
+    said = fold(raw) + " " + fold(spoken)
+    if turn.fix and not any(fold(form) in said for form in turn.fix):
         problems.append(f"the mistake was not corrected (expected {turn.fix[0]!r})")
-    if turn.must and not any(fold(form) in fold(raw) for form in turn.must):
+    if turn.must and not any(fold(form) in said for form in turn.must):
         problems.append(f"missing the expected content (one of {', '.join(map(repr, turn.must[:3]))})")
     if site_language == "ar" and not turn.free_language and not ARABIC.search(spoken):
         problems.append("no Arabic for an Arabic speaker")

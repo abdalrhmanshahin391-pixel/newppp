@@ -283,3 +283,8 @@ def test_answers_only_turns_must_not_ask_and_the_learner_led_reference_loads():
     ref = parse_reference(load_reference("german-learner-led"))
     turns = ref.talks[0].turns
     assert [t.no_question for t in turns][:3] == [False, False, True] and all(t.no_question for t in turns[2:])
+
+
+def test_a_correction_in_bold_still_counts():
+    turn = Turn("Ich möchte ein Kaffee", fix=("einen Kaffee",))
+    assert check_turn(turn, 'الصح: "Ich möchte **einen** Kaffee".', "ar") == []
