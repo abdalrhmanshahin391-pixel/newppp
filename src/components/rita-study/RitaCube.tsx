@@ -124,8 +124,8 @@ export function RitaCube({
   /** The home hero pauses offscreen, in hidden tabs, and for reduced motion. */
   active?: boolean;
 }) {
-  const body = useRef<HTMLDivElement>(null);
-  const eyes = useRef<HTMLDivElement>(null);
+  const body = useRef<HTMLSpanElement>(null);
+  const eyes = useRef<HTMLSpanElement>(null);
   const modeRef = useRef<OrbMode>(mode);
   modeRef.current = mode;
 
@@ -332,16 +332,16 @@ export function RitaCube({
   }, [levelsRef, active]);
 
   return (
-    <div className="uz-cube" role="img" aria-label={label}>
-      <div ref={body} className="uz-cube-body">
+    <span className="uz-cube" style={{ display: "block" }} role="img" aria-label={label}>
+      <span ref={body} className="uz-cube-body">
         <svg className="uz-cube-shape" viewBox="0 0 100 100" aria-hidden="true">
           <path d={BLOB} />
         </svg>
-        <div ref={eyes} className="uz-cube-eyes" aria-hidden="true">
+        <span ref={eyes} className="uz-cube-eyes" aria-hidden="true">
           <span className="uz-cube-eye" />
           <span className="uz-cube-eye" />
-        </div>
-      </div>
-    </div>
+        </span>
+      </span>
+    </span>
   );
 }

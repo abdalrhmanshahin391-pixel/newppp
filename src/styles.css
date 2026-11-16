@@ -10501,3 +10501,42 @@ html.rita-app,
     animation: none;
   }
 }
+.study-headline {
+  max-width: 16em;
+  margin: 0 auto;
+  font-family: "Figtree", Helvetica, Arial, sans-serif;
+  font-size: clamp(2rem, 5.6vw, 4.6rem);
+  font-weight: 400;
+  line-height: 1.56;
+  letter-spacing: -.035em;
+  text-align: center;
+  text-wrap: balance;
+}
+.study-pill {
+  display: inline-flex;
+  vertical-align: middle;
+  align-items: center;
+  gap: .15em;
+  height: 1.24em;
+  padding-right: .34em;
+  border-radius: 2em;
+  background: #f2f2f1;
+  color: #151517;
+  white-space: nowrap;
+}
+.study-sticker, .study-face {
+  box-sizing: border-box;
+  width: 1.15em;
+  height: 1.15em;
+  margin: -.06em 0 0 -.04em;
+}
+.study-sticker {
+  color: white;
+  border: .065em solid white;
+  border-radius: 26%;
+  padding: .19em;
+  box-shadow: 0 .035em .09em #14141f30;
+}
+.sticker-Speak { background: #365fcd; transform: rotate(-6deg); }
+.sticker-read { background: #38695e; transform: rotate(4deg); }
+.sticker-remember { background: #a34f36; transform: rotate(-4deg); }
