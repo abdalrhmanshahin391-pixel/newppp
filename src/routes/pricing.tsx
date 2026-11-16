@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, ArrowRight, Check, Minus } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { OfferRibbon, discountPercent, offerLive } from "@/components/pricing/offer";
@@ -11,7 +11,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { updateSiteSettings } from "@/lib/site-settings.functions";
 import { useQueryClient } from "@tanstack/react-query";
-
 
 export const Route = createFileRoute("/pricing")({
   loader: async () => {
@@ -24,17 +23,16 @@ export const Route = createFileRoute("/pricing")({
   },
   head: () => ({
     meta: [
-      { title: "Uzyra plans — flashcards, summaries and AI questions" },
+      { title: "Uzyra plans: flashcards, summaries and AI questions" },
       {
         name: "description",
         content:
           "Pick the Uzyra plan that matches your semester: a free start, an everyday study plan, or the exam-season plan with the biggest AI allowance.",
       },
-      { property: "og:title", content: "Choose your smart study plan — Uzyra" },
+      { property: "og:title", content: "Choose your smart study plan | Uzyra" },
       {
         property: "og:description",
-        content:
-          "Simple plans for flashcards, PDF summaries, AI questions and your to-do board.",
+        content: "Simple plans for flashcards, PDF summaries, AI questions and your to-do board.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -77,12 +75,86 @@ function cap(n: number | null | undefined, unit: string) {
   return n === null || n === undefined ? `Unlimited ${unit}` : `${n.toLocaleString()} ${unit}`;
 }
 
+type Billing = "three_months" | "yearly" | "once";
+
+/** One row of the comparison table: a label and how to read the plan's allowance. */
+type Row = { label: string; value: (p: FullPlan) => number | null | false };
+
+const allowance = (n: number | null | undefined, on = true): number | null | false =>
+  !on || n === 0 ? false : n === undefined ? false : n;
+
+/** The comparison table, grouped like the cards: every value comes from the plan in the admin. */
+const COMPARE: { title: string; rows: Row[] }[] = [
+  {
+    title: "Study tools",
+    rows: [
+      { label: "Flashcards", value: (p) => allowance(p.max_flashcards) },
+      { label: "PDF summaries", value: (p) => allowance(p.max_summaries) },
+    ],
+  },
+  {
+    title: "AI questions",
+    rows: [
+      {
+        label: "Lecture questions",
+        value: (p) => allowance(p.max_ai_questions, p.feature_lecture_qgen !== false),
+      },
+      {
+        label: "All-in-One lectures",
+        value: (p) => allowance(p.max_all_in_one_lectures, p.feature_all_in_one !== false),
+      },
+      {
+        label: "Archive questions with explanations",
+        value: (p) => allowance(p.max_archive_questions, p.feature_archive_qgen !== false),
+      },
+    ],
+  },
+  {
+    title: "Organise",
+    rows: [
+      { label: "To-do tasks", value: (p) => allowance(p.max_todo_tasks) },
+      { label: "Calendar entries", value: (p) => allowance(p.max_calendar_items) },
+    ],
+  },
+  {
+    title: "Classrooms",
+    rows: [
+      { label: "Classrooms you create", value: (p) => allowance(p.max_groups) },
+      { label: "Join classrooms", value: () => null },
+    ],
+  },
+];
+
+/** Questions under the table. Edit the wording here; keep every answer true for Uzyra. */
+const QUESTIONS: { q: string; a: string; packs?: boolean }[] = [
+  {
+    q: "Can I start for free?",
+    a: "Yes. The free plan needs no payment. Move to a paid plan when you need more.",
+  },
+  {
+    q: "What is the difference between 3 months and yearly?",
+    a: "It is the same plan, paid for 3 months or for a whole year. Yearly costs less per month.",
+  },
+  {
+    q: "Can I cancel any time?",
+    a: "Yes. Subscriptions can be cancelled any time.",
+  },
+  {
+    q: "Do credit packs expire?",
+    a: "No. A pack is paid once and never expires. When it runs out, buy it again and the credits add on top.",
+    packs: true,
+  },
+  {
+    q: "Where do I see what I have left?",
+    a: "Your balance and allowances are in Settings, under Plan.",
+  },
+];
+
 function PricingPage() {
   const loaderData = Route.useLoaderData();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [yearly, setYearly] = useState(false);
-  const [kind, setKind] = useState<"monthly" | "lifetime" | null>(null);
+  const [billing, setBilling] = useState<Billing>("three_months");
   const usageFn = useServerFn(myPlanUsage);
   const settings = useSiteSettings();
   const saveSettings = useServerFn(updateSiteSettings);
@@ -108,6 +180,8 @@ function PricingPage() {
 
   const isAdmin = !!(mine as any)?.is_admin;
   const packsVisible = settings.credit_packs_enabled || isAdmin;
+  const lifetime = billing === "once";
+  const yearly = billing === "yearly";
 
   const togglePacks = async () => {
     setSavingPacks(true);
@@ -119,17 +193,42 @@ function PricingPage() {
     }
   };
 
-  const live = plans.filter(
-    (p) => p.published !== false && (p.billing_kind ?? "monthly") === (kind ?? "monthly"),
+  const published = plans.filter((p) => p.published !== false);
+  const live = published.filter(
+    (p) => (p.billing_kind ?? "monthly") === (lifetime ? "lifetime" : "monthly"),
+  );
+  const hasPacks = packsVisible && published.some((p) => p.billing_kind === "lifetime");
+
+  // The biggest yearly saving against four 3-month periods, for the "Save" note in the switch.
+  const yearlySave = Math.max(
+    0,
+    ...published
+      .filter((p) => (p.billing_kind ?? "monthly") === "monthly" && p.price_cents && p.yearly_cents)
+      .map((p) => Math.round((1 - p.yearly_cents / (p.price_cents * 4)) * 100)),
   );
 
+  const priceOf = (p: FullPlan) =>
+    lifetime ? (p.once_cents ?? 0) : yearly ? (p.yearly_cents ?? 0) : (p.price_cents ?? 0);
+
   const buy = (p: FullPlan) => {
-    const billing = kind === "lifetime" ? "once" : yearly ? "yearly" : "three_months";
     if (!user) {
-      navigate({ to: "/register", search: { next: `/checkout?plan=${p.slug}&billing=${billing}` } as any });
+      navigate({
+        to: "/register",
+        search: { next: `/checkout?plan=${p.slug}&billing=${billing}` } as any,
+      });
       return;
     }
     navigate({ to: "/checkout", search: { plan: p.slug, billing } as any });
+  };
+
+  const switchOptions: { k: Billing; label: string; note?: string }[] = [
+    { k: "three_months", label: "3 months" },
+    { k: "yearly", label: "Yearly", note: yearlySave > 0 ? `Save ${yearlySave}%` : undefined },
+    ...(hasPacks ? [{ k: "once" as const, label: "Pay once" }] : []),
+  ];
+  const columns = { gridTemplateColumns: `repeat(${Math.max(live.length, 1)}, minmax(0, 1fr))` };
+  const tableColumns = {
+    gridTemplateColumns: `minmax(0, 1.3fr) repeat(${Math.max(live.length, 1)}, minmax(0, 1fr))`,
   };
 
   return (
@@ -139,92 +238,259 @@ function PricingPage() {
     >
       <ProHeader variant="solid" />
 
-       <section className="relative pt-24 md:pt-28">
-         <div className="relative mx-auto flex max-w-[1120px] flex-col items-center px-6 pt-6 text-center md:px-10 md:pt-8">
-          <h1 className="sr-only">Uzyra study plans and pricing</h1>
-          {kind && (
-            <button
-              type="button"
-              onClick={() => setKind(null)}
-              className="rita-btn rita-btn-secondary mt-8 gap-2"
-            >
-              <ArrowLeft size={15} />
-              {kind === "monthly" ? "Subscription plans" : "One-time packs"} · change
-            </button>
-          )}
+      <main className="mx-auto max-w-[1194px] px-4 pb-28 pt-28 sm:px-6 md:pt-[136px]">
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <h1 className="text-[36px] font-[450] leading-[1.06] tracking-[-0.035em] md:text-[46px]">
+            Plans and pricing
+          </h1>
+          <div
+            role="radiogroup"
+            aria-label="Billing"
+            className="inline-flex w-fit rounded-full bg-[var(--pro-card)] p-1 md:mb-1"
+          >
+            {switchOptions.map((o) => (
+              <button
+                key={o.k}
+                type="button"
+                role="radio"
+                aria-checked={billing === o.k}
+                onClick={() => setBilling(o.k)}
+                className={`rounded-full px-3.5 py-1.5 text-[13.5px] leading-[20px] transition-colors duration-150 ${
+                  billing === o.k
+                    ? "bg-[var(--pro-page)] text-[var(--pro-ink)] shadow-[0_1px_2px_rgba(18,17,23,0.08)]"
+                    : "text-white/45 hover:text-white/75"
+                }`}
+              >
+                {o.label}
+                {o.note && <span className="rita-accent ms-1">{o.note}</span>}
+              </button>
+            ))}
+          </div>
+        </div>
 
-          {kind === "monthly" && (
-             <div className="mt-6 inline-flex rounded-full border border-white/10 bg-white/[0.06] p-1">
-              {[
-                { k: false, label: "3 Months" },
-                { k: true, label: "Yearly · save more" },
-              ].map((o) => (
-                <button
-                  key={String(o.k)}
-                  type="button"
-                  onClick={() => setYearly(o.k)}
-                  className={`rounded-full px-5 py-2 text-[13.5px] font-semibold transition-colors ${
-                     yearly === o.k ? "rita-accent-bg" : "text-white/55 hover:text-white"
-                  }`}
+        {lifetime && (
+          <p className="mt-4 max-w-xl text-[14.5px] leading-[1.5] text-white/45">
+            Yours for life. Use them at your own pace; when a pack runs out, buy it again and the
+            credits add on top.
+          </p>
+        )}
+
+        {isLoading && (
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-[555px] animate-pulse rounded-[24px] bg-[var(--pro-card)]"
+              />
+            ))}
+          </div>
+        )}
+
+        {!isLoading && live.length === 0 && (
+          <p className="mt-10 rounded-[24px] bg-[var(--pro-card)] p-10 text-center text-[14.5px] text-white/45">
+            No plans are published yet.
+          </p>
+        )}
+
+        {!isLoading && live.length > 0 && (
+          <div className="mt-10 grid gap-4 max-md:!grid-cols-1" style={columns}>
+            {live.map((p) => {
+              const priceCents = priceOf(p);
+              const isMine = mine?.plan?.slug === p.slug;
+              const best = !!p.highlight;
+              const liveOffer = offerLive(p.offer_ends_at);
+              const off =
+                lifetime || yearly || !liveOffer
+                  ? 0
+                  : discountPercent(p.compare_cents, p.price_cents);
+              const lines = (p.perks && p.perks.length > 0 ? p.perks : cardLines(p)).slice(0, 7);
+              return (
+                <article
+                  key={p.slug}
+                  className={`relative flex min-h-[555px] flex-col overflow-hidden rounded-[24px] p-9 bg-[var(--pro-card)]`}
                 >
-                  {o.label}
-                </button>
+                  <OfferRibbon
+                    label={p.ribbon_label}
+                    color={p.ribbon_color}
+                    endsAt={p.offer_ends_at}
+                  />
+                  <div className="flex min-h-[26px] items-center justify-between gap-3">
+                    <h2 className="text-[17px] font-medium leading-[1.5] tracking-[-0.01em]">
+                      {p.name}
+                    </h2>
+                    {isMine ? (
+                      <span className="rounded-full bg-white/[0.1] px-2.5 py-0.5 text-[12.5px] font-medium leading-[18.75px] text-white/80">
+                        Your plan
+                      </span>
+                    ) : best && !p.ribbon_label ? (
+                      <span className="rita-accent rita-accent-soft rounded-full px-2.5 py-0.5 text-[12.5px] font-medium leading-[18.75px]">
+                        Popular
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap items-baseline gap-x-1.5">
+                    <span className="text-[44px] font-[450] leading-[1.5] tracking-[-0.04em]">
+                      {money(priceCents, p.currency)}
+                    </span>
+                    <span className="text-[15px] leading-[1.5] text-white/40">
+                      {priceCents === 0 ? "" : lifetime ? "once" : yearly ? "/year" : "/3 months"}
+                    </span>
+                    {off > 0 && (
+                      <span className="ms-1 text-[15px] text-white/30 line-through">
+                        {money(p.compare_cents ?? 0, p.currency)}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="mt-2 min-h-[22px] text-[14.5px] leading-[1.5] text-white/45">
+                    {p.tagline}
+                  </p>
+
+                  <ul className="mb-9 mt-9 grid gap-2.5">
+                    {lines.map((text) => (
+                      <li
+                        key={text}
+                        className="flex items-start gap-3 text-[14px] leading-[1.5] text-white/85"
+                      >
+                        <Check
+                          size={15}
+                          strokeWidth={1.75}
+                          className="mt-[3px] shrink-0 text-white/70"
+                          aria-hidden
+                        />
+                        {text}
+                      </li>
+                    ))}
+                  </ul>
+
+                  {!lifetime && priceCents === 0 ? (
+                    <Link
+                      to={user ? "/study" : "/register"}
+                      className={`mt-auto flex h-12 items-center justify-center rounded-full text-[14.5px] font-medium transition-transform duration-150 active:scale-[0.98] bg-[var(--pro-ink)] text-[var(--pro-page)]`}
+                    >
+                      {p.cta_label || "Start free"}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => buy(p)}
+                      className={`mt-auto h-12 rounded-full text-[14.5px] font-medium transition-transform duration-150 active:scale-[0.98] bg-[var(--pro-ink)] text-[var(--pro-page)]`}
+                    >
+                      {p.cta_label ||
+                        (lifetime
+                          ? isMine
+                            ? `Top up ${p.name}`
+                            : `Buy ${p.name}`
+                          : `Get ${p.name}`)}
+                    </button>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+
+        {!isLoading && live.length > 0 && (
+          <section aria-label="Compare plans" className="mt-16 overflow-x-auto md:mt-20">
+            <div className="min-w-[620px]">
+              <div className="grid" style={tableColumns}>
+                <span />
+                {live.map((p) => (
+                  <span
+                    key={p.slug}
+                    className="text-center font-mono text-[11px] uppercase leading-[16.5px] tracking-[0.14em] text-white/40"
+                  >
+                    {p.name.toUpperCase()}
+                  </span>
+                ))}
+              </div>
+
+              {COMPARE.map((group) => (
+                <div key={group.title} className="mt-[60px]">
+                  <h2 className="mb-6 text-[28px] font-[450] leading-[1.06] tracking-[-0.035em] md:text-[34px]">
+                    {group.title}
+                  </h2>
+                  {group.rows.map((row) => (
+                    <div
+                      key={row.label}
+                      className="grid border-t border-white/[0.08]"
+                      style={tableColumns}
+                    >
+                      <span className="flex h-[50px] items-center pe-4 text-[14px] text-white/85">
+                        {row.label}
+                      </span>
+                      {live.map((p) => {
+                        const v = row.value(p);
+                        return (
+                          <span
+                            key={p.slug}
+                            className={`flex h-[50px] items-center justify-center text-[13px] text-white/85 ${
+                              p.highlight
+                                ? "bg-[color-mix(in_oklab,var(--pro-ink)_6%,transparent)]"
+                                : "bg-[color-mix(in_oklab,var(--pro-ink)_3%,transparent)]"
+                            }`}
+                          >
+                            {v === false ? (
+                              <span className="sr-only">Not included</span>
+                            ) : v === null ? (
+                              row.label === "Join classrooms" ? (
+                                <Check size={15} strokeWidth={1.75} aria-label="Included" />
+                              ) : (
+                                "Unlimited"
+                              )
+                            ) : (
+                              v.toLocaleString("en-US")
+                            )}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
               ))}
             </div>
-          )}
+          </section>
+        )}
 
-          {kind === "lifetime" && (
-            <p className="mt-5 max-w-xl text-[14.5px] font-medium text-white/50">
-              Yours for life — use them at your own pace. When a pack runs out, buy it again and
-              the credits add on top.
+        <section className="mt-20 grid gap-8 md:mt-[100px] md:grid-cols-[minmax(0,0.56fr)_minmax(0,1fr)]">
+          <div>
+            <h2 className="text-[28px] font-[450] leading-[1.06] tracking-[-0.035em] md:text-[34px]">
+              Questions
+            </h2>
+            <p className="mt-3 text-[14px] leading-[1.625] text-white/45">
+              Plans, billing and where to find your allowance.
             </p>
-          )}
-        </div>
-      </section>
-
-      {!kind && (
-        <section className="mx-auto grid max-w-[1120px] gap-6 px-6 pb-32 pt-8 md:grid-cols-2 md:px-10 md:pt-10">
-          {[
-            {
-              k: "monthly" as const,
-              title: "Subscription plans",
-              copy: "A steady allowance for cards, summaries and AI questions. Choose 3 months or yearly. Cancel any time.",
-              cta: "See plans",
-            },
-            {
-              k: "lifetime" as const,
-              title: "Credit packs — pay once",
-              copy: "200 flashcards, 100 questions and more. Use them whenever you like, they never expire.",
-              cta: "See packs",
-            },
-          ]
-            .filter((b) => b.k !== "lifetime" || packsVisible)
-            .map((b) => (
-            <article
-              key={b.k}
-               className="group flex min-h-[650px] flex-col overflow-hidden rounded-[20px] border-2 border-[#121117] bg-[#0b0b0f] text-left"
-            >
-                <div className="p-8 md:p-10">
-                  <p className="text-[19px] font-bold md:text-[21px]">Uzyra <span className="rita-accent font-normal">Study</span></p>
-                  <h2 className="mt-5 max-w-[25rem] text-[28px] font-semibold leading-[1.1] md:text-[36px]">{b.title}</h2>
-                  <p className="mt-5 max-w-[28rem] text-[16px] leading-[1.6] text-white/50 md:text-[17px]">{b.copy}</p>
-                  <button type="button" onClick={() => setKind(b.k)} className="rita-btn rita-btn-primary mt-7 gap-2">
-                    {b.cta} <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
-                  </button>
-                </div>
-             </article>
+          </div>
+          <div className="border-b border-white/[0.08]">
+            {QUESTIONS.filter((item) => !item.packs || hasPacks).map((item) => (
+              <details key={item.q} className="group border-t border-white/[0.08]">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-[17px] text-[15px] font-medium leading-[1.5] [&::-webkit-details-marker]:hidden">
+                  {item.q}
+                  <ChevronDown
+                    size={16}
+                    strokeWidth={1.5}
+                    className="shrink-0 text-white/35 transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none"
+                    aria-hidden
+                  />
+                </summary>
+                <p className="max-w-[60ch] pb-5 text-[14px] leading-[1.625] text-white/55">
+                  {item.a}
+                </p>
+              </details>
             ))}
+          </div>
         </section>
-      )}
 
-      {!kind && isAdmin && (
-        <section className="mx-auto -mt-16 max-w-[1120px] px-6 pb-16 md:px-10">
-           <div className="flex flex-wrap items-center justify-between gap-4 rounded-[20px] border-2 border-[#121117] bg-[#0b0b0f] p-6">
+        {isAdmin && (
+          <section className="mt-20 flex flex-wrap items-center justify-between gap-4 rounded-[24px] bg-[var(--pro-card)] p-7">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/35">Admin only</p>
-              <p className="mt-1 text-[15px] font-bold text-white">
-                Credit packs — pay once:{" "}
-                <span className={settings.credit_packs_enabled ? "text-[#256528]" : "text-[#b3213f]"}>
+              <p className="text-[12.5px] font-medium text-white/40">Admin only</p>
+              <p className="mt-1 text-[15px] font-medium">
+                Credit packs:{" "}
+                <span
+                  className={settings.credit_packs_enabled ? "text-[#4ade80]" : "text-[#f87171]"}
+                >
                   {settings.credit_packs_enabled ? "visible to everyone" : "hidden from students"}
                 </span>
               </p>
@@ -236,7 +502,7 @@ function PricingPage() {
               type="button"
               onClick={togglePacks}
               disabled={savingPacks}
-              className="rita-btn rita-btn-secondary disabled:opacity-60"
+              className="h-10 rounded-full bg-[var(--pro-ink)] px-5 text-[14px] font-medium text-[var(--pro-page)] disabled:opacity-60"
             >
               {savingPacks
                 ? "Saving…"
@@ -244,177 +510,21 @@ function PricingPage() {
                   ? "Hide for everyone"
                   : "Show to everyone"}
             </button>
-          </div>
-        </section>
-      )}
-
-      <main className="mx-auto max-w-[1120px] px-6 pb-24 pt-12 md:px-10">
-        {kind && (
-        <>
-        {isLoading && (
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-[30rem] animate-pulse rounded-[20px] bg-white/[0.07]" />
-            ))}
-          </div>
+          </section>
         )}
-
-        {!isLoading && live.length === 0 && (
-          <p className="rounded-[20px] border border-dashed border-white/15 bg-white/[0.05] p-10 text-center font-semibold text-white/50">
-            No plans are published yet.
-          </p>
-        )}
-
-         <div className="grid items-stretch gap-6 lg:grid-cols-2 xl:grid-cols-3">
-          {live.map((p, i) => {
-            const lifetime = kind === "lifetime";
-            const priceCents = lifetime
-              ? (p.once_cents ?? 0)
-              : yearly
-                ? (p.yearly_cents ?? 0)
-                : (p.price_cents ?? 0);
-            const isMine = mine?.plan?.slug === p.slug;
-            const best = !!p.highlight;
-
-            const liveOffer = offerLive(p.offer_ends_at);
-            const off = lifetime || yearly || !liveOffer ? 0 : discountPercent(p.compare_cents, p.price_cents);
-            const semesterSave =
-              !lifetime && yearly && p.price_cents && p.yearly_cents
-                ? Math.max(0, Math.round((1 - p.yearly_cents / (p.price_cents * 4)) * 100))
-                : 0;
-            return (
-              <article
-                key={p.slug}
-                 className={`relative flex min-h-[610px] flex-col overflow-hidden rounded-[20px] border-2 bg-[#0b0b0f] p-8 md:p-9 ${
-                   best ? "border-[#2b6df0]" : "border-[#121117]"
-                }`}
-              >
-                <OfferRibbon label={p.ribbon_label} color={p.ribbon_color} endsAt={p.offer_ends_at} />
-                {best && !p.ribbon_label && (
-                    <span className="absolute right-5 top-5 rounded-full rita-accent-bg px-3.5 py-1.5 text-[10.5px] font-bold uppercase tracking-[0.14em]">
-                    Most popular
-                  </span>
-                )}
-                {isMine && (
-                    <span className="absolute left-5 top-5 rounded-full bg-white px-3.5 py-1.5 text-[10.5px] font-bold uppercase tracking-[0.14em] rita-ink">
-                    Your plan
-                  </span>
-                )}
-
-
-                 <p className={`${lifetime ? "" : "mt-2"} text-[19px] font-bold md:text-[21px]`}>Uzyra <span className="rita-accent font-normal">{p.name}</span></p>
-
-                {p.tagline && (
-                    <p className="mt-5 min-h-12 text-[16px] font-medium leading-[1.5] text-white/50">
-                    {p.tagline}
-                  </p>
-                )}
-
-                 <div className="mt-7 flex flex-wrap items-end gap-x-2 gap-y-2">
-                    <span className="text-[40px] font-semibold leading-none md:text-[46px]">
-                    {money(priceCents, p.currency)}
-                  </span>
-                   <span className="pb-1.5 text-[14px] font-medium text-white/35">
-                    {priceCents === 0 ? "free" : lifetime ? "once" : yearly ? "/ year" : "/ 3 months"}
-                  </span>
-                  {off > 0 && (
-                    <span className="mb-1.5 inline-flex items-center gap-1.5">
-                       <span className="text-[15px] font-semibold text-white/30 line-through">
-                        {money(p.compare_cents ?? 0, p.currency)}
-                      </span>
-                      <span
-                        className="rounded-full rita-accent-bg px-2.5 py-1 text-[11.5px] font-black"
-                      >
-                        −{off}%
-                      </span>
-                    </span>
-                  )}
-                  {semesterSave > 0 && (
-                     <span className="rita-accent-soft rita-accent mb-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-black">
-                      save {semesterSave}% vs 3 months
-                    </span>
-                  )}
-                </div>
-
-
-                 <div className="mb-8 mt-8 border-t border-white/10 pt-6">
-                   <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/35">What is included</p>
-                   <ul className="mt-4 grid gap-3">
-                  {[
-                    { on: p.max_flashcards !== 0, text: cap(p.max_flashcards, "flashcards") },
-                    { on: p.max_summaries !== 0, text: cap(p.max_summaries, "PDF summaries") },
-                    {
-                      on: p.feature_lecture_qgen !== false && p.max_ai_questions !== 0,
-                      text: cap(p.max_ai_questions, "lecture questions"),
-                    },
-                    {
-                      on: p.feature_all_in_one !== false && p.max_all_in_one_lectures !== 0,
-                      text: cap(p.max_all_in_one_lectures, "All-in-One lectures"),
-                    },
-                    {
-                      on: p.feature_archive_qgen !== false && p.max_archive_questions !== 0,
-                      text: cap(p.max_archive_questions, "Archive questions with full explanations"),
-                    },
-                    { on: p.max_todo_tasks !== 0, text: cap(p.max_todo_tasks, "to-do tasks") },
-                    {
-                      on: p.max_calendar_items !== 0,
-                      text: cap(p.max_calendar_items, "calendar entries"),
-                    },
-                    { on: p.max_groups !== 0, text: cap(p.max_groups, "classrooms you create") },
-                    { on: true, text: "Join unlimited classrooms" },
-                  ]
-                    .filter((l) => l.on)
-                    .map((l) => (
-                      <Line key={l.text} on text={l.text} />
-                    ))}
-                   </ul>
-                 </div>
-
-
-
-                {!lifetime && priceCents === 0 ? (
-                  <Link
-                    to={user ? "/study" : "/register"}
-                     className={`rita-btn mt-auto ${best ? "rita-btn-primary" : "rita-btn-secondary"}`}
-                  >
-                    {p.cta_label || "Start free"}
-                  </Link>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => buy(p)}
-                     className={`rita-btn mt-auto disabled:opacity-60 ${best ? "rita-btn-primary" : "rita-btn-secondary"}`}
-                  >
-                    {p.cta_label ||
-                      (lifetime
-                        ? isMine
-                          ? `Top up ${p.name}`
-                          : `Buy ${p.name} — ${money(priceCents, p.currency)}`
-                        : `Get ${p.name}`)}
-                  </button>
-                )}
-              </article>
-            );
-          })}
-        </div>
-        </>
-        )}
-
-
 
         {mine && (
-           <section className="mt-16 flex flex-wrap items-center gap-4 rounded-[20px] border-2 border-[#121117] bg-[#0b0b0f] p-8">
+          <section className="mt-6 flex flex-wrap items-center gap-4 rounded-[24px] bg-[var(--pro-card)] p-7">
             <div className="min-w-0">
-              <h2 className="text-[18px] font-bold">You are on {mine.plan?.name}</h2>
-              <p className="mt-1 text-[14px] font-medium text-white/45">
-                Your balance, allowances and any offer countdown now live on their own page.
+              <h2 className="text-[17px] font-medium">You are on {mine.plan?.name}</h2>
+              <p className="mt-1 text-[14px] text-white/45">
+                Your balance, allowances and any offer countdown live on their own page.
               </p>
             </div>
             <Link
               to="/settings"
               search={{ section: "plan" }}
-              className="rita-btn rita-btn-primary ms-auto"
+              className="ms-auto flex h-11 items-center rounded-full bg-[var(--pro-ink)] px-5 text-[14.5px] font-medium text-[var(--pro-page)]"
             >
               Open my plan
             </Link>
@@ -425,15 +535,26 @@ function PricingPage() {
   );
 }
 
-function Line({ on, text }: { on?: boolean; text: string }) {
-  return (
-    <li className={`flex items-start gap-2.5 text-[15px] ${on ? "font-medium text-white/75" : "text-white/30 line-through"}`}>
-      <span
-        className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full ${on ? "rita-accent-soft" : "bg-white/[0.06]"}`}
-      >
-        {on ? <Check size={12} strokeWidth={3.5} className="rita-accent" /> : <Minus size={12} className="text-white/30" />}
-      </span>
-      {text}
-    </li>
-  );
+/** The card's short list when the admin wrote no perks: the plan's allowances. */
+function cardLines(p: FullPlan): string[] {
+  return [
+    { on: p.max_flashcards !== 0, text: cap(p.max_flashcards, "flashcards") },
+    { on: p.max_summaries !== 0, text: cap(p.max_summaries, "PDF summaries") },
+    {
+      on: p.feature_lecture_qgen !== false && p.max_ai_questions !== 0,
+      text: cap(p.max_ai_questions, "lecture questions"),
+    },
+    {
+      on: p.feature_all_in_one !== false && p.max_all_in_one_lectures !== 0,
+      text: cap(p.max_all_in_one_lectures, "All-in-One lectures"),
+    },
+    {
+      on: p.feature_archive_qgen !== false && p.max_archive_questions !== 0,
+      text: cap(p.max_archive_questions, "archive questions"),
+    },
+    { on: p.max_todo_tasks !== 0, text: cap(p.max_todo_tasks, "to-do tasks") },
+    { on: p.max_groups !== 0, text: cap(p.max_groups, "classrooms you create") },
+  ]
+    .filter((l) => l.on)
+    .map((l) => l.text);
 }
