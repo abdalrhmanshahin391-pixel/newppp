@@ -7,6 +7,11 @@ name: Rita content probe
 # Task "voice-lines" instead records the study circle's short spoken lines with Uzyra's call
 # voice (voice-agent/uzyra_voice_lines.py, CARTESIA_API_KEY from the same Modal secret) and
 # commits them to the branch it runs on (public/sounds/uzyra/).
+# Task "talk-eval" plays the Jordanian learners' conversations (voice-agent/rita_talk_eval_corpus.py),
+# or another app's chat (voice-agent/evals/references), with any Groq model; the report (score, where
+# it goes wrong, style against the reference, worst replies) lands on the run's summary page.
+# Text only, no voice service is called. See docs/talk-eval.md.
+# Run it on a branch to measure a prompt change before merging; it never fails on a low score.
 # The requests run inside Modal, so GitHub only needs the existing Modal deployment
 # credentials. GROQ_API_KEY stays in the private `ritajet-voice` Modal secret.
 
@@ -14,14 +19,39 @@ on:
   workflow_dispatch:
     inputs:
       task:
-        description: "probe (the content and talk probes) or voice-lines (record the circle's lines)"
+        description: "probe (content and talk probes), talk-eval (learners' conversations) or voice-lines"
         type: choice
         options:
           - probe
+          - talk-eval
           - voice-lines
         default: probe
       only:
         description: "voice-lines only: actions to record, comma separated (empty = all)"
+        type: string
+        default: ""
+      model:
+        description: "talk-eval only: Groq model id (empty = the worker's model)"
+        type: string
+        default: ""
+      effort:
+        description: "talk-eval only: thinking level low, medium or high (empty = the worker's own)"
+        type: string
+        default: ""
+      split:
+        description: "talk-eval only: dev, holdout, all, or feelings (the feelings and understanding talks of both)"
+        type: string
+        default: "dev"
+      runs:
+        description: "talk-eval only: times the same lines are played (1-3); compare means, not one run"
+        type: string
+        default: "1"
+      reference:
+        description: "talk-eval only: another app's chat in voice-agent/evals/references (name without .json)"
+        type: string
+        default: ""
+      judge:
+        description: "talk-eval only: a Groq model that scores every reply 1-5 (empty = no judge)"
         type: string
         default: ""
 
@@ -30,7 +60,7 @@ permissions:
 
 jobs:
   content-probe:
-    if: inputs.task != 'voice-lines'
+    if: inputs.task == 'probe'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
@@ -57,6 +87,48 @@ jobs:
         if: always()
         working-directory: voice-agent
         run: modal run modal_app.py::talk_probe
+
+  talk-eval:
+    if: inputs.task == 'talk-eval'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Modal CLI
+        run: python -m pip install --disable-pip-version-check modal
+      - name: Play the learners' conversations inside Modal
+        working-directory: voice-agent
+        env:
+          MODEL: ${{ inputs.model }}
+          EFFORT: ${{ inputs.effort }}
+          SPLIT: ${{ inputs.split }}
+          RUNS: ${{ inputs.runs }}
+          REFERENCE: ${{ inputs.reference }}
+          JUDGE: ${{ inputs.judge }}
+        run: |
+          modal run modal_app.py::talk_eval --model "$MODEL" --effort "$EFFORT" --split "${SPLIT:-dev}" \
+            --runs "${RUNS:-1}" --reference "$REFERENCE" --judge "$JUDGE" \
+            --out ../talk-eval.json --report ../talk-eval-report.md
+      - name: Show the report on the run's summary page
+        if: always()
+        run: |
+          if [ -f talk-eval-report.md ]; then cat talk-eval-report.md >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Keep every reply for reading
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rita-talk-eval
+          path: |
+            talk-eval.json
+            talk-eval-report.md
+          retention-days: 14
+          if-no-files-found: warn
 
   voice-lines:
     if: inputs.task == 'voice-lines'

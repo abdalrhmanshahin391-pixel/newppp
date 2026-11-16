@@ -24,15 +24,53 @@ export function guardVoiceCallbacks<T extends object>(callbacks: T, current: () 
   ) as T;
 }
 
+/** The start route's refusal reasons ("code: message" in the error text), in the learner's words. */
+const REFUSALS: Array<[RegExp, string, string]> = [
+  [
+    /\bunauthorized: /i,
+    "انتهت جلستك. سجّل دخول من جديد، ثم أعد الاتصال.",
+    "Your session has ended. Sign in again, then reconnect.",
+  ],
+  [
+    /usage safety limit|\b(?:daily|monthly|hourly|usage|budget|safety)_?limit|\bdisabled\b/i,
+    "صوت يوزرا وصل حد الاستخدام الآمن حالياً. جرّب بعد شوي.",
+    "Uzyra's voice has reached its safety limit for now. Try again a little later.",
+  ],
+  [
+    /voice_not_available_for_language/i,
+    "صوت يوزرا مش متاح لهاي اللغة لسا.",
+    "Uzyra's voice is not available for this language yet.",
+  ],
+  [
+    /conversation_unavailable|invalid_conversation/i,
+    "هاي المحادثة مش متاحة. ابدأ محادثة جديدة.",
+    "This conversation is not available. Start a new one.",
+  ],
+  [/lesson_unavailable/i, "هاد الدرس مش متاح هلّق.", "This lesson is not available right now."],
+  [
+    /modal_not_configured|session_storage_failed|secrets_not_ready|agent_not_found|agent_unhealthy|provider_model_unavailable|capacity_unavailable|cold_start_timeout|pipecat_start_failed|pipecat_request_rejected/i,
+    "خدمة الصوت مش جاهزة هلّق. جرّب كمان شوي.",
+    "The voice service is not ready right now. Try again shortly.",
+  ],
+];
+
+/** A provider error the call survives (a TTS or recogniser hiccup): only `fatal: false` counts. */
+export function isRecoverableVoiceError(data: unknown): boolean {
+  return Boolean(data && typeof data === "object" && (data as { fatal?: unknown }).fatal === false);
+}
+
 export function voiceErrorMessage(error: unknown, arabic: boolean): string {
   const raw = error instanceof Error ? error.message : String(error ?? "");
+  for (const [pattern, ar, en] of REFUSALS) {
+    if (pattern.test(raw)) return arabic ? ar : en;
+  }
   if (/permission|notallowed|microphone/i.test(raw)) {
     return arabic
       ? "اسمح للميكروفون من إعدادات المتصفح، ثم أعد الاتصال."
       : "Allow microphone access, then reconnect.";
   }
   if (
-    /\b401\b|\b403\b|unauthori|authentication|(?:invalid|missing|rejected)\s+(?:api.?key|credential)/i.test(
+    /\b401\b|\b403\b|unauthori|provider_auth_failed|public_key_rejected|authentication|(?:invalid|missing|rejected)\s+(?:api.?key|credential)/i.test(
       raw,
     )
   ) {
@@ -59,4 +97,16 @@ export function voiceStateWord(phase: VoicePhase, mood: string, muted: boolean):
   if (mood === "talking" || mood === "laughing") return "بتحكي…";
   if (mood === "thinking") return "بتفكر…";
   return muted ? "المايك مسكّر" : "بسمعك…";
+}
+
+/** A content-free reason for diagnostics: the refusal code, or a coarse kind of failure. */
+export function failureCode(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error ?? "");
+  const code = /^\s*([a-z][a-z0-9_]{2,60}):/.exec(raw)?.[1];
+  if (code) return code;
+  if (/timed?\s*out|timeout/i.test(raw)) return "timeout";
+  if (/disconnect/i.test(raw)) return "disconnected";
+  if (/handshake|network|websocket|connection/i.test(raw)) return "network";
+  if (/permission|notallowed|microphone/i.test(raw)) return "microphone";
+  return "other";
 }

@@ -158,3 +158,108 @@ def test_no_task_means_the_plain_continue_directive():
     state = RitaSessionState()
     state.observe_user_turn("كمّل")
     assert state.turn_directive() == "continue the topic from where you stopped; do not restart or summarise"
+
+
+def _types(lines: list[str]) -> list[str]:
+    state = RitaSessionState(active_language="ar", active_dialect="ar-JO")
+    state.set_site_language("ar")
+    out = []
+    for line in lines:
+        state.observe_user_turn(line)
+        out.append(state.response_type.value)
+    return out
+
+
+def test_a_feeling_is_a_listening_turn_and_stays_one_while_the_learner_keeps_talking():
+    assert _types(["والله تعبان، عندي امتحان بكرا", "يعني درست بس كله طار", "طيب شو أعمل هلأ؟"]) == [
+        "feelings",
+        "feelings",
+        "feelings",
+    ]
+    # "Why do you ask me all this?" is a push back, not a grammar "why".
+    assert _types(["ليش بتسألني كل هالأسئلة؟"]) == ["feelings"]
+    assert _types(["I'm useless"]) == ["feelings"]
+    # "Let's go on", a sentence in the language or a word question ends listening.
+    assert _types(["حاسة إني ولا اشي", "اه، يلا نكمل"]) == ["feelings", "answer_short"]
+    assert _types(["تعبان كتير", "I work in a hospital"])[1] != "feelings"
+
+
+def test_words_about_feelings_inside_a_word_question_or_a_longer_word_are_not_feelings():
+    assert _types(["كيف بقول بالإنجليزي أنا تعبان؟"]) != ["feelings"]
+    assert _types(["شو يعني stressed؟"]) != ["feelings"]
+    assert _types(["شو أحسن مطعم بعمان؟"]) != ["feelings"]
+    assert _types(["عندي امتحان آيلتس وخايف من السبيكنج"]) != ["feelings"]
+    state = RitaSessionState()
+    state.observe_user_turn("I'm useless")
+    assert "LISTEN" in state.turn_note().upper() and "HOPELESS" in state.turn_note()
+
+
+def test_hopeless_words_ask_about_harm_once_and_talk_of_harm_gets_help_at_once():
+    state = RitaSessionState(active_language="ar", active_dialect="ar-JO")
+    state.set_site_language("ar")
+    state.observe_user_turn("الاثنين بدلوا إني أنا يوزلس")
+    assert state.response_type.value == "feelings" and "HOPELESS" in state.turn_note()
+    state.observe_assistant_turn("كلمة قاسية. بتجيك أفكار تأذي حالك؟")
+    state.observe_user_turn("لا لا ما بفكر أأذي حالي، بس تعبان")
+    assert not state.harm_signal and "already asked" in state.turn_note()
+    state.observe_user_turn("ولا اشي بستاهل")
+    assert "HOPELESS" not in state.turn_note()
+
+    crisis = RitaSessionState()
+    crisis.observe_user_turn("أحياناً بفكر إنه أحسن لو أختفي")
+    assert crisis.response_type.value == "feelings"
+    assert "911" in crisis.turn_note() and "do not ask" in crisis.turn_note()
+    # The next turn still keeps help in view.
+    crisis.observe_assistant_turn("شكراً إنك حكيتلي. اتصل على 911.")
+    crisis.observe_user_turn("ما بدي أحكي لحدا")
+    assert crisis.response_type.value == "feelings" and "911" in crisis.turn_note()
+
+
+def test_a_push_back_on_the_questions_gets_its_own_instruction():
+    for line in ("شوفو هاي الأسئلة الي بتسأليها", "شو هاي الأسئلة، أنا مش بتحقيق", "ليش بتسألني كل هالأسئلة؟"):
+        state = RitaSessionState()
+        state.observe_user_turn(line)
+        assert state.response_type.value == "feelings", line
+        assert "PUSH BACK" in state.turn_note(), line
+
+
+def test_help_is_needed_only_on_feelings_turns_after_talk_of_harm():
+    state = RitaSessionState()
+    state.observe_user_turn("تعبان كتير")
+    assert not state.help_needed()
+    state.observe_user_turn("أحياناً بفكر أختفي")
+    assert state.help_needed()
+    state.observe_user_turn("ما بدي أحكي لحدا")
+    assert state.help_needed()
+    state.observe_user_turn("اه، يلا نكمل")
+    assert not state.help_needed()
+
+
+def test_answers_only_holds_for_the_call_until_the_learner_asks_to_be_asked():
+    state = RitaSessionState(active_language="ar", active_dialect="ar-JO")
+    state.set_site_language("ar")
+    state.observe_user_turn("علميني كلمات ألمانية")
+    assert not state.answers_only
+    state.observe_user_turn("ما تسأليني جرب واحدة، بس أنت أعطيني الإشي اللي بقولك إياه")
+    assert state.answers_only and "ANSWERS ONLY" in state.turn_note()
+    state.observe_user_turn("طيب كيف أحكي بدي أشرب مي بالألماني")
+    assert "ANSWERS ONLY" in state.turn_note()
+    # A feeling is still listened to first.
+    state.observe_user_turn("والله تعبان كتير اليوم")
+    assert "ANSWERS ONLY" not in state.turn_note()
+    state.observe_user_turn("خلص هلأ اسأليني")
+    assert not state.answers_only
+
+
+def test_why_do_you_ask_is_not_a_wish_for_answers_only():
+    state = RitaSessionState()
+    state.observe_user_turn("ليش بتسألني كل هالأسئلة؟")
+    assert not state.answers_only
+
+
+def test_the_turn_that_sets_answers_only_is_confirmed_once():
+    state = RitaSessionState()
+    state.observe_user_turn("ما تسأليني جرب، بس أعطيني اللي بقولك إياه")
+    assert "JUST TOLD YOU" in state.turn_note()
+    state.observe_user_turn("كيف بحكي بدي أشرب مي بالألماني")
+    assert "JUST TOLD YOU" not in state.turn_note() and "ANSWERS ONLY" in state.turn_note()

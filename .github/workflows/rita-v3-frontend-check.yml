@@ -120,6 +120,7 @@ jobs:
           node --test src/lib/config.server.test.mjs src/lib/rita-provider-key.test.mjs
           node --test src/lib/rita-v3-startup.test.mjs
           node --test src/lib/rita-voice-connection.test.ts
+          node --test src/lib/rita-v3-start-refusal.test.ts
           node --test src/lib/rita-v3-diagnostics-trace.test.mjs
           node --test src/lib/rita-v3-heard.test.ts
           node --test src/lib/rita-conversation.test.ts
