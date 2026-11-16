@@ -384,11 +384,14 @@ class RitaSpeechCleaner(FrameProcessor):
     `help_needed` says whether this reply answers a learner who spoke of disappearing or harm; if
     the reply gave no real help, HELP_LINE follows it, as text, so it is spoken, shown and kept."""
 
-    def __init__(self, help_needed=None, **kwargs):
+    def __init__(self, help_needed=None, raw: bool = False, **kwargs):
         super().__init__(**kwargs)
         self._filter = SpeechTextFilter()
         self._raw: list[str] = []
         self._help_needed = help_needed
+        #: free conversation: the model's words are spoken as written; no word is swapped and no
+        #: line is added (only markdown marks the voice would read are dropped)
+        self._raw_mode = raw
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
@@ -398,14 +401,15 @@ class RitaSpeechCleaner(FrameProcessor):
                 self._raw = []
             elif isinstance(frame, LLMTextFrame):
                 self._raw.append(frame.text)
-                frame.text = neutral_wording(self._filter.feed(frame.text))
+                cleaned = self._filter.feed(frame.text)
+                frame.text = cleaned if self._raw_mode else neutral_wording(cleaned)
                 if not frame.text:
                     return  # everything in it is being held back or dropped
             elif isinstance(frame, LLMFullResponseEndFrame):
                 tail = self._filter.pending
                 if tail:
                     await self.push_frame(TTSSpeakFrame(tail), direction)
-                needed = bool(self._help_needed and self._help_needed())
+                needed = bool(not self._raw_mode and self._help_needed and self._help_needed())
                 line = help_line_for("".join(self._raw), needed)
                 if line:
                     logger.info("Uzyra added the help line after a reply that gave none")

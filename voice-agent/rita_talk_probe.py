@@ -185,12 +185,12 @@ def split_reply(raw: str) -> tuple[str, str]:
 
 
 def heard(spoken: str) -> str:
-    """What the voice says: the same cleaner as the worker (markdown marks dropped)."""
+    """What the voice says in a free conversation: the model's words, only markdown marks dropped."""
 
-    from rita_dialect import SpeechTextFilter, neutral_wording
+    from rita_dialect import SpeechTextFilter
 
     speech = SpeechTextFilter()
-    return neutral_wording(speech.feed(spoken) + speech.pending).strip()
+    return (speech.feed(spoken) + speech.pending).strip()
 
 
 #: A phrase in quotes ("I'm from …") is the learner's line to say, not one of Uzyra's sentences.
@@ -341,24 +341,15 @@ def turn_request(talk: Talk, history: list[tuple[str, str]], text: str):
         "mode": "free_conversation",
         "targetLanguage": talk.target,
     }
-    prompt = bot.build_prompt(body, state, dialogue=router_mode() == RouterMode.ON)
+    # A free conversation is sent raw, as the worker sends it: only the chat's messages and the model.
+    chat = [{"role": role, "content": content} for role, content in history]
     messages = [
-        {"role": "system", "content": prompt},
-        {"role": "assistant", "content": bot.FREE_CONVERSATION_OPENER},
-        *({"role": role, "content": content} for role, content in history),
+        *bot.first_messages(
+            body, chat, lambda: bot.build_prompt(body, state, dialogue=router_mode() == RouterMode.ON)
+        ),
         {"role": "user", "content": text},
     ]
-    params: dict[str, Any] = {
-        "model": bot.LLM_MODEL,
-        "temperature": 0.45,
-        "top_p": 0.9,
-        "max_completion_tokens": bot.LLM_MAX_COMPLETION_TOKENS,
-        "reasoning_effort": "low",
-        "messages": messages,
-    }
-    options = bot.explain_options(state)
-    if options:
-        params.update(options)
+    params: dict[str, Any] = {"model": bot.LLM_MODEL, "messages": messages}
     return params, state
 
 

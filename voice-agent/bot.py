@@ -390,6 +390,20 @@ def saved_conversation_history(body: dict[str, Any]) -> list[dict[str, str]]:
     return list(reversed(selected_newest_first))
 
 
+def first_messages(
+    body: dict[str, Any], saved_history: list[dict[str, str]], system_prompt: Any
+) -> list[dict[str, str]]:
+    """What the model's context starts with. A free conversation starts with nothing of ours: no
+    system prompt and no opener, only the chat's own earlier messages (if the page sent any)."""
+
+    if is_free_talk(body):
+        return [*saved_history]
+    messages = [{"role": "system", "content": system_prompt()}, *saved_history]
+    if not saved_history:
+        messages.append(opening_message(body))
+    return messages
+
+
 async def bot(args: DailyRunnerArguments):
     """Pipecat Cloud entrypoint; the Modal worker calls run_bot directly."""
     await run_bot(
@@ -491,11 +505,17 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         ),
     )
 
+    # Free conversation is sent to Groq raw: no system prompt, no opener, no note, no per-turn
+    # settings; only the learner's messages and the model's own replies.
+    raw_chat = is_free_talk(body)
     llm = RitaGroqLLMService(
         api_key=require_secret("GROQ_API_KEY"),
         latency_recorder=latency,
-        turn_options=lambda: explain_options(state),
-        settings=GroqLLMService.Settings(
+        turn_options=None if raw_chat else (lambda: explain_options(state)),
+        # A raw chat names only the model: Groq's own defaults for everything else.
+        settings=GroqLLMService.Settings(model=LLM_MODEL)
+        if raw_chat
+        else GroqLLMService.Settings(
             model=LLM_MODEL,
             temperature=0.45,
             top_p=0.9,
@@ -520,21 +540,17 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
     lesson_voice = LessonVoice() if lesson_engine_enabled(body) else None
     # An interactive study lesson: the guide is on screen; the website sends the learner's requests.
     study_voice = StudyVoice.from_body(body) if study_enabled(body) else None
-    initial_messages = [
-        {
-            "role": "system",
-            "content": build_prompt(
-                body,
-                state,
-                dialogue=router_state == RouterMode.ON,
-                lesson_voice=lesson_voice,
-                study_voice=study_voice,
-            ),
-        },
-        *saved_history,
-    ]
-    if not saved_history:
-        initial_messages.append(opening_message(body))
+    initial_messages = first_messages(
+        body,
+        saved_history,
+        lambda: build_prompt(
+            body,
+            state,
+            dialogue=router_state == RouterMode.ON,
+            lesson_voice=lesson_voice,
+            study_voice=study_voice,
+        ),
+    )
     context = LLMContext(initial_messages)
     vad = SileroVADAnalyzer(params=VADParams(stop_secs=0.2))
     user_aggregator, assistant_aggregator = LLMContextAggregatorPair(
@@ -555,7 +571,8 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             vad_analyzer=vad,
         ),
         assistant_params=LLMAssistantAggregatorParams(
-            enable_auto_context_summarization=True,
+            # A summary is written by the model from a prompt of ours, so a raw chat keeps every message.
+            enable_auto_context_summarization=not raw_chat,
             auto_context_summarization_config=LLMAutoContextSummarizationConfig(
                 max_context_tokens=8_000,
                 max_unsummarized_messages=24,
@@ -621,6 +638,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         trace_id=latency.trace_id,
         turn_id=lambda: latency.turn,
         lesson=lesson_voice,
+        raw=raw_chat,
     )
 
     def refresh_prompt() -> None:
@@ -664,7 +682,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             llm,
             sheet_splitter,
             RitaWordJoiner(),
-            RitaSpeechCleaner(help_needed=state.help_needed),
+            RitaSpeechCleaner(help_needed=state.help_needed, raw=raw_chat),
             tts,
             transport.output(),
             assistant_aggregator,

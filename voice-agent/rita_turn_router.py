@@ -172,9 +172,12 @@ class RitaTurnRouter(FrameProcessor):
         trace_id: str = "",
         turn_id: Callable[[], int] | None = None,
         lesson: LessonVoice | None = None,
+        raw: bool = False,
         **kwargs,
     ):
         super().__init__(**kwargs)
+        #: free conversation: every turn goes to the model as it is; the router never answers itself
+        self._raw = raw
         self._state = state
         self._prepare_turn = prepare_turn
         self._language_of_turn = language_of_turn
@@ -230,6 +233,11 @@ class RitaTurnRouter(FrameProcessor):
                 await self.push_frame(frame, direction)
                 return
             self.last_routed_context_size = len(frame.context.get_messages())
+            if self._raw:
+                self._prepare_turn(text)  # the state and the voice's language only; no prompt
+                self.last_action = "pass"
+                await self.push_frame(frame, direction)
+                return
             if self.mode == RouterMode.ON:
                 # One place updates the state and the system prompt, before the model reads it.
                 self._prepare_turn(text)

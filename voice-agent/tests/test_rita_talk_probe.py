@@ -31,8 +31,10 @@ def test_each_turn_sees_the_conversation_so_far():
     history = [("user", talk.turns[0].text), ("assistant", "أهلاً! من وين بدنا نبدأ؟")]
     params, state = turn_request(talk, history, talk.turns[1].text)
     roles = [message["role"] for message in params["messages"]]
-    assert roles == ["system", "assistant", "user", "assistant", "user"]
+    # Raw, as the live free conversation: no system prompt, no opener, only the chat.
+    assert roles == ["user", "assistant", "user"]
     assert params["messages"][-1]["content"] == talk.turns[1].text
+    assert set(params) == {"model", "messages"}
 
 
 def test_a_missing_key_fails_every_reply(capsys):

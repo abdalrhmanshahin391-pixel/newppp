@@ -243,13 +243,8 @@ async def play(
             sent = model_params(params, model, effort)
             reply = await ask(client, sent)
             raw = reply["raw"]
-            # The live worker adds the help line after a reply that gave none (rita_dialect); the
-            # eval hears the same reply, and marks that the line was added.
-            from rita_dialect import help_line_for
-
-            added = help_line_for(raw, state.help_needed()) if raw else ""
-            if added:
-                raw = f"{raw} {added}"
+            # A free conversation is raw: the worker adds no line to the reply, so neither does the eval.
+            added = ""
             kind_of_reply = str(getattr(state.response_type, "value", state.response_type))
             row: dict[str, Any] = {
                 "talk": talk.id,
