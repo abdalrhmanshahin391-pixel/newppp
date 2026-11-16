@@ -471,7 +471,7 @@ class RitaSessionState:
         note = self._type_note()
         if self.answers_only_new and self.response_type != ResponseType.FEELINGS:
             note = (note + " " if note else "") + (
-                "TURN NOTE: THE LEARNER JUST TOLD YOU HOW THEY WANT TO LEARN: answers only, no questions "
+                "TURN NOTE: THE LEARNER JUST TOLD YOU HOW THEY WANT TO LEARN, ANSWERS ONLY: no questions "
                 "or practice prompts. Confirm it in one short line (تمام، من هلأ بعطيك اللي بتطلبه بس), "
                 "then give again what you were giving, without any question."
             )
