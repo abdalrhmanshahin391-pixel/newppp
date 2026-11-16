@@ -191,4 +191,25 @@ def test_words_about_feelings_inside_a_word_question_or_a_longer_word_are_not_fe
     assert _types(["عندي امتحان آيلتس وخايف من السبيكنج"]) != ["feelings"]
     state = RitaSessionState()
     state.observe_user_turn("I'm useless")
-    assert "LISTEN" in state.turn_note().upper() and "911" in state.turn_note()
+    assert "LISTEN" in state.turn_note().upper() and "HOPELESS" in state.turn_note()
+
+
+def test_hopeless_words_ask_about_harm_once_and_talk_of_harm_gets_help_at_once():
+    state = RitaSessionState(active_language="ar", active_dialect="ar-JO")
+    state.set_site_language("ar")
+    state.observe_user_turn("الاثنين بدلوا إني أنا يوزلس")
+    assert state.response_type.value == "feelings" and "HOPELESS" in state.turn_note()
+    state.observe_assistant_turn("كلمة قاسية. بتجيك أفكار تأذي حالك؟")
+    state.observe_user_turn("لا لا ما بفكر أأذي حالي، بس تعبان")
+    assert not state.harm_signal and "already asked" in state.turn_note()
+    state.observe_user_turn("ولا اشي بستاهل")
+    assert "HOPELESS" not in state.turn_note()
+
+    crisis = RitaSessionState()
+    crisis.observe_user_turn("أحياناً بفكر إنه أحسن لو أختفي")
+    assert crisis.response_type.value == "feelings"
+    assert "911" in crisis.turn_note() and "do not ask" in crisis.turn_note()
+    # The next turn still keeps help in view.
+    crisis.observe_assistant_turn("شكراً إنك حكيتلي. اتصل على 911.")
+    crisis.observe_user_turn("ما بدي أحكي لحدا")
+    assert crisis.response_type.value == "feelings" and "911" in crisis.turn_note()

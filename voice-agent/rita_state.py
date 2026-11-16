@@ -10,9 +10,8 @@ from rita_dialect import LANGUAGE_NAMES, asks_how_to_say, how_to_say_directive
 from rita_dialogue_acts import Act, Awaiting, classify, normalize, parse_last_question, tokens
 from rita_language_commands import detect_language_command
 
-
 #: A feeling, a hard moment or a push back on the questions, in Jordanian Arabic, English or German.
-#: A word question about one of these words ("شو يعني stressed؟") is not a feeling: see _word_question.
+#: A word question about one of these words ("شو يعني stressed؟") is not a feeling: see WORD_QUESTION.
 FEELINGS_SIGNAL = re.compile(
     r"(?:^|[^\u0621-\u064A])[وفب]?(?:تعبان|تعبانه|تعبانة|ميت تعب|مهلكني|مهلكتني|زهقان|زهقانه|زهقانة|مضغوط|"
     r"مضغوطة|مخنوق|مخنوقة|مقهور|مقهورة|حزين|حزينه|حزينة|زعلان|زعلانه|زعلانة|وحيد|وحيده|وحيدة|غبي|غبيه|"
@@ -24,6 +23,21 @@ FEELINGS_SIGNAL = re.compile(
     r"|\b(?:useless|worthless|stupid|hopeless|depressed|lonely|exhausted|sad|stressed|"
     r"nobody listens|want to disappear|traurig|einsam|gestresst|nutzlos)\b"
 )
+#: Hopeless words about oneself: the reply asks once, gently, about thoughts of harm.
+HOPELESS = re.compile(
+    r"يوزلس|(?:إني|اني|حالي) ولا (?:اشي|شي)|ما في فايد|ما عاد في اشي|ما في اشي بستاهل|بلا قيمة|ما إلي قيمة|ما الي قيمة|"
+    r"\b(?:useless|worthless|hopeless|nutzlos|wertlos)\b"
+)
+#: Talk of dying, disappearing or harm: the reply gives real help at once.
+HARM_TALK = re.compile(
+    r"أختفي|اختفي|أموت|اموت|انتحر|أنتحر|أنهي حياتي|انهي حياتي|أذي حالي|اذي حالي|أأذي|اأذي|"
+    r"\b(?:kill myself|want to die|end my life|disappear forever)\b"
+)
+#: "No, I don't think of that": an answer to the harm question, not talk of harm.
+DENIES_HARM = re.compile(r"(?:^|\s)(?:لا|ما|مش)\s+(?:لا\s+)?(?:بفكر|في هيك|رح|بدي)|ما في هيك|\bno\b|\bnot\b|don'?t")
+#: Uzyra asked about thoughts of harm in a reply.
+HARM_QUESTION = re.compile(r"ت[ؤأا]ذ[يى]|[إا]يذاء|تضر|تختف[يى]|اختفاء|harm|hurt(?:ing)? yourself")
+
 
 #: A question about a word or how to say something: the words in it are not the learner's feelings.
 WORD_QUESTION = re.compile(
@@ -116,6 +130,13 @@ class RitaSessionState:
     attempt_count: int = 0
     understood: bool = False
     frustration_signal: bool = False
+    #: this feelings turn has hopeless words about oneself / talk of harm or of disappearing
+    hopeless_signal: bool = False
+    harm_signal: bool = False
+    #: Uzyra already asked about thoughts of harm in this call (asked once, never again)
+    harm_asked: bool = False
+    #: they spoke of harm or of disappearing earlier in this call: help stays in view
+    harm_seen: bool = False
     correction_budget: int = 1
     last_feedback_signature: str = ""
     response_type: ResponseType = ResponseType.ANSWER_SHORT
@@ -245,6 +266,10 @@ class RitaSessionState:
             )
         )
         feelings = bool(FEELINGS_SIGNAL.search(lowered)) and not WORD_QUESTION.search(lowered)
+        self.harm_signal = bool(HARM_TALK.search(lowered)) and not DENIES_HARM.search(lowered)
+        self.hopeless_signal = bool(HOPELESS.search(lowered)) and not self.harm_signal
+        feelings = feelings or self.harm_signal
+        self.harm_seen = self.harm_seen or self.harm_signal
         pronunciation = bool(re.search(r"(?:كيف تنطق|نطق|pronounc|aussprach)", lowered))
         correction_retry = bool(
             re.search(r"(?:مرة ثانية|كمان مرة|لسا غلط|again|noch einmal|wiederholen)", lowered)
@@ -338,6 +363,8 @@ class RitaSessionState:
 
     def observe_assistant_turn(self, text: str) -> None:
         self.assistant_turns += 1
+        if self.response_type == ResponseType.FEELINGS and HARM_QUESTION.search(text):
+            self.harm_asked = True
         normalized = re.sub(r"[^\w\u0600-\u06ff]+", " ", text.casefold()).strip()
         self.last_feedback_signature = " ".join(normalized.split()[:16])
         quoted = [q.strip() for q in _QUOTED.findall(text) if _LATIN.search(q)]
@@ -430,13 +457,31 @@ class RitaSessionState:
                 "Cover exactly what they asked, nothing more."
             )
         if self.response_type == ResponseType.FEELINGS:
-            return (
+            note = (
                 "TURN NOTE: THE LEARNER SHARES A FEELING OR A HARD MOMENT. Listen like a caring friend, "
                 "not a teacher: no correction, no phrase in quotes to learn, no sheet, no list of tips. "
                 "Show in their own words that you understood what they mean, then one gentle question or "
-                "a choice. Hopeless words about themselves: ask once, gently, about thoughts of harm. "
-                "Thoughts of harm or of disappearing: 911 (emergency in Jordan) or one trusted person now."
+                "a choice."
             )
+            if self.harm_signal:
+                note += (
+                    " THEY SPOKE OF DISAPPEARING, DYING OR HARM: do not ask about it, answer it. Thank "
+                    "them for telling you, say they deserve support right now, ask them to call 911 "
+                    "(emergency in Jordan) or reach one person they trust now, and stay with them."
+                )
+            elif self.harm_seen:
+                note += (
+                    " EARLIER THEY SPOKE OF DISAPPEARING OR HARM: keep listening, and keep 911 or one "
+                    "person they trust in view, gently, in this reply."
+                )
+            elif self.hopeless_signal and not self.harm_asked:
+                note += (
+                    " HOPELESS WORDS ABOUT THEMSELVES: after showing you understood, ask once, gently and "
+                    "directly, whether thoughts of hurting themselves or of disappearing come."
+                )
+            elif self.harm_asked:
+                note += " You already asked about thoughts of harm: do not ask it again."
+            return note
         if self.response_type == ResponseType.EMPATHY:
             return (
                 "TURN NOTE: THE LEARNER SOUNDS DISCOURAGED. Say one human sentence about it first, "
