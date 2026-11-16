@@ -233,3 +233,25 @@ def test_help_is_needed_only_on_feelings_turns_after_talk_of_harm():
     assert state.help_needed()
     state.observe_user_turn("اه، يلا نكمل")
     assert not state.help_needed()
+
+
+def test_answers_only_holds_for_the_call_until_the_learner_asks_to_be_asked():
+    state = RitaSessionState(active_language="ar", active_dialect="ar-JO")
+    state.set_site_language("ar")
+    state.observe_user_turn("علميني كلمات ألمانية")
+    assert not state.answers_only
+    state.observe_user_turn("ما تسأليني جرب واحدة، بس أنت أعطيني الإشي اللي بقولك إياه")
+    assert state.answers_only and "ANSWERS ONLY" in state.turn_note()
+    state.observe_user_turn("طيب كيف أحكي بدي أشرب مي بالألماني")
+    assert "ANSWERS ONLY" in state.turn_note()
+    # A feeling is still listened to first.
+    state.observe_user_turn("والله تعبان كتير اليوم")
+    assert "ANSWERS ONLY" not in state.turn_note()
+    state.observe_user_turn("خلص هلأ اسأليني")
+    assert not state.answers_only
+
+
+def test_why_do_you_ask_is_not_a_wish_for_answers_only():
+    state = RitaSessionState()
+    state.observe_user_turn("ليش بتسألني كل هالأسئلة؟")
+    assert not state.answers_only

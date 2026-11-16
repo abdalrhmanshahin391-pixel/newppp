@@ -23,6 +23,17 @@ FEELINGS_SIGNAL = re.compile(
     r"|\b(?:useless|worthless|stupid|hopeless|depressed|lonely|exhausted|sad|stressed|"
     r"nobody listens|want to disappear|traurig|einsam|gestresst|nutzlos)\b"
 )
+#: The learner asks for answers only, with no practice questions ("don't ask me to try, just give me
+#: what I ask for"); it holds for the rest of the call until they ask to be asked again.
+ANSWERS_ONLY_ON = re.compile(
+    r"(?:ما|لا|بلاش)\s+ت?سأل(?:ني|يني)|بلاش (?:أسئلة|اسئلة)|بدون (?:أسئلة|اسئلة|تمارين)|"
+    r"بس (?:إنت |انت |أنت |انتي |إنتي )?(?:أعطيني|اعطيني|عطيني|عطني|إعطيني)|ما بدي تمارين|"
+    r"\bdon'?t ask me\b|\bno questions\b|\bjust (?:give|tell) me\b|\bstop asking me to\b"
+)
+ANSWERS_ONLY_OFF = re.compile(
+    r"اسألني|اسأليني|إسألني|إسأليني|خلينا نتمرن|خلينا نتدرب|بدي أتمرن|بدي اتمرن|اختبرني|اختبريني|"
+    r"\bquiz me\b|\bask me\b|\btest me\b"
+)
 #: The learner pushes back on Uzyra's questions ("what are these questions", "why do you keep asking").
 PUSHBACK = re.compile(
     r"(?:شو|شوف|شوفي|شوفو|ليش)\s+(?:هاي|هدول|كل)?\s*(?:ال|هال)?(?:أسئلة|اسئلة)|بتسألني|بتسأليني|بطّل تسأل|بطل تسأل|"
@@ -143,6 +154,8 @@ class RitaSessionState:
     #: they spoke of harm or of disappearing earlier in this call: help stays in view
     harm_seen: bool = False
     pushback_signal: bool = False
+    #: the learner asked for answers only: no questions until they ask to be asked again
+    answers_only: bool = False
     correction_budget: int = 1
     last_feedback_signature: str = ""
     response_type: ResponseType = ResponseType.ANSWER_SHORT
@@ -276,6 +289,10 @@ class RitaSessionState:
         self.hopeless_signal = bool(HOPELESS.search(lowered)) and not self.harm_signal
         feelings = feelings or self.harm_signal
         self.pushback_signal = bool(PUSHBACK.search(lowered))
+        if ANSWERS_ONLY_OFF.search(lowered):
+            self.answers_only = False
+        elif ANSWERS_ONLY_ON.search(lowered):
+            self.answers_only = True
         self.harm_seen = self.harm_seen or self.harm_signal
         pronunciation = bool(re.search(r"(?:كيف تنطق|نطق|pronounc|aussprach)", lowered))
         correction_retry = bool(
@@ -438,7 +455,8 @@ class RitaSessionState:
         return ""
 
     def turn_note(self, *, dialogue: bool = False) -> str:
-        """The response type as a plain sentence, for types that change how Uzyra should answer.
+        """The response type as a plain sentence, for types that change how Uzyra should answer,
+        followed by the learner's standing wish for answers only.
 
         Empty when the dialogue directive already says it (router on), so the model never reads
         the same instruction twice.
@@ -446,6 +464,18 @@ class RitaSessionState:
 
         if dialogue and self.turn_directive():
             return ""
+        note = self._type_note()
+        if self.answers_only and self.response_type != ResponseType.FEELINGS:
+            note = (note + " " if note else "") + (
+                "TURN NOTE: THE LEARNER ASKED FOR ANSWERS ONLY, earlier in this call: give exactly what "
+                "they ask, then stop. No question at all, no phrase for them to answer with, no جرّب or "
+                "practice prompt, until they ask you to ask them again."
+            )
+        return note
+
+    def _type_note(self) -> str:
+        """The turn note for this response type alone."""
+
         if self.response_type == ResponseType.COMPLAINT:
             return (
                 "TURN NOTE: THE LEARNER IS REPORTING A PROBLEM. Acknowledge it in one short sentence. "

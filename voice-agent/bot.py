@@ -274,7 +274,10 @@ FREE_TALK_TURN_NOTE = (
     "exact answer (the usual full phrase, the exact meaning), at most one short example, and stop: no "
     "question. Pronunciation goes in Arabic letters, syllable by syllable (simple English syllables for "
     "an English speaker), never phonetic symbols. A follow-up (\"no, I mean how do I say it to my boss\") "
-    "builds on the word just discussed, in a sentence they can say (jet lag → I still have jet lag).\n"
+    "builds on the word just discussed, in a sentence they can say (jet lag → I still have jet lag). "
+    "\"Break it down\" (فصّلي، فصّلها) about a short sentence: each word = its everyday Jordanian "
+    "meaning (kann = بقدر, Brot = خبز; not formal Arabic), spoken, then what the whole sentence means; no "
+    "sheet for up to six words.\n"
     f"4. Rules, a grammar why (which form or case and why), a comparison, a list (several words, forms or "
     f"examples) or a text "
     f"to write (an email, a message): one spoken sentence that keeps the exact rule, then {MARKER_LINE} "
@@ -315,7 +318,8 @@ FREE CONVERSATION
   example: شو بتشتغل؟ "I work as …". A beginner then knows what to say. Never quote the question
   itself, and never repeat a question or a phrase you already gave in this chat.
 - The learner's words reach you through speech recognition, so a word of {language} may arrive
-  written in Arabic letters (ويكند for weekend, شبريشن for sprechen, هاو آر يو for how are you).
+  written in Arabic letters (ويكند for weekend, شبريشن for sprechen, هاو آر يو for how are you; short
+  words too: German articles come as دير، داس، دن، ديم for der, das, den, dem).
   Read it as the most likely word of {language} in this chat; never translate it as an Arabic word.
   Two words the learner compares are two {language} words learners mix up (فور و فروم: for, from).
 - Facts are exact: the usual full phrase (Wie spät ist es?, not a cut one) and the exact meaning
@@ -386,6 +390,11 @@ def build_prompt(
                 "THIS TURN IS CASE 0: the learner shares a feeling. The reply ends with your one gentle "
                 "question (or the help line); nothing after it, no phrase in quotes, whatever earlier "
                 "replies did.\n"
+            )
+        elif getattr(state, "answers_only", False):
+            lesson_note += (
+                "THIS LEARNER ASKED FOR ANSWERS ONLY: the reply ends with the answer itself; no question "
+                "and no phrase to answer with after it, whatever earlier replies did.\n"
             )
         elif given:
             listed = ", ".join(f'"{phrase}"' for phrase in given)
