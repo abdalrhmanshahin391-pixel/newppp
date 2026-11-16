@@ -213,3 +213,11 @@ def test_hopeless_words_ask_about_harm_once_and_talk_of_harm_gets_help_at_once()
     crisis.observe_assistant_turn("شكراً إنك حكيتلي. اتصل على 911.")
     crisis.observe_user_turn("ما بدي أحكي لحدا")
     assert crisis.response_type.value == "feelings" and "911" in crisis.turn_note()
+
+
+def test_a_push_back_on_the_questions_gets_its_own_instruction():
+    for line in ("شوفو هاي الأسئلة الي بتسأليها", "شو هاي الأسئلة، أنا مش بتحقيق", "ليش بتسألني كل هالأسئلة؟"):
+        state = RitaSessionState()
+        state.observe_user_turn(line)
+        assert state.response_type.value == "feelings", line
+        assert "PUSH BACK" in state.turn_note(), line

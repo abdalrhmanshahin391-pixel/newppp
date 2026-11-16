@@ -69,7 +69,7 @@ RISK_CHECK = re.compile(
 )
 #: Real help: someone to reach now (Jordan's emergency number, a person, a specialist).
 HELP = re.compile(
-    r"911|طوارئ|مختص|أخصائي|اخصائي|دكتور نفسي|طبيب|حدا (?:قريب|بتثق|تثق|من أهلك)|مساعدة|emergency|someone you trust",
+    r"911|٩١١|طوارئ|مختص|أخصائي|اخصائي|دكتور نفسي|طبيب|حدا (?:قريب|بتثق|تثق|من أهلك)|مساعدة|emergency|someone you trust",
     re.IGNORECASE,
 )
 #: A phrase to learn in quotes: two or more Latin-script words.

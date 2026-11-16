@@ -18,10 +18,15 @@ FEELINGS_SIGNAL = re.compile(
     r"غبية|فاشل|فاشله|فاشلة|يوزلس|ولا اشي|ولا شي|بألم|بالألم|بوجع|موجوع|موجوعة|ما في فايدة|ما في فايده|"
     r"ما في اشي بستاهل|ما عاد في اشي|أختفي|اختفي|أموت|اموت|انتحر|أنتحر|أأذي|اأذي|أذي حالي|اذي حالي|رسبت|"
     r"انرفضت|رفضتني|يسمعني|بتحقيق|شو هاي الأسئلة|شو هاي الاسئلة|هاي الأسئلة|هاي الاسئلة|بتسألني|بتسأليني|"
-    r"كل هالأسئلة|كل هالاسئلة|ما عندي حدا|ما حدا بيحكي|انحرجت|محرج|محرجة|بدهم إياني|بدهم اياني|"
+    r"كل هالأسئلة|كل هالاسئلة|وما عرفت|ما عندي حدا|ما حدا بيحكي|انحرجت|محرج|محرجة|بدهم إياني|بدهم اياني|"
     r"مش حابب|مش حابة)(?=$|[^\u0621-\u064A])"
     r"|\b(?:useless|worthless|stupid|hopeless|depressed|lonely|exhausted|sad|stressed|"
     r"nobody listens|want to disappear|traurig|einsam|gestresst|nutzlos)\b"
+)
+#: The learner pushes back on Uzyra's questions ("what are these questions", "why do you keep asking").
+PUSHBACK = re.compile(
+    r"(?:شو|شوف|شوفي|شوفو|ليش)\s+(?:هاي|هدول|كل)?\s*(?:ال|هال)?(?:أسئلة|اسئلة)|بتسألني|بتسأليني|بطّل تسأل|بطل تسأل|"
+    r"بطّلي تسألي|بطلي تسألي|بتحقيق|تحقيق معي|stop asking|why do you keep asking"
 )
 #: Hopeless words about oneself: the reply asks once, gently, about thoughts of harm.
 HOPELESS = re.compile(
@@ -137,6 +142,7 @@ class RitaSessionState:
     harm_asked: bool = False
     #: they spoke of harm or of disappearing earlier in this call: help stays in view
     harm_seen: bool = False
+    pushback_signal: bool = False
     correction_budget: int = 1
     last_feedback_signature: str = ""
     response_type: ResponseType = ResponseType.ANSWER_SHORT
@@ -269,6 +275,7 @@ class RitaSessionState:
         self.harm_signal = bool(HARM_TALK.search(lowered)) and not DENIES_HARM.search(lowered)
         self.hopeless_signal = bool(HOPELESS.search(lowered)) and not self.harm_signal
         feelings = feelings or self.harm_signal
+        self.pushback_signal = bool(PUSHBACK.search(lowered))
         self.harm_seen = self.harm_seen or self.harm_signal
         pronunciation = bool(re.search(r"(?:كيف تنطق|نطق|pronounc|aussprach)", lowered))
         correction_retry = bool(
@@ -466,26 +473,33 @@ class RitaSessionState:
             if self.harm_signal:
                 note += (
                     " THEY SPOKE OF DISAPPEARING, DYING OR HARM: do not ask about it, answer it. Thank "
-                    "them for telling you, say they deserve support right now, ask them to call 911 "
-                    "(emergency in Jordan) or reach one person they trust now, and stay with them."
+                    "them for telling you, say they deserve support right now, and say these words: "
+                    "رقم الطوارئ 911 موجود هلأ، أو أي حدا بتثق فيه. Then say you are staying with them here."
                 )
             elif self.harm_seen:
                 note += (
-                    " EARLIER THEY SPOKE OF DISAPPEARING OR HARM: keep listening, and keep 911 or one "
-                    "person they trust in view, gently, in this reply."
+                    " EARLIER THEY SPOKE OF DISAPPEARING OR HARM: keep listening, and this reply must still "
+                    "say, gently, that 911 or one person they trust is there for them right now."
                 )
             elif self.hopeless_signal and not self.harm_asked:
                 note += (
-                    " HOPELESS WORDS ABOUT THEMSELVES: after showing you understood, ask once, gently and "
-                    "directly, whether thoughts of hurting themselves or of disappearing come."
+                    " HOPELESS WORDS ABOUT THEMSELVES: show in one sentence that you understood, then end "
+                    "the reply with this question, gently: بتجيك أفكار تأذي فيها حالك أو إنك تختفي؟"
+                )
+            elif self.pushback_signal:
+                note += (
+                    " THEY PUSH BACK ON YOUR QUESTIONS (annoyed by them, not finding them hard): say they "
+                    "are right to ask, that you ask to understand them, not to test them, and offer one "
+                    "choice: بتحب أسمع بس ولا نركز على شغلة وحدة؟ No other question."
                 )
             elif self.harm_asked:
                 note += " You already asked about thoughts of harm: do not ask it again."
             return note
         if self.response_type == ResponseType.EMPATHY:
             return (
-                "TURN NOTE: THE LEARNER SOUNDS DISCOURAGED. Say one human sentence about it first, "
-                "then offer one small, easy next step."
+                "TURN NOTE: THE LEARNER SOUNDS DISCOURAGED ABOUT THE LEARNING. Say one human sentence "
+                "about it first, then offer one small, easy next step in the language (in a free "
+                "conversation: one easy question and a phrase in quotes to answer with)."
             )
         return ""
 
