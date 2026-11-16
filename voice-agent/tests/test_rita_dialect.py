@@ -308,6 +308,14 @@ class NeutralWordingTests(unittest.TestCase):
         self.assertEqual(neutral_wording("إنتَ جاي؟"), "إنت جاي؟")
         self.assertEqual(neutral_wording("إنتو كيفكم؟"), "إنتو كيفكم؟")
 
+    def test_would_like_to_aimed_at_one_gender_becomes_neutral(self):
+        from rita_dialect import neutral_wording
+
+        # From the eval: "شو حابّة تحكي اليوم؟" to a man.
+        self.assertEqual(neutral_wording("أكيد، احكيلي شو حابّة تحكي اليوم؟"), "أكيد، احكيلي شو بدك تحكي اليوم؟")
+        self.assertEqual(neutral_wording("حابب نكمل؟"), "بدك نكمل؟")
+        self.assertEqual(neutral_wording("أنا حابة نكمل"), "أنا حابة نكمل")
+
     def test_other_words_are_left_alone(self):
         from rita_dialect import neutral_wording
 

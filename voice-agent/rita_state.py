@@ -466,7 +466,8 @@ class RitaSessionState:
             if self.attempt_count >= 2:
                 return "the learner still needs a simpler explanation; change method completely and use one concrete everyday example; do not repeat the previous wording"
             return (
-                "the learner did not understand your last reply: say what you meant again in plainer, "
+                "the learner did not understand your last reply: start with a short sorry (آسفة، لخبطتك), "
+                "then say what you meant again in plainer, "
                 "shorter words (one concrete example only if it was a teaching point); do not add a "
                 "second concept; no [[SHEET]]"
             )

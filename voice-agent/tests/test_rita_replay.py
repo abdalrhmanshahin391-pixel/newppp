@@ -137,7 +137,7 @@ def test_samples_are_asked_with_the_workers_model_settings_and_failures_are_repo
 
 
 def test_known_wrong_phrases_are_flagged_on_the_replayed_reply():
-    result = asyncio.run(replay_case(FakeClient(["شو حابب نتعلم؟"]), case(), samples=1))
+    result = asyncio.run(replay_case(FakeClient(["كيف فيك اليوم؟"]), case(), samples=1))
     assert result["samples"][0]["watch"]
 
 

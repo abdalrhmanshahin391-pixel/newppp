@@ -163,11 +163,17 @@ _GENDERED_SAY = re.compile(r"(?<![\w\u0621-\u064a])(ب?)تقولي(ها|ه)(?![\
 _GENDERED_YOU = re.compile(r"(?<![\w\u0621-\u064a])([وف]?[إا]نت)(?:\u0650|\u064e|ي)(?![\w\u0621-\u064a])")
 
 
+# "Would you like to" to one gender (حابّة تحكي، حابب نكمل) becomes the neutral بدك; Uzyra's own
+# "أنا حابة" is left alone.
+_GENDERED_WOULD_LIKE = re.compile(r"(?<![\w\u0621-\u064a])(?<!أنا )(?<!انا )حاب(?:\u0651)?(?:ة|ب)(?=\s+[تن])")
+
+
 def neutral_wording(text: str) -> str:
     """Swap gendered "tell me" / "you say it" / "you" for neutral ones; the model still writes them."""
 
     text = _GENDERED_TELL_ME.sub("احكيلي", text)
     text = _GENDERED_YOU.sub(r"\1", text)
+    text = _GENDERED_WOULD_LIKE.sub("بدك", text)
     return _GENDERED_SAY.sub(lambda m: f"{m.group(1)}تقول{m.group(2)}", text)
 
 
