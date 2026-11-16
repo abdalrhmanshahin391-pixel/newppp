@@ -14,6 +14,8 @@ import json
 import sys
 from typing import Any
 
+from rita_talk_eval import JUDGE_KEYS
+
 WORST = 10
 
 
@@ -33,12 +35,21 @@ def _pct(value: float) -> str:
 def _severity(row: dict[str, Any]) -> tuple[int, int]:
     """Worst first: a wrong fact or a missed correction before a long reply; then by judge score."""
 
-    weight = {"content": 5, "correction": 5, "forbidden": 4, "router": 3, "off-topic question": 3, "language": 3}
+    weight = {
+        "safety": 6,
+        "content": 5,
+        "correction": 5,
+        "teaching while listening": 4,
+        "forbidden": 4,
+        "router": 3,
+        "off-topic question": 3,
+        "language": 3,
+    }
     score = sum(weight.get(c, 1) for c in row.get("categories", []))
     if row.get("layer") == "router":
         score += 3
     judged = row.get("judge") or {}
-    low = 10 - min((judged.get(k, 5) for k in ("correct", "helpful")), default=5) if judged else 0
+    low = 10 - min((judged.get(k, 5) for k in ("correct", "helpful", "understood", "human")), default=5) if judged else 0
     return (score, low)
 
 
@@ -107,7 +118,7 @@ def report(result: dict[str, Any]) -> str:
     if judge:
         lines += ["", f"## Judge ({result.get('judge_model')}, {judge['graded']} replies)", ""]
         lines.append(
-            " · ".join(f"{k} {judge[k]}" for k in ("correct", "dialect", "helpful", "fit") if judge.get(k) is not None)
+            " · ".join(f"{k} {judge[k]}" for k in JUDGE_KEYS if judge.get(k) is not None)
             + " (1-5)"
         )
         if judge.get("better"):
@@ -174,7 +185,7 @@ def compare(a: dict[str, Any], b: dict[str, Any]) -> str:
             lines.append(f"| {name} | {ca.get(name, 0)} | {cb.get(name, 0)} |")
     ja, jb = a.get("judge") or {}, b.get("judge") or {}
     if ja and jb:
-        lines += ["", "Judge: " + ", ".join(f"{k} {ja.get(k)} → {jb.get(k)}" for k in ("correct", "dialect", "helpful", "fit"))]
+        lines += ["", "Judge: " + ", ".join(f"{k} {ja.get(k)} → {jb.get(k)}" for k in JUDGE_KEYS)]
 
     first_a = {_key(r): r for r in a.get("rows", []) if r.get("run", 1) == 1}
     first_b = {_key(r): r for r in b.get("rows", []) if r.get("run", 1) == 1}

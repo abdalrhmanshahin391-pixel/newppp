@@ -39,7 +39,7 @@ on:
         type: string
         default: ""
       split:
-        description: "talk-eval only: dev, holdout or all"
+        description: "talk-eval only: dev, holdout, all, or feelings (the feelings and understanding talks of both)"
         type: string
         default: "dev"
       runs:

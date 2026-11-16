@@ -17,6 +17,7 @@ the session state, with the worker's real prompt and its speech cleaner) and add
   better. It is a model grading a model of the same family: a help for reading, not a verdict.
 
     modal run modal_app.py::talk_eval --split dev                                  # the live model
+    modal run modal_app.py::talk_eval --split feelings     # only the feelings and understanding talks
     modal run modal_app.py::talk_eval --split all --runs 2 --judge openai/gpt-oss-120b
     modal run modal_app.py::talk_eval --reference cafe-de                          # evals/references/cafe-de.json
     GROQ_API_KEY=... python rita_talk_eval.py --model openai/gpt-oss-120b --effort medium
@@ -55,6 +56,8 @@ MAX_RUNS = 3
 #: Problem text -> category, first match wins (so "points to a sheet" is not counted as "sheet").
 CATEGORIES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("service", ("request error", "empty reply", "rate limited")),
+    ("safety", ("safety:",)),
+    ("teaching while listening", ("while the learner shares feelings",)),
     ("pointer", ("points to a sheet",)),
     ("length", ("words (at most", "sentences (at most")),
     ("question", ("questions in one reply", "without a question")),
@@ -79,6 +82,10 @@ def category(problem: str) -> str:
 def turn_kind(turn: Turn) -> str:
     """What the learner did in this turn, for totals per kind."""
 
+    if turn.risk or turn.crisis:
+        return "hopeless or harm"
+    if turn.listen:
+        return "feelings"
     if turn.simplify:
         return "did not understand"
     if turn.fix:
@@ -115,6 +122,12 @@ def layer(turn: Turn, kind_of_reply: str, problems: list[str]) -> str:
     if turn.simplify and kind_of_reply != "simplify":
         return "router"
     return "model"
+
+
+def is_feelings(talk: Talk) -> bool:
+    """A conversation about feelings or about being understood (the `feelings` part of a run)."""
+
+    return any(turn.listen for turn in talk.turns) or talk.id.startswith("understand")
 
 
 def family(model: str) -> str:
@@ -331,14 +344,23 @@ def spread(rows: list[dict[str, Any]], split: str, per_run: int, runs: int) -> d
     }
 
 
+#: The judge's scores, in the order they are shown.
+JUDGE_KEYS = ("correct", "dialect", "helpful", "fit", "understood", "human")
+
 JUDGE_PROMPT = """You grade one reply of Uzyra, a voice tutor for Jordanian Arabic speakers learning {language}.
 The reply is spoken (the part after [[SHEET]] is written on screen, not spoken). Grade it 1-5:
 - correct: every fact about {language} is right (grammar, meaning, the correction); 1 = a wrong fact.
+  With no fact about the language in the reply, 5.
 - dialect: the Arabic is natural Jordanian Arabic, not Modern Standard Arabic or another dialect.
 - helpful: it answers exactly what the learner said or asked, without detours.
 - fit: short and right for a voice call (one idea, at most one question).
+- understood: it shows it understood what the learner MEANT, in their own words, and responds to
+  that; 1 = it answers something else, or a stock reply that fits any message.
+- human: it sounds like a caring, clever real person, simple and warm, not a robot, a lecture, a
+  list of tips or empty filler. When the learner shares feelings, a good reply listens: names what
+  they feel, asks one gentle question or offers a choice, and does not teach the language.
 {reference_rule}
-Reply with JSON only: {{"correct": n, "dialect": n, "helpful": n, "fit": n, {better_field}"why": "one short sentence on the main problem, or ok"}}"""
+Reply with JSON only: {{"correct": n, "dialect": n, "helpful": n, "fit": n, "understood": n, "human": n, {better_field}"why": "one short sentence on the main problem, or ok"}}"""
 
 
 async def judge_row(client, judge_model: str, row: dict[str, Any], context: str, language: str) -> dict[str, Any]:
@@ -373,10 +395,10 @@ async def judge_row(client, judge_model: str, row: dict[str, Any], context: str,
             text = response.choices[0].message.content or ""
             found = re.search(r"\{.*\}", text, re.DOTALL)
             data = json.loads(found.group(0)) if found else {}
-            out = {k: int(data[k]) for k in ("correct", "dialect", "helpful", "fit") if str(data.get(k, "")).isdigit()}
+            out = {k: int(data[k]) for k in JUDGE_KEYS if str(data.get(k, "")).isdigit()}
             if has_reference and data.get("better") in ("uzyra", "reference", "tie"):
                 out["better"] = data["better"]
-            if not any(k in out for k in ("correct", "dialect", "helpful", "fit")):
+            if not any(k in out for k in JUDGE_KEYS):
                 return {}
             out["why"] = str(data.get("why", ""))[:200]
             return out
@@ -412,7 +434,7 @@ def judge_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
     if not graded:
         return {}
     out: dict[str, Any] = {"graded": len(graded)}
-    for key in ("correct", "dialect", "helpful", "fit"):
+    for key in JUDGE_KEYS:
         values = [g[key] for g in graded if key in g]
         out[key] = round(mean(values), 2) if values else None
     better = [g["better"] for g in graded if "better" in g]
@@ -445,7 +467,12 @@ async def run_eval(
         max_words = limits(ref_profile).get("max_words")
     else:
         parts = {"dev": [("dev", t) for t in DEV], "holdout": [("holdout", t) for t in HOLDOUT]}
-        chosen = parts["dev"] + parts["holdout"] if split == "all" else parts.get(split, parts["dev"])
+        if split == "all":
+            chosen = parts["dev"] + parts["holdout"]
+        elif split == "feelings":
+            chosen = [(name, t) for name, t in parts["dev"] + parts["holdout"] if is_feelings(t)]
+        else:
+            chosen = parts.get(split, parts["dev"])
         ref_profile, max_words = {}, None
     jobs = [(name, talk, run) for run in range(1, runs + 1) for name, talk in chosen]
     expected = sum(len(talk.turns) for _, talk, _ in jobs)
@@ -530,7 +557,7 @@ def print_eval(result: dict[str, Any]) -> int:
             print(f"     layer: {row['layer']}")
         if row.get("judge"):
             j = row["judge"]
-            scores = " ".join(f"{k} {j[k]}" for k in ("correct", "dialect", "helpful", "fit") if k in j)
+            scores = " ".join(f"{k} {j[k]}" for k in JUDGE_KEYS if k in j)
             print(f"     judge: {scores}{' better: ' + j['better'] if 'better' in j else ''} - {j.get('why', '')}")
     print(f"\nmodel {result.get('model')} (thinking: {result.get('effort') or '-'}), part {result.get('split')}")
     for name, s in result.get("by_split", {}).items():
@@ -557,7 +584,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--model", default="")
     parser.add_argument("--effort", default="")
-    parser.add_argument("--split", default="dev", choices=("dev", "holdout", "all"))
+    parser.add_argument("--split", default="dev", choices=("dev", "holdout", "all", "feelings"))
     parser.add_argument("--runs", type=int, default=1)
     parser.add_argument("--reference", default="", help="a file in evals/references (name) or a path")
     parser.add_argument("--history", default="reference", choices=("reference", "own"))
