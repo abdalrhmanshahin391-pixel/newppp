@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, ChevronDown } from "lucide-react";
@@ -150,6 +150,107 @@ const QUESTIONS: { q: string; a: string; packs?: boolean }[] = [
   },
 ];
 
+/**
+ * Sample plans for /pricing?demo=1: three plans shaped like the reference page (names, prices and
+ * list lengths) so the layout can be seen before real plans are written. Never sold: the buttons
+ * do nothing in the preview.
+ */
+const DEMO_PLANS: FullPlan[] = [
+  {
+    slug: "demo-free",
+    name: "Free",
+    tagline: "For trying Uzyra. No card needed.",
+    price_cents: 0,
+    yearly_cents: 0,
+    max_flashcards: 100,
+    max_summaries: 3,
+    max_ai_questions: 50,
+    max_todo_tasks: 20,
+    max_calendar_items: 20,
+    max_groups: 1,
+    max_all_in_one_lectures: 0,
+    max_all_in_one_questions: 0,
+    max_archive_questions: 0,
+    todo_full: false,
+    rich_cards: false,
+    feature_lecture_qgen: true,
+    feature_archive_qgen: false,
+    feature_all_in_one: false,
+    sort: 1,
+    billing_kind: "monthly",
+    published: true,
+    currency: "USD",
+    cta_label: "Try for free",
+    perks: ["Make your own flashcards", "100 AI credits to start", "1 classroom"],
+  },
+  {
+    slug: "demo-pro",
+    name: "Pro",
+    tagline: "For one person, billed yearly.",
+    highlight: true,
+    price_cents: 2000,
+    yearly_cents: 6400,
+    max_flashcards: 3000,
+    max_summaries: 60,
+    max_ai_questions: 3000,
+    max_todo_tasks: null,
+    max_calendar_items: null,
+    max_groups: 5,
+    max_all_in_one_lectures: 30,
+    max_all_in_one_questions: 0,
+    max_archive_questions: 500,
+    todo_full: true,
+    rich_cards: true,
+    feature_lecture_qgen: true,
+    feature_archive_qgen: true,
+    feature_all_in_one: true,
+    sort: 2,
+    billing_kind: "monthly",
+    published: true,
+    currency: "USD",
+    cta_label: "Try for free",
+    perks: [
+      "3-day free trial. Cancel before day 3 and pay nothing.",
+      "Everything in Free",
+      "3,000 AI credits a month",
+      "5 classrooms",
+    ],
+  },
+  {
+    slug: "demo-team",
+    name: "Team",
+    tagline: "For a team, per seat, billed yearly.",
+    price_cents: 3200,
+    yearly_cents: 10200,
+    max_flashcards: null,
+    max_summaries: null,
+    max_ai_questions: 5000,
+    max_todo_tasks: null,
+    max_calendar_items: null,
+    max_groups: null,
+    max_all_in_one_lectures: 100,
+    max_all_in_one_questions: 0,
+    max_archive_questions: 2000,
+    todo_full: true,
+    rich_cards: true,
+    feature_lecture_qgen: true,
+    feature_archive_qgen: true,
+    feature_all_in_one: true,
+    sort: 3,
+    billing_kind: "monthly",
+    published: true,
+    currency: "USD",
+    cta_label: "Try for free",
+    perks: [
+      "3-day free trial. Cancel before day 3 and pay nothing.",
+      "Everything in Pro",
+      "5,000 AI credits a month per seat",
+      "Unlimited classrooms",
+      "Shared decks and team calendar",
+    ],
+  },
+];
+
 function PricingPage() {
   const loaderData = Route.useLoaderData();
   const { user } = useAuth();
@@ -160,8 +261,13 @@ function PricingPage() {
   const saveSettings = useServerFn(updateSiteSettings);
   const qc = useQueryClient();
   const [savingPacks, setSavingPacks] = useState(false);
+  // /pricing?demo=1 shows the sample plans (read after hydration so server and client agree).
+  const [demo, setDemo] = useState(false);
+  useEffect(() => {
+    setDemo(new URLSearchParams(window.location.search).has("demo"));
+  }, []);
 
-  const { data: plans = loaderData?.plans ?? [], isLoading } = useQuery({
+  const { data: realPlans = loaderData?.plans ?? [], isLoading: loadingPlans } = useQuery({
     queryKey: ["plans"],
     initialData: loaderData?.plans && loaderData.plans.length > 0 ? loaderData.plans : undefined,
     staleTime: 5 * 60_000,
@@ -178,6 +284,8 @@ function PricingPage() {
     enabled: !!user,
   });
 
+  const plans = demo ? DEMO_PLANS : realPlans;
+  const isLoading = !demo && loadingPlans;
   const isAdmin = !!(mine as any)?.is_admin;
   const packsVisible = settings.credit_packs_enabled || isAdmin;
   const lifetime = billing === "once";
@@ -211,6 +319,7 @@ function PricingPage() {
     lifetime ? (p.once_cents ?? 0) : yearly ? (p.yearly_cents ?? 0) : (p.price_cents ?? 0);
 
   const buy = (p: FullPlan) => {
+    if (demo) return; // sample plans are not for sale
     if (!user) {
       navigate({
         to: "/register",
