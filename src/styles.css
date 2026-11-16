@@ -10556,3 +10556,19 @@ html.rita-app,
     .rh-defer-cta { --rh-estimated-height: 17rem; }
   }
 }
+.fw-dock.fw-dock-book {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: auto;
+  min-width: 44px;
+  padding: 0 8px;
+  color: white;
+  background: #37373c;
+  font-size: 12px;
+  font-weight: 600;
+}
+@media (max-width: 420px) {
+  .fw-dock-book span { display: none; }
+}
