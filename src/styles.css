@@ -10540,3 +10540,19 @@ html.rita-app,
 .sticker-Speak { background: #365fcd; transform: rotate(-6deg); }
 .sticker-read { background: #38695e; transform: rotate(4deg); }
 .sticker-remember { background: #a34f36; transform: rotate(-4deg); }
+
+/* Reserve space before first paint; remember the real height on return visits
+   to the same section, including an expanded FAQ. */
+@supports (content-visibility: auto) and (contain-intrinsic-block-size: auto 1px) {
+  @media screen {
+    .uz-home .rh-defer-demo,
+    .uz-home .rh-defer-faq,
+    .uz-home .rh-defer-cta {
+      content-visibility: auto;
+      contain-intrinsic-block-size: auto var(--rh-estimated-height);
+    }
+    .rh-defer-demo { --rh-estimated-height: 34rem; }
+    .rh-defer-faq { --rh-estimated-height: 27rem; }
+    .rh-defer-cta { --rh-estimated-height: 17rem; }
+  }
+}

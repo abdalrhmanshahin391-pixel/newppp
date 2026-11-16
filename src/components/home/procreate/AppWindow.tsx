@@ -166,13 +166,26 @@ export function AppWindow() {
     const onScroll = () => {
       if (!raf) raf = window.requestAnimationFrame(update);
     };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    // Measure only while the preview is near the viewport.
+    const track = (near: boolean) => {
+      if (near) {
+        window.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", onScroll);
+        onScroll();
+      } else {
+        window.removeEventListener("scroll", onScroll);
+        window.removeEventListener("resize", onScroll);
+        if (raf) window.cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+    const observer = typeof IntersectionObserver === "undefined" ? null :
+      new IntersectionObserver(([entry]) => track(entry.isIntersecting), { rootMargin: "160px" });
+    if (observer) observer.observe(el);
+    else track(true);
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (raf) window.cancelAnimationFrame(raf);
+      observer?.disconnect();
+      track(false);
       clearTimers();
     };
   }, [play]);
@@ -210,7 +223,7 @@ export function AppWindow() {
         <div
           ref={frame}
           aria-hidden="true"
-          className="overflow-hidden rounded-[16px] will-change-transform"
+          className="rh-defer-demo overflow-hidden rounded-[16px] will-change-transform"
           style={{
             border: "1px solid var(--pp-ink)",
             background: "#ffffff",

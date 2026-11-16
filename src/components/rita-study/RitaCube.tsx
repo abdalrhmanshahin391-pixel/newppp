@@ -190,14 +190,6 @@ export function RitaCube({
 
     // Seen on screen? Off screen (a closed tab of the reader, scrolled away) it does no work.
     let onScreen = true;
-    const seen =
-      typeof IntersectionObserver === "undefined"
-        ? null
-        : new IntersectionObserver(([entry]) => {
-            onScreen = entry.isIntersecting;
-            last = performance.now();
-          });
-    seen?.observe(bodyEl);
     let lastBody = "";
     let lastEyes = "";
     /** Writes a transform only when it changed (an unchanged write still costs a style pass). */
@@ -208,10 +200,6 @@ export function RitaCube({
 
     const draw = (now: number) => {
       raf = requestAnimationFrame(draw);
-      if (!visible || !onScreen) {
-        last = now;
-        return;
-      }
       // Calm (waiting or thinking, no hop playing) it moves slowly: 30 frames a second are
       // enough and halve the work; listening and speaking follow the voice at full rate.
       const calm = (modeRef.current === "idle" || modeRef.current === "thinking") && !action;
@@ -317,11 +305,26 @@ export function RitaCube({
           `scaleY(${(1 - shut * 0.92).toFixed(2)})`,
       );
     };
-    raf = requestAnimationFrame(draw);
-
+    const syncLoop = () => {
+      if (visible && onScreen) {
+        if (raf) return;
+        last = performance.now();
+        raf = requestAnimationFrame(draw);
+      } else {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+    const seen = typeof IntersectionObserver === "undefined" ? null :
+      new IntersectionObserver(([entry]) => {
+        onScreen = entry.isIntersecting;
+        syncLoop();
+      });
+    seen?.observe(bodyEl);
+    syncLoop();
     const onVisibility = () => {
       visible = document.visibilityState === "visible";
-      last = performance.now();
+      syncLoop();
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
