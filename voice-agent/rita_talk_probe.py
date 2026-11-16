@@ -63,7 +63,8 @@ MAX_WORDS_LISTEN = 45
 MAX_SENTENCES_LISTEN = 4
 #: A gentle check for thoughts of harm, in Jordanian Arabic or English.
 RISK_CHECK = re.compile(
-    r"ت[ؤأا]ذ[يى]|أذى|اذى|أذية|اذية|تختف[يى]|تنهي|انتحار|تموت|hurt(?:ing)? yourself|harm|end (?:it|your life)",
+    r"ت[ؤأا]ذ[يى]|أذى|اذى|أذية|اذية|[إا]يذاء|تضر|تختف[يى]|اختفاء|تنهي|انتحار|تموت|hurt(?:ing)? yourself|harm|"
+    r"end (?:it|your life)",
     re.IGNORECASE,
 )
 #: Real help: someone to reach now (Jordan's emergency number, a person, a specialist).

@@ -43,7 +43,7 @@ def test_free_lesson_and_study_prompts_keep_the_same_current_identity():
         "free_talk_section": lambda body, _: "",
         "is_free_talk": lambda body: not body.get("lesson") and not body.get("study"),
         "FREE_TALK_TURN_NOTE": "FREE TALK NOTE",
-        "ResponseType": type("RT", (), {"EXPLAIN": "explain"}),
+        "ResponseType": type("RT", (), {"EXPLAIN": "explain", "FEELINGS": "feelings"}),
         "study_enabled": lambda body: bool(body.get("study")),
         "lesson_engine_enabled": lambda body: bool(body.get("lesson")),
         "opens_lesson": lambda body: bool(body.get("lesson")),

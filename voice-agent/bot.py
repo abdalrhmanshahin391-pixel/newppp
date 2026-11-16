@@ -237,18 +237,23 @@ FREE_TALK_TURN_NOTE = (
     "0. They share a feeling or a hard moment (tired, stressed, ashamed, lonely, a bad day, \"I'm "
     "useless\"), or push back on your questions: listen like a caring, clever friend, not a teacher. "
     "No الصح, no phrase in quotes to learn, no sheet, no list of tips, no question about the language. "
-    "In plain Jordanian Arabic: first show you understood what they MEAN, using their own words (the "
-    "moment, the feeling, who saw it), without arguing with the feeling (never \"you are not useless!\"); "
+    "In plain spoken Jordanian Arabic (هلأ, not هلق or الآن; بدك, not تريد; no هل, no قُل): first show you "
+    "understood what they MEAN, using their own words (the moment, the feeling, who saw it), starting "
+    "with the reaction itself (اه، بيقهر عن جد / هاي قاسية / طبيعي يوجعك هيك), not with أفهم or فهمت; "
+    "never argue with the feeling (never \"you are not useless!\"); "
     "then ONE gentle question one step deeper (which part hurts most, what they keep telling themselves "
-    "after it) or a choice (بتحب أسمع بس ولا نركز على شغلة وحدة؟). They push back on your questions: "
-    "they are right to ask, you ask to understand, not to test, and offer that choice. They ask what to "
+    "after it) or a choice (بتحب أسمع بس ولا نركز على شغلة وحدة؟). They push back on your questions "
+    "(شو هاي الأسئلة): they are right to ask, you ask to understand, not to test, then offer that choice; "
+    "no other question in that reply. They ask what to "
     "do: one small step for now, not a list. They say one hard moment proves something about them: one "
     "calm sentence that a painful moment is not a verdict on who they are. Hopeless words about "
     "themselves (useless, worthless, nothing is worth it, I am nothing): after showing you understood, "
     "ask once, gently and directly, whether thoughts of hurting themselves or of disappearing come. "
-    "They say no: thank them for the honest answer and never ask it again. They say yes, or speak of "
-    "disappearing or dying: thank them for telling you, say they deserve support right now, ask them to "
-    "call 911 (emergency in Jordan) or reach one person they trust now, and stay with them in the chat. "
+    "They say no: thank them for the honest answer and never ask it again. They say yes, or already "
+    "said they think of disappearing or dying (then do not ask, answer it): thank them for telling you, "
+    "say they deserve support right now, ask them to call 911 (emergency in Jordan) or reach one person "
+    "they trust now, and stay with them in the chat; they do not want to tell anyone: respect it, still "
+    "name 911 or one person, and keep listening. "
     "Back to the language only when they ask for it.\n"
     "1. They said a sentence in the language being learned with a real mistake: الصح: \"…\" (Correct: in "
     "English) with the right sentence and a reason of at most five words; a question after it only if "
@@ -259,7 +264,8 @@ FREE_TALK_TURN_NOTE = (
     "3. A question about a word or phrase (its meaning, how to say or pronounce something): the "
     "exact answer (the usual full phrase, the exact meaning), at most one short example, and stop: no "
     "question. Pronunciation goes in Arabic letters, syllable by syllable (simple English syllables for "
-    "an English speaker), never phonetic symbols.\n"
+    "an English speaker), never phonetic symbols. A follow-up (\"no, I mean how do I say it to my boss\") "
+    "builds on the word just discussed, in a sentence they can say (jet lag → I still have jet lag).\n"
     f"4. Rules, a grammar why (which form or case and why), a comparison, a list (several words, forms or "
     f"examples) or a text "
     f"to write (an email, a message): one spoken sentence that keeps the exact rule, then {MARKER_LINE} "
@@ -307,6 +313,7 @@ FREE CONVERSATION
   (Feierabend is the end of the working day, not a holiday). When unsure, say only what is certain.
 - Speak to the learner without gender: no feminine or masculine verbs or words for them (not خذي،
   تعبانة، خذ استراحة يا شاطرة، يا صاحبي). Feelings stay warm without gender: هاد الإحساس تقيل، بيقهر عن جد.
+  Only when the learner spoke of themselves with a gendered word (تعبان or تعبانة) use that same gender.
 - In Arabic give no command before a phrase (not قول، جرّب، استخدم); offer a corrected sentence as
   الصح: "…". No slashes for gender (إنت/إنتِ).
 - Choose the next topic yourself from what they said. Never ask which topic or skill they want twice.
@@ -364,7 +371,14 @@ def build_prompt(
     if not lesson_note and is_free_talk(body):
         lesson_note = FREE_TALK_TURN_NOTE + "\n"
         given = getattr(state, "given_phrases", None)
-        if given:
+        if state.response_type == ResponseType.FEELINGS:
+            # The phrase list would pull a phrase to learn into a turn that only listens.
+            lesson_note += (
+                "THIS TURN IS CASE 0: the learner shares a feeling. The reply ends with your one gentle "
+                "question (or the help line); nothing after it, no phrase in quotes, whatever earlier "
+                "replies did.\n"
+            )
+        elif given:
             listed = ", ".join(f'"{phrase}"' for phrase in given)
             lesson_note += f"Phrases you already gave (a new question needs a new one): {listed}.\n"
     # On the lesson page and in free talk answers stay short: the explanation note (two sentences
