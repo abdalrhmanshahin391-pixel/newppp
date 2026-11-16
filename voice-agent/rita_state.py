@@ -316,8 +316,9 @@ class RitaSessionState:
             self.response_type = ResponseType.FEELINGS
         elif pronunciation:
             self.response_type = ResponseType.PRONUNCIATION_DRILL
-        elif re.search(
-            r"(?:اشرح|ليش|لماذا|فصل|تفصيل|كل كلمه|كل كلمة|وضح|why|explain|warum|in detail|word by word|break (?:it )?down)",
+        elif self.last_act != Act.STOP and not re.search(r"كفاية|بكفي|\benough\b|\bgenug\b", lowered) and re.search(
+            r"(?:اشرح|ليش|لماذا|فصل|تفصيل|كل كلمه|كل كلمة|وضح|قواعد|قاعدة|why|explain|warum|in detail|word by word|"
+            r"break (?:it )?down|\brules?\b|\bregeln?\b)",
             lowered,
         ) or re.search(
             # A comparison or a list of words, phrases or examples belongs on the sheet too.

@@ -263,3 +263,12 @@ def test_the_turn_that_sets_answers_only_is_confirmed_once():
     assert "JUST TOLD YOU" in state.turn_note()
     state.observe_user_turn("كيف بحكي بدي أشرب مي بالألماني")
     assert "JUST TOLD YOU" not in state.turn_note() and "ANSWERS ONLY" in state.turn_note()
+
+
+def test_a_question_about_the_rules_is_an_explanation():
+    state = RitaSessionState()
+    state.observe_user_turn("طيب ممكن تحكيلي عن قواعد دي والدز والدير")
+    assert state.response_type == ResponseType.EXPLAIN
+    stop = RitaSessionState()
+    stop.observe_user_turn("خلص كفاية قواعد")
+    assert stop.response_type != ResponseType.EXPLAIN
