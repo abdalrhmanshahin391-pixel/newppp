@@ -54,6 +54,11 @@ on:
         description: "talk-eval only: a Groq model that scores every reply 1-5 (empty = no judge)"
         type: string
         default: ""
+      history:
+        description: "talk-eval with a reference: whose replies go into the history (own = Uzyra's, a real chat)"
+        type: choice
+        options: [reference, own]
+        default: reference
 
 permissions:
   contents: read
@@ -111,9 +116,10 @@ jobs:
           RUNS: ${{ inputs.runs }}
           REFERENCE: ${{ inputs.reference }}
           JUDGE: ${{ inputs.judge }}
+          HISTORY: ${{ inputs.history }}
         run: |
           modal run modal_app.py::talk_eval --model "$MODEL" --effort "$EFFORT" --split "${SPLIT:-dev}" \
-            --runs "${RUNS:-1}" --reference "$REFERENCE" --judge "$JUDGE" \
+            --runs "${RUNS:-1}" --reference "$REFERENCE" --judge "$JUDGE" --history "${HISTORY:-reference}" \
             --out ../talk-eval.json --report ../talk-eval-report.md
       - name: Show the report on the run's summary page
         if: always()
