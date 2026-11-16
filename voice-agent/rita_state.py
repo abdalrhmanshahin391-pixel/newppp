@@ -11,6 +11,28 @@ from rita_dialogue_acts import Act, Awaiting, classify, normalize, parse_last_qu
 from rita_language_commands import detect_language_command
 
 
+#: A feeling, a hard moment or a push back on the questions, in Jordanian Arabic, English or German.
+#: A word question about one of these words ("شو يعني stressed؟") is not a feeling: see _word_question.
+FEELINGS_SIGNAL = re.compile(
+    r"(?:^|[^\u0621-\u064A])[وفب]?(?:تعبان|تعبانه|تعبانة|ميت تعب|مهلكني|مهلكتني|زهقان|زهقانه|زهقانة|مضغوط|"
+    r"مضغوطة|مخنوق|مخنوقة|مقهور|مقهورة|حزين|حزينه|حزينة|زعلان|زعلانه|زعلانة|وحيد|وحيده|وحيدة|غبي|غبيه|"
+    r"غبية|فاشل|فاشله|فاشلة|يوزلس|ولا اشي|ولا شي|بألم|بالألم|بوجع|موجوع|موجوعة|ما في فايدة|ما في فايده|"
+    r"ما في اشي بستاهل|ما عاد في اشي|أختفي|اختفي|أموت|اموت|انتحر|أنتحر|أأذي|اأذي|أذي حالي|اذي حالي|رسبت|"
+    r"انرفضت|رفضتني|يسمعني|بتحقيق|شو هاي الأسئلة|شو هاي الاسئلة|هاي الأسئلة|هاي الاسئلة|بتسألني|بتسأليني|"
+    r"كل هالأسئلة|كل هالاسئلة|ما عندي حدا|ما حدا بيحكي|انحرجت|محرج|محرجة|بدهم إياني|بدهم اياني|"
+    r"مش حابب|مش حابة)(?=$|[^\u0621-\u064A])"
+    r"|\b(?:useless|worthless|stupid|hopeless|depressed|lonely|exhausted|sad|stressed|"
+    r"nobody listens|want to disappear|traurig|einsam|gestresst|nutzlos)\b"
+)
+
+#: A question about a word or how to say something: the words in it are not the learner's feelings.
+WORD_QUESTION = re.compile(
+    r"(?:شو يعني|شو معنى|يعني شو|معنى كلمة|كيف بقول|كيف أقول|كيف اقول|كيف بحكي|كيف بنقول|كيف بتقول|"
+    r"بالانجليزي|بالإنجليزي|بالالماني|بالألماني|how (?:do|can) (?:i|you) say|what does|"
+    r"what is .+ in|wie sagt man|was bedeutet)"
+)
+
+
 class ResponseType(StrEnum):
     BACKCHANNEL = "backchannel"
     ANSWER_SHORT = "answer_short"
@@ -19,6 +41,8 @@ class ResponseType(StrEnum):
     PRONUNCIATION_DRILL = "pronunciation_drill"
     TOOL_ACTION = "tool_action"
     EMPATHY = "empathy_social"
+    #: the learner shares a feeling or a hard moment, or pushes back on the questions: listen first
+    FEELINGS = "feelings"
     COMPLAINT = "complaint"
     SIMPLIFY = "simplify"
 
@@ -220,6 +244,7 @@ class RitaSessionState:
                 lowered,
             )
         )
+        feelings = bool(FEELINGS_SIGNAL.search(lowered)) and not WORD_QUESTION.search(lowered)
         pronunciation = bool(re.search(r"(?:كيف تنطق|نطق|pronounc|aussprach)", lowered))
         correction_retry = bool(
             re.search(r"(?:مرة ثانية|كمان مرة|لسا غلط|again|noch einmal|wiederholen)", lowered)
@@ -234,6 +259,8 @@ class RitaSessionState:
             self.response_type = ResponseType.COMPLAINT
         elif self.last_act == Act.SIMPLIFY:
             self.response_type = ResponseType.SIMPLIFY
+        elif feelings or self._still_listening(lowered):
+            self.response_type = ResponseType.FEELINGS
         elif pronunciation:
             self.response_type = ResponseType.PRONUNCIATION_DRILL
         elif re.search(
@@ -255,6 +282,19 @@ class RitaSessionState:
             self.response_type = ResponseType.CORRECTION
         else:
             self.response_type = ResponseType.ANSWER_SHORT
+
+    def _still_listening(self, lowered: str) -> bool:
+        """The turn after a feeling stays a listening turn while the learner keeps talking about it in
+        Arabic: not a sentence in the language being learned, not a word question, not "let's go on"."""
+
+        if self.response_type != ResponseType.FEELINGS:
+            return False
+        if WORD_QUESTION.search(lowered) or re.search(r"[a-zäöüß]{3,}", lowered):
+            return False
+        return not re.search(
+            r"(?:^|\s)(?:نكمل|نرجع|نتعلم|نتدرب|الدرس|يلا|خلص|شكرا|شكراً|باي)(?=$|[\s،,.!؟?])|let'?s|weiter",
+            lowered,
+        )
 
     def _observe_act(self, clean: str) -> None:
         reading = classify(clean, awaiting=self.awaiting)
@@ -388,6 +428,14 @@ class RitaSessionState:
                 "TURN NOTE: THE LEARNER ASKED FOR AN EXPLANATION. Say the core idea in at most two short "
                 "spoken sentences (about 25 words in all), then write [[SHEET]] and put the rules, forms and examples there. "
                 "Cover exactly what they asked, nothing more."
+            )
+        if self.response_type == ResponseType.FEELINGS:
+            return (
+                "TURN NOTE: THE LEARNER SHARES A FEELING OR A HARD MOMENT. Listen like a caring friend, "
+                "not a teacher: no correction, no phrase in quotes to learn, no sheet, no list of tips. "
+                "Show in their own words that you understood what they mean, then one gentle question or "
+                "a choice. Hopeless words about themselves: ask once, gently, about thoughts of harm. "
+                "Thoughts of harm or of disappearing: 911 (emergency in Jordan) or one trusted person now."
             )
         if self.response_type == ResponseType.EMPATHY:
             return (

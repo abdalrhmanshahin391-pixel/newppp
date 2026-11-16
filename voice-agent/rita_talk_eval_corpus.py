@@ -469,9 +469,10 @@ HOLDOUT: tuple[Talk, ...] = (
         "ar",
         EN,
         (
-            T("اليوم كان سيء، رسبت بامتحان", sheet="no", lead=True,
-              want="Short real empathy; no pressure; maybe one gentle phrase like 'I had a bad day'."),
-            T("I feel very sad today", sheet="no", right=True, want="Right; kind; no correction."),
+            T("اليوم كان سيء، رسبت بامتحان", sheet="no", listen=True,
+              want="Short real empathy, in the learner's words; one gentle question; no phrase to learn."),
+            T("I feel very sad today", sheet="no", right=True, listen=True, free_language=True,
+              want="Right; kind; no correction; listens."),
             T("كيف بقول بدي أرتاح شوي؟", sheet="no", must=("rest", "break", "relax"), want="'I need a little rest / a break.'"),
         ),
     ),

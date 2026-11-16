@@ -158,3 +158,37 @@ def test_no_task_means_the_plain_continue_directive():
     state = RitaSessionState()
     state.observe_user_turn("كمّل")
     assert state.turn_directive() == "continue the topic from where you stopped; do not restart or summarise"
+
+
+def _types(lines: list[str]) -> list[str]:
+    state = RitaSessionState(active_language="ar", active_dialect="ar-JO")
+    state.set_site_language("ar")
+    out = []
+    for line in lines:
+        state.observe_user_turn(line)
+        out.append(state.response_type.value)
+    return out
+
+
+def test_a_feeling_is_a_listening_turn_and_stays_one_while_the_learner_keeps_talking():
+    assert _types(["والله تعبان، عندي امتحان بكرا", "يعني درست بس كله طار", "طيب شو أعمل هلأ؟"]) == [
+        "feelings",
+        "feelings",
+        "feelings",
+    ]
+    # "Why do you ask me all this?" is a push back, not a grammar "why".
+    assert _types(["ليش بتسألني كل هالأسئلة؟"]) == ["feelings"]
+    assert _types(["I'm useless"]) == ["feelings"]
+    # "Let's go on", a sentence in the language or a word question ends listening.
+    assert _types(["حاسة إني ولا اشي", "اه، يلا نكمل"]) == ["feelings", "answer_short"]
+    assert _types(["تعبان كتير", "I work in a hospital"])[1] != "feelings"
+
+
+def test_words_about_feelings_inside_a_word_question_or_a_longer_word_are_not_feelings():
+    assert _types(["كيف بقول بالإنجليزي أنا تعبان؟"]) != ["feelings"]
+    assert _types(["شو يعني stressed؟"]) != ["feelings"]
+    assert _types(["شو أحسن مطعم بعمان؟"]) != ["feelings"]
+    assert _types(["عندي امتحان آيلتس وخايف من السبيكنج"]) != ["feelings"]
+    state = RitaSessionState()
+    state.observe_user_turn("I'm useless")
+    assert "LISTEN" in state.turn_note().upper() and "911" in state.turn_note()
