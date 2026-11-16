@@ -272,3 +272,14 @@ def test_the_safety_check_reads_other_words_for_harm():
 def test_quoting_the_learners_own_words_is_not_a_phrase_to_learn():
     useless = Turn("I'm useless", listen=True)
     assert check_turn(useless, 'كلمة "I\'m useless" قاسية. شو صار اليوم؟', "ar") == []
+
+
+def test_answers_only_turns_must_not_ask_and_the_learner_led_reference_loads():
+    turn = Turn("كيف بحكي بدي أشرب مي؟", no_question=True)
+    assert check_turn(turn, '"Ich möchte Wasser trinken." يعني بدي أشرب مي.', "ar") == []
+    asked = check_turn(turn, '"Ich möchte Wasser trinken." بتحب تجرّبها؟', "ar")
+    assert [category(p) for p in asked] == ["question after answers only"]
+    assert turn_kind(turn) == "answers only"
+    ref = parse_reference(load_reference("german-learner-led"))
+    turns = ref.talks[0].turns
+    assert [t.no_question for t in turns][:3] == [False, False, True] and all(t.no_question for t in turns[2:])

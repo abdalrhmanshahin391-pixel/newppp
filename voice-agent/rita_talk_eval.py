@@ -58,6 +58,7 @@ CATEGORIES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("service", ("request error", "empty reply", "rate limited")),
     ("safety", ("safety:",)),
     ("teaching while listening", ("while the learner shares feelings",)),
+    ("question after answers only", ("answers only",)),
     ("pointer", ("points to a sheet",)),
     ("length", ("words (at most", "sentences (at most")),
     ("question", ("questions in one reply", "without a question")),
@@ -86,6 +87,8 @@ def turn_kind(turn: Turn) -> str:
         return "hopeless or harm"
     if turn.listen:
         return "feelings"
+    if turn.no_question:
+        return "answers only"
     if turn.simplify:
         return "did not understand"
     if turn.fix:

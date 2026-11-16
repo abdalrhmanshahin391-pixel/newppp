@@ -1,0 +1,59 @@
+{
+  "name": "german-learner-led",
+  "source": "A chat in another assistant app, sent by the owner as screenshots (November 2026).",
+  "site_language": "ar",
+  "target": {"code": "de", "name": "German", "speechCode": "de"},
+  "notes": "The learner leads. When they say not to ask them to try, the app stops asking for the rest of the chat and gives only what was asked. A 'how do I say' gets the sentence alone; 'break it down' gets each word with its meaning; die, das and der heard in Arabic letters are read as the articles, with the ending patterns, the plural and a tip, then examples with translations.",
+  "conversations": [
+    {
+      "id": "words-on-request",
+      "turns": [
+        {
+          "learner": "ممكن ممكن نغيّر الموضوع شوي",
+          "reply": "أكيد، شو حابب نحكي بدل هيك؟",
+          "expect": {"sheet": "no"}
+        },
+        {
+          "learner": "يعني علميني شوي عن الـ… مثلا مجموعة كلمات ألمانية",
+          "reply": "تمام، خلّينا نبلّش بكلمات يومية سهلة. مثلا صباح الخير = Guten Morgen. مساء الخير = Guten Abend. مع السلامة = Tschüss. شكراً = Danke. جرّب أول واحدة بس: Guten Morgen.",
+          "expect": {"must": ["Guten", "Danke", "Tschüss", "Hallo"]}
+        },
+        {
+          "learner": "أحكيلك مثلا ما تسأليني مثلا جرب واحدة مثلا كلفظة بس أنت أعطيني الإشي اللي أنا بقولك إياه",
+          "reply": "تمام، فهمت عليك. من هلا رح أعطيك الكلمة أو الجملة بس. كلمات بسيطة اليوم: Guten Morgen = صباح الخير. Guten Abend = مساء الخير. Danke = شكراً.",
+          "expect": {"no_question": true, "forbid": ["جرّب", "جرب"]}
+        },
+        {
+          "learner": "طيب كيف أحكي بدي أروح الحمام بالألماني",
+          "reply": "“Ich muss auf die Toilette.”",
+          "expect": {"must": ["Toilette"], "no_question": true, "free_language": true, "sheet": "no"}
+        },
+        {
+          "learner": "ممكن تفصلي إياها",
+          "reply": "أكيد. “Ich” يعني “أنا”. “muss” يعني “لازم” أو “مضطر”. “auf die Toilette” حرفيًا “على الحمّام”، بس معناها “على الحمّام” أو “إلى الحمّام”. فالجملة كلها: “أنا مضطر أروح الحمّام”.",
+          "expect": {"must": ["لازم", "مضطر", "مضطرة"], "no_question": true}
+        },
+        {
+          "learner": "طب كيف بدي أحكي بدي أشرب مي بالألماني",
+          "reply": "“Ich möchte Wasser trinken.”",
+          "expect": {"must": ["Wasser"], "no_question": true, "free_language": true, "sheet": "no"}
+        },
+        {
+          "learner": "فصلي إياها كمان",
+          "reply": "“Ich” = أنا، “möchte” = بدي أو بحب، “Wasser” = مي، “trinken” = أشرب. مع بعض: “Ich möchte Wasser trinken” يعني بدي أشرب مي.",
+          "expect": {"must": ["trinken"], "no_question": true}
+        },
+        {
+          "learner": "طيب ممكن تحكيلي عن قواعد دي والدز والدير",
+          "reply": "أكيد. بألماني في ٣ أدوات تعريف حسب جنس الكلمة: der للمذكر، die للمؤنث، das للمحايد. المشكلة إنه الجنس مش دايمًا منطقي، لازم ينحفظ مع الكلمة. بس في شوية أنماط بتساعدك: نهايات زي -ung غالبًا die، زي “die Zeitung”. نهايات زي -chen غالبًا das، زي “das Mädchen”. وأيام الأسبوع والفصول غالبًا der، زي “der Montag”. ولما تجمع أي كلمة، الجمع كله بياخذ die. أحسن طريقة تحفظها مع الكلمة نفسها من الأول: der Tisch، die Frau، das Auto. هيك مخك بيربطها كحزمة وحدة.",
+          "expect": {"must": ["ung"], "no_question": true}
+        },
+        {
+          "learner": "ممكن تعطيني أمثلة",
+          "reply": "أكيد. أمثلة سريعة: der Hund = الكلب. die Lampe = اللمبة. das Buch = الكتاب. بالجمع: die Bücher = الكتب. die Hunde = الكلاب. وشوف كيف الـdie صارت للجميع بالجمع بغض النظر عن الأصل. وكمان مثال للنهايات: die Information، عشانها بتنتهي بـ-tion غالبًا بتكون die.",
+          "expect": {"must": ["das "], "no_question": true}
+        }
+      ]
+    }
+  ]
+}

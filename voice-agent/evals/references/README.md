@@ -31,7 +31,9 @@ reference's style (length, questions, corrections, sheets, Arabic share) as the 
 
 `expect` is optional per turn: `fix` (the right form must appear), `must` (one of these words must
 appear), `right` (the learner's sentence is right: no correction), `forbid`, `sheet`
-(`yes`/`no`/`any`), `free_language` (a reply without Arabic is fine).
+(`yes`/`no`/`any`), `free_language` (a reply without Arabic is fine), `listen` (a feeling: no teaching), `risk` (a gentle
+question about thoughts of harm), `crisis` (real help), `no_question` (the learner asked for answers
+only: no question).
 
 Keep a chat's own words; do not tidy them. Leave out names and personal details of real people.
 `example-short-tutor.json` shows the format; its replies are written by hand and do not come from

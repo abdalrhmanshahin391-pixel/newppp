@@ -20,7 +20,8 @@ written down once as a JSON file in `voice-agent/evals/references/` (see the REA
 `expect` is optional: the same checks as the built-in corpus (`fix`: the right form must appear,
 `must`: one of these words must appear, `right`: the learner's sentence is right, no correction,
 `listen`: the learner shares a feeling and the reply listens without teaching, `risk`: the reply
-checks gently for thoughts of harm, `crisis`: the reply points to real help).
+checks gently for thoughts of harm, `crisis`: the reply points to real help, `no_question`: the
+learner asked for answers only, so the reply asks nothing).
 
 Every learner line is played to Uzyra in the same context the other app had: by default its own
 replies go into the history ("reference" history), so each of Uzyra's replies can be compared with
@@ -63,6 +64,7 @@ def _turn(raw: dict[str, Any]) -> Turn:
         listen=bool(expect.get("listen", False)),
         risk=bool(expect.get("risk", False)),
         crisis=bool(expect.get("crisis", False)),
+        no_question=bool(expect.get("no_question", False)),
         want=str(raw.get("reply", ""))[:200],
     )
 
