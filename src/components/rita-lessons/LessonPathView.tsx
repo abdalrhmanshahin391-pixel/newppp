@@ -191,7 +191,6 @@ export function LessonPathView({
   const [fresh, setFresh] = useState("");
   const [dragId, setDragId] = useState("");
   const [overId, setOverId] = useState("");
-  const [shake, setShake] = useState("");
 
   useEffect(() => {
     setFreeOrder(window.localStorage.getItem(FREE_ORDER_KEY) === "1");
@@ -317,12 +316,7 @@ export function LessonPathView({
         showFinish(normalizeLevel(node.item.title));
         return;
       }
-      if (node.item.kind === "resources") setSheet(node.item);
-      else {
-        // Exercises: only their look for now.
-        setShake(node.item.id);
-        window.setTimeout(() => setShake(""), 450);
-      }
+      setSheet(node.item);
       return;
     }
     if (stateOf(node.lesson) === "locked" && !freeOrder) {
@@ -509,6 +503,7 @@ export function LessonPathView({
         { type: "item", item: created },
         ...list.slice(index),
       ]);
+      if (kind === "exercises") setSheet(created);
       setFresh(created.id);
       confirmSound();
       window.setTimeout(() => setFresh(""), 900);
@@ -775,7 +770,6 @@ export function LessonPathView({
                 data-drag={dragId === id ? "" : undefined}
                 data-over={overId === id ? "" : undefined}
                 data-fresh={fresh === id ? "" : undefined}
-                data-shake={shake === id ? "" : undefined}
                 style={{
                   ["--x" as string]: `${centre.x - 85}px`,
                   ["--y" as string]: `${place.top}px`,
@@ -835,7 +829,7 @@ export function LessonPathView({
                 ) : finishLevel ? (
                   <span className="lp-sub">{finishLine(finishCount)}</span>
                 ) : (
-                  <span className="lp-sub">قريباً</span>
+                  <span className="lp-sub">{node.type === "item" && node.item.quiz_count ? `${node.item.quiz_count} أسئلة` : "قريباً"}</span>
                 )}
               </button>
             );
@@ -876,7 +870,7 @@ export function LessonPathView({
                           <Icon size={18} />
                         </span>
                         {kind === "exercises"
-                          ? "تمارين"
+                          ? "اختبار من Lecture Lab"
                           : kind === "resources"
                             ? "ملفات وروابط"
                             : `خط نهاية ${levelAt(plus.index)}`}
@@ -922,7 +916,7 @@ export function LessonPathView({
       {sheet && (
         <PathStopSheet
           item={sheet}
-          admin={isAdmin}
+          admin={isAdmin && (sheet.kind !== "exercises" || editing)}
           color={LOOK[sheet.kind].color}
           onClose={() => setSheet(null)}
           onChanged={onReload}

@@ -1,3 +1,4 @@
+import { PathQuiz } from "./PathQuiz";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -127,7 +128,7 @@ export function PathStopSheet({
   return (
     <div className="lp-sheet-back" onClick={onClose}>
       <div
-        className="lp-sheet"
+        className={item.kind === "exercises" ? "lp-sheet lp-quiz-sheet" : "lp-sheet"}
         role="dialog"
         aria-modal="true"
         aria-label={item.title}
@@ -148,8 +149,8 @@ export function PathStopSheet({
           </p>
         )}
 
-        {item.kind === "exercises" && !admin && (
-          <p className="lp-sheet-empty">التمارين جاية قريباً.</p>
+        {item.kind === "exercises" && (
+          <PathQuiz key={item.id} item={item} admin={admin} onClose={onClose} onChanged={onChanged} />
         )}
 
         {item.kind === "resources" && (
@@ -232,7 +233,7 @@ export function PathStopSheet({
                 />
               </>
             )}
-            {item.kind !== "finish" && (
+            {item.kind === "resources" && (
               <div className="lp-sheet-row">
                 <input
                   value={title}

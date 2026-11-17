@@ -15,7 +15,7 @@ export async function pathItemsFor(
   try {
     const { data, error } = await db
       .from("rita_path_items")
-      .select("id, kind, title, path_order")
+      .select("*")
       .eq("language", language ?? "en")
       .order("path_order");
     if (error) {
@@ -23,7 +23,7 @@ export async function pathItemsFor(
         console.warn("Path items unavailable", error.message);
       return [];
     }
-    const rows = (data ?? []) as { id: string; kind: string; title: string; path_order: number }[];
+    const rows = (data ?? []) as { id: string; kind: string; title: string; path_order: number; quiz_count?: number }[];
     const counts: Record<string, number> = {};
     const resourceIds = rows.filter((row) => row.kind === "resources").map((row) => row.id);
     if (resourceIds.length) {
@@ -39,6 +39,7 @@ export async function pathItemsFor(
       kind: row.kind === "resources" || row.kind === "finish" ? row.kind : "exercises",
       title: row.title,
       path_order: Number(row.path_order),
+      quiz_count: row.quiz_count ?? 0,
       resource_count: counts[row.id] ?? 0,
     }));
   } catch (cause) {
