@@ -1,3 +1,4 @@
+import { useWorkspaceTask, useWorkspaceGuard } from "./admin/WorkspaceGuard";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -50,6 +51,8 @@ function Editor({ item, onChanged, onClose }: Props) {
   const [preview, setPreview] = useState<Draft[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const finishTask = useWorkspaceTask(busy);
+  const guard = useWorkspaceGuard();
   const lectures =
     board.data?.lectures.filter((l) => topics.includes(l.subtopic_id) && l.question_count > 0) ??
     [];
@@ -88,6 +91,8 @@ function Editor({ item, onChanged, onClose }: Props) {
       });
       if (r.error) throw r.error;
       await onChanged();
+      finishTask();
+      guard?.saved();
       onClose();
     } catch (e) {
       setError(message(e));

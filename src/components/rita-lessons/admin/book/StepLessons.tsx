@@ -1,3 +1,4 @@
+import { useWorkspaceTask } from "../WorkspaceGuard";
 import { useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, Check, FileText, Loader2, Pencil, Sparkles, Square, X } from "lucide-react";
@@ -88,6 +89,7 @@ export function StepLessons({
   const cancel = useRef(false);
   const guides = useGuides(book.id);
   const working = running || guides.running || maker.running;
+  useWorkspaceTask(working);
   const live = lessons.filter((lesson) => lesson.status !== "archived");
   const chosen = plan.filter((item) => !unchecked.has(keyOf(item)));
   const nextNo = lessons.reduce((max, lesson) => Math.max(max, lesson.lesson_no), 0) + 1;

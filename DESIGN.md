@@ -1355,3 +1355,24 @@ own selection goes. The circle takes a dark red ring, the quote strip a dark red
 answers that part as to a complete beginner: one very simple sentence and a small sheet. A selection
 across two answers, or with the learner's own words, shows «حدّد من رد واحد ليوزرا.» The newest
 selection wins: selecting in the guide clears the left one, and the other way round.
+
+
+## Curriculum editing on the lesson path
+
+An admin-only “إدارة المحتوى” control on `/rita-lessons` lazy-loads the curriculum workspace.
+On wide screens the right-hand panel leaves the learner path visible; below 900px it becomes
+one full-width dialog. It reuses the book's Read / Lessons / Review / Publish stages and the
+lesson editor's exercises, plan, slides, resources and study-guide tabs. Editors and new-book
+forms render inline: never nest their old dialogs inside this panel. The standalone
+`/admin/curricula` remains supported through the same components and data hook.
+
+Book preview loads only on demand and renders one PDF page. Coverage comes from each live
+lesson's actual page range: published, draft, uncovered, overlaps. Reading progress, lesson
+coverage and learner progress are separate concepts. Show at most 100 page buttons at a time.
+The path's + can choose an existing or newly-created lesson; placement is explicit, independent
+of publication. The server re-reads same-language placements including drafts, checks admin and
+level, and saves through the existing atomic layout function. No new database schema is needed.
+
+Protect unsaved edits (including adding goals and rearranging slides), pending uploads and
+content generation before navigation. Success refreshes the path and the admin state; failures
+remain visible. Archive and publish retain their existing consequences and confirmations.

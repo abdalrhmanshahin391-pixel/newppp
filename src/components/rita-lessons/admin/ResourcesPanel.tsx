@@ -1,3 +1,4 @@
+import { useWorkspaceTask } from "./WorkspaceGuard";
 import { useRef, useState } from "react";
 import type { DragEvent, ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -95,6 +96,7 @@ export function ResourcesPanel({
   const [fileError, setFileError] = useState("");
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState("");
+  useWorkspaceTask(Boolean(busyId));
   const [dragging, setDragging] = useState(false);
   const [editId, setEditId] = useState("");
   const [editTitle, setEditTitle] = useState("");

@@ -1,3 +1,4 @@
+import { mergePath, placeLessonAtGap } from "./rita-path-layout";
 // The admin's editing of the lesson path (move stops, add exercise / resources stops, their files
 // and links) and the learner's view of a resources stop. Runs with the user's own session: the
 // tables' row-level security lets only admins write, and the layout is saved by one database
@@ -272,5 +273,58 @@ export const adminDeletePathItemResource = createServerFn({ method: "POST" })
     fail(error, "delete resource");
     if (row?.file_path)
       await context.supabase.storage.from(RESOURCES_BUCKET).remove([row.file_path]);
+    return { ok: true };
+  });
+
+/** Re-read placements on the server, retaining draft lessons absent from the learner map. */
+export const adminPlacePathLesson = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    parse(
+      z.object({
+        lessonId: uuid,
+        language: z.string().min(2).max(20),
+        level: z.string().optional(),
+        before: uuid.optional(),
+        after: uuid.optional(),
+      }),
+      input,
+    ),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const [lessonResult, itemResult] = await Promise.all([
+      context.supabase
+        .from("rita_lessons")
+        .select("id, path_order, curriculum:rita_curricula!inner(target_language, level)")
+        .neq("status", "archived")
+        .eq("curriculum.target_language", data.language)
+        .order("path_order"),
+      context.supabase
+        .from("rita_path_items")
+        .select("id, kind, title, path_order")
+        .eq("language", data.language)
+        .order("path_order"),
+    ]);
+    fail(lessonResult.error, "lessons");
+    fail(itemResult.error, "stops");
+    const rows = (lessonResult.data ?? []) as unknown as {
+      id: string;
+      path_order: number | null;
+      curriculum: { level: string };
+    }[];
+    const lesson = rows.find((row) => row.id === data.lessonId);
+    if (!lesson) throw new Error("الدرس مش متاح بهاللغة.");
+    if (data.level && lesson.curriculum.level !== data.level)
+      throw new Error("اختار درس من نفس مستوى مكان الإضافة.");
+    const ordered = mergePath(
+      rows.filter((row) => row.path_order != null),
+      (itemResult.data ?? []).map((row) => ({ ...row, resource_count: 0 })),
+    );
+    const refs = ordered.map((node) => ({
+      type: node.type,
+      id: node.type === "lesson" ? node.lesson.id : node.item.id,
+    }));
+    await saveLayout(context, placeLessonAtGap(refs, lesson.id, data));
     return { ok: true };
   });

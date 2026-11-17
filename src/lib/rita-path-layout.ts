@@ -111,3 +111,23 @@ export function layoutOrders(
 export function pathItemPdfPath(itemId: string, fileId: string): string {
   return `path-items/${itemId}/${fileId}.pdf`;
 }
+
+/** Inserts a lesson at a stable gap, even when it was already on the path. */
+export function placeLessonAtGap(
+  list: PathRef[],
+  lessonId: string,
+  gap: { before?: string; after?: string },
+): PathRef[] {
+  let index = gap.after ? list.findIndex((n) => n.id === gap.after) : -1;
+  if (index < 0 && gap.before) {
+    const before = list.findIndex((n) => n.id === gap.before);
+    if (before >= 0) index = before + 1;
+  }
+  if (index < 0 && !gap.before && !gap.after) index = list.length;
+  if (index < 0) throw new Error("مكان الإضافة تغيّر. اختاره من + في المسار من جديد.");
+  const old = list.findIndex((n) => n.type === "lesson" && n.id === lessonId);
+  const result = list.filter((n) => !(n.type === "lesson" && n.id === lessonId));
+  if (old >= 0 && old < index) index--;
+  result.splice(index, 0, { type: "lesson", id: lessonId });
+  return result;
+}

@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ContentRequest } from "./admin/PathContentPanel";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { toast } from "sonner";
 import {
@@ -56,6 +57,8 @@ import {
 } from "@/lib/rita-path-levels";
 import { LessonImage } from "./LessonArt";
 import { PathStopSheet } from "./PathStopSheet";
+
+const PathContentPanel = lazy(() => import("./admin/PathContentPanel"));
 
 // Horizontal offsets that make the path zig-zag, as in the lesson map design.
 const ZIGZAG = [0, 64, 90, 64, 0, -64, -90, -64];
@@ -184,6 +187,7 @@ export function LessonPathView({
   // not change what the learner can access.
   const [freeOrder, setFreeOrder] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [content, setContent] = useState<ContentRequest | null>(null);
   const [nodes, setNodes] = useState<Node[]>([]);
   const [sheet, setSheet] = useState<PathItem | null>(null);
   const [adding, setAdding] = useState<number | null>(null);
@@ -308,7 +312,8 @@ export function LessonPathView({
 
   function open(node: Node) {
     if (editing) {
-      if (node.type === "item") setSheet(node.item);
+      if (isAdmin)
+        setContent(node.type === "lesson" ? { lessonId: node.lesson.id } : { item: node.item });
       return;
     }
     if (node.type === "item") {
@@ -503,7 +508,7 @@ export function LessonPathView({
         { type: "item", item: created },
         ...list.slice(index),
       ]);
-      if (kind === "exercises") setSheet(created);
+      setContent({ item: created });
       setFresh(created.id);
       confirmSound();
       window.setTimeout(() => setFresh(""), 900);
@@ -540,12 +545,12 @@ export function LessonPathView({
   return (
     <main
       dir="rtl"
-      className="edith-premium lp min-h-screen bg-white pb-32 text-[var(--pp-ink)]"
+      className={`edith-premium lp min-h-screen bg-white pb-32 text-[var(--pp-ink)] ${isAdmin && content ? "pc-path-open" : ""}`}
       data-editing={editing ? "" : undefined}
       style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <header className="sticky top-0 z-30 border-b border-[var(--pp-line)] bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-md items-center justify-between gap-2 px-4 py-3">
+        <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-between gap-2 px-4 py-3">
           <Link
             to="/learn"
             hash="rita"
@@ -571,6 +576,20 @@ export function LessonPathView({
             {isAdmin && (
               <button
                 type="button"
+                className="lp-edit"
+                aria-haspopup="dialog"
+                aria-expanded={Boolean(content)}
+                onClick={() => {
+                  setEditing(true);
+                  setContent({ level: headerLevel });
+                }}
+              >
+                <FolderOpen size={15} /> إدارة المحتوى
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                type="button"
                 onClick={() => {
                   setEditing((value) => !value);
                   setAdding(null);
@@ -590,7 +609,8 @@ export function LessonPathView({
         <h2 className="lp-heading">دروسك مع يوزرا</h2>
         {editing && (
           <p className="lp-edit-hint">
-            اضغط مطوّلاً على أي محطة واسحبها فوق ثانية عشان يتبدّلوا. اكبس + لإضافة تمارين أو ملفات.
+            اضغط مطوّلاً على أي محطة واسحبها فوق ثانية عشان يتبدّلوا. اكبس الدرس لتحريره أو + لإضافة
+            درس أو تمارين أو ملفات.
           </p>
         )}
       </section>
@@ -829,7 +849,11 @@ export function LessonPathView({
                 ) : finishLevel ? (
                   <span className="lp-sub">{finishLine(finishCount)}</span>
                 ) : (
-                  <span className="lp-sub">{node.type === "item" && node.item.quiz_count ? `${node.item.quiz_count} أسئلة` : "قريباً"}</span>
+                  <span className="lp-sub">
+                    {node.type === "item" && node.item.quiz_count
+                      ? `${node.item.quiz_count} أسئلة`
+                      : "قريباً"}
+                  </span>
                 )}
               </button>
             );
@@ -853,6 +877,27 @@ export function LessonPathView({
               </button>
               {adding === plus.index && (
                 <div className="lp-add" role="menu">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      const before = nodes[plus.index - 1];
+                      const after = nodes[plus.index];
+                      setContent({
+                        level: levelAt(plus.index),
+                        insert: {
+                          before: before ? idOf(before) : undefined,
+                          after: after ? idOf(after) : undefined,
+                        },
+                      });
+                      setAdding(null);
+                    }}
+                  >
+                    <span>
+                      <BookOpen size={18} />
+                    </span>
+                    درس من كتاب أو درس موجود
+                  </button>
                   {(["exercises", "resources", "finish"] as PathItemKind[]).map((kind) => {
                     const Icon = LOOK[kind].Icon;
                     return (
@@ -913,6 +958,26 @@ export function LessonPathView({
         </div>
       )}
 
+      {isAdmin && content && (
+        <Suspense
+          fallback={
+            <p
+              className="fixed inset-y-0 right-0 z-50 grid w-full place-items-center border-l border-[var(--pp-line)] bg-white text-[var(--pp-ink)] min-[1100px]:w-[58vw]"
+              role="status"
+            >
+              تحميل إدارة المحتوى…
+            </p>
+          }
+        >
+          <PathContentPanel
+            request={content}
+            language={language}
+            items={items}
+            onClose={() => setContent(null)}
+            onReload={onReload}
+          />
+        </Suspense>
+      )}
       {sheet && (
         <PathStopSheet
           item={sheet}

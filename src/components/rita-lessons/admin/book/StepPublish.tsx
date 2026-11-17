@@ -1,3 +1,4 @@
+import { useWorkspaceTask } from "../WorkspaceGuard";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -54,6 +55,7 @@ export function StepPublish({
   const publishExercisesFn = useServerFn(adminPublishExercises);
   const reorderFn = useServerFn(adminReorderLessons);
   const [busy, setBusy] = useState("");
+  useWorkspaceTask(Boolean(busy));
   const [error, setError] = useState("");
   const plan = useMemo(() => publishPlan(lessons, exercises), [exercises, lessons]);
   const byId = useMemo(() => new Map(lessons.map((lesson) => [lesson.id, lesson])), [lessons]);

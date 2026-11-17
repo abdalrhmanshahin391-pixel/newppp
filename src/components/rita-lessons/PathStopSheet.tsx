@@ -1,3 +1,4 @@
+import { useWorkspaceTask, useWorkspaceGuard } from "./admin/WorkspaceGuard";
 import { PathQuiz } from "./PathQuiz";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
@@ -30,12 +31,14 @@ const message = (cause: unknown) =>
  */
 export function PathStopSheet({
   item,
+  embedded = false,
   admin,
   color,
   onClose,
   onChanged,
 }: {
   item: PathItem;
+  embedded?: boolean;
   admin: boolean;
   color: string;
   onClose: () => void;
@@ -52,6 +55,8 @@ export function PathStopSheet({
   const [title, setTitle] = useState(item.title);
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
+  const finishTask = useWorkspaceTask(busy);
+  const guard = useWorkspaceGuard();
   const file = useRef<HTMLInputElement>(null);
 
   async function load() {
@@ -66,7 +71,7 @@ export function PathStopSheet({
 
   useEffect(() => {
     void load();
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && onClose();
+    const onKey = (event: KeyboardEvent) => !embedded && event.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -126,11 +131,14 @@ export function PathStopSheet({
   }
 
   return (
-    <div className="lp-sheet-back" onClick={onClose}>
+    <div
+      className={embedded ? "pc-stop" : "lp-sheet-back"}
+      onClick={embedded ? undefined : onClose}
+    >
       <div
         className={item.kind === "exercises" ? "lp-sheet lp-quiz-sheet" : "lp-sheet"}
-        role="dialog"
-        aria-modal="true"
+        role={embedded ? "region" : "dialog"}
+        aria-modal={embedded ? undefined : true}
         aria-label={item.title}
         onClick={(event) => event.stopPropagation()}
         style={{ ["--c" as string]: color }}
@@ -150,7 +158,13 @@ export function PathStopSheet({
         )}
 
         {item.kind === "exercises" && (
-          <PathQuiz key={item.id} item={item} admin={admin} onClose={onClose} onChanged={onChanged} />
+          <PathQuiz
+            key={item.id}
+            item={item}
+            admin={admin}
+            onClose={onClose}
+            onChanged={onChanged}
+          />
         )}
 
         {item.kind === "resources" && (
@@ -263,6 +277,8 @@ export function PathStopSheet({
                 if (!window.confirm("أكيد بدك تحذف هالمحطة من المسار؟")) return;
                 void run(async () => {
                   await deleteFn({ data: { id: item.id } });
+                  finishTask();
+                  guard?.saved();
                   onClose();
                 }, "انحذفت المحطة");
               }}

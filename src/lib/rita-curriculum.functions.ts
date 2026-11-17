@@ -436,6 +436,7 @@ export const adminCreateCurriculum = createServerFn({ method: "POST" })
     parseWith(
       z.object({
         kind: kindSchema,
+        level: z.enum(CEFR).default("A1"),
         title: z.string().trim().min(1).max(160),
         title_ar: z.string().trim().max(160).default(""),
         // Required: a default once made new German books show to English learners.

@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { CEFR, type Level } from "@/lib/rita-path-levels";
+import { useState, type ReactNode } from "react";
+import { useWorkspaceTask } from "../WorkspaceGuard";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Upload, X } from "lucide-react";
@@ -18,11 +20,17 @@ const field =
  */
 export function NewBookDialog({
   open,
+  embedded = false,
+  initialLanguage = "",
+  initialLevel = "A1",
   onOpenChange,
   pdfCache,
   onCreated,
 }: {
   open: boolean;
+  embedded?: boolean;
+  initialLanguage?: string;
+  initialLevel?: Level;
   onOpenChange: (open: boolean) => void;
   pdfCache: Map<string, File>;
   onCreated: (id: string) => Promise<void>;
@@ -32,13 +40,17 @@ export function NewBookDialog({
   const registry = useLanguageRegistry();
   const [kind, setKind] = useState<"grammar" | "vocabulary">("grammar");
   // No default: a preset English once sent new German books to English learners.
-  const [language, setLanguage] = useState("");
+  const [language, setLanguage] = useState(initialLanguage);
   const [title, setTitle] = useState("");
+  const [level, setLevel] = useState<Level>(initialLevel);
   const [titleAr, setTitleAr] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
   const busy = Boolean(progress);
+  useWorkspaceTask(busy);
+  const Shell = embedded ? EmbeddedBookShell : ModalBookShell;
+  const Title = embedded ? "h2" : Dialog.Title;
 
   async function submit() {
     setError("");
@@ -88,6 +100,7 @@ export function NewBookDialog({
       const book = await createFn({
         data: {
           kind,
+          level,
           title: title.trim(),
           title_ar: titleAr.trim(),
           target_language: language,
@@ -124,7 +137,7 @@ export function NewBookDialog({
       setTitle("");
       setTitleAr("");
       setFile(null);
-      onOpenChange(false);
+      if (!embedded) onOpenChange(false);
       await onCreated(book.id);
     } catch (cause) {
       setError(errorText(cause));
@@ -134,7 +147,150 @@ export function NewBookDialog({
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
+    <Shell open={open} onClose={() => !busy && onOpenChange(false)}>
+      <header className="rita-ex-header flex items-center justify-between gap-3">
+        <Title className="text-[20px] font-bold">كتاب جديد</Title>
+        <button
+          type="button"
+          className="rita-btn rita-btn-quiet rita-btn-sm"
+          disabled={busy}
+          aria-label="إغلاق"
+          onClick={() => onOpenChange(false)}
+        >
+          <X size={18} />
+        </button>
+      </header>
+      <div className="rita-ex-body space-y-4">
+        <div>
+          <p className="mb-2 text-[15px] font-semibold">نوع الكتاب</p>
+          <div role="radiogroup" aria-label="نوع الكتاب" className="rita-choice">
+            {(["grammar", "vocabulary"] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={kind === value}
+                onClick={() => setKind(value)}
+              >
+                {value === "grammar" ? "قواعد" : "كلمات"}
+              </button>
+            ))}
+          </div>
+        </div>
+        <label className="block text-[15px] font-semibold">
+          المستوى
+          <select
+            className={field}
+            value={level}
+            disabled={busy}
+            onChange={(event) => setLevel(event.target.value as Level)}
+          >
+            {CEFR.map((value) => (
+              <option key={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-[15px] font-semibold">
+          لغة الكتاب
+          <span className="block text-[13px] font-normal text-[var(--pp-muted)]">
+            الدروس بتظهر لمتعلّمي هاللغة بس
+          </span>
+          <select
+            value={language}
+            required
+            onChange={(event) => setLanguage(event.target.value)}
+            className="rita-select mt-1"
+          >
+            <option value="" disabled>
+              اختار لغة الكتاب…
+            </option>
+            {registry.all.map((item) => (
+              <option key={item.code} value={item.code}>
+                {item.name_ar} · {item.name_native}
+                {item.enabled ? "" : " (معطّلة)"}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-[15px] font-semibold">
+          اسم الكتاب بالإنجليزي
+          <input
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            dir="ltr"
+            className={`${field} mt-1`}
+          />
+        </label>
+        <label className="block text-[15px] font-semibold">
+          اسم الكتاب بالعربي <span className="font-normal text-[var(--pp-muted)]">(اختياري)</span>
+          <input
+            value={titleAr}
+            onChange={(event) => setTitleAr(event.target.value)}
+            className={`${field} mt-1`}
+          />
+        </label>
+        <label className="flex min-h-[56px] cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--pp-line)] px-3 text-[15px] font-semibold text-[var(--pp-accent-text)]">
+          <Upload size={17} aria-hidden="true" />
+          <span className="truncate">{file ? file.name : "اختار ملف PDF"}</span>
+          <input
+            type="file"
+            accept="application/pdf"
+            className="sr-only"
+            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+          />
+        </label>
+        {error && (
+          <p
+            role="alert"
+            className="rounded-xl bg-[#fbe9ed] p-3 text-[15px] font-semibold text-[#8c1a31]"
+          >
+            {error}
+          </p>
+        )}
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void submit()}
+          className="rita-btn rita-btn-primary w-full gap-2"
+        >
+          {busy && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
+          {progress || "أضف الكتاب"}
+        </button>
+        {busy && (
+          <p role="status" className="text-center text-[14px] text-[var(--pp-muted)]">
+            خلّي الصفحة مفتوحة لحد ما يخلص.
+          </p>
+        )}
+      </div>
+    </Shell>
+  );
+}
+
+function EmbeddedBookShell({
+  children,
+  open,
+}: {
+  children: ReactNode;
+  open: boolean;
+  onClose: () => void;
+}) {
+  return open ? (
+    <section className="pc-new-book" dir="rtl">
+      {children}
+    </section>
+  ) : null;
+}
+function ModalBookShell({
+  children,
+  open,
+  onClose,
+}: {
+  children: ReactNode;
+  open: boolean;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog.Root open={open} onOpenChange={(next) => !next && onClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="rita-ex-overlay edith-premium" />
         <Dialog.Content
@@ -142,109 +298,7 @@ export function NewBookDialog({
           dir="rtl"
           aria-describedby={undefined}
         >
-          <header className="rita-ex-header flex items-center justify-between gap-3">
-            <Dialog.Title className="text-[20px] font-bold">كتاب جديد</Dialog.Title>
-            <Dialog.Close asChild>
-              <button
-                type="button"
-                className="rita-btn rita-btn-quiet rita-btn-sm"
-                disabled={busy}
-                aria-label="إغلاق"
-              >
-                <X size={18} />
-              </button>
-            </Dialog.Close>
-          </header>
-          <div className="rita-ex-body space-y-4">
-            <div>
-              <p className="mb-2 text-[15px] font-semibold">نوع الكتاب</p>
-              <div role="radiogroup" aria-label="نوع الكتاب" className="rita-choice">
-                {(["grammar", "vocabulary"] as const).map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    role="radio"
-                    aria-checked={kind === value}
-                    onClick={() => setKind(value)}
-                  >
-                    {value === "grammar" ? "قواعد" : "كلمات"}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <label className="block text-[15px] font-semibold">
-              لغة الكتاب
-              <span className="block text-[13px] font-normal text-[var(--pp-muted)]">
-                الدروس بتظهر لمتعلّمي هاللغة بس
-              </span>
-              <select
-                value={language}
-                required
-                onChange={(event) => setLanguage(event.target.value)}
-                className="rita-select mt-1"
-              >
-                <option value="" disabled>
-                  اختار لغة الكتاب…
-                </option>
-                {registry.all.map((item) => (
-                  <option key={item.code} value={item.code}>
-                    {item.name_ar} · {item.name_native}
-                    {item.enabled ? "" : " (معطّلة)"}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-[15px] font-semibold">
-              اسم الكتاب بالإنجليزي
-              <input
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                dir="ltr"
-                className={`${field} mt-1`}
-              />
-            </label>
-            <label className="block text-[15px] font-semibold">
-              اسم الكتاب بالعربي{" "}
-              <span className="font-normal text-[var(--pp-muted)]">(اختياري)</span>
-              <input
-                value={titleAr}
-                onChange={(event) => setTitleAr(event.target.value)}
-                className={`${field} mt-1`}
-              />
-            </label>
-            <label className="flex min-h-[56px] cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--pp-line)] px-3 text-[15px] font-semibold text-[var(--pp-accent-text)]">
-              <Upload size={17} aria-hidden="true" />
-              <span className="truncate">{file ? file.name : "اختار ملف PDF"}</span>
-              <input
-                type="file"
-                accept="application/pdf"
-                className="sr-only"
-                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-              />
-            </label>
-            {error && (
-              <p
-                role="alert"
-                className="rounded-xl bg-[#fbe9ed] p-3 text-[15px] font-semibold text-[#8c1a31]"
-              >
-                {error}
-              </p>
-            )}
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void submit()}
-              className="rita-btn rita-btn-primary w-full gap-2"
-            >
-              {busy && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
-              {progress || "أضف الكتاب"}
-            </button>
-            {busy && (
-              <p role="status" className="text-center text-[14px] text-[var(--pp-muted)]">
-                خلّي الصفحة مفتوحة لحد ما يخلص.
-              </p>
-            )}
-          </div>
+          {children}
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

@@ -41,6 +41,7 @@ export function StepReview({
   resources,
   resourcesReady,
   onNext,
+  onOpenLesson,
   onChanged,
 }: {
   book: CurriculumRow;
@@ -55,6 +56,7 @@ export function StepReview({
   resources: Record<string, Resource[]>;
   resourcesReady: boolean;
   onNext: () => void;
+  onOpenLesson?: (id: string) => void;
   onChanged: () => Promise<void>;
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
@@ -148,8 +150,8 @@ export function StepReview({
           {unfinished.length > 0 && (
             <div className="flex flex-wrap items-center gap-3 rounded-xl bg-[#fff6e5] p-3 text-[14px] text-[#6b4100]">
               <p className="min-w-0 flex-1">
-                {unfinished.length} درس أخضر بدون دليل مربوط. لحد ما ينربط، الطلاب بياخدوه كدرس يوزرا
-                العادي.
+                {unfinished.length} درس أخضر بدون دليل مربوط. لحد ما ينربط، الطلاب بياخدوه كدرس
+                يوزرا العادي.
               </p>
               {maker.running ? (
                 <button
@@ -188,7 +190,9 @@ export function StepReview({
                   >
                     <button
                       type="button"
-                      onClick={() => setOpenId(lesson.id)}
+                      onClick={() =>
+                        onOpenLesson ? onOpenLesson(lesson.id) : setOpenId(lesson.id)
+                      }
                       className="flex min-h-[64px] w-full min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-start transition-colors hover:bg-[var(--pp-grey)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--pp-ink)]"
                     >
                       <span className="w-8 shrink-0 text-center text-[14px] font-semibold tabular-nums text-[var(--pp-muted)]">

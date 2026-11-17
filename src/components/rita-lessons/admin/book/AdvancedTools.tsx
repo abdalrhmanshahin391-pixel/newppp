@@ -1,3 +1,4 @@
+import { useWorkspaceTask } from "../WorkspaceGuard";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -42,6 +43,7 @@ export function AdvancedTools({
   const [summaryJson, setSummaryJson] = useState("");
   const [lessonJson, setLessonJson] = useState("");
   const [busy, setBusy] = useState("");
+  useWorkspaceTask(Boolean(busy));
 
   async function run(label: string, task: () => Promise<unknown>, done: string) {
     setBusy(label);
