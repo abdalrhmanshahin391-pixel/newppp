@@ -78,13 +78,16 @@ function cap(n: number | null | undefined, unit: string) {
 type Billing = "three_months" | "yearly" | "once";
 
 /** One row of the comparison table: a label and how to read the plan's allowance. */
-type Row = { label: string; value: (p: FullPlan) => number | null | false };
+type Row = { label: string; value: (p: FullPlan) => number | string | null | false };
 
 const allowance = (n: number | null | undefined, on = true): number | null | false =>
   !on || n === 0 ? false : n === undefined ? false : n;
 
 /** The comparison table, grouped like the cards: every value comes from the plan in the admin. */
+const conversationAllowance = (p: FullPlan) => `${((p.free_talk_seconds ?? 0) / 60).toLocaleString()} minutes of free conversation ${p.free_talk_period === "lifetime" ? "per account" : "per month"}`;
+
 const COMPARE: { title: string; rows: Row[] }[] = [
+  { title: "Voice learning", rows: [{label: "Free conversation time",value: conversationAllowance}] },
   {
     title: "Study tools",
     rows: [
@@ -158,6 +161,8 @@ const QUESTIONS: { q: string; a: string; packs?: boolean }[] = [
 const DEMO_PLANS: FullPlan[] = [
   {
     slug: "demo-free",
+    free_talk_seconds: 600,
+    free_talk_period: "lifetime",
     name: "Free",
     tagline: "For trying Uzyra. No card needed.",
     price_cents: 0,
@@ -185,6 +190,8 @@ const DEMO_PLANS: FullPlan[] = [
   },
   {
     slug: "demo-pro",
+    free_talk_seconds: 21600,
+    free_talk_period: "monthly",
     name: "Pro",
     tagline: "For one person, billed yearly.",
     highlight: true,
@@ -218,6 +225,8 @@ const DEMO_PLANS: FullPlan[] = [
   },
   {
     slug: "demo-team",
+    free_talk_seconds: 36000,
+    free_talk_period: "monthly",
     name: "Team",
     tagline: "For a team, per seat, billed yearly.",
     price_cents: 3200,
@@ -412,7 +421,7 @@ function PricingPage() {
                 lifetime || yearly || !liveOffer
                   ? 0
                   : discountPercent(p.compare_cents, p.price_cents);
-              const lines = (p.perks && p.perks.length > 0 ? p.perks : cardLines(p)).slice(0, 7);
+              const lines = [conversationAllowance(p), ...(p.perks && p.perks.length > 0 ? p.perks : cardLines(p)).slice(0, 7)];
               return (
                 <article
                   key={p.slug}
@@ -549,7 +558,7 @@ function PricingPage() {
                                 "Unlimited"
                               )
                             ) : (
-                              v.toLocaleString("en-US")
+                              typeof v === "string" ? v : v.toLocaleString("en-US")
                             )}
                           </span>
                         );

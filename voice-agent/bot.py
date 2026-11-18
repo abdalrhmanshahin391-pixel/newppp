@@ -959,7 +959,11 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         await task.cancel()
 
     runner = PipelineRunner(handle_sigint=False)
-    await runner.run(task)
+    if body.get("freeTalk"):
+        from free_talk_guard import run_with_deadline
+        await run_with_deadline(lambda: runner.run(task), lambda: task.cancel(), body["freeTalk"])
+    else:
+        await runner.run(task)
 
 
 if __name__ == "__main__":

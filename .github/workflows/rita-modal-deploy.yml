@@ -48,3 +48,10 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check modal
           modal deploy modal_app.py
+          python - <<'PY'
+          import modal, os
+          result = modal.Function.from_name("ritajet-voice", "quota_readiness").remote()
+          assert result["quotaProtocol"] == 1 and result["configured"], "Voice quota enforcement is not ready"
+          assert result["build"] == os.environ["RITA_GIT_SHA"], "Voice build mismatch"
+          print("Voice quota protocol 1 verified on build " + result["build"])
+          PY

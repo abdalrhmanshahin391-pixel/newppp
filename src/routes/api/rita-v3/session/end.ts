@@ -6,6 +6,10 @@ export const Route = createFileRoute("/api/rita-v3/session/end")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        if (request.headers.get("x-uzyra-voice-control") === "1") {
+          const { handleFreeTalkControl } = await import("@/lib/free-talk-control.server");
+          return handleFreeTalkControl(request);
+        }
         const auth = await requireRitaUser(request);
         if (!auth) return new Response("Unauthorized", { status: 401 });
         const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
@@ -15,6 +19,10 @@ export const Route = createFileRoute("/api/rita-v3/session/end")({
           return Response.json({ ok: false, code: "invalid_session" }, { status: 400 });
         }
 
+        try {
+          const { endFreeTalk } = await import("@/lib/free-talk.server");
+          await endFreeTalk(auth.userId, sessionId);
+        } catch { return Response.json({ok:false,code:"free_talk_stop_unconfirmed"},{status:503}); }
         // Modal owns worker lifetime; do not invoke the retired Pipecat control plane.
         void providerSessionId;
         await updateRitaV3Session(sessionId, auth.userId, auth.token, {

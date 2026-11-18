@@ -1,3 +1,5 @@
+import {publishVoiceTime,type VoiceTimeSnapshot} from "@/lib/free-talk-time";
+import {VoiceTime} from "@/components/VoiceTime";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -271,6 +273,7 @@ export function RitaRealtimeV3({
   const botAudioPlaying = useRef(false);
   const [soundBlocked, setSoundBlocked] = useState(false);
   const [active, setActive] = useState(false);
+  const [voiceDeadline, setVoiceDeadline] = useState<{ snapshot: VoiceTimeSnapshot; receivedAt: number } | null>(null);
 
   // Tell the language switcher a conversation is running, so it waits until it is over.
   useEffect(() => {
@@ -833,6 +836,7 @@ export function RitaRealtimeV3({
 
   const endLesson = useCallback(
     async (preserveMessages = false) => {
+      setVoiceDeadline(null);
       const retiring = attemptRef.current;
       retiring?.close();
       cancelFiller();
@@ -878,7 +882,7 @@ export function RitaRealtimeV3({
               }),
               keepalive: true,
               signal: AbortSignal.timeout(5000),
-            }).catch(() => undefined);
+            }).catch(() => undefined).finally(() => publishVoiceTime());
           })()
         : Promise.resolve();
       void flushMetrics({ keepalive: true });
@@ -948,6 +952,17 @@ export function RitaRealtimeV3({
     await endLesson();
     if (!lessonId && !studyLessonId) void navigate({ to: "/rita-conversations" });
   }, [endLesson, lessonId, studyLessonId, navigate]);
+
+  useEffect(() => {
+    if (!active || !voiceDeadline?.snapshot.activeDeadline) return;
+    const remaining = Date.parse(voiceDeadline.snapshot.activeDeadline) - Date.parse(voiceDeadline.snapshot.serverNow) - (performance.now() - voiceDeadline.receivedAt);
+    const timer = window.setTimeout(() => {
+      if (sessionId.current !== voiceDeadline.snapshot.activeSessionId) return;
+      void endLesson(true);
+      setStatus("Conversation time ended.");
+    }, Math.max(0, remaining));
+    return () => window.clearTimeout(timer);
+  }, [active, voiceDeadline, endLesson]);
 
   useEffect(() => () => void endLesson(), [endLesson]);
 
@@ -1258,6 +1273,11 @@ export function RitaRealtimeV3({
                 providerSessionId?: string | null;
               };
               sessionId.current = String(started.sessionId ?? "");
+              if((started as {freeTalk?:VoiceTimeSnapshot}).freeTalk) {
+                const snapshot = (started as {freeTalk:VoiceTimeSnapshot}).freeTalk;
+                publishVoiceTime(snapshot);
+                setVoiceDeadline({snapshot,receivedAt:performance.now()});
+              }
               providerSessionId.current = String(started.providerSessionId ?? "");
               if (sessionId.current) flushPendingMetrics(sessionId.current);
               if (transportConnectedAt.current && !transportMetricRecorded.current) {
@@ -1617,6 +1637,11 @@ export function RitaRealtimeV3({
       if (!sessionId.current && typeof startResult?.sessionId === "string") {
         sessionId.current = startResult.sessionId;
         providerSessionId.current = String(startResult.providerSessionId ?? "");
+        const snapshot = (startResult as {freeTalk?:VoiceTimeSnapshot}).freeTalk;
+        if (snapshot) {
+          publishVoiceTime(snapshot);
+          setVoiceDeadline({snapshot,receivedAt:performance.now()});
+        }
         flushPendingMetrics(sessionId.current);
       }
       if (!isCurrent()) return;
@@ -2061,6 +2086,7 @@ export function RitaRealtimeV3({
             />
             {status}
           </p>
+          {!lessonId && !studyLessonId && <VoiceTime />}
           {!lessonId && saveState !== "idle" ? (
             <p
               role="status"
