@@ -36,6 +36,7 @@ import "./path-content.css";
 export type ContentRequest = {
   lessonId?: string;
   item?: PathItem;
+  film?: boolean;
   insert?: { before?: string; after?: string };
   level?: string;
 };
@@ -54,7 +55,8 @@ export default function PathContentPanel({
   onReload: () => Promise<void>;
 }) {
   const { isAdmin } = useAuth();
-  const data = useCurriculumAdminData(isAdmin);
+  const filmStop = request.film ? request.item : undefined;
+  const data = useCurriculumAdminData(isAdmin && !filmStop);
   const saveLayout = useServerFn(adminPlacePathLesson);
   const studyFn = useServerFn(adminBookStudyState);
   const [bookId, setBookId] = useState("");
@@ -267,7 +269,7 @@ export default function PathContentPanel({
           >
             <header className="pc-header">
               <div>
-                <Dialog.Title>إدارة المحتوى</Dialog.Title>
+                <Dialog.Title>{filmStop ? "تمارين مقاطع الأفلام" : "إدارة المحتوى"}</Dialog.Title>
                 <p id="pc-description">
                   للأدمن فقط · {language?.toUpperCase() ?? "كل اللغات"}
                   {book ? ` · ${book.level}` : ""}
@@ -311,7 +313,19 @@ export default function PathContentPanel({
               </div>
             )}
             <div className="pc-body">
-              {data.loadError && (
+              {filmStop && (
+                <PathStopSheet
+                  key={filmStop.id}
+                  embedded
+                  film
+                  admin
+                  color="#2b6df0"
+                  item={items.find((i) => i.id === filmStop.id) ?? filmStop}
+                  onClose={() => leave(onClose)}
+                  onChanged={onReload}
+                />
+              )}
+              {!filmStop && data.loadError && (
                 <div className="pc-error" role="alert">
                   <p>{data.loadError}</p>
                   <button className="rita-btn rita-btn-soft" onClick={() => void data.refresh()}>
@@ -319,12 +333,12 @@ export default function PathContentPanel({
                   </button>
                 </div>
               )}
-              {!overview && !data.loadError && (
+              {!filmStop && !overview && !data.loadError && (
                 <p className="pc-loading" role="status">
                   <Loader2 size={19} className="animate-spin" /> تحميل كتب المنهج…
                 </p>
               )}
-              {overview && !data.loadError && (
+              {!filmStop && overview && !data.loadError && (
                 <>
                   {overview.needsMigration && (
                     <p className="pc-notice">

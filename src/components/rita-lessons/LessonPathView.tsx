@@ -11,6 +11,7 @@ import {
   Dumbbell,
   Flag,
   FileText,
+  Clapperboard,
   FolderOpen,
   Loader2,
   Lock,
@@ -490,7 +491,7 @@ export function LessonPathView({
     return level ?? lessonOrder[0]?.level ?? normalizeLevel(null);
   }
 
-  async function add(kind: PathItemKind, index: number) {
+  async function add(kind: PathItemKind, index: number, film = false) {
     setAdding(null);
     setBusy(true);
     try {
@@ -498,7 +499,13 @@ export function LessonPathView({
         data: {
           language,
           kind,
-          title: kind === "exercises" ? "تمارين" : kind === "finish" ? levelAt(index) : "Resources",
+          title: film
+            ? "تدريب بمقاطع الأفلام"
+            : kind === "exercises"
+              ? "تمارين"
+              : kind === "finish"
+                ? levelAt(index)
+                : "Resources",
           list: nodes.map(refOf),
           index,
         },
@@ -508,7 +515,7 @@ export function LessonPathView({
         { type: "item", item: created },
         ...list.slice(index),
       ]);
-      setContent({ item: created });
+      setContent({ item: created, film });
       setFresh(created.id);
       confirmSound();
       window.setTimeout(() => setFresh(""), 900);
@@ -607,6 +614,37 @@ export function LessonPathView({
 
       <section className="mx-auto max-w-md px-4 pt-7 text-center">
         <h2 className="lp-heading">دروسك مع يوزرا</h2>
+        {isAdmin && lessons && !error && (
+          <details className="my-4 rounded-2xl border border-blue-200 bg-blue-50 text-start">
+            <summary className="cursor-pointer px-4 py-3 font-bold text-blue-900">
+              <Clapperboard className="me-2 inline-block" size={20} />
+              تمارين مقاطع الأفلام
+            </summary>
+            <div className="grid gap-2 border-t border-blue-200 p-3">
+              {items
+                .filter((item) => item.kind === "exercises")
+                .map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    disabled={busy}
+                    className="min-h-11 rounded-xl bg-white px-3 text-start"
+                    onClick={() => setContent({ item, film: true })}
+                  >
+                    {item.title} · {item.film_lines?.length ?? 0} مقاطع
+                  </button>
+                ))}
+              <button
+                type="button"
+                className="min-h-11 rounded-xl bg-blue-700 px-3 font-bold text-white"
+                disabled={busy}
+                onClick={() => void add("exercises", nodes.length, true)}
+              >
+                أضف محطة مقاطع في آخر المسار
+              </button>
+            </div>
+          </details>
+        )}
         {editing && (
           <p className="lp-edit-hint">
             اضغط مطوّلاً على أي محطة واسحبها فوق ثانية عشان يتبدّلوا. اكبس الدرس لتحريره أو + لإضافة
@@ -899,6 +937,17 @@ export function LessonPathView({
                       <BookOpen size={18} />
                     </span>
                     درس من كتاب أو درس موجود
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    disabled={busy}
+                    onClick={() => void add("exercises", plus.index, true)}
+                  >
+                    <span>
+                      <Clapperboard size={18} />
+                    </span>
+                    تدريب بمقاطع الأفلام
                   </button>
                   {(["exercises", "resources", "finish"] as PathItemKind[]).map((kind) => {
                     const Icon = LOOK[kind].Icon;

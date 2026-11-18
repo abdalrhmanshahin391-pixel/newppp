@@ -14,6 +14,7 @@ const FilmPlayer = lazy(() => import("./FilmPractice").then((m) => ({ default: m
 type Props = {
   item: PathItem;
   admin: boolean;
+  film?: boolean;
   onClose: () => void;
   onChanged: () => Promise<void>;
 };
@@ -35,7 +36,9 @@ export function PathQuiz(props: Props) {
   const t = useCopy();
   const ids = props.item.film_lines ?? [];
   const canChoose = props.admin || (!!props.item.quiz_count && ids.length > 0);
-  const [mode, setMode] = useState<"quiz" | "film" | null>(null);
+  const [mode, setMode] = useState<"quiz" | "film" | null>(
+    props.admin && props.film ? "film" : null,
+  );
   const active = mode ?? (canChoose ? null : ids.length ? "film" : "quiz");
   return (
     <div className="path-quiz" dir={lang === "ar" ? "rtl" : "ltr"}>

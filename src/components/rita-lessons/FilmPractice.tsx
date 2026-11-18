@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Check, Pause, Play, Plus, RotateCcw } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import lines from "@/lib/sintel-lines.json";
@@ -10,10 +11,14 @@ import "./film-practice.css";
 
 type Line = (typeof lines)[number];
 const byId = new Map(lines.map((line) => [line.id, line]));
+const dailyIds = [5, 8, 13, 14, 15, 20, 23];
 const normalize = (text: string) =>
   text
     .toLowerCase()
-    .replace(/[’‘]/g, "'")
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .replace(/ـ/g, "")
+    .replace(/[’‘']/g, "")
     .replace(/[^\p{L}\p{N}']+/gu, " ")
     .trim();
 function useCopy() {
@@ -41,6 +46,8 @@ function Credit() {
 function Clip({ line, video }: { line: Line; video?: React.RefObject<HTMLVideoElement | null> }) {
   const t = useCopy();
   const [error, setError] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [ended, setEnded] = useState(false);
   const internal = useRef<HTMLVideoElement>(null);
   const ref = video ?? internal;
   return (
@@ -49,6 +56,13 @@ function Clip({ line, video }: { line: Line; video?: React.RefObject<HTMLVideoEl
         ref={ref}
         aria-label={t("Sintel dialogue clip", "مشهد من سينتل")}
         src={`/media/sintel/${line.id}.mp4`}
+        poster={`/media/sintel/${line.id}.jpg`}
+        onPlay={() => {
+          setPlaying(true);
+          setEnded(false);
+        }}
+        onPause={() => setPlaying(false)}
+        onEnded={() => setEnded(true)}
         preload="metadata"
         playsInline
         controls
@@ -64,7 +78,35 @@ function Clip({ line, video }: { line: Line; video?: React.RefObject<HTMLVideoEl
           {t("Clip unavailable · Retry", "تعذّر تحميل المقطع · أعد المحاولة")}
         </button>
       )}
-      <Credit />
+      <div className="fc-controls">
+        <button
+          type="button"
+          className="fc-play"
+          disabled={error}
+          onClick={async () => {
+            const player = ref.current;
+            if (!player) return;
+            if (!player.paused) {
+              player.pause();
+              return;
+            }
+            if (player.ended) player.currentTime = 0;
+            try {
+              await player.play();
+            } catch {
+              setError(true);
+            }
+          }}
+        >
+          {playing ? <Pause size={16} /> : ended ? <RotateCcw size={16} /> : <Play size={16} />}
+          {playing
+            ? t("Pause", "إيقاف مؤقت")
+            : ended
+              ? t("Replay clip", "إعادة المقطع")
+              : t("Play clip", "شغّل المقطع")}
+        </button>
+        <Credit />
+      </div>
     </>
   );
 }
@@ -83,6 +125,7 @@ export function FilmEditor({
   const [previous] = useState(item.film_lines ?? []);
   const [ids, setIds] = useState(previous);
   const [query, setQuery] = useState("");
+  const [daily, setDaily] = useState(true);
   const [preview, setPreview] = useState<Line>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -90,12 +133,22 @@ export function FilmEditor({
   const guard = useWorkspaceGuard();
   useWorkspaceDraft(ids);
   const needle = normalize(query);
-  const matches = lines.filter(
-    (line) =>
-      [line.en, line.ar].some((text) =>
-        (" " + normalize(text) + " ").includes(" " + needle + " "),
-      ) || !needle,
-  );
+  const matches = needle
+    ? lines.filter((line) =>
+        needle.split(" ").every((word) =>
+          normalize(line.en + " " + line.ar)
+            .split(" ")
+            .some((token) => token.startsWith(word)),
+        ),
+      )
+    : daily
+      ? dailyIds.map((id) => byId.get(id)!)
+      : lines;
+  function toggle(id: number) {
+    setIds((current) =>
+      current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
+    );
+  }
   async function publish() {
     setBusy(true);
     setError("");
@@ -117,6 +170,7 @@ export function FilmEditor({
         {t("Search Sintel dialogue", "ابحث في حوار سينتل")}
         <input
           type="search"
+          data-workspace-transient
           dir="auto"
           value={query}
           onChange={(e) => {
@@ -126,17 +180,47 @@ export function FilmEditor({
           placeholder={t("Phrase or word", "جملة أو كلمة")}
         />
       </label>
+      {!needle && (
+        <div className="fc-filters" aria-label={t("Phrase collection", "مجموعة الجمل")}>
+          <button type="button" aria-pressed={daily} onClick={() => setDaily(true)}>
+            {t("Everyday phrases", "جمل يومية")}
+          </button>
+          <button type="button" aria-pressed={!daily} onClick={() => setDaily(false)}>
+            {t("All clips", "كل المقاطع")} · {lines.length}
+          </button>
+        </div>
+      )}
       <div className="fc-results">
         {matches.map((line) => (
-          <button
-            key={line.id}
-            aria-pressed={preview?.id === line.id}
-            dir="ltr"
-            onClick={() => setPreview(line)}
-          >
-            {ids.includes(line.id) && "✓ "}
-            {line.en}
-          </button>
+          <div className="fc-result" key={line.id}>
+            <button
+              type="button"
+              className="fc-preview"
+              aria-pressed={preview?.id === line.id}
+              onClick={() => setPreview(line)}
+            >
+              <img
+                loading="lazy"
+                src={`/media/sintel/${line.id}.jpg`}
+                width="72"
+                height="40"
+                alt=""
+              />
+              <span>
+                <strong dir="ltr">{line.en}</strong>
+                <span dir="rtl">{line.ar}</span>
+              </span>
+            </button>
+            <button
+              className="fc-select"
+              type="button"
+              aria-pressed={ids.includes(line.id)}
+              aria-label={t("Select phrase", "اختيار الجملة") + " · " + line.en}
+              onClick={() => toggle(line.id)}
+            >
+              {ids.includes(line.id) ? <Check size={18} /> : <Plus size={18} />}
+            </button>
+          </div>
         ))}
       </div>
       {!matches.length && (
@@ -156,7 +240,12 @@ export function FilmEditor({
           </button>
         </div>
       )}
-      <ol>
+      {ids.length > 0 && (
+        <h4>
+          {t("Selected phrases", "جمل التدريب")} · {ids.length}
+        </h4>
+      )}
+      <ol className="fc-selected">
         {ids.map((id) => (
           <li key={id}>
             <bdi>{byId.get(id)?.en}</bdi>{" "}
@@ -175,7 +264,7 @@ export function FilmEditor({
         disabled={previous.join() === ids.join()}
         onClick={() => void publish()}
       >
-        {t("Save clips", "احفظ المقاطع")} ({ids.length})
+        {busy ? t("Saving…", "جارٍ الحفظ…") : t("Save practice", "احفظ التدريب")} ({ids.length})
       </button>
     </fieldset>
   );
@@ -197,6 +286,10 @@ export function FilmPlayer({ ids, onClose }: { ids: number[]; onClose: () => voi
     );
   return (
     <div className="film-practice">
+      <small>
+        {t("Clip", "المقطع")} {Math.floor(step / 4) + 1} / {selected.length} · {t("Step", "الخطوة")}{" "}
+        {(step % 4) + 1} / 4
+      </small>
       <progress
         aria-label={t("Practice progress", "تقدّم التدريب")}
         value={step}
