@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, ChevronDown } from "lucide-react";
 import { ProHeader } from "@/components/home/procreate/ProHeader";
-import { supabase } from "@/integrations/supabase/legacy-client";
 import { OfferRibbon, discountPercent, offerLive } from "@/components/pricing/offer";
 import { myPlanUsage, listPlans, type PlanRow } from "@/lib/plans.functions";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,7 +17,7 @@ export const Route = createFileRoute("/pricing")({
       const plans = (await listPlans()) as FullPlan[];
       return { plans };
     } catch {
-      return { plans: [] as FullPlan[] };
+      return { plans: undefined };
     }
   },
   head: () => ({
@@ -276,15 +275,18 @@ function PricingPage() {
     setDemo(new URLSearchParams(window.location.search).has("demo"));
   }, []);
 
-  const { data: realPlans = loaderData?.plans ?? [], isLoading: loadingPlans } = useQuery({
+  const fetchPlans = useServerFn(listPlans);
+  const {
+    data: realPlans,
+    isLoading: loadingPlans,
+    isError: plansError,
+    isFetching: fetchingPlans,
+    refetch: refetchPlans,
+  } = useQuery({
     queryKey: ["plans"],
-    initialData: loaderData?.plans && loaderData.plans.length > 0 ? loaderData.plans : undefined,
-    staleTime: 5 * 60_000,
-    queryFn: async (): Promise<FullPlan[]> => {
-      const { data, error } = await (supabase.from as any)("plans").select("*").order("sort");
-      if (error) throw new Error(error.message);
-      return (data ?? []) as FullPlan[];
-    },
+    initialData: loaderData?.plans,
+    staleTime: 60_000,
+    queryFn: async () => (await fetchPlans()) as FullPlan[],
   });
 
   const { data: mine } = useQuery({
@@ -293,7 +295,8 @@ function PricingPage() {
     enabled: !!user,
   });
 
-  const plans = demo ? DEMO_PLANS : realPlans;
+  const plans = demo ? DEMO_PLANS : (realPlans ?? []);
+  const showPlansError = !demo && plansError && !realPlans;
   const isLoading = !demo && loadingPlans;
   const isAdmin = !!(mine as any)?.is_admin;
   const packsVisible = settings.credit_packs_enabled || isAdmin;
@@ -404,7 +407,21 @@ function PricingPage() {
           </div>
         )}
 
-        {!isLoading && live.length === 0 && (
+        {showPlansError && (
+          <div role="alert" className="mt-10 rounded-[24px] bg-[var(--pro-card)] p-8 text-center">
+            <p>We couldn’t load plans right now.</p>
+            <button
+              type="button"
+              className="rh-btn mt-4 mx-auto"
+              disabled={fetchingPlans}
+              onClick={() => void refetchPlans()}
+            >
+              {fetchingPlans ? "Loading plans…" : "Try again"}
+            </button>
+          </div>
+        )}
+
+        {!isLoading && !showPlansError && live.length === 0 && (
           <p className="mt-10 rounded-[24px] bg-[var(--pro-card)] p-10 text-center text-[14.5px] text-white/45">
             No plans are published yet.
           </p>
