@@ -97,6 +97,7 @@ export function FloatingWindow({
   origin,
   shown,
   onHidden,
+  onTuckChange,
   revealSignal = 0,
   tabLabel = "أظهر النافذة",
   place,
@@ -111,6 +112,7 @@ export function FloatingWindow({
   shown: boolean;
   /** The X was pressed and the window has finished going away. */
   onHidden: () => void;
+  onTuckChange?: (tucked: boolean) => void;
   /** Changing it brings the window back from the side (new content arrived). */
   revealSignal?: number;
   /** The tab's name for screen readers and keyboards. */
@@ -130,6 +132,9 @@ export function FloatingWindow({
   const [active, setActive] = useState<"" | "move" | "resize">("");
   const [visible, setVisible] = useState(false);
   const [tucked, setTucked] = useState(false);
+  useEffect(() => {
+    onTuckChange?.(tucked);
+  }, [tucked, onTuckChange]);
   const [tabState, setTabStateRaw] = useState<TabState>("off");
   const before = useRef<Rect | null>(null);
   const lastTap = useRef(0);
@@ -222,7 +227,11 @@ export function FloatingWindow({
     setRect((current) => {
       if (max) return maximisedRect(area);
       let initial: Rect;
-      if (variant === "questions") {
+      if (place === "study-whiteboard") {
+        const w = Math.min(740, area.w >= 900 ? area.w * 0.55 : area.w - EDGE * 2);
+        const h = Math.min(730, area.h - EDGE * 2);
+        initial = { w, h, x: EDGE, y: (area.h - h) / 2 };
+      } else if (variant === "questions") {
         const w = Math.min(960, area.w * 0.88);
         const h = Math.min(700, area.h * 0.88);
         initial = { w, h, x: (area.w - w) / 2, y: (area.h - h) / 2 };
@@ -609,9 +618,14 @@ export function FloatingWindow({
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={() => tuck(0)}
                 >
-                  {place === "book-practice" ? <>
-                    <PanelRightClose size={17} aria-hidden="true" /><span>إلى الجانب</span>
-                  </> : <ChevronsRight size={15} strokeWidth={2.2} aria-hidden="true" />}
+                  {place === "book-practice" ? (
+                    <>
+                      <PanelRightClose size={17} aria-hidden="true" />
+                      <span>إلى الجانب</span>
+                    </>
+                  ) : (
+                    <ChevronsRight size={15} strokeWidth={2.2} aria-hidden="true" />
+                  )}
                 </button>
               </div>
               <div className="fw-body">{children}</div>

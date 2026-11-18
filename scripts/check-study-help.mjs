@@ -80,6 +80,20 @@ const result = await build({
             };
           if (path === "@tanstack/react-start")
             return { contents: "export const useServerFn=f=>f;" };
+          if (path.endsWith("whiteboard.functions"))
+            return {
+              contents: `
+            export async function studyBoardStep({data}) {
+              (window.qaBoardCalls ||= []).push(data);
+              if (window.qaBoardFail) return {ok:false,message:"تعذّر تجهيز الرسم."};
+              return {ok:true,audio:location.search.includes("silent")?null:"/api/german/tts",
+                step:{title:data.question?"سؤالك عن الفعل":"مين بيعمل الفعل؟",narration:"لما نحكي عن شخص واحد، منضيف حرف إس للفعل بالمضارع البسيط.",
+                commands:[{op:"write",at:[42,35],text:"She",ink:"indigo"},{op:"arrow",at:[122,54],to:[220,54],ink:"teal"},
+                {op:"write",at:[248,35],text:"looks after",ink:"ink"},{op:"line",at:[250,67],to:[348,67],ink:"coral"},
+                {op:"write",at:[54,174],text:"She looks after her brother.",ink:"ink"},{op:"write",at:[272,90],text:"فعل في المضارع",ink:"teal"}]}};
+            }
+          `,
+            };
           const names = [
             "explainPhrase",
             "studyGuideDownload",
@@ -282,6 +296,21 @@ if (process.argv.includes("--check")) {
           "common_mistake",
         ],
       );
+      // The existing explain wedge now opens the board. The quote survives the ring gesture.
+      const explain = await page.locator('[data-service="explain"] .st-wedge-in').boundingBox();
+      await page.mouse.click(explain.x + explain.width / 2, explain.y + explain.height / 2);
+      const board = page.getByRole("region", { name: "سبورة يوزرا" });
+      await board.locator(".wb-drawing").waitFor();
+      assert.match(await board.locator("blockquote").textContent(), /looks after/);
+      assert.equal(await page.evaluate(() => window.qaBoardCalls.length), 1);
+      // Read instantly even when a mobile browser defers audio until a second tap.
+      const paused = board.getByRole("button", { name: "تشغيل الشرح", exact: true });
+      if (await paused.count())
+        await board.getByRole("button", { name: "عرض الخطوة كاملة" }).click();
+      await board.getByRole("button", { name: "تمام، كمّلي" }).click();
+      await page.waitForFunction(() => window.qaBoardCalls.at(-1)?.index === 1);
+      await page.getByRole("button", { name: "أخفِ النافذة" }).click();
+      await menu(page);
       await choose(page, "فلاش كاردز", true);
       await page.locator(".st-practice-front").waitFor();
       assert.equal(await page.locator(".st-practice-front").innerText(), "looks after");

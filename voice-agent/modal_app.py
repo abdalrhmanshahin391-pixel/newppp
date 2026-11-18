@@ -673,6 +673,13 @@ async def start_session(payload: dict[str, Any]):
 
     body = payload.get("body") if isinstance(payload.get("body"), dict) else {}
     action = payload.get("action", "start")
+    if action == "whiteboard-narration":
+        from uzyra_voice_lines import narrate_board_step
+        text, language = body.get("text"), body.get("language")
+        if not isinstance(text, str) or not 1 <= len(text.strip()) <= 440 or language not in ("ar", "en"):
+            raise HTTPException(status_code=400, detail="invalid_whiteboard_step")
+        audio = await narrate_board_step(text, language)
+        return {"quotaProtocol": 1, "audio": audio}
     if action == "stop":
         return await _stop_quota_session(body)
     if action == "capabilities":

@@ -245,7 +245,7 @@ type Recognition = {
   abort(): void;
 };
 
-function recogniser(): (new () => Recognition) | null {
+export function recogniser(): (new () => Recognition) | null {
   if (typeof window === "undefined") return null;
   const w = window as unknown as {
     SpeechRecognition?: new () => Recognition;
