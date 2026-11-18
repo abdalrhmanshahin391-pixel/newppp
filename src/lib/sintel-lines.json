@@ -3,120 +3,160 @@
     "id": 1,
     "en": "This blade has a dark past.",
     "ar": "لهذا النصل ماضٍ مظلم.",
-    "target": "past"
+    "target": "past",
+    "targetAr": "ماضٍ",
+    "contextAr": "تصف الجملة تاريخ النصل."
   },
   {
     "id": 2,
     "en": "It has shed much innocent blood.",
     "ar": "لقد سفك الكثير من دماء الأبرياء.",
-    "target": "innocent"
+    "target": "innocent",
+    "targetAr": "الأبرياء",
+    "contextAr": "يتحدّث الراوي عن ضحايا النصل."
   },
   {
     "id": 3,
     "en": "You're a fool for traveling alone, so completely unprepared.",
     "ar": "من الحماقة أن تسافري وحدك وأنت غير مستعدة إطلاقًا.",
-    "target": "alone"
+    "target": "alone",
+    "targetAr": "وحدك",
+    "contextAr": "يحذّرها من السفر بلا رفيق."
   },
   {
     "id": 4,
     "en": "You're lucky your blood's still flowing.",
     "ar": "من حسن حظك أن دمك ما زال يجري في عروقك.",
-    "target": "lucky"
+    "target": "lucky",
+    "targetAr": "حسن حظك",
+    "contextAr": "نجت سينتل من الخطر."
   },
   {
     "id": 5,
     "en": "Thank you.",
     "ar": "شكرًا لك.",
-    "target": "Thank"
+    "target": "Thank",
+    "targetAr": "شكرًا",
+    "contextAr": "تردّ بكلمة امتنان قصيرة."
   },
   {
     "id": 7,
     "en": "What brings you to the land of the gatekeepers?",
     "ar": "ما الذي أتى بك إلى أرض حرّاس البوابات؟",
-    "target": "gatekeepers"
+    "target": "gatekeepers",
+    "targetAr": "حرّاس البوابات",
+    "contextAr": "يسألها عن سبب مجيئها."
   },
   {
     "id": 8,
     "en": "I'm searching for someone.",
     "ar": "أنا أبحث عن شخص ما.",
-    "target": "searching"
+    "target": "searching",
+    "targetAr": "أبحث",
+    "contextAr": "تشرح سينتل سبب رحلتها."
   },
   {
     "id": 9,
     "en": "Someone very dear? A kindred spirit?",
     "ar": "هل هو شخص عزيز جدًا؟ روح تشبه روحك؟",
-    "target": "dear"
+    "target": "dear",
+    "targetAr": "عزيز",
+    "contextAr": "يسأل عن الشخص الذي تفتقده."
   },
   {
     "id": 10,
     "en": "A dragon.",
     "ar": "تنين.",
-    "target": "dragon"
+    "target": "dragon",
+    "targetAr": "تنين",
+    "contextAr": "تكشف هوية من تبحث عنه."
   },
   {
     "id": 11,
     "en": "A dangerous quest for a lone hunter.",
     "ar": "مهمة خطيرة لصيّادة وحيدة.",
-    "target": "dangerous"
+    "target": "dangerous",
+    "targetAr": "خطيرة",
+    "contextAr": "يصف صعوبة الرحلة."
   },
   {
     "id": 12,
     "en": "I've been alone for as long as I can remember.",
     "ar": "عشت وحدي منذ أبعد ما أتذكر.",
-    "target": "remember"
+    "target": "remember",
+    "targetAr": "أتذكر",
+    "contextAr": "تتحدّث عن وحدتها منذ الصغر."
   },
   {
     "id": 13,
     "en": "We're almost done. Shhh...",
     "ar": "أوشكنا على الانتهاء. هشش...",
-    "target": "almost"
+    "target": "almost",
+    "targetAr": "أوشكنا",
+    "contextAr": "لم يبقَ سوى القليل."
   },
   {
     "id": 14,
     "en": "Hey, sit still.",
     "ar": "مهلًا، ابقَ ساكنًا.",
-    "target": "still"
+    "target": "still",
+    "targetAr": "ساكنًا",
+    "contextAr": "تطلب منه أن يتوقّف عن الحركة."
   },
   {
     "id": 15,
     "en": "Good night, Scales.",
     "ar": "تصبح على خير يا سكيلز.",
-    "target": "night"
+    "target": "night",
+    "targetAr": "خير",
+    "contextAr": "تودّع سكيلز قبل النوم."
   },
   {
     "id": 16,
     "en": "Get him, Scales! Come on!",
     "ar": "أمسك به يا سكيلز! هيا!",
-    "target": "Get"
+    "target": "Get",
+    "targetAr": "أمسك",
+    "contextAr": "تشجّع سكيلز على المطاردة."
   },
   {
     "id": 18,
     "en": "Yeah! Come on!",
     "ar": "أجل! هيا!",
-    "target": "Come"
+    "target": "Come",
+    "targetAr": "هيا",
+    "contextAr": "هتاف قصير للتشجيع."
   },
   {
     "id": 20,
     "en": "I have failed.",
     "ar": "لقد فشلت.",
-    "target": "failed"
+    "target": "failed",
+    "targetAr": "فشلت",
+    "contextAr": "تعبّر عن خيبة أملها."
   },
   {
     "id": 21,
     "en": "You've only failed to see...",
     "ar": "كل ما أخفقت فيه هو أن ترى...",
-    "target": "see"
+    "target": "see",
+    "targetAr": "ترى",
+    "contextAr": "يلفت انتباهها إلى ما فاتها."
   },
   {
     "id": 22,
     "en": "These are dragon lands, Sintel.",
     "ar": "هذه أراضي التنانين يا سينتل.",
-    "target": "lands"
+    "target": "lands",
+    "targetAr": "أراضي",
+    "contextAr": "يصف المكان الذي وصلت إليه."
   },
   {
     "id": 23,
     "en": "You are closer than you know.",
     "ar": "أنتِ أقرب مما تظنين.",
-    "target": "closer"
+    "target": "closer",
+    "targetAr": "أقرب",
+    "contextAr": "يطمئنها بشأن المسافة المتبقّية."
   }
 ]

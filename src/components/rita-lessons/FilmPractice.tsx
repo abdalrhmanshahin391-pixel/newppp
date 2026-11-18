@@ -1,5 +1,16 @@
-import { useRef, useState } from "react";
-import { Check, Pause, Play, Plus, RotateCcw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  ArrowLeft,
+  Check,
+  Clapperboard,
+  Volume2,
+  Turtle,
+  X,
+  Pause,
+  Play,
+  Plus,
+  RotateCcw,
+} from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import lines from "@/lib/sintel-lines.json";
@@ -8,6 +19,7 @@ import type { PathItem } from "@/lib/rita-path-layout";
 import { useWorkspaceDraft, useWorkspaceGuard, useWorkspaceTask } from "./admin/WorkspaceGuard";
 import { FilmSpeaking } from "./FilmSpeaking";
 import "./film-practice.css";
+import "./film-session.css";
 
 type Line = (typeof lines)[number];
 const byId = new Map(lines.map((line) => [line.id, line]));
@@ -272,41 +284,128 @@ export function FilmEditor({
 
 export function FilmPlayer({ ids, onClose }: { ids: number[]; onClose: () => void }) {
   const t = useCopy();
+  const lang = useUiLanguage();
   const selected = ids.flatMap((id) => byId.get(id) ?? []);
   const [step, setStep] = useState(0);
-  const line = selected[Math.floor(step / 4)];
-  if (!line)
-    return (
-      <div className="film-practice">
-        <h4>{t("Practice complete", "أنهيت التدريب")}</h4>
-        <button className="fc-primary" onClick={onClose}>
-          {t("Back to path", "ارجع للخارطة")}
-        </button>
-      </div>
-    );
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const el = dialog.current;
+    el?.showModal();
+    return () => el?.close();
+  }, []);
+  // First introduce the selected phrases, then practise each one in three ways.
+  const count = selected.length;
+  const preview = step < count;
+  const index = preview ? step : Math.floor((step - count) / 3);
+  const phase = preview ? 0 : 1 + ((step - count) % 3);
+  const line = selected[index];
   return (
-    <div className="film-practice">
-      <small>
-        {t("Clip", "المقطع")} {Math.floor(step / 4) + 1} / {selected.length} · {t("Step", "الخطوة")}{" "}
-        {(step % 4) + 1} / 4
-      </small>
-      <progress
-        aria-label={t("Practice progress", "تقدّم التدريب")}
-        value={step}
-        max={4 * selected.length}
-      />
-      <FilmStep key={step} line={line} phase={step % 4} next={() => setStep((s) => s + 1)} />
-    </div>
+    <dialog
+      ref={dialog}
+      className="film-session"
+      dir={lang === "ar" ? "rtl" : "ltr"}
+      aria-label={t("Film practice", "تدريب المقاطع")}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+    >
+      <div className="fs-layout">
+        <header className="fs-top" dir="ltr">
+          <a
+            href="https://durian.blender.org/sharing/"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Sintel · © Blender Foundation · CC BY 3.0"
+            title="Sintel · © Blender Foundation · CC BY 3.0"
+          >
+            <Clapperboard size={23} />
+          </a>
+          <progress
+            aria-label={t("Practice progress", "تقدّم التدريب")}
+            value={step}
+            max={count * 4 || 1}
+          />
+          <button type="button" aria-label={t("Close practice", "إغلاق التدريب")} onClick={onClose}>
+            <X />
+          </button>
+        </header>
+        {line ? (
+          <FilmStep
+            key={step}
+            line={line}
+            phase={phase}
+            index={index}
+            count={count}
+            previous={() => setStep(step - 1)}
+            next={() => setStep(step + 1)}
+          />
+        ) : (
+          <>
+            <div className="fs-stage">
+              <div className="fs-finished">
+                <Check size={40} />
+                <h2>{t("Practice complete", "أنهيت التدريب")}</h2>
+                <Credit />
+              </div>
+            </div>
+            <footer className="fs-foot">
+              <button className="fs-primary" onClick={onClose}>
+                {t("Back to path", "ارجع للخارطة")}
+              </button>
+            </footer>
+          </>
+        )}
+      </div>
+    </dialog>
   );
 }
 
-function FilmStep({ line, phase, next }: { line: Line; phase: number; next: () => void }) {
+function Highlight({ text, word }: { text: string; word: string }) {
+  const i = text.indexOf(word);
+  return i < 0 ? (
+    text
+  ) : (
+    <>
+      {text.slice(0, i)}
+      <mark>{word}</mark>
+      {text.slice(i + word.length)}
+    </>
+  );
+}
+
+function FilmStep({
+  line,
+  phase,
+  index,
+  count,
+  previous,
+  next,
+}: {
+  line: Line;
+  phase: number;
+  index: number;
+  count: number;
+  previous: () => void;
+  next: () => void;
+}) {
   const t = useCopy();
   const video = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [error, setError] = useState(false);
   const [options] = useState(() =>
-    shuffled([line, ...shuffled(lines.filter((other) => other.ar !== line.ar)).slice(0, 2)]),
+    shuffled([line, ...shuffled(lines.filter((l) => l.ar !== line.ar)).slice(0, 2)]),
   );
-  const words = line.en.split(/\s+/);
+  const phrase = line.en.split(/\s+/);
+  const prefixLength = Math.max(
+    0,
+    Math.min(
+      phrase.length - 4,
+      phrase.findIndex((word) => word.includes(line.target)),
+    ),
+  );
+  const prefix = phrase.slice(0, prefixLength).join(" ");
+  const words = phrase.slice(prefixLength);
   const [bank] = useState(() => {
     const mixed = shuffled(words.map((_, i) => i));
     if (mixed.every((v, i) => v === i)) mixed.push(mixed.shift()!);
@@ -315,126 +414,204 @@ function FilmStep({ line, phase, next }: { line: Line; phase: number; next: () =
   const [picked, setPicked] = useState<number[]>([]);
   const [choice, setChoice] = useState<number>();
   const [checked, setChecked] = useState(false);
-  const [playError, setPlayError] = useState(false);
   const correct =
-    phase === 1 ? choice === line.id : picked.map((i) => words[i]).join(" ") === line.en;
+    phase === 1 ? choice === line.id : picked.map((i) => words[i]).join(" ") === words.join(" ");
   const title = [
     t("Watch and listen", "شاهد واسمع"),
-    t("Choose the translation", "اختر ترجمة العبارة"),
-    t("Build the phrase you hear", "رتّب كلمات العبارة اللي سمعتها"),
-    t("Say the phrase", "انطق العبارة"),
+    t("Choose the translation you hear.", "اختر ترجمة العبارة التي تسمعها في الفيديو."),
+    t("Build the phrase you hear.", "رتّب كلمات العبارة التي تسمعها في الفيديو."),
+    t("Say the phrase.", "انطق العبارة."),
   ][phase];
-  async function replay(rate: number) {
-    if (!video.current) return;
-    video.current.currentTime = 0;
-    video.current.playbackRate = rate;
+  async function play(rate = 1) {
+    const el = video.current;
+    if (!el) return;
     try {
-      await video.current.play();
-      setPlayError(false);
+      if (error) el.load();
+      setError(false);
+      el.currentTime = 0;
+      el.playbackRate = rate;
+      await el.play();
     } catch {
-      setPlayError(true);
+      setError(true);
     }
   }
+  const media = (
+    <video
+      ref={video}
+      src={`/media/sintel/${line.id}.mp4`}
+      poster={`/media/sintel/${line.id}.jpg`}
+      preload="metadata"
+      playsInline
+      onPlaying={() => setPlaying(true)}
+      onPause={() => setPlaying(false)}
+      onEnded={() => setPlaying(false)}
+      onError={() => setError(true)}
+    />
+  );
+  const translation = (
+    <>
+      <p dir="ltr" lang="en">
+        <Highlight text={line.en} word={line.target} />
+      </p>
+      <p dir="rtl" lang="ar">
+        <Highlight text={line.ar} word={line.targetAr} />
+      </p>
+    </>
+  );
   return (
     <>
-      <h4>{title}</h4>
-      <div className="fc-card">
-        <Clip line={line} video={video} />
-        {(phase === 0 || phase === 3) && (
-          <>
-            <p dir="ltr" lang="en">
-              <strong>
-                {line.en.split(line.target)[0]}
-                <mark>{line.target}</mark>
-                {line.en.split(line.target)[1]}
-              </strong>
-            </p>
-            <p dir="rtl" lang="ar">
-              {line.ar}
-            </p>
-          </>
-        )}
-      </div>
-      {phase === 1 && (
-        <div className="fc-options" dir="rtl">
-          {options.map((o) => (
-            <button
-              key={o.id}
-              disabled={checked}
-              aria-pressed={choice === o.id}
-              onClick={() => setChoice(o.id)}
-            >
-              {o.ar}
-            </button>
-          ))}
-        </div>
-      )}
-      {phase === 2 && (
-        <>
-          <div className="fc-answer" dir="ltr" aria-label={t("Your phrase", "عبارتك")}>
-            {picked.map((id, i) => (
-              <button
-                key={id}
-                disabled={checked}
-                onClick={() => setPicked(picked.filter((_, n) => n !== i))}
-              >
-                {words[id]}
+      <div className={"fs-stage fs-phase-" + phase}>
+        <div className="fs-column">
+          <h2 className={phase === 0 ? "sr-only" : undefined}>{title}</h2>
+          <article className="fs-card">
+            {phase !== 3 ? (
+              <div className="fs-scene">
+                {media}
+                <button
+                  type="button"
+                  className="fs-play"
+                  aria-label={playing ? t("Pause", "إيقاف مؤقت") : t("Play clip", "شغّل المقطع")}
+                  onClick={() => (playing ? video.current?.pause() : void play())}
+                >
+                  <span>{playing ? <Pause size={17} /> : <Play size={17} />}</span>
+                </button>
+              </div>
+            ) : (
+              <div hidden>{media}</div>
+            )}
+            {error && (
+              <button className="fs-retry" onClick={() => void play()}>
+                {t("Could not play · Retry", "تعذّر التشغيل · أعد المحاولة")}
               </button>
-            ))}
-          </div>
-          <div className="fc-bank" dir="ltr">
-            {bank.map((id) => (
-              <button
-                key={id}
-                disabled={checked || picked.includes(id)}
-                onClick={() => setPicked([...picked, id])}
-              >
-                {words[id]}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-      {phase === 3 ? (
-        <>
-          <div className="fc-actions">
-            {[1, 0.75].map((rate) => (
-              <button key={rate} onClick={() => void replay(rate)}>
-                {rate === 1 ? t("Listen", "اسمع") : t("Listen slowly", "اسمع ببطء")}
-              </button>
-            ))}
-          </div>
-          {playError && (
-            <p role="alert">
-              {t("Use the video controls to replay.", "استخدم زر تشغيل الفيديو للإعادة.")}
-            </p>
+            )}
+            {phase === 0 && (
+              <>
+                <div className="fs-caption" dir="rtl">
+                  {line.contextAr}
+                </div>
+                <div className="fs-lines">{translation}</div>
+              </>
+            )}
+            {phase === 2 && (
+              <div className="fs-answer" dir="ltr" aria-label={t("Your phrase", "عبارتك")}>
+                {prefix && <strong>{prefix}</strong>}
+                {words.map((word, i) => {
+                  const id = picked[i];
+                  return id === undefined ? (
+                    <span
+                      aria-hidden="true"
+                      className="fs-slot"
+                      key={i}
+                      style={{ width: `${Math.min(10, Math.max(3, word.length))}ch` }}
+                    />
+                  ) : (
+                    <button
+                      key={i}
+                      disabled={checked}
+                      data-grade={checked ? (words[id] === word ? "right" : "wrong") : undefined}
+                      onClick={() => setPicked(picked.filter((_, n) => n !== i))}
+                    >
+                      {words[id]}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {phase === 3 && (
+              <div className="fs-lines">
+                {translation}
+                <div className="fs-listen" dir="ltr">
+                  {[1, 0.75].map((rate) => (
+                    <button
+                      key={rate}
+                      aria-label={
+                        rate === 1 ? t("Listen", "اسمع") : t("Listen slowly", "اسمع ببطء")
+                      }
+                      onClick={() => void play(rate)}
+                    >
+                      {rate === 1 ? <Volume2 /> : <Turtle />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </article>
+          {phase === 1 && (
+            <div className="fs-options" dir="rtl">
+              {options.map((o) => (
+                <button
+                  key={o.id}
+                  disabled={checked}
+                  aria-pressed={choice === o.id}
+                  onClick={() => setChoice(o.id)}
+                >
+                  {o.ar}
+                </button>
+              ))}
+            </div>
           )}
-          <FilmSpeaking t={t} stopVideo={() => video.current?.pause()} onDone={next} />
-        </>
-      ) : (
-        <>
+          {phase === 2 && (
+            <div className="fs-bank" dir="ltr">
+              {bank.map((id) => (
+                <button
+                  key={id}
+                  disabled={checked || picked.includes(id)}
+                  onClick={() => setPicked([...picked, id])}
+                >
+                  {words[id]}
+                </button>
+              ))}
+            </div>
+          )}
+          {phase === 3 && (
+            <FilmSpeaking t={t} stopVideo={() => video.current?.pause()} onDone={next} />
+          )}
+        </div>
+      </div>
+      {phase !== 3 && (
+        <footer
+          className="fs-foot"
+          data-grade={checked ? (correct ? "right" : "wrong") : undefined}
+        >
+          {phase === 0 && (
+            <div className="fs-dots" aria-label={t("Clip", "المقطع") + ` ${index + 1}/${count}`}>
+              {Array.from({ length: count }, (_, i) => (
+                <i key={i} data-current={i === index} />
+              ))}
+            </div>
+          )}
           {checked && (
-            <p role="status" className={correct ? "fc-right" : "fc-wrong"}>
-              {correct ? (
-                t("Correct!", "صحيح!")
-              ) : (
-                <>
+            <div className="fs-feedback" role="status">
+              <strong>{correct ? t("Correct!", "صحيح!") : t("Incorrect", "غير صحيح")}</strong>
+              {!correct && (
+                <p>
                   {t("Correct answer", "الإجابة الصحيحة")} ·{" "}
                   <bdi>{phase === 1 ? line.ar : line.en}</bdi>
-                </>
+                </p>
               )}
-            </p>
+            </div>
           )}
-          <button
-            className="fc-primary"
-            disabled={
-              phase === 1 ? choice === undefined : phase === 2 && picked.length !== words.length
-            }
-            onClick={phase === 0 || checked ? next : () => setChecked(true)}
-          >
-            {phase === 0 || checked ? t("Continue", "متابعة") : t("Check", "تحقّق")}
-          </button>
-        </>
+          <div className="fs-buttons">
+            <button
+              className="fs-primary"
+              disabled={
+                phase === 1 ? choice === undefined : phase === 2 && picked.length !== words.length
+              }
+              onClick={phase === 0 || checked ? next : () => setChecked(true)}
+            >
+              {phase === 0 || checked ? t("Continue", "متابعة") : t("Check", "تحقّق")}
+            </button>
+            {phase === 0 && index > 0 && (
+              <button
+                className="fs-prev"
+                aria-label={t("Previous clip", "المقطع السابق")}
+                onClick={previous}
+              >
+                <ArrowLeft />
+              </button>
+            )}
+          </div>
+        </footer>
       )}
     </>
   );

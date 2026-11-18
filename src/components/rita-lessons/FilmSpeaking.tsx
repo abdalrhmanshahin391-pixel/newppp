@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
+import { Mic, Square } from "lucide-react";
+
 type Copy = (en: string, ar: string) => string;
 
 export function FilmSpeaking({
@@ -73,9 +75,11 @@ export function FilmSpeaking({
   }
   const supported = typeof MediaRecorder !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
   return (
-    <div className="fc-actions">
+    <div className="fs-speaking">
       {supported && (
         <button
+          className="fs-mic"
+          aria-pressed={status === "recording"}
           disabled={status === "asking" || status === "finishing"}
           onClick={() => {
             if (status === "recording") {
@@ -84,11 +88,14 @@ export function FilmSpeaking({
             } else void record();
           }}
         >
-          {status === "recording"
-            ? t("Stop recording", "أوقف التسجيل")
-            : status === "asking"
-              ? t("Waiting for microphone…", "بانتظار إذن الميكروفون…")
-              : t("Record your pronunciation", "سجّل نطقك")}
+          {status === "recording" ? <Square size={30} /> : <Mic size={40} />}
+          <span className="sr-only">
+            {status === "recording"
+              ? t("Stop recording", "أوقف التسجيل")
+              : status === "asking"
+                ? t("Waiting for microphone…", "بانتظار إذن الميكروفون…")
+                : t("Record your pronunciation", "سجّل نطقك")}
+          </span>
         </button>
       )}
       {(!supported || failed) && (
@@ -102,7 +109,7 @@ export function FilmSpeaking({
       {audio && (
         <audio aria-label={t("Your recording", "تسجيلك")} src={audio} controls onPlay={stopVideo} />
       )}
-      <button onClick={onDone}>
+      <button className="fs-skip" onClick={onDone}>
         {audio ? t("Continue", "متابعة") : t("Skip speaking", "لا أستطيع الكلام الآن")}
       </button>
     </div>
