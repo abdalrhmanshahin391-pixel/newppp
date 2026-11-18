@@ -1,0 +1,204 @@
+.film-practice {
+  width: min(100%, 36rem);
+  margin-inline: auto;
+}
+.film-practice h4 {
+  line-height: 1.35;
+}
+.fc-card {
+  background: white;
+  border: 1px solid #d8dce2;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-block: 0.8rem;
+}
+.fc-card video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 640/272;
+  background: #17171b;
+}
+.fc-card small {
+  display: block;
+  padding: 0.4rem 0.8rem;
+  color: #566070;
+  font-size: 0.75rem;
+}
+.fc-card a {
+  text-decoration: underline;
+}
+.fc-card p {
+  margin: 0.45rem 0.85rem 0.85rem;
+}
+.fc-card strong {
+  font-size: 1.25rem;
+}
+.fc-card mark {
+  background: transparent;
+  color: #185ac1;
+}
+.fc-options,
+.fc-results {
+  display: grid;
+  gap: 0.4rem;
+  margin-block: 0.75rem;
+}
+.fc-results {
+  max-height: 13rem;
+  overflow-y: auto;
+}
+.fc-options button,
+.fc-results button,
+.fc-bank button,
+.fc-answer button,
+.fc-actions button,
+.fc-card button {
+  border: 1px solid #c5ccd6;
+  background: #fff;
+  text-align: start;
+}
+.film-practice button[aria-pressed="true"] {
+  border-color: #2864c7;
+  background: #e8f0ff;
+}
+.fc-actions,
+.fc-bank,
+.fc-answer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-block: 0.8rem;
+}
+.fc-answer {
+  min-height: 3.5rem;
+  border-block-end: 2px solid #bdc6d5;
+}
+.fc-actions audio {
+  max-width: 100%;
+}
+.fc-primary {
+  display: block;
+  width: 100%;
+  background: #205ec1;
+  color: white;
+  margin-block: 0.8rem;
+}
+.fc-right,
+.fc-wrong {
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+}
+.fc-right {
+  color: #165e35;
+  background: #e9f6eb;
+}
+.fc-wrong {
+  color: #8e3327;
+  background: #fff0eb;
+}
+
+.fc-controls,
+.fc-play,
+.fc-filters,
+.fc-result,
+.fc-preview,
+.fc-selected li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.fc-controls {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 0.45rem 0.7rem;
+  background: #f6f8fb;
+}
+.fc-controls small {
+  padding: 0;
+}
+.fc-card .fc-play,
+.fc-select {
+  color: #174eaa;
+}
+.fc-results {
+  max-height: 18rem;
+  overscroll-behavior: contain;
+}
+.fc-result {
+  border: 1px solid #d7dde6;
+  border-radius: 12px;
+  padding-inline-end: 0.3rem;
+}
+.fc-result .fc-preview {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 0.5rem;
+}
+.fc-preview img {
+  width: 4rem;
+  height: 2.6rem;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.fc-preview span {
+  min-width: 0;
+}
+.fc-preview strong,
+.fc-preview span span {
+  display: block;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+.fc-preview span span {
+  font-size: 0.85rem;
+  font-weight: 450;
+  color: #545e6e;
+}
+.fc-result .fc-select {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  padding: 0.45rem;
+}
+.fc-selected li {
+  justify-content: space-between;
+  border-block-end: 1px solid #dce2ec;
+}
+.fc-card {
+  box-shadow: 0 3px 12px rgb(24 44 82 / 0.08);
+}
+.fc-card video {
+  object-fit: contain;
+}
+.fc-card p:has(strong) {
+  margin-block-start: 1rem;
+  font-size: 1.3rem;
+}
+.fc-filters {
+  flex-wrap: wrap;
+}
+.fc-filters button {
+  border: 1px solid #c5ccd6;
+}
+.path-quiz .film-practice progress {
+  accent-color: #205ec1;
+}
+.fc-answer {
+  border: 1px dashed #aebbd0;
+  border-radius: 12px;
+  padding: 0.4rem;
+  background: #f6f8fb;
+}
+.fc-bank button,
+.fc-answer button {
+  box-shadow: 0 2px 0 #ced5de;
+}
+.fc-bank button:disabled {
+  opacity: 0.45;
+}
+.fc-primary {
+  min-height: 48px;
+  box-shadow: 0 3px 0 #15448e;
+}

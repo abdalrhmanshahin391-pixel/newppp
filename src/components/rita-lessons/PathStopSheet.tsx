@@ -32,6 +32,7 @@ const message = (cause: unknown) =>
 export function PathStopSheet({
   item,
   embedded = false,
+  film = false,
   admin,
   color,
   onClose,
@@ -39,6 +40,7 @@ export function PathStopSheet({
 }: {
   item: PathItem;
   embedded?: boolean;
+  film?: boolean;
   admin: boolean;
   color: string;
   onClose: () => void;
@@ -146,9 +148,11 @@ export function PathStopSheet({
         <div className="lp-sheet-head">
           <span className="lp-sheet-dot" />
           <h3>{item.kind === "finish" ? `خط نهاية ${item.title}` : item.title}</h3>
-          <button type="button" onClick={onClose} aria-label="سكّر" className="lp-sheet-x">
-            <X size={18} />
-          </button>
+          {(!embedded || !film) && (
+            <button type="button" onClick={onClose} aria-label="سكّر" className="lp-sheet-x">
+              <X size={18} />
+            </button>
+          )}
         </div>
 
         {item.kind === "finish" && (
@@ -159,6 +163,7 @@ export function PathStopSheet({
 
         {item.kind === "exercises" && (
           <PathQuiz
+            film={film}
             key={item.id}
             item={item}
             admin={admin}
@@ -206,7 +211,7 @@ export function PathStopSheet({
           </div>
         )}
 
-        {admin && (
+        {admin && !film && (
           <div className="lp-sheet-admin">
             {item.kind === "resources" && (
               <>

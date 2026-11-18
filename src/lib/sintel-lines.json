@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "en": "This blade has a dark past.",
+    "ar": "لهذا النصل ماضٍ مظلم.",
+    "target": "past"
+  },
+  {
+    "id": 2,
+    "en": "It has shed much innocent blood.",
+    "ar": "لقد سفك الكثير من دماء الأبرياء.",
+    "target": "innocent"
+  },
+  {
+    "id": 3,
+    "en": "You're a fool for traveling alone, so completely unprepared.",
+    "ar": "من الحماقة أن تسافري وحدك وأنت غير مستعدة إطلاقًا.",
+    "target": "alone"
+  },
+  {
+    "id": 4,
+    "en": "You're lucky your blood's still flowing.",
+    "ar": "من حسن حظك أن دمك ما زال يجري في عروقك.",
+    "target": "lucky"
+  },
+  {
+    "id": 5,
+    "en": "Thank you.",
+    "ar": "شكرًا لك.",
+    "target": "Thank"
+  },
+  {
+    "id": 7,
+    "en": "What brings you to the land of the gatekeepers?",
+    "ar": "ما الذي أتى بك إلى أرض حرّاس البوابات؟",
+    "target": "gatekeepers"
+  },
+  {
+    "id": 8,
+    "en": "I'm searching for someone.",
+    "ar": "أنا أبحث عن شخص ما.",
+    "target": "searching"
+  },
+  {
+    "id": 9,
+    "en": "Someone very dear? A kindred spirit?",
+    "ar": "هل هو شخص عزيز جدًا؟ روح تشبه روحك؟",
+    "target": "dear"
+  },
+  {
+    "id": 10,
+    "en": "A dragon.",
+    "ar": "تنين.",
+    "target": "dragon"
+  },
+  {
+    "id": 11,
+    "en": "A dangerous quest for a lone hunter.",
+    "ar": "مهمة خطيرة لصيّادة وحيدة.",
+    "target": "dangerous"
+  },
+  {
+    "id": 12,
+    "en": "I've been alone for as long as I can remember.",
+    "ar": "عشت وحدي منذ أبعد ما أتذكر.",
+    "target": "remember"
+  },
+  {
+    "id": 13,
+    "en": "We're almost done. Shhh...",
+    "ar": "أوشكنا على الانتهاء. هشش...",
+    "target": "almost"
+  },
+  {
+    "id": 14,
+    "en": "Hey, sit still.",
+    "ar": "مهلًا، ابقَ ساكنًا.",
+    "target": "still"
+  },
+  {
+    "id": 15,
+    "en": "Good night, Scales.",
+    "ar": "تصبح على خير يا سكيلز.",
+    "target": "night"
+  },
+  {
+    "id": 16,
+    "en": "Get him, Scales! Come on!",
+    "ar": "أمسك به يا سكيلز! هيا!",
+    "target": "Get"
+  },
+  {
+    "id": 18,
+    "en": "Yeah! Come on!",
+    "ar": "أجل! هيا!",
+    "target": "Come"
+  },
+  {
+    "id": 20,
+    "en": "I have failed.",
+    "ar": "لقد فشلت.",
+    "target": "failed"
+  },
+  {
+    "id": 21,
+    "en": "You've only failed to see...",
+    "ar": "كل ما أخفقت فيه هو أن ترى...",
+    "target": "see"
+  },
+  {
+    "id": 22,
+    "en": "These are dragon lands, Sintel.",
+    "ar": "هذه أراضي التنانين يا سينتل.",
+    "target": "lands"
+  },
+  {
+    "id": 23,
+    "en": "You are closer than you know.",
+    "ar": "أنتِ أقرب مما تظنين.",
+    "target": "closer"
+  }
+]

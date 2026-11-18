@@ -1,0 +1,6 @@
+Sintel (2010) — © copyright Blender Foundation | https://durian.blender.org/
+Licensed under Creative Commons Attribution 3.0: https://creativecommons.org/licenses/by/3.0/
+https://durian.blender.org/sharing/
+These excerpts are trimmed, resized and re-encoded from the original film. Uzyra added Arabic translations and exercises.
+English dialogue and cue timings: https://durian.blender.org/wp-content/content/subtitles/sintel_en.srt
+Video and audio rendition: https://storage.googleapis.com/shaka-demo-assets/sintel/dash.mpd

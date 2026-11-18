@@ -12,6 +12,7 @@ export type PathItem = {
   path_order: number;
   resource_count: number;
   quiz_count?: number;
+  film_lines?: number[];
 };
 
 export type PathRef = { type: "lesson" | "item"; id: string };
