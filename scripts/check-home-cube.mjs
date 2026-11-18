@@ -197,10 +197,11 @@ try {
     });
     await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
     await page.waitForTimeout(200);
-    const stillCube = await page.locator(".uz-cube-body").getAttribute("style");
+    const heroBody = page.locator(".rh-hero-cube .uz-cube-body");
+    const stillCube = await heroBody.getAttribute("style");
     await page.waitForTimeout(400);
     assert.equal(
-      await page.locator(".uz-cube-body").getAttribute("style"),
+      await heroBody.getAttribute("style"),
       stillCube,
       "offscreen cube pauses",
     );
@@ -232,7 +233,7 @@ try {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.waitForTimeout(100);
     assert.equal(
-      await page.locator(".uz-cube-body").evaluate((el) => getComputedStyle(el).transform),
+      await heroBody.evaluate((el) => getComputedStyle(el).transform),
       "none",
     );
     await page.emulateMedia({ reducedMotion: "no-preference" });
