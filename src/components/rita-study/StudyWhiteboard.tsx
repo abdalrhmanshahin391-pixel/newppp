@@ -285,7 +285,7 @@ export function StudyWhiteboard({
     if (cursor < pages.length - 1) {
       setReady(false);
       setCursor(cursor + 1);
-    } else if (page.index < 2) void load(page.index + 1);
+    } else if (!page.step.finished && page.index < 2) void load(page.index + 1);
     else {
       setFinished(true);
       setHandsFree(false);
@@ -368,9 +368,9 @@ export function StudyWhiteboard({
           <div className="wb-pagination">
             <span>{page.question ? "سؤالك عن الفقرة" : "شرح الفقرة"}</span>
             <span className="wb-page-count">
-              الخطوة {["١", "٢", "٣"][page.index]} من ٣{" "}
+              الخطوة {["١", "٢", "٣"][page.index]}{" "}
               <i>
-                {[0, 1, 2].map((n) => (
+                {Array.from({ length: page.index + 1 }, (_, n) => n).map((n) => (
                   <b key={n} data-filled={n <= page.index} />
                 ))}
               </i>
@@ -464,7 +464,7 @@ export function StudyWhiteboard({
                 >
                   {finished
                     ? "العودة للدرس"
-                    : page.index === 2 && cursor === pages.length - 1
+                    : (page.step.finished || page.index === 2) && cursor === pages.length - 1
                       ? "تمام، فهمت"
                       : "تمام، كمّلي"}{" "}
                   {finished ? <Check /> : <ArrowLeft />}

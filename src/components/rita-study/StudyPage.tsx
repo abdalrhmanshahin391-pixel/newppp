@@ -42,6 +42,7 @@ import {
   languageItems,
   replyRingItems,
   ringItems,
+  actionItem,
 } from "./radial-items";
 import { useExplanationLanguage } from "@/hooks/useExplanationLanguage";
 import { GuideFrame, type GuideFrameHandle } from "./GuideFrame";
@@ -613,13 +614,15 @@ export function StudyPage({
       setRingMode("main");
       return;
     }
+    if (id === "board") return void pick("board");
     void pick(id as StudyAction);
   }
 
-  async function pick(action: StudyAction) {
+  async function pick(action: StudyAction | "board") {
     if (action === "make_cards" || action === "make_mcq") return void practice(action);
     const sel = selectionRef.current;
-    if (action === "explain" && sel) {
+    if (action === "board") {
+      if (!sel) return;
       if (!actions.includes("explain")) return;
       requests.stop();
       setPhrase(null);
@@ -982,7 +985,12 @@ export function StudyPage({
               ? languageItems(explanation.value)
               : replySelection
                 ? replyRingItems()
-                : ringItems({ actions }).map((item) =>
+                : [
+                    ...ringItems({ actions }),
+                    ...(actions.includes("explain")
+                      ? [{ ...actionItem("explain"), id: "board", label: "شرح وايت بورد" }]
+                      : []),
+                  ].map((item) =>
                     making && (item.id === "make_cards" || item.id === "make_mcq")
                       ? {
                           ...item,

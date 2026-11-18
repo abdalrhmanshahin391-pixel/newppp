@@ -25,6 +25,8 @@ const lang=new URLSearchParams(location.search).get('lang')==='en'?'en':'ar';
 i18n.use(initReactI18next).init({lng:lang,fallbackLng:'en',resources:{ar:{translation:{}},en:{translation:{}}},interpolation:{escapeValue:false}});
 SAMPLE_THIRD_PERSON.sections.push({kind:'usage',heading:'In context',items:[{label:'Care',example:'She {{looks after}} her little brother.'},{label:'River',example:'We sat on the river {{bank}}.'},{label:'Money',example:'She went to the {{bank}}.'}]});
 SAMPLE_THIRD_PERSON.sections.push({kind:'usage',heading:'Sentence structure',items:[{label:'Reading',example:'She is reading a book.'}]});
+SAMPLE_THIRD_PERSON.sections.push({kind:'usage',heading:'Watch out',items:[{label:'',example:'One verb is irregular: have → has (not haves). She studies at night and watches a film on Fridays.'}]});
+SAMPLE_THIRD_PERSON.sections.push({kind:'usage',heading:'Mixed reading',items:[{label:'',example:'The word has في أول الجملة and later in this longer example comes the second has.'}]});
 const data={lesson:{id:'question-design-preview',title:'Present simple',title_ar:'المضارع البسيط',topic:'sample',objectives:[]},guide:{id:'sample',title:'Present simple',version:1,content:SAMPLE_THIRD_PERSON,learner_path:'',allow_download:false},preview:true};
 const r=createRootRoute({component:()=> <Outlet/>});
 const p=createRoute({getParentRoute:()=>r,path:'/preview',component:()=> <StudyPage data={data}/>});
@@ -86,11 +88,16 @@ const result = await build({
             export async function studyBoardStep({data}) {
               (window.qaBoardCalls ||= []).push(data);
               if (window.qaBoardFail) return {ok:false,message:"تعذّر تجهيز الرسم."};
+              if(data.selection.exact.startsWith("The word has")) return {ok:true,audio:null,step:{title:"تكرار الكلمة",narration:"نحدّد الكلمة الثانية.",finished:true,rows:[{source:data.selection.exact,explanation:"لاحظ مكان التكرار.",marks:[{kind:"circle",target:{text:"has",occurrence:2}},{kind:"arrow",from:{text:"has",occurrence:1},target:{text:"has",occurrence:2}}]}]}};
+              if(data.selection.exact.startsWith("One verb is irregular"))return {ok:true,audio:null,step:{
+                title:"كيف تغيّر الفعل مع الفاعل المفرد؟", finished:true,
+                narration:"مع she بنكتب studies وwatches. أما have فإله صيغة خاصة مع المفرد، وهي has.",
+                rows:[{source:"have → has",marks:[{kind:"arrow",from:{text:"have",occurrence:1},target:{text:"has",occurrence:1}},{kind:"circle",target:{text:"has",occurrence:1}}],explanation:"مع he أو she أو it، صيغة have هي has."},
+                {source:"She studies",marks:[{kind:"underline",target:{text:"ies",occurrence:1}}],explanation:"قبل الـ y حرف ساكن، فبتصير النهاية ies."},
+                {source:"watches a film",marks:[{kind:"underline",target:{text:"es",occurrence:1}}],explanation:"الفاعل لسه She. ولأن watch بتنتهي بـ ch، بنضيف es."}]}};
               return {ok:true,audio:location.search.includes("silent")?null:"/api/german/tts",
                 step:{title:data.question?"سؤالك عن الفعل":"مين بيعمل الفعل؟",narration:"لما نحكي عن شخص واحد، منضيف حرف إس للفعل بالمضارع البسيط.",
-                commands:[{op:"write",at:[42,35],text:"She",ink:"indigo"},{op:"arrow",at:[122,54],to:[220,54],ink:"teal"},
-                {op:"write",at:[248,35],text:"looks after",ink:"ink"},{op:"line",at:[250,67],to:[348,67],ink:"coral"},
-                {op:"write",at:[54,174],text:"She looks after her brother.",ink:"ink"},{op:"write",at:[272,90],text:"فعل في المضارع",ink:"teal"}]}};
+                finished:data.index===2, rows:[{source:data.selection.exact,marks:[],explanation:"العبارة بتوصف الفعل داخل الجملة."}]}};
             }
           `,
             };
@@ -211,7 +218,10 @@ if (process.argv.includes("--serve")) {
 if (process.argv.includes("--check")) {
   const pw = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
   const engine = process.env.BROWSER || "chromium";
-  const browser = await pw[engine].launch({ headless: true });
+  const browser = await pw[engine].launch({
+    headless: true,
+    executablePath: process.env.BROWSER_EXECUTABLE,
+  });
   const findings = [];
   async function selectPhrase(page) {
     await page.getByRole("button", { name: "تحديد عبارة", exact: true }).click();
@@ -294,15 +304,17 @@ if (process.argv.includes("--check")) {
           "why_form",
           "word_by_word",
           "common_mistake",
+          "board",
         ],
       );
-      // The existing explain wedge now opens the board. The quote survives the ring gesture.
-      const explain = await page.locator('[data-service="explain"] .st-wedge-in').boundingBox();
+      // The independent whiteboard wedge opens the board. The quote survives the ring gesture.
+      const explain = await page.locator('[data-service="board"] .st-wedge-in').boundingBox();
       await page.mouse.click(explain.x + explain.width / 2, explain.y + explain.height / 2);
       const board = page.getByRole("region", { name: "سبورة يوزرا" });
-      await board.locator(".wb-drawing").waitFor();
+      await board.locator(".wb-relations").waitFor();
       assert.match(await board.locator("blockquote").textContent(), /looks after/);
       assert.equal(await page.evaluate(() => window.qaBoardCalls.length), 1);
+      await board.screenshot({ path: resolve(out, "whiteboard-" + width + ".png") });
       // Read instantly even when a mobile browser defers audio until a second tap.
       const paused = board.getByRole("button", { name: "تشغيل الشرح", exact: true });
       if (await paused.count())
@@ -357,6 +369,107 @@ if (process.argv.includes("--check")) {
       await page.screenshot({ path: resolve(out, `${engine}-${width}-practice.png`) });
       assert.deepEqual(errors, []);
       findings.push({ width, services: [...seen], errors });
+      await page.close();
+    }
+    {
+      const page = await browser.newPage({
+        viewport: { width: 1024, height: 820 },
+        reducedMotion: "reduce",
+      });
+      await page.goto(origin + "/preview");
+      await page.frameLocator("iframe").locator("[data-seg]").first().waitFor();
+      const passage =
+        "One verb is irregular: have → has (not haves). She studies at night and watches a film on Fridays.";
+      await page.evaluate((text) => window.qaSelect(text), passage);
+      await menu(page);
+      const clickWedge = async (id) => {
+        const box = await page.locator(`[data-service="${id}"] .st-wedge-in`).boundingBox();
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+      };
+      await clickWedge("explain");
+      await page.locator(".qa-message").filter({ hasText: "He works" }).waitFor();
+      assert.equal(await page.locator(".wb-relations").count(), 0);
+      await page.evaluate((text) => window.qaSelect(text), passage);
+      await menu(page);
+      await clickWedge("board");
+      await page.locator(".wb-relation").nth(2).waitFor();
+      assert.deepEqual(await page.locator(".wb-relation q").allTextContents(), [
+        "have → has",
+        "She studies",
+        "watches a film",
+      ]);
+      await page.locator('[data-mark="circle"]').waitFor();
+      await page.locator(".wb-sheet").screenshot({ path: resolve(out, "selected-passage.png") });
+      for (const width of [390, 768, 1280, 1024]) {
+        await page.setViewportSize({ width, height: 820 });
+        await page.waitForFunction(() => document.querySelectorAll(".wb-marks path").length === 4);
+        await page.evaluate(
+          () =>
+            new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+        );
+        const geometry = await page
+          .locator(".wb-quote")
+          .first()
+          .evaluate((box) => {
+            const node = box.querySelector("q").firstChild,
+              svg = box.querySelector("svg");
+            const bounds = (start, end) => {
+              const r = document.createRange();
+              r.setStart(node, start);
+              r.setEnd(node, end);
+              return r.getBoundingClientRect();
+            };
+            const has = bounds(7, 10),
+              circle = box.querySelector('[data-mark="circle"]').getBoundingClientRect();
+            const arrow = box.querySelector('[data-mark="arrow"]'),
+              matrix = svg.getScreenCTM();
+            const words = [bounds(0, 4), has];
+            for (let i = 0; i <= 100; i++) {
+              const p = arrow
+                .getPointAtLength((arrow.getTotalLength() * i) / 100)
+                .matrixTransform(matrix);
+              if (words.some((r) => p.x > r.left && p.x < r.right && p.y > r.top && p.y < r.bottom))
+                return false;
+            }
+            return (
+              circle.left <= has.left &&
+              circle.right >= has.right &&
+              circle.top <= has.top &&
+              circle.bottom >= has.bottom &&
+              circle.left > words[0].right
+            );
+          });
+        assert.ok(geometry, "arrow clears words and circle encloses has at " + width);
+      }
+      await page.reload();
+      await page.frameLocator("iframe").locator("[data-seg]").first().waitFor();
+      const mixed =
+        "The word has في أول الجملة and later in this longer example comes the second has.";
+      await page.evaluate((text) => window.qaSelect(text), mixed);
+      await menu(page);
+      await clickWedge("board");
+      await page.locator(".wb-quote q").filter({ hasText: mixed }).waitFor({timeout:5000}).catch(async error=>{console.log(await page.evaluate(()=>window.qaBoardCalls?.map(call=>call.selection.exact)),await page.locator(".st-rad").allInnerTexts());throw error;});
+      await page.locator('[data-mark="arrow"]').waitFor();
+      const wraps = await page.locator(".wb-quote").evaluate((el) => {
+        const node = el.querySelector("q").firstChild;
+        const at = (idx) => {
+          const r = document.createRange();
+          r.setStart(node, idx);
+          r.setEnd(node, idx + 3);
+          return r.getBoundingClientRect();
+        };
+        const first = at(node.textContent.indexOf("has")),
+          last = at(node.textContent.lastIndexOf("has"));
+        const ring = el.querySelector('[data-mark="circle"]').getBoundingClientRect();
+        return (
+          first.bottom < last.top &&
+          ring.top <= last.top &&
+          ring.bottom >= last.bottom &&
+          ring.left <= last.left &&
+          ring.right >= last.right
+        );
+      });
+      assert.ok(wraps, "circle follows the second occurrence on another line");
       await page.close();
     }
     // A server error must stay visible and offer a usable retry.
@@ -589,7 +702,7 @@ if (process.argv.includes("--check")) {
     await failure.locator(".st-practice-front").waitFor();
     await failure.close();
     await writeFile(resolve(out, `${engine}-checks.json`), JSON.stringify(findings, null, 2));
-    console.log(`${engine}: eight wheel slices, cards, answers, reopen and retry passed`);
+    console.log(`${engine}: study wheel, cards, answers, reopen and retry passed`);
   } finally {
     await browser.close();
     await new Promise((done) => server.close(done));
