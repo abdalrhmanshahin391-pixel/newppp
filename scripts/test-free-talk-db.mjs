@@ -158,6 +158,8 @@ try {
     `insert into public.free_talk_sessions(id,user_id,period_key,reserved_seconds,charged_seconds,created_at,deadline,state,room_name) values('${id(41)}','${id(4)}','2000-01',3600,3600,'2000-01-01','2000-01-01 01:00Z','closed','old-month')`,
   );
   await expect(`select (public.free_talk_budget('${id(4)}')->>'remainingSeconds')::int`, 21600);
+  await exec(`delete from auth.users where id='${id(1)}'`);
+  await expect(`select count(*)::int from public.free_talk_sessions where user_id='${id(1)}'`,0);
   console.log(
     `PASS: ${checks} database quota checks (${isolatedUrl ? "PostgreSQL with independent concurrent connections" : "isolated PGlite; parallel requests serialized by runtime"}).`,
   );
