@@ -57,7 +57,7 @@ const ICONS: Record<StudyAction, LucideIcon> = {
 
 /** Short names for the ring (the full wording is still used for Uzyra's requests). */
 const SHORT: Partial<Record<StudyAction, string>> = {
-  explain: "اشرحلي",
+  explain: "شرح",
   simplify: "بسّط بمثال",
   meaning: "معنى ونطق",
   explain_back: "أنا بشرح",

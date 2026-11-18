@@ -48,3 +48,5 @@
   and `PRODUCT.md`; preserve its Design Brief, approval and hard-review requirements.
   Use only relevant existing design skills, not the entire collection.
 - Only when an optimization trial is approved: read [the pilot protocol](docs/agent-workflow-pilot.md).
+
+- Before editing selection explanations, read [the explanation contract](docs/selection-explanations.md).
