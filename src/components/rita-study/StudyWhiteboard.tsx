@@ -18,7 +18,7 @@ import {
 import { studyBoardStep } from "@/lib/study/whiteboard.functions";
 import { confirmsBoardStep, type BoardSelection, type BoardStep } from "@/lib/study/whiteboard";
 import type { ExplanationLanguage } from "@/lib/explanation-language";
-import { recogniser } from "@/components/repeat/repeat-voice";
+import { recogniser } from "@/lib/browser-speech-recogniser";
 import { BoardPaper } from "./BoardPaper";
 import "./whiteboard.css";
 
