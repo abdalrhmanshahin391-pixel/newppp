@@ -381,15 +381,19 @@ if (process.argv.includes("--check")) {
       const passage =
         "One verb is irregular: have → has (not haves). She studies at night and watches a film on Fridays.";
       await page.evaluate((text) => window.qaSelect(text), passage);
+      await page.locator('.st-orb[data-state="armed"]').waitFor();
       await menu(page);
       const clickWedge = async (id) => {
-        const box = await page.locator(`[data-service="${id}"] .st-wedge-in`).boundingBox();
-        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+        const wedge = page.locator(`[data-service="${id}"]`);
+        assert.ok(await wedge.isEnabled(), `Expected an enabled ${id} action`);
+        // The arc's bounding-box centre can overlap other controls when the wheel is shifted.
+        await wedge.press("Enter");
       };
       await clickWedge("explain");
       await page.locator(".qa-message").filter({ hasText: "He works" }).waitFor();
       assert.equal(await page.locator(".wb-relations").count(), 0);
       await page.evaluate((text) => window.qaSelect(text), passage);
+      await page.locator('.st-orb[data-state="armed"]').waitFor();
       await menu(page);
       await clickWedge("board");
       await page.locator(".wb-relation").nth(2).waitFor();
@@ -446,9 +450,20 @@ if (process.argv.includes("--check")) {
       const mixed =
         "The word has في أول الجملة and later in this longer example comes the second has.";
       await page.evaluate((text) => window.qaSelect(text), mixed);
+      await page.locator('.st-orb[data-state="armed"]').waitFor();
       await menu(page);
       await clickWedge("board");
-      await page.locator(".wb-quote q").filter({ hasText: mixed }).waitFor({timeout:5000}).catch(async error=>{console.log(await page.evaluate(()=>window.qaBoardCalls?.map(call=>call.selection.exact)),await page.locator(".st-rad").allInnerTexts());throw error;});
+      await page
+        .locator(".wb-quote q")
+        .filter({ hasText: mixed })
+        .waitFor({ timeout: 5000 })
+        .catch(async (error) => {
+          console.log(
+            await page.evaluate(() => window.qaBoardCalls?.map((call) => call.selection.exact)),
+            await page.locator(".st-rad").allInnerTexts(),
+          );
+          throw error;
+        });
       await page.locator('[data-mark="arrow"]').waitFor();
       const wraps = await page.locator(".wb-quote").evaluate((el) => {
         const node = el.querySelector("q").firstChild;
