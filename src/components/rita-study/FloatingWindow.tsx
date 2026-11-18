@@ -132,10 +132,10 @@ export function FloatingWindow({
   const [active, setActive] = useState<"" | "move" | "resize">("");
   const [visible, setVisible] = useState(false);
   const [tucked, setTucked] = useState(false);
-  useEffect(() => {
-    onTuckChange?.(tucked);
-  }, [tucked, onTuckChange]);
   const [tabState, setTabStateRaw] = useState<TabState>("off");
+  useEffect(() => {
+    onTuckChange?.(tucked || tabState === "on");
+  }, [tucked, tabState, onTuckChange]);
   const before = useRef<Rect | null>(null);
   const lastTap = useRef(0);
   // The latest values, for gestures and animation frames that outlive a render.
