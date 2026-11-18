@@ -104,10 +104,14 @@ export function LibraryPage({
   );
   useEffect(() => {
     try {
-      window.sessionStorage.setItem(SEED_KEY, seed);
+      if (seed) window.sessionStorage.setItem(SEED_KEY, seed);
     } catch {
       // Not saved: the next visit gets new picks.
     }
+  }, [seed]);
+
+  useEffect(() => {
+    if (!seed) setSeed(readSeed());
   }, [seed]);
 
   const catalog = useQuery({

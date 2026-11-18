@@ -50,3 +50,5 @@ if [ "$(printf '%s\n' "$checks" | grep -c '|t$')" -ne 31 ]; then
   echo "Expected all 31 user-books deployment checks to be true" >&2
   exit 1
 fi
+echo "== supabase/tests/books/95_guest_catalog_access.sql"
+run -f supabase/tests/books/95_guest_catalog_access.sql

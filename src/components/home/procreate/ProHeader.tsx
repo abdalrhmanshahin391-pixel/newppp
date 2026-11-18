@@ -54,7 +54,7 @@ function Avatar({
       className="rh-avatar"
       style={{ background: tone, width: size, height: size, fontSize: size * 0.42 }}
     >
-      {src ? <img src={src} alt="" className="h-full w-full object-cover" /> : initial}
+      {src ? <img src={src} alt="" className="rh-avatar-photo" /> : initial}
     </span>
   );
 }
@@ -161,7 +161,7 @@ export function ProHeader({
                 open={menu === "language"}
                 onOpenChange={(open) => setMenu(open ? "language" : null)}
               />
-              <div className="relative" ref={accountBox}>
+              <div className="rh-account-anchor" ref={accountBox}>
                 <button
                   type="button"
                   data-rh-trigger

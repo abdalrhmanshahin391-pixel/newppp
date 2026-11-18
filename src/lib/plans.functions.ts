@@ -63,7 +63,10 @@ async function fetchPlans(): Promise<PlanRow[]> {
   const { url, publishableKey } = getSupabasePublicConfig();
   const { createClient } = await import("@supabase/supabase-js");
   const client = createClient(url, publishableKey, { auth: { persistSession: false } });
-  const { data, error } = await (client.from as any)("plans").select("*").order("sort");
+  const { data, error } = await (client.from as any)("plans")
+    .select("*")
+    .eq("published", true)
+    .order("sort");
   if (error) throw new Error(error.message);
   return ((data ?? []) as PlanRow[]).map((plan) => productCopyFields(plan, ["name", "tagline"]));
 }

@@ -3382,8 +3382,14 @@ body:has(.rh-learn-home) {
   box-shadow: 0 0 0 2px #ff6b6b;
 }
 
+.rh-account-anchor {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+}
 .rh-avatar-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 4px;
   height: 44px;
@@ -3481,7 +3487,8 @@ body:has(.rh-learn-home) {
   font-size: 14px;
 }
 .rh-avatar {
-  display: inline-grid;
+  position: relative;
+  display: grid;
   flex: none;
   place-items: center;
   overflow: hidden;
@@ -3489,6 +3496,14 @@ body:has(.rh-learn-home) {
   color: #fff;
   font-weight: 800;
   box-shadow: 0 0 0 2px #2b6df0;
+}
+.rh-avatar-photo {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .rh-burger {
   display: grid;
@@ -3528,8 +3543,13 @@ body:has(.rh-learn-home) {
 [dir="rtl"] .rh-card {
   transform-origin: top left;
 }
-.rh-account {
+.rh-card.rh-account {
+  inset-block-start: calc(100% + 14px);
   width: 288px;
+  animation-name: rh-account-in;
+}
+@keyframes rh-account-in {
+  from { opacity: 0; }
 }
 .rh-credits {
   display: grid;
