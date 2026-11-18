@@ -1,5 +1,5 @@
 import { useWorkspaceTask, useWorkspaceGuard } from "./admin/WorkspaceGuard";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
@@ -7,6 +7,9 @@ import { supabase } from "@/integrations/supabase/legacy-client";
 import { lqBoard, type LqOption } from "@/lib/lecture-lab.functions";
 import type { PathItem } from "@/lib/rita-path-layout";
 import "./path-quiz.css";
+
+const FilmEditor = lazy(() => import("./FilmPractice").then((m) => ({ default: m.FilmEditor })));
+const FilmPlayer = lazy(() => import("./FilmPractice").then((m) => ({ default: m.FilmPlayer })));
 
 type Props = {
   item: PathItem;
@@ -29,9 +32,35 @@ function message(error: unknown) {
 
 export function PathQuiz(props: Props) {
   const lang = useUiLanguage();
+  const t = useCopy();
+  const ids = props.item.film_lines ?? [];
+  const canChoose = props.admin || (!!props.item.quiz_count && ids.length > 0);
+  const [mode, setMode] = useState<"quiz" | "film" | null>(null);
+  const active = mode ?? (canChoose ? null : ids.length ? "film" : "quiz");
   return (
     <div className="path-quiz" dir={lang === "ar" ? "rtl" : "ltr"}>
-      {props.admin ? <Editor {...props} /> : <Player {...props} />}
+      {active === null ? (
+        <div className="grid gap-2">
+          <button className="pq-option" onClick={() => setMode("film")}>
+            {t("Film practice", "تدريب بمقاطع الأفلام")}
+          </button>
+          <button className="pq-option" onClick={() => setMode("quiz")}>
+            {t("Lecture Lab quiz", "اختبار من مختبر المحاضرات")}
+          </button>
+        </div>
+      ) : active === "film" ? (
+        <Suspense fallback={<p role="status">{t("Loading…", "جارٍ التحميل…")}</p>}>
+          {props.admin ? (
+            <FilmEditor {...props} />
+          ) : (
+            <FilmPlayer ids={ids} onClose={props.onClose} />
+          )}
+        </Suspense>
+      ) : props.admin ? (
+        <Editor {...props} />
+      ) : (
+        <Player {...props} />
+      )}
     </div>
   );
 }

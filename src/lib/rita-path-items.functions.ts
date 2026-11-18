@@ -1,3 +1,4 @@
+import filmLines from "./sintel-lines.json";
 import { mergePath, placeLessonAtGap } from "./rita-path-layout";
 // The admin's editing of the lesson path (move stops, add exercise / resources stops, their files
 // and links) and the learner's view of a resources stop. Runs with the user's own session: the
@@ -326,5 +327,36 @@ export const adminPlacePathLesson = createServerFn({ method: "POST" })
       id: node.type === "lesson" ? node.lesson.id : node.item.id,
     }));
     await saveLayout(context, placeLessonAtGap(refs, lesson.id, data));
+    return { ok: true };
+  });
+
+const validFilmIds = new Set(filmLines.map((line) => line.id));
+const filmSelection = z
+  .array(
+    z
+      .number()
+      .int()
+      .refine((id) => validFilmIds.has(id)),
+  )
+  .max(filmLines.length)
+  .refine((ids) => new Set(ids).size === ids.length);
+
+export const savePathFilmLines = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    parse(z.object({ id: uuid, previous: filmSelection, lines: filmSelection }), input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: saved, error } = await context.supabase
+      .from("rita_path_items")
+      .update({ film_lines: data.lines })
+      .eq("id", data.id)
+      .eq("kind", "exercises")
+      .eq("film_lines", `{${data.previous.join(",")}}`)
+      .select("id")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!saved) throw new Error("تغيّرت المحطة. افتحها من جديد قبل الحفظ.");
     return { ok: true };
   });

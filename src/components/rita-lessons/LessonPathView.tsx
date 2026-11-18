@@ -850,9 +850,11 @@ export function LessonPathView({
                   <span className="lp-sub">{finishLine(finishCount)}</span>
                 ) : (
                   <span className="lp-sub">
-                    {node.type === "item" && node.item.quiz_count
-                      ? `${node.item.quiz_count} أسئلة`
-                      : "قريباً"}
+                    {node.type === "item" && node.item.film_lines?.length
+                      ? `مقاطع تدريب · ${node.item.film_lines.length}`
+                      : node.type === "item" && node.item.quiz_count
+                        ? `${node.item.quiz_count} أسئلة`
+                        : "قريباً"}
                   </span>
                 )}
               </button>

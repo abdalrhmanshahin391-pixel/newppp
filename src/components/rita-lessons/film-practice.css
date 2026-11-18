@@ -1,0 +1,99 @@
+.film-practice {
+  width: min(100%, 36rem);
+  margin-inline: auto;
+}
+.film-practice h4 {
+  line-height: 1.35;
+}
+.fc-card {
+  background: white;
+  border: 1px solid #d8dce2;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-block: 0.8rem;
+}
+.fc-card video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 640/272;
+  background: #17171b;
+}
+.fc-card small {
+  display: block;
+  padding: 0.4rem 0.8rem;
+  color: #566070;
+  font-size: 0.75rem;
+}
+.fc-card a {
+  text-decoration: underline;
+}
+.fc-card p {
+  margin: 0.45rem 0.85rem 0.85rem;
+}
+.fc-card strong {
+  font-size: 1.25rem;
+}
+.fc-card mark {
+  background: transparent;
+  color: #185ac1;
+}
+.fc-options,
+.fc-results {
+  display: grid;
+  gap: 0.4rem;
+  margin-block: 0.75rem;
+}
+.fc-results {
+  max-height: 13rem;
+  overflow-y: auto;
+}
+.fc-options button,
+.fc-results button,
+.fc-bank button,
+.fc-answer button,
+.fc-actions button,
+.fc-card button {
+  border: 1px solid #c5ccd6;
+  background: #fff;
+  text-align: start;
+}
+.film-practice button[aria-pressed="true"] {
+  border-color: #2864c7;
+  background: #e8f0ff;
+}
+.fc-actions,
+.fc-bank,
+.fc-answer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-block: 0.8rem;
+}
+.fc-answer {
+  min-height: 3.5rem;
+  border-block-end: 2px solid #bdc6d5;
+}
+.fc-actions audio {
+  max-width: 100%;
+}
+.fc-primary {
+  display: block;
+  width: 100%;
+  background: #205ec1;
+  color: white;
+  margin-block: 0.8rem;
+}
+.fc-right,
+.fc-wrong {
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+}
+.fc-right {
+  color: #165e35;
+  background: #e9f6eb;
+}
+.fc-wrong {
+  color: #8e3327;
+  background: #fff0eb;
+}
