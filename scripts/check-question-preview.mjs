@@ -75,6 +75,7 @@ const result = await build({
             return { contents: "export const useServerFn=f=>f;" };
           const names = [
             "studyGuideDownload",
+            "studyBoardStep",
             "studyMakeCards",
             "studyMakeMcq",
             "resolveReplyRequest",

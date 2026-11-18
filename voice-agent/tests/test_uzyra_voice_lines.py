@@ -37,3 +37,32 @@ def test_only_records_the_named_actions():
         pass
     else:
         raise AssertionError("an unknown action must be refused")
+
+
+def test_board_narration_uses_the_selected_voice_and_language(monkeypatch):
+    import asyncio
+    import base64
+    import aiohttp
+    from unittest.mock import AsyncMock, MagicMock
+    from uzyra_voice_lines import CARTESIA_VERSION, MODEL, narrate_board_step
+
+    response = MagicMock(status=200, read=AsyncMock(return_value=b"speech bytes"))
+    session = MagicMock()
+    session.post.return_value.__aenter__.return_value = response
+    client = MagicMock()
+    client.return_value.__aenter__.return_value = session
+    monkeypatch.setattr(aiohttp, "ClientSession", client)
+    monkeypatch.setenv("CARTESIA_API_KEY", "fixture")
+    monkeypatch.setenv("RITA_CARTESIA_VOICE_ID", "fixture-voice")
+
+    audio = asyncio.run(narrate_board_step("Start here.", "en"))
+    assert base64.b64decode(audio) == b"speech bytes"
+    args = session.post.call_args.kwargs
+    assert args["headers"]["Cartesia-Version"] == CARTESIA_VERSION
+    assert args["json"]["model_id"] == MODEL
+    assert args["json"]["language"] == "en"
+    assert args["json"]["voice"]["id"] == "fixture-voice"
+    assert args["json"]["transcript"] == "Start here."
+
+    response.status = 503
+    assert asyncio.run(narrate_board_step("Start here.", "en")) is None

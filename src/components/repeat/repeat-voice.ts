@@ -7,6 +7,7 @@
 //   black the moment it is said. Browsers without one record a short clip that is transcribed
 //   once at the end instead.
 // Sounds go through one Web Audio context, woken by the "Start" tap (iPad needs a tap first).
+import { recogniser, type Recognition } from "@/lib/browser-speech-recogniser";
 import { ttsHeaders } from "@/lib/tts-auth";
 import type { RepeatLang } from "@/lib/repeat/match";
 
@@ -231,28 +232,6 @@ export const repeatSounds = {
 };
 
 // ---------- The learner's words --------------------------------------------------------------
-
-type Recognition = {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  maxAlternatives: number;
-  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
-  onerror: ((event: { error?: string }) => void) | null;
-  onend: (() => void) | null;
-  start(): void;
-  stop(): void;
-  abort(): void;
-};
-
-function recogniser(): (new () => Recognition) | null {
-  if (typeof window === "undefined") return null;
-  const w = window as unknown as {
-    SpeechRecognition?: new () => Recognition;
-    webkitSpeechRecognition?: new () => Recognition;
-  };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
-}
 
 export type HearingMode = "live" | "clip" | "none";
 
