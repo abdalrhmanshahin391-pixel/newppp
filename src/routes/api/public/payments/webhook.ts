@@ -31,10 +31,6 @@ const GRANT_COLUMNS = [
 /** Finds the plan a purchased price belongs to, by its price id or slug. */
 async function planForPrice(priceId?: string | null, planSlug?: string | null) {
   const db = getSupabase();
-  if (planSlug) {
-    const { data } = await (db as any).from("plans").select("*").eq("slug", planSlug).maybeSingle();
-    if (data) return data as Record<string, any>;
-  }
   if (!priceId) return null;
   const { data } = await (db as any)
     .from("plans")
@@ -43,6 +39,7 @@ async function planForPrice(priceId?: string | null, planSlug?: string | null) {
       `paddle_price_monthly.eq.${priceId},paddle_price_yearly.eq.${priceId},paddle_price_once.eq.${priceId}`,
     )
     .maybeSingle();
+  if (data && planSlug && data.slug !== planSlug) throw new Error("Payment price does not match the requested plan");
   return data as Record<string, any> | null;
 }
 
@@ -121,7 +118,7 @@ async function handleTransactionCompleted(data: any, env: PaddleEnv) {
   const planSlug = data?.customData?.planSlug;
 
   const plan = await planForPrice(priceId, planSlug);
-  const targetSlug = planSlug || plan?.slug;
+  const targetSlug = plan?.slug;
   if (!targetSlug) return;
 
   if (plan?.billing_kind === "lifetime") {
@@ -142,7 +139,7 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
   if (!userId) return;
 
   const plan = await planForPrice(priceId, planSlug);
-  const targetSlug = planSlug || plan?.slug;
+  const targetSlug = plan?.slug;
 
   await (getSupabase() as any).from("subscriptions").upsert(
     {

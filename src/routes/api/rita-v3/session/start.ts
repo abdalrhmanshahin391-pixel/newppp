@@ -1,3 +1,4 @@
+import { reserveFreeTalk, freeTalkBudget, voiceControlUrl, type FreeTalkGrant } from "@/lib/free-talk.server";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   RITA_V3_MODELS,
@@ -104,13 +105,9 @@ async function startSession(request: Request): Promise<Response> {
           title: lesson?.title ?? sampleTitle,
         }
       : null;
-  const mode = study
-    ? "study_lesson"
-    : lesson || engineLesson
-      ? "guided_lesson"
-      : ["free_conversation", "guided_lesson", "pronunciation_drill"].includes(String(body.mode))
-        ? String(body.mode)
-        : "free_conversation";
+  // Only a server-loaded lesson can leave the free-talk budget. Client mode flags are not proof.
+  // The browser cannot label a free call as a lesson to bypass its time budget.
+  const mode = study ? "study_lesson" : lesson ? "guided_lesson" : "free_conversation";
   const rawConversationId = String(body.conversationId ?? "").trim();
   const conversationId =
     mode === "free_conversation" && /^[0-9a-f-]{36}$/i.test(rawConversationId)
@@ -203,9 +200,24 @@ async function startSession(request: Request): Promise<Response> {
     );
   }
 
+  let freeTalk: FreeTalkGrant | null = null;
+  let controlUrl: string | undefined;
+  if (mode === "free_conversation") {
+    try {
+      controlUrl = voiceControlUrl();
+      freeTalk = await reserveFreeTalk(access.auth.userId, sessionId);
+    } catch (error) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
+      await supabaseAdmin.from("rita_v3_sessions").delete().eq("id", sessionId).eq("user_id", access.auth.userId);
+      const code = error instanceof Error && /^free_talk_[a-z_]+$/.test(error.message) ? error.message : "free_talk_unavailable";
+      return Response.json({ok:false,code,message:"Free conversation time is unavailable. Check your remaining time or try again later."},{status:code === "free_talk_unavailable" ? 503 : 429});
+    }
+  }
   const startedAt = performance.now();
   const startBody = {
     appSessionId: sessionId,
+    quotaProtocol: 1,
+    ...(freeTalk ? { freeTalk: { sessionId, controlUrl } } : {}),
     traceId,
     personality,
     language,
@@ -264,6 +276,9 @@ async function startSession(request: Request): Promise<Response> {
     await recordStartMetric("start_upstream_response", upstreamElapsedMs, {
       upstreamStatus: upstream.status,
     });
+    if (freeTalk && (payload.quotaProtocol !== 1 || payload.quotaEnforced !== true)) {
+      throw new Error("free_talk_worker_not_enforcing");
+    }
     if (!upstream.ok || !payload.dailyRoom || !payload.dailyToken) {
       const failure = classifyWorkerStartFailure(upstream.status, payload, upstream.headers);
       await updateRitaV3Session(sessionId, access.auth.userId, access.auth.token, {
@@ -300,6 +315,7 @@ async function startSession(request: Request): Promise<Response> {
       provider_session_id: String(payload.sessionId ?? payload.id ?? ""),
       connected_at: new Date().toISOString(),
     });
+    const currentBudget = freeTalk ? await freeTalkBudget(access.auth.userId) : null;
     const modalTimings = readModalTimingEvidence(payload.diagnostics);
     await recordStartMetric("start_credentials_ready", upstreamElapsedMs, {
       upstreamStatus: upstream.status,
@@ -307,6 +323,7 @@ async function startSession(request: Request): Promise<Response> {
     });
     return Response.json(
       {
+        ...(currentBudget ? { freeTalk: currentBudget } : {}),
         dailyRoom: payload.dailyRoom,
         dailyToken: payload.dailyToken,
         sessionId,
@@ -318,6 +335,7 @@ async function startSession(request: Request): Promise<Response> {
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
+    if(freeTalk) { const {endFreeTalk}=await import("@/lib/free-talk.server"); await endFreeTalk(access.auth.userId,sessionId).catch(()=>undefined); }
     console.error("Uzyra Modal start request failed", {
       elapsedMs: Math.round(performance.now() - startedAt),
       errorName: error instanceof Error ? error.name : "unknown",

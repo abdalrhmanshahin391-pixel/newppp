@@ -1,3 +1,6 @@
+import {useVoiceTime} from "@/hooks/useVoiceTime";
+import {voiceTimeLabel} from "@/lib/free-talk-time";
+import {VoiceTime} from "./VoiceTime";
 import { useCallback, useId, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Infinity as InfinityIcon } from "lucide-react";
@@ -31,6 +34,7 @@ export function CreditsMeter({
   inline?: boolean;
 }) {
   const plan = usePlan();
+  const voice = useVoiceTime();
   const [own, setOwn] = useState(false);
   const open = controlled ?? own;
   const setOpen = useCallback(
@@ -98,12 +102,9 @@ export function CreditsMeter({
           ? a
           : b,
       );
-  const level: Level = tightest ? levelOf(tightest.limit, tightest.used) : "ok";
-  const short = !tightest
-    ? "Unlimited"
-    : level === "out"
-      ? "Used up"
-      : `${Math.max(0, tightest.limit! - tightest.used).toLocaleString()} left`;
+  const level: Level = voice.seconds !== undefined && voice.seconds !== null ? (voice.seconds === 0 ? "out" : voice.seconds <= 300 ? "low" : "ok") : tightest ? levelOf(tightest.limit, tightest.used) : "ok";
+  const short = voice.isError ? "Time unavailable" : voice.seconds === undefined ? "…" : voiceTimeLabel(voice.seconds);
+
 
   const card = (
     <div
@@ -116,6 +117,7 @@ export function CreditsMeter({
         {unlimitedAll && <span className="rh-badge">All tools open</span>}
       </div>
 
+      <VoiceTime />
       {offerName && (
         <div className="rh-offer">
           <p className="font-bold">{offerName} is active</p>
