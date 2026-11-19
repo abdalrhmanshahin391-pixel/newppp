@@ -29,6 +29,7 @@ import {
 import type { PathLesson, ReviewSuggestion } from "@/lib/rita-curriculum.functions";
 import {
   mergePath,
+  stopClipCount,
   swapRefs,
   type PathItem,
   type PathItemKind,
@@ -615,35 +616,14 @@ export function LessonPathView({
       <section className="mx-auto max-w-md px-4 pt-7 text-center">
         <h2 className="lp-heading">دروسك مع يوزرا</h2>
         {isAdmin && lessons && !error && (
-          <details className="my-4 rounded-2xl border border-blue-200 bg-blue-50 text-start">
-            <summary className="cursor-pointer px-4 py-3 font-bold text-blue-900">
-              <Clapperboard className="me-2 inline-block" size={20} />
-              تمارين مقاطع الأفلام
-            </summary>
-            <div className="grid gap-2 border-t border-blue-200 p-3">
-              {items
-                .filter((item) => item.kind === "exercises")
-                .map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    disabled={busy}
-                    className="min-h-11 rounded-xl bg-white px-3 text-start"
-                    onClick={() => setContent({ item, film: true })}
-                  >
-                    {item.title} · {item.film_lines?.length ?? 0} مقاطع
-                  </button>
-                ))}
-              <button
-                type="button"
-                className="min-h-11 rounded-xl bg-blue-700 px-3 font-bold text-white"
-                disabled={busy}
-                onClick={() => void add("exercises", nodes.length, true)}
-              >
-                أضف محطة مقاطع في آخر المسار
-              </button>
-            </div>
-          </details>
+          <Link
+            to="/admin/clips"
+            className="my-4 flex min-h-12 items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-start font-bold text-blue-900"
+          >
+            <Clapperboard size={20} aria-hidden="true" />
+            <span className="me-auto">مكتبة المقاطع</span>
+            <span className="text-[13px] font-normal">أضف مقاطع وحطّها بالمسار</span>
+          </Link>
         )}
         {editing && (
           <p className="lp-edit-hint">
@@ -888,8 +868,8 @@ export function LessonPathView({
                   <span className="lp-sub">{finishLine(finishCount)}</span>
                 ) : (
                   <span className="lp-sub">
-                    {node.type === "item" && node.item.film_lines?.length
-                      ? `مقاطع تدريب · ${node.item.film_lines.length}`
+                    {node.type === "item" && stopClipCount(node.item)
+                      ? `مقاطع تدريب · ${stopClipCount(node.item)}`
                       : node.type === "item" && node.item.quiz_count
                         ? `${node.item.quiz_count} أسئلة`
                         : "قريباً"}

@@ -5,11 +5,16 @@ import { useServerFn } from "@tanstack/react-start";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { lqBoard, type LqOption } from "@/lib/lecture-lab.functions";
-import type { PathItem } from "@/lib/rita-path-layout";
+import { stopClipCount, type PathItem } from "@/lib/rita-path-layout";
 import "./path-quiz.css";
 
 const FilmEditor = lazy(() => import("./FilmPractice").then((m) => ({ default: m.FilmEditor })));
-const FilmPlayer = lazy(() => import("./FilmPractice").then((m) => ({ default: m.FilmPlayer })));
+const FilmStopPlayer = lazy(() =>
+  import("./FilmPractice").then((m) => ({ default: m.FilmStopPlayer })),
+);
+const ClipStopEditor = lazy(() =>
+  import("./clips/ClipStopEditor").then((m) => ({ default: m.ClipStopEditor })),
+);
 
 type Props = {
   item: PathItem;
@@ -34,12 +39,12 @@ function message(error: unknown) {
 export function PathQuiz(props: Props) {
   const lang = useUiLanguage();
   const t = useCopy();
-  const ids = props.item.film_lines ?? [];
-  const canChoose = props.admin || (!!props.item.quiz_count && ids.length > 0);
+  const clipCount = stopClipCount(props.item);
+  const canChoose = props.admin || (!!props.item.quiz_count && clipCount > 0);
   const [mode, setMode] = useState<"quiz" | "film" | null>(
     props.admin && props.film ? "film" : null,
   );
-  const active = mode ?? (canChoose ? null : ids.length ? "film" : "quiz");
+  const active = mode ?? (canChoose ? null : clipCount ? "film" : "quiz");
   return (
     <div className="path-quiz" dir={lang === "ar" ? "rtl" : "ltr"}>
       {active === null ? (
@@ -53,10 +58,17 @@ export function PathQuiz(props: Props) {
         </div>
       ) : active === "film" ? (
         <Suspense fallback={<p role="status">{t("Loading…", "جارٍ التحميل…")}</p>}>
-          {props.admin ? (
-            <FilmEditor {...props} />
+          {!props.admin ? (
+            <FilmStopPlayer item={props.item} onClose={props.onClose} />
+          ) : props.item.clip_ids ? (
+            <ClipStopEditor
+              stop={{ id: props.item.id, title: props.item.title, clip_ids: props.item.clip_ids }}
+              onSaved={props.onChanged}
+              onClose={props.onClose}
+            />
           ) : (
-            <FilmPlayer ids={ids} onClose={props.onClose} />
+            // Before the clips migration a stop still holds Sintel lines.
+            <FilmEditor {...props} />
           )}
         </Suspense>
       ) : props.admin ? (

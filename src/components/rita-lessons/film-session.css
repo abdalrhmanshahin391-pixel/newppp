@@ -375,3 +375,52 @@ dialog.film-session[open] {
 .fs-finished a {
   text-decoration: underline;
 }
+/* The credit of each clip, under its sentence; GIFs also name GIPHY. */
+.fs-card > .fs-credit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 0 20px 14px;
+  font-size: 12px;
+  color: #64717c;
+}
+.fs-credit a {
+  text-decoration: underline;
+}
+.fs-giphy {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.fs-finished .fs-credit {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #64717c;
+}
+.fs-finished .fs-giphy {
+  margin-inline-start: 6px;
+}
+/* A silent GIF has no sound to order from, so its meaning is shown. */
+.fs-hint {
+  margin: 0;
+  padding: 12px 20px 0;
+  color: #64717c;
+  font-size: 16px;
+}
+/* Big, easy targets for the answers (they had borders only). */
+.film-session .fs-options button {
+  min-height: 52px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 17px;
+  line-height: 1.4;
+}
+.film-session .fs-bank button,
+.film-session .fs-answer button {
+  min-height: 44px;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 650;
+}

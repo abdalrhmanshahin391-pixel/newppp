@@ -13,6 +13,8 @@ export type PathItem = {
   resource_count: number;
   quiz_count?: number;
   film_lines?: number[];
+  /** The clips of an exercises stop (rita_film_clips ids). Undefined before that migration. */
+  clip_ids?: string[];
 };
 
 export type PathRef = { type: "lesson" | "item"; id: string };
@@ -131,4 +133,9 @@ export function placeLessonAtGap(
   if (old >= 0 && old < index) index--;
   result.splice(index, 0, { type: "lesson", id: lessonId });
   return result;
+}
+
+/** How many film clips an exercises stop holds (its library clips, or its older Sintel lines). */
+export function stopClipCount(item: Pick<PathItem, "clip_ids" | "film_lines">): number {
+  return item.clip_ids ? item.clip_ids.length : (item.film_lines?.length ?? 0);
 }
