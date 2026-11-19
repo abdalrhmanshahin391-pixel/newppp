@@ -1,3 +1,4 @@
+import { readBoardReply } from "./board-reply.ts";
 import { layoutBoard } from "../../components/rita-study/board-layout.ts";
 import type { BoardCommand } from "./whiteboard.ts";
 import assert from "node:assert/strict";
@@ -61,5 +62,38 @@ test("a section grows to fit coincident labels and a connector goes around the m
       const y = arrow[i - 1][1] + ((arrow[i][1] - arrow[i - 1][1]) * k) / 100;
       assert.ok(!labels.some((b) => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h));
     }
+  }
+});
+
+test("malformed optional marks never discard a follow-up answer; missing narration is retriable", () => {
+  const answer = "نضيف الحرف لأن الفاعل مفرد.";
+  for (const rows of [null, [{ text: "x".repeat(80) }], [{ text: "studies", circle: "blue" }]]) {
+    const step = readBoardReply({ narration: answer, rows, sketch: [[-1, 90]] }, "سؤالك");
+    assert.equal(step?.narration, answer);
+    assert.ok(step && boardStepSchema.safeParse(step).success);
+  }
+  assert.equal(readBoardReply({ rows: ["She studies"] }, "سؤالك"), null);
+});
+
+test("circle and connector follow the named terms in both reading directions", () => {
+  for (const [text, result, rtl] of [
+    ["study", "studies", false],
+    ["فعل", "فاعل", true],
+  ] as const) {
+    const step = readBoardReply(
+      { narration: "Example", rows: [{ text, result, circle: "result" }, "She studies at night."] },
+      "Example",
+    )!;
+    const [source, target, arrow] = step.commands;
+    assert.ok(source.op === "write" && target.op === "write" && arrow.op === "arrow");
+    assert.equal(target.text, result);
+    assert.equal(target.circled, true);
+    assert.equal(source.circled, false);
+    const layout = layoutBoard(step.commands);
+    const a = layout.labels.get(source)!.box,
+      b = layout.labels.get(target)!.box;
+    assert.equal(arrow.at[0], rtl ? a.x - 16 : a.x + a.w + 16);
+    assert.equal(arrow.to[0], rtl ? b.x + b.w + 16 : b.x - 16);
+    assert.deepEqual(layout.arrow(arrow.at, arrow.to), [arrow.at, arrow.to]);
   }
 });

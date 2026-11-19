@@ -254,6 +254,7 @@ export function StudyWhiteboard({
     setAsking(false);
     try {
       const reply = await generate({
+        signal: AbortSignal.timeout(75000),
         data: {
           lessonId,
           preview,
@@ -262,7 +263,17 @@ export function StudyWhiteboard({
           previous: pages
             .slice(0, cursor + 1)
             .slice(-5)
-            .map((p) => p.step.narration),
+            .map((p) =>
+              [
+                p.question,
+                p.step.title,
+                ...p.step.commands.flatMap((c) => (c.op === "write" ? [c.text] : [])),
+                p.step.narration,
+              ]
+                .filter(Boolean)
+                .join("\n")
+                .slice(0, 1200),
+            ),
           index,
           question,
         },
@@ -305,7 +316,7 @@ export function StudyWhiteboard({
     };
   }, [shown, onVoiceGuard]);
   function advance() {
-    if (pending.current || !page || !ready || finished) return;
+    if (pending.current || !page || finished) return;
     setAsking(false);
     setProblem("");
     setMicHint("");
@@ -463,8 +474,8 @@ export function StudyWhiteboard({
                     {sheet.question}
                   </p>
                 )}
-                {i === cursor ? (
-                  <Playback sheet={sheet} shown={shown && !busy && !finished} onReady={setReady} />
+                {i === cursor && !finished ? (
+                  <Playback sheet={sheet} shown={shown && !busy && !asking} onReady={setReady} />
                 ) : (
                   <>
                     <div className="wb-sheet">
@@ -481,6 +492,13 @@ export function StudyWhiteboard({
               </article>
             ))}
           </div>
+          {finished && (
+            <div role="status" className="wb-complete">
+              <Check /> خلصنا شرح الفقرة.
+            </div>
+          )}
+        </div>
+        <footer className="wb-footer">
           {busy && (
             <div role="status" className="wb-status">
               <LoaderCircle className="wb-spin" />
@@ -498,15 +516,9 @@ export function StudyWhiteboard({
               </button>
             </div>
           )}
-          {finished && (
-            <div role="status" className="wb-complete">
-              <Check /> خلصنا شرح الفقرة.
-            </div>
-          )}
-        </div>
-        {page && !busy && (
-          <footer className="wb-footer">
-            {asking && !finished ? (
+          {page &&
+            !busy &&
+            (asking && !finished ? (
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -550,7 +562,6 @@ export function StudyWhiteboard({
                   <button
                     type="button"
                     className="wb-primary"
-                    disabled={!ready && !finished}
                     onClick={finished ? onClose : advance}
                   >
                     {finished
@@ -565,7 +576,6 @@ export function StudyWhiteboard({
                       <button
                         type="button"
                         className="wb-small"
-                        disabled={!ready}
                         onClick={() => setAsking(true)}
                         aria-label="اسأل عن هذه الخطوة"
                       >
@@ -607,9 +617,8 @@ export function StudyWhiteboard({
                   )}
                 </div>
               </>
-            )}
-          </footer>
-        )}
+            ))}
+        </footer>
       </section>
     </dialog>
   );
