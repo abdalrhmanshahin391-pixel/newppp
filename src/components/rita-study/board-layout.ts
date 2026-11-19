@@ -79,7 +79,9 @@ export function layoutBoard(commands: BoardCommand[]) {
   const labels = new Map<BoardCommand, { original: Box; box: Box }>();
   for (const c of commands) {
     if (c.op !== "write") continue;
-    const w = Math.min(560, Array.from(c.text).length * (/[\u0600-\u06ff]/.test(c.text) ? 12 : 17));
+    const w =
+      c.width ??
+      Math.min(560, Array.from(c.text).length * (/[\u0600-\u06ff]/.test(c.text) ? 12 : 17));
     const original = {
       x: Math.max(12, Math.min(588 - w, c.at[0])),
       y: Math.max(10, c.at[1]),

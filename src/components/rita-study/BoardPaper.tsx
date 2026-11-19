@@ -23,6 +23,17 @@ function segments(command: BoardCommand, layout: ReturnType<typeof layoutBoard>)
     const glyphs = letters.map(strokesFor);
     const { x: left, y: top, w: width } = layout.labels.get(command)!.box;
     const rtl = /[\u0600-\u06ff]/.test(command.text);
+    const outline: Segment[] = command.circled
+      ? [
+          {
+            ...base,
+            x: left,
+            y: top,
+            color: colors.coral,
+            path: `M0 -5 H${width} C${width + 15} -5 ${width + 15} 37 ${width} 37 H0 C-15 37 -15 -5 0 -5 Z`,
+          },
+        ]
+      : [];
     if (glyphs.some((g) => !g) || width / letters.length < 7) {
       // Keep joined Arabic words and bidi runs shaped by the browser as ink appears from the right.
 
@@ -36,12 +47,16 @@ function segments(command: BoardCommand, layout: ReturnType<typeof layoutBoard>)
           width,
           rtl,
         },
+        ...outline,
       ];
     }
     const scale = Math.min(1.65, width / (letters.length * 12));
-    return glyphs.flatMap((parts, i) =>
-      (parts ?? []).map((path) => ({ ...base, path, x: left + i * 12 * scale, y: top, scale })),
-    );
+    return [
+      ...glyphs.flatMap((parts, i) =>
+        (parts ?? []).map((path) => ({ ...base, path, x: left + i * 12 * scale, y: top, scale })),
+      ),
+      ...outline,
+    ];
   }
   if (command.op === "path")
     return [

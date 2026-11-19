@@ -162,6 +162,8 @@ export type PracticeAsk = {
   system: string;
   user: string;
   maxTokens: number;
+  /** A completed plain-text answer can also be useful to the whiteboard. */
+  plainReply?: (text: string) => unknown;
   /** The whole budget in ms for both tries (the server function must answer before its limit). */
   budgetMs?: number;
   now?: () => number;
@@ -224,7 +226,11 @@ export async function askPracticeModel(
           choices?: { message?: { content?: unknown }; finish_reason?: unknown }[];
         };
         const choice = json?.choices?.[0];
-        const reply = readJson(String(choice?.message?.content ?? ""));
+        const text = String(choice?.message?.content ?? "");
+        const reply =
+          readJson(text) ??
+          (choice?.finish_reason === "stop" ? ask.plainReply?.(text.trim()) : null) ??
+          null;
         if (reply !== null) return { ok: true, reply };
         reason = "failed";
         log(`Practice model: no JSON (try ${attempt}, finish ${String(choice?.finish_reason)})`);

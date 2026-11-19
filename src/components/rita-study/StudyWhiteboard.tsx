@@ -27,7 +27,12 @@ import { BoardPaper } from "./BoardPaper";
 import "./whiteboard.css";
 
 const completeInk = () => 1;
-type Sheet = { step: BoardStep; audio: string | null; index: number; question: string };
+type Sheet = {
+  step: BoardStep;
+  audio: string | null | Promise<string | null>;
+  index: number;
+  question: string;
+};
 type Props = {
   lessonId: string;
   preview: boolean;
@@ -48,9 +53,22 @@ function Playback({
   onReady: (ready: boolean) => void;
 }) {
   const audio = useRef<HTMLAudioElement>(null);
-  const time = useRef({ start: 0, progress: 0, running: false, voiced: Boolean(sheet.audio) });
+  const [src, setSrc] = useState<string | null | undefined>(() =>
+    typeof sheet.audio === "string" || sheet.audio === null ? sheet.audio : undefined,
+  );
+  const time = useRef({ start: 0, progress: 0, running: false, voiced: Boolean(src), floor: 0 });
+  const wantsVoice = useRef(true);
+  useEffect(() => {
+    let live = true;
+    Promise.resolve(sheet.audio).then((value) => {
+      if (live) setSrc(value);
+    });
+    return () => {
+      live = false;
+    };
+  }, [sheet.audio]);
   const [state, setState] = useState<"playing" | "paused" | "done">("paused");
-  const [silent, setSilent] = useState(!sheet.audio);
+  const [silent, setSilent] = useState(!src);
   const [run, setRun] = useState(0);
   const duration = Math.min(11000, Math.max(3200, sheet.step.narration.length * 68));
   const clock = useCallback(() => {
@@ -62,7 +80,7 @@ function Playback({
       Number.isFinite(audio.current.duration) &&
       audio.current.duration > 0
     )
-      return Math.min(1, audio.current.currentTime / audio.current.duration);
+      return Math.max(t.floor, Math.min(1, audio.current.currentTime / audio.current.duration));
     if (t.voiced || !t.running) return t.progress;
     return Math.min(1, t.progress + (performance.now() - t.start) / duration);
   }, [duration]);
@@ -73,47 +91,62 @@ function Playback({
     onReady(true);
   }, [onReady]);
   const pause = useCallback(() => {
+    wantsVoice.current = false;
     time.current.progress = clock();
     time.current.running = false;
     audio.current?.pause();
     setState((old) => (old === "done" ? old : "paused"));
   }, [clock]);
-  const play = useCallback(() => {
-    onReady(false);
-    const t = time.current;
-    if (t.progress >= 1) {
-      t.progress = 0;
-      if (audio.current) audio.current.currentTime = 0;
-    }
-    t.start = performance.now();
-    t.running = true;
-    setRun((number) => number + 1);
-    setState("playing");
-    const player = audio.current;
-    if (t.voiced && player)
-      void player.play().catch((error: Error) => {
-        if (!t.running) return;
-        if (error.name === "NotAllowedError") {
-          pause();
-          return;
-        }
-        if (error.name === "AbortError") return;
-        t.voiced = false;
-        t.start = performance.now();
-        setSilent(true);
-      });
-  }, [onReady, pause]);
+  const play = useCallback(
+    (attachVoice = false) => {
+      wantsVoice.current = true;
+      onReady(false);
+      const t = time.current;
+      if (t.progress >= 1 && !attachVoice) {
+        t.floor = 0;
+        t.progress = 0;
+        if (audio.current) audio.current.currentTime = 0;
+      }
+      t.start = performance.now();
+      t.running = true;
+      setRun((number) => number + 1);
+      setState("playing");
+      const player = audio.current;
+      if (t.voiced && player)
+        void player.play().catch((error: Error) => {
+          if (!t.running) return;
+          if (error.name === "NotAllowedError") {
+            pause();
+            return;
+          }
+          if (error.name === "AbortError") return;
+          t.voiced = false;
+          t.start = performance.now();
+          setSilent(true);
+        });
+    },
+    [onReady, pause],
+  );
   const visible = useRef(shown);
   visible.current = shown;
   useEffect(() => {
-    const player = audio.current;
     const timer = time.current;
+    const player = audio.current;
     if (visible.current) play();
     return () => {
       timer.running = false;
       player?.pause();
     };
   }, [play]);
+  useEffect(() => {
+    if (!src || time.current.voiced) return;
+    const t = time.current;
+    t.floor = clock();
+    t.progress = t.floor;
+    t.voiced = true;
+    setSilent(false);
+    if (visible.current && wantsVoice.current) play(true);
+  }, [src, clock, play]);
   useEffect(() => {
     if (!shown) pause();
   }, [shown, pause]);
@@ -141,7 +174,7 @@ function Playback({
           type="button"
           className="wb-audio"
           disabled={!shown}
-          onClick={state === "playing" ? pause : play}
+          onClick={state === "playing" ? pause : () => play()}
           aria-label={
             state === "playing"
               ? "إيقاف الشرح مؤقتًا"
@@ -155,19 +188,24 @@ function Playback({
         <div>
           <span className="wb-speaker">
             {silent ? <VolumeX /> : <AudioLines />}
-            {silent ? "الصوت غير متاح · نص الشرح" : "يوزرا"}
+            {src === undefined
+              ? "جارٍ تحضير الصوت…"
+              : silent
+                ? "الصوت غير متاح · نص الشرح"
+                : "يوزرا"}
           </span>
           <p dir="auto">{sheet.step.narration}</p>
           {state !== "done" && shown && (
             <div className="wb-reading">
               {state === "paused" && (
-                <button type="button" onClick={play}>
+                <button type="button" onClick={() => play()}>
                   تشغيل الشرح
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => {
+                  wantsVoice.current = false;
                   audio.current?.pause();
                   finish();
                 }}
@@ -177,19 +215,17 @@ function Playback({
             </div>
           )}
         </div>
-        {sheet.audio && (
-          <audio
-            ref={audio}
-            src={sheet.audio}
-            preload="auto"
-            onEnded={finish}
-            onError={() => {
-              time.current.voiced = false;
-              time.current.start = performance.now();
-              setSilent(true);
-            }}
-          />
-        )}
+        <audio
+          ref={audio}
+          src={src || undefined}
+          preload="auto"
+          onEnded={finish}
+          onError={() => {
+            time.current.voiced = false;
+            time.current.start = performance.now();
+            setSilent(true);
+          }}
+        />
       </div>
     </>
   );
@@ -254,6 +290,7 @@ export function StudyWhiteboard({
     setAsking(false);
     try {
       const reply = await generate({
+        signal: AbortSignal.timeout(75000),
         data: {
           lessonId,
           preview,
@@ -262,7 +299,17 @@ export function StudyWhiteboard({
           previous: pages
             .slice(0, cursor + 1)
             .slice(-5)
-            .map((p) => p.step.narration),
+            .map((p) =>
+              [
+                p.question,
+                p.step.title,
+                ...p.step.commands.flatMap((c) => (c.op === "write" ? [c.text] : [])),
+                p.step.narration,
+              ]
+                .filter(Boolean)
+                .join("\n")
+                .slice(0, 1200),
+            ),
           index,
           question,
         },
@@ -272,7 +319,12 @@ export function StudyWhiteboard({
         setProblem(reply.message);
         return;
       }
-      const next = { step: reply.step, audio: reply.audio, index, question };
+      const next = {
+        step: reply.step,
+        audio: Promise.resolve(reply.audio).catch(() => null),
+        index,
+        question,
+      };
       const insert = pages.length ? cursor + 1 : 0;
       setPages((old) => [...old.slice(0, insert), next, ...old.slice(insert)]);
       setCursor(insert);
@@ -305,7 +357,7 @@ export function StudyWhiteboard({
     };
   }, [shown, onVoiceGuard]);
   function advance() {
-    if (pending.current || !page || !ready || finished) return;
+    if (pending.current || !page || finished) return;
     setAsking(false);
     setProblem("");
     setMicHint("");
@@ -463,8 +515,8 @@ export function StudyWhiteboard({
                     {sheet.question}
                   </p>
                 )}
-                {i === cursor ? (
-                  <Playback sheet={sheet} shown={shown && !busy && !finished} onReady={setReady} />
+                {i === cursor && !finished ? (
+                  <Playback sheet={sheet} shown={shown && !busy && !asking} onReady={setReady} />
                 ) : (
                   <>
                     <div className="wb-sheet">
@@ -481,6 +533,13 @@ export function StudyWhiteboard({
               </article>
             ))}
           </div>
+          {finished && (
+            <div role="status" className="wb-complete">
+              <Check /> خلصنا شرح الفقرة.
+            </div>
+          )}
+        </div>
+        <footer className="wb-footer">
           {busy && (
             <div role="status" className="wb-status">
               <LoaderCircle className="wb-spin" />
@@ -498,15 +557,9 @@ export function StudyWhiteboard({
               </button>
             </div>
           )}
-          {finished && (
-            <div role="status" className="wb-complete">
-              <Check /> خلصنا شرح الفقرة.
-            </div>
-          )}
-        </div>
-        {page && !busy && (
-          <footer className="wb-footer">
-            {asking && !finished ? (
+          {page &&
+            !busy &&
+            (asking && !finished ? (
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -550,7 +603,6 @@ export function StudyWhiteboard({
                   <button
                     type="button"
                     className="wb-primary"
-                    disabled={!ready && !finished}
                     onClick={finished ? onClose : advance}
                   >
                     {finished
@@ -565,7 +617,6 @@ export function StudyWhiteboard({
                       <button
                         type="button"
                         className="wb-small"
-                        disabled={!ready}
                         onClick={() => setAsking(true)}
                         aria-label="اسأل عن هذه الخطوة"
                       >
@@ -607,9 +658,8 @@ export function StudyWhiteboard({
                   )}
                 </div>
               </>
-            )}
-          </footer>
-        )}
+            ))}
+        </footer>
       </section>
     </dialog>
   );

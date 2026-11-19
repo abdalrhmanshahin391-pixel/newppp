@@ -82,17 +82,18 @@ const result = await build({
             return { contents: "export const useServerFn=f=>f;" };
           if (path.endsWith("whiteboard.functions"))
             return {
+              resolveDir: root,
               contents: `
+            import { readBoardReply } from "@/lib/study/board-reply";
             export async function studyBoardStep({data}) {
               (window.qaBoardCalls ||= []).push(data);
               if (window.qaBoardFail) return {ok:false,message:"تعذّر تجهيز الرسم."};
-              return {ok:true,audio:location.search.includes("silent")?null:"/api/german/tts",
-                step:{title:data.question?"سؤالك عن الفعل":["مين بيعمل الفعل؟","كيف بيتغيّر الفعل؟","مثال جديد"][data.index],narration:"لما نحكي عن شخص واحد، منضيف حرف إس للفعل بالمضارع البسيط.",
-                commands:data.index===1?[{op:"write",at:[44,38],text:"look",ink:"ink"},{op:"arrow",at:[130,55],to:[228,55],ink:"teal"},{op:"write",at:[250,38],text:"looks",ink:"indigo"},{op:"write",at:[52,152],text:"He looks after his cat.",ink:"ink"}]:[{op:"write",at:[42,35],text:"She",ink:"indigo"},{op:"arrow",at:[122,54],to:[220,54],ink:"teal"},
-                {op:"write",at:[248,35],text:"looks after",ink:"ink"},{op:"line",at:[250,67],to:[348,67],ink:"coral"},
-                {op:"write",at:[54,174],text:"She looks after her brother.",ink:"ink"},{op:"write",at:[272,90],text:"فعل في المضارع",ink:"teal"}]}};
-            }
-          `,
+              const title=data.question?"سؤالك عن الفعل":["مين بيعمل الفعل؟","كيف بيتغيّر الفعل؟","مثال جديد"][data.index];
+              const narration=data.question?"لأنّ الفاعل مفرد.":"لما نحكي عن شخص واحد، منضيف حرف إس للفعل بالمضارع البسيط.";
+              const audio = data.index===0 && !data.question ? new Promise(done=>{window.qaReleaseVoice=()=>done("/api/german/tts?old")}) : Promise.resolve(location.search.includes("silent")?null:"/api/german/tts");
+              return {ok:true,audio,
+                step:readBoardReply({title,narration,rows:[{text:"look",result:"looks",circle:"result"}, "She looks after her little brother.", {bad:true}]},title)};
+            }`,
             };
           const names = [
             "explainPhrase",
@@ -303,15 +304,34 @@ if (process.argv.includes("--check")) {
       await board.locator(".wb-drawing").waitFor();
       assert.match(await board.locator("blockquote").textContent(), /looks after/);
       assert.equal(await page.evaluate(() => window.qaBoardCalls.length), 1);
-      // Read instantly even when a mobile browser defers audio until a second tap.
-      const paused = board.getByRole("button", { name: "تشغيل الشرح", exact: true });
-      if (await paused.count())
-        await board.getByRole("button", { name: "عرض الخطوة كاملة" }).click();
+      // Advancing must work with a still unresolved voice request.
+      await board.getByText("جارٍ تحضير الصوت…").waitFor();
       await board.getByRole("button", { name: "تمام، كمّلي" }).click();
       await page.waitForFunction(() => window.qaBoardCalls.at(-1)?.index === 1);
       await page.waitForFunction(() => document.querySelectorAll(".wb-topic").length === 2);
+      await page.evaluate(() => window.qaReleaseVoice());
+      assert.equal(await board.locator('audio[src*="?old"]').count(), 0);
       assert.equal(await board.locator(".wb-drawing").count(), 2);
       assert.equal(Math.round((await board.boundingBox()).width), width);
+      await board.getByRole("button", { name: "اسأل عن هذه الخطوة" }).click();
+      await board.locator("#wb-ask").fill("ليش أضفنا s؟");
+      await page.evaluate(() => {
+        window.qaBoardFail = true;
+      });
+      await board.getByRole("button", { name: "إرسال السؤال" }).click();
+      await board.getByRole("alert").waitFor();
+      await page.evaluate(() => {
+        window.qaBoardFail = false;
+      });
+      await board.getByRole("button", { name: "جرّب مرة ثانية" }).click();
+      await board.locator("[data-followup=true]").waitFor();
+      assert.match(await board.locator("[data-followup=true]").textContent(), /لأنّ الفاعل مفرد/);
+      assert.equal(await page.evaluate(() => window.qaBoardCalls.at(-1).question), "ليش أضفنا s؟");
+      await board.getByRole("button", { name: "تمام، كمّلي" }).click();
+      await page.waitForFunction(() => document.querySelectorAll(".wb-topic").length === 4);
+      assert.equal(await page.evaluate(() => window.qaBoardCalls.at(-1).index), 2);
+      await board.getByRole("button", { name: "تمام، فهمت" }).click();
+      await board.getByText("خلصنا شرح الفقرة.").waitFor();
       await page.getByRole("button", { name: "رجوع إلى الدرس" }).click();
       await page.getByRole("button", { name: "حدّد جملة", exact: true }).click();
       if (engine === "webkit") {
