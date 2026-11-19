@@ -4,6 +4,10 @@ import {
   ArrowLeft,
   AudioLines,
   BookOpen,
+  Minus,
+  Plus,
+  Layers,
+  ChevronLeft,
   Check,
   ChevronRight,
   CornerDownLeft,
@@ -22,6 +26,7 @@ import { recogniser } from "@/lib/browser-speech-recogniser";
 import { BoardPaper } from "./BoardPaper";
 import "./whiteboard.css";
 
+const completeInk = () => 1;
 type Sheet = { step: BoardStep; audio: string | null; index: number; question: string };
 type Props = {
   lessonId: string;
@@ -199,10 +204,32 @@ export function StudyWhiteboard({
   onClose,
   onVoiceGuard,
 }: Props) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const scrollArea = useRef<HTMLDivElement>(null);
+  const [canvasWidth, setCanvasWidth] = useState(0);
+  useEffect(() => {
+    const observer = new ResizeObserver((entries) => setCanvasWidth(entries[0].contentRect.width));
+    observer.observe(scrollArea.current!);
+    return () => observer.disconnect();
+  }, []);
+  const [zoom, setZoom] = useState(100);
+  const source = useRef<HTMLDivElement>(null);
+  const activeSection = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = dialog.current!;
+    el.showModal();
+    return () => el.close();
+  }, []);
   const generate = useServerFn(studyBoardStep);
   const [pages, setPages] = useState<Sheet[]>([]);
   const [cursor, setCursor] = useState(0);
   const page = pages[cursor];
+  useEffect(() => {
+    activeSection.current?.scrollIntoView({
+      block: "nearest",
+      behavior: window.matchMedia("(prefers-reduced-motion:reduce)").matches ? "instant" : "smooth",
+    });
+  }, [page]);
   const [busy, setBusy] = useState(true);
   const [problem, setProblem] = useState("");
   const [ready, setReady] = useState(false);
@@ -348,177 +375,242 @@ export function StudyWhiteboard({
     };
   }, [handsFree, ready, shown, busy, asking, problem, finished, language, cursor]);
   return (
-    <section className="wb" dir="rtl" aria-label="سبورة يوزرا">
-      <div className="wb-scroll">
-        <div className="wb-reference">
-          <BookOpen size={17} />
-          <div>
-            <strong>من الفقرة المحدّدة</strong>
-            <blockquote className={expanded ? "is-expanded" : ""} dir="auto">
-              {selection.exact}
-            </blockquote>
-          </div>
-          {selection.exact.length > 55 && (
-            <button type="button" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
-              {expanded ? "طيّ" : "عرض الكل"}
-            </button>
-          )}
-        </div>
-        {page && (
-          <div className="wb-pagination">
-            <span>{page.question ? "سؤالك عن الفقرة" : "شرح الفقرة"}</span>
-            <span className="wb-page-count">
-              الخطوة {["١", "٢", "٣"][page.index]} من ٣{" "}
-              <i>
-                {[0, 1, 2].map((n) => (
-                  <b key={n} data-filled={n <= page.index} />
-                ))}
-              </i>
-            </span>
-          </div>
-        )}
-        {page?.question && (
-          <p className="wb-question" dir="auto">
-            {page.question}
-          </p>
-        )}
-        {page && (
-          <Playback
-            key={cursor}
-            sheet={page}
-            shown={shown && !busy && !finished}
-            onReady={setReady}
-          />
-        )}
-        {busy && (
-          <div role="status" className="wb-status">
-            <LoaderCircle className="wb-spin" />
-            {page ? "يوزرا بتحضّر الرسم التالي…" : "يوزرا بتحضّر شرح الفقرة…"}
-          </div>
-        )}
-        {problem && (
-          <div className="wb-status" role="alert">
-            <span>{problem}</span>
+    <dialog
+      className="wb-dialog"
+      ref={dialog}
+      aria-label="سبورة يوزرا"
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+    >
+      <section className="wb" dir="rtl" aria-label="سبورة يوزرا">
+        <header className="wb-top" dir="ltr">
+          <button
+            className="wb-back"
+            type="button"
+            onClick={onClose}
+            aria-label="رجوع إلى الدرس"
+            autoFocus
+          >
+            <ChevronLeft />
+          </button>
+          <strong dir="auto">{pages[0]?.step.title || "سبورة يوزرا"}</strong>
+          <div className="wb-tools">
             <button
               type="button"
-              onClick={() => void load(failed.current.index, failed.current.question)}
+              aria-label="تصغير السبورة"
+              disabled={zoom <= 75}
+              onClick={() => setZoom(zoom - 25)}
             >
-              جرّب مرة ثانية
+              <Minus />
+            </button>
+            <button aria-label="الحجم الأصلي" onClick={() => setZoom(100)}>
+              {zoom}%
+            </button>
+            <button
+              type="button"
+              aria-label="تكبير السبورة"
+              disabled={zoom >= 150}
+              onClick={() => setZoom(zoom + 25)}
+            >
+              <Plus />
             </button>
           </div>
-        )}
-        {finished && (
-          <div role="status" className="wb-complete">
-            <Check /> خلصنا شرح الفقرة.
-          </div>
-        )}
-      </div>
-      {page && !busy && (
-        <footer className="wb-footer">
-          {asking && !finished ? (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                respond(draft);
-              }}
-            >
-              <label htmlFor="wb-ask">شو حابّ أوضّح بهالخطوة؟</label>
-              <div className="wb-field">
-                <input
-                  id="wb-ask"
-                  autoFocus
-                  value={draft}
-                  maxLength={300}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder="اكتب سؤالك…"
-                  dir="auto"
-                />
-                <button aria-label="إرسال السؤال" disabled={!draft.trim()}>
-                  <CornerDownLeft />
-                </button>
-              </div>
-              <button type="button" className="wb-link" onClick={() => setAsking(false)}>
-                رجوع للشرح
+          <button
+            className="wb-source-button"
+            type="button"
+            title="الفقرة المحدّدة"
+            aria-label="عرض الفقرة المحدّدة"
+            onClick={() => {
+              setExpanded(true);
+              source.current?.scrollIntoView({ block: "start" });
+            }}
+          >
+            <BookOpen size={18} />
+          </button>
+        </header>
+        <div className="wb-scroll" ref={scrollArea}>
+          <div ref={source} className="wb-reference">
+            <BookOpen size={17} />
+            <div>
+              <strong>من الفقرة المحدّدة</strong>
+              <blockquote className={expanded ? "is-expanded" : ""} dir="auto">
+                {selection.exact}
+              </blockquote>
+            </div>
+            {selection.exact.length > 55 && (
+              <button type="button" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
+                {expanded ? "طيّ" : "عرض الكل"}
               </button>
-            </form>
-          ) : (
-            <>
-              <p aria-live="polite" className="wb-hint">
-                {finished
-                  ? ""
-                  : micHint ||
-                    (hearing
-                      ? "الميكروفون شغّال. احكي «تمام» أو اسأل يوزرا."
-                      : ready
-                        ? canHear
-                          ? "وقفت هون. احكي «تمام» بالميكروفون أو تابع بالزر."
-                          : "وقفت هون. منكمّل؟"
-                        : "اسمع الشرح وتابع القلم.")}
-              </p>
-              <div className="wb-controls">
-                <button
-                  type="button"
-                  className="wb-primary"
-                  disabled={!ready && !finished}
-                  onClick={finished ? onClose : advance}
-                >
-                  {finished
-                    ? "العودة للدرس"
-                    : page.index === 2 && cursor === pages.length - 1
-                      ? "تمام، فهمت"
-                      : "تمام، كمّلي"}{" "}
-                  {finished ? <Check /> : <ArrowLeft />}
-                </button>
-                {!finished && (
+            )}
+          </div>
+          <div className="wb-canvas" style={{ width: canvasWidth || "100%", zoom: zoom / 100 }}>
+            {pages.map((sheet, i) => (
+              <article
+                className="wb-topic"
+                key={i}
+                ref={i === cursor ? activeSection : undefined}
+                data-active={i === cursor}
+                data-followup={Boolean(sheet.question)}
+              >
+                <div className="wb-topic-label">
+                  <Layers size={14} />
+                  {sheet.question ? "سؤال عن القسم" : "القسم"} {["١", "٢", "٣"][sheet.index]}
+                </div>
+                {sheet.question && (
+                  <p className="wb-question" dir="auto">
+                    {sheet.question}
+                  </p>
+                )}
+                {i === cursor ? (
+                  <Playback sheet={sheet} shown={shown && !busy && !finished} onReady={setReady} />
+                ) : (
                   <>
-                    <button
-                      type="button"
-                      className="wb-small"
-                      disabled={!ready}
-                      onClick={() => setAsking(true)}
-                      aria-label="اسأل عن هذه الخطوة"
-                    >
-                      <MessageCircle />
-                      <span>عندي سؤال</span>
-                    </button>
-                    {canHear && (
-                      <button
-                        type="button"
-                        className="wb-icon"
-                        aria-label="المتابعة بالصوت"
-                        title="المتابعة بالصوت"
-                        aria-pressed={handsFree}
-                        onClick={() => {
-                          setMicHint("");
-                          setHandsFree(!handsFree);
-                        }}
-                      >
-                        <Mic />
-                      </button>
-                    )}
+                    <div className="wb-sheet">
+                      <div className="wb-heading">
+                        <h2 dir="auto">{sheet.step.title}</h2>
+                      </div>
+                      <BoardPaper step={sheet.step} clock={completeInk} playing={false} />
+                    </div>
+                    <p className="wb-saved-note" dir="auto">
+                      {sheet.step.narration}
+                    </p>
                   </>
                 )}
-                {cursor > 0 && (
+              </article>
+            ))}
+          </div>
+          {busy && (
+            <div role="status" className="wb-status">
+              <LoaderCircle className="wb-spin" />
+              {page ? "يوزرا بتحضّر الرسم التالي…" : "يوزرا بتحضّر شرح الفقرة…"}
+            </div>
+          )}
+          {problem && (
+            <div className="wb-status" role="alert">
+              <span>{problem}</span>
+              <button
+                type="button"
+                onClick={() => void load(failed.current.index, failed.current.question)}
+              >
+                جرّب مرة ثانية
+              </button>
+            </div>
+          )}
+          {finished && (
+            <div role="status" className="wb-complete">
+              <Check /> خلصنا شرح الفقرة.
+            </div>
+          )}
+        </div>
+        {page && !busy && (
+          <footer className="wb-footer">
+            {asking && !finished ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  respond(draft);
+                }}
+              >
+                <label htmlFor="wb-ask">شو حابّ أوضّح بهالخطوة؟</label>
+                <div className="wb-field">
+                  <input
+                    id="wb-ask"
+                    autoFocus
+                    value={draft}
+                    maxLength={300}
+                    onChange={(e) => setDraft(e.target.value)}
+                    placeholder="اكتب سؤالك…"
+                    dir="auto"
+                  />
+                  <button aria-label="إرسال السؤال" disabled={!draft.trim()}>
+                    <CornerDownLeft />
+                  </button>
+                </div>
+                <button type="button" className="wb-link" onClick={() => setAsking(false)}>
+                  رجوع للشرح
+                </button>
+              </form>
+            ) : (
+              <>
+                <p aria-live="polite" className="wb-hint">
+                  {finished
+                    ? ""
+                    : micHint ||
+                      (hearing
+                        ? "الميكروفون شغّال. احكي «تمام» أو اسأل يوزرا."
+                        : ready
+                          ? canHear
+                            ? "وقفت هون. احكي «تمام» بالميكروفون أو تابع بالزر."
+                            : "وقفت هون. منكمّل؟"
+                          : "اسمع الشرح وتابع القلم.")}
+                </p>
+                <div className="wb-controls">
                   <button
                     type="button"
-                    className="wb-icon"
-                    title="اللوحة السابقة"
-                    aria-label="اللوحة السابقة"
-                    onClick={() => {
-                      setFinished(false);
-                      setProblem("");
-                      setReady(false);
-                      setCursor(cursor - 1);
-                    }}
+                    className="wb-primary"
+                    disabled={!ready && !finished}
+                    onClick={finished ? onClose : advance}
                   >
-                    <ChevronRight />
+                    {finished
+                      ? "العودة للدرس"
+                      : page.index === 2 && cursor === pages.length - 1
+                        ? "تمام، فهمت"
+                        : "تمام، كمّلي"}{" "}
+                    {finished ? <Check /> : <ArrowLeft />}
                   </button>
-                )}
-              </div>
-            </>
-          )}
-        </footer>
-      )}
-    </section>
+                  {!finished && (
+                    <>
+                      <button
+                        type="button"
+                        className="wb-small"
+                        disabled={!ready}
+                        onClick={() => setAsking(true)}
+                        aria-label="اسأل عن هذه الخطوة"
+                      >
+                        <MessageCircle />
+                        <span>عندي سؤال</span>
+                      </button>
+                      {canHear && (
+                        <button
+                          type="button"
+                          className="wb-icon"
+                          aria-label="المتابعة بالصوت"
+                          title="المتابعة بالصوت"
+                          aria-pressed={handsFree}
+                          onClick={() => {
+                            setMicHint("");
+                            setHandsFree(!handsFree);
+                          }}
+                        >
+                          <Mic />
+                        </button>
+                      )}
+                    </>
+                  )}
+                  {cursor > 0 && (
+                    <button
+                      type="button"
+                      className="wb-icon"
+                      title="القسم السابق"
+                      aria-label="القسم السابق"
+                      onClick={() => {
+                        setFinished(false);
+                        setProblem("");
+                        setReady(false);
+                        setCursor(cursor - 1);
+                      }}
+                    >
+                      <ChevronRight />
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </footer>
+        )}
+      </section>
+    </dialog>
   );
 }

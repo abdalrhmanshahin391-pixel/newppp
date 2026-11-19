@@ -50,7 +50,7 @@ import { markSelection, readSelection, sectionSegIds, type PageSelection } from 
 import { markReplySelection, readReplySelection, type ReplySelection } from "./reply-selection";
 import { readStudyMemory, writeStudyMemory } from "./study-memory";
 import { attachTechSelect, drawSelectionFx } from "./tech-select";
-import { installSoundUnlock, setSoundOn, soundOn } from "./tech-sound";
+import { installSoundUnlock, menuOpenSound, setSoundOn, soundOn } from "./tech-sound";
 import { useStudyRequests } from "./useStudyRequests";
 import { playVoiceLine, prepareVoiceLine, warmVoiceLines, type VoiceCue } from "./voice-lines";
 import "./study-meaning.css";
@@ -134,14 +134,13 @@ export function StudyPage({
   const [ringMode, setRingMode] = useState<"main" | "language">("main");
   const explanation = useExplanationLanguage();
   const [board, setBoard] = useState<{ id: string; selection: BoardSelection } | null>(null);
-  const [boardTucked, setBoardTucked] = useState(false);
   // The floating window: the cards and questions made from a selection, or the temporary question
   // design preview. Hidden with its X it stays alive, and the ••• at the bottom brings it back;
   // slid off the right edge, its tab brings it back. `reveal` grows to bring it back from the side.
   const [win, setWin] = useState<{
     at: { x: number; y: number };
     shown: boolean;
-    content: "practice" | "preview" | "board";
+    content: "practice" | "preview";
     reveal: number;
   } | null>(null);
   useEffect(() => {
@@ -573,7 +572,7 @@ export function StudyPage({
    * Opens the floating window with this content, growing out of the circle. If it is already open
    * with it, it is shown again (and comes back if it was slid to the side).
    */
-  function openWindow(content: "practice" | "preview" | "board") {
+  function openWindow(content: "practice" | "preview") {
     const box = work.current;
     const at = box ? { x: orb.x * box.clientWidth, y: orb.y * box.clientHeight } : { x: 0, y: 0 };
     setWin((current) =>
@@ -624,12 +623,12 @@ export function StudyPage({
       requests.stop();
       setPhrase(null);
       setMenuOpen(false);
-      setBoardTucked(false);
+      menuOpenSound();
       setBoard({
         id: crypto.randomUUID(),
         selection: { exact: sel.exact, parts: sel.parts, segIds: sel.segIds },
       });
-      openWindow("board");
+
       return;
     }
     if (action === "meaning") {
@@ -741,11 +740,7 @@ export function StudyPage({
   }
 
   const windowTitle =
-    win?.content === "board"
-      ? "سبورة يوزرا"
-      : win?.content === "practice" && practiceView
-        ? practiceTitle(practiceView)
-        : BRAND_NAME;
+    win?.content === "practice" && practiceView ? practiceTitle(practiceView) : BRAND_NAME;
 
   const guidePane = (
     <div className="flex h-full min-h-0 flex-col bg-[#f4f4f8]" dir="rtl">
@@ -883,13 +878,28 @@ export function StudyPage({
             <div className={`min-h-0 flex-1 ${tab === "rita" ? "" : "hidden"}`}>{ritaPane}</div>
           </>
         )}
+        {board && (
+          <StudyWhiteboard
+            key={board.id}
+            lessonId={lesson.id}
+            preview={preview}
+            selection={board.selection}
+            language={explanation.value}
+            shown
+            onVoiceGuard={phrasePlaying}
+            onClose={() => {
+              frame.current?.document()?.getSelection()?.removeAllRanges();
+              keepSelection(null);
+              setBoard(null);
+              requestAnimationFrame(() => orbButton.current?.focus({ preventScroll: true }));
+            }}
+          />
+        )}
         {win && (
           <FloatingWindow
             key={win.content}
             title={windowTitle}
             variant={win.content === "practice" ? "practice" : "questions"}
-            place={win.content === "board" ? "study-whiteboard" : undefined}
-            onTuckChange={win.content === "board" ? setBoardTucked : undefined}
             origin={win.at}
             shown={win.shown}
             revealSignal={win.reveal}
@@ -899,21 +909,7 @@ export function StudyPage({
               orbButton.current?.focus({ preventScroll: true });
             }}
           >
-            {win.content === "board" && board ? (
-              <StudyWhiteboard
-                key={board.id}
-                lessonId={lesson.id}
-                preview={preview}
-                selection={board.selection}
-                language={explanation.value}
-                shown={win.shown && !boardTucked}
-                onVoiceGuard={phrasePlaying}
-                onClose={() => {
-                  setWin(null);
-                  orbButton.current?.focus({ preventScroll: true });
-                }}
-              />
-            ) : win.content === "practice" && practiceView ? (
+            {win.content === "practice" && practiceView ? (
               <div className="edith-premium st-practice-window" dir="rtl">
                 <p className="st-practice-window-note">{PRACTICE_NOTE}</p>
                 <StudyPracticeBody
@@ -989,7 +985,9 @@ export function StudyPage({
                           disabled: true,
                           disabledReason: "استنّى لحد ما يخلص تجهيز التدريب الحالي",
                         }
-                      : item,
+                      : item.id === "explain"
+                        ? { ...item, label: "شرح بالسبورة" }
+                        : item,
                   )
           }
           quote={replySelection?.exact ?? selection?.exact ?? ""}
