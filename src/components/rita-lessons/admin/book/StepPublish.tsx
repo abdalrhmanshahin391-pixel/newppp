@@ -20,9 +20,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { CheckCircle2, GripVertical, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
-import { publishPlan, type ExercisesState } from "@/lib/rita-book-flow";
+import { publishPlan, type SlidesState } from "@/lib/rita-book-flow";
 import {
-  adminPublishExercises,
   adminReorderLessons,
   adminSetCurriculumStatus,
   adminSetLessonStatus,
@@ -33,31 +32,30 @@ import { errorText } from "./book-utils";
 import { BidiText, ErrorBox } from "./BookBits";
 
 /**
- * Step 4: publish. One button publishes the book and every lesson that is ready (with its
- * exercises); lessons with problems are left out and named. Below it, the order of the learner path
+ * Step 4: publish. One button publishes the book and every lesson whose slides are linked; lessons
+ * still without slides are left out and named. Below it, the order of the learner path
  * across all published books.
  */
 export function StepPublish({
   book,
   lessons,
   allLessons,
-  exercises,
+  slideStates,
   onChanged,
 }: {
   book: CurriculumRow;
   lessons: LessonRow[];
   allLessons: LessonRow[];
-  exercises: Record<string, ExercisesState>;
+  slideStates: Record<string, SlidesState>;
   onChanged: () => Promise<void>;
 }) {
   const lessonStatusFn = useServerFn(adminSetLessonStatus);
   const bookStatusFn = useServerFn(adminSetCurriculumStatus);
-  const publishExercisesFn = useServerFn(adminPublishExercises);
   const reorderFn = useServerFn(adminReorderLessons);
   const [busy, setBusy] = useState("");
   useWorkspaceTask(Boolean(busy));
   const [error, setError] = useState("");
-  const plan = useMemo(() => publishPlan(lessons, exercises), [exercises, lessons]);
+  const plan = useMemo(() => publishPlan(lessons, slideStates), [slideStates, lessons]);
   const byId = useMemo(() => new Map(lessons.map((lesson) => [lesson.id, lesson])), [lessons]);
   const live = lessons.filter((lesson) => lesson.status !== "archived");
   const published = live.filter((lesson) => lesson.status === "published").length;
@@ -78,9 +76,6 @@ export function StepPublish({
       for (const id of plan.publish) {
         const lesson = byId.get(id);
         if (!lesson) continue;
-        if (plan.withExercises.includes(id) && exercises[id]?.status === "draft") {
-          await publishExercisesFn({ data: { lessonId: id, publish: true } });
-        }
         if (lesson.status !== "published") {
           await lessonStatusFn({ data: { lessonId: id, status: "published" } });
         }
@@ -119,9 +114,6 @@ export function StepPublish({
         {plan.publish.length > 0 && (
           <li>
             جاهز للنشر: <strong>{plan.publish.length}</strong>
-            {plan.spokenOnly.length > 0
-              ? ` (منهم ${plan.spokenOnly.length} بدون تمارين، بينشروا كدرس صوتي)`
-              : ""}
           </li>
         )}
       </ul>
@@ -129,7 +121,7 @@ export function StepPublish({
       {plan.blocked.length > 0 && (
         <div className="rounded-xl bg-[#fbe9ed] p-3 text-[15px] text-[#8c1a31]">
           <p className="font-semibold">
-            هدول ما رح ينشروا لأن فيهم مشكلة بالتمارين (صلّحها من المراجعة):
+            هدول ما رح ينشروا لأنه شرائحهم مش جاهزة لسا (كمّلهم من المراجعة):
           </p>
           <ul className="mt-1 list-disc ps-5">
             {plan.blocked.map((id) => (

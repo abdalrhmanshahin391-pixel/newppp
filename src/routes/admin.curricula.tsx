@@ -34,8 +34,7 @@ function AdminCurricula() {
   const { isAdmin, loading } = useAuth();
   const navigate = useNavigate({ from: "/admin/curricula" });
   const { book: bookId, step } = Route.useSearch();
-  const { overview, exercises, exercisesReady, loadError, refresh } =
-    useCurriculumAdminData(isAdmin);
+  const { overview, slides: slideStates, loadError, refresh } = useCurriculumAdminData(isAdmin);
   const [newBookOpen, setNewBookOpen] = useState(false);
   const [pdfCache] = useState(() => new Map<string, File>());
 
@@ -110,8 +109,6 @@ function AdminCurricula() {
             lessons={overview.lessons.filter((lesson) => lesson.curriculum_id === selected.id)}
             allLessons={overview.lessons}
             missingText={overview.missingText[selected.id] ?? []}
-            exercises={exercises[selected.id] ?? {}}
-            exercisesReady={exercisesReady}
             slides={overview.slides}
             slidesReady={overview.slidesReady}
             slidesShared={overview.slidesShared}
@@ -132,7 +129,7 @@ function AdminCurricula() {
               windows={overview.windows}
               lessons={overview.lessons}
               missingText={overview.missingText}
-              exercises={exercises}
+              slides={slideStates}
               onOpen={open}
               onNew={() => setNewBookOpen(true)}
             />

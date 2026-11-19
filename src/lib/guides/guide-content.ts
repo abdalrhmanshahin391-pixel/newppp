@@ -82,23 +82,52 @@ export type Section = z.infer<typeof SectionSchema>;
 
 const hasArabic = (value: string) => /[؀-ۿ]/.test(value);
 
-export const GuideContentSchema = z.object({
-  version: z.literal(GUIDE_VERSION).default(GUIDE_VERSION),
-  /** The page title. Shown in capitals, so keep it short. */
+/** The most slides one guide may have, and the most sections one slide may hold (one page). */
+export const MAX_SLIDES = 6;
+export const MAX_SECTIONS_PER_SLIDE = 4;
+
+/** One slide: its title and how many of the guide's sections (in order) it shows. */
+const SlideSchema = z.object({
   title: text(60).min(1),
-  /** One or two sentences. Markup marks the term being taught. */
-  intro: text(280).min(1),
-  sections: z.array(SectionSchema).min(1).max(4),
-  /** A closing reminder in a grey box. */
-  callout: text(240).default(""),
-  /** A short note for Arabic readers. Empty or it must really be Arabic. */
-  arabic_note: text(320)
-    .default("")
-    .refine((value) => value === "" || hasArabic(value), "the Arabic note must be Arabic"),
-  source: z
-    .object({ from_page: z.number().int().min(1), to_page: z.number().int().min(1) })
-    .optional(),
+  count: z.number().int().min(1).max(MAX_SECTIONS_PER_SLIDE),
 });
+export type Slide = z.infer<typeof SlideSchema>;
+
+export const GuideContentSchema = z
+  .object({
+    version: z.literal(GUIDE_VERSION).default(GUIDE_VERSION),
+    /** The page title. Shown in capitals, so keep it short. */
+    title: text(60).min(1),
+    /** One or two sentences. Markup marks the term being taught. */
+    intro: text(280).min(1),
+    /** Every section of every slide, in order (a guide of one page has no `slides`). */
+    sections: z
+      .array(SectionSchema)
+      .min(1)
+      .max(MAX_SLIDES * MAX_SECTIONS_PER_SLIDE),
+    /**
+     * How the sections are split into slides, like the pages of a book: slide 1 takes the first
+     * `count` sections, slide 2 the next ones... Empty: one page holding every section (the first
+     * guides were made like this, at most 4 sections).
+     */
+    slides: z.array(SlideSchema).max(MAX_SLIDES).optional(),
+    /** A closing reminder in a grey box. */
+    callout: text(240).default(""),
+    /** A short note for Arabic readers. Empty or it must really be Arabic. */
+    arabic_note: text(320)
+      .default("")
+      .refine((value) => value === "" || hasArabic(value), "the Arabic note must be Arabic"),
+    source: z
+      .object({ from_page: z.number().int().min(1), to_page: z.number().int().min(1) })
+      .optional(),
+  })
+  .refine(
+    (guide) =>
+      guide.slides?.length
+        ? guide.slides.reduce((sum, slide) => sum + slide.count, 0) === guide.sections.length
+        : guide.sections.length <= MAX_SECTIONS_PER_SLIDE,
+    { message: "the slides must share out every section, at most 4 on one page" },
+  );
 export type GuideContent = z.infer<typeof GuideContentSchema>;
 
 // ---------------------------------------------------------------------------------------------
@@ -192,9 +221,59 @@ function tidyList(value: unknown, max: number, each: (item: unknown) => unknown)
   return Array.isArray(value) ? value.slice(0, max).map(each) : value;
 }
 
-export function normalizeGuideReply(raw: unknown): unknown {
-  if (!isObj(raw)) return raw;
-  const sections = tidyList(raw.sections, 4, (section) => {
+/** The slides of a guide, each with the indexes of its sections (an old guide is one slide). */
+export function guideSlides(
+  content: Pick<GuideContent, "title" | "sections" | "slides">,
+): { title: string; sections: number[] }[] {
+  const slides = content.slides ?? [];
+  if (!slides.length) {
+    return [{ title: content.title, sections: content.sections.map((_, index) => index) }];
+  }
+  let next = 0;
+  return slides.map((slide) => {
+    const sections = Array.from({ length: slide.count }, (_, i) => next + i).filter(
+      (index) => index < content.sections.length,
+    );
+    next += slide.count;
+    return { title: slide.title, sections };
+  });
+}
+
+/** The slide that holds a section (0 when the guide has one page). */
+export function slideOfSection(
+  content: Pick<GuideContent, "title" | "sections" | "slides">,
+  section: number,
+): number {
+  const found = guideSlides(content).findIndex((slide) => slide.sections.includes(section));
+  return Math.max(0, found);
+}
+
+/**
+ * The writer answers with `slides: [{ title, sections: [...] }]`; the guide keeps one flat list of
+ * sections (their names stay "s1", "s2"... across slides) and the slide split beside it.
+ */
+function flattenSlides(raw: Obj): Obj {
+  if (
+    !Array.isArray(raw.slides) ||
+    !raw.slides.some((slide) => isObj(slide) && Array.isArray(slide.sections))
+  ) {
+    return raw;
+  }
+  const sections: unknown[] = [];
+  const slides: Obj[] = [];
+  for (const slide of raw.slides.slice(0, MAX_SLIDES)) {
+    if (!isObj(slide) || !Array.isArray(slide.sections) || !slide.sections.length) continue;
+    const own = slide.sections.slice(0, MAX_SECTIONS_PER_SLIDE);
+    sections.push(...own);
+    slides.push({ title: tidy(slide.title ?? raw.title, 60) || "Slide", count: own.length });
+  }
+  return { ...raw, sections, slides };
+}
+
+export function normalizeGuideReply(input: unknown): unknown {
+  if (!isObj(input)) return input;
+  const raw = flattenSlides(input);
+  const sections = tidyList(raw.sections, MAX_SLIDES * MAX_SECTIONS_PER_SLIDE, (section) => {
     if (!isObj(section)) return section;
     const base: Obj = { ...section, heading: tidy(section.heading, 40) };
     if (section.kind === "table") {
@@ -252,6 +331,7 @@ export function normalizeGuideReply(raw: unknown): unknown {
     title: tidy(raw.title, 60),
     intro: tidy(raw.intro, 280),
     sections,
+    slides: Array.isArray(raw.slides) ? raw.slides : [],
     callout: tidy(raw.callout ?? "", 240),
     arabic_note: tidy(raw.arabic_note ?? "", 320),
   };

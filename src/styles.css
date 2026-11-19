@@ -4642,6 +4642,58 @@ html.rita-app,
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
+/* The slide switcher of a guide with several slides: it stays at the bottom of the pane. */
+.st-slides {
+  position: sticky;
+  bottom: 12px;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  margin: 0 auto;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.94);
+  box-shadow:
+    0 1px 2px rgb(18 17 23 / 0.08),
+    0 6px 20px rgb(18 17 23 / 0.12);
+  backdrop-filter: blur(12px);
+}
+.st-slides button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  color: #121117;
+  transition: background-color 150ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .st-slides button:not(:disabled):hover {
+    background: #f0f0f4;
+  }
+}
+.st-slides button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.st-slides button:disabled {
+  opacity: 0.3;
+}
+.st-slides-title {
+  overflow: hidden;
+  min-width: 0;
+  padding-inline: 4px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13.5px;
+  color: #34333f;
+}
+.st-slides-title b {
+  color: #2b6df0;
+}
 .st-divider {
   position: relative;
   width: 12px;
