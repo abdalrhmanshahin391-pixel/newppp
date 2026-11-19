@@ -23,7 +23,7 @@ const reply = z.object({
 export function plainBoardReply(text: string) {
   if (
     text.length > 4000 ||
-    /[{}\[\]`<>]/.test(text) ||
+    /[{}[\]`<>]/.test(text) ||
     !/\p{L}/u.test(text) ||
     text.split(/\s+/).length < 3
   )
