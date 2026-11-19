@@ -2,6 +2,8 @@ import { useId, useLayoutEffect, useMemo, useRef } from "react";
 import type { BoardCommand, BoardStep } from "@/lib/study/whiteboard";
 import { strokesFor } from "./pen-strokes";
 
+import { layoutBoard } from "./board-layout";
+
 const colors = { ink: "#273650", indigo: "#6447aa", teal: "#18776f", coral: "#b14c40" };
 type Segment = {
   path: string;
@@ -13,16 +15,14 @@ type Segment = {
   width?: number;
   rtl?: boolean;
 };
-function segments(command: BoardCommand): Segment[] {
+function segments(command: BoardCommand, layout: ReturnType<typeof layoutBoard>): Segment[] {
   const [x, y] = command.at;
   const base = { x: 0, y: 0, scale: 1, color: colors[command.ink] };
   if (command.op === "write") {
     const letters = Array.from(command.text);
     const glyphs = letters.map(strokesFor);
-    const left = Math.max(10, Math.min(580 - Math.min(570, letters.length * 11), x));
-    const top = Math.min(257, Math.max(8, y));
+    const { x: left, y: top, w: width } = layout.labels.get(command)!.box;
     const rtl = /[\u0600-\u06ff]/.test(command.text);
-    const width = Math.min(580 - left, letters.length * (rtl ? 12 : 17));
     if (glyphs.some((g) => !g) || width / letters.length < 7) {
       // Keep joined Arabic words and bidi runs shaped by the browser as ink appears from the right.
 
@@ -57,10 +57,22 @@ function segments(command: BoardCommand): Segment[] {
     ];
   }
   const line = { ...base, path: `M${x} ${y} L${ex} ${ey}` };
-  if (command.op === "line") return [line];
-  const angle = Math.atan2(ey - y, ex - x);
-  const wing = (a: number) => [ex - 12 * Math.cos(a), ey - 12 * Math.sin(a)].join(" ");
-  return [line, { ...base, path: `M${wing(angle - 0.48)} L${ex} ${ey} L${wing(angle + 0.48)}` }];
+  if (command.op === "line") {
+    const owner = layout.underlines.get(command);
+    if (owner) line.path = `M${x} ${owner.y + owner.h + 3} H${ex}`;
+    return [line];
+  }
+  const points = layout.arrow(command.at, command.to);
+  if (points.length < 2) return [];
+  const [tipX, tipY] = points[points.length - 1],
+    [lastX, lastY] = points[points.length - 2];
+  const angle = Math.atan2(tipY - lastY, tipX - lastX);
+  line.path = points.map((p, i) => (i ? "L" : "M") + p.join(" ")).join(" ");
+  const wing = (a: number) => [tipX - 7 * Math.cos(a), tipY - 7 * Math.sin(a)].join(" ");
+  return [
+    line,
+    { ...base, path: `M${wing(angle - 0.48)} L${tipX} ${tipY} L${wing(angle + 0.48)}` },
+  ];
 }
 
 // The pen and ink use one clock. When audio plays this clock follows its playback position.
@@ -75,7 +87,8 @@ export function BoardPaper({
 }) {
   const id = useId().replace(/:/g, "");
   const svg = useRef<SVGSVGElement>(null);
-  const lines = useMemo(() => step.commands.flatMap(segments), [step]);
+  const layout = useMemo(() => layoutBoard(step.commands), [step]);
+  const lines = useMemo(() => step.commands.flatMap((c) => segments(c, layout)), [step, layout]);
   useLayoutEffect(() => {
     const paper = svg.current!;
     const pen = paper.querySelector<SVGGElement>("[data-nib]")!;
@@ -144,7 +157,7 @@ export function BoardPaper({
     <svg
       className="wb-drawing"
       ref={svg}
-      viewBox="0 0 600 300"
+      viewBox={`-12 -12 624 ${layout.height + 24}`}
       role="img"
       aria-label={[
         step.title,

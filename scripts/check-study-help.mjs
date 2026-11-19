@@ -87,8 +87,8 @@ const result = await build({
               (window.qaBoardCalls ||= []).push(data);
               if (window.qaBoardFail) return {ok:false,message:"تعذّر تجهيز الرسم."};
               return {ok:true,audio:location.search.includes("silent")?null:"/api/german/tts",
-                step:{title:data.question?"سؤالك عن الفعل":"مين بيعمل الفعل؟",narration:"لما نحكي عن شخص واحد، منضيف حرف إس للفعل بالمضارع البسيط.",
-                commands:[{op:"write",at:[42,35],text:"She",ink:"indigo"},{op:"arrow",at:[122,54],to:[220,54],ink:"teal"},
+                step:{title:data.question?"سؤالك عن الفعل":["مين بيعمل الفعل؟","كيف بيتغيّر الفعل؟","مثال جديد"][data.index],narration:"لما نحكي عن شخص واحد، منضيف حرف إس للفعل بالمضارع البسيط.",
+                commands:data.index===1?[{op:"write",at:[44,38],text:"look",ink:"ink"},{op:"arrow",at:[130,55],to:[228,55],ink:"teal"},{op:"write",at:[250,38],text:"looks",ink:"indigo"},{op:"write",at:[52,152],text:"He looks after his cat.",ink:"ink"}]:[{op:"write",at:[42,35],text:"She",ink:"indigo"},{op:"arrow",at:[122,54],to:[220,54],ink:"teal"},
                 {op:"write",at:[248,35],text:"looks after",ink:"ink"},{op:"line",at:[250,67],to:[348,67],ink:"coral"},
                 {op:"write",at:[54,174],text:"She looks after her brother.",ink:"ink"},{op:"write",at:[272,90],text:"فعل في المضارع",ink:"teal"}]}};
             }
@@ -309,7 +309,24 @@ if (process.argv.includes("--check")) {
         await board.getByRole("button", { name: "عرض الخطوة كاملة" }).click();
       await board.getByRole("button", { name: "تمام، كمّلي" }).click();
       await page.waitForFunction(() => window.qaBoardCalls.at(-1)?.index === 1);
-      await page.getByRole("button", { name: "أخفِ النافذة" }).click();
+      await page.waitForFunction(() => document.querySelectorAll(".wb-topic").length === 2);
+      assert.equal(await board.locator(".wb-drawing").count(), 2);
+      assert.equal(Math.round((await board.boundingBox()).width), width);
+      await page.getByRole("button", { name: "رجوع إلى الدرس" }).click();
+      await page.getByRole("button", { name: "حدّد جملة", exact: true }).click();
+      if (engine === "webkit") {
+        const p = await page.evaluate(() => window.qaSelect("She is reading a book."));
+        await page.mouse.dblclick(p.x, p.y);
+      }
+      await page.locator('.st-orb[data-state="armed"]').waitFor();
+      await menu(page);
+      const newWedge = await page.locator('[data-service="explain"] .st-wedge-in').boundingBox();
+      await page.mouse.click(newWedge.x + newWedge.width / 2, newWedge.y + newWedge.height / 2);
+      await board.locator(".wb-drawing").waitFor();
+      assert.match(await board.locator("blockquote").textContent(), /reading/);
+      assert.equal(await board.locator(".wb-topic").count(), 1);
+      await page.getByRole("button", { name: "رجوع إلى الدرس" }).click();
+      await selectPhrase(page);
       await menu(page);
       await choose(page, "فلاش كاردز", true);
       await page.locator(".st-practice-front").waitFor();
