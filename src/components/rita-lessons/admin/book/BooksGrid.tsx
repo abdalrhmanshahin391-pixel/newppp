@@ -1,5 +1,5 @@
 import { ArrowLeft, Plus } from "lucide-react";
-import { bookProgress, lessonPlan, type BookStep, type ExercisesState } from "@/lib/rita-book-flow";
+import { bookProgress, lessonPlan, type BookStep, type SlidesState } from "@/lib/rita-book-flow";
 import type { CurriculumRow, LessonRow, WindowRow } from "@/lib/rita-curriculum.functions";
 import { KindBadge, StepDots } from "./BookBits";
 
@@ -9,7 +9,7 @@ export function BooksGrid({
   windows,
   lessons,
   missingText,
-  exercises,
+  slides,
   onOpen,
   onNew,
 }: {
@@ -17,7 +17,7 @@ export function BooksGrid({
   windows: WindowRow[];
   lessons: LessonRow[];
   missingText: Record<string, number[]>;
-  exercises: Record<string, Record<string, ExercisesState>>;
+  slides: Record<string, Record<string, SlidesState>>;
   onOpen: (bookId: string, step: BookStep) => void;
   onNew: () => void;
 }) {
@@ -62,7 +62,7 @@ export function BooksGrid({
               book,
               lessons: bookLessons,
               missingPages: missingText[book.id]?.length ?? 0,
-              exercises: exercises[book.id] ?? {},
+              slides: slides[book.id] ?? {},
               openSuggestions: open,
             });
             return (

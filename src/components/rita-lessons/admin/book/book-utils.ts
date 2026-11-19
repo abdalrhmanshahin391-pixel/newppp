@@ -3,6 +3,8 @@
 import { supabase } from "@/integrations/supabase/legacy-client";
 import type { LessonDraft } from "@/lib/rita-curriculum";
 import type { CurriculumRow, LessonRow } from "@/lib/rita-curriculum.functions";
+import type { SlidesState } from "@/lib/rita-book-flow";
+import type { BookStudyState } from "@/lib/study/study.functions";
 
 export const BUCKET = "rita-curricula";
 
@@ -95,4 +97,15 @@ export function lessonToDraft(lesson: LessonRow): LessonDraft {
 
 export function pagesLabel(from: number, to: number) {
   return to !== from ? `ص${from}–${to}` : `ص${from}`;
+}
+
+/** Each lesson's slides (linked or not, review points) from the book's study state. */
+export function slidesOf(study: BookStudyState): Record<string, SlidesState> {
+  if (!study.ready) return {};
+  return Object.fromEntries(
+    Object.keys(study.experience).map((id) => [
+      id,
+      { linked: Boolean(study.linked[id]), notes: study.notes?.[id] ?? 0 },
+    ]),
+  );
 }

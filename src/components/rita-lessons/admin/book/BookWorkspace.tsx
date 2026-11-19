@@ -9,7 +9,6 @@ import {
   bookProgress,
   lessonPlan,
   type BookStep,
-  type ExercisesState,
 } from "@/lib/rita-book-flow";
 import {
   adminSetCurriculumStatus,
@@ -20,7 +19,7 @@ import {
 import type { Resource } from "@/lib/rita-resources";
 import { adminBookStudyState, type BookStudyState } from "@/lib/study/study.functions";
 import type { Slide } from "@/lib/rita-slides";
-import { errorText } from "./book-utils";
+import { errorText, slidesOf } from "./book-utils";
 import { KindBadge } from "./BookBits";
 import { AdvancedTools } from "./AdvancedTools";
 import { StepLessons } from "./StepLessons";
@@ -36,8 +35,6 @@ export function BookWorkspace({
   lessons,
   allLessons,
   missingText,
-  exercises,
-  exercisesReady,
   slides,
   slidesReady,
   slidesShared,
@@ -56,8 +53,6 @@ export function BookWorkspace({
   lessons: LessonRow[];
   allLessons: LessonRow[];
   missingText: number[];
-  exercises: Record<string, ExercisesState>;
-  exercisesReady: boolean;
   slides: Record<string, Slide[]>;
   slidesReady: boolean;
   slidesShared: Record<string, boolean>;
@@ -99,11 +94,13 @@ export function BookWorkspace({
       }).length,
     [book.read_cursor, lessons, windows],
   );
+  // Each lesson's slides: linked or not, and the points their review raised.
+  const slideStates = useMemo(() => slidesOf(study), [study]);
   const progress = bookProgress({
     book,
     lessons,
     missingPages: missingText.length,
-    exercises,
+    slides: slideStates,
     openSuggestions,
   });
 
@@ -213,7 +210,6 @@ export function BookWorkspace({
             book={book}
             windows={windows}
             lessons={lessons}
-            exercisesReady={exercisesReady}
             study={study}
             onNext={() => onStep("review")}
             onChanged={changed}
@@ -223,9 +219,8 @@ export function BookWorkspace({
           <StepReview
             book={book}
             lessons={lessons}
-            exercises={exercises}
-            exercisesReady={exercisesReady}
             study={study}
+            slideStates={slideStates}
             slides={slides}
             slidesReady={slidesReady}
             slidesShared={slidesShared}
@@ -242,16 +237,16 @@ export function BookWorkspace({
             book={book}
             lessons={lessons}
             allLessons={allLessons}
-            exercises={exercises}
-            onChanged={onChanged}
+            slideStates={slideStates}
+            onChanged={changed}
           />
         )}
       </div>
 
-      {!exercisesReady && (
+      {!study.ready && (
         <p className="rounded-xl bg-[#fff6e5] p-3 text-[14px] text-[#6b4100]">
-          التمارين بدها تحديث قاعدة البيانات: طبّق migration ‏20261025100000_rita_lessons_v2 بـ
-          Lovable Cloud. لحد هداك، الدروس بتنصنع بدون تمارين.
+          دروس الكتب (شرائح يمين ويوزرا يسار) بدها جداول الدراسة التفاعلية بقاعدة البيانات. لحد ما
+          تنطبق، ما بتنصنع دروس جديدة.
         </p>
       )}
 

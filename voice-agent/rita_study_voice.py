@@ -153,7 +153,8 @@ class StudyVoice:
         study = body.get("study") if isinstance(body.get("study"), dict) else {}
         sections = study.get("sections") if isinstance(study.get("sections"), list) else []
         lines = []
-        for section in sections[:8]:
+        # A lesson has up to six slides of four sections each.
+        for section in sections[:24]:
             if not isinstance(section, dict):
                 continue
             heading = _text(section.get("heading"), 80)

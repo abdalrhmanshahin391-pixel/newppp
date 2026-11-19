@@ -155,6 +155,11 @@ export type BookStudyState =
       switchOn: boolean;
       /** Per lesson: a ready guide with its learners' copy is linked. */
       linked: Record<string, boolean>;
+      /**
+       * Per lesson: review points (medium or high) on its linked slides: something wrong, or
+       * something the book pages teach that no slide shows.
+       */
+      notes: Record<string, number>;
       /** Per lesson: the kind the admin chose (red classic or green study). */
       experience: Record<string, Experience>;
     };
@@ -183,14 +188,26 @@ export const adminBookStudyState = createServerFn({ method: "GET" })
       ...new Set((lessons ?? []).map((row) => row.study_guide_id).filter(Boolean)),
     ] as string[];
     const usable = new Set<string>();
+    const guideNotes = new Map<string, number>();
     if (guideIds.length) {
       const { data: guides, error: guidesError } = await db
         .from("rita_lesson_guides")
-        .select("id, status, learner_path")
+        .select("id, status, learner_path, warnings")
         .in("id", guideIds);
       if (guidesError) throw new Error(`guides: ${guidesError.message}`);
-      for (const guide of guides ?? [])
+      for (const guide of guides ?? []) {
         if (guide.status === "ready" && guide.learner_path) usable.add(String(guide.id));
+        const warnings = Array.isArray(guide.warnings) ? guide.warnings : [];
+        guideNotes.set(
+          String(guide.id),
+          warnings.filter(
+            (item: unknown) =>
+              typeof item === "object" &&
+              item !== null &&
+              ["medium", "high"].includes(String((item as { severity?: unknown }).severity)),
+          ).length,
+        );
+      }
     }
     return {
       ready: true,
@@ -199,6 +216,12 @@ export const adminBookStudyState = createServerFn({ method: "GET" })
         (lessons ?? []).map((row) => [
           String(row.id),
           Boolean(row.study_guide_id && usable.has(String(row.study_guide_id))),
+        ]),
+      ),
+      notes: Object.fromEntries(
+        (lessons ?? []).map((row) => [
+          String(row.id),
+          row.study_guide_id ? (guideNotes.get(String(row.study_guide_id)) ?? 0) : 0,
         ]),
       ),
       experience: Object.fromEntries(

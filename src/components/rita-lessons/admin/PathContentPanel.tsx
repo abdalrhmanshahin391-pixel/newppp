@@ -421,7 +421,7 @@ export default function PathContentPanel({
                             book: b,
                             lessons: own,
                             missingPages: overview.missingText[b.id]?.length ?? 0,
-                            exercises: data.exercises[b.id] ?? {},
+                            slides: data.slides[b.id] ?? {},
                             openSuggestions: lessonPlan({
                               suggestions: overview.windows
                                 .filter((w) => w.curriculum_id === b.id)
@@ -628,10 +628,7 @@ export default function PathContentPanel({
                             key={lesson.id}
                             lesson={lesson}
                             initialTab="plan"
-                            readiness={lessonReadiness(
-                              lesson,
-                              data.exercises[book.id]?.[lesson.id],
-                            )}
+                            readiness={lessonReadiness(lesson, data.slides[book.id]?.[lesson.id])}
                             bookPublished={book.status === "published"}
                             studyLinked={study.ready && Boolean(study.linked[lesson.id])}
                             kind={study.ready ? study.experience[lesson.id] : "classic"}
@@ -655,8 +652,6 @@ export default function PathContentPanel({
                             books.some((b) => b.id === l.curriculum_id),
                           )}
                           missingText={overview.missingText[book.id] ?? []}
-                          exercises={data.exercises[book.id] ?? {}}
-                          exercisesReady={data.exercisesReady}
                           slides={overview.slides}
                           slidesReady={overview.slidesReady}
                           slidesShared={overview.slidesShared}

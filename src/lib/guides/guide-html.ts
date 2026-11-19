@@ -6,6 +6,7 @@
 import { BRAND_NAME, UZYRA_MARK_PATHS, UZYRA_MARK_VIEWBOX } from "../brand.ts";
 import { sectionId } from "./guide-blocks.ts";
 import {
+  guideSlides,
   parseMarkup,
   plainText,
   type GuideContent,
@@ -281,7 +282,10 @@ ul.rules .rule{font-weight:700;font-size:10.1pt;line-height:1.45}
 ul.rules .ex{font-size:10pt;color:var(--body);margin-top:2pt}
 .ar{position:relative;margin-top:9pt;border:1.1pt solid var(--line);border-radius:12pt;padding:8.25pt 12pt;direction:rtl;text-align:right;font:400 10.1pt/1.8 "Noto Sans Arabic",Arial,sans-serif;color:var(--body);break-inside:avoid}
 .ar b{font-weight:700;color:var(--ink)}
-.ar .tag{position:absolute;left:9pt;top:-6pt;padding:0 4.5pt;background:#fff;font:600 7pt/1 Figtree,sans-serif;letter-spacing:.14em;color:var(--muted);direction:ltr}`;
+.ar .tag{position:absolute;left:9pt;top:-6pt;padding:0 4.5pt;background:#fff;font:600 7pt/1 Figtree,sans-serif;letter-spacing:.14em;color:var(--muted);direction:ltr}
+.slide + .slide{break-before:page}
+.slide-title{margin:14pt 0 0;padding-bottom:6pt;border-bottom:.75pt solid var(--line);font:700 15pt/1.15 "Inter Tight",Arial,sans-serif;color:var(--ink)}
+.slide-no{display:inline-block;min-width:26pt;margin-right:5pt;color:var(--blue);font-size:10pt;letter-spacing:.04em}`;
 }
 
 export function renderGuideHtml(content: GuideContent, options: GuideHtmlOptions = {}): string {
@@ -300,11 +304,23 @@ export function renderGuideHtml(content: GuideContent, options: GuideHtmlOptions
     ? `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; font-src ${escapeHtml(fontOrigin(base))}; img-src data:">`
     : "";
   const styles = css(base, escapeCssString(footer)) + (options.screen ? SCREEN_CSS : "");
+  // Slides, like the pages of a book: printed, each starts a new page; on screen the study page
+  // shows one at a time (SLIDE_CSS). The intro opens the first slide, the reminders close the last.
+  const slides = guideSlides(content);
+  const titled = (content.slides ?? []).length > 0;
+  const slideHtml = slides
+    .map((slide, index) => {
+      const last = index === slides.length - 1;
+      return `<div class="slide" data-slide="${index}">
+${index === 0 ? `<p class="intro"${name("i", "i", content.intro)}>${inline(content.intro)}</p>` : ""}
+${titled ? `<h2 class="slide-title"><span class="slide-no">${index + 1}/${slides.length}</span> ${inline(slide.title)}</h2>` : ""}
+${slide.sections.map((sectionIndex) => sectionHtml(content.sections[sectionIndex], sectionIndex, name)).join("\n")}
+${last ? `${callout}\n${arabic}` : ""}
+</div>`;
+    })
+    .join("\n");
   const body = `<header class="head"><h1${name("t", "t", content.title)}>${inline(content.title)}</h1><div class="brand" role="img" aria-label="${BRAND_NAME}">${markSvg}<span aria-hidden="true">UZYR${wordmarkA}</span></div></header>
-<p class="intro"${name("i", "i", content.intro)}>${inline(content.intro)}</p>
-${content.sections.map((section, index) => sectionHtml(section, index, name)).join("\n")}
-${callout}
-${arabic}`;
+${slideHtml}`;
   return `<!doctype html>
 <html lang="en" dir="ltr"><head><meta charset="utf-8">${policy}<title>${escapeHtml(content.title)}</title><style>${styles}</style></head><body>
 ${options.screen ? `<main class="sheet">${body}</main>` : body}
@@ -353,6 +369,9 @@ ul.rules .ex{font-size:13.5px}
 .ar{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font:400 14px/1.8 "Noto Sans Arabic",Arial,sans-serif}
 .ar .tag{left:12px;top:-7px;font-size:9px}
 section.block{scroll-margin-top:16px}
+.slide-title{margin:18px 0 0;padding-bottom:8px;border-bottom:1px solid #e4e4ea;font:650 17px/1.2 "Inter Tight",Arial,sans-serif}
+.slide-no{min-width:0;margin-right:8px;font-size:12px}
+${[0, 1, 2, 3, 4, 5].map((n) => `html[data-slide="${n}"] .slide:not([data-slide="${n}"]){display:none}`).join("\n")}
 ::selection{background:#cfe0ff}
 ::highlight(st-sel){background-color:#cfe0ff}
 .st-flash{animation:st-flash 1.2s ease-out}
