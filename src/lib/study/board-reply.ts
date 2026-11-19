@@ -18,6 +18,19 @@ const reply = z.object({
   sketch: sketch.optional().catch(undefined),
 });
 
+// Accept a complete prose explanation when the model omits its drawing object.
+// A truncated object or code block must still go through the normal repair path.
+export function plainBoardReply(text: string) {
+  if (
+    text.length > 4000 ||
+    /[{}\[\]`<>]/.test(text) ||
+    !/\p{L}/u.test(text) ||
+    text.split(/\s+/).length < 3
+  )
+    return null;
+  return { narration: text };
+}
+
 export function readBoardReply(raw: unknown, defaultTitle: string): BoardStep | null {
   const parsed = reply.safeParse(raw);
   if (!parsed.success) return null;

@@ -90,7 +90,8 @@ const result = await build({
               if (window.qaBoardFail) return {ok:false,message:"تعذّر تجهيز الرسم."};
               const title=data.question?"سؤالك عن الفعل":["مين بيعمل الفعل؟","كيف بيتغيّر الفعل؟","مثال جديد"][data.index];
               const narration=data.question?"لأنّ الفاعل مفرد.":"لما نحكي عن شخص واحد، منضيف حرف إس للفعل بالمضارع البسيط.";
-              return {ok:true,audio:location.search.includes("silent")?null:"/api/german/tts",
+              const audio = data.index===0 && !data.question ? new Promise(done=>{window.qaReleaseVoice=()=>done("/api/german/tts?old")}) : Promise.resolve(location.search.includes("silent")?null:"/api/german/tts");
+              return {ok:true,audio,
                 step:readBoardReply({title,narration,rows:[{text:"look",result:"looks",circle:"result"}, "She looks after her little brother.", {bad:true}]},title)};
             }`,
             };
@@ -303,13 +304,13 @@ if (process.argv.includes("--check")) {
       await board.locator(".wb-drawing").waitFor();
       assert.match(await board.locator("blockquote").textContent(), /looks after/);
       assert.equal(await page.evaluate(() => window.qaBoardCalls.length), 1);
-      // Read instantly even when a mobile browser defers audio until a second tap.
-      const paused = board.getByRole("button", { name: "تشغيل الشرح", exact: true });
-      if (await paused.count())
-        await board.getByRole("button", { name: "عرض الخطوة كاملة" }).click();
+      // Advancing must work with a still unresolved voice request.
+      await board.getByText("جارٍ تحضير الصوت…").waitFor();
       await board.getByRole("button", { name: "تمام، كمّلي" }).click();
       await page.waitForFunction(() => window.qaBoardCalls.at(-1)?.index === 1);
       await page.waitForFunction(() => document.querySelectorAll(".wb-topic").length === 2);
+      await page.evaluate(() => window.qaReleaseVoice());
+      assert.equal(await board.locator('audio[src*="?old"]').count(), 0);
       assert.equal(await board.locator(".wb-drawing").count(), 2);
       assert.equal(Math.round((await board.boundingBox()).width), width);
       await board.getByRole("button", { name: "اسأل عن هذه الخطوة" }).click();

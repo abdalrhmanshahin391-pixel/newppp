@@ -55,7 +55,7 @@ const tricky: GuideContent = {
   sections: [
     {
       kind: "table",
-      heading: "Forms",
+      heading: "Forms of {{verbs}}",
       columns: [
         { label: "Base", tone: "neutral" },
         { label: "+ -ing", tone: "positive" },
@@ -76,7 +76,7 @@ const tricky: GuideContent = {
     },
   ],
   callout: "Watch the spelling.",
-  arabic_note: "نضيف ing للفعل مثل run → running.",
+  arabic_note: "نضيف ing للفعل مثل run → running. Don't mix A & B.",
 };
 
 const guides: GuideContent[] = [...SAMPLE_GUIDES.map((sample) => sample.content), tricky];
@@ -155,7 +155,7 @@ test("the outline names the headings and taught terms only", () => {
   const outline = guideOutline(tricky);
   assert.equal(outline.title, "Verbs + -ing");
   assert.deepEqual(outline.sections, [
-    { id: "s1", heading: "Forms", terms: [] },
+    { id: "s1", heading: "Forms of {{verbs}}", terms: [] },
     { id: "s2", heading: "Usage", terms: ["eating"] },
   ]);
 });

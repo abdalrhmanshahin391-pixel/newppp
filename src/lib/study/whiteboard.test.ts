@@ -1,4 +1,4 @@
-import { readBoardReply } from "./board-reply.ts";
+import { plainBoardReply, readBoardReply } from "./board-reply.ts";
 import { layoutBoard } from "../../components/rita-study/board-layout.ts";
 import type { BoardCommand } from "./whiteboard.ts";
 import assert from "node:assert/strict";
@@ -96,4 +96,10 @@ test("circle and connector follow the named terms in both reading directions", (
     assert.equal(arrow.to[0], rtl ? b.x + b.w + 16 : b.x - 16);
     assert.deepEqual(layout.arrow(arrow.at, arrow.to), [arrow.at, arrow.to]);
   }
+});
+
+test("a complete spoken reply can explain the same selection without a new model call", () => {
+  const answer = "لأن الفاعل هنا مفرد.";
+  assert.equal(readBoardReply(plainBoardReply(answer), "شرح الفقرة")?.narration, answer);
+  assert.equal(plainBoardReply('{"narration": "incomplete reply'), null);
 });

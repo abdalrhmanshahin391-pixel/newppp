@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middlew
 import { ASSISTANT_IDENTITY_PROMPT } from "@/lib/brand";
 import { resolveRequest } from "./study-request.functions";
 import { PRACTICE_FAILURE_TEXT, askPracticeModel } from "./study-practice";
-import { readBoardReply } from "./board-reply";
+import { plainBoardReply, readBoardReply } from "./board-reply";
 import type { BoardStep } from "./whiteboard";
 
 const input = z.object({
@@ -31,7 +31,9 @@ Each row is {"text":"study","result":"studies","circle":"result"} or {"text":"Sh
 Optionally include "sketch":[[0,90],[50,10],[100,90],[0,90]] for a freehand diagram on its own below the notes, in a 0–100 coordinate space. Omit it unless it helps.
 Use the quoted passage and answer the learner directly. Do not ask for confirmation.`;
 
-type Result = { ok: true; step: BoardStep; audio: string | null } | { ok: false; message: string };
+type Result =
+  | { ok: true; step: BoardStep; audio: Promise<string | null> | null }
+  | { ok: false; message: string };
 
 // Only server-generated narration from an authorized, quota-counted lesson request is synthesized.
 async function narrate(text: string, language: string) {
@@ -80,6 +82,7 @@ export const studyBoardStep = createServerFn({ method: "POST" })
       fetch: (url: RequestInfo | URL, init?: RequestInit) => fetch(url, init),
       system: ASSISTANT_IDENTITY_PROMPT + "\n" + direction,
       maxTokens: 2400,
+      plainReply: plainBoardReply,
       user: JSON.stringify({
         quote,
         surrounding,
@@ -114,6 +117,6 @@ export const studyBoardStep = createServerFn({ method: "POST" })
     return {
       ok: true,
       step,
-      audio: step.narration.length <= 440 ? await narrate(step.narration, language) : null,
+      audio: step.narration.length <= 440 ? narrate(step.narration, language) : null,
     };
   });
