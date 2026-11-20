@@ -125,7 +125,7 @@ export function ProHeader({
 
   return (
     <header
-      className={`rh-bar ${solid ? "sticky" : "rh-bar-home fixed inset-x-0"} z-50`}
+      className={`rh-bar ${solid ? "sticky" : "rh-bar-home sticky"} z-50`}
       dir={arabic ? "rtl" : "ltr"}
     >
       <div className="rh-bar-inner uz-header-shell">
