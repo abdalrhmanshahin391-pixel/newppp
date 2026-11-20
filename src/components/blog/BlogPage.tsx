@@ -1,8 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
-import { useDismiss } from "@/components/header/useDismiss";
+import { HeaderResourcesMenu } from "@/components/header/HeaderResourcesMenu";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import "./blog.css";
 
@@ -10,17 +9,7 @@ const articlePath = "/blog/from-page-to-practice";
 
 export function BlogPage({ article = false }: { article?: boolean }) {
   const ar = useUiLanguage() === "ar";
-  const [compact, setCompact] = useState(false);
   const [open, setOpen] = useState(false);
-  const menu = useRef<HTMLDivElement>(null);
-  const close = useCallback(() => setOpen(false), []);
-  useDismiss(open, close, menu);
-  useEffect(() => {
-    const scroll = () => setCompact(window.scrollY > 48);
-    scroll();
-    window.addEventListener("scroll", scroll, { passive: true });
-    return () => window.removeEventListener("scroll", scroll);
-  }, []);
   const blog = ar ? "المدونة" : "Blog";
   const title = ar
     ? "من صفحة في كتاب إلى جملة تستخدمها"
@@ -47,38 +36,18 @@ export function BlogPage({ article = false }: { article?: boolean }) {
   );
   return (
     <div className="ub-page" dir={ar ? "rtl" : "ltr"} lang={ar ? "ar" : "en"}>
-      <header className="ub-header" data-compact={compact}>
+      <header className="ub-header uz-header-shell">
         <Link to="/" aria-label={ar ? "يوزرا الرئيسية" : "Uzyra home"}>
           <UzyraWordmark size={16} />
         </Link>
-        <nav aria-label={ar ? "التنقل" : "Navigation"}>
-          <Link className="ub-wide" to="/books">
+        <nav className="uz-header-nav" aria-label={ar ? "التنقل" : "Navigation"}>
+          <Link className="ub-wide uz-header-link" to="/books">
             {ar ? "المكتبة" : "Library"}
           </Link>
-          <Link className="ub-wide" to="/pricing">
+          <Link className="ub-wide uz-header-link" to="/pricing">
             {ar ? "الأسعار" : "Pricing"}
           </Link>
-          <div ref={menu} className="ub-menu">
-            <button
-              type="button"
-              data-rh-trigger
-              aria-expanded={open}
-              onClick={() => setOpen(!open)}
-            >
-              {ar ? "الموارد" : "Resources"} <ChevronDown size={14} />
-            </button>
-            {open && (
-              <div className="ub-list">
-                <Link to="/blog" onClick={close}>
-                  {blog}
-                </Link>
-                <Link to="/books">{ar ? "المكتبة" : "Library"}</Link>
-                <Link className="ub-mobile" to="/pricing">
-                  {ar ? "الأسعار" : "Pricing"}
-                </Link>
-              </div>
-            )}
-          </div>
+          <HeaderResourcesMenu arabic={ar} open={open} onOpenChange={setOpen} showMobilePricing />
         </nav>
         <Link className="ub-cta" to="/start">
           {ar ? "ابدأ التعلّم" : "Start learning"}

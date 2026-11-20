@@ -36,12 +36,16 @@ function chunks(parts: string[]) {
   };
 }
 
+// Attempt the same iteration before and after installation, regardless of the DOM library's types.
+function iterationTarget<T>(stream: ReadableStream<T>): AsyncIterable<T> {
+  return stream as ReadableStream<T> & AsyncIterable<T>;
+}
+
 test("without the polyfill, `for await` over a stream fails as on Safari", async () => {
   const scope = safariLike();
   const stream = new scope.ReadableStream(chunks(["a"]));
   await assert.rejects(async () => {
-    // (was ts-expect-error) this stream is not async iterable, as on Safari
-    for await (const part of stream) void part;
+    for await (const part of iterationTarget(stream)) void part;
   }, TypeError);
 });
 
@@ -50,8 +54,7 @@ test("for await reads every part of a stream after the polyfill", async () => {
   installStreamPolyfills(scope);
   const stream = new scope.ReadableStream(chunks(["a", "b", "c"]));
   const seen: string[] = [];
-  // (was ts-expect-error) made iterable by the polyfill
-  for await (const part of stream) seen.push(part);
+  for await (const part of iterationTarget(stream)) seen.push(part);
   assert.deepEqual(seen, ["a", "b", "c"]);
   assert.equal(stream.locked, false);
 });
@@ -68,8 +71,7 @@ test("leaving the loop early cancels the stream", async () => {
       cancelled = true;
     },
   });
-  // (was ts-expect-error) made iterable by the polyfill
-  for await (const part of stream) {
+  for await (const part of iterationTarget(stream)) {
     void part;
     break;
   }
@@ -113,7 +115,7 @@ test("the function can run alone from its own source, as it does in pdf.js' work
   const scope = safariLike();
   new Function("scope", `(${installStreamPolyfills.toString()})(scope);`)(scope);
   const seen: string[] = [];
-  // (was ts-expect-error) made iterable by the polyfill
-  for await (const part of new scope.ReadableStream(chunks(["w"]))) seen.push(part);
+  for await (const part of iterationTarget(new scope.ReadableStream(chunks(["w"]))))
+    seen.push(part);
   assert.deepEqual(seen, ["w"]);
 });

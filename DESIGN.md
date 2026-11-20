@@ -314,24 +314,16 @@ cube is omitted; connecting, failed and active statuses remain visible.
 
 ## Top bar and menus
 
-One bar for the whole site (`ProHeader`, classes `.rh-bar*`, explicit colours so they look the
-same on the cream pages and on the white ones). On the home page it is dark ink `#121117`, 64px,
-no blur, no capsule. Every other page (`variant="solid"`, `data-look="capsule"`) takes the blog's
-look: a white 60px capsule (40px radius) floating 14px from the top, 14px grotesk links in ink
-`#181719` centred, the current page in `#ba431d` instead of the drawn line, a black pill «Start
-learning», credits and language chips with a light `#dedddc` outline. Past 48px of scroll it
-narrows to 816px with a `#ecebed` border and a soft shadow. The blog uses this same bar.
-Links sit next to the logo; the current page gets the hand-drawn blue line from the home
-headline, drawn once. Guests get "Sign in" and one blue "Start learning" button. Signed-in
-users get the Credits chip (Uzyra's small orb plus what is left; the orb ring turns amber below
-20% and red when used up) and the avatar with a blue ring.
+The blog, home and inner pages share the blog header's white surface, 60px height, 16px wordmark
+and 14px grotesk type. Library, Pricing and Resources share the same spacing and text weight
+across pages, and Start learning uses the black pill. The header remains visible while scrolling
+with the same width and shape. The main site also includes Games and the existing sign-in,
+credits, language and account controls. On narrow screens the main site puts its extra links and
+actions in the menu, keeping the header text at 14px.
 
-Menus are the white card with a 2px ink border (same as the home word card), 16px radius, no
-window inside a window. Rows are 44px, bare ink icons, `--pp-accent-soft` on hover; one `rh-item`
-style for every row. Credits bars show what is left (blue, amber under 20%, red at zero, and
-the words "Used up"). Only one menu is open at a time; Escape and a press outside close it and
-focus returns to the button. Opening is 160ms, `scale(.96)` from the button, off with reduced
-motion.
+Resources, account and mobile menus use white cards, light borders and 14px text. The main site
+keeps one disclosure open at a time. Escape and a press outside close the desktop disclosures
+through the existing header dismissal behavior.
 
 ## Learning home (`/learn`)
 
@@ -613,7 +605,7 @@ the accent for the action.
 
 **Calm scale (Nov 2026, same as the home page).** Smaller, lighter words and more room, not a
 smaller page: the root size and the user's zoom are never touched. In `.rita-app`:
-- Header: 60px bar, 14px links, 38px buttons (the same rule as `.uz-home` / `.uz-learn`).
+- Header: the shared 60px bar and 14px type from the blog.
 - Tailwind's big named sizes are lower (`--text-2xl` … `--text-7xl` = 22 / 26 / 30 / 36 / 40 /
   44px), so a page title lands at 30–44px instead of 48–72px; base and smaller sizes are
   unchanged. A bold `h1` is drawn at 600.
@@ -1119,7 +1111,7 @@ the user's zoom are never changed.
   `.rh-hero-title` out, so no `!important` is stacked; check with `getComputedStyle` after a change.
 - Lead text 16px (17 from 768), line height 1.6, at most 36rem wide.
 - Hero buttons 42px tall, 15px text, 1.5px border.
-- Header on the home page: bar 60px, links 14px weight 500 (44px target kept), its button 38px.
+- Header on the home page: the blog’s 60px bar, 16px wordmark and 14px link and button type.
 - Uzyra's orb 280px (380 from 768) on a stage 320/360px tall and at most 840px wide; rings 1px.
   The orb sits in a positioned wrapper (the orb itself is `position: relative`).
 - Word tags around the orb: 14–17px, weight 600, 1px border, radius 12, a 44px touch area.

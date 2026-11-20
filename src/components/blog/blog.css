@@ -9,78 +9,6 @@
   position: sticky;
   top: 14px;
   z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  width: calc(100% - 48px);
-  max-width: 1500px;
-  margin: 0 auto;
-  height: 60px;
-  padding: 0 15px;
-  background: white;
-  border: 1px solid transparent;
-  border-radius: 40px;
-  transition:
-    max-width 0.24s ease,
-    box-shadow 0.2s;
-}
-.ub-header[data-compact="true"] {
-  max-width: 816px;
-  border-color: #ecebed;
-  box-shadow: 0 5px 21px #18171912;
-}
-.ub-header nav,
-.ub-menu button {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  font-size: 14px;
-}
-.ub-header nav a,
-.ub-menu button {
-  padding-block: 13px;
-}
-.ub-menu {
-  position: relative;
-}
-.ub-menu button {
-  gap: 5px;
-  color: #ba431d;
-  cursor: pointer;
-}
-.ub-menu button[aria-expanded="true"] svg {
-  transform: rotate(180deg);
-}
-.ub-list {
-  position: absolute;
-  inset-inline-start: 0;
-  top: 100%;
-  min-width: 165px;
-  border-radius: 14px;
-  background: white;
-  box-shadow: 0 10px 28px #1111;
-  border: 1px solid #e8e7e7;
-  padding: 5px;
-}
-.ub-list a {
-  display: block;
-  padding-inline: 12px;
-}
-.ub-list a:hover {
-  background: #f6f5f4;
-  border-radius: 8px;
-}
-.ub-list .ub-mobile {
-  display: none;
-}
-.ub-cta {
-  background: #181719;
-  color: white;
-  padding: 11px 18px;
-  border-radius: 30px;
-  font-size: 14px;
-  font-weight: 600;
 }
 .ub-main {
   width: min(944px, calc(100% - 48px));
@@ -157,16 +85,6 @@
   outline-offset: 3px;
 }
 @media (max-width: 640px) {
-  .ub-header {
-    width: calc(100% - 16px);
-    padding-inline: 10px;
-  }
-  .ub-wide {
-    display: none;
-  }
-  .ub-list .ub-mobile {
-    display: block;
-  }
   .ub-main {
     width: calc(100% - 36px);
     padding-top: 70px;
@@ -182,17 +100,5 @@
   }
   .ub-row time {
     font-size: 14px;
-  }
-  .ub-cta {
-    padding-inline: 12px;
-  }
-  .ub-list {
-    inset-inline-start: auto;
-    inset-inline-end: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ub-header {
-    transition: none;
   }
 }
