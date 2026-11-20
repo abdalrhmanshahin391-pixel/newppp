@@ -567,7 +567,6 @@ function DeviceTracker() {
       }
     })();
 
-    const interval = window.setInterval(() => void ping(), MIN_GAP_MS);
     const onVisible = () => {
       if (document.visibilityState === "visible") void ping();
     };
@@ -576,7 +575,6 @@ function DeviceTracker() {
     return () => {
       cancelled = true;
       unsub?.();
-      window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
