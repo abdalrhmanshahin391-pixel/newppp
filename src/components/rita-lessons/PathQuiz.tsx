@@ -1,13 +1,13 @@
 import { useWorkspaceTask, useWorkspaceGuard } from "./admin/WorkspaceGuard";
 import { toast } from "sonner";
-import { Clapperboard, Images, ListChecks, ChevronLeft } from "lucide-react";
+import { Clapperboard, ListChecks, ChevronLeft } from "lucide-react";
 import { lazy, Suspense, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { lqBoard, type LqOption } from "@/lib/lecture-lab.functions";
-import type { PathItem } from "@/lib/rita-path-layout";
+import { mediaLineIds, type PathItem } from "@/lib/rita-path-layout";
 import "./path-quiz.css";
 
 const FilmEditor = lazy(() => import("./FilmPractice").then((m) => ({ default: m.FilmEditor })));
@@ -39,20 +39,13 @@ export function PathQuiz(props: Props) {
   const guard = useWorkspaceGuard();
   const choices = [
     {
-      id: "gif",
-      name: t("Animated GIFs", "تمارين GIF"),
-      hint: t(
-        "Animated phrases, translation and word order",
-        "صور متحرّكة مع ترجمة وترتيب كلمات ونطق",
-      ),
-      count: props.item.gif_lines?.length ?? 0,
-      Icon: Images,
-    },
-    {
       id: "film",
-      name: t("Film clips", "مقاطع الأفلام"),
-      hint: t("Find a spoken line in a scene", "ابحث عن جملة واسمعها في مشهدها"),
-      count: props.item.film_lines?.length ?? 0,
+      name: t("Film clips & GIFs", "تمارين المقاطع وGIF"),
+      hint: t(
+        "Practise each phrase as a film clip or GIF",
+        "تدرّب على نفس الجملة كمقطع أو صورة متحرّكة",
+      ),
+      count: mediaLineIds(props.item).length,
       Icon: Clapperboard,
     },
     {
@@ -123,13 +116,9 @@ export function PathQuiz(props: Props) {
           ) : (
             <Suspense fallback={<p role="status">{t("Loading…", "جارٍ التحميل…")}</p>}>
               {props.admin ? (
-                <FilmEditor key={active} {...props} media={active} onClose={afterSave} />
+                <FilmEditor key={active} {...props} onClose={afterSave} />
               ) : (
-                <FilmPlayer
-                  media={active}
-                  ids={(active === "gif" ? props.item.gif_lines : props.item.film_lines) ?? []}
-                  onClose={props.onClose}
-                />
+                <FilmPlayer ids={mediaLineIds(props.item)} onClose={props.onClose} />
               )}
             </Suspense>
           )}

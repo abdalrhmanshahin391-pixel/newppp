@@ -16,8 +16,12 @@ export type PathItem = {
   gif_lines?: number[];
 };
 
+export function mediaLineIds(item: PathItem) {
+  return [...new Set([...(item.film_lines ?? []), ...(item.gif_lines ?? [])])];
+}
+
 export function exerciseCount(item: PathItem) {
-  return (item.film_lines?.length ?? 0) + (item.gif_lines?.length ?? 0) + (item.quiz_count ?? 0);
+  return mediaLineIds(item).length + (item.quiz_count ?? 0);
 }
 
 export function pathItemTitle(item: PathItem) {

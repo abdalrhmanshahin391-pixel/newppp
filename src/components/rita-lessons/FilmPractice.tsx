@@ -15,7 +15,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import lines from "@/lib/sintel-lines.json";
 import { savePathFilmLines } from "@/lib/rita-path-items.functions";
-import type { PathItem } from "@/lib/rita-path-layout";
+import { mediaLineIds, type PathItem } from "@/lib/rita-path-layout";
 import { useWorkspaceDraft, useWorkspaceGuard, useWorkspaceTask } from "./admin/WorkspaceGuard";
 import { FilmSpeaking } from "./FilmSpeaking";
 import "./film-practice.css";
@@ -148,20 +148,37 @@ function GifPreview({ line }: { line: Line }) {
   );
 }
 
+function MediaFormat({ value, onChange }: { value: Media; onChange: (value: Media) => void }) {
+  const t = useCopy();
+  return (
+    <label>
+      {t("Format", "العرض")}{" "}
+      <select
+        data-workspace-transient
+        value={value}
+        onChange={(e) => onChange(e.target.value === "gif" ? "gif" : "film")}
+      >
+        <option value="film">{t("Video", "فيديو")}</option>
+        <option value="gif">GIF</option>
+      </select>
+    </label>
+  );
+}
+
 export function FilmEditor({
   item,
-  media,
   onChanged,
   onClose,
 }: {
   item: PathItem;
-  media: Media;
   onChanged: () => Promise<void>;
   onClose: () => void;
 }) {
   const t = useCopy();
   const save = useServerFn(savePathFilmLines);
-  const [previous] = useState((media === "gif" ? item.gif_lines : item.film_lines) ?? []);
+  const [media, setMedia] = useState<Media>("film");
+  const [original] = useState(item);
+  const [previous] = useState(() => mediaLineIds(original));
   const [ids, setIds] = useState(previous);
   const [query, setQuery] = useState("");
   const [daily, setDaily] = useState(true);
@@ -192,7 +209,14 @@ export function FilmEditor({
     setBusy(true);
     setError("");
     try {
-      await save({ data: { id: item.id, previous, lines: ids, media } });
+      await save({
+        data: {
+          id: item.id,
+          previous: original.film_lines ?? [],
+          previousGifs: original.gif_lines ?? [],
+          lines: ids,
+        },
+      });
       finish();
       guard?.saved();
       await onChanged();
@@ -206,9 +230,7 @@ export function FilmEditor({
   return (
     <fieldset className="film-practice" disabled={busy}>
       <label>
-        {media === "gif"
-          ? t("Find a GIF by its phrase", "ابحث عن GIF بالجملة أو ترجمتها")
-          : t("Search Sintel dialogue", "ابحث في حوار سينتل")}
+        {t("Find a phrase or translation", "ابحث عن جملة أو ترجمتها")}
         <input
           type="search"
           data-workspace-transient
@@ -274,6 +296,7 @@ export function FilmEditor({
       )}
       {preview && (
         <div className="fc-card">
+          <MediaFormat value={media} onChange={setMedia} />
           {media === "gif" ? (
             <GifPreview key={preview.id} line={preview} />
           ) : (
@@ -315,17 +338,10 @@ export function FilmEditor({
   );
 }
 
-export function FilmPlayer({
-  ids,
-  media = "film",
-  onClose,
-}: {
-  ids: number[];
-  media?: Media;
-  onClose: () => void;
-}) {
+export function FilmPlayer({ ids, onClose }: { ids: number[]; onClose: () => void }) {
   const t = useCopy();
   const lang = useUiLanguage();
+  const [media, setMedia] = useState<Media>("film");
   const selected = ids.flatMap((id) => byId.get(id) ?? []);
   const [step, setStep] = useState(0);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -364,6 +380,7 @@ export function FilmPlayer({
           >
             <Clapperboard size={23} />
           </a>
+          <MediaFormat value={media} onChange={setMedia} />
           <progress
             aria-label={t("Practice progress", "تقدّم التدريب")}
             value={step}

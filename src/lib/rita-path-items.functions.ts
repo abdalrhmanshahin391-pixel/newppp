@@ -349,20 +349,20 @@ export const savePathFilmLines = createServerFn({ method: "POST" })
         id: uuid,
         previous: filmSelection,
         lines: filmSelection,
-        media: z.enum(["film", "gif"]).default("film"),
+        previousGifs: filmSelection,
       }),
       input,
     ),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const column = data.media === "gif" ? "gif_lines" : "film_lines";
     const { data: saved, error } = await context.supabase
       .from("rita_path_items")
-      .update({ [column]: data.lines })
+      .update({ film_lines: data.lines, gif_lines: [] })
       .eq("id", data.id)
       .eq("kind", "exercises")
-      .eq(column, `{${data.previous.join(",")}}`)
+      .eq("gif_lines", `{${data.previousGifs.join(",")}}`)
+      .eq("film_lines", `{${data.previous.join(",")}}`)
       .select("id")
       .maybeSingle();
     if (error) throw new Error(error.message);
