@@ -72,6 +72,8 @@ import { Route as AdminStudySampleRouteImport } from './routes/admin.study-sampl
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminToolkitRouteImport } from './routes/admin.toolkit'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as BlogFromPageToPracticeRouteImport } from './routes/blog.from-page-to-practice'
 import { Route as CheckoutIndexRouteImport } from './routes/checkout.index'
 import { Route as CheckoutSuccessRouteImport } from './routes/checkout.success'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
@@ -470,6 +472,16 @@ const AdminToolkitRoute = AdminToolkitRouteImport.update({
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/admin/users',
   path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogFromPageToPracticeRoute = BlogFromPageToPracticeRouteImport.update({
+  id: '/blog/from-page-to-practice',
+  path: '/blog/from-page-to-practice',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutIndexRoute = CheckoutIndexRouteImport.update({
@@ -952,6 +964,7 @@ export interface FileRoutesByFullPath {
   '/admin/support': typeof AdminSupportRoute
   '/admin/toolkit': typeof AdminToolkitRoute
   '/admin/users': typeof AdminUsersRoute
+  '/blog/from-page-to-practice': typeof BlogFromPageToPracticeRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/courses/$courseId': typeof CoursesCourseIdRouteWithChildren
   '/german/add': typeof GermanAddRoute
@@ -976,6 +989,7 @@ export interface FileRoutesByFullPath {
   '/summaries/$summaryId': typeof SummariesSummaryIdRoute
   '/summaries/new': typeof SummariesNewRoute
   '/admin/': typeof AdminIndexRoute
+  '/blog/': typeof BlogIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
   '/german/': typeof GermanIndexRoute
   '/learn/': typeof LearnIndexRoute
@@ -1096,6 +1110,7 @@ export interface FileRoutesByTo {
   '/admin/support': typeof AdminSupportRoute
   '/admin/toolkit': typeof AdminToolkitRoute
   '/admin/users': typeof AdminUsersRoute
+  '/blog/from-page-to-practice': typeof BlogFromPageToPracticeRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/german/add': typeof GermanAddRoute
   '/german/articles': typeof GermanArticlesRoute
@@ -1119,6 +1134,7 @@ export interface FileRoutesByTo {
   '/summaries/$summaryId': typeof SummariesSummaryIdRoute
   '/summaries/new': typeof SummariesNewRoute
   '/admin': typeof AdminIndexRoute
+  '/blog': typeof BlogIndexRoute
   '/checkout': typeof CheckoutIndexRoute
   '/german': typeof GermanIndexRoute
   '/learn': typeof LearnIndexRoute
@@ -1242,6 +1258,7 @@ export interface FileRoutesById {
   '/admin/support': typeof AdminSupportRoute
   '/admin/toolkit': typeof AdminToolkitRoute
   '/admin/users': typeof AdminUsersRoute
+  '/blog/from-page-to-practice': typeof BlogFromPageToPracticeRoute
   '/checkout/success': typeof CheckoutSuccessRoute
   '/courses/$courseId': typeof CoursesCourseIdRouteWithChildren
   '/german/add': typeof GermanAddRoute
@@ -1266,6 +1283,7 @@ export interface FileRoutesById {
   '/summaries/$summaryId': typeof SummariesSummaryIdRoute
   '/summaries/new': typeof SummariesNewRoute
   '/admin/': typeof AdminIndexRoute
+  '/blog/': typeof BlogIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
   '/german/': typeof GermanIndexRoute
   '/learn/': typeof LearnIndexRoute
@@ -1391,6 +1409,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/toolkit'
     | '/admin/users'
+    | '/blog/from-page-to-practice'
     | '/checkout/success'
     | '/courses/$courseId'
     | '/german/add'
@@ -1415,6 +1434,7 @@ export interface FileRouteTypes {
     | '/summaries/$summaryId'
     | '/summaries/new'
     | '/admin/'
+    | '/blog/'
     | '/checkout/'
     | '/german/'
     | '/learn/'
@@ -1535,6 +1555,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/toolkit'
     | '/admin/users'
+    | '/blog/from-page-to-practice'
     | '/checkout/success'
     | '/german/add'
     | '/german/articles'
@@ -1558,6 +1579,7 @@ export interface FileRouteTypes {
     | '/summaries/$summaryId'
     | '/summaries/new'
     | '/admin'
+    | '/blog'
     | '/checkout'
     | '/german'
     | '/learn'
@@ -1680,6 +1702,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/toolkit'
     | '/admin/users'
+    | '/blog/from-page-to-practice'
     | '/checkout/success'
     | '/courses/$courseId'
     | '/german/add'
@@ -1704,6 +1727,7 @@ export interface FileRouteTypes {
     | '/summaries/$summaryId'
     | '/summaries/new'
     | '/admin/'
+    | '/blog/'
     | '/checkout/'
     | '/german/'
     | '/learn/'
@@ -1828,6 +1852,7 @@ export interface RootRouteChildren {
   AdminSupportRoute: typeof AdminSupportRoute
   AdminToolkitRoute: typeof AdminToolkitRoute
   AdminUsersRoute: typeof AdminUsersRoute
+  BlogFromPageToPracticeRoute: typeof BlogFromPageToPracticeRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   JoinCodeRoute: typeof JoinCodeRoute
   LearnGermanRoute: typeof LearnGermanRoute
@@ -1839,6 +1864,7 @@ export interface RootRouteChildren {
   SummariesSummaryIdRoute: typeof SummariesSummaryIdRoute
   SummariesNewRoute: typeof SummariesNewRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  BlogIndexRoute: typeof BlogIndexRoute
   CheckoutIndexRoute: typeof CheckoutIndexRoute
   LearnIndexRoute: typeof LearnIndexRoute
   ShareIndexRoute: typeof ShareIndexRoute
@@ -2319,6 +2345,20 @@ declare module '@tanstack/react-router' {
       path: '/admin/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/from-page-to-practice': {
+      id: '/blog/from-page-to-practice'
+      path: '/blog/from-page-to-practice'
+      fullPath: '/blog/from-page-to-practice'
+      preLoaderRoute: typeof BlogFromPageToPracticeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout/': {
@@ -3096,6 +3136,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminSupportRoute: AdminSupportRoute,
   AdminToolkitRoute: AdminToolkitRoute,
   AdminUsersRoute: AdminUsersRoute,
+  BlogFromPageToPracticeRoute: BlogFromPageToPracticeRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   JoinCodeRoute: JoinCodeRoute,
   LearnGermanRoute: LearnGermanRoute,
@@ -3107,6 +3148,7 @@ const rootRouteChildren: RootRouteChildren = {
   SummariesSummaryIdRoute: SummariesSummaryIdRoute,
   SummariesNewRoute: SummariesNewRoute,
   AdminIndexRoute: AdminIndexRoute,
+  BlogIndexRoute: BlogIndexRoute,
   CheckoutIndexRoute: CheckoutIndexRoute,
   LearnIndexRoute: LearnIndexRoute,
   ShareIndexRoute: ShareIndexRoute,

@@ -28,6 +28,7 @@ export async function pathItemsFor(
       kind: string;
       title: string;
       path_order: number;
+      map_level?: PathItem["map_level"] | null;
       quiz_count?: number;
       film_lines?: number[];
       clip_ids?: string[] | null;
@@ -48,6 +49,7 @@ export async function pathItemsFor(
       kind: row.kind === "resources" || row.kind === "finish" ? row.kind : "exercises",
       title: row.title,
       path_order: Number(row.path_order),
+      map_level: row.map_level ?? undefined,
       film_lines: row.film_lines ?? [],
       ...(Array.isArray(row.clip_ids) ? { clip_ids: row.clip_ids } : {}),
       gif_lines: row.gif_lines ?? [],

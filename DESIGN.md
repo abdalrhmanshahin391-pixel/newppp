@@ -301,6 +301,11 @@ or automatic animations. Links have 44px hit areas,
 readable muted text, visible focus and RTL layouts. Full-screen study keeps its
 footer exclusion.
 
+On the blog (`/blog`, `/blog/<post>`) the same footer takes `data-tone="light"`: the blog's
+white surface with a thin `#e6e5e4` rule, ink `#181719` text, muted `#646365`, the grotesk
+font, 14px links, a lighter 500-weight heading, the black pill «Start learning» like the blog
+header, and a pale `#efeeed` wordmark. Layout, links and the blue thread are unchanged.
+
 The study header keeps Back to lessons and optional PDF download. The lesson
 title and admin-preview notice remain available to screen readers. Visible sample
 headings, sample-switch and challenge shortcuts are removed. Idle copy below Uzyra's
