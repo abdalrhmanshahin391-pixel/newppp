@@ -344,15 +344,24 @@ const filmSelection = z
 export const savePathFilmLines = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    parse(z.object({ id: uuid, previous: filmSelection, lines: filmSelection }), input),
+    parse(
+      z.object({
+        id: uuid,
+        previous: filmSelection,
+        lines: filmSelection,
+        previousGifs: filmSelection,
+      }),
+      input,
+    ),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { data: saved, error } = await context.supabase
       .from("rita_path_items")
-      .update({ film_lines: data.lines })
+      .update({ film_lines: data.lines, gif_lines: [] })
       .eq("id", data.id)
       .eq("kind", "exercises")
+      .eq("gif_lines", `{${data.previousGifs.join(",")}}`)
       .eq("film_lines", `{${data.previous.join(",")}}`)
       .select("id")
       .maybeSingle();

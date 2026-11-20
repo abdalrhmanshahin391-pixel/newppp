@@ -13,7 +13,22 @@ export type PathItem = {
   resource_count: number;
   quiz_count?: number;
   film_lines?: number[];
+  gif_lines?: number[];
 };
+
+export function mediaLineIds(item: PathItem) {
+  return [...new Set([...(item.film_lines ?? []), ...(item.gif_lines ?? [])])];
+}
+
+export function exerciseCount(item: PathItem) {
+  return mediaLineIds(item).length + (item.quiz_count ?? 0);
+}
+
+export function pathItemTitle(item: PathItem) {
+  if (item.kind === "exercises" && item.title === "تدريب بمقاطع الأفلام" && !exerciseCount(item))
+    return "تمارين";
+  return item.title;
+}
 
 export type PathRef = { type: "lesson" | "item"; id: string };
 
