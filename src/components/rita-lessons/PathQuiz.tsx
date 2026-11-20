@@ -139,7 +139,7 @@ function Editor({ item, onChanged, onClose }: Props) {
   const [title, setTitle] = useState(item.title);
   const [search, setSearch] = useState("");
   const [topics, setTopics] = useState<string[]>([]);
-  const [count, setCount] = useState(10);
+  const [count, setCount] = useState(item.quiz_count || 10);
   const [preview, setPreview] = useState<Draft[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);

@@ -20,7 +20,7 @@ import { curriculumCoverage } from "@/lib/curriculum-coverage";
 import { lessonReadiness, bookProgress, lessonPlan, type BookStep } from "@/lib/rita-book-flow";
 import { adminPlacePathLesson } from "@/lib/rita-path-items.functions";
 import { adminBookStudyState, type BookStudyState } from "@/lib/study/study.functions";
-import { type PathItem } from "@/lib/rita-path-layout";
+import { exerciseCount, type PathItem } from "@/lib/rita-path-layout";
 import type { CurriculumRow } from "@/lib/rita-curriculum.functions";
 import { PathStopSheet } from "../PathStopSheet";
 import { BookWorkspace } from "./book/BookWorkspace";
@@ -45,16 +45,21 @@ export default function PathContentPanel({
   language,
   items,
   onClose,
+  onPractice,
   onReload,
 }: {
   request: ContentRequest;
   language: string | null;
   items: PathItem[];
   onClose: () => void;
+  onPractice?: (item: PathItem) => void;
   onReload: () => Promise<void>;
 }) {
   const { isAdmin } = useAuth();
-  const exerciseStop = request.item?.kind === "exercises" ? request.item : undefined;
+  const exerciseStop =
+    request.item?.kind === "exercises"
+      ? (items.find((item) => item.id === request.item?.id) ?? request.item)
+      : undefined;
   const data = useCurriculumAdminData(isAdmin && !exerciseStop);
   const saveLayout = useServerFn(adminPlacePathLesson);
   const studyFn = useServerFn(adminBookStudyState);
@@ -277,6 +282,15 @@ export default function PathContentPanel({
                   {book ? ` · ${book.level}` : ""}
                 </p>
               </div>
+              {exerciseStop && exerciseCount(exerciseStop) > 0 && onPractice && (
+                <button
+                  type="button"
+                  className="rita-btn rita-btn-primary"
+                  onClick={() => leave(() => onPractice(exerciseStop))}
+                >
+                  ابدأ التدريب
+                </button>
+              )}
               <button
                 className="rita-btn rita-btn-icon pc-expand"
                 aria-label={expanded ? "تصغير اللوحة" : "توسيع اللوحة"}
@@ -321,7 +335,7 @@ export default function PathContentPanel({
                   embedded
                   admin
                   color="#d87718"
-                  item={items.find((i) => i.id === exerciseStop.id) ?? exerciseStop}
+                  item={exerciseStop}
                   onClose={() => leave(onClose)}
                   onChanged={onReload}
                 />

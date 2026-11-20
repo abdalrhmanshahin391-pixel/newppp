@@ -314,8 +314,9 @@ export function LessonPathView({
 
   function open(node: Node) {
     if (node.type === "item" && node.item.kind === "exercises") {
-      if (isAdmin) setContent({ item: node.item });
-      else if (exerciseCount(node.item)) setSheet(node.item);
+      const published = exerciseCount(node.item) > 0;
+      if (isAdmin && (editing || !published)) setContent({ item: node.item });
+      else if (published) setSheet(node.item);
       else setHint("لسا ما انضافت تمارين لهاي المحطة.");
       return;
     }
@@ -995,6 +996,10 @@ export function LessonPathView({
             language={language}
             items={items}
             onClose={() => setContent(null)}
+            onPractice={(item) => {
+              setContent(null);
+              setSheet(item);
+            }}
             onReload={onReload}
           />
         </Suspense>
@@ -1002,7 +1007,15 @@ export function LessonPathView({
       {sheet && (
         <PathStopSheet
           item={sheet}
-          admin={isAdmin && (sheet.kind !== "exercises" || editing)}
+          admin={isAdmin && sheet.kind !== "exercises"}
+          onEdit={
+            isAdmin && sheet.kind === "exercises"
+              ? () => {
+                  setSheet(null);
+                  setContent({ item: sheet });
+                }
+              : undefined
+          }
           color={LOOK[sheet.kind].color}
           onClose={() => setSheet(null)}
           onChanged={onReload}
