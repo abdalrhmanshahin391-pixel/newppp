@@ -301,7 +301,8 @@ or automatic animations. Links have 44px hit areas,
 readable muted text, visible focus and RTL layouts. Full-screen study keeps its
 footer exclusion.
 
-On the blog (`/blog`, `/blog/<post>`) the same footer takes `data-tone="light"`: the blog's
+Every page except home takes `data-tone="light"` (dark seasonal themes fall back to the ink
+look), as first done for the blog: the blog's
 white surface with a thin `#e6e5e4` rule, ink `#181719` text, muted `#646365`, the grotesk
 font, 14px links, a lighter 500-weight heading, the black pill «Start learning» like the blog
 header, and a pale `#efeeed` wordmark. Layout, links and the blue thread are unchanged.
@@ -314,7 +315,12 @@ cube is omitted; connecting, failed and active statuses remain visible.
 ## Top bar and menus
 
 One bar for the whole site (`ProHeader`, classes `.rh-bar*`, explicit colours so they look the
-same on the cream pages and on the white ones). Dark ink `#121117`, 64px, no blur, no capsule.
+same on the cream pages and on the white ones). On the home page it is dark ink `#121117`, 64px,
+no blur, no capsule. Every other page (`variant="solid"`, `data-look="capsule"`) takes the blog's
+look: a white 60px capsule (40px radius) floating 14px from the top, 14px grotesk links in ink
+`#181719` centred, the current page in `#ba431d` instead of the drawn line, a black pill «Start
+learning», credits and language chips with a light `#dedddc` outline. Past 48px of scroll it
+narrows to 816px with a `#ecebed` border and a soft shadow. The blog uses this same bar.
 Links sit next to the logo; the current page gets the hand-drawn blue line from the home
 headline, drawn once. Guests get "Sign in" and one blue "Start learning" button. Signed-in
 users get the Credits chip (Uzyra's small orb plus what is left; the orb ring turns amber below
