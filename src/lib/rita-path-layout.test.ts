@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  exerciseCount,
+  pathItemTitle,
   insertRef,
   layoutOrders,
   mergePath,
@@ -71,4 +73,16 @@ test("merging the saved layout gives the same order back", () => {
     merged.map((node) => (node.type === "lesson" ? node.lesson.id : node.item.id)),
     list.map((ref) => ref.id),
   );
+});
+
+test("blank legacy exercise stops and mixed-media stops have the right map labels", () => {
+  const empty = { ...item("A", 1), title: "تدريب بمقاطع الأفلام" };
+  assert.equal(exerciseCount(empty), 0);
+  assert.equal(pathItemTitle(empty), "تمارين");
+  const custom = { ...empty, title: "محادثة في السوق" };
+  assert.equal(pathItemTitle(custom), custom.title);
+  const mixed = { ...empty, quiz_count: 3, gif_lines: [5, 8], film_lines: [5] };
+  assert.equal(exerciseCount(mixed), 6);
+  assert.equal(pathItemTitle(mixed), mixed.title);
+  assert.equal(exerciseCount(empty), 0);
 });

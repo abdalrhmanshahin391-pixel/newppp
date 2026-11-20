@@ -375,3 +375,17 @@ dialog.film-session[open] {
 .fs-finished a {
   text-decoration: underline;
 }
+.fs-scene .fs-gif {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.film-session .fs-gif-listen {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--blue-ink);
+  padding-inline: 20px;
+}

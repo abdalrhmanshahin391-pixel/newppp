@@ -344,16 +344,25 @@ const filmSelection = z
 export const savePathFilmLines = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
-    parse(z.object({ id: uuid, previous: filmSelection, lines: filmSelection }), input),
+    parse(
+      z.object({
+        id: uuid,
+        previous: filmSelection,
+        lines: filmSelection,
+        media: z.enum(["film", "gif"]).default("film"),
+      }),
+      input,
+    ),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
+    const column = data.media === "gif" ? "gif_lines" : "film_lines";
     const { data: saved, error } = await context.supabase
       .from("rita_path_items")
-      .update({ film_lines: data.lines })
+      .update({ [column]: data.lines })
       .eq("id", data.id)
       .eq("kind", "exercises")
-      .eq("film_lines", `{${data.previous.join(",")}}`)
+      .eq(column, `{${data.previous.join(",")}}`)
       .select("id")
       .maybeSingle();
     if (error) throw new Error(error.message);

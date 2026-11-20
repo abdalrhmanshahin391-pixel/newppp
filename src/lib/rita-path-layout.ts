@@ -13,7 +13,18 @@ export type PathItem = {
   resource_count: number;
   quiz_count?: number;
   film_lines?: number[];
+  gif_lines?: number[];
 };
+
+export function exerciseCount(item: PathItem) {
+  return (item.film_lines?.length ?? 0) + (item.gif_lines?.length ?? 0) + (item.quiz_count ?? 0);
+}
+
+export function pathItemTitle(item: PathItem) {
+  if (item.kind === "exercises" && item.title === "تدريب بمقاطع الأفلام" && !exerciseCount(item))
+    return "تمارين";
+  return item.title;
+}
 
 export type PathRef = { type: "lesson" | "item"; id: string };
 

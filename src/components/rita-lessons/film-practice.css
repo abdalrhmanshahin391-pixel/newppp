@@ -202,3 +202,9 @@
   min-height: 48px;
   box-shadow: 0 3px 0 #15448e;
 }
+.fc-card .fc-gif {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+}

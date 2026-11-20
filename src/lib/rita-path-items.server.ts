@@ -30,6 +30,7 @@ export async function pathItemsFor(
       path_order: number;
       quiz_count?: number;
       film_lines?: number[];
+      gif_lines?: number[];
     }[];
     const counts: Record<string, number> = {};
     const resourceIds = rows.filter((row) => row.kind === "resources").map((row) => row.id);
@@ -47,6 +48,7 @@ export async function pathItemsFor(
       title: row.title,
       path_order: Number(row.path_order),
       film_lines: row.film_lines ?? [],
+      gif_lines: row.gif_lines ?? [],
       quiz_count: row.quiz_count ?? 0,
       resource_count: counts[row.id] ?? 0,
     }));
