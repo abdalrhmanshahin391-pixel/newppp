@@ -116,7 +116,13 @@ end $$;
 update public.rita_path_items item
 set clip_ids = coalesce((
   select array_agg(clip.id order by line.ord)
-  from unnest(item.film_lines) with ordinality as line(legacy_id, ord)
+  from (
+    -- The stop's lines in order (film first, then GIF), each line once.
+    select l.legacy_id, min(l.ord) as ord
+    from unnest(item.film_lines || item.gif_lines) with ordinality as l(legacy_id, ord)
+    group by l.legacy_id
+  ) line
   join public.rita_film_clips clip on clip.legacy_id = line.legacy_id
 ), '{}')
-where cardinality(item.film_lines) > 0 and cardinality(item.clip_ids) = 0;
+where cardinality(item.film_lines) + cardinality(item.gif_lines) > 0
+  and cardinality(item.clip_ids) = 0;

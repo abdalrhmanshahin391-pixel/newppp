@@ -8,10 +8,10 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
+  Clapperboard,
   Dumbbell,
   Flag,
   FileText,
-  Clapperboard,
   FolderOpen,
   Loader2,
   Lock,
@@ -28,8 +28,9 @@ import {
 } from "lucide-react";
 import type { PathLesson, ReviewSuggestion } from "@/lib/rita-curriculum.functions";
 import {
+  exerciseCount,
+  pathItemTitle,
   mergePath,
-  stopClipCount,
   swapRefs,
   type PathItem,
   type PathItemKind,
@@ -313,6 +314,12 @@ export function LessonPathView({
   const nodeRows = rows.flatMap((r, index) => (r.type === "node" ? [index] : []));
 
   function open(node: Node) {
+    if (node.type === "item" && node.item.kind === "exercises") {
+      if (isAdmin) setContent({ item: node.item });
+      else if (exerciseCount(node.item)) setSheet(node.item);
+      else setHint("لسا ما انضافت تمارين لهاي المحطة.");
+      return;
+    }
     if (editing) {
       if (isAdmin)
         setContent(node.type === "lesson" ? { lessonId: node.lesson.id } : { item: node.item });
@@ -492,7 +499,7 @@ export function LessonPathView({
     return level ?? lessonOrder[0]?.level ?? normalizeLevel(null);
   }
 
-  async function add(kind: PathItemKind, index: number, film = false) {
+  async function add(kind: PathItemKind, index: number) {
     setAdding(null);
     setBusy(true);
     try {
@@ -500,13 +507,7 @@ export function LessonPathView({
         data: {
           language,
           kind,
-          title: film
-            ? "تدريب بمقاطع الأفلام"
-            : kind === "exercises"
-              ? "تمارين"
-              : kind === "finish"
-                ? levelAt(index)
-                : "Resources",
+          title: kind === "exercises" ? "تمارين" : kind === "finish" ? levelAt(index) : "Resources",
           list: nodes.map(refOf),
           index,
         },
@@ -516,7 +517,8 @@ export function LessonPathView({
         { type: "item", item: created },
         ...list.slice(index),
       ]);
-      setContent({ item: created, film });
+      if (kind !== "exercises") setContent({ item: created });
+      else toast.success("انضافت محطة تمارين. اضغط عليها لإضافة المحتوى.");
       setFresh(created.id);
       confirmSound();
       window.setTimeout(() => setFresh(""), 900);
@@ -616,14 +618,19 @@ export function LessonPathView({
       <section className="mx-auto max-w-md px-4 pt-7 text-center">
         <h2 className="lp-heading">دروسك مع يوزرا</h2>
         {isAdmin && lessons && !error && (
-          <Link
-            to="/admin/clips"
-            className="my-4 flex min-h-12 items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-start font-bold text-blue-900"
-          >
-            <Clapperboard size={20} aria-hidden="true" />
-            <span className="me-auto">مكتبة المقاطع</span>
-            <span className="text-[13px] font-normal">أضف مقاطع وحطّها بالمسار</span>
-          </Link>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <button
+              type="button"
+              className="lp-edit"
+              disabled={busy}
+              onClick={() => void add("exercises", nodes.length)}
+            >
+              <Plus size={16} /> أضف محطة تمارين
+            </button>
+            <Link to="/admin/clips" className="lp-edit">
+              <Clapperboard size={16} aria-hidden="true" /> مكتبة المقاطع
+            </Link>
+          </div>
         )}
         {editing && (
           <p className="lp-edit-hint">
@@ -786,7 +793,7 @@ export function LessonPathView({
               : finishLevel
                 ? `نهاية ${finishLevel}`
                 : node.type === "item"
-                  ? node.item.title
+                  ? pathItemTitle(node.item)
                   : "";
             return (
               <button
@@ -868,10 +875,10 @@ export function LessonPathView({
                   <span className="lp-sub">{finishLine(finishCount)}</span>
                 ) : (
                   <span className="lp-sub">
-                    {node.type === "item" && stopClipCount(node.item)
-                      ? `مقاطع تدريب · ${stopClipCount(node.item)}`
-                      : node.type === "item" && node.item.quiz_count
-                        ? `${node.item.quiz_count} أسئلة`
+                    {node.type === "item" && exerciseCount(node.item)
+                      ? `تمارين المحطة · ${exerciseCount(node.item)}`
+                      : isAdmin
+                        ? "أضف أول تمرين"
                         : "قريباً"}
                   </span>
                 )}
@@ -918,17 +925,6 @@ export function LessonPathView({
                     </span>
                     درس من كتاب أو درس موجود
                   </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    disabled={busy}
-                    onClick={() => void add("exercises", plus.index, true)}
-                  >
-                    <span>
-                      <Clapperboard size={18} />
-                    </span>
-                    تدريب بمقاطع الأفلام
-                  </button>
                   {(["exercises", "resources", "finish"] as PathItemKind[]).map((kind) => {
                     const Icon = LOOK[kind].Icon;
                     return (
@@ -946,7 +942,7 @@ export function LessonPathView({
                           <Icon size={18} />
                         </span>
                         {kind === "exercises"
-                          ? "اختبار من Lecture Lab"
+                          ? "محطة تمارين"
                           : kind === "resources"
                             ? "ملفات وروابط"
                             : `خط نهاية ${levelAt(plus.index)}`}
@@ -993,7 +989,7 @@ export function LessonPathView({
         <Suspense
           fallback={
             <p
-              className="fixed inset-y-0 right-0 z-50 grid w-full place-items-center border-l border-[var(--pp-line)] bg-white text-[var(--pp-ink)] min-[1100px]:w-[58vw]"
+              className={`fixed inset-y-0 right-0 z-50 grid w-full place-items-center border-l border-[var(--pp-line)] bg-white text-[var(--pp-ink)] ${content.item?.kind === "exercises" ? "" : "min-[1100px]:w-[58vw]"}`}
               role="status"
             >
               تحميل إدارة المحتوى…

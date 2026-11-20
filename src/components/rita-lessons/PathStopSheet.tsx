@@ -12,7 +12,7 @@ import {
   adminRenamePathItem,
   getPathItemResources,
 } from "@/lib/rita-path-items.functions";
-import { pathItemPdfPath, type PathItem } from "@/lib/rita-path-layout";
+import { pathItemPdfPath, pathItemTitle, type PathItem } from "@/lib/rita-path-layout";
 import {
   MAX_PDF_BYTES,
   RESOURCES_BUCKET,
@@ -32,7 +32,6 @@ const message = (cause: unknown) =>
 export function PathStopSheet({
   item,
   embedded = false,
-  film = false,
   admin,
   color,
   onClose,
@@ -40,7 +39,6 @@ export function PathStopSheet({
 }: {
   item: PathItem;
   embedded?: boolean;
-  film?: boolean;
   admin: boolean;
   color: string;
   onClose: () => void;
@@ -54,7 +52,7 @@ export function PathStopSheet({
   const [resources, setResources] = useState<LearnerResource[] | null>(
     item.kind === "resources" ? null : [],
   );
-  const [title, setTitle] = useState(item.title);
+  const [title, setTitle] = useState(pathItemTitle(item));
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const finishTask = useWorkspaceTask(busy);
@@ -132,6 +130,83 @@ export function PathStopSheet({
     }, "انضاف الملف");
   }
 
+  const settings = admin && (
+    <div className="lp-sheet-admin">
+      {item.kind === "resources" && (
+        <>
+          <div className="lp-sheet-row">
+            <input
+              value={url}
+              onChange={(event) => setUrl(event.target.value)}
+              placeholder="https://… رابط"
+              dir="ltr"
+              aria-label="رابط جديد"
+            />
+            <button type="button" disabled={busy || !url.trim()} onClick={() => void addLink()}>
+              <Link2 size={16} /> أضف
+            </button>
+          </div>
+          <button
+            type="button"
+            className="lp-sheet-wide"
+            disabled={busy}
+            onClick={() => file.current?.click()}
+          >
+            <Upload size={16} /> ارفع ملف PDF
+          </button>
+          <input
+            ref={file}
+            type="file"
+            accept="application/pdf"
+            hidden
+            onChange={(event) => {
+              const picked = event.target.files?.[0];
+              event.target.value = "";
+              if (picked) void addPdf(picked);
+            }}
+          />
+        </>
+      )}
+      {item.kind !== "finish" && (
+        <div className="lp-sheet-row">
+          <input
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            aria-label="اسم المحطة"
+            maxLength={120}
+          />
+          <button
+            type="button"
+            disabled={busy || !title.trim() || title.trim() === pathItemTitle(item)}
+            onClick={() =>
+              void run(async () => {
+                await renameFn({ data: { id: item.id, title: title.trim() } });
+                guard?.saved();
+              }, "انحفظ الاسم")
+            }
+          >
+            احفظ الاسم
+          </button>
+        </div>
+      )}
+      <button
+        type="button"
+        className="lp-sheet-wide is-danger"
+        disabled={busy}
+        onClick={() => {
+          if (!window.confirm("أكيد بدك تحذف هالمحطة من المسار؟")) return;
+          void run(async () => {
+            await deleteFn({ data: { id: item.id } });
+            finishTask();
+            guard?.saved();
+            onClose();
+          }, "انحذفت المحطة");
+        }}
+      >
+        <Trash2 size={16} /> احذف المحطة
+      </button>
+    </div>
+  );
   return (
     <div
       className={embedded ? "pc-stop" : "lp-sheet-back"}
@@ -147,8 +222,8 @@ export function PathStopSheet({
       >
         <div className="lp-sheet-head">
           <span className="lp-sheet-dot" />
-          <h3>{item.kind === "finish" ? `خط نهاية ${item.title}` : item.title}</h3>
-          {(!embedded || !film) && (
+          <h3>{item.kind === "finish" ? `خط نهاية ${item.title}` : pathItemTitle(item)}</h3>
+          {!embedded && (
             <button type="button" onClick={onClose} aria-label="سكّر" className="lp-sheet-x">
               <X size={18} />
             </button>
@@ -163,8 +238,8 @@ export function PathStopSheet({
 
         {item.kind === "exercises" && (
           <PathQuiz
-            film={film}
             key={item.id}
+            settings={settings}
             item={item}
             admin={admin}
             onClose={onClose}
@@ -211,87 +286,7 @@ export function PathStopSheet({
           </div>
         )}
 
-        {admin && !film && (
-          <div className="lp-sheet-admin">
-            {item.kind === "resources" && (
-              <>
-                <div className="lp-sheet-row">
-                  <input
-                    value={url}
-                    onChange={(event) => setUrl(event.target.value)}
-                    placeholder="https://… رابط"
-                    dir="ltr"
-                    aria-label="رابط جديد"
-                  />
-                  <button
-                    type="button"
-                    disabled={busy || !url.trim()}
-                    onClick={() => void addLink()}
-                  >
-                    <Link2 size={16} /> أضف
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  className="lp-sheet-wide"
-                  disabled={busy}
-                  onClick={() => file.current?.click()}
-                >
-                  <Upload size={16} /> ارفع ملف PDF
-                </button>
-                <input
-                  ref={file}
-                  type="file"
-                  accept="application/pdf"
-                  hidden
-                  onChange={(event) => {
-                    const picked = event.target.files?.[0];
-                    event.target.value = "";
-                    if (picked) void addPdf(picked);
-                  }}
-                />
-              </>
-            )}
-            {item.kind === "resources" && (
-              <div className="lp-sheet-row">
-                <input
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  aria-label="اسم المحطة"
-                  maxLength={120}
-                />
-                <button
-                  type="button"
-                  disabled={busy || !title.trim() || title.trim() === item.title}
-                  onClick={() =>
-                    void run(
-                      () => renameFn({ data: { id: item.id, title: title.trim() } }),
-                      "انحفظ الاسم",
-                    )
-                  }
-                >
-                  احفظ الاسم
-                </button>
-              </div>
-            )}
-            <button
-              type="button"
-              className="lp-sheet-wide is-danger"
-              disabled={busy}
-              onClick={() => {
-                if (!window.confirm("أكيد بدك تحذف هالمحطة من المسار؟")) return;
-                void run(async () => {
-                  await deleteFn({ data: { id: item.id } });
-                  finishTask();
-                  guard?.saved();
-                  onClose();
-                }, "انحذفت المحطة");
-              }}
-            >
-              <Trash2 size={16} /> احذف المحطة
-            </button>
-          </div>
-        )}
+        {item.kind !== "exercises" && settings}
       </div>
     </div>
   );

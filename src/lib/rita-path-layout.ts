@@ -15,7 +15,30 @@ export type PathItem = {
   film_lines?: number[];
   /** The clips of an exercises stop (rita_film_clips ids). Undefined before that migration. */
   clip_ids?: string[];
+  gif_lines?: number[];
 };
+
+export function mediaLineIds(item: Pick<PathItem, "film_lines" | "gif_lines">) {
+  return [...new Set([...(item.film_lines ?? []), ...(item.gif_lines ?? [])])];
+}
+
+/**
+ * How many clips an exercises stop holds: its library clips, or (before the clips library
+ * migration) its Sintel lines.
+ */
+export function stopClipCount(item: Pick<PathItem, "clip_ids" | "film_lines" | "gif_lines">) {
+  return item.clip_ids ? item.clip_ids.length : mediaLineIds(item).length;
+}
+
+export function exerciseCount(item: PathItem) {
+  return stopClipCount(item) + (item.quiz_count ?? 0);
+}
+
+export function pathItemTitle(item: PathItem) {
+  if (item.kind === "exercises" && item.title === "تدريب بمقاطع الأفلام" && !exerciseCount(item))
+    return "تمارين";
+  return item.title;
+}
 
 export type PathRef = { type: "lesson" | "item"; id: string };
 
@@ -133,9 +156,4 @@ export function placeLessonAtGap(
   if (old >= 0 && old < index) index--;
   result.splice(index, 0, { type: "lesson", id: lessonId });
   return result;
-}
-
-/** How many film clips an exercises stop holds (its library clips, or its older Sintel lines). */
-export function stopClipCount(item: Pick<PathItem, "clip_ids" | "film_lines">): number {
-  return item.clip_ids ? item.clip_ids.length : (item.film_lines?.length ?? 0);
 }

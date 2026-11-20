@@ -1,5 +1,7 @@
 import { useWorkspaceTask, useWorkspaceGuard } from "./admin/WorkspaceGuard";
-import { lazy, Suspense, useState } from "react";
+import { toast } from "sonner";
+import { Clapperboard, ListChecks, ChevronLeft } from "lucide-react";
+import { lazy, Suspense, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
@@ -19,7 +21,7 @@ const ClipStopEditor = lazy(() =>
 type Props = {
   item: PathItem;
   admin: boolean;
-  film?: boolean;
+  settings?: ReactNode;
   onClose: () => void;
   onChanged: () => Promise<void>;
 };
@@ -39,42 +41,107 @@ function message(error: unknown) {
 export function PathQuiz(props: Props) {
   const lang = useUiLanguage();
   const t = useCopy();
-  const clipCount = stopClipCount(props.item);
-  const canChoose = props.admin || (!!props.item.quiz_count && clipCount > 0);
-  const [mode, setMode] = useState<"quiz" | "film" | null>(
-    props.admin && props.film ? "film" : null,
-  );
-  const active = mode ?? (canChoose ? null : clipCount ? "film" : "quiz");
+  const guard = useWorkspaceGuard();
+  const choices = [
+    {
+      id: "film",
+      name: t("Film clips & GIFs", "تمارين المقاطع وGIF"),
+      hint: t(
+        "Practise each phrase as a film clip or GIF",
+        "تدرّب على نفس الجملة كمقطع أو صورة متحرّكة",
+      ),
+      count: stopClipCount(props.item),
+      Icon: Clapperboard,
+    },
+    {
+      id: "quiz",
+      name: props.admin ? t("Question bank", "بنك الأسئلة") : t("Quiz", "اختبار"),
+      hint: props.admin
+        ? t("Choose questions by subject", "اختَر أسئلة من مواد مختبر المحاضرات")
+        : t("Answer and check your result", "جاوب وراجع نتيجتك"),
+      count: props.item.quiz_count ?? 0,
+      Icon: ListChecks,
+    },
+  ] as const;
+  const available = choices.filter((option) => props.admin || option.count > 0);
+  const [mode, setMode] = useState<(typeof choices)[number]["id"] | null>(null);
+  const active = mode ?? (!props.admin && available.length === 1 ? available[0].id : null);
+  const back = () => setMode(null);
+  const afterSave = () => {
+    toast.success(t("Station exercises saved", "انحفظت تمارين المحطة"));
+    back();
+  };
   return (
     <div className="path-quiz" dir={lang === "ar" ? "rtl" : "ltr"}>
       {active === null ? (
-        <div className="grid gap-2">
-          <button className="pq-option" onClick={() => setMode("film")}>
-            {t("Film practice", "تدريب بمقاطع الأفلام")}
-          </button>
-          <button className="pq-option" onClick={() => setMode("quiz")}>
-            {t("Lecture Lab quiz", "اختبار من مختبر المحاضرات")}
-          </button>
-        </div>
-      ) : active === "film" ? (
-        <Suspense fallback={<p role="status">{t("Loading…", "جارٍ التحميل…")}</p>}>
-          {!props.admin ? (
-            <FilmStopPlayer item={props.item} onClose={props.onClose} />
-          ) : props.item.clip_ids ? (
-            <ClipStopEditor
-              stop={{ id: props.item.id, title: props.item.title, clip_ids: props.item.clip_ids }}
-              onSaved={props.onChanged}
-              onClose={props.onClose}
-            />
-          ) : (
-            // Before the clips migration a stop still holds Sintel lines.
-            <FilmEditor {...props} />
+        <>
+          <h4>
+            {props.admin
+              ? t("Choose an exercise type", "اختَر نوع التمرين")
+              : t("Choose a practice", "اختَر تدريبك")}
+          </h4>
+          {available.map(({ id, name, hint, count, Icon }) => (
+            <button
+              key={id}
+              type="button"
+              className="pq-option pq-kind"
+              onClick={() => (guard ? guard.leave(() => setMode(id)) : setMode(id))}
+            >
+              <span className="pq-kind-icon">
+                <Icon size={23} />
+              </span>
+              <span>
+                <strong>{name}</strong>
+                <small>{hint}</small>
+              </span>
+              <span className="pq-kind-count">{count || "+"}</span>
+            </button>
+          ))}
+          {props.admin && props.settings && (
+            <details className="pq-settings">
+              <summary>{t("Station settings", "إعدادات المحطة")}</summary>
+              {props.settings}
+            </details>
           )}
-        </Suspense>
-      ) : props.admin ? (
-        <Editor {...props} />
+        </>
       ) : (
-        <Player {...props} />
+        <>
+          {(props.admin || available.length > 1) && (
+            <button className="pq-back" onClick={() => (guard ? guard.leave(back) : back())}>
+              <ChevronLeft size={16} />
+              {t("Exercise types", "أنواع التمارين")}
+            </button>
+          )}
+          {active === "quiz" ? (
+            props.admin ? (
+              <Editor {...props} onClose={afterSave} />
+            ) : (
+              <Player {...props} />
+            )
+          ) : (
+            <Suspense fallback={<p role="status">{t("Loading…", "جارٍ التحميل…")}</p>}>
+              {!props.admin ? (
+                <FilmStopPlayer item={props.item} onClose={props.onClose} />
+              ) : props.item.clip_ids ? (
+                <ClipStopEditor
+                  stop={{
+                    id: props.item.id,
+                    title: props.item.title,
+                    clip_ids: props.item.clip_ids,
+                  }}
+                  onSaved={async () => {
+                    await props.onChanged();
+                    toast.success(t("Station exercises saved", "انحفظت تمارين المحطة"));
+                  }}
+                  onClose={back}
+                />
+              ) : (
+                // Before the clips library migration a stop still holds Sintel lines.
+                <FilmEditor key={active} {...props} onClose={afterSave} />
+              )}
+            </Suspense>
+          )}
+        </>
       )}
     </div>
   );
@@ -190,6 +257,7 @@ function Editor({ item, onChanged, onClose }: Props) {
             {t("Lecture Lab subjects", "مواد Lecture Lab")}
             <input
               type="search"
+              data-workspace-transient
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("Search subjects and topics", "ابحث عن مادة أو موضوع فرعي")}

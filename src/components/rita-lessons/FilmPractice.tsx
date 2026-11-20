@@ -18,7 +18,7 @@ import lines from "@/lib/sintel-lines.json";
 import { savePathFilmLines } from "@/lib/rita-path-items.functions";
 import { listClips } from "@/lib/film-clips.functions";
 import { SINTEL_POOL, sintelClips } from "@/lib/film-clips-sintel";
-import type { PathItem } from "@/lib/rita-path-layout";
+import { mediaLineIds, type PathItem } from "@/lib/rita-path-layout";
 import {
   choiceOptions,
   clipCredit,
@@ -35,6 +35,7 @@ import { FilmSpeaking } from "./FilmSpeaking";
 import "./film-practice.css";
 import "./film-session.css";
 
+type Media = "film" | "gif";
 type Line = (typeof lines)[number];
 const byId = new Map(lines.map((line) => [line.id, line]));
 const dailyIds = [5, 8, 13, 14, 15, 20, 23];
@@ -129,6 +130,47 @@ function Clip({ line, video }: { line: Line; video?: React.RefObject<HTMLVideoEl
   );
 }
 
+function useGifMotion() {
+  return useState(() => !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+}
+function GifPreview({ line }: { line: Line }) {
+  const t = useCopy();
+  const [moving, setMoving] = useGifMotion();
+  return (
+    <>
+      <img
+        className="fc-gif"
+        src={`/media/sintel/${line.id}.${moving ? "gif" : "jpg"}`}
+        alt={line.en}
+      />
+      <div className="fc-controls">
+        <button type="button" className="fc-play" onClick={() => setMoving(!moving)}>
+          {moving ? <Pause size={16} /> : <Play size={16} />}
+          {moving ? t("Pause GIF", "أوقف الصورة") : t("Play GIF", "حرّك الصورة")}
+        </button>
+        <Credit />
+      </div>
+    </>
+  );
+}
+
+function MediaFormat({ value, onChange }: { value: Media; onChange: (value: Media) => void }) {
+  const t = useCopy();
+  return (
+    <label>
+      {t("Format", "العرض")}{" "}
+      <select
+        data-workspace-transient
+        value={value}
+        onChange={(e) => onChange(e.target.value === "gif" ? "gif" : "film")}
+      >
+        <option value="film">{t("Video", "فيديو")}</option>
+        <option value="gif">GIF</option>
+      </select>
+    </label>
+  );
+}
+
 export function FilmEditor({
   item,
   onChanged,
@@ -140,7 +182,9 @@ export function FilmEditor({
 }) {
   const t = useCopy();
   const save = useServerFn(savePathFilmLines);
-  const [previous] = useState(item.film_lines ?? []);
+  const [media, setMedia] = useState<Media>("film");
+  const [original] = useState(item);
+  const [previous] = useState(() => mediaLineIds(original));
   const [ids, setIds] = useState(previous);
   const [query, setQuery] = useState("");
   const [daily, setDaily] = useState(true);
@@ -171,7 +215,14 @@ export function FilmEditor({
     setBusy(true);
     setError("");
     try {
-      await save({ data: { id: item.id, previous, lines: ids } });
+      await save({
+        data: {
+          id: item.id,
+          previous: original.film_lines ?? [],
+          previousGifs: original.gif_lines ?? [],
+          lines: ids,
+        },
+      });
       finish();
       guard?.saved();
       await onChanged();
@@ -185,7 +236,7 @@ export function FilmEditor({
   return (
     <fieldset className="film-practice" disabled={busy}>
       <label>
-        {t("Search Sintel dialogue", "ابحث في حوار سينتل")}
+        {t("Find a phrase or translation", "ابحث عن جملة أو ترجمتها")}
         <input
           type="search"
           data-workspace-transient
@@ -251,7 +302,12 @@ export function FilmEditor({
       )}
       {preview && (
         <div className="fc-card">
-          <Clip key={preview.id} line={preview} />
+          <MediaFormat value={media} onChange={setMedia} />
+          {media === "gif" ? (
+            <GifPreview key={preview.id} line={preview} />
+          ) : (
+            <Clip key={preview.id} line={preview} />
+          )}
           <p dir="rtl">{preview.ar}</p>
           <button disabled={ids.includes(preview.id)} onClick={() => setIds([...ids, preview.id])}>
             {t("Add clip to this stop", "أضف المقطع للمحطة")}
@@ -304,7 +360,7 @@ export function FilmStopPlayer({ item, onClose }: { item: PathItem; onClose: () 
   });
   if (!ids)
     return (
-      <FilmPlayer clips={sintelClips(item.film_lines ?? [])} pool={SINTEL_POOL} onClose={onClose} />
+      <FilmPlayer clips={sintelClips(mediaLineIds(item))} pool={SINTEL_POOL} onClose={onClose} />
     );
   if (ids.length && query.isPending)
     return <p role="status">{t("Loading clips…", "جارٍ تحميل المقاطع…")}</p>;
@@ -366,6 +422,9 @@ export function FilmPlayer({
     [clips, pool],
   );
   const [step, setStep] = useState(0);
+  // The Sintel lines also ship as GIFs: the learner can watch the same phrase as a GIF.
+  const [media, setMedia] = useState<Media>("film");
+  const gifReady = clips.some((clip) => sintelGif(clip));
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const el = dialog.current;
@@ -380,7 +439,9 @@ export function FilmPlayer({
       ref={dialog}
       className="film-session"
       dir={lang === "ar" ? "rtl" : "ltr"}
-      aria-label={t("Film practice", "تدريب المقاطع")}
+      aria-label={
+        media === "gif" ? t("GIF practice", "تدريب GIF") : t("Film practice", "تدريب المقاطع")
+      }
       onCancel={(event) => {
         event.preventDefault();
         onClose();
@@ -391,6 +452,7 @@ export function FilmPlayer({
           <span aria-hidden="true">
             <Clapperboard size={23} />
           </span>
+          {gifReady && <MediaFormat value={media} onChange={setMedia} />}
           <progress
             aria-label={t("Practice progress", "تقدّم التدريب")}
             value={step}
@@ -404,6 +466,7 @@ export function FilmPlayer({
           <FilmStep
             key={step}
             clip={clip}
+            media={media}
             phase={current.type === "intro" ? "intro" : current.exercise}
             index={current.clip}
             count={clips.length}
@@ -447,6 +510,13 @@ function Highlight({ text, word }: { text: string; word: string }) {
   );
 }
 
+/** A Sintel clip's ready-made GIF (without extension), or null for other clips. */
+function sintelGif(clip: FilmClip) {
+  return clip.kind === "video" && clip.legacy_id != null && clip.source === "Sintel"
+    ? `/media/sintel/${clip.legacy_id}`
+    : null;
+}
+
 type Phase = "intro" | ClipExercise;
 const PHASE_CLASS: Record<Phase, number> = {
   intro: 0,
@@ -458,6 +528,7 @@ const PHASE_CLASS: Record<Phase, number> = {
 
 function FilmStep({
   clip,
+  media: format,
   phase,
   index,
   count,
@@ -466,6 +537,7 @@ function FilmStep({
   next,
 }: {
   clip: FilmClip;
+  media: Media;
   phase: Phase;
   index: number;
   count: number;
@@ -475,6 +547,9 @@ function FilmStep({
 }) {
   const t = useCopy();
   const gif = clip.kind === "gif";
+  // A video clip shown as its GIF: the picture moves, the sound comes from the hidden video.
+  const gifView = format === "gif" ? sintelGif(clip) : null;
+  const [moving, setMoving] = useGifMotion();
   const video = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState(false);
@@ -503,11 +578,15 @@ function FilmStep({
       : choice === right;
   const title = {
     intro: gif ? t("Watch", "شاهد") : t("Watch and listen", "شاهد واسمع"),
-    meaning: t("Choose the translation you hear.", "اختر ترجمة العبارة التي تسمعها في الفيديو."),
+    meaning: gifView
+      ? t("Choose the translation of this phrase.", "اختَر ترجمة العبارة.")
+      : t("Choose the translation you hear.", "اختر ترجمة العبارة التي تسمعها في الفيديو."),
     sentence: t("Which sentence fits the clip?", "اختر الجملة التي تناسب المقطع."),
     order: gif
       ? t("Build the sentence.", "رتّب كلمات الجملة.")
-      : t("Build the phrase you hear.", "رتّب كلمات العبارة التي تسمعها في الفيديو."),
+      : gifView
+        ? t("Listen and arrange the words.", "استمع للعبارة ورتّب كلماتها.")
+        : t("Build the phrase you hear.", "رتّب كلمات العبارة التي تسمعها في الفيديو."),
     speak: t("Say the phrase.", "انطق العبارة."),
   }[phase];
   const start = clip.start_s ?? 0;
@@ -542,7 +621,7 @@ function FilmStep({
       ref={video}
       src={clip.video_url ?? undefined}
       poster={clip.poster_url ?? undefined}
-      preload="metadata"
+      preload={gifView ? "none" : "metadata"}
       playsInline
       onLoadedMetadata={(event) => {
         if (start && event.currentTarget.currentTime < start)
@@ -576,20 +655,63 @@ function FilmStep({
           <article className="fs-card">
             {phase !== "speak" ? (
               <div className="fs-scene">
-                {media}
-                {!gif && (
+                {gifView ? (
+                  <>
+                    <img className="fs-gif" src={`${gifView}.${moving ? "gif" : "jpg"}`} alt="" />
+                    <div hidden>{media}</div>
+                  </>
+                ) : (
+                  media
+                )}
+                {gifView ? (
                   <button
                     type="button"
                     className="fs-play"
-                    aria-label={playing ? t("Pause", "إيقاف مؤقت") : t("Play clip", "شغّل المقطع")}
-                    onClick={() => (playing ? video.current?.pause() : void play())}
+                    aria-label={
+                      moving ? t("Pause GIF", "أوقف الصورة") : t("Play GIF", "حرّك الصورة")
+                    }
+                    onClick={() => setMoving(!moving)}
                   >
-                    <span>{playing ? <Pause size={17} /> : <Play size={17} />}</span>
+                    <span>{moving ? <Pause size={17} /> : <Play size={17} />}</span>
                   </button>
+                ) : (
+                  !gif && (
+                    <button
+                      type="button"
+                      className="fs-play"
+                      aria-label={
+                        playing ? t("Pause", "إيقاف مؤقت") : t("Play clip", "شغّل المقطع")
+                      }
+                      onClick={() => (playing ? video.current?.pause() : void play())}
+                    >
+                      <span>{playing ? <Pause size={17} /> : <Play size={17} />}</span>
+                    </button>
+                  )
                 )}
               </div>
             ) : (
               <div hidden>{media}</div>
+            )}
+            {gifView && phase !== "speak" && (
+              <button
+                className="fs-gif-listen"
+                onClick={() => (playing ? video.current?.pause() : void play())}
+              >
+                <Volume2 size={18} />
+                {playing
+                  ? t("Pause dialogue", "أوقف الصوت")
+                  : t("Listen to the phrase", "اسمع العبارة")}
+              </button>
+            )}
+            {gifView && phase === "meaning" && (
+              <p className="fs-caption" dir="ltr">
+                {clip.en}
+              </p>
+            )}
+            {gifView && phase === "order" && (
+              <p className="fs-caption" dir="rtl">
+                {clip.ar}
+              </p>
             )}
             {error && (
               <button

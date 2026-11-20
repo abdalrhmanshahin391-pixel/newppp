@@ -36,7 +36,6 @@ import "./path-content.css";
 export type ContentRequest = {
   lessonId?: string;
   item?: PathItem;
-  film?: boolean;
   insert?: { before?: string; after?: string };
   level?: string;
 };
@@ -55,8 +54,8 @@ export default function PathContentPanel({
   onReload: () => Promise<void>;
 }) {
   const { isAdmin } = useAuth();
-  const filmStop = request.film ? request.item : undefined;
-  const data = useCurriculumAdminData(isAdmin && !filmStop);
+  const exerciseStop = request.item?.kind === "exercises" ? request.item : undefined;
+  const data = useCurriculumAdminData(isAdmin && !exerciseStop);
   const saveLayout = useServerFn(adminPlacePathLesson);
   const studyFn = useServerFn(adminBookStudyState);
   const [bookId, setBookId] = useState("");
@@ -240,16 +239,17 @@ export default function PathContentPanel({
     <WorkspaceGuardContext.Provider value={guard}>
       <Dialog.Root
         open
-        modal={compact}
+        modal={compact || !!exerciseStop}
         onOpenChange={(open) => {
           if (!open) leave(onClose);
         }}
       >
         <Dialog.Portal>
-          {compact && <Dialog.Overlay className="pc-overlay" />}
+          {(compact || exerciseStop) && <Dialog.Overlay className="pc-overlay" />}
           <Dialog.Content
             className="pc-panel edith-premium"
             data-expanded={expanded || undefined}
+            data-exercise={exerciseStop ? true : undefined}
             dir="rtl"
             aria-describedby="pc-description"
             onEscapeKeyDown={(event) => {
@@ -269,7 +269,9 @@ export default function PathContentPanel({
           >
             <header className="pc-header">
               <div>
-                <Dialog.Title>{filmStop ? "تمارين مقاطع الأفلام" : "إدارة المحتوى"}</Dialog.Title>
+                <Dialog.Title>
+                  {exerciseStop ? "محتوى محطة التمارين" : "إدارة المحتوى"}
+                </Dialog.Title>
                 <p id="pc-description">
                   للأدمن فقط · {language?.toUpperCase() ?? "كل اللغات"}
                   {book ? ` · ${book.level}` : ""}
@@ -313,19 +315,18 @@ export default function PathContentPanel({
               </div>
             )}
             <div className="pc-body">
-              {filmStop && (
+              {exerciseStop && (
                 <PathStopSheet
-                  key={filmStop.id}
+                  key={exerciseStop.id}
                   embedded
-                  film
                   admin
-                  color="#2b6df0"
-                  item={items.find((i) => i.id === filmStop.id) ?? filmStop}
+                  color="#d87718"
+                  item={items.find((i) => i.id === exerciseStop.id) ?? exerciseStop}
                   onClose={() => leave(onClose)}
                   onChanged={onReload}
                 />
               )}
-              {!filmStop && data.loadError && (
+              {!exerciseStop && data.loadError && (
                 <div className="pc-error" role="alert">
                   <p>{data.loadError}</p>
                   <button className="rita-btn rita-btn-soft" onClick={() => void data.refresh()}>
@@ -333,12 +334,12 @@ export default function PathContentPanel({
                   </button>
                 </div>
               )}
-              {!filmStop && !overview && !data.loadError && (
+              {!exerciseStop && !overview && !data.loadError && (
                 <p className="pc-loading" role="status">
                   <Loader2 size={19} className="animate-spin" /> تحميل كتب المنهج…
                 </p>
               )}
-              {!filmStop && overview && !data.loadError && (
+              {!exerciseStop && overview && !data.loadError && (
                 <>
                   {overview.needsMigration && (
                     <p className="pc-notice">
