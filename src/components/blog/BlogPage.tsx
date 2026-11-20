@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
 import { useDismiss } from "@/components/header/useDismiss";
@@ -10,17 +10,10 @@ const articlePath = "/blog/from-page-to-practice";
 
 export function BlogPage({ article = false }: { article?: boolean }) {
   const ar = useUiLanguage() === "ar";
-  const [compact, setCompact] = useState(false);
   const [open, setOpen] = useState(false);
   const menu = useRef<HTMLDivElement>(null);
   const close = useCallback(() => setOpen(false), []);
   useDismiss(open, close, menu);
-  useEffect(() => {
-    const scroll = () => setCompact(window.scrollY > 48);
-    scroll();
-    window.addEventListener("scroll", scroll, { passive: true });
-    return () => window.removeEventListener("scroll", scroll);
-  }, []);
   const blog = ar ? "المدونة" : "Blog";
   const title = ar
     ? "من صفحة في كتاب إلى جملة تستخدمها"
@@ -47,7 +40,7 @@ export function BlogPage({ article = false }: { article?: boolean }) {
   );
   return (
     <div className="ub-page" dir={ar ? "rtl" : "ltr"} lang={ar ? "ar" : "en"}>
-      <header className="ub-header" data-compact={compact}>
+      <header className="ub-header">
         <Link to="/" aria-label={ar ? "يوزرا الرئيسية" : "Uzyra home"}>
           <UzyraWordmark size={16} />
         </Link>

@@ -21,14 +21,6 @@
   background: white;
   border: 1px solid transparent;
   border-radius: 40px;
-  transition:
-    max-width 0.24s ease,
-    box-shadow 0.2s;
-}
-.ub-header[data-compact="true"] {
-  max-width: 816px;
-  border-color: #ecebed;
-  box-shadow: 0 5px 21px #18171912;
 }
 .ub-header nav,
 .ub-menu button {
@@ -189,10 +181,5 @@
   .ub-list {
     inset-inline-start: auto;
     inset-inline-end: 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ub-header {
-    transition: none;
   }
 }
