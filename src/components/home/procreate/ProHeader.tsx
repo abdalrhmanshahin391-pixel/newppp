@@ -76,6 +76,15 @@ export function ProHeader({
   const [menu, setMenu] = useState<OpenMenu>(null);
   const [sheet, setSheet] = useState(false);
   const solid = variant === "solid";
+  // Off the home page the bar is the blog's white capsule; it narrows once the page scrolls.
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    if (!solid) return;
+    const scroll = () => setCompact(window.scrollY > 48);
+    scroll();
+    window.addEventListener("scroll", scroll, { passive: true });
+    return () => window.removeEventListener("scroll", scroll);
+  }, [solid]);
   const accountBox = useRef<HTMLDivElement>(null);
   const accountId = useId();
 
@@ -134,7 +143,11 @@ export function ProHeader({
   );
 
   return (
-    <header className={`rh-bar ${solid ? "sticky" : "fixed inset-x-0"} top-0 z-50`}>
+    <header
+      className={`rh-bar ${solid ? "sticky" : "fixed inset-x-0"} top-0 z-50`}
+      data-look={solid ? "capsule" : undefined}
+      data-compact={solid ? compact : undefined}
+    >
       <div className="rh-bar-inner">
         <Link to="/" aria-label={`${BRAND_NAME} home`} className="rh-logo shrink-0">
           <UzyraWordmark size={20} />

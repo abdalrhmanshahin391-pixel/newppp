@@ -7,6 +7,9 @@ body {
   width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
+  /* clip, not hidden, where supported: hidden makes html/body a scroll box, and then the sticky
+     top bar scrolls away with the page instead of staying at the top. */
+  overflow-x: clip;
 }
 
 @theme {
@@ -468,6 +471,7 @@ html,
 body {
   max-width: 100%;
   overflow-x: hidden;
+  overflow-x: clip;
 }
 .dark {
   --background: oklch(0.18 0.03 355);
@@ -10618,3 +10622,155 @@ html.rita-app,
 .uz-footer[data-tone="light"] .uz-footer-links a:hover { text-decoration-color: currentColor; }
 .uz-footer[data-tone="light"] .uz-footer-signature { color: #efeeed; }
 .uz-footer[data-tone="light"] :is(a, button):focus-visible { outline-color: #225bab; }
+
+/* ===========================================================================
+   The top bar off the home page (data-look="capsule"): the blog's white capsule. It floats
+   14px under the top of the page, narrows with a soft shadow once the page scrolls, and keeps
+   every control of the bar (links, credits, language, account, phone menu) in ink on white.
+   =========================================================================== */
+.rh-bar[data-look="capsule"] {
+  --rh-cap-ink: #181719;
+  --rh-cap-muted: #646365;
+  --rh-cap-line: #ecebed;
+  --uz-logo: #181719;
+  top: 0;
+  padding-top: 14px;
+  background: transparent;
+  border-bottom: 0;
+  color: var(--rh-cap-ink);
+  font-family: var(--font-grotesk), Arial, sans-serif;
+  pointer-events: none;
+}
+.rh-bar[data-look="capsule"] .rh-bar-inner,
+.rh-bar[data-look="capsule"] .rh-sheet-wrap {
+  pointer-events: auto;
+}
+.rh-bar[data-look="capsule"] .rh-bar-inner {
+  width: calc(100% - 48px);
+  max-width: 1500px;
+  height: 60px;
+  padding-inline: 15px;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid transparent;
+  border-radius: 40px;
+  transition:
+    max-width 0.24s ease,
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+.rh-bar[data-look="capsule"][data-compact="true"] .rh-bar-inner {
+  max-width: 816px;
+  border-color: var(--rh-cap-line);
+  box-shadow: 0 5px 21px #18171912;
+}
+.rh-bar[data-look="capsule"] .rh-nav {
+  justify-content: center;
+  padding-inline-start: 0;
+}
+.rh-bar[data-look="capsule"] .rh-link {
+  color: var(--rh-cap-ink);
+  font-family: var(--font-grotesk), Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+.rh-bar[data-look="capsule"] .rh-link:hover {
+  color: var(--rh-cap-ink);
+  transform: none;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+/* The current page is marked like the blog's open menu: the warm accent, no drawn line. */
+.rh-bar[data-look="capsule"] .rh-link[aria-current="page"] {
+  color: #ba431d;
+}
+.rh-bar[data-look="capsule"] .rh-squiggle {
+  display: none;
+}
+.rh-bar[data-look="capsule"] .rh-btn {
+  height: 40px;
+  padding-inline: 18px;
+  border: 0;
+  border-radius: 30px;
+  background: var(--rh-cap-ink);
+  color: #fff;
+  font-family: var(--font-grotesk), Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+}
+.rh-bar[data-look="capsule"] .rh-btn:hover {
+  background: #2c2b2e;
+}
+.rh-bar[data-look="capsule"] .rh-credits-chip,
+.rh-bar[data-look="capsule"] .rh-lang-choose {
+  border-color: #dedddc;
+  border-radius: 30px;
+  color: var(--rh-cap-ink);
+  font-family: var(--font-grotesk), Arial, sans-serif;
+  font-size: 14px;
+}
+.rh-bar[data-look="capsule"] .rh-credits-chip:hover,
+.rh-bar[data-look="capsule"] .rh-credits-chip[data-open="true"],
+.rh-bar[data-look="capsule"] .rh-avatar-btn:hover,
+.rh-bar[data-look="capsule"] .rh-avatar-btn[data-open="true"],
+.rh-bar[data-look="capsule"] .rh-burger:hover {
+  background: #f6f5f4;
+}
+.rh-bar[data-look="capsule"] .rh-credits-chip[data-open="true"] {
+  border-color: var(--rh-cap-ink);
+}
+.rh-bar[data-look="capsule"] .rh-chip-val {
+  color: var(--rh-cap-muted);
+}
+.rh-bar[data-look="capsule"] .rh-avatar-btn,
+.rh-bar[data-look="capsule"] .rh-burger {
+  color: var(--rh-cap-ink);
+}
+.rh-bar[data-look="capsule"] :is(.rh-link, .rh-btn, .rh-avatar-btn, .rh-credits-chip, .rh-burger):focus-visible {
+  outline: 2px solid #225bab;
+  outline-offset: 3px;
+}
+.rh-bar[data-look="capsule"] .rh-sheet-wrap {
+  width: calc(100% - 48px);
+  max-width: 816px;
+  margin-inline: auto;
+  padding: 8px 0 0;
+}
+.rh-bar[data-look="capsule"] .rh-sheet-links .rh-link {
+  font-size: 15px;
+}
+@media (max-width: 640px) {
+  .rh-bar[data-look="capsule"] .rh-bar-inner,
+  .rh-bar[data-look="capsule"] .rh-sheet-wrap {
+    width: calc(100% - 16px);
+  }
+  .rh-bar[data-look="capsule"] .rh-bar-inner {
+    padding-inline: 10px;
+  }
+  .rh-bar[data-look="capsule"] .rh-btn {
+    padding-inline: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rh-bar[data-look="capsule"] .rh-bar-inner {
+    transition: none;
+  }
+}
+
+/* Dark seasonal themes keep the dark footer: a white band would not sit on their pages. */
+.dark .uz-footer[data-tone="light"] {
+  --uf-ink: #121117;
+  --uf-paper: #f2f2f5;
+  --uf-muted: #b2b1bd;
+  --uf-line: #35343e;
+  color-scheme: dark;
+  border-top-color: transparent;
+}
+.dark .uz-footer[data-tone="light"] .uz-footer-start {
+  background: #f2f2f5;
+  color: #121117;
+}
+.dark .uz-footer[data-tone="light"] .uz-footer-signature {
+  color: #3d3c47;
+}

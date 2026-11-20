@@ -11,14 +11,15 @@ export function SiteFooter() {
   const settings = useSiteSettings();
   const ar = lang === "ar";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const blog = pathname === "/blog" || pathname.startsWith("/blog/");
+  // The home page keeps the dark footer; every other page has the light one.
+  const home = pathname === "/";
   return (
     <SiteFooterView
       ar={ar}
       columns={footerColumns(ar, settings.offers_page_enabled)}
       supportEmail={SUPPORT_EMAIL}
       year={new Date().getFullYear()}
-      tone={blog ? "light" : "ink"}
+      tone={home ? "ink" : "light"}
     />
   );
 }
