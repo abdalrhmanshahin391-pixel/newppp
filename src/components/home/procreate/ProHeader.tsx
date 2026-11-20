@@ -19,6 +19,7 @@ const SIMPLE_LINKS: { to: string; label: string }[] = [
   { to: "/games", label: "Games" },
   { to: "/books", label: "Library" },
   { to: "/pricing", label: "Pricing" },
+  { to: "/blog", label: "Blog" },
 ];
 
 // The language switcher is rendered once for wide screens and once for phones; each has its own
@@ -67,7 +68,7 @@ function Avatar({
 export function ProHeader({
   variant = "transparent",
 }: { variant?: "transparent" | "solid"; tone?: "dark" | "light" } = {}) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, profile, isAdmin, isGolden, loading: authLoading } = useAuth();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
@@ -124,7 +125,9 @@ export function ProHeader({
           className="rh-link"
           aria-current={isHere(pathname, l.to) ? "page" : undefined}
         >
-          <LinkLabel here={isHere(pathname, l.to)}>{l.label}</LinkLabel>
+          <LinkLabel here={isHere(pathname, l.to)}>
+            {l.to === "/blog" && i18n.language?.startsWith("ar") ? "المدونة" : l.label}
+          </LinkLabel>
         </Link>
       ))}
     </>
