@@ -4,6 +4,7 @@ import { ChevronDown } from "lucide-react";
 import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
 import { useDismiss } from "@/components/header/useDismiss";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
+import { BlogFooter } from "./BlogFooter";
 import "./blog.css";
 
 const articlePath = "/blog/from-page-to-practice";
@@ -132,6 +133,7 @@ export function BlogPage({ article = false }: { article?: boolean }) {
           </div>
         </article>
       </main>
+      <BlogFooter ar={ar} />
     </div>
   );
 }

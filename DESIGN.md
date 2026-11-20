@@ -1376,3 +1376,13 @@ level, and saves through the existing atomic layout function. No new database sc
 Protect unsaved edits (including adding goals and rearranging slides), pending uploads and
 content generation before navigation. Success refreshes the path and the admin state; failures
 remain visible. Archive and publish retain their existing consequences and confirmations.
+
+## Blog footer (`/blog`, `/blog/<post>`)
+
+The blog draws its own footer instead of the global ink one (`/blog` is in the global footer's
+exclusion list). It sits on the blog's white surface at the width of the post column, under one
+thin `#e6e5e4` rule, with the header's type: 14px, ink `#181719` links, `#646365` group headings.
+Top row: the Uzyra wordmark at the header's size and the same black «Start learning» pill. Then the
+link groups (Resources: Blog and Library, then the site's real groups) in 5 / 3 / 2 columns, and a
+last row with the support email, the account and policy links and the copyright. Links have 44px
+hit areas; RTL mirrors the layout. No dark band, large wordmark, thread, image or animation.

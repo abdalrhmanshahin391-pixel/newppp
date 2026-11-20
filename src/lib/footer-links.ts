@@ -37,3 +37,17 @@ export function footerColumns(ar: boolean, offersEnabled: boolean): FooterColumn
     },
   ];
 }
+
+/** The blog's resources first (the header's Resources menu), then the site's real link groups. */
+export function blogFooterColumns(ar: boolean, offersEnabled: boolean): FooterColumn[] {
+  return [
+    {
+      heading: ar ? "الموارد" : "Resources",
+      links: [
+        { label: ar ? "المدونة" : "Blog", to: "/blog" },
+        { label: ar ? "المكتبة" : "Library", to: "/books" },
+      ],
+    },
+    ...footerColumns(ar, offersEnabled),
+  ];
+}
