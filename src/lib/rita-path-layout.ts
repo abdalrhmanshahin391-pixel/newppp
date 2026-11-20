@@ -1,3 +1,5 @@
+import type { Level } from "./rita-path-levels";
+
 // The learner's lesson path mixes two kinds of stops: lessons (rita_lessons, integer path_order)
 // and path items an admin places between them (rita_path_items: exercises or resources, with a
 // fractional path_order in the same number space). Pure: merging, moving and the orders to save.
@@ -10,6 +12,7 @@ export type PathItem = {
   kind: PathItemKind;
   title: string;
   path_order: number;
+  map_level?: Level;
   resource_count: number;
   quiz_count?: number;
   film_lines?: number[];

@@ -26,6 +26,7 @@ export type StopInfo = {
   level: Level | null;
   /** For an admin's finish stop: the level it closes. */
   finishOf: Level | null;
+  itemLevel?: Level;
   done: boolean;
 };
 
@@ -88,6 +89,37 @@ export function levelRows<N>(nodes: N[], info: (node: N) => StopInfo): LevelRow<
   const next = nextLevel(highest);
   if (next) rows.push({ type: "soon", level: next });
   return rows;
+}
+
+/** Show one level while keeping node indices in the full, persisted path order. */
+export function levelPageRows<N>(
+  nodes: N[],
+  level: Level,
+  info: (node: N) => StopInfo,
+): Exclude<LevelRow<N>, { type: "soon" }>[] {
+  const stops = nodes.map(info);
+  const firstLevel = stops.find((stop) => stop.level || stop.finishOf);
+  let section = firstLevel?.level ?? firstLevel?.finishOf ?? CEFR[0];
+  const indices = stops.flatMap((stop, index) => {
+    section = stop.level ?? stop.finishOf ?? section;
+    return (stop.itemLevel ?? section) === level ? [index] : [];
+  });
+
+  const rows = levelRows(
+    indices.map((index) => nodes[index]),
+    info,
+  )
+    .filter((row) => row.type !== "soon")
+    .map((row) =>
+      row.type === "node" ? { ...row, nodeIndex: indices[row.nodeIndex], level } : row,
+    );
+  const banner = rows.find((row) => row.type === "banner") ?? {
+    type: "banner" as const,
+    level,
+    count: { lessons: 0, done: 0 },
+    first: true,
+  };
+  return [banner, ...rows.filter((row) => row.type !== "banner")];
 }
 
 export type ViewState = "done" | "current" | "locked" | "open";
