@@ -11,7 +11,10 @@ export function SiteFooterView({
   columns,
   supportEmail,
   year,
+  tone = "ink",
 }: {
+  /** "light": the blog's white surface; the same footer, recoloured. */
+  tone?: "ink" | "light";
   ar: boolean;
   columns: FooterColumn[];
   supportEmail: string;
@@ -20,6 +23,7 @@ export function SiteFooterView({
   return (
     <footer
       className="uz-footer"
+      data-tone={tone}
       dir={ar ? "rtl" : "ltr"}
       aria-label={ar ? "روابط الموقع" : "Site footer"}
     >

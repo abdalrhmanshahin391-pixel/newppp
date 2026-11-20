@@ -10,7 +10,7 @@ import {
 import { SiteFooterView } from "./SiteFooterView";
 import { footerColumns } from "../lib/footer-links";
 
-function render(ar: boolean) {
+function render(ar: boolean, tone?: "ink" | "light") {
   const router = createRouter({
     routeTree: createRootRoute(),
     history: createMemoryHistory({ initialEntries: ["/"] }),
@@ -22,6 +22,7 @@ function render(ar: boolean) {
         columns={footerColumns(ar, true)}
         supportEmail="support@example.com"
         year={2026}
+        tone={tone}
       />
     </RouterContextProvider>,
   );
@@ -66,4 +67,11 @@ test("the offers link follows its setting, and the retired tools are not linked"
   assert.ok(!destinations(false).includes("/offers"));
   for (const gone of ["/german", "/study/match", "/study/pdf", "/study/all-in-one"])
     assert.ok(!destinations(true).includes(gone), gone);
+});
+
+test("the blog gets the same footer in its light tone", () => {
+  assert.match(render(false), /data-tone="ink"/);
+  const light = render(false, "light");
+  assert.match(light, /data-tone="light"/);
+  assert.match(light, /class="uz-footer-art" aria-hidden="true"/);
 });
