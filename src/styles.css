@@ -3191,10 +3191,107 @@ body:has(.rh-learn-home) {
 }
 
 
-/* ===========================================================================
-   Top bar and menus (every page). The bar is dark ink; the menus are the white card with
-   an ink border from the home page. Colours are explicit so the cream remap cannot touch them.
-   =========================================================================== */
+/* Shared header dimensions and typography come from the blog. */
+.uz-header-shell {
+  color: #181719;
+  font-family: var(--font-grotesk), Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: calc(100% - 48px);
+  max-width: 1500px;
+  margin: 0 auto;
+  height: 60px;
+  padding: 0 15px;
+  background: white;
+  border: 1px solid transparent;
+  border-radius: 40px;
+}
+.uz-header-nav {
+  align-items: center;
+  gap: 28px;
+}
+.ub-header .uz-header-nav,
+.ub-menu button {
+  display: flex;
+}
+.uz-header-nav .uz-header-link,
+.ub-menu :is(button, a) {
+  padding-block: 13px;
+}
+.ub-menu {
+  position: relative;
+}
+.ub-menu button {
+  align-items: center;
+  gap: 5px;
+  color: #ba431d;
+  cursor: pointer;
+}
+.ub-menu button[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.ub-list {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 100%;
+  min-width: 165px;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 10px 28px #1111;
+  border: 1px solid #e8e7e7;
+  padding: 5px;
+}
+.ub-list a {
+  display: block;
+  padding-inline: 12px;
+}
+.ub-list a:hover {
+  background: #f6f5f4;
+  border-radius: 8px;
+}
+.ub-list .ub-mobile {
+  display: none;
+}
+.ub-cta {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  background: #181719;
+  color: white;
+  padding: 11px 18px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+}
+@media (max-width: 640px) {
+  .uz-header-shell {
+    width: calc(100% - 16px);
+    padding-inline: 10px;
+  }
+  .ub-wide {
+    display: none;
+  }
+  .ub-list .ub-mobile {
+    display: block;
+  }
+  .ub-cta {
+    padding-inline: 12px;
+  }
+  .ub-list {
+    inset-inline-start: auto;
+    inset-inline-end: 0;
+  }
+}
+
+.uz-header-shell :is(a, button):focus-visible,
+.rh-bar .rh-sheet :is(a, button):focus-visible {
+  outline: 2px solid #225bab;
+  outline-offset: 3px;
+}
 .rh-bar {
   --rh-ink: #121117;
   --rh-muted: #6a697c;
@@ -3202,75 +3299,53 @@ body:has(.rh-learn-home) {
   --rh-accent: #2b6df0;
   --rh-accent-soft: #e7eefd;
   --rh-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  background: #121117;
-  color: #fff;
-  border-bottom: 1px solid rgb(255 255 255 / 0.1);
-  font-family: "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  top: -10px;
+  padding-block-start: 24px;
+  pointer-events: none;
+  color: #181719;
+  font-family: var(--font-grotesk), Arial, sans-serif;
+  font-size: 14px;
+}
+.rh-bar-home {
+  top: 0;
 }
 .rh-bar-inner {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  height: 64px;
-  max-width: 1120px;
-  margin-inline: auto;
-  padding-inline: 20px;
-}
-@media (min-width: 768px) {
-  .rh-bar-inner {
-    padding-inline: 40px;
-  }
+  pointer-events: auto;
 }
 .rh-nav {
   flex: 1;
-  align-items: center;
-  gap: 28px;
-  padding-inline-start: 12px;
+  min-width: 0;
+  justify-content: center;
 }
 .rh-actions {
   align-items: center;
   gap: 12px;
 }
-
 .rh-link {
-  position: relative;
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding-inline: 2px;
-  border: 0;
-  background: none;
-  cursor: pointer;
-  color: rgb(255 255 255 / 0.78);
-  font: 600 16px/24px "Uzyra Arabic", "Figtree", "Inter Tight", "Inter", Helvetica, Arial, sans-serif;
+  color: #181719;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: nowrap;
   text-decoration: none;
-  transition:
-    color 160ms ease,
-    transform 160ms var(--rh-ease);
-}
-.rh-link:hover,
-.rh-link[aria-current="page"] {
-  color: #fff;
 }
 .rh-link:hover {
-  transform: translateY(-1px);
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
-.rh-link:focus-visible,
-.rh-avatar-btn:focus-visible,
-.rh-credits-chip:focus-visible,
-.rh-burger:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 3px;
-  border-radius: 6px;
+.rh-link[aria-current="page"] {
+  color: #ba431d;
 }
-/* The Uzyra mark and name are soft white (not pure white) on the dark bar and footer. */
-.rh-logo,
+.rh-logo {
+  color: inherit;
+}
 .rf-wordmark {
   color: var(--uz-logo, #f2f2f5);
 }
-/* Pink action button, the same on every page (cream pages use another primary colour). */
 .rh-btn {
   display: inline-flex;
   align-items: center;
@@ -3302,39 +3377,6 @@ body:has(.rh-learn-home) {
 }
 .rh-card .rh-btn:focus-visible {
   outline-color: #121117;
-}
-
-/* The hand-drawn line from the home headline, drawn once under the current page. */
-.rh-squiggle {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 6px;
-  width: 100%;
-  height: 7px;
-  overflow: visible;
-  pointer-events: none;
-  clip-path: inset(0 0 0 0);
-  animation: rh-bar-wipe 520ms var(--rh-ease) backwards;
-}
-.rh-squiggle path {
-  fill: none;
-  stroke: #2b6df0;
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
-}
-@keyframes rh-bar-wipe {
-  from {
-    clip-path: inset(0 100% 0 0);
-  }
-}
-@keyframes rh-bar-wipe-rtl {
-  from {
-    clip-path: inset(0 0 0 100%);
-  }
-}
-[dir="rtl"] .rh-squiggle {
-  animation-name: rh-bar-wipe-rtl;
 }
 
 /* Credits chip: Rita's little orb and what is left. */
@@ -3753,18 +3795,10 @@ body:has(.rh-learn-home) {
   background: #e7eefd;
   transform: none;
 }
-.rh-sheet-links .rh-squiggle {
-  inset-inline: 12px auto;
-  bottom: 8px;
-  width: 44px;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .rh-card,
-  .rh-squiggle {
+  .rh-card {
     animation: none;
   }
-  .rh-link,
   .rh-chevron,
   .rh-fill,
   .rh-credits-chip,
@@ -3772,9 +3806,6 @@ body:has(.rh-learn-home) {
   .rh-btn,
   .rh-item {
     transition: none;
-  }
-  .rh-link:hover {
-    transform: none;
   }
 }
 
@@ -8635,9 +8666,6 @@ html.rita-app,
   --home-lead: 16px;
   --home-btn-h: 42px;
   --home-btn-font: 15px;
-  --home-nav: 14px;
-  --home-bar-h: 60px;
-  --home-bar-btn-h: 38px;
   --home-chip: clamp(14px, 1.5vw, 17px);
   --home-h2: clamp(1.75rem, calc(1.2rem + 1.4vw), 2.25rem); /* 28px on phones, 36 from ~1200 */
   --home-h3: 17px;
@@ -8683,34 +8711,6 @@ html.rita-app,
   font-size: var(--home-lead);
   line-height: 1.6;
 }
-/* The header on the home page, the learning home (/learn) and the app pages (.rita-app): smaller,
-   lighter links and a lower bar; the links keep a 44px target for touch. The others take the
-   header values only. */
-.uz-learn,
-.rita-app {
-  --home-nav: 14px;
-  --home-bar-h: 60px;
-  --home-bar-btn-h: 38px;
-}
-.uz-home .rh-bar-inner,
-.uz-learn .rh-bar-inner,
-.rita-app .rh-bar-inner {
-  height: var(--home-bar-h);
-}
-.uz-home .rh-link,
-.uz-learn .rh-link,
-.rita-app .rh-link {
-  font-size: var(--home-nav);
-  font-weight: 500;
-  line-height: 20px;
-}
-.uz-home .rh-btn,
-.uz-learn .rh-btn,
-.rita-app .rh-btn {
-  height: var(--home-bar-btn-h);
-  padding-inline: 14px;
-  font-size: var(--home-nav);
-}
 /* Uzyra sits in the original orbit centre; the rings and word-chip geometry stay intact. */
 .uz-home .rh-hero-cube {
   width: clamp(144px, 22vw, 220px);
@@ -8733,21 +8733,6 @@ html.rita-app,
 .uz-home .rh-hero-answer {
   border-radius: 16px;
 }
-/* Very narrow phones (320–359px): the logo, "Start learning" and the menu button did not fit the
-   bar (it ran ~25px past the edge before this change). Tighter spacing keeps them inside. */
-@media (max-width: 359px) {
-  :is(.uz-home, .uz-learn, .rita-app) .rh-bar-inner {
-    gap: 8px;
-    padding-inline: 12px;
-  }
-  :is(.uz-home, .uz-learn, .rita-app) .rh-actions {
-    gap: 6px;
-  }
-  :is(.uz-home, .uz-learn, .rita-app) .rh-btn {
-    padding-inline: 10px;
-  }
-}
-
 /* Entering a lesson (LessonIntro): the language splash's picture (.uz-splash, dark), but it stays
    until the lesson is ready instead of leaving on a timer. The hairline breathes while waiting;
    then the lesson's title rolls in with one dot per section, and the intro fades away over the
@@ -10623,139 +10608,54 @@ html.rita-app,
 .uz-footer[data-tone="light"] .uz-footer-signature { color: #efeeed; }
 .uz-footer[data-tone="light"] :is(a, button):focus-visible { outline-color: #225bab; }
 
-/* ===========================================================================
-   The top bar off the home page (data-look="capsule"): the blog's white capsule. It floats
-   14px under the top of the page, narrows with a soft shadow once the page scrolls, and keeps
-   every control of the bar (links, credits, language, account, phone menu) in ink on white.
-   =========================================================================== */
-.rh-bar[data-look="capsule"] {
-  --rh-cap-ink: #181719;
-  --rh-cap-muted: #646365;
-  --rh-cap-line: #ecebed;
-  --uz-logo: #181719;
-  top: 0;
-  padding-top: 14px;
-  background: transparent;
-  border-bottom: 0;
-  color: var(--rh-cap-ink);
-  font-family: var(--font-grotesk), Arial, sans-serif;
-  pointer-events: none;
-}
-.rh-bar[data-look="capsule"] .rh-bar-inner,
-.rh-bar[data-look="capsule"] .rh-sheet-wrap {
-  pointer-events: auto;
-}
-.rh-bar[data-look="capsule"] .rh-bar-inner {
-  width: calc(100% - 48px);
-  max-width: 1500px;
-  height: 60px;
-  padding-inline: 15px;
-  gap: 12px;
-  background: #fff;
-  border: 1px solid transparent;
-  border-radius: 40px;
-  transition:
-    max-width 0.24s ease,
-    box-shadow 0.2s,
-    border-color 0.2s;
-}
-.rh-bar[data-look="capsule"][data-compact="true"] .rh-bar-inner {
-  max-width: 816px;
-  border-color: var(--rh-cap-line);
-  box-shadow: 0 5px 21px #18171912;
-}
-.rh-bar[data-look="capsule"] .rh-nav {
-  justify-content: center;
-  padding-inline-start: 0;
-}
-.rh-bar[data-look="capsule"] .rh-link {
-  color: var(--rh-cap-ink);
-  font-family: var(--font-grotesk), Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 20px;
-}
-.rh-bar[data-look="capsule"] .rh-link:hover {
-  color: var(--rh-cap-ink);
-  transform: none;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-/* The current page is marked like the blog's open menu: the warm accent, no drawn line. */
-.rh-bar[data-look="capsule"] .rh-link[aria-current="page"] {
-  color: #ba431d;
-}
-.rh-bar[data-look="capsule"] .rh-squiggle {
-  display: none;
-}
-.rh-bar[data-look="capsule"] .rh-btn {
-  height: 40px;
-  padding-inline: 18px;
-  border: 0;
-  border-radius: 30px;
-  background: var(--rh-cap-ink);
-  color: #fff;
-  font-family: var(--font-grotesk), Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-}
-.rh-bar[data-look="capsule"] .rh-btn:hover {
-  background: #2c2b2e;
-}
-.rh-bar[data-look="capsule"] .rh-credits-chip,
-.rh-bar[data-look="capsule"] .rh-lang-choose {
+/* Extra controls use the same typography and surface as the Resources menu. */
+.rh-bar :is(.rh-credits-chip, .rh-lang-choose) {
   border-color: #dedddc;
   border-radius: 30px;
-  color: var(--rh-cap-ink);
+  color: #181719;
+  font: 400 14px/1.5 var(--font-grotesk), Arial, sans-serif;
+}
+.rh-bar :is(.rh-avatar-btn, .rh-burger) {
+  color: #181719;
+}
+.rh-bar :is(.rh-credits-chip, .rh-avatar-btn, .rh-burger):hover,
+.rh-bar :is(.rh-credits-chip, .rh-avatar-btn)[data-open="true"] {
+  background: #f6f5f4;
+}
+.rh-bar .rh-credits-chip[data-open="true"] {
+  border-color: #181719;
+}
+.rh-bar .rh-chip-val {
+  color: #646365;
+}
+.rh-bar .rh-card {
+  border: 1px solid #e8e7e7;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px #1111;
   font-family: var(--font-grotesk), Arial, sans-serif;
   font-size: 14px;
 }
-.rh-bar[data-look="capsule"] .rh-credits-chip:hover,
-.rh-bar[data-look="capsule"] .rh-credits-chip[data-open="true"],
-.rh-bar[data-look="capsule"] .rh-avatar-btn:hover,
-.rh-bar[data-look="capsule"] .rh-avatar-btn[data-open="true"],
-.rh-bar[data-look="capsule"] .rh-burger:hover {
+.rh-bar :is(.rh-item, .rh-sheet-links .rh-link) {
+  font: 400 14px/1.5 var(--font-grotesk), Arial, sans-serif;
+}
+.rh-bar :is(.rh-item, .rh-sheet-links .rh-link):hover {
   background: #f6f5f4;
 }
-.rh-bar[data-look="capsule"] .rh-credits-chip[data-open="true"] {
-  border-color: var(--rh-cap-ink);
-}
-.rh-bar[data-look="capsule"] .rh-chip-val {
-  color: var(--rh-cap-muted);
-}
-.rh-bar[data-look="capsule"] .rh-avatar-btn,
-.rh-bar[data-look="capsule"] .rh-burger {
-  color: var(--rh-cap-ink);
-}
-.rh-bar[data-look="capsule"] :is(.rh-link, .rh-btn, .rh-avatar-btn, .rh-credits-chip, .rh-burger):focus-visible {
-  outline: 2px solid #225bab;
-  outline-offset: 3px;
-}
-.rh-bar[data-look="capsule"] .rh-sheet-wrap {
+.rh-bar .rh-sheet-wrap {
   width: calc(100% - 48px);
-  max-width: 816px;
+  max-width: 1500px;
   margin-inline: auto;
   padding: 8px 0 0;
+  pointer-events: auto;
 }
-.rh-bar[data-look="capsule"] .rh-sheet-links .rh-link {
-  font-size: 15px;
+@media (max-width: 1023.98px) {
+  .rh-bar .rh-card.rh-lang-card { top: 84px; }
 }
 @media (max-width: 640px) {
-  .rh-bar[data-look="capsule"] .rh-bar-inner,
-  .rh-bar[data-look="capsule"] .rh-sheet-wrap {
-    width: calc(100% - 16px);
-  }
-  .rh-bar[data-look="capsule"] .rh-bar-inner {
-    padding-inline: 10px;
-  }
-  .rh-bar[data-look="capsule"] .rh-btn {
-    padding-inline: 12px;
-  }
+  .rh-bar .rh-sheet-wrap { width: calc(100% - 16px); }
 }
-@media (prefers-reduced-motion: reduce) {
-  .rh-bar[data-look="capsule"] .rh-bar-inner {
-    transition: none;
-  }
+@media (max-width: 359px) {
+  .rh-bar .rh-actions { gap: 6px; }
 }
 
 /* Dark seasonal themes keep the dark footer: a white band would not sit on their pages. */

@@ -69,7 +69,7 @@ export function LanguageMenu({
         className={`rh-avatar-btn ${language ? "" : "rh-lang-choose"}`}
       >
         {language ? (
-          <LanguageFlag language={language} size={28} onDark />
+          <LanguageFlag language={language} size={28} />
         ) : (
           <>
             <Globe size={18} aria-hidden="true" />
