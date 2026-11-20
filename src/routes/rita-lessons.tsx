@@ -15,12 +15,15 @@ import type { PathItem } from "@/lib/rita-path-layout";
 import { unlockSound } from "@/components/rita-study/tech-sound";
 import { prefetchLesson, rememberLesson } from "@/lib/study/lesson-entry";
 
+import { CEFR, type Level } from "@/lib/rita-path-levels";
+
 const UUID = /^[0-9a-f-]{36}$/i;
 
 export const Route = createFileRoute("/rita-lessons")({
-  validateSearch: (search: Record<string, unknown>): { lesson?: string } => {
+  validateSearch: (search: Record<string, unknown>): { lesson?: string; level?: Level } => {
     const lesson = typeof search.lesson === "string" ? search.lesson.trim() : "";
-    return UUID.test(lesson) ? { lesson } : {};
+    const level = CEFR.find((value) => value === search.level);
+    return { lesson: UUID.test(lesson) ? lesson : undefined, level };
   },
   head: () => ({
     meta: [{ title: "دروس يوزرا — Uzyra" }, { name: "robots", content: "noindex" }],
@@ -34,7 +37,7 @@ export const Route = createFileRoute("/rita-lessons")({
 
 function RitaLessonsPage() {
   const navigate = useNavigate();
-  const { lesson: openId } = Route.useSearch();
+  const { lesson: openId, level } = Route.useSearch();
   const pushed = useRef(false);
   const { user, loading, isAdmin } = useAuth();
   const pathFn = useServerFn(getLessonPath);
@@ -98,7 +101,7 @@ function RitaLessonsPage() {
       return;
     }
     pushed.current = true;
-    void navigate({ to: "/rita-lessons", search: { lesson: lesson.id } });
+    void navigate({ to: "/rita-lessons", search: { lesson: lesson.id, level } });
   }
 
   // Back closes the card. When the card came from a shared link there is nothing to go back to.
@@ -107,7 +110,7 @@ function RitaLessonsPage() {
       pushed.current = false;
       window.history.back();
     } else {
-      void navigate({ to: "/rita-lessons", search: {}, replace: true });
+      void navigate({ to: "/rita-lessons", search: { level }, replace: true });
     }
   }
 
@@ -120,6 +123,10 @@ function RitaLessonsPage() {
         error={error}
         isAdmin={isAdmin}
         language={language}
+        selectedLevel={level}
+        onLevelChange={(next, keepPosition = false) =>
+          void navigate({ to: "/rita-lessons", search: { level: next }, resetScroll: true })
+        }
         onOpenLesson={open}
         onReload={load}
       />

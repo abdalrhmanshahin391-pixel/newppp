@@ -1,3 +1,4 @@
+import { CEFR } from "./rita-path-levels";
 import filmLines from "./sintel-lines.json";
 import { mergePath, placeLessonAtGap } from "./rita-path-layout";
 // The admin's editing of the lesson path (move stops, add exercise / resources stops, their files
@@ -93,6 +94,7 @@ export const adminAddPathItem = createServerFn({ method: "POST" })
     parse(
       z.object({
         language,
+        level: z.enum(CEFR).optional(),
         kind: z.enum(["exercises", "resources", "finish"]),
         title: z.string().trim().min(1).max(120),
         list: z.array(ref).max(500),
@@ -110,6 +112,7 @@ export const adminAddPathItem = createServerFn({ method: "POST" })
         kind: data.kind,
         title: data.title,
         path_order: 0,
+        ...(data.level && { map_level: data.level }),
         created_by: context.userId,
       })
       .select("id, kind, title, path_order")
@@ -138,6 +141,7 @@ export const adminAddPathItem = createServerFn({ method: "POST" })
       kind: created.kind,
       title: created.title,
       path_order: Number(placed?.path_order ?? 0),
+      map_level: data.level,
       resource_count: 0,
     };
   });
