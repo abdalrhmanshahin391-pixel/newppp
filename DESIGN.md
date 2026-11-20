@@ -301,6 +301,11 @@ or automatic animations. Links have 44px hit areas,
 readable muted text, visible focus and RTL layouts. Full-screen study keeps its
 footer exclusion.
 
+On the blog (`/blog`, `/blog/<post>`) the same footer takes `data-tone="light"`: the blog's
+white surface with a thin `#e6e5e4` rule, ink `#181719` text, muted `#646365`, the grotesk
+font, 14px links, a lighter 500-weight heading, the black pill «Start learning» like the blog
+header, and a pale `#efeeed` wordmark. Layout, links and the blue thread are unchanged.
+
 The study header keeps Back to lessons and optional PDF download. The lesson
 title and admin-preview notice remain available to screen readers. Visible sample
 headings, sample-switch and challenge shortcuts are removed. Idle copy below Uzyra's
@@ -1376,13 +1381,3 @@ level, and saves through the existing atomic layout function. No new database sc
 Protect unsaved edits (including adding goals and rearranging slides), pending uploads and
 content generation before navigation. Success refreshes the path and the admin state; failures
 remain visible. Archive and publish retain their existing consequences and confirmations.
-
-## Blog footer (`/blog`, `/blog/<post>`)
-
-The blog draws its own footer instead of the global ink one (`/blog` is in the global footer's
-exclusion list). It sits on the blog's white surface at the width of the post column, under one
-thin `#e6e5e4` rule, with the header's type: 14px, ink `#181719` links, `#646365` group headings.
-Top row: the Uzyra wordmark at the header's size and the same black «Start learning» pill. Then the
-link groups (Resources: Blog and Library, then the site's real groups) in 5 / 3 / 2 columns, and a
-last row with the support email, the account and policy links and the copyright. Links have 44px
-hit areas; RTL mirrors the layout. No dark band, large wordmark, thread, image or animation.

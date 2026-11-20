@@ -482,8 +482,6 @@ const NO_FOOTER = [
   "/reset-password",
   "/rita-live",
   "/rita-study",
-  // The blog draws its own footer in the blog's light style.
-  "/blog",
 ];
 
 function GlobalFooter() {

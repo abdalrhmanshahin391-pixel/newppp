@@ -12,8 +12,6 @@ on:
       - "src/components/LanguageProvider*"
       - "src/components/ThemeProvider.tsx"
       - "src/components/SiteFooter*"
-      - "src/components/blog/**"
-      - "src/lib/footer-links.ts"
       - "src/components/learn/**"
       - "scripts/check-learn-navigation.mjs"
       - "scripts/check-question-preview.mjs"
@@ -52,7 +50,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - name: Locale rendering and cache lifecycle regressions
-        run: bun test src/lib/ui-language.test.ts src/lib/startup-cache.test.ts src/components/LanguageProvider.test.tsx src/components/SiteFooterView.test.tsx src/components/blog/BlogFooter.test.tsx src/lib/learn-home.test.ts src/lib/learning-language.test.ts
+        run: bun test src/lib/ui-language.test.ts src/lib/startup-cache.test.ts src/components/LanguageProvider.test.tsx src/components/SiteFooterView.test.tsx src/lib/learn-home.test.ts src/lib/learning-language.test.ts
       - run: bunx tsc --noEmit
       - name: Temporary question preview state and existing study regressions
         run: bun test src/components/rita-study/question-preview.test.ts src/components/rita-study/window-geometry.test.ts src/lib/study/study-practice.test.ts
