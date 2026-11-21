@@ -10,6 +10,7 @@
 .library-showcase-action { margin-top: 1.25rem; text-align: center; }
 .library-showcase-action a { display: inline-block; padding: .75rem 1.25rem; background: #161619; color: white; border-radius: .65rem; }
 
-.library-preview-slot { min-block-size: 42rem; margin-top: 2rem; }
+.library-preview-slot { margin-top: 2rem; }
+.library-preview-slot:empty { min-block-size: 52.2rem; }
 .library-preview-slot .library-stage { margin-top: 0; }
-@media (max-width: 640px) { .library-preview-slot { min-block-size: 38rem; } }
+@media (max-width: 760px) { .library-preview-slot:empty { min-block-size: 48.4rem; } }

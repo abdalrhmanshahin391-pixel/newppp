@@ -92,7 +92,7 @@ const result = await build({
               const narration=data.question?"لأنّ الفاعل مفرد.":"لما نحكي عن شخص واحد، منضيف حرف إس للفعل بالمضارع البسيط.";
               const audio = data.index===0 && !data.question ? new Promise(done=>{window.qaReleaseVoice=()=>done("/api/german/tts?old")}) : Promise.resolve(location.search.includes("silent")?null:"/api/german/tts");
               const step=readBoardReply({title,narration,rows:[{text:"look",result:"looks",circle:"result"}, "She looks after her little brother.", {bad:true}]},title);
-              return {ok:true,previewStep:Promise.resolve(step),completion:data.index===0&&!data.question&&!window.qaFirstBoardDone?new Promise(resolve=>{window.qaFinishBoard=()=>{window.qaFirstBoardDone=true;resolve({ok:true,step,audio})}}):Promise.resolve({ok:true,step,audio})};
+              return {ok:true,previewStep:Promise.resolve(step),completion:window.qaHoldBoard?new Promise(resolve=>{window.qaFinishBoard=()=>{window.qaHoldBoard=false;resolve({ok:true,step,audio})}}):Promise.resolve({ok:true,step,audio})};
             }`,
             };
           const names = [
@@ -298,6 +298,7 @@ if (process.argv.includes("--check")) {
         ],
       );
       // The existing explain wedge now opens the board. The quote survives the ring gesture.
+      await page.evaluate(() => { window.qaHoldBoard = true; });
       const explain = await page.locator('[data-service="explain"] .st-wedge-in').boundingBox();
       await page.mouse.click(explain.x + explain.width / 2, explain.y + explain.height / 2);
       const board = page.getByRole("region", { name: "سبورة يوزرا" });
