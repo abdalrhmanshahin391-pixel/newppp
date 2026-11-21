@@ -1112,6 +1112,7 @@ the user's zoom are never changed.
 - Lead text 16px (17 from 768), line height 1.6, at most 36rem wide.
 - Hero buttons 42px tall, 15px text, 1.5px border.
 - Header on the home page: the blog’s 60px bar, 16px wordmark and 14px link and button type.
+  Signed-in controls show a fixed-width voice timer, a globe with the learning language code, and a rounded-square account photo. On phones, the account menu opens from the bottom.
 - Uzyra's orb 280px (380 from 768) on a stage 320/360px tall and at most 840px wide; rings 1px.
   The orb sits in a positioned wrapper (the orb itself is `position: relative`).
 - Word tags around the orb: 14–17px, weight 600, 1px border, radius 12, a 44px touch area.

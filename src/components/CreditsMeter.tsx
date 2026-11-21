@@ -1,9 +1,10 @@
 import { useVoiceTime } from "@/hooks/useVoiceTime";
 import { voiceTimeLabel } from "@/lib/free-talk-time";
+import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { VoiceTime } from "./VoiceTime";
 import { useCallback, useId, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Infinity as InfinityIcon } from "lucide-react";
+import { Clock3, Infinity as InfinityIcon } from "lucide-react";
 import { usePlan } from "@/hooks/usePlan";
 import { useDismiss } from "@/components/header/useDismiss";
 
@@ -11,7 +12,6 @@ type Line = { label: string; used: number; limit: number | null };
 type Level = "ok" | "low" | "out";
 
 const LOW_BELOW = 0.2;
-const TIME_UNAVAILABLE = "Time unavailable";
 
 function levelOf(limit: number | null, used: number): Level {
   if (limit === null) return "ok";
@@ -34,6 +34,8 @@ export function CreditsMeter({
   onOpenChange?: (open: boolean) => void;
   inline?: boolean;
 }) {
+  const ar = useUiLanguage() === "ar";
+  const credits = ar ? "الرصيد" : "Credits";
   const plan = usePlan();
   const voice = useVoiceTime();
   const [own, setOwn] = useState(false);
@@ -116,7 +118,7 @@ export function CreditsMeter({
         ? levelOf(tightest.limit, tightest.used)
         : "ok";
   const short = voice.isError
-    ? TIME_UNAVAILABLE
+    ? "—"
     : voice.seconds === undefined
       ? "…"
       : voiceTimeLabel(voice.seconds);
@@ -209,8 +211,8 @@ export function CreditsMeter({
           aria-controls={panelId}
           className="rh-item"
         >
-          <span className="rh-orb" data-level={level} aria-hidden="true" />
-          Credits <span className="rh-item-dim">· {short}</span>
+          <Clock3 size={17} aria-hidden="true" />
+          {credits} <span className="rh-item-dim">· {short}</span>
         </button>
         {open && card}
       </div>
@@ -226,17 +228,12 @@ export function CreditsMeter({
         aria-expanded={open}
         aria-controls={panelId}
         data-open={open ? "true" : "false"}
+        aria-label={`${credits} · ${voice.isError ? (ar ? "الوقت غير متاح" : "Time unavailable") : short}`}
         className="rh-credits-chip"
       >
-        <span className="rh-orb" data-level={level} aria-hidden="true" />
-        <span>Credits</span>
-        <span className="rh-chip-val" data-level={level}>
-          <span aria-hidden="true" className="rh-chip-sizer">
-            {TIME_UNAVAILABLE}
-          </span>
-          <span className="rh-chip-time" title={short}>
-            {short}
-          </span>
+        <Clock3 size={17} aria-hidden="true" />
+        <span dir="ltr" className="rh-chip-time" data-level={level}>
+          {short}
         </span>
       </button>
       {open && card}
