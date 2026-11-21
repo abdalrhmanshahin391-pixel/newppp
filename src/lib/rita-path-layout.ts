@@ -16,15 +16,25 @@ export type PathItem = {
   resource_count: number;
   quiz_count?: number;
   film_lines?: number[];
+  /** The clips of an exercises stop (rita_film_clips ids). Undefined before that migration. */
+  clip_ids?: string[];
   gif_lines?: number[];
 };
 
-export function mediaLineIds(item: PathItem) {
+export function mediaLineIds(item: Pick<PathItem, "film_lines" | "gif_lines">) {
   return [...new Set([...(item.film_lines ?? []), ...(item.gif_lines ?? [])])];
 }
 
+/**
+ * How many clips an exercises stop holds: its library clips, or (before the clips library
+ * migration) its Sintel lines.
+ */
+export function stopClipCount(item: Pick<PathItem, "clip_ids" | "film_lines" | "gif_lines">) {
+  return item.clip_ids ? item.clip_ids.length : mediaLineIds(item).length;
+}
+
 export function exerciseCount(item: PathItem) {
-  return mediaLineIds(item).length + (item.quiz_count ?? 0);
+  return stopClipCount(item) + (item.quiz_count ?? 0);
 }
 
 export function pathItemTitle(item: PathItem) {

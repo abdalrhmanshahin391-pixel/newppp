@@ -7,11 +7,16 @@ import { useServerFn } from "@tanstack/react-start";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { lqBoard, type LqOption } from "@/lib/lecture-lab.functions";
-import { mediaLineIds, type PathItem } from "@/lib/rita-path-layout";
+import { stopClipCount, type PathItem } from "@/lib/rita-path-layout";
 import "./path-quiz.css";
 
 const FilmEditor = lazy(() => import("./FilmPractice").then((m) => ({ default: m.FilmEditor })));
-const FilmPlayer = lazy(() => import("./FilmPractice").then((m) => ({ default: m.FilmPlayer })));
+const FilmStopPlayer = lazy(() =>
+  import("./FilmPractice").then((m) => ({ default: m.FilmStopPlayer })),
+);
+const ClipStopEditor = lazy(() =>
+  import("./clips/ClipStopEditor").then((m) => ({ default: m.ClipStopEditor })),
+);
 
 type Props = {
   item: PathItem;
@@ -45,7 +50,7 @@ export function PathQuiz(props: Props) {
         "Practise each phrase as a film clip or GIF",
         "تدرّب على نفس الجملة كمقطع أو صورة متحرّكة",
       ),
-      count: mediaLineIds(props.item).length,
+      count: stopClipCount(props.item),
       Icon: Clapperboard,
     },
     {
@@ -115,10 +120,24 @@ export function PathQuiz(props: Props) {
             )
           ) : (
             <Suspense fallback={<p role="status">{t("Loading…", "جارٍ التحميل…")}</p>}>
-              {props.admin ? (
-                <FilmEditor key={active} {...props} onClose={afterSave} />
+              {!props.admin ? (
+                <FilmStopPlayer item={props.item} onClose={props.onClose} />
+              ) : props.item.clip_ids ? (
+                <ClipStopEditor
+                  stop={{
+                    id: props.item.id,
+                    title: props.item.title,
+                    clip_ids: props.item.clip_ids,
+                  }}
+                  onSaved={async () => {
+                    await props.onChanged();
+                    toast.success(t("Station exercises saved", "انحفظت تمارين المحطة"));
+                  }}
+                  onClose={back}
+                />
               ) : (
-                <FilmPlayer ids={mediaLineIds(props.item)} onClose={props.onClose} />
+                // Before the clips library migration a stop still holds Sintel lines.
+                <FilmEditor key={active} {...props} onClose={afterSave} />
               )}
             </Suspense>
           )}

@@ -8,6 +8,7 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
+  Clapperboard,
   Dumbbell,
   Flag,
   FileText,
@@ -662,14 +663,19 @@ export function LessonPathView({
       <section className="mx-auto max-w-md px-4 pt-7 text-center">
         <h2 className="lp-heading">دروسك مع يوزرا</h2>
         {isAdmin && lessons && !error && (
-          <button
-            type="button"
-            className="lp-edit mx-auto mt-4"
-            disabled={busy}
-            onClick={() => void add("exercises", endOfPage)}
-          >
-            <Plus size={16} /> أضف محطة تمارين
-          </button>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <button
+              type="button"
+              className="lp-edit"
+              disabled={busy}
+              onClick={() => void add("exercises", endOfPage)}
+            >
+              <Plus size={16} /> أضف محطة تمارين
+            </button>
+            <Link to="/admin/clips" className="lp-edit">
+              <Clapperboard size={16} aria-hidden="true" /> مكتبة المقاطع
+            </Link>
+          </div>
         )}
         {editing && (
           <p className="lp-edit-hint">

@@ -1379,3 +1379,26 @@ level, and saves through the existing atomic layout function. No new database sc
 Protect unsaved edits (including adding goals and rearranging slides), pending uploads and
 content generation before navigation. Success refreshes the path and the admin state; failures
 remain visible. Archive and publish retain their existing consequences and confirmations.
+
+## Clips library (`/admin/clips`) and the clips player
+
+One clip is one English sentence with its Arabic meaning, one target word (and its meaning), an
+optional line about the scene, and a credit. Exercises come only from these fields.
+
+- **Library:** search (English or Arabic, from the start of words), filter chips (الكل · فيديو ·
+  GIF · مش بالمسار), cards in 1 / 2 / 3 columns (`minmax(0,1fr)`). Each card: the cover (16:9,
+  a «فيديو» or «GIF» tag, tap to preview), the sentence with the target word in `#007bb6`, the
+  meaning, «الكلمة: …», the stops that use it as blue chips, the credit line, and تعديل · معاينة ·
+  حذف. «اختار» ticks a card; the dark bar fixed to the bottom then offers جرّبها · أضف للمسار ·
+  إلغاء. Under the cards, «محطات المقاطع بالمسار» opens a stop's editor.
+- **Editor** (the book dialogs' sheet / window): «فيديو من جهازك» or «GIF من GIPHY»; for a video,
+  «من هون / لهون» while it plays, the seconds, «جرّب القصّة», and a rights checkbox for a new
+  upload; for a GIF, GIPHY search with «Powered by GIPHY». Then the sentence, «اقترح الترجمة
+  والكلمة», tappable word chips for the target, the fields, and the credit. Problems show only
+  after a save attempt. «شوف كطالب» opens the player on the draft.
+- **Stop editor:** the stop's clips in order (↑ ↓ ×) and the library below with + / ✓.
+- **Player** (`.film-session`): every clip once, then each clip's exercises. A video: meaning
+  (Arabic choices), word order, speaking. A silent GIF: the sentence that fits, then word order
+  with the Arabic meaning shown. Answers are 52 px (choices) and 44 px (word tiles) high. Each
+  clip shows its credit under the sentence; GIFs add «Powered by GIPHY». A GIF loops muted.
+- Videos are cut by seeking to the start and pausing at the end; nothing is re-encoded.
