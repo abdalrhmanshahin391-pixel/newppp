@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronDown, LayoutGrid, LogOut, Menu, ReceiptText, Settings, X } from "lucide-react";
+import { LayoutGrid, LogOut, Menu, ReceiptText, Settings, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { openWelcome } from "@/lib/auth-dialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -61,6 +61,21 @@ export function ProHeader({
   const navigate = useNavigate();
   const [menu, setMenu] = useState<OpenMenu>(null);
   const [sheet, setSheet] = useState(false);
+  const sheetDialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (!sheet) return;
+    const dialog = sheetDialog.current;
+    dialog?.showModal();
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const closeOnDesktop = () => {
+      if (desktop.matches) setSheet(false);
+    };
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => {
+      desktop.removeEventListener("change", closeOnDesktop);
+      dialog?.close();
+    };
+  }, [sheet]);
   const solid = variant === "solid";
   const arabic = i18n.language?.startsWith("ar") ?? false;
   const startLearning = arabic ? "ابدأ التعلّم" : "Start learning";
@@ -174,14 +189,13 @@ export function ProHeader({
                   type="button"
                   data-rh-trigger
                   onClick={() => setMenu((m) => (m === "account" ? null : "account"))}
-                  aria-label="Account menu"
+                  aria-label={arabic ? "قائمة الحساب" : "Account menu"}
                   aria-expanded={menu === "account"}
                   aria-controls={accountId}
                   data-open={menu === "account" ? "true" : "false"}
                   className="rh-avatar-btn"
                 >
-                  <Avatar src={avatar} initial={initial} tone={tone} size={36} />
-                  <ChevronDown size={16} aria-hidden="true" className="rh-chevron" />
+                  <Avatar src={avatar} initial={initial} tone={tone} size={30} />
                 </button>
 
                 {menu === "account" && (
@@ -200,7 +214,7 @@ export function ProHeader({
                     </Link>
                     <Link to="/pricing" className="rh-item">
                       <ReceiptText size={18} aria-hidden="true" />
-                      Plans & pricing
+                      {arabic ? "الباقات والأسعار" : "Plans & pricing"}
                     </Link>
                     <InstallAppButton className="rh-item" iconClassName="rh-item-icon" />
                     {isAdmin && (
@@ -208,7 +222,7 @@ export function ProHeader({
                         <div className="rh-rule" />
                         <Link to="/admin" className="rh-item">
                           <LayoutGrid size={18} aria-hidden="true" />
-                          Admin
+                          {arabic ? "الإدارة" : "Admin"}
                         </Link>
                       </>
                     )}
@@ -239,7 +253,7 @@ export function ProHeader({
           )}
           <button
             type="button"
-            aria-label={sheet ? "Close menu" : "Open menu"}
+            aria-label={arabic ? "فتح القائمة" : "Open menu"}
             aria-expanded={sheet}
             onClick={() => {
               setMenu(null);
@@ -247,25 +261,34 @@ export function ProHeader({
             }}
             className="rh-burger"
           >
-            {sheet ? <X size={24} /> : <Menu size={24} />}
+            {user ? (
+              <Avatar src={avatar} initial={initial} tone={tone} size={30} />
+            ) : (
+              <Menu size={22} />
+            )}
           </button>
         </div>
       </div>
 
       {sheet && (
-        <div className="rh-sheet-wrap lg:hidden">
+        <dialog
+          ref={sheetDialog}
+          className="rh-sheet-wrap lg:hidden"
+          aria-label={arabic ? "القائمة" : "Menu"}
+          onCancel={() => setSheet(false)}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setSheet(false);
+          }}
+        >
           <div className="rh-card rh-sheet" aria-label="Menu">
-            <div className="rh-sheet-links">
-              {nav(() => setSheet(false))}
-              <Link
-                to="/blog"
-                onClick={() => setSheet(false)}
-                className="rh-link uz-header-link"
-                aria-current={isHere(pathname, "/blog") ? "page" : undefined}
-              >
-                {arabic ? "المدونة" : "Blog"}
-              </Link>
-            </div>
+            <button
+              type="button"
+              className="rh-sheet-close"
+              aria-label={arabic ? "إغلاق" : "Close menu"}
+              onClick={() => setSheet(false)}
+            >
+              <X size={18} />
+            </button>
             {user ? (
               <>
                 <div className="rh-rule" />
@@ -285,7 +308,7 @@ export function ProHeader({
                 {isAdmin && (
                   <Link to="/admin" className="rh-item">
                     <LayoutGrid size={18} aria-hidden="true" />
-                    Admin
+                    {arabic ? "الإدارة" : "Admin"}
                   </Link>
                 )}
                 <div className="rh-rule" />
@@ -311,8 +334,20 @@ export function ProHeader({
                 </>
               )
             )}
+            <div className="rh-rule" />
+            <div className="rh-sheet-links">
+              {nav(() => setSheet(false))}
+              <Link
+                to="/blog"
+                onClick={() => setSheet(false)}
+                className="rh-link uz-header-link"
+                aria-current={isHere(pathname, "/blog") ? "page" : undefined}
+              >
+                {arabic ? "المدونة" : "Blog"}
+              </Link>
+            </div>
           </div>
-        </div>
+        </dialog>
       )}
     </header>
   );
