@@ -12,6 +12,9 @@ import {
   practiceFailureView,
   readJson,
   shuffleOptions,
+  quizScore,
+  retryWrong,
+  questionForUzyra,
   practiceTitle,
   PRACTICE_NOTE,
 } from "./study-practice.ts";
@@ -20,6 +23,7 @@ import {
   languageFromId,
   languageItems,
   replyRingItems,
+  RULE_NO_CARDS,
   ringItems,
 } from "../../components/rita-study/radial-items.ts";
 
@@ -113,6 +117,56 @@ test("the right answer's place is shuffled and stays right", () => {
   assert.ok(places.size > 1);
 });
 
+test("each wrong option keeps its own reason when the options are shuffled", () => {
+  const whyNot = ["", "studys: y بتصير ies", "study: مع she بنزيد ending", "studyes: بنشيل y أول"];
+  for (let seed = 0; seed < 20; seed += 1) {
+    let value = seed / 20;
+    const random = () => (value = (value * 9301 + 0.4927) % 1);
+    const [q] = cleanMcqs(
+      { questions: [{ ...GOOD, why_not: [...whyNot.slice(1, 2), "", ...whyNot.slice(2)] }] },
+      1,
+      random,
+    );
+    assert.ok(q.whyNot);
+    assert.equal(q.whyNot![q.answer], "");
+    q.options.forEach((option, index) => {
+      if (index === q.answer) return;
+      // The reason travelled with its option.
+      const original = GOOD.options.indexOf(option);
+      const given = [whyNot[1], "", whyNot[2], whyNot[3]][original];
+      assert.equal(q.whyNot![index], given);
+    });
+  }
+  // No reasons, or the wrong number of them: four empty lines, the question is still kept.
+  const [plain] = cleanMcqs({ questions: [{ ...GOOD, why_not: ["only one"] }] }, 1);
+  assert.deepEqual(plain.whyNot, ["", "", "", ""]);
+});
+
+test("the score, trying the wrong ones again, and the words sent to Uzyra", () => {
+  const questions = [{ answer: 0 }, { answer: 2 }, { answer: 1 }];
+  assert.deepEqual(quizScore(questions, { 0: 0, 1: 1 }), {
+    answered: 2,
+    right: 1,
+    total: 3,
+    done: false,
+  });
+  assert.deepEqual(quizScore(questions, { 0: 0, 1: 1, 2: 1 }).done, true);
+  assert.deepEqual(retryWrong(questions, { 0: 0, 1: 1, 2: 1 }), {
+    answers: { 0: 0, 2: 1 },
+    first: 1,
+  });
+  const q = {
+    ...GOOD,
+    options: GOOD.options as [string, string, string, string],
+    whyNot: ["", "x", "y", "z"] as [string, string, string, string],
+  };
+  const asked = questionForUzyra(q, 0);
+  assert.ok(asked.reply.includes(asked.exact));
+  assert.ok(asked.reply.includes(`الجواب الصح: ${GOOD.options[GOOD.answer]}`));
+  assert.ok(asked.reply.includes(`أنا اخترت: ${GOOD.options[0]}`));
+  assert.ok(asked.exact.length <= 600);
+});
+
 test("question count follows the size of the selection", () => {
   assert.equal(mcqCount("studies"), 1);
   assert.equal(mcqCount("She studies at night and watches a film"), 2);
@@ -152,12 +206,17 @@ test("the wheel keeps its eight slices in fixed places, practice disabled for un
       items.map((item) => item.id),
       expected,
     );
-    for (const id of ["make_cards", "make_mcq"]) {
-      const item = items.find((item) => item.id === id)!;
-      assert.equal(item.disabled, kind === "too_long" || kind === "non_text");
-      assert.ok(item.disabledReason);
-    }
+    const unusable = kind === "too_long" || kind === "non_text";
+    const mcq = items.find((item) => item.id === "make_mcq")!;
+    assert.equal(mcq.disabled, unusable);
+    assert.ok(mcq.disabledReason);
+    // A rule or an Arabic explanation makes no flashcards (questions still test it).
+    const cards = items.find((item) => item.id === "make_cards")!;
+    assert.equal(cards.disabled, unusable || kind === "rule" || kind === "arabic_only");
+    assert.ok(cards.disabledReason);
   }
+  const rule = ringItems({ actions: availableActions("rule"), kind: "rule" });
+  assert.equal(rule.find((item) => item.id === "make_cards")!.disabledReason, RULE_NO_CARDS);
   assert.equal(ACTION_INFO.make_cards.group, "cards");
   assert.equal(ACTION_INFO.make_mcq.group, "practice");
 });

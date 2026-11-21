@@ -66,6 +66,20 @@ export function sliceAt(dx: number, dy: number, count: number, dead: number): nu
   return Math.floor(((degrees + step / 2) % 360) / step);
 }
 
+/**
+ * The slice a held finger picks: the direction it moved from where it was pressed, once it has
+ * moved past a dead zone (`r0 * 0.62`, about a third of the way to the slices). A finger that is
+ * let go where it was pressed picks nothing, wherever the wheel sits.
+ */
+export function heldSlice(
+  point: { x: number; y: number },
+  origin: { x: number; y: number },
+  count: number,
+  r0: number,
+): number {
+  return sliceAt(point.x - origin.x, point.y - origin.y, count, r0 * 0.62);
+}
+
 /** A point at `radius` and `degrees` (clockwise from up) around (cx, cy). */
 export function polar(cx: number, cy: number, radius: number, degrees: number) {
   const a = (degrees * Math.PI) / 180;

@@ -89,7 +89,9 @@ const AVAILABLE: Record<StudyAction, SelectionKind[]> = {
   summarize_section: [],
   // Only for a selection in Uzyra's answers, never for the guide (see reply-selection.ts).
   explain_reply: [],
-  make_cards: ALL_TEXT,
+  // A rule or an Arabic explanation is not a card (agreed with the owner): its examples are,
+  // selected on their own. Practice questions still test a rule.
+  make_cards: ["word", "phrase", "sentence", "table_cells", "multi_block"],
   make_mcq: ALL_TEXT,
   report: [...ALL_TEXT, "too_long"],
 };

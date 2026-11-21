@@ -82,8 +82,10 @@ export const FloatingOrb = forwardRef<
     onPress: (viaKey: boolean) => void;
     /** Held still, then sliding: the menu lights up the option under the pointer. */
     onHoldStart?: () => void;
-    onHoldMove?: (clientX: number, clientY: number) => void;
-    onHoldEnd?: (clientX: number, clientY: number) => void;
+    /** The finger moved while held; `from` is where it was first pressed down. */
+    onHoldMove?: (clientX: number, clientY: number, from: { x: number; y: number }) => void;
+    /** It was let go; `from` is where it was first pressed down. */
+    onHoldEnd?: (clientX: number, clientY: number, from: { x: number; y: number }) => void;
     /** The round menu is open. */
     open?: boolean;
     moving: boolean;
@@ -195,7 +197,7 @@ export const FloatingOrb = forwardRef<
         const current = drag.current;
         if (!current || current.id !== event.pointerId) return;
         if (current.holding) {
-          onHoldMove?.(event.clientX, event.clientY);
+          onHoldMove?.(event.clientX, event.clientY, { x: current.x, y: current.y });
           return;
         }
         if (
@@ -222,7 +224,7 @@ export const FloatingOrb = forwardRef<
           /* the pointer is already gone */
         }
         if (current?.holding) {
-          onHoldEnd?.(event.clientX, event.clientY);
+          onHoldEnd?.(event.clientX, event.clientY, { x: current.x, y: current.y });
           return;
         }
         if (current?.moved) return;

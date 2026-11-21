@@ -487,3 +487,198 @@
     animation: none;
   }
 }
+
+/* ---- Practice questions: progress dots, lettered options, right/wrong, "why" ------------------ */
+/* Shared by the dialog (books) and the floating window (lessons): both wrap the same body. */
+.st-practice-body {
+  --st-quiz-right: #1f9d55;
+  --st-quiz-right-soft: #e8f7ee;
+  --st-quiz-wrong: #d64545;
+  --st-quiz-wrong-soft: #fdecec;
+}
+.st-quiz-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.st-quiz-dots {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.st-quiz-dot {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: 1.5px solid var(--pp-line);
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  /* A 12px dot with a 32px touch target. */
+  position: relative;
+}
+.st-quiz-dot::after {
+  content: "";
+  position: absolute;
+  inset: -10px;
+}
+.st-quiz-dot[data-state="right"] {
+  border-color: var(--st-quiz-right);
+  background: var(--st-quiz-right);
+}
+.st-quiz-dot[data-state="wrong"] {
+  border-color: var(--st-quiz-wrong);
+  background: var(--st-quiz-wrong);
+}
+.st-quiz-dot[aria-current="step"] {
+  box-shadow: 0 0 0 3px var(--pp-accent-soft);
+  border-color: var(--pp-accent);
+}
+.st-quiz-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 12px;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    opacity 160ms ease,
+    transform 120ms ease;
+}
+.st-quiz-option:not(:disabled):active {
+  transform: scale(0.985);
+}
+.st-quiz-letter {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--pp-grey);
+  font-size: 14px;
+  font-weight: 700;
+}
+.st-quiz-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.st-quiz-option[data-state="right"] {
+  border: 2px solid var(--st-quiz-right);
+  background: var(--st-quiz-right-soft);
+}
+.st-quiz-option[data-state="right"] .st-quiz-letter {
+  background: var(--st-quiz-right);
+  color: white;
+}
+.st-quiz-option[data-state="wrong"] {
+  border: 2px solid var(--st-quiz-wrong);
+  background: var(--st-quiz-wrong-soft);
+  animation: st-quiz-shake 360ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+.st-quiz-option[data-state="wrong"] .st-quiz-letter {
+  background: var(--st-quiz-wrong);
+  color: white;
+}
+.st-quiz-option[data-state="rest"] {
+  opacity: 0.55;
+}
+@keyframes st-quiz-shake {
+  20%,
+  60% {
+    transform: translateX(-5px);
+  }
+  40%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+.st-quiz-why {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--pp-line);
+  border-inline-start: 4px solid var(--st-quiz-right);
+  background: var(--pp-grey);
+  animation: st-quiz-rise 220ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.st-quiz-why[data-state="wrong"] {
+  border-inline-start-color: var(--st-quiz-wrong);
+}
+.st-quiz-verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 700;
+}
+.st-quiz-why[data-state="right"] .st-quiz-verdict {
+  color: var(--st-quiz-right);
+}
+.st-quiz-why[data-state="wrong"] .st-quiz-verdict {
+  color: var(--st-quiz-wrong);
+}
+.st-quiz-right {
+  padding: 2px 10px;
+  border-radius: 8px;
+  background: var(--st-quiz-right-soft);
+  color: var(--st-quiz-right);
+}
+.st-quiz-reason {
+  margin-top: 12px;
+}
+.st-quiz-label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--pp-muted);
+}
+.st-quiz-reason.is-wrong .st-quiz-label {
+  color: var(--st-quiz-wrong);
+}
+.st-quiz-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 14px;
+}
+.st-quiz-score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--pp-accent-soft);
+}
+.st-quiz-score strong {
+  font-size: 18px;
+}
+.st-quiz-score button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+@keyframes st-quiz-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .st-quiz-option,
+  .st-quiz-option[data-state="wrong"],
+  .st-quiz-why {
+    animation: none;
+    transition: none;
+  }
+}

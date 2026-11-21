@@ -28,18 +28,21 @@ import {
   fitWheel,
   polar,
   sliceAngle,
-  sliceAt,
+  heldSlice,
   slicePath,
   WHEEL_TICKS,
 } from "./wheel-layout";
 import { ReportForm } from "./ReportForm";
 import { confirmSound, menuCloseSound, menuOpenSound, optionNote } from "./tech-sound";
 
+/** Where the finger was first pressed on the circle (screen pixels). */
+export type HoldOrigin = { x: number; y: number };
+
 export type RadialHandle = {
-  /** The finger or pen is held down on the circle and moving: light up the option it is over. */
-  hover: (clientX: number, clientY: number) => void;
-  /** It was let go: choose the option it is over, if any. */
-  release: (clientX: number, clientY: number) => void;
+  /** The finger or pen is held down on the circle and moving: light up the option it points to. */
+  hover: (clientX: number, clientY: number, from?: HoldOrigin) => void;
+  /** It was let go: choose the option it points to, if it moved far enough. */
+  release: (clientX: number, clientY: number, from?: HoldOrigin) => void;
 };
 
 type Geometry = { cx: number; cy: number; w: number; h: number; left: number; top: number };
@@ -208,11 +211,18 @@ export const RadialMenu = forwardRef<
     if (index >= 0) optionNote(index);
   }, []);
 
-  // Held on the circle: the direction from the wheel's centre picks the slice.
+  // Held on the circle: the direction the finger moved from where it was pressed picks the slice.
+  // Near an edge the wheel (and the circle) slides inwards while the finger stays put; measuring
+  // from the wheel's new centre would then read a finger that never moved as a pick.
   const sliceUnder = useCallback(
-    (x: number, y: number) => {
+    (x: number, y: number, from?: HoldOrigin) => {
       if (!geom || !fit) return -1;
-      return sliceAt(x - geom.left - fit.cx, y - geom.top - fit.cy, visible.length, fit.r0 * 0.62);
+      return heldSlice(
+        { x, y },
+        from ?? { x: geom.left + fit.cx, y: geom.top + fit.cy },
+        visible.length,
+        fit.r0,
+      );
     },
     [geom, fit, visible.length],
   );
@@ -220,9 +230,9 @@ export const RadialMenu = forwardRef<
   useImperativeHandle(
     ref,
     () => ({
-      hover: (x, y) => light(sliceUnder(x, y)),
-      release: (x, y) => {
-        const index = sliceUnder(x, y);
+      hover: (x, y, from) => light(sliceUnder(x, y, from)),
+      release: (x, y, from) => {
+        const index = sliceUnder(x, y, from);
         hotRef.current = -1;
         setHot(-1);
         const item = index >= 0 ? visible[index] : null;
