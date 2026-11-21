@@ -95,3 +95,21 @@ export function readBoardReply(raw: unknown, defaultTitle: string): BoardStep | 
   }
   return { title: heading, narration, commands };
 }
+
+// A complete first row is safe to draw before the remaining JSON arrives.
+// Parse only this exact prefix; other valid field orders use the normal final reply.
+export function readFirstBoardRow(text: string, heading: string) {
+  const match =
+    /^\s*\{\s*"title"\s*:\s*"(?:\\.|[^"\\])*"\s*,\s*"narration"\s*:\s*"(?:\\.|[^"\\])*"\s*,\s*"rows"\s*:\s*\[\s*(?:\{(?:[^{}"\\]|"(?:\\.|[^"\\])*")*\}|"(?:\\.|[^"\\])*")/.exec(
+      text,
+    );
+  if (!match) return null;
+  try {
+    const prefix = JSON.parse(match[0] + "]}");
+    const first = prefix.rows[0];
+    if (!row.safeParse(typeof first === "string" ? { text: first } : first).success) return null;
+    return readBoardReply(prefix, heading);
+  } catch {
+    return null;
+  }
+}

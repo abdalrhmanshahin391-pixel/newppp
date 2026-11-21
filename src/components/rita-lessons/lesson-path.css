@@ -696,3 +696,8 @@
     display: none;
   }
 }
+
+/* Rows retain their board coordinates. The gutter leaves room for badges and focus rings. */
+.lp-row-group, .lp-row-origin { position: absolute; inset-inline: 0; pointer-events: none; }
+.lp-row-group { content-visibility: auto; overflow-clip-margin: 48px; }
+.lp-row-origin > * { pointer-events: auto; }

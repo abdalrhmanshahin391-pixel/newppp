@@ -284,6 +284,13 @@ function RootComponent() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
+  useEffect(() => {
+    const entryRoute = router.state.matches.at(-1)?.routeId ?? "/";
+    void import("@/lib/page-vitals")
+      .then(({ observePageVitals }) => observePageVitals(entryRoute))
+      .catch(() => {});
+  }, [router]);
+
   // Opening sign-in anywhere is an in-app page change (see `openAuth`).
   useEffect(() => {
     setAuthNavigator((href) => void router.navigate({ href }));

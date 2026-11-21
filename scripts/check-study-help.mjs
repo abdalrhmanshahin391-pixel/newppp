@@ -91,8 +91,8 @@ const result = await build({
               const title=data.question?"سؤالك عن الفعل":["مين بيعمل الفعل؟","كيف بيتغيّر الفعل؟","مثال جديد"][data.index];
               const narration=data.question?"لأنّ الفاعل مفرد.":"لما نحكي عن شخص واحد، منضيف حرف إس للفعل بالمضارع البسيط.";
               const audio = data.index===0 && !data.question ? new Promise(done=>{window.qaReleaseVoice=()=>done("/api/german/tts?old")}) : Promise.resolve(location.search.includes("silent")?null:"/api/german/tts");
-              return {ok:true,audio,
-                step:readBoardReply({title,narration,rows:[{text:"look",result:"looks",circle:"result"}, "She looks after her little brother.", {bad:true}]},title)};
+              const step=readBoardReply({title,narration,rows:[{text:"look",result:"looks",circle:"result"}, "She looks after her little brother.", {bad:true}]},title);
+              return {ok:true,previewStep:Promise.resolve(step),completion:data.index===0&&!data.question&&!window.qaFirstBoardDone?new Promise(resolve=>{window.qaFinishBoard=()=>{window.qaFirstBoardDone=true;resolve({ok:true,step,audio})}}):Promise.resolve({ok:true,step,audio})};
             }`,
             };
           const names = [
@@ -202,7 +202,7 @@ const server = createServer(async (req, res) => {
     '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/client.css"></head><body><div style="height:44px;display:flex;align-items:center;gap:10px;padding:4px 12px;background:#eef2fa;font:12px sans-serif" dir="rtl"><span>فحص محلي بردود تجريبية</span><button onclick="qaSelect(\'looks after\')">تحديد عبارة</button><button onclick="qaSelect(\'With he, she and it, the present simple verb changes its ending. The ending depends on the last letters of the verb.\')">تحديد قاعدة</button><button onclick="qaSelect(\'She is reading a book.\')">حدّد جملة</button><button onclick="qaSelect(\'studies\')">حدّد studies</button></div><div id="app" style="height:calc(100vh - 44px)"></div><script src="/client.js"></script></body></html>',
   );
 });
-await new Promise((done) => server.listen(4178, "127.0.0.1", done));
+await new Promise((done) => server.listen(process.argv.includes("--serve") ? 4178 : 0, "127.0.0.1", done));
 const origin = "http://127.0.0.1:" + server.address().port;
 if (process.argv.includes("--serve")) {
   console.log("Study help preview: " + origin + "/preview");
@@ -304,6 +304,8 @@ if (process.argv.includes("--check")) {
       await board.locator(".wb-drawing").waitFor();
       assert.match(await board.locator("blockquote").textContent(), /looks after/);
       assert.equal(await page.evaluate(() => window.qaBoardCalls.length), 1);
+      assert.equal(await board.locator(".wb-transcript").count(), 0);
+      await page.evaluate(() => window.qaFinishBoard());
       // Advancing must work with a still unresolved voice request.
       await board.getByText("جارٍ تحضير الصوت…").waitFor();
       await board.getByRole("button", { name: "تمام، كمّلي" }).click();

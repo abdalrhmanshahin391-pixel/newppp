@@ -133,7 +133,11 @@ export function StudyPage({
   // The ring shows the study options, or the three languages Uzyra can explain in.
   const [ringMode, setRingMode] = useState<"main" | "language">("main");
   const explanation = useExplanationLanguage();
-  const [board, setBoard] = useState<{ id: string; selection: BoardSelection } | null>(null);
+  const [board, setBoard] = useState<{
+    id: string;
+    selection: BoardSelection;
+    startedAt: number;
+  } | null>(null);
   // The floating window: the cards and questions made from a selection, or the temporary question
   // design preview. Hidden with its X it stays alive, and the ••• at the bottom brings it back;
   // slid off the right edge, its tab brings it back. `reveal` grows to bring it back from the side.
@@ -626,6 +630,7 @@ export function StudyPage({
       menuOpenSound();
       setBoard({
         id: crypto.randomUUID(),
+        startedAt: performance.now(),
         selection: { exact: sel.exact, parts: sel.parts, segIds: sel.segIds },
       });
 
@@ -883,6 +888,7 @@ export function StudyPage({
             key={board.id}
             lessonId={lesson.id}
             preview={preview}
+            startedAt={board.startedAt}
             selection={board.selection}
             language={explanation.value}
             shown
