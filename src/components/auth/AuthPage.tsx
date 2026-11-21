@@ -1,3 +1,4 @@
+import "./auth.css";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight } from "lucide-react";
