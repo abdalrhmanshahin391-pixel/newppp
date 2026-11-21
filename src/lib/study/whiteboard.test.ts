@@ -103,3 +103,38 @@ test("a complete spoken reply can explain the same selection without a new model
   assert.equal(readBoardReply(plainBoardReply(answer), "شرح الفقرة")?.narration, answer);
   assert.equal(plainBoardReply('{"narration": "incomplete reply'), null);
 });
+
+test("a complete first row can be drawn while the rest of the UTF-8 stream is pending", async () => {
+  const { readFirstBoardRow } = await import("./board-reply.ts");
+  const { readModelStream } = await import("./read-model-stream.ts");
+  const first =
+    '{"title":"مثال","narration":"نضيف حرفًا.","rows":[{"text":"study","result":"studies"}';
+  assert.equal(readFirstBoardRow(first.slice(0, -1), "Example"), null);
+  assert.equal(readFirstBoardRow(first.replace('"text":"study"', '"bad":true'), "Example"), null);
+  const wire = (content: string) =>
+    new TextEncoder().encode(
+      "data: " + JSON.stringify({ choices: [{ delta: { content } }] }) + "\r\n\r\n",
+    );
+  let source!: ReadableStreamDefaultController<Uint8Array>;
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      source = controller;
+    },
+  });
+  let accept!: () => void;
+  const displayed = new Promise<void>((resolve) => {
+    accept = resolve;
+  });
+  const result = readModelStream(new Response(body), (text) => {
+    if (readFirstBoardRow(text, "Example")?.title === "مثال") accept();
+  });
+  const bytes = wire(first);
+  const split = bytes.findIndex((byte) => byte >= 128) + 1;
+  source.enqueue(bytes.slice(0, split));
+  source.enqueue(bytes.slice(split));
+  await displayed;
+  source.enqueue(wire(',"She studies."]}'));
+  source.enqueue(new TextEncoder().encode("data: [DONE]\n"));
+  source.close();
+  assert.equal(JSON.parse((await result).text).rows.length, 2);
+});

@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middlew
 import { ASSISTANT_IDENTITY_PROMPT } from "@/lib/brand";
 import { resolveRequest } from "./study-request.functions";
 import { PRACTICE_FAILURE_TEXT, askPracticeModel } from "./study-practice";
-import { plainBoardReply, readBoardReply } from "./board-reply";
+import { plainBoardReply, readBoardReply, readFirstBoardRow } from "./board-reply";
 import type { BoardStep } from "./whiteboard";
 
 const input = z.object({
@@ -26,14 +26,22 @@ All sections stay visible on one board about this selection. Build on the preced
 If a question is supplied, answer it directly as an annotation of the current section, using the selected passage and previous explanation.
 Use the requested explanation language (conversational Jordanian Arabic by default). Keep examples in their original language.
 Teach only the requested current section. When the learner asks a question the answer takes precedence over the section plan.
-Return JSON with title, narration (1–2 short spoken sentences, up to 440 characters), and rows (1–3 short board notes).
+Return JSON in this exact field order: title, narration (1–2 short spoken sentences, up to 440 characters), and rows (1–3 short board notes).
 Each row is {"text":"study","result":"studies","circle":"result"} or {"text":"She studies at night."}. Use the result only for a real relationship. The board draws the arrow. To circle a term, put that term alone in text or result and set circle to that field name. Never draw arrows or circles by guessing coordinates. Omit numbering and literal arrows.
 Optionally include "sketch":[[0,90],[50,10],[100,90],[0,90]] for a freehand diagram on its own below the notes, in a 0–100 coordinate space. Omit it unless it helps.
 Use the quoted passage and answer the learner directly. Do not ask for confirmation.`;
 
-type Result =
+type Completion =
   | { ok: true; step: BoardStep; audio: Promise<string | null> | null }
   | { ok: false; message: string };
+
+type Result =
+  | { ok: false; message: string }
+  | {
+      ok: true;
+      previewStep: Promise<BoardStep | null>;
+      completion: Promise<Completion>;
+    };
 
 // Only server-generated narration from an authorized, quota-counted lesson request is synthesized.
 async function narrate(text: string, language: string) {
@@ -99,24 +107,50 @@ export const studyBoardStep = createServerFn({ method: "POST" })
       }),
     };
     const heading = language === "en" ? "Passage explanation" : "شرح الفقرة";
-    const asked = await askPracticeModel(request);
-    if (!asked.ok) return { ok: false, message: PRACTICE_FAILURE_TEXT[asked.reason] };
-    let step = readBoardReply(asked.reply, heading);
-    if (!step) {
-      const retry = await askPracticeModel({
-        ...request,
-        budgetMs: 10000,
-        system:
-          request.system +
-          '\nSimplify the answer. Return {"title":"...","narration":"a direct answer","rows":["short example"]}.',
-      });
-      if (!retry.ok) return { ok: false, message: PRACTICE_FAILURE_TEXT[retry.reason] };
-      step = readBoardReply(retry.reply, heading);
+    let showFirst!: (step: BoardStep | null) => void;
+    const previewStep = new Promise<BoardStep | null>((resolve) => {
+      showFirst = resolve;
+    });
+    let sent = false;
+    let spoken: { text: string; audio: Promise<string | null> } | undefined;
+    function onPartial(text: string) {
+      if (sent || text.length > 6000) return;
+      const first = readFirstBoardRow(text, heading);
+      if (!first) return;
+      sent = true;
+      showFirst(first);
+      if (first.narration.length <= 440)
+        spoken = { text: first.narration, audio: narrate(first.narration, language) };
     }
-    if (!step) return { ok: false, message: "تعذّر قراءة الشرح. جرّب مرة ثانية." };
-    return {
-      ok: true,
-      step,
-      audio: step.narration.length <= 440 ? narrate(step.narration, language) : null,
-    };
+    async function complete(): Promise<Completion> {
+      const asked = await askPracticeModel({ ...request, onPartial });
+      if (!asked.ok) return { ok: false, message: PRACTICE_FAILURE_TEXT[asked.reason] };
+      let step = readBoardReply(asked.reply, heading);
+      if (!step) {
+        const retry = await askPracticeModel({
+          ...request,
+          budgetMs: 10000,
+          system:
+            request.system +
+            '\nSimplify the answer. Return {"title":"...","narration":"a direct answer","rows":["short example"]}.',
+        });
+        if (!retry.ok) return { ok: false, message: PRACTICE_FAILURE_TEXT[retry.reason] };
+        step = readBoardReply(retry.reply, heading);
+      }
+      if (!step) return { ok: false, message: "تعذّر قراءة الشرح. جرّب مرة ثانية." };
+      return {
+        ok: true,
+        step,
+        audio:
+          step.narration.length <= 440
+            ? spoken?.text === step.narration
+              ? spoken.audio
+              : narrate(step.narration, language)
+            : null,
+      };
+    }
+    const completion = complete()
+      .catch((): Completion => ({ ok: false, message: PRACTICE_FAILURE_TEXT.failed }))
+      .finally(() => showFirst(null));
+    return { ok: true, previewStep, completion };
   });

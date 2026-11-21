@@ -1,3 +1,4 @@
+import "./lesson-path.css";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -596,6 +597,160 @@ export function LessonPathView({
       ]
     : [];
 
+  function renderRow(r: (typeof rows)[number], index: number) {
+    const place = layout[index];
+    if (r.type === "banner") {
+      return (
+        <LevelBanner
+          key={`${r.type}-${r.level}-${index}`}
+          row={r}
+          top={place.top}
+          index={index}
+          editing={editing}
+          startLevel={startLevel}
+          lowest={lowest}
+          onStart={startFrom}
+        />
+      );
+    }
+    if (r.type === "finish") {
+      return (
+        <FinishStop
+          key={`finish-${r.level}-${index}`}
+          level={r.level}
+          count={r.count}
+          x={place.x}
+          top={place.top}
+          index={index}
+          onOpen={() => showFinish(r.level)}
+        />
+      );
+    }
+    const node = r.node;
+    const id = idOf(node);
+    const centre = place;
+    const look = LOOK[lookOf(node)];
+    const lesson = node.type === "lesson" ? node.lesson : null;
+    const state = lesson ? stateOf(lesson) : null;
+    const locked = state === "locked";
+    const isCurrent = state === "current";
+    const finishLevel =
+      node.type === "item" && node.item.kind === "finish" ? normalizeLevel(node.item.title) : null;
+    const finishCount = finishLevel ? counts.get(finishLevel) : undefined;
+    const finished = Boolean(
+      finishCount && finishCount.lessons > 0 && finishCount.done >= finishCount.lessons,
+    );
+    const title = lesson
+      ? lesson.title || lesson.title_ar
+      : finishLevel
+        ? `نهاية ${finishLevel}`
+        : node.type === "item"
+          ? pathItemTitle(node.item)
+          : "";
+    return (
+      <Fragment key={id}>
+        <button
+          type="button"
+          onClick={() => {
+            if (swallowClick.current) {
+              swallowClick.current = false;
+              return;
+            }
+            open(node);
+          }}
+          onPointerDown={(event) => onPointerDown(event, node)}
+          onPointerMove={onPointerMove}
+          onPointerUp={(event) => void onPointerUp(event)}
+          onPointerCancel={endPress}
+          onContextMenu={(event) => editing && event.preventDefault()}
+          className="lp-node"
+          data-drag={dragId === id ? "" : undefined}
+          data-over={overId === id ? "" : undefined}
+          data-fresh={fresh === id ? "" : undefined}
+          style={{
+            ["--x" as string]: `${centre.x - 85}px`,
+            ["--y" as string]: `${place.top}px`,
+            ["--i" as string]: index,
+            ["--c" as string]: finished ? "#c88a12" : look.color,
+            ["--soft" as string]: finished ? "#fff6df" : look.soft,
+          }}
+          aria-label={`${title} — ${look.word}${locked ? " (مقفل)" : ""}`}
+        >
+          {isCurrent && !editing && <span className="lp-here">إنت هون</span>}
+          <span className="block" style={{ height: NODE_TOP - 4 }} aria-hidden="true" />
+          <span className="lp-disc" style={{ width: NODE, height: NODE }}>
+            {isCurrent && !editing && <span className="lp-pulse" aria-hidden="true" />}
+            <span className="absolute inset-0 rounded-full bg-white" />
+            {lesson ? (
+              <LessonImage
+                src={lesson.image_url}
+                alt=""
+                className={`lp-face ${locked ? "is-locked" : ""}`}
+              />
+            ) : finished ? (
+              <span className="lp-face lp-item-face">
+                <Trophy size={32} strokeWidth={2.1} aria-hidden="true" />
+              </span>
+            ) : (
+              <span className="lp-face lp-item-face">
+                <look.Icon size={32} strokeWidth={2.1} aria-hidden="true" />
+              </span>
+            )}
+            {locked && (
+              <span className="lp-badge is-lock">
+                <Lock size={15} />
+              </span>
+            )}
+            {state === "done" && (
+              <span className="lp-badge is-done">
+                <Check size={16} strokeWidth={3} />
+              </span>
+            )}
+            {node.type === "item" && node.item.kind === "resources" && (
+              <span className="lp-count">{node.item.resource_count}</span>
+            )}
+            <span className="lp-pill">{look.word}</span>
+          </span>
+          <span className={`lp-title ${locked ? "is-locked" : ""}`}>{title}</span>
+          {lesson ? (
+            lesson.in_progress && !locked ? (
+              <span className="lp-sub is-accent">قيد التقدّم</span>
+            ) : (
+              <span className="lp-sub">
+                {lesson.kind === "vocabulary" ? "كلمات" : "قواعد"}
+                {lesson.objective_count > 0 ? ` · ${lesson.objective_count} أهداف` : ""}
+              </span>
+            )
+          ) : node.type === "item" && node.item.kind === "resources" ? (
+            <span className="lp-sub">ملفات وروابط</span>
+          ) : finishLevel ? (
+            <span className="lp-sub">{finishLine(finishCount)}</span>
+          ) : (
+            <span className="lp-sub">
+              {node.type === "item" && exerciseCount(node.item)
+                ? `تمارين المحطة · ${exerciseCount(node.item)}`
+                : isAdmin
+                  ? "أضف أول تمرين"
+                  : "قريباً"}
+            </span>
+          )}
+        </button>
+        {editing && isAdmin && lesson && (
+          <button
+            type="button"
+            className="rita-btn rita-btn-quiet absolute min-h-11 text-red-700"
+            style={{ top: place.top + 174, left: centre.x, transform: "translateX(-50%)" }}
+            disabled={busy}
+            aria-label={`إزالة من المسار · ${title}`}
+            onClick={() => void removeLesson(lesson)}
+          >
+            <Trash2 size={15} /> إزالة من المسار
+          </button>
+        )}
+      </Fragment>
+    );
+  }
+
   return (
     <main
       dir="rtl"
@@ -803,161 +958,26 @@ export function LessonPathView({
               );
             })}
 
-          {rows.map((r, index) => {
-            const place = layout[index];
-            if (r.type === "banner") {
-              return (
-                <LevelBanner
-                  key={`${r.type}-${r.level}-${index}`}
-                  row={r}
-                  top={place.top}
-                  index={index}
-                  editing={editing}
-                  startLevel={startLevel}
-                  lowest={lowest}
-                  onStart={startFrom}
-                />
-              );
-            }
-            if (r.type === "finish") {
-              return (
-                <FinishStop
-                  key={`finish-${r.level}-${index}`}
-                  level={r.level}
-                  count={r.count}
-                  x={place.x}
-                  top={place.top}
-                  index={index}
-                  onOpen={() => showFinish(r.level)}
-                />
-              );
-            }
-            const node = r.node;
-            const id = idOf(node);
-            const centre = place;
-            const look = LOOK[lookOf(node)];
-            const lesson = node.type === "lesson" ? node.lesson : null;
-            const state = lesson ? stateOf(lesson) : null;
-            const locked = state === "locked";
-            const isCurrent = state === "current";
-            const finishLevel =
-              node.type === "item" && node.item.kind === "finish"
-                ? normalizeLevel(node.item.title)
-                : null;
-            const finishCount = finishLevel ? counts.get(finishLevel) : undefined;
-            const finished = Boolean(
-              finishCount && finishCount.lessons > 0 && finishCount.done >= finishCount.lessons,
-            );
-            const title = lesson
-              ? lesson.title || lesson.title_ar
-              : finishLevel
-                ? `نهاية ${finishLevel}`
-                : node.type === "item"
-                  ? pathItemTitle(node.item)
-                  : "";
-            return (
-              <Fragment key={id}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (swallowClick.current) {
-                      swallowClick.current = false;
-                      return;
-                    }
-                    open(node);
-                  }}
-                  onPointerDown={(event) => onPointerDown(event, node)}
-                  onPointerMove={onPointerMove}
-                  onPointerUp={(event) => void onPointerUp(event)}
-                  onPointerCancel={endPress}
-                  onContextMenu={(event) => editing && event.preventDefault()}
-                  className="lp-node"
-                  data-drag={dragId === id ? "" : undefined}
-                  data-over={overId === id ? "" : undefined}
-                  data-fresh={fresh === id ? "" : undefined}
-                  style={{
-                    ["--x" as string]: `${centre.x - 85}px`,
-                    ["--y" as string]: `${place.top}px`,
-                    ["--i" as string]: index,
-                    ["--c" as string]: finished ? "#c88a12" : look.color,
-                    ["--soft" as string]: finished ? "#fff6df" : look.soft,
-                  }}
-                  aria-label={`${title} — ${look.word}${locked ? " (مقفل)" : ""}`}
-                >
-                  {isCurrent && !editing && <span className="lp-here">إنت هون</span>}
-                  <span className="block" style={{ height: NODE_TOP - 4 }} aria-hidden="true" />
-                  <span className="lp-disc" style={{ width: NODE, height: NODE }}>
-                    {isCurrent && !editing && <span className="lp-pulse" aria-hidden="true" />}
-                    <span className="absolute inset-0 rounded-full bg-white" />
-                    {lesson ? (
-                      <LessonImage
-                        src={lesson.image_url}
-                        alt=""
-                        className={`lp-face ${locked ? "is-locked" : ""}`}
-                      />
-                    ) : finished ? (
-                      <span className="lp-face lp-item-face">
-                        <Trophy size={32} strokeWidth={2.1} aria-hidden="true" />
-                      </span>
-                    ) : (
-                      <span className="lp-face lp-item-face">
-                        <look.Icon size={32} strokeWidth={2.1} aria-hidden="true" />
-                      </span>
-                    )}
-                    {locked && (
-                      <span className="lp-badge is-lock">
-                        <Lock size={15} />
-                      </span>
-                    )}
-                    {state === "done" && (
-                      <span className="lp-badge is-done">
-                        <Check size={16} strokeWidth={3} />
-                      </span>
-                    )}
-                    {node.type === "item" && node.item.kind === "resources" && (
-                      <span className="lp-count">{node.item.resource_count}</span>
-                    )}
-                    <span className="lp-pill">{look.word}</span>
-                  </span>
-                  <span className={`lp-title ${locked ? "is-locked" : ""}`}>{title}</span>
-                  {lesson ? (
-                    lesson.in_progress && !locked ? (
-                      <span className="lp-sub is-accent">قيد التقدّم</span>
-                    ) : (
-                      <span className="lp-sub">
-                        {lesson.kind === "vocabulary" ? "كلمات" : "قواعد"}
-                        {lesson.objective_count > 0 ? ` · ${lesson.objective_count} أهداف` : ""}
-                      </span>
-                    )
-                  ) : node.type === "item" && node.item.kind === "resources" ? (
-                    <span className="lp-sub">ملفات وروابط</span>
-                  ) : finishLevel ? (
-                    <span className="lp-sub">{finishLine(finishCount)}</span>
-                  ) : (
-                    <span className="lp-sub">
-                      {node.type === "item" && exerciseCount(node.item)
-                        ? `تمارين المحطة · ${exerciseCount(node.item)}`
-                        : isAdmin
-                          ? "أضف أول تمرين"
-                          : "قريباً"}
-                    </span>
-                  )}
-                </button>
-                {editing && isAdmin && lesson && (
-                  <button
-                    type="button"
-                    className="rita-btn rita-btn-quiet absolute min-h-11 text-red-700"
-                    style={{ top: place.top + 174, left: centre.x, transform: "translateX(-50%)" }}
-                    disabled={busy}
-                    aria-label={`إزالة من المسار · ${title}`}
-                    onClick={() => void removeLesson(lesson)}
+          {editing || rows.length < 16
+            ? rows.map(renderRow)
+            : Array.from({ length: Math.ceil(rows.length / 8) }, (_, group) => {
+                const first = group * 8;
+                const last = layout[Math.min(first + 7, rows.length - 1)];
+                const top = layout[first].top - 32;
+                return (
+                  <div
+                    className="lp-row-group"
+                    key={first}
+                    style={{ top, height: last.top + last.h + 32 - top }}
                   >
-                    <Trash2 size={15} /> إزالة من المسار
-                  </button>
-                )}
-              </Fragment>
-            );
-          })}
+                    <div className="lp-row-origin" style={{ top: -top }}>
+                      {rows
+                        .slice(first, first + 8)
+                        .map((row, offset) => renderRow(row, first + offset))}
+                    </div>
+                  </div>
+                );
+              })}
 
           {pluses.map((plus) => (
             <div
