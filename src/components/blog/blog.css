@@ -7,7 +7,7 @@
 }
 .ub-header {
   position: sticky;
-  top: 14px;
+  top: 0;
   z-index: 20;
 }
 .ub-main {

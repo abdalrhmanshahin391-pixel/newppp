@@ -85,9 +85,9 @@ export function AuthPage({ mode, next }: { mode: AuthStep; next?: string }) {
       dir={ar ? "rtl" : "ltr"}
     >
       <header className="rh-bar">
-        <div className="rh-bar-inner">
+        <div className="rh-bar-inner uz-header-shell">
           <Link to="/" aria-label="Uzyra" className="rh-logo shrink-0">
-            <UzyraWordmark size={20} />
+            <UzyraWordmark size={16} />
           </Link>
           {welcome ? (
             <Link to="/" className="rh-link">
@@ -113,7 +113,7 @@ export function AuthPage({ mode, next }: { mode: AuthStep; next?: string }) {
           {welcome ? (
             <div className="ua-welcome">
               <p className="ua-eyebrow">{t.welcomeTo}</p>
-              <UzyraWordmark size={56} withMark={false} className="ua-mark" />
+              <UzyraWordmark size={36} withMark={false} className="ua-mark" />
               <Rising text={t.startHeadline} className="ua-display" />
               <div className="ua-actions">
                 <Link to="/register" search={{ next }} className="ua-btn ua-btn--primary ua-go">
