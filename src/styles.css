@@ -10630,7 +10630,18 @@ html.rita-app,
   border-color: #181719;
 }
 .rh-bar .rh-chip-val {
+  position: relative;
+  white-space: nowrap;
   color: #646365;
+}
+.rh-chip-sizer {
+  visibility: hidden;
+}
+.rh-chip-time {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .rh-bar .rh-card {
   border: 1px solid #e8e7e7;

@@ -96,7 +96,6 @@ function PasswordField({
   onChange,
   autoComplete,
   placeholder,
-  autoFocus,
   t,
 }: {
   label: string;
@@ -104,7 +103,6 @@ function PasswordField({
   onChange: (v: string) => void;
   autoComplete: string;
   placeholder: string;
-  autoFocus?: boolean;
   t: AuthCopy;
 }) {
   const [shown, setShown] = useState(false);
@@ -117,7 +115,6 @@ function PasswordField({
           dir="ltr"
           type={shown ? "text" : "password"}
           autoComplete={autoComplete}
-          autoFocus={autoFocus}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
@@ -343,7 +340,6 @@ export function SignInPanel({ next }: { next?: string }) {
               ltr
               type="email"
               autoComplete="email"
-              autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
@@ -700,7 +696,6 @@ export function SignUpPanel() {
                     label={t.fullName}
                     type="text"
                     autoComplete="name"
-                    autoFocus
                     value={form.full_name}
                     onChange={(e) => update("full_name", e.target.value)}
                     placeholder={t.placeholderName}
@@ -725,7 +720,6 @@ export function SignUpPanel() {
                     ltr
                     type="email"
                     autoComplete="email"
-                    autoFocus
                     value={form.email}
                     onChange={(e) => update("email", e.target.value)}
                     placeholder="you@example.com"
@@ -750,7 +744,6 @@ export function SignUpPanel() {
                     onChange={(v) => update("password", v)}
                     autoComplete="new-password"
                     placeholder={t.placeholderPassword}
-                    autoFocus
                     t={t}
                   />
                   <label className="ua-check-row ua-check-row--top">
@@ -869,7 +862,6 @@ export function ForgotPanel() {
           ltr
           type="email"
           autoComplete="email"
-          autoFocus
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
