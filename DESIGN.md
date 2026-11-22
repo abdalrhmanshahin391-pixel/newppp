@@ -27,6 +27,32 @@ hero cube static. Use `scripts/check-home-cube.mjs` for isolated Chromium/WebKit
 screenshots and phone/tablet videos; it uses local account/reader fixtures, not production voice or
 database.
 
+### How the cube moves (`RitaCube`, engine in `src/components/rita-study/cube`)
+
+- **A real block, drawn flat.** It is a rounded box in 3D (the space covered by eight balls in its
+  corners), so any turn gives the right outline: the eight corners are turned, projected with a
+  little perspective, and the outline around their discs is drawn. Still one flat ink colour; the
+  3D shows only in the outline and the eyes. At rest it is exactly the logo (its uneven corners
+  included).
+- **Eyes on the face.** The eyes are drawn on the front face, so they slide and narrow as it turns
+  and hide when it faces away (nearly edge on, too). Eight feelings: neutral, attentive,
+  surprised, happy (^^), sleepy, focused, curious (one eye bigger), sad. Shapes of one kind blend
+  in 0.3 s; a change of kind (pill ↔ arc) happens behind a blink. Blinks shut fast, hold a beat
+  and open slower; now and then a double blink.
+- **Hand-timed clips per mood**, each easing between keys (some land with a small overshoot),
+  shuffled without repeats and blended into one another (0.42 s): idle (glance, hop, curious tilt,
+  look up, read the page, wiggle, rest; rarely a full turn or a doze), thinking (ponder, scan,
+  tap along), listening (lean in and nod, tilt), speaking (sway, explain, bright). The eyes move
+  before the body. Squash and stretch are anchored at its base.
+- **Voices.** Listening: the learner's voice presses it down and each new phrase gives a small
+  nod. Speaking: it hops on the beats of Uzyra's voice and stretches while she talks.
+- **Pointer** (`interactive`, the home cubes): on a mouse its eyes, then its body, turn towards
+  the pointer, and let go a few seconds after it stops. A tap: hop, spin (with a wind-up), wiggle,
+  nod, in turn, with happy eyes.
+- **Cost.** Three SVG paths written only when they change; nothing offscreen or in hidden tabs;
+  reduced motion holds it still (blinks only). Our own clips and shapes: never copy another
+  product's animation data or characters.
+
 ## Conversation history
 
 The conversation page prioritizes resuming a saved conversation. Use a compact title and new-chat

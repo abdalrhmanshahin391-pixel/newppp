@@ -259,7 +259,7 @@ export function UltraHero() {
       <div className="uz-ultra-inner">
         <p className="uz-ultra-lockup">
           <span className="uz-ultra-mark" aria-hidden="true">
-            <RitaCube levelsRef={levels} mode="idle" label="" active={moving} />
+            <RitaCube levelsRef={levels} mode="idle" label="" active={moving} interactive />
           </span>
           <span>Uzyra Ultra</span>
         </p>
@@ -284,7 +284,7 @@ export function UltraHero() {
           </span>
         </h1>
         <div className="uz-ultra-cube">
-          <RitaCube levelsRef={levels} mode="idle" label="Uzyra" active={moving} />
+          <RitaCube levelsRef={levels} mode="idle" label="Uzyra" active={moving} interactive />
         </div>
       </div>
     </section>

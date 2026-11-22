@@ -197,14 +197,11 @@ try {
     });
     await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
     await page.waitForTimeout(200);
-    const heroBody = page.locator(".rh-hero-cube .uz-cube-body");
-    const stillCube = await heroBody.getAttribute("style");
+    // The cube's outline is an SVG path redrawn every frame while it moves.
+    const heroBody = page.locator(".rh-hero-cube .uz-cube-shape");
+    const stillCube = await heroBody.getAttribute("d");
     await page.waitForTimeout(400);
-    assert.equal(
-      await heroBody.getAttribute("style"),
-      stillCube,
-      "offscreen cube pauses",
-    );
+    assert.equal(await heroBody.getAttribute("d"), stillCube, "offscreen cube pauses");
     await page.evaluate(() => scrollTo(0, 0));
     await page.getByRole("link", { name: "Learn", exact: true }).click();
     await page.locator(".uz-rail").waitFor();
@@ -231,10 +228,13 @@ try {
     );
     await page.getByRole("link", { name: "Home", exact: true }).click();
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(150);
+    const restingCube = await heroBody.getAttribute("d");
+    await page.waitForTimeout(500);
     assert.equal(
-      await heroBody.evaluate((el) => getComputedStyle(el).transform),
-      "none",
+      await heroBody.getAttribute("d"),
+      restingCube,
+      "reduced motion holds the cube still",
     );
     await page.emulateMedia({ reducedMotion: "no-preference" });
     findings.push({

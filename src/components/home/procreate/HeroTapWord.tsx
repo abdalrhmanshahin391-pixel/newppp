@@ -251,6 +251,7 @@ export function HeroTapWord() {
             mode={speaking ? "speaking" : "idle"}
             label="Uzyra"
             active={animateCube}
+            interactive
           />
         </div>
 
