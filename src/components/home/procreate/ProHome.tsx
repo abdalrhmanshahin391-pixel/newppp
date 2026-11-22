@@ -11,6 +11,9 @@ const UnderTheHood = lazy(() =>
   import("./UnderTheHood").then((m) => ({ default: m.UnderTheHood })),
 );
 const HomeFaq = lazy(() => import("./HomeFaq").then((m) => ({ default: m.HomeFaq })));
+const StickerShelf = lazy(() =>
+  import("./StickerShelf").then((m) => ({ default: m.StickerShelf })),
+);
 const FinalCta = lazy(() => import("./FinalCta").then((m) => ({ default: m.FinalCta })));
 
 /** Home page: white surface, ink text, blue actions. Uzyra first, then the story bands and the questions. */
@@ -39,6 +42,7 @@ export function ProHome() {
       <Suspense fallback={<div className="min-h-[45vh]" aria-hidden="true" />}>
         <HomeFaq />
         <FinalCta />
+        <StickerShelf />
       </Suspense>
     </main>
   );
