@@ -42,13 +42,13 @@ export function StudyHeadline() {
       document.removeEventListener("visibilitychange", update);
     };
   }, []);
-  return <h1 className="study-headline">
+  return <h2 className="study-headline">
     <HeroWord word="Speak" /> a language, <HeroWord word="read" /> a book, and{" "}
     <HeroWord word="remember" /> new words with{" "}
     <span className="study-pill"><span ref={face} className="study-face" aria-hidden="true">
       <RitaCube levelsRef={levels} mode="idle" label="Uzyra" active={active} />
     </span>Uzyra</span>.
-  </h1>;
+  </h2>;
 }
 
 type Word = {

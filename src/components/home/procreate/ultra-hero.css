@@ -1,0 +1,198 @@
+/* The top of the home page: the dot field, Uzyra's mark and name, the typed headline, the cube. */
+.uz-ultra {
+  --ultra-ink: #121117;
+  --ultra-font: "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  /* The headline's size, line and tracking per width (the reference's landing scale). */
+  --ultra-size: 107px;
+  --ultra-line: 107px;
+  --ultra-track: -2.14px;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  color: var(--ultra-ink);
+  font-family: var(--ultra-font);
+}
+@media (width <= 1600px) {
+  .uz-ultra {
+    --ultra-size: 72px;
+    --ultra-line: 72.04px;
+    --ultra-track: -1.44px;
+  }
+}
+@media (width <= 1024px) {
+  .uz-ultra {
+    --ultra-size: 56px;
+    --ultra-line: 56.04px;
+    --ultra-track: -1.12px;
+  }
+}
+@media (width <= 767px) {
+  .uz-ultra {
+    --ultra-size: 40px;
+    --ultra-line: 44.04px;
+    --ultra-track: -0.8px;
+  }
+}
+@media (width <= 425px) {
+  .uz-ultra {
+    --ultra-size: 44px;
+    --ultra-line: 46.04px;
+    --ultra-track: -0.6px;
+  }
+}
+@media (width <= 360px) {
+  .uz-ultra {
+    --ultra-size: 36px;
+    --ultra-line: 40px;
+    --ultra-track: -0.5px;
+  }
+}
+
+.uz-ultra-field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.uz-ultra-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: clamp(128px, 16vh, 176px) 16px clamp(72px, 10vh, 120px);
+  text-align: center;
+}
+
+/* Uzyra's mark and name, 30px tall. */
+.uz-ultra-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 32px;
+  font-weight: 450;
+  line-height: 30px;
+  letter-spacing: -0.64px;
+  font-variation-settings:
+    "wdth" 100,
+    "opsz" 32;
+  animation: uz-ultra-rise 0.7s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.uz-ultra-mark {
+  display: block;
+  width: 34px;
+  height: 30px;
+  flex: none;
+}
+@media (width <= 767px) {
+  .uz-ultra-lockup {
+    gap: 8px;
+    font-size: 24px;
+    line-height: 22px;
+    letter-spacing: -0.48px;
+  }
+  .uz-ultra-mark {
+    width: 25px;
+    height: 22px;
+  }
+}
+
+/* The headline, typed in. Its weight and settings come from the reference too. */
+.uz-ultra .uz-ultra-title {
+  max-width: 15ch;
+  margin: clamp(40px, 6vh, 64px) 0 0;
+  font-family: var(--ultra-font);
+  font-size: var(--ultra-size);
+  font-weight: 450;
+  line-height: var(--ultra-line);
+  letter-spacing: var(--ultra-track);
+  font-variation-settings:
+    "wdth" 100,
+    "opsz" 144;
+  text-wrap: balance;
+  color: var(--ultra-ink);
+}
+.uz-ultra-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.uz-ultra-ch {
+  position: relative;
+  opacity: 0;
+  animation: uz-ultra-type 1ms linear forwards;
+  animation-delay: calc(var(--start) + var(--i) * var(--type));
+}
+/* The caret travels with the letter being typed, then blinks a few times on the last one. */
+.uz-ultra-ch::after {
+  content: "";
+  position: absolute;
+  top: 0.12em;
+  right: -0.06em;
+  width: 0.045em;
+  height: 0.86em;
+  background: currentColor;
+  opacity: 0;
+  animation: uz-ultra-caret var(--type) step-end;
+  animation-delay: calc(var(--start) + var(--i) * var(--type));
+}
+.uz-ultra-last::after {
+  animation: uz-ultra-blink 0.9s step-end 3;
+  animation-delay: calc(var(--start) + var(--i) * var(--type));
+}
+/* Shown from the first frame and held after it (no tween, so no rounding at the end). */
+@keyframes uz-ultra-type {
+  0%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes uz-ultra-caret {
+  0% {
+    opacity: 1;
+  }
+}
+@keyframes uz-ultra-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Uzyra's cube, large, where the reference has its buttons. */
+.uz-ultra-cube {
+  width: clamp(168px, 20vw, 264px);
+  height: clamp(168px, 20vw, 264px);
+  margin-top: clamp(48px, 8vh, 88px);
+  animation: uz-ultra-rise 0.9s cubic-bezier(0.23, 1, 0.32, 1) 0.5s both;
+}
+@keyframes uz-ultra-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uz-ultra-lockup,
+  .uz-ultra-cube {
+    animation: none;
+  }
+  .uz-ultra-ch {
+    opacity: 1;
+    animation: none;
+  }
+  .uz-ultra-ch::after {
+    display: none;
+  }
+}

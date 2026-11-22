@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { ProHeader } from "./ProHeader";
 import { HeroTapWord } from "./HeroTapWord";
+import { UltraHero } from "./UltraHero";
 
 const AskAnything = lazy(() => import("./AskAnything").then((m) => ({ default: m.AskAnything })));
 const TopicsStrip = lazy(() => import("./TopicsStrip").then((m) => ({ default: m.TopicsStrip })));
@@ -28,6 +29,7 @@ export function ProHome() {
       </noscript>
       <ProHeader tone="light" />
 
+      <UltraHero />
       <HeroTapWord />
 
       <Suspense fallback={<div className="min-h-[45vh]" aria-hidden="true" />}>
