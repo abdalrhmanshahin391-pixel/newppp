@@ -8,6 +8,49 @@ import { useActiveLanguage } from "@/lib/language-scope";
 
 const delay = (ms: number) => ({ "--d": `${ms}ms` }) as CSSProperties;
 
+const wordIcons = {
+  Speak: <path d="M2 12c3-2 6-6 9-4l1 1 1-1c3-2 6 2 9 4-4 6-7 7-10 7s-7-1-10-7Zm0 0c4 0 6-1 10-1s6 1 10 1c-4 1-6 3-10 3s-6-2-10-3Z" />,
+  read: <path d="M12 6c-3-2-6-2-10-1v14c4-1 7-1 10 1 3-2 6-2 10-1V5c-4-1-7-1-10 1Zm0 0v14" />,
+  remember: <path d="m5 6 1-3 15 3-1 4M3 8h14a1 1 0 0 1 1 1v11H2V9a1 1 0 0 1 1-1Zm3 5h8" />,
+};
+
+function HeroWord({ word }: { word: keyof typeof wordIcons }) {
+  return <span className="study-pill">
+    <svg aria-hidden="true" className={`study-sticker sticker-${word}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">{wordIcons[word]}</svg>
+    {word}
+  </span>;
+}
+
+export function StudyHeadline() {
+  const face = useRef<HTMLSpanElement>(null);
+  const levels = useRef({ input: 0, output: 0 });
+  const [active, setActive] = useState(false);
+  useEffect(() => {
+    const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    let visible = false;
+    const update = () => setActive(visible && !document.hidden && !motion.matches);
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      update();
+    });
+    if (face.current) observer.observe(face.current);
+    motion.addEventListener("change", update);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      observer.disconnect();
+      motion.removeEventListener("change", update);
+      document.removeEventListener("visibilitychange", update);
+    };
+  }, []);
+  return <h1 className="study-headline">
+    <HeroWord word="Speak" /> a language, <HeroWord word="read" /> a book, and{" "}
+    <HeroWord word="remember" /> new words with{" "}
+    <span className="study-pill"><span ref={face} className="study-face" aria-hidden="true">
+      <RitaCube levelsRef={levels} mode="idle" label="Uzyra" active={active} />
+    </span>Uzyra</span>.
+  </h1>;
+}
+
 type Word = {
   term: string;
   lang: "German" | "English";
@@ -166,35 +209,7 @@ export function HeroTapWord() {
       className="relative mx-auto max-w-[1240px] px-5 pb-6 pt-[96px] md:px-10 md:pt-[104px]"
     >
       <div className="text-center">
-        <h1 className="edith-in rh-hero-title" style={delay(60)}>
-          Say it out loud.
-          <br />
-          <span className="rita-accent relative inline-block">
-            Keep it for good.
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 400 22"
-              preserveAspectRatio="none"
-              className="absolute -bottom-[0.14em] left-0 h-[0.2em] w-full"
-            >
-              <path
-                className="rh-draw"
-                d="M4 15 C 70 3, 130 20, 200 11 S 330 5, 396 13"
-                fill="none"
-                stroke="var(--pp-accent)"
-                strokeWidth="7"
-                strokeLinecap="round"
-              />
-            </svg>
-          </span>
-        </h1>
-        <p
-          className="edith-in rh-hero-lead mx-auto mt-5"
-          style={{ ...delay(140), color: "var(--pp-muted)" }}
-        >
-          Uzyra is a voice teacher for English and German who explains in Arabic. Every word you ask
-          about can become a flashcard.
-        </p>
+        <StudyHeadline />
         <div
           className="edith-in rh-hero-cta mt-6 flex flex-wrap items-center justify-center gap-3"
           style={delay(220)}

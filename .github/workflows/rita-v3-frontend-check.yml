@@ -36,6 +36,9 @@ on:
       - "src/lib/rita-voice-connection*"
       - "src/lib/rita-curriculum*"
       - "src/components/rita-lessons/**"
+      - "src/lib/film-clips*"
+      - "src/lib/rita-path-*"
+      - "src/routes/admin.clips.tsx"
       - "src/routes/rita-lessons.tsx"
       - "src/routes/admin.curricula.tsx"
       - "src/lib/learning-language*"
@@ -120,6 +123,7 @@ jobs:
           node --test src/lib/config.server.test.mjs src/lib/rita-provider-key.test.mjs
           node --test src/lib/rita-v3-startup.test.mjs
           node --test src/lib/rita-voice-connection.test.ts
+          node --test src/lib/rita-v3-start-refusal.test.ts
           node --test src/lib/rita-v3-diagnostics-trace.test.mjs
           node --test src/lib/rita-v3-heard.test.ts
           node --test src/lib/rita-conversation.test.ts
@@ -131,6 +135,7 @@ jobs:
           node --test src/lib/rita-image-request.test.ts
           node --test src/lib/learn-home.test.ts
           node --test src/lib/rita-path-levels.test.ts
+          node --test src/lib/film-clips.test.ts
           node --test src/lib/books.test.ts
           node --test src/lib/books-import.test.ts
           node --test src/lib/books-starter.test.ts

@@ -1,3 +1,5 @@
+import type { Level } from "./rita-path-levels";
+
 // The learner's lesson path mixes two kinds of stops: lessons (rita_lessons, integer path_order)
 // and path items an admin places between them (rita_path_items: exercises or resources, with a
 // fractional path_order in the same number space). Pure: merging, moving and the orders to save.
@@ -10,8 +12,36 @@ export type PathItem = {
   kind: PathItemKind;
   title: string;
   path_order: number;
+  map_level?: Level;
   resource_count: number;
+  quiz_count?: number;
+  film_lines?: number[];
+  /** The clips of an exercises stop (rita_film_clips ids). Undefined before that migration. */
+  clip_ids?: string[];
+  gif_lines?: number[];
 };
+
+export function mediaLineIds(item: Pick<PathItem, "film_lines" | "gif_lines">) {
+  return [...new Set([...(item.film_lines ?? []), ...(item.gif_lines ?? [])])];
+}
+
+/**
+ * How many clips an exercises stop holds: its library clips, or (before the clips library
+ * migration) its Sintel lines.
+ */
+export function stopClipCount(item: Pick<PathItem, "clip_ids" | "film_lines" | "gif_lines">) {
+  return item.clip_ids ? item.clip_ids.length : mediaLineIds(item).length;
+}
+
+export function exerciseCount(item: PathItem) {
+  return stopClipCount(item) + (item.quiz_count ?? 0);
+}
+
+export function pathItemTitle(item: PathItem) {
+  if (item.kind === "exercises" && item.title === "تدريب بمقاطع الأفلام" && !exerciseCount(item))
+    return "تمارين";
+  return item.title;
+}
 
 export type PathRef = { type: "lesson" | "item"; id: string };
 
@@ -109,4 +139,24 @@ export function layoutOrders(
 /** Where the admin's browser uploads a resources stop's PDF (the server checks this shape). */
 export function pathItemPdfPath(itemId: string, fileId: string): string {
   return `path-items/${itemId}/${fileId}.pdf`;
+}
+
+/** Inserts a lesson at a stable gap, even when it was already on the path. */
+export function placeLessonAtGap(
+  list: PathRef[],
+  lessonId: string,
+  gap: { before?: string; after?: string },
+): PathRef[] {
+  let index = gap.after ? list.findIndex((n) => n.id === gap.after) : -1;
+  if (index < 0 && gap.before) {
+    const before = list.findIndex((n) => n.id === gap.before);
+    if (before >= 0) index = before + 1;
+  }
+  if (index < 0 && !gap.before && !gap.after) index = list.length;
+  if (index < 0) throw new Error("مكان الإضافة تغيّر. اختاره من + في المسار من جديد.");
+  const old = list.findIndex((n) => n.type === "lesson" && n.id === lessonId);
+  const result = list.filter((n) => !(n.type === "lesson" && n.id === lessonId));
+  if (old >= 0 && old < index) index--;
+  result.splice(index, 0, { type: "lesson", id: lessonId });
+  return result;
 }

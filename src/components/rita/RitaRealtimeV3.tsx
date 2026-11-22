@@ -1,3 +1,5 @@
+import {publishVoiceTime,type VoiceTimeSnapshot} from "@/lib/free-talk-time";
+import {VoiceTime} from "@/components/VoiceTime";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -65,6 +67,8 @@ import { ReplyReport } from "@/components/rita/ReplyReport";
 import {
   VoiceAttempt,
   guardVoiceCallbacks,
+  failureCode,
+  isRecoverableVoiceError,
   voiceErrorMessage,
   voiceStateWord,
   type VoicePhase,
@@ -257,6 +261,8 @@ export function RitaRealtimeV3({
   const currentReplySource = useRef<RitaConversationSource>("voice");
 
   const attemptRef = useRef<VoiceAttempt | null>(null);
+  // A failed call's cleanup (at most five seconds): a reconnect pressed meanwhile waits for it.
+  const retiringCleanup = useRef<Promise<void> | null>(null);
   const [connectionPhase, setConnectionPhase] = useState<VoicePhase>("idle");
   const [status, setStatus] = useState("Ready to start");
   const [mood, setMood] = useState<RitaMood>("ready");
@@ -267,6 +273,7 @@ export function RitaRealtimeV3({
   const botAudioPlaying = useRef(false);
   const [soundBlocked, setSoundBlocked] = useState(false);
   const [active, setActive] = useState(false);
+  const [voiceDeadline, setVoiceDeadline] = useState<{ snapshot: VoiceTimeSnapshot; receivedAt: number } | null>(null);
 
   // Tell the language switcher a conversation is running, so it waits until it is over.
   useEffect(() => {
@@ -829,6 +836,7 @@ export function RitaRealtimeV3({
 
   const endLesson = useCallback(
     async (preserveMessages = false) => {
+      setVoiceDeadline(null);
       const retiring = attemptRef.current;
       retiring?.close();
       cancelFiller();
@@ -874,7 +882,7 @@ export function RitaRealtimeV3({
               }),
               keepalive: true,
               signal: AbortSignal.timeout(5000),
-            }).catch(() => undefined);
+            }).catch(() => undefined).finally(() => publishVoiceTime());
           })()
         : Promise.resolve();
       void flushMetrics({ keepalive: true });
@@ -944,6 +952,17 @@ export function RitaRealtimeV3({
     await endLesson();
     if (!lessonId && !studyLessonId) void navigate({ to: "/rita-conversations" });
   }, [endLesson, lessonId, studyLessonId, navigate]);
+
+  useEffect(() => {
+    if (!active || !voiceDeadline?.snapshot.activeDeadline) return;
+    const remaining = Date.parse(voiceDeadline.snapshot.activeDeadline) - Date.parse(voiceDeadline.snapshot.serverNow) - (performance.now() - voiceDeadline.receivedAt);
+    const timer = window.setTimeout(() => {
+      if (sessionId.current !== voiceDeadline.snapshot.activeSessionId) return;
+      void endLesson(true);
+      setStatus("Conversation time ended.");
+    }, Math.max(0, remaining));
+    return () => window.clearTimeout(timer);
+  }, [active, voiceDeadline, endLesson]);
 
   useEffect(() => () => void endLesson(), [endLesson]);
 
@@ -1045,7 +1064,16 @@ export function RitaRealtimeV3({
   }
 
   async function startLesson() {
-    if (starting || active || attemptRef.current) return;
+    if (starting || active) return;
+    // The reconnect button shows as soon as a call fails; pressed while that call is still being
+    // closed, it waits for the close and then starts the new call.
+    const closing = retiringCleanup.current;
+    if (closing && attemptRef.current && !attemptRef.current.current) {
+      setStarting(true);
+      await closing;
+      setStarting(false);
+    }
+    if (attemptRef.current) return;
     const attempt = new VoiceAttempt();
     attemptRef.current = attempt;
     const isCurrent = () => attempt.current && attemptRef.current === attempt;
@@ -1055,16 +1083,21 @@ export function RitaRealtimeV3({
         cause,
         Boolean(studyLessonId) || languageRef.current !== "en",
       );
-      setStarting(true);
       void metric("voice_connection_failed", undefined, {
         stage,
         errorKind: cause instanceof Error ? cause.name : "provider",
+        // The start route's refusal code ("voice_not_available_for_language: …"), never free text.
+        reason: failureCode(cause),
       });
-      const cleanup = endLesson(true);
+      const cleanup = endLesson(true).finally(() => {
+        if (retiringCleanup.current === cleanup) retiringCleanup.current = null;
+      });
+      retiringCleanup.current = cleanup;
+      // The reconnect button shows at once instead of a spinner while the old call closes.
+      setStarting(false);
       setConnectionPhase("failed");
       setError(message);
       setStatus(message);
-      void cleanup;
     };
     // First thing inside the tap: unlock audio and start the real click-to-ready timer.
     unlockBotAudio();
@@ -1240,6 +1273,11 @@ export function RitaRealtimeV3({
                 providerSessionId?: string | null;
               };
               sessionId.current = String(started.sessionId ?? "");
+              if((started as {freeTalk?:VoiceTimeSnapshot}).freeTalk) {
+                const snapshot = (started as {freeTalk:VoiceTimeSnapshot}).freeTalk;
+                publishVoiceTime(snapshot);
+                setVoiceDeadline({snapshot,receivedAt:performance.now()});
+              }
               providerSessionId.current = String(started.providerSessionId ?? "");
               if (sessionId.current) flushPendingMetrics(sessionId.current);
               if (transportConnectedAt.current && !transportMetricRecorded.current) {
@@ -1279,6 +1317,11 @@ export function RitaRealtimeV3({
             onError: (event) => {
               const eventData = (event?.data ?? {}) as { error?: unknown; message?: unknown };
               const detail = String(eventData.error ?? eventData.message ?? "Provider error");
+              // A provider hiccup the worker survives (fatal: false) must not end the call.
+              if (isRecoverableVoiceError(eventData)) {
+                void metric("voice_error_recovered", undefined, { reason: failureCode(detail) });
+                return;
+              }
               snapshotNetwork("transport_error");
               failConnection(new Error(detail), "transport_or_pipeline");
             },
@@ -1594,6 +1637,11 @@ export function RitaRealtimeV3({
       if (!sessionId.current && typeof startResult?.sessionId === "string") {
         sessionId.current = startResult.sessionId;
         providerSessionId.current = String(startResult.providerSessionId ?? "");
+        const snapshot = (startResult as {freeTalk?:VoiceTimeSnapshot}).freeTalk;
+        if (snapshot) {
+          publishVoiceTime(snapshot);
+          setVoiceDeadline({snapshot,receivedAt:performance.now()});
+        }
         flushPendingMetrics(sessionId.current);
       }
       if (!isCurrent()) return;
@@ -2038,6 +2086,7 @@ export function RitaRealtimeV3({
             />
             {status}
           </p>
+          {!lessonId && !studyLessonId && <VoiceTime />}
           {!lessonId && saveState !== "idle" ? (
             <p
               role="status"

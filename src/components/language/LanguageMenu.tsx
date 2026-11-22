@@ -1,13 +1,11 @@
 import { useCallback, useId, useRef, useState } from "react";
-import { Check, ChevronDown, Globe, Loader2 } from "lucide-react";
-import { LanguageFlag } from "@/components/language/LanguageFlag";
+import { Check, Globe, Loader2 } from "lucide-react";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { useDismiss } from "@/components/header/useDismiss";
 import { VOICE_SESSION_ERROR, useLearningLanguage } from "@/hooks/useLearningLanguage";
-import { languageLabel } from "@/lib/learning-language";
 
 /**
- * The language switcher in the top bar: the flag of the language being learned, and a menu with
+ * The language switcher in the top bar: the code of the language being learned, and a menu with
  * the others. Signed-in learners only (the parent decides).
  */
 export function LanguageMenu({
@@ -45,7 +43,7 @@ export function LanguageMenu({
   }
 
   if (!ready) {
-    return <div aria-hidden="true" className="h-9 w-14 animate-pulse rounded-lg bg-white/10" />;
+    return <div aria-hidden="true" className="rh-language-tool invisible" />;
   }
 
   const label = language
@@ -66,17 +64,10 @@ export function LanguageMenu({
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         data-open={open ? "true" : "false"}
-        className={`rh-avatar-btn ${language ? "" : "rh-lang-choose"}`}
+        className="rh-language-tool"
       >
-        {language ? (
-          <LanguageFlag language={language} size={28} onDark />
-        ) : (
-          <>
-            <Globe size={18} aria-hidden="true" />
-            <span className="rh-lang-choose-text">{text("Choose language", "اختر لغة")}</span>
-          </>
-        )}
-        <ChevronDown size={16} aria-hidden="true" className="rh-chevron" />
+        <Globe size={17} aria-hidden="true" />
+        <bdi>{code === "ar" ? "ع" : code?.toUpperCase() || "…"}</bdi>
       </button>
 
       <span role="status" aria-live="polite" className="sr-only">
@@ -103,12 +94,10 @@ export function LanguageMenu({
                   onClick={() => void choose(item.code)}
                   className="rh-item rh-lang-row disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <LanguageFlag language={item} size={28} />
                   <span className="rh-lang-names">
                     <span className="rh-lang-native">
                       <bdi lang={item.code}>{item.name_native}</bdi>
                     </span>
-                    <span className="rh-lang-sub">{languageLabel(item, ui)}</span>
                   </span>
                   <span className="rh-lang-mark" aria-hidden="true">
                     {pending === item.code ? (

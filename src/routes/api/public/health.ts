@@ -17,6 +17,7 @@ export const Route = createFileRoute("/api/public/health")({
             ok: backendConnected,
             service: "ritajet",
             backend: "lovable-cloud",
+            voiceQuotaProtocol: 1,
             projectId: LOVABLE_CLOUD_PROJECT_ID,
             time: new Date().toISOString(),
           },

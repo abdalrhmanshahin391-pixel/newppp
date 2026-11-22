@@ -80,6 +80,21 @@ const result = await build({
             };
           if (path === "@tanstack/react-start")
             return { contents: "export const useServerFn=f=>f;" };
+          if (path.endsWith("whiteboard.functions"))
+            return {
+              resolveDir: root,
+              contents: `
+            import { readBoardReply } from "@/lib/study/board-reply";
+            export async function studyBoardStep({data}) {
+              (window.qaBoardCalls ||= []).push(data);
+              if (window.qaBoardFail) return {ok:false,message:"تعذّر تجهيز الرسم."};
+              const title=data.question?"سؤالك عن الفعل":["مين بيعمل الفعل؟","كيف بيتغيّر الفعل؟","مثال جديد"][data.index];
+              const narration=data.question?"لأنّ الفاعل مفرد.":"لما نحكي عن شخص واحد، منضيف حرف إس للفعل بالمضارع البسيط.";
+              const audio = data.index===0 && !data.question ? new Promise(done=>{window.qaReleaseVoice=()=>done("/api/german/tts?old")}) : Promise.resolve(location.search.includes("silent")?null:"/api/german/tts");
+              const step=readBoardReply({title,narration,rows:[{text:"look",result:"looks",circle:"result"}, "She looks after her little brother.", {bad:true}]},title);
+              return {ok:true,previewStep:Promise.resolve(step),completion:window.qaHoldBoard?new Promise(resolve=>{window.qaFinishBoard=()=>{window.qaHoldBoard=false;resolve({ok:true,step,audio})}}):Promise.resolve({ok:true,step,audio})};
+            }`,
+            };
           const names = [
             "explainPhrase",
             "studyGuideDownload",
@@ -187,7 +202,7 @@ const server = createServer(async (req, res) => {
     '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/client.css"></head><body><div style="height:44px;display:flex;align-items:center;gap:10px;padding:4px 12px;background:#eef2fa;font:12px sans-serif" dir="rtl"><span>فحص محلي بردود تجريبية</span><button onclick="qaSelect(\'looks after\')">تحديد عبارة</button><button onclick="qaSelect(\'With he, she and it, the present simple verb changes its ending. The ending depends on the last letters of the verb.\')">تحديد قاعدة</button><button onclick="qaSelect(\'She is reading a book.\')">حدّد جملة</button><button onclick="qaSelect(\'studies\')">حدّد studies</button></div><div id="app" style="height:calc(100vh - 44px)"></div><script src="/client.js"></script></body></html>',
   );
 });
-await new Promise((done) => server.listen(4178, "127.0.0.1", done));
+await new Promise((done) => server.listen(process.argv.includes("--serve") ? 4178 : 0, "127.0.0.1", done));
 const origin = "http://127.0.0.1:" + server.address().port;
 if (process.argv.includes("--serve")) {
   console.log("Study help preview: " + origin + "/preview");
@@ -282,6 +297,60 @@ if (process.argv.includes("--check")) {
           "common_mistake",
         ],
       );
+      // The existing explain wedge now opens the board. The quote survives the ring gesture.
+      await page.evaluate(() => { window.qaHoldBoard = true; });
+      const explain = await page.locator('[data-service="explain"] .st-wedge-in').boundingBox();
+      await page.mouse.click(explain.x + explain.width / 2, explain.y + explain.height / 2);
+      const board = page.getByRole("region", { name: "سبورة يوزرا" });
+      await board.locator(".wb-drawing").waitFor();
+      assert.match(await board.locator("blockquote").textContent(), /looks after/);
+      assert.equal(await page.evaluate(() => window.qaBoardCalls.length), 1);
+      assert.equal(await board.locator(".wb-transcript").count(), 0);
+      await page.evaluate(() => window.qaFinishBoard());
+      // Advancing must work with a still unresolved voice request.
+      await board.getByText("جارٍ تحضير الصوت…").waitFor();
+      await board.getByRole("button", { name: "تمام، كمّلي" }).click();
+      await page.waitForFunction(() => window.qaBoardCalls.at(-1)?.index === 1);
+      await page.waitForFunction(() => document.querySelectorAll(".wb-topic").length === 2);
+      await page.evaluate(() => window.qaReleaseVoice());
+      assert.equal(await board.locator('audio[src*="?old"]').count(), 0);
+      assert.equal(await board.locator(".wb-drawing").count(), 2);
+      assert.equal(Math.round((await board.boundingBox()).width), width);
+      await board.getByRole("button", { name: "اسأل عن هذه الخطوة" }).click();
+      await board.locator("#wb-ask").fill("ليش أضفنا s؟");
+      await page.evaluate(() => {
+        window.qaBoardFail = true;
+      });
+      await board.getByRole("button", { name: "إرسال السؤال" }).click();
+      await board.getByRole("alert").waitFor();
+      await page.evaluate(() => {
+        window.qaBoardFail = false;
+      });
+      await board.getByRole("button", { name: "جرّب مرة ثانية" }).click();
+      await board.locator("[data-followup=true]").waitFor();
+      assert.match(await board.locator("[data-followup=true]").textContent(), /لأنّ الفاعل مفرد/);
+      assert.equal(await page.evaluate(() => window.qaBoardCalls.at(-1).question), "ليش أضفنا s؟");
+      await board.getByRole("button", { name: "تمام، كمّلي" }).click();
+      await page.waitForFunction(() => document.querySelectorAll(".wb-topic").length === 4);
+      assert.equal(await page.evaluate(() => window.qaBoardCalls.at(-1).index), 2);
+      await board.getByRole("button", { name: "تمام، فهمت" }).click();
+      await board.getByText("خلصنا شرح الفقرة.").waitFor();
+      await page.getByRole("button", { name: "رجوع إلى الدرس" }).click();
+      await page.getByRole("button", { name: "حدّد جملة", exact: true }).click();
+      if (engine === "webkit") {
+        const p = await page.evaluate(() => window.qaSelect("She is reading a book."));
+        await page.mouse.dblclick(p.x, p.y);
+      }
+      await page.locator('.st-orb[data-state="armed"]').waitFor();
+      await menu(page);
+      const newWedge = await page.locator('[data-service="explain"] .st-wedge-in').boundingBox();
+      await page.mouse.click(newWedge.x + newWedge.width / 2, newWedge.y + newWedge.height / 2);
+      await board.locator(".wb-drawing").waitFor();
+      assert.match(await board.locator("blockquote").textContent(), /reading/);
+      assert.equal(await board.locator(".wb-topic").count(), 1);
+      await page.getByRole("button", { name: "رجوع إلى الدرس" }).click();
+      await selectPhrase(page);
+      await menu(page);
       await choose(page, "فلاش كاردز", true);
       await page.locator(".st-practice-front").waitFor();
       assert.equal(await page.locator(".st-practice-front").innerText(), "looks after");

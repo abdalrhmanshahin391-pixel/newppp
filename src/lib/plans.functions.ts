@@ -10,6 +10,8 @@ export type PlanRow = {
   tagline: string;
   price_cents: number;
   yearly_cents: number;
+  free_talk_seconds: number;
+  free_talk_period: "monthly" | "lifetime";
   max_flashcards: number | null;
   max_ai_questions: number | null;
   max_summaries: number | null;
@@ -61,7 +63,10 @@ async function fetchPlans(): Promise<PlanRow[]> {
   const { url, publishableKey } = getSupabasePublicConfig();
   const { createClient } = await import("@supabase/supabase-js");
   const client = createClient(url, publishableKey, { auth: { persistSession: false } });
-  const { data, error } = await (client.from as any)("plans").select("*").order("sort");
+  const { data, error } = await (client.from as any)("plans")
+    .select("*")
+    .eq("published", true)
+    .order("sort");
   if (error) throw new Error(error.message);
   return ((data ?? []) as PlanRow[]).map((plan) => productCopyFields(plan, ["name", "tagline"]));
 }
@@ -115,7 +120,7 @@ export const recordFlashcards = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Activates plan immediately after successful checkout confirmation. */
+/** Confirms a plan assigned by a verified webhook; checkout browser state grants no access. */
 export const activatePlanAfterCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -128,46 +133,10 @@ export const activatePlanAfterCheckout = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const userId = (context as any).userId as string;
     const client = (context as any).supabase as any;
-
-    // Verify plan exists
-    const { data: plan, error: planErr } = await client
-      .from("plans")
-      .select("*")
-      .eq("slug", data.planSlug)
-      .maybeSingle();
-
-    if (planErr || !plan) {
-      throw new Error(`Plan "${data.planSlug}" not found`);
-    }
-
-    // Call activate_user_plan RPC
-    const { error: rpcErr } = await client.rpc("activate_user_plan", {
-      _user_id: userId,
-      _plan_slug: plan.slug,
-    });
-
-    if (rpcErr) {
-      console.warn("activate_user_plan RPC error, trying fallback:", rpcErr);
-      try {
-        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        await (supabaseAdmin as any)
-          .from("user_plans")
-          .upsert(
-            { user_id: userId, plan_slug: plan.slug, updated_at: new Date().toISOString() },
-            { onConflict: "user_id" },
-          );
-      } catch (adminErr) {
-        console.warn("supabaseAdmin upsert error:", adminErr);
-        await client
-          .from("user_plans")
-          .upsert(
-            { user_id: userId, plan_slug: plan.slug, updated_at: new Date().toISOString() },
-            { onConflict: "user_id" },
-          );
-      }
-    }
-
-    return { ok: true, planSlug: plan.slug };
+    // Browser checkout completion is not payment evidence; only confirm an existing assignment.
+    const {data: assigned,error} = await client.from("user_plans").select("plan_slug").eq("user_id",userId).maybeSingle();
+    if(error || assigned?.plan_slug !== data.planSlug) throw new Error("Payment confirmation is pending. Your plan will appear after verification.");
+    return {ok:true,planSlug:assigned.plan_slug};
   });
 
 /** Claims a 100% free plan using a valid 100% discount promo code without requiring credit card or payment details. */
@@ -326,29 +295,10 @@ export const claimFreePlanWithPromo = createServerFn({ method: "POST" })
     const durationDays = isYearly ? 365 : 90; // 3 months = 90 days!
     const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000).toISOString();
 
-    // 3. Activate plan for user
-    const { error: rpcErr } = await client.rpc("activate_user_plan", {
-      _user_id: userId,
-      _plan_slug: plan.slug,
-    });
-
-    if (rpcErr) {
-      console.warn("activate_user_plan RPC error:", rpcErr);
-    }
-    try {
-      await (supabaseAdmin as any)
-        .from("user_plans")
-        .upsert(
-          { user_id: userId, plan_slug: plan.slug, updated_at: now.toISOString() },
-          { onConflict: "user_id" },
-        );
-    } catch (adminErr) {
-      console.warn("Admin upsert fallback failed:", adminErr);
-    }
-
+    // The verified promo is a time-bound grant; it must not overwrite the permanent base plan.
     // Record grant in manual_plan_grants with 3-month expiration
-    try {
-      await (supabaseAdmin as any).from("manual_plan_grants").insert({
+    {
+      const { error } = await (supabaseAdmin as any).from("manual_plan_grants").insert({
         user_id: userId,
         plan_slug: plan.slug,
         starts_at: now.toISOString(),
@@ -357,8 +307,7 @@ export const claimFreePlanWithPromo = createServerFn({ method: "POST" })
         overrides_paid: true,
         granted_by: userId,
       });
-    } catch (mpgErr) {
-      console.warn("manual_plan_grants insert error:", mpgErr);
+      if (error) throw new Error("The promo could not be activated. Please retry.");
     }
 
     // Record in toolkit_claims so /my-plan countdown timer displays the active 3 months

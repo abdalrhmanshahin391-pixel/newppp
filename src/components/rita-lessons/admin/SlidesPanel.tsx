@@ -1,3 +1,4 @@
+import { useWorkspaceDraft, useWorkspaceTask } from "./WorkspaceGuard";
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Loader2, Plus, Save, Sparkles, Trash2 } from "lucide-react";
 import {
@@ -133,6 +134,8 @@ export function SlidesPanel({
   const [newKind, setNewKind] = useState<SlideKind>("point");
   const [saving, setSaving] = useState(false);
   const [sharing, setSharing] = useState(false);
+  useWorkspaceDraft(draft);
+  useWorkspaceTask(saving || sharing);
 
   const dirty = useMemo(
     () => JSON.stringify(draft) !== JSON.stringify(saved ?? []),

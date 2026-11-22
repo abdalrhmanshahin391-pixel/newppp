@@ -134,6 +134,24 @@ async def diagnose_talk_probe(runs: int = 2) -> dict[str, Any]:
     return await run_probe(runs)
 
 
+@app.function(secrets=secrets, timeout=3600, region="eu")
+async def diagnose_talk_eval(
+    model: str = "",
+    effort: str = "",
+    split: str = "dev",
+    runs: int = 1,
+    reference: dict[str, Any] | None = None,
+    history: str = "reference",
+    judge: str = "",
+) -> dict[str, Any]:
+    """Grade the free conversations on Jordanian learners' questions, or on another app's chat
+    (`reference`, the JSON itself), text only, no voice."""
+
+    from rita_talk_eval import run_eval
+
+    return await run_eval(model, effort, split, runs, reference, history, judge)
+
+
 @app.function(secrets=secrets, timeout=300)
 async def make_voice_lines(only: str = "") -> dict[str, Any]:
     """Record the study circle's short lines with Uzyra's call voice (see uzyra_voice_lines)."""
@@ -333,6 +351,39 @@ def talk_probe(runs: int = 2) -> None:
 
 
 @app.local_entrypoint()
+def talk_eval(
+    model: str = "",
+    effort: str = "",
+    split: str = "dev",
+    runs: int = 1,
+    reference: str = "",
+    history: str = "reference",
+    judge: str = "",
+    out: str = "",
+    report: str = "",
+) -> None:
+    """Play the learners' conversations (or a reference chat from evals/references) with any Groq
+    model; print every reply, keep the JSON, write a readable report."""
+
+    from rita_eval_report import report as render
+    from rita_talk_eval import print_eval
+
+    ref = None
+    if reference:
+        from rita_eval_reference import load_reference
+
+        ref = load_reference(reference)
+    result = diagnose_talk_eval.remote(model, effort, split, runs, ref, history, judge)
+    if out:
+        Path(out).write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding="utf-8")
+    if report and result.get("outcome") == "ok":
+        Path(report).write_text(render(result), encoding="utf-8")
+    print_eval(result)
+    if result.get("outcome") != "ok":
+        raise SystemExit(1)
+
+
+@app.local_entrypoint()
 def voice_lines(out: str = "../public/sounds/uzyra", only: str = "") -> None:
     """Write the study circle's lines into the site and fail when any is missing."""
 
@@ -502,41 +553,69 @@ async def _create_session(body: dict[str, Any]) -> dict[str, Any]:
 
     session_id = str(body.get("appSessionId") or uuid.uuid4())
     trace_id = str(body.get("traceId") or "")[:64]
-    expires = int(time.time()) + ROOM_LIFETIME_SECS
+    from free_talk_guard import control, deadline_seconds
+    quota = None
+    if body.get("freeTalk"):
+        source = body["freeTalk"]
+        claimed = await control(source,"claim")
+        quota = {**claimed["grant"],"controlUrl":source["controlUrl"]}
+        deadline_seconds(quota)
+        body = {**body,"freeTalk":quota}
+    elif body.get("mode") == "free_conversation" and not body.get("quotaExempt"):
+        raise RuntimeError("free_talk_lease_required")
+    expires = int(__import__("datetime").datetime.fromisoformat(quota["deadline"].replace("Z","+00:00")).timestamp()) if quota else int(time.time()) + ROOM_LIFETIME_SECS
     started_at = time.perf_counter()
 
-    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=8)) as http:
-        room_started_at = time.perf_counter()
-        room = await _daily_post(
-            http,
-            "/rooms",
-            {
-                "privacy": "private",
-                "properties": {"exp": expires, "eject_at_room_exp": True, "max_participants": 2},
-            },
-        )
-        room_ms = round((time.perf_counter() - room_started_at) * 1000, 2)
-        learner_started_at = time.perf_counter()
-        learner = await _daily_post(
-            http,
-            "/meeting-tokens",
-            {"properties": {"room_name": room["name"], "exp": expires, "is_owner": False}},
-        )
-        learner_token_ms = round((time.perf_counter() - learner_started_at) * 1000, 2)
-        bot_started_at = time.perf_counter()
-        bot_token = await _daily_post(
-            http,
-            "/meeting-tokens",
-            {"properties": {"room_name": room["name"], "exp": expires, "is_owner": True}},
-        )
-        bot_token_ms = round((time.perf_counter() - bot_started_at) * 1000, 2)
+    call = None
+    try:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=8)) as http:
+            room_started_at = time.perf_counter()
+            room = await _daily_post(
+                http,
+                "/rooms",
+                {
+                    **({"name":quota["roomName"]} if quota else {}),
+                    "privacy": "private",
+                    "properties": {"exp": expires, "eject_at_room_exp": True, "max_participants": 2},
+                },
+            )
+            room_ms = round((time.perf_counter() - room_started_at) * 1000, 2)
+            learner_started_at = time.perf_counter()
+            learner = await _daily_post(
+                http,
+                "/meeting-tokens",
+                {"properties": {"room_name": room["name"], "exp": expires, "eject_at_token_exp": True, "is_owner": False}},
+            )
+            learner_token_ms = round((time.perf_counter() - learner_started_at) * 1000, 2)
+            bot_started_at = time.perf_counter()
+            bot_token = await _daily_post(
+                http,
+                "/meeting-tokens",
+                {"properties": {"room_name": room["name"], "exp": expires, "eject_at_token_exp": True, "is_owner": True}},
+            )
+            bot_token_ms = round((time.perf_counter() - bot_started_at) * 1000, 2)
 
-    spawn_started_at = time.perf_counter()
-    call = await RitaWorker().run_session.spawn.aio(
-        room["url"], bot_token["token"], session_id, body
-    )
+        spawn_started_at = time.perf_counter()
+        call = await RitaWorker().run_session.spawn.aio(
+            room["url"], bot_token["token"], session_id, body
+        )
+        if quota:
+            bound = await control(quota,"bind",callId=call.object_id)
+            if not bound.get("bound"):
+                raise RuntimeError("free_talk_start_cancelled")
+    except BaseException:
+        if quota:
+            # No refund unless both worker cancellation and provider ejection are confirmed.
+            try:
+                await _stop_quota_session({"roomName":quota["roomName"],"providerCallId":call.object_id if call else None})
+                await control(quota,"settle")
+            except Exception:
+                pass
+        raise
     spawn_ms = round((time.perf_counter() - spawn_started_at) * 1000, 2)
     return {
+        "quotaProtocol": 1,
+        "quotaEnforced": bool(quota),
         "dailyRoom": room["url"],
         "dailyToken": learner["token"],
         "sessionId": call.object_id,
@@ -552,6 +631,19 @@ async def _create_session(body: dict[str, Any]) -> dict[str, Any]:
 
 
 @app.function(secrets=secrets, timeout=30)
+def quota_readiness() -> dict[str, Any]:
+    """Private deployment attestation; no calls, provider requests or secret values."""
+    import free_talk_guard
+
+    return {
+        "quotaProtocol": 1,
+        "build": os.environ.get("RITA_GIT_SHA", ""),
+        "configured": all(os.environ.get(name) for name in ("RITA_MODAL_TOKEN", "DAILY_API_KEY")),
+        "controlUrl": free_talk_guard.control_url("https://ritajet.com/api/rita-v3/session/end"),
+    }
+
+
+@app.function(secrets=secrets, timeout=30)
 async def prepare_voice_probe() -> dict[str, Any]:
     """Start the fixed synthetic canary through authenticated Modal RPC."""
     return await _create_session(
@@ -561,6 +653,7 @@ async def prepare_voice_probe() -> dict[str, Any]:
             "language": "automatic",
             "dialect": "ar-JO",
             "mode": "free_conversation",
+            "quotaExempt": True,
             "personality": "kind",
             "trimLeadingSilence": True,
         }
@@ -579,6 +672,21 @@ async def start_session(payload: dict[str, Any]):
         raise HTTPException(status_code=401, detail="unauthorized")
 
     body = payload.get("body") if isinstance(payload.get("body"), dict) else {}
+    action = payload.get("action", "start")
+    if action == "whiteboard-narration":
+        from uzyra_voice_lines import narrate_board_step
+        text, language = body.get("text"), body.get("language")
+        if not isinstance(text, str) or not 1 <= len(text.strip()) <= 440 or language not in ("ar", "en"):
+            raise HTTPException(status_code=400, detail="invalid_whiteboard_step")
+        audio = await narrate_board_step(text, language)
+        return {"quotaProtocol": 1, "audio": audio}
+    if action == "stop":
+        return await _stop_quota_session(body)
+    if action == "capabilities":
+        return {"quotaProtocol":1,"build":os.environ.get("RITA_GIT_SHA","")}
+    body.pop("quotaExempt",None)
+    if body.get("quotaProtocol") != 1:
+        raise HTTPException(status_code=409,detail="voice_update_required")
     return await _create_session(body)
 
 
@@ -597,3 +705,13 @@ async def replay_turns(payload: dict[str, Any]):
 
     return await run_replay(payload)
 
+
+
+async def _stop_quota_session(body: dict[str, Any]):
+    from free_talk_guard import delete_room
+    call_id = body.get("providerCallId")
+    # Removing the room blocks access even if the worker control plane is unavailable.
+    await delete_room(str(body.get("roomName", "")))
+    if call_id:
+        await modal.FunctionCall.from_id(call_id).cancel.aio()
+    return {"quotaProtocol":1,"stopped":True}

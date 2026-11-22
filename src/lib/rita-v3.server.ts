@@ -449,7 +449,8 @@ export async function requireRitaV3Access(request: Request) {
   if (!auth) return { ok: false as const, response: new Response("Unauthorized", { status: 401 }) };
   const settings = await getRitaSettings();
   const allowance = await getRitaAllowance(auth.userId, settings);
-  if (!settings.enabled || !allowance.allowed) {
+  const { data: adminRole } = await ritaV3UserClient(auth.token).rpc("has_role", {_user_id:auth.userId,_role:"admin"});
+  if (!settings.enabled || (!adminRole && !allowance.allowed)) {
     return {
       ok: false as const,
       response: Response.json(

@@ -1,3 +1,6 @@
+import "./lesson-path.css";
+import { useWorkspaceTask, useWorkspaceGuard } from "./admin/WorkspaceGuard";
+import { PathQuiz } from "./PathQuiz";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -10,7 +13,7 @@ import {
   adminRenamePathItem,
   getPathItemResources,
 } from "@/lib/rita-path-items.functions";
-import { pathItemPdfPath, type PathItem } from "@/lib/rita-path-layout";
+import { pathItemPdfPath, pathItemTitle, type PathItem } from "@/lib/rita-path-layout";
 import {
   MAX_PDF_BYTES,
   RESOURCES_BUCKET,
@@ -29,12 +32,14 @@ const message = (cause: unknown) =>
  */
 export function PathStopSheet({
   item,
+  embedded = false,
   admin,
   color,
   onClose,
   onChanged,
 }: {
   item: PathItem;
+  embedded?: boolean;
   admin: boolean;
   color: string;
   onClose: () => void;
@@ -48,9 +53,11 @@ export function PathStopSheet({
   const [resources, setResources] = useState<LearnerResource[] | null>(
     item.kind === "resources" ? null : [],
   );
-  const [title, setTitle] = useState(item.title);
+  const [title, setTitle] = useState(pathItemTitle(item));
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
+  const finishTask = useWorkspaceTask(busy);
+  const guard = useWorkspaceGuard();
   const file = useRef<HTMLInputElement>(null);
 
   async function load() {
@@ -65,7 +72,7 @@ export function PathStopSheet({
 
   useEffect(() => {
     void load();
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && onClose();
+    const onKey = (event: KeyboardEvent) => !embedded && event.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -124,22 +131,104 @@ export function PathStopSheet({
     }, "انضاف الملف");
   }
 
+  const settings = admin && (
+    <div className="lp-sheet-admin">
+      {item.kind === "resources" && (
+        <>
+          <div className="lp-sheet-row">
+            <input
+              value={url}
+              onChange={(event) => setUrl(event.target.value)}
+              placeholder="https://… رابط"
+              dir="ltr"
+              aria-label="رابط جديد"
+            />
+            <button type="button" disabled={busy || !url.trim()} onClick={() => void addLink()}>
+              <Link2 size={16} /> أضف
+            </button>
+          </div>
+          <button
+            type="button"
+            className="lp-sheet-wide"
+            disabled={busy}
+            onClick={() => file.current?.click()}
+          >
+            <Upload size={16} /> ارفع ملف PDF
+          </button>
+          <input
+            ref={file}
+            type="file"
+            accept="application/pdf"
+            hidden
+            onChange={(event) => {
+              const picked = event.target.files?.[0];
+              event.target.value = "";
+              if (picked) void addPdf(picked);
+            }}
+          />
+        </>
+      )}
+      {item.kind !== "finish" && (
+        <div className="lp-sheet-row">
+          <input
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            aria-label="اسم المحطة"
+            maxLength={120}
+          />
+          <button
+            type="button"
+            disabled={busy || !title.trim() || title.trim() === pathItemTitle(item)}
+            onClick={() =>
+              void run(async () => {
+                await renameFn({ data: { id: item.id, title: title.trim() } });
+                guard?.saved();
+              }, "انحفظ الاسم")
+            }
+          >
+            احفظ الاسم
+          </button>
+        </div>
+      )}
+      <button
+        type="button"
+        className="lp-sheet-wide is-danger"
+        disabled={busy}
+        onClick={() => {
+          if (!window.confirm("أكيد بدك تحذف هالمحطة من المسار؟")) return;
+          void run(async () => {
+            await deleteFn({ data: { id: item.id } });
+            finishTask();
+            guard?.saved();
+            onClose();
+          }, "انحذفت المحطة");
+        }}
+      >
+        <Trash2 size={16} /> احذف المحطة
+      </button>
+    </div>
+  );
   return (
-    <div className="lp-sheet-back" onClick={onClose}>
+    <div
+      className={embedded ? "pc-stop" : "lp-sheet-back"}
+      onClick={embedded ? undefined : onClose}
+    >
       <div
-        className="lp-sheet"
-        role="dialog"
-        aria-modal="true"
+        className={item.kind === "exercises" ? "lp-sheet lp-quiz-sheet" : "lp-sheet"}
+        role={embedded ? "region" : "dialog"}
+        aria-modal={embedded ? undefined : true}
         aria-label={item.title}
         onClick={(event) => event.stopPropagation()}
         style={{ ["--c" as string]: color }}
       >
         <div className="lp-sheet-head">
           <span className="lp-sheet-dot" />
-          <h3>{item.kind === "finish" ? `خط نهاية ${item.title}` : item.title}</h3>
-          <button type="button" onClick={onClose} aria-label="سكّر" className="lp-sheet-x">
-            <X size={18} />
-          </button>
+          <h3>{item.kind === "finish" ? `خط نهاية ${item.title}` : pathItemTitle(item)}</h3>
+          {!embedded && (
+            <button type="button" onClick={onClose} aria-label="سكّر" className="lp-sheet-x">
+              <X size={18} />
+            </button>
+          )}
         </div>
 
         {item.kind === "finish" && (
@@ -148,8 +237,15 @@ export function PathStopSheet({
           </p>
         )}
 
-        {item.kind === "exercises" && !admin && (
-          <p className="lp-sheet-empty">التمارين جاية قريباً.</p>
+        {item.kind === "exercises" && (
+          <PathQuiz
+            key={item.id}
+            settings={settings}
+            item={item}
+            admin={admin}
+            onClose={onClose}
+            onChanged={onChanged}
+          />
         )}
 
         {item.kind === "resources" && (
@@ -191,85 +287,7 @@ export function PathStopSheet({
           </div>
         )}
 
-        {admin && (
-          <div className="lp-sheet-admin">
-            {item.kind === "resources" && (
-              <>
-                <div className="lp-sheet-row">
-                  <input
-                    value={url}
-                    onChange={(event) => setUrl(event.target.value)}
-                    placeholder="https://… رابط"
-                    dir="ltr"
-                    aria-label="رابط جديد"
-                  />
-                  <button
-                    type="button"
-                    disabled={busy || !url.trim()}
-                    onClick={() => void addLink()}
-                  >
-                    <Link2 size={16} /> أضف
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  className="lp-sheet-wide"
-                  disabled={busy}
-                  onClick={() => file.current?.click()}
-                >
-                  <Upload size={16} /> ارفع ملف PDF
-                </button>
-                <input
-                  ref={file}
-                  type="file"
-                  accept="application/pdf"
-                  hidden
-                  onChange={(event) => {
-                    const picked = event.target.files?.[0];
-                    event.target.value = "";
-                    if (picked) void addPdf(picked);
-                  }}
-                />
-              </>
-            )}
-            {item.kind !== "finish" && (
-              <div className="lp-sheet-row">
-                <input
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  aria-label="اسم المحطة"
-                  maxLength={120}
-                />
-                <button
-                  type="button"
-                  disabled={busy || !title.trim() || title.trim() === item.title}
-                  onClick={() =>
-                    void run(
-                      () => renameFn({ data: { id: item.id, title: title.trim() } }),
-                      "انحفظ الاسم",
-                    )
-                  }
-                >
-                  احفظ الاسم
-                </button>
-              </div>
-            )}
-            <button
-              type="button"
-              className="lp-sheet-wide is-danger"
-              disabled={busy}
-              onClick={() => {
-                if (!window.confirm("أكيد بدك تحذف هالمحطة من المسار؟")) return;
-                void run(async () => {
-                  await deleteFn({ data: { id: item.id } });
-                  onClose();
-                }, "انحذفت المحطة");
-              }}
-            >
-              <Trash2 size={16} /> احذف المحطة
-            </button>
-          </div>
-        )}
+        {item.kind !== "exercises" && settings}
       </div>
     </div>
   );

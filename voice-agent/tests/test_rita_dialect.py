@@ -90,10 +90,10 @@ class GreetingTests(unittest.TestCase):
 class PromptTests(unittest.TestCase):
     def test_prompt_teaches_the_dialect_and_the_answer_shape(self):
         prompt = build_prompt({}, RitaSessionState(), dialogue=True)
-        self.assertIn("JORDANIAN SPEECH", prompt)
-        self.assertIn("هيك (not هكذا)", prompt)
+        self.assertIn("natural spoken Jordanian", prompt)
+        self.assertIn("هكذا", prompt.split("Never formal", 1)[1][:80])
         self.assertIn("REPLY LANGUAGE", prompt)
-        self.assertIn("I need to go to the bathroom", prompt)
+        self.assertIn("Can I have the bill, please?", prompt)
 
 
 class WatchTests(unittest.TestCase):
@@ -188,6 +188,18 @@ class CleanerInAPipelineTests(unittest.TestCase):
 
         self.assertEqual(asyncio.run(go()), "هو “Guten Morgen.”")
 
+    def test_after_talk_of_harm_a_reply_without_help_gets_the_help_line(self):
+        async def go(needed: bool, text: str):
+            frames = [LLMFullResponseStartFrame(), LLMTextFrame(text), LLMFullResponseEndFrame()]
+            down, _ = await run_test(RitaSpeechCleaner(help_needed=lambda: needed), frames_to_send=frames)
+            return "".join(f.text for f in down if isinstance(f, LLMTextFrame))
+
+        said = asyncio.run(go(True, "مفهوم، ما في مشكلة."))
+        self.assertTrue(said.startswith("مفهوم، ما في مشكلة.") and "911" in said)
+        # Not added when the reply already gave it, nor when no help is needed.
+        self.assertEqual(asyncio.run(go(True, "اتصل على ٩١١ هلأ.")), "اتصل على ٩١١ هلأ.")
+        self.assertEqual(asyncio.run(go(False, "مفهوم.")), "مفهوم.")
+
     def test_a_leaked_note_never_reaches_the_voice(self):
         async def go():
             frames = [
@@ -261,21 +273,23 @@ class PromptWithoutContradictionsTests(unittest.TestCase):
     def test_the_language_comes_from_one_place(self):
         self.assertNotIn("answer in turn_language", self.prompt)
         self.assertNotIn("Never answer fully in English", self.prompt)
-        self.assertIn("Write in the REPLY LANGUAGE named on the last line", self.prompt)
+        self.assertEqual(self.prompt.count("REPLY LANGUAGE:"), 1)
 
     def test_it_says_which_rule_wins(self):
-        self.assertIn("PRIORITY WHEN RULES CLASH", self.prompt)
-        self.assertIn("a TURN NOTE may allow more", self.prompt)
+        self.assertIn("When rules clash: safety and honesty first", self.prompt)
+        self.assertIn("or a\n  TURN NOTE says otherwise", self.prompt)
 
     def test_the_gendered_word_is_not_planted_as_an_example(self):
         self.assertNotIn("خبريني", self.prompt)
 
-    def test_german_cases_are_stated_correctly(self):
-        self.assertIn("do not all take the dative", self.prompt)
-        self.assertIn("hoffen takes auf + accusative", self.prompt)
+    def test_the_prompt_is_short(self):
+        # The old prompt was about 3,500 words and contradicted itself; the new one is a third of that.
+        self.assertLess(len(self.prompt.split()), 1200)
 
     def test_examples_do_not_all_open_with_the_same_word(self):
-        self.assertEqual(self.prompt.count("بنقولها"), 1)
+        replies = [line.split(":", 1)[1].split()[0] for line in self.prompt.splitlines() if line.startswith("Uzyra:")]
+        self.assertGreaterEqual(len(replies), 4)
+        self.assertEqual(len(set(replies)), len(replies))
 
 
 class NeutralWordingTests(unittest.TestCase):
@@ -284,6 +298,23 @@ class NeutralWordingTests(unittest.TestCase):
 
         self.assertEqual(neutral_wording("أوكي، خبريني عن يومك"), "أوكي، احكيلي عن يومك")
         self.assertEqual(neutral_wording("خبرني شو صار"), "احكيلي شو صار")
+
+    def test_a_you_marked_for_one_gender_loses_the_mark(self):
+        from rita_dialect import neutral_wording
+
+        # From the live chat: "أهلاً، تمام، إنتِ كيف؟" to a man.
+        self.assertEqual(neutral_wording("أهلاً، تمام، إنتِ كيف؟"), "أهلاً، تمام، إنت كيف؟")
+        self.assertEqual(neutral_wording("وانتي شو رأيك؟"), "وانتي شو رأيك؟".replace("انتي", "انت"))
+        self.assertEqual(neutral_wording("إنتَ جاي؟"), "إنت جاي؟")
+        self.assertEqual(neutral_wording("إنتو كيفكم؟"), "إنتو كيفكم؟")
+
+    def test_would_like_to_aimed_at_one_gender_becomes_neutral(self):
+        from rita_dialect import neutral_wording
+
+        # From the eval: "شو حابّة تحكي اليوم؟" to a man.
+        self.assertEqual(neutral_wording("أكيد، احكيلي شو حابّة تحكي اليوم؟"), "أكيد، احكيلي شو بدك تحكي اليوم؟")
+        self.assertEqual(neutral_wording("حابب نكمل؟"), "بدك نكمل؟")
+        self.assertEqual(neutral_wording("أنا حابة نكمل"), "أنا حابة نكمل")
 
     def test_other_words_are_left_alone(self):
         from rita_dialect import neutral_wording
@@ -306,3 +337,18 @@ class NeutralSayItTests(unittest.TestCase):
         self.assertEqual(neutral_wording("كيف تقوليه؟"), "كيف تقوله؟")
         for text in ("بتقولها", "قولي", "تقولين", "مقولية"):
             self.assertEqual(neutral_wording(text), text)
+
+
+def test_a_phonetic_transcription_is_not_spoken():
+    from rita_dialect import SpeechTextFilter
+
+    def spoken(chunks):
+        f = SpeechTextFilter()
+        return "".join(f.feed(c) for c in chunks) + f.pending
+
+    assert spoken(['"Comfortable" بتنطق /ˈkʌm.fɚ.tə.bəl/، يعني كَم‑فر‑تبل.']) == '"Comfortable" بتنطق يعني كَم‑فر‑تبل.'
+    # Split across streamed pieces, the same result.
+    assert spoken(['"Wednesday" بتنطق /ˈwen', 'z.deɪ/ يعني وِنز‑دي.']) == '"Wednesday" بتنطق يعني وِنز‑دي.'
+    # A slash that is not a transcription stays.
+    assert spoken(["Use he/she here."]) == "Use he/she here."
+    assert spoken(["a / b"]) == "a / b"

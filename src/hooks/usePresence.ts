@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/legacy-client";
 
 /**
  * Tracks login events (one row per SIGNED_IN) and heartbeats a presence row
- * every 60s while the user is signed in. Mount once at the root.
+ * every 15 min (visible + active tabs only) while the user is signed in. Mount once at the root.
  *
  * IMPORTANT: never `await` inside the onAuthStateChange callback — doing so
  * can deadlock the Supabase auth client and stall every subsequent request
@@ -14,6 +14,21 @@ export function usePresence() {
     let disposed = false;
     let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
     let activeUserId: string | null = null;
+    let lastActivity = Date.now();
+    let wasIdle = false;
+    const onActivity = () => {
+      const idleBefore = wasIdle || Date.now() - lastActivity > 5 * 60_000;
+      lastActivity = Date.now();
+      wasIdle = false;
+      if (idleBefore && activeUserId && !document.hidden) heartbeat(activeUserId);
+    };
+    const onVisibility = () => {
+      if (document.hidden) wasIdle = true;
+      else onActivity();
+    };
+    const activityEvents = ["pointerdown", "keydown", "touchstart", "scroll"] as const;
+    activityEvents.forEach((e) => window.addEventListener(e, onActivity, { passive: true }));
+    document.addEventListener("visibilitychange", onVisibility);
 
     function heartbeat(uid: string) {
       void supabase
@@ -30,10 +45,13 @@ export function usePresence() {
       stop();
       activeUserId = uid;
       heartbeat(uid);
+      // Only write while the tab is visible and the user interacted in the last
+      // 5 minutes, so forgotten/idle tabs never keep the database awake.
       heartbeatTimer = setInterval(() => {
-        if (typeof document !== "undefined" && document.hidden) return;
+        if (document.hidden) return;
+        if (Date.now() - lastActivity > 5 * 60_000) return;
         heartbeat(uid);
-      }, 180_000);
+      }, 15 * 60_000);
     }
 
     function stop() {
@@ -79,6 +97,8 @@ export function usePresence() {
       disposed = true;
       sub?.subscription.unsubscribe();
       stop();
+      activityEvents.forEach((e) => window.removeEventListener(e, onActivity));
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 }

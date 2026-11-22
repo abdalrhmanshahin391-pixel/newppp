@@ -1,3 +1,4 @@
+import { useWorkspaceTask } from "../WorkspaceGuard";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -35,6 +36,7 @@ export function useGuides(curriculumId: string) {
   const [listError, setListError] = useState("");
   const [progress, setProgress] = useState<Record<string, GuideProgress>>({});
   const [running, setRunning] = useState(false);
+  useWorkspaceTask(running);
   const cancel = useRef(false);
 
   const refresh = useCallback(async () => {

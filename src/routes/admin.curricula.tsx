@@ -1,17 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
+import { useCurriculumAdminData } from "@/components/rita-lessons/admin/book/useCurriculumAdminData";
 import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { guardRedirect } from "@/lib/guard-redirect";
-import { BOOK_STEPS, type BookStep, type ExercisesState } from "@/lib/rita-book-flow";
-import { adminCurriculumOverview, adminExercisesSummary } from "@/lib/rita-curriculum.functions";
+import { BOOK_STEPS, type BookStep } from "@/lib/rita-book-steps";
 import { BooksGrid } from "@/components/rita-lessons/admin/book/BooksGrid";
 import { BookWorkspace } from "@/components/rita-lessons/admin/book/BookWorkspace";
 import { NewBookDialog } from "@/components/rita-lessons/admin/book/NewBookDialog";
 import { LanguageCheck } from "@/components/rita-lessons/admin/book/LanguageCheck";
 import { ErrorBox } from "@/components/rita-lessons/admin/book/BookBits";
-import { errorText } from "@/components/rita-lessons/admin/book/book-utils";
 
 type CurriculaSearch = { book?: string; step?: BookStep };
 
@@ -28,8 +26,6 @@ export const Route = createFileRoute("/admin/curricula")({
   component: AdminCurricula,
 });
 
-type Overview = Awaited<ReturnType<typeof adminCurriculumOverview>>;
-
 /**
  * Uzyra's books for admins: the list of books (each with its next step), or one book worked through
  * in four steps. The book and step are in the address, so back and reload keep the place.
@@ -38,47 +34,14 @@ function AdminCurricula() {
   const { isAdmin, loading } = useAuth();
   const navigate = useNavigate({ from: "/admin/curricula" });
   const { book: bookId, step } = Route.useSearch();
-  const overviewFn = useServerFn(adminCurriculumOverview);
-  const summaryFn = useServerFn(adminExercisesSummary);
-  const [overview, setOverview] = useState<Overview | null>(null);
-  const [exercises, setExercises] = useState<Record<string, Record<string, ExercisesState>>>({});
-  const [exercisesReady, setExercisesReady] = useState(true);
-  const [loadError, setLoadError] = useState("");
+  const { overview, exercises, exercisesReady, loadError, refresh } =
+    useCurriculumAdminData(isAdmin);
   const [newBookOpen, setNewBookOpen] = useState(false);
   const [pdfCache] = useState(() => new Map<string, File>());
 
   useEffect(() => {
     if (!loading && !isAdmin) guardRedirect(navigate);
   }, [loading, isAdmin, navigate]);
-
-  const refresh = useCallback(async () => {
-    setLoadError("");
-    try {
-      const next = await overviewFn();
-      setOverview(next);
-      const books = next.curricula.filter((book) => book.status !== "archived");
-      const summaries = await Promise.all(
-        books.map((book) =>
-          summaryFn({ data: { curriculumId: book.id } }).catch(() => ({
-            ready: true,
-            byLesson: {},
-          })),
-        ),
-      );
-      setExercises(
-        Object.fromEntries(books.map((book, index) => [book.id, summaries[index].byLesson])),
-      );
-      setExercisesReady(summaries.every((summary) => summary.ready));
-    } catch (error) {
-      // A failed load must never leave a silent spinner: show the error and a retry.
-      setOverview(null);
-      setLoadError(errorText(error));
-    }
-  }, [overviewFn, summaryFn]);
-
-  useEffect(() => {
-    if (isAdmin) void refresh();
-  }, [isAdmin, refresh]);
 
   const open = useCallback(
     (id: string, nextStep: BookStep) => void navigate({ search: { book: id, step: nextStep } }),
@@ -139,7 +102,7 @@ function AdminCurricula() {
           <div className="grid place-items-center py-24">
             <Loader2 className="animate-spin text-[var(--pp-accent-text)]" />
           </div>
-        ) : overview && selected ? (
+        ) : overview && selected && !loadError ? (
           <BookWorkspace
             key={selected.id}
             book={selected}

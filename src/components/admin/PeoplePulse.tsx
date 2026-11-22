@@ -20,7 +20,8 @@ function ago(s: string) {
 export function PeoplePulse() {
   const { data, isFetching } = useQuery({
     queryKey: ["people-pulse"],
-    refetchInterval: 60_000,
+    refetchInterval: false,
+    refetchOnWindowFocus: true,
     queryFn: () => getPeoplePulse({}) as Promise<{ pulse: Pulse; online: OnlineRow[] }>,
   });
 

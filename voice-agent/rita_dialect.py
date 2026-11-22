@@ -159,10 +159,21 @@ _GENDERED_TELL_ME = re.compile(r"(?<![\w\u0600-\u06ff])(?:خبريني|خبرن�
 _GENDERED_SAY = re.compile(r"(?<![\w\u0621-\u064a])(ب?)تقولي(ها|ه)(?![\w\u0621-\u064a])")
 
 
+# "You" marked for one gender (إنتِ، إنتي، إنتَ); the plain written إنت does not pick one.
+_GENDERED_YOU = re.compile(r"(?<![\w\u0621-\u064a])([وف]?[إا]نت)(?:\u0650|\u064e|ي)(?![\w\u0621-\u064a])")
+
+
+# "Would you like to" to one gender (حابّة تحكي، حابب نكمل) becomes the neutral بدك; Uzyra's own
+# "أنا حابة" is left alone.
+_GENDERED_WOULD_LIKE = re.compile(r"(?<![\w\u0621-\u064a])(?<!أنا )(?<!انا )حاب(?:\u0651)?(?:ة|ب)(?=\s+[تن])")
+
+
 def neutral_wording(text: str) -> str:
-    """Swap gendered "tell me" / "you say it" for neutral ones; the model still writes them now and then."""
+    """Swap gendered "tell me" / "you say it" / "you" for neutral ones; the model still writes them."""
 
     text = _GENDERED_TELL_ME.sub("احكيلي", text)
+    text = _GENDERED_YOU.sub(r"\1", text)
+    text = _GENDERED_WOULD_LIKE.sub("بدك", text)
     return _GENDERED_SAY.sub(lambda m: f"{m.group(1)}تقول{m.group(2)}", text)
 
 
@@ -201,6 +212,12 @@ def _probe(buffer: str) -> str:
     return "keep"
 
 
+#: Phonetic (IPA) letters: a /…/ span that holds one is a transcription the voice would spell out.
+_PHONETIC = frozenset("ˈˌəɪʊɔæɑɒʌːθðʃʒŋɚɝɛɜɐ")
+#: The longest /…/ span held back while it might be a transcription.
+_MAX_SLASH = 48
+
+
 class SpeechTextFilter:
     """Clean-up that works on any slicing of a streamed reply: markdown marks, a stop after a
     closing quote, and self-notes. Only text that starts like a leaked note is ever held back,
@@ -218,6 +235,8 @@ class SpeechTextFilter:
         self._num = ""  # up to two digits at the start of a sentence, held while they might be "1."
         self._num_mark = ""  # the "." or ")" that followed them
         self._list_next: int | None = None  # the number a spoken list would continue with
+        self._slash = ""  # a "/…" span held while it might be a phonetic transcription
+        self._skip_comma = False  # drop the comma that followed a dropped transcription
 
     @property
     def pending(self) -> str:
@@ -225,7 +244,8 @@ class SpeechTextFilter:
 
         held, self._probe = self._probe, ""
         digits, self._num, self._num_mark = self._num + self._num_mark, "", ""
-        return digits + held if held and _probe(held) != "leak" else digits
+        slash, self._slash = self._slash, ""
+        return (digits + held if held and _probe(held) != "leak" else digits) + slash
 
     def _emit(self, out: list[str], text: str) -> None:
         for ch in text:
@@ -271,10 +291,40 @@ class SpeechTextFilter:
         self._emit(out, held)
         return False
 
+    def _take_slash(self, ch: str, out: list[str]) -> bool:
+        """Hold "/…/" and drop it when it is a phonetic transcription (/ˈkʌm.fər.tə.bəl/): the voice
+        would read the symbols one by one. Any other slash ("and/or") is let through unchanged.
+        Returns True when `ch` was used up here."""
+
+        if not self._slash:
+            if ch != "/":
+                return False
+            self._slash = ch
+            return True
+        self._slash += ch
+        if ch == "/":
+            span, self._slash = self._slash, ""
+            if any(letter in _PHONETIC for letter in span):
+                self._skip_comma = True
+                return True
+            self._emit(out, span)
+            return True
+        if ch == "\n" or len(self._slash) > _MAX_SLASH:
+            span, self._slash = self._slash, ""
+            self._emit(out, span)
+        return True
+
     def feed(self, text: str) -> str:
         out: list[str] = []
         for ch in text:
             if ch in "*`":
+                continue
+            if self._skip_comma:
+                # The space before the transcription was already spoken: drop the comma and spaces after it.
+                if ch in " ،,":
+                    continue
+                self._skip_comma = False
+            if self._take_slash(ch, out):
                 continue
             # A heading mark or a lone underscore at the start of a line is markdown, not speech.
             if ch in "#_" and (not self._tail or self._tail[-1] in " \n"):
@@ -315,14 +365,33 @@ class SpeechTextFilter:
         return "".join(out)
 
 
+#: Said after a reply to a learner who spoke of disappearing or harm, when the reply itself gave no
+#: real help: safety does not depend on the model following its note. No gender for the learner.
+HELP_LINE = "رقم الطوارئ 911 موجود هلأ، أو أي حدا بتثق فيه. أنا هون معك."
+_HELP_GIVEN = re.compile(r"911|٩١١")
+
+
+def help_line_for(reply: str, needed: bool) -> str:
+    """The help line to add after this reply, or "" when it is not needed or already there."""
+
+    return HELP_LINE if needed and not _HELP_GIVEN.search(reply) else ""
+
+
 class RitaSpeechCleaner(FrameProcessor):
     """Place between the language model and the voice. The text frame is changed in place so
-    the page's live chat (which reads the same frames) is never shown the text twice."""
+    the page's live chat (which reads the same frames) is never shown the text twice.
 
-    def __init__(self, **kwargs):
+    `help_needed` says whether this reply answers a learner who spoke of disappearing or harm; if
+    the reply gave no real help, HELP_LINE follows it, as text, so it is spoken, shown and kept."""
+
+    def __init__(self, help_needed=None, raw: bool = False, **kwargs):
         super().__init__(**kwargs)
         self._filter = SpeechTextFilter()
         self._raw: list[str] = []
+        self._help_needed = help_needed
+        #: free conversation: the model's words are spoken as written; no word is swapped and no
+        #: line is added (only markdown marks the voice would read are dropped)
+        self._raw_mode = raw
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
@@ -332,13 +401,19 @@ class RitaSpeechCleaner(FrameProcessor):
                 self._raw = []
             elif isinstance(frame, LLMTextFrame):
                 self._raw.append(frame.text)
-                frame.text = neutral_wording(self._filter.feed(frame.text))
+                cleaned = self._filter.feed(frame.text)
+                frame.text = cleaned if self._raw_mode else neutral_wording(cleaned)
                 if not frame.text:
                     return  # everything in it is being held back or dropped
             elif isinstance(frame, LLMFullResponseEndFrame):
                 tail = self._filter.pending
                 if tail:
                     await self.push_frame(TTSSpeakFrame(tail), direction)
+                needed = bool(not self._raw_mode and self._help_needed and self._help_needed())
+                line = help_line_for("".join(self._raw), needed)
+                if line:
+                    logger.info("Uzyra added the help line after a reply that gave none")
+                    await self.push_frame(LLMTextFrame(" " + line), direction)
                 found = scan_dialect("".join(self._raw))
                 if found:
                     logger.bind(findings=found).warning("Uzyra dialect watch")

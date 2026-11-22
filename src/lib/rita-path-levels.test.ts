@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   levelRows,
+  levelPageRows,
   nextLevel,
   normalizeLevel,
   statesFrom,
@@ -109,4 +110,28 @@ test("no choice, or the first level, keeps the server's states", () => {
   const keep = { a1: "done", a2: "current", a3: "locked", b1: "locked", b2: "locked" };
   assert.deepEqual(Object.fromEntries(statesFrom(path, (l) => l.level, null)), keep);
   assert.deepEqual(Object.fromEntries(statesFrom(path, (l) => l.level, "A1")), keep);
+});
+
+test("each level renders its own road with global placement indices", () => {
+  const stops: StopInfo[] = [
+    { level: "A1", finishOf: null, done: true },
+    { level: null, finishOf: null, done: false },
+    { level: null, finishOf: "A1", done: false },
+    { level: "A2", finishOf: null, done: false },
+    { level: null, finishOf: null, done: false },
+    { level: "A1", finishOf: null, done: false },
+  ];
+  const page = (level: "A1" | "A2" | "B1") => levelPageRows(stops, level, (stop) => stop);
+  assert.deepEqual(
+    page("A1").flatMap((row) => (row.type === "node" ? [row.nodeIndex] : [])),
+    [0, 1, 2, 5],
+  );
+  assert.deepEqual(
+    page("A2").flatMap((row) => (row.type === "node" ? [row.nodeIndex] : [])),
+    [3, 4],
+  );
+  assert.deepEqual(
+    page("B1").map((row) => row.type),
+    ["banner"],
+  );
 });

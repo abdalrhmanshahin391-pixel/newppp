@@ -54,9 +54,9 @@ def test_the_prompt_is_the_one_the_live_worker_builds_for_the_same_turns():
 
 
 def test_the_history_changes_the_state_like_a_real_call():
-    plain = build_case(case(history=()))[1]
-    with_history = build_case(case())[1]
-    assert plain != with_history  # the earlier turns are part of the session state
+    plain = build_case(case(history=()))[0]
+    with_history = build_case(case())[0]
+    assert plain.recent_user_turns != with_history.recent_user_turns  # earlier turns shape the state
 
 
 def test_a_site_language_choice_is_applied():
@@ -137,7 +137,7 @@ def test_samples_are_asked_with_the_workers_model_settings_and_failures_are_repo
 
 
 def test_known_wrong_phrases_are_flagged_on_the_replayed_reply():
-    result = asyncio.run(replay_case(FakeClient(["شو حابب نتعلم؟"]), case(), samples=1))
+    result = asyncio.run(replay_case(FakeClient(["كيف فيك اليوم؟"]), case(), samples=1))
     assert result["samples"][0]["watch"]
 
 

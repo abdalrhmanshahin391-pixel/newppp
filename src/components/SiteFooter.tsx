@@ -15,6 +15,7 @@ export function SiteFooter() {
       columns={footerColumns(ar, settings.offers_page_enabled)}
       supportEmail={SUPPORT_EMAIL}
       year={new Date().getFullYear()}
+      tone="light"
     />
   );
 }

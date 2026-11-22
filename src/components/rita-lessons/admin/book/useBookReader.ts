@@ -1,3 +1,4 @@
+import { useWorkspaceTask } from "../WorkspaceGuard";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { failureSummary, isFatalReason, readPages, unresolvedIn } from "@/lib/page-reading";
@@ -43,6 +44,7 @@ export function useBookReader({
   const checkKeyFn = useServerFn(adminCheckVisionKey);
   const savePagesFn = useServerFn(adminSaveCurriculumPages);
   const [running, setRunning] = useState(false);
+  useWorkspaceTask(running);
   const [status, setStatus] = useState("");
   const [error, setError] = useState<ReadError | null>(null);
   const [problems, setProblems] = useState<PageProblem[]>([]);

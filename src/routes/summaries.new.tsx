@@ -22,12 +22,6 @@ import { generateSummary } from "@/lib/summaries.functions";
 import { saveAiKey, listAiKeyStatus, testGeminiKey } from "@/lib/jarvis.functions";
 import { SiteHeader } from "@/components/SiteHeader";
 import { toast } from "sonner";
-import { z } from "zod";
-
-const SearchSchema = z.object({
-  source: z.enum(["photos", "pdf"]).optional(),
-});
-
 export const Route = createFileRoute("/summaries/new")({
   head: () => ({
     meta: [
@@ -45,7 +39,12 @@ export const Route = createFileRoute("/summaries/new")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  validateSearch: (s) => SearchSchema.parse(s),
+  validateSearch: (search): { source?: Source } => {
+    const { source } = search;
+    if (source === undefined) return {};
+    if (source === "photos" || source === "pdf") return { source };
+    throw new Error("Expected the summary source to be photos or pdf.");
+  },
   component: NewSummary,
 });
 

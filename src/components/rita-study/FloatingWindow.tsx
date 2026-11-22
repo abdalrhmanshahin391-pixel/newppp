@@ -1,6 +1,7 @@
+import "./floating-window.css";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { ChevronLeft, ChevronsRight, X } from "lucide-react";
+import { ChevronLeft, ChevronsRight, PanelRightClose, X } from "lucide-react";
 import { UzyraMark } from "@/components/brand/UzyraMark";
 import { menuCloseSound, menuOpenSound } from "./tech-sound";
 import {
@@ -52,7 +53,7 @@ type TabState = "off" | "hint" | "armed" | "on" | "pulling";
 /** Where the window's place is kept: per kind, or under `place` (the book reader keeps its own). */
 const storageKey = (variant?: Variant, place?: string) =>
   place
-    ? `uzyra-window-rect:${place}`
+    ? `uzyra-window-rect:${place === "book-practice" ? "book-practice-wide-v1" : place}`
     : variant === "practice"
       ? "uzyra-window-rect:practice"
       : "uzyra-window-rect";
@@ -225,6 +226,10 @@ export function FloatingWindow({
       if (variant === "questions") {
         const w = Math.min(960, area.w * 0.88);
         const h = Math.min(700, area.h * 0.88);
+        initial = { w, h, x: (area.w - w) / 2, y: (area.h - h) / 2 };
+      } else if (place === "book-practice") {
+        const w = Math.min(850, area.w - EDGE * 2);
+        const h = Math.min(620, area.h - EDGE * 2);
         initial = { w, h, x: (area.w - w) / 2, y: (area.h - h) / 2 };
       } else if (variant === "practice") {
         // Beside the lesson, against the right edge, as iPad's Slide Over.
@@ -599,13 +604,20 @@ export function FloatingWindow({
                 </p>
                 <button
                   type="button"
-                  className="fw-dock"
+                  className={place === "book-practice" ? "fw-dock fw-dock-book" : "fw-dock"}
                   aria-label="زيح النافذة لليمين"
                   title="زيح النافذة لليمين"
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={() => tuck(0)}
                 >
-                  <ChevronsRight size={15} strokeWidth={2.2} aria-hidden="true" />
+                  {place === "book-practice" ? (
+                    <>
+                      <PanelRightClose size={17} aria-hidden="true" />
+                      <span>إلى الجانب</span>
+                    </>
+                  ) : (
+                    <ChevronsRight size={15} strokeWidth={2.2} aria-hidden="true" />
+                  )}
                 </button>
               </div>
               <div className="fw-body">{children}</div>

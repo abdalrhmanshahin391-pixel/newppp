@@ -1,3 +1,4 @@
+import { useWorkspaceTask } from "./WorkspaceGuard";
 import { useCallback, useEffect, useState } from "react";
 import { KIND_TEXT } from "@/lib/study/lesson-maker";
 import { Link } from "@tanstack/react-router";
@@ -56,6 +57,7 @@ export function StudyGuidePanel({
   const [state, setState] = useState<StudyLessonState | null>(null);
   const [loadError, setLoadError] = useState("");
   const [busy, setBusy] = useState("");
+  useWorkspaceTask(Boolean(busy));
 
   const load = useCallback(async () => {
     try {

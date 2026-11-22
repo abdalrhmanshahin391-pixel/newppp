@@ -68,15 +68,24 @@ const LATIN_RUN =
   /[-+]?[A-Za-z0-9][A-Za-z0-9'’+/-]*(?:\s+(?:[/+-]\s+)?[A-Za-z0-9][A-Za-z0-9'’+/-]*)*/g;
 
 /** Latin words inside an Arabic note keep their own direction, so "he / she / it" stays in order. */
-function isolateLatin(escaped: string): string {
-  return escaped.replace(LATIN_RUN, '<bdi dir="ltr">$&</bdi>');
+function isolateLatin(text: string): string {
+  let html = "";
+  let end = 0;
+  for (const match of text.matchAll(LATIN_RUN)) {
+    html +=
+      escapeHtml(text.slice(end, match.index)) +
+      '<bdi dir="ltr">' +
+      escapeHtml(match[0]) +
+      "</bdi>";
+    end = match.index + match[0].length;
+  }
+  return html + escapeHtml(text.slice(end));
 }
 
 function runsHtml(runs: Run[], arabic = false): string {
   return runs
     .map((run) => {
-      let html = escapeHtml(run.text);
-      html = arabic ? isolateLatin(html) : keepTogether(html);
+      let html = arabic ? isolateLatin(run.text) : keepTogether(escapeHtml(run.text));
       if (run.term) html = `<span class="term">${html}</span>`;
       if (run.strong) html = `<b>${html}</b>`;
       if (run.italic) html = `<i>${html}</i>`;
@@ -114,7 +123,7 @@ function tableHtml(section: Extract<Section, { kind: "table" }>, s: string, name
   const head = section.columns
     .map(
       (column, c) =>
-        `<th><span class="pill ${tone(column.tone)}"${name(null, `${s}.hd.c${c + 1}`, column.label)}>${escapeHtml(column.label)}</span></th>`,
+        `<th><span class="pill ${tone(column.tone)}"${name(null, `${s}.hd.c${c + 1}`, column.label)}>${inline(column.label)}</span></th>`,
     )
     .join("");
   const body = section.rows
@@ -129,20 +138,20 @@ function tableHtml(section: Extract<Section, { kind: "table" }>, s: string, name
           .join("")}</tr>`,
     )
     .join("");
-  return `<section class="block"${sectionAttr(s, name)}><h2 class="sec"${name(`${s}.h`, `${s}.h`, section.heading)}>${escapeHtml(section.heading)}</h2><table class="grid"><colgroup>${cols}</colgroup><thead><tr${name(`${s}.hd`, null)}>${head}</tr></thead><tbody>${body}</tbody></table></section>`;
+  return `<section class="block"${sectionAttr(s, name)}><h2 class="sec"${name(`${s}.h`, `${s}.h`, section.heading)}>${inline(section.heading)}</h2><table class="grid"><colgroup>${cols}</colgroup><thead><tr${name(`${s}.hd`, null)}>${head}</tr></thead><tbody>${body}</tbody></table></section>`;
 }
 
 function matrixHtml(section: Extract<Section, { kind: "matrix" }>, s: string, name: Namer): string {
   const head = `<th></th>${section.columns
     .map(
       (column, c) =>
-        `<th><span class="pill tone-blue solid"${name(null, `${s}.hd.c${c + 1}`, column)}>${escapeHtml(column)}</span></th>`,
+        `<th><span class="pill tone-blue solid"${name(null, `${s}.hd.c${c + 1}`, column)}>${inline(column)}</span></th>`,
     )
     .join("")}`;
   const body = section.rows
     .map(
       (row, r) =>
-        `<tr${name(`${s}.r${r + 1}`, null)}><th class="rowhead"><span class="pill tone-green solid tall"${name(null, `${s}.r${r + 1}.l`, row.label)}>${escapeHtml(row.label)}</span></th>${row.cells
+        `<tr${name(`${s}.r${r + 1}`, null)}><th class="rowhead"><span class="pill tone-green solid tall"${name(null, `${s}.r${r + 1}.l`, row.label)}>${inline(row.label)}</span></th>${row.cells
           .map(
             (value, c) =>
               `<td${name(null, `${s}.r${r + 1}.c${c + 1}`, value)}>${inline(value)}</td>`,
@@ -150,7 +159,7 @@ function matrixHtml(section: Extract<Section, { kind: "matrix" }>, s: string, na
           .join("")}</tr>`,
     )
     .join("");
-  return `<section class="block"${sectionAttr(s, name)}><h2 class="sec"${name(`${s}.h`, `${s}.h`, section.heading)}>${escapeHtml(section.heading)}</h2><table class="grid matrix"><thead><tr${name(`${s}.hd`, null)}>${head}</tr></thead><tbody>${body}</tbody></table></section>`;
+  return `<section class="block"${sectionAttr(s, name)}><h2 class="sec"${name(`${s}.h`, `${s}.h`, section.heading)}>${inline(section.heading)}</h2><table class="grid matrix"><thead><tr${name(`${s}.hd`, null)}>${head}</tr></thead><tbody>${body}</tbody></table></section>`;
 }
 
 function usageHtml(section: Extract<Section, { kind: "usage" }>, s: string, name: Namer): string {
@@ -161,12 +170,12 @@ function usageHtml(section: Extract<Section, { kind: "usage" }>, s: string, name
       const label = !item.label
         ? ""
         : labelSeg
-          ? `<span${labelSeg}>${escapeHtml(item.label)}</span>: `
-          : `${escapeHtml(item.label)}: `;
+          ? `<span${labelSeg}>${inline(item.label)}</span>: `
+          : `${inline(item.label)}: `;
       return `<p${name(id, null)}>${label}<span class="ex"${name(null, `${id}.x`, item.example)}>${inline(item.example)}</span></p>`;
     })
     .join("");
-  return `<section class="card usage block"${sectionAttr(s, name)}><h3${name(`${s}.h`, `${s}.h`, section.heading)}>${escapeHtml(section.heading)}</h3>${items}</section>`;
+  return `<section class="card usage block"${sectionAttr(s, name)}><h3${name(`${s}.h`, `${s}.h`, section.heading)}>${inline(section.heading)}</h3>${items}</section>`;
 }
 
 function rulesHtml(section: Extract<Section, { kind: "rules" }>, s: string, name: Namer): string {
@@ -181,7 +190,7 @@ function rulesHtml(section: Extract<Section, { kind: "rules" }>, s: string, name
         .join("")}</li>`;
     })
     .join("");
-  return `<section class="block"${sectionAttr(s, name)}><h2 class="sec"${name(`${s}.h`, `${s}.h`, section.heading)}>${escapeHtml(section.heading)}</h2><ul class="rules">${items}</ul></section>`;
+  return `<section class="block"${sectionAttr(s, name)}><h2 class="sec"${name(`${s}.h`, `${s}.h`, section.heading)}>${inline(section.heading)}</h2><ul class="rules">${items}</ul></section>`;
 }
 
 function sectionAttr(s: string, name: Namer): string {
@@ -291,7 +300,7 @@ export function renderGuideHtml(content: GuideContent, options: GuideHtmlOptions
     ? `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; font-src ${escapeHtml(fontOrigin(base))}; img-src data:">`
     : "";
   const styles = css(base, escapeCssString(footer)) + (options.screen ? SCREEN_CSS : "");
-  const body = `<header class="head"><h1${name("t", "t", content.title)}>${keepTogether(escapeHtml(content.title))}</h1><div class="brand" role="img" aria-label="${BRAND_NAME}">${markSvg}<span aria-hidden="true">UZYR${wordmarkA}</span></div></header>
+  const body = `<header class="head"><h1${name("t", "t", content.title)}>${inline(content.title)}</h1><div class="brand" role="img" aria-label="${BRAND_NAME}">${markSvg}<span aria-hidden="true">UZYR${wordmarkA}</span></div></header>
 <p class="intro"${name("i", "i", content.intro)}>${inline(content.intro)}</p>
 ${content.sections.map((section, index) => sectionHtml(section, index, name)).join("\n")}
 ${callout}

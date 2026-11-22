@@ -1,0 +1,16 @@
+.library-stage { perspective: 1600px; margin-top: 2rem; }
+.library-screen { overflow: hidden; border: 1px solid var(--pp-ink, #161619); border-radius: 16px; background: white; color: #161619; transform-origin: 50% 0%; }
+.library-bar { display: flex; align-items: center; justify-content: space-between; padding: .8rem 1.1rem; background: #161619; color: white; font-size: 14px; }
+.library-bar span { opacity: .8; }
+.library-shelves { padding: 0 clamp(.8rem, 2.3vw, 2rem) 1.4rem; --c: #161619; --soft: #f2f2f3; }
+.library-shelves .bk-shelf { margin-top: 1.5rem; }
+.library-shelves .bk-item { cursor: default; }
+.library-shelves .bk-item:active { transform: none; }
+.library-shelves .bk-row:focus-visible { outline: 2px solid var(--pp-accent); }
+.library-showcase-action { margin-top: 1.25rem; text-align: center; }
+.library-showcase-action a { display: inline-block; padding: .75rem 1.25rem; background: #161619; color: white; border-radius: .65rem; }
+
+.library-preview-slot { margin-top: 2rem; }
+.library-preview-slot:empty { min-block-size: 52.2rem; }
+.library-preview-slot .library-stage { margin-top: 0; }
+@media (max-width: 760px) { .library-preview-slot:empty { min-block-size: 48.4rem; } }

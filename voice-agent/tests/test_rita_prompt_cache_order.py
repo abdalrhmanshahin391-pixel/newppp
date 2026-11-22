@@ -17,10 +17,10 @@ def prompt(language):
 class PromptOrderTests(unittest.TestCase):
     def test_the_per_turn_state_is_last_so_the_long_fixed_part_can_be_cached(self):
         text = prompt("ar")
-        state_at = text.index("Structured session state:")
-        self.assertGreater(state_at, text.index("HUMAN TONE"))
-        self.assertGreater(state_at, text.index("TEACHING CONTROL"))
-        self.assertNotIn("VOICE CONTRACT", text[state_at:])
+        state_at = text.index("SESSION STATE")
+        self.assertGreater(state_at, text.index("HOW YOU TALK"))
+        self.assertGreater(state_at, text.index("TEACHING"))
+        self.assertNotIn("WHO YOU ARE", text[state_at:])
 
     def test_everything_before_the_state_is_identical_from_turn_to_turn(self):
         a, b = prompt("ar"), prompt("de")

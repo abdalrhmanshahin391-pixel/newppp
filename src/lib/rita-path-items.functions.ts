@@ -1,3 +1,6 @@
+import { CEFR } from "./rita-path-levels";
+import filmLines from "./sintel-lines.json";
+import { mergePath, placeLessonAtGap } from "./rita-path-layout";
 // The admin's editing of the lesson path (move stops, add exercise / resources stops, their files
 // and links) and the learner's view of a resources stop. Runs with the user's own session: the
 // tables' row-level security lets only admins write, and the layout is saved by one database
@@ -6,6 +9,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";
 import { layoutOrders, type PathItem, type PathRef } from "./rita-path-layout";
+import { MAX_STOP_CLIPS, cleanClipIds } from "./film-clips";
 import {
   MAX_RESOURCES,
   NewResourceSchema,
@@ -91,6 +95,7 @@ export const adminAddPathItem = createServerFn({ method: "POST" })
     parse(
       z.object({
         language,
+        level: z.enum(CEFR).optional(),
         kind: z.enum(["exercises", "resources", "finish"]),
         title: z.string().trim().min(1).max(120),
         list: z.array(ref).max(500),
@@ -108,6 +113,7 @@ export const adminAddPathItem = createServerFn({ method: "POST" })
         kind: data.kind,
         title: data.title,
         path_order: 0,
+        ...(data.level && { map_level: data.level }),
         created_by: context.userId,
       })
       .select("id, kind, title, path_order")
@@ -136,7 +142,9 @@ export const adminAddPathItem = createServerFn({ method: "POST" })
       kind: created.kind,
       title: created.title,
       path_order: Number(placed?.path_order ?? 0),
+      map_level: data.level,
       resource_count: 0,
+      ...(data.kind === "exercises" ? { clip_ids: [] } : {}),
     };
   });
 
@@ -273,4 +281,186 @@ export const adminDeletePathItemResource = createServerFn({ method: "POST" })
     if (row?.file_path)
       await context.supabase.storage.from(RESOURCES_BUCKET).remove([row.file_path]);
     return { ok: true };
+  });
+
+/** Re-read placements on the server, retaining draft lessons absent from the learner map. */
+export const adminPlacePathLesson = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    parse(
+      z.object({
+        lessonId: uuid,
+        language: z.string().min(2).max(20),
+        level: z.string().optional(),
+        before: uuid.optional(),
+        after: uuid.optional(),
+      }),
+      input,
+    ),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const [lessonResult, itemResult] = await Promise.all([
+      context.supabase
+        .from("rita_lessons")
+        .select("id, path_order, curriculum:rita_curricula!inner(target_language, level)")
+        .neq("status", "archived")
+        .eq("curriculum.target_language", data.language)
+        .order("path_order"),
+      context.supabase
+        .from("rita_path_items")
+        .select("id, kind, title, path_order")
+        .eq("language", data.language)
+        .order("path_order"),
+    ]);
+    fail(lessonResult.error, "lessons");
+    fail(itemResult.error, "stops");
+    const rows = (lessonResult.data ?? []) as unknown as {
+      id: string;
+      path_order: number | null;
+      curriculum: { level: string };
+    }[];
+    const lesson = rows.find((row) => row.id === data.lessonId);
+    if (!lesson) throw new Error("الدرس مش متاح بهاللغة.");
+    if (data.level && lesson.curriculum.level !== data.level)
+      throw new Error("اختار درس من نفس مستوى مكان الإضافة.");
+    const ordered = mergePath(
+      rows.filter((row) => row.path_order != null),
+      (itemResult.data ?? []).map((row) => ({ ...row, resource_count: 0 })),
+    );
+    const refs = ordered.map((node) => ({
+      type: node.type,
+      id: node.type === "lesson" ? node.lesson.id : node.item.id,
+    }));
+    await saveLayout(context, placeLessonAtGap(refs, lesson.id, data));
+    return { ok: true };
+  });
+
+const validFilmIds = new Set(filmLines.map((line) => line.id));
+const filmSelection = z
+  .array(
+    z
+      .number()
+      .int()
+      .refine((id) => validFilmIds.has(id)),
+  )
+  .max(filmLines.length)
+  .refine((ids) => new Set(ids).size === ids.length);
+
+export const savePathFilmLines = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    parse(
+      z.object({
+        id: uuid,
+        previous: filmSelection,
+        lines: filmSelection,
+        previousGifs: filmSelection,
+      }),
+      input,
+    ),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { data: saved, error } = await context.supabase
+      .from("rita_path_items")
+      .update({ film_lines: data.lines, gif_lines: [] })
+      .eq("id", data.id)
+      .eq("kind", "exercises")
+      .eq("gif_lines", `{${data.previousGifs.join(",")}}`)
+      .eq("film_lines", `{${data.previous.join(",")}}`)
+      .select("id")
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!saved) throw new Error("تغيّرت المحطة. افتحها من جديد قبل الحفظ.");
+    return { ok: true };
+  });
+
+const clipIdList = z
+  .array(uuid)
+  .max(MAX_STOP_CLIPS)
+  .refine((ids) => new Set(ids).size === ids.length);
+
+/** The ids among `ids` that are clips in the library, in the given order. */
+async function knownClipIds(ctx: Ctx, ids: string[]) {
+  if (!ids.length) return [];
+  const { data, error } = await ctx.supabase.from("rita_film_clips").select("id").in("id", ids);
+  fail(error, "clips");
+  return cleanClipIds(ids, new Set(((data ?? []) as { id: string }[]).map((row) => row.id)));
+}
+
+/** The clips of an exercises stop, in order. Refused when someone saved the stop meanwhile. */
+export const adminSaveStopClips = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    parse(z.object({ id: uuid, previous: clipIdList, clipIds: clipIdList }), input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const clipIds = await knownClipIds(context, data.clipIds);
+    const { data: saved, error } = await context.supabase
+      .from("rita_path_items")
+      .update({ clip_ids: clipIds })
+      .eq("id", data.id)
+      .eq("kind", "exercises")
+      .eq("clip_ids", `{${data.previous.join(",")}}`)
+      .select("id")
+      .maybeSingle();
+    fail(error, "save stop");
+    if (!saved) throw new Error("تغيّرت المحطة. افتحها من جديد قبل الحفظ.");
+    return { ok: true, clipIds };
+  });
+
+/** A new exercises stop with these clips, after a lesson or stop of the path (or at its end). */
+export const adminAddClipStop = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    parse(
+      z.object({
+        language: z
+          .string()
+          .trim()
+          .regex(/^[a-z]{2,3}(-[a-z0-9]{2,8})?$/),
+        title: z.string().trim().min(1).max(120),
+        clipIds: clipIdList.min(1),
+        after: uuid.nullable(),
+      }),
+      input,
+    ),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const clipIds = await knownClipIds(context, data.clipIds);
+    if (!clipIds.length) throw new Error("المقاطع المختارة انحذفت. اختار من جديد.");
+    const { adminPathNodes } = await import("./rita-path-items.server");
+    const { nodes, error: pathError } = await adminPathNodes(context.supabase, data.language);
+    fail(pathError, "path");
+    const at = data.after ? nodes.findIndex((node) => node.id === data.after) + 1 : nodes.length;
+    if (at <= 0) throw new Error("مكان الإضافة تغيّر. اختاره من جديد.");
+    const { data: created, error } = await context.supabase
+      .from("rita_path_items")
+      .insert({
+        language: data.language,
+        kind: "exercises",
+        title: data.title,
+        path_order: 0,
+        clip_ids: clipIds,
+        created_by: context.userId,
+      })
+      .select("id")
+      .single();
+    fail(error, "add stop");
+    if (!created) throw new Error("ما انضافت المحطة. جرّب مرة ثانية.");
+    const refs: PathRef[] = nodes.map((node) => ({ type: node.type, id: node.id }));
+    try {
+      await saveLayout(context, [
+        ...refs.slice(0, at),
+        { type: "item", id: created.id },
+        ...refs.slice(at),
+      ]);
+    } catch (cause) {
+      await context.supabase.from("rita_path_items").delete().eq("id", created.id);
+      throw cause;
+    }
+    return { ok: true, id: created.id as string };
   });

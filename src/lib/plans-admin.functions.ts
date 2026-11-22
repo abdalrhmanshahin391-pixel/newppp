@@ -15,6 +15,8 @@ const planSchema = z.object({
   paddle_price_yearly: z.string().max(80).nullable().default(null),
   paddle_price_once: z.string().max(80).nullable().default(null),
   cta_label: z.string().max(40).nullable().default(null),
+  free_talk_seconds: z.number().int().min(0).max(3600000).default(0),
+  free_talk_period: z.enum(["monthly", "lifetime"]).default("monthly"),
   max_flashcards: z.number().int().min(0).nullable(),
   max_ai_questions: z.number().int().min(0).nullable(),
   max_summaries: z.number().int().min(0).nullable(),

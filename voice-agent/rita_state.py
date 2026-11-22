@@ -10,6 +10,67 @@ from rita_dialect import LANGUAGE_NAMES, asks_how_to_say, how_to_say_directive
 from rita_dialogue_acts import Act, Awaiting, classify, normalize, parse_last_question, tokens
 from rita_language_commands import detect_language_command
 
+#: A feeling, a hard moment or a push back on the questions, in Jordanian Arabic, English or German.
+#: A word question about one of these words ("شو يعني stressed؟") is not a feeling: see WORD_QUESTION.
+FEELINGS_SIGNAL = re.compile(
+    r"(?:^|[^\u0621-\u064A])[وفب]?(?:تعبان|تعبانه|تعبانة|ميت تعب|مهلكني|مهلكتني|زهقان|زهقانه|زهقانة|مضغوط|"
+    r"مضغوطة|مخنوق|مخنوقة|مقهور|مقهورة|حزين|حزينه|حزينة|زعلان|زعلانه|زعلانة|وحيد|وحيده|وحيدة|غبي|غبيه|"
+    r"غبية|فاشل|فاشله|فاشلة|يوزلس|ولا اشي|ولا شي|بألم|بالألم|بوجع|موجوع|موجوعة|ما في فايدة|ما في فايده|"
+    r"ما في اشي بستاهل|ما عاد في اشي|أختفي|اختفي|أموت|اموت|انتحر|أنتحر|أأذي|اأذي|أذي حالي|اذي حالي|رسبت|"
+    r"انرفضت|رفضتني|يسمعني|بتحقيق|شو هاي الأسئلة|شو هاي الاسئلة|هاي الأسئلة|هاي الاسئلة|بتسألني|بتسأليني|"
+    r"كل هالأسئلة|كل هالاسئلة|وما عرفت|ما عندي حدا|ما حدا بيحكي|انحرجت|محرج|محرجة|بدهم إياني|بدهم اياني|"
+    r"مش حابب|مش حابة)(?=$|[^\u0621-\u064A])"
+    r"|\b(?:useless|worthless|stupid|hopeless|depressed|lonely|exhausted|sad|stressed|"
+    r"nobody listens|want to disappear|traurig|einsam|gestresst|nutzlos)\b"
+)
+#: The learner asks for answers only, with no practice questions ("don't ask me to try, just give me
+#: what I ask for"); it holds for the rest of the call until they ask to be asked again.
+ANSWERS_ONLY_ON = re.compile(
+    r"(?:ما|لا|بلاش)\s+ت?سأل(?:ني|يني)|بلاش (?:أسئلة|اسئلة)|بدون (?:أسئلة|اسئلة|تمارين)|"
+    r"بس (?:إنت |انت |أنت |انتي |إنتي )?(?:أعطيني|اعطيني|عطيني|عطني|إعطيني)|ما بدي تمارين|"
+    r"\bdon'?t ask me\b|\bno questions\b|\bjust (?:give|tell) me\b|\bstop asking me to\b"
+)
+ANSWERS_ONLY_OFF = re.compile(
+    r"اسألني|اسأليني|إسألني|إسأليني|خلينا نتمرن|خلينا نتدرب|بدي أتمرن|بدي اتمرن|اختبرني|اختبريني|"
+    r"\bquiz me\b|\bask me\b|\btest me\b"
+)
+#: The learner wants Arabic only, with no English or German mixed in ("احكي معي عربي", "ليش بتخلطي");
+#: it holds for the rest of the call until they ask for another language or for a phrase.
+ARABIC_ONLY_ON = re.compile(
+    r"(?:احكي|احكيلي|احكوا|حاكيني|حكيني|كلميني)\s+(?:معي\s+|معاي\s+)?(?:عربي|بالعربي)|"
+    r"(?:عربي|بالعربي)\s+(?:بس|فقط)|بتخلط|بتخلطي|ليش\s+(?:عم\s+)?(?:تخلط|تخلطي|بتدخل|بتحطي)|"
+    r"جمل[ةه]\s+عربي\s+و\s*جمل[ةه]\s+(?:إنجليزي|انجليزي|انجلش)|(?:بحكي|عم بحكي)\s+معك\s+(?:بالعربي|عربي)|"
+    r"بلاش\s+(?:إنجليزي|انجليزي|انجلش|إنجلش)|بدون\s+(?:إنجليزي|انجليزي|انجلش)|"
+    r"\b(?:speak|talk)\s+(?:to me\s+)?(?:in\s+)?arabic(?:\s+only)?\b"
+)
+#: The learner pushes back on Uzyra's questions ("what are these questions", "why do you keep asking").
+PUSHBACK = re.compile(
+    r"(?:شو|شوف|شوفي|شوفو|ليش)\s+(?:هاي|هدول|كل)?\s*(?:ال|هال)?(?:أسئلة|اسئلة)|بتسألني|بتسأليني|بطّل تسأل|بطل تسأل|"
+    r"بطّلي تسألي|بطلي تسألي|بتحقيق|تحقيق معي|stop asking|why do you keep asking"
+)
+#: Hopeless words about oneself: the reply asks once, gently, about thoughts of harm.
+HOPELESS = re.compile(
+    r"يوزلس|(?:إني|اني|حالي) ولا (?:اشي|شي)|ما في فايد|ما عاد في اشي|ما في اشي بستاهل|بلا قيمة|ما إلي قيمة|ما الي قيمة|"
+    r"\b(?:useless|worthless|hopeless|nutzlos|wertlos)\b"
+)
+#: Talk of dying, disappearing or harm: the reply gives real help at once.
+HARM_TALK = re.compile(
+    r"أختفي|اختفي|أموت|اموت|انتحر|أنتحر|أنهي حياتي|انهي حياتي|أذي حالي|اذي حالي|أأذي|اأذي|"
+    r"\b(?:kill myself|want to die|end my life|disappear forever)\b"
+)
+#: "No, I don't think of that": an answer to the harm question, not talk of harm.
+DENIES_HARM = re.compile(r"(?:^|\s)(?:لا|ما|مش)\s+(?:لا\s+)?(?:بفكر|في هيك|رح|بدي)|ما في هيك|\bno\b|\bnot\b|don'?t")
+#: Uzyra asked about thoughts of harm in a reply.
+HARM_QUESTION = re.compile(r"ت[ؤأا]ذ[يى]|[إا]يذاء|تضر|تختف[يى]|اختفاء|harm|hurt(?:ing)? yourself")
+
+
+#: A question about a word or how to say something: the words in it are not the learner's feelings.
+WORD_QUESTION = re.compile(
+    r"(?:شو يعني|شو معنى|يعني شو|معنى كلمة|كيف بقول|كيف أقول|كيف اقول|كيف بحكي|كيف بنقول|كيف بتقول|"
+    r"بالانجليزي|بالإنجليزي|بالالماني|بالألماني|how (?:do|can) (?:i|you) say|what does|"
+    r"what is .+ in|wie sagt man|was bedeutet)"
+)
+
 
 class ResponseType(StrEnum):
     BACKCHANNEL = "backchannel"
@@ -19,6 +80,8 @@ class ResponseType(StrEnum):
     PRONUNCIATION_DRILL = "pronunciation_drill"
     TOOL_ACTION = "tool_action"
     EMPATHY = "empathy_social"
+    #: the learner shares a feeling or a hard moment, or pushes back on the questions: listen first
+    FEELINGS = "feelings"
     COMPLAINT = "complaint"
     SIMPLIFY = "simplify"
 
@@ -92,6 +155,22 @@ class RitaSessionState:
     attempt_count: int = 0
     understood: bool = False
     frustration_signal: bool = False
+    #: this feelings turn has hopeless words about oneself / talk of harm or of disappearing
+    hopeless_signal: bool = False
+    harm_signal: bool = False
+    #: Uzyra already asked about thoughts of harm in this call (asked once, never again)
+    harm_asked: bool = False
+    #: they spoke of harm or of disappearing earlier in this call: help stays in view
+    harm_seen: bool = False
+    pushback_signal: bool = False
+    #: the learner asked for answers only: no questions until they ask to be asked again
+    answers_only: bool = False
+    #: the learner set that wish on this very turn
+    answers_only_new: bool = False
+    #: the learner asked for Arabic only: no other language mixed into Uzyra's own words
+    arabic_only: bool = False
+    #: the learner asked for it on this very turn
+    arabic_only_new: bool = False
     correction_budget: int = 1
     last_feedback_signature: str = ""
     response_type: ResponseType = ResponseType.ANSWER_SHORT
@@ -220,6 +299,23 @@ class RitaSessionState:
                 lowered,
             )
         )
+        feelings = bool(FEELINGS_SIGNAL.search(lowered)) and not WORD_QUESTION.search(lowered)
+        self.harm_signal = bool(HARM_TALK.search(lowered)) and not DENIES_HARM.search(lowered)
+        self.hopeless_signal = bool(HOPELESS.search(lowered)) and not self.harm_signal
+        feelings = feelings or self.harm_signal
+        self.pushback_signal = bool(PUSHBACK.search(lowered))
+        was = self.answers_only
+        if ANSWERS_ONLY_OFF.search(lowered):
+            self.answers_only = False
+        elif ANSWERS_ONLY_ON.search(lowered):
+            self.answers_only = True
+        self.answers_only_new = self.answers_only and not was
+        self.arabic_only_new = bool(ARABIC_ONLY_ON.search(lowered)) and not self.arabic_only
+        if ARABIC_ONLY_ON.search(lowered):
+            self.arabic_only = True
+        elif self.arabic_only and self.active_language not in ("ar", None):
+            self.arabic_only = False  # they asked for another language since
+        self.harm_seen = self.harm_seen or self.harm_signal
         pronunciation = bool(re.search(r"(?:كيف تنطق|نطق|pronounc|aussprach)", lowered))
         correction_retry = bool(
             re.search(r"(?:مرة ثانية|كمان مرة|لسا غلط|again|noch einmal|wiederholen)", lowered)
@@ -234,11 +330,23 @@ class RitaSessionState:
             self.response_type = ResponseType.COMPLAINT
         elif self.last_act == Act.SIMPLIFY:
             self.response_type = ResponseType.SIMPLIFY
+        elif feelings or self._still_listening(lowered):
+            self.response_type = ResponseType.FEELINGS
         elif pronunciation:
             self.response_type = ResponseType.PRONUNCIATION_DRILL
+        elif self.arabic_only_new:
+            self.response_type = ResponseType.ANSWER_SHORT  # agree in one line, not an explanation
         elif re.search(
-            r"(?:اشرح|ليش|لماذا|فصل|تفصيل|كل كلمه|كل كلمة|وضح|why|explain|warum|in detail|word by word|break (?:it )?down)",
+            r"(?:اشرح|فصل|تفصيل|كل كلمه|كل كلمة|وضح|explain|in detail|word by word|break (?:it )?down)",
             lowered,
+        ) or (
+            # "ليش" / "why" is an everyday question; it asks for an explanation only about language.
+            re.search(r"(?:ليش|لماذا|\bwhy\b|warum)", lowered)
+            and re.search(
+                r"(?:[a-zäöüß]{2,}|بنقول|بتقول|بنحكي|بتنكتب|بتصير|بنحط|قاعد[ةه]|كلم[ةه]|جمل[ةه]|فعل|"
+                r"\b(?:say|word|sentence|grammar|verb|tense|sagt|wort|satz)\b)",
+                re.sub(r"\b(?:why|warum)\b", "", lowered),
+            )
         ) or re.search(
             # A comparison or a list of words, phrases or examples belongs on the sheet too.
             r"(?:الفرق بين|فرق بين|difference between|unterschied zwischen|"
@@ -255,6 +363,25 @@ class RitaSessionState:
             self.response_type = ResponseType.CORRECTION
         else:
             self.response_type = ResponseType.ANSWER_SHORT
+
+    def help_needed(self) -> bool:
+        """This reply answers a learner who spoke of disappearing or harm in a feelings turn: it must
+        point to real help (the speech cleaner adds the help line when the model gave none)."""
+
+        return self.response_type == ResponseType.FEELINGS and (self.harm_signal or self.harm_seen)
+
+    def _still_listening(self, lowered: str) -> bool:
+        """The turn after a feeling stays a listening turn while the learner keeps talking about it in
+        Arabic: not a sentence in the language being learned, not a word question, not "let's go on"."""
+
+        if self.response_type != ResponseType.FEELINGS:
+            return False
+        if WORD_QUESTION.search(lowered) or re.search(r"[a-zäöüß]{3,}", lowered):
+            return False
+        return not re.search(
+            r"(?:^|\s)(?:نكمل|نرجع|نتعلم|نتدرب|الدرس|يلا|خلص|شكرا|شكراً|باي)(?=$|[\s،,.!؟?])|let'?s|weiter",
+            lowered,
+        )
 
     def _observe_act(self, clean: str) -> None:
         reading = classify(clean, awaiting=self.awaiting)
@@ -298,6 +425,8 @@ class RitaSessionState:
 
     def observe_assistant_turn(self, text: str) -> None:
         self.assistant_turns += 1
+        if self.response_type == ResponseType.FEELINGS and HARM_QUESTION.search(text):
+            self.harm_asked = True
         normalized = re.sub(r"[^\w\u0600-\u06ff]+", " ", text.casefold()).strip()
         self.last_feedback_signature = " ".join(normalized.split()[:16])
         quoted = [q.strip() for q in _QUOTED.findall(text) if _LATIN.search(q)]
@@ -319,12 +448,12 @@ class RitaSessionState:
             return how_to_say_directive(self.reply_language())
         act, awaiting = self.last_act, self.awaiting
         if act == Act.YES and awaiting == Awaiting.YES_NO:
-            return "the learner answered YES to last_question"
+            return "the learner answered YES to your last question"
         if act == Act.NO:
             if awaiting == Awaiting.CHOICE:
                 return "the learner refused every option; ask one short open question about what they want"
             if awaiting == Awaiting.YES_NO:
-                return "the learner answered NO to last_question"
+                return "the learner answered NO to your last question"
             return "the learner said no; accept it, do not argue or explain, offer one short alternative"
         if act == Act.DONT_KNOW:
             return "the learner does not know; pick the simplest option yourself in one short sentence and continue; do not ask again"
@@ -337,8 +466,10 @@ class RitaSessionState:
             if self.attempt_count >= 2:
                 return "the learner still needs a simpler explanation; change method completely and use one concrete everyday example; do not repeat the previous wording"
             return (
-                "explain the same idea in plain words with one concrete example; do not add a second "
-                "concept; say it, with no [[SHEET]]"
+                "the learner did not understand your last reply: start with a short sorry (آسفة، لخبطتك), "
+                "then say what you meant again in plainer, "
+                "shorter words (one concrete example only if it was a teaching point); do not add a "
+                "second concept; no [[SHEET]]"
             )
         if act == Act.UNDERSTOOD:
             return "the learner understood; do not re-explain; take one small next step"
@@ -352,13 +483,14 @@ class RitaSessionState:
         if act == Act.REPEAT:
             return "repeat your last reply, shorter and simpler"
         if act == Act.UNCLEAR:
-            return "the answer does not fit last_question; ask one short clarification of at most eight words"
+            return "the answer does not fit your last question; ask one short clarification of at most eight words"
         if act == Act.BACKCHANNEL:
             return "the learner only acknowledged; answer in one short sentence or continue naturally"
         return ""
 
     def turn_note(self, *, dialogue: bool = False) -> str:
-        """The response type as a plain sentence, for types that change how Uzyra should answer.
+        """The response type as a plain sentence, for types that change how Uzyra should answer,
+        followed by the learner's standing wish for answers only.
 
         Empty when the dialogue directive already says it (router on), so the model never reads
         the same instruction twice.
@@ -366,6 +498,24 @@ class RitaSessionState:
 
         if dialogue and self.turn_directive():
             return ""
+        note = self._type_note()
+        if self.answers_only_new and self.response_type != ResponseType.FEELINGS:
+            note = (note + " " if note else "") + (
+                "TURN NOTE: THE LEARNER JUST TOLD YOU HOW THEY WANT TO LEARN, ANSWERS ONLY: no questions "
+                "or practice prompts. Confirm it in one short line (تمام، من هلأ بعطيك اللي بتطلبه بس), "
+                "then give again what you were giving, without any question."
+            )
+        elif self.answers_only and self.response_type != ResponseType.FEELINGS:
+            note = (note + " " if note else "") + (
+                "TURN NOTE: THE LEARNER ASKED FOR ANSWERS ONLY, earlier in this call: give exactly what "
+                "they ask, then stop. No question at all, no phrase for them to answer with, no جرّب or "
+                "practice prompt, until they ask you to ask them again."
+            )
+        return note
+
+    def _type_note(self) -> str:
+        """The turn note for this response type alone."""
+
         if self.response_type == ResponseType.COMPLAINT:
             return (
                 "TURN NOTE: THE LEARNER IS REPORTING A PROBLEM. Acknowledge it in one short sentence. "
@@ -389,10 +539,45 @@ class RitaSessionState:
                 "spoken sentences (about 25 words in all), then write [[SHEET]] and put the rules, forms and examples there. "
                 "Cover exactly what they asked, nothing more."
             )
+        if self.response_type == ResponseType.FEELINGS:
+            note = (
+                "TURN NOTE: THE LEARNER SHARES A FEELING OR A HARD MOMENT. Listen like a caring friend, "
+                "not a teacher: no correction, no phrase in quotes to learn, no sheet, no list of tips. "
+                "Show in their own words that you understood what they mean, then one gentle question or "
+                "a choice."
+            )
+            if self.harm_signal:
+                note += (
+                    " THEY SPOKE OF DISAPPEARING, DYING OR HARM: do not ask about it, answer it. Thank "
+                    "them for telling you, say they deserve support right now, and say these words: "
+                    "رقم الطوارئ 911 موجود هلأ، أو أي حدا بتثق فيه. Then say you are staying with them here."
+                )
+            elif self.harm_seen:
+                note += (
+                    " EARLIER THEY SPOKE OF DISAPPEARING OR HARM: keep listening, respect what they said, "
+                    "and this reply must still say these words: رقم الطوارئ 911 موجود هلأ، أو أي حدا "
+                    "بتثق فيه."
+                )
+            elif self.hopeless_signal and not self.harm_asked:
+                note += (
+                    " HOPELESS WORDS ABOUT THEMSELVES: show in one sentence that you understood, then end "
+                    "the reply with this question, gently, as its only question: بتجيك أفكار تأذي فيها "
+                    "حالك أو إنك تختفي؟"
+                )
+            elif self.pushback_signal:
+                note += (
+                    " THEY PUSH BACK ON YOUR QUESTIONS (annoyed by them, not finding them hard): say they "
+                    "are right to ask, that you ask to understand them, not to test them, and offer one "
+                    "choice: بتحب أسمع بس ولا نركز على شغلة وحدة؟ No other question."
+                )
+            elif self.harm_asked:
+                note += " You already asked about thoughts of harm: do not ask it again."
+            return note
         if self.response_type == ResponseType.EMPATHY:
             return (
-                "TURN NOTE: THE LEARNER SOUNDS DISCOURAGED. Say one human sentence about it first, "
-                "then offer one small, easy next step."
+                "TURN NOTE: THE LEARNER SOUNDS DISCOURAGED ABOUT THE LEARNING. Say one human sentence "
+                "about it first, then offer one small, easy next step in the language (in a free "
+                "conversation: one easy question and a phrase in quotes to answer with)."
             )
         return ""
 
@@ -448,17 +633,30 @@ class RitaSessionState:
         return "; ".join(parts)
 
     def prompt_state(self, *, dialogue: bool = False) -> str:
-        strategy = (
-            "normal"
-            if self.attempt_count < 2
-            else "change-method: slower model, minimal pair, syllable isolation, or new analogy"
-        )
-        base = (
-            f"response_type={self.response_type}; active_language={self.active_language}; "
-            f"turn_language={self.current_turn_language}; dialect={self.active_dialect}; "
-            f"language_source={self.language_source}; evidence={self.consecutive_evidence}; "
-            f"attempt_count={self.attempt_count}; understood={self.understood}; "
-            f"frustration={self.frustration_signal}; correction_budget={self.correction_budget}; "
-            f"teaching_strategy={strategy}; last_feedback={self.last_feedback_signature or 'none'}"
-        )
-        return f"{base}; {self.dialogue_state()}" if dialogue else base
+        """This turn's instructions in plain words, or "".
+
+        The raw state (last question, options, topic, last feedback, counters) is no longer sent:
+        the model echoed it back (a misheard topic, an "إنتِ" it had written) instead of listening.
+        """
+
+        lines: list[str] = []
+        directive = self.turn_directive() if dialogue else ""
+        if directive:
+            lines.append(f"TURN NOTE: {directive}.")
+        elif self.attempt_count >= 2 and self.response_type == ResponseType.CORRECTION:
+            lines.append(
+                "TURN NOTE: the same correction did not work twice: change method (a slower example, a "
+                "minimal pair, one syllable at a time); do not repeat your last feedback."
+            )
+        if self.arabic_only_new:
+            lines.append(
+                "TURN NOTE: THE LEARNER JUST ASKED FOR ARABIC ONLY. Agree in one short line (معك حق، من هلأ "
+                "عربي بس); do not explain why you mixed languages. From now on, no English or German in "
+                "your own words."
+            )
+        elif self.arabic_only:
+            lines.append(
+                "THE LEARNER ASKED FOR ARABIC ONLY: every word of yours is Jordanian Arabic, with no English "
+                "or German mixed in. Only when they ask how to say something, give that one phrase."
+            )
+        return "\n".join(lines)

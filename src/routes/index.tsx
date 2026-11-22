@@ -1,5 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { ProHome } from "@/components/home/procreate/ProHome";
 
 export const Route = createFileRoute("/")({
@@ -33,35 +32,12 @@ export const Route = createFileRoute("/")({
     ],
     links: [
       { rel: "canonical", href: "https://ritajet.com/" },
-      { rel: "prefetch", href: "/pricing" },
     ],
   }),
   component: Index,
 });
 
 function Index() {
-  const router = useRouter();
-
-  useEffect(() => {
-    // When the browser is idle after painting the home page, warm up the primary ad conversion
-    // targets (/pricing and /register) so tapping "Start learning" or "Pricing" opens in 0ms.
-    let cancelled = false;
-    const idle = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number })
-      .requestIdleCallback;
-    const warm = () => {
-      if (cancelled) return;
-      void router.preloadRoute({ to: "/pricing" } as any);
-      void router.preloadRoute({ to: "/register" } as any);
-    };
-    const id = idle ? idle(warm, { timeout: 1500 }) : window.setTimeout(warm, 700);
-    return () => {
-      cancelled = true;
-      const cancelIdle = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
-      if (idle && cancelIdle) cancelIdle(id as number);
-      else window.clearTimeout(id as number);
-    };
-  }, [router]);
-
   return (
     <div className="rita-cream edith-light edith-premium min-h-screen bg-black text-white">
       <ProHome />

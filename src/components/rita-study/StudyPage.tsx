@@ -33,6 +33,8 @@ import { FloatingOrb, type OrbState } from "./FloatingOrb";
 import { RadialMenu, type RadialHandle } from "./RadialMenu";
 import { FloatingWindow, WindowDots } from "./FloatingWindow";
 import { QuestionPreview } from "./QuestionPreview";
+import { StudyWhiteboard } from "./StudyWhiteboard";
+import type { BoardSelection } from "@/lib/study/whiteboard";
 import { BRAND_NAME } from "@/lib/brand";
 import {
   KIND_LABEL,
@@ -50,7 +52,7 @@ import { markSelection, readSelection, sectionSegIds, type PageSelection } from 
 import { markReplySelection, readReplySelection, type ReplySelection } from "./reply-selection";
 import { readStudyMemory, writeStudyMemory } from "./study-memory";
 import { attachTechSelect, drawSelectionFx } from "./tech-select";
-import { installSoundUnlock, setSoundOn, soundOn } from "./tech-sound";
+import { installSoundUnlock, menuOpenSound, setSoundOn, soundOn } from "./tech-sound";
 import { useStudyRequests } from "./useStudyRequests";
 import { playVoiceLine, prepareVoiceLine, warmVoiceLines, type VoiceCue } from "./voice-lines";
 import "./study-meaning.css";
@@ -133,6 +135,11 @@ export function StudyPage({
   // The ring shows the study options, or the three languages Uzyra can explain in.
   const [ringMode, setRingMode] = useState<"main" | "language">("main");
   const explanation = useExplanationLanguage();
+  const [board, setBoard] = useState<{
+    id: string;
+    selection: BoardSelection;
+    startedAt: number;
+  } | null>(null);
   // The floating window: the cards and questions made from a selection, or the temporary question
   // design preview. Hidden with its X it stays alive, and the ••• at the bottom brings it back;
   // slid off the right edge, its tab brings it back. `reveal` grows to bring it back from the side.
@@ -625,6 +632,20 @@ export function StudyPage({
   async function pick(action: StudyAction) {
     if (action === "make_cards" || action === "make_mcq") return void practice(action);
     const sel = selectionRef.current;
+    if (action === "explain" && sel) {
+      if (!actions.includes("explain")) return;
+      requests.stop();
+      setPhrase(null);
+      setMenuOpen(false);
+      menuOpenSound();
+      setBoard({
+        id: crypto.randomUUID(),
+        startedAt: performance.now(),
+        selection: { exact: sel.exact, parts: sel.parts, segIds: sel.segIds },
+      });
+
+      return;
+    }
     if (action === "meaning") {
       if (!sel || !actions.includes("meaning")) return;
       const resolved = resolveSelection(guide.content, sel, "meaning");
@@ -732,6 +753,9 @@ export function StudyPage({
       setDownloading(false);
     }
   }
+
+  const windowTitle =
+    win?.content === "practice" && practiceView ? practiceTitle(practiceView) : BRAND_NAME;
 
   const guidePane = (
     <div className="flex h-full min-h-0 flex-col bg-[#f4f4f8]" dir="rtl">
@@ -869,12 +893,28 @@ export function StudyPage({
             <div className={`min-h-0 flex-1 ${tab === "rita" ? "" : "hidden"}`}>{ritaPane}</div>
           </>
         )}
+        {board && (
+          <StudyWhiteboard
+            key={board.id}
+            lessonId={lesson.id}
+            preview={preview}
+            startedAt={board.startedAt}
+            selection={board.selection}
+            language={explanation.value}
+            shown
+            onVoiceGuard={phrasePlaying}
+            onClose={() => {
+              frame.current?.document()?.getSelection()?.removeAllRanges();
+              keepSelection(null);
+              setBoard(null);
+              requestAnimationFrame(() => orbButton.current?.focus({ preventScroll: true }));
+            }}
+          />
+        )}
         {win && (
           <FloatingWindow
             key={win.content}
-            title={
-              win.content === "practice" && practiceView ? practiceTitle(practiceView) : BRAND_NAME
-            }
+            title={windowTitle}
             variant={win.content === "practice" ? "practice" : "questions"}
             origin={win.at}
             shown={win.shown}
@@ -914,9 +954,7 @@ export function StudyPage({
         )}
         {win && !win.shown && (
           <WindowDots
-            title={
-              win.content === "practice" && practiceView ? practiceTitle(practiceView) : BRAND_NAME
-            }
+            title={windowTitle}
             onShow={() => setWin((current) => current && { ...current, shown: true })}
             onClose={() => setWin(null)}
           />
@@ -968,7 +1006,9 @@ export function StudyPage({
                           disabled: true,
                           disabledReason: "استنّى لحد ما يخلص تجهيز التدريب الحالي",
                         }
-                      : item,
+                      : item.id === "explain"
+                        ? { ...item, label: "شرح بالسبورة" }
+                        : item,
                   )
           }
           quote={replySelection?.exact ?? selection?.exact ?? ""}

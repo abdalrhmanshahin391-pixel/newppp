@@ -48,6 +48,7 @@ export function BookWorkspace({
   step,
   onStep,
   onBack,
+  onOpenLesson,
   onChanged,
 }: {
   book: CurriculumRow;
@@ -67,6 +68,7 @@ export function BookWorkspace({
   step: BookStep;
   onStep: (step: BookStep) => void;
   onBack: () => void;
+  onOpenLesson?: (id: string) => void;
   onChanged: () => Promise<void>;
 }) {
   const statusFn = useServerFn(adminSetCurriculumStatus);
@@ -230,6 +232,7 @@ export function BookWorkspace({
             sharedReady={sharedReady}
             resources={resources}
             resourcesReady={resourcesReady}
+            onOpenLesson={onOpenLesson}
             onNext={() => onStep("publish")}
             onChanged={changed}
           />

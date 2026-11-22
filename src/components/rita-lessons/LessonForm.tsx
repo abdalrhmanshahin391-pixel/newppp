@@ -1,3 +1,4 @@
+import { useWorkspaceDraft, useWorkspaceTask } from "./admin/WorkspaceGuard";
 import { useEffect, useState } from "react";
 import { Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -71,6 +72,8 @@ export function LessonForm({
 }) {
   const [form, setForm] = useState<LessonDraft>(() => structuredClone(initial));
   const [regenerating, setRegenerating] = useState(-1);
+  useWorkspaceDraft(form);
+  useWorkspaceTask(regenerating >= 0);
 
   const patch = (part: Partial<LessonDraft>) => setForm((current) => ({ ...current, ...part }));
 

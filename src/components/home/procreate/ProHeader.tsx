@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ChevronDown, LayoutGrid, LogOut, Menu, ReceiptText, Settings, X } from "lucide-react";
+import { LayoutGrid, LogOut, Menu, ReceiptText, Settings, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { openWelcome } from "@/lib/auth-dialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { CreditsMeter } from "@/components/CreditsMeter";
 import { InstallAppButton } from "@/components/InstallAppButton";
+import { HeaderResourcesMenu } from "@/components/header/HeaderResourcesMenu";
 import { useDismiss } from "@/components/header/useDismiss";
 import { avatarTone, useAvatarUrl } from "@/lib/avatars";
 import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
@@ -15,24 +16,14 @@ import { BRAND_NAME } from "@/lib/brand";
 import { StartLearningLink } from "@/components/StartLearningLink";
 import { LanguageMenu } from "@/components/language/LanguageMenu";
 
-const SIMPLE_LINKS: { to: string; label: string }[] = [
-  { to: "/games", label: "Games" },
-  { to: "/books", label: "Library" },
-  { to: "/pricing", label: "Pricing" },
-];
+const MAIN_LINKS = [
+  { to: "/games", en: "Games", ar: "الألعاب" },
+  { to: "/books", en: "Library", ar: "المكتبة" },
+  { to: "/pricing", en: "Pricing", ar: "الأسعار" },
+] as const;
 
-// The language switcher is rendered once for wide screens and once for phones; each has its own
-// state, so the hidden copy never reacts to presses inside the visible one.
-type OpenMenu = "credits" | "account" | "language" | "language-phone" | null;
-
-/** The hand-drawn accent line from the home headline, drawn once under the current page. */
-function Squiggle() {
-  return (
-    <svg aria-hidden="true" className="rh-squiggle" viewBox="0 0 60 10" preserveAspectRatio="none">
-      <path pathLength={1} d="M2 5 C 8 1, 14 9, 20 5 S 32 1, 40 5 S 52 9, 58 5" />
-    </svg>
-  );
-}
+// Keep one disclosure open, including the dedicated language trigger on smaller screens.
+type OpenMenu = "resources" | "credits" | "account" | "language" | "language-phone" | null;
 
 function isHere(pathname: string, to: string) {
   return pathname === to || pathname.startsWith(`${to}/`);
@@ -54,27 +45,44 @@ function Avatar({
       className="rh-avatar"
       style={{ background: tone, width: size, height: size, fontSize: size * 0.42 }}
     >
-      {src ? <img src={src} alt="" className="h-full w-full object-cover" /> : initial}
+      {src ? <img src={src} alt="" className="rh-avatar-photo" /> : initial}
     </span>
   );
 }
 
-/**
- * One top bar for the whole site: the dark ink bar, links on the left, the account on the
- * right. Home floats it over the page, every other page keeps it sticky. The menus are the
- * same white card with an ink border used on the home page.
- */
+/** Shared blog styling, with learning and account controls on the main site. */
 export function ProHeader({
   variant = "transparent",
 }: { variant?: "transparent" | "solid"; tone?: "dark" | "light" } = {}) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, profile, isAdmin, isGolden, loading: authLoading } = useAuth();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   const navigate = useNavigate();
   const [menu, setMenu] = useState<OpenMenu>(null);
   const [sheet, setSheet] = useState(false);
+  const sheetDialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (!sheet) return;
+    const dialog = sheetDialog.current;
+    dialog?.showModal();
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const closeOnDesktop = () => {
+      if (desktop.matches) setSheet(false);
+    };
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => {
+      desktop.removeEventListener("change", closeOnDesktop);
+      dialog?.close();
+    };
+  }, [sheet]);
   const solid = variant === "solid";
+  const arabic = i18n.language?.startsWith("ar") ?? false;
+  const startLearning = arabic ? "ابدأ التعلّم" : "Start learning";
+  const signIn = arabic ? "سجّل الدخول" : "Sign in";
+  const setResourcesOpen = useCallback((open: boolean) => {
+    setMenu((current) => (open ? "resources" : current === "resources" ? null : current));
+  }, []);
   const accountBox = useRef<HTMLDivElement>(null);
   const accountId = useId();
 
@@ -112,44 +120,59 @@ export function ProHeader({
   const nav = (onOpen?: () => void) => (
     <>
       {user && (
-        <StartLearningLink onOpen={onOpen} className="rh-link">
-          <LinkLabel here={isHere(pathname, "/learn")}>Start learning</LinkLabel>
+        <StartLearningLink onOpen={onOpen} className="rh-link uz-header-link">
+          {startLearning}
         </StartLearningLink>
       )}
-      {SIMPLE_LINKS.map((l) => (
+      {MAIN_LINKS.map((link) => (
         <Link
-          key={l.to}
-          to={l.to as never}
+          key={link.to}
+          to={link.to}
           onClick={onOpen}
-          className="rh-link"
-          aria-current={isHere(pathname, l.to) ? "page" : undefined}
+          className="rh-link uz-header-link"
+          aria-current={isHere(pathname, link.to) ? "page" : undefined}
         >
-          <LinkLabel here={isHere(pathname, l.to)}>{l.label}</LinkLabel>
+          {arabic ? link.ar : link.en}
         </Link>
       ))}
     </>
   );
 
   return (
-    <header className={`rh-bar ${solid ? "sticky" : "fixed inset-x-0"} top-0 z-50`}>
-      <div className="rh-bar-inner">
+    <header
+      className={`rh-bar ${solid ? "sticky" : "rh-bar-home sticky"} z-50`}
+      dir={arabic ? "rtl" : "ltr"}
+    >
+      <div className="rh-bar-inner uz-header-shell">
         <Link to="/" aria-label={`${BRAND_NAME} home`} className="rh-logo shrink-0">
-          <UzyraWordmark size={20} />
+          <UzyraWordmark size={16} />
         </Link>
 
-        <nav aria-label="Main" className="rh-nav hidden lg:flex">
+        <nav
+          aria-label={arabic ? "التنقل" : "Navigation"}
+          className="rh-nav uz-header-nav hidden lg:flex"
+        >
           {nav()}
+          <HeaderResourcesMenu
+            arabic={arabic}
+            open={menu === "resources"}
+            onOpenChange={setResourcesOpen}
+          />
         </nav>
 
         <div className="rh-actions hidden lg:flex">
           {authLoading ? (
-            <div aria-hidden="true" className="h-9 w-9 animate-pulse rounded-full bg-white/10" />
+            <div aria-hidden="true" className="h-9 w-9 animate-pulse rounded-full bg-black/5" />
           ) : !user ? (
             <>
-              <button type="button" onClick={() => openWelcome()} className="rh-link">
-                Sign in
+              <button
+                type="button"
+                onClick={() => openWelcome()}
+                className="rh-link uz-header-link"
+              >
+                {signIn}
               </button>
-              <StartLearningLink className="rh-btn">Start learning</StartLearningLink>
+              <StartLearningLink className="ub-cta">{startLearning}</StartLearningLink>
             </>
           ) : (
             <>
@@ -161,19 +184,18 @@ export function ProHeader({
                 open={menu === "language"}
                 onOpenChange={(open) => setMenu(open ? "language" : null)}
               />
-              <div className="relative" ref={accountBox}>
+              <div className="rh-account-anchor" ref={accountBox}>
                 <button
                   type="button"
                   data-rh-trigger
                   onClick={() => setMenu((m) => (m === "account" ? null : "account"))}
-                  aria-label="Account menu"
+                  aria-label={arabic ? "قائمة الحساب" : "Account menu"}
                   aria-expanded={menu === "account"}
                   aria-controls={accountId}
                   data-open={menu === "account" ? "true" : "false"}
                   className="rh-avatar-btn"
                 >
-                  <Avatar src={avatar} initial={initial} tone={tone} size={36} />
-                  <ChevronDown size={16} aria-hidden="true" className="rh-chevron" />
+                  <Avatar src={avatar} initial={initial} tone={tone} size={30} />
                 </button>
 
                 {menu === "account" && (
@@ -192,7 +214,7 @@ export function ProHeader({
                     </Link>
                     <Link to="/pricing" className="rh-item">
                       <ReceiptText size={18} aria-hidden="true" />
-                      Plans & pricing
+                      {arabic ? "الباقات والأسعار" : "Plans & pricing"}
                     </Link>
                     <InstallAppButton className="rh-item" iconClassName="rh-item-icon" />
                     {isAdmin && (
@@ -200,7 +222,7 @@ export function ProHeader({
                         <div className="rh-rule" />
                         <Link to="/admin" className="rh-item">
                           <LayoutGrid size={18} aria-hidden="true" />
-                          Admin
+                          {arabic ? "الإدارة" : "Admin"}
                         </Link>
                       </>
                     )}
@@ -218,7 +240,7 @@ export function ProHeader({
 
         <div className="rh-actions flex lg:hidden">
           {!user && !authLoading && (
-            <StartLearningLink className="rh-btn">Start learning</StartLearningLink>
+            <StartLearningLink className="ub-cta">{startLearning}</StartLearningLink>
           )}
           {user && !authLoading && (
             <LanguageMenu
@@ -231,7 +253,7 @@ export function ProHeader({
           )}
           <button
             type="button"
-            aria-label={sheet ? "Close menu" : "Open menu"}
+            aria-label={arabic ? "فتح القائمة" : "Open menu"}
             aria-expanded={sheet}
             onClick={() => {
               setMenu(null);
@@ -239,15 +261,34 @@ export function ProHeader({
             }}
             className="rh-burger"
           >
-            {sheet ? <X size={24} /> : <Menu size={24} />}
+            {user ? (
+              <Avatar src={avatar} initial={initial} tone={tone} size={30} />
+            ) : (
+              <Menu size={22} />
+            )}
           </button>
         </div>
       </div>
 
       {sheet && (
-        <div className="rh-sheet-wrap lg:hidden">
+        <dialog
+          ref={sheetDialog}
+          className="rh-sheet-wrap lg:hidden"
+          aria-label={arabic ? "القائمة" : "Menu"}
+          onCancel={() => setSheet(false)}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setSheet(false);
+          }}
+        >
           <div className="rh-card rh-sheet" aria-label="Menu">
-            <div className="rh-sheet-links">{nav(() => setSheet(false))}</div>
+            <button
+              type="button"
+              className="rh-sheet-close"
+              aria-label={arabic ? "إغلاق" : "Close menu"}
+              onClick={() => setSheet(false)}
+            >
+              <X size={18} />
+            </button>
             {user ? (
               <>
                 <div className="rh-rule" />
@@ -267,7 +308,7 @@ export function ProHeader({
                 {isAdmin && (
                   <Link to="/admin" className="rh-item">
                     <LayoutGrid size={18} aria-hidden="true" />
-                    Admin
+                    {arabic ? "الإدارة" : "Admin"}
                   </Link>
                 )}
                 <div className="rh-rule" />
@@ -288,23 +329,26 @@ export function ProHeader({
                     }}
                     className="rh-item"
                   >
-                    Sign in
+                    {signIn}
                   </button>
                 </>
               )
             )}
+            <div className="rh-rule" />
+            <div className="rh-sheet-links">
+              {nav(() => setSheet(false))}
+              <Link
+                to="/blog"
+                onClick={() => setSheet(false)}
+                className="rh-link uz-header-link"
+                aria-current={isHere(pathname, "/blog") ? "page" : undefined}
+              >
+                {arabic ? "المدونة" : "Blog"}
+              </Link>
+            </div>
           </div>
-        </div>
+        </dialog>
       )}
     </header>
-  );
-}
-
-function LinkLabel({ here, children }: { here: boolean; children: ReactNode }) {
-  return (
-    <>
-      {children}
-      {here && <Squiggle />}
-    </>
   );
 }

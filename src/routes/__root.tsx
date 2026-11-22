@@ -284,6 +284,13 @@ function RootComponent() {
   const router = useRouter();
   const { user, loading } = useAuth();
 
+  useEffect(() => {
+    const entryRoute = router.state.matches.at(-1)?.routeId ?? "/";
+    void import("@/lib/page-vitals")
+      .then(({ observePageVitals }) => observePageVitals(entryRoute))
+      .catch(() => {});
+  }, [router]);
+
   // Opening sign-in anywhere is an in-app page change (see `openAuth`).
   useEffect(() => {
     setAuthNavigator((href) => void router.navigate({ href }));
@@ -567,7 +574,6 @@ function DeviceTracker() {
       }
     })();
 
-    const interval = window.setInterval(() => void ping(), MIN_GAP_MS);
     const onVisible = () => {
       if (document.visibilityState === "visible") void ping();
     };
@@ -576,7 +582,6 @@ function DeviceTracker() {
     return () => {
       cancelled = true;
       unsub?.();
-      window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import os
 from typing import Any
 
 MODEL = "sonic-3.6"
@@ -61,6 +62,39 @@ def line_files(only: str = "") -> list[tuple[str, str]]:
     ]
 
 
+def _speech_body(text: str, language: str, voice_id: str) -> dict[str, Any]:
+    return {
+        "model_id": MODEL,
+        "transcript": text,
+        "voice": {"mode": "id", "id": voice_id},
+        "output_format": {
+            "container": "mp3",
+            "sample_rate": 44100,
+            "bit_rate": 96000,
+        },
+        "language": language,
+        "generation_config": {"speed": 1, "volume": 1},
+    }
+
+
+async def narrate_board_step(text: str, language: str) -> str | None:
+    """One authorized whiteboard step, spoken with the live tutor's voice."""
+    import aiohttp
+
+    key = os.environ.get("CARTESIA_API_KEY", "").strip()
+    if not key:
+        return None
+    headers = {"Cartesia-Version": CARTESIA_VERSION, "X-API-Key": key}
+    voice = os.environ.get("RITA_CARTESIA_VOICE_ID") or VOICE_ID
+    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=12)) as http:
+        async with http.post("https://api.cartesia.ai/tts/bytes", headers=headers,
+                             json=_speech_body(text, language, voice)) as response:
+            if response.status != 200:
+                return None
+            audio = await response.read()
+            return base64.b64encode(audio).decode("ascii") if 0 < len(audio) <= 1_000_000 else None
+
+
 async def render_lines(api_key: str, only: str = "") -> dict[str, Any]:
     """Every line as MP3 (base64), made with Uzyra's call voice; never returns the key."""
 
@@ -75,18 +109,7 @@ async def render_lines(api_key: str, only: str = "") -> dict[str, Any]:
     problems: list[str] = []
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=60)) as http:
         for name, text in line_files(only):
-            body = {
-                "model_id": MODEL,
-                "transcript": text,
-                "voice": {"mode": "id", "id": VOICE_ID},
-                "output_format": {
-                    "container": "mp3",
-                    "sample_rate": 44100,
-                    "bit_rate": 96000,
-                },
-                "language": "ar",
-                "generation_config": {"speed": 1, "volume": 1},
-            }
+            body = _speech_body(text, "ar", VOICE_ID)
             for attempt in range(3):
                 async with http.post(
                     "https://api.cartesia.ai/tts/bytes", headers=headers, json=body

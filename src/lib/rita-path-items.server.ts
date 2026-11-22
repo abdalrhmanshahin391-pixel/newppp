@@ -1,5 +1,5 @@
 // Reading the exercise / resources stops of a lesson path (rita_path_items). Server only.
-import type { PathItem } from "./rita-path-layout";
+import { mergePath, type PathItem } from "./rita-path-layout";
 
 const NOT_APPLIED = /could not find|does not exist|schema cache|PGRST20[0-9]|42P01/i;
 
@@ -15,7 +15,7 @@ export async function pathItemsFor(
   try {
     const { data, error } = await db
       .from("rita_path_items")
-      .select("id, kind, title, path_order")
+      .select("*")
       .eq("language", language ?? "en")
       .order("path_order");
     if (error) {
@@ -23,7 +23,17 @@ export async function pathItemsFor(
         console.warn("Path items unavailable", error.message);
       return [];
     }
-    const rows = (data ?? []) as { id: string; kind: string; title: string; path_order: number }[];
+    const rows = (data ?? []) as {
+      id: string;
+      kind: string;
+      title: string;
+      path_order: number;
+      map_level?: PathItem["map_level"] | null;
+      quiz_count?: number;
+      film_lines?: number[];
+      clip_ids?: string[] | null;
+      gif_lines?: number[];
+    }[];
     const counts: Record<string, number> = {};
     const resourceIds = rows.filter((row) => row.kind === "resources").map((row) => row.id);
     if (resourceIds.length) {
@@ -39,10 +49,77 @@ export async function pathItemsFor(
       kind: row.kind === "resources" || row.kind === "finish" ? row.kind : "exercises",
       title: row.title,
       path_order: Number(row.path_order),
+      map_level: row.map_level ?? undefined,
+      film_lines: row.film_lines ?? [],
+      ...(Array.isArray(row.clip_ids) ? { clip_ids: row.clip_ids } : {}),
+      gif_lines: row.gif_lines ?? [],
+      quiz_count: row.quiz_count ?? 0,
       resource_count: counts[row.id] ?? 0,
     }));
   } catch (cause) {
     console.warn("Path items unavailable", cause);
     return [];
   }
+}
+
+export type PathNode = { type: "lesson" | "item"; id: string; title: string; kind?: string };
+
+/**
+ * The path of one language as the admin sees it (lessons that are not archived and the stops
+ * between them), in order, with titles. Errors are returned for the caller to report.
+ */
+export async function adminPathNodes(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: any,
+  language: string,
+): Promise<{ nodes: PathNode[]; error: { message?: string; code?: string } | null }> {
+  const [lessonResult, itemResult] = await Promise.all([
+    db
+      .from("rita_lessons")
+      .select("id, title, title_ar, path_order, curriculum:rita_curricula!inner(target_language)")
+      .neq("status", "archived")
+      .eq("curriculum.target_language", language)
+      .order("path_order"),
+    db
+      .from("rita_path_items")
+      .select("id, kind, title, path_order")
+      .eq("language", language)
+      .order("path_order"),
+  ]);
+  const error = lessonResult.error ?? itemResult.error ?? null;
+  if (error) return { nodes: [], error };
+  const lessons = (
+    (lessonResult.data ?? []) as {
+      id: string;
+      title: string;
+      title_ar: string | null;
+      path_order: number | null;
+    }[]
+  ).filter((row) => row.path_order != null);
+  const items = (
+    (itemResult.data ?? []) as {
+      id: string;
+      kind: string;
+      title: string;
+      path_order: number;
+    }[]
+  ).map((row) => ({
+    ...row,
+    kind: (row.kind === "resources" || row.kind === "finish"
+      ? row.kind
+      : "exercises") as PathItem["kind"],
+    resource_count: 0,
+  }));
+  return {
+    nodes: mergePath(lessons, items).map((node) =>
+      node.type === "lesson"
+        ? {
+            type: "lesson" as const,
+            id: node.lesson.id,
+            title: node.lesson.title_ar || node.lesson.title,
+          }
+        : { type: "item" as const, id: node.item.id, title: node.item.title, kind: node.item.kind },
+    ),
+    error: null,
+  };
 }

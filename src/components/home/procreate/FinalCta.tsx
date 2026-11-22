@@ -4,7 +4,7 @@ import { StartLearningLink } from "@/components/StartLearningLink";
 /** Closing invitation. White text is inline: the home theme re-colours white utility classes. */
 export function FinalCta() {
   return (
-    <section className="mx-auto w-full max-w-[1240px] px-5 pb-20 md:px-8 md:pb-24">
+    <section className="rh-defer-cta mx-auto w-full max-w-[1240px] px-5 pb-20 md:px-8 md:pb-24">
       <div
         className="rounded-[16px] px-6 py-12 text-center md:px-12 md:py-16"
         style={{ background: "#121117" }}

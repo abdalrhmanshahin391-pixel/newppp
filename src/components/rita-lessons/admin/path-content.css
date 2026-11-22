@@ -1,0 +1,604 @@
+/* Content editing is loaded only when an admin opens the path workspace. */
+.pc-panel {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 65;
+  width: min(720px, 58vw);
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: var(--pp-ink, #121117);
+  border-left: 1px solid var(--pp-line, #dddde5);
+  box-shadow: -12px 0 40px rgb(18 17 23 / 0.07);
+  font-family: var(--font-grotesk);
+  text-align: start;
+  outline: none;
+  animation: pc-enter 180ms ease-out;
+}
+.pc-panel[data-expanded] {
+  width: min(1040px, 88vw);
+}
+.pc-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--pp-line, #dddde5);
+  flex-shrink: 0;
+}
+.pc-header > div {
+  flex: 1;
+  min-width: 0;
+}
+.pc-header h2 {
+  font-size: 19px;
+  font-weight: 650;
+  margin: 0;
+}
+.pc-header p {
+  font-size: 12px;
+  color: var(--pp-muted, #6e6e7a);
+  margin: 4px 0 0;
+}
+.pc-body {
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 20px 24px 48px;
+  min-height: 0;
+  flex: 1;
+}
+.pc-body h2 {
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.pc-body h3 {
+  font-size: 17px;
+  font-weight: 600;
+}
+.pc-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.pc-title-row p,
+.pc-muted {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--pp-muted, #6e6e7a);
+  margin: 8px 0;
+}
+.pc-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.pc-search {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 12px;
+  border: 1px solid var(--pp-line, #dddde5);
+  border-radius: 10px;
+}
+.pc-search input {
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  padding: 12px 0;
+  border: 0;
+  font-size: 16px;
+  outline: none;
+}
+.pc-search:focus-within {
+  outline: 2px solid #2b6df0;
+  outline-offset: 2px;
+}
+.pc-filters select {
+  border: 1px solid var(--pp-line, #dddde5);
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px;
+  font-size: 14px;
+}
+.pc-books,
+.pc-lessons {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.pc-books li + li,
+.pc-lessons li + li {
+  border-top: 1px solid var(--pp-line, #dddde5);
+}
+.pc-books li > button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: start;
+  padding: 20px 4px;
+  border-radius: 8px;
+}
+.pc-books li > button:hover,
+.pc-lessons button:hover {
+  background: #f7f8fb;
+}
+.pc-book-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 60px;
+  border: 1px solid #dddde5;
+  border-radius: 4px 9px 9px 4px;
+  color: #35343d;
+  background: #f5f5f8;
+  flex-shrink: 0;
+}
+.pc-book-copy {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.pc-book-copy strong {
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+.pc-book-copy small,
+.pc-book-copy > span {
+  font-size: 12px;
+  color: var(--pp-muted, #6e6e7a);
+}
+.pc-book-copy progress {
+  width: 100%;
+  height: 4px;
+  border: 0;
+  border-radius: 4px;
+  accent-color: #2b6df0;
+}
+.pc-book-copy progress::-webkit-progress-bar {
+  background: #ededf3;
+  border-radius: 4px;
+}
+.pc-book-copy progress::-webkit-progress-value {
+  background: #2b6df0;
+  border-radius: 4px;
+}
+.pc-advanced {
+  margin-top: 24px;
+  border-top: 1px solid var(--pp-line, #dddde5);
+  padding-top: 16px;
+}
+.pc-advanced summary {
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+.pc-empty {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  padding: 48px 20px;
+  gap: 12px;
+}
+.pc-empty p {
+  color: var(--pp-muted, #6e6e7a);
+  font-size: 14px;
+}
+.pc-notice,
+.pc-insert {
+  background: #f5f7fc;
+  padding: 12px 24px;
+  font-size: 13px;
+  line-height: 1.7;
+  border-bottom: 1px solid #e4e7f0;
+  flex-shrink: 0;
+}
+.pc-insert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #244c98;
+  background: #edf3ff;
+}
+.pc-insert small {
+  display: block;
+  color: #425b86;
+}
+.pc-error {
+  padding: 16px;
+  border: 1px solid #e9bac1;
+  border-radius: 10px;
+  color: #8e1b2b;
+  margin-bottom: 16px;
+}
+.pc-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 50px 0;
+}
+.pc-back {
+  margin-bottom: 16px;
+}
+
+.pc-book-nav,
+.pc-book-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #dddde5;
+}
+.pc-book-nav button,
+.pc-book-tabs button {
+  min-height: 44px;
+  padding: 10px 12px;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pc-book-nav button[aria-current],
+.pc-book-tabs button[aria-current] {
+  color: #245bc7;
+  border-bottom: 2px solid #2b6df0;
+}
+.pc-coverage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  max-height: 180px;
+  overflow: auto;
+  padding: 8px 2px;
+}
+.pc-coverage button {
+  min-width: 44px;
+  height: 44px;
+  font-size: 11px;
+  border: 1px solid #d8dbe5;
+  border-radius: 5px;
+}
+.pc-coverage button[data-covered="published"] {
+  color: #214eaa;
+  background: #e8f0ff;
+  border-color: #aac4f5;
+}
+.pc-coverage button[data-covered="draft"] {
+  background: #ededf2;
+  color: #4a4a59;
+}
+.pc-coverage button[aria-pressed="true"] {
+  outline: 2px solid #121117;
+  outline-offset: 1px;
+}
+.pc-gap-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+}
+.pc-pdf {
+  margin: 20px 0 24px;
+  border: 1px solid #dddde5;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.pc-pdf-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 54px;
+  border-bottom: 1px solid #dddde5;
+  background: #fafafd;
+}
+.pc-pdf-page {
+  background: #f0f1f5;
+  padding: 12px;
+  min-height: 180px;
+}
+.pc-pdf-page canvas {
+  width: 100%;
+  height: auto;
+  background: #fff;
+}
+.pc-pdf-page p {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  padding: 24px;
+}
+.pc-lessons button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: start;
+  padding: 16px 4px;
+}
+.pc-lessons button > span {
+  flex: 1;
+}
+.pc-lessons small {
+  color: #6e6e7a;
+  font-size: 12px;
+}
+.pc-lesson-editor > .rita-ex-header {
+  padding: 16px 0;
+}
+.pc-lesson-editor .rita-ex-body {
+  overflow: visible;
+  padding: 20px 0;
+}
+.pc-lesson-editor .rita-tabs-list {
+  overflow: auto;
+  padding-inline: 0;
+  white-space: nowrap;
+}
+.pc-lesson-editor .rita-tab {
+  flex-shrink: 0;
+}
+.pc-body .rita-stepper {
+  overflow-x: auto;
+}
+.pc-stop > .lp-sheet {
+  position: static;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  box-shadow: none;
+  border: 0;
+  border-radius: 0;
+}
+.pc-stop .lp-sheet-head {
+  padding-inline: 0;
+}
+.pc-stop .lp-quiz-body {
+  padding-inline: 0;
+}
+.pc-place {
+  margin: 12px 0;
+}
+.pc-panel button:focus-visible,
+.pc-panel select:focus-visible,
+.pc-panel a:focus-visible {
+  outline: 2px solid #245bc7;
+  outline-offset: 3px;
+}
+.pc-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 64;
+  background: rgb(18 17 23 / 0.2);
+}
+@media (min-width: 1100px) {
+  .pc-path-open {
+    margin-right: min(720px, 58vw);
+  }
+  .pc-path-open > div.fixed {
+    right: min(720px, 58vw);
+  }
+}
+@media (max-width: 1099px) {
+  .pc-panel,
+  .pc-panel[data-expanded] {
+    width: 100%;
+  }
+  .pc-expand {
+    display: none;
+  }
+}
+@media (max-width: 520px) {
+  .pc-header {
+    padding: 14px 16px;
+  }
+  .pc-body {
+    padding: 16px 16px 40px;
+  }
+  .pc-filters {
+    flex-wrap: wrap;
+  }
+  .pc-search {
+    flex-basis: 100%;
+  }
+  .pc-lessons button {
+    flex-wrap: wrap;
+  }
+  .pc-notice,
+  .pc-insert {
+    padding-inline: 16px;
+  }
+}
+@keyframes pc-enter {
+  from {
+    transform: translateX(24px);
+    opacity: 0.3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-panel {
+    animation: none;
+  }
+}
+
+.pc-page-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.pc-page-range select {
+  min-height: 44px;
+  border: 1px solid #dddde5;
+  border-radius: 8px;
+  padding: 8px;
+}
+.pc-pdf-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px;
+}
+.pc-pdf-toolbar input {
+  width: 65px;
+  padding: 8px;
+  border: 1px solid #dddde5;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 16px;
+}
+.pc-pdf-page {
+  min-height: 200px;
+  padding: 12px;
+  background: #f2f3f6;
+  border: 1px solid #dddde5;
+  border-radius: 12px;
+}
+.pc-pdf-page canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: white;
+}
+.pc-pdf-page canvas[hidden] {
+  display: none;
+}
+.pc-pdf-page p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  font-size: 14px;
+}
+.pc-gap-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+}
+.pc-lessons button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 0;
+  text-align: start;
+  font-size: 14px;
+}
+.pc-lessons button > span {
+  flex: 1;
+}
+.pc-lessons small {
+  color: var(--pp-muted);
+  font-size: 12px;
+}
+.pc-lesson-editor .rita-ex-header {
+  padding: 16px 0;
+  background: transparent;
+}
+.pc-lesson-editor .rita-ex-body {
+  padding: 20px 0;
+  overflow: visible;
+}
+.pc-lesson-editor .rita-tabs-list {
+  padding-inline: 0;
+  overflow-x: auto;
+}
+.pc-stop > .lp-sheet {
+  position: static;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+}
+.pc-new-book > .rita-ex-body {
+  padding-inline: 0;
+}
+.pc-place {
+  margin: 12px 0;
+}
+.pc-panel :is(button, input, select, textarea):focus-visible {
+  outline: 2px solid #245bc7;
+  outline-offset: 3px;
+}
+.pc-panel button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.pc-panel-loading {
+  position: fixed;
+  z-index: 64;
+  inset: 0 0 0 auto;
+  width: min(720px, 100vw);
+  background: white;
+  padding: 32px;
+}
+
+.pc-panel .rita-tabs-list {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 16px;
+  overflow-x: auto;
+}
+.pc-panel .rita-tab {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+.pc-panel .rita-stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pc-panel .rita-step {
+  min-height: 44px;
+  flex: 1;
+  font-size: 13px;
+}
+.pc-panel [class*="text-[#c4c4d1]"] {
+  color: #6e6e7a;
+}
+.pc-panel [class*="rounded-2xl"][class*="border"][class*="p-5"] {
+  padding: 16px;
+  border-radius: 12px;
+}
+.pc-panel-loading {
+  position: fixed;
+  right: 16px;
+  top: 70px;
+  z-index: 70;
+  background: #fff;
+  padding: 20px;
+  border: 1px solid #dddde5;
+  border-radius: 12px;
+}
+.pc-panel[data-exercise] {
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  border: none;
+}
+.pc-panel[data-exercise] .pc-expand {
+  display: none;
+}
+.pc-panel[data-exercise] .pc-stop {
+  max-width: 44rem;
+  margin-inline: auto;
+}

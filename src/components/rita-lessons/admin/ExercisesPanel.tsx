@@ -27,6 +27,7 @@ import {
   type LessonItem,
 } from "@/lib/rita-lesson-content";
 import { EngineCheck } from "./EngineCheck";
+import { useWorkspaceTask } from "./WorkspaceGuard";
 
 const TEMPLATE_LABEL: Record<LessonItem["template"], string> = {
   choice_fill: "اختيار بالفراغ",
@@ -52,7 +53,13 @@ function answerOf(item: LessonItem): string {
  * review's warnings, preview the lesson as a learner, edit or replace a question, and publish.
  * Learners only ever get published exercises; until then they keep the spoken lesson.
  */
-export function ExercisesPanel({ lessonId }: { lessonId: string }) {
+export function ExercisesPanel({
+  lessonId,
+  onChanged,
+}: {
+  lessonId: string;
+  onChanged?: () => Promise<void>;
+}) {
   const loadFn = useServerFn(adminLessonExercises);
   const generateFn = useServerFn(adminGenerateExercises);
   const saveFn = useServerFn(adminSaveExercises);
@@ -60,6 +67,7 @@ export function ExercisesPanel({ lessonId }: { lessonId: string }) {
   const publishFn = useServerFn(adminPublishExercises);
   const [view, setView] = useState<ExercisesView | null>(null);
   const [busy, setBusy] = useState("");
+  useWorkspaceTask(Boolean(busy));
   const [error, setError] = useState("");
   const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
 
@@ -82,6 +90,7 @@ export function ExercisesPanel({ lessonId }: { lessonId: string }) {
     try {
       setView(await task());
       if (done) toast.success(done);
+      await onChanged?.();
     } catch (cause) {
       setError(message(cause));
       toast.error(message(cause));

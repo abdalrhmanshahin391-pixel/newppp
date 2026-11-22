@@ -1,3 +1,4 @@
+import { useWorkspaceTask } from "../WorkspaceGuard";
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -58,6 +59,7 @@ export function useLessonMaker({
 
   const [runs, setRuns] = useState<Record<string, RunState>>({});
   const [running, setRunning] = useState(false);
+  useWorkspaceTask(running);
   const cancel = useRef(false);
 
   /** A run is kept under the row's key and, once the lesson exists, under the lesson too. */

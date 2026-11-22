@@ -1,0 +1,440 @@
+dialog.film-session[open] {
+  --sky: #009fe9;
+  --blue-ink: #006da3;
+  --line: #edf0f2;
+  --fog: #f0f3f5;
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  border: 0;
+  background: white;
+  color: #15171a;
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+.film-session::backdrop {
+  background: white;
+}
+.fs-layout {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.fs-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  padding: max(18px, env(safe-area-inset-top)) 1.2vw 12px;
+}
+.fs-top a,
+.film-session .fs-top button {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  color: var(--blue-ink);
+}
+.film-session .fs-top button {
+  color: #84909b;
+}
+.film-session .fs-top progress {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e9edf0;
+  accent-color: #ffc600;
+  margin: 0;
+  flex: 1;
+  height: 12px;
+}
+.fs-top progress::-webkit-progress-bar {
+  background: #e9edf0;
+}
+.fs-top progress::-webkit-progress-value {
+  background: #ffc600;
+  border-radius: 999px;
+  transition: width 0.22s ease;
+}
+.fs-top progress::-moz-progress-bar {
+  background: #ffc600;
+  border-radius: 999px;
+}
+.fs-stage {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  padding: 16px max(16px, env(safe-area-inset-left));
+}
+.fs-column {
+  width: min(100%, 556px);
+  margin: auto;
+  flex: none;
+}
+.fs-column h2 {
+  font-size: clamp(17px, 2vw, 21px);
+  font-weight: 750;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+.fs-column h2.sr-only {
+  margin: 0;
+}
+.fs-card {
+  border: 2px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+  background: #fff;
+}
+.fs-scene {
+  position: relative;
+  aspect-ratio: 16/9;
+  background: #15171a;
+}
+.fs-phase-0 .fs-scene {
+  aspect-ratio: 1.6;
+}
+.fs-scene video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.film-session .fs-play {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+.fs-play span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin: 12px;
+  color: #fff;
+  border-radius: 50%;
+  background: #101219ad;
+}
+.fs-caption {
+  background: var(--fog);
+  padding: 12px 20px;
+  text-align: start;
+  font-size: 16px;
+}
+.fs-lines {
+  padding: 17px 20px 20px;
+}
+.fs-lines p:first-child {
+  font-size: clamp(20px, 2.1vw, 24px);
+  line-height: 1.35;
+  font-weight: 750;
+  text-align: left;
+  margin: 0;
+}
+.fs-lines p:nth-child(2) {
+  color: #64717c;
+  text-align: right;
+  margin: 0.3rem 0 0;
+  line-height: 1.5;
+}
+.fs-lines mark {
+  color: #007bb6;
+  background: transparent;
+}
+.fs-foot {
+  padding: 14px 16px max(24px, env(safe-area-inset-bottom));
+  flex: none;
+  text-align: start;
+}
+.fs-buttons {
+  display: flex;
+  gap: 8px;
+  width: min(100%, 686px);
+  margin: auto;
+  direction: ltr;
+}
+.fs-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin: 0 auto 25px;
+}
+.fs-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 100%;
+  background: #b8e5f8;
+}
+.fs-dots i[data-current="true"] {
+  background: var(--sky);
+}
+.film-session .fs-primary {
+  display: block;
+  width: min(100%, 686px);
+  margin: auto;
+  min-height: 50px;
+  border-radius: 12px;
+  background: #008ed2;
+  color: #fff;
+  box-shadow: 0 4px 0 #006caa;
+  font-weight: 750;
+}
+.film-session .fs-primary:disabled {
+  background: var(--fog);
+  color: #65727c;
+  box-shadow: none;
+  opacity: 1;
+}
+.film-session .fs-prev,
+.fs-options button,
+.fs-bank button,
+.fs-answer button {
+  border: 2px solid var(--line);
+  background: white;
+  box-shadow: 0 2px 0 var(--line);
+}
+.fs-prev {
+  color: var(--blue-ink);
+}
+[dir="rtl"] .fs-prev svg {
+  transform: rotate(180deg);
+}
+.fs-options {
+  display: grid;
+  gap: 9px;
+  margin-top: 24px;
+}
+.fs-options button {
+  text-align: start;
+}
+.film-session .fs-options button[aria-pressed="true"],
+.fs-answer button {
+  background: #dcf3ff;
+  border-color: var(--sky);
+  color: #006fa9;
+}
+.fs-answer,
+.fs-bank {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.fs-answer {
+  padding: 16px;
+  min-height: 72px;
+}
+.fs-slot {
+  height: 44px;
+  border-radius: 10px;
+  background: var(--fog);
+}
+.fs-bank {
+  justify-content: center;
+  padding-top: 16px;
+}
+.fs-bank button:disabled {
+  visibility: hidden;
+}
+.fs-answer button[data-grade="wrong"] {
+  background: #ffebe6;
+  border-color: #ef523a;
+  color: #9e2d1c;
+}
+.film-session button:disabled {
+  cursor: default;
+}
+.fs-foot[data-grade] {
+  border-radius: 18px 18px 0 0;
+}
+.fs-foot[data-grade="wrong"] {
+  background: #ffe9e6;
+  color: #9f3224;
+}
+.fs-foot[data-grade="wrong"] .fs-primary {
+  background: #da462d;
+  box-shadow: 0 4px 0 #ad301c;
+}
+.fs-foot[data-grade="right"] {
+  background: #e6f8eb;
+  color: #1d663c;
+}
+.fs-foot[data-grade="right"] .fs-primary {
+  background: #21804a;
+  box-shadow: 0 4px 0 #156036;
+}
+.fs-feedback {
+  width: min(100%, 686px);
+  margin: 0 auto 14px;
+}
+.fs-feedback strong {
+  font-size: 20px;
+}
+.fs-feedback p {
+  margin: 0.2rem 0;
+}
+.fs-listen {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+.fs-listen button,
+.film-session .fs-mic {
+  display: grid;
+  place-items: center;
+  background: var(--fog);
+  color: var(--blue-ink);
+}
+.fs-speaking {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-top: clamp(24px, 12vh, 120px);
+}
+.film-session .fs-mic {
+  height: 78px;
+  width: 78px;
+  border-radius: 22px;
+}
+.film-session .fs-mic[aria-pressed="true"] {
+  background: #ffede9;
+  color: #b83e2e;
+}
+.fs-speaking audio {
+  max-width: 100%;
+}
+.film-session .fs-skip {
+  color: var(--blue-ink);
+  margin-top: 12px;
+}
+.fs-finished {
+  margin: auto;
+  text-align: center;
+  font-weight: bold;
+  font-size: 24px;
+}
+.fs-finished svg {
+  margin: 0 auto 1rem;
+  color: #22814a;
+}
+.fs-retry {
+  color: var(--blue-ink);
+}
+@media (min-width: 700px) and (min-height: 650px) {
+  .fs-top {
+    padding-top: clamp(24px, 5vh, 48px);
+  }
+  .fs-foot {
+    padding-bottom: clamp(32px, 6vh, 55px);
+  }
+  .fs-phase-3 .fs-column {
+    margin-top: 5vh;
+  }
+  .fs-phase-3 {
+    padding-bottom: 95px;
+  }
+  .film-session .fs-skip {
+    position: absolute;
+    bottom: 5vh;
+    inset-inline: 0;
+    margin: auto;
+    width: max-content;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fs-top progress::-webkit-progress-value {
+    transition: none;
+  }
+}
+.fs-finished small {
+  display: block;
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #64717c;
+}
+.fs-finished a {
+  text-decoration: underline;
+}
+/* The credit of each clip, under its sentence; GIFs also name GIPHY. */
+.fs-card > .fs-credit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 0 20px 14px;
+  font-size: 12px;
+  color: #64717c;
+}
+.fs-credit a {
+  text-decoration: underline;
+}
+.fs-giphy {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.fs-finished .fs-credit {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #64717c;
+}
+.fs-finished .fs-giphy {
+  margin-inline-start: 6px;
+}
+/* A silent GIF has no sound to order from, so its meaning is shown. */
+.fs-hint {
+  margin: 0;
+  padding: 12px 20px 0;
+  color: #64717c;
+  font-size: 16px;
+}
+/* Big, easy targets for the answers (they had borders only). */
+.film-session .fs-options button {
+  min-height: 52px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 17px;
+  line-height: 1.4;
+}
+.film-session .fs-bank button,
+.film-session .fs-answer button {
+  min-height: 44px;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 650;
+}
+.fs-scene .fs-gif {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.film-session .fs-gif-listen {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--blue-ink);
+  padding-inline: 20px;
+}

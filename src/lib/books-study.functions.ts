@@ -332,7 +332,7 @@ export const bookMakeCards = createServerFn({ method: "POST" })
     );
     if (!asked.ok)
       return { ok: false, code: asked.reason, message: PRACTICE_FAILURE_TEXT[asked.reason] };
-    const cards = cleanCards(asked.reply, `${outcome.quote}\n${outcome.context}`, limit, style);
+    const cards = cleanCards(asked.reply, outcome.quote, limit, style);
     if (!cards.length) return { ok: false, code: "no_cards", message: NO_CARDS_TEXT };
     return { ok: true, cards };
   });

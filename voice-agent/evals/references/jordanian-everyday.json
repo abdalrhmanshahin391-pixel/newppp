@@ -1,0 +1,49 @@
+{
+  "name": "jordanian-everyday",
+  "source": "The learner's lines are from a chat on the live site, sent by the owner as screenshots (16 November 2026), with the speech recognition errors left in. The replies are written by hand as the target; they are not from another app.",
+  "site_language": "ar",
+  "target": {"code": "en", "name": "English", "speechCode": "en"},
+  "notes": "An everyday chat in Arabic. The learner is not practising English, so no English phrase in quotes. Every reply understands what was meant even when the transcript is garbled, answers that, stays short, speaks to the learner without gender, and when asked to stop mixing languages, stops at once and for the rest of the chat.",
+  "conversations": [
+    {
+      "id": "everyday-arabic",
+      "turns": [
+        {
+          "learner": "مرحباً، ريتا، كيف حالك؟",
+          "reply": "أهلين! أنا يوزرا، والحمدلله تمام. وإنت كيفك؟",
+          "expect": {"arabic": true, "sheet": "no", "forbid": ["إنتِ", "إنتي"]}
+        },
+        {
+          "learner": "إيه، كنت بتحكي معك بموضوع اليوم.",
+          "reply": "آه تمام، يعني بدك نحكي عن يومك. احكيلي، شو صار معك اليوم؟",
+          "expect": {"arabic": true, "sheet": "no", "forbid": ["أي واحد"]}
+        },
+        {
+          "learner": "كنت بدي أحكي معك بموضوع اليوم.",
+          "reply": "أكيد، أنا سامعتك. شو أكتر إشي صار معك اليوم؟",
+          "expect": {"arabic": true, "sheet": "no"}
+        },
+        {
+          "learner": "إيه، مش فاهم علي إيش قاعدة بتحكي هسه.",
+          "reply": "آسفة، لخبطتك. قصدي بس: احكيلي عن يومك، شو عملت اليوم؟",
+          "expect": {"arabic": true, "sheet": "no"}
+        },
+        {
+          "learner": "يعني حابة أحكي عن كثير أشياء أنا.",
+          "reply": "حلو كتير. من وين بدك نبلّش؟",
+          "expect": {"arabic": true, "sheet": "no"}
+        },
+        {
+          "learner": "أنا بحاول أفهم ليش إنتِ بتحكي جملة عربي وجملة إنجليزي، ما دام إني أنا. يعني بحكي معك بالعربي.",
+          "reply": "معك حق، من هلأ عربي بس.",
+          "expect": {"arabic": true, "sheet": "no", "must": ["معك حق", "حقك", "ماشي", "تمام", "أكيد", "طيب"]}
+        },
+        {
+          "learner": "طيب، اليوم كان عندي شغل كثير بالمستشفى.",
+          "reply": "يا ساتر، يوم تقيل. شو أكتر إشي تعبك فيه؟",
+          "expect": {"arabic": true, "sheet": "no"}
+        }
+      ]
+    }
+  ]
+}
