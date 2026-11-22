@@ -844,7 +844,7 @@ export async function guideModel() {
   return (await getServerRuntimeSecret("RITA_GUIDE_MODEL")) || DEFAULT_GUIDE_MODEL;
 }
 
-/** Writes one printed guide page from the book pages of a lesson. Checked and tidied before it returns. */
+/** Writes a lesson's guide (one to six slides) from its book pages. Checked and tidied before it returns. */
 export async function generateGuide(input: {
   bookTitle: string;
   title: string;
@@ -857,8 +857,9 @@ export async function generateGuide(input: {
     guideSystemPrompt(),
     guideUserPrompt(input),
     {
-      maxTokens: 4_000,
-      timeoutMs: 120_000,
+      // Several slides now (up to six pages), so the reply is longer than the old single page.
+      maxTokens: 9_000,
+      timeoutMs: 170_000,
       temperature: 0.3,
       normalize: normalizeGuideReply,
       model: await guideModel(),

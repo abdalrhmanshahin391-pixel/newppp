@@ -5,7 +5,7 @@ import {
   lessonPlan,
   lessonReadiness,
   publishPlan,
-  type ExercisesState,
+  type SlidesState,
   type LessonLike,
 } from "./rita-book-flow.ts";
 
@@ -27,18 +27,14 @@ const lesson = (
   source_from_page: from,
   source_to_page: to,
 });
-const ex = (status: ExercisesState["status"], warnings = 0, problems = 0): ExercisesState => ({
-  status,
-  warnings,
-  problems,
-});
+const sl = (linked: boolean, notes = 0): SlidesState => ({ linked, notes });
 
 test("a new book starts with reading; a half-read one continues", () => {
   const fresh = bookProgress({
     book: book(0),
     lessons: [],
     missingPages: 37,
-    exercises: {},
+    slides: {},
     openSuggestions: 0,
   });
   assert.deepEqual(fresh.next, { step: "read", label: "اقرأ الكتاب" });
@@ -47,7 +43,7 @@ test("a new book starts with reading; a half-read one continues", () => {
     book: book(20),
     lessons: [],
     missingPages: 0,
-    exercises: {},
+    slides: {},
     openSuggestions: 0,
   });
   assert.equal(half.next.label, "كمّل القراءة");
@@ -58,7 +54,7 @@ test("after reading: make the lessons, then review, then publish", () => {
     book: book(38),
     lessons: [],
     missingPages: 0,
-    exercises: {},
+    slides: {},
     openSuggestions: 5,
   });
   assert.deepEqual(read.next, { step: "lessons", label: "اصنع الدروس" });
@@ -66,7 +62,7 @@ test("after reading: make the lessons, then review, then publish", () => {
     book: book(38),
     lessons: [lesson("a"), lesson("b")],
     missingPages: 0,
-    exercises: { a: ex("draft"), b: ex("draft", 2) },
+    slides: { a: sl(true), b: sl(true, 2) },
     openSuggestions: 0,
   });
   assert.equal(made.next.step, "review", "a lesson with warnings needs a look");
@@ -74,7 +70,7 @@ test("after reading: make the lessons, then review, then publish", () => {
     book: book(38),
     lessons: [lesson("a"), lesson("b")],
     missingPages: 0,
-    exercises: { a: ex("draft"), b: ex("draft") },
+    slides: { a: sl(true), b: sl(true) },
     openSuggestions: 0,
   });
   assert.deepEqual(clean.next, { step: "publish", label: "انشر للطلاب" });
@@ -83,37 +79,41 @@ test("after reading: make the lessons, then review, then publish", () => {
     book: book(38, "published"),
     lessons: [lesson("a", "published"), lesson("b", "published")],
     missingPages: 0,
-    exercises: { a: ex("published"), b: ex("published") },
+    slides: { a: sl(true), b: sl(true) },
     openSuggestions: 0,
   });
   assert.deepEqual(live.done, { read: true, lessons: true, review: true, publish: true });
   assert.equal(live.publishedLessons, 2);
 });
 
-test("readiness of a lesson", () => {
-  assert.equal(lessonReadiness(lesson("a"), undefined), "no_exercises");
-  assert.equal(lessonReadiness(lesson("a"), ex("draft")), "ready");
-  assert.equal(lessonReadiness(lesson("a"), ex("draft", 1)), "warnings");
-  assert.equal(lessonReadiness(lesson("a"), ex("draft", 0, 2)), "problems");
-  assert.equal(lessonReadiness(lesson("a", "published"), ex("published")), "published");
-  assert.equal(lessonReadiness(lesson("a", "published"), undefined), "published");
-  assert.equal(
-    lessonReadiness(lesson("a", "published"), ex("draft")),
-    "ready",
-    "edited exercises of a live lesson wait to be published again",
-  );
-  assert.equal(lessonReadiness(lesson("a", "archived"), ex("draft")), "archived");
+test("after making: a lesson without linked slides still needs the lessons step's work", () => {
+  const unlinked = bookProgress({
+    book: book(38),
+    lessons: [lesson("a")],
+    missingPages: 0,
+    slides: { a: sl(false) },
+    openSuggestions: 0,
+  });
+  assert.equal(unlinked.next.step, "review");
+  assert.equal(unlinked.readyLessons, 0);
 });
 
-test("publish everything ready leaves out lessons with problems", () => {
+test("readiness of a book lesson follows its slides, not exercises", () => {
+  assert.equal(lessonReadiness(lesson("a"), undefined), "no_slides");
+  assert.equal(lessonReadiness(lesson("a"), sl(false)), "no_slides");
+  assert.equal(lessonReadiness(lesson("a"), sl(true)), "ready");
+  assert.equal(lessonReadiness(lesson("a"), sl(true, 1)), "warnings");
+  assert.equal(lessonReadiness(lesson("a", "published"), undefined), "published");
+  assert.equal(lessonReadiness(lesson("a", "archived"), sl(true)), "archived");
+});
+
+test("publish everything ready leaves out lessons without slides", () => {
   const plan = publishPlan(
     [lesson("a"), lesson("b"), lesson("c"), lesson("d", "published"), lesson("e", "archived")],
-    { a: ex("draft"), b: ex("draft", 0, 1), d: ex("published") },
+    { a: sl(true), b: sl(true, 3), c: sl(false), d: sl(true) },
   );
-  assert.deepEqual(plan.publish, ["a", "c"]);
-  assert.deepEqual(plan.withExercises, ["a"]);
-  assert.deepEqual(plan.spokenOnly, ["c"]);
-  assert.deepEqual(plan.blocked, ["b"]);
+  assert.deepEqual(plan.publish, ["a", "b"]);
+  assert.deepEqual(plan.blocked, ["c"]);
 });
 
 test("the lesson plan lists every suggested topic not yet made, in page order", () => {

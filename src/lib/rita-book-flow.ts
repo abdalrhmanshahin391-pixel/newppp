@@ -13,11 +13,14 @@ export const STEP_LABEL: Record<BookStep, string> = {
   publish: "النشر",
 };
 
-/** What the exercises of one lesson look like to the admin (from adminExercisesSummary). */
-export type ExercisesState = {
-  status: "none" | "draft" | "published";
-  warnings: number;
-  problems: number;
+/**
+ * What a book lesson's slides look like to the admin (from adminBookStudyState): a ready guide is
+ * linked, and how many points its second review raised (something wrong, or something the book
+ * pages teach that no slide shows).
+ */
+export type SlidesState = {
+  linked: boolean;
+  notes: number;
 };
 
 export type BookLike = {
@@ -35,25 +38,22 @@ export type LessonLike = {
   source_to_page: number;
 };
 
-export type LessonReadiness =
-  "published" | "ready" | "warnings" | "problems" | "no_exercises" | "archived";
+export type LessonReadiness = "published" | "ready" | "warnings" | "no_slides" | "archived";
 
 /**
- * A lesson's state in the review list. "ready": exercises written with nothing flagged.
- * "warnings": the second review flagged something to look at (it can still be published).
- * "problems": the code checks fail, so its exercises cannot be published. "no_exercises": only the
- * spoken lesson exists.
+ * A book lesson's state in the review list. Book lessons are slides on the right and Uzyra on the
+ * left, so a lesson is ready once its slides are linked. "warnings": the review of the slides
+ * raised points to look at (it can still be published). "no_slides": the slides are not made or
+ * not linked yet, so it cannot be published.
  */
 export function lessonReadiness(
   lesson: LessonLike,
-  exercises: ExercisesState | undefined,
+  slides: SlidesState | undefined,
 ): LessonReadiness {
   if (lesson.status === "archived") return "archived";
-  if (exercises && exercises.problems > 0) return "problems";
-  if (lesson.status === "published" && (!exercises || exercises.status !== "draft"))
-    return "published";
-  if (!exercises || exercises.status === "none") return "no_exercises";
-  if (exercises.warnings > 0) return "warnings";
+  if (lesson.status === "published") return "published";
+  if (!slides?.linked) return "no_slides";
+  if (slides.notes > 0) return "warnings";
   return "ready";
 }
 
@@ -61,8 +61,7 @@ export const READINESS_LABEL: Record<LessonReadiness, string> = {
   published: "منشور",
   ready: "جاهز",
   warnings: "فيه ملاحظات",
-  problems: "فيه مشكلة",
-  no_exercises: "بدون تمارين",
+  no_slides: "بدون شرائح",
   archived: "مؤرشف",
 };
 
@@ -84,13 +83,13 @@ export function bookProgress(input: {
   book: BookLike;
   lessons: LessonLike[];
   missingPages: number;
-  exercises: Record<string, ExercisesState>;
+  slides: Record<string, SlidesState>;
   /** Topics read but not yet turned into lessons. */
   openSuggestions: number;
 }): BookProgress {
   const { book } = input;
   const live = input.lessons.filter((lesson) => lesson.status !== "archived");
-  const readiness = live.map((lesson) => lessonReadiness(lesson, input.exercises[lesson.id]));
+  const readiness = live.map((lesson) => lessonReadiness(lesson, input.slides[lesson.id]));
   const publishedLessons = readiness.filter((state) => state === "published").length;
   const readyLessons = readiness.filter(
     (state) => state === "ready" || state === "warnings",
@@ -141,25 +140,18 @@ export function lessonPlan(input: {
   }).sort((a, b) => a.from_page - b.from_page || a.to_page - b.to_page);
 }
 
-/** Lessons the "publish everything ready" button will publish (and which it leaves alone). */
+/** Lessons the "publish everything ready" button will publish, and the ones still without slides. */
 export function publishPlan(
   lessons: LessonLike[],
-  exercises: Record<string, ExercisesState>,
-): { publish: string[]; withExercises: string[]; spokenOnly: string[]; blocked: string[] } {
+  slides: Record<string, SlidesState>,
+): { publish: string[]; blocked: string[] } {
   const publish: string[] = [];
-  const withExercises: string[] = [];
-  const spokenOnly: string[] = [];
   const blocked: string[] = [];
   for (const lesson of lessons) {
-    const state = lessonReadiness(lesson, exercises[lesson.id]);
+    const state = lessonReadiness(lesson, slides[lesson.id]);
     if (state === "archived" || state === "published") continue;
-    if (state === "problems") {
-      blocked.push(lesson.id);
-      continue;
-    }
-    publish.push(lesson.id);
-    if (state === "no_exercises") spokenOnly.push(lesson.id);
-    else withExercises.push(lesson.id);
+    if (state === "no_slides") blocked.push(lesson.id);
+    else publish.push(lesson.id);
   }
-  return { publish, withExercises, spokenOnly, blocked };
+  return { publish, blocked };
 }

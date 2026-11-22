@@ -49,8 +49,7 @@ const READINESS_STYLE: Record<LessonReadiness, string> = {
   published: "bg-[var(--pp-ink)] text-white",
   ready: "bg-[#e6f4ea] text-[#1d6b3a]",
   warnings: "bg-[#fff6e5] text-[#8a5200]",
-  problems: "bg-[#fbe9ed] text-[#8c1a31]",
-  no_exercises: "bg-[var(--pp-grey)] text-[var(--pp-muted)]",
+  no_slides: "bg-[#fbe9ed] text-[#8c1a31]",
   archived: "bg-[var(--pp-grey)] text-[var(--pp-muted)]",
 };
 

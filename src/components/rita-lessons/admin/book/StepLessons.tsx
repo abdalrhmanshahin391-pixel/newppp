@@ -1,56 +1,34 @@
 import { useWorkspaceTask } from "../WorkspaceGuard";
-import { useMemo, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Check, FileText, Loader2, Pencil, Sparkles, Square, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowLeft, Check, FileText, Loader2, Pencil, Sparkles, Square } from "lucide-react";
 import { toast } from "sonner";
 import { lessonPlan } from "@/lib/rita-book-flow";
-import {
-  adminGenerateExercises,
-  adminGenerateLesson,
-  type CurriculumRow,
-  type LessonRow,
-  type WindowRow,
-} from "@/lib/rita-curriculum.functions";
+import type { CurriculumRow, LessonRow, WindowRow } from "@/lib/rita-curriculum.functions";
 import type { BookStudyState } from "@/lib/study/study.functions";
-import {
-  KIND_TEXT,
-  pipelineView,
-  STEP_TEXT,
-  type BookRow,
-  type LessonKind,
-} from "@/lib/study/lesson-maker";
+import { pipelineView, STEP_TEXT, type BookRow } from "@/lib/study/lesson-maker";
 import { NextLessonPicker } from "@/components/rita-lessons/admin/NextLessonPicker";
 import type { TopicSuggestion } from "@/lib/rita-slides";
-import { errorDetail, errorText, pagesLabel } from "./book-utils";
-import { BidiText, LessonKindBadge, MakerSteps } from "./BookBits";
+import { pagesLabel } from "./book-utils";
+import { BidiText, MakerSteps } from "./BookBits";
 import { GuidesPanel } from "./GuidesPanel";
 import { useGuides, type GuideProgress } from "./useGuides";
 import { useLessonMaker } from "./useLessonMaker";
 
-type ItemState = {
-  state: "waiting" | "lesson" | "exercises" | "done" | "failed";
-  error?: string;
-  /** The server's own words, shown small under the hint. */
-  detail?: string;
-  /** The lesson was made but its exercises were not: it leaves the suggestions, so it is listed apart. */
-  partial?: boolean;
-  title?: string;
-};
-
 const keyOf = (item: TopicSuggestion) => `${item.topic}:${item.from_page}-${item.to_page}`;
+
+/** Book lessons are made without exercises: slides on the right and Uzyra on the left. */
+const NO_EXERCISES = false;
 
 /**
  * Step 2: the lessons. The reading summaries suggest the book's lessons; the admin keeps the ones
- * wanted (and can rename a topic) and picks their kind: red (Uzyra's lesson) or green (guide + Uzyra).
- * One button then writes each lesson and its exercises, one after the other, with progress; a green
- * lesson also gets its PDF guide, checked and linked. It can be stopped and started again; finished
- * lessons are not redone.
+ * wanted (and can rename a topic). One button makes each of them in full, one after the other: the
+ * lesson, its slides (as many as the topic needs, like the pages of a book), then the slides checked
+ * and linked. It can be stopped and started again; finished steps are not redone.
  */
 export function StepLessons({
   book,
   windows,
   lessons,
-  exercisesReady,
   study,
   onNext,
   onChanged,
@@ -58,19 +36,13 @@ export function StepLessons({
   book: CurriculumRow;
   windows: WindowRow[];
   lessons: LessonRow[];
-  exercisesReady: boolean;
   study: BookStudyState;
   onNext: () => void;
   onChanged: () => Promise<void>;
 }) {
-  const lessonFn = useServerFn(adminGenerateLesson);
-  const exercisesFn = useServerFn(adminGenerateExercises);
-  const [experience, setExperience] = useState<LessonKind>("classic");
-  const setup = { exercisesReady, studyReady: study.ready };
+  const setup = { exercisesReady: NO_EXERCISES, studyReady: study.ready };
   const maker = useLessonMaker({ book, setup, onChanged });
-  // A green lesson needs the study tables; until they are there every new lesson is red.
-  const kind: LessonKind = study.ready ? experience : "classic";
-  /** The green lessons sent in this visit, by key, so a failure is still named after its row leaves. */
+  /** The lessons sent in this visit, by key, so a failure is still named after its row leaves. */
   const [sent, setSent] = useState<Record<string, string>>({});
   const plan = useMemo(
     () =>
@@ -83,12 +55,9 @@ export function StepLessons({
   );
   const [unchecked, setUnchecked] = useState<Set<string>>(new Set());
   const [topics, setTopics] = useState<Record<string, string>>({});
-  const [progress, setProgress] = useState<Record<string, ItemState>>({});
-  const [running, setRunning] = useState(false);
   const [editing, setEditing] = useState("");
-  const cancel = useRef(false);
   const guides = useGuides(book.id);
-  const working = running || guides.running || maker.running;
+  const working = guides.running || maker.running;
   useWorkspaceTask(working);
   const live = lessons.filter((lesson) => lesson.status !== "archived");
   const chosen = plan.filter((item) => !unchecked.has(keyOf(item)));
@@ -104,8 +73,9 @@ export function StepLessons({
     to: item.to_page,
   });
 
-  /** Green lessons: each one made in full (lesson, exercises, guide, link) by the lesson maker. */
-  async function makeGreen(rows: BookRow[]) {
+  /** Each lesson is made in full (lesson, slides, check and link) by the lesson maker. */
+  async function make(rows: BookRow[]) {
+    if (!study.ready || !rows.length) return;
     setSent((current) => ({
       ...current,
       ...Object.fromEntries(rows.map((row) => [row.key, row.title])),
@@ -113,67 +83,9 @@ export function StepLessons({
     await maker.make(rows.map((row) => ({ row, facts: { exists: false } })));
   }
 
-  async function makeLessons() {
-    if (kind === "study") return makeGreen(chosen.map(rowOf));
-    cancel.current = false;
-    setRunning(true);
-    const queue = [...chosen];
-    let made = 0;
-    try {
-      for (const item of queue) {
-        if (cancel.current) break;
-        const key = keyOf(item);
-        const set = (state: ItemState) => setProgress((current) => ({ ...current, [key]: state }));
-        // Which step failed decides what the admin does next.
-        let stage: "lesson" | "exercises" = "lesson";
-        try {
-          set({ state: "lesson" });
-          const row = await lessonFn({
-            data: {
-              curriculumId: book.id,
-              topic: (topics[key] ?? item.topic).trim() || item.topic,
-              from: item.from_page,
-              to: item.to_page,
-            },
-          });
-          if (exercisesReady) {
-            stage = "exercises";
-            set({ state: "exercises" });
-            await exercisesFn({ data: { lessonId: row.id } });
-          }
-          set({ state: "done" });
-          made += 1;
-        } catch (error) {
-          set({
-            state: "failed",
-            error:
-              stage === "exercises"
-                ? `التمارين ما انكتبت: ${errorText(error)}`
-                : `ما انكتب الدرس: ${errorText(error)}`,
-            detail: errorDetail(error),
-            partial: stage === "exercises",
-            title: item.title_ar || item.topic,
-          });
-        }
-      }
-      if (made) toast.success(`انصنع ${made} درس`);
-    } finally {
-      setRunning(false);
-      await onChanged();
-    }
-  }
-
-  // Lessons made in this run stay listed with their result until the page is reloaded.
-  const finished = Object.entries(progress).filter(([, value]) => value.state === "done").length;
-  const failures = Object.entries(progress).filter(
-    ([, value]) => value.state === "failed" && !value.partial,
-  );
-  const partials = Object.values(progress).filter(
-    (value) => value.state === "failed" && value.partial,
-  );
-  // Green lessons that were made but stopped at a later step: their row has left the suggestions.
+  // Lessons that were made but stopped at a later step: their row has left the suggestions.
   const inPlan = new Set(plan.map(keyOf));
-  const greenStops = Object.entries(sent).flatMap(([key, title]) => {
+  const stops = Object.entries(sent).flatMap(([key, title]) => {
     const run = maker.runs[key];
     return run?.state === "failed" && !inPlan.has(key) ? [{ key, title, run }] : [];
   });
@@ -185,23 +97,25 @@ export function StepLessons({
           الدروس
         </h2>
         <p className="mt-1 text-[15px] text-[var(--pp-muted)]">
-          هاي الدروس اللي اقترحناها من الكتاب. شيل الصح عن اللي ما بدك إياه، وبعدين اصنعها.
-          {exercisesReady ? " كل درس بينصنع مع تمارينه." : ""}
+          هاي الدروس اللي اقترحناها من الكتاب. شيل الصح عن اللي ما بدك إياه، وبعدين اصنعها. كل درس
+          بيطلع شرائح يمين (قد ما القاعدة بدها، زي صفحات الكتاب) ويوزرا يسار.
         </p>
         {live.length > 0 && (
           <p className="mt-1 text-[15px] font-semibold">بالكتاب هلأ {live.length} درس.</p>
         )}
       </div>
 
+      {!study.ready && (
+        <p className="rounded-xl bg-[#fff6e5] p-4 text-[15px] text-[#6b4100]">
+          صناعة الدروس بدها جداول الدراسة التفاعلية بقاعدة البيانات. طبّقها من Lovable Cloud وارجع.
+        </p>
+      )}
+
       {book.read_cursor === 0 ? (
         <p className="rounded-xl bg-[var(--pp-grey)] p-4 text-[15px]">
           اقرأ الكتاب أولاً، وبعدين بتطلع الدروس المقترحة هون.
         </p>
-      ) : plan.length === 0 &&
-        !running &&
-        !maker.running &&
-        finished === 0 &&
-        greenStops.length === 0 ? (
+      ) : plan.length === 0 && !maker.running && stops.length === 0 ? (
         <div className="space-y-3 rounded-xl bg-[var(--pp-grey)] p-4 text-[15px]">
           <p>
             {live.length
@@ -222,7 +136,6 @@ export function StepLessons({
             <ul className="divide-y divide-[var(--pp-line)] rounded-xl border border-[var(--pp-line)]">
               {plan.map((item) => {
                 const key = keyOf(item);
-                const state = progress[key];
                 const run = maker.runs[key];
                 const checked = !unchecked.has(key);
                 return (
@@ -300,104 +213,50 @@ export function StepLessons({
                           )}
                         </div>
                       )}
-                      {state?.state === "failed" && (
-                        <div className="mt-1 space-y-1">
-                          <p className="text-[14px] font-semibold text-[#8c1a31]">{state.error}</p>
-                          {state.detail && (
-                            <p
-                              className="break-words text-[12.5px] text-[var(--pp-muted)]"
-                              dir="ltr"
-                            >
-                              {state.detail}
-                            </p>
-                          )}
-                        </div>
-                      )}
                     </div>
-                    <ItemStatus state={state} />
                   </li>
                 );
               })}
             </ul>
           )}
 
-          {running || maker.running ? (
-            <button
-              type="button"
-              onClick={() => {
-                cancel.current = true;
-                maker.stop();
-              }}
-              className="rita-btn rita-btn-soft gap-2"
-            >
+          {maker.running ? (
+            <button type="button" onClick={maker.stop} className="rita-btn rita-btn-soft gap-2">
               <Square size={14} fill="currentColor" aria-hidden="true" />
               إيقاف بعد الدرس الحالي
             </button>
           ) : (
-            <>
-              <KindChoice
-                value={kind}
-                studyReady={study.ready}
-                disabled={working}
-                onChange={setExperience}
-              />
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  disabled={!chosen.length || working}
-                  onClick={() => void makeLessons()}
-                  className="rita-btn rita-btn-primary gap-2"
-                >
-                  <Sparkles size={17} aria-hidden="true" />
-                  اصنع الدروس المختارة ({chosen.length})
-                  <LessonKindBadge kind={kind} />
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={!chosen.length || working || !study.ready}
+                onClick={() => void make(chosen.map(rowOf))}
+                className="rita-btn rita-btn-primary gap-2"
+              >
+                <Sparkles size={17} aria-hidden="true" />
+                اصنع الدروس ({chosen.length})
+              </button>
+              {live.length > 0 && (
+                <button type="button" onClick={onNext} className="rita-btn rita-btn-soft gap-2">
+                  للمراجعة
+                  <ArrowLeft size={17} aria-hidden="true" />
                 </button>
-                <button
-                  type="button"
-                  disabled={!chosen.length || working}
-                  onClick={() =>
-                    void guides
-                      .make(
-                        chosen.map((item) => ({
-                          key: keyOf(item),
-                          title: (topics[keyOf(item)] ?? item.topic).trim() || item.topic,
-                          from: item.from_page,
-                          to: item.to_page,
-                        })),
-                      )
-                      .then((made) => {
-                        if (made) toast.success(`انصنع ${made} دليل PDF`);
-                      })
-                  }
-                  className="rita-btn rita-btn-soft gap-2"
-                >
-                  <FileText size={17} aria-hidden="true" />
-                  اصنع دليل PDF ({chosen.length})
-                </button>
-                {live.length > 0 && (
-                  <button type="button" onClick={onNext} className="rita-btn rita-btn-soft gap-2">
-                    للمراجعة
-                    <ArrowLeft size={17} aria-hidden="true" />
-                  </button>
-                )}
-              </div>
-            </>
+              )}
+            </div>
           )}
-          {(running || maker.running) && (
+          {maker.running && (
             <p role="status" className="text-[14px] text-[var(--pp-muted)]">
-              {maker.running
-                ? "كل درس أخضر بياخد كم دقيقة (الدرس، التمارين، الدليل، الربط). خلّي الصفحة مفتوحة."
-                : "كل درس بياخد دقيقة لدقيقتين. خلّي الصفحة مفتوحة."}
+              كل درس بياخد كم دقيقة (الدرس، الشرائح، الفحص والربط). خلّي الصفحة مفتوحة.
             </p>
           )}
-          {!maker.running && greenStops.length > 0 && (
+          {!maker.running && stops.length > 0 && (
             <div className="space-y-2 rounded-xl bg-[#fff6e5] p-3 text-[14px] text-[#6b4100]">
               <p className="font-semibold">
-                {greenStops.length} درس أخضر انصنع بس ما كمل. الشغل يلي قبل الوقفة محفوظ، والطلاب
-                بياخدوا الدرس العادي لحد ما ينربط دليله. كمّله من «المراجعة» بزر «كمّل».
+                {stops.length} درس انصنع بس ما كمل. الشغل يلي قبل الوقفة محفوظ. كمّله من «المراجعة»
+                بزر «كمّل».
               </p>
               <ul className="space-y-2">
-                {greenStops.map(({ key, title, run }) => (
+                {stops.map(({ key, title, run }) => (
                   <li key={key}>
                     <p>
                       <BidiText text={title} /> · وقف عند «{STEP_TEXT[run.step].label}»:{" "}
@@ -413,41 +272,12 @@ export function StepLessons({
               </ul>
             </div>
           )}
-          {!running && partials.length > 0 && (
-            <div className="space-y-2 rounded-xl bg-[#fff6e5] p-3 text-[14px] text-[#6b4100]">
-              <p className="font-semibold">
-                {partials.length} درس انصنع بدون تمارين. افتحه من «المراجعة» (الدرس ← التمارين)
-                واضغط «اصنع التمارين».
-              </p>
-              <ul className="space-y-2">
-                {partials.map((partial) => (
-                  <li key={partial.title}>
-                    <p>
-                      <BidiText text={partial.title ?? ""} /> · {partial.error}
-                    </p>
-                    {partial.detail && (
-                      <p className="break-words text-[12.5px]" dir="ltr">
-                        {partial.detail}
-                      </p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {!running && failures.length > 0 && (
-            <p className="text-[14px] text-[#8c1a31]">
-              {failures.length} درس ما انصنع. صلّح السبب المكتوب تحته واضغط «اصنع» مرة ثانية.
-            </p>
-          )}
         </>
       )}
 
-      <GuidesPanel guides={guides} />
-
       <details className="rounded-xl border border-[var(--pp-line)] p-3">
         <summary className="cursor-pointer text-[15px] font-semibold">
-          درس بموضوع وصفحات من عندك <LessonKindBadge kind={kind} />
+          درس بموضوع وصفحات من عندك
         </summary>
         <div className="mt-3">
           <NextLessonPicker
@@ -455,91 +285,55 @@ export function StepLessons({
             suggestions={[]}
             readCursor={book.read_cursor}
             defaultFrom={Math.min(book.taught_cursor + 1, Math.max(1, book.read_cursor))}
-            busy={working}
-            generatingKey={running || maker.running ? "custom" : ""}
-            onGenerate={(pick) => {
-              if (kind === "study") {
-                void makeGreen([
-                  {
-                    key: `custom:${pick.topic}:${pick.from}-${pick.to}`,
-                    lessonId: null,
-                    title: pick.topic,
-                    titleEn: pick.topic,
-                    ...pick,
-                  },
-                ]);
-                return;
-              }
-              setRunning(true);
-              void (async () => {
-                try {
-                  const row = await lessonFn({ data: { curriculumId: book.id, ...pick } });
-                  if (exercisesReady) await exercisesFn({ data: { lessonId: row.id } });
-                  toast.success("انصنع الدرس");
-                } catch (error) {
-                  toast.error(errorText(error));
-                } finally {
-                  setRunning(false);
-                  await onChanged();
-                }
-              })();
-            }}
+            busy={working || !study.ready}
+            generatingKey={maker.running ? "custom" : ""}
+            onGenerate={(pick) =>
+              void make([
+                {
+                  key: `custom:${pick.topic}:${pick.from}-${pick.to}`,
+                  lessonId: null,
+                  title: pick.topic,
+                  titleEn: pick.topic,
+                  ...pick,
+                },
+              ])
+            }
           />
         </div>
       </details>
-    </section>
-  );
-}
 
-/** The kind of the new lessons: two cards, red for Uzyra's lesson and green for the guide + Uzyra. */
-function KindChoice({
-  value,
-  studyReady,
-  disabled,
-  onChange,
-}: {
-  value: LessonKind;
-  studyReady: boolean;
-  disabled: boolean;
-  onChange: (kind: LessonKind) => void;
-}) {
-  return (
-    <div className="space-y-2">
-      <p id="new-lessons-kind" className="text-[15px] font-semibold">
-        نوع الدروس الجديدة
-      </p>
-      <div role="radiogroup" aria-labelledby="new-lessons-kind" className="kind-choice">
-        {(["classic", "study"] as const).map((kind) => (
+      <details className="rounded-xl border border-[var(--pp-line)] p-3">
+        <summary className="cursor-pointer text-[15px] font-semibold">خيارات متقدمة</summary>
+        <div className="mt-3 space-y-3">
+          <p className="text-[14px] text-[var(--pp-muted)]">
+            شرائح PDF بس، بدون ما ينصنع درس (للطباعة أو المراجعة).
+          </p>
           <button
-            key={kind}
             type="button"
-            role="radio"
-            aria-checked={value === kind}
-            data-kind={kind}
-            disabled={disabled || (kind === "study" && !studyReady)}
-            onClick={() => onChange(kind)}
-            className="kind-card"
+            disabled={!chosen.length || working}
+            onClick={() =>
+              void guides
+                .make(
+                  chosen.map((item) => ({
+                    key: keyOf(item),
+                    title: (topics[keyOf(item)] ?? item.topic).trim() || item.topic,
+                    from: item.from_page,
+                    to: item.to_page,
+                  })),
+                )
+                .then((made) => {
+                  if (made) toast.success(`انصنع ${made} ملف PDF`);
+                })
+            }
+            className="rita-btn rita-btn-soft gap-2"
           >
-            <span className="kind-pic" aria-hidden="true">
-              <i />
-              <i />
-              {kind === "classic" && <i />}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[16px] font-bold">{KIND_TEXT[kind].name}</span>
-              <span className="mt-0.5 block text-[13.5px] leading-relaxed text-[var(--pp-muted)]">
-                {KIND_TEXT[kind].about}
-              </span>
-            </span>
+            <FileText size={17} aria-hidden="true" />
+            اصنع PDF بس للمختارة ({chosen.length})
           </button>
-        ))}
-      </div>
-      {!studyReady && (
-        <p className="text-[13.5px] text-[var(--pp-muted)]">
-          «ملف + يوزرا» بده تحديث قاعدة البيانات (الدراسة التفاعلية). لحد هداك الدروس الجديدة حمرا.
-        </p>
-      )}
-    </div>
+          <GuidesPanel guides={guides} />
+        </div>
+      </details>
+    </section>
   );
 }
 
@@ -571,32 +365,5 @@ function GuideLine({ value }: { value: GuideProgress }) {
       <Loader2 size={14} className="animate-spin" aria-hidden="true" />
       دليل PDF: {value.stage === "writing" ? "جاري الكتابة…" : "جاري الرسم…"}
     </p>
-  );
-}
-
-function ItemStatus({ state }: { state: ItemState | undefined }) {
-  if (!state || state.state === "waiting") return null;
-  if (state.state === "done") {
-    return (
-      <span className="flex shrink-0 items-center gap-1 text-[14px] font-semibold text-[#1d6b3a]">
-        <Check size={16} aria-hidden="true" /> انصنع
-      </span>
-    );
-  }
-  if (state.state === "failed") {
-    return (
-      <span className="flex shrink-0 items-center gap-1 text-[14px] font-semibold text-[#8c1a31]">
-        <X size={16} aria-hidden="true" /> ما زبط
-      </span>
-    );
-  }
-  return (
-    <span
-      role="status"
-      className="flex shrink-0 items-center gap-1 text-[14px] font-semibold text-[var(--pp-accent-text)]"
-    >
-      <Loader2 size={15} className="animate-spin" aria-hidden="true" />
-      {state.state === "lesson" ? "كتابة الدرس…" : "كتابة التمارين…"}
-    </span>
   );
 }

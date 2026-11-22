@@ -1,6 +1,15 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { renderGuideHtml } from "@/lib/guides/guide-html";
-import type { GuideContent } from "@/lib/guides/guide-content";
+import { guideSlides, type GuideContent } from "@/lib/guides/guide-content";
 
 /** The frame's width before it is fitted to its pane (the sheet inside is at most 640px). */
 const START_WIDTH = 664;
@@ -53,6 +62,10 @@ export const GuideFrame = forwardRef<
   const width = useRef(START_WIDTH);
   const height = useRef(1200);
   const fitted = useRef(true);
+  /** Slides, like the pages of a book: one shows at a time (an old one-page guide has one). */
+  const slides = useMemo(() => guideSlides(content), [content]);
+  const [slide, setSlide] = useState(0);
+  const current = useRef(0);
 
   const html = useMemo(() => {
     const origin = typeof window === "undefined" ? "" : window.location.origin;
@@ -116,6 +129,69 @@ export const GuideFrame = forwardRef<
       apply(scale.current);
     }
   }, [apply]);
+
+  /** Shows one slide (and only it) and goes back to its top. */
+  const showSlide = useCallback(
+    (next: number, toTop = true) => {
+      const index = Math.max(0, Math.min(slides.length - 1, next));
+      current.current = index;
+      setSlide(index);
+      const doc = frame.current?.contentDocument;
+      if (doc && slides.length > 1) doc.documentElement.dataset.slide = String(index);
+      measure();
+      if (toTop && scroller.current) scroller.current.scrollTop = 0;
+    },
+    [measure, slides.length],
+  );
+
+  /** A piece on another slide: turn to that slide first (the pieces of other slides are hidden). */
+  const reveal = useCallback(
+    (element: Element | null) => {
+      const holder = element?.closest("[data-slide]");
+      const index = holder ? Number(holder.getAttribute("data-slide")) : current.current;
+      if (Number.isFinite(index) && index !== current.current) showSlide(index, false);
+    },
+    [showSlide],
+  );
+
+  // A new guide starts on its first slide.
+  useEffect(() => {
+    current.current = 0;
+    setSlide(0);
+  }, [content]);
+
+  // A quick sideways flick of one finger turns the slide, only while the sheet is not zoomed (then
+  // a sideways move has nothing to scroll). Selecting with a finger holds first, so it is slower.
+  useEffect(() => {
+    const layer = hit.current;
+    const box = scroller.current;
+    if (!layer || !box || slides.length < 2) return;
+    let start: { x: number; y: number; t: number } | null = null;
+    const onStart = (event: TouchEvent) => {
+      start =
+        event.touches.length === 1
+          ? { x: event.touches[0].clientX, y: event.touches[0].clientY, t: Date.now() }
+          : null;
+    };
+    const onEnd = (event: TouchEvent) => {
+      const touch = event.changedTouches[0];
+      if (!start || !touch) return;
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      const quick = Date.now() - start.t < 320;
+      start = null;
+      if (!quick || Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 2) return;
+      if (box.scrollWidth > box.clientWidth + 1) return;
+      // The sheet reads left to right: a flick to the left shows the next slide.
+      showSlide(current.current + (dx < 0 ? 1 : -1));
+    };
+    layer.addEventListener("touchstart", onStart, { passive: true });
+    layer.addEventListener("touchend", onEnd, { passive: true });
+    return () => {
+      layer.removeEventListener("touchstart", onStart);
+      layer.removeEventListener("touchend", onEnd);
+    };
+  }, [showSlide, slides.length]);
 
   // The pane changes size (window, divider): refit while the learner has not zoomed by hand.
   useEffect(() => {
@@ -235,6 +311,7 @@ export const GuideFrame = forwardRef<
     if (!doc || handed.current === doc || !doc.querySelector("[data-seg]")) return;
     handed.current = doc;
     listen(doc);
+    if (slides.length > 1) doc.documentElement.dataset.slide = String(current.current);
     measure();
     fit();
     // Web fonts change the sheet's height once they arrive.
@@ -263,6 +340,7 @@ export const GuideFrame = forwardRef<
       const target = frame.current?.contentDocument?.getElementById(id);
       const box = scroller.current;
       if (!target || !box) return;
+      reveal(target);
       box.scrollTo({
         top: Math.max(0, (topOf(target) - 16) * scale.current),
         behavior: smooth ? "smooth" : "auto",
@@ -276,6 +354,7 @@ export const GuideFrame = forwardRef<
         doc?.querySelector(`[data-block="${CSS.escape(id)}"]`) ??
         doc?.getElementById(id);
       if (!target || !box) return;
+      reveal(target);
       const rect = target.getBoundingClientRect();
       box.scrollTo({
         top: Math.max(0, (rect.top + rect.height / 2) * scale.current - box.clientHeight / 2),
@@ -306,6 +385,32 @@ export const GuideFrame = forwardRef<
         />
         <div ref={hit} className="st-hit" />
       </div>
+      {slides.length > 1 && (
+        <nav className="st-slides" aria-label="شرائح الدرس">
+          <button
+            type="button"
+            onClick={() => showSlide(slide - 1)}
+            disabled={slide === 0}
+            aria-label="الشريحة السابقة"
+          >
+            <ChevronLeft size={18} aria-hidden="true" />
+          </button>
+          <span className="st-slides-title" dir="ltr">
+            <b>
+              {slide + 1}/{slides.length}
+            </b>{" "}
+            {slides[slide]?.title}
+          </span>
+          <button
+            type="button"
+            onClick={() => showSlide(slide + 1)}
+            disabled={slide === slides.length - 1}
+            aria-label="الشريحة الجاية"
+          >
+            <ChevronRight size={18} aria-hidden="true" />
+          </button>
+        </nav>
+      )}
     </div>
   );
 });

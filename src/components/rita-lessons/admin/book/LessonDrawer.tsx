@@ -12,46 +12,35 @@ import type { LessonReadiness } from "@/lib/rita-book-flow";
 import type { Objective } from "@/lib/rita-curriculum";
 import {
   adminGenerateLessonImage,
-  adminLessonExercises,
-  adminPublishExercises,
-  adminGenerateSlides,
   adminRegenerateObjective,
-  adminSaveSlides,
   adminSetLessonStatus,
-  adminSetSlidesShared,
   adminUpdateLesson,
   type LessonRow,
 } from "@/lib/rita-curriculum.functions";
-import { shouldPublishExercisesWithLesson } from "@/lib/rita-engine-check";
 import type { Resource } from "@/lib/rita-resources";
 import type { Slide } from "@/lib/rita-slides";
 import { LessonForm } from "@/components/rita-lessons/LessonForm";
 import { LessonImage } from "@/components/rita-lessons/LessonArt";
-import { ExercisesPanel } from "@/components/rita-lessons/admin/ExercisesPanel";
 import { ResourcesPanel } from "@/components/rita-lessons/admin/ResourcesPanel";
-import { SlidesPanel } from "@/components/rita-lessons/admin/SlidesPanel";
 import { StudyGuidePanel } from "@/components/rita-lessons/admin/StudyGuidePanel";
 import { errorText, lessonToDraft, pagesLabel } from "./book-utils";
 import { BidiText, LessonKindBadge, ReadinessChip } from "./BookBits";
 
 /**
- * One lesson, opened from the review list: its exercises first (what the learner practises),
- * then its goals and plan, its slides and its resources. Preview and publish are always at the top.
+ * One book lesson, opened from the review list: its slides first (what the learner studies, with
+ * Uzyra beside them), then its goals and plan, and its resources. Preview and publish are always at
+ * the top. Book lessons have no exercises and no old talk-only slideshow any more.
  */
-export type DrawerTab = "exercises" | "plan" | "slides" | "resources" | "study";
+export type DrawerTab = "plan" | "resources" | "study";
 
 export function LessonDrawer({
   lesson,
   embedded = false,
-  initialTab = "exercises",
+  initialTab = "study",
   studyLinked = false,
   kind,
   readiness,
   bookPublished,
-  slides,
-  slidesReady,
-  slidesShared,
-  sharedReady,
   resources,
   resourcesReady,
   onClose,
@@ -67,31 +56,26 @@ export function LessonDrawer({
   kind?: LessonKind;
   readiness: LessonReadiness;
   bookPublished: boolean;
-  slides: Record<string, Slide[]>;
-  slidesReady: boolean;
-  slidesShared: Record<string, boolean>;
-  sharedReady: boolean;
+  /** The old talk-only slideshow of a lesson: no longer shown for book lessons. */
+  slides?: Record<string, Slide[]>;
+  slidesReady?: boolean;
+  slidesShared?: Record<string, boolean>;
+  sharedReady?: boolean;
   resources: Record<string, Resource[]>;
   resourcesReady: boolean;
   onClose: () => void;
   onChanged: () => Promise<void>;
 }) {
   const statusFn = useServerFn(adminSetLessonStatus);
-  const exercisesFn = useServerFn(adminLessonExercises);
-  const publishExercisesFn = useServerFn(adminPublishExercises);
   const updateFn = useServerFn(adminUpdateLesson);
   const regenerateFn = useServerFn(adminRegenerateObjective);
   const imageFn = useServerFn(adminGenerateLessonImage);
-  const slidesFn = useServerFn(adminGenerateSlides);
-  const saveSlidesFn = useServerFn(adminSaveSlides);
-  const shareSlidesFn = useServerFn(adminSetSlidesShared);
   const [busy, setBusy] = useState("");
   const guard = useWorkspaceGuard();
   const finishTask = useWorkspaceTask(Boolean(busy));
   const [tab, setTab] = useState(initialTab);
   const Shell = embedded ? EmbeddedLessonShell : ModalLessonShell;
   const Title = embedded ? "h2" : Dialog.Title;
-  const [deckEpoch, setDeckEpoch] = useState(0);
   // "Cancel" in the plan form puts the saved lesson back on screen.
   const [formEpoch, setFormEpoch] = useState(0);
 
@@ -150,7 +134,6 @@ export function LessonDrawer({
               </Link>
               <button
                 type="button"
-                disabled={Boolean(busy)}
                 onClick={() => {
                   if (lesson.status === "published") {
                     void run(
@@ -160,42 +143,27 @@ export function LessonDrawer({
                     );
                     return;
                   }
-                  // The exercises go out with the lesson, or learners get a spoken lesson only.
-                  let withExercises = false;
-                  void run("status", async () => {
-                    const view = await exercisesFn({ data: { lessonId: lesson.id } });
-                    if (
-                      shouldPublishExercisesWithLesson({
-                        hasContent: view.content !== null,
-                        status: view.status,
-                        problems: view.problems.length,
-                      })
-                    ) {
-                      await publishExercisesFn({
-                        data: { lessonId: lesson.id, publish: true },
-                      });
-                      withExercises = true;
-                    }
-                    await statusFn({ data: { lessonId: lesson.id, status: "published" } });
-                    toast.success(
-                      withExercises
-                        ? "انشر الدرس مع تمارينه"
-                        : bookPublished
-                          ? "انشر الدرس (بدون تمارين)"
-                          : "انشر الدرس، وبيظهر للطلاب لما تنشر الكتاب",
-                    );
-                  });
+                  void run(
+                    "status",
+                    () => statusFn({ data: { lessonId: lesson.id, status: "published" } }),
+                    bookPublished ? "انشر الدرس" : "انشر الدرس، وبيظهر للطلاب لما تنشر الكتاب",
+                  );
                 }}
+                // A book lesson is its slides: without them there is nothing to publish.
+                disabled={
+                  Boolean(busy) || (lesson.status !== "published" && readiness === "no_slides")
+                }
+                title={
+                  lesson.status !== "published" && readiness === "no_slides"
+                    ? "الدرس بدون شرائح لسا. كمّله من المراجعة."
+                    : undefined
+                }
                 className={`rita-btn rita-btn-sm gap-1.5 ${lesson.status === "published" ? "rita-btn-soft" : "rita-btn-primary"}`}
               >
                 {busy === "status" && (
                   <Loader2 size={15} className="animate-spin" aria-hidden="true" />
                 )}
-                {lesson.status === "published"
-                  ? "إلغاء النشر"
-                  : readiness === "ready" || readiness === "warnings"
-                    ? "انشر الدرس مع تمارينه"
-                    : "انشر الدرس"}
+                {lesson.status === "published" ? "إلغاء النشر" : "انشر الدرس"}
               </button>
               <Menu.Root dir="rtl">
                 <Menu.Trigger asChild>
@@ -248,31 +216,6 @@ export function LessonDrawer({
                 </Menu.Portal>
               </Menu.Root>
             </div>
-            {lesson.status === "published" &&
-              (readiness === "ready" || readiness === "warnings") && (
-                <div className="flex flex-wrap items-center gap-2 rounded-xl bg-[#fff6e5] p-3 text-[14px] text-[#6b4100]">
-                  <p className="me-auto font-semibold">
-                    الدرس منشور بس تمارينه لسا مسودة، فالطلاب بياخدوا الدرس صوتي بدون تمارين.
-                  </p>
-                  <button
-                    type="button"
-                    disabled={Boolean(busy)}
-                    onClick={() =>
-                      void run(
-                        "exercises",
-                        () => publishExercisesFn({ data: { lessonId: lesson.id, publish: true } }),
-                        "انشرت التمارين للطلاب",
-                      )
-                    }
-                    className="rita-btn rita-btn-primary rita-btn-sm gap-1.5"
-                  >
-                    {busy === "exercises" && (
-                      <Loader2 size={15} className="animate-spin" aria-hidden="true" />
-                    )}
-                    انشر التمارين
-                  </button>
-                </div>
-              )}
           </header>
 
           <Tabs.Root
@@ -284,26 +227,17 @@ export function LessonDrawer({
             dir="rtl"
           >
             <Tabs.List className="rita-tabs-list px-5" aria-label="أقسام الدرس">
-              <Tabs.Trigger value="exercises" className="rita-tab">
-                التمارين
+              <Tabs.Trigger value="study" className="rita-tab">
+                الشرائح
               </Tabs.Trigger>
               <Tabs.Trigger value="plan" className="rita-tab">
                 الأهداف والخطة
               </Tabs.Trigger>
-              <Tabs.Trigger value="slides" className="rita-tab">
-                السلايدات
-              </Tabs.Trigger>
               <Tabs.Trigger value="resources" className="rita-tab">
                 المراجع{resourcesReady ? ` (${resources[lesson.id]?.length ?? 0})` : ""}
               </Tabs.Trigger>
-              <Tabs.Trigger value="study" className="rita-tab">
-                الدراسة التفاعلية
-              </Tabs.Trigger>
             </Tabs.List>
             <div className="rita-ex-body">
-              <Tabs.Content value="exercises" className="rita-tab-panel">
-                <ExercisesPanel key={lesson.id} lessonId={lesson.id} onChanged={onChanged} />
-              </Tabs.Content>
               <Tabs.Content value="plan" className="rita-tab-panel">
                 <LessonForm
                   key={`${lesson.id}:${lesson.version}:${formEpoch}`}
@@ -335,49 +269,6 @@ export function LessonDrawer({
               </Tabs.Content>
               <Tabs.Content value="study" className="rita-tab-panel">
                 <StudyGuidePanel key={lesson.id} lesson={lesson} onChanged={onChanged} />
-              </Tabs.Content>
-              <Tabs.Content value="slides" className="rita-tab-panel">
-                <SlidesPanel
-                  key={`${lesson.id}:${deckEpoch}`}
-                  from={lesson.source_from_page}
-                  to={lesson.source_to_page}
-                  ready={slidesReady}
-                  shared={slidesShared[lesson.id] === true}
-                  sharedReady={sharedReady}
-                  onToggleShared={async (next) => {
-                    try {
-                      await shareSlidesFn({ data: { lessonId: lesson.id, shared: next } });
-                      toast.success(next ? "السلايدات ظاهرة للطلاب" : "السلايدات مخفية عن الطلاب");
-                      await onChanged();
-                    } catch (error) {
-                      toast.error(errorText(error));
-                    }
-                  }}
-                  saved={slides[lesson.id]}
-                  busy={Boolean(busy)}
-                  generating={busy === "slides"}
-                  onGenerate={() =>
-                    void run(
-                      "slides",
-                      async () => {
-                        await slidesFn({ data: { lessonId: lesson.id } });
-                        setDeckEpoch((value) => value + 1);
-                      },
-                      "انكتبت السلايدات. راجعها قبل ما تعرضها للطلاب",
-                    )
-                  }
-                  onSave={async (deck) => {
-                    try {
-                      await saveSlidesFn({ data: { lessonId: lesson.id, slides: deck } });
-                      toast.success("انحفظت السلايدات");
-                      await onChanged();
-                      return true;
-                    } catch (error) {
-                      toast.error(errorText(error));
-                      return false;
-                    }
-                  }}
-                />
               </Tabs.Content>
               <Tabs.Content value="resources" className="rita-tab-panel">
                 <ResourcesPanel
