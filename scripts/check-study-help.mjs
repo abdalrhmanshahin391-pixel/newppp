@@ -379,10 +379,10 @@ if (process.argv.includes("--check")) {
       await page.locator(".st-practice-option").nth(2).click();
       assert.match(await page.locator(".st-practice-feedback").innerText(), /صح/);
       await page.getByRole("button", { name: "السابق", exact: true }).click();
-      assert.match(
-        await page.locator(".st-practice-option[aria-pressed=true]").innerText(),
-        /He work every day\.\s+إجابتك/,
-      );
+      // The learner's wrong pick stays marked (red, «إجابتك» for screen readers).
+      const pick = page.locator(".st-practice-option[aria-pressed=true]");
+      assert.match(await pick.innerText(), /He work every day\./);
+      assert.equal(await pick.getAttribute("data-state"), "wrong");
       await page.locator(".fw.is-practice .fw-x").click();
       await page.locator(".fw.is-practice").waitFor({ state: "hidden" });
       await page.getByRole("button", { name: "آخر تدريب", exact: true }).click();

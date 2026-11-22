@@ -11,6 +11,7 @@ import { StudyPracticeBody, type PracticeView } from "./StudyPracticePanel";
 import {
   PRACTICE_NOTE,
   cardStylesFor,
+  questionForUzyra,
   practiceTitle,
   type CardStyle,
   type StudyCard,
@@ -41,6 +42,7 @@ import {
   languageFromId,
   languageItems,
   replyRingItems,
+  RULE_NO_CARDS,
   ringItems,
 } from "./radial-items";
 import { useExplanationLanguage } from "@/hooks/useExplanationLanguage";
@@ -463,7 +465,15 @@ export function StudyPage({
   async function practice(action: PracticeAction, retry = false, wanted?: CardStyle) {
     if (practiceBusy.current) return;
     const sel = retry ? lastPractice.current?.selection : selectionRef.current;
-    if (!sel || !sel.segIds.length || (!retry && !actions.includes(action))) return;
+    if (!sel || !sel.segIds.length) return;
+    if (!retry && !actions.includes(action)) {
+      if (
+        action === "make_cards" &&
+        (selected?.kind === "rule" || selected?.kind === "arabic_only")
+      )
+        toast.message(RULE_NO_CARDS);
+      return;
+    }
     const saved = {
       segIds: [...sel.segIds],
       exact: sel.exact,
@@ -926,6 +936,11 @@ export function StudyPage({
                   }}
                   onSwitch={(action) => void practice(action, true)}
                   onStyle={(style) => void practice("make_cards", true, style)}
+                  onExplain={(question, chosen) => {
+                    // Uzyra explains it in the conversation (by voice in a call).
+                    if (!wide && !bridge.send) setTab("rita");
+                    void requests.runReply(questionForUzyra(question, chosen));
+                  }}
                   onClose={() => {
                     setWin(null);
                     orbButton.current?.focus({ preventScroll: true });
@@ -960,8 +975,8 @@ export function StudyPage({
             setOpenedByKey(false);
             setMenuOpen(true);
           }}
-          onHoldMove={(x, y) => radial.current?.hover(x, y)}
-          onHoldEnd={(x, y) => radial.current?.release(x, y)}
+          onHoldMove={(x, y, from) => radial.current?.hover(x, y, from)}
+          onHoldEnd={(x, y, from) => radial.current?.release(x, y, from)}
           moving={movingOrb}
           onStopMoving={() => setMovingOrb(false)}
           label={
@@ -984,7 +999,7 @@ export function StudyPage({
               ? languageItems(explanation.value)
               : replySelection
                 ? replyRingItems()
-                : ringItems({ actions }).map((item) =>
+                : ringItems({ actions, kind: selected?.kind }).map((item) =>
                     making && (item.id === "make_cards" || item.id === "make_mcq")
                       ? {
                           ...item,

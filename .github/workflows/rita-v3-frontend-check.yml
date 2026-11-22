@@ -201,6 +201,10 @@ jobs:
         run: |
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" \
             node --test src/components/rita-study/practice-save.browser.test.ts
+      - name: Practice questions in a real browser (sounds, why and why-not, score, retry)
+        run: |
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" \
+            node --test src/components/rita-study/quiz.browser.test.ts
       - name: Build site
         run: bun run build
 
