@@ -1,5 +1,20 @@
 # DESIGN.md — the visual system of Uzyra
 
+## Home top (Uzyra Ultra)
+
+The first thing on `/` (`UltraHero`). White page; behind it a field of small black marks on a loose
+grid (24px, 20px on phones). A soft ring follows the pointer, or drifts slowly on its own; marks
+under it grow into short dashes that point away from its centre and are pushed out, then settle
+back to faint dots. Black only, never coloured. Plain WebGL, no library; it draws only while on
+screen and holds still with reduced motion.
+
+Order: Uzyra's cube (30px, its usual idle life) with «Uzyra Ultra» beside it; the headline
+«Learn a language by speaking it.», typed in letter by letter with a caret that blinks out; then
+the cube again, large (168–264px). No buttons here: «Start learning» stays in the top bar and the
+next section. The headline is the page's only `h1`, in Google Sans Flex 450 with its own size
+scale (107/72/56/40/44/36px at >1600/≤1600/≤1024/≤767/≤425/≤360). Keep it short and plain; do not
+add a subline or a second claim.
+
 ## The home cube
 
 No background lines: the Hedwig-style animated contours were removed (Nov 2026) at the owner's

@@ -2275,14 +2275,14 @@ hairline borders and generous radii.
   letter-spacing: -0.035em;
   text-wrap: balance;
 }
-/* The home page's own headline (.rh-hero-title) is left out: its size comes from the home scale
+/* The home page's own headlines (.rh-hero-title, .uz-ultra-title) are left out: its size comes from the home scale
    (.uz-home) below, so no !important has to be stacked on top of this one. */
-.edith-premium h1:not(.rh-hero-title, .study-headline) {
+.edith-premium h1:not(.rh-hero-title, .study-headline, .uz-ultra-title) {
   font-size: 48px !important;
   line-height: 52px !important;
 }
 @media (min-width: 1024px) {
-  .edith-premium h1:not(.rh-hero-title, .study-headline) {
+  .edith-premium h1:not(.rh-hero-title, .study-headline, .uz-ultra-title) {
     font-size: 64px !important;
     line-height: 68px !important;
   }
@@ -8746,7 +8746,7 @@ html.rita-app,
     animation: none;
   }
 }
-.uz-home h1.study-headline {
+.uz-home .study-headline {
   max-width: 16em;
   margin: 0 auto;
   font-family: "Figtree", Helvetica, Arial, sans-serif;
