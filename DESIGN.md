@@ -1391,3 +1391,13 @@ in RTL). It turns every 2.4s with a 0.7s `cubic-bezier(0.16, 1, 0.3, 1)` ease, o
 screen; the pointer lights the row under it and stops the turn, keyboard focus brings a row to
 the middle, reduced motion keeps it still. Right: the café-and-books sticker art (WebP, no
 motion); on phones and tablets it sits above the list.
+
+## Home: sticker shelf (`StickerShelf`, end of home)
+
+After the closing invitation. One «Ask Uzyra anything» field between two thin rules, with a round
+grey arrow button; sending it opens the conversation with Uzyra (`/rita`; the typed words are not
+carried over). Below, four stickers (café, library, lighthouse, observatory; WebP, background
+removed) fanned like cards: tilted −18° / −6° / 6° / 18°, overlapping by 7% of their width, with a
+soft drop shadow. Hover lifts one to 1.02 with a deeper shadow; pressed, it grows to 1.12, comes
+to the front and follows the pointer or finger, leaning with the drag; on release it springs home
+(0.56s `cubic-bezier(0.34, 1.56, 0.64, 1)`). Reduced motion keeps only the hover lift.
