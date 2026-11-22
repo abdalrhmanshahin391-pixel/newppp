@@ -14,7 +14,7 @@ export function DeferredOverlays() {
       const [banner, ritax, auth, toaster] = await Promise.all([
         import("@/components/PaymentTestModeBanner"),
         import("@/components/RitaXAnnouncements"),
-        import("@/components/auth/AuthPanels"),
+        import("@/components/auth/AuthReturn"),
         import("@/components/ui/sonner"),
       ]).catch((error) => {
         console.warn("Optional tools could not be loaded", error);

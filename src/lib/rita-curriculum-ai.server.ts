@@ -881,3 +881,48 @@ export async function reviewGuide(input: {
   );
   return { problems: value.problems, model };
 }
+
+const ClipTextSchema = z.object({
+  ar: z.string().trim().min(1).max(400),
+  target: z.string().trim().min(1).max(60),
+  target_ar: z.string().trim().min(1).max(80),
+  context_ar: z.string().trim().max(200).default(""),
+});
+export type ClipText = z.infer<typeof ClipTextSchema>;
+
+/**
+ * The «اقترح» button of the clips library: from the English sentence of a clip, its Arabic meaning,
+ * one target word (taken from the sentence as written) with its meaning, and one short note about
+ * the scene. The admin reviews and edits all of it before saving.
+ */
+export async function suggestClipText(input: {
+  en: string;
+  kind: "video" | "gif";
+}): Promise<ClipText> {
+  const system = `You prepare one short English sentence from a ${input.kind === "gif" ? "silent GIF" : "video clip"} for Arabic-speaking adult learners (A1-A2).
+Reply with one JSON object:
+{"ar": "the meaning in clear Modern Standard Arabic", "target": "the one most useful word or short phrase to learn, copied exactly as it appears in the English sentence", "target_ar": "its Arabic meaning, as it appears in your Arabic sentence", "context_ar": "one short Arabic line about what is happening in the scene, guessed only from the sentence"}
+Rules:
+- "target" must be a substring of the English sentence (same spelling), not a name and not a tiny word like "a" or "the".
+- "target_ar" must appear inside "ar".
+- Keep "context_ar" under 12 words. Do not invent names or story details.`;
+  const { value } = await chatJson(
+    ClipTextSchema,
+    system,
+    `English sentence: ${input.en.slice(0, 300)}`,
+    {
+      maxTokens: 300,
+      timeoutMs: 25_000,
+      temperature: 0.3,
+    },
+  );
+  // The admin can pick another word; a target outside the sentence would break the exercises.
+  if (!input.en.toLowerCase().includes(value.target.toLowerCase())) {
+    const words = input.en
+      .replace(/[^\p{L}\p{N}'’ ]+/gu, " ")
+      .split(/\s+/)
+      .filter(Boolean);
+    value.target = words.sort((a, b) => b.length - a.length)[0] ?? value.target;
+  }
+  return value;
+}

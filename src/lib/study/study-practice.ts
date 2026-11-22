@@ -1,3 +1,4 @@
+import { readModelStream } from "./read-model-stream.ts";
 // Flashcards and multiple-choice questions made from what the learner selected in a study guide.
 // Pure: the prompts, and the checks that clean what the model sends back. The server functions in
 // study-practice.functions.ts call the model; nothing the model says is trusted before it passes
@@ -163,6 +164,7 @@ export type PracticeAsk = {
   user: string;
   maxTokens: number;
   /** A completed plain-text answer can also be useful to the whiteboard. */
+  onPartial?: (text: string) => void;
   plainReply?: (text: string) => unknown;
   /** The whole budget in ms for both tries (the server function must answer before its limit). */
   budgetMs?: number;
@@ -205,6 +207,7 @@ export async function askPracticeModel(
         headers: { Authorization: `Bearer ${ask.key}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model: PRACTICE_MODEL,
+          ...(ask.onPartial && attempt === 1 ? { stream: true } : {}),
           temperature: 0.2,
           ...(lowReasoning ? { reasoning_effort: "low" } : {}),
           max_completion_tokens: ask.maxTokens,
@@ -222,18 +225,21 @@ export async function askPracticeModel(
         if (response.status === 401 || response.status === 403) break;
         if (response.status === 400 || response.status === 422) lowReasoning = false;
       } else {
-        const json = (await response.json()) as {
-          choices?: { message?: { content?: unknown }; finish_reason?: unknown }[];
-        };
-        const choice = json?.choices?.[0];
-        const text = String(choice?.message?.content ?? "");
+        let text: string;
+        let finish: string | null;
+        if (ask.onPartial && response.headers.get("content-type")?.includes("text/event-stream")) {
+          ({ text, finish } = await readModelStream(response, ask.onPartial));
+        } else {
+          const json = await response.json();
+          const choice = json?.choices?.[0];
+          text = String(choice?.message?.content ?? "");
+          finish = choice?.finish_reason ?? null;
+        }
         const reply =
-          readJson(text) ??
-          (choice?.finish_reason === "stop" ? ask.plainReply?.(text.trim()) : null) ??
-          null;
+          readJson(text) ?? (finish === "stop" ? ask.plainReply?.(text.trim()) : null) ?? null;
         if (reply !== null) return { ok: true, reply };
         reason = "failed";
-        log(`Practice model: no JSON (try ${attempt}, finish ${String(choice?.finish_reason)})`);
+        log(`Practice model: no JSON (try ${attempt}, finish ${String(finish)})`);
       }
     } catch (cause) {
       const timedOut = cause instanceof Error && /timeout|abort/i.test(cause.name + cause.message);

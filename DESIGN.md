@@ -301,6 +301,12 @@ or automatic animations. Links have 44px hit areas,
 readable muted text, visible focus and RTL layouts. Full-screen study keeps its
 footer exclusion.
 
+Every page except home takes `data-tone="light"` (dark seasonal themes fall back to the ink
+look), as first done for the blog: the blog's
+white surface with a thin `#e6e5e4` rule, ink `#181719` text, muted `#646365`, the grotesk
+font, 14px links, a lighter 500-weight heading, the black pill «Start learning» like the blog
+header, and a pale `#efeeed` wordmark. Layout, links and the blue thread are unchanged.
+
 The study header keeps Back to lessons and optional PDF download. The lesson
 title and admin-preview notice remain available to screen readers. Visible sample
 headings, sample-switch and challenge shortcuts are removed. Idle copy below Uzyra's
@@ -308,19 +314,16 @@ cube is omitted; connecting, failed and active statuses remain visible.
 
 ## Top bar and menus
 
-One bar for the whole site (`ProHeader`, classes `.rh-bar*`, explicit colours so they look the
-same on the cream pages and on the white ones). Dark ink `#121117`, 64px, no blur, no capsule.
-Links sit next to the logo; the current page gets the hand-drawn blue line from the home
-headline, drawn once. Guests get "Sign in" and one blue "Start learning" button. Signed-in
-users get the Credits chip (Uzyra's small orb plus what is left; the orb ring turns amber below
-20% and red when used up) and the avatar with a blue ring.
+The blog, home and inner pages share the blog header's white surface, 60px height, 16px wordmark
+and 14px grotesk type. Library, Pricing and Resources share the same spacing and text weight
+across pages, and Start learning uses the black pill. The header remains visible while scrolling
+with the same width and shape. The main site also includes Games and the existing sign-in,
+credits, language and account controls. On narrow screens the main site puts its extra links and
+actions in the menu, keeping the header text at 14px.
 
-Menus are the white card with a 2px ink border (same as the home word card), 16px radius, no
-window inside a window. Rows are 44px, bare ink icons, `--pp-accent-soft` on hover; one `rh-item`
-style for every row. Credits bars show what is left (blue, amber under 20%, red at zero, and
-the words "Used up"). Only one menu is open at a time; Escape and a press outside close it and
-focus returns to the button. Opening is 160ms, `scale(.96)` from the button, off with reduced
-motion.
+Resources, account and mobile menus use white cards, light borders and 14px text. The main site
+keeps one disclosure open at a time. Escape and a press outside close the desktop disclosures
+through the existing header dismissal behavior.
 
 ## Learning home (`/learn`)
 
@@ -602,7 +605,7 @@ the accent for the action.
 
 **Calm scale (Nov 2026, same as the home page).** Smaller, lighter words and more room, not a
 smaller page: the root size and the user's zoom are never touched. In `.rita-app`:
-- Header: 60px bar, 14px links, 38px buttons (the same rule as `.uz-home` / `.uz-learn`).
+- Header: the shared 60px bar and 14px type from the blog.
 - Tailwind's big named sizes are lower (`--text-2xl` … `--text-7xl` = 22 / 26 / 30 / 36 / 40 /
   44px), so a page title lands at 30–44px instead of 48–72px; base and smaller sizes are
   unchanged. A bold `h1` is drawn at 600.
@@ -1108,7 +1111,8 @@ the user's zoom are never changed.
   `.rh-hero-title` out, so no `!important` is stacked; check with `getComputedStyle` after a change.
 - Lead text 16px (17 from 768), line height 1.6, at most 36rem wide.
 - Hero buttons 42px tall, 15px text, 1.5px border.
-- Header on the home page: bar 60px, links 14px weight 500 (44px target kept), its button 38px.
+- Header on the home page: the blog’s 60px bar, 16px wordmark and 14px link and button type.
+  Signed-in controls show a fixed-width voice timer, a globe with the learning language code, and a rounded-square account photo. On phones, the account menu opens from the bottom.
 - Uzyra's orb 280px (380 from 768) on a stage 320/360px tall and at most 840px wide; rings 1px.
   The orb sits in a positioned wrapper (the orb itself is `position: relative`).
 - Word tags around the orb: 14–17px, weight 600, 1px border, radius 12, a 44px touch area.
@@ -1376,3 +1380,47 @@ level, and saves through the existing atomic layout function. No new database sc
 Protect unsaved edits (including adding goals and rearranging slides), pending uploads and
 content generation before navigation. Success refreshes the path and the admin state; failures
 remain visible. Archive and publish retain their existing consequences and confirmations.
+
+## Clips library (`/admin/clips`) and the clips player
+
+One clip is one English sentence with its Arabic meaning, one target word (and its meaning), an
+optional line about the scene, and a credit. Exercises come only from these fields.
+
+- **Library:** search (English or Arabic, from the start of words), filter chips (الكل · فيديو ·
+  GIF · مش بالمسار), cards in 1 / 2 / 3 columns (`minmax(0,1fr)`). Each card: the cover (16:9,
+  a «فيديو» or «GIF» tag, tap to preview), the sentence with the target word in `#007bb6`, the
+  meaning, «الكلمة: …», the stops that use it as blue chips, the credit line, and تعديل · معاينة ·
+  حذف. «اختار» ticks a card; the dark bar fixed to the bottom then offers جرّبها · أضف للمسار ·
+  إلغاء. Under the cards, «محطات المقاطع بالمسار» opens a stop's editor.
+- **Editor** (the book dialogs' sheet / window): «فيديو من جهازك» or «GIF من GIPHY»; for a video,
+  «من هون / لهون» while it plays, the seconds, «جرّب القصّة», and a rights checkbox for a new
+  upload; for a GIF, GIPHY search with «Powered by GIPHY». Then the sentence, «اقترح الترجمة
+  والكلمة», tappable word chips for the target, the fields, and the credit. Problems show only
+  after a save attempt. «شوف كطالب» opens the player on the draft.
+- **Stop editor:** the stop's clips in order (↑ ↓ ×) and the library below with + / ✓.
+- **Player** (`.film-session`): every clip once, then each clip's exercises. A video: meaning
+  (Arabic choices), word order, speaking. A silent GIF: the sentence that fits, then word order
+  with the Arabic meaning shown. Answers are 52 px (choices) and 44 px (word tiles) high. Each
+  clip shows its credit under the sentence; GIFs add «Powered by GIPHY». A GIF loops muted.
+- Videos are cut by seeking to the start and pausing at the end; nothing is re-encoded.
+
+## Home: «Ask Uzyra anything» (`AskAnything`)
+
+Under the home hero. Left: the title (400 weight, `clamp(28px, 3vw, 40px)`) over a turning list
+of ten questions, each with the Uzyra feature that answers it (label, icon, question; the row
+links to that feature). Seven rows of 58px show at a time: the middle one in ink, the others
+scaled 0.93 / 0.86 / 0.79, faded 0.62 / 0.45 / 0.28 and leaning back 18 / 36 / 54px (mirrored
+in RTL). It turns every 2.4s with a 0.7s `cubic-bezier(0.16, 1, 0.3, 1)` ease, only while on
+screen; the pointer lights the row under it and stops the turn, keyboard focus brings a row to
+the middle, reduced motion keeps it still. Right: the café-and-books sticker art (WebP, no
+motion); on phones and tablets it sits above the list.
+
+## Home: sticker shelf (`StickerShelf`, end of home)
+
+After the closing invitation. One «Ask Uzyra anything» field between two thin rules, with a round
+grey arrow button; sending it opens the conversation with Uzyra (`/rita`; the typed words are not
+carried over). Below, four stickers (café, library, lighthouse, observatory; WebP, background
+removed) fanned like cards: tilted −18° / −6° / 6° / 18°, overlapping by 7% of their width, with a
+soft drop shadow. Hover lifts one to 1.02 with a deeper shadow; pressed, it grows to 1.12, comes
+to the front and follows the pointer or finger, leaning with the drag; on release it springs home
+(0.56s `cubic-bezier(0.34, 1.56, 0.64, 1)`). Reduced motion keeps only the hover lift.

@@ -27,13 +27,21 @@ import { BoardPaper } from "./BoardPaper";
 import "./whiteboard.css";
 
 const completeInk = () => 1;
+type BoardTiming = { action: string; start: number };
+function recordInk(timing: BoardTiming) {
+  performance.measure("uzyra.board." + timing.action + ".ink", { start: timing.start });
+}
 type Sheet = {
   step: BoardStep;
+  visibleCommands: number;
+  timing: BoardTiming;
+  onInk: () => void;
   audio: string | null | Promise<string | null>;
   index: number;
   question: string;
 };
 type Props = {
+  startedAt: number;
   lessonId: string;
   preview: boolean;
   selection: BoardSelection;
@@ -52,6 +60,7 @@ function Playback({
   shown: boolean;
   onReady: (ready: boolean) => void;
 }) {
+  const heard = useRef(false);
   const audio = useRef<HTMLAudioElement>(null);
   const [src, setSrc] = useState<string | null | undefined>(() =>
     typeof sheet.audio === "string" || sheet.audio === null ? sheet.audio : undefined,
@@ -164,6 +173,8 @@ function Playback({
         </div>
         <BoardPaper
           key={run}
+          visibleCommands={sheet.visibleCommands}
+          onInk={sheet.onInk}
           step={sheet.step}
           clock={clock}
           playing={state === "playing" && shown}
@@ -219,6 +230,14 @@ function Playback({
           ref={audio}
           src={src || undefined}
           preload="auto"
+          onPlaying={() => {
+            if (!heard.current) {
+              heard.current = true;
+              performance.measure("uzyra.board." + sheet.timing.action + ".voice", {
+                start: sheet.timing.start,
+              });
+            }
+          }}
           onEnded={finish}
           onError={() => {
             time.current.voiced = false;
@@ -232,6 +251,7 @@ function Playback({
 }
 
 export function StudyWhiteboard({
+  startedAt,
   lessonId,
   preview,
   selection,
@@ -281,15 +301,34 @@ export function StudyWhiteboard({
     pending = useRef(false);
   const failed = useRef({ index: 0, question: "" });
   const initial = useRef(false);
+  const initialClick = useRef(true);
+  const [firstRow, setFirstRow] = useState<BoardStep | null>(null);
+  const firstSection = useRef<HTMLElement>(null);
+  const onFirstInk = useRef<() => void>(undefined);
+  useEffect(() => {
+    if (firstRow) firstSection.current?.scrollIntoView({ block: "nearest" });
+  }, [firstRow]);
   const load = async (index: number, question = "") => {
     if (pending.current) return;
+    const timing = {
+      action: question ? "question" : index ? "continue" : "open",
+      start: index || question || !initialClick.current ? performance.now() : startedAt,
+    };
+    initialClick.current = false;
+    let recordedInk = false;
+    const onInk = () => {
+      if (recordedInk) return;
+      recordedInk = true;
+      recordInk(timing);
+    };
+    onFirstInk.current = onInk;
     pending.current = true;
     failed.current = { index, question };
     setProblem("");
     setBusy(true);
     setAsking(false);
     try {
-      const reply = await generate({
+      const response = await generate({
         signal: AbortSignal.timeout(75000),
         data: {
           lessonId,
@@ -314,12 +353,30 @@ export function StudyWhiteboard({
           question,
         },
       });
+      if (!response.ok) {
+        if (mounted.current) setProblem(response.message);
+        return;
+      }
+      // Subscribe immediately so a failed stream cannot leave an unhandled deferred rejection.
+      const completed = response.completion.catch(() => null);
+      const first = await response.previewStep;
+      if (mounted.current && first) setFirstRow(first);
+      const reply = await completed;
+      if (!reply) throw new Error("Board stream closed");
       if (!mounted.current) return;
       if (!reply.ok) {
         setProblem(reply.message);
         return;
       }
+      const samePrefix =
+        first &&
+        first.commands.every(
+          (command, i) => JSON.stringify(command) === JSON.stringify(reply.step.commands[i]),
+        );
       const next = {
+        visibleCommands: samePrefix ? first.commands.length : 0,
+        timing,
+        onInk,
         step: reply.step,
         audio: Promise.resolve(reply.audio).catch(() => null),
         index,
@@ -335,7 +392,10 @@ export function StudyWhiteboard({
       if (mounted.current) setProblem("انقطع الاتصال. الفقرة محفوظة، جرّب مرة ثانية.");
     } finally {
       pending.current = false;
-      if (mounted.current) setBusy(false);
+      if (mounted.current) {
+        setFirstRow(null);
+        setBusy(false);
+      }
     }
   };
   const start = useRef(load);
@@ -532,6 +592,21 @@ export function StudyWhiteboard({
                 )}
               </article>
             ))}
+            {firstRow && busy && (
+              <article ref={firstSection} className="wb-topic" data-active="true">
+                <div className="wb-sheet">
+                  <div className="wb-heading">
+                    <h2 dir="auto">{firstRow.title}</h2>
+                  </div>
+                  <BoardPaper
+                    step={firstRow}
+                    clock={completeInk}
+                    playing={false}
+                    onInk={onFirstInk.current}
+                  />
+                </div>
+              </article>
+            )}
           </div>
           {finished && (
             <div role="status" className="wb-complete">

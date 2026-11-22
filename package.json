@@ -101,11 +101,12 @@
     "vaul": "^1.1.2",
     "vite-plugin-node-polyfills": "^0.24.0",
     "vite-tsconfig-paths": "^6.0.2",
+    "web-vitals": "5.1.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
-    "@lovable.dev/vite-tanstack-config": "2.26.5",
+    "@lovable.dev/vite-tanstack-config": "2.27.1",
     "@types/dompurify": "^3.2.0",
     "@types/node": "^22.16.5",
     "@types/pako": "^2.0.4",

@@ -107,6 +107,13 @@ export const DEFAULT_LAYOUT: HubLayout = {
           icon: "GraduationCap",
         },
         {
+          id: "/admin/clips",
+          to: "/admin/clips",
+          label: "Clips library (video and GIF practice)",
+          labelAr: "مكتبة المقاطع (فيديو و GIF)",
+          icon: "Video",
+        },
+        {
           id: "/admin/study-sample",
           to: "/admin/study-sample",
           label: "Try the study page (guide + Uzyra)",

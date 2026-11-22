@@ -95,15 +95,25 @@ export function BoardPaper({
   step,
   clock,
   playing,
+  visibleCommands = 0,
+  onInk,
 }: {
   step: BoardStep;
   clock: () => number;
   playing: boolean;
+  visibleCommands?: number;
+  onInk?: () => void;
 }) {
   const id = useId().replace(/:/g, "");
   const svg = useRef<SVGSVGElement>(null);
   const layout = useMemo(() => layoutBoard(step.commands), [step]);
-  const lines = useMemo(() => step.commands.flatMap((c) => segments(c, layout)), [step, layout]);
+  const lines = useMemo(
+    () =>
+      step.commands.flatMap((c, commandIndex) =>
+        segments(c, layout).map((line) => ({ ...line, commandIndex })),
+      ),
+    [step, layout],
+  );
   useLayoutEffect(() => {
     const paper = svg.current!;
     const pen = paper.querySelector<SVGGElement>("[data-nib]")!;
@@ -129,11 +139,14 @@ export function BoardPaper({
         last: -1,
       };
     });
+    const firstNewPath = paths.find((path) => path.line.commandIndex >= visibleCommands);
+    const alreadyDrawn = firstNewPath?.start ?? end;
+    let sawInk = false;
     let raf = 0;
     let previous = { x: 25, y: 35 };
     const draw = () => {
       const progress = reduced.matches ? 1 : clock();
-      const position = progress * end;
+      const position = alreadyDrawn + progress * (end - alreadyDrawn);
       previous = { x: 25, y: 35 };
       for (const s of paths) {
         const fraction = Math.max(
@@ -141,6 +154,10 @@ export function BoardPaper({
           Math.min(1, (position - s.start - 6) / (s.finish - s.start - 6)),
         );
         const { x, y, scale, width, rtl } = s.line;
+        if (onInk && !sawInk && fraction > 0) {
+          sawInk = true;
+          onInk();
+        }
         if (s.last !== fraction) {
           if (s.clip && width) {
             s.clip.setAttribute("width", String(fraction * width));
@@ -162,12 +179,12 @@ export function BoardPaper({
         }
       }
       pen.setAttribute("transform", `translate(${previous.x} ${previous.y})`);
-      pen.style.opacity = progress >= 1 ? "0" : "1";
+      pen.style.opacity = position >= end ? "0" : "1";
       if (playing && progress < 1) raf = requestAnimationFrame(draw);
     };
     draw();
     return () => cancelAnimationFrame(raf);
-  }, [clock, lines, playing]);
+  }, [clock, lines, playing, visibleCommands, onInk]);
   return (
     <svg
       className="wb-drawing"

@@ -1,3 +1,5 @@
+import type { Level } from "./rita-path-levels";
+
 // The learner's lesson path mixes two kinds of stops: lessons (rita_lessons, integer path_order)
 // and path items an admin places between them (rita_path_items: exercises or resources, with a
 // fractional path_order in the same number space). Pure: merging, moving and the orders to save.
@@ -10,10 +12,36 @@ export type PathItem = {
   kind: PathItemKind;
   title: string;
   path_order: number;
+  map_level?: Level;
   resource_count: number;
   quiz_count?: number;
   film_lines?: number[];
+  /** The clips of an exercises stop (rita_film_clips ids). Undefined before that migration. */
+  clip_ids?: string[];
+  gif_lines?: number[];
 };
+
+export function mediaLineIds(item: Pick<PathItem, "film_lines" | "gif_lines">) {
+  return [...new Set([...(item.film_lines ?? []), ...(item.gif_lines ?? [])])];
+}
+
+/**
+ * How many clips an exercises stop holds: its library clips, or (before the clips library
+ * migration) its Sintel lines.
+ */
+export function stopClipCount(item: Pick<PathItem, "clip_ids" | "film_lines" | "gif_lines">) {
+  return item.clip_ids ? item.clip_ids.length : mediaLineIds(item).length;
+}
+
+export function exerciseCount(item: PathItem) {
+  return stopClipCount(item) + (item.quiz_count ?? 0);
+}
+
+export function pathItemTitle(item: PathItem) {
+  if (item.kind === "exercises" && item.title === "تدريب بمقاطع الأفلام" && !exerciseCount(item))
+    return "تمارين";
+  return item.title;
+}
 
 export type PathRef = { type: "lesson" | "item"; id: string };
 

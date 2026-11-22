@@ -95,7 +95,7 @@ const from = source.indexOf(
   "/* ===========================================================================\n   The learning home",
 );
 const to = source.indexOf(
-  "/* ===========================================================================\n   Welcome, sign in",
+  baseline ? "/* ===========================================================================\n   Welcome, sign in" : "/* Closing signature.",
   from,
 );
 assert.ok(from >= 0 && to > from);

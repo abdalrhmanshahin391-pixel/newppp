@@ -95,3 +95,41 @@
 .path-quiz [role="alert"] {
   color: #922b20;
 }
+.pq-kind-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 12px;
+  background: #fff1e3;
+  color: #994801;
+}
+.pq-kind small {
+  display: block;
+  font-weight: 400;
+  color: #565461;
+  margin-block-start: 0.25rem;
+}
+.pq-kind-count {
+  margin-inline-start: auto;
+  font-variant-numeric: tabular-nums;
+}
+.pq-kind:hover {
+  border-color: #b7601a;
+}
+.pq-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+[dir="rtl"] .pq-back svg {
+  transform: rotate(180deg);
+}
+.pq-settings {
+  margin-block-start: 1.5rem;
+  border-block-start: 1px solid var(--pp-line, #dddde5);
+}
+.pq-settings summary {
+  color: var(--pp-muted, #585762);
+}

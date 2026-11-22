@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { guardRedirect } from "@/lib/guard-redirect";
-import { BOOK_STEPS, type BookStep } from "@/lib/rita-book-flow";
+import { BOOK_STEPS, type BookStep } from "@/lib/rita-book-steps";
 import { BooksGrid } from "@/components/rita-lessons/admin/book/BooksGrid";
 import { BookWorkspace } from "@/components/rita-lessons/admin/book/BookWorkspace";
 import { NewBookDialog } from "@/components/rita-lessons/admin/book/NewBookDialog";
