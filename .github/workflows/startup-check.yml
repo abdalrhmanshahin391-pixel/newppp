@@ -7,6 +7,7 @@ on:
       - "src/styles.css"
       - "src/components/home/procreate/HeroTapWord.tsx"
       - "src/components/rita-study/RitaCube.tsx"
+      - "src/components/rita-study/cube/**"
       - "scripts/check-home-cube.mjs"
       - "src/i18n/**"
       - "src/components/LanguageProvider*"
@@ -56,6 +57,8 @@ jobs:
         run: bun test src/components/rita-study/question-preview.test.ts src/components/rita-study/window-geometry.test.ts src/lib/study/study-practice.test.ts
       - name: Hold audio lifecycle regressions
         run: node --test src/components/rita-study/tech-sound.test.mjs
+      - name: Uzyra's cube (3D outline, eyes, clips, engine)
+        run: node --test src/components/rita-study/cube/cube.test.ts
       - name: Learning sections in Chromium and WebKit
         run: |
           npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund playwright@1.62.1
