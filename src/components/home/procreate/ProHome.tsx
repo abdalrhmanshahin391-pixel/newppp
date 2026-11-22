@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { ProHeader } from "./ProHeader";
 import { HeroTapWord } from "./HeroTapWord";
 
+const AskAnything = lazy(() => import("./AskAnything").then((m) => ({ default: m.AskAnything })));
 const TopicsStrip = lazy(() => import("./TopicsStrip").then((m) => ({ default: m.TopicsStrip })));
 const FeatureTrio = lazy(() => import("./FeatureTrio").then((m) => ({ default: m.FeatureTrio })));
 const VoiceBand = lazy(() => import("./VoiceBand").then((m) => ({ default: m.VoiceBand })));
@@ -16,7 +17,7 @@ const FinalCta = lazy(() => import("./FinalCta").then((m) => ({ default: m.Final
 export function ProHome() {
   return (
     <main
-      className="uz-home rita-cream edith-light edith-premium relative min-h-screen overflow-hidden bg-black text-white"
+      className="uz-home rita-cream edith-light edith-premium relative min-h-screen overflow-clip bg-black text-white"
       style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <noscript>
@@ -27,6 +28,7 @@ export function ProHome() {
       <HeroTapWord />
 
       <Suspense fallback={<div className="min-h-[45vh]" aria-hidden="true" />}>
+        <AskAnything />
         <TopicsStrip />
         <FeatureTrio />
         <VoiceBand />

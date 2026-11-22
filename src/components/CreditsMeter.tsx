@@ -1,9 +1,10 @@
-import {useVoiceTime} from "@/hooks/useVoiceTime";
-import {voiceTimeLabel} from "@/lib/free-talk-time";
-import {VoiceTime} from "./VoiceTime";
+import { useVoiceTime } from "@/hooks/useVoiceTime";
+import { voiceTimeLabel } from "@/lib/free-talk-time";
+import { useUiLanguage } from "@/components/language/useUiLanguage";
+import { VoiceTime } from "./VoiceTime";
 import { useCallback, useId, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Infinity as InfinityIcon } from "lucide-react";
+import { Clock3, Infinity as InfinityIcon } from "lucide-react";
 import { usePlan } from "@/hooks/usePlan";
 import { useDismiss } from "@/components/header/useDismiss";
 
@@ -33,6 +34,8 @@ export function CreditsMeter({
   onOpenChange?: (open: boolean) => void;
   inline?: boolean;
 }) {
+  const ar = useUiLanguage() === "ar";
+  const credits = ar ? "الرصيد" : "Credits";
   const plan = usePlan();
   const voice = useVoiceTime();
   const [own, setOwn] = useState(false);
@@ -46,65 +49,79 @@ export function CreditsMeter({
   useDismiss(open && !inline, () => setOpen(false), box);
 
   const data = plan.data;
-  if (!data) return null;
 
-  const p = data.plan as unknown as Record<string, number | null | undefined> | undefined;
-  const grants = (data.grants ?? {}) as Record<string, number>;
+  const p = data?.plan as unknown as Record<string, number | null | undefined> | undefined;
+  const grants = (data?.grants ?? {}) as Record<string, number>;
   const cap = (column: string, kind: string) => {
     const base = p?.[column];
     if (base === null || base === undefined) return null;
     return Number(base) + Number(grants[kind] ?? 0);
   };
 
-  const lines: Line[] = [
-    {
-      label: "Flashcards",
-      used: data.usage.flashcards,
-      limit: cap("max_flashcards", "flashcards"),
-    },
-    {
-      label: "AI questions",
-      used: data.usage.ai_questions,
-      limit: cap("max_ai_questions", "ai_questions"),
-    },
-    {
-      label: "PDF summaries",
-      used: data.usage.summaries,
-      limit: cap("max_summaries", "summaries"),
-    },
-    {
-      label: "To-do tasks",
-      used: data.usage.todo_tasks,
-      limit: cap("max_todo_tasks", "todo_tasks"),
-    },
-    {
-      label: "Calendar entries",
-      used: data.usage.calendar_items,
-      limit: cap("max_calendar_items", "calendar_items"),
-    },
-    { label: "Classrooms", used: data.usage.groups, limit: cap("max_groups", "groups") },
-  ];
+  const lines: Line[] = data
+    ? [
+        {
+          label: "Flashcards",
+          used: data.usage.flashcards,
+          limit: cap("max_flashcards", "flashcards"),
+        },
+        {
+          label: "AI questions",
+          used: data.usage.ai_questions,
+          limit: cap("max_ai_questions", "ai_questions"),
+        },
+        {
+          label: "PDF summaries",
+          used: data.usage.summaries,
+          limit: cap("max_summaries", "summaries"),
+        },
+        {
+          label: "To-do tasks",
+          used: data.usage.todo_tasks,
+          limit: cap("max_todo_tasks", "todo_tasks"),
+        },
+        {
+          label: "Calendar entries",
+          used: data.usage.calendar_items,
+          limit: cap("max_calendar_items", "calendar_items"),
+        },
+        { label: "Classrooms", used: data.usage.groups, limit: cap("max_groups", "groups") },
+      ]
+    : [];
 
   const offer = data as { offer_name?: string | null; offer_expires_at?: string | null };
-  const offerName = offer.offer_name;
-  const offerEnds = offer.offer_expires_at;
+  const offerName = offer?.offer_name;
+  const offerEnds = offer?.offer_expires_at;
   const daysLeft = offerEnds
     ? Math.max(0, Math.ceil((new Date(offerEnds).getTime() - Date.now()) / 86_400_000))
     : null;
 
   const metered = lines.filter((l) => l.limit !== null);
-  const unlimitedAll = plan.isAdmin || metered.length === 0;
+  const unlimitedAll = !!data && (plan.isAdmin || metered.length === 0);
   // The chip shows the tool that is closest to running out.
-  const tightest = unlimitedAll
-    ? null
-    : metered.reduce((a, b) =>
-        (a.limit! - a.used) / Math.max(a.limit!, 1) <= (b.limit! - b.used) / Math.max(b.limit!, 1)
-          ? a
-          : b,
-      );
-  const level: Level = voice.seconds !== undefined && voice.seconds !== null ? (voice.seconds === 0 ? "out" : voice.seconds <= 300 ? "low" : "ok") : tightest ? levelOf(tightest.limit, tightest.used) : "ok";
-  const short = voice.isError ? "Time unavailable" : voice.seconds === undefined ? "…" : voiceTimeLabel(voice.seconds);
-
+  const tightest =
+    unlimitedAll || metered.length === 0
+      ? null
+      : metered.reduce((a, b) =>
+          (a.limit! - a.used) / Math.max(a.limit!, 1) <= (b.limit! - b.used) / Math.max(b.limit!, 1)
+            ? a
+            : b,
+        );
+  const level: Level =
+    voice.seconds !== undefined && voice.seconds !== null
+      ? voice.seconds === 0
+        ? "out"
+        : voice.seconds <= 300
+          ? "low"
+          : "ok"
+      : tightest
+        ? levelOf(tightest.limit, tightest.used)
+        : "ok";
+  const short = voice.isError
+    ? "—"
+    : voice.seconds === undefined
+      ? "…"
+      : voiceTimeLabel(voice.seconds);
 
   const card = (
     <div
@@ -113,7 +130,7 @@ export function CreditsMeter({
       aria-label="Your credits"
     >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <p className="rh-card-title">{plan.planName} plan</p>
+        <p className="rh-card-title">{data ? `${plan.planName} plan` : "Credits"}</p>
         {unlimitedAll && <span className="rh-badge">All tools open</span>}
       </div>
 
@@ -134,7 +151,7 @@ export function CreditsMeter({
           Flashcards, AI questions, PDF summaries, tasks, calendar and classrooms have no limit on
           this account.
         </p>
-      ) : (
+      ) : data ? (
         <ul className="rh-meters">
           {lines.map((l) => {
             const unlimited = l.limit === null;
@@ -175,7 +192,7 @@ export function CreditsMeter({
             );
           })}
         </ul>
-      )}
+      ) : null}
 
       <Link to="/pricing" onClick={() => setOpen(false)} className="rh-btn rh-wide">
         See plans
@@ -194,8 +211,8 @@ export function CreditsMeter({
           aria-controls={panelId}
           className="rh-item"
         >
-          <span className="rh-orb" data-level={level} aria-hidden="true" />
-          Credits <span className="rh-item-dim">· {short}</span>
+          <Clock3 size={17} aria-hidden="true" />
+          {credits} <span className="rh-item-dim">· {short}</span>
         </button>
         {open && card}
       </div>
@@ -211,11 +228,11 @@ export function CreditsMeter({
         aria-expanded={open}
         aria-controls={panelId}
         data-open={open ? "true" : "false"}
+        aria-label={`${credits} · ${voice.isError ? (ar ? "الوقت غير متاح" : "Time unavailable") : short}`}
         className="rh-credits-chip"
       >
-        <span className="rh-orb" data-level={level} aria-hidden="true" />
-        <span>Credits</span>
-        <span className="rh-chip-val" data-level={level}>
+        <Clock3 size={17} aria-hidden="true" />
+        <span dir="ltr" className="rh-chip-time" data-level={level}>
           {short}
         </span>
       </button>

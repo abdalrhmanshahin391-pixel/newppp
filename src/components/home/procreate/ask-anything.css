@@ -1,0 +1,177 @@
+/* «Ask Uzyra anything»: a turning list of questions beside the café picture. */
+.uz-ask {
+  --ask-ink: #1a1311;
+  --ask-body: #6b6663;
+  --ask-faint: #9b9692;
+  --ask-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 40px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(72px, 10vw, 150px) 20px;
+  color: var(--ask-ink);
+  font-family: var(--font-grotesk), Arial, sans-serif;
+}
+.uz-ask-copy {
+  width: 100%;
+  max-width: 760px;
+}
+.uz-ask-title {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--ask-ink);
+}
+[dir="rtl"] .uz-ask-title {
+  letter-spacing: 0;
+}
+.uz-ask-list {
+  position: relative;
+  margin: clamp(36px, 5vw, 64px) 0 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+.uz-ask-row {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  transform-origin: left center;
+  transition:
+    transform 0.7s var(--ask-ease),
+    opacity 0.7s var(--ask-ease);
+  will-change: transform, opacity;
+}
+[dir="rtl"] .uz-ask-row {
+  transform-origin: right center;
+}
+.uz-ask-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  color: inherit;
+  text-align: start;
+  text-decoration: none;
+}
+@media (min-width: 768px) {
+  .uz-ask-link {
+    grid-template-columns: 150px 16px minmax(0, 1fr);
+    column-gap: 16px;
+  }
+}
+.uz-ask-source,
+.uz-ask-chevron {
+  display: none;
+}
+@media (min-width: 768px) {
+  .uz-ask-source {
+    display: block;
+    overflow: hidden;
+    text-align: end;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 14px;
+    color: var(--ask-faint);
+  }
+  .uz-ask-chevron {
+    display: grid;
+    place-items: center;
+    color: var(--ask-ink);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s var(--ask-ease);
+  }
+  [dir="rtl"] .uz-ask-chevron svg {
+    transform: scaleX(-1);
+  }
+}
+.uz-ask-text {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+.uz-ask-icon {
+  flex: none;
+  color: var(--ask-faint);
+}
+.uz-ask-q {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  letter-spacing: -0.015em;
+  color: var(--ask-body);
+  transition: color 0.4s ease;
+}
+[dir="rtl"] .uz-ask-q {
+  letter-spacing: 0;
+}
+@media (min-width: 768px) {
+  .uz-ask-q {
+    font-size: 22px;
+  }
+}
+.uz-ask-row[data-current="true"] .uz-ask-q {
+  color: var(--ask-ink);
+}
+.uz-ask-row[data-current="true"] .uz-ask-source {
+  color: var(--ask-body);
+}
+.uz-ask-row[data-current="true"] .uz-ask-icon {
+  color: var(--ask-ink);
+}
+.uz-ask-link:hover .uz-ask-chevron,
+.uz-ask-link:focus-visible .uz-ask-chevron {
+  opacity: 1;
+  transform: none;
+}
+.uz-ask-link:focus-visible {
+  outline: 2px solid #225bab;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+.uz-ask-art {
+  display: block;
+  width: min(78vw, 360px);
+  height: auto;
+}
+@media (min-width: 1024px) {
+  .uz-ask {
+    grid-template-columns: minmax(0, 760px) minmax(0, 1fr);
+    align-items: center;
+    justify-items: stretch;
+    gap: 48px;
+    padding-inline: 40px;
+  }
+  .uz-ask-art {
+    width: min(100%, 440px);
+    justify-self: center;
+  }
+}
+/* Phones: the picture first, then the questions. */
+@media (max-width: 1023.98px) {
+  .uz-ask-art {
+    order: -1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uz-ask-row,
+  .uz-ask-chevron,
+  .uz-ask-q {
+    transition: none;
+  }
+}

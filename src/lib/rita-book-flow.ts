@@ -3,8 +3,8 @@
 // decide both. Pure, so they are unit tested with node.
 import { suggestNextTopics, type TopicSuggestion } from "./rita-slides.ts";
 
-export const BOOK_STEPS = ["read", "lessons", "review", "publish"] as const;
-export type BookStep = (typeof BOOK_STEPS)[number];
+import type { BookStep } from "./rita-book-steps.ts";
+export { BOOK_STEPS, type BookStep } from "./rita-book-steps.ts";
 
 export const STEP_LABEL: Record<BookStep, string> = {
   read: "قراءة الكتاب",

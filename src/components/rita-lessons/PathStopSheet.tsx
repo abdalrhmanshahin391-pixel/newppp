@@ -1,3 +1,4 @@
+import "./lesson-path.css";
 import { useWorkspaceTask, useWorkspaceGuard } from "./admin/WorkspaceGuard";
 import { PathQuiz } from "./PathQuiz";
 import { useServerFn } from "@tanstack/react-start";

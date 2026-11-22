@@ -73,7 +73,8 @@ function PeoplePage() {
   const { data, isFetching, refetch, error } = useQuery({
     queryKey: ["people-dashboard", days],
     enabled: isAdmin,
-    refetchInterval: 60_000,
+    refetchInterval: false,
+    refetchOnWindowFocus: true,
     queryFn: () => getPeopleDashboard({ data: { days } }) as Promise<PeopleDashboard>,
   });
 

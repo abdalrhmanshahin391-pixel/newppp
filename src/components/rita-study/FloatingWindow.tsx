@@ -1,3 +1,4 @@
+import "./floating-window.css";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { ChevronLeft, ChevronsRight, PanelRightClose, X } from "lucide-react";

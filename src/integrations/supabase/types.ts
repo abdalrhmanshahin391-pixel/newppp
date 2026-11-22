@@ -1167,32 +1167,35 @@ export type Database = {
       book_study_requests: {
         Row: {
           action: string
-          book_id: string
+          book_id: string | null
           created_at: string
           page: number
           quota_group: string
           request_id: string
           selection_len: number
+          user_book_id: string | null
           user_id: string
         }
         Insert: {
           action: string
-          book_id: string
+          book_id?: string | null
           created_at?: string
           page: number
           quota_group: string
           request_id: string
           selection_len?: number
+          user_book_id?: string | null
           user_id: string
         }
         Update: {
           action?: string
-          book_id?: string
+          book_id?: string | null
           created_at?: string
           page?: number
           quota_group?: string
           request_id?: string
           selection_len?: number
+          user_book_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1208,6 +1211,13 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "book_study_requests_user_book_id_fkey"
+            columns: ["user_book_id"]
+            isOneToOne: false
+            referencedRelation: "user_books"
             referencedColumns: ["id"]
           },
         ]
@@ -2098,6 +2108,74 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "flash_subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      free_talk_config: {
+        Row: {
+          enabled: boolean
+          id: boolean
+        }
+        Insert: {
+          enabled?: boolean
+          id?: boolean
+        }
+        Update: {
+          enabled?: boolean
+          id?: boolean
+        }
+        Relationships: []
+      }
+      free_talk_sessions: {
+        Row: {
+          active_at: string | null
+          charged_seconds: number | null
+          closed_at: string | null
+          created_at: string
+          deadline: string
+          id: string
+          period_key: string
+          provider_call_id: string | null
+          reserved_seconds: number
+          room_name: string
+          state: string
+          user_id: string
+        }
+        Insert: {
+          active_at?: string | null
+          charged_seconds?: number | null
+          closed_at?: string | null
+          created_at?: string
+          deadline: string
+          id: string
+          period_key: string
+          provider_call_id?: string | null
+          reserved_seconds: number
+          room_name: string
+          state?: string
+          user_id: string
+        }
+        Update: {
+          active_at?: string | null
+          charged_seconds?: number | null
+          closed_at?: string | null
+          created_at?: string
+          deadline?: string
+          id?: string
+          period_key?: string
+          provider_call_id?: string | null
+          reserved_seconds?: number
+          room_name?: string
+          state?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "free_talk_sessions_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "rita_v3_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -3101,6 +3179,8 @@ export type Database = {
           feature_archive_qgen: boolean
           feature_lecture_qgen: boolean
           feature_review: boolean
+          free_talk_period: string
+          free_talk_seconds: number
           highlight: boolean
           max_ai_questions: number | null
           max_all_in_one_lectures: number | null
@@ -3142,6 +3222,8 @@ export type Database = {
           feature_archive_qgen?: boolean
           feature_lecture_qgen?: boolean
           feature_review?: boolean
+          free_talk_period?: string
+          free_talk_seconds?: number
           highlight?: boolean
           max_ai_questions?: number | null
           max_all_in_one_lectures?: number | null
@@ -3183,6 +3265,8 @@ export type Database = {
           feature_archive_qgen?: boolean
           feature_lecture_qgen?: boolean
           feature_review?: boolean
+          free_talk_period?: string
+          free_talk_seconds?: number
           highlight?: boolean
           max_ai_questions?: number | null
           max_all_in_one_lectures?: number | null
@@ -4919,6 +5003,7 @@ export type Database = {
           kind: string
           language: string
           path_order: number
+          quiz_count: number
           title: string
           updated_at: string
         }
@@ -4929,6 +5014,7 @@ export type Database = {
           kind: string
           language?: string
           path_order: number
+          quiz_count?: number
           title: string
           updated_at?: string
         }
@@ -4939,10 +5025,37 @@ export type Database = {
           kind?: string
           language?: string
           path_order?: number
+          quiz_count?: number
           title?: string
           updated_at?: string
         }
         Relationships: []
+      }
+      rita_path_quizzes: {
+        Row: {
+          item_id: string
+          questions: Json
+          version: string
+        }
+        Insert: {
+          item_id: string
+          questions: Json
+          version?: string
+        }
+        Update: {
+          item_id?: string
+          questions?: Json
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rita_path_quizzes_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: true
+            referencedRelation: "rita_path_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rita_replay_runs: {
         Row: {
@@ -7594,6 +7707,60 @@ export type Database = {
         }
         Relationships: []
       }
+      user_book_adds: {
+        Row: {
+          added_at: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_books: {
+        Row: {
+          created_at: string
+          file_path: string
+          id: string
+          page_count: number | null
+          size_bytes: number
+          slot: number
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          id?: string
+          page_count?: number | null
+          size_bytes: number
+          slot: number
+          status?: string
+          title: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          id?: string
+          page_count?: number | null
+          size_bytes?: number
+          slot?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_courses: {
         Row: {
           course_id: string
@@ -8318,6 +8485,15 @@ export type Database = {
           username: string
         }[]
       }
+      answer_path_quiz: {
+        Args: {
+          p_choice: number
+          p_index: number
+          p_item: string
+          p_version: string
+        }
+        Returns: Json
+      }
       book_card: {
         Args: { b: Database["public"]["Tables"]["books"]["Row"] }
         Returns: Json
@@ -8417,6 +8593,17 @@ export type Database = {
         Args: { p_book: string; p_from?: string; p_until?: string }
         Returns: undefined
       }
+      books_take_my_study_quota: {
+        Args: {
+          p_action: string
+          p_book: string
+          p_group: string
+          p_page: number
+          p_request: string
+          p_selection_len: number
+        }
+        Returns: Json
+      }
       books_take_study_quota: {
         Args: {
           p_action: string
@@ -8480,6 +8667,21 @@ export type Database = {
       effective_plan: { Args: { _user_id: string }; Returns: Json }
       effective_plan_slug: { Args: { _user_id: string }; Returns: string }
       ensure_lq_default_bucket: { Args: never; Returns: Json }
+      free_talk_bind: {
+        Args: { p_call: string; p_session: string }
+        Returns: boolean
+      }
+      free_talk_budget: { Args: { p_user: string }; Returns: Json }
+      free_talk_claim: { Args: { p_session: string }; Returns: Json }
+      free_talk_close: {
+        Args: { p_session: string; p_user: string }
+        Returns: Json
+      }
+      free_talk_reserve: {
+        Args: { p_session: string; p_user: string }
+        Returns: Json
+      }
+      free_talk_settle: { Args: { p_session: string }; Returns: boolean }
       get_course_real_counts: {
         Args: { _course_ids: string[] }
         Returns: {
@@ -8576,6 +8778,14 @@ export type Database = {
         }[]
       }
       offers_list: { Args: never; Returns: Json }
+      preview_path_quiz: {
+        Args: { p_count: number; p_topics: string[] }
+        Returns: Json
+      }
+      publish_path_quiz: {
+        Args: { p_item: string; p_questions: Json; p_title: string }
+        Returns: undefined
+      }
       push_audience_count: { Args: { _group_ids: string[] }; Returns: number }
       push_audience_devices: {
         Args: { _group_ids: string[] }
@@ -8609,6 +8819,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      read_path_quiz: { Args: { p_item: string }; Returns: Json }
       remove_user_card_and_cancel_auto_renew: {
         Args: { _card_id: string; _user_id: string }
         Returns: boolean
@@ -8718,6 +8929,7 @@ export type Database = {
       }
       sync_golden_user: { Args: { _user_id: string }; Returns: undefined }
       toolkit_offer: { Args: never; Returns: Json }
+      user_books_lock_file: { Args: { p_path: string }; Returns: boolean }
       user_in_group: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
