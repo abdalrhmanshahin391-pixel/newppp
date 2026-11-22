@@ -13,12 +13,12 @@ await mkdir(out, { recursive: true });
 const entry = `
 import React from 'react';import {createRoot} from 'react-dom/client';
 import {createRootRoute,createRoute,createRouter,RouterProvider,Outlet,Link} from '@tanstack/react-router';
-import {HeroTapWord} from './src/components/home/procreate/HeroTapWord';
+import {UltraHero} from './src/components/home/procreate/UltraHero';
 import {LearnSections} from './src/components/learn/LearnHomeView';
 import {UzyraWordmark} from './src/components/brand/UzyraWordmark';
 const lang=new URLSearchParams(location.search).get('lang')==='ar'?'ar':'en';
 function Header(){return <header className="qa-header"><UzyraWordmark size={22}/><nav><Link to="/">Home</Link><Link to="/learn">Learn</Link><Link to="/reader">Reader</Link><Link to="/dark">Dark</Link></nav></header>}
-function Home(){return <main className="uz-home rita-cream edith-light edith-premium relative min-h-screen overflow-hidden bg-black text-white" style={{fontFamily:'var(--font-grotesk)'}}><Header/><HeroTapWord/><div className="qa-tail">Uzyra · Learn at your pace</div></main>}
+function Home(){return <main className="uz-home rita-cream edith-light edith-premium relative min-h-screen overflow-hidden bg-black text-white" style={{fontFamily:'var(--font-grotesk)'}}><Header/><UltraHero/><div className="qa-tail">Uzyra · Learn at your pace</div></main>}
 function Learn(){return <div className="edith-premium edith-light uz-learn min-h-screen"><Header/><main className="uz-learn-main"><LearnSections lang={lang} showGerman={true} chips={{flashcards:null,lessons:null}}/></main></div>}
 function Reader(){return <main className="edith-premium qa-reader"><Header/><div className="qa-reader-grid"><section><h1>{lang==='ar'?'اسأل يوزرا':'Ask Uzyra'}</h1><p>{lang==='ar'?'حدّد النص واقرأ بهدوء.':'Select the text and read at your pace.'}</p><button>Open menu</button><details><summary>Reader menu</summary><button>Bookmark</button></details><textarea aria-label="Ask Uzyra" placeholder="Ask Uzyra"/></section><article className="qa-paper"><h2>THIRD PERSON -S AND -ES</h2><p>With he, she and it, the present simple verb changes its ending.</p><p>She studies at night and watches a film on Fridays.</p></article></div></main>}
 const r=createRootRoute({component:()=> <Outlet/>});
@@ -52,6 +52,7 @@ const result = await build({
     },
   ],
 });
+const bundledCss = result.outputFiles.find((f) => f.path.endsWith(".css"))?.text ?? "";
 const source = await readFile(resolve(root, "src/styles.css"), "utf8");
 const compiler = await compile(source, { base: root, onDependency: () => {} });
 const tokens = new Set(entry.match(/[\w!:/.[\]#%(),+-]+/g));
@@ -82,6 +83,7 @@ const fonts = [
 const css =
   fonts +
   compiler.build([...tokens]) +
+  bundledCss +
   `
 body{margin:0}.qa-header{height:64px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;background:#121117;color:white;position:relative;z-index:3;font:500 14px Figtree,sans-serif}.qa-header nav{display:flex;gap:16px}.qa-tail{height:110vh;padding:100px 24px;text-align:center;color:#6a697c}
 /* Match ProHome's explicit font and its floating ProHeader; the navigation labels are test controls. */
@@ -157,7 +159,7 @@ try {
     const page = await context.newPage();
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(origin + "/?lang=" + lang);
-    await page.locator(".rh-hero-cube .uz-cube").waitFor();
+    await page.locator(".uz-ultra-cube .uz-cube").waitFor();
     await page.evaluate(() => document.fonts.ready);
     assert.ok(
       await page.evaluate(() =>
@@ -171,26 +173,27 @@ try {
     );
     await page.waitForTimeout(4000);
     assert.equal(await page.locator(".uz-page-contours").count(), 0, "no background lines");
-    assert.equal(await page.locator(".rh-rings span").count(), 4);
-    assert.equal(await page.locator(".rh-hero-cube .uz-cube").count(), 1);
-    assert.equal(await page.locator("canvas").count(), 0);
-    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-    const positions = await page.evaluate(() => {
-      const box = document.querySelector(".rh-hero-cube").getBoundingClientRect();
-      const ring = document.querySelector(".rh-rings span").getBoundingClientRect();
-      return [
-        Math.abs(box.x + box.width / 2 - ring.x - ring.width / 2),
-        Math.abs(box.y + box.height / 2 - ring.y - ring.height / 2),
-      ];
-    });
-    assert.ok(
-      positions.every((v) => v < 1),
-      "cube retains ring centre",
+    // The old tap-a-word hero is gone: no orbit rings, word chips or hero buttons.
+    assert.equal(
+      await page.locator(".rh-rings, .rh-chip, .rh-hero-cube").count(),
+      0,
+      "old hero removed",
     );
-    await page
-      .getByRole("button", { name: "Guten Morgen, German. Tap for the meaning.", exact: true })
-      .click();
-    await page.getByText("صباح الخير", { exact: true }).waitFor();
+    assert.equal(await page.locator("h1").count(), 1, "one h1");
+    assert.equal(
+      await page.locator(".uz-ultra .uz-cube").count(),
+      2,
+      "the mark and the large cube",
+    );
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    // The large cube is interactive: a tap reacts, and the outline path changes.
+    const cubePath = page.locator(".uz-ultra-cube .uz-cube-shape");
+    const before = await cubePath.getAttribute("d");
+    await page.locator(".uz-ultra-cube").click();
+    await page.waitForTimeout(350);
+    assert.notEqual(await cubePath.getAttribute("d"), before, "a tap moves the cube");
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.waitForTimeout(100);
     await page.screenshot({
       path: resolve(out, engine + "-home-" + width + "-" + lang + ".png"),
       fullPage: false,
@@ -198,7 +201,7 @@ try {
     await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
     await page.waitForTimeout(200);
     // The cube's outline is an SVG path redrawn every frame while it moves.
-    const heroBody = page.locator(".rh-hero-cube .uz-cube-shape");
+    const heroBody = page.locator(".uz-ultra-cube .uz-cube-shape");
     const stillCube = await heroBody.getAttribute("d");
     await page.waitForTimeout(400);
     assert.equal(await heroBody.getAttribute("d"), stillCube, "offscreen cube pauses");

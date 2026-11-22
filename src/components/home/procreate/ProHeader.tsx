@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CreditsMeter } from "@/components/CreditsMeter";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { HeaderResourcesMenu } from "@/components/header/HeaderResourcesMenu";
-import { useDismiss } from "@/components/header/useDismiss";
+import { MenuGroup, MenuPanel, useMenuTrigger } from "@/components/header/MenuGroup";
 import { avatarTone, useAvatarUrl } from "@/lib/avatars";
 import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
 import { BRAND_NAME } from "@/lib/brand";
@@ -50,6 +50,96 @@ function Avatar({
   );
 }
 
+/** The avatar button and its menu: who you are, settings, plans, install, admin, log out. */
+function AccountMenu({
+  open,
+  onOpenChange,
+  arabic,
+  avatar,
+  initial,
+  tone,
+  name,
+  role,
+  isAdmin,
+  onLogout,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  arabic: boolean;
+  avatar: string | null | undefined;
+  initial: string;
+  tone: string;
+  name: string;
+  role: string;
+  isAdmin: boolean;
+  onLogout: () => void;
+}) {
+  const { t } = useTranslation();
+  const accountId = useId();
+  const trigger = useMenuTrigger({ id: "account", open, onOpenChange });
+  return (
+    <div className="rh-account-anchor">
+      <button
+        ref={trigger.ref}
+        type="button"
+        data-rh-trigger
+        onClick={trigger.onClick}
+        onPointerEnter={trigger.onPointerEnter}
+        onKeyDown={trigger.onKeyDown}
+        aria-label={arabic ? "قائمة الحساب" : "Account menu"}
+        aria-expanded={open}
+        aria-controls={open ? accountId : undefined}
+        data-open={open ? "true" : "false"}
+        className="rh-avatar-btn"
+      >
+        <Avatar src={avatar} initial={initial} tone={tone} size={30} />
+      </button>
+      <MenuPanel
+        id="account"
+        open={open}
+        panelId={accountId}
+        width={288}
+        label="Account"
+        fallbackClassName="rh-card rh-account"
+      >
+        <div className="uz-mp-body rh-account-body">
+          <div className="rh-who">
+            <Avatar src={avatar} initial={initial} tone={tone} size={44} />
+            <div className="min-w-0">
+              <p className="rh-who-name">{name}</p>
+              <span className="rh-badge">{role}</span>
+            </div>
+          </div>
+          <div className="rh-rule" />
+          <Link to="/settings" search={{ section: "account" }} data-mp-item className="rh-item">
+            <Settings size={18} aria-hidden="true" />
+            {t("nav.settings")}
+          </Link>
+          <Link to="/pricing" data-mp-item className="rh-item">
+            <ReceiptText size={18} aria-hidden="true" />
+            {arabic ? "الباقات والأسعار" : "Plans & pricing"}
+          </Link>
+          <InstallAppButton className="rh-item" iconClassName="rh-item-icon" />
+          {isAdmin && (
+            <>
+              <div className="rh-rule" />
+              <Link to="/admin" data-mp-item className="rh-item">
+                <LayoutGrid size={18} aria-hidden="true" />
+                {arabic ? "الإدارة" : "Admin"}
+              </Link>
+            </>
+          )}
+          <div className="rh-rule" />
+          <button type="button" data-mp-item onClick={onLogout} className="rh-item rh-item-danger">
+            <LogOut size={18} aria-hidden="true" />
+            {t("cms.header.logout")}
+          </button>
+        </div>
+      </MenuPanel>
+    </div>
+  );
+}
+
 /** Shared blog styling, with learning and account controls on the main site. */
 export function ProHeader({
   variant = "transparent",
@@ -83,8 +173,6 @@ export function ProHeader({
   const setResourcesOpen = useCallback((open: boolean) => {
     setMenu((current) => (open ? "resources" : current === "resources" ? null : current));
   }, []);
-  const accountBox = useRef<HTMLDivElement>(null);
-  const accountId = useId();
 
   const displayName = profile?.username ?? user?.email ?? "";
   const avatar = useAvatarUrl(
@@ -100,9 +188,6 @@ export function ProHeader({
     : isGolden
       ? "Golden member"
       : t("cms.header.roleUser");
-
-  const closeAccount = useCallback(() => setMenu((m) => (m === "account" ? null : m)), []);
-  useDismiss(menu === "account", closeAccount, accountBox);
 
   // A new page always starts with every menu shut.
   useEffect(() => {
@@ -148,9 +233,13 @@ export function ProHeader({
           <UzyraWordmark size={16} />
         </Link>
 
-        <nav
-          aria-label={arabic ? "التنقل" : "Navigation"}
+        <MenuGroup
+          as="nav"
+          label={arabic ? "التنقل" : "Navigation"}
           className="rh-nav uz-header-nav hidden lg:flex"
+          active={menu === "resources" ? "resources" : null}
+          align="start"
+          hoverOpen
         >
           {nav()}
           <HeaderResourcesMenu
@@ -158,9 +247,13 @@ export function ProHeader({
             open={menu === "resources"}
             onOpenChange={setResourcesOpen}
           />
-        </nav>
+        </MenuGroup>
 
-        <div className="rh-actions hidden lg:flex">
+        <MenuGroup
+          className="rh-actions hidden lg:flex"
+          active={menu === "credits" || menu === "language" || menu === "account" ? menu : null}
+          align="end"
+        >
           {authLoading ? (
             <div aria-hidden="true" className="h-9 w-9 animate-pulse rounded-full bg-black/5" />
           ) : !user ? (
@@ -184,59 +277,21 @@ export function ProHeader({
                 open={menu === "language"}
                 onOpenChange={(open) => setMenu(open ? "language" : null)}
               />
-              <div className="rh-account-anchor" ref={accountBox}>
-                <button
-                  type="button"
-                  data-rh-trigger
-                  onClick={() => setMenu((m) => (m === "account" ? null : "account"))}
-                  aria-label={arabic ? "قائمة الحساب" : "Account menu"}
-                  aria-expanded={menu === "account"}
-                  aria-controls={accountId}
-                  data-open={menu === "account" ? "true" : "false"}
-                  className="rh-avatar-btn"
-                >
-                  <Avatar src={avatar} initial={initial} tone={tone} size={30} />
-                </button>
-
-                {menu === "account" && (
-                  <div id={accountId} className="rh-card rh-account" aria-label="Account">
-                    <div className="rh-who">
-                      <Avatar src={avatar} initial={initial} tone={tone} size={44} />
-                      <div className="min-w-0">
-                        <p className="rh-who-name">{name}</p>
-                        <span className="rh-badge">{role}</span>
-                      </div>
-                    </div>
-                    <div className="rh-rule" />
-                    <Link to="/settings" search={{ section: "account" }} className="rh-item">
-                      <Settings size={18} aria-hidden="true" />
-                      {t("nav.settings")}
-                    </Link>
-                    <Link to="/pricing" className="rh-item">
-                      <ReceiptText size={18} aria-hidden="true" />
-                      {arabic ? "الباقات والأسعار" : "Plans & pricing"}
-                    </Link>
-                    <InstallAppButton className="rh-item" iconClassName="rh-item-icon" />
-                    {isAdmin && (
-                      <>
-                        <div className="rh-rule" />
-                        <Link to="/admin" className="rh-item">
-                          <LayoutGrid size={18} aria-hidden="true" />
-                          {arabic ? "الإدارة" : "Admin"}
-                        </Link>
-                      </>
-                    )}
-                    <div className="rh-rule" />
-                    <button type="button" onClick={handleLogout} className="rh-item rh-item-danger">
-                      <LogOut size={18} aria-hidden="true" />
-                      {t("cms.header.logout")}
-                    </button>
-                  </div>
-                )}
-              </div>
+              <AccountMenu
+                open={menu === "account"}
+                onOpenChange={(open) => setMenu(open ? "account" : null)}
+                arabic={arabic}
+                avatar={avatar}
+                initial={initial}
+                tone={tone}
+                name={name}
+                role={role}
+                isAdmin={isAdmin}
+                onLogout={handleLogout}
+              />
             </>
           )}
-        </div>
+        </MenuGroup>
 
         <div className="rh-actions flex lg:hidden">
           {!user && !authLoading && (

@@ -2275,14 +2275,14 @@ hairline borders and generous radii.
   letter-spacing: -0.035em;
   text-wrap: balance;
 }
-/* The home page's own headlines (.rh-hero-title, .uz-ultra-title) are left out: its size comes from the home scale
+/* The home page's own headline (.uz-ultra-title) is left out: its size comes from the home scale
    (.uz-home) below, so no !important has to be stacked on top of this one. */
-.edith-premium h1:not(.rh-hero-title, .study-headline, .uz-ultra-title) {
+.edith-premium h1:not(.uz-ultra-title) {
   font-size: 48px !important;
   line-height: 52px !important;
 }
 @media (min-width: 1024px) {
-  .edith-premium h1:not(.rh-hero-title, .study-headline, .uz-ultra-title) {
+  .edith-premium h1:not(.uz-ultra-title) {
     font-size: 64px !important;
     line-height: 68px !important;
   }
@@ -3090,80 +3090,6 @@ body:has(.rh-learn-home) {
   }
 }
 
-/* Hero: tap-a-word stage. Sizes come from the home scale (.uz-home, at the end of this file). */
-.edith-premium .rh-rings {
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%);
-  mask-image: linear-gradient(180deg, transparent 0%, #000 22%, #000 78%, transparent 100%);
-}
-.edith-premium .rh-chip {
-  z-index: 2;
-  padding: 0.5rem 1rem;
-  border: 2px solid var(--pp-ink);
-  border-radius: 14px;
-  background: #fff;
-  color: var(--pp-ink);
-  font-family: var(--pp-display);
-  font-size: clamp(16px, 2.1vw, 23px);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  cursor: pointer;
-  transform: rotate(var(--rot, 0deg));
-  box-shadow: 0 14px 26px -16px rgba(18, 17, 23, 0.4);
-  transition:
-    transform 240ms var(--pp-ease),
-    background-color 160ms ease,
-    box-shadow 240ms var(--pp-ease);
-}
-.edith-premium .rh-chip:hover {
-  transform: rotate(0deg) translateY(-4px);
-  box-shadow: 0 20px 30px -16px rgba(18, 17, 23, 0.45);
-}
-.edith-premium .rh-chip:active {
-  transform: rotate(0deg) scale(0.97);
-}
-.edith-premium .rh-chip:focus-visible {
-  outline: 3px solid var(--pp-ink);
-  outline-offset: 3px;
-}
-.edith-premium .rh-chip-on {
-  background: var(--pp-accent);
-  color: var(--pp-on-accent);
-  transform: rotate(0deg) translateY(-2px);
-}
-/* A tapped word gives a small springy pop (the independent scale property, so the tilt stays). */
-.edith-premium .rh-chip-pop {
-  animation: rh-chip-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-@keyframes rh-chip-pop {
-  0% {
-    scale: 0.92;
-  }
-  55% {
-    scale: 1.06;
-  }
-  100% {
-    scale: 1;
-  }
-}
-.edith-premium .rh-ping {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  background: var(--pp-accent);
-  border: 2px solid var(--pp-ink);
-}
-.edith-premium .rh-ping::after {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  border: 2px solid var(--pp-accent);
-  animation: rh-ring 2200ms ease-out infinite;
-}
 .edith-premium .rh-draw {
   stroke-dasharray: 520;
   stroke-dashoffset: 520;
@@ -3178,15 +3104,6 @@ body:has(.rh-learn-home) {
   .edith-premium .rh-draw {
     animation: none;
     stroke-dashoffset: 0;
-  }
-  .edith-premium .rh-ping::after,
-  .edith-premium .rh-chip-pop {
-    animation: none;
-  }
-  .edith-premium .rh-chip,
-  .edith-premium .rh-chip:hover,
-  .edith-premium .rh-chip:active {
-    transition: none;
   }
 }
 
@@ -3228,7 +3145,7 @@ body:has(.rh-learn-home) {
 .ub-menu button {
   align-items: center;
   gap: 5px;
-  color: #ba431d;
+  color: #181719;
   cursor: pointer;
 }
 .ub-menu button[aria-expanded="true"] svg {
@@ -3289,7 +3206,7 @@ body:has(.rh-learn-home) {
 
 .uz-header-shell :is(a, button):focus-visible,
 .rh-bar .rh-sheet :is(a, button):focus-visible {
-  outline: 2px solid #225bab;
+  outline: 2px solid #181719;
   outline-offset: 3px;
 }
 .rh-bar {
@@ -3341,8 +3258,12 @@ body:has(.rh-learn-home) {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
+/* The page you are on: ink, underlined (no colour anywhere in the bar). */
 .rh-link[aria-current="page"] {
-  color: #ba431d;
+  color: #181719;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 6px;
 }
 .rh-logo {
   color: inherit;
@@ -3533,7 +3454,7 @@ body:has(.rh-learn-home) {
 }
 .rh-lang-error {
   margin: 8px 12px 6px;
-  color: #b3213f;
+  color: #181719;
   font-size: 14px;
 }
 .rh-avatar {
@@ -3633,10 +3554,10 @@ body:has(.rh-learn-home) {
   align-items: center;
   height: 22px;
   padding-inline: 8px;
-  border: 1.5px solid #121117;
+  border: 1px solid #181719;
   border-radius: 6px;
-  background: #e7eefd;
-  color: #121117;
+  background: #f4f4f5;
+  color: #181719;
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
@@ -3647,7 +3568,7 @@ body:has(.rh-learn-home) {
 .rh-offer {
   padding: 10px 12px;
   border-radius: 8px;
-  background: #e7eefd;
+  background: #f4f4f5;
   font-size: 13.5px;
   line-height: 1.4;
 }
@@ -3684,30 +3605,22 @@ body:has(.rh-learn-home) {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
-.rh-meter-val[data-level="low"] {
-  color: #8a5200;
-}
+.rh-meter-val[data-level="low"],
 .rh-meter-val[data-level="out"] {
-  color: #b3213f;
+  color: #181719;
 }
 .rh-track {
-  height: 10px;
+  height: 8px;
   margin-top: 6px;
   overflow: hidden;
-  border: 1.5px solid #121117;
   border-radius: 9999px;
-  background: #fff;
+  background: #e8e8ea;
 }
 .rh-fill {
   height: 100%;
-  background: #2b6df0;
+  border-radius: 9999px;
+  background: #181719;
   transition: width 300ms var(--rh-ease);
-}
-.rh-fill[data-level="low"] {
-  background: #f5b942;
-}
-.rh-fill[data-level="out"] {
-  background: #e5484d;
 }
 .rh-wide {
   width: 100%;
@@ -3771,7 +3684,7 @@ body:has(.rh-learn-home) {
 }
 .rh-item-danger,
 .rh-item-danger svg {
-  color: #b3213f;
+  color: #181719;
 }
 
 /* Phone: the bar opens one card under it. */
@@ -6922,39 +6835,6 @@ html.rita-app,
   border-width: 1.5px;
   font-size: var(--home-btn-font);
 }
-.uz-home h1.rh-hero-title {
-  font-size: var(--home-h1);
-  font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-}
-.uz-home .rh-hero-lead {
-  max-width: 36rem;
-  font-size: var(--home-lead);
-  line-height: 1.6;
-}
-/* Uzyra sits in the original orbit centre; the rings and word-chip geometry stay intact. */
-.uz-home .rh-hero-cube {
-  width: clamp(144px, 22vw, 220px);
-  height: clamp(144px, 22vw, 220px);
-}
-.uz-home .rh-chip {
-  padding: 0.375rem 0.85rem;
-  border-width: 1px;
-  border-radius: 12px;
-  font-size: var(--home-chip);
-  font-weight: 600;
-  box-shadow: 0 10px 20px -16px rgba(18, 17, 23, 0.35);
-}
-/* The words stay light to look at but keep a 44px target for a finger. */
-.uz-home .rh-chip::after {
-  content: "";
-  position: absolute;
-  inset: -6px -4px;
-}
-.uz-home .rh-hero-answer {
-  border-radius: 16px;
-}
 /* Entering a lesson (LessonIntro): the language splash's picture (.uz-splash, dark), but it stays
    until the lesson is ready instead of leaving on a timer. The hairline breathes while waiting;
    then the lesson's title rolls in with one dot per section, and the intro fades away over the
@@ -8732,46 +8612,6 @@ html.rita-app,
     animation: none;
   }
 }
-.uz-home .study-headline {
-  max-width: 16em;
-  margin: 0 auto;
-  font-family: "Figtree", Helvetica, Arial, sans-serif;
-  font-size: clamp(1.75rem, 3.52vw, 3rem);
-  font-weight: 400;
-  line-height: 1.56;
-  letter-spacing: -.035em;
-  text-align: center;
-  text-wrap: balance;
-}
-.study-pill {
-  display: inline-flex;
-  vertical-align: middle;
-  align-items: center;
-  gap: .15em;
-  height: 1.24em;
-  padding-right: .34em;
-  border-radius: 2em;
-  background: #f2f2f1;
-  color: #151517;
-  white-space: nowrap;
-}
-.study-sticker, .study-face {
-  box-sizing: border-box;
-  width: 1.15em;
-  height: 1.15em;
-  margin: -.06em 0 0 -.04em;
-}
-.study-sticker {
-  color: white;
-  border: .065em solid white;
-  border-radius: 26%;
-  padding: .19em;
-  box-shadow: 0 .035em .09em #14141f30;
-}
-.sticker-Speak { background: #365fcd; transform: rotate(-6deg); }
-.sticker-read { background: #38695e; transform: rotate(4deg); }
-.sticker-remember { background: #a34f36; transform: rotate(-4deg); }
-
 /* Reserve space before first paint; remember the real height on return visits
    to the same section, including an expanded FAQ. */
 @supports (content-visibility: auto) and (contain-intrinsic-block-size: auto 1px) {
@@ -8872,7 +8712,7 @@ html.rita-app,
   text-align: start;
   font-variant-numeric: tabular-nums;
 }
-.rh-chip-time[data-level="out"] { color: #993d35; }
+.rh-chip-time[data-level="out"] { color: #181719; }
 .rh-bar .rh-avatar {
   border-radius: 9px;
   box-shadow: inset 0 0 0 1px #0001;
@@ -8903,6 +8743,26 @@ html.rita-app,
 .rh-bar :is(.rh-item, .rh-sheet-links .rh-link):hover {
   background: #f6f5f4;
 }
+/* Quiet text in the bar's menus is a true grey (the app's blue-grey would read as a colour). */
+.rh-bar {
+  --pp-muted: #66656b;
+}
+.rh-bar :is(.rh-lang-title, .rh-note, .rh-item-dim, .rh-lang-sub, .rh-meter-val) {
+  color: #66656b;
+}
+.rh-bar .rh-meter-val:is([data-level="low"], [data-level="out"]) {
+  color: #181719;
+}
+/* The buttons inside the bar's menus ("See plans") are black pills, like the bar's own button. */
+.rh-bar .rh-btn {
+  border: 0;
+  border-radius: 30px;
+  background: #181719;
+  color: #fff;
+}
+.rh-bar .rh-btn:hover {
+  background: #2c2b2e;
+}
 .rh-bar dialog.rh-sheet-wrap {
   position: fixed;
   inset: auto 0 0;
@@ -8926,7 +8786,7 @@ html.rita-app,
 .rh-bar .rh-account .rh-who-name { font-weight: 600; overflow-wrap: anywhere; }
 .rh-bar .rh-lang-native { font-size: 14px; font-weight: 500; }
 .rh-bar .rh-lang-row[aria-checked="true"] { background: #f4f4f5; }
-.rh-bar .rh-lang-mark { color: #333238; }
+.rh-bar .rh-lang-mark { color: #181719; }
 .rh-sheet-close {
   display: grid;
   place-items: center;

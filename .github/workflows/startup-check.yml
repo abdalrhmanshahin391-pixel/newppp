@@ -9,6 +9,12 @@ on:
       - "src/components/rita-study/RitaCube.tsx"
       - "src/components/rita-study/cube/**"
       - "scripts/check-home-cube.mjs"
+      - "scripts/check-header-menus.mjs"
+      - "src/components/header/**"
+      - "src/components/home/procreate/ProHeader.tsx"
+      - "src/components/CreditsMeter.tsx"
+      - "src/components/language/LanguageMenu.tsx"
+      - "src/components/blog/BlogPage.tsx"
       - "src/i18n/**"
       - "src/components/LanguageProvider*"
       - "src/components/ThemeProvider.tsx"
@@ -59,12 +65,16 @@ jobs:
         run: node --test src/components/rita-study/tech-sound.test.mjs
       - name: Uzyra's cube (3D outline, eyes, clips, engine)
         run: node --test src/components/rita-study/cube/cube.test.ts
+      - name: Header menus (panel placement, highlight, keys)
+        run: node --test src/components/header/menu-motion.test.ts
       - name: Learning sections in Chromium and WebKit
         run: |
           npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund playwright@1.62.1
           npx --prefix "$RUNNER_TEMP/pw" playwright install --with-deps chromium webkit
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" node scripts/check-home-cube.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" BROWSER=webkit node scripts/check-home-cube.mjs
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" node scripts/check-header-menus.mjs
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" BROWSER=webkit node scripts/check-header-menus.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" node scripts/check-study-help.mjs --check
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" BROWSER=webkit node scripts/check-study-help.mjs --check
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" node scripts/check-learn-navigation.mjs

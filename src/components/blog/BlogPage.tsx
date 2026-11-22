@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
 import { HeaderResourcesMenu } from "@/components/header/HeaderResourcesMenu";
+import { MenuGroup } from "@/components/header/MenuGroup";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import "./blog.css";
 
@@ -40,7 +41,14 @@ export function BlogPage({ article = false }: { article?: boolean }) {
         <Link to="/" aria-label={ar ? "يوزرا الرئيسية" : "Uzyra home"}>
           <UzyraWordmark size={16} />
         </Link>
-        <nav className="uz-header-nav" aria-label={ar ? "التنقل" : "Navigation"}>
+        <MenuGroup
+          as="nav"
+          className="uz-header-nav"
+          label={ar ? "التنقل" : "Navigation"}
+          active={open ? "resources" : null}
+          align="start"
+          hoverOpen
+        >
           <Link className="ub-wide uz-header-link" to="/books">
             {ar ? "المكتبة" : "Library"}
           </Link>
@@ -48,7 +56,7 @@ export function BlogPage({ article = false }: { article?: boolean }) {
             {ar ? "الأسعار" : "Pricing"}
           </Link>
           <HeaderResourcesMenu arabic={ar} open={open} onOpenChange={setOpen} showMobilePricing />
-        </nav>
+        </MenuGroup>
         <Link className="ub-cta" to="/start">
           {ar ? "ابدأ التعلّم" : "Start learning"}
         </Link>
