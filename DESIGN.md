@@ -1380,3 +1380,14 @@ level, and saves through the existing atomic layout function. No new database sc
 Protect unsaved edits (including adding goals and rearranging slides), pending uploads and
 content generation before navigation. Success refreshes the path and the admin state; failures
 remain visible. Archive and publish retain their existing consequences and confirmations.
+
+## Home: «Ask Uzyra anything» (`AskAnything`)
+
+Under the home hero. Left: the title (400 weight, `clamp(28px, 3vw, 40px)`) over a turning list
+of ten questions, each with the Uzyra feature that answers it (label, icon, question; the row
+links to that feature). Seven rows of 58px show at a time: the middle one in ink, the others
+scaled 0.93 / 0.86 / 0.79, faded 0.62 / 0.45 / 0.28 and leaning back 18 / 36 / 54px (mirrored
+in RTL). It turns every 2.4s with a 0.7s `cubic-bezier(0.16, 1, 0.3, 1)` ease, only while on
+screen; the pointer lights the row under it and stops the turn, keyboard focus brings a row to
+the middle, reduced motion keeps it still. Right: the café-and-books sticker art (WebP, no
+motion); on phones and tablets it sits above the list.
