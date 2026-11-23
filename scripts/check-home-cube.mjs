@@ -181,6 +181,11 @@ try {
     );
     assert.equal(await page.locator("h1").count(), 1, "one h1");
     assert.equal(
+      (await page.locator(".uz-ultra-lockup").innerText()).replace(/\s+/g, " ").trim(),
+      "Meet Uzyra Ultra",
+      "the first line reads Meet, the cube, Uzyra Ultra",
+    );
+    assert.equal(
       await page.locator(".uz-ultra .uz-cube").count(),
       2,
       "the mark and the large cube",

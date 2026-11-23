@@ -78,11 +78,25 @@ function unwrapNear(p: Pose, near: Pose): Pose {
   };
 }
 
-export type CubeOptions = { seed?: number; reduced?: boolean; size?: number; mood?: Mood };
+/**
+ * How much faster than the first version it plays (1.3 is 30% faster). Everything is sped up
+ * together: clips, taps, blinks, rests and springs, so the moves keep their shape and only come
+ * quicker.
+ */
+export const SPEED = 1.3;
+
+export type CubeOptions = {
+  seed?: number;
+  reduced?: boolean;
+  size?: number;
+  mood?: Mood;
+  speed?: number;
+};
 
 export function createCube(options: CubeOptions = {}) {
   const rand = seeded(options.seed ?? 1);
   const between = (a: number, b: number) => a + rand() * (b - a);
+  const speed = options.speed ?? SPEED;
   let reduced = options.reduced ?? false;
   let mood: Mood = options.mood ?? "idle";
   const face = new FacePlayer(MOOD_FACE[mood]);
@@ -218,7 +232,7 @@ export function createCube(options: CubeOptions = {}) {
     },
     /** Moves time on by dt seconds. Levels are the raw microphone and voice levels, 0..1. */
     step(dt: number, levels: { input: number; output: number } = { input: 0, output: 0 }) {
-      const step = Math.min(0.1, Math.max(0, dt));
+      const step = Math.min(0.1, Math.max(0, dt)) * speed;
       clock += step;
 
       // Blinks happen even with reduced motion: they are small and keep it alive.

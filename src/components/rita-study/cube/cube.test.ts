@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CLIPS, REST, sampleClip, type Key } from "./cube-clips.ts";
-import { createCube, restFrame } from "./cube-engine.ts";
+import { createCube, restFrame, SPEED } from "./cube-engine.ts";
 import { eyeOutline, FACES, FacePlayer } from "./cube-faces.ts";
 import {
   apply,
@@ -243,4 +243,25 @@ test("a tap plays a reaction with a happy face", () => {
   for (let i = 0; i < 20; i += 1) cube.step(1 / 60);
   const eyes = cube.frame().eyes;
   assert.ok(eyes);
+});
+
+test("it plays faster by the speed factor, and keeps the same moves", () => {
+  const hopTime = (speed: number) => {
+    const cube = createCube({ seed: 5, speed });
+    cube.poke("hop");
+    let peak = 0;
+    for (let i = 0; i < 360; i += 1) {
+      cube.step(1 / 120);
+      const y = cube.pose().y;
+      peak = Math.max(peak, y);
+      if (peak > 0.1 && y < 0.002) return { time: (i + 1) / 120, peak };
+    }
+    return { time: 3, peak };
+  };
+  const slow = hopTime(1);
+  const fast = hopTime(SPEED);
+  assert.ok(SPEED >= 1.25, "at least 25% faster than the first version");
+  const ratio = slow.time / fast.time;
+  assert.ok(ratio > SPEED - 0.08 && ratio < SPEED + 0.08, `ratio ${ratio}`);
+  assert.ok(Math.abs(slow.peak - fast.peak) < 0.02, "the hop is as high, only quicker");
 });
