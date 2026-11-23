@@ -37,6 +37,7 @@ export function PathStopSheet({
   color,
   onClose,
   onChanged,
+  onEdit,
 }: {
   item: PathItem;
   embedded?: boolean;
@@ -44,6 +45,7 @@ export function PathStopSheet({
   color: string;
   onClose: () => void;
   onChanged: () => Promise<void>;
+  onEdit?: () => void;
 }) {
   const listFn = useServerFn(getPathItemResources);
   const addFn = useServerFn(adminAddPathItemResource);
@@ -224,6 +226,11 @@ export function PathStopSheet({
         <div className="lp-sheet-head">
           <span className="lp-sheet-dot" />
           <h3>{item.kind === "finish" ? `خط نهاية ${item.title}` : pathItemTitle(item)}</h3>
+          {onEdit && (
+            <button type="button" className="rita-btn rita-btn-quiet" onClick={onEdit}>
+              عدّل التمارين
+            </button>
+          )}
           {!embedded && (
             <button type="button" onClick={onClose} aria-label="سكّر" className="lp-sheet-x">
               <X size={18} />
