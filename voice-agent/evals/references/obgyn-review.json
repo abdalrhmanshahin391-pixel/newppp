@@ -1,0 +1,472 @@
+{
+  "name": "obgyn-review",
+  "source": "A medical student's OB/GYN review sheet sent by the owner (23 November 2026, PDF 'obgyn_all_questions_quick_answers'): 57 questions in the order they came up in a chat, each with a short clinical answer written as the target.",
+  "site_language": "ar",
+  "target": {
+    "code": "en",
+    "name": "English",
+    "speechCode": "en"
+  },
+  "notes": "A study chat about obstetrics and gynecology in Arabic with English terms. Each answer goes straight to the point: the exact fact (numbers, dates, the rule), one short clarification, medical terms kept in English, and history-taking lines given as ready English sentences. No small talk, no question back, no lecture.",
+  "conversations": [
+    {
+      "id": "obgyn-review",
+      "turns": [
+        {
+          "learner": "كيف ألفظ Gynecology؟",
+          "reply": "Gynecology: طب النسائية. Gynecological: متعلق بأمراض النساء. Obstetrics: طب الحمل والولادة."
+        },
+        {
+          "learner": "ما معنى Gynecology؟",
+          "reply": "دراسة وعلاج أمراض الجهاز التناسلي الأنثوي، مثل اضطرابات الدورة والمبيض والرحم."
+        },
+        {
+          "learner": "لماذا نسأل عن occupation للمريضة؟",
+          "reply": "لمعرفة التعرض لمواد ضارة أو مجهود بدني أو ظروف عمل قد تؤثر على الحمل والصحة."
+        },
+        {
+          "learner": "لماذا نسأل عن occupation للزوج؟",
+          "reply": "لتقييم التعرضات المهنية المحتملة التي قد تؤثر على الخصوبة، وكذلك الظروف الاجتماعية."
+        },
+        {
+          "learner": "كيف أسأل عن blood group وRh sensitization؟",
+          "reply": "What is your blood group and Rh status? Have you received Anti-D? Have you ever had a positive antibody screen?",
+          "expect": {
+            "free_language": true,
+            "must": [
+              "Anti-D",
+              "antibody"
+            ]
+          }
+        },
+        {
+          "learner": "هل Anti-D عبارة عن vaccine؟",
+          "reply": "لا؛ هو passive immunoglobulin للوقاية من Rh sensitization، وليس لقاحاً.",
+          "expect": {
+            "must": [
+              "immunoglobulin",
+              "مش لقاح",
+              "ليس لقاح",
+              "not a vaccine",
+              "مش vaccine"
+            ]
+          }
+        },
+        {
+          "learner": "هل أسأل إذا عندها Rh antibodies وأخذت Anti-D؟",
+          "reply": "نعم، خصوصاً إذا كانت Rh-negative؛ واسأل عن نتائج antibody screening السابقة."
+        },
+        {
+          "learner": "ماذا يعني Rh-positive أو Rh-negative؟",
+          "reply": "صفة على خلايا الدم الحمراء. Rh-negative لا يعني تلقائياً وجود anti-D antibodies."
+        },
+        {
+          "learner": "متى نعطي Anti-D؟",
+          "reply": "عادة عند 28 أسبوعاً للحامل Rh-negative غير المتحسسة، وخلال 72 ساعة بعد الولادة إذا كان الطفل Rh-positive؛ وقد يلزم بعد أحداث محسّسة.",
+          "expect": {
+            "must": [
+              "72"
+            ]
+          }
+        },
+        {
+          "learner": "ما معنى Gravida وPara و+ abortions؟",
+          "reply": "G: عدد الأحمال بما فيها الحالي. P: أحمال وصلت لحد الولادة المعتمد محلياً. +: أحمال انتهت قبل ذلك الحد، ومنها miscarriage.",
+          "expect": {
+            "must": [
+              "miscarriage",
+              "إجهاض",
+              "abortion"
+            ]
+          }
+        },
+        {
+          "learner": "كيف أسأل عن LMP؟",
+          "reply": "What was the first day of your last menstrual period? المقصود أول يوم نزف من آخر دورة.",
+          "expect": {
+            "must": [
+              "first day",
+              "أول يوم"
+            ]
+          }
+        },
+        {
+          "learner": "كيف أحسب EDD؟",
+          "reply": "Naegele's rule: أول يوم LMP + 7 أيام − 3 أشهر + سنة، أو +280 يوماً لدورة 28 يوماً.",
+          "expect": {
+            "must": [
+              "280",
+              "Naegele",
+              "نيجل"
+            ]
+          }
+        },
+        {
+          "learner": "هل ovarian cyst أو PCOS يؤثران على EDD؟",
+          "reply": "PCOS قد يؤخر الإباضة ويجعل LMP غير موثوق؛ الكيس البسيط عادة لا يغيّر التاريخ. السونار المبكر أفضل عند عدم اليقين."
+        },
+        {
+          "learner": "كيف يحسب ultrasound عمر الحمل؟",
+          "reply": "بالثلث الأول نستخدم CRL (crown–rump length)، ومنه يقدّر الجهاز gestational age وEDD.",
+          "expect": {
+            "must": [
+              "CRL",
+              "crown"
+            ]
+          }
+        },
+        {
+          "learner": "ما الفرق بين past obstetric وpast gynecological history؟",
+          "reply": "Obstetric: الأحمال والولادات والإجهاضات ومضاعفاتها. Gynecological: الدورة، الأمراض النسائية، الجراحات، ومنع الحمل."
+        },
+        {
+          "learner": "ما معنى intermenstrual bleeding؟",
+          "reply": "نزف مهبلي يحدث بين مواعيد الدورات الشهرية المعتادة.",
+          "expect": {
+            "must": [
+              "بين"
+            ]
+          }
+        },
+        {
+          "learner": "ما هو age at menarche؟",
+          "reply": "العمر عند أول دورة شهرية، وليس مجرد بداية البلوغ.",
+          "expect": {
+            "must": [
+              "أول دورة",
+              "first period",
+              "first menstrual"
+            ]
+          }
+        },
+        {
+          "learner": "كم العمر المعتاد للـmenarche؟",
+          "reply": "غالباً نحو 12–13 سنة؛ عدم حدوثه بعمر 15 سنة يستدعي التقييم.",
+          "expect": {
+            "must": [
+              "13"
+            ]
+          }
+        },
+        {
+          "learner": "ما ترتيب أخذ obstetric history؟",
+          "reply": "Profile → chief complaint → HPI → current pregnancy → past obstetric → gynecological → medical/surgical → drugs/allergies → family → social.",
+          "expect": {
+            "must": [
+              "chief complaint",
+              "complaint"
+            ]
+          }
+        },
+        {
+          "learner": "ماذا يأتي بعد history of present pregnancy؟",
+          "reply": "Past obstetric history، ثم past gynecological history.",
+          "expect": {
+            "must": [
+              "past obstetric",
+              "obstetric history"
+            ]
+          }
+        },
+        {
+          "learner": "هل family history قبل social history؟",
+          "reply": "غالباً نعم، لكن ترتيب النماذج يختلف بين المستشفيات؛ الأهم عدم نسيان أي قسم."
+        },
+        {
+          "learner": "لماذا نسأل عن interval بين الأحمال؟",
+          "reply": "قِصر الفترة بين حملين يرتبط ببعض مخاطر الحمل؛ وبعد قيصرية سابقة يفيد في تقييم خطة الولادة."
+        },
+        {
+          "learner": "لماذا نسأل عن مدة الزواج حتى أول حمل؟",
+          "reply": "لاستكشاف تأخر الإنجاب، لكن يجب السؤال عن مدة المحاولة دون منع حمل، لا مدة الزواج وحدها."
+        },
+        {
+          "learner": "ما أشهر منشطات الحمل؟",
+          "reply": "Letrozole، clomiphene، gonadotropins، وhCG trigger؛ واسأل أيضاً عن IUI أو IVF.",
+          "expect": {
+            "must": [
+              "letrozole",
+              "clomiphene",
+              "كلوميفين",
+              "ليتروزول"
+            ]
+          }
+        },
+        {
+          "learner": "ما معنى cervical cerclage؟",
+          "reply": "غرزة لربط عنق الرحم في حالات مختارة من cervical insufficiency للحد من خطر فقد الحمل أو الولادة المبكرة.",
+          "expect": {
+            "must": [
+              "عنق الرحم",
+              "cervix",
+              "cervical"
+            ]
+          }
+        },
+        {
+          "learner": "متى يوضع ويزال cerclage؟",
+          "reply": "التاريخي غالباً 12–14 أسبوعاً؛ وإزالته عادة 36–37 أسبوعاً، حسب الحالة والخطة.",
+          "expect": {
+            "must": [
+              "36",
+              "37"
+            ]
+          }
+        },
+        {
+          "learner": "ما معنى spotting منذ 3 November؟",
+          "reply": "تنقيط دم خفيف بدأ منذ 3 نوفمبر؛ ليس بالضرورة نزيفاً غزيراً.",
+          "expect": {
+            "must": [
+              "خفيف",
+              "light"
+            ]
+          }
+        },
+        {
+          "learner": "هل صياغة patient profile صحيحة؟",
+          "reply": "مثال: She is a 37-year-old married housewife living in Al-Rabba, G11 P2+8. تأكد من صحة الأرقام."
+        },
+        {
+          "learner": "كيف أذكر blood group ومهنة الزوج؟",
+          "reply": "Her blood group is O positive. Her husband's blood group is unknown, and he works as a farmer.",
+          "expect": {
+            "free_language": true
+          }
+        },
+        {
+          "learner": "هل LMP 26 July 2026 يعطي EDD 2 May 2027؟",
+          "reply": "نعم، وفق قاعدة 280 يوماً: EDD = 2 May 2027، بشرط موثوقية LMP.",
+          "expect": {
+            "must": [
+              "نعم",
+              "صح",
+              "yes",
+              "مزبوط",
+              "صحيح"
+            ]
+          }
+        },
+        {
+          "learner": "كيف أحسب gestational age؟",
+          "reply": "احسب الأيام من أول يوم LMP حتى تاريخ التقييم، ثم اقسم على 7: الناتج أسابيع كاملة والباقي أيام.",
+          "expect": {
+            "must": [
+              "7",
+              "سبعة"
+            ]
+          }
+        },
+        {
+          "learner": "هل أحسبه من أول يوم الحمل أم الدورة؟",
+          "reply": "من أول يوم لآخر دورة شهرية LMP، وليس من يوم الإخصاب.",
+          "expect": {
+            "must": [
+              "LMP",
+              "آخر دورة",
+              "الدورة"
+            ]
+          }
+        },
+        {
+          "learner": "هل أقسم الأيام على 4 أم 7؟",
+          "reply": "على 7، لأن الأسبوع سبعة أيام.",
+          "expect": {
+            "must": [
+              "7",
+              "سبعة"
+            ]
+          }
+        },
+        {
+          "learner": "ما معنى GA 16+1؟",
+          "reply": "16 أسبوعاً كاملاً ويوم واحد. 16+6 يعني 16 أسبوعاً و6 أيام.",
+          "expect": {
+            "must": [
+              "يوم",
+              "day"
+            ]
+          }
+        },
+        {
+          "learner": "كم GA في 22 November إذا LMP هو 26 July؟",
+          "reply": "119 يوماً = 17 أسبوعاً و0 يوم. أما في 13 November فكان 15 أسبوعاً و5 أيام.",
+          "expect": {
+            "must": [
+              "17"
+            ]
+          }
+        },
+        {
+          "learner": "كيف أصف admission من ER بسبب النزيف؟",
+          "reply": "She presented to the emergency department on Friday night, November 13, with vaginal bleeding that began that morning.",
+          "expect": {
+            "free_language": true,
+            "must": [
+              "presented",
+              "emergency"
+            ]
+          }
+        },
+        {
+          "learner": "كيف أصف كمية ولون النزيف؟",
+          "reply": "Heavy, dark-red, continuous vaginal bleeding requiring approximately 3–4 pad changes؛ مع تحديد الفترة ومدى امتلاء الفوط.",
+          "expect": {
+            "must": [
+              "pad"
+            ]
+          }
+        },
+        {
+          "learner": "ما معنى no passage of tissue or blood clots؟",
+          "reply": "لم تلاحظ خروج أنسجة حمل أو كتل من دم متجلط مع النزيف.",
+          "expect": {
+            "must": [
+              "أنسجة",
+              "كتل",
+              "جلط"
+            ]
+          }
+        },
+        {
+          "learner": "ما معنى pad وكيف أسأل عن عددها؟",
+          "reply": "Pad = فوطة صحية. اسأل: كم فوطة بتغيّري خلال اليوم؟ وهل بتمتلئ تماماً؟",
+          "expect": {
+            "must": [
+              "فوط"
+            ]
+          }
+        },
+        {
+          "learner": "هل سؤال المريضة عن الفوط محرج؟",
+          "reply": "سؤال سريري طبيعي لتقدير شدة النزف؛ اسأله بلطف وخصوصية وبأسلوب مهني."
+        },
+        {
+          "learner": "لماذا أسأل عن abdominal pain أو contractions؟",
+          "reply": "الألم والتقلصات يساعدان على التمييز بين أسباب نزف الحمل، ومنها فقد الحمل والولادة المبكرة."
+        },
+        {
+          "learner": "هل placenta abruption ممكنة؟",
+          "reply": "ممكن ضمن التشخيصات بحسب عمر الحمل والأعراض، لكنها ليست تشخيصاً مؤكداً؛ غالباً ترافقها آلام أو إيلام رحمي."
+        },
+        {
+          "learner": "كيف أجمع negative associated symptoms؟",
+          "reply": "She denies trauma, falls, postcoital bleeding, fever, chills, dizziness, or leakage of fluid؛ مع ذكر الألم والتقلصات.",
+          "expect": {
+            "must": [
+              "denies"
+            ]
+          }
+        },
+        {
+          "learner": "كيف أبدأ history of current pregnancy؟",
+          "reply": "اذكر عمر الحمل وطريقة تأريخه، ثم بداية الحمل، متابعة antenatal care، السونار، التحاليل، الأدوية والمضاعفات."
+        },
+        {
+          "learner": "ما معنى amenorrhea؟",
+          "reply": "انقطاع الدورة الشهرية؛ وهو متوقع أثناء الحمل.",
+          "expect": {
+            "must": [
+              "انقطاع",
+              "غياب"
+            ]
+          }
+        },
+        {
+          "learner": "ما سبب amenorrhea في هذه المريضة؟",
+          "reply": "الحمل نفسه غالباً؛ ارتفاع الهرمونات يمنع حدوث الدورة. تأكد من اتساق المدة مع LMP.",
+          "expect": {
+            "must": [
+              "حمل",
+              "pregnan"
+            ]
+          }
+        },
+        {
+          "learner": "هل amenorrhea لمدة شهرين ونصف تتوافق مع LMP 26 July و13 November؟",
+          "reply": "ليس تماماً: المدة نحو 15 أسبوعاً و5 أيام، أي أكثر من 3 أشهر ونصف؛ يلزم توضيح التاريخ.",
+          "expect": {
+            "must": [
+              "15"
+            ]
+          }
+        },
+        {
+          "learner": "كيف أرتب الحالة خلال ساعة قبل presentation؟",
+          "reply": "استخدم checklist ثابتة، دوّن الحقائق أولاً، ثم صغ عرضاً موجزاً بالإنجليزية وراجع التواريخ والنواقص."
+        },
+        {
+          "learner": "ما معنى D&C وكيف ألفظها؟",
+          "reply": "Dilation and curettage: توسيع عنق الرحم وكحت بطانة/محتويات الرحم بأداة؛ يُستخدم في استطبابات محددة.",
+          "expect": {
+            "must": [
+              "dilation",
+              "dilatation",
+              "curettage"
+            ]
+          }
+        },
+        {
+          "learner": "هل D&C هو الإجهاض نفسه؟",
+          "reply": "لا. الإجهاض حدث أو إنهاء للحمل؛ D&C إجراء قد يُستخدم لتدبير بعض الحالات، وليس مرادفاً للإجهاض."
+        },
+        {
+          "learner": "كيف أعرف أن المريضة دخلت في labor؟",
+          "reply": "تقلصات رحمية منتظمة مع تغيّر تدريجي بعنق الرحم (dilatation/effacement). نزول السائل وحده لا يؤكد المخاض.",
+          "expect": {
+            "must": [
+              "dilat",
+              "efface",
+              "عنق الرحم"
+            ]
+          }
+        },
+        {
+          "learner": "ماذا أفعل إذا سألت الدكتورة سؤالاً لا أعرفه؟",
+          "reply": "قل بوضوح I'm not sure، ثم اذكر ما تعرفه من منطق سريري دون اختلاق أو تخمين غير مبرر."
+        },
+        {
+          "learner": "ما differential diagnosis للنزيف في الثلث الثاني؟",
+          "reply": "قد يشمل pregnancy loss، أسباب عنق الرحم أو المهبل، ومشاكل المشيمة؛ التقييم يعتمد على العمر الحملي والفحص والسونار.",
+          "expect": {
+            "must": [
+              "مشيمة",
+              "placent",
+              "previa",
+              "abruption"
+            ]
+          }
+        },
+        {
+          "learner": "متى أقول menstrual cycle regular؟",
+          "reply": "إذا كانت الفواصل بين الدورات متقاربة باستمرار، حتى لو كانت كل 35 يوماً."
+        },
+        {
+          "learner": "ما المدى المعتاد لطول الدورة؟",
+          "reply": "غالباً 24–38 يوماً للبالغات؛ وتُحسب من أول يوم دورة إلى أول يوم الدورة التالية.",
+          "expect": {
+            "must": [
+              "24",
+              "21"
+            ]
+          }
+        },
+        {
+          "learner": "متى أعتبر الدورة irregular؟",
+          "reply": "إذا تغيرت الفواصل بشكل واضح، مثل 25 يوماً ثم 45 يوماً؛ لا يشترط أن تكون كل 28 يوماً."
+        },
+        {
+          "learner": "إذا كانت الدورة كل 35 يوماً دائماً، هل هي منتظمة؟",
+          "reply": "نعم، دورة كل 35 يوماً بانتظام تُعد regular، رغم أنها أطول من المتوسط.",
+          "expect": {
+            "must": [
+              "نعم",
+              "regular",
+              "منتظم"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
