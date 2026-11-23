@@ -85,6 +85,13 @@
       "when": 1794435976317,
       "tag": "0011_tighten_book_link_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795406803302,
+      "tag": "0012_public_announcements_role_scoped_reads",
+      "breakpoints": true
     }
   ]
 }

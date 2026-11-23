@@ -12,7 +12,7 @@ export type BootstrapPayload = {
 
 /**
  * Server-side fetch of the global datasets every page needs (theme settings) so the first HTML frame is already correct.
- * The actual query lives in site-bootstrap.server.ts behind a short cache.
+ * Public data is a bundled snapshot, so cold renders cannot wake the database.
  */
 export const getSiteBootstrap = createServerFn({ method: "GET" }).handler(
   async (): Promise<BootstrapPayload> => {

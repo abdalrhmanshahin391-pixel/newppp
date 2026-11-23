@@ -26,6 +26,7 @@ import { needsOnboarding } from "@/lib/onboarding";
 import { setAuthNavigator } from "@/lib/auth-dialog";
 import { DeferredOverlays } from "@/components/DeferredOverlays";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
+import { ACTUAL_SIGNIN_EVENT } from "@/lib/actual-signin";
 
 // A stale deployment can make a lazy-loaded chunk unavailable. Retry once, then
 // stop with a readable page. The old pageshow handler cleared this guard on the
@@ -504,22 +505,12 @@ function GlobalFooter() {
 function DeviceTracker() {
   useEffect(() => {
     let cancelled = false;
-    let unsub: (() => void) | undefined;
-    let lastPing = 0;
+    let inFlight = false;
 
-    // The device check used to run every 60s in every open tab, plus once on
-    // every focus/visibility change. That is a request storm at scale for a
-    // check that only needs to be roughly current, so it is now throttled to
-    // once every 5 minutes and never runs while the tab is hidden.
-    const MIN_GAP_MS = 5 * 60_000;
-
-    async function ping(force = false) {
-      if (cancelled) return;
-      if (!force) {
-        if (document.hidden) return;
-        if (Date.now() - lastPing < MIN_GAP_MS) return;
-      }
-      lastPing = Date.now();
+    // Actual sign-in only: no hydration, token refresh, focus, or idle timer.
+    async function ping() {
+      if (cancelled || inFlight) return;
+      inFlight = true;
       try {
         const [{ supabase }, { getOrCreateDeviceId }, { recordDevice }] = await Promise.all([
           import("@/integrations/supabase/client"),
@@ -528,6 +519,9 @@ function DeviceTracker() {
         ]);
         const { data } = await supabase.auth.getSession();
         if (!data.session || cancelled) return;
+        void supabase.from("user_login_events").insert({ user_id: data.session.user.id }).then(
+          () => {}, () => {},
+        );
         const deviceId = getOrCreateDeviceId();
         const res = await recordDevice({ data: { deviceId } }).catch(() => null);
         if (cancelled) return;
@@ -541,48 +535,17 @@ function DeviceTracker() {
         }
       } catch {
         /* ignore */
+      } finally {
+        inFlight = false;
       }
     }
 
-    (async () => {
-      try {
-        const { supabase } = await import("@/integrations/supabase/client");
-        if (cancelled) return;
-        const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-          if (event === "SIGNED_IN") void ping(true);
-        });
-        unsub = () => sub.subscription.unsubscribe();
-        const idle = (
-          window as unknown as {
-            requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
-          }
-        ).requestIdleCallback;
-        if (idle) {
-          idle(
-            () => {
-              if (!cancelled) void ping();
-            },
-            { timeout: 2000 },
-          );
-        } else {
-          setTimeout(() => {
-            if (!cancelled) void ping();
-          }, 1000);
-        }
-      } catch {
-        /* Account tracking is optional and must never affect page rendering. */
-      }
-    })();
-
-    const onVisible = () => {
-      if (document.visibilityState === "visible") void ping();
-    };
-    document.addEventListener("visibilitychange", onVisible);
+    const onSignIn = () => { void ping(); };
+    window.addEventListener(ACTUAL_SIGNIN_EVENT, onSignIn);
 
     return () => {
       cancelled = true;
-      unsub?.();
-      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener(ACTUAL_SIGNIN_EVENT, onSignIn);
     };
   }, []);
   return null;

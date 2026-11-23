@@ -32,6 +32,8 @@
   synchronized with `node scripts/sync-lesson-edge.mjs`. New Edge Functions need owner approval.
 - Database work is event-driven. Only `vault-daily-snapshot` may run on a timer; do not add polling
   or other scheduled jobs. Any new background job needs owner approval.
+- Public startup uses a bundled, public-only snapshot; run `bun scripts/refresh-public-site-snapshot.ts` before publishing public settings/artwork/announcements changes so cold SSR cannot wake the database. Never bundle private content or expiring signed URLs.
+- Presence requires genuine visible interaction and is rate-limited; device/login tracking runs only after explicit sign-in so hydration, focus and token refresh cannot cause passive writes.
 - Lovable's Vite wrapper already supplies React/TanStack/Tailwind/Nitro plugins; see
   `vite.config.ts` before changing build configuration to avoid duplicate plugins.
 

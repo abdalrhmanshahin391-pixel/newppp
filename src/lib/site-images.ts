@@ -1,14 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { signSiteMedia } from "@/lib/site-media";
+import { useAuth } from "@/hooks/useAuth";
 
 export type SiteImageMap = Record<string, string>;
 
 /** All admin-set picture overrides, resolved to usable URLs. */
 export function useSiteImages() {
+  const { user } = useAuth();
   return useQuery<SiteImageMap>({
     queryKey: ["site-images"],
     staleTime: 5 * 60_000,
+    enabled: Boolean(user),
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     queryFn: async () => {
       const { data } = await (supabase.from as any)("site_images_public").select("key,path");
       const rows = (data ?? []) as { key: string; path: string }[];

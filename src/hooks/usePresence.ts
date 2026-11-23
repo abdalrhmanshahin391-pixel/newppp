@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/legacy-client";
+import { createActivityGate, PRESENCE_INTERVAL_MS } from "@/lib/idle-activity";
 
 /**
- * Tracks login events (one row per SIGNED_IN) and heartbeats a presence row
- * every 15 min (visible + active tabs only) while the user is signed in. Mount once at the root.
+ * Presence only after genuine interaction, at most every 30 minutes while
+ * visible and active in the last 2 minutes. Hydration never writes. Mount once.
  *
  * IMPORTANT: never `await` inside the onAuthStateChange callback — doing so
  * can deadlock the Supabase auth client and stall every subsequent request
@@ -14,23 +15,17 @@ export function usePresence() {
     let disposed = false;
     let heartbeatTimer: ReturnType<typeof setInterval> | null = null;
     let activeUserId: string | null = null;
-    let lastActivity = Date.now();
-    let wasIdle = false;
+    const activity = createActivityGate();
     const onActivity = () => {
-      const idleBefore = wasIdle || Date.now() - lastActivity > 5 * 60_000;
-      lastActivity = Date.now();
-      wasIdle = false;
-      if (idleBefore && activeUserId && !document.hidden) heartbeat(activeUserId);
-    };
-    const onVisibility = () => {
-      if (document.hidden) wasIdle = true;
-      else onActivity();
+      if (document.hidden) return;
+      activity.interact(Date.now());
+      if (activeUserId) heartbeat(activeUserId);
     };
     const activityEvents = ["pointerdown", "keydown", "touchstart", "scroll"] as const;
     activityEvents.forEach((e) => window.addEventListener(e, onActivity, { passive: true }));
-    document.addEventListener("visibilitychange", onVisibility);
 
     function heartbeat(uid: string) {
+      if (disposed || !activity.take(Date.now(), !document.hidden)) return;
       void supabase
         .from("user_sessions")
         .upsert({ user_id: uid, last_seen_at: new Date().toISOString() }, { onConflict: "user_id" })
@@ -44,34 +39,23 @@ export function usePresence() {
       if (disposed || activeUserId === uid) return;
       stop();
       activeUserId = uid;
-      heartbeat(uid);
-      // Only write while the tab is visible and the user interacted in the last
-      // 5 minutes, so forgotten/idle tabs never keep the database awake.
       heartbeatTimer = setInterval(() => {
-        if (document.hidden) return;
-        if (Date.now() - lastActivity > 5 * 60_000) return;
         heartbeat(uid);
-      }, 15 * 60_000);
+      }, PRESENCE_INTERVAL_MS);
     }
 
     function stop() {
       if (heartbeatTimer) clearInterval(heartbeatTimer);
       heartbeatTimer = null;
       activeUserId = null;
+      activity.reset();
     }
 
     let sub: { subscription: { unsubscribe: () => void } } | null = null;
     try {
       const result = supabase.auth.onAuthStateChange((event, session) => {
         const uid = session?.user?.id;
-        if (event === "SIGNED_IN" && uid) {
-          void supabase
-            .from("user_login_events")
-            .insert({ user_id: uid })
-            .then(
-              () => {},
-              () => {},
-            );
+        if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && uid) {
           start(uid);
         } else if (event === "SIGNED_OUT") {
           stop();
@@ -98,7 +82,6 @@ export function usePresence() {
       sub?.subscription.unsubscribe();
       stop();
       activityEvents.forEach((e) => window.removeEventListener(e, onActivity));
-      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 }

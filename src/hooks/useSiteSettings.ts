@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { productCopyFields } from "@/lib/brand";
+import { useAuth } from "@/hooks/useAuth";
 
 export type SiteTheme =
   | "default"
@@ -145,13 +146,16 @@ async function fetchSiteSettings(): Promise<SiteSettings> {
 }
 
 export function useSiteSettings() {
+  const { user } = useAuth();
   const { data } = useQuery({
     queryKey: ["site-settings"],
     queryFn: fetchSiteSettings,
+    enabled: Boolean(user),
     staleTime: 30 * 60_000,
     gcTime: 60 * 60_000,
     refetchOnMount: false,
     refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
   });
   return data ?? DEFAULTS;
 }

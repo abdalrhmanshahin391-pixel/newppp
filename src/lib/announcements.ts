@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { useAuth } from "@/hooks/useAuth";
 import { productCopyFields } from "./brand";
+import snapshot from "./public-site-snapshot.json";
+import { ANNOUNCEMENT_STALE_MS } from "./idle-activity";
 
 export type AnnouncementStyle =
   "ribbon" | "floating" | "spotlight" | "modal" | "marquee" | "toast" | "strip" | "inline";
@@ -91,8 +93,14 @@ export function useAnnouncements() {
   const { user } = useAuth();
   return useQuery({
     queryKey: ["site-announcements", user?.id ?? "anon"],
-    staleTime: 30_000,
+    staleTime: user ? ANNOUNCEMENT_STALE_MS : Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
     queryFn: async () => {
+      if (!user) return (snapshot.announcements as Announcement[]).map((row) =>
+        productCopyFields(row, ["title", "body", "href_label"]),
+      );
       if (user) {
         try {
           const { data, error } = await (supabase.rpc as any)("my_announcements");

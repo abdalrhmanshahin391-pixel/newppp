@@ -22,6 +22,7 @@ import { GoogleButton } from "@/components/auth/GoogleButton";
 import { useAuthCopy, type AuthCopy } from "@/components/auth/auth-copy";
 
 import { closeAuth, setAuthMode } from "@/lib/auth-dialog";
+import { notifyActualSignIn } from "@/lib/actual-signin";
 
 /* ── shared bits ────────────────────────────────────────────────────────── */
 
@@ -251,6 +252,7 @@ export function SignInPanel({ next }: { next?: string }) {
         }
       }
 
+      notifyActualSignIn();
       if (remember) saveRememberedLogin({ email: email.trim().toLowerCase() });
       else clearRememberedLogin();
 
@@ -276,6 +278,7 @@ export function SignInPanel({ next }: { next?: string }) {
       });
       if (result.error) throw result.error;
       if (result.redirected) return;
+      notifyActualSignIn();
       closeAuth();
       await router.invalidate();
       const destination = sessionStorage.getItem("rita-auth-next");
@@ -572,7 +575,10 @@ export function SignUpPanel() {
         extraParams: { prompt: "select_account" },
       });
       if (result.error) throw result.error;
-      if (!result.redirected) closeAuth();
+      if (!result.redirected) {
+        notifyActualSignIn();
+        closeAuth();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : t.googleSignupFailed);
       setLoading(false);

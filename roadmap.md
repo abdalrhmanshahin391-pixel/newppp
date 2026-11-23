@@ -1,5 +1,8 @@
 # Roadmap
 
+- [ ] Apply approved idle savings: public startup snapshot, safe announcement reads, activity-only presence and sign-in-only device checks
+- [ ] Verify idle savings regressions and preview behavior; production savings require publishing and later usage measurement
+
 - [x] Restrict checkout to debit/credit cards and hide optional business tax-ID controls
 - [x] Refine checkout and home typography/content
 - [x] Diagnose and fix blank-page reliability and first-load performance

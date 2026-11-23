@@ -1,0 +1,3 @@
+DROP POLICY "live announcements are readable" ON public.site_announcements;
+CREATE POLICY "live announcements anonymous read" ON public.site_announcements FOR SELECT TO anon USING (active = true AND (starts_at IS NULL OR starts_at <= now()) AND (ends_at IS NULL OR ends_at > now()));
+CREATE POLICY "live announcements authenticated read" ON public.site_announcements FOR SELECT TO authenticated USING ((active = true AND (starts_at IS NULL OR starts_at <= now()) AND (ends_at IS NULL OR ends_at > now())) OR public.has_role(auth.uid(), 'admin'::public.app_role));
