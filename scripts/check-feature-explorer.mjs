@@ -1,6 +1,9 @@
-// The home feature section: the real component, served locally. Nothing remote is contacted.
-// Checks the typed statement, the rippling and drifting circles, the letters that fade in, the
-// pause off screen, the phone layout, reduced motion, and that nothing on it is coloured.
+// The home page's sections from the intro card down: the feature section, the library preview,
+// Under the hood and the sticker shelf, the real components served locally. Nothing remote is
+// contacted. Checks the typed headings, the rippling and drifting circles, the letters that fade
+// in, the two live pictures (the tap word and the words that turn into flashcards), the books and
+// stickers that rise in, the bars drawn with the scroll, the counted number, the pause off screen,
+// the phone layout, reduced motion, and that nothing outside the pictures is coloured.
 import assert from "node:assert/strict";
 import { build } from "esbuild";
 import { compile } from "@tailwindcss/node";
@@ -15,7 +18,10 @@ const entry = `
 import React from 'react';import {createRoot} from 'react-dom/client';
 import {createRootRoute, createRouter, RouterProvider, createMemoryHistory} from '@tanstack/react-router';
 import {FeatureExplorer} from './src/components/home/procreate/FeatureExplorer';
-function Home(){return <main className="uz-home rita-cream edith-light edith-premium relative min-h-screen overflow-clip bg-black text-white" style={{fontFamily:'var(--font-grotesk)'}}><div className="qa-head">Above the section</div><FeatureExplorer/><div className="qa-tail">Uzyra · Learn at your pace</div></main>}
+import {AppWindow} from './src/components/home/procreate/AppWindow';
+import {UnderTheHood} from './src/components/home/procreate/UnderTheHood';
+import {StickerShelf} from './src/components/home/procreate/StickerShelf';
+function Home(){return <main className="uz-home rita-cream edith-light edith-premium relative min-h-screen overflow-clip bg-black text-white" style={{fontFamily:'var(--font-grotesk)'}}><div className="qa-head">Above the section</div><FeatureExplorer/><AppWindow/><UnderTheHood/><StickerShelf/><div className="qa-tail">Uzyra · Learn at your pace</div></main>}
 const router = createRouter({routeTree: createRootRoute({component: Home}), history: createMemoryHistory({initialEntries:['/']})});
 createRoot(document.getElementById('app')).render(<RouterProvider router={router}/>);
 `;
@@ -36,7 +42,11 @@ const bundledCss = result.outputFiles.find((f) => f.path.endsWith(".css"))?.text
 const source = await readFile(resolve(root, "src/styles.css"), "utf8");
 const compiler = await compile(source, { base: root, onDependency: () => {} });
 const tokens = new Set(entry.match(/[\w!:/.[\]#%(),+-]+/g));
-for (const directory of ["src/components/home/procreate", "src/components/rita-study"]) {
+for (const directory of [
+  "src/components/home/procreate",
+  "src/components/rita-study",
+  "src/components/books",
+]) {
   for (const name of await readdir(resolve(root, directory))) {
     if (!name.endsWith(".tsx")) continue;
     const text = await readFile(resolve(root, directory, name), "utf8");
@@ -75,7 +85,7 @@ const server = createServer(async (req, res) => {
     res.setHeader("Content-Type", types[extname(asset.path)] || "application/octet-stream");
     return res.end(asset.contents);
   }
-  if (url.pathname.startsWith("/fonts/") || url.pathname.startsWith("/home/")) {
+  if (["/fonts/", "/home/", "/book-covers/", "/media/"].some((p) => url.pathname.startsWith(p))) {
     const base = resolve(root, "public");
     const path = resolve(base, "." + url.pathname);
     if (!path.startsWith(base + "/") && !path.startsWith(base + "\\")) {
@@ -125,14 +135,14 @@ const circles = (page) =>
     return { drift, ys };
   });
 const typed = (page) =>
-  page.locator(".uz-fx-ch").evaluateAll((els) => {
+  page.locator(".uz-fx-said .uz-ag-ch").evaluateAll((els) => {
     const shown = els.filter((el) => getComputedStyle(el).opacity === "1").length;
     return { shown, total: els.length };
   });
 const letters = (page, n) =>
   page
     .locator(`.uz-fx-row >> nth=${n}`)
-    .locator(".uz-fx-letter")
+    .locator(".uz-ag-letter")
     .evaluateAll((els) => {
       const ops = els.map((el) => Number(getComputedStyle(el).opacity));
       return {
@@ -142,9 +152,9 @@ const letters = (page, n) =>
         total: ops.length,
       };
     });
-// Any coloured text, border or fill in the section (images aside).
-const colours = (page) =>
-  page.locator(".uz-fx").evaluate((section) => {
+// Any coloured text, border or fill in a section (images aside).
+const colours = (page, selector) =>
+  page.locator(selector).evaluate((section) => {
     const tinted = [];
     const isGrey = (value) => {
       for (const m of value.matchAll(/rgba?\(([^)]+)\)/g)) {
@@ -239,9 +249,43 @@ try {
       await page.waitForTimeout(300);
       const early = await letters(page, n);
       assert.ok(early.first > 0.95, `row ${n}: first letters in (${early.first})`);
-      assert.ok(early.last < 1, `row ${n}: last letters still fading`);
+      // (On phones the previous live picture may already have scrolled this title into view.)
+      if (before.full === 0) assert.ok(early.last < 1, `row ${n}: last letters still fading`);
       await page.waitForTimeout(early.total * 5 + 300);
       assert.equal((await letters(page, n)).full, early.total, `row ${n}: all in`);
+      if (n < 2) {
+        // The live pictures start once they are well in view (on phones they sit under the text).
+        await page
+          .locator(row)
+          .locator(".uz-fx-media")
+          .evaluate((el) => {
+            scrollBy(0, el.getBoundingClientRect().top - innerHeight * 0.3);
+          });
+      }
+      if (n === 0) {
+        // Talk: the German opens its meaning by itself, and a tap closes and reopens it.
+        const chip = page.locator(".uz-fx-word-chip");
+        await page.waitForFunction(
+          () =>
+            document.querySelector(".uz-fx-word-chip")?.getAttribute("aria-expanded") === "true",
+          null,
+          { timeout: 6000 },
+        );
+        await chip.click();
+        assert.equal(await chip.getAttribute("aria-expanded"), "false", "a tap closes the meaning");
+        await chip.click();
+        assert.equal(await chip.getAttribute("aria-expanded"), "true", "a tap opens it again");
+        await page.waitForTimeout(300);
+      }
+      if (n === 1) {
+        // Words: the list turns into flashcards by itself; the button goes back and forth.
+        await page.waitForSelector(".uz-fx-stack[data-shown]", { timeout: 6000 });
+        await page.waitForTimeout(700);
+        await page.screenshot({ path: resolve(out, `${engine}-row2-cards-${width}.png`) });
+        await page.locator(".uz-fx-turn").click();
+        assert.equal(await page.locator(".uz-fx-stack[data-shown]").count(), 0, "back to the list");
+        await page.waitForTimeout(600);
+      }
       await page.screenshot({ path: resolve(out, `${engine}-row${n + 1}-${width}.png`) });
       if (phone) {
         const copy = await page.locator(row).locator(".uz-fx-copy").boundingBox();
@@ -267,16 +311,18 @@ try {
         .evaluate((media) => {
           const box = media.getBoundingClientRect();
           // The study shot runs off the edge on purpose; the drawn panels must fit.
-          return [...media.querySelectorAll(".uz-fx-panel, .uz-fx-bubble, .uz-fx-talk-cube")].some(
-            (el) => {
-              const r = el.getBoundingClientRect();
-              return (
-                r.top < box.top - 0.5 ||
-                r.bottom > box.bottom + 0.5 ||
-                el.scrollHeight > el.clientHeight + 1
-              );
-            },
-          );
+          return [
+            ...media.querySelectorAll(
+              ".uz-fx-panel, .uz-fx-bubble, .uz-fx-talk-cube, .uz-fx-meaning",
+            ),
+          ].some((el) => {
+            const r = el.getBoundingClientRect();
+            return (
+              r.top < box.top - 0.5 ||
+              r.bottom > box.bottom + 0.5 ||
+              el.scrollHeight > el.clientHeight + 1
+            );
+          });
         });
       assert.equal(spill, false, `row ${n}: picture fits`);
     }
@@ -287,7 +333,56 @@ try {
     // The CTA sits under the last row.
     await page.locator(".uz-fx-button").scrollIntoViewIfNeeded();
     assert.equal(await page.locator(".uz-fx-button").getAttribute("href"), "/learn");
-    assert.deepEqual(await colours(page), [], "black, white and greys only");
+
+    // The library: the heading types itself in, the books rise one after another.
+    await page.locator(".uz-lib-title").scrollIntoViewIfNeeded();
+    await scrollTo(page, ".uz-lib-title", 0.4);
+    await page.waitForSelector(".library-shelves .bk-item", { timeout: 8000 });
+    await page.waitForTimeout(1600);
+    const libTyped = await page
+      .locator(".uz-lib-title .uz-ag-ch")
+      .evaluateAll((els) => els.every((el) => getComputedStyle(el).opacity === "1"));
+    assert.ok(libTyped, "library heading typed");
+    await scrollTo(page, ".library-shelves", 0.3);
+    await page.waitForTimeout(1800);
+    const books = await page
+      .locator(".library-shelves .bk-item")
+      .evaluateAll((els) => els.map((el) => Number(getComputedStyle(el).opacity)));
+    assert.ok(books.length > 6 && books.every((o) => o === 1), "the books have risen in");
+    await page.screenshot({ path: resolve(out, `${engine}-library-${width}.png`) });
+
+    // Under the hood: the demo, bars drawn with the scroll, the number counted up.
+    await scrollTo(page, ".uz-hood-demo", 0.25);
+    await page.waitForTimeout(4600);
+    await page.screenshot({ path: resolve(out, `${engine}-hood-demo-${width}.png`) });
+    const barScale = () =>
+      page
+        .locator(".uz-hood-bar >> nth=0")
+        .evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).a);
+    await scrollTo(page, ".uz-hood-turn", 0.98);
+    await page.waitForTimeout(150);
+    const early = await barScale();
+    await scrollTo(page, ".uz-hood-turn", 0.1);
+    await page.waitForTimeout(150);
+    const late = await barScale();
+    assert.ok(early < 0.2 && late > 0.98, `bars draw with the scroll (${early} -> ${late})`);
+    await page.screenshot({ path: resolve(out, `${engine}-hood-turn-${width}.png`) });
+    await scrollTo(page, ".uz-hood-measured", 0.4);
+    await page.waitForTimeout(1700);
+    assert.equal(await page.locator(".uz-hood-number [data-count]").innerText(), "75");
+    await page.screenshot({ path: resolve(out, `${engine}-hood-facts-${width}.png`) });
+
+    // The stickers rise into their fan.
+    await scrollTo(page, ".uz-shelf-row", 0.4);
+    await page.waitForTimeout(1600);
+    const stickers = await page
+      .locator(".uz-shelf-item")
+      .evaluateAll((els) => els.map((el) => Number(getComputedStyle(el).opacity)));
+    assert.ok(stickers.length === 4 && stickers.every((o) => o === 1), "stickers in");
+    await page.screenshot({ path: resolve(out, `${engine}-stickers-${width}.png`) });
+    for (const section of [".uz-fx", ".uz-lib", ".uz-hood", ".uz-shelf"]) {
+      assert.deepEqual(await colours(page, section), [], `${section}: black, white and greys only`);
+    }
 
     // Off screen the circles stop.
     await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
@@ -323,6 +418,22 @@ try {
   await page.locator(".uz-fx-row >> nth=2").scrollIntoViewIfNeeded();
   const all = await letters(page, 4);
   assert.equal(all.full, all.total, "descriptions shown at once, even below the fold");
+  assert.equal(await page.locator(".uz-fx-stack[data-shown]").count(), 1, "words shown as cards");
+  await page.locator(".uz-lib").scrollIntoViewIfNeeded();
+  await page.waitForSelector(".library-shelves .bk-item", { state: "attached", timeout: 8000 });
+  const calm = await page.evaluate(() => ({
+    bars: [...document.querySelectorAll(".uz-hood-bar")].every(
+      (el) => getComputedStyle(el).transform === "none",
+    ),
+    count: document.querySelector(".uz-hood-number [data-count]")?.textContent,
+    stickers: [...document.querySelectorAll(".uz-shelf-item")].every(
+      (el) => getComputedStyle(el).opacity === "1",
+    ),
+    books: [...document.querySelectorAll(".library-shelves .bk-item")].every(
+      (el) => getComputedStyle(el).opacity === "1",
+    ),
+  }));
+  assert.deepEqual(calm, { bars: true, count: "75", stickers: true, books: true }, "all still");
   await page.screenshot({ path: resolve(out, engine + "-reduced.png") });
   findings.push({ engine, reduced: true, acceptance: "passed" });
   await context.close();

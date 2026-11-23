@@ -51,27 +51,57 @@ feature sections: we used their sizes and timings, not their code, words, icons 
 
 - **Statement:** "Uzyra is a voice tutor and a study space in one…", 54px (34px on phones), typed
   in at 0.02s a letter with a caret once its top is 80% down the screen. Above it, a row of 98px
-  circles (70px on phones) with lucide icons of what Uzyra does.
+  circles (70px on phones) with seven lucide icons: mic, file, layers, games, star, headphones,
+  graduation cap.
   - **Ripple:** each circle rises and falls `sin((x + phase) / screen width · 2π) · 35px`; the
     phase travels one screen width every 7s. It starts when the section's top is 55% down the
     screen and stops off screen or in a hidden tab.
   - **Drift:** the row slides 250px left while the section crosses the screen, tied to the scroll.
-- **Rows:** five features (talk, study, lessons, lectures, games). Each has a 42px title (28px on
-  phones) that links to the page, a description and a square picture (corners 36px, 24px on
-  phones). Desktop: copy in 4 of 12 columns, picture in 6, 120px between rows. Phones: centred,
+- **Rows:** five features: talk, keep every word, study, lessons, games. Each has a 42px title
+  (28px on phones) that links to the page, a description and a square picture (corners 36px, 24px
+  on phones). Desktop: copy in 4 of 12 columns, picture in 6, 120px between rows. Phones: centred,
   copy above the picture.
   - **Letters:** when a title's top is 85% down the screen, its description fades in letter by
     letter: 0.1s each, 0.005s apart.
 - **Pictures:**
-  - The study one is a real screenshot of the study page (`public/home/features/study.webp`,
-    sample lesson, no learner data), cropped to the guide and shown in grey with
-    `filter: grayscale(1)`. Delete that line to show it in its own colours.
-  - The others are drawn from the product's own pieces: the live cube speaking on black, a lesson
-    path with stars, a lecture with its summary, flashcards and questions, and Wordcraft tiles
-    with Pairs.
+  - **Talk:** on black, the learner's line («كيف أحكي بدي ماي بالألماني؟»), the live cube speaking,
+    then Uzyra's reply. The German in it is a button: it opens its meaning and how to say it (it
+    opens by itself the first time).
+  - **Keep every word:** the saved words fill in one by one, then fold into a fanned stack of
+    flashcards. The button switches between the list and the cards.
+  - **Study:** a real screenshot of the study page (`public/home/features/study.webp`, sample
+    lesson, no learner data), cropped to the guide and shown in grey with `filter: grayscale(1)`.
+    Delete that line to show it in its own colours.
+  - **Lessons and games:** drawn from the product's own pieces: a lesson path with stars, and
+    Wordcraft tiles with Pairs.
 - **Colour:** black, white and neutral greys only; the browser check fails on any tint.
-- **Reduced motion:** the statement and descriptions are there at once; the circles stay still.
-- **Check:** `scripts/check-feature-explorer.mjs` (Chromium and WebKit in CI).
+- **Reduced motion:** the text is there at once, the pictures show their last step, and the
+  circles stay still.
+
+### The rest of the home page, in the same style
+
+The shared motion lives in `ag-motion.tsx` (typed headings, letter-by-letter text) and
+`ag-hooks.ts` (start once in view, reduced motion). Arabic headings are not split into letters:
+that would break their joined shapes.
+
+- **Library preview (`AppWindow`, `LibraryShelves`):** a typed heading, the shelves in a soft
+  grey frame with 36px corners that grows from 0.9 to full size with the scroll (no tilt), books
+  rising one after another (70ms apart), and a black pill to open the library. Book covers keep
+  their colours; everything around them is neutral.
+- **Under the hood (`UnderTheHood`):** typed heading and letter-by-letter lead.
+  - The demo sits in a 36px card with larger text; the language being heard is a black pill.
+  - In the timeline, each bar draws itself with the scroll: it grows from its start as the card
+    rises from 90% to 30% of the screen, one lane a little after the one above. Your speech is
+    grey, Uzyra's steps light grey, and her speech black.
+  - The six facts are 36px cards with letter-by-letter text. The measured number counts up from 0
+    to 75 the first time it is seen.
+- **Stickers (`StickerShelf`):** the first time the row is in view, the stickers rise into their
+  fan one after another (90ms apart), each turning from upright to its own angle. Dragging and
+  the hover lift are unchanged.
+- **Removed:** the old "Practise out loud" trio (`FeatureTrio`), and the lecture row in favour of
+  "Keep every word". All blue on these sections is now black or grey.
+- **Check:** `scripts/check-feature-explorer.mjs` covers the feature section, the library preview,
+  Under the hood and the stickers (Chromium and WebKit in CI).
 
 ## The home cube
 

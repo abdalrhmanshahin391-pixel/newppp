@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
+import { Typed } from "./ag-motion";
 import "./book-window.css";
 
 const LibraryShelves = lazy(() => import("./LibraryShelves"));
@@ -31,11 +32,20 @@ export function AppWindow() {
       ref={section}
       dir={ar ? "rtl" : "ltr"}
       aria-labelledby="window-heading"
-      className="home-library mx-auto w-full max-w-[1180px] px-5 pb-16 md:px-10 md:pb-24"
+      className="home-library uz-lib"
     >
-      <h2 id="window-heading" className="rh-h2 text-center">
-        {ar ? "تعلّم لغة، صفحة بعد صفحة." : "Learn a language, one page at a time."}
-      </h2>
+      {/* Arabic is not typed letter by letter: split letters would lose their joined shapes. */}
+      {ar ? (
+        <h2 id="window-heading" className="uz-lib-title">
+          تعلّم لغة، صفحة بعد صفحة.
+        </h2>
+      ) : (
+        <Typed
+          id="window-heading"
+          className="uz-lib-title"
+          text="Learn a language, one page at a time."
+        />
+      )}
       <div className="library-preview-slot">
         {near && (
           <Suspense fallback={null}>

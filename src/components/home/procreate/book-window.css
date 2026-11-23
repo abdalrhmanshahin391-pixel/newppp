@@ -1,16 +1,145 @@
-.library-stage { perspective: 1600px; margin-top: 2rem; }
-.library-screen { overflow: hidden; border: 1px solid var(--pp-ink, #161619); border-radius: 16px; background: white; color: #161619; transform-origin: 50% 0%; }
-.library-bar { display: flex; align-items: center; justify-content: space-between; padding: .8rem 1.1rem; background: #161619; color: white; font-size: 14px; }
-.library-bar span { opacity: .8; }
-.library-shelves { padding: 0 clamp(.8rem, 2.3vw, 2rem) 1.4rem; --c: #161619; --soft: #f2f2f3; }
-.library-shelves .bk-shelf { margin-top: 1.5rem; }
-.library-shelves .bk-item { cursor: default; }
-.library-shelves .bk-item:active { transform: none; }
-.library-shelves .bk-row:focus-visible { outline: 2px solid var(--pp-accent); }
-.library-showcase-action { margin-top: 1.25rem; text-align: center; }
-.library-showcase-action a { display: inline-block; padding: .75rem 1.25rem; background: #161619; color: white; border-radius: .65rem; }
+/* The home library preview: a typed heading, the shelves in a soft 36px frame that grows to full
+   size with the scroll, books rising one after another, and a pill to open the library. */
+.uz-lib {
+  --lib-ink: #121212;
+  --lib-soft: #f3f3f4;
+  --lib-font: "Uzyra Arabic", "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 120px 24px;
+  color: var(--lib-ink);
+  font-family: var(--lib-font);
+}
+.uz-lib .uz-lib-title {
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: var(--lib-font);
+  font-size: 54px;
+  font-weight: 450;
+  line-height: 56.16px;
+  letter-spacing: -0.95px;
+  text-align: center;
+}
+.library-stage {
+  margin-top: 0;
+}
+.library-screen {
+  overflow: hidden;
+  border-radius: 36px;
+  background: var(--lib-soft);
+  color: var(--lib-ink);
+  transform-origin: 50% 0%;
+  will-change: transform;
+}
+.library-shelves {
+  padding: 8px clamp(0.8rem, 2.6vw, 2.5rem) 2rem;
+  --c: #121212;
+  --soft: #e4e4e6;
+}
+/* The book objects use the library's cool greys; on the home page they are neutral. */
+.library-shelves {
+  --pp-ink: #121212;
+  --pp-muted: #6b6b6e;
+}
+.library-shelves .bk-shelf-icon {
+  background: #121212;
+}
+.library-shelves .bk-cover {
+  background: #dcdcdd;
+}
+.library-shelves .bk-pages {
+  background: repeating-linear-gradient(180deg, #fbfbfb 0 1.5px, #d9d9da 1.5px 2.4px);
+}
+.library-shelves .bk-pages-side {
+  background: repeating-linear-gradient(90deg, #fbfbfb 0 1.5px, #d9d9da 1.5px 2.4px);
+}
+.library-shelves .bk-board {
+  background: linear-gradient(90deg, transparent, #121212 18%, #121212 82%, transparent);
+}
+.library-shelves .bk-ground {
+  background: radial-gradient(closest-side, rgb(18 18 18 / 0.16), transparent);
+}
+.library-shelves .bk-shelf {
+  margin-top: 1.75rem;
+}
+.library-shelves .bk-item {
+  cursor: default;
+  opacity: 0;
+  translate: 0 28px;
+  transition:
+    opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+    translate 0.7s cubic-bezier(0.23, 1, 0.32, 1),
+    transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  transition-delay: calc(var(--n, 0) * 70ms), calc(var(--n, 0) * 70ms), 0s;
+}
+.library-shelves[data-shown] .bk-item {
+  opacity: 1;
+  translate: 0 0;
+}
+.library-shelves .bk-item:active {
+  transform: none;
+}
+.library-shelves .bk-row:focus-visible {
+  outline: 2px solid var(--lib-ink);
+}
+.library-showcase-action {
+  display: flex;
+  justify-content: center;
+  margin-top: 56px;
+}
+.library-showcase-action a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 0 28px;
+  border-radius: 999px;
+  background: var(--lib-ink);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: transform 0.12s ease;
+}
+.library-showcase-action a:active {
+  transform: scale(0.97);
+}
+.library-showcase-action a:focus-visible {
+  outline: 2px solid var(--lib-ink);
+  outline-offset: 3px;
+}
 
-.library-preview-slot { margin-top: 2rem; }
-.library-preview-slot:empty { min-block-size: 52.2rem; }
-.library-preview-slot .library-stage { margin-top: 0; }
-@media (max-width: 760px) { .library-preview-slot:empty { min-block-size: 48.4rem; } }
+.library-preview-slot {
+  margin-top: 56px;
+}
+.library-preview-slot:empty {
+  min-block-size: 49rem;
+}
+@media (width <= 767px) {
+  .uz-lib {
+    padding: 80px 16px;
+  }
+  .uz-lib .uz-lib-title {
+    font-size: 34px;
+    line-height: 36.04px;
+    letter-spacing: -0.68px;
+  }
+  .library-screen {
+    border-radius: 24px;
+  }
+  .library-preview-slot {
+    margin-top: 40px;
+  }
+  .library-preview-slot:empty {
+    min-block-size: 46rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .library-shelves .bk-item {
+    opacity: 1;
+    translate: none;
+    transition: none;
+  }
+  .library-screen {
+    will-change: auto;
+  }
+}

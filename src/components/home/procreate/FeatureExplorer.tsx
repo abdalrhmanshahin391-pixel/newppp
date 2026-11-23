@@ -1,42 +1,27 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import {
-  BookOpen,
   FileText,
   Gamepad2,
   GraduationCap,
   Headphones,
-  Languages,
   Layers,
-  MessageCircle,
   Mic,
-  PenLine,
-  Sparkles,
   Star,
   type LucideIcon,
 } from "lucide-react";
 import { RitaCube } from "@/components/rita-study/RitaCube";
-import { driftOffset, LETTERS, splitLetters, waveOffset, wavePhase } from "./feature-explorer";
+import { useActiveLanguage } from "@/lib/language-scope";
+import { driftOffset, waveOffset, wavePhase } from "./feature-explorer";
+import { useOnceInView, useReducedMotion } from "./ag-hooks";
+import { Letters, Typed } from "./ag-motion";
 import "./feature-explorer.css";
 
 const STATEMENT =
   "Uzyra is a voice tutor and a study space in one. Speak a new language out loud, and learn your own lectures with her.";
 
 /** The circles under the statement: what you can do here, in icons. */
-const ICONS: LucideIcon[] = [
-  Mic,
-  MessageCircle,
-  FileText,
-  BookOpen,
-  Layers,
-  PenLine,
-  Gamepad2,
-  Star,
-  Languages,
-  Headphones,
-  GraduationCap,
-  Sparkles,
-];
+const ICONS: LucideIcon[] = [Mic, FileText, Layers, Gamepad2, Star, Headphones, GraduationCap];
 
 type Feature = {
   id: string;
@@ -44,17 +29,30 @@ type Feature = {
   text: string;
   to: string;
   label: string;
+  /** The picture has controls of its own, so it is a labelled group rather than an image. */
+  live?: boolean;
   media: ReactNode;
 };
 
 const FEATURES: Feature[] = [
   {
     id: "talk",
-    title: "Talk to Uzyra",
-    text: "Speak Jordanian Arabic or English and Uzyra answers out loud, in a sentence or two. She corrects the mistakes that matter, plays any role you ask for, and keeps the conversation going.",
+    title: "Talk it through",
+    text: "Speak English or German out loud and Uzyra answers in Jordanian Arabic, in a sentence or two. Tap any foreign word in her reply to see what it means and how to say it.",
     to: "/rita-conversations",
-    label: "Uzyra answering a learner out loud",
+    label:
+      "A learner asks Uzyra how to say something in German, and taps the answer for its meaning",
+    live: true,
     media: <TalkScene />,
+  },
+  {
+    id: "words",
+    title: "Keep every word",
+    text: "The words you ask about collect in your list. Fix or delete them, then turn the list into flashcards in the subject you choose.",
+    to: "/rita",
+    label: "Saved words turning into flashcards",
+    live: true,
+    media: <WordsScene />,
   },
   {
     id: "study",
@@ -73,14 +71,6 @@ const FEATURES: Feature[] = [
     media: <LessonsScene />,
   },
   {
-    id: "lectures",
-    title: "Your lectures, ready to study",
-    text: "Upload a lecture and get a summary, flashcards and practice questions with explanations. Review them whenever you like, on your own or with your class.",
-    to: "/learn",
-    label: "A lecture turned into a summary, flashcards and questions",
-    media: <LectureScene />,
-  },
-  {
     id: "games",
     title: "Play to remember",
     text: "Wordcraft, Pairs and the German Lab turn the words you are learning into short games: build words, match pairs, and practise articles and pronunciation.",
@@ -90,40 +80,6 @@ const FEATURES: Feature[] = [
   },
 ];
 
-function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReduced(media.matches);
-    update();
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
-  return reduced;
-}
-
-/** Runs `onEnter` once, when the element's top reaches `share` of the way down the screen. */
-function useOnceInView<T extends Element>(share: number, onEnter: () => void) {
-  const ref = useRef<T>(null);
-  const done = useRef(onEnter);
-  done.current = onEnter;
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        io.disconnect();
-        done.current();
-      },
-      { rootMargin: `0px 0px -${Math.round((1 - share) * 100)}% 0px` },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [share]);
-  return ref;
-}
-
 /**
  * The statement, typed in once it is in view, over a row of circles that ripples and drifts left
  * with the scroll.
@@ -131,8 +87,6 @@ function useOnceInView<T extends Element>(share: number, onEnter: () => void) {
 function Statement({ reduced }: { reduced: boolean }) {
   const section = useRef<HTMLElement>(null);
   const list = useRef<HTMLUListElement>(null);
-  const [typing, setTyping] = useState(false);
-  const text = useOnceInView<HTMLDivElement>(0.8, () => setTyping(true));
 
   useEffect(() => {
     const sectionEl = section.current;
@@ -224,64 +178,19 @@ function Statement({ reduced }: { reduced: boolean }) {
     };
   }, [reduced]);
 
-  const chars = [...STATEMENT];
   return (
     <section ref={section} className="uz-fx-statement" aria-labelledby="uz-fx-statement">
       <ul ref={list} className="uz-fx-circles" aria-hidden="true">
-        {[...ICONS, ...ICONS].map((Icon, i) => (
+        {[...ICONS, ...ICONS, ...ICONS].map((Icon, i) => (
           <li key={i} className="uz-fx-circle">
             <Icon strokeWidth={1.4} />
           </li>
         ))}
       </ul>
-      <div ref={text} className="uz-fx-wrap">
-        <h2
-          id="uz-fx-statement"
-          className="uz-fx-said"
-          data-typing={typing || reduced ? "on" : undefined}
-          style={{ "--type": `${LETTERS.type}s` } as CSSProperties}
-        >
-          <span className="uz-fx-sr">{STATEMENT}</span>
-          <span aria-hidden="true">
-            {chars.map((ch, i) => (
-              <span
-                key={i}
-                className={i === chars.length - 1 ? "uz-fx-ch uz-fx-last" : "uz-fx-ch"}
-                style={{ "--i": i } as CSSProperties}
-              >
-                {ch}
-              </span>
-            ))}
-          </span>
-        </h2>
+      <div className="uz-fx-wrap">
+        <Typed id="uz-fx-statement" className="uz-fx-said" text={STATEMENT} />
       </div>
     </section>
-  );
-}
-
-/** A description whose letters fade in, one after another, when its title comes into view. */
-function Letters({ text, shown }: { text: string; shown: boolean }) {
-  return (
-    <p className="uz-fx-text" data-shown={shown ? "on" : undefined}>
-      <span className="uz-fx-sr">{text}</span>
-      <span aria-hidden="true">
-        {splitLetters(text).map(({ word, letters }, w) => (
-          <span key={w}>
-            <span className="uz-fx-word">
-              {letters.map(({ char, index }) => (
-                <span
-                  key={index}
-                  className="uz-fx-letter"
-                  style={{ transitionDelay: `${(index * LETTERS.stagger).toFixed(3)}s` }}
-                >
-                  {char}
-                </span>
-              ))}
-            </span>{" "}
-          </span>
-        ))}
-      </span>
-    </p>
   );
 }
 
@@ -294,9 +203,9 @@ function Row({ feature, reduced }: { feature: Feature; reduced: boolean }) {
         <h3 ref={title} className="uz-fx-title">
           <Link to={feature.to}>{feature.title}</Link>
         </h3>
-        <Letters text={feature.text} shown={shown || reduced} />
+        <Letters className="uz-fx-text" text={feature.text} shown={shown || reduced} />
       </div>
-      <div className="uz-fx-media" role="img" aria-label={feature.label}>
+      <div className="uz-fx-media" role={feature.live ? "group" : "img"} aria-label={feature.label}>
         {feature.media}
       </div>
     </article>
@@ -335,15 +244,48 @@ export function FeatureExplorer() {
  * real screenshot of the study page (sample lesson, no learner data).
  * ------------------------------------------------------------------------------------------- */
 
+/** Steps of a scene, one after another, once it is well in view; all at once with reduced motion. */
+function useSteps(times: number[]) {
+  const reduced = useReducedMotion();
+  const [step, setStep] = useState(0);
+  const [go, setGo] = useState(false);
+  const timers = useRef<number[]>([]);
+  const host = useOnceInView<HTMLDivElement>(0.75, () => setGo(true));
+  const stop = () => {
+    timers.current.forEach((t) => window.clearTimeout(t));
+    timers.current = [];
+  };
+  useEffect(() => {
+    if (reduced) {
+      setStep(times.length);
+      return;
+    }
+    if (!go) return;
+    timers.current = times.map((ms, i) => window.setTimeout(() => setStep(i + 1), ms));
+    return stop;
+    // The times are constants of each scene.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [go, reduced]);
+  // A tap takes over from the timed steps.
+  const choose = (next: number) => {
+    stop();
+    setStep(next);
+  };
+  return { host, step, setStep: choose };
+}
+
+/**
+ * The learner asks in Arabic, Uzyra answers with the German sentence, and the German is a word you
+ * can tap: it opens its meaning and how to say it (it opens by itself the first time).
+ */
 function TalkScene() {
   const levels = useRef({ input: 0, output: 0 });
-  const host = useRef<HTMLDivElement>(null);
+  const { host, step, setStep } = useSteps([300, 1300, 2700]);
   const [live, setLive] = useState(false);
-  // Uzyra "speaks" while the picture is on screen: a soft, made-up voice level for the cube.
+  // Uzyra "speaks" while her line is on screen: a soft, made-up voice level for the cube.
   useEffect(() => {
     const el = host.current;
-    if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let raf = 0;
     const start = performance.now();
     const tick = (now: number) => {
@@ -364,16 +306,110 @@ function TalkScene() {
       cancelAnimationFrame(raf);
       io.disconnect();
     };
-  }, []);
+  }, [host]);
+  const open = step >= 3;
   return (
-    <div ref={host} className="uz-fx-scene uz-fx-talk">
-      <p className="uz-fx-bubble uz-fx-me" dir="rtl" lang="ar">
-        كيف بقول بدي الفاتورة بالإنجليزي؟
+    <div ref={host} className="uz-fx-scene uz-fx-talk" data-step={step}>
+      <p className="uz-fx-bubble uz-fx-me" dir="rtl" lang="ar" data-in={step >= 1 || undefined}>
+        كيف أحكي بدي ماي بالألماني؟
       </p>
       <div className="uz-fx-talk-cube">
         <RitaCube levelsRef={levels} mode="speaking" label="" active={live} />
       </div>
-      <p className="uz-fx-bubble uz-fx-her">“Can I have the bill, please?”</p>
+      <div className="uz-fx-her-wrap" data-in={step >= 2 || undefined}>
+        <p className="uz-fx-bubble uz-fx-her" dir="rtl" lang="ar">
+          بنقول{" "}
+          <button
+            type="button"
+            className="uz-fx-word-chip"
+            dir="ltr"
+            lang="de"
+            aria-expanded={open}
+            aria-controls="uz-fx-meaning"
+            onClick={() => setStep(open ? 2 : 3)}
+          >
+            Ich möchte Wasser
+          </button>
+        </p>
+        <div id="uz-fx-meaning" className="uz-fx-meaning" data-open={open || undefined}>
+          <p className="uz-fx-meaning-term" lang="de">
+            Ich möchte Wasser
+          </p>
+          <p dir="rtl" lang="ar">
+            بدي ماي
+          </p>
+          <p className="uz-fx-meaning-say" dir="rtl" lang="ar">
+            بتنلفظ: إِش مُوشته ڤاسَر
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Saved words in the learner's language (English while none is chosen).
+const SAVED_WORDS: Record<"de" | "en", [string, string][]> = {
+  de: [
+    ["Guten Morgen", "صباح الخير"],
+    ["leihen", "يستعير"],
+    ["das Haus", "البيت"],
+  ],
+  en: [
+    ["Good morning", "صباح الخير"],
+    ["borrow", "يستعير"],
+    ["the house", "البيت"],
+  ],
+};
+
+/**
+ * The list of saved words fills in, then the button turns it into a fanned stack of flashcards.
+ * The button goes back and forth between the two.
+ */
+function WordsScene() {
+  const code = useActiveLanguage();
+  const words = SAVED_WORDS[code === "de" ? "de" : "en"];
+  const { host, step, setStep } = useSteps([200, 2900, 3150]);
+  const cards = step >= 3;
+  return (
+    <div ref={host} className="uz-fx-scene uz-fx-soft">
+      <div className="uz-fx-window uz-fx-panel uz-fx-words" data-step={step}>
+        <p className="uz-fx-eyebrow">My words · {words.length}</p>
+        <div className="uz-fx-deck">
+          <ul className="uz-fx-wordlist" data-hidden={cards || undefined}>
+            {words.map(([term, meaning], i) => (
+              <li key={term} style={{ transitionDelay: cards ? "0s" : `${i * 0.12}s` }}>
+                <span>{term}</span>
+                <span dir="rtl" lang="ar">
+                  {meaning}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="uz-fx-stack" data-shown={cards || undefined}>
+            {/* Last in the markup sits on top, so the first word is the front card. */}
+            {[...words].reverse().map(([term, meaning], i) => (
+              <div
+                key={term}
+                className="uz-fx-flash"
+                style={{ "--n": words.length - 1 - i } as CSSProperties}
+              >
+                <b>{term}</b>
+                <span dir="rtl" lang="ar">
+                  {meaning}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <button
+          type="button"
+          className="uz-fx-turn"
+          data-press={step === 2 || undefined}
+          onClick={() => setStep(cards ? 1 : 3)}
+        >
+          {cards ? "Back to the list" : `Turn ${words.length} words into flashcards`}
+        </button>
+      </div>
     </div>
   );
 }
@@ -421,34 +457,6 @@ function LessonsScene() {
           ))}
         </ol>
         <p className="uz-fx-goal">Goal: say what you do every morning</p>
-      </div>
-    </div>
-  );
-}
-
-function LectureScene() {
-  return (
-    <div className="uz-fx-scene uz-fx-soft">
-      <div className="uz-fx-window uz-fx-panel">
-        <p className="uz-fx-file">
-          <FileText strokeWidth={1.5} />
-          Lecture 4 · History taking.pdf
-        </p>
-        <div className="uz-fx-outputs">
-          <span>
-            <b>Summary</b>1 page
-          </span>
-          <span>
-            <b>Flashcards</b>24 cards
-          </span>
-          <span>
-            <b>Questions</b>18 with answers
-          </span>
-        </div>
-        <div className="uz-fx-card">
-          <p className="uz-fx-card-q">What does LMP stand for?</p>
-          <p className="uz-fx-card-a">Last menstrual period: the first day of the last period.</p>
-        </div>
       </div>
     </div>
   );

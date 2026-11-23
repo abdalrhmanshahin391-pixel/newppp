@@ -17,7 +17,10 @@ const StickerShelf = lazy(() =>
 );
 const FinalCta = lazy(() => import("./FinalCta").then((m) => ({ default: m.FinalCta })));
 
-/** Home page: white surface, ink text, blue actions. Uzyra first, then the story bands and the questions. */
+/**
+ * Home page: white surface, ink text, black, white and greys. Uzyra first, then what she does, the
+ * library, how the voice works, the stickers, and the questions.
+ */
 export function ProHome() {
   return (
     <main
@@ -25,7 +28,11 @@ export function ProHome() {
       style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <noscript>
-        <style>{".rita-reveal{opacity:1!important;transform:none!important}"}</style>
+        <style>
+          {
+            ".rita-reveal{opacity:1!important;transform:none!important}.uz-ag-ch,.uz-ag-letter,.uz-shelf-item,.library-shelves .bk-item,.uz-fx-me,.uz-fx-her-wrap,.uz-fx-wordlist li{opacity:1!important;translate:none!important;transform:none!important}"
+          }
+        </style>
       </noscript>
       <ProHeader tone="light" />
 
@@ -42,9 +49,9 @@ export function ProHome() {
       </Suspense>
 
       <Suspense fallback={<div className="min-h-[45vh]" aria-hidden="true" />}>
+        <StickerShelf />
         <HomeFaq />
         <FinalCta />
-        <StickerShelf />
       </Suspense>
     </main>
   );

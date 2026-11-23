@@ -1,0 +1,378 @@
+/*
+ * Under the hood: the live demo, the turn timeline and the six facts. Same type and corners as
+ * the feature section (54px heading, 36px cards); black, white and neutral greys only.
+ */
+.uz-hood {
+  --hood-ink: #121212;
+  --hood-muted: #47474a;
+  --hood-line: #e4e4e6;
+  --hood-soft: #f3f3f4;
+  --hood-font: "Uzyra Arabic", "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 120px 24px;
+  background: #fff;
+  color: var(--hood-ink);
+  font-family: var(--hood-font);
+}
+.uz-hood-head {
+  max-width: 900px;
+  margin: 0 auto 72px;
+  text-align: center;
+}
+.uz-hood-eyebrow {
+  margin: 0 0 16px;
+  color: var(--hood-muted);
+  font-size: 15px;
+  font-weight: 500;
+}
+.uz-hood .uz-hood-title {
+  margin: 0;
+  font-family: var(--hood-font);
+  font-size: 54px;
+  font-weight: 450;
+  line-height: 56.16px;
+  letter-spacing: -0.95px;
+}
+.uz-hood-lead {
+  max-width: 680px;
+  margin: 24px auto 0;
+  color: var(--hood-muted);
+  font-size: 19px;
+  line-height: 1.55;
+}
+.uz-hood-stack {
+  display: grid;
+  gap: 24px;
+}
+.uz-hood-card {
+  padding: 40px;
+  border-radius: 36px;
+  background: var(--hood-soft);
+}
+.uz-hood-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--hood-muted);
+  font-size: 14px;
+}
+.uz-hood-tag {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--hood-ink);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+}
+.uz-hood-label {
+  margin: 0;
+  color: var(--hood-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+.uz-hood .uz-hood-h3 {
+  margin: 0;
+  font-family: var(--hood-font);
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+}
+.uz-hood-body {
+  margin: 0;
+  color: var(--hood-muted);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* ---- The demo ---------------------------------------------------------------------------- */
+.uz-hood-demo-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.uz-hood-langs {
+  display: flex;
+  gap: 6px;
+}
+.uz-hood-langs span {
+  padding: 6px 14px;
+  border: 1px solid var(--hood-line);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+.uz-hood-langs span[data-on] {
+  border-color: var(--hood-ink);
+  background: var(--hood-ink);
+  color: #fff;
+}
+.uz-hood-demo-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-top: 40px;
+}
+.uz-hood-reply {
+  padding-left: 40px;
+  border-left: 1px solid #d4d4d7;
+}
+.uz-hood-said {
+  min-height: 2.6em;
+  margin: 12px 0 0;
+  font-size: 30px;
+  font-weight: 450;
+  line-height: 1.3;
+  letter-spacing: -0.4px;
+}
+.uz-hood-group {
+  display: inline-block;
+  margin-right: 0.3em;
+}
+.uz-hood-w {
+  border-bottom: 2px solid transparent;
+}
+.uz-hood-w[data-partial] {
+  border-bottom: 2px dashed var(--hood-ink);
+  color: #8a8a8e;
+}
+.uz-hood-demo-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 32px;
+}
+.uz-hood-demo-foot p {
+  max-width: 44rem;
+  margin: 0;
+  color: var(--hood-muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.uz-hood-replay {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--hood-ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.uz-hood-replay:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) and (pointer: fine) {
+  .uz-hood-replay:hover {
+    background: var(--hood-line);
+  }
+}
+.uz-hood-replay:focus-visible {
+  outline: 2px solid var(--hood-ink);
+  outline-offset: 3px;
+}
+
+/* ---- The timeline ------------------------------------------------------------------------ */
+.uz-hood-turn {
+  display: grid;
+  gap: 16px;
+}
+.uz-hood-turn-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.uz-hood-strong {
+  color: var(--hood-ink);
+}
+.uz-hood-lanes {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+.uz-hood-lanes li {
+  display: grid;
+  grid-template-columns: 14rem 1fr;
+  gap: 16px;
+  align-items: center;
+}
+.uz-hood-lane-label {
+  font-size: 15px;
+  font-weight: 500;
+}
+.uz-hood-track {
+  position: relative;
+  display: block;
+  height: 28px;
+  border-radius: 999px;
+  background: #fff;
+}
+.uz-hood-bar {
+  position: absolute;
+  inset-block: 0;
+  border-radius: 999px;
+  transform-origin: 0 50%;
+  will-change: transform;
+}
+.uz-hood-bar[data-tone="you"] {
+  background: #9b9b9e;
+}
+.uz-hood-bar[data-tone="step"] {
+  background: #d4d4d7;
+}
+.uz-hood-bar[data-tone="speaks"] {
+  background: var(--hood-ink);
+}
+
+/* ---- The six facts ----------------------------------------------------------------------- */
+.uz-hood-specs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.uz-hood-spec {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 36px;
+  border-radius: 36px;
+  background: var(--hood-soft);
+}
+.uz-hood-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+  border: 1px solid var(--hood-line);
+  border-radius: 50%;
+  background: #fff;
+}
+.uz-hood-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.6;
+}
+.uz-hood-measured {
+  background: var(--hood-ink);
+  color: #fff;
+}
+.uz-hood-measured .uz-hood-label,
+.uz-hood-measured .uz-hood-body {
+  color: #b9b9bc;
+}
+.uz-hood-number {
+  margin: 0;
+  font-size: 64px;
+  font-weight: 450;
+  line-height: 1;
+  letter-spacing: -1.5px;
+  font-variant-numeric: tabular-nums;
+}
+.uz-hood-number small {
+  margin-left: 6px;
+  font-size: 20px;
+  letter-spacing: 0;
+}
+
+/* ---- Tablets and phones ------------------------------------------------------------------ */
+@media (width <= 1023px) {
+  .uz-hood-specs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .uz-hood-said {
+    font-size: 24px;
+  }
+}
+@media (width <= 767px) {
+  .uz-hood {
+    padding: 80px 16px;
+  }
+  .uz-hood-head {
+    margin-bottom: 48px;
+  }
+  .uz-hood .uz-hood-title {
+    font-size: 34px;
+    line-height: 36.04px;
+    letter-spacing: -0.68px;
+  }
+  .uz-hood-lead {
+    font-size: 17px;
+  }
+  .uz-hood-card,
+  .uz-hood-spec {
+    padding: 24px;
+    border-radius: 24px;
+  }
+  .uz-hood-stack,
+  .uz-hood-specs {
+    gap: 16px;
+  }
+  .uz-hood-specs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .uz-hood-demo-cols {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    margin-top: 28px;
+  }
+  .uz-hood-reply {
+    padding: 24px 0 0;
+    border-left: 0;
+    border-top: 1px solid #d4d4d7;
+  }
+  .uz-hood-said {
+    font-size: 21px;
+  }
+  .uz-hood .uz-hood-h3 {
+    font-size: 20px;
+  }
+  .uz-hood-lanes li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  .uz-hood-track {
+    height: 22px;
+  }
+  .uz-hood-number {
+    font-size: 52px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uz-hood-langs span,
+  .uz-hood-replay {
+    transition: none;
+  }
+  .uz-hood-replay:active {
+    transform: none;
+  }
+  .uz-hood-bar {
+    will-change: auto;
+  }
+}
