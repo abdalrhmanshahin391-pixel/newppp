@@ -5,6 +5,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { productCopyFields } from "./brand";
+import { useAuth } from "@/hooks/useAuth";
+import snapshot from "./public-site-snapshot.json";
+import { ANNOUNCEMENT_STALE_MS } from "./idle-activity";
 
 export type RitaXLayout = "modal" | "sheet" | "corner" | "bar";
 export type RitaXTheme = "cream" | "mint" | "sky" | "lilac" | "ink" | "sunset";
@@ -139,10 +142,15 @@ export function markSeen(a: RitaX) {
 /* ---------------- data ---------------- */
 
 export function useLiveRitaX() {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: ["ritax-live"],
-    staleTime: 60_000,
+    queryKey: ["ritax-live", user?.id ?? "anon"],
+    staleTime: user ? ANNOUNCEMENT_STALE_MS : Infinity,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     queryFn: async () => {
+      if (!user) return (snapshot.ritaX as RitaX[]).map(currentAnnouncementCopy);
       const { data, error } = await (supabase.from as any)("announcements")
         .select("*")
         .eq("status", "live")

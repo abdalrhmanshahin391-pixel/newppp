@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/legacy-client";
 import { refreshAuthProfile, useAuth } from "@/hooks/useAuth";
 import { isVoiceSessionActive } from "@/lib/language-scope";
 import { showLanguageSplash } from "@/lib/language-splash";
+import snapshot from "@/lib/public-site-snapshot.json";
 import {
   BUILT_IN_LANGUAGES,
   resolveActiveLanguage,
@@ -26,12 +27,14 @@ async function fetchLanguages(): Promise<LearningLanguage[]> {
 
 /** The list of languages: from the database, or the two built-in ones if it is not there yet. */
 export function useLanguageRegistry() {
+  const { user } = useAuth();
   const query = useQuery({
     queryKey: LANGUAGES_QUERY_KEY,
-    queryFn: fetchLanguages,
+    queryFn: user ? fetchLanguages : async () => snapshot.languages as LearningLanguage[],
     staleTime: 5 * 60_000,
     retry: false,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
   const fromDb = query.isSuccess && query.data.length > 0;
   const all = fromDb ? sortLanguages(query.data) : BUILT_IN_LANGUAGES;

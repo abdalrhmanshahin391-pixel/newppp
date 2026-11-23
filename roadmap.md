@@ -1,7 +1,9 @@
 # Roadmap
 
-- [ ] Apply approved idle savings: public startup snapshot, safe announcement reads, activity-only presence and sign-in-only device checks
-- [ ] Verify idle savings regressions and preview behavior; production savings require publishing and later usage measurement
+- [x] Apply approved idle savings: public startup snapshot, safe announcement reads, activity-only presence and sign-in-only device checks
+- [x] Verify 51 focused regressions and public preview startup/focus: zero database calls, no runtime errors
+- [ ] Authenticated idle/login verification — blocked: test-account permission declined and no matching requester account
+- [ ] Production idle savings measurement — blocked: changes must be published first, then comparable usage records collected; full Chromium/WebKit CI not run locally
 
 - [x] Restrict checkout to debit/credit cards and hide optional business tax-ID controls
 - [x] Refine checkout and home typography/content

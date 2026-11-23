@@ -7,10 +7,16 @@ export function createActivityGate() {
   let lastActivity: number | null = null;
   let lastWrite: number | null = null;
   return {
-    interact(now: number) { lastActivity = now; },
-    reset() { lastActivity = null; lastWrite = null; },
+    interact(now: number) {
+      lastActivity = now;
+    },
+    reset() {
+      lastActivity = null;
+      lastWrite = null;
+    },
     take(now: number, visible: boolean) {
-      if (!visible || lastActivity === null || now - lastActivity > PRESENCE_ACTIVE_MS) return false;
+      if (!visible || lastActivity === null || now - lastActivity > PRESENCE_ACTIVE_MS)
+        return false;
       if (lastWrite !== null && now - lastWrite < PRESENCE_INTERVAL_MS) return false;
       lastWrite = now;
       return true;
