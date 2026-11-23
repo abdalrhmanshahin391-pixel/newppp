@@ -258,6 +258,7 @@ export function UltraHero() {
       <canvas ref={canvas} className="uz-ultra-field" aria-hidden="true" />
       <div className="uz-ultra-inner">
         <p className="uz-ultra-lockup">
+          <span>Meet</span>
           <span className="uz-ultra-mark" aria-hidden="true">
             <RitaCube levelsRef={levels} mode="idle" label="" active={moving} interactive />
           </span>
