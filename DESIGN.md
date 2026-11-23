@@ -44,6 +44,35 @@ section. We used its numbers and behaviour, not its code or video.
 - **Not taken from the reference:** its product screens and its logo.
 - **Check:** `scripts/check-intro-card.mjs`.
 
+## Home feature section (`FeatureExplorer`)
+
+Under the intro card. Its layout and motion follow the reference landing page's statement and
+feature sections: we used their sizes and timings, not their code, words, icons or product screens.
+
+- **Statement:** "Uzyra is a voice tutor and a study space in one…", 54px (34px on phones), typed
+  in at 0.02s a letter with a caret once its top is 80% down the screen. Above it, a row of 98px
+  circles (70px on phones) with lucide icons of what Uzyra does.
+  - **Ripple:** each circle rises and falls `sin((x + phase) / screen width · 2π) · 35px`; the
+    phase travels one screen width every 7s. It starts when the section's top is 55% down the
+    screen and stops off screen or in a hidden tab.
+  - **Drift:** the row slides 250px left while the section crosses the screen, tied to the scroll.
+- **Rows:** five features (talk, study, lessons, lectures, games). Each has a 42px title (28px on
+  phones) that links to the page, a description and a square picture (corners 36px, 24px on
+  phones). Desktop: copy in 4 of 12 columns, picture in 6, 120px between rows. Phones: centred,
+  copy above the picture.
+  - **Letters:** when a title's top is 85% down the screen, its description fades in letter by
+    letter: 0.1s each, 0.005s apart.
+- **Pictures:**
+  - The study one is a real screenshot of the study page (`public/home/features/study.webp`,
+    sample lesson, no learner data), cropped to the guide and shown in grey with
+    `filter: grayscale(1)`. Delete that line to show it in its own colours.
+  - The others are drawn from the product's own pieces: the live cube speaking on black, a lesson
+    path with stars, a lecture with its summary, flashcards and questions, and Wordcraft tiles
+    with Pairs.
+- **Colour:** black, white and neutral greys only; the browser check fails on any tint.
+- **Reduced motion:** the statement and descriptions are there at once; the circles stay still.
+- **Check:** `scripts/check-feature-explorer.mjs` (Chromium and WebKit in CI).
+
 ## The home cube
 
 No background lines: the Hedwig-style animated contours were removed (Nov 2026) at the owner's

@@ -1,0 +1,597 @@
+/*
+ * Under the intro card: the typed statement over a rippling row of circles, then one row per
+ * feature. Black, white and greys only. Sizes follow the reference section: 120px section padding,
+ * a 12-column grid (copy 4 columns, picture 6 with a 2-column gap), 42px titles, square pictures
+ * with 36px corners; on phones everything is centred and stacked, copy first.
+ */
+.uz-fx {
+  --fx-ink: #121212;
+  --fx-muted: #47474a;
+  --fx-line: #e4e4e6;
+  --fx-soft: #f3f3f4;
+  --fx-font: "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  position: relative;
+  background: #fff;
+  color: var(--fx-ink);
+  font-family: var(--fx-font);
+  overflow-x: clip;
+}
+.uz-fx-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- The statement ---------------------------------------------------------------------- */
+.uz-fx-statement {
+  position: relative;
+  padding: 120px 0 88px;
+}
+.uz-fx-circles {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 0;
+  /* Room for the ripple (±35px) so the circles never clip. */
+  padding: 35px 0;
+  list-style: none;
+  white-space: nowrap;
+  will-change: transform;
+}
+.uz-fx-circle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 98px;
+  height: 98px;
+  border: 1px solid var(--fx-line);
+  border-radius: 50%;
+  background: var(--fx-soft);
+  color: var(--fx-ink);
+  will-change: transform;
+}
+.uz-fx-circle svg {
+  width: 36px;
+  height: 36px;
+}
+/* 180px under the circles (less the ripple's room), nine of twelve columns wide. */
+.uz-fx-wrap {
+  max-width: 1280px;
+  margin: 145px auto 0;
+  padding: 0 24px;
+}
+.uz-fx-said {
+  max-width: 75%;
+  margin: 0;
+  font-size: 54px;
+  font-weight: 450;
+  line-height: 56.16px;
+  letter-spacing: -0.95px;
+  text-wrap: balance;
+}
+.uz-fx-ch {
+  position: relative;
+  opacity: 0;
+}
+.uz-fx-said[data-typing] .uz-fx-ch {
+  animation: uz-fx-type 1ms linear forwards;
+  animation-delay: calc(var(--i) * var(--type));
+}
+/* The caret rides on the letter being typed, then blinks a few times at the end. */
+.uz-fx-ch::after {
+  content: "";
+  position: absolute;
+  top: 0.1em;
+  right: -0.05em;
+  width: 0.05em;
+  height: 0.9em;
+  background: currentColor;
+  opacity: 0;
+}
+.uz-fx-said[data-typing] .uz-fx-ch::after {
+  animation: uz-fx-caret var(--type) step-end;
+  animation-delay: calc(var(--i) * var(--type));
+}
+.uz-fx-said[data-typing] .uz-fx-last::after {
+  animation: uz-fx-blink 0.9s step-end 3;
+  animation-delay: calc(var(--i) * var(--type));
+}
+@keyframes uz-fx-type {
+  0%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes uz-fx-caret {
+  0% {
+    opacity: 1;
+  }
+}
+@keyframes uz-fx-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---- The feature rows ------------------------------------------------------------------- */
+.uz-fx-features {
+  padding: 120px 24px;
+}
+.uz-fx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 120px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.uz-fx-row {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 24px;
+  align-items: center;
+}
+.uz-fx-copy {
+  display: flex;
+  grid-column: 1 / span 4;
+  flex-direction: column;
+  gap: 24px;
+}
+.uz-fx-media {
+  grid-column: 7 / span 6;
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 36px;
+  background: var(--fx-soft);
+}
+.uz-fx-title {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 450;
+  line-height: 43.68px;
+  letter-spacing: -0.73px;
+}
+.uz-fx-title a {
+  color: inherit;
+  text-decoration: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .uz-fx-title a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 6px;
+  }
+}
+.uz-fx-title a:focus-visible {
+  outline: 2px solid var(--fx-ink);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.uz-fx-text {
+  margin: 0;
+  color: var(--fx-muted);
+  font-size: 17px;
+  line-height: 1.55;
+}
+.uz-fx-word {
+  white-space: nowrap;
+}
+.uz-fx-letter {
+  opacity: 0;
+  transition: opacity 0.1s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+.uz-fx-text[data-shown] .uz-fx-letter {
+  opacity: 1;
+}
+.uz-fx-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 72px;
+}
+.uz-fx-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 0 28px;
+  border-radius: 999px;
+  background: var(--fx-soft);
+  color: var(--fx-ink);
+  font-size: 17px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+.uz-fx-button:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) and (pointer: fine) {
+  .uz-fx-button:hover {
+    background: var(--fx-line);
+  }
+}
+.uz-fx-button:focus-visible {
+  outline: 2px solid var(--fx-ink);
+  outline-offset: 3px;
+}
+
+/* ---- The pictures ----------------------------------------------------------------------- */
+.uz-fx-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 9%;
+}
+.uz-fx-soft {
+  background: linear-gradient(160deg, #f6f6f7 0%, #e6e6e7 100%);
+}
+.uz-fx-window {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--fx-line);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 60px -28px rgb(18 18 18 / 0.28);
+}
+/* The study shot: cropped to the guide and the orb beside it, running off the bottom right. */
+.uz-fx-shot {
+  position: absolute;
+  top: 11%;
+  left: 9%;
+  width: 100%;
+  bottom: -8%;
+}
+.uz-fx-shot img {
+  display: block;
+  width: 166.67%;
+  max-width: none;
+  height: auto;
+  margin-left: -66.67%;
+  filter: grayscale(1);
+}
+.uz-fx-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+  container-type: inline-size;
+}
+.uz-fx-eyebrow {
+  margin: 0;
+  color: var(--fx-muted);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Talk: black, with the cube speaking between the two lines. */
+.uz-fx-talk {
+  gap: 22px;
+  background: #000;
+  color: #fff;
+}
+.uz-fx-talk-cube {
+  width: 34%;
+  aspect-ratio: 1;
+}
+.uz-fx-talk-cube .uz-cube-shape {
+  fill: #fff;
+}
+.uz-fx-talk-cube .uz-cube-eye {
+  fill: #000;
+}
+.uz-fx-bubble {
+  max-width: 86%;
+  margin: 0;
+  padding: 12px 18px;
+  border-radius: 22px;
+  font-size: 17px;
+  line-height: 1.35;
+}
+.uz-fx-me {
+  align-self: flex-end;
+  background: #2a2a2d;
+  font-family: "Uzyra Arabic", var(--fx-font);
+}
+.uz-fx-her {
+  align-self: flex-start;
+  background: #fff;
+  color: #000;
+}
+
+/* Lessons: a short path, done and current and locked. */
+.uz-fx-path {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.uz-fx-path li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 0;
+  font-size: 16px;
+}
+.uz-fx-path li + li::before {
+  content: "";
+  position: absolute;
+  top: -11px;
+  left: 10px;
+  width: 2px;
+  height: 22px;
+  background: var(--fx-line);
+}
+.uz-fx-node {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--fx-ink);
+  border-radius: 50%;
+  background: var(--fx-ink);
+}
+.uz-fx-path [data-state="now"] .uz-fx-node {
+  background: #fff;
+  box-shadow:
+    inset 0 0 0 4px #fff,
+    inset 0 0 0 11px var(--fx-ink);
+}
+.uz-fx-path [data-state="next"] {
+  color: #9b9b9e;
+}
+.uz-fx-path [data-state="next"] .uz-fx-node {
+  border-color: var(--fx-line);
+  background: #fff;
+}
+.uz-fx-path [data-state="now"] .uz-fx-lesson {
+  font-weight: 600;
+}
+.uz-fx-stars {
+  display: flex;
+  gap: 2px;
+}
+.uz-fx-stars svg {
+  width: 16px;
+  height: 16px;
+  color: #c4c4c6;
+}
+.uz-fx-stars svg[data-on] {
+  color: var(--fx-ink);
+  fill: var(--fx-ink);
+}
+.uz-fx-goal {
+  margin: 4px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--fx-soft);
+  font-size: 14px;
+}
+
+/* Lectures: a file, what it turns into, and one flashcard. */
+.uz-fx-file {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+.uz-fx-file svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.uz-fx-outputs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.uz-fx-outputs span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid var(--fx-line);
+  border-radius: 12px;
+  color: var(--fx-muted);
+  font-size: 12px;
+}
+.uz-fx-outputs b {
+  color: var(--fx-ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+.uz-fx-card {
+  padding: 18px;
+  border-radius: 14px;
+  background: var(--fx-ink);
+  color: #fff;
+}
+.uz-fx-card-q {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 500;
+}
+.uz-fx-card-a {
+  margin: 0;
+  color: #c4c4c6;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* Games: letter tiles and pairs. */
+.uz-fx-tiles {
+  display: flex;
+  gap: 8px;
+}
+.uz-fx-tiles span {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background: var(--fx-ink);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600;
+}
+.uz-fx-tiles span[data-empty] {
+  border: 2px dashed #c4c4c6;
+  background: #fff;
+}
+.uz-fx-pairs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.uz-fx-pairs span {
+  padding: 12px;
+  border: 1px solid var(--fx-line);
+  border-radius: 12px;
+  font-size: 15px;
+  text-align: center;
+}
+.uz-fx-pairs span[data-matched] {
+  border-color: var(--fx-ink);
+  background: var(--fx-soft);
+  text-decoration: line-through;
+  text-decoration-color: #9b9b9e;
+}
+
+/* ---- Phones and tablets ----------------------------------------------------------------- */
+@media (width <= 1023px) {
+  .uz-fx-statement {
+    padding: 40px 0 64px;
+  }
+  .uz-fx-wrap {
+    margin-top: 45px;
+    text-align: center;
+  }
+  .uz-fx-said {
+    max-width: none;
+  }
+  .uz-fx-copy {
+    grid-column: 1 / span 5;
+  }
+  .uz-fx-media {
+    grid-column: 6 / span 7;
+  }
+}
+@media (width <= 767px) {
+  .uz-fx-statement {
+    padding: 40px 0 48px;
+  }
+  .uz-fx-circles {
+    gap: 6px;
+  }
+  .uz-fx-circle {
+    width: 70px;
+    height: 70px;
+  }
+  .uz-fx-circle svg {
+    width: 28px;
+    height: 28px;
+  }
+  .uz-fx-wrap {
+    padding: 0 16px;
+  }
+  .uz-fx-said {
+    font-size: 34px;
+    line-height: 36.04px;
+    letter-spacing: -0.68px;
+  }
+  .uz-fx-features {
+    padding: 80px 16px;
+  }
+  .uz-fx-list {
+    gap: 88px;
+  }
+  .uz-fx-row {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .uz-fx-copy {
+    align-items: center;
+    text-align: center;
+  }
+  .uz-fx-media {
+    width: 100%;
+    border-radius: 24px;
+  }
+  .uz-fx-title {
+    font-size: 28px;
+    line-height: 29.6px;
+    letter-spacing: -0.28px;
+  }
+  .uz-fx-scene {
+    padding: 7%;
+  }
+  .uz-fx-panel {
+    gap: 10px;
+    padding: 16px;
+  }
+  .uz-fx-bubble {
+    font-size: 15px;
+  }
+  .uz-fx-path li {
+    padding: 8px 0;
+    font-size: 14px;
+  }
+  .uz-fx-path li + li::before {
+    top: -8px;
+    height: 16px;
+  }
+  .uz-fx-outputs span {
+    padding: 9px;
+  }
+  .uz-fx-card {
+    padding: 14px;
+  }
+  .uz-fx-card-q {
+    font-size: 15px;
+  }
+  .uz-fx-tiles span {
+    font-size: 18px;
+  }
+  .uz-fx-pairs span {
+    padding: 9px;
+    font-size: 13px;
+  }
+}
+
+/* ---- Reduced motion: everything there at once, nothing moving ----------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .uz-fx-ch,
+  .uz-fx-letter {
+    opacity: 1;
+    animation: none !important;
+    transition: none;
+  }
+  .uz-fx-ch::after {
+    display: none;
+  }
+  .uz-fx-circles,
+  .uz-fx-circle {
+    will-change: auto;
+  }
+  .uz-fx-button:active {
+    transform: none;
+  }
+}

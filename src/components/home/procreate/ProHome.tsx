@@ -1,11 +1,11 @@
 import { lazy, Suspense } from "react";
 import { ProHeader } from "./ProHeader";
+import { FeatureExplorer } from "./FeatureExplorer";
 import { IntroCard } from "./IntroCard";
 import { UltraHero } from "./UltraHero";
 
 const AskAnything = lazy(() => import("./AskAnything").then((m) => ({ default: m.AskAnything })));
 const TopicsStrip = lazy(() => import("./TopicsStrip").then((m) => ({ default: m.TopicsStrip })));
-const FeatureTrio = lazy(() => import("./FeatureTrio").then((m) => ({ default: m.FeatureTrio })));
 const VoiceBand = lazy(() => import("./VoiceBand").then((m) => ({ default: m.VoiceBand })));
 const AppWindow = lazy(() => import("./AppWindow").then((m) => ({ default: m.AppWindow })));
 const UnderTheHood = lazy(() =>
@@ -31,11 +31,11 @@ export function ProHome() {
 
       <UltraHero />
       <IntroCard />
+      <FeatureExplorer />
 
       <Suspense fallback={<div className="min-h-[45vh]" aria-hidden="true" />}>
         <AskAnything />
         <TopicsStrip />
-        <FeatureTrio />
         <VoiceBand />
         <AppWindow />
         <UnderTheHood />

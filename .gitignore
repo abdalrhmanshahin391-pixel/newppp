@@ -60,5 +60,6 @@ guides-worker/samples/
 /output/brand-identity/
 /output/header-menus/
 /output/home-intro/
+/output/home-features/
 # Sanitized, local-only workflow evaluation records (never credentials or private payloads)
 /output/agent-workflow-pilot/

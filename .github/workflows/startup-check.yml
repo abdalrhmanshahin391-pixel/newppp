@@ -13,6 +13,10 @@ on:
       - "scripts/check-intro-card.mjs"
       - "src/components/home/procreate/IntroCard.tsx"
       - "src/components/home/procreate/intro-*"
+      - "scripts/check-feature-explorer.mjs"
+      - "src/components/home/procreate/FeatureExplorer.tsx"
+      - "src/components/home/procreate/feature-explorer*"
+      - "public/home/features/**"
       - "src/components/home/procreate/ProHome.tsx"
       - "src/components/header/**"
       - "src/components/home/procreate/ProHeader.tsx"
@@ -73,6 +77,8 @@ jobs:
         run: node --test src/components/header/menu-motion.test.ts
       - name: Home intro card (scroll growth, film beats, catch-up)
         run: node --test src/components/home/procreate/intro-film.test.ts
+      - name: Home feature section (ripple, drift, letter timing)
+        run: node --test src/components/home/procreate/feature-explorer.test.ts
       - name: Learning sections in Chromium and WebKit
         run: |
           npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund playwright@1.62.1
@@ -83,6 +89,8 @@ jobs:
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" BROWSER=webkit node scripts/check-header-menus.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" node scripts/check-intro-card.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" BROWSER=webkit node scripts/check-intro-card.mjs
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" node scripts/check-feature-explorer.mjs
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" BROWSER=webkit node scripts/check-feature-explorer.mjs
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" node scripts/check-study-help.mjs --check
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" BROWSER=webkit node scripts/check-study-help.mjs --check
           PLAYWRIGHT_MODULE="$RUNNER_TEMP/pw/node_modules/playwright/index.mjs" node scripts/check-learn-navigation.mjs
