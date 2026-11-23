@@ -42,3 +42,8 @@ site (speech recognition errors kept), and the replies are written by hand as th
 
 Run references with history `own` to see how Uzyra holds a whole chat with her own replies; the
 default `reference` history only shows each reply in the other app's context.
+
+`obgyn-review.json` is a medical student's OB/GYN review sheet sent by the owner (23 November 2026):
+57 questions in chat order with short target answers and `must` checks for the key facts (numbers,
+dates, terms). A few answers rely on a patient case the questions never state (the profile in 28,
+the husband's job in 29, the timeline in 48), so no reply can match those exactly.
