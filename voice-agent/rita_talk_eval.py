@@ -202,7 +202,11 @@ async def ask(client, params: dict[str, Any]) -> dict[str, Any]:
             if is_parse_failure(error) and not parts and not retried:
                 retried = True
                 continue
-            return {"raw": "", "error": f"{type(error).__name__}: {str(error)[:160]}"}
+            # How much text had arrived before the failure: a retry is only possible with none.
+            return {
+                "raw": "",
+                "error": f"{type(error).__name__}: {str(error)[:160]} (after {len(''.join(parts))} chars)",
+            }
         done = time.perf_counter()
         return {
             "raw": "".join(parts).strip(),

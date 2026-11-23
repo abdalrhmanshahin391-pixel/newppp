@@ -60,7 +60,7 @@ def test_the_request_to_groq_holds_the_short_prompt_the_chat_and_its_settings():
     params = llm.build_chat_completion_params(llm.get_llm_adapter().get_llm_invocation_params(context))
     assert params["messages"] == [SHORT, {"role": "user", "content": "مرحباً، كيف حالك؟"}]
     assert params["max_completion_tokens"] == bot.FREE_TALK_SETTINGS["max_completion_tokens"]
-    assert params["reasoning_effort"] == "low"
+    assert params["reasoning_effort"] == "medium"
 
 
 def test_the_reply_is_spoken_as_written_with_nothing_added():
