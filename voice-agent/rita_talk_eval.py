@@ -175,6 +175,7 @@ async def ask(client, params: dict[str, Any]) -> dict[str, Any]:
 
     import openai
 
+    retried = False
     for attempt in range(RETRIES):
         started = time.perf_counter()
         first = 0.0
@@ -195,10 +196,25 @@ async def ask(client, params: dict[str, Any]) -> dict[str, Any]:
             await asyncio.sleep(_retry_after(error, attempt))
             continue
         except openai.APIError as error:
-            return {"raw": "", "error": f"{type(error).__name__}: {str(error)[:160]}"}
+            # The worker retries Groq's "Parsing failed" once before any word is spoken; so does this.
+            from rita_groq_llm import is_parse_failure
+
+            if is_parse_failure(error) and not parts and not retried:
+                from rita_groq_llm import RETRY_OVERRIDES
+
+                retried = True
+                params = {**params, **RETRY_OVERRIDES}
+                continue
+            # How much text had arrived before the failure: a retry is only possible with none.
+            return {
+                "raw": "",
+                "retried": retried,
+                "error": f"{type(error).__name__}: {str(error)[:160]} (after {len(''.join(parts))} chars)",
+            }
         done = time.perf_counter()
         return {
             "raw": "".join(parts).strip(),
+            "retried": retried,
             "finish": str(finish or ""),
             "first_ms": round((first - started) * 1000) if first else None,
             "total_ms": round((done - started) * 1000),
@@ -259,6 +275,7 @@ async def play(
                 "effort": sent.get("reasoning_effort", ""),
                 "max_tokens": sent.get("max_completion_tokens"),
                 "first_ms": reply.get("first_ms"),
+                "retried": reply.get("retried", False),
                 "total_ms": reply.get("total_ms"),
                 "finish": reply.get("finish", ""),
                 "help_added": bool(added),
@@ -268,7 +285,11 @@ async def play(
             if reply.get("error"):
                 problems = [f"request error: {reply['error']}"]
                 out.append({**row, "problems": problems, "categories": ["service"], "layer": "service"})
-                break
+                # Carry on: with the reference history the next turn's context is unchanged; with
+                # Uzyra's own history the failed turn is left out, as a live call would lose it.
+                if history_mode == "reference" and reference is not None:
+                    history.extend([("user", turn.text), ("assistant", row.get("reference", ""))])
+                continue
             m = measure(raw)
             problems = check_turn(turn, raw, talk.site_language, max_words) + repeated_phrase(turn, m["spoken"], earlier)
             if not raw:

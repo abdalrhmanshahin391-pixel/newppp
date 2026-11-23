@@ -3,6 +3,14 @@
 Measures what Uzyra **says** in a free conversation. This is text only: the worker's real prompt and
 speech cleaner are used with the Groq model, and no voice service (Cartesia, Soniox) is called.
 
+A free conversation has its own short prompt and settings, in `voice-agent/rita_free_talk_prompt.py`
+(spoken answers of about 15 words, the fact first, Jordanian Arabic with terms in English, medium
+thinking). The eval sends exactly what the worker sends. The OB/GYN review reference
+(`obgyn-review`, 57 study questions with target answers) is the check for study questions; run it
+with history `reference` (3 runs) and `own`, and the everyday, support and German references plus
+the corpus (`split: all`) as regressions. Groq's "Parsing failed" error is retried once at another
+temperature, before any word is spoken, in the worker and in the eval.
+
 ## Run it
 
 Actions → **Rita content probe** → Run workflow:

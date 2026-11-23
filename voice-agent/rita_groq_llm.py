@@ -24,6 +24,26 @@ def finish_reason_name(chunk: Any) -> str | None:
     return clean or None
 
 
+def is_parse_failure(error: BaseException) -> bool:
+    """Groq's "Parsing failed" error: the model's output could not be read (now and then with
+    gpt-oss). A fresh request almost always succeeds, so it is worth one retry."""
+
+    return "parsing failed" in str(error).casefold() or "failed_generation" in str(error).casefold()
+
+
+def chunk_has_text(chunk: Any) -> bool:
+    choices = getattr(chunk, "choices", None)
+    if not choices:
+        return False
+    delta = getattr(choices[0], "delta", None)
+    return bool(getattr(delta, "content", None))
+
+
+#: The retry after a parse failure samples differently: the same request at the same temperature
+#: failed again on the same questions in the talk eval.
+RETRY_OVERRIDES = {"temperature": 1.0}
+
+
 def apply_turn_options(params: dict[str, Any], options: dict[str, Any] | None) -> dict[str, Any]:
     """Overlay one turn's reply budget (`max_completion_tokens`, `reasoning_effort`) on the request."""
 
@@ -49,28 +69,64 @@ class RitaGroqLLMService(GroqLLMService):
         super().__init__(*args, **kwargs)
         self._rita_latency = latency_recorder
         self._turn_options = turn_options
+        self._retrying = False
 
     def build_chat_completion_params(self, params_from_context):
         params = super().build_chat_completion_params(params_from_context)
-        return apply_turn_options(params, self._turn_options() if self._turn_options else None)
+        params = apply_turn_options(params, self._turn_options() if self._turn_options else None)
+        return {**params, **RETRY_OVERRIDES} if self._retrying else params
 
     async def get_chat_completions(self, *args, **kwargs):
-        stream = await super().get_chat_completions(*args, **kwargs)
+        open_stream = super().get_chat_completions
+        retried = False
+
+        async def reopen(error: BaseException):
+            nonlocal retried
+            if retried or not is_parse_failure(error):
+                raise error
+            retried = True
+            self._rita_latency.mark("groq_retry", reason="parse_failed")
+            self._retrying = True
+            try:
+                return await open_stream(*args, **kwargs)
+            finally:
+                self._retrying = False
+
+        try:
+            stream = await open_stream(*args, **kwargs)
+        except Exception as error:  # noqa: BLE001 - only Groq's parse failure is retried
+            stream = await reopen(error)
 
         async def observed_stream():
+            nonlocal stream
+            spoke = False
             try:
-                async for chunk in stream:
-                    reason = finish_reason_name(chunk)
-                    if reason:
-                        self._rita_latency.mark(
-                            "groq_finish_reason",
-                            finish_reason=reason,
-                            truncated=reason == "length",
-                        )
-                    yield chunk
+                while True:
+                    try:
+                        async for chunk in stream:
+                            reason = finish_reason_name(chunk)
+                            if reason:
+                                self._rita_latency.mark(
+                                    "groq_finish_reason",
+                                    finish_reason=reason,
+                                    truncated=reason == "length",
+                                )
+                            spoke = spoke or chunk_has_text(chunk)
+                            yield chunk
+                        return
+                    except Exception as error:  # noqa: BLE001 - re-raised unless retried
+                        # A retry is safe only before any words went out to the voice.
+                        if spoke:
+                            raise
+                        await _close(stream)
+                        stream = await reopen(error)
             finally:
-                close = getattr(stream, "aclose", None)
-                if close is not None:
-                    await close()
+                await _close(stream)
 
         return observed_stream()
+
+
+async def _close(stream: Any) -> None:
+    close = getattr(stream, "aclose", None)
+    if close is not None:
+        await close()

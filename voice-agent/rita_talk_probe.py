@@ -341,7 +341,7 @@ def turn_request(talk: Talk, history: list[tuple[str, str]], text: str):
         "mode": "free_conversation",
         "targetLanguage": talk.target,
     }
-    # A free conversation is sent raw, as the worker sends it: only the chat's messages and the model.
+    # A free conversation is sent as the worker sends it: its short prompt, the chat and its settings.
     chat = [{"role": role, "content": content} for role, content in history]
     messages = [
         *bot.first_messages(
@@ -349,7 +349,7 @@ def turn_request(talk: Talk, history: list[tuple[str, str]], text: str):
         ),
         {"role": "user", "content": text},
     ]
-    params: dict[str, Any] = {"model": bot.LLM_MODEL, "messages": messages}
+    params: dict[str, Any] = {"model": bot.LLM_MODEL, "messages": messages, **bot.FREE_TALK_SETTINGS}
     return params, state
 
 
