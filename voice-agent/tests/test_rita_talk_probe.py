@@ -35,7 +35,8 @@ def test_each_turn_sees_the_conversation_so_far():
     import bot
 
     assert roles == ["system", "user", "assistant", "user"]
-    assert params["messages"][0]["content"] == bot.FREE_TALK_PROMPT
+    assert params["messages"][0]["content"].startswith(bot.IDENTITY_PROMPT)
+    assert "about 20 words" in params["messages"][0]["content"]
     assert params["messages"][-1]["content"] == talk.turns[1].text
     assert set(params) == {"model", "messages", *bot.FREE_TALK_SETTINGS}
 

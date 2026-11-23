@@ -51,7 +51,7 @@ from pipecat.utils.context.llm_context_summarization import (
 from brand_identity import FREE_CONVERSATION_OPENER, IDENTITY_PROMPT
 from rita_cartesia_tts import RitaCartesiaTTSService
 from rita_dialect import RitaSpeechCleaner
-from rita_free_talk_prompt import FREE_TALK_PROMPT, FREE_TALK_SETTINGS
+from rita_free_talk_prompt import FREE_TALK_PROMPT, FREE_TALK_SETTINGS, free_talk_prompt
 from rita_interruption import RitaUserTurnStartStrategy, gate_mode
 from rita_groq_llm import RitaGroqLLMService
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
@@ -398,7 +398,8 @@ def first_messages(
     (a spoken answer, the fact first) and no opener, then the chat's earlier messages, if any."""
 
     if is_free_talk(body):
-        return [{"role": "system", "content": FREE_TALK_PROMPT}, *saved_history]
+        prompt = free_talk_prompt(parse_target_language(body))
+        return [{"role": "system", "content": prompt}, *saved_history]
     messages = [{"role": "system", "content": system_prompt()}, *saved_history]
     if not saved_history:
         messages.append(opening_message(body))

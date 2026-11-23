@@ -18,7 +18,7 @@ def never():
     raise AssertionError("a free conversation must not build a system prompt")
 
 
-SHORT = {"role": "system", "content": bot.FREE_TALK_PROMPT}
+SHORT = {"role": "system", "content": bot.free_talk_prompt(bot.parse_target_language(FREE))}
 
 
 def test_a_free_conversation_starts_with_its_short_prompt_only():
