@@ -8,7 +8,7 @@ under it grow into short dashes that point away from its centre and are pushed o
 back to faint dots. Black only, never coloured. Plain WebGL, no library; it draws only while on
 screen and holds still with reduced motion.
 
-Order: Uzyra's cube (30px, its usual idle life) with «Uzyra Ultra» beside it; the headline
+Order: «Meet», Uzyra's cube (30px, its usual idle life) and «Uzyra Ultra» on one line; the headline
 «Learn a language by speaking it.», typed in letter by letter with a caret that blinks out; then
 the cube again, large (168–264px). No buttons here: «Start learning» stays in the top bar and the
 next sections. The headline is the page's only `h1`, in Google Sans Flex 450 with its own size
@@ -50,6 +50,9 @@ production voice or database.
 - **Pointer** (`interactive`, the home cubes): on a mouse its eyes, then its body, turn towards
   the pointer, and let go a few seconds after it stops. A tap: hop, spin (with a wind-up), wiggle,
   nod, in turn, with happy eyes.
+- **Speed.** One factor (`SPEED` in `cube-engine.ts`, now 1.3: 30% faster than the first version)
+  time-warps the whole cube: clips, taps, blinks, rests and springs. Moves keep their shape and only
+  come quicker; change that one number to tune.
 - **Cost.** Three SVG paths written only when they change; nothing offscreen or in hidden tabs;
   reduced motion holds it still (blinks only). Our own clips and shapes: never copy another
   product's animation data or characters.
