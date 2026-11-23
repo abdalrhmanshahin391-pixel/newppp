@@ -104,3 +104,17 @@ def test_other_errors_are_not_retried(monkeypatch):
     with pytest.raises(RuntimeError, match="boom"):
         collect(llm, fake_open, monkeypatch)
     assert len(calls) == 1
+
+
+def test_the_retry_samples_differently(monkeypatch):
+    from rita_groq_llm import RETRY_OVERRIDES
+
+    llm, _, _ = service([])
+    seen = []
+    base = {"model": "m", "temperature": 0.45}
+    monkeypatch.setattr(GroqLLMService, "build_chat_completion_params", lambda self, p: dict(base))
+    seen.append(llm.build_chat_completion_params({}))
+    llm._retrying = True
+    seen.append(llm.build_chat_completion_params({}))
+    assert seen[0]["temperature"] == 0.45
+    assert seen[1]["temperature"] == RETRY_OVERRIDES["temperature"]

@@ -39,6 +39,11 @@ def chunk_has_text(chunk: Any) -> bool:
     return bool(getattr(delta, "content", None))
 
 
+#: The retry after a parse failure samples differently: the same request at the same temperature
+#: failed again on the same questions in the talk eval.
+RETRY_OVERRIDES = {"temperature": 1.0}
+
+
 def apply_turn_options(params: dict[str, Any], options: dict[str, Any] | None) -> dict[str, Any]:
     """Overlay one turn's reply budget (`max_completion_tokens`, `reasoning_effort`) on the request."""
 
@@ -64,10 +69,12 @@ class RitaGroqLLMService(GroqLLMService):
         super().__init__(*args, **kwargs)
         self._rita_latency = latency_recorder
         self._turn_options = turn_options
+        self._retrying = False
 
     def build_chat_completion_params(self, params_from_context):
         params = super().build_chat_completion_params(params_from_context)
-        return apply_turn_options(params, self._turn_options() if self._turn_options else None)
+        params = apply_turn_options(params, self._turn_options() if self._turn_options else None)
+        return {**params, **RETRY_OVERRIDES} if self._retrying else params
 
     async def get_chat_completions(self, *args, **kwargs):
         open_stream = super().get_chat_completions
@@ -79,7 +86,11 @@ class RitaGroqLLMService(GroqLLMService):
                 raise error
             retried = True
             self._rita_latency.mark("groq_retry", reason="parse_failed")
-            return await open_stream(*args, **kwargs)
+            self._retrying = True
+            try:
+                return await open_stream(*args, **kwargs)
+            finally:
+                self._retrying = False
 
         try:
             stream = await open_stream(*args, **kwargs)

@@ -200,11 +200,15 @@ async def ask(client, params: dict[str, Any]) -> dict[str, Any]:
             from rita_groq_llm import is_parse_failure
 
             if is_parse_failure(error) and not parts and not retried:
+                from rita_groq_llm import RETRY_OVERRIDES
+
                 retried = True
+                params = {**params, **RETRY_OVERRIDES}
                 continue
             # How much text had arrived before the failure: a retry is only possible with none.
             return {
                 "raw": "",
+                "retried": retried,
                 "error": f"{type(error).__name__}: {str(error)[:160]} (after {len(''.join(parts))} chars)",
             }
         done = time.perf_counter()
