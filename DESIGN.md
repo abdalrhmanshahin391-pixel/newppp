@@ -11,7 +11,7 @@ screen and holds still with reduced motion.
 Order: Uzyra's cube (30px, its usual idle life) with «Uzyra Ultra» beside it; the headline
 «Learn a language by speaking it.», typed in letter by letter with a caret that blinks out; then
 the cube again, large (168–264px). No buttons here: «Start learning» stays in the top bar and the
-next section. The headline is the page's only `h1`, in Google Sans Flex 450 with its own size
+next sections. The headline is the page's only `h1`, in Google Sans Flex 450 with its own size
 scale (107/72/56/40/44/36px at >1600/≤1600/≤1024/≤767/≤425/≤360). Keep it short and plain; do not
 add a subline or a second claim.
 
@@ -20,12 +20,13 @@ add a subline or a second claim.
 No background lines: the Hedwig-style animated contours were removed (Nov 2026) at the owner's
 request; they were too visible and redrew a full-screen layer 12 times a second on every page.
 
-The home hero reuses the flat ink Uzyra cube with white eyes, no shadow or texture. Keep the
-existing four orbit rings, their centre, word positions and tap/save actions. The cube reacts to
-word taps; it and its level driver stop offscreen or in hidden tabs. Reduced motion makes the
-hero cube static. Use `scripts/check-home-cube.mjs` for isolated Chromium/WebKit component checks,
-screenshots and phone/tablet videos; it uses local account/reader fixtures, not production voice or
-database.
+The home top (`UltraHero`, above) is the only hero: the earlier tap-a-word hero (headline with
+sticker pills, orbit rings, word chips, the two big buttons) was removed in Nov 2026 because the
+new top replaced it; do not bring its rings or chips back. The cube is the flat ink Uzyra cube with
+white eyes, no shadow or texture; it and its level driver stop offscreen or in hidden tabs, and
+reduced motion makes it static. Use `scripts/check-home-cube.mjs` for isolated Chromium/WebKit
+component checks, screenshots and phone/tablet videos; it uses local account/reader fixtures, not
+production voice or database.
 
 ### How the cube moves (`RitaCube`, engine in `src/components/rita-study/cube`)
 
@@ -52,6 +53,34 @@ database.
 - **Cost.** Three SVG paths written only when they change; nothing offscreen or in hidden tabs;
   reduced motion holds it still (blinks only). Our own clips and shapes: never copy another
   product's animation data or characters.
+
+## Top bar menus (`src/components/header`)
+
+All the bar's menus (Resources, credits, language, account) share one panel under the bar, built
+from our own code (the behaviour was studied from a public site; none of its code is used). The
+bar and its menus are ink, white and grey only: no orange, blue or red anywhere (the page you are
+on is underlined, not coloured; «Log out» and the used-up credits are ink too). A script checks
+every element's computed colours (`scripts/check-header-menus.mjs`), so a coloured rule fails CI.
+
+- **Panel:** white, 12px corners, a 1px ring and a soft deep shadow (`0 16px 48px -8px` at 22%).
+  It opens with a fade and a scale from 0.96 over 200ms (`cubic-bezier(0.16, 1, 0.3, 1)`) from the
+  edge that hangs from the trigger (right for the account tools, left for the navigation; flipped in
+  right-to-left pages) and closes the same way. It stays inside the screen with an 8px margin.
+- **Switching menus** (point at another trigger while one is open, or ←/→): the panel moves along
+  the bar and changes size in 400ms with a light spring; the old content slides 80px away and
+  clears in 140ms, the new content slides in and fades in a beat later (350ms).
+- **Highlight:** a 5% black rounded box glides between items (150ms) and stays 80ms after the
+  pointer leaves one, so crossing a gap does not flash it. Mouse only; keyboard focus shows it too,
+  with a 2px ink outline.
+- **Opening:** a click opens; Resources also opens when a mouse rests on it and closes when it
+  leaves, unless it was clicked (then it stays until a second click, Esc or a press outside). On a
+  touch screen it is taps only. ↓/↑ on a trigger open the menu and move through the items
+  (Home/End too, wrapping), ←/→ switch menu in screen order, Esc closes and returns focus to the
+  trigger, and tabbing away or pressing outside closes it.
+- **Reduced motion:** a 120ms fade only, no scale, travel or glide.
+- A menu is added by putting its trigger and `MenuPanel` inside a `MenuGroup`; the menu keeps its
+  own state and content (the panel draws it through a portal). Items are `[data-mp-item]` or
+  `.rh-item`. Outside a group (the phone sheet, a page without one) a menu is a plain card.
 
 ## Conversation history
 

@@ -2,6 +2,7 @@ import { useCallback, useId, useRef, useState } from "react";
 import { Check, Globe, Loader2 } from "lucide-react";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { useDismiss } from "@/components/header/useDismiss";
+import { MenuPanel, useInMenuGroup, useMenuTrigger } from "@/components/header/MenuGroup";
 import { VOICE_SESSION_ERROR, useLearningLanguage } from "@/hooks/useLearningLanguage";
 
 /**
@@ -23,7 +24,9 @@ export function LanguageMenu({
   const text = (en: string, ar: string) => (ui === "ar" ? ar : en);
 
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
-  useDismiss(open, close, root);
+  const inGroup = useInMenuGroup();
+  useDismiss(open && !inGroup, close, root);
+  const trigger = useMenuTrigger({ id: "language", open, onOpenChange });
 
   async function choose(next: string) {
     if (next === code) {
@@ -56,9 +59,12 @@ export function LanguageMenu({
   return (
     <div className="relative" ref={root}>
       <button
+        ref={trigger.ref}
         type="button"
         data-rh-trigger
-        onClick={() => onOpenChange(!open)}
+        onClick={trigger.onClick}
+        onPointerEnter={trigger.onPointerEnter}
+        onKeyDown={trigger.onKeyDown}
         aria-label={label}
         aria-haspopup="true"
         aria-expanded={open}
@@ -74,12 +80,15 @@ export function LanguageMenu({
         {announce}
       </span>
 
-      {open && (
-        <div
-          id={menuId}
-          className="rh-card rh-lang-card"
-          aria-label={text("Learning language", "لغة التعلّم")}
-        >
+      <MenuPanel
+        id="language"
+        open={open}
+        panelId={menuId}
+        width={288}
+        label={text("Learning language", "لغة التعلّم")}
+        fallbackClassName="rh-card rh-lang-card"
+      >
+        <div className="uz-mp-body">
           <p className="rh-lang-title">{text("Learning language", "لغة التعلّم")}</p>
           <div role="radiogroup" aria-label={text("Learning language", "لغة التعلّم")}>
             {languages.map((item) => {
@@ -92,6 +101,7 @@ export function LanguageMenu({
                   aria-checked={selected}
                   disabled={pending !== null}
                   onClick={() => void choose(item.code)}
+                  data-mp-item
                   className="rh-item rh-lang-row disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <span className="rh-lang-names">
@@ -124,7 +134,7 @@ export function LanguageMenu({
             </p>
           ) : null}
         </div>
-      )}
+      </MenuPanel>
     </div>
   );
 }

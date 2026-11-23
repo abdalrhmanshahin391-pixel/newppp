@@ -7,6 +7,7 @@ import { Link } from "@tanstack/react-router";
 import { Clock3, Infinity as InfinityIcon } from "lucide-react";
 import { usePlan } from "@/hooks/usePlan";
 import { useDismiss } from "@/components/header/useDismiss";
+import { MenuPanel, useInMenuGroup, useMenuTrigger } from "@/components/header/MenuGroup";
 
 type Line = { label: string; used: number; limit: number | null };
 type Level = "ok" | "low" | "out";
@@ -46,7 +47,9 @@ export function CreditsMeter({
   );
   const box = useRef<HTMLDivElement>(null);
   const panelId = useId();
-  useDismiss(open && !inline, () => setOpen(false), box);
+  const inGroup = useInMenuGroup();
+  useDismiss(open && !inline && !inGroup, () => setOpen(false), box);
+  const trigger = useMenuTrigger({ id: "credits", open, onOpenChange: setOpen });
 
   const data = plan.data;
 
@@ -123,12 +126,8 @@ export function CreditsMeter({
       ? "…"
       : voiceTimeLabel(voice.seconds);
 
-  const card = (
-    <div
-      id={panelId}
-      className={`rh-card rh-credits ${inline ? "rh-card-inline" : ""}`}
-      aria-label="Your credits"
-    >
+  const body = (
+    <>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <p className="rh-card-title">{data ? `${plan.planName} plan` : "Credits"}</p>
         {unlimitedAll && <span className="rh-badge">All tools open</span>}
@@ -197,6 +196,16 @@ export function CreditsMeter({
       <Link to="/pricing" onClick={() => setOpen(false)} className="rh-btn rh-wide">
         See plans
       </Link>
+    </>
+  );
+
+  const card = (
+    <div
+      id={panelId}
+      className={`rh-card rh-credits ${inline ? "rh-card-inline" : ""}`}
+      aria-label="Your credits"
+    >
+      {body}
     </div>
   );
 
@@ -222,11 +231,14 @@ export function CreditsMeter({
   return (
     <div className="relative" ref={box}>
       <button
+        ref={trigger.ref}
         type="button"
         data-rh-trigger
-        onClick={() => setOpen(!open)}
+        onClick={trigger.onClick}
+        onPointerEnter={trigger.onPointerEnter}
+        onKeyDown={trigger.onKeyDown}
         aria-expanded={open}
-        aria-controls={panelId}
+        aria-controls={open ? panelId : undefined}
         data-open={open ? "true" : "false"}
         aria-label={`${credits} · ${voice.isError ? (ar ? "الوقت غير متاح" : "Time unavailable") : short}`}
         className="rh-credits-chip"
@@ -236,7 +248,16 @@ export function CreditsMeter({
           {short}
         </span>
       </button>
-      {open && card}
+      <MenuPanel
+        id="credits"
+        open={open}
+        panelId={panelId}
+        width={320}
+        label="Your credits"
+        fallbackClassName="rh-card"
+      >
+        <div className="rh-credits">{body}</div>
+      </MenuPanel>
     </div>
   );
 }

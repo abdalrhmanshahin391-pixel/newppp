@@ -1,0 +1,227 @@
+/* The header's menus: one shared panel under the bar. Ink, white and grey only. */
+.uz-mp-group {
+  position: relative;
+  align-self: stretch;
+}
+
+.uz-mp-host {
+  --mp-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --mp-spring: cubic-bezier(0.3, 1.12, 0.45, 1);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 0;
+  height: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+
+/* The panel: shut it is a little small and clear; open it grows to full size. Width, height and
+   position glide only once it is open, so it appears in place and then follows you along the bar. */
+.uz-mp-surface {
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: var(--mp-w, 0px);
+  height: var(--mp-h, 0px);
+  translate: var(--mp-x, 0px) 0;
+  scale: 0.96;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform-origin: top left;
+  transition:
+    opacity 200ms var(--mp-ease),
+    scale 200ms var(--mp-ease),
+    visibility 0s linear 200ms;
+}
+.uz-mp-host[data-origin="right"] .uz-mp-surface {
+  transform-origin: top right;
+}
+.uz-mp-host[data-state="open"] .uz-mp-surface {
+  scale: 1;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity 200ms var(--mp-ease),
+    scale 200ms var(--mp-ease),
+    visibility 0s;
+}
+.uz-mp-host[data-state="open"][data-motion="on"] .uz-mp-surface {
+  transition:
+    opacity 200ms var(--mp-ease),
+    scale 200ms var(--mp-ease),
+    translate 400ms var(--mp-spring),
+    width 400ms var(--mp-spring),
+    height 400ms var(--mp-spring),
+    visibility 0s;
+}
+
+/* Keeps the pointer inside the group while it crosses the gap between the bar and the panel. */
+.uz-mp-bridge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -10px;
+  height: 10px;
+}
+
+.uz-mp-box {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.08),
+    0 16px 48px -8px rgb(0 0 0 / 0.22);
+}
+.uz-mp-stage {
+  position: absolute;
+  inset: 0;
+}
+
+/* The grey highlight that glides from item to item (placed and timed by the group). */
+.uz-mp-hl {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 0.05);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.uz-mp-pane {
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #181719;
+  font-family: var(--font-grotesk), Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: start;
+  transition:
+    translate var(--mp-slide, 350ms) var(--mp-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+    opacity 250ms ease;
+}
+.uz-mp-pane:not([data-active="true"]) {
+  pointer-events: none;
+  /* Leaving content clears quickly, so it never sits on top of what arrives. */
+  transition:
+    translate var(--mp-slide, 350ms) var(--mp-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+    opacity 140ms ease-out;
+}
+.uz-mp-pane[data-active="true"] {
+  /* Arriving content fades in a beat later. */
+  transition:
+    translate var(--mp-slide, 350ms) var(--mp-ease, cubic-bezier(0.16, 1, 0.3, 1)),
+    opacity 220ms ease 70ms;
+}
+
+.uz-mp-list {
+  display: grid;
+  gap: 2px;
+}
+.uz-mp-pane .uz-mp-body,
+.uz-mp-pane .uz-mp-list {
+  padding: 8px;
+}
+.uz-mp-title {
+  margin: 4px 12px 6px;
+  color: rgb(0 0 0 / 0.55);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+/* Items: no background of their own (the highlight is the hover), the same ink everywhere. */
+.uz-mp-group .uz-mp-pane :is([data-mp-item], .rh-item) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #181719;
+  font:
+    500 14px/1.4 var(--font-grotesk),
+    Arial,
+    sans-serif;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+@media (pointer: coarse) {
+  .uz-mp-group .uz-mp-pane :is([data-mp-item], .rh-item) {
+    min-height: 44px;
+  }
+}
+.uz-mp-group .uz-mp-pane :is([data-mp-item], .rh-item):hover {
+  background: transparent;
+}
+.uz-mp-group .uz-mp-pane :is([data-mp-item], .rh-item):active {
+  background: rgb(0 0 0 / 0.07);
+}
+.uz-mp-group .uz-mp-pane :is([data-mp-item], .rh-item):focus-visible {
+  outline: 2px solid #181719;
+  outline-offset: -2px;
+}
+/* The chosen language: a bolder name and its tick (no coloured background). */
+.uz-mp-group .uz-mp-pane .rh-lang-row[aria-checked="true"] {
+  background: transparent;
+}
+.uz-mp-group .uz-mp-pane .rh-lang-row[aria-checked="true"] .rh-lang-native {
+  font-weight: 600;
+}
+.uz-mp-group .uz-mp-pane :is([data-mp-item], .rh-item) svg {
+  flex: none;
+  color: #181719;
+}
+
+/* The blog bar's "Pricing" row only shows where the bar itself has no room for that link. */
+.uz-mp-group .uz-mp-pane .ub-mobile {
+  display: none;
+}
+@media (max-width: 640px) {
+  .uz-mp-group .uz-mp-pane .ub-mobile {
+    display: flex;
+  }
+}
+
+/* The small arrow beside a menu's name turns over while it is open. */
+.ub-menu button svg {
+  transition: transform 200ms var(--rh-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uz-mp-host .uz-mp-surface,
+  .uz-mp-host[data-state="open"] .uz-mp-surface,
+  .uz-mp-host[data-state="open"][data-motion="on"] .uz-mp-surface {
+    scale: 1;
+    transition:
+      opacity 120ms linear,
+      visibility 0s linear 120ms;
+  }
+  .uz-mp-host[data-state="open"] .uz-mp-surface {
+    transition:
+      opacity 120ms linear,
+      visibility 0s;
+  }
+  .uz-mp-pane {
+    translate: none !important;
+    transition: opacity 120ms linear;
+  }
+  .uz-mp-hl {
+    transition: none !important;
+  }
+  .ub-menu button svg {
+    transition: none;
+  }
+}

@@ -58,5 +58,6 @@ guides-worker/samples/
 /output/conversations-preview/
 # Brand identity checks and captures
 /output/brand-identity/
+/output/header-menus/
 # Sanitized, local-only workflow evaluation records (never credentials or private payloads)
 /output/agent-workflow-pilot/
