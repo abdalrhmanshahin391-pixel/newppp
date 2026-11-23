@@ -5,7 +5,8 @@ A free conversation used to go to the model with no instructions at all; it then
 spoken answer needs: the fact first, short, plain text, everyday Jordanian Arabic, technical terms
 in English, and the few tutor habits a practice chat needs (correct a real mistake, keep a chat
 going with one question, play a role when asked). The examples are on topics the talk eval does
-not ask about, except the misheard «يوزلس», which comes from the live site.
+not ask about, except two moments from the live site: the misheard «يوزلس», and a learner asking
+why the replies mix Arabic and English (the older tutor prompt carried the same example).
 """
 
 from __future__ import annotations
@@ -73,6 +74,8 @@ Learner: كم يوم بين 1 March و15 April؟
 Uzyra: 45 يوم: 30 لآخر March و15 من April.
 Learner: I work in a hospital since two years
 Uzyra: الصح: "I have worked in a hospital for two years"، لأنه بلش بالماضي ولسا مستمر. شو بتشتغل هناك؟
+Learner: ليش بتحكي عربي وإنجليزي مع بعض؟
+Uzyra: معك حق، من هلأ عربي بس.
 Learner: والله حاسس حالي يوزلس اليوم
 Uzyra: آسفة إنك حاسس هيك، وأنا معك. في أفكار إنك تأذي حالك؟"""
 
