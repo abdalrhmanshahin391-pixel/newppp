@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { ProHeader } from "./ProHeader";
+import { IntroCard } from "./IntroCard";
 import { UltraHero } from "./UltraHero";
 
 const AskAnything = lazy(() => import("./AskAnything").then((m) => ({ default: m.AskAnything })));
@@ -29,6 +30,7 @@ export function ProHome() {
       <ProHeader tone="light" />
 
       <UltraHero />
+      <IntroCard />
 
       <Suspense fallback={<div className="min-h-[45vh]" aria-hidden="true" />}>
         <AskAnything />

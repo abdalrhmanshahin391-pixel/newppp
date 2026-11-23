@@ -1,0 +1,176 @@
+/* Under the home hero: the black intro card (it grows with the scroll; the film draws inside). */
+.uz-intro {
+  --intro-bg: #000;
+  --intro-font: "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  position: relative;
+  padding: 0 0 clamp(48px, 8vh, 96px);
+  background: #fff;
+  font-family: var(--intro-font);
+}
+.uz-intro-card {
+  position: relative;
+  width: calc(100% - 12px);
+  margin: 0 auto;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--intro-bg);
+  transform-origin: 50% 50%;
+  will-change: transform;
+  container-type: inline-size;
+  isolation: isolate;
+}
+@media (width > 768px) {
+  .uz-intro-card {
+    border-radius: 36px;
+  }
+}
+.uz-intro-stage {
+  position: absolute;
+  inset: 0;
+  outline: none;
+}
+.uz-intro-stage[role="button"] {
+  cursor: pointer;
+}
+.uz-intro-stage:focus-visible {
+  box-shadow: inset 0 0 0 2px #fff;
+  border-radius: inherit;
+}
+.uz-intro-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The cube and the name, in the middle (the film fades and wipes them in). */
+.uz-intro-lockup {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.26em;
+  margin: 0;
+  color: #fff;
+  font-size: max(20px, 4.4cqi);
+  font-weight: 450;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variation-settings:
+    "wdth" 100,
+    "opsz" 72;
+  pointer-events: none;
+}
+.uz-intro-mark {
+  display: block;
+  flex: none;
+  width: 1.2em;
+  height: 1.2em;
+  margin-right: 0.04em;
+  opacity: 0;
+}
+/* On black the block is white and its eyes are holes. */
+.uz-intro-mark .uz-cube-shape {
+  fill: #fff;
+}
+.uz-intro-mark .uz-cube-eye {
+  fill: var(--intro-bg);
+}
+.uz-intro-word {
+  display: inline-block;
+  padding-bottom: 0.08em;
+  opacity: 0;
+  clip-path: inset(-25% 100% -25% 0);
+}
+
+/* The round button: pause and play. */
+.uz-intro-toggle {
+  position: absolute;
+  right: 22px;
+  bottom: 22px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.14);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    transform 0.3s,
+    opacity 0.3s;
+}
+.uz-intro-toggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  /* The pill takes over on a mouse; the button shows again when the pointer reaches it. */
+  .uz-intro-card:hover .uz-intro-toggle:not(:hover, :focus-visible) {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+@media (width <= 767px) {
+  .uz-intro-toggle {
+    right: 14px;
+    bottom: 14px;
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* The pointer as a "Replay intro" pill (mouse and trackpad only). */
+.uz-intro-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  pointer-events: none;
+  will-change: transform;
+}
+.uz-intro-pill-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px 16px 16px;
+  border: 1px solid rgb(0 0 0 / 0.12);
+  border-radius: 999px;
+  background: #fff;
+  color: #000;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+  transition:
+    transform 0.2s cubic-bezier(0.55, 0.085, 0.68, 0.53),
+    opacity 0.2s cubic-bezier(0.55, 0.085, 0.68, 0.53);
+}
+.uz-intro-pill[data-shown] .uz-intro-pill-body {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  transition:
+    transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    opacity 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@media not ((hover: hover) and (pointer: fine)) {
+  .uz-intro-pill {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uz-intro-card {
+    transform: none !important;
+  }
+}

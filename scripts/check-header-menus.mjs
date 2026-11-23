@@ -257,10 +257,17 @@ try {
         .locator('.uz-mp-pane[data-mp-pane="resources"] a', { hasText: "Blog" })
         .isVisible(),
     );
-    const scale = await page
-      .locator(".uz-mp-surface")
-      .first()
-      .evaluate((el) => getComputedStyle(el).scale);
+    // The open transition settles at full size (wait for it rather than a fixed time: a slow
+    // runner can still be mid-transition after the hover delay).
+    let scale = "";
+    for (let tries = 0; tries < 20; tries += 1) {
+      scale = await page
+        .locator(".uz-mp-surface")
+        .first()
+        .evaluate((el) => getComputedStyle(el).scale);
+      if (scale === "1" || scale === "none") break;
+      await page.waitForTimeout(100);
+    }
     assert.ok(scale === "1" || scale === "none", "full size once open (" + scale + ")");
     // The grey highlight finds the item under the pointer.
     const blog = page.locator('.uz-mp-pane[data-mp-pane="resources"] a', { hasText: "Blog" });
