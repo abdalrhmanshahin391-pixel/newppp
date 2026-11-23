@@ -26,7 +26,7 @@ def test_a_free_conversation_starts_with_its_short_prompt_only():
     history = [{"role": "user", "content": "مرحبا"}, {"role": "assistant", "content": "أهلين"}]
     assert bot.first_messages(FREE, history, never) == [SHORT, *history]
     # Spoken, short, fact first: the prompt keeps it to a sentence or two and no tables.
-    assert "about 20 words" in bot.FREE_TALK_PROMPT
+    assert "never more than 25" in bot.FREE_TALK_PROMPT
     assert "no tables" in bot.FREE_TALK_PROMPT
 
 
