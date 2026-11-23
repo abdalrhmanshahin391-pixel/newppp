@@ -36,7 +36,7 @@ def test_each_turn_sees_the_conversation_so_far():
 
     assert roles == ["system", "user", "assistant", "user"]
     assert params["messages"][0]["content"].startswith(bot.IDENTITY_PROMPT)
-    assert "never more than 25" in params["messages"][0]["content"]
+    assert "never more than 25 unless" in params["messages"][0]["content"]
     assert params["messages"][-1]["content"] == talk.turns[1].text
     assert set(params) == {"model", "messages", *bot.FREE_TALK_SETTINGS}
 
