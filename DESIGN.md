@@ -15,6 +15,35 @@ next sections. The headline is the page's only `h1`, in Google Sans Flex 450 wit
 scale (107/72/56/40/44/36px at >1600/≤1600/≤1024/≤767/≤425/≤360). Keep it short and plain; do not
 add a subline or a second claim.
 
+## Home intro card (`IntroCard`)
+
+Right under the home top: a black card, 16:9, 6px from each side of the page, corners 24px (36px
+above 768px). The timing in `intro-film.ts` follows the reference landing page's intro video
+section. We used its numbers and behaviour, not its code or video.
+
+- **Scroll:** the card scales from 0.5 to 1 while its top moves from the bottom of the screen to
+  the middle. On phones (≤768px) it scales from 0.92 to 1, ending 80% down. The curve is
+  power2.out, and the card catches up with the scroll over 1s (power3.out, restarting from where
+  it is).
+- **Film:** drawn live on a canvas, in white and grey only.
+  - 0–0.5s: dots fly in and draw the cube's resting outline.
+  - 0.35–1.2s: the cube grows to 46% of the card's height, with a soft white glow behind it.
+  - 1.2–1.7s: it shrinks into its place beside the name.
+  - Around 1.6s: the live cube (white body, black eyes) takes over from the dots.
+  - «Uzyra», then «Ultra», wipe in from the left.
+  - Behind everything, a slanted ring of dots turns slowly.
+  - The film repeats every 12s. It starts when 40% of the card is in view and stops off screen.
+- **Controls:**
+  - Tapping the card, or pressing Enter, replays the film.
+  - The round 48px button pauses and plays it.
+  - With a mouse, the pointer becomes a white «Replay intro» pill. It appears with a 0.3s
+    back-out, follows the pointer in 0.35s (power2.out) and hides in 0.2s. The round button
+    hides while the pointer is on the card, until the pointer reaches it.
+- **Reduced motion or Save-Data:** no scaling and no film. The card shows the cube and the name,
+  still.
+- **Not taken from the reference:** its product screens and its logo.
+- **Check:** `scripts/check-intro-card.mjs`.
+
 ## The home cube
 
 No background lines: the Hedwig-style animated contours were removed (Nov 2026) at the owner's

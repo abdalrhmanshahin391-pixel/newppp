@@ -59,5 +59,6 @@ guides-worker/samples/
 # Brand identity checks and captures
 /output/brand-identity/
 /output/header-menus/
+/output/home-intro/
 # Sanitized, local-only workflow evaluation records (never credentials or private payloads)
 /output/agent-workflow-pilot/
