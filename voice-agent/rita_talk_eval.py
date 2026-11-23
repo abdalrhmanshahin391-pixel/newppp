@@ -175,6 +175,7 @@ async def ask(client, params: dict[str, Any]) -> dict[str, Any]:
 
     import openai
 
+    retried = False
     for attempt in range(RETRIES):
         started = time.perf_counter()
         first = 0.0
@@ -195,10 +196,17 @@ async def ask(client, params: dict[str, Any]) -> dict[str, Any]:
             await asyncio.sleep(_retry_after(error, attempt))
             continue
         except openai.APIError as error:
+            # The worker retries Groq's "Parsing failed" once before any word is spoken; so does this.
+            from rita_groq_llm import is_parse_failure
+
+            if is_parse_failure(error) and not parts and not retried:
+                retried = True
+                continue
             return {"raw": "", "error": f"{type(error).__name__}: {str(error)[:160]}"}
         done = time.perf_counter()
         return {
             "raw": "".join(parts).strip(),
+            "retried": retried,
             "finish": str(finish or ""),
             "first_ms": round((first - started) * 1000) if first else None,
             "total_ms": round((done - started) * 1000),
@@ -259,6 +267,7 @@ async def play(
                 "effort": sent.get("reasoning_effort", ""),
                 "max_tokens": sent.get("max_completion_tokens"),
                 "first_ms": reply.get("first_ms"),
+                "retried": reply.get("retried", False),
                 "total_ms": reply.get("total_ms"),
                 "finish": reply.get("finish", ""),
                 "help_added": bool(added),
