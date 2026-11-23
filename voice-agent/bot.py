@@ -51,6 +51,7 @@ from pipecat.utils.context.llm_context_summarization import (
 from brand_identity import FREE_CONVERSATION_OPENER, IDENTITY_PROMPT
 from rita_cartesia_tts import RitaCartesiaTTSService
 from rita_dialect import RitaSpeechCleaner
+from rita_free_talk_prompt import FREE_TALK_PROMPT, FREE_TALK_SETTINGS
 from rita_interruption import RitaUserTurnStartStrategy, gate_mode
 from rita_groq_llm import RitaGroqLLMService
 from rita_latency import RitaLatencyObserver, RitaLatencyRecorder
@@ -393,11 +394,11 @@ def saved_conversation_history(body: dict[str, Any]) -> list[dict[str, str]]:
 def first_messages(
     body: dict[str, Any], saved_history: list[dict[str, str]], system_prompt: Any
 ) -> list[dict[str, str]]:
-    """What the model's context starts with. A free conversation starts with nothing of ours: no
-    system prompt and no opener, only the chat's own earlier messages (if the page sent any)."""
+    """What the model's context starts with. A free conversation starts with its own short prompt
+    (a spoken answer, the fact first) and no opener, then the chat's earlier messages, if any."""
 
     if is_free_talk(body):
-        return [*saved_history]
+        return [{"role": "system", "content": FREE_TALK_PROMPT}, *saved_history]
     messages = [{"role": "system", "content": system_prompt()}, *saved_history]
     if not saved_history:
         messages.append(opening_message(body))
@@ -505,15 +506,20 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
         ),
     )
 
-    # Free conversation is sent to Groq raw: no system prompt, no opener, no note, no per-turn
-    # settings; only the learner's messages and the model's own replies.
+    # Free conversation gets its own short prompt and fixed reply settings (rita_free_talk_prompt):
+    # no opener, no turn notes, no per-turn budget, and the long tutor prompt is never swapped in.
     raw_chat = is_free_talk(body)
     llm = RitaGroqLLMService(
         api_key=require_secret("GROQ_API_KEY"),
         latency_recorder=latency,
         turn_options=None if raw_chat else (lambda: explain_options(state)),
-        # A raw chat names only the model: Groq's own defaults for everything else.
-        settings=GroqLLMService.Settings(model=LLM_MODEL)
+        settings=GroqLLMService.Settings(
+            model=LLM_MODEL,
+            temperature=FREE_TALK_SETTINGS["temperature"],
+            top_p=FREE_TALK_SETTINGS["top_p"],
+            max_completion_tokens=FREE_TALK_SETTINGS["max_completion_tokens"],
+            extra={"reasoning_effort": FREE_TALK_SETTINGS["reasoning_effort"]},
+        )
         if raw_chat
         else GroqLLMService.Settings(
             model=LLM_MODEL,
@@ -619,7 +625,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
             state.asked_how_to_say,
         )
         messages = context.get_messages()
-        if messages and messages[0].get("role") == "system":
+        if not raw_chat and messages and messages[0].get("role") == "system":
             messages[0]["content"] = build_prompt(
                 body,
                 state,
@@ -644,7 +650,7 @@ async def run_bot(*, room_url: str, token: str, session_id: str, body: dict[str,
     def refresh_prompt() -> None:
         """Rebuilds the system prompt now (a new lesson step arrived between turns)."""
         messages = context.get_messages()
-        if messages and messages[0].get("role") == "system":
+        if not raw_chat and messages and messages[0].get("role") == "system":
             messages[0]["content"] = build_prompt(
                 body,
                 state,

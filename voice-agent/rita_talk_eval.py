@@ -268,7 +268,11 @@ async def play(
             if reply.get("error"):
                 problems = [f"request error: {reply['error']}"]
                 out.append({**row, "problems": problems, "categories": ["service"], "layer": "service"})
-                break
+                # Carry on: with the reference history the next turn's context is unchanged; with
+                # Uzyra's own history the failed turn is left out, as a live call would lose it.
+                if history_mode == "reference" and reference is not None:
+                    history.extend([("user", turn.text), ("assistant", row.get("reference", ""))])
+                continue
             m = measure(raw)
             problems = check_turn(turn, raw, talk.site_language, max_words) + repeated_phrase(turn, m["spoken"], earlier)
             if not raw:

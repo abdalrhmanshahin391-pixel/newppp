@@ -1,5 +1,6 @@
-"""A free conversation reaches Groq raw: no system prompt, no opener, no note, no settings of
-ours, and the reply is spoken as the model wrote it. Lessons and books keep their prompts."""
+"""A free conversation reaches Groq with its own short prompt and fixed settings only: no opener,
+no turn notes, never the long tutor prompt, and the reply is spoken as the model wrote it.
+Lessons and books keep their prompts."""
 
 import asyncio
 import sys
@@ -17,10 +18,16 @@ def never():
     raise AssertionError("a free conversation must not build a system prompt")
 
 
-def test_a_free_conversation_starts_with_nothing_of_ours():
-    assert bot.first_messages(FREE, [], never) == []
+SHORT = {"role": "system", "content": bot.FREE_TALK_PROMPT}
+
+
+def test_a_free_conversation_starts_with_its_short_prompt_only():
+    assert bot.first_messages(FREE, [], never) == [SHORT]
     history = [{"role": "user", "content": "مرحبا"}, {"role": "assistant", "content": "أهلين"}]
-    assert bot.first_messages(FREE, history, never) == history
+    assert bot.first_messages(FREE, history, never) == [SHORT, *history]
+    # Spoken, short, fact first: the prompt keeps it to a sentence or two and no tables.
+    assert "about 20 words" in bot.FREE_TALK_PROMPT
+    assert "no tables" in bot.FREE_TALK_PROMPT
 
 
 def test_lessons_and_books_keep_their_prompt():
@@ -29,7 +36,7 @@ def test_lessons_and_books_keep_their_prompt():
         assert messages[0] == {"role": "system", "content": "PROMPT"}
 
 
-def test_the_request_to_groq_holds_only_the_chat_and_the_model():
+def test_the_request_to_groq_holds_the_short_prompt_the_chat_and_its_settings():
     from pipecat.processors.aggregators.llm_context import LLMContext
     from pipecat.services.groq.llm import GroqLLMService
 
@@ -40,14 +47,20 @@ def test_the_request_to_groq_holds_only_the_chat_and_the_model():
         api_key="test",
         latency_recorder=RitaLatencyRecorder(session_id="t"),
         turn_options=None,
-        settings=GroqLLMService.Settings(model=bot.LLM_MODEL),
+        settings=GroqLLMService.Settings(
+            model=bot.LLM_MODEL,
+            temperature=bot.FREE_TALK_SETTINGS["temperature"],
+            top_p=bot.FREE_TALK_SETTINGS["top_p"],
+            max_completion_tokens=bot.FREE_TALK_SETTINGS["max_completion_tokens"],
+            extra={"reasoning_effort": bot.FREE_TALK_SETTINGS["reasoning_effort"]},
+        ),
     )
     context = LLMContext(bot.first_messages(FREE, [], never))
     context.add_message({"role": "user", "content": "مرحباً، كيف حالك؟"})
     params = llm.build_chat_completion_params(llm.get_llm_adapter().get_llm_invocation_params(context))
-    assert params["messages"] == [{"role": "user", "content": "مرحباً، كيف حالك؟"}]
-    sent = {k: v for k, v in params.items() if v is not None and type(v).__name__ != "NotGiven"}
-    assert set(sent) - {"model", "messages", "stream", "stream_options"} == set(), sent
+    assert params["messages"] == [SHORT, {"role": "user", "content": "مرحباً، كيف حالك؟"}]
+    assert params["max_completion_tokens"] == bot.FREE_TALK_SETTINGS["max_completion_tokens"]
+    assert params["reasoning_effort"] == "low"
 
 
 def test_the_reply_is_spoken_as_written_with_nothing_added():
@@ -112,5 +125,7 @@ def test_the_wiring_in_bot():
     assert "raw=raw_chat" in bot_source and "RitaSpeechCleaner(help_needed=state.help_needed, raw=raw_chat)" in bot_source
     assert "turn_options=None if raw_chat" in bot_source
     assert "enable_auto_context_summarization=not raw_chat" in bot_source
-    assert "settings=GroqLLMService.Settings(model=LLM_MODEL)\n        if raw_chat" in bot_source
+    assert 'extra={"reasoning_effort": FREE_TALK_SETTINGS["reasoning_effort"]},\n        )\n        if raw_chat' in bot_source
+    # The long tutor prompt is never swapped in over the free conversation's short one.
+    assert bot_source.count('if not raw_chat and messages and messages[0].get("role") == "system":') == 2
     assert RitaSessionState  # the state is still kept for the voice's language
