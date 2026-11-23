@@ -103,6 +103,20 @@ that would break their joined shapes.
 - **Check:** `scripts/check-feature-explorer.mjs` covers the feature section, the library preview,
   Under the hood and the stickers (Chromium and WebKit in CI).
 
+## Who can open what
+
+Signed out, a visitor can read about Uzyra but not use it. Open to everyone: the home page, the
+games list, the library list, the learning hub, prices and offers, the blog, about, the legal pages,
+support, and the sign-in pages. Everything else needs an account: the games themselves (Wordcraft,
+Pairs, Repeat), every study tool, talking to Uzyra, lessons, books, and shared decks, question sets
+and summaries (a shared link asks the visitor to sign in first).
+
+- **Gate:** `RequireAuth` shows the sign-in panel (`SignedOutPanel`) in place of the page: black
+  and white, with the Uzyra mark, a title and line for the page (`gate-copy.ts`) and what waits
+  inside. Signing in comes back to the same address, search included.
+- **Check:** `scripts/check-guest-routes.mjs` fails CI when a route is neither on its short public
+  list nor guarded.
+
 ## The home cube
 
 No background lines: the Hedwig-style animated contours were removed (Nov 2026) at the owner's
@@ -712,8 +726,8 @@ A word-path game for learning English words (`src/components/wordcraft`, engine 
   4 × 5), Hard (5, 6, 6 and 7 letters, 4 × 6, the most tangled of several grids). Three grey cards, each with a
   small grid of white squares showing its size. Every round is new and random.
 - **Where the words come from:** signed in, Groq suggests words for the level (`wordcraftRound`), the engine keeps
-  the good ones and proves one answer. Signed out, or when the AI cannot help, the round comes from the built-in
-  list and a quiet line under the board says so. The next round is made while the current one is played.
+  the good ones and proves one answer. When the AI cannot help, the round comes from the built-in list and a
+  quiet line under the board says so. The game needs an account: signed out, `/wordcraft` shows the sign-in panel. The next round is made while the current one is played.
 - **Waiting:** the guide says "Getting your words ready…" and the empty board (the level's size) breathes softly.
 - **Board:** grey `#f4f4f8` panel, 24px corners; tiles are white, 14px corners, a 3px bottom lip, Inter Tight 700.
   The tile size follows the screen (46px floor on phones, 96px cap), the grid is always left to right, even in Arabic.

@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { RequireAuth } from "@/components/study/RequireAuth";
+import { GATE } from "@/components/study/gate-copy";
 import { WordcraftPage } from "@/components/wordcraft/WordcraftPage";
 import type { Level } from "@/lib/wordcraft/round";
 
@@ -25,5 +27,9 @@ export const Route = createFileRoute("/wordcraft")({
 
 function WordcraftRoute() {
   const { d } = Route.useSearch();
-  return <WordcraftPage level={d} />;
+  return (
+    <RequireAuth what="your games" {...GATE.wordcraft}>
+      <WordcraftPage level={d} />
+    </RequireAuth>
+  );
 }

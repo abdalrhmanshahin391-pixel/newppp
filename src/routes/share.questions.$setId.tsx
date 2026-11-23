@@ -1,4 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { RequireAuth } from "@/components/study/RequireAuth";
+import { GATE } from "@/components/study/gate-copy";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -54,7 +56,11 @@ export const Route = createFileRoute("/share/questions/$setId")({
       },
     ],
   }),
-  component: QuestionSetDetailPage,
+  component: () => (
+    <RequireAuth what="shared questions" {...GATE.questions}>
+      <QuestionSetDetailPage />
+    </RequireAuth>
+  ),
 });
 
 function QuestionSetDetailPage() {

@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { RequireAuth } from "@/components/study/RequireAuth";
+import { GATE } from "@/components/study/gate-copy";
 import { RepeatPage } from "@/components/repeat/RepeatPage";
 
 export const Route = createFileRoute("/repeat")({
@@ -12,5 +14,9 @@ export const Route = createFileRoute("/repeat")({
       },
     ],
   }),
-  component: RepeatPage,
+  component: () => (
+    <RequireAuth what="your practice" {...GATE.repeat}>
+      <RepeatPage />
+    </RequireAuth>
+  ),
 });

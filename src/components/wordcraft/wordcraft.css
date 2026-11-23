@@ -66,13 +66,6 @@
   font-size: 16px;
   line-height: 1.6;
 }
-.wc-note {
-  align-self: flex-start;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: var(--pp-grey);
-  font-size: 14px;
-}
 
 .wc .wc-section-title {
   font-size: 26px;
@@ -166,12 +159,6 @@
   .wc-pick-go {
     display: none;
   }
-}
-.wc-inline-link {
-  color: var(--pp-accent-text);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 .wc-note-line {
   grid-area: note;
