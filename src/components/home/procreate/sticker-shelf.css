@@ -1,7 +1,7 @@
 /* The end of the home page: the ask field and four stickers fanned like cards. */
 .uz-shelf {
-  --shelf-ink: #1a1311;
-  --shelf-muted: #93969e;
+  --shelf-ink: #121212;
+  --shelf-muted: #9b9b9e;
   --shelf-line: rgba(0, 0, 0, 0.09);
   --shelf-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   max-width: 1240px;
@@ -56,7 +56,7 @@
   border-bottom-color: var(--shelf-ink);
 }
 .uz-shelf-ask button:focus-visible {
-  outline: 2px solid #225bab;
+  outline: 2px solid var(--shelf-ink);
   outline-offset: 3px;
 }
 .uz-shelf-row {
@@ -77,7 +77,37 @@
   -webkit-touch-callout: none;
   transition: transform 0.56s var(--shelf-spring);
 }
-.uz-shelf-item[data-held="true"] {
+/* Entrance: each sticker rises from below, upright, and settles at its own angle. Uses the
+   separate translate and opacity properties so it never fights the drag's transform. */
+.uz-shelf-item {
+  opacity: 0;
+  translate: 0 90px;
+}
+.uz-shelf-row[data-shown] .uz-shelf-item {
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    transform 0.56s var(--shelf-spring),
+    opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1) calc(var(--n) * 0.09s),
+    translate 0.9s cubic-bezier(0.23, 1, 0.32, 1) calc(var(--n) * 0.09s);
+}
+.uz-shelf-row:not([data-shown]) .uz-shelf-item img {
+  rotate: 0deg !important;
+}
+.uz-shelf-row[data-shown] .uz-shelf-item img {
+  transition:
+    scale 0.42s var(--shelf-spring),
+    rotate 0.9s var(--shelf-spring) calc(var(--n) * 0.09s + 0.1s),
+    filter 0.3s ease;
+}
+.uz-shelf-row[data-shown] .uz-shelf-item[data-held="true"] img {
+  transition:
+    scale 0.42s var(--shelf-spring),
+    rotate 0.26s var(--shelf-spring),
+    filter 0.3s ease;
+}
+.uz-shelf-item[data-held="true"],
+.uz-shelf-row[data-shown] .uz-shelf-item[data-held="true"] {
   z-index: 60;
   cursor: grabbing;
   transition: none;
@@ -104,6 +134,14 @@
   filter: drop-shadow(0 18px 22px rgba(20, 18, 34, 0.3));
 }
 @media (prefers-reduced-motion: reduce) {
+  .uz-shelf-item,
+  .uz-shelf-row[data-shown] .uz-shelf-item {
+    opacity: 1;
+    translate: none;
+  }
+  .uz-shelf-row:not([data-shown]) .uz-shelf-item img {
+    rotate: var(--tilt) !important;
+  }
   .uz-shelf-item {
     cursor: default;
     touch-action: auto;

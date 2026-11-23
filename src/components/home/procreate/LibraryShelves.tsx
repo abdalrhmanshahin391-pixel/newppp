@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 import { BookObject, UzyraIcon } from "@/components/books/BookObject";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
+import { useShown } from "./ag-hooks";
 
 // Sample shelves from the starter library, shown without fetching the live catalogue.
 const books = [
@@ -87,7 +88,9 @@ export default function LibraryShelves() {
   const ar = useUiLanguage() === "ar";
   const stage = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLDivElement>(null);
-  // Tilt follows scroll: 0 when the window sits in the middle of the screen. Only transform is written.
+  // The books rise one after another the first time the shelves are well in view.
+  const { ref: shelvesRef, shown } = useShown<HTMLDivElement>(0.8);
+  // The frame grows to full size with the scroll (like the intro card). Only transform is written.
   useEffect(() => {
     const el = stage.current;
     const win = frame.current;
@@ -103,9 +106,8 @@ export default function LibraryShelves() {
       const p = Math.max(0, Math.min(1, (start - top) / (start - end)));
       const eased = 1 - Math.pow(1 - p, 3);
       const wide = window.innerWidth >= 768;
-      const tilt = motion.matches ? 0 : (wide ? 24 : 0) * (1 - eased);
       const scale = motion.matches ? 1 : (wide ? 0.9 : 0.96) + (wide ? 0.1 : 0.04) * eased;
-      win.style.transform = `rotateX(${tilt.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+      win.style.transform = `scale(${scale.toFixed(3)})`;
     };
     const onScroll = () => {
       if (!raf) raf = window.requestAnimationFrame(update);
@@ -142,11 +144,13 @@ export default function LibraryShelves() {
   return (
     <div ref={stage} className="library-stage">
       <div ref={frame} className="library-screen">
-        <header className="library-bar">
-          <strong>Uzyra</strong>
-          <span>{ar ? "معاينة المكتبة" : "Library preview"}</span>
-        </header>
-        <div className="library-shelves">
+        <div
+          ref={shelvesRef}
+          className="library-shelves"
+          data-shown={shown || undefined}
+          aria-label={ar ? "معاينة المكتبة" : "Library preview"}
+          role="group"
+        >
           {shelves.map((shelf) => (
             <section key={shelf.en} className="bk-shelf">
               <div className="bk-shelf-head">
@@ -164,8 +168,12 @@ export default function LibraryShelves() {
                 aria-label={ar ? shelf.ar : shelf.en}
                 tabIndex={0}
               >
-                {shelf.picks.map((i) => (
-                  <div key={books[i].cover_url} className="bk-item">
+                {shelf.picks.map((i, n) => (
+                  <div
+                    key={books[i].cover_url}
+                    className="bk-item"
+                    style={{ "--n": n } as CSSProperties}
+                  >
                     <BookObject book={books[i]} />
                     <span className="bk-item-title" dir="auto">
                       {books[i].title}

@@ -1,0 +1,86 @@
+/* Shared home motion: typed headings and letter-by-letter fades (see ag-motion.tsx). */
+.uz-ag-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Typed: each letter appears on its turn; the caret rides on the letter being typed, then blinks
+   a few times at the end. */
+.uz-ag-ch {
+  position: relative;
+  opacity: 0;
+}
+[data-typing] .uz-ag-ch {
+  animation: uz-ag-type 1ms linear forwards;
+  animation-delay: calc(var(--i) * var(--type));
+}
+.uz-ag-ch::after {
+  content: "";
+  position: absolute;
+  top: 0.1em;
+  right: -0.05em;
+  width: 0.05em;
+  height: 0.9em;
+  background: currentColor;
+  opacity: 0;
+}
+[data-typing] .uz-ag-ch::after {
+  animation: uz-ag-caret var(--type) step-end;
+  animation-delay: calc(var(--i) * var(--type));
+}
+[data-typing] .uz-ag-last::after {
+  animation: uz-ag-blink 0.9s step-end 3;
+  animation-delay: calc(var(--i) * var(--type));
+}
+@keyframes uz-ag-type {
+  0%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes uz-ag-caret {
+  0% {
+    opacity: 1;
+  }
+}
+@keyframes uz-ag-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Letters: a quick fade each, one after another (power2.out). */
+.uz-ag-word {
+  white-space: nowrap;
+}
+.uz-ag-letter {
+  opacity: 0;
+  transition: opacity 0.1s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+[data-shown] .uz-ag-letter {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uz-ag-ch,
+  .uz-ag-letter {
+    opacity: 1;
+    animation: none !important;
+    transition: none;
+  }
+  .uz-ag-ch::after {
+    display: none;
+  }
+}

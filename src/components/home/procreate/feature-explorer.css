@@ -1,0 +1,686 @@
+/*
+ * Under the intro card: the typed statement over a rippling row of circles, then one row per
+ * feature. Black, white and greys only. Sizes follow the reference section: 120px section padding,
+ * a 12-column grid (copy 4 columns, picture 6 with a 2-column gap), 42px titles, square pictures
+ * with 36px corners; on phones everything is centred and stacked, copy first.
+ */
+.uz-fx {
+  --fx-ink: #121212;
+  --fx-muted: #47474a;
+  --fx-line: #e4e4e6;
+  --fx-soft: #f3f3f4;
+  --fx-font: "Uzyra Arabic", "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  position: relative;
+  background: #fff;
+  color: var(--fx-ink);
+  font-family: var(--fx-font);
+  overflow-x: clip;
+}
+/* ---- The statement ---------------------------------------------------------------------- */
+.uz-fx-statement {
+  position: relative;
+  padding: 120px 0 88px;
+}
+.uz-fx-circles {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 0;
+  /* Room for the ripple (±35px) so the circles never clip. */
+  padding: 35px 0;
+  list-style: none;
+  white-space: nowrap;
+  will-change: transform;
+}
+.uz-fx-circle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 98px;
+  height: 98px;
+  border: 1px solid var(--fx-line);
+  border-radius: 50%;
+  background: var(--fx-soft);
+  color: var(--fx-ink);
+  will-change: transform;
+}
+.uz-fx-circle svg {
+  width: 36px;
+  height: 36px;
+}
+/* 180px under the circles (less the ripple's room), nine of twelve columns wide. */
+.uz-fx-wrap {
+  max-width: 1280px;
+  margin: 145px auto 0;
+  padding: 0 24px;
+}
+.uz-fx .uz-fx-said {
+  max-width: 75%;
+  margin: 0;
+  font-family: var(--fx-font);
+  font-size: 54px;
+  font-weight: 450;
+  line-height: 56.16px;
+  letter-spacing: -0.95px;
+  text-wrap: balance;
+}
+/* ---- The feature rows ------------------------------------------------------------------- */
+.uz-fx-features {
+  padding: 120px 24px;
+}
+.uz-fx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 120px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.uz-fx-row {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 24px;
+  align-items: center;
+}
+.uz-fx-copy {
+  display: flex;
+  grid-column: 1 / span 4;
+  flex-direction: column;
+  gap: 24px;
+}
+.uz-fx-media {
+  grid-column: 7 / span 6;
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 36px;
+  background: var(--fx-soft);
+}
+.uz-fx .uz-fx-title {
+  margin: 0;
+  font-family: var(--fx-font);
+  font-size: 42px;
+  font-weight: 450;
+  line-height: 43.68px;
+  letter-spacing: -0.73px;
+}
+.uz-fx-title a {
+  color: inherit;
+  text-decoration: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .uz-fx-title a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 6px;
+  }
+}
+.uz-fx-title a:focus-visible {
+  outline: 2px solid var(--fx-ink);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.uz-fx-text {
+  margin: 0;
+  color: var(--fx-muted);
+  font-size: 17px;
+  line-height: 1.55;
+}
+.uz-fx-cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 72px;
+}
+.uz-fx-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 0 28px;
+  border-radius: 999px;
+  background: var(--fx-soft);
+  color: var(--fx-ink);
+  font-size: 17px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+.uz-fx-button:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) and (pointer: fine) {
+  .uz-fx-button:hover {
+    background: var(--fx-line);
+  }
+}
+.uz-fx-button:focus-visible {
+  outline: 2px solid var(--fx-ink);
+  outline-offset: 3px;
+}
+
+/* ---- The pictures ----------------------------------------------------------------------- */
+.uz-fx-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 9%;
+}
+.uz-fx-soft {
+  background: linear-gradient(160deg, #f6f6f7 0%, #e6e6e7 100%);
+}
+.uz-fx-window {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--fx-line);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 60px -28px rgb(18 18 18 / 0.28);
+}
+/* The study shot: cropped to the guide and the orb beside it, running off the bottom right. */
+.uz-fx-shot {
+  position: absolute;
+  top: 11%;
+  left: 9%;
+  width: 100%;
+  bottom: -8%;
+}
+.uz-fx-shot img {
+  display: block;
+  width: 166.67%;
+  max-width: none;
+  height: auto;
+  margin-left: -66.67%;
+  filter: grayscale(1);
+}
+.uz-fx-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+  container-type: inline-size;
+}
+.uz-fx-eyebrow {
+  margin: 0;
+  color: var(--fx-muted);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* Talk: black, with the cube speaking between the two lines. */
+.uz-fx-talk {
+  justify-content: flex-start;
+  gap: 22px;
+  padding-top: 11%;
+  background: #000;
+  color: #fff;
+}
+.uz-fx-talk-cube {
+  width: 28%;
+  aspect-ratio: 1;
+}
+.uz-fx-talk-cube .uz-cube-shape {
+  fill: #fff;
+}
+.uz-fx-talk-cube .uz-cube-eye {
+  fill: #000;
+}
+.uz-fx-bubble {
+  max-width: 86%;
+  margin: 0;
+  padding: 12px 18px;
+  border-radius: 22px;
+  font-size: 17px;
+  line-height: 1.35;
+}
+.uz-fx-me {
+  align-self: flex-end;
+  background: #2a2a2d;
+}
+.uz-fx-her {
+  align-self: flex-start;
+  background: #fff;
+  color: #000;
+}
+
+/* Lessons: a short path, done and current and locked. */
+.uz-fx-path {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.uz-fx-path li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 11px 0;
+  font-size: 16px;
+}
+.uz-fx-path li + li::before {
+  content: "";
+  position: absolute;
+  top: -11px;
+  left: 10px;
+  width: 2px;
+  height: 22px;
+  background: var(--fx-line);
+}
+.uz-fx-node {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--fx-ink);
+  border-radius: 50%;
+  background: var(--fx-ink);
+}
+.uz-fx-path [data-state="now"] .uz-fx-node {
+  background: #fff;
+  box-shadow:
+    inset 0 0 0 4px #fff,
+    inset 0 0 0 11px var(--fx-ink);
+}
+.uz-fx-path [data-state="next"] {
+  color: #9b9b9e;
+}
+.uz-fx-path [data-state="next"] .uz-fx-node {
+  border-color: var(--fx-line);
+  background: #fff;
+}
+.uz-fx-path [data-state="now"] .uz-fx-lesson {
+  font-weight: 600;
+}
+.uz-fx-stars {
+  display: flex;
+  gap: 2px;
+}
+.uz-fx-stars svg {
+  width: 16px;
+  height: 16px;
+  color: #c4c4c6;
+}
+.uz-fx-stars svg[data-on] {
+  color: var(--fx-ink);
+  fill: var(--fx-ink);
+}
+.uz-fx-goal {
+  margin: 4px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--fx-soft);
+  font-size: 14px;
+}
+
+/* Games: letter tiles and pairs. */
+.uz-fx-tiles {
+  display: flex;
+  gap: 8px;
+}
+.uz-fx-tiles span {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background: var(--fx-ink);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600;
+}
+.uz-fx-tiles span[data-empty] {
+  border: 2px dashed #c4c4c6;
+  background: #fff;
+}
+.uz-fx-pairs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.uz-fx-pairs span {
+  padding: 12px;
+  border: 1px solid var(--fx-line);
+  border-radius: 12px;
+  font-size: 15px;
+  text-align: center;
+}
+.uz-fx-pairs span[data-matched] {
+  border-color: var(--fx-ink);
+  background: var(--fx-soft);
+  text-decoration: line-through;
+  text-decoration-color: #9b9b9e;
+}
+
+/* ---- Phones and tablets ----------------------------------------------------------------- */
+@media (width <= 1023px) {
+  .uz-fx-statement {
+    padding: 40px 0 64px;
+  }
+  .uz-fx-wrap {
+    margin-top: 45px;
+    text-align: center;
+  }
+  .uz-fx .uz-fx-said {
+    max-width: none;
+  }
+  .uz-fx-copy {
+    grid-column: 1 / span 5;
+  }
+  .uz-fx-media {
+    grid-column: 6 / span 7;
+  }
+}
+@media (width <= 767px) {
+  .uz-fx-statement {
+    padding: 40px 0 48px;
+  }
+  .uz-fx-circles {
+    gap: 6px;
+  }
+  .uz-fx-circle {
+    width: 70px;
+    height: 70px;
+  }
+  .uz-fx-circle svg {
+    width: 28px;
+    height: 28px;
+  }
+  .uz-fx-wrap {
+    padding: 0 16px;
+  }
+  .uz-fx .uz-fx-said {
+    font-size: 34px;
+    line-height: 36.04px;
+    letter-spacing: -0.68px;
+  }
+  .uz-fx-features {
+    padding: 80px 16px;
+  }
+  .uz-fx-list {
+    gap: 88px;
+  }
+  .uz-fx-row {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .uz-fx-copy {
+    align-items: center;
+    text-align: center;
+  }
+  .uz-fx-media {
+    width: 100%;
+    border-radius: 24px;
+  }
+  .uz-fx .uz-fx-title {
+    font-size: 28px;
+    line-height: 29.6px;
+    letter-spacing: -0.28px;
+  }
+  .uz-fx-scene {
+    padding: 7%;
+  }
+  .uz-fx-panel {
+    gap: 10px;
+    padding: 16px;
+  }
+  .uz-fx-bubble {
+    font-size: 15px;
+  }
+  .uz-fx-path li {
+    padding: 8px 0;
+    font-size: 14px;
+  }
+  .uz-fx-path li + li::before {
+    top: -8px;
+    height: 16px;
+  }
+  .uz-fx-tiles span {
+    font-size: 18px;
+  }
+  .uz-fx-pairs span {
+    padding: 9px;
+    font-size: 13px;
+  }
+}
+
+/* ---- Talk: the two lines arrive, then the German opens its meaning ----------------------- */
+.uz-fx-me,
+.uz-fx-her-wrap {
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 0.45s cubic-bezier(0.23, 1, 0.32, 1),
+    transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.uz-fx-me[data-in],
+.uz-fx-her-wrap[data-in] {
+  opacity: 1;
+  transform: none;
+}
+.uz-fx-her-wrap {
+  position: relative;
+  align-self: flex-start;
+  max-width: 86%;
+}
+.uz-fx-her-wrap .uz-fx-her {
+  max-width: none;
+}
+.uz-fx-word-chip {
+  display: inline-block;
+  margin: 0 2px;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: #e4e4e6;
+  color: #000;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    transform 0.12s ease;
+}
+.uz-fx-word-chip:active {
+  transform: scale(0.97);
+}
+.uz-fx-word-chip[aria-expanded="true"] {
+  background: #000;
+  color: #fff;
+}
+.uz-fx-word-chip:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.uz-fx-meaning {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 220px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #2a2a2d;
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(-6px) scale(0.96);
+  transform-origin: 30% 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s cubic-bezier(0.23, 1, 0.32, 1),
+    transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.uz-fx-meaning[data-open] {
+  opacity: 1;
+  transform: none;
+}
+.uz-fx-meaning p {
+  margin: 0;
+}
+.uz-fx-meaning-term {
+  font-weight: 600;
+}
+.uz-fx-meaning-say {
+  margin-top: 4px !important;
+  color: #b9b9bc;
+  font-size: 14px;
+}
+
+/* ---- Words: the list fills in, then folds into flashcards --------------------------------- */
+.uz-fx-deck {
+  position: relative;
+  min-height: 168px;
+}
+.uz-fx-wordlist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.uz-fx-wordlist li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--fx-line);
+  font-size: 16px;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+    transform 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.uz-fx-wordlist li span + span {
+  color: var(--fx-muted);
+  font-weight: 400;
+}
+.uz-fx-words[data-step]:not([data-step="0"]) .uz-fx-wordlist li {
+  opacity: 1;
+  transform: none;
+}
+.uz-fx-wordlist[data-hidden] li {
+  opacity: 0 !important;
+  transform: translateY(18px) scale(0.96) !important;
+}
+.uz-fx-stack {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.uz-fx-flash {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 78%;
+  height: 132px;
+  border: 1px solid var(--fx-line);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 14px 30px -18px rgb(18 18 18 / 0.35);
+  opacity: 0;
+  transform: translateY(24px) scale(0.92);
+  transition:
+    opacity 0.4s cubic-bezier(0.23, 1, 0.32, 1),
+    transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  transition-delay: calc(var(--n) * 0.07s);
+}
+.uz-fx-flash b {
+  font-size: 20px;
+  font-weight: 600;
+}
+.uz-fx-flash span {
+  color: var(--fx-muted);
+}
+.uz-fx-stack[data-shown] .uz-fx-flash {
+  opacity: 1;
+  transform: translate(calc(var(--n) * 10px), calc(var(--n) * -8px)) rotate(calc(var(--n) * 3deg));
+}
+.uz-fx-turn {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--fx-ink);
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.uz-fx-turn:active,
+.uz-fx-turn[data-press] {
+  transform: scale(0.97);
+}
+.uz-fx-turn:focus-visible {
+  outline: 2px solid var(--fx-ink);
+  outline-offset: 3px;
+}
+@media (width <= 767px) {
+  .uz-fx-deck {
+    min-height: 138px;
+  }
+  .uz-fx-wordlist li {
+    padding: 9px 0;
+    font-size: 14px;
+  }
+  .uz-fx-flash {
+    height: 104px;
+  }
+  .uz-fx-flash b {
+    font-size: 17px;
+  }
+  .uz-fx-turn {
+    min-height: 40px;
+    font-size: 13px;
+  }
+  .uz-fx-meaning {
+    top: calc(100% + 6px);
+    min-width: 180px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  .uz-fx-meaning-say {
+    font-size: 12px;
+  }
+  .uz-fx-talk {
+    gap: 12px;
+    padding-top: 7%;
+  }
+  .uz-fx-talk-cube {
+    width: 22%;
+  }
+}
+
+/* ---- Reduced motion: everything there at once, nothing moving ----------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .uz-fx-circles,
+  .uz-fx-circle {
+    will-change: auto;
+  }
+  .uz-fx-me,
+  .uz-fx-her-wrap,
+  .uz-fx-meaning,
+  .uz-fx-wordlist li,
+  .uz-fx-flash,
+  .uz-fx-button,
+  .uz-fx-turn,
+  .uz-fx-word-chip {
+    transition: none;
+  }
+  .uz-fx-button:active,
+  .uz-fx-turn:active,
+  .uz-fx-word-chip:active {
+    transform: none;
+  }
+}

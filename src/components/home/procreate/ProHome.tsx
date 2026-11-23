@@ -1,11 +1,11 @@
 import { lazy, Suspense } from "react";
 import { ProHeader } from "./ProHeader";
+import { FeatureExplorer } from "./FeatureExplorer";
 import { IntroCard } from "./IntroCard";
 import { UltraHero } from "./UltraHero";
 
 const AskAnything = lazy(() => import("./AskAnything").then((m) => ({ default: m.AskAnything })));
 const TopicsStrip = lazy(() => import("./TopicsStrip").then((m) => ({ default: m.TopicsStrip })));
-const FeatureTrio = lazy(() => import("./FeatureTrio").then((m) => ({ default: m.FeatureTrio })));
 const VoiceBand = lazy(() => import("./VoiceBand").then((m) => ({ default: m.VoiceBand })));
 const AppWindow = lazy(() => import("./AppWindow").then((m) => ({ default: m.AppWindow })));
 const UnderTheHood = lazy(() =>
@@ -17,7 +17,10 @@ const StickerShelf = lazy(() =>
 );
 const FinalCta = lazy(() => import("./FinalCta").then((m) => ({ default: m.FinalCta })));
 
-/** Home page: white surface, ink text, blue actions. Uzyra first, then the story bands and the questions. */
+/**
+ * Home page: white surface, ink text, black, white and greys. Uzyra first, then what she does, the
+ * library, how the voice works, the stickers, and the questions.
+ */
 export function ProHome() {
   return (
     <main
@@ -25,26 +28,30 @@ export function ProHome() {
       style={{ fontFamily: "var(--font-grotesk)" }}
     >
       <noscript>
-        <style>{".rita-reveal{opacity:1!important;transform:none!important}"}</style>
+        <style>
+          {
+            ".rita-reveal{opacity:1!important;transform:none!important}.uz-ag-ch,.uz-ag-letter,.uz-shelf-item,.library-shelves .bk-item,.uz-fx-me,.uz-fx-her-wrap,.uz-fx-wordlist li{opacity:1!important;translate:none!important;transform:none!important}"
+          }
+        </style>
       </noscript>
       <ProHeader tone="light" />
 
       <UltraHero />
       <IntroCard />
+      <FeatureExplorer />
 
       <Suspense fallback={<div className="min-h-[45vh]" aria-hidden="true" />}>
         <AskAnything />
         <TopicsStrip />
-        <FeatureTrio />
         <VoiceBand />
         <AppWindow />
         <UnderTheHood />
       </Suspense>
 
       <Suspense fallback={<div className="min-h-[45vh]" aria-hidden="true" />}>
+        <StickerShelf />
         <HomeFaq />
         <FinalCta />
-        <StickerShelf />
       </Suspense>
     </main>
   );

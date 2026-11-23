@@ -1,7 +1,14 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
+import { useShown } from "./ag-hooks";
 import "./sticker-shelf.css";
 
 const STICKERS: { src: string; tilt: number; lift: number; alt: [string, string] }[] = [
@@ -37,7 +44,8 @@ type Drag = { i: number; x: number; y: number; tilt: number };
  * The end of the home page: one «Ask Uzyra anything» field (it opens a conversation with Uzyra)
  * over four stickers fanned like cards. A sticker lifts a little under the pointer; pressed, it
  * grows, comes to the front and follows the finger, leaning with the drag; let go, it springs
- * back to its place. Reduced motion keeps only the small lift.
+ * back to its place. The first time the row is in view the stickers rise into the fan one after
+ * another, each turning from upright to its own angle. Reduced motion keeps only the small lift.
  */
 export function StickerShelf() {
   const ar = useUiLanguage() === "ar";
@@ -46,6 +54,8 @@ export function StickerShelf() {
   const [drag, setDrag] = useState<Drag | null>(null);
   const [still, setStill] = useState(false);
   const from = useRef<{ x: number; y: number; lastX: number; lastT: number } | null>(null);
+  // The stickers rise into their fan, one after another, the first time the row is in view.
+  const { ref: rowRef, shown } = useShown<HTMLDivElement>(0.85);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -115,7 +125,7 @@ export function StickerShelf() {
         </button>
       </form>
 
-      <div className="uz-shelf-row" dir="ltr">
+      <div ref={rowRef} className="uz-shelf-row" dir="ltr" data-shown={shown || undefined}>
         {STICKERS.map((sticker, i) => {
           const held = drag?.i === i;
           return (
@@ -123,10 +133,14 @@ export function StickerShelf() {
               key={sticker.src}
               className="uz-shelf-item"
               data-held={held}
-              style={{
-                transform: held ? `translate(${drag.x}px, ${drag.y}px)` : undefined,
-                marginTop: `${sticker.lift}px`,
-              }}
+              style={
+                {
+                  transform: held ? `translate(${drag.x}px, ${drag.y}px)` : undefined,
+                  marginTop: `${sticker.lift}px`,
+                  "--n": i,
+                  "--tilt": `${sticker.tilt}deg`,
+                } as CSSProperties
+              }
               onPointerDown={(event) => down(i, event)}
               onPointerMove={(event) => move(i, event)}
               onPointerUp={up}
