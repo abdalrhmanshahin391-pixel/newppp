@@ -119,19 +119,22 @@ production voice or database.
 ### How Uzyra moves (`RitaCube`, engine in `src/components/rita-study/mascot`)
 
 The look and the rhythm follow the bots on x.ai/bot, as the owner asked: the soft red square in
-their red (`#EA4045`), their proportions (a rounded square with some thickness and round edges),
+their red (`#EA4045`), their proportions (a squircle with some thickness and round edges),
 and their timings, ranges and easing curves, read from their page. The shapes, clips and code are
 ours; none of their drawings or animation files are used.
 
-- **Shape.** A soft cube: 76 × 76 from the front, 32 deep, corners 16 round from the front, every
-  edge rounded (10). It is a box widened by a disc (the corners) and a ball (the edges), so the
-  farthest point in any direction has a closed form; the outline at any turn is those points for
-  a ring of directions (48–168 by size). They move smoothly as it turns, so it never shakes, and
-  its round side shows as it turns away (edge on it is 32 wide).
+- **Shape.** A soft cube: 76 × 76 from the front, 28 deep, every edge rounded (8). From the front
+  it is a squircle like the red bot on x.ai/bot (measured on their page: a superellipse of
+  exponent about 2.9), so each corner bends into the side with no visible seam and the sides
+  bulge a little; the formula is ours, not their drawing. It is a squircle slab widened by a ball,
+  so the farthest point in any direction has a closed form; the outline at any turn is those
+  points for a ring of directions (48–168 by size). They move smoothly as it turns, so it never
+  shakes, and its round side shows as it turns away (edge on it is 28 wide).
 - **Eyes.** Flat shapes on the front face, turned with it, so they slide and narrow as it turns
   and hide just before it is edge on. At rest two upright pills (9.5 × 20.5, 20 apart, a little
-  below the middle). Feelings: neutral, attentive, squint (thinking), happy (the eyes flip into
-  ◠ arcs), surprised, curious (one eye smaller), sleepy (◡ arcs). A feeling always changes inside
+  below the middle). Always pills or arcs, never small round dots. Feelings: neutral, attentive,
+  squint (thinking: shorter pills), happy (the eyes flip into ◠ arcs), surprised, curious (one
+  eye shorter), sleepy (◡ arcs). A feeling always changes inside
   a blink, when the lids are shut. A blink lasts 0.24 s and opens with a small overshoot.
 - **Clips per mood**, keyframed, played 25% faster than written (`SPEED` 1.25):
   - waiting: float, glance, hop, spin, front flip, double hop, peek (turns to show its side and
@@ -148,13 +151,12 @@ ours; none of their drawings or animation files are used.
   along fast moves up or down and while it spins, leans into a spin and wobbles back when it
   stops (a spring), and jiggles like jelly when it lands. Everything is kept within 0.86–1.16.
 - **No jumps.** A new clip (or a new mood) starts from wherever it is and blends in over 0.4 s;
-  whole turns are folded away first so it never unwinds. Never two turns at once: during a spin
-  or flip a tap hops instead. A test runs 60 s of moods, taps and voices at 60 fps and checks no
-  frame moves more than 5 units or turns more than 24°.
+  whole turns are folded away first so it never unwinds. A test runs 60 s of moods and voices at
+  60 fps and checks no frame moves more than 5 units or turns more than 24°.
 - **Voices.** Listening: the learner's voice presses it down and tips it forward. Speaking: it
   rises and stretches with Uzyra's voice.
-- **Pointer and taps** (`interactive`): on a mouse its eyes (0.07 s), then its body (0.22 s) turn
-  to the pointer. Taps go spin, hop, flip, wiggle, spin, nod; all but the nod bring happy eyes.
+- **No pointer, no taps.** By the owner's choice it does not follow the mouse or react to taps;
+  it only plays its own clips.
 - **Cost.** Three SVG paths written only when they change; nothing offscreen or in hidden tabs;
   reduced motion holds the body still (blinks only).
 

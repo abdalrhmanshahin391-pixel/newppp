@@ -80,11 +80,12 @@ const both = (e: EyeShape): EyePair => [e, { ...e }];
 export const FACES: Record<FaceName, EyePair> = {
   neutral: both(pill(EYE.w, EYE.h)),
   attentive: both(pill(10, 22.5, 0, -0.5)),
-  squint: both(pill(10, 10.5, 10, -1)),
+  /** Thinking: the same upright pills, a little shorter (never small round dots). */
+  squint: both(pill(9, 16.5, 0, -1)),
   /** ◠ ◠: the eyes flip up into happy arcs. */
   happy: both(arc(true, 6.2, 160, 5.4, -1.5, 2.5)),
   surprised: both(pill(11, 23.5, 0, -1)),
-  curious: [pill(EYE.w, EYE.h), pill(10, 12, 8, -1)],
+  curious: [pill(EYE.w, EYE.h), pill(9, 16.5, 0, -1)],
   /** ◡ ◡: relaxed, nearly shut. */
   sleepy: both(arc(false, 5.6, 130, 4.2, 2, 2)),
 };

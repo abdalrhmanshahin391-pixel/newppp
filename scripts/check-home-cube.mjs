@@ -191,12 +191,16 @@ try {
       "the mark and the large cube",
     );
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-    // The large cube is interactive: a tap reacts, and the outline path changes.
+    // The large cube moves on its own; it does not follow the pointer or react to taps.
     const cubePath = page.locator(".uz-ultra-cube .uz-cube-shape");
     const before = await cubePath.getAttribute("d");
-    await page.locator(".uz-ultra-cube").click();
     await page.waitForTimeout(350);
-    assert.notEqual(await cubePath.getAttribute("d"), before, "a tap moves the cube");
+    assert.notEqual(await cubePath.getAttribute("d"), before, "the cube moves on its own");
+    assert.notEqual(
+      await page.locator(".uz-ultra-cube .uz-cube").evaluate((el) => getComputedStyle(el).cursor),
+      "pointer",
+      "no tap affordance",
+    );
     await page.evaluate(() => scrollTo(0, 0));
     await page.waitForTimeout(100);
     await page.screenshot({

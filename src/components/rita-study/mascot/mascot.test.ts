@@ -45,9 +45,10 @@ test("at rest it is a 76 × 76 soft square with two upright eyes a little below 
   const b = bbox(g.body);
   assert.ok(Math.abs(b.x1 - b.x0 - 2 * BODY.half) < 0.05, `width ${b.x1 - b.x0}`);
   assert.ok(Math.abs(b.y1 - b.y0 - 2 * BODY.half) < 0.05, `height ${b.y1 - b.y0}`);
-  // A soft corner: the 45° point sits well inside the square's corner.
+  // A squircle corner like the red bot on x.ai/bot: the 45° point sits at 0.787 of the half
+  // size (measured on their page at 0.79).
   const corner = support([1, 1, 0]);
-  assert.ok(corner[0] < BODY.half - 3 && corner[0] > BODY.half - 8, `corner ${corner[0]}`);
+  assert.ok(Math.abs(corner[0] / BODY.half - 0.787) < 0.01, `corner ${corner[0]}`);
   const [l, r] = g.eyes!.map((o) => bbox([o.start, ...o.curves.map((c) => c[2])]));
   assert.ok(l.y1 - l.y0 > 2 * (l.x1 - l.x0), "eyes about twice as tall as wide");
   assert.ok((l.y0 + l.y1) / 2 > 50, "eyes sit below the middle");

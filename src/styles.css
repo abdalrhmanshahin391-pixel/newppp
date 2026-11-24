@@ -5848,11 +5848,6 @@ html.rita-app,
 .uz-cube-eye {
   fill: #fff;
 }
-.uz-cube[data-interactive] {
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
 /* The language choices in the circle: a short word in the disc, the chosen one blue and ticked. */
 .st-rad-glyph {
   font-size: 17px;

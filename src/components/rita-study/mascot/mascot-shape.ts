@@ -1,9 +1,8 @@
 /**
  * Uzyra's body and eyes, drawn in the 100 × 100 box the SVG uses.
  *
- * The body is a soft cube: a rounded square with some thickness and fully rounded edges, like a
- * thick cookie. Mathematically it is a box, widened by a disc in its front plane (the rounded
- * corners) and then by a ball (the rounded edges). For any direction, the point of such a body
+ * The body is a soft cube: a squircle with some thickness and fully rounded edges, like a thick
+ * cookie. Mathematically it is a squircle slab, widened by a ball (the rounded edges). For any direction, the point of such a body
  * that reaches farthest that way has a closed form, so the outline at any turn is found by asking
  * that for a ring of directions around the screen. Those points move smoothly as it turns, so the
  * outline never shakes, and its rounded side comes into view as it turns away.
@@ -20,16 +19,21 @@ export type Vec3 = [number, number, number];
 export const CENTRE: Vec2 = [50, 50];
 
 /**
- * The soft cube: 76 wide and tall, 32 deep. `corner` rounds the front square's corners and `edge`
- * rounds every edge, so seen from the front its corners are corner + edge = 16 round.
+ * The soft cube: 76 wide and tall, 28 deep. Seen from the front it is a squircle, not a square
+ * with round corners: the corner bends into the side with no seam and the sides bulge a little.
+ * Its front shape matches the soft red square on x.ai/bot, measured from their page (a
+ * superellipse of exponent about 2.9 at this size); the formula and numbers are ours.
+ * `squircle` is the exponent of the front shape before `edge` rounds every edge (together they
+ * give that 2.9 outline to within 0.03 of a unit).
  */
-export const BODY = { half: 38, halfDepth: 16, corner: 6, edge: 10 } as const;
-const HX = BODY.half - BODY.corner - BODY.edge;
+export const BODY = { half: 38, halfDepth: 14, edge: 8, squircle: 3.25 } as const;
+const HX = BODY.half - BODY.edge;
 const HZ = BODY.halfDepth - BODY.edge;
+const M = BODY.squircle / (BODY.squircle - 1);
 /** The flat front face: the eyes are drawn on it. */
 export const FACE_Z = BODY.halfDepth;
-/** Half the size of the flat front face (the eyes must stay inside it). */
-export const FACE_HALF = HX + BODY.corner;
+/** Half the width of the flat front face through its middle (the eyes must stay inside it). */
+export const FACE_HALF = HX;
 
 /** Resting eyes: upright pills, a little below the middle. */
 export const EYE = { w: 9.5, h: 20.5, gap: 20, y: 3 } as const;
@@ -37,13 +41,16 @@ export const EYE = { w: 9.5, h: 20.5, gap: 20, y: 3 } as const;
 /** The body's farthest point in direction `d` (body coordinates, any length). */
 export function support(d: Vec3): Vec3 {
   const [dx, dy, dz] = d;
-  const flat = Math.hypot(dx, dy);
   const len = Math.hypot(dx, dy, dz) || 1;
-  const c = flat > 1e-9 ? BODY.corner / flat : 0;
   const e = BODY.edge / len;
+  // The squircle's farthest point toward (dx, dy) has a closed form (Hölder's equality).
+  const ax = Math.abs(dx) ** (M - 1);
+  const ay = Math.abs(dy) ** (M - 1);
+  const norm = (Math.abs(dx) ** M + Math.abs(dy) ** M) ** (1 / BODY.squircle);
+  const k = norm > 1e-12 ? HX / norm : 0;
   return [
-    Math.sign(dx) * HX + dx * c + dx * e,
-    Math.sign(dy) * HX + dy * c + dy * e,
+    Math.sign(dx) * ax * k + dx * e,
+    Math.sign(dy) * ay * k + dy * e,
     Math.sign(dz) * HZ + dz * e,
   ];
 }
