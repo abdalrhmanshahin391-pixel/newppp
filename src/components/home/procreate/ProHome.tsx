@@ -4,22 +4,16 @@ import { FeatureExplorer } from "./FeatureExplorer";
 import { IntroCard } from "./IntroCard";
 import { UltraHero } from "./UltraHero";
 
-const AskAnything = lazy(() => import("./AskAnything").then((m) => ({ default: m.AskAnything })));
 const TopicsStrip = lazy(() => import("./TopicsStrip").then((m) => ({ default: m.TopicsStrip })));
-const VoiceBand = lazy(() => import("./VoiceBand").then((m) => ({ default: m.VoiceBand })));
 const AppWindow = lazy(() => import("./AppWindow").then((m) => ({ default: m.AppWindow })));
 const UnderTheHood = lazy(() =>
   import("./UnderTheHood").then((m) => ({ default: m.UnderTheHood })),
 );
-const HomeFaq = lazy(() => import("./HomeFaq").then((m) => ({ default: m.HomeFaq })));
-const StickerShelf = lazy(() =>
-  import("./StickerShelf").then((m) => ({ default: m.StickerShelf })),
-);
-const FinalCta = lazy(() => import("./FinalCta").then((m) => ({ default: m.FinalCta })));
 
 /**
  * Home page: white surface, ink text, black, white and greys. Uzyra first, then what she does, the
- * library, how the voice works, the stickers, and the questions.
+ * library and how it works. (The «Ask Uzyra anything» list, the voice band, the sticker shelf, the
+ * questions and the closing invitation were removed in Nov 2026 at the owner's request.)
  */
 export function ProHome() {
   return (
@@ -30,7 +24,7 @@ export function ProHome() {
       <noscript>
         <style>
           {
-            ".rita-reveal{opacity:1!important;transform:none!important}.uz-ag-ch,.uz-ag-letter,.uz-shelf-item,.library-shelves .bk-item,.uz-fx-me,.uz-fx-her-wrap,.uz-fx-wordlist li{opacity:1!important;translate:none!important;transform:none!important}"
+            ".rita-reveal{opacity:1!important;transform:none!important}.uz-ag-ch,.uz-ag-letter,.library-shelves .bk-item,.uz-fx-me,.uz-fx-her-wrap,.uz-fx-wordlist li{opacity:1!important;translate:none!important;transform:none!important}"
           }
         </style>
       </noscript>
@@ -41,17 +35,9 @@ export function ProHome() {
       <FeatureExplorer />
 
       <Suspense fallback={<div className="min-h-[45vh]" aria-hidden="true" />}>
-        <AskAnything />
         <TopicsStrip />
-        <VoiceBand />
         <AppWindow />
         <UnderTheHood />
-      </Suspense>
-
-      <Suspense fallback={<div className="min-h-[45vh]" aria-hidden="true" />}>
-        <StickerShelf />
-        <HomeFaq />
-        <FinalCta />
       </Suspense>
     </main>
   );
