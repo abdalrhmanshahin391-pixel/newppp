@@ -187,8 +187,14 @@ try {
     await page.waitForTimeout(1300);
     const lowest = await scaleOf(page);
     await scrollCardTo(page, phone ? 0.5 : 0.08);
+    // Read it early in the one-second catch-up (poll a little: a busy CI runner can take a few
+    // frames to start it).
     await page.waitForTimeout(150);
-    const lagging = await scaleOf(page);
+    let lagging = await scaleOf(page);
+    for (let i = 0; i < 6 && lagging === lowest; i++) {
+      await page.waitForTimeout(50);
+      lagging = await scaleOf(page);
+    }
     if (lowest < 0.99) {
       assert.ok(
         lagging > lowest && lagging < 1,
