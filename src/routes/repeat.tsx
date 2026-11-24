@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { RequireSignIn } from "@/components/study/RequireSignIn";
 import { RepeatPage } from "@/components/repeat/RepeatPage";
 
 export const Route = createFileRoute("/repeat")({
@@ -12,5 +13,9 @@ export const Route = createFileRoute("/repeat")({
       },
     ],
   }),
-  component: RepeatPage,
+  component: () => (
+    <RequireSignIn>
+      <RepeatPage />
+    </RequireSignIn>
+  ),
 });

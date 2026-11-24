@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { RequireSignIn } from "@/components/study/RequireSignIn";
 import { WordcraftPage } from "@/components/wordcraft/WordcraftPage";
 import type { Level } from "@/lib/wordcraft/round";
 
@@ -25,5 +26,9 @@ export const Route = createFileRoute("/wordcraft")({
 
 function WordcraftRoute() {
   const { d } = Route.useSearch();
-  return <WordcraftPage level={d} />;
+  return (
+    <RequireSignIn>
+      <WordcraftPage level={d} />
+    </RequireSignIn>
+  );
 }

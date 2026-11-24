@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { RequireSignIn } from "@/components/study/RequireSignIn";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Printer, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/legacy-client";
@@ -25,7 +26,11 @@ export const Route = createFileRoute("/summaries/$summaryId")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: SummaryViewer,
+  component: () => (
+    <RequireSignIn>
+      <SummaryViewer />
+    </RequireSignIn>
+  ),
 });
 
 type Row = {

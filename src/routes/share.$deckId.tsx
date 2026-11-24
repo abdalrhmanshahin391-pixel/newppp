@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { RequireSignIn } from "@/components/study/RequireSignIn";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, BookmarkPlus, ChevronLeft, ChevronRight, EyeOff, Layers, Loader2, Play, Trash2 } from "lucide-react";
@@ -27,7 +28,11 @@ export const Route = createFileRoute("/share/$deckId")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: DeckPage,
+  component: () => (
+    <RequireSignIn>
+      <DeckPage />
+    </RequireSignIn>
+  ),
 });
 
 function DeckPage() {

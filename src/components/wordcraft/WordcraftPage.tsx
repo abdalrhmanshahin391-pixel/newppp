@@ -112,7 +112,6 @@ function Logotype() {
 
 function Picker({ lang, words }: { lang: Lang; words: WordLang }) {
   const t = (en: string, ar: string) => (lang === "ar" ? ar : en);
-  const { user, loading } = useAuth();
   return (
     <div className="wc-home">
       <header className="wc-head">
@@ -153,20 +152,6 @@ function Picker({ lang, words }: { lang: Lang; words: WordLang }) {
           );
         })}
       </ul>
-      {!loading && !user ? (
-        <p className="wc-note">
-          {t(
-            "Signed out, the words come from Uzyra's own list. ",
-            "بدون تسجيل دخول، الكلمات من قائمة Uzyra. ",
-          )}
-          <Link to="/login" search={{ next: "/wordcraft" }} className="wc-inline-link">
-            {t(
-              "Sign in for new AI words every round.",
-              "سجّل دخول لكلمات جديدة من الذكاء الاصطناعي كل جولة.",
-            )}
-          </Link>
-        </p>
-      ) : null}
     </div>
   );
 }

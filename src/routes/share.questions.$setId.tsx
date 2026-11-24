@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { RequireSignIn } from "@/components/study/RequireSignIn";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -54,7 +55,11 @@ export const Route = createFileRoute("/share/questions/$setId")({
       },
     ],
   }),
-  component: QuestionSetDetailPage,
+  component: () => (
+    <RequireSignIn>
+      <QuestionSetDetailPage />
+    </RequireSignIn>
+  ),
 });
 
 function QuestionSetDetailPage() {
