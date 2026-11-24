@@ -1,20 +1,20 @@
 import { useEffect, useRef, type MutableRefObject } from "react";
 import type { OrbMode } from "@/components/rita-live/orb-dynamics";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
-import { createCube, restFrame } from "./cube/cube-engine";
+import { createPill, restFrame } from "./pill/pill-engine";
 
-/** The cube at rest: the first paint, and what shows when it is not moving. */
+/** At rest: the first paint, and what shows when it is not moving. */
 const REST = restFrame(200);
 
 /**
- * Uzyra's face: a soft black block with two white eyes, alive.
+ * Uzyra's face: a blue pill with two white eyes, alive (the engine is in ./pill).
  *
- * It is a real block in 3D, drawn flat: it turns, tips and rolls, its eyes sit on its front face
- * (they slide and narrow as it turns and hide when it faces away), and it squashes and stretches
- * as it hops. While waiting it plays short clips (glances, hops, a curious tilt, reading the page,
- * now and then a full turn or a doze), blinks, and changes its eyes for each feeling. While the
- * learner speaks it leans in and their voice presses it down; while it thinks it looks up and
- * searches; while Uzyra speaks it hops on the beats of her voice.
+ * It is a thick slab drawn flat: it turns, tips and leans, its eyes slide across its front face
+ * as it turns and hide when it faces away, and it squashes and stretches as it hops. It plays
+ * short clips of its mood one after another and blends from wherever it is into the next, blinks,
+ * and changes its eyes inside a blink so the swap is never seen. While the learner speaks it leans
+ * in and their voice presses it down; while it thinks it looks up and searches; while Uzyra speaks
+ * it bobs with her voice.
  *
  * `interactive` adds the pointer: its eyes, then its body, follow the pointer, and a tap makes it
  * hop, spin, wiggle or nod. One animation-frame loop writes three SVG paths, only when they
@@ -62,7 +62,7 @@ export function RitaCube({
     }
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const cube = createCube({
+    const cube = createPill({
       seed: Math.floor(Math.random() * 2 ** 31),
       reduced: reduced.matches,
       size: hostEl.clientWidth || 200,

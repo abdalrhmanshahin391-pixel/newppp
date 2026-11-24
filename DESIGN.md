@@ -29,7 +29,7 @@ section. We used its numbers and behaviour, not its code or video.
   - 0–0.5s: dots fly in and draw the cube's resting outline.
   - 0.35–1.2s: the cube grows to 46% of the card's height, with a soft white glow behind it.
   - 1.2–1.7s: it shrinks into its place beside the name.
-  - Around 1.6s: the live cube (white body, black eyes) takes over from the dots.
+  - Around 1.6s: the live Uzyra (blue body, white eyes) takes over from the white dots.
   - «Uzyra», then «Ultra», wipe in from the left.
   - Behind everything, a slanted ring of dots turns slowly.
   - The film repeats every 12s. It starts when 40% of the card is in view and stops off screen.
@@ -110,40 +110,44 @@ request; they were too visible and redrew a full-screen layer 12 times a second 
 
 The home top (`UltraHero`, above) is the only hero: the earlier tap-a-word hero (headline with
 sticker pills, orbit rings, word chips, the two big buttons) was removed in Nov 2026 because the
-new top replaced it; do not bring its rings or chips back. The cube is the flat ink Uzyra cube with
+new top replaced it; do not bring its rings or chips back. Uzyra is a flat blue pill (#3C82F6) with
 white eyes, no shadow or texture; it and its level driver stop offscreen or in hidden tabs, and
 reduced motion makes it static. Use `scripts/check-home-cube.mjs` for isolated Chromium/WebKit
 component checks, screenshots and phone/tablet videos; it uses local account/reader fixtures, not
 production voice or database.
 
-### How the cube moves (`RitaCube`, engine in `src/components/rita-study/cube`)
+### How Uzyra moves (`RitaCube`, engine in `src/components/rita-study/pill`)
 
-- **A real block, drawn flat.** It is a rounded box in 3D (the space covered by eight balls in its
-  corners), so any turn gives the right outline: the eight corners are turned, projected with a
-  little perspective, and the outline around their discs is drawn. Still one flat ink colour; the
-  3D shows only in the outline and the eyes. At rest it is exactly the logo (its uneven corners
-  included).
-- **Eyes on the face.** The eyes are drawn on the front face, so they slide and narrow as it turns
-  and hide when it faces away (nearly edge on, too). Eight feelings: neutral, attentive,
-  surprised, happy (^^), sleepy, focused, curious (one eye bigger), sad. Shapes of one kind blend
-  in 0.3 s; a change of kind (pill ↔ arc) happens behind a blink. Blinks shut fast, hold a beat
-  and open slower; now and then a double blink.
-- **Hand-timed clips per mood**, each easing between keys (some land with a small overshoot),
-  shuffled without repeats and blended into one another (0.42 s): idle (glance, hop, curious tilt,
-  look up, read the page, wiggle, rest; rarely a full turn or a doze), thinking (ponder, scan,
-  tap along), listening (lean in and nod, tilt), speaking (sway, explain, bright). The eyes move
-  before the body. Squash and stretch are anchored at its base.
-- **Voices.** Listening: the learner's voice presses it down and each new phrase gives a small
-  nod. Speaking: it hops on the beats of Uzyra's voice and stretches while she talks.
-- **Pointer** (`interactive`, the home cubes): on a mouse its eyes, then its body, turn towards
-  the pointer, and let go a few seconds after it stops. A tap: hop, spin (with a wind-up), wiggle,
-  nod, in turn, with happy eyes.
-- **Speed.** One factor (`SPEED` in `cube-engine.ts`, now 1.3: 30% faster than the first version)
-  time-warps the whole cube: clips, taps, blinks, rests and springs. Moves keep their shape and only
-  come quicker; change that one number to tune.
+The look and the rhythm follow the bots on x.ai/bot, as the owner asked: a pill in their blue
+(`#3C82F6`), and their timings and easing curves, read from their page. The shapes, clips and code
+are ours; none of their drawings or animation files are used.
+
+- **Shape.** A pill (a box with half-circle ends), 78 × 50 in the 100 box, seen as a 36-deep
+  slab. Turning widens it by its side (W·|cos| + D·|sin|) and slides the face, with its eyes,
+  toward the turn until they pass out of sight; tipping does the same up and down. Leaning,
+  squash and moving are one affine map on the Bézier control points, so the outline is exact and
+  smooth at any size (no corner sampling, which made the old cube shake as it turned).
+- **Eyes.** Two white upright pills (8 × 17, 23 apart). Feelings: neutral, attentive, squint
+  (thinking), happy, surprised, curious (one eye smaller), sleepy. A feeling always changes inside
+  a blink, at the moment the lids are shut, so the swap is never seen. A blink lasts 0.26 s: shut
+  in the first 35% (ease in-out), open with a small overshoot (`cubic-bezier(0.4, 0.22, 0.28, 1.34)`);
+  about every 2.4–5.2 s, now and then a double blink.
+- **Clips per mood**, keyframed, each stretch eased by its end key:
+  - waiting (4–6 s): float, glance, hop, look up; rarely a full turn or a doze;
+  - listening (2.6–3 s): lean in, nod; thinking (4–4.6 s): ponder, tap-tap;
+  - speaking (2.5–2.6 s): talk, explain.
+  Curves: in-out `(0.42, 0, 0.58, 1)` for most moves, `(0.74, 0.03, 0.26, 1.02)` for quick turns,
+  overshoots for landings. Clips are weighted and never repeat twice in a row.
+- **No jumps.** A new clip (or a new mood) starts from wherever Uzyra is and blends in over
+  0.45 s (`cubic-bezier(0.4, 0, 0.2, 1)`); whole turns are folded away first so it never unwinds.
+  A test steps 40 s through every mood at 60 fps and checks no frame moves more than 3 units
+  (13° for a spin).
+- **Voices.** Listening: the learner's voice presses it down and tips it forward. Speaking: it
+  rises and stretches with Uzyra's voice. Levels rise in 0.03 s and fall in 0.1 s (half-lives).
+- **Pointer** (`interactive`): on a mouse its eyes (0.07 s), then its body (0.22 s) turn to the
+  pointer. A tap: hop, spin, wiggle, nod, in turn; the hop and the spin bring happy eyes.
 - **Cost.** Three SVG paths written only when they change; nothing offscreen or in hidden tabs;
-  reduced motion holds it still (blinks only). Our own clips and shapes: never copy another
-  product's animation data or characters.
+  reduced motion holds the body still (blinks only).
 
 ## Top bar menus (`src/components/header`)
 

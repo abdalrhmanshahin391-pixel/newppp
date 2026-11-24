@@ -168,6 +168,8 @@ const colours = (page, selector) =>
       return true;
     };
     for (const el of section.querySelectorAll("*")) {
+      // Uzyra herself is blue (#3C82F6); everything else is black, white and greys.
+      if (el.closest(".uz-cube")) continue;
       const s = getComputedStyle(el);
       for (const prop of [
         "color",
