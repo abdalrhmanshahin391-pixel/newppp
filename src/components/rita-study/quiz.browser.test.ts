@@ -126,8 +126,7 @@ test("questions: sounds, colours, why and why-not, dots, score, retry, explain m
       }),
     );
     await page.goto(`${ORIGIN}/`);
-    const sounds = () =>
-      page.evaluate(() => (window as unknown as { __sounds?: string[] }).__sounds ?? []);
+    const sounds = () => page.evaluate(() => (window as unknown as { __sounds?: string[] }).__sounds ?? []);
     const option = (n: number) => page.locator(".st-quiz-option").nth(n);
     const dot = (n: number) => page.locator(".st-quiz-dot").nth(n);
 
