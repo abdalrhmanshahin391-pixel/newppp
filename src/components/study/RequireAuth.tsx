@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { SignedOutPanel, type PanelMode } from "@/components/study/SignedOutPanel";
+import { SignedOutPanel } from "@/components/study/SignedOutPanel";
 import { useAuth } from "@/hooks/useAuth";
 
 /**
@@ -13,16 +13,9 @@ import { useAuth } from "@/hooks/useAuth";
 export function RequireAuth({
   children,
   what = "your study work",
-  title,
-  lead,
-  modes,
 }: {
   children: ReactNode;
   what?: string;
-  /** Replaces the panel's "Sign in to keep …" heading. */
-  title?: string;
-  lead?: string;
-  modes?: PanelMode[];
 }) {
   const { user, loading } = useAuth();
 
@@ -43,11 +36,12 @@ export function RequireAuth({
       <div className="rita-cream min-h-screen bg-[color:var(--pro-page,#f4f4f8)] text-foreground">
         <SiteHeader />
         <div className="mx-auto max-w-[1180px] px-4 md:px-8">
-          <SignedOutPanel what={what} title={title} lead={lead} modes={modes} />
+          <SignedOutPanel what={what} />
         </div>
       </div>
     );
   }
+
 
   return <>{children}</>;
 }

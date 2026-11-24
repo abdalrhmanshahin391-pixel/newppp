@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { RequireAuth } from "@/components/study/RequireAuth";
-import { GATE } from "@/components/study/gate-copy";
+import { RequireSignIn } from "@/components/study/RequireSignIn";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Printer, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/legacy-client";
@@ -28,9 +27,9 @@ export const Route = createFileRoute("/summaries/$summaryId")({
     ],
   }),
   component: () => (
-    <RequireAuth what="summaries" {...GATE.summary}>
+    <RequireSignIn>
       <SummaryViewer />
-    </RequireAuth>
+    </RequireSignIn>
   ),
 });
 

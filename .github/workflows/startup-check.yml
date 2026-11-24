@@ -4,9 +4,7 @@ on:
     paths:
       - "src/routes/**"
       - "scripts/check-guest-routes.mjs"
-      - "src/components/study/RequireAuth.tsx"
-      - "src/components/study/SignedOutPanel.tsx"
-      - "src/components/study/gate-copy.ts"
+      - "src/components/study/RequireSignIn.tsx"
       - "src/router.tsx"
       - "src/styles.css"
       - "src/components/home/procreate/HeroTapWord.tsx"

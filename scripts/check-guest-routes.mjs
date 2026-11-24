@@ -1,10 +1,10 @@
 // Every page a visitor can *use* needs an account. This walks src/routes and fails when a route
-// is neither on the public list below nor guarded: by RequireAuth / SignedOutPanel, a redirect to
+// is neither on the public list below nor guarded: by RequireAuth / RequireSignIn / SignedOutPanel, a redirect to
 // /login, a redirect elsewhere, an admin check, or a guarded parent layout. The guard may sit in
 // the route file or in a component it imports from "@/…" (one level deep).
 //
 // It reads the code, so it cannot tell a page-wide redirect to /login from one that only runs when a
-// button is pressed; a page guarded only that way passes here. Wrap such pages in RequireAuth.
+// button is pressed; a page guarded only that way passes here. Wrap such pages in RequireSignIn (or RequireAuth).
 //
 // Run: node scripts/check-guest-routes.mjs
 import { readFile, readdir } from "node:fs/promises";
@@ -41,7 +41,7 @@ const PUBLIC = new Map([
 ]);
 
 const GUARD =
-  /RequireAuth|SignedOutPanel|ProtectedContent|to: "\/login"|location\.replace\("\/login"\)|location\.href = "\/login"|throw redirect\(|isAdmin|AdminGuard/;
+  /RequireAuth|RequireSignIn|SignedOutPanel|ProtectedContent|to: "\/login"|location\.replace\("\/login"\)|location\.href = "\/login"|throw redirect\(|isAdmin|AdminGuard/;
 
 async function guardedFile(path, depth = 0) {
   const text = await readFile(path, "utf8");
@@ -99,7 +99,7 @@ const stale = [...PUBLIC.keys()].filter((name) => !known.has(name));
 if (stale.length) console.error("Public list names routes that no longer exist:", stale);
 if (open.length) {
   console.error(
-    "These pages open without an account. Wrap them in <RequireAuth> (or add them to PUBLIC with a reason):",
+    "These pages open without an account. Wrap them in <RequireSignIn> (or add them to PUBLIC with a reason):",
   );
   for (const name of open) console.error("  /" + name.replaceAll(".", "/"));
   process.exit(1);

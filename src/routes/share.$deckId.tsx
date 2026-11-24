@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { RequireAuth } from "@/components/study/RequireAuth";
-import { GATE } from "@/components/study/gate-copy";
+import { RequireSignIn } from "@/components/study/RequireSignIn";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, BookmarkPlus, ChevronLeft, ChevronRight, EyeOff, Layers, Loader2, Play, Trash2 } from "lucide-react";
@@ -30,9 +29,9 @@ export const Route = createFileRoute("/share/$deckId")({
     ],
   }),
   component: () => (
-    <RequireAuth what="shared decks" {...GATE.deck}>
+    <RequireSignIn>
       <DeckPage />
-    </RequireAuth>
+    </RequireSignIn>
   ),
 });
 

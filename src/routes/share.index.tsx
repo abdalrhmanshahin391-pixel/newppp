@@ -1,6 +1,5 @@
 import { LanguageGate } from "@/components/language/LanguageGate";
-import { RequireAuth } from "@/components/study/RequireAuth";
-import { GATE } from "@/components/study/gate-copy";
+import { RequireSignIn } from "@/components/study/RequireSignIn";
 import { useDbLanguage, useLanguageResolved } from "@/lib/language-scope";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -55,11 +54,11 @@ export const Route = createFileRoute("/share/")({
     ],
   }),
   component: () => (
-    <RequireAuth what="shared decks" {...GATE.share}>
+    <RequireSignIn>
       <LanguageGate>
         <SharePage />
       </LanguageGate>
-    </RequireAuth>
+    </RequireSignIn>
   ),
 });
 

@@ -112,9 +112,11 @@ support, and the sign-in pages. Everything else needs an account: the games them
 Pairs, Repeat), every study tool, talking to Uzyra, lessons, books, and shared decks, question sets
 and summaries (a shared link asks the visitor to sign in first).
 
-- **Gate:** `RequireAuth` shows the sign-in panel (`SignedOutPanel`) in place of the page: black
-  and white, with the Uzyra mark, a title and line for the page (`gate-copy.ts`) and what waits
-  inside. Signing in comes back to the same address, search included.
+- **Gate:** `RequireSignIn` sends a signed-out visitor to the site's own sign-in page (the welcome
+  page, then sign-in or sign-up) and brings them back to the same address, search included, after
+  signing in. There is no separate sign-in screen for these pages; the visitor sees a quiet
+  placeholder for a moment, and the redirect replaces the page in history so Back does not loop.
+  (The older study surfaces keep their own `RequireAuth` panel.)
 - **Check:** `scripts/check-guest-routes.mjs` fails CI when a route is neither on its short public
   list nor guarded.
 
@@ -744,7 +746,7 @@ A word-path game for learning English words (`src/components/wordcraft`, engine 
   small grid of white squares showing its size. Every round is new and random.
 - **Where the words come from:** signed in, Groq suggests words for the level (`wordcraftRound`), the engine keeps
   the good ones and proves one answer. When the AI cannot help, the round comes from the built-in list and a
-  quiet line under the board says so. The game needs an account: signed out, `/wordcraft` shows the sign-in panel. The next round is made while the current one is played.
+  quiet line under the board says so. The game needs an account: signed out, `/wordcraft` goes to the sign-in page. The next round is made while the current one is played.
 - **Waiting:** the guide says "Getting your words ready…" and the empty board (the level's size) breathes softly.
 - **Board:** grey `#f4f4f8` panel, 24px corners; tiles are white, 14px corners, a 3px bottom lip, Inter Tight 700.
   The tile size follows the screen (46px floor on phones, 96px cap), the grid is always left to right, even in Arabic.
