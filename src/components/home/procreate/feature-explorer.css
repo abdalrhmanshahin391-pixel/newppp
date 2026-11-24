@@ -220,12 +220,6 @@
   width: 28%;
   aspect-ratio: 1;
 }
-.uz-fx-talk-cube .uz-cube-shape {
-  fill: #fff;
-}
-.uz-fx-talk-cube .uz-cube-eye {
-  fill: #000;
-}
 .uz-fx-bubble {
   max-width: 86%;
   margin: 0;

@@ -29,7 +29,7 @@ section. We used its numbers and behaviour, not its code or video.
   - 0–0.5s: dots fly in and draw the cube's resting outline.
   - 0.35–1.2s: the cube grows to 46% of the card's height, with a soft white glow behind it.
   - 1.2–1.7s: it shrinks into its place beside the name.
-  - Around 1.6s: the live cube (white body, black eyes) takes over from the dots.
+  - Around 1.6s: the live Uzyra (blue body, white eyes) takes over from the white dots.
   - «Uzyra», then «Ultra», wipe in from the left.
   - Behind everything, a slanted ring of dots turns slowly.
   - The film repeats every 12s. It starts when 40% of the card is in view and stops off screen.
@@ -95,13 +95,14 @@ that would break their joined shapes.
     grey, Uzyra's steps light grey, and her speech black.
   - The six facts are 36px cards with letter-by-letter text. The measured number counts up from 0
     to 75 the first time it is seen.
-- **Stickers (`StickerShelf`):** the first time the row is in view, the stickers rise into their
-  fan one after another (90ms apart), each turning from upright to its own angle. Dragging and
-  the hover lift are unchanged.
 - **Removed:** the old "Practise out loud" trio (`FeatureTrio`), and the lecture row in favour of
-  "Keep every word". All blue on these sections is now black or grey.
+  "Keep every word". All blue on these sections is now black or grey. In Nov 2026 the owner also
+  asked for the end of the home page to go: «Ask Uzyra anything» (`AskAnything`), the voice band
+  (`VoiceBand`), the sticker shelf (`StickerShelf`), the questions (`HomeFaq`) and the closing
+  invitation (`FinalCta`). The home now runs UltraHero, IntroCard, FeatureExplorer, the topic
+  pills, the library window and Under the hood, then the footer. Do not bring them back unasked.
 - **Check:** `scripts/check-feature-explorer.mjs` covers the feature section, the library preview,
-  Under the hood and the stickers (Chromium and WebKit in CI).
+  and Under the hood (Chromium and WebKit in CI).
 
 ## Who can open what
 
@@ -124,40 +125,56 @@ request; they were too visible and redrew a full-screen layer 12 times a second 
 
 The home top (`UltraHero`, above) is the only hero: the earlier tap-a-word hero (headline with
 sticker pills, orbit rings, word chips, the two big buttons) was removed in Nov 2026 because the
-new top replaced it; do not bring its rings or chips back. The cube is the flat ink Uzyra cube with
+new top replaced it; do not bring its rings or chips back. Uzyra is a flat soft blue cube (#3C82F6) with
 white eyes, no shadow or texture; it and its level driver stop offscreen or in hidden tabs, and
 reduced motion makes it static. Use `scripts/check-home-cube.mjs` for isolated Chromium/WebKit
 component checks, screenshots and phone/tablet videos; it uses local account/reader fixtures, not
 production voice or database.
 
-### How the cube moves (`RitaCube`, engine in `src/components/rita-study/cube`)
+### How Uzyra moves (`RitaCube`, engine in `src/components/rita-study/mascot`)
 
-- **A real block, drawn flat.** It is a rounded box in 3D (the space covered by eight balls in its
-  corners), so any turn gives the right outline: the eight corners are turned, projected with a
-  little perspective, and the outline around their discs is drawn. Still one flat ink colour; the
-  3D shows only in the outline and the eyes. At rest it is exactly the logo (its uneven corners
-  included).
-- **Eyes on the face.** The eyes are drawn on the front face, so they slide and narrow as it turns
-  and hide when it faces away (nearly edge on, too). Eight feelings: neutral, attentive,
-  surprised, happy (^^), sleepy, focused, curious (one eye bigger), sad. Shapes of one kind blend
-  in 0.3 s; a change of kind (pill ↔ arc) happens behind a blink. Blinks shut fast, hold a beat
-  and open slower; now and then a double blink.
-- **Hand-timed clips per mood**, each easing between keys (some land with a small overshoot),
-  shuffled without repeats and blended into one another (0.42 s): idle (glance, hop, curious tilt,
-  look up, read the page, wiggle, rest; rarely a full turn or a doze), thinking (ponder, scan,
-  tap along), listening (lean in and nod, tilt), speaking (sway, explain, bright). The eyes move
-  before the body. Squash and stretch are anchored at its base.
-- **Voices.** Listening: the learner's voice presses it down and each new phrase gives a small
-  nod. Speaking: it hops on the beats of Uzyra's voice and stretches while she talks.
-- **Pointer** (`interactive`, the home cubes): on a mouse its eyes, then its body, turn towards
-  the pointer, and let go a few seconds after it stops. A tap: hop, spin (with a wind-up), wiggle,
-  nod, in turn, with happy eyes.
-- **Speed.** One factor (`SPEED` in `cube-engine.ts`, now 1.3: 30% faster than the first version)
-  time-warps the whole cube: clips, taps, blinks, rests and springs. Moves keep their shape and only
-  come quicker; change that one number to tune.
+The look and the rhythm follow the bots on x.ai/bot, as the owner asked: the soft square shape of
+their red bot, in the blue of their blue bot (`#3C82F6`, the owner asked for exactly that blue; it
+was `#EA4045` red until Nov 24 2026), their proportions (a squircle with some thickness and round edges),
+and their timings, ranges and easing curves, read from their page. The shapes, clips and code are
+ours; none of their drawings or animation files are used.
+
+- **Shape.** A soft cube: 76 × 76 from the front, 28 deep, every edge rounded (8). From the front
+  it is a squircle like the red bot on x.ai/bot (measured on their page: a superellipse of
+  exponent about 2.9), so each corner bends into the side with no visible seam and the sides
+  bulge a little; the formula is ours, not their drawing. It is a squircle slab widened by a ball,
+  so the farthest point in any direction has a closed form; the outline at any turn is those
+  points for a ring of directions (48–168 by size). They move smoothly as it turns, so it never
+  shakes, and its round side shows as it turns away (edge on it is 28 wide).
+- **Eyes.** Flat shapes on the front face, turned with it, so they slide and narrow as it turns
+  and hide just before it is edge on. At rest two upright pills (9.5 × 20.5, 20 apart, a little
+  below the middle). Always pills or arcs, never small round dots. Feelings: neutral, attentive,
+  squint (thinking: shorter pills), happy (the eyes flip into ◠ arcs), surprised, curious (one
+  eye shorter), sleepy (◡ arcs). A feeling always changes inside
+  a blink, when the lids are shut. A blink lasts 0.24 s and opens with a small overshoot.
+- **Clips per mood**, keyframed, played 25% faster than written (`SPEED` 1.25):
+  - waiting: float, glance, hop, spin, front flip, double hop, peek (turns to show its side and
+    peeks back), look up (the eyes roll up, then flip into happy arcs); rarely a doze;
+  - listening: lean in, nod; thinking: ponder, tap-tap, a tumble; speaking: talk, explain, a happy
+    spin.
+  The favourites come up often: a spin or a flip in about a quarter of the waiting clips, and the
+  happy eyes after every hop and spin. A whole turn takes about 0.85 s on a curve that is fast in
+  the middle and soft at both ends (`cubic-bezier(0.6, 0, 0.3, 1)`), so it peaks near 21° a frame
+  at 60 fps and never strobes; most other moves are in-out `(0.42, 0, 0.58, 1)`, quick turns
+  `(0.74, 0.03, 0.26, 1.02)`, a wind-up `(0.4, -0.14, 0.16, 1)`.
+- **Squash and stretch.** Jumps crouch, stretch on take-off and squash on landing, within their
+  ranges (0.93–1.12 across, 0.88–1.09 up). On top, the engine adds follow-through: it stretches
+  along fast moves up or down and while it spins, leans into a spin and wobbles back when it
+  stops (a spring), and jiggles like jelly when it lands. Everything is kept within 0.86–1.16.
+- **No jumps.** A new clip (or a new mood) starts from wherever it is and blends in over 0.4 s;
+  whole turns are folded away first so it never unwinds. A test runs 60 s of moods and voices at
+  60 fps and checks no frame moves more than 5 units or turns more than 24°.
+- **Voices.** Listening: the learner's voice presses it down and tips it forward. Speaking: it
+  rises and stretches with Uzyra's voice.
+- **No pointer, no taps.** By the owner's choice it does not follow the mouse or react to taps;
+  it only plays its own clips.
 - **Cost.** Three SVG paths written only when they change; nothing offscreen or in hidden tabs;
-  reduced motion holds it still (blinks only). Our own clips and shapes: never copy another
-  product's animation data or characters.
+  reduced motion holds the body still (blinks only).
 
 ## Top bar menus (`src/components/header`)
 
@@ -1579,23 +1596,3 @@ optional line about the scene, and a credit. Exercises come only from these fiel
   clip shows its credit under the sentence; GIFs add «Powered by GIPHY». A GIF loops muted.
 - Videos are cut by seeking to the start and pausing at the end; nothing is re-encoded.
 
-## Home: «Ask Uzyra anything» (`AskAnything`)
-
-Under the home hero. Left: the title (400 weight, `clamp(28px, 3vw, 40px)`) over a turning list
-of ten questions, each with the Uzyra feature that answers it (label, icon, question; the row
-links to that feature). Seven rows of 58px show at a time: the middle one in ink, the others
-scaled 0.93 / 0.86 / 0.79, faded 0.62 / 0.45 / 0.28 and leaning back 18 / 36 / 54px (mirrored
-in RTL). It turns every 2.4s with a 0.7s `cubic-bezier(0.16, 1, 0.3, 1)` ease, only while on
-screen; the pointer lights the row under it and stops the turn, keyboard focus brings a row to
-the middle, reduced motion keeps it still. Right: the café-and-books sticker art (WebP, no
-motion); on phones and tablets it sits above the list.
-
-## Home: sticker shelf (`StickerShelf`, end of home)
-
-After the closing invitation. One «Ask Uzyra anything» field between two thin rules, with a round
-grey arrow button; sending it opens the conversation with Uzyra (`/rita`; the typed words are not
-carried over). Below, four stickers (café, library, lighthouse, observatory; WebP, background
-removed) fanned like cards: tilted −18° / −6° / 6° / 18°, overlapping by 7% of their width, with a
-soft drop shadow. Hover lifts one to 1.02 with a deeper shadow; pressed, it grows to 1.12, comes
-to the front and follows the pointer or finger, leaning with the drag; on release it springs home
-(0.56s `cubic-bezier(0.34, 1.56, 0.64, 1)`). Reduced motion keeps only the hover lift.

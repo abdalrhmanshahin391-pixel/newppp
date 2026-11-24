@@ -3010,45 +3010,8 @@ body:has(.rh-learn-home) {
     transform: translateY(10px) scale(0.98);
   }
 }
-@keyframes rh-wave {
-  0%,
-  100% {
-    transform: scaleY(0.35);
-  }
-  50% {
-    transform: scaleY(1);
-  }
-}
-@keyframes rh-ring {
-  from {
-    opacity: 0.55;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(2);
-  }
-}
-@keyframes rh-float {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(-9px);
-  }
-}
 .edith-premium .rh-pop {
   animation: rh-pop 560ms var(--pp-ease) var(--rh-d, 0ms) backwards;
-}
-.edith-premium .rh-wave {
-  transform-origin: center;
-  animation: rh-wave 1100ms ease-in-out var(--rh-d, 0ms) infinite;
-}
-.edith-premium .rh-ring {
-  animation: rh-ring 3600ms ease-out var(--rh-d, 0ms) infinite;
-}
-.edith-premium .rh-float {
-  animation: rh-float 6s ease-in-out var(--rh-d, 0ms) infinite alternate;
 }
 .edith-premium .rh-lift {
   transition:
@@ -3061,28 +3024,11 @@ body:has(.rh-learn-home) {
     box-shadow: 0 18px 40px -24px rgba(18, 17, 23, 0.35);
   }
 }
-.edith-premium details.rh-faq summary {
-  list-style: none;
-  cursor: pointer;
-}
-.edith-premium details.rh-faq summary::-webkit-details-marker {
-  display: none;
-}
-.edith-premium details.rh-faq .rh-plus {
-  transition: transform 220ms var(--pp-ease);
-}
-.edith-premium details.rh-faq[open] .rh-plus {
-  transform: rotate(45deg);
-}
 @media (prefers-reduced-motion: reduce) {
-  .edith-premium .rh-pop,
-  .edith-premium .rh-wave,
-  .edith-premium .rh-ring,
-  .edith-premium .rh-float {
+  .edith-premium .rh-pop {
     animation: none;
   }
-  .edith-premium .rh-lift,
-  .edith-premium details.rh-faq .rh-plus {
+  .edith-premium .rh-lift {
     transition: none;
   }
   .edith-premium .rh-lift:hover {
@@ -5827,9 +5773,9 @@ html.rita-app,
 .uz-msg-in {
   animation: uz-msg-in 260ms cubic-bezier(0.23, 1, 0.32, 1) both;
 }
-/* Uzyra's cube (RitaCube): a flat black block (no shading, no shadow) with two white rounded eyes.
-   It is drawn in 3D by its engine (src/components/rita-study/cube): the outline and the eyes are
-   SVG paths written frame by frame. Its moves may reach past its box (hops, turns). */
+/* Uzyra (RitaCube): a flat soft blue cube (#3C82F6, no shading, no shadow) with two white eyes.
+   It is drawn by its engine (src/components/rita-study/mascot): the outline and the eyes are SVG
+   paths written frame by frame. Its moves may reach past its box (hops, spins, flips). */
 .uz-cube {
   position: relative;
   width: 100%;
@@ -5843,15 +5789,10 @@ html.rita-app,
   overflow: visible;
 }
 .uz-cube-shape {
-  fill: #111113;
+  fill: #3c82f6;
 }
 .uz-cube-eye {
   fill: #fff;
-}
-.uz-cube[data-interactive] {
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
 }
 /* The language choices in the circle: a short word in the disc, the chosen one blue and ticked. */
 .st-rad-glyph {
@@ -8613,18 +8554,14 @@ html.rita-app,
   }
 }
 /* Reserve space before first paint; remember the real height on return visits
-   to the same section, including an expanded FAQ. */
+   to the same section. */
 @supports (content-visibility: auto) and (contain-intrinsic-block-size: auto 1px) {
   @media screen {
-    .uz-home .rh-defer-demo,
-    .uz-home .rh-defer-faq,
-    .uz-home .rh-defer-cta {
+    .uz-home .rh-defer-demo {
       content-visibility: auto;
       contain-intrinsic-block-size: auto var(--rh-estimated-height);
     }
     .rh-defer-demo { --rh-estimated-height: 34rem; }
-    .rh-defer-faq { --rh-estimated-height: 27rem; }
-    .rh-defer-cta { --rh-estimated-height: 17rem; }
   }
 }
 .fw-dock.fw-dock-book {
