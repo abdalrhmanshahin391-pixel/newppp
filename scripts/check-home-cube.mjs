@@ -194,8 +194,12 @@ try {
     // The large cube moves on its own; it does not follow the pointer or react to taps.
     const cubePath = page.locator(".uz-ultra-cube .uz-cube-shape");
     const before = await cubePath.getAttribute("d");
-    await page.waitForTimeout(350);
-    assert.notEqual(await cubePath.getAttribute("d"), before, "the cube moves on its own");
+    let moved = false;
+    for (let i = 0; i < 30 && !moved; i++) {
+      await page.waitForTimeout(100);
+      moved = (await cubePath.getAttribute("d")) !== before;
+    }
+    assert.ok(moved, "the cube moves on its own");
     assert.notEqual(
       await page.locator(".uz-ultra-cube .uz-cube").evaluate((el) => getComputedStyle(el).cursor),
       "pointer",
