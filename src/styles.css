@@ -5827,9 +5827,9 @@ html.rita-app,
 .uz-msg-in {
   animation: uz-msg-in 260ms cubic-bezier(0.23, 1, 0.32, 1) both;
 }
-/* Uzyra (RitaCube): a flat blue pill (#3C82F6, no shading, no shadow) with two white eyes.
-   It is drawn by its engine (src/components/rita-study/pill): the outline and the eyes are SVG
-   paths written frame by frame. Its moves may reach past its box (hops, turns). */
+/* Uzyra (RitaCube): a flat soft red cube (#EA4045, no shading, no shadow) with two white eyes.
+   It is drawn by its engine (src/components/rita-study/mascot): the outline and the eyes are SVG
+   paths written frame by frame. Its moves may reach past its box (hops, spins, flips). */
 .uz-cube {
   position: relative;
   width: 100%;
@@ -5843,7 +5843,7 @@ html.rita-app,
   overflow: visible;
 }
 .uz-cube-shape {
-  fill: #3c82f6;
+  fill: #ea4045;
 }
 .uz-cube-eye {
   fill: #fff;

@@ -1,23 +1,24 @@
 import { useEffect, useRef, type MutableRefObject } from "react";
 import type { OrbMode } from "@/components/rita-live/orb-dynamics";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
-import { createPill, restFrame } from "./pill/pill-engine";
+import { createMascot, restFrame } from "./mascot/mascot-engine";
 
 /** At rest: the first paint, and what shows when it is not moving. */
 const REST = restFrame(200);
 
 /**
- * Uzyra's face: a blue pill with two white eyes, alive (the engine is in ./pill).
+ * Uzyra's face: a soft red cube (#EA4045) with two white eyes, alive (the engine is in ./mascot).
  *
- * It is a thick slab drawn flat: it turns, tips and leans, its eyes slide across its front face
- * as it turns and hide when it faces away, and it squashes and stretches as it hops. It plays
- * short clips of its mood one after another and blends from wherever it is into the next, blinks,
- * and changes its eyes inside a blink so the swap is never seen. While the learner speaks it leans
- * in and their voice presses it down; while it thinks it looks up and searches; while Uzyra speaks
- * it bobs with her voice.
+ * It is a rounded square with some thickness and round edges, drawn flat: as it turns its round
+ * side comes into view, and its eyes slide across its front face and hide when it faces away. It
+ * plays short clips of its mood one after another and blends from wherever it is into the next,
+ * spins and flips now and then, blinks, and changes its eyes inside a blink (they flip into happy
+ * arcs after a spin or a hop). It stretches along fast moves, leans into a spin and jiggles when
+ * it lands. While the learner speaks it leans in and their voice presses it down; while it thinks
+ * it looks up and searches; while Uzyra speaks it bobs with her voice.
  *
  * `interactive` adds the pointer: its eyes, then its body, follow the pointer, and a tap makes it
- * hop, spin, wiggle or nod. One animation-frame loop writes three SVG paths, only when they
+ * spin, hop, flip or wiggle. One animation-frame loop writes three SVG paths, only when they
  * changed; it stops offscreen and in hidden tabs. Reduced motion keeps it still (it only blinks).
  */
 export function RitaCube({
@@ -62,7 +63,7 @@ export function RitaCube({
     }
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const cube = createPill({
+    const cube = createMascot({
       seed: Math.floor(Math.random() * 2 ** 31),
       reduced: reduced.matches,
       size: hostEl.clientWidth || 200,

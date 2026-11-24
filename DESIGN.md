@@ -29,7 +29,7 @@ section. We used its numbers and behaviour, not its code or video.
   - 0–0.5s: dots fly in and draw the cube's resting outline.
   - 0.35–1.2s: the cube grows to 46% of the card's height, with a soft white glow behind it.
   - 1.2–1.7s: it shrinks into its place beside the name.
-  - Around 1.6s: the live Uzyra (blue body, white eyes) takes over from the white dots.
+  - Around 1.6s: the live Uzyra (red body, white eyes) takes over from the white dots.
   - «Uzyra», then «Ultra», wipe in from the left.
   - Behind everything, a slanted ring of dots turns slowly.
   - The film repeats every 12s. It starts when 40% of the card is in view and stops off screen.
@@ -110,42 +110,51 @@ request; they were too visible and redrew a full-screen layer 12 times a second 
 
 The home top (`UltraHero`, above) is the only hero: the earlier tap-a-word hero (headline with
 sticker pills, orbit rings, word chips, the two big buttons) was removed in Nov 2026 because the
-new top replaced it; do not bring its rings or chips back. Uzyra is a flat blue pill (#3C82F6) with
+new top replaced it; do not bring its rings or chips back. Uzyra is a flat soft red cube (#EA4045) with
 white eyes, no shadow or texture; it and its level driver stop offscreen or in hidden tabs, and
 reduced motion makes it static. Use `scripts/check-home-cube.mjs` for isolated Chromium/WebKit
 component checks, screenshots and phone/tablet videos; it uses local account/reader fixtures, not
 production voice or database.
 
-### How Uzyra moves (`RitaCube`, engine in `src/components/rita-study/pill`)
+### How Uzyra moves (`RitaCube`, engine in `src/components/rita-study/mascot`)
 
-The look and the rhythm follow the bots on x.ai/bot, as the owner asked: a pill in their blue
-(`#3C82F6`), and their timings and easing curves, read from their page. The shapes, clips and code
-are ours; none of their drawings or animation files are used.
+The look and the rhythm follow the bots on x.ai/bot, as the owner asked: the soft red square in
+their red (`#EA4045`), their proportions (a rounded square with some thickness and round edges),
+and their timings, ranges and easing curves, read from their page. The shapes, clips and code are
+ours; none of their drawings or animation files are used.
 
-- **Shape.** A pill (a box with half-circle ends), 78 × 50 in the 100 box, seen as a 36-deep
-  slab. Turning widens it by its side (W·|cos| + D·|sin|) and slides the face, with its eyes,
-  toward the turn until they pass out of sight; tipping does the same up and down. Leaning,
-  squash and moving are one affine map on the Bézier control points, so the outline is exact and
-  smooth at any size (no corner sampling, which made the old cube shake as it turned).
-- **Eyes.** Two white upright pills (8 × 17, 23 apart). Feelings: neutral, attentive, squint
-  (thinking), happy, surprised, curious (one eye smaller), sleepy. A feeling always changes inside
-  a blink, at the moment the lids are shut, so the swap is never seen. A blink lasts 0.26 s: shut
-  in the first 35% (ease in-out), open with a small overshoot (`cubic-bezier(0.4, 0.22, 0.28, 1.34)`);
-  about every 2.4–5.2 s, now and then a double blink.
-- **Clips per mood**, keyframed, each stretch eased by its end key:
-  - waiting (4–6 s): float, glance, hop, look up; rarely a full turn or a doze;
-  - listening (2.6–3 s): lean in, nod; thinking (4–4.6 s): ponder, tap-tap;
-  - speaking (2.5–2.6 s): talk, explain.
-  Curves: in-out `(0.42, 0, 0.58, 1)` for most moves, `(0.74, 0.03, 0.26, 1.02)` for quick turns,
-  overshoots for landings. Clips are weighted and never repeat twice in a row.
-- **No jumps.** A new clip (or a new mood) starts from wherever Uzyra is and blends in over
-  0.45 s (`cubic-bezier(0.4, 0, 0.2, 1)`); whole turns are folded away first so it never unwinds.
-  A test steps 40 s through every mood at 60 fps and checks no frame moves more than 3 units
-  (13° for a spin).
+- **Shape.** A soft cube: 76 × 76 from the front, 32 deep, corners 16 round from the front, every
+  edge rounded (10). It is a box widened by a disc (the corners) and a ball (the edges), so the
+  farthest point in any direction has a closed form; the outline at any turn is those points for
+  a ring of directions (48–168 by size). They move smoothly as it turns, so it never shakes, and
+  its round side shows as it turns away (edge on it is 32 wide).
+- **Eyes.** Flat shapes on the front face, turned with it, so they slide and narrow as it turns
+  and hide just before it is edge on. At rest two upright pills (9.5 × 20.5, 20 apart, a little
+  below the middle). Feelings: neutral, attentive, squint (thinking), happy (the eyes flip into
+  ◠ arcs), surprised, curious (one eye smaller), sleepy (◡ arcs). A feeling always changes inside
+  a blink, when the lids are shut. A blink lasts 0.24 s and opens with a small overshoot.
+- **Clips per mood**, keyframed, played 25% faster than written (`SPEED` 1.25):
+  - waiting: float, glance, hop, spin, front flip, double hop, peek (turns to show its side and
+    peeks back), look up (the eyes roll up, then flip into happy arcs); rarely a doze;
+  - listening: lean in, nod; thinking: ponder, tap-tap, a tumble; speaking: talk, explain, a happy
+    spin.
+  The favourites come up often: a spin or a flip in about a quarter of the waiting clips, and the
+  happy eyes after every hop and spin. A whole turn takes about 0.85 s on a curve that is fast in
+  the middle and soft at both ends (`cubic-bezier(0.6, 0, 0.3, 1)`), so it peaks near 21° a frame
+  at 60 fps and never strobes; most other moves are in-out `(0.42, 0, 0.58, 1)`, quick turns
+  `(0.74, 0.03, 0.26, 1.02)`, a wind-up `(0.4, -0.14, 0.16, 1)`.
+- **Squash and stretch.** Jumps crouch, stretch on take-off and squash on landing, within their
+  ranges (0.93–1.12 across, 0.88–1.09 up). On top, the engine adds follow-through: it stretches
+  along fast moves up or down and while it spins, leans into a spin and wobbles back when it
+  stops (a spring), and jiggles like jelly when it lands. Everything is kept within 0.86–1.16.
+- **No jumps.** A new clip (or a new mood) starts from wherever it is and blends in over 0.4 s;
+  whole turns are folded away first so it never unwinds. Never two turns at once: during a spin
+  or flip a tap hops instead. A test runs 60 s of moods, taps and voices at 60 fps and checks no
+  frame moves more than 5 units or turns more than 24°.
 - **Voices.** Listening: the learner's voice presses it down and tips it forward. Speaking: it
-  rises and stretches with Uzyra's voice. Levels rise in 0.03 s and fall in 0.1 s (half-lives).
-- **Pointer** (`interactive`): on a mouse its eyes (0.07 s), then its body (0.22 s) turn to the
-  pointer. A tap: hop, spin, wiggle, nod, in turn; the hop and the spin bring happy eyes.
+  rises and stretches with Uzyra's voice.
+- **Pointer and taps** (`interactive`): on a mouse its eyes (0.07 s), then its body (0.22 s) turn
+  to the pointer. Taps go spin, hop, flip, wiggle, spin, nod; all but the nod bring happy eyes.
 - **Cost.** Three SVG paths written only when they change; nothing offscreen or in hidden tabs;
   reduced motion holds the body still (blinks only).
 

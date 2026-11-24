@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { RitaCube } from "@/components/rita-study/RitaCube";
-import { restFrame } from "@/components/rita-study/pill/pill-engine";
+import { restFrame } from "@/components/rita-study/mascot/mascot-engine";
 import {
   cardScale,
   cubeDots,
