@@ -1,0 +1,234 @@
+/* The end of the home page: Emith, large, on a black card with a turning field of blue dashes. */
+.uz-emith {
+  --emith-blue: #3c82f6;
+  --emith-font: "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  padding: 0 6px clamp(40px, 6vh, 80px);
+  background: #fff;
+  font-family: var(--emith-font);
+}
+.uz-emith-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  min-height: clamp(560px, 86vh, 880px);
+  padding: clamp(48px, 7vw, 112px);
+  overflow: hidden;
+  border-radius: 36px;
+  background: #000;
+  color: #fff;
+  isolation: isolate;
+}
+.uz-emith-field {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ---- The words ---------------------------------------------------------------------------- */
+.uz-emith-copy {
+  max-width: 560px;
+}
+.uz-emith-eyebrow {
+  margin: 0 0 18px;
+  color: #9aa3b5;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.uz-emith .uz-emith-title {
+  margin: 0;
+  font-family: var(--emith-font);
+  font-size: clamp(52px, 7.4vw, 112px);
+  font-weight: 450;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #fff;
+}
+.uz-emith-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.uz-emith-ch {
+  position: relative;
+  opacity: 0;
+}
+.uz-emith-card[data-shown] .uz-emith-ch {
+  animation: uz-emith-type 1ms linear forwards;
+  animation-delay: calc(300ms + var(--i) * var(--type));
+}
+/* The blue caret travels with the letter being typed, then blinks on the last one. */
+.uz-emith-ch::after {
+  content: "";
+  position: absolute;
+  top: 0.08em;
+  right: -0.07em;
+  width: 0.06em;
+  height: 0.9em;
+  border-radius: 2px;
+  background: var(--emith-blue);
+  opacity: 0;
+}
+.uz-emith-card[data-shown] .uz-emith-ch::after {
+  animation: uz-emith-caret var(--type) step-end;
+  animation-delay: calc(300ms + var(--i) * var(--type));
+}
+.uz-emith-card[data-shown] .uz-emith-last::after {
+  animation: uz-emith-blink 1s step-end 4;
+  animation-delay: calc(300ms + var(--i) * var(--type));
+}
+@keyframes uz-emith-type {
+  0%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes uz-emith-caret {
+  0% {
+    opacity: 1;
+  }
+}
+@keyframes uz-emith-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.uz-emith-lead {
+  max-width: 30rem;
+  margin: 28px 0 0;
+  color: #c3c8d4;
+  font-size: clamp(17px, 1.4vw, 20px);
+  line-height: 1.55;
+}
+.uz-emith-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 56px;
+  margin-top: 36px;
+  padding: 0 30px;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 999px;
+  background: #1f1f23;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease,
+    transform 0.12s ease;
+}
+.uz-emith-button:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) and (pointer: fine) {
+  .uz-emith-button:hover {
+    background: #2c2c32;
+  }
+}
+.uz-emith-button:focus-visible {
+  outline: 2px solid var(--emith-blue);
+  outline-offset: 3px;
+}
+
+/* ---- Emith ------------------------------------------------------------------------------- */
+.uz-emith-figure {
+  position: relative;
+  justify-self: center;
+  width: min(100%, 520px);
+  aspect-ratio: 568 / 694;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+/* A soft blue light behind her, so her navy suit reads on the black. */
+.uz-emith-figure::before {
+  content: "";
+  position: absolute;
+  inset: 4% -6% 0;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(60 130 246 / 0.32), rgb(60 130 246 / 0) 100%);
+  pointer-events: none;
+}
+.uz-emith-figure:focus-visible {
+  outline: 2px solid var(--emith-blue);
+  outline-offset: 6px;
+  border-radius: 24px;
+}
+.uz-emith-hop,
+.uz-emith-float {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transform-origin: 50% 100%;
+}
+.uz-emith-float {
+  animation: uz-emith-float 3.2s ease-in-out infinite alternate;
+}
+@keyframes uz-emith-float {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-8px);
+  }
+}
+.uz-emith-float img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.uz-emith-float img[data-on] {
+  opacity: 1;
+}
+
+/* ---- Tablets and phones: Emith on top, the words under her -------------------------------- */
+@media (width <= 900px) {
+  .uz-emith-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    min-height: 0;
+    padding: 40px 24px 48px;
+    border-radius: 24px;
+  }
+  .uz-emith-figure {
+    order: -1;
+    width: min(78%, 360px);
+  }
+  .uz-emith-copy {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uz-emith-float {
+    animation: none;
+  }
+  .uz-emith-card .uz-emith-ch,
+  .uz-emith-card[data-shown] .uz-emith-ch {
+    opacity: 1;
+    animation: none;
+  }
+  .uz-emith-ch::after {
+    display: none;
+  }
+}

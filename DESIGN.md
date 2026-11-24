@@ -104,6 +104,29 @@ that would break their joined shapes.
 - **Check:** `scripts/check-feature-explorer.mjs` covers the feature section, the library preview,
   and Under the hood (Chromium and WebKit in CI).
 
+## Home: Emith's card (`EmithShowcase`, end of home)
+
+The last section before the footer, after Under the hood. A big black card (36px corners, 24 on
+phones, 6px from the page edges) in the spirit of the closing card on antigravity.google: their
+look studied, our own code.
+
+- **Emith**, Uzyra's study partner in lessons and books, stands large on the right (on phones
+  and tablets above the words). Her eight poses are cut from the owner's pixel-art sheet, with the
+  white background removed and a 7px white sticker edge added (`public/media/home/emith`, WebP,
+  about 20 KB each, loaded lazily): wave, idea, teach, think, laptop, listen, cheer, stand. She plays
+  the next one every 2.8s while the card is on screen, landing with a small hop (0.44s squash and
+  stretch); a tap plays the next one at once and throws the dashes outwards. A soft blue light sits
+  behind her so her navy suit reads on the black; she floats 8px up and down.
+- **The field:** blue dashes (`#3C82F6`, Uzyra's blue) turn slowly round her, slower further out,
+  longer and brighter on a ring around her and near the mouse (which also pushes them aside). It
+  is a 2D canvas, dashes batched by brightness, up to 900 (420 on narrow screens); behind the words
+  most dashes are left out so the text stays easy to read.
+- **Words:** "Your study partner", then "Meet Emith." typed in letter by letter with a blue caret
+  that blinks at the end, a short line, and a dark "Start learning" pill to `/learn`.
+- Runs only on screen in a visible tab. Reduced motion: one still frame, the first pose, no typing,
+  no float. Checked by `scripts/check-feature-explorer.mjs` (dashes drawn and turning, typed title,
+  pose changes on its own and on a tap, still under reduced motion).
+
 ## Who can open what
 
 Signed out, a visitor can read about Uzyra but not use it. Open to everyone: the home page, the
