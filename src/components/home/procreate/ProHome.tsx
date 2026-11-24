@@ -9,11 +9,15 @@ const AppWindow = lazy(() => import("./AppWindow").then((m) => ({ default: m.App
 const UnderTheHood = lazy(() =>
   import("./UnderTheHood").then((m) => ({ default: m.UnderTheHood })),
 );
+const EmithShowcase = lazy(() =>
+  import("./EmithShowcase").then((m) => ({ default: m.EmithShowcase })),
+);
 
 /**
  * Home page: white surface, ink text, black, white and greys. Uzyra first, then what she does, the
- * library and how it works. (The «Ask Uzyra anything» list, the voice band, the sticker shelf, the
- * questions and the closing invitation were removed in Nov 2026 at the owner's request.)
+ * library and how it works, and Emith, Uzyra's study partner, to close. (The «Ask Uzyra anything»
+ * list, the voice band, the sticker shelf, the questions and the closing invitation were removed in
+ * Nov 2026 at the owner's request.)
  */
 export function ProHome() {
   return (
@@ -38,6 +42,7 @@ export function ProHome() {
         <TopicsStrip />
         <AppWindow />
         <UnderTheHood />
+        <EmithShowcase />
       </Suspense>
     </main>
   );

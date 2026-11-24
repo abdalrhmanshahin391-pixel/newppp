@@ -1,5 +1,5 @@
-// The home page's sections from the intro card down: the feature section, the library preview and
-// Under the hood, the real components served locally. Nothing remote is contacted. Checks the typed headings, the rippling and drifting circles, the letters that fade
+// The home page's sections from the intro card down: the feature section, the library preview,
+// Under the hood and Emith's card, the real components served locally. Nothing remote is contacted. Checks the typed headings, the rippling and drifting circles, the letters that fade
 // in, the two live pictures (the tap word and the words that turn into flashcards), the books
 // that rise in, the bars drawn with the scroll, the counted number, the pause off screen,
 // the phone layout, reduced motion, and that nothing outside the pictures is coloured.
@@ -19,7 +19,8 @@ import {createRootRoute, createRouter, RouterProvider, createMemoryHistory} from
 import {FeatureExplorer} from './src/components/home/procreate/FeatureExplorer';
 import {AppWindow} from './src/components/home/procreate/AppWindow';
 import {UnderTheHood} from './src/components/home/procreate/UnderTheHood';
-function Home(){return <main className="uz-home rita-cream edith-light edith-premium relative min-h-screen overflow-clip bg-black text-white" style={{fontFamily:'var(--font-grotesk)'}}><div className="qa-head">Above the section</div><FeatureExplorer/><AppWindow/><UnderTheHood/><div className="qa-tail">Uzyra · Learn at your pace</div></main>}
+import {EmithShowcase} from './src/components/home/procreate/EmithShowcase';
+function Home(){return <main className="uz-home rita-cream edith-light edith-premium relative min-h-screen overflow-clip bg-black text-white" style={{fontFamily:'var(--font-grotesk)'}}><div className="qa-head">Above the section</div><FeatureExplorer/><AppWindow/><UnderTheHood/><EmithShowcase/><div className="qa-tail">Uzyra · Learn at your pace</div></main>}
 const router = createRouter({routeTree: createRootRoute({component: Home}), history: createMemoryHistory({initialEntries:['/']})});
 createRoot(document.getElementById('app')).render(<RouterProvider router={router}/>);
 `;
@@ -385,6 +386,46 @@ try {
       assert.deepEqual(await colours(page, section), [], `${section}: black, white and greys only`);
     }
 
+    // Emith: her card types its title, her poses change on their own and on a tap, and the blue
+    // dash field is drawn and moving.
+    await scrollTo(page, ".uz-emith-card", 0.5);
+    await page.waitForTimeout(1600);
+    const emith = () =>
+      page.evaluate(() => {
+        const c = document.querySelector(".uz-emith-field");
+        const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+        let lit = 0,
+          blue = 0,
+          sum = 0;
+        for (let i = 0; i < d.length; i += 16) {
+          if (d[i + 3] === 0) continue;
+          lit += 1;
+          if (d[i + 2] > d[i] + 60) blue += 1;
+          sum = (sum + d[i + 3] * (i % 9973)) % 1e9;
+        }
+        const on = [...document.querySelectorAll(".uz-emith-float img")].findIndex((img) =>
+          img.hasAttribute("data-on"),
+        );
+        const typed = [...document.querySelectorAll(".uz-emith-ch")].every(
+          (el) => getComputedStyle(el).opacity === "1",
+        );
+        const img = document.querySelector(".uz-emith-float img[data-on]");
+        return { lit, blue, sum, on, typed, loaded: img.complete && img.naturalWidth > 0 };
+      });
+    const e1 = await emith();
+    assert.ok(e1.lit > 200 && e1.blue / e1.lit > 0.9, `blue dashes drawn (${e1.blue}/${e1.lit})`);
+    assert.ok(e1.typed, "the title is typed in");
+    assert.ok(e1.loaded, "Emith's pose image loaded");
+    await page.waitForTimeout(300);
+    assert.notEqual((await emith()).sum, e1.sum, "the dash field turns");
+    await page.waitForTimeout(3000);
+    const e2 = await emith();
+    assert.notEqual(e2.on, e1.on, `her pose changes on its own (${e1.on} -> ${e2.on})`);
+    await page.locator(".uz-emith-figure").click();
+    await page.waitForTimeout(150);
+    assert.equal((await emith()).on, (e2.on + 1) % 8, "a tap plays her next pose");
+    await page.screenshot({ path: resolve(out, `${engine}-emith-${width}.png`) });
+
     // Off screen the circles stop.
     await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
     await page.waitForTimeout(200);
@@ -432,6 +473,18 @@ try {
     ),
   }));
   assert.deepEqual(calm, { bars: true, count: "75", books: true }, "all still");
+  await page.locator(".uz-emith-card").scrollIntoViewIfNeeded();
+  await page.waitForTimeout(3400);
+  const emithCalm = await page.evaluate(() => ({
+    typed: [...document.querySelectorAll(".uz-emith-ch")].every(
+      (el) => getComputedStyle(el).opacity === "1",
+    ),
+    pose: [...document.querySelectorAll(".uz-emith-float img")].findIndex((img) =>
+      img.hasAttribute("data-on"),
+    ),
+    float: getComputedStyle(document.querySelector(".uz-emith-float")).animationName,
+  }));
+  assert.deepEqual(emithCalm, { typed: true, pose: 0, float: "none" }, "Emith holds still");
   await page.screenshot({ path: resolve(out, engine + "-reduced.png") });
   findings.push({ engine, reduced: true, acceptance: "passed" });
   await context.close();
