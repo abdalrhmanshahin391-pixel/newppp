@@ -95,13 +95,14 @@ that would break their joined shapes.
     grey, Uzyra's steps light grey, and her speech black.
   - The six facts are 36px cards with letter-by-letter text. The measured number counts up from 0
     to 75 the first time it is seen.
-- **Stickers (`StickerShelf`):** the first time the row is in view, the stickers rise into their
-  fan one after another (90ms apart), each turning from upright to its own angle. Dragging and
-  the hover lift are unchanged.
 - **Removed:** the old "Practise out loud" trio (`FeatureTrio`), and the lecture row in favour of
-  "Keep every word". All blue on these sections is now black or grey.
+  "Keep every word". All blue on these sections is now black or grey. In Nov 2026 the owner also
+  asked for the end of the home page to go: «Ask Uzyra anything» (`AskAnything`), the voice band
+  (`VoiceBand`), the sticker shelf (`StickerShelf`), the questions (`HomeFaq`) and the closing
+  invitation (`FinalCta`). The home now runs UltraHero, IntroCard, FeatureExplorer, the topic
+  pills, the library window and Under the hood, then the footer. Do not bring them back unasked.
 - **Check:** `scripts/check-feature-explorer.mjs` covers the feature section, the library preview,
-  Under the hood and the stickers (Chromium and WebKit in CI).
+  and Under the hood (Chromium and WebKit in CI).
 
 ## The home cube
 
@@ -1580,23 +1581,3 @@ optional line about the scene, and a credit. Exercises come only from these fiel
   clip shows its credit under the sentence; GIFs add «Powered by GIPHY». A GIF loops muted.
 - Videos are cut by seeking to the start and pausing at the end; nothing is re-encoded.
 
-## Home: «Ask Uzyra anything» (`AskAnything`)
-
-Under the home hero. Left: the title (400 weight, `clamp(28px, 3vw, 40px)`) over a turning list
-of ten questions, each with the Uzyra feature that answers it (label, icon, question; the row
-links to that feature). Seven rows of 58px show at a time: the middle one in ink, the others
-scaled 0.93 / 0.86 / 0.79, faded 0.62 / 0.45 / 0.28 and leaning back 18 / 36 / 54px (mirrored
-in RTL). It turns every 2.4s with a 0.7s `cubic-bezier(0.16, 1, 0.3, 1)` ease, only while on
-screen; the pointer lights the row under it and stops the turn, keyboard focus brings a row to
-the middle, reduced motion keeps it still. Right: the café-and-books sticker art (WebP, no
-motion); on phones and tablets it sits above the list.
-
-## Home: sticker shelf (`StickerShelf`, end of home)
-
-After the closing invitation. One «Ask Uzyra anything» field between two thin rules, with a round
-grey arrow button; sending it opens the conversation with Uzyra (`/rita`; the typed words are not
-carried over). Below, four stickers (café, library, lighthouse, observatory; WebP, background
-removed) fanned like cards: tilted −18° / −6° / 6° / 18°, overlapping by 7% of their width, with a
-soft drop shadow. Hover lifts one to 1.02 with a deeper shadow; pressed, it grows to 1.12, comes
-to the front and follows the pointer or finger, leaning with the drag; on release it springs home
-(0.56s `cubic-bezier(0.34, 1.56, 0.64, 1)`). Reduced motion keeps only the hover lift.

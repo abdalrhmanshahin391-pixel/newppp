@@ -22,8 +22,6 @@ on:
       - "src/components/home/procreate/book-window.css"
       - "src/components/home/procreate/UnderTheHood.tsx"
       - "src/components/home/procreate/under-the-hood.css"
-      - "src/components/home/procreate/StickerShelf.tsx"
-      - "src/components/home/procreate/sticker-shelf.css"
       - "public/home/features/**"
       - "src/components/home/procreate/ProHome.tsx"
       - "src/components/header/**"

@@ -1,8 +1,7 @@
-// The home page's sections from the intro card down: the feature section, the library preview,
-// Under the hood and the sticker shelf, the real components served locally. Nothing remote is
-// contacted. Checks the typed headings, the rippling and drifting circles, the letters that fade
-// in, the two live pictures (the tap word and the words that turn into flashcards), the books and
-// stickers that rise in, the bars drawn with the scroll, the counted number, the pause off screen,
+// The home page's sections from the intro card down: the feature section, the library preview and
+// Under the hood, the real components served locally. Nothing remote is contacted. Checks the typed headings, the rippling and drifting circles, the letters that fade
+// in, the two live pictures (the tap word and the words that turn into flashcards), the books
+// that rise in, the bars drawn with the scroll, the counted number, the pause off screen,
 // the phone layout, reduced motion, and that nothing outside the pictures is coloured.
 import assert from "node:assert/strict";
 import { build } from "esbuild";
@@ -20,8 +19,7 @@ import {createRootRoute, createRouter, RouterProvider, createMemoryHistory} from
 import {FeatureExplorer} from './src/components/home/procreate/FeatureExplorer';
 import {AppWindow} from './src/components/home/procreate/AppWindow';
 import {UnderTheHood} from './src/components/home/procreate/UnderTheHood';
-import {StickerShelf} from './src/components/home/procreate/StickerShelf';
-function Home(){return <main className="uz-home rita-cream edith-light edith-premium relative min-h-screen overflow-clip bg-black text-white" style={{fontFamily:'var(--font-grotesk)'}}><div className="qa-head">Above the section</div><FeatureExplorer/><AppWindow/><UnderTheHood/><StickerShelf/><div className="qa-tail">Uzyra · Learn at your pace</div></main>}
+function Home(){return <main className="uz-home rita-cream edith-light edith-premium relative min-h-screen overflow-clip bg-black text-white" style={{fontFamily:'var(--font-grotesk)'}}><div className="qa-head">Above the section</div><FeatureExplorer/><AppWindow/><UnderTheHood/><div className="qa-tail">Uzyra · Learn at your pace</div></main>}
 const router = createRouter({routeTree: createRootRoute({component: Home}), history: createMemoryHistory({initialEntries:['/']})});
 createRoot(document.getElementById('app')).render(<RouterProvider router={router}/>);
 `;
@@ -383,15 +381,7 @@ try {
     assert.equal(await page.locator(".uz-hood-number [data-count]").innerText(), "75");
     await page.screenshot({ path: resolve(out, `${engine}-hood-facts-${width}.png`) });
 
-    // The stickers rise into their fan.
-    await scrollTo(page, ".uz-shelf-row", 0.4);
-    await page.waitForTimeout(1600);
-    const stickers = await page
-      .locator(".uz-shelf-item")
-      .evaluateAll((els) => els.map((el) => Number(getComputedStyle(el).opacity)));
-    assert.ok(stickers.length === 4 && stickers.every((o) => o === 1), "stickers in");
-    await page.screenshot({ path: resolve(out, `${engine}-stickers-${width}.png`) });
-    for (const section of [".uz-fx", ".uz-lib", ".uz-hood", ".uz-shelf"]) {
+    for (const section of [".uz-fx", ".uz-lib", ".uz-hood"]) {
       assert.deepEqual(await colours(page, section), [], `${section}: black, white and greys only`);
     }
 
@@ -437,14 +427,11 @@ try {
       (el) => getComputedStyle(el).transform === "none",
     ),
     count: document.querySelector(".uz-hood-number [data-count]")?.textContent,
-    stickers: [...document.querySelectorAll(".uz-shelf-item")].every(
-      (el) => getComputedStyle(el).opacity === "1",
-    ),
     books: [...document.querySelectorAll(".library-shelves .bk-item")].every(
       (el) => getComputedStyle(el).opacity === "1",
     ),
   }));
-  assert.deepEqual(calm, { bars: true, count: "75", stickers: true, books: true }, "all still");
+  assert.deepEqual(calm, { bars: true, count: "75", books: true }, "all still");
   await page.screenshot({ path: resolve(out, engine + "-reduced.png") });
   findings.push({ engine, reduced: true, acceptance: "passed" });
   await context.close();
