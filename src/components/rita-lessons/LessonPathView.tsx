@@ -42,7 +42,11 @@ import {
   type PathItemKind,
   type PathRef,
 } from "@/lib/rita-path-layout";
-import { adminAddPathItem, adminSavePathLayout } from "@/lib/rita-path-items.functions";
+import {
+  adminAddPathItem,
+  adminDeletePathItem,
+  adminSavePathLayout,
+} from "@/lib/rita-path-items.functions";
 import {
   confirmSound,
   installSoundUnlock,
@@ -196,6 +200,7 @@ export function LessonPathView({
 }) {
   const saveFn = useServerFn(adminSavePathLayout);
   const addFn = useServerFn(adminAddPathItem);
+  const deleteItemFn = useServerFn(adminDeletePathItem);
   const lessonStatus = useServerFn(adminSetLessonStatus);
   const [hint, setHint] = useState("");
   // Free order only relaxes the sequencing (any lesson can be opened); it does
@@ -331,6 +336,21 @@ export function LessonPathView({
     }
   }
 
+  async function removeItem(item: PathItem) {
+    if (!window.confirm(`أكيد بدك تحذف «${pathItemTitle(item)}» من المسار؟`)) return;
+    setBusy(true);
+    try {
+      await deleteItemFn({ data: { id: item.id } });
+      setNodes((previous) => previous.filter((node) => idOf(node) !== item.id));
+      await onReload();
+      toast.success("انحذفت المحطة من المسار.");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "تعذّر حذف المحطة. جرّب مرة ثانية.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const counts = new Map<Level, LevelCount>();
   for (const r of allRows) if (r.type === "banner") counts.set(r.level, r.count);
 
@@ -371,7 +391,9 @@ export function LessonPathView({
 
   function open(node: Node) {
     if (node.type === "item" && node.item.kind === "exercises") {
-      if (isAdmin) setContent({ item: node.item });
+      // Admins manage a stop's content while editing (or when it is still empty); otherwise
+      // everyone, admins included, opens the exercises to solve them.
+      if (isAdmin && (editing || !exerciseCount(node.item))) setContent({ item: node.item });
       else if (exerciseCount(node.item)) setSheet(node.item);
       else setHint("لسا ما انضافت تمارين لهاي المحطة.");
       return;
@@ -748,6 +770,21 @@ export function LessonPathView({
             <Trash2 size={15} /> إزالة من المسار
           </button>
         )}
+        {editing &&
+          isAdmin &&
+          node.type === "item" &&
+          (node.item.kind === "exercises" || node.item.kind === "resources") && (
+            <button
+              type="button"
+              className="rita-btn rita-btn-quiet absolute min-h-11 text-red-700"
+              style={{ top: place.top + 174, left: centre.x, transform: "translateX(-50%)" }}
+              disabled={busy}
+              aria-label={`احذف المحطة · ${title}`}
+              onClick={() => void removeItem(node.item)}
+            >
+              <Trash2 size={15} /> احذف المحطة
+            </button>
+          )}
       </Fragment>
     );
   }
