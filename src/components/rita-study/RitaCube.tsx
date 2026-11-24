@@ -7,7 +7,7 @@ import { createMascot, restFrame } from "./mascot/mascot-engine";
 const REST = restFrame(200);
 
 /**
- * Uzyra's face: a soft red cube (#EA4045) with two white eyes, alive (the engine is in ./mascot).
+ * Uzyra's face: a soft blue cube (#3C82F6) with two white eyes, alive (the engine is in ./mascot).
  *
  * It is a rounded square with some thickness and round edges, drawn flat: as it turns its round
  * side comes into view, and its eyes slide across its front face and hide when it faces away. It
