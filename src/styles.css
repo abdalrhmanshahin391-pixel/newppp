@@ -5773,7 +5773,7 @@ html.rita-app,
 .uz-msg-in {
   animation: uz-msg-in 260ms cubic-bezier(0.23, 1, 0.32, 1) both;
 }
-/* Uzyra (RitaCube): a flat soft red cube (#EA4045, no shading, no shadow) with two white eyes.
+/* Uzyra (RitaCube): a flat soft blue cube (#3C82F6, no shading, no shadow) with two white eyes.
    It is drawn by its engine (src/components/rita-study/mascot): the outline and the eyes are SVG
    paths written frame by frame. Its moves may reach past its box (hops, spins, flips). */
 .uz-cube {
@@ -5789,7 +5789,7 @@ html.rita-app,
   overflow: visible;
 }
 .uz-cube-shape {
-  fill: #ea4045;
+  fill: #3c82f6;
 }
 .uz-cube-eye {
   fill: #fff;

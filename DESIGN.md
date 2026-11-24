@@ -29,7 +29,7 @@ section. We used its numbers and behaviour, not its code or video.
   - 0–0.5s: dots fly in and draw the cube's resting outline.
   - 0.35–1.2s: the cube grows to 46% of the card's height, with a soft white glow behind it.
   - 1.2–1.7s: it shrinks into its place beside the name.
-  - Around 1.6s: the live Uzyra (red body, white eyes) takes over from the white dots.
+  - Around 1.6s: the live Uzyra (blue body, white eyes) takes over from the white dots.
   - «Uzyra», then «Ultra», wipe in from the left.
   - Behind everything, a slanted ring of dots turns slowly.
   - The film repeats every 12s. It starts when 40% of the card is in view and stops off screen.
@@ -111,7 +111,7 @@ request; they were too visible and redrew a full-screen layer 12 times a second 
 
 The home top (`UltraHero`, above) is the only hero: the earlier tap-a-word hero (headline with
 sticker pills, orbit rings, word chips, the two big buttons) was removed in Nov 2026 because the
-new top replaced it; do not bring its rings or chips back. Uzyra is a flat soft red cube (#EA4045) with
+new top replaced it; do not bring its rings or chips back. Uzyra is a flat soft blue cube (#3C82F6) with
 white eyes, no shadow or texture; it and its level driver stop offscreen or in hidden tabs, and
 reduced motion makes it static. Use `scripts/check-home-cube.mjs` for isolated Chromium/WebKit
 component checks, screenshots and phone/tablet videos; it uses local account/reader fixtures, not
@@ -119,8 +119,9 @@ production voice or database.
 
 ### How Uzyra moves (`RitaCube`, engine in `src/components/rita-study/mascot`)
 
-The look and the rhythm follow the bots on x.ai/bot, as the owner asked: the soft red square in
-their red (`#EA4045`), their proportions (a squircle with some thickness and round edges),
+The look and the rhythm follow the bots on x.ai/bot, as the owner asked: the soft square shape of
+their red bot, in the blue of their blue bot (`#3C82F6`, the owner asked for exactly that blue; it
+was `#EA4045` red until Nov 24 2026), their proportions (a squircle with some thickness and round edges),
 and their timings, ranges and easing curves, read from their page. The shapes, clips and code are
 ours; none of their drawings or animation files are used.
 
