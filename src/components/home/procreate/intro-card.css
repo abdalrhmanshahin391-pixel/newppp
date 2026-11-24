@@ -71,13 +71,6 @@
   margin-right: 0.04em;
   opacity: 0;
 }
-/* On black the block is white and its eyes are holes. */
-.uz-intro-mark .uz-cube-shape {
-  fill: #fff;
-}
-.uz-intro-mark .uz-cube-eye {
-  fill: var(--intro-bg);
-}
 .uz-intro-word {
   display: inline-block;
   padding-bottom: 0.08em;

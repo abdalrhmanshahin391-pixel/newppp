@@ -7,7 +7,7 @@ on:
       - "src/styles.css"
       - "src/components/home/procreate/HeroTapWord.tsx"
       - "src/components/rita-study/RitaCube.tsx"
-      - "src/components/rita-study/cube/**"
+      - "src/components/rita-study/mascot/**"
       - "scripts/check-home-cube.mjs"
       - "scripts/check-header-menus.mjs"
       - "scripts/check-intro-card.mjs"
@@ -79,8 +79,8 @@ jobs:
         run: bun test src/components/rita-study/question-preview.test.ts src/components/rita-study/window-geometry.test.ts src/lib/study/study-practice.test.ts
       - name: Hold audio lifecycle regressions
         run: node --test src/components/rita-study/tech-sound.test.mjs
-      - name: Uzyra's cube (3D outline, eyes, clips, engine)
-        run: node --test src/components/rita-study/cube/cube.test.ts
+      - name: Uzyra's soft cube (outline, eyes, clips, spins, squash, engine)
+        run: node --test src/components/rita-study/mascot/mascot.test.ts
       - name: Header menus (panel placement, highlight, keys)
         run: node --test src/components/header/menu-motion.test.ts
       - name: Home intro card (scroll growth, film beats, catch-up)

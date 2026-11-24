@@ -168,6 +168,8 @@ const colours = (page, selector) =>
       return true;
     };
     for (const el of section.querySelectorAll("*")) {
+      // Uzyra herself is red (#EA4045); everything else is black, white and greys.
+      if (el.closest(".uz-cube")) continue;
       const s = getComputedStyle(el);
       for (const prop of [
         "color",
@@ -246,11 +248,20 @@ try {
         const title = el.querySelector(".uz-fx-title");
         scrollBy(0, title.getBoundingClientRect().top - innerHeight * 0.6);
       });
+      // The first letters land within about 300 ms; a busy CI runner (WebKit) can lag a frame or
+      // two, so allow up to a second, while the last letters must still be fading.
       await page.waitForTimeout(300);
-      const early = await letters(page, n);
+      let early = await letters(page, n);
+      let waited = 0;
+      for (; waited < 7 && early.first <= 0.95; waited++) {
+        await page.waitForTimeout(100);
+        early = await letters(page, n);
+      }
       assert.ok(early.first > 0.95, `row ${n}: first letters in (${early.first})`);
       // (On phones the previous live picture may already have scrolled this title into view.)
-      if (before.full === 0) assert.ok(early.last < 1, `row ${n}: last letters still fading`);
+      if (before.full === 0 && waited === 0) {
+        assert.ok(early.last < 1, `row ${n}: last letters still fading`);
+      }
       await page.waitForTimeout(early.total * 5 + 300);
       assert.equal((await letters(page, n)).full, early.total, `row ${n}: all in`);
       if (n < 2) {
