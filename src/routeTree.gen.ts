@@ -102,6 +102,7 @@ import { Route as StudySessionRouteImport } from './routes/study.session'
 import { Route as StudySummariesRouteImport } from './routes/study.summaries'
 import { Route as StudyTodoRouteImport } from './routes/study.todo'
 import { Route as SummariesIndexRouteImport } from './routes/summaries.index'
+import { Route as PathQuizItemIdRouteImport } from './routes/path-quiz.$itemId'
 import { Route as SummariesSummaryIdRouteImport } from './routes/summaries.$summaryId'
 import { Route as SummariesNewRouteImport } from './routes/summaries.new'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
@@ -624,6 +625,11 @@ const SummariesIndexRoute = SummariesIndexRouteImport.update({
   path: '/summaries/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PathQuizItemIdRoute = PathQuizItemIdRouteImport.update({
+  id: '/path-quiz/$itemId',
+  path: '/path-quiz/$itemId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SummariesSummaryIdRoute = SummariesSummaryIdRouteImport.update({
   id: '/summaries/$summaryId',
   path: '/summaries/$summaryId',
@@ -986,6 +992,7 @@ export interface FileRoutesByFullPath {
   '/study/session': typeof StudySessionRoute
   '/study/summaries': typeof StudySummariesRoute
   '/study/todo': typeof StudyTodoRoute
+  '/path-quiz/$itemId': typeof PathQuizItemIdRoute
   '/summaries/$summaryId': typeof SummariesSummaryIdRoute
   '/summaries/new': typeof SummariesNewRoute
   '/admin/': typeof AdminIndexRoute
@@ -1131,6 +1138,7 @@ export interface FileRoutesByTo {
   '/study/session': typeof StudySessionRoute
   '/study/summaries': typeof StudySummariesRoute
   '/study/todo': typeof StudyTodoRoute
+  '/path-quiz/$itemId': typeof PathQuizItemIdRoute
   '/summaries/$summaryId': typeof SummariesSummaryIdRoute
   '/summaries/new': typeof SummariesNewRoute
   '/admin': typeof AdminIndexRoute
@@ -1280,6 +1288,7 @@ export interface FileRoutesById {
   '/study/session': typeof StudySessionRoute
   '/study/summaries': typeof StudySummariesRoute
   '/study/todo': typeof StudyTodoRoute
+  '/path-quiz/$itemId': typeof PathQuizItemIdRoute
   '/summaries/$summaryId': typeof SummariesSummaryIdRoute
   '/summaries/new': typeof SummariesNewRoute
   '/admin/': typeof AdminIndexRoute
@@ -1431,6 +1440,7 @@ export interface FileRouteTypes {
     | '/study/session'
     | '/study/summaries'
     | '/study/todo'
+    | '/path-quiz/$itemId'
     | '/summaries/$summaryId'
     | '/summaries/new'
     | '/admin/'
@@ -1576,6 +1586,7 @@ export interface FileRouteTypes {
     | '/study/session'
     | '/study/summaries'
     | '/study/todo'
+    | '/path-quiz/$itemId'
     | '/summaries/$summaryId'
     | '/summaries/new'
     | '/admin'
@@ -1724,6 +1735,7 @@ export interface FileRouteTypes {
     | '/study/session'
     | '/study/summaries'
     | '/study/todo'
+    | '/path-quiz/$itemId'
     | '/summaries/$summaryId'
     | '/summaries/new'
     | '/admin/'
@@ -1861,6 +1873,7 @@ export interface RootRouteChildren {
   ShareDeckIdRoute: typeof ShareDeckIdRoute
   ShareNewRoute: typeof ShareNewRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
+  PathQuizItemIdRoute: typeof PathQuizItemIdRoute
   SummariesSummaryIdRoute: typeof SummariesSummaryIdRoute
   SummariesNewRoute: typeof SummariesNewRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -2557,6 +2570,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SummariesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/path-quiz/$itemId': {
+      id: '/path-quiz/$itemId'
+      path: '/path-quiz/$itemId'
+      fullPath: '/path-quiz/$itemId'
+      preLoaderRoute: typeof PathQuizItemIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/summaries/$summaryId': {
       id: '/summaries/$summaryId'
       path: '/summaries/$summaryId'
@@ -3145,6 +3165,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShareDeckIdRoute: ShareDeckIdRoute,
   ShareNewRoute: ShareNewRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,
+  PathQuizItemIdRoute: PathQuizItemIdRoute,
   SummariesSummaryIdRoute: SummariesSummaryIdRoute,
   SummariesNewRoute: SummariesNewRoute,
   AdminIndexRoute: AdminIndexRoute,

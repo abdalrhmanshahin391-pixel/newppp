@@ -1161,6 +1161,31 @@ lower right of the circle. Slides are AI drafts, so an admin switches "show to l
 lesson; regenerating switches it off. The card is a modal: Esc and back close it, focus is kept
 inside and returned, the page behind is locked, motion stops under reduced motion.
 
+## Path quiz page (`/path-quiz/$itemId`)
+
+A quiz stop on the lesson path (Lecture Lab questions) opens on its own page, in the home page's
+language: white, a still field of faint black dots at the edges (24px, 20px and only at the top on
+phones), the question in Google Sans Flex 450 (40px down to 26px), black pills for actions.
+
+- **Top:** back to the path (asks first if answers would be lost), the stop's name, a sound switch
+  (the shared `tech-sound` setting). Under it, one 6px segment per question: ink for the current
+  one, green when answered right, red when wrong.
+- **Question:** Uzyra's cube (48px, 56px from 1024px) beside «Question 3 of 10»; it thinks while
+  the answer is checked, hops on a right answer and shakes its head on a wrong one.
+- **Answers:** 16px cards with a hairline border and a letter in a circle. The chosen one gets a 2px
+  ink border. After checking: the right answer green with ✓, a wrong choice red with ✗, the rest
+  faded; the list shakes once on a wrong answer. Keys 1–8 or A–H choose, Enter checks and goes on.
+- **Action bar:** fixed at the bottom on every screen (the thumb's reach on phones): «Check», then
+  the result («Right!» / «Not this time» with the right answer and the explanation) and «Next».
+  The bar turns soft green or soft red. Sounds: `rightAnswerSound`, `wrongAnswerSound`, then
+  `quizDoneSound` on the result page.
+- **Result:** the cube, the score counting up (for example 8 / 10), one line about it, «Back to
+  the path» and «Try again», then the questions answered wrong with the right answer and why.
+- **States:** a grey loading shape, a load error with «Try again», «No quiz here yet».
+- Green and red only mark answers, always with a word and an icon. Marking stays on the server
+  (`answer_path_quiz`). Reduced motion: no hop, shake, rise or count-up; colours and sounds stay.
+- A stop that holds both quiz and clips, and film/GIF stops, still open in the path's window.
+
 ## Lesson exercise window
 
 Lessons with exercises (content version 2, `src/lib/rita-lesson-*`) run on the lesson engine. The
