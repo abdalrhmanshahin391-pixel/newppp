@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Clapperboard,
   Dumbbell,
+  ListChecks,
   Flag,
   FileText,
   FolderOpen,
@@ -35,6 +36,8 @@ import {
 } from "@/lib/rita-curriculum.functions";
 import {
   exerciseCount,
+  exerciseMode,
+  type ExerciseMode,
   pathItemTitle,
   mergePath,
   swapRefs,
@@ -42,7 +45,11 @@ import {
   type PathItemKind,
   type PathRef,
 } from "@/lib/rita-path-layout";
-import { adminAddPathItem, adminSavePathLayout } from "@/lib/rita-path-items.functions";
+import {
+  adminAddPathItem,
+  adminDeletePathItem,
+  adminSavePathLayout,
+} from "@/lib/rita-path-items.functions";
 import {
   confirmSound,
   installSoundUnlock,
@@ -89,13 +96,15 @@ const DOODLES = [BookOpen, MessageCircle, Globe2, Headphones, PenLine, Sparkles]
 const FREE_ORDER_KEY = "ritaFreeOrder";
 const HOLD_MS = 300;
 
-type Look = "study" | "classic" | PathItemKind;
+type Look = "study" | "classic" | PathItemKind | ExerciseMode;
 
 /** Each kind of stop has its own colour, word and picture, used everywhere on the path. */
 const LOOK: Record<Look, { color: string; soft: string; word: string; Icon: typeof FileText }> = {
   study: { color: "#16a34a", soft: "#e9f8ef", word: "PDF + صوت", Icon: FileText },
   classic: { color: "#2b6df0", soft: "#e7eefd", word: "محادثة", Icon: MessageCircle },
   exercises: { color: "#f08a24", soft: "#fff1e2", word: "تمارين", Icon: Dumbbell },
+  quiz: { color: "#0e8fb0", soft: "#e3f5fa", word: "أسئلة", Icon: ListChecks },
+  clips: { color: "#d6336c", soft: "#fde8ef", word: "أفلام وGIF", Icon: Clapperboard },
   resources: { color: "#7c5cff", soft: "#f0ecff", word: "ملفات", Icon: FolderOpen },
   finish: { color: "#121117", soft: "#f4f4f8", word: "النهاية", Icon: Flag },
 };
@@ -105,7 +114,19 @@ type Node = { type: "lesson"; lesson: PathLesson } | { type: "item"; item: PathI
 const idOf = (node: Node) => (node.type === "lesson" ? node.lesson.id : node.item.id);
 const refOf = (node: Node): PathRef => ({ type: node.type, id: idOf(node) });
 const lookOf = (node: Node): Look =>
-  node.type === "item" ? node.item.kind : node.lesson.experience === "study" ? "study" : "classic";
+  node.type === "item"
+    ? (exerciseMode(node.item) ?? node.item.kind)
+    : node.lesson.experience === "study"
+      ? "study"
+      : "classic";
+
+/** The stops an admin can add, each with its own look. */
+type NewStop = "quiz" | "clips" | "resources" | "finish";
+const NEW_STOP_TITLE: Record<"quiz" | "clips" | "resources", string> = {
+  quiz: "أسئلة",
+  clips: "أفلام وGIF",
+  resources: "Resources",
+};
 
 /** The language being learned and the level the learner is at; a tap switches the language. */
 function PathLanguage({ level }: { level: Level }) {
@@ -196,6 +217,7 @@ export function LessonPathView({
 }) {
   const saveFn = useServerFn(adminSavePathLayout);
   const addFn = useServerFn(adminAddPathItem);
+  const deleteItemFn = useServerFn(adminDeletePathItem);
   const lessonStatus = useServerFn(adminSetLessonStatus);
   const [hint, setHint] = useState("");
   // Free order only relaxes the sequencing (any lesson can be opened); it does
@@ -331,6 +353,21 @@ export function LessonPathView({
     }
   }
 
+  async function removeItem(item: PathItem) {
+    if (!window.confirm(`أكيد بدك تحذف «${pathItemTitle(item)}» من المسار؟`)) return;
+    setBusy(true);
+    try {
+      await deleteItemFn({ data: { id: item.id } });
+      setNodes((previous) => previous.filter((node) => idOf(node) !== item.id));
+      await onReload();
+      toast.success("انحذفت المحطة من المسار.");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "تعذّر حذف المحطة. جرّب مرة ثانية.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const counts = new Map<Level, LevelCount>();
   for (const r of allRows) if (r.type === "banner") counts.set(r.level, r.count);
 
@@ -371,7 +408,9 @@ export function LessonPathView({
 
   function open(node: Node) {
     if (node.type === "item" && node.item.kind === "exercises") {
-      if (isAdmin) setContent({ item: node.item });
+      // Admins manage a stop's content while editing (or when it is still empty); otherwise
+      // everyone, admins included, opens the exercises to solve them.
+      if (isAdmin && (editing || !exerciseCount(node.item))) setContent({ item: node.item });
       else if (exerciseCount(node.item)) setSheet(node.item);
       else setHint("لسا ما انضافت تمارين لهاي المحطة.");
       return;
@@ -545,16 +584,18 @@ export function LessonPathView({
     }
   }
 
-  async function add(kind: PathItemKind, index: number) {
+  async function add(stop: NewStop, index: number) {
     setAdding(null);
     setBusy(true);
+    const kind: PathItemKind = stop === "quiz" || stop === "clips" ? "exercises" : stop;
     try {
       const created = await addFn({
         data: {
           language,
           level: pageLevel,
           kind,
-          title: kind === "exercises" ? "تمارين" : kind === "finish" ? pageLevel : "Resources",
+          ...(kind === "exercises" && { mode: stop as ExerciseMode }),
+          title: stop === "finish" ? pageLevel : NEW_STOP_TITLE[stop],
           list: nodes.map(refOf),
           index,
         },
@@ -564,8 +605,8 @@ export function LessonPathView({
         { type: "item", item: created },
         ...list.slice(index),
       ]);
-      if (kind !== "exercises") setContent({ item: created });
-      else toast.success("انضافت محطة تمارين. اضغط عليها لإضافة المحتوى.");
+      // A new quiz, clips or resources stop opens straight on its content.
+      if (kind !== "finish") setContent({ item: created });
       setFresh(created.id);
       confirmSound();
       window.setTimeout(() => setFresh(""), 900);
@@ -729,9 +770,13 @@ export function LessonPathView({
           ) : (
             <span className="lp-sub">
               {node.type === "item" && exerciseCount(node.item)
-                ? `تمارين المحطة · ${exerciseCount(node.item)}`
+                ? exerciseMode(node.item) === "quiz"
+                  ? `${exerciseCount(node.item)} أسئلة`
+                  : exerciseMode(node.item) === "clips"
+                    ? `${exerciseCount(node.item)} مقاطع`
+                    : `تمارين المحطة · ${exerciseCount(node.item)}`
                 : isAdmin
-                  ? "أضف أول تمرين"
+                  ? "اضغط لإضافة المحتوى"
                   : "قريباً"}
             </span>
           )}
@@ -748,6 +793,21 @@ export function LessonPathView({
             <Trash2 size={15} /> إزالة من المسار
           </button>
         )}
+        {editing &&
+          isAdmin &&
+          node.type === "item" &&
+          (node.item.kind === "exercises" || node.item.kind === "resources") && (
+            <button
+              type="button"
+              className="rita-btn rita-btn-quiet absolute min-h-11 text-red-700"
+              style={{ top: place.top + 174, left: centre.x, transform: "translateX(-50%)" }}
+              disabled={busy}
+              aria-label={`احذف المحطة · ${title}`}
+              onClick={() => void removeItem(node.item)}
+            >
+              <Trash2 size={15} /> احذف المحطة
+            </button>
+          )}
       </Fragment>
     );
   }
@@ -823,9 +883,17 @@ export function LessonPathView({
               type="button"
               className="lp-edit"
               disabled={busy}
-              onClick={() => void add("exercises", endOfPage)}
+              onClick={() => void add("quiz", endOfPage)}
             >
-              <Plus size={16} /> أضف محطة تمارين
+              <Plus size={16} /> أضف محطة أسئلة
+            </button>
+            <button
+              type="button"
+              className="lp-edit"
+              disabled={busy}
+              onClick={() => void add("clips", endOfPage)}
+            >
+              <Plus size={16} /> أضف محطة أفلام وGIF
             </button>
             <Link to="/admin/clips" className="lp-edit">
               <Clapperboard size={16} aria-hidden="true" /> مكتبة المقاطع
@@ -1024,7 +1092,7 @@ export function LessonPathView({
                     </span>
                     درس من كتاب أو درس موجود
                   </button>
-                  {(["exercises", "resources", "finish"] as PathItemKind[]).map((kind) => {
+                  {(["quiz", "clips", "resources", "finish"] as NewStop[]).map((kind) => {
                     const Icon = LOOK[kind].Icon;
                     return (
                       <button
@@ -1040,9 +1108,11 @@ export function LessonPathView({
                         <span>
                           <Icon size={18} />
                         </span>
-                        {kind === "exercises"
-                          ? "محطة تمارين"
-                          : kind === "resources"
+                        {kind === "quiz"
+                          ? "أسئلة من Lecture Lab"
+                          : kind === "clips"
+                            ? "أفلام وGIF"
+                            : kind === "resources"
                             ? "ملفات وروابط"
                             : `خط نهاية ${pageLevel}`}
                       </button>
@@ -1140,7 +1210,7 @@ export function LessonPathView({
         <PathStopSheet
           item={sheet}
           admin={isAdmin && (sheet.kind !== "exercises" || editing)}
-          color={LOOK[sheet.kind].color}
+          color={LOOK[exerciseMode(sheet) ?? sheet.kind].color}
           onClose={() => setSheet(null)}
           onChanged={onReload}
         />

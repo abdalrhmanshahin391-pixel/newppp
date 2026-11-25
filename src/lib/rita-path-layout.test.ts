@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   exerciseCount,
+  exerciseMode,
   pathItemTitle,
   insertRef,
   layoutOrders,
@@ -85,4 +86,15 @@ test("blank legacy exercise stops and mixed-media stops have the right map label
   assert.equal(exerciseCount(mixed), 5);
   assert.equal(pathItemTitle(mixed), mixed.title);
   assert.equal(exerciseCount(empty), 0);
+});
+
+test("an exercises stop is a quiz stop or a clips stop", () => {
+  const empty = { ...item("A", 1), title: "أسئلة" };
+  assert.equal(exerciseMode(empty), null);
+  assert.equal(exerciseMode({ ...empty, exercise_mode: "quiz" as const }), "quiz");
+  assert.equal(exerciseMode({ ...empty, quiz_count: 4 }), "quiz");
+  assert.equal(exerciseMode({ ...empty, clip_ids: ["c1"] }), "clips");
+  assert.equal(exerciseMode({ ...empty, gif_lines: [2] }), "clips");
+  assert.equal(exerciseMode({ ...empty, quiz_count: 2, clip_ids: ["c1"] }), null);
+  assert.equal(exerciseMode({ ...empty, kind: "resources" as const }), null);
 });

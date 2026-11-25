@@ -7,7 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { supabase } from "@/integrations/supabase/legacy-client";
 import { lqBoard, type LqOption } from "@/lib/lecture-lab.functions";
-import { stopClipCount, type PathItem } from "@/lib/rita-path-layout";
+import { exerciseMode, stopClipCount, type PathItem } from "@/lib/rita-path-layout";
 import "./path-quiz.css";
 
 const FilmEditor = lazy(() => import("./FilmPractice").then((m) => ({ default: m.FilmEditor })));
@@ -63,9 +63,16 @@ export function PathQuiz(props: Props) {
       Icon: ListChecks,
     },
   ] as const;
-  const available = choices.filter((option) => props.admin || option.count > 0);
+  // A quiz stop or a clips stop holds one kind only and opens straight on it. An older stop
+  // holding both kinds (or an empty one without a kind) still offers the choice.
+  const fixed = exerciseMode(props.item);
+  const only = fixed === "quiz" ? "quiz" : fixed === "clips" ? "film" : null;
+  const available = choices.filter((option) =>
+    only ? option.id === only : props.admin || option.count > 0,
+  );
   const [mode, setMode] = useState<(typeof choices)[number]["id"] | null>(null);
-  const active = mode ?? (!props.admin && available.length === 1 ? available[0].id : null);
+  const active =
+    mode ?? only ?? (!props.admin && available.length === 1 ? available[0].id : null);
   const back = () => setMode(null);
   const afterSave = () => {
     toast.success(t("Station exercises saved", "انحفظت تمارين المحطة"));
@@ -106,7 +113,7 @@ export function PathQuiz(props: Props) {
         </>
       ) : (
         <>
-          {(props.admin || available.length > 1) && (
+          {!only && (props.admin || available.length > 1) && (
             <button className="pq-back" onClick={() => (guard ? guard.leave(back) : back())}>
               <ChevronLeft size={16} />
               {t("Exercise types", "أنواع التمارين")}
@@ -140,6 +147,12 @@ export function PathQuiz(props: Props) {
                 <FilmEditor key={active} {...props} onClose={afterSave} />
               )}
             </Suspense>
+          )}
+          {only && props.admin && props.settings && (
+            <details className="pq-settings">
+              <summary>{t("Station settings", "إعدادات المحطة")}</summary>
+              {props.settings}
+            </details>
           )}
         </>
       )}

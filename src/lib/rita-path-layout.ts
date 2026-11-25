@@ -19,7 +19,24 @@ export type PathItem = {
   /** The clips of an exercises stop (rita_film_clips ids). Undefined before that migration. */
   clip_ids?: string[];
   gif_lines?: number[];
+  /** What an exercises stop holds: a Lecture Lab quiz or film clips & GIFs. Null: both or not set. */
+  exercise_mode?: ExerciseMode | null;
 };
+
+export type ExerciseMode = "quiz" | "clips";
+
+/**
+ * The kind of an exercises stop: its saved mode, else the one kind of content it holds (before
+ * the mode migration, or an older stop). Null when it holds both kinds or nothing yet.
+ */
+export function exerciseMode(item: PathItem): ExerciseMode | null {
+  if (item.kind !== "exercises") return null;
+  if (item.exercise_mode === "quiz" || item.exercise_mode === "clips") return item.exercise_mode;
+  const quiz = (item.quiz_count ?? 0) > 0;
+  const clips = stopClipCount(item) > 0;
+  if (quiz === clips) return null;
+  return quiz ? "quiz" : "clips";
+}
 
 export function mediaLineIds(item: Pick<PathItem, "film_lines" | "gif_lines">) {
   return [...new Set([...(item.film_lines ?? []), ...(item.gif_lines ?? [])])];
