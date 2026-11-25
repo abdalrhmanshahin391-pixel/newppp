@@ -33,6 +33,7 @@ export async function pathItemsFor(
       film_lines?: number[];
       clip_ids?: string[] | null;
       gif_lines?: number[];
+      exercise_mode?: string | null;
     }[];
     const counts: Record<string, number> = {};
     const resourceIds = rows.filter((row) => row.kind === "resources").map((row) => row.id);
@@ -54,6 +55,8 @@ export async function pathItemsFor(
       ...(Array.isArray(row.clip_ids) ? { clip_ids: row.clip_ids } : {}),
       gif_lines: row.gif_lines ?? [],
       quiz_count: row.quiz_count ?? 0,
+      exercise_mode:
+        row.exercise_mode === "quiz" || row.exercise_mode === "clips" ? row.exercise_mode : null,
       resource_count: counts[row.id] ?? 0,
     }));
   } catch (cause) {

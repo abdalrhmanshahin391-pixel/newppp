@@ -20,7 +20,7 @@ import { curriculumCoverage } from "@/lib/curriculum-coverage";
 import { lessonReadiness, bookProgress, lessonPlan, type BookStep } from "@/lib/rita-book-flow";
 import { adminPlacePathLesson } from "@/lib/rita-path-items.functions";
 import { adminBookStudyState, type BookStudyState } from "@/lib/study/study.functions";
-import { type PathItem } from "@/lib/rita-path-layout";
+import { exerciseMode, type PathItem } from "@/lib/rita-path-layout";
 import type { CurriculumRow } from "@/lib/rita-curriculum.functions";
 import { PathStopSheet } from "../PathStopSheet";
 import { BookWorkspace } from "./book/BookWorkspace";
@@ -270,7 +270,13 @@ export default function PathContentPanel({
             <header className="pc-header">
               <div>
                 <Dialog.Title>
-                  {exerciseStop ? "محتوى محطة التمارين" : "إدارة المحتوى"}
+                  {exerciseStop
+                    ? exerciseMode(exerciseStop) === "quiz"
+                      ? "محتوى محطة الأسئلة"
+                      : exerciseMode(exerciseStop) === "clips"
+                        ? "محتوى محطة الأفلام وGIF"
+                        : "محتوى محطة التمارين"
+                    : "إدارة المحتوى"}
                 </Dialog.Title>
                 <p id="pc-description">
                   للأدمن فقط · {language?.toUpperCase() ?? "كل اللغات"}

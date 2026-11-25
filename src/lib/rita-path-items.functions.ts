@@ -78,6 +78,22 @@ async function saveLayout(ctx: Ctx, list: PathRef[]) {
   fail(error, "save path");
 }
 
+/**
+ * Inserts a stop. Before the exercise_mode migration is applied the column is missing: the stop
+ * is then added without it (it takes its kind from what it holds once filled).
+ */
+async function insertStop(ctx: Ctx, row: Record<string, unknown>) {
+  const insert = (values: Record<string, unknown>) =>
+    ctx.supabase.from("rita_path_items").insert(values).select("id, kind, title, path_order").single();
+  const first = await insert(row);
+  if (first.error && "exercise_mode" in row && /exercise_mode/i.test(first.error.message ?? "")) {
+    const rest = { ...row };
+    delete rest.exercise_mode;
+    return insert(rest);
+  }
+  return first;
+}
+
 /** A new order of the path (an admin swapped two stops). */
 export const adminSavePathLayout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -97,6 +113,7 @@ export const adminAddPathItem = createServerFn({ method: "POST" })
         language,
         level: z.enum(CEFR).optional(),
         kind: z.enum(["exercises", "resources", "finish"]),
+        mode: z.enum(["quiz", "clips"]).optional(),
         title: z.string().trim().min(1).max(120),
         list: z.array(ref).max(500),
         index: z.number().int().min(0).max(500),
@@ -106,18 +123,16 @@ export const adminAddPathItem = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }): Promise<PathItem> => {
     await assertAdmin(context);
-    const { data: created, error } = await context.supabase
-      .from("rita_path_items")
-      .insert({
-        language: data.language ?? "en",
-        kind: data.kind,
-        title: data.title,
-        path_order: 0,
-        ...(data.level && { map_level: data.level }),
-        created_by: context.userId,
-      })
-      .select("id, kind, title, path_order")
-      .single();
+    const mode = data.kind === "exercises" ? (data.mode ?? null) : null;
+    const { data: created, error } = await insertStop(context, {
+      language: data.language ?? "en",
+      kind: data.kind,
+      title: data.title,
+      path_order: 0,
+      ...(data.level && { map_level: data.level }),
+      ...(mode && { exercise_mode: mode }),
+      created_by: context.userId,
+    });
     fail(error, "add stop");
     if (!created) throw new Error("ما انضافت المحطة. جرّب مرة ثانية.");
     const at = Math.min(data.index, data.list.length);
@@ -144,7 +159,7 @@ export const adminAddPathItem = createServerFn({ method: "POST" })
       path_order: Number(placed?.path_order ?? 0),
       map_level: data.level,
       resource_count: 0,
-      ...(data.kind === "exercises" ? { clip_ids: [] } : {}),
+      ...(data.kind === "exercises" ? { clip_ids: [], quiz_count: 0, exercise_mode: mode } : {}),
     };
   });
 
@@ -437,18 +452,15 @@ export const adminAddClipStop = createServerFn({ method: "POST" })
     fail(pathError, "path");
     const at = data.after ? nodes.findIndex((node) => node.id === data.after) + 1 : nodes.length;
     if (at <= 0) throw new Error("مكان الإضافة تغيّر. اختاره من جديد.");
-    const { data: created, error } = await context.supabase
-      .from("rita_path_items")
-      .insert({
-        language: data.language,
-        kind: "exercises",
-        title: data.title,
-        path_order: 0,
-        clip_ids: clipIds,
-        created_by: context.userId,
-      })
-      .select("id")
-      .single();
+    const { data: created, error } = await insertStop(context, {
+      language: data.language,
+      kind: "exercises",
+      title: data.title,
+      path_order: 0,
+      clip_ids: clipIds,
+      exercise_mode: "clips",
+      created_by: context.userId,
+    });
     fail(error, "add stop");
     if (!created) throw new Error("ما انضافت المحطة. جرّب مرة ثانية.");
     const refs: PathRef[] = nodes.map((node) => ({ type: node.type, id: node.id }));
