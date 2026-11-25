@@ -6,6 +6,7 @@ import type { ContentRequest } from "./admin/PathContentPanel";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { toast } from "sonner";
 import {
+  ArrowLeft,
   ArrowRight,
   Check,
   ChevronDown,
@@ -75,6 +76,7 @@ import {
 } from "@/lib/rita-path-levels";
 import { LessonImage } from "./LessonArt";
 import { PathStopSheet } from "./PathStopSheet";
+import { RitaCube } from "@/components/rita-study/RitaCube";
 
 const PathContentPanel = lazy(() => import("./admin/PathContentPanel"));
 
@@ -119,6 +121,17 @@ const lookOf = (node: Node): Look =>
     : node.lesson.experience === "study"
       ? "study"
       : "classic";
+
+/** Each kind of stop has its own shape (lesson-path.css draws them). */
+const SHAPE: Record<Look, string> = {
+  classic: "circle",
+  study: "squircle",
+  exercises: "circle",
+  quiz: "diamond",
+  clips: "frame",
+  resources: "folder",
+  finish: "medal",
+};
 
 /** The stops an admin can add, each with its own look. */
 type NewStop = "quiz" | "clips" | "resources" | "finish";
@@ -219,6 +232,7 @@ export function LessonPathView({
   const addFn = useServerFn(adminAddPathItem);
   const deleteItemFn = useServerFn(adminDeletePathItem);
   const navigate = useNavigate();
+  const cubeLevels = useRef({ input: 0, output: 0 });
   const lessonStatus = useServerFn(adminSetLessonStatus);
   const [hint, setHint] = useState("");
   // Free order only relaxes the sequencing (any lesson can be opened); it does
@@ -713,6 +727,7 @@ export function LessonPathView({
           onPointerCancel={endPress}
           onContextMenu={(event) => editing && event.preventDefault()}
           className="lp-node"
+          data-state={editing ? undefined : (state ?? undefined)}
           data-drag={dragId === id ? "" : undefined}
           data-over={overId === id ? "" : undefined}
           data-fresh={fresh === id ? "" : undefined}
@@ -727,9 +742,13 @@ export function LessonPathView({
         >
           {isCurrent && !editing && <span className="lp-here">إنت هون</span>}
           <span className="block" style={{ height: NODE_TOP - 4 }} aria-hidden="true" />
-          <span className="lp-disc" style={{ width: NODE, height: NODE }}>
+          <span
+            className="lp-disc"
+            data-shape={SHAPE[lookOf(node)]}
+            style={{ width: NODE, height: NODE }}
+          >
             {isCurrent && !editing && <span className="lp-pulse" aria-hidden="true" />}
-            <span className="absolute inset-0 rounded-full bg-white" />
+            <span className="lp-under" />
             {lesson ? (
               <LessonImage
                 src={lesson.image_url}
@@ -738,11 +757,15 @@ export function LessonPathView({
               />
             ) : finished ? (
               <span className="lp-face lp-item-face">
-                <Trophy size={32} strokeWidth={2.1} aria-hidden="true" />
+                <span className="lp-icon">
+                  <Trophy size={32} strokeWidth={2.1} aria-hidden="true" />
+                </span>
               </span>
             ) : (
               <span className="lp-face lp-item-face">
-                <look.Icon size={32} strokeWidth={2.1} aria-hidden="true" />
+                <span className="lp-icon">
+                  <look.Icon size={32} strokeWidth={2.1} aria-hidden="true" />
+                </span>
               </span>
             )}
             {locked && (
@@ -791,13 +814,13 @@ export function LessonPathView({
         {editing && isAdmin && lesson && (
           <button
             type="button"
-            className="rita-btn rita-btn-quiet absolute min-h-11 text-red-700"
-            style={{ top: place.top + 174, left: centre.x, transform: "translateX(-50%)" }}
+            className="lp-del"
+            style={{ top: place.top + 178, left: centre.x }}
             disabled={busy}
             aria-label={`إزالة من المسار · ${title}`}
             onClick={() => void removeLesson(lesson)}
           >
-            <Trash2 size={15} /> إزالة من المسار
+            <Trash2 size={14} /> إزالة
           </button>
         )}
         {editing &&
@@ -806,18 +829,20 @@ export function LessonPathView({
           (node.item.kind === "exercises" || node.item.kind === "resources") && (
             <button
               type="button"
-              className="rita-btn rita-btn-quiet absolute min-h-11 text-red-700"
-              style={{ top: place.top + 174, left: centre.x, transform: "translateX(-50%)" }}
+              className="lp-del"
+              style={{ top: place.top + 178, left: centre.x }}
               disabled={busy}
               aria-label={`احذف المحطة · ${title}`}
               onClick={() => void removeItem(node.item)}
             >
-              <Trash2 size={15} /> احذف المحطة
+              <Trash2 size={14} /> احذف
             </button>
           )}
       </Fragment>
     );
   }
+
+  const heroCount = counts.get(pageLevel);
 
   return (
     <main
@@ -826,15 +851,10 @@ export function LessonPathView({
       data-editing={editing ? "" : undefined}
       style={{ fontFamily: "var(--font-grotesk)" }}
     >
-      <header className="sticky top-0 z-30 border-b border-[var(--pp-line)] bg-white/95 backdrop-blur">
+      <header className="lp-top sticky top-0 z-30">
         <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-between gap-2 px-4 py-3">
-          <Link
-            to="/learn"
-            hash="rita"
-            aria-label="رجوع"
-            className="grid h-10 w-10 place-items-center rounded-full text-[var(--pp-muted)] hover:bg-[var(--pp-grey)]"
-          >
-            <ArrowRight size={22} />
+          <Link to="/learn" hash="rita" aria-label="رجوع" className="lp-back">
+            <ArrowRight size={20} />
           </Link>
           <PathLanguage level={pageLevel} />
           <div className="flex items-center gap-1.5">
@@ -882,8 +902,45 @@ export function LessonPathView({
         </div>
       </header>
 
-      <section className="mx-auto max-w-md px-4 pt-7 text-center">
-        <h2 className="lp-heading">دروسك مع يوزرا</h2>
+      <section className="lp-hero">
+        <div className="lp-hero-text">
+          <p className="lp-eyebrow">
+            المستوى {pageLevel}
+            {learning ? " · " : ""}
+            {learning && <LanguageFlag language={learning} size={16} />}
+          </p>
+          <h2 className="lp-heading">دروسك مع يوزرا</h2>
+          {heroCount && heroCount.lessons > 0 && (
+            <div className="lp-progress">
+              <p>
+                خلّصت <b>{heroCount.done}</b> من {heroCount.lessons} دروس بـ {pageLevel}
+              </p>
+              <span
+                className="lp-progress-bar"
+                role="progressbar"
+                aria-label={`التقدّم بالمستوى ${pageLevel}`}
+                aria-valuemin={0}
+                aria-valuemax={heroCount.lessons}
+                aria-valuenow={heroCount.done}
+              >
+                <span style={{ width: `${(heroCount.done / heroCount.lessons) * 100}%` }} />
+              </span>
+            </div>
+          )}
+          {current?.level === pageLevel && !editing && (
+            <button type="button" className="lp-continue" onClick={() => onOpenLesson(current)}>
+              <span className="lp-continue-label">كمّل</span>
+              <span className="lp-continue-title">{current.title || current.title_ar}</span>
+              <ArrowLeft size={18} aria-hidden="true" />
+            </button>
+          )}
+        </div>
+        <span className="lp-hero-cube" aria-hidden="true">
+          <RitaCube levelsRef={cubeLevels} mode="idle" label="" />
+        </span>
+      </section>
+
+      <section className="mx-auto max-w-md px-4 text-center">
         {isAdmin && lessons && !error && (
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             <button
@@ -1141,7 +1198,7 @@ export function LessonPathView({
             <button
               type="button"
               disabled={busy}
-              className="rita-btn rita-btn-quiet"
+              className="lp-prev"
               onClick={() => showLevel(previousLevel)}
             >
               ارجع إلى {previousLevel}
@@ -1152,10 +1209,11 @@ export function LessonPathView({
               <button
                 type="button"
                 disabled={busy}
-                className="rita-btn rita-btn-primary"
+                className="lp-next"
                 onClick={() => showLevel(followingLevel)}
               >
                 انتقل إلى {followingLevel}
+                <ArrowLeft size={17} aria-hidden="true" />
               </button>
             ) : (
               <span className="text-sm text-[var(--pp-muted)]">
@@ -1174,7 +1232,7 @@ export function LessonPathView({
       )}
 
       {current?.level === pageLevel && !editing && (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--pp-line)] bg-white/95 px-4 py-3 backdrop-blur">
+        <div className="lp-bottom fixed inset-x-0 bottom-0 z-20 px-4 py-3">
           <div className="mx-auto flex max-w-md items-center justify-between gap-4">
             <div className="min-w-0 text-right">
               <p className="text-[11.5px] font-semibold text-[var(--pp-muted)]">الدرس الحالي</p>
@@ -1182,12 +1240,9 @@ export function LessonPathView({
                 {current.title || current.title_ar}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => onOpenLesson(current)}
-              className="rita-btn rita-btn-primary lp-go shrink-0"
-            >
+            <button type="button" onClick={() => onOpenLesson(current)} className="lp-go shrink-0">
               متابعة
+              <ArrowLeft size={17} aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -1265,8 +1320,8 @@ function FinishStop({
       aria-label={`نهاية المستوى ${level} — ${finishLine(count)}`}
     >
       <span className="block" style={{ height: NODE_TOP - 4 }} aria-hidden="true" />
-      <span className="lp-disc" style={{ width: NODE, height: NODE }}>
-        <span className="absolute inset-0 rounded-full bg-white" />
+      <span className="lp-disc" data-shape="medal" style={{ width: NODE, height: NODE }}>
+        <span className="lp-under" />
         <span className="lp-face lp-item-face">
           {finished ? (
             <Trophy size={32} strokeWidth={2.1} aria-hidden="true" />
@@ -1283,6 +1338,15 @@ function FinishStop({
 }
 
 /** A level's banner on the road, or the «coming soon» one after the last level. */
+const LEVEL_NAME: Partial<Record<Level, string>> = {
+  A1: "مبتدئ · A1",
+  A2: "أساسي · A2",
+  B1: "متوسط · B1",
+  B2: "فوق المتوسط · B2",
+  C1: "متقدّم · C1",
+  C2: "متمكّن · C2",
+};
+
 function LevelBanner({
   row,
   top,
@@ -1311,10 +1375,15 @@ function LevelBanner({
         {row.level}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="lp-level-name">المستوى {row.level}</span>
+        <span className="lp-level-name">{LEVEL_NAME[row.level] ?? `المستوى ${row.level}`}</span>
         <span className="lp-level-sub">
           {row.count.done} من {row.count.lessons} دروس{startedHere ? " · بدأت من هون" : ""}
         </span>
+        {row.count.lessons > 0 && (
+          <span className="lp-level-bar" aria-hidden="true">
+            <span style={{ width: `${(row.count.done / row.count.lessons) * 100}%` }} />
+          </span>
+        )}
       </span>
       {canStart && (
         <button type="button" className="lp-level-go" onClick={() => onStart(row.level)}>
