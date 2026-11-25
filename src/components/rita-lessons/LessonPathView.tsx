@@ -1,5 +1,5 @@
 import "./lesson-path.css";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ContentRequest } from "./admin/PathContentPanel";
@@ -218,6 +218,7 @@ export function LessonPathView({
   const saveFn = useServerFn(adminSavePathLayout);
   const addFn = useServerFn(adminAddPathItem);
   const deleteItemFn = useServerFn(adminDeletePathItem);
+  const navigate = useNavigate();
   const lessonStatus = useServerFn(adminSetLessonStatus);
   const [hint, setHint] = useState("");
   // Free order only relaxes the sequencing (any lesson can be opened); it does
@@ -411,6 +412,9 @@ export function LessonPathView({
       // Admins manage a stop's content while editing (or when it is still empty); otherwise
       // everyone, admins included, opens the exercises to solve them.
       if (isAdmin && (editing || !exerciseCount(node.item))) setContent({ item: node.item });
+      else if (exerciseMode(node.item) === "quiz")
+        // A quiz stop opens its own page (one question at a time, with sounds).
+        void navigate({ to: "/path-quiz/$itemId", params: { itemId: node.item.id } });
       else if (exerciseCount(node.item)) setSheet(node.item);
       else setHint("لسا ما انضافت تمارين لهاي المحطة.");
       return;
@@ -1113,8 +1117,8 @@ export function LessonPathView({
                           : kind === "clips"
                             ? "أفلام وGIF"
                             : kind === "resources"
-                            ? "ملفات وروابط"
-                            : `خط نهاية ${pageLevel}`}
+                              ? "ملفات وروابط"
+                              : `خط نهاية ${pageLevel}`}
                       </button>
                     );
                   })}
