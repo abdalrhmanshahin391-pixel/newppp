@@ -5078,6 +5078,7 @@ export type Database = {
       }
       rita_path_items: {
         Row: {
+          clip_exercises: string[] | null
           clip_ids: string[]
           created_at: string
           created_by: string | null
@@ -5093,6 +5094,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          clip_exercises?: string[] | null
           clip_ids?: string[]
           created_at?: string
           created_by?: string | null
@@ -5108,6 +5110,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          clip_exercises?: string[] | null
           clip_ids?: string[]
           created_at?: string
           created_by?: string | null

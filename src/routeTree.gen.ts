@@ -102,6 +102,7 @@ import { Route as StudySessionRouteImport } from './routes/study.session'
 import { Route as StudySummariesRouteImport } from './routes/study.summaries'
 import { Route as StudyTodoRouteImport } from './routes/study.todo'
 import { Route as SummariesIndexRouteImport } from './routes/summaries.index'
+import { Route as PathClipsItemIdRouteImport } from './routes/path-clips.$itemId'
 import { Route as PathQuizItemIdRouteImport } from './routes/path-quiz.$itemId'
 import { Route as SummariesSummaryIdRouteImport } from './routes/summaries.$summaryId'
 import { Route as SummariesNewRouteImport } from './routes/summaries.new'
@@ -625,6 +626,11 @@ const SummariesIndexRoute = SummariesIndexRouteImport.update({
   path: '/summaries/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PathClipsItemIdRoute = PathClipsItemIdRouteImport.update({
+  id: '/path-clips/$itemId',
+  path: '/path-clips/$itemId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PathQuizItemIdRoute = PathQuizItemIdRouteImport.update({
   id: '/path-quiz/$itemId',
   path: '/path-quiz/$itemId',
@@ -992,6 +998,7 @@ export interface FileRoutesByFullPath {
   '/study/session': typeof StudySessionRoute
   '/study/summaries': typeof StudySummariesRoute
   '/study/todo': typeof StudyTodoRoute
+  '/path-clips/$itemId': typeof PathClipsItemIdRoute
   '/path-quiz/$itemId': typeof PathQuizItemIdRoute
   '/summaries/$summaryId': typeof SummariesSummaryIdRoute
   '/summaries/new': typeof SummariesNewRoute
@@ -1138,6 +1145,7 @@ export interface FileRoutesByTo {
   '/study/session': typeof StudySessionRoute
   '/study/summaries': typeof StudySummariesRoute
   '/study/todo': typeof StudyTodoRoute
+  '/path-clips/$itemId': typeof PathClipsItemIdRoute
   '/path-quiz/$itemId': typeof PathQuizItemIdRoute
   '/summaries/$summaryId': typeof SummariesSummaryIdRoute
   '/summaries/new': typeof SummariesNewRoute
@@ -1288,6 +1296,7 @@ export interface FileRoutesById {
   '/study/session': typeof StudySessionRoute
   '/study/summaries': typeof StudySummariesRoute
   '/study/todo': typeof StudyTodoRoute
+  '/path-clips/$itemId': typeof PathClipsItemIdRoute
   '/path-quiz/$itemId': typeof PathQuizItemIdRoute
   '/summaries/$summaryId': typeof SummariesSummaryIdRoute
   '/summaries/new': typeof SummariesNewRoute
@@ -1440,6 +1449,7 @@ export interface FileRouteTypes {
     | '/study/session'
     | '/study/summaries'
     | '/study/todo'
+    | '/path-clips/$itemId'
     | '/path-quiz/$itemId'
     | '/summaries/$summaryId'
     | '/summaries/new'
@@ -1586,6 +1596,7 @@ export interface FileRouteTypes {
     | '/study/session'
     | '/study/summaries'
     | '/study/todo'
+    | '/path-clips/$itemId'
     | '/path-quiz/$itemId'
     | '/summaries/$summaryId'
     | '/summaries/new'
@@ -1735,6 +1746,7 @@ export interface FileRouteTypes {
     | '/study/session'
     | '/study/summaries'
     | '/study/todo'
+    | '/path-clips/$itemId'
     | '/path-quiz/$itemId'
     | '/summaries/$summaryId'
     | '/summaries/new'
@@ -1873,6 +1885,7 @@ export interface RootRouteChildren {
   ShareDeckIdRoute: typeof ShareDeckIdRoute
   ShareNewRoute: typeof ShareNewRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
+  PathClipsItemIdRoute: typeof PathClipsItemIdRoute
   PathQuizItemIdRoute: typeof PathQuizItemIdRoute
   SummariesSummaryIdRoute: typeof SummariesSummaryIdRoute
   SummariesNewRoute: typeof SummariesNewRoute
@@ -2570,6 +2583,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SummariesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/path-clips/$itemId': {
+      id: '/path-clips/$itemId'
+      path: '/path-clips/$itemId'
+      fullPath: '/path-clips/$itemId'
+      preLoaderRoute: typeof PathClipsItemIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/path-quiz/$itemId': {
       id: '/path-quiz/$itemId'
       path: '/path-quiz/$itemId'
@@ -3165,6 +3185,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShareDeckIdRoute: ShareDeckIdRoute,
   ShareNewRoute: ShareNewRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,
+  PathClipsItemIdRoute: PathClipsItemIdRoute,
   PathQuizItemIdRoute: PathQuizItemIdRoute,
   SummariesSummaryIdRoute: SummariesSummaryIdRoute,
   SummariesNewRoute: SummariesNewRoute,

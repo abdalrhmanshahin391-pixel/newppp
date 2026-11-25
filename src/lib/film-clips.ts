@@ -178,7 +178,8 @@ export function clipExercises(kind: ClipKind): ClipExercise[] {
 }
 
 export type SessionStep =
-  { type: "intro"; clip: number } | { type: "exercise"; clip: number; exercise: ClipExercise };
+  | { type: "intro"; clip: number }
+  | { type: "exercise"; clip: number; exercise: ClipExercise };
 
 /** First each clip is shown once, then each clip's exercises in turn. */
 export function sessionSteps(clips: Pick<FilmClip, "kind">[]): SessionStep[] {
@@ -322,4 +323,143 @@ export function moveEntry<T>(list: T[], index: number, by: -1 | 1): T[] {
   const next = list.slice();
   [next[index], next[to]] = [next[to], next[index]];
   return next;
+}
+
+// ---------------------------------------------------------------------------------------------
+// The film & GIF page (/path-clips/$itemId): watch, understand, practise.
+
+/** Every exercise a film & GIF stop can hold. An admin picks which ones per stop. */
+export type StopExercise =
+  | "meaning" // video: choose the Arabic meaning of what you hear
+  | "listen" // video: hear it without subtitles, choose the sentence you heard
+  | "sentence" // GIF: choose the sentence that fits
+  | "blank" // the target word is missing: type it
+  | "order" // build the sentence from its words
+  | "speak" // video: say the sentence
+  | "match"; // once at the end: match the stop's words to their meanings
+
+export const STOP_EXERCISES: StopExercise[] = [
+  "meaning",
+  "listen",
+  "sentence",
+  "blank",
+  "order",
+  "speak",
+  "match",
+];
+
+export const STOP_EXERCISE_LABEL: Record<StopExercise, { ar: string; en: string; hint: string }> = {
+  meaning: { ar: "المعنى", en: "Meaning", hint: "فيديو: يختار معنى الجملة اللي سمعها" },
+  listen: { ar: "اسمع واختار", en: "Listen", hint: "فيديو بدون ترجمة: يختار الجملة اللي سمعها" },
+  sentence: {
+    ar: "الجملة المناسبة",
+    en: "Fitting sentence",
+    hint: "GIF: يختار الجملة اللي بتناسبه",
+  },
+  blank: { ar: "كمّل الكلمة", en: "Fill the gap", hint: "الكلمة المهمة مخفية ويكتبها" },
+  order: { ar: "رتّب الكلمات", en: "Word order", hint: "يبني الجملة من كلماتها" },
+  speak: { ar: "انطق", en: "Speak", hint: "فيديو: يسجّل صوته وهو يقول الجملة" },
+  match: { ar: "وصّل الكلمات", en: "Match words", hint: "بالآخر: يوصّل كلمات المحطة بمعانيها" },
+};
+
+/** The exercises a stop uses: its saved list, else all of them. Unknown values are dropped. */
+export function stopExerciseList(saved: readonly string[] | null | undefined): StopExercise[] {
+  if (!saved?.length) return STOP_EXERCISES;
+  const list = STOP_EXERCISES.filter((exercise) => saved.includes(exercise));
+  return list.length ? list : STOP_EXERCISES;
+}
+
+/** The exercises one clip makes on the page, in order, among the stop's chosen ones. */
+export function pageClipExercises(
+  clip: Pick<FilmClip, "kind" | "en" | "target">,
+  allowed: readonly StopExercise[] = STOP_EXERCISES,
+): StopExercise[] {
+  const own: StopExercise[] =
+    clip.kind === "gif"
+      ? ["sentence", "blank", "order"]
+      : ["meaning", "listen", "blank", "order", "speak"];
+  return own.filter(
+    (exercise) =>
+      allowed.includes(exercise) && (exercise !== "blank" || !!blankParts(clip.en, clip.target)),
+  );
+}
+
+export type PageStep =
+  | { type: "watch"; clip: number }
+  | { type: "exercise"; clip: number; exercise: Exclude<StopExercise, "match"> }
+  | { type: "match" };
+
+/** The page's three stages, in order. */
+export type PageStage = "watch" | "understand" | "practise";
+export function stageOf(step: PageStep): PageStage {
+  if (step.type === "watch") return "watch";
+  if (step.type === "match") return "practise";
+  return step.exercise === "meaning" || step.exercise === "listen" || step.exercise === "sentence"
+    ? "understand"
+    : "practise";
+}
+
+/**
+ * Watch each clip once, then the understanding exercises (meaning, listening, the fitting
+ * sentence) over all clips, then the practice ones (gap, order, speaking), then the word match.
+ */
+export function pageSteps(
+  clips: Pick<FilmClip, "kind" | "en" | "target" | "target_ar">[],
+  allowed: readonly StopExercise[] = STOP_EXERCISES,
+): PageStep[] {
+  const steps: PageStep[] = clips.map((_, clip) => ({ type: "watch" as const, clip }));
+  const own = clips.map((item) => pageClipExercises(item, allowed));
+  for (const exercise of STOP_EXERCISES)
+    clips.forEach((_, clip) => {
+      if (exercise !== "match" && own[clip].includes(exercise))
+        steps.push({ type: "exercise", clip, exercise });
+    });
+  if (allowed.includes("match") && matchPairs(clips).length >= 2) steps.push({ type: "match" });
+  return steps;
+}
+
+/** The sentence around its target word, for the fill-the-gap exercise. Null without the word. */
+export function blankParts(
+  en: string,
+  target: string,
+): { before: string; word: string; after: string } | null {
+  const word = target.trim();
+  const at = targetIndex(en, word);
+  if (!word || at < 0) return null;
+  return {
+    before: en.slice(0, at),
+    word: en.slice(at, at + word.length),
+    after: en.slice(at + word.length),
+  };
+}
+
+/** Whether a typed word is the expected one (case, spaces, punctuation and ’ vs ' ignored). */
+export function sameWord(typed: string, expected: string): boolean {
+  const clean = (text: string) =>
+    text
+      .normalize("NFKC")
+      .toLowerCase()
+      .replace(/[’‘`´]/g, "'")
+      .replace(/[^\p{L}\p{N}' -]/gu, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  return clean(typed) !== "" && clean(typed) === clean(expected);
+}
+
+/** The stop's words and their meanings (each word once), at most six. */
+export function matchPairs(
+  clips: Pick<FilmClip, "target" | "target_ar">[],
+): { en: string; ar: string }[] {
+  const seen = new Set<string>();
+  const pairs: { en: string; ar: string }[] = [];
+  for (const clip of clips) {
+    const en = clip.target.trim();
+    const ar = clip.target_ar.trim();
+    const key = en.toLowerCase();
+    if (!en || !ar || seen.has(key)) continue;
+    seen.add(key);
+    pairs.push({ en, ar });
+    if (pairs.length === 6) break;
+  }
+  return pairs;
 }

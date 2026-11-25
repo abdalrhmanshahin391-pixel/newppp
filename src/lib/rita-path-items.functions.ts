@@ -84,7 +84,11 @@ async function saveLayout(ctx: Ctx, list: PathRef[]) {
  */
 async function insertStop(ctx: Ctx, row: Record<string, unknown>) {
   const insert = (values: Record<string, unknown>) =>
-    ctx.supabase.from("rita_path_items").insert(values).select("id, kind, title, path_order").single();
+    ctx.supabase
+      .from("rita_path_items")
+      .insert(values)
+      .select("id, kind, title, path_order")
+      .single();
   const first = await insert(row);
   if (first.error && "exercise_mode" in row && /exercise_mode/i.test(first.error.message ?? "")) {
     const rest = { ...row };
@@ -424,6 +428,34 @@ export const adminSaveStopClips = createServerFn({ method: "POST" })
     fail(error, "save stop");
     if (!saved) throw new Error("تغيّرت المحطة. افتحها من جديد قبل الحفظ.");
     return { ok: true, clipIds };
+  });
+
+/** Which exercises a film & GIF stop uses. An empty list means all of them. */
+export const adminSaveStopExercises = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    parse(
+      z.object({
+        id: uuid,
+        exercises: z
+          .array(z.enum(["meaning", "listen", "sentence", "blank", "order", "speak", "match"]))
+          .max(7),
+      }),
+      input,
+    ),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const exercises = [...new Set(data.exercises)];
+    const { error } = await context.supabase
+      .from("rita_path_items")
+      .update({ clip_exercises: exercises.length ? exercises : null })
+      .eq("id", data.id)
+      .eq("kind", "exercises");
+    if (error && /clip_exercises/i.test(error.message ?? ""))
+      throw new Error("طبّق ملف قاعدة البيانات path_clip_exercises.sql عشان تقدر تختار التمارين.");
+    fail(error, "save exercises");
+    return { ok: true };
   });
 
 /** A new exercises stop with these clips, after a lesson or stop of the path (or at its end). */

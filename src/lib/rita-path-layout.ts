@@ -21,6 +21,8 @@ export type PathItem = {
   gif_lines?: number[];
   /** What an exercises stop holds: a Lecture Lab quiz or film clips & GIFs. Null: both or not set. */
   exercise_mode?: ExerciseMode | null;
+  /** The exercises a film & GIF stop uses. Null or empty: all of them. */
+  clip_exercises?: string[] | null;
 };
 
 export type ExerciseMode = "quiz" | "clips";
