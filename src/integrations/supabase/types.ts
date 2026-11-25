@@ -4169,6 +4169,87 @@ export type Database = {
         }
         Relationships: []
       }
+      rita_film_clips: {
+        Row: {
+          ar: string
+          context_ar: string
+          created_at: string
+          created_by: string | null
+          credit: string
+          credit_url: string
+          en: string
+          end_s: number | null
+          gif_id: string | null
+          gif_mp4: string | null
+          gif_page: string | null
+          gif_still: string | null
+          id: string
+          kind: string
+          legacy_id: number | null
+          poster_path: string | null
+          poster_url: string | null
+          source: string
+          start_s: number | null
+          target: string
+          target_ar: string
+          updated_at: string
+          video_path: string | null
+          video_url: string | null
+        }
+        Insert: {
+          ar?: string
+          context_ar?: string
+          created_at?: string
+          created_by?: string | null
+          credit?: string
+          credit_url?: string
+          en: string
+          end_s?: number | null
+          gif_id?: string | null
+          gif_mp4?: string | null
+          gif_page?: string | null
+          gif_still?: string | null
+          id?: string
+          kind?: string
+          legacy_id?: number | null
+          poster_path?: string | null
+          poster_url?: string | null
+          source?: string
+          start_s?: number | null
+          target?: string
+          target_ar?: string
+          updated_at?: string
+          video_path?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          ar?: string
+          context_ar?: string
+          created_at?: string
+          created_by?: string | null
+          credit?: string
+          credit_url?: string
+          en?: string
+          end_s?: number | null
+          gif_id?: string | null
+          gif_mp4?: string | null
+          gif_page?: string | null
+          gif_still?: string | null
+          id?: string
+          kind?: string
+          legacy_id?: number | null
+          poster_path?: string | null
+          poster_url?: string | null
+          source?: string
+          start_s?: number | null
+          target?: string
+          target_ar?: string
+          updated_at?: string
+          video_path?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       rita_free_conversation_messages: {
         Row: {
           client_message_id: string
@@ -4997,8 +5078,12 @@ export type Database = {
       }
       rita_path_items: {
         Row: {
+          clip_ids: string[]
           created_at: string
           created_by: string | null
+          exercise_mode: string | null
+          film_lines: number[]
+          gif_lines: number[]
           id: string
           kind: string
           language: string
@@ -5008,8 +5093,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          clip_ids?: string[]
           created_at?: string
           created_by?: string | null
+          exercise_mode?: string | null
+          film_lines?: number[]
+          gif_lines?: number[]
           id?: string
           kind: string
           language?: string
@@ -5019,8 +5108,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          clip_ids?: string[]
           created_at?: string
           created_by?: string | null
+          exercise_mode?: string | null
+          film_lines?: number[]
+          gif_lines?: number[]
           id?: string
           kind?: string
           language?: string
