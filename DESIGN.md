@@ -1475,6 +1475,22 @@ the language's flag and offers switching language or a free talk with Uzyra. Whi
 banners stay on the road, and a + at a level's edge sits above the next banner (it adds to the
 level before).
 
+**Redesign (Nov 2026): the home page's language.** The top bar is white glass with a round back
+button and outline pills (black when on). A hero opens the page: a grey pill with the level and the
+flag, «دروسك مع يوزرا» in Google Sans Flex 450 (56px down to 34px), «خلّصت N من M دروس بـ A1» over a
+6px ink progress bar, a black «كمّل · <the current lesson>» pill, and Uzyra's cube (120px, 76px on
+phones) floating beside it. Each kind of stop has a shape of its own, drawn in `lesson-path.css`:
+conversation lesson = circle, PDF + voice lesson = squircle (30px), quiz = diamond, film & GIF = a
+wide 120×78 frame with a strip of holes top and bottom, files = a folder with a tab, a level's finish
+= a medal with an outer ring. The layout footprint stays 88px, so dragging and the road are
+unchanged. A done lesson has a 5px ring and an ink ✓; the current one is 14% larger with a dashed
+halo and «إنت هون»; a lesson still to come keeps a pale ring. The walked road is ink (#121117), the
+rest #ececf1, the lights the cube's blue. A level is a #f4f4f7 card (24px corners) with a white 58px
+tile holding the level in the display face, its name («مبتدئ · A1»…), the count and a thin ink bar;
+«قريباً» is a dashed white card. «انتقل إلى A2» and «متابعة» are black pills with an arrow; the
+bottom bar is white glass. Admins' delete is a small red-outline pill under the stop; + is an ink
+dashed circle. Reduced motion: the cube, halo and bars stand still.
+
 ## Floating window (study page, `FloatingWindow`)
 
 A dark window over the study work area in the manner of iPadOS windows, opened from the circle (the
