@@ -4,8 +4,18 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowDown, ArrowUp, Check, Eye, Loader2, Plus, X } from "lucide-react";
 import { adminListClips, type ClipLibrary } from "@/lib/film-clips.functions";
-import { adminSaveStopClips } from "@/lib/rita-path-items.functions";
-import { clipMatches, MAX_STOP_CLIPS, moveEntry, type FilmClip } from "@/lib/film-clips";
+import { adminSaveStopClips, adminSaveStopExercises } from "@/lib/rita-path-items.functions";
+import {
+  clipMatches,
+  MAX_STOP_CLIPS,
+  moveEntry,
+  pageClipExercises,
+  STOP_EXERCISE_LABEL,
+  STOP_EXERCISES,
+  stopExerciseList,
+  type FilmClip,
+  type StopExercise,
+} from "@/lib/film-clips";
 import { useWorkspaceDraft, useWorkspaceGuard, useWorkspaceTask } from "../admin/WorkspaceGuard";
 import { FilmPlayer } from "../FilmPractice";
 import { ClipText, ClipThumb } from "./ClipBits";
@@ -20,7 +30,7 @@ export function ClipStopEditor({
   onSaved,
   onClose,
 }: {
-  stop: { id: string; title: string; clip_ids: string[] };
+  stop: { id: string; title: string; clip_ids: string[]; clip_exercises?: string[] | null };
   /** The library when the caller has it; loaded here otherwise. */
   library?: ClipLibrary;
   onSaved: () => Promise<void> | void;
@@ -28,6 +38,7 @@ export function ClipStopEditor({
 }) {
   const listFn = useServerFn(adminListClips);
   const saveFn = useServerFn(adminSaveStopClips);
+  const saveExercisesFn = useServerFn(adminSaveStopExercises);
   const loaded = useQuery({
     queryKey: ["clip-library", "en"],
     queryFn: () => listFn({ data: { language: "en" } }),
@@ -37,6 +48,8 @@ export function ClipStopEditor({
   const data = library ?? loaded.data;
   const [previous] = useState(stop.clip_ids);
   const [ids, setIds] = useState(stop.clip_ids);
+  const [firstExercises] = useState(() => stopExerciseList(stop.clip_exercises));
+  const [exercises, setExercises] = useState<StopExercise[]>(firstExercises);
   const [query, setQuery] = useState("");
   const [preview, setPreview] = useState<FilmClip>();
   const [busy, setBusy] = useState(false);
@@ -49,13 +62,23 @@ export function ClipStopEditor({
     () => (data?.clips ?? []).filter((clip) => clipMatches(clip, query)).slice(0, 60),
     [data, query],
   );
-  const changed = previous.join() !== ids.join();
+  const exercisesChanged = firstExercises.join() !== exercises.join();
+  const changed = previous.join() !== ids.join() || exercisesChanged;
 
   async function save() {
     setBusy(true);
     setError("");
     try {
-      await saveFn({ data: { id: stop.id, previous, clipIds: ids } });
+      if (previous.join() !== ids.join())
+        await saveFn({ data: { id: stop.id, previous, clipIds: ids } });
+      if (exercisesChanged)
+        await saveExercisesFn({
+          data: {
+            id: stop.id,
+            // Every exercise ticked is stored as «all», so new kinds join later stops too.
+            exercises: exercises.length === STOP_EXERCISES.length ? [] : exercises,
+          },
+        });
       finish();
       guard?.saved();
       await onSaved();
@@ -117,7 +140,14 @@ export function ClipStopEditor({
                 {clip ? (
                   <>
                     <ClipThumb clip={clip} className="h-11 w-[76px]" />
-                    <ClipText clip={clip} />
+                    <span className="grid min-w-0 flex-1 gap-0.5">
+                      <ClipText clip={clip} />
+                      <span className="truncate text-[12px] text-[var(--pp-muted)]">
+                        {pageClipExercises(clip, exercises)
+                          .map((exercise) => STOP_EXERCISE_LABEL[exercise].ar)
+                          .join(" · ") || "ما في تمارين لهاد المقطع"}
+                      </span>
+                    </span>
                   </>
                 ) : (
                   <span className="flex-1 text-[14px] text-[var(--pp-muted)]">مقطع انحذف</span>
@@ -155,6 +185,46 @@ export function ClipStopEditor({
           })}
         </ol>
       )}
+
+      <fieldset className="grid gap-2 rounded-xl border border-[var(--pp-line)] p-3">
+        <legend className="px-1 text-[15px] font-bold">التمارين بهاي المحطة</legend>
+        <p className="text-[13px] text-[var(--pp-muted)]">
+          المتعلم بيشوف كل مقطع أول، وبعدين بيحل التمارين اللي بتختارها هون.
+        </p>
+        <div className="grid gap-1.5 sm:grid-cols-2">
+          {STOP_EXERCISES.map((exercise) => {
+            const on = exercises.includes(exercise);
+            return (
+              <label
+                key={exercise}
+                className="flex min-h-11 cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 hover:bg-[var(--pp-grey)]"
+              >
+                <input
+                  type="checkbox"
+                  className="mt-1 size-4 accent-[var(--pp-ink)]"
+                  checked={on}
+                  disabled={on && exercises.length === 1}
+                  onChange={() =>
+                    setExercises(
+                      STOP_EXERCISES.filter((value) =>
+                        value === exercise ? !on : exercises.includes(value),
+                      ),
+                    )
+                  }
+                />
+                <span className="grid">
+                  <span className="text-[14px] font-semibold">
+                    {STOP_EXERCISE_LABEL[exercise].ar}
+                  </span>
+                  <span className="text-[12px] text-[var(--pp-muted)]">
+                    {STOP_EXERCISE_LABEL[exercise].hint}
+                  </span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
 
       <label className="grid grid-cols-[minmax(0,1fr)] gap-1 text-[15px] font-semibold">
         أضف من المكتبة

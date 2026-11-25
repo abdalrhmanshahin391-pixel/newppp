@@ -233,3 +233,79 @@ test("a stop counts its library clips, or its older Sintel lines before the migr
   assert.equal(stopClipCount({ film_lines: [1, 2, 3] }), 3);
   assert.equal(stopClipCount({}), 0);
 });
+
+test("the page's steps follow the stop's chosen exercises", async () => {
+  const { pageSteps, stopExerciseList, pageClipExercises } = await import("./film-clips.ts");
+  const video = {
+    kind: "video" as const,
+    en: "I am searching for someone.",
+    target: "searching",
+    target_ar: "أبحث",
+  };
+  const gif = {
+    kind: "gif" as const,
+    en: "Good night, Scales.",
+    target: "night",
+    target_ar: "ليلة",
+  };
+  assert.deepEqual(pageClipExercises(video), ["meaning", "listen", "blank", "order", "speak"]);
+  assert.deepEqual(pageClipExercises(gif), ["sentence", "blank", "order"]);
+  // No target in the sentence: no gap to fill.
+  assert.deepEqual(pageClipExercises({ ...video, target: "dragon" }, ["blank", "order"]), [
+    "order",
+  ]);
+  const all = pageSteps([video, gif]);
+  assert.deepEqual(all.slice(0, 2), [
+    { type: "watch", clip: 0 },
+    { type: "watch", clip: 1 },
+  ]);
+  assert.deepEqual(all.at(-1), { type: "match" });
+  assert.equal(all.length, 2 + 5 + 3 + 1);
+  // Stages never go back: watch, then understand, then practise.
+  const { stageOf } = await import("./film-clips.ts");
+  const order = all.map(stageOf);
+  assert.deepEqual([...new Set(order)], ["watch", "understand", "practise"]);
+  assert.ok(
+    order.every(
+      (stage, i) =>
+        i === 0 ||
+        ["watch", "understand", "practise"].indexOf(stage) >=
+          ["watch", "understand", "practise"].indexOf(order[i - 1]),
+    ),
+  );
+  const some = pageSteps([video, gif], stopExerciseList(["order", "nonsense"]));
+  assert.deepEqual(
+    some.map((s) => s.type),
+    ["watch", "watch", "exercise", "exercise"],
+  );
+  assert.deepEqual(stopExerciseList(null).length, 7);
+  assert.deepEqual(stopExerciseList(["bad"]).length, 7);
+  // One word only: nothing to match.
+  assert.equal(pageSteps([video], ["match"]).length, 1);
+});
+
+test("fill the gap and match the words", async () => {
+  const { blankParts, sameWord, matchPairs } = await import("./film-clips.ts");
+  assert.deepEqual(blankParts("You are closer than you know.", "closer"), {
+    before: "You are ",
+    word: "closer",
+    after: " than you know.",
+  });
+  assert.equal(blankParts("Thank you.", "dragon"), null);
+  assert.ok(sameWord(" Closer! ", "closer"));
+  assert.ok(sameWord("you’re", "you're"));
+  assert.ok(!sameWord("close", "closer"));
+  assert.ok(!sameWord("", ""));
+  assert.deepEqual(
+    matchPairs([
+      { target: "night", target_ar: "ليلة" },
+      { target: "Night", target_ar: "ليل" },
+      { target: "lucky", target_ar: "" },
+      { target: "dragon", target_ar: "تنين" },
+    ]),
+    [
+      { en: "night", ar: "ليلة" },
+      { en: "dragon", ar: "تنين" },
+    ],
+  );
+});

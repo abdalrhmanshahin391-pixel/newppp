@@ -71,8 +71,7 @@ export function PathQuiz(props: Props) {
     only ? option.id === only : props.admin || option.count > 0,
   );
   const [mode, setMode] = useState<(typeof choices)[number]["id"] | null>(null);
-  const active =
-    mode ?? only ?? (!props.admin && available.length === 1 ? available[0].id : null);
+  const active = mode ?? only ?? (!props.admin && available.length === 1 ? available[0].id : null);
   const back = () => setMode(null);
   const afterSave = () => {
     toast.success(t("Station exercises saved", "انحفظت تمارين المحطة"));
@@ -135,6 +134,7 @@ export function PathQuiz(props: Props) {
                     id: props.item.id,
                     title: props.item.title,
                     clip_ids: props.item.clip_ids,
+                    clip_exercises: props.item.clip_exercises,
                   }}
                   onSaved={async () => {
                     await props.onChanged();

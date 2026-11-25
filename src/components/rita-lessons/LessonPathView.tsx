@@ -415,6 +415,9 @@ export function LessonPathView({
       else if (exerciseMode(node.item) === "quiz")
         // A quiz stop opens its own page (one question at a time, with sounds).
         void navigate({ to: "/path-quiz/$itemId", params: { itemId: node.item.id } });
+      else if (exerciseMode(node.item) === "clips" && node.item.clip_ids?.length)
+        // A film & GIF stop opens its own page (watch, understand, practise).
+        void navigate({ to: "/path-clips/$itemId", params: { itemId: node.item.id } });
       else if (exerciseCount(node.item)) setSheet(node.item);
       else setHint("لسا ما انضافت تمارين لهاي المحطة.");
       return;

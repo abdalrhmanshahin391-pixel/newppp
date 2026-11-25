@@ -1186,6 +1186,28 @@ phones), the question in Google Sans Flex 450 (40px down to 26px), black pills f
   (`answer_path_quiz`). Reduced motion: no hop, shake, rise or count-up; colours and sounds stay.
 - A stop that holds both quiz and clips, and film/GIF stops, still open in the path's window.
 
+## Path film & GIF page (`/path-clips/$itemId`)
+
+A film & GIF stop opens on its own page, built on the quiz page's shell (dots, top bar with back and
+sound, fixed action bar, answer cards, result, sounds and the cube's reactions).
+
+- **Stages:** three pills, «شاهد · افهم · تمرّن» (Watch · Understand · Practise): the current one
+  ink, the finished ones with a green ✓. Under them a thin ink progress bar and a ✓/✗ tally.
+- **Watch:** each clip in a 20px-radius dark frame (16:9, at most 56% of the screen's height; 16px
+  and 42% on phones) with a white round play button, then chips: replay, «ببطء» (0.75×). A
+  subtitles switch (English · عربي · both) above the sentence in the headline face, the target word
+  marked in soft yellow. A word card: the word → its meaning, and the scene's context. The credit.
+- **Understand:** meaning (choose the Arabic), listen (no subtitles: choose the sentence heard),
+  the fitting sentence for a GIF. Three answer cards, keys 1–3.
+- **Practise:** fill the gap (the sentence with an underlined input for the target word, case and
+  punctuation ignored), word order (dashed answer box, word tiles), speaking (recorded, not
+  graded, can be skipped), and once at the end matching up to six words to their meanings.
+- **Admin:** in the stop's content, checkboxes choose its exercises (`clip_exercises`; all ticked
+  is stored as null = all), and each clip in the list shows the exercises it will make.
+- **Result:** the score, «أعد الغلط بس» (a new run of only the wrong steps), «من الأول», the
+  words learnt (word · meaning) and the sentences to go over.
+- Reduced motion: no shake or count-up; GIFs don't start on their own.
+
 ## Lesson exercise window
 
 Lessons with exercises (content version 2, `src/lib/rita-lesson-*`) run on the lesson engine. The
