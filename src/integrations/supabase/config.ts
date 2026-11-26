@@ -1,4 +1,10 @@
 const EXPECTED_PROJECT_ID = "aeawoexywnyankbeqkmz";
+// Lovable Cloud now serves the same project from its own address (set by Lovable on 26 Nov 2026).
+// Both addresses reach the one backend, so both are accepted; anything else is still refused.
+const EXPECTED_HOSTS = new Set([
+  `${EXPECTED_PROJECT_ID}.supabase.co`,
+  "c--bd068ec8-7921-456a-a2a6-a0f40ea0be07-prod.lovable.cloud",
+]);
 
 export type SupabasePublicConfig = {
   projectId: string;
@@ -30,7 +36,7 @@ export function getSupabasePublicConfig(): SupabasePublicConfig {
   } catch {
     throw new Error("VITE_SUPABASE_URL is not a valid URL.");
   }
-  if (projectId !== EXPECTED_PROJECT_ID || hostname !== `${projectId}.supabase.co`) {
+  if (projectId !== EXPECTED_PROJECT_ID || !EXPECTED_HOSTS.has(hostname)) {
     throw new Error("Lovable Cloud project mismatch. Uzyra must use one backend only.");
   }
 
