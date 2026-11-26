@@ -1,6 +1,8 @@
-// The lesson factory, one book: read it, choose the lessons its pages give, make them. Three cards
-// on one page, top to bottom; reviewing and publishing a made lesson is the other page
-// (/admin/publish). A lesson is made in full by one press (the lesson, its slides, the check and
+// The lesson factory, one book: read it, choose the lessons its pages give, make them. Laid out
+// like the home page's features: the big cover and title, then three rows («01 / 02 / 03»), each
+// with its words and one black pill on one side and the work in a white card on the other (sides
+// swap row by row, stacked on phones), and a black card at the end when lessons wait for review.
+// Reviewing and publishing a made lesson is the other page (/admin/publish). A lesson is made in full by one press (the lesson, its slides, the check and
 // the link), so nothing here asks the admin to link a guide or choose a lesson kind.
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
@@ -18,7 +20,6 @@ import {
   MoreHorizontal,
   Pencil,
   RotateCcw,
-  Send,
   Sparkles,
   Square,
 } from "lucide-react";
@@ -45,6 +46,7 @@ import { GuidesPanel } from "../book/GuidesPanel";
 import { useGuides } from "../book/useGuides";
 import { useLessonMaker, type LessonMaker } from "../book/useLessonMaker";
 import { useBookReader } from "../book/useBookReader";
+import { WordsIn } from "../HomeBits";
 import { Bar, BookCover, kindName } from "./FactoryBits";
 
 const keyOf = (item: TopicSuggestion) => `${item.topic}:${item.from_page}-${item.to_page}`;
@@ -128,14 +130,14 @@ export function FactoryBook({
         <ArrowRight size={16} aria-hidden="true" /> كل الكتب
       </button>
 
-      <section className="la-hero" aria-label="الكتاب">
+      <header className="la-bookhero">
         <BookCover book={book} big />
         <div className="min-w-0 flex-1">
           <p className="la-eyebrow">
             {kindName(book.kind)} · {book.level} · {book.target_language.toUpperCase()}
           </p>
-          <h1 className="la-title">{book.title_ar || book.title}</h1>
-          <div className="la-chips mt-3">
+          <WordsIn as="h1" className="la-title" text={book.title_ar || book.title} />
+          <div className="la-chips">
             {book.title_ar && (
               <span className="la-chip">
                 <bdi dir="ltr">{book.title}</bdi>
@@ -143,15 +145,19 @@ export function FactoryBook({
             )}
             <span className="la-chip">{book.page_count} صفحة</span>
             <span className="la-chip">{live.length} درس</span>
-            {published > 0 && <span className="la-chip is-green">{published} منشور</span>}
-            <span className={book.status === "published" ? "la-chip is-green" : "la-chip"}>
+            {published > 0 && <span className="la-chip is-ink">{published} منشور</span>}
+            <span className={book.status === "published" ? "la-chip is-ink" : "la-chip"}>
               الكتاب {book.status === "published" ? "منشور" : "مسودة"}
             </span>
           </div>
         </div>
         <Menu.Root dir="rtl">
           <Menu.Trigger asChild>
-            <button type="button" className="la-btn is-quiet is-sm" aria-label="خيارات الكتاب">
+            <button
+              type="button"
+              className="la-btn is-quiet is-sm la-bookhero-menu"
+              aria-label="خيارات الكتاب"
+            >
               <MoreHorizontal size={18} />
             </button>
           </Menu.Trigger>
@@ -176,52 +182,52 @@ export function FactoryBook({
             </Menu.Content>
           </Menu.Portal>
         </Menu.Root>
-      </section>
+      </header>
 
-      <ReadCard book={book} missingText={missingText} reader={reader} onChanged={onChanged} />
-      <MakeCard
-        book={book}
-        windows={windows}
-        lessons={lessons}
-        studyReady={study.ready}
-        maker={maker}
-        readerRunning={reader.running}
-      />
-      <MadeCard
-        book={book}
-        lessons={live}
-        study={study}
-        slideStates={slideStates}
-        maker={maker}
-        onChanged={changed}
-      />
+      <div className="la-features">
+        <ReadCard book={book} missingText={missingText} reader={reader} onChanged={onChanged} />
+        <MakeCard
+          book={book}
+          windows={windows}
+          lessons={lessons}
+          studyReady={study.ready}
+          maker={maker}
+          readerRunning={reader.running}
+        />
+        <MadeCard
+          book={book}
+          lessons={live}
+          study={study}
+          slideStates={slideStates}
+          maker={maker}
+          onChanged={changed}
+        />
+      </div>
 
       {waiting > 0 ? (
-        <Link to="/admin/publish" search={{ book: book.id }} className="la-cta">
-          <span className="la-cta-icon">
-            <Send size={20} aria-hidden="true" />
-          </span>
-          <span>
-            <b>{waiting === 1 ? "درس واحد جاهز" : `${waiting} دروس جاهزين`} بانتظار المراجعة</b>
-            <small>شوفهم زي الطالب وانشرهم من صفحة المراجعة والنشر</small>
-          </span>
-          <span className="la-cta-go">
-            افتح المراجعة والنشر <ArrowLeft size={17} aria-hidden="true" />
-          </span>
-        </Link>
+        <section className="la-black" aria-label="بانتظار المراجعة">
+          <div>
+            <p className="la-black-eyebrow">الخطوة الجاية</p>
+            <h2 className="la-black-title">
+              {waiting === 1 ? "درس واحد جاهز للمراجعة." : `${waiting} دروس جاهزين للمراجعة.`}
+            </h2>
+            <p className="la-black-text">شوفهم زي الطالب وانشرهم للكل من صفحة المراجعة والنشر.</p>
+          </div>
+          <Link to="/admin/publish" search={{ book: book.id }} className="la-btn is-white">
+            المراجعة والنشر <ArrowLeft size={17} aria-hidden="true" />
+          </Link>
+        </section>
       ) : live.length > 0 && published === live.length ? (
-        <Link to="/rita-lessons" className="la-cta">
-          <span className="la-cta-icon">
-            <Check size={20} aria-hidden="true" />
-          </span>
-          <span>
-            <b>كل دروس هالكتاب منشورة</b>
-            <small>الطلاب بيشوفوها بالمسار بمستوى {book.level}</small>
-          </span>
-          <span className="la-cta-go">
+        <section className="la-black" aria-label="كل الدروس منشورة">
+          <div>
+            <p className="la-black-eyebrow">خلصنا</p>
+            <h2 className="la-black-title">كل دروس هالكتاب منشورة.</h2>
+            <p className="la-black-text">الطلاب بيشوفوها بالمسار بمستوى {book.level}.</p>
+          </div>
+          <Link to="/rita-lessons" className="la-btn is-white">
             شوف المسار <ArrowLeft size={17} aria-hidden="true" />
-          </span>
-        </Link>
+          </Link>
+        </section>
       ) : null}
 
       <details className="la-more">
@@ -264,146 +270,144 @@ function ReadCard({
   }
 
   return (
-    <section className="la-card" aria-labelledby="la-read-title">
-      <div className="la-card-head">
-        <span className={done ? "la-step is-done" : "la-step"}>
-          {done ? <Check size={18} aria-hidden="true" /> : "1"}
+    <section className="la-feature" aria-labelledby="la-read-title">
+      <div className="la-feature-copy">
+        <p className="la-feature-no">{done ? "01 · خلصت ✓" : "01"}</p>
+        <h2 id="la-read-title" className="la-feature-title">
+          اقرأ الكتاب
+        </h2>
+        <p className="la-feature-text">
+          بنقرأ كل صفحة (حتى الممسوحة) وبنكتب ملخص، ومنه بتطلع الدروس.
+        </p>
+        <span className="la-feature-big">
+          {share}%<small>مقروء</small>
         </span>
-        <div className="min-w-0">
-          <h2 id="la-read-title">اقرأ الكتاب</h2>
-          <p>بنقرأ كل صفحة (حتى الممسوحة) وبنكتب ملخص، ومنه بتطلع الدروس.</p>
-        </div>
-        <span className="la-card-side la-big-number">{share}%</span>
+        {reader.running ? (
+          <div className="la-actions">
+            <p role="status" className="la-status m-0">
+              <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+              {reader.status || "عم نقرأ…"}
+            </p>
+            <button type="button" onClick={reader.stop} className="la-btn is-sm">
+              <Square size={13} fill="currentColor" aria-hidden="true" /> وقّف
+            </button>
+          </div>
+        ) : !done ? (
+          <div className="la-actions">
+            <button
+              type="button"
+              onClick={() => void reader.readWholeBook()}
+              className="la-btn is-ink"
+            >
+              <BookOpen size={17} aria-hidden="true" />
+              {book.read_cursor > 0 ? "كمّل القراءة" : "اقرأ الكتاب"}
+            </button>
+            <span className="la-hint">خلّي الصفحة مفتوحة لحد ما يخلص. بتقدر توقف وتكمل بعدين.</span>
+          </div>
+        ) : null}
       </div>
 
-      <p className="text-[16px] font-bold">
-        {done ? "انقرأ الكتاب كامل ✓" : `قرينا ${read} من ${book.page_count} صفحة`}
-      </p>
-      <p className="mb-3 mt-0.5 text-[13.5px] text-[var(--la-muted)]">
-        نص جاهز لـ {Math.max(0, book.page_count - missingText.length)} من {book.page_count} صفحة
-        {missingText.length > 0 ? ` · ${missingText.length} لسا بلا نص` : ""}
-      </p>
-      <Bar value={read} max={book.page_count} />
+      <div className="la-work">
+        <p className="la-work-lead">
+          {done ? "انقرأ الكتاب كامل ✓" : `قرينا ${read} من ${book.page_count} صفحة`}
+        </p>
+        <p className="la-work-sub">
+          نص جاهز لـ {Math.max(0, book.page_count - missingText.length)} من {book.page_count} صفحة
+          {missingText.length > 0 ? ` · ${missingText.length} لسا بلا نص` : ""}
+        </p>
+        <Bar value={read} max={book.page_count} />
 
-      {book.page_count > 0 && (
-        <>
-          <div className="la-pagemap" dir="ltr" aria-hidden="true">
-            {Array.from({ length: Math.min(book.page_count, 400) }, (_, index) => index + 1).map(
-              (page) => (
-                <span
-                  key={page}
-                  title={`ص${page}`}
-                  data-state={
-                    missing.has(page) && page <= book.read_cursor
-                      ? "missing"
-                      : page <= book.read_cursor
-                        ? "read"
-                        : "todo"
-                  }
-                />
-              ),
+        {book.page_count > 0 && (
+          <>
+            <div className="la-pagemap" dir="ltr" aria-hidden="true">
+              {Array.from({ length: Math.min(book.page_count, 400) }, (_, index) => index + 1).map(
+                (page) => (
+                  <span
+                    key={page}
+                    title={`ص${page}`}
+                    data-state={
+                      missing.has(page) && page <= book.read_cursor
+                        ? "missing"
+                        : page <= book.read_cursor
+                          ? "read"
+                          : "todo"
+                    }
+                  />
+                ),
+              )}
+            </div>
+            <p className="la-legend">
+              <span>
+                <i style={{ background: "var(--la-ink)" }} />
+                مقروءة
+              </span>
+              <span>
+                <i className="is-missing" />
+                بلا نص
+              </span>
+              <span>
+                <i style={{ background: "var(--la-line)" }} />
+                لسا
+              </span>
+            </p>
+          </>
+        )}
+
+        {reader.error && (
+          <div className="mt-3">
+            <ErrorBox hint={reader.error.hint} raw={reader.error.raw} onClose={reader.clearError} />
+          </div>
+        )}
+        <div className="mt-3">
+          <UnreadablePages
+            book={book}
+            problems={reader.problems}
+            reader={reader}
+            onChanged={onChanged}
+          />
+        </div>
+        {reader.textNote && !reader.running && (
+          <p className="la-note mt-3">
+            ما قدرنا ناخد النص من {reader.textNote.count} صفحة داخل الملف على هالجهاز (
+            <bdi dir="ltr">{reader.textNote.cause}</bdi>). بنقراها بالذكاء الاصطناعي بدالها.
+          </p>
+        )}
+        {!reader.running && (blankPages.length > 0 || cutPages.length > 0) && (
+          <div className="la-note mt-3">
+            {blankPages.length > 0 && (
+              <p className="m-0">
+                {blankPages.map((item) => `ص${item.page_no}`).join("، ")}: ما فيها نص (غلاف أو صفحة
+                فاضية)، فانعلّمت فارغة.
+              </p>
+            )}
+            {cutPages.length > 0 && (
+              <p className="m-0">
+                {cutPages.map((item) => `ص${item.page_no}`).join("، ")}: صفحة طويلة كثير وانقطع نصها
+                بالآخر.
+              </p>
             )}
           </div>
-          <p className="la-legend">
-            <span>
-              <i style={{ background: "var(--la-ink)" }} />
-              مقروءة
-            </span>
-            <span>
-              <i style={{ background: "#f0a23b" }} />
-              بلا نص
-            </span>
-            <span>
-              <i style={{ background: "var(--la-line)" }} />
-              لسا
-            </span>
-          </p>
-        </>
-      )}
-
-      {reader.running ? (
-        <div className="la-actions">
-          <p
-            role="status"
-            className="me-auto flex items-center gap-2 text-[15px] font-bold text-[var(--la-blue)]"
-          >
-            <Loader2 size={17} className="animate-spin" aria-hidden="true" />
-            {reader.status || "عم نقرأ…"}
-          </p>
-          <button type="button" onClick={reader.stop} className="la-btn is-sm">
-            <Square size={13} fill="currentColor" aria-hidden="true" /> وقّف
-          </button>
-        </div>
-      ) : !done ? (
-        <div className="la-actions">
-          <button
-            type="button"
-            onClick={() => void reader.readWholeBook()}
-            className="la-btn is-ink"
-          >
-            <BookOpen size={17} aria-hidden="true" />
-            {book.read_cursor > 0 ? "كمّل القراءة" : "اقرأ الكتاب"}
-          </button>
-          <span className="text-[13px] text-[var(--la-muted)]">
-            خلّي الصفحة مفتوحة لحد ما يخلص. بتقدر توقف وتكمل بعدين.
-          </span>
-        </div>
-      ) : null}
-
-      {reader.error && (
-        <div className="mt-3">
-          <ErrorBox hint={reader.error.hint} raw={reader.error.raw} onClose={reader.clearError} />
-        </div>
-      )}
-      <div className="mt-3">
-        <UnreadablePages
-          book={book}
-          problems={reader.problems}
-          reader={reader}
-          onChanged={onChanged}
-        />
+        )}
+        {stuck.length > 0 && !reader.running && reader.problems.length === 0 && (
+          <details className="la-note is-look mt-3">
+            <summary className="cursor-pointer font-bold">
+              {stuck.length} صفحة لسا بلا نص. «كمّل القراءة» بيجرّبها مرة ثانية، أو علّمها فارغة
+            </summary>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {stuck.slice(0, 60).map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => void markBlank(page)}
+                  className="la-btn is-sm"
+                >
+                  ص{page} فارغة
+                </button>
+              ))}
+            </div>
+          </details>
+        )}
       </div>
-      {reader.textNote && !reader.running && (
-        <p className="la-note mt-3">
-          ما قدرنا ناخد النص من {reader.textNote.count} صفحة داخل الملف على هالجهاز (
-          <bdi dir="ltr">{reader.textNote.cause}</bdi>). بنقراها بالذكاء الاصطناعي بدالها.
-        </p>
-      )}
-      {!reader.running && (blankPages.length > 0 || cutPages.length > 0) && (
-        <div className="la-note mt-3">
-          {blankPages.length > 0 && (
-            <p className="m-0">
-              {blankPages.map((item) => `ص${item.page_no}`).join("، ")}: ما فيها نص (غلاف أو صفحة
-              فاضية)، فانعلّمت فارغة.
-            </p>
-          )}
-          {cutPages.length > 0 && (
-            <p className="m-0">
-              {cutPages.map((item) => `ص${item.page_no}`).join("، ")}: صفحة طويلة كثير وانقطع نصها
-              بالآخر.
-            </p>
-          )}
-        </div>
-      )}
-      {stuck.length > 0 && !reader.running && reader.problems.length === 0 && (
-        <details className="la-note is-amber mt-3">
-          <summary className="cursor-pointer font-bold">
-            {stuck.length} صفحة لسا بلا نص. «كمّل القراءة» بيجرّبها مرة ثانية، أو علّمها فارغة
-          </summary>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {stuck.slice(0, 60).map((page) => (
-              <button
-                key={page}
-                type="button"
-                onClick={() => void markBlank(page)}
-                className="la-btn is-sm"
-              >
-                ص{page} فارغة
-              </button>
-            ))}
-          </div>
-        </details>
-      )}
     </section>
   );
 }
@@ -469,218 +473,227 @@ function MakeCard({
   ).length;
 
   return (
-    <section className="la-card" aria-labelledby="la-make-title">
-      <div className="la-card-head">
-        <span className="la-step">2</span>
-        <div className="min-w-0">
-          <h2 id="la-make-title">الدروس اللي ممكن نعملها</h2>
-          <p>اقترحناها من الصفحات اللي انقرت. شيل الصح عن اللي ما بدك إياه، وبعدين اصنعها.</p>
-        </div>
-        {plan.length > 0 && <span className="la-card-side la-big-number">{plan.length}</span>}
+    <section className="la-feature is-flip" aria-labelledby="la-make-title">
+      <div className="la-feature-copy">
+        <p className="la-feature-no">02</p>
+        <h2 id="la-make-title" className="la-feature-title">
+          اختار الدروس، واصنعها
+        </h2>
+        <p className="la-feature-text">
+          اقترحناها من الصفحات اللي انقرت. شيل الصح عن اللي ما بدك إياه، وبعدين اصنعها. كل درس
+          بينصنع كامل لحاله.
+        </p>
+        <span className="la-feature-big">
+          {plan.length}
+          <small>{plan.length === 1 ? "درس مقترح" : "دروس مقترحة"}</small>
+        </span>
       </div>
 
-      {!studyReady && (
-        <p className="la-note is-amber mb-3">
-          صناعة الدروس بدها جداول الدراسة التفاعلية بقاعدة البيانات. طبّقها وارجع.
-        </p>
-      )}
+      <div className="la-work">
+        {!studyReady && (
+          <p className="la-note is-look mb-3">
+            صناعة الدروس بدها جداول الدراسة التفاعلية بقاعدة البيانات. طبّقها وارجع.
+          </p>
+        )}
 
-      {book.read_cursor === 0 ? (
-        <p className="la-note">اقرأ الكتاب أول، وبتطلع الدروس المقترحة هون.</p>
-      ) : plan.length === 0 && !maker.running ? (
-        <p className="la-note">
-          {lessons.some((lesson) => lesson.status !== "archived")
-            ? "كل الدروس المقترحة من الصفحات المقروءة انصنعت."
-            : "ما في دروس مقترحة من الصفحات المقروءة لهلأ."}
-          {book.read_cursor < book.page_count ? " كمّل قراءة الكتاب لتطلع دروس جديدة." : ""}
-        </p>
-      ) : (
-        <>
-          {plan.length > 1 && !working && (
-            <div className="mb-2 flex gap-1">
-              <button
-                type="button"
-                className="la-btn is-quiet is-sm"
-                onClick={() => setUnchecked(new Set())}
-              >
-                اختار الكل
-              </button>
-              <button
-                type="button"
-                className="la-btn is-quiet is-sm"
-                onClick={() => setUnchecked(new Set(plan.map(keyOf)))}
-              >
-                شيل الكل
-              </button>
-            </div>
-          )}
-          <ul className="la-list">
-            {plan.map((item) => {
-              const key = keyOf(item);
-              const run = maker.runs[key];
-              const checked = !unchecked.has(key);
-              return (
-                <li key={key} className="la-row" data-on={checked}>
-                  <input
-                    type="checkbox"
-                    className="la-check"
-                    checked={checked}
-                    disabled={working}
-                    aria-label={`اختيار ${item.title_ar || item.topic}`}
-                    onChange={() =>
-                      setUnchecked((current) => {
-                        const next = new Set(current);
-                        if (next.has(key)) next.delete(key);
-                        else next.add(key);
-                        return next;
-                      })
-                    }
-                  />
-                  <div className="la-row-main">
-                    <p className="la-row-title">
-                      <BidiText text={item.title_ar || item.topic} />
-                    </p>
-                    <div className="la-row-sub flex flex-wrap items-center gap-x-2">
-                      {editing === key ? (
-                        <input
-                          autoFocus
-                          value={topics[key] ?? item.topic}
-                          onChange={(event) =>
-                            setTopics((current) => ({ ...current, [key]: event.target.value }))
-                          }
-                          onBlur={() => setEditing("")}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === "Escape") setEditing("");
-                          }}
-                          dir="ltr"
-                          aria-label="موضوع الدرس بالإنجليزي"
-                          className="w-full max-w-[22rem] rounded-lg border border-[var(--la-ink)] px-2 py-1 text-[15px] text-[var(--la-ink)]"
-                        />
-                      ) : (
-                        <>
-                          <bdi dir="ltr">{topics[key] ?? item.topic}</bdi>
-                          <button
-                            type="button"
-                            disabled={working}
-                            onClick={() => setEditing(key)}
-                            aria-label="تعديل موضوع الدرس"
-                            className="la-btn is-quiet is-sm !min-h-7 !px-1.5"
-                          >
-                            <Pencil size={13} aria-hidden="true" />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                    {run && (
-                      <span className="mt-1.5 block">
-                        <MakerSteps steps={pipelineView({ exists: false }, setup, run)} />
-                      </span>
-                    )}
-                    {run?.state === "failed" && (
-                      <p className="mt-1 text-[13.5px] font-bold text-[var(--la-red)]">
-                        وقف عند «{STEP_TEXT[run.step].label}»: {run.message}
-                      </p>
-                    )}
-                  </div>
-                  <span className="la-chip">{pagesLabel(item.from_page, item.to_page)}</span>
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="la-sticky">
-            {maker.running ? (
-              <>
-                <p role="status">
-                  <Loader2 size={14} className="me-1 inline animate-spin" aria-hidden="true" />
-                  عم نصنع الدروس، كل درس بياخد كم دقيقة. خلّي الصفحة مفتوحة.
-                </p>
-                <button type="button" onClick={maker.stop} className="la-btn is-sm">
-                  <Square size={13} fill="currentColor" aria-hidden="true" /> وقّف بعد الدرس الحالي
-                </button>
-              </>
-            ) : (
-              <>
-                <p>
-                  اخترت {chosen.length} من {plan.length} · كل درس بينصنع كامل لحاله
-                </p>
+        {book.read_cursor === 0 ? (
+          <p className="la-note">اقرأ الكتاب أول، وبتطلع الدروس المقترحة هون.</p>
+        ) : plan.length === 0 && !maker.running ? (
+          <p className="la-note">
+            {lessons.some((lesson) => lesson.status !== "archived")
+              ? "كل الدروس المقترحة من الصفحات المقروءة انصنعت."
+              : "ما في دروس مقترحة من الصفحات المقروءة لهلأ."}
+            {book.read_cursor < book.page_count ? " كمّل قراءة الكتاب لتطلع دروس جديدة." : ""}
+          </p>
+        ) : (
+          <>
+            {plan.length > 1 && !working && (
+              <div className="mb-2 flex gap-1">
                 <button
                   type="button"
-                  disabled={!chosen.length || working || readerRunning || !studyReady}
-                  onClick={() => void make(chosen.map(rowOf))}
-                  className="la-btn is-ink"
+                  className="la-btn is-quiet is-sm"
+                  onClick={() => setUnchecked(new Set())}
                 >
-                  <Sparkles size={17} aria-hidden="true" />
-                  اصنع الدروس ({chosen.length})
+                  اختار الكل
                 </button>
-              </>
+                <button
+                  type="button"
+                  className="la-btn is-quiet is-sm"
+                  onClick={() => setUnchecked(new Set(plan.map(keyOf)))}
+                >
+                  شيل الكل
+                </button>
+              </div>
             )}
-          </div>
-        </>
-      )}
+            <ul className="la-list">
+              {plan.map((item) => {
+                const key = keyOf(item);
+                const run = maker.runs[key];
+                const checked = !unchecked.has(key);
+                return (
+                  <li key={key} className="la-row" data-on={checked}>
+                    <input
+                      type="checkbox"
+                      className="la-check"
+                      checked={checked}
+                      disabled={working}
+                      aria-label={`اختيار ${item.title_ar || item.topic}`}
+                      onChange={() =>
+                        setUnchecked((current) => {
+                          const next = new Set(current);
+                          if (next.has(key)) next.delete(key);
+                          else next.add(key);
+                          return next;
+                        })
+                      }
+                    />
+                    <div className="la-row-main">
+                      <p className="la-row-title">
+                        <BidiText text={item.title_ar || item.topic} />
+                      </p>
+                      <div className="la-row-sub flex flex-wrap items-center gap-x-2">
+                        {editing === key ? (
+                          <input
+                            autoFocus
+                            value={topics[key] ?? item.topic}
+                            onChange={(event) =>
+                              setTopics((current) => ({ ...current, [key]: event.target.value }))
+                            }
+                            onBlur={() => setEditing("")}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" || event.key === "Escape") setEditing("");
+                            }}
+                            dir="ltr"
+                            aria-label="موضوع الدرس بالإنجليزي"
+                            className="w-full max-w-[22rem] rounded-lg border border-[var(--la-ink)] px-2 py-1 text-[15px] text-[var(--la-ink)]"
+                          />
+                        ) : (
+                          <>
+                            <bdi dir="ltr">{topics[key] ?? item.topic}</bdi>
+                            <button
+                              type="button"
+                              disabled={working}
+                              onClick={() => setEditing(key)}
+                              aria-label="تعديل موضوع الدرس"
+                              className="la-btn is-quiet is-sm !min-h-7 !px-1.5"
+                            >
+                              <Pencil size={13} aria-hidden="true" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                      {run && (
+                        <span className="mt-1.5 block">
+                          <MakerSteps steps={pipelineView({ exists: false }, setup, run)} />
+                        </span>
+                      )}
+                      {run?.state === "failed" && (
+                        <p className="la-row-fail">
+                          وقف عند «{STEP_TEXT[run.step].label}»: {run.message}
+                        </p>
+                      )}
+                    </div>
+                    <span className="la-chip">{pagesLabel(item.from_page, item.to_page)}</span>
+                  </li>
+                );
+              })}
+            </ul>
 
-      {stopped > 0 && !maker.running && (
-        <p className="la-note is-amber mt-3">
-          {stopped === 1 ? "درس واحد" : `${stopped} دروس`} انصنعوا بس ما كملوا. كمّلهم من «الدروس
-          اللي انصنعت» تحت، والشغل اللي قبل الوقفة محفوظ.
-        </p>
-      )}
+            <div className="la-sticky">
+              {maker.running ? (
+                <>
+                  <p role="status">
+                    <Loader2 size={14} className="me-1 inline animate-spin" aria-hidden="true" />
+                    عم نصنع الدروس، كل درس بياخد كم دقيقة. خلّي الصفحة مفتوحة.
+                  </p>
+                  <button type="button" onClick={maker.stop} className="la-btn is-sm">
+                    <Square size={13} fill="currentColor" aria-hidden="true" /> وقّف بعد الدرس
+                    الحالي
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p>
+                    اخترت {chosen.length} من {plan.length} · كل درس بينصنع كامل لحاله
+                  </p>
+                  <button
+                    type="button"
+                    disabled={!chosen.length || working || readerRunning || !studyReady}
+                    onClick={() => void make(chosen.map(rowOf))}
+                    className="la-btn is-ink"
+                  >
+                    <Sparkles size={17} aria-hidden="true" />
+                    اصنع الدروس ({chosen.length})
+                  </button>
+                </>
+              )}
+            </div>
+          </>
+        )}
 
-      <details className="la-more">
-        <summary>خيارات إضافية</summary>
-        <div className="space-y-4">
-          <div>
-            <p className="la-section-title">درس بموضوع وصفحات من عندك</p>
-            <NextLessonPicker
-              nextNo={nextNo}
-              suggestions={[]}
-              readCursor={book.read_cursor}
-              defaultFrom={Math.min(book.taught_cursor + 1, Math.max(1, book.read_cursor))}
-              busy={working || !studyReady}
-              generatingKey={maker.running ? "custom" : ""}
-              onGenerate={(pick) =>
-                void make([
-                  {
-                    key: `custom:${pick.topic}:${pick.from}-${pick.to}`,
-                    lessonId: null,
-                    title: pick.topic,
-                    titleEn: pick.topic,
-                    ...pick,
-                  },
-                ])
-              }
-            />
-          </div>
-          <div>
-            <p className="la-section-title">ملفات PDF بس (للطباعة، بدون درس)</p>
-            <button
-              type="button"
-              disabled={!chosen.length || working}
-              onClick={() =>
-                void guides
-                  .make(
-                    chosen.map((item) => ({
-                      key: keyOf(item),
-                      title: (topics[keyOf(item)] ?? item.topic).trim() || item.topic,
-                      from: item.from_page,
-                      to: item.to_page,
-                    })),
-                  )
-                  .then((made) => {
-                    if (made) toast.success(`انصنع ${made} ملف PDF`);
-                  })
-              }
-              className="la-btn is-sm"
-            >
-              <FileText size={15} aria-hidden="true" />
-              اصنع PDF للمختارة ({chosen.length})
-            </button>
-            <div className="mt-3">
-              <GuidesPanel guides={guides} />
+        {stopped > 0 && !maker.running && (
+          <p className="la-note is-look mt-3">
+            {stopped === 1 ? "درس واحد" : `${stopped} دروس`} انصنعوا بس ما كملوا. كمّلهم من «الدروس
+            اللي انصنعت» تحت، والشغل اللي قبل الوقفة محفوظ.
+          </p>
+        )}
+
+        <details className="la-more">
+          <summary>خيارات إضافية</summary>
+          <div className="space-y-4">
+            <div>
+              <p className="la-section-title">درس بموضوع وصفحات من عندك</p>
+              <NextLessonPicker
+                nextNo={nextNo}
+                suggestions={[]}
+                readCursor={book.read_cursor}
+                defaultFrom={Math.min(book.taught_cursor + 1, Math.max(1, book.read_cursor))}
+                busy={working || !studyReady}
+                generatingKey={maker.running ? "custom" : ""}
+                onGenerate={(pick) =>
+                  void make([
+                    {
+                      key: `custom:${pick.topic}:${pick.from}-${pick.to}`,
+                      lessonId: null,
+                      title: pick.topic,
+                      titleEn: pick.topic,
+                      ...pick,
+                    },
+                  ])
+                }
+              />
+            </div>
+            <div>
+              <p className="la-section-title">ملفات PDF بس (للطباعة، بدون درس)</p>
+              <button
+                type="button"
+                disabled={!chosen.length || working}
+                onClick={() =>
+                  void guides
+                    .make(
+                      chosen.map((item) => ({
+                        key: keyOf(item),
+                        title: (topics[keyOf(item)] ?? item.topic).trim() || item.topic,
+                        from: item.from_page,
+                        to: item.to_page,
+                      })),
+                    )
+                    .then((made) => {
+                      if (made) toast.success(`انصنع ${made} ملف PDF`);
+                    })
+                }
+                className="la-btn is-sm"
+              >
+                <FileText size={15} aria-hidden="true" />
+                اصنع PDF للمختارة ({chosen.length})
+              </button>
+              <div className="mt-3">
+                <GuidesPanel guides={guides} />
+              </div>
             </div>
           </div>
-        </div>
-      </details>
+        </details>
+      </div>
     </section>
   );
 }
@@ -764,151 +777,163 @@ function MadeCard({
   }
 
   return (
-    <section className="la-card" aria-labelledby="la-made-title">
-      <div className="la-card-head">
-        <span className="la-step">3</span>
-        <div className="min-w-0">
-          <h2 id="la-made-title">الدروس اللي انصنعت</h2>
-          <p>
-            {lessons.length
-              ? `${lessons.length} درس · ${counts.ready} جاهز للمراجعة · ${counts.published} منشور`
-              : "لسا ما انصنع ولا درس من هالكتاب."}
-          </p>
-        </div>
+    <section className="la-feature" aria-labelledby="la-made-title">
+      <div className="la-feature-copy">
+        <p className="la-feature-no">03</p>
+        <h2 id="la-made-title" className="la-feature-title">
+          الدروس اللي انصنعت
+        </h2>
+        <p className="la-feature-text">
+          {lessons.length
+            ? `${counts.ready} جاهز للمراجعة · ${counts.published} منشور. شوف أي درس كطالب، أو افتحه لتراجعه وتنشره.`
+            : "لسا ما انصنع ولا درس من هالكتاب. اختار دروس فوق واصنعها."}
+        </p>
+        <span className="la-feature-big">
+          {lessons.length}
+          <small>{lessons.length === 1 ? "درس" : "دروس"}</small>
+        </span>
+        {maker.running && (
+          <div className="la-actions">
+            <button type="button" onClick={maker.stop} className="la-btn is-sm">
+              <Square size={13} fill="currentColor" aria-hidden="true" /> وقّف بعد الدرس الحالي
+            </button>
+          </div>
+        )}
       </div>
 
-      {unfinished.length > 0 && !maker.running && (
-        <div className="la-note is-amber mb-3 flex flex-wrap items-center gap-3">
-          <span className="me-auto">
-            {unfinished.length === 1 ? "درس واحد" : `${unfinished.length} دروس`} ما كملوا لسا، وما
-            بيطلعوا بصفحة النشر لحد ما يكملوا.
-          </span>
-          <button type="button" className="la-btn is-sm" onClick={() => finish(unfinished)}>
-            <Sparkles size={14} aria-hidden="true" /> كمّلهم كلهم ({unfinished.length})
-          </button>
-        </div>
-      )}
-      {talkOnly.length > 0 && !maker.running && (
-        <div className="la-note mb-3 flex flex-wrap items-center gap-3">
-          <span className="me-auto">
-            {talkOnly.length} درس محادثة قديم (يوزرا بس، بدون شرائح). «كمّل» بيحوّله لدرس شرائح، أو
-            أرشفهم.
-          </span>
-          <button
-            type="button"
-            className="la-btn is-sm"
-            disabled={archiving}
-            onClick={() => void archiveTalkOnly()}
-          >
-            <Archive size={14} aria-hidden="true" /> أرشفهم ({talkOnly.length})
-          </button>
-        </div>
-      )}
+      <div className="la-work">
+        {!lessons.length && <p className="la-note">الدروس اللي بتصنعها بتطلع هون.</p>}
+        {unfinished.length > 0 && !maker.running && (
+          <div className="la-note is-look mb-3 flex flex-wrap items-center gap-3">
+            <span className="me-auto">
+              {unfinished.length === 1 ? "درس واحد" : `${unfinished.length} دروس`} ما كملوا لسا، وما
+              بيطلعوا بصفحة النشر لحد ما يكملوا.
+            </span>
+            <button
+              type="button"
+              className="la-btn is-sm is-ink"
+              onClick={() => finish(unfinished)}
+            >
+              <Sparkles size={14} aria-hidden="true" /> كمّلهم كلهم ({unfinished.length})
+            </button>
+          </div>
+        )}
+        {talkOnly.length > 0 && !maker.running && (
+          <div className="la-note mb-3 flex flex-wrap items-center gap-3">
+            <span className="me-auto">
+              {talkOnly.length} درس محادثة قديم (يوزرا بس، بدون شرائح). «كمّل» بيحوّله لدرس شرائح،
+              أو أرشفهم.
+            </span>
+            <button
+              type="button"
+              className="la-btn is-sm"
+              disabled={archiving}
+              onClick={() => void archiveTalkOnly()}
+            >
+              <Archive size={14} aria-hidden="true" /> أرشفهم ({talkOnly.length})
+            </button>
+          </div>
+        )}
 
-      {lessons.length > 0 && (
-        <ul className="la-list">
-          {lessons.map((lesson) => {
-            const state = lessonReadiness(lesson, slideStates[lesson.id]);
-            const run = maker.runs[lesson.id];
-            const linked = linkedOf(lesson.id);
-            const notes = slideStates[lesson.id]?.notes ?? 0;
-            return (
-              <li key={lesson.id} className="la-row">
-                <LessonImage src={lesson.image_url} alt="" className="la-thumb !rounded-[12px]" />
-                <div className="la-row-main">
-                  <p className="la-row-title">
-                    <BidiText text={lesson.title_ar || lesson.title} />
-                  </p>
-                  <p className="la-row-sub">
-                    {pagesLabel(lesson.source_from_page, lesson.source_to_page)}
-                    {lesson.title_ar && (
-                      <>
-                        {" · "}
-                        <bdi dir="ltr">{lesson.title}</bdi>
-                      </>
-                    )}
-                  </p>
-                  {run && run.state !== "failed" && (
-                    <span className="mt-1.5 block">
-                      <MakerSteps
-                        steps={pipelineView(
-                          { exists: true, status: lesson.status, linked },
-                          setup,
-                          run,
-                        )}
-                      />
-                    </span>
-                  )}
-                  {run?.state === "failed" && (
-                    <p className="mt-1 text-[13.5px] font-bold text-[var(--la-red)]">
-                      وقف عند «{STEP_TEXT[run.step].label}»: {run.message}
+        {lessons.length > 0 && (
+          <ul className="la-list">
+            {lessons.map((lesson) => {
+              const state = lessonReadiness(lesson, slideStates[lesson.id]);
+              const run = maker.runs[lesson.id];
+              const linked = linkedOf(lesson.id);
+              const notes = slideStates[lesson.id]?.notes ?? 0;
+              return (
+                <li key={lesson.id} className="la-row">
+                  <LessonImage src={lesson.image_url} alt="" className="la-thumb !rounded-[12px]" />
+                  <div className="la-row-main">
+                    <p className="la-row-title">
+                      <BidiText text={lesson.title_ar || lesson.title} />
                     </p>
-                  )}
-                </div>
-                <div className="la-row-side">
-                  {run && run.state !== "failed" ? (
-                    <span className="la-status text-[var(--la-blue)]">
-                      <Loader2 size={14} className="animate-spin" aria-hidden="true" />
-                      {run.state === "queued" ? "بالدور" : "عم ينصنع"}
-                    </span>
-                  ) : state === "published" ? (
-                    <span className="la-chip is-green">
-                      <Check size={13} aria-hidden="true" /> منشور
-                    </span>
-                  ) : state === "ready" ? (
-                    <span className="la-chip is-blue">جاهز للمراجعة</span>
-                  ) : state === "warnings" ? (
-                    <span className="la-chip is-amber">جاهز · {notes} ملاحظات</span>
-                  ) : (
-                    <span className="la-chip is-amber">ما كمل</span>
-                  )}
-                  {(run?.state === "failed" || (state === "no_slides" && !run)) && (
-                    <button
-                      type="button"
-                      className="la-btn is-sm"
-                      disabled={maker.running || !study.ready}
-                      onClick={() => finish([lesson])}
-                    >
-                      <RotateCcw size={14} aria-hidden="true" /> كمّل
-                    </button>
-                  )}
-                  {linked && (
-                    <Link
-                      to="/rita-study"
-                      search={{ lesson: lesson.id, preview: true }}
-                      className="la-btn is-sm"
-                    >
-                      <Eye size={14} aria-hidden="true" /> شوفه كطالب
-                    </Link>
-                  )}
-                  {(state === "ready" || state === "warnings" || state === "published") && !run && (
-                    <Link
-                      to="/admin/publish"
-                      search={{ lesson: lesson.id }}
-                      className="la-btn is-sm is-ink"
-                    >
-                      {state === "published" ? "افتحه" : "راجع وانشر"}
-                    </Link>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      {maker.running && (
-        <div className="la-actions">
-          <button type="button" onClick={maker.stop} className="la-btn is-sm">
-            <Square size={13} fill="currentColor" aria-hidden="true" /> وقّف بعد الدرس الحالي
-          </button>
-        </div>
-      )}
-      {book.status !== "published" && counts.published > 0 && (
-        <p className="la-note is-amber mt-3">
-          الكتاب لسا مسودة، فالطلاب ما بيشوفوا دروسه. أول ما تنشر درس من صفحة النشر بينشر الكتاب
-          معه.
-        </p>
-      )}
+                    <p className="la-row-sub">
+                      {pagesLabel(lesson.source_from_page, lesson.source_to_page)}
+                      {lesson.title_ar && (
+                        <>
+                          {" · "}
+                          <bdi dir="ltr">{lesson.title}</bdi>
+                        </>
+                      )}
+                    </p>
+                    {run && run.state !== "failed" && (
+                      <span className="mt-1.5 block">
+                        <MakerSteps
+                          steps={pipelineView(
+                            { exists: true, status: lesson.status, linked },
+                            setup,
+                            run,
+                          )}
+                        />
+                      </span>
+                    )}
+                    {run?.state === "failed" && (
+                      <p className="la-row-fail">
+                        وقف عند «{STEP_TEXT[run.step].label}»: {run.message}
+                      </p>
+                    )}
+                  </div>
+                  <div className="la-row-side">
+                    {run && run.state !== "failed" ? (
+                      <span className="la-status">
+                        <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+                        {run.state === "queued" ? "بالدور" : "عم ينصنع"}
+                      </span>
+                    ) : state === "published" ? (
+                      <span className="la-chip is-ink">
+                        <Check size={13} aria-hidden="true" /> منشور
+                      </span>
+                    ) : state === "ready" ? (
+                      <span className="la-chip is-line">جاهز للمراجعة</span>
+                    ) : state === "warnings" ? (
+                      <span className="la-chip is-look">جاهز · {notes} ملاحظات</span>
+                    ) : (
+                      <span className="la-chip is-look">ما كمل</span>
+                    )}
+                    {(run?.state === "failed" || (state === "no_slides" && !run)) && (
+                      <button
+                        type="button"
+                        className="la-btn is-sm"
+                        disabled={maker.running || !study.ready}
+                        onClick={() => finish([lesson])}
+                      >
+                        <RotateCcw size={14} aria-hidden="true" /> كمّل
+                      </button>
+                    )}
+                    {linked && (
+                      <Link
+                        to="/rita-study"
+                        search={{ lesson: lesson.id, preview: true }}
+                        className="la-btn is-sm"
+                      >
+                        <Eye size={14} aria-hidden="true" /> شوفه كطالب
+                      </Link>
+                    )}
+                    {(state === "ready" || state === "warnings" || state === "published") &&
+                      !run && (
+                        <Link
+                          to="/admin/publish"
+                          search={{ lesson: lesson.id }}
+                          className="la-btn is-sm is-ink"
+                        >
+                          {state === "published" ? "افتحه" : "راجع وانشر"}
+                        </Link>
+                      )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {book.status !== "published" && counts.published > 0 && (
+          <p className="la-note is-look mt-3">
+            الكتاب لسا مسودة، فالطلاب ما بيشوفوا دروسه. أول ما تنشر درس من صفحة النشر بينشر الكتاب
+            معه.
+          </p>
+        )}
+      </div>
     </section>
   );
 }

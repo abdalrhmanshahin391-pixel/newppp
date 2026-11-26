@@ -1249,51 +1249,63 @@ the exercises to a draft.
 
 ## Lesson factory (`/admin/curricula`) and review & publish (`/admin/publish`)
 
-Making lessons and publishing them are two separate pages, each a full page (no side panels), in
-the home page's language (`lesson-admin.css`, classes `.la-*`): white with a still field of faint
-dots at the edges, a 52px Google Sans Flex headline, grey number tiles (18px corners), 24px cards
-with a 1px #ececf1 hairline, black pills, and a glass top bar that names the page and links to the
-other one. Each page has its own colour for its icon: the factory the cube's blue (#2f6fe4,
-Sparkles), publishing green (#15803d, Send). Admin hub tiles: «مصنع الدروس» and «المراجعة والنشر».
+Making lessons and publishing them are two separate pages, each a full page (no side panels), built
+like the home page (`lesson-admin.css`, classes `.la-*`; shared pieces in
+`src/components/rita-lessons/admin/HomeBits.tsx`):
+- **Colour:** black, white and neutral greys only; Uzyra's cube is the one colour. States are words
+  and marks, never tints: ink chip = published, outlined chip = ready, a chip with «!» = needs a
+  look; red only for a real failure. Book covers without a picture are black/grey.
+- **Type:** Google Sans Flex throughout. Page headline 72px (40px on phones) at weight 450, section
+  headlines 54px (34px), feature titles 42px (30px); a 15px muted eyebrow and a 19px muted lead.
+- **Surfaces:** grey cards `#f3f3f4` with no border, 36px corners (24px on phones), 40–48px inside;
+  work areas inside them are white with 28px corners. Black pills for the main action, white pills
+  for the rest. The site's own top bar (`ProHeader`, solid, light) on both pages.
+- **Motion:** the top of each list page is the home hero's field of marks (`DotHero`, a 2D canvas
+  using `ultra-field.ts`: the ring follows the pointer, then drifts), with «[cube] page name»
+  above the headline. Headlines come in word by word with a caret (`WordsIn`; Arabic words are never
+  split into letters), numbers count up the first time they are seen (`CountUp`), cards rise in
+  70ms apart. Reduced motion: everything still, the field drawn once.
 
 **The lesson factory** turns a book's pages into lessons.
-- The shelf: hero («مصنع الدروس», one line on what it does), four numbers (books, pages read, lessons
-  made, ready to publish: the last links to publishing), then one card per book: a cover (its
-  picture, or its level on a colour of its own), title, level/kind/language chips, a blue reading
-  bar, «N درس · M منشور», and one wide button for what comes next («كمّل القراءة», «اصنع N دروس»,
-  «كمّل N دروس», green «راجع وانشر (N)» or «افتح الكتاب»). A dashed card adds a book.
-- A book: back, a hero with the big cover, the title in the headline face and chips (English title,
-  pages, lessons, published, book status), «⋯» to archive it. Then three numbered cards, top to
-  bottom, on one page (no steps, no tabs):
-  1. «اقرأ الكتاب»: the share read in big numbers, a bar, a page map (one 14px square a page: ink
-     read, amber no text, grey not yet), «كمّل القراءة» / «وقّف» with the live status, then only
-     the problems there are (unreadable pages, pages without text with «فارغة» buttons).
-  2. «الدروس اللي ممكن نعملها»: the suggested lessons as rows (checkbox, Arabic title, English
-     topic editable with the pencil, page chip), «اختار الكل / شيل الكل», and a sticky glass bar:
-     «اخترت N من M» and one black «اصنع الدروس (N)». Each lesson is made in full by itself (the
-     lesson, its slides, the check and the link), its steps shown under its row. A custom lesson
-     and PDF-only guides are folded in «خيارات إضافية».
-  3. «الدروس اللي انصنعت»: one row per lesson (picture, title, pages) with its state: «عم ينصنع»,
-     blue «جاهز للمراجعة», amber «جاهز · N ملاحظات», green «منشور», amber «ما كمل» with «كمّل»;
-     «شوفه كطالب» and «راجع وانشر». «كمّلهم كلهم» and archiving the old talk-only lessons sit above.
-  A black banner under the cards says how many lessons wait for review and opens publishing.
-  The rarely needed tools stay folded at the bottom («أدوات متقدمة»).
+- The shelf: the field with «مصنع الدروس», «من الكتاب للدرس.», a lead, black «+ كتاب جديد» and
+  «المراجعة والنشر» (with how many wait). Four number cards (books, pages read, lessons made, ready
+  to publish: the last opens publishing). Then «كتبك، وكل كتاب وين وصل.» and the books inside one
+  big grey frame (like the home's library window): white cards with the cover, title, chips, a black
+  reading bar, «N درس · M منشور», and one black pill for what comes next («كمّل القراءة», «اصنع N
+  دروس», «كمّل N دروس», «راجع وانشر (N)» or «افتح الكتاب»). A dashed card adds a book. The book
+  language check sits under the shelf.
+- A book: back, the big cover and the title as the headline, chips, «⋯» to archive it. Then three
+  rows like the home's features, «01 / 02 / 03», words and the main pill on one side (sticky while
+  scrolling), the work in a white card on the other; the sides swap row by row and stack on phones:
+  1. «اقرأ الكتاب»: the share read in big numbers and «كمّل القراءة» / «وقّف» with the live
+     status; the work card has the page count, a bar, the page map (ink read, outlined no text,
+     grey not yet) and only the problems there are.
+  2. «اختار الدروس، واصنعها»: how many are suggested; rows with round black checks, the English
+     topic editable with the pencil, and a sticky bar «اخترت N من M» + black «اصنع الدروس (N)».
+     A custom lesson and PDF-only guides are folded in «خيارات إضافية».
+  3. «الدروس اللي انصنعت»: how many; one row per lesson with its state chip, «كمّل», «شوفه كطالب»
+     and «راجع وانشر».
+  A black closing card follows when lessons wait («درسين جاهزين للمراجعة.» with a white pill
+  «المراجعة والنشر») or when all are published («شوف المسار»). «أدوات متقدمة» stays folded.
 - The factory never asks for a lesson kind, a guide to link or exercises: new lessons are the
   guide + Uzyra kind, and exercises live on the path as stops of their own.
 
 **Review & publish** is the last step, apart from making.
-- Hero («المراجعة والنشر»), four numbers (ready, with review notes, published, published per
-  level), a note with a link back to the factory when lessons are still being made, then a toolbar:
-  two tabs (جاهزين · منشورين, with counts), level and book filters, a search field, and green «انشر
-  الكل (N)» for the cards shown.
-- One card per lesson: a 16:9 picture with the level, book and pages, the Arabic title (opens the
-  lesson) and the English one, «N أهداف · N كلمة · الشرائح ✓», amber review notes, «الكتاب مسودة ·
-  بينشر معه» when it applies; «شوفه كطالب» and green «انشر» (published: «منشور · بالمسار بمستوى A1»
-  and «إلغاء النشر»).
-- A lesson opens on its own page (`?lesson=`): a big picture and title, «جاهزيته» (slides linked,
-  goals for Uzyra, review notes, book status, where it goes on the path) as green / amber / grey
-  dots, «شو بيتعلّم الطالب» (goals, words, pages), and a sticky bar: «انشر للكل», «شوفه كطالب»,
-  «⋯» with «تعديل متقدم» (the full lesson editor on its own page, `?edit=true`) and «احذف الدرس».
+- The field with «المراجعة والنشر», «شوف الدرس، وانشره للكل.», a lead and pills to the factory and
+  the path. Four number cards (ready, with review notes, published, levels on the path). Then
+  «دروس جاهزة للمراجعة.» (or «دروس منشورة بالمسار.»), a centred row of pills: the two tabs in a
+  grey track (the chosen one black, with counts), level and book filters, search, and black «انشر
+  الكل (N)».
+- One grey 36px card per lesson: its picture in a white frame with the level, book and pages, the
+  title (opens the lesson) and the English one, «N أهداف · N كلمة · الشرائح ✓», review notes,
+  «الكتاب مسودة · بينشر معه» when it applies; white «شوفه كطالب» and black «انشر» (published:
+  «منشور · بالمسار بمستوى A1» and «إلغاء النشر»).
+- A lesson opens on its own page (`?lesson=`): its picture large on one side, the title, chips and
+  three counted numbers (goals, words, pages) on the other; then two grey cards, «جاهزيته» (slides
+  linked, goals for Uzyra, review notes, book status, where it goes on the path, as black / outlined
+  / grey marks, red only when the slides are missing) and «شو بيتعلّم الطالب» (goals, words,
+  pages), and a sticky bar: «انشر للكل», «شوفه كطالب», «⋯» with «تعديل متقدم» (the full lesson
+  editor on its own page in a white card, `?edit=true`) and «احذف الدرس».
 - Publishing a lesson publishes its book too when it is a draft, and puts the lesson at the end of
   its level on the path. Logic: `src/lib/rita-lesson-board.ts` (tested).
 

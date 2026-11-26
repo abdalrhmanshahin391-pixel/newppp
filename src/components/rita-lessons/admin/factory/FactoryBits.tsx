@@ -1,6 +1,7 @@
 import type { CurriculumRow } from "@/lib/rita-curriculum.functions";
 
-const COVER_COLOURS = ["#2f6fe4", "#0e8fb0", "#7c5cff", "#d6336c", "#15803d", "#e08a10"];
+// Black and greys only, like the rest of the page.
+const COVER_COLOURS = ["#121212", "#2a2a2e", "#3d3d43", "#55555c", "#1c1c20", "#47474d"];
 
 /** A colour that stays the same for a book, for its cover when it has no picture. */
 export function coverColour(id: string) {
@@ -23,10 +24,10 @@ export function BookCover({ book, big = false }: { book: CurriculumRow; big?: bo
 
 export const kindName = (kind: CurriculumRow["kind"]) => (kind === "grammar" ? "قواعد" : "كلمات");
 
-export function Bar({ value, max, tone }: { value: number; max: number; tone?: "blue" | "green" }) {
+export function Bar({ value, max }: { value: number; max: number }) {
   const share = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0;
   return (
-    <span className={tone ? `la-bar is-${tone}` : "la-bar"} aria-hidden="true">
+    <span className="la-bar" aria-hidden="true">
       <span style={{ width: `${share * 100}%` }} />
     </span>
   );

@@ -1,11 +1,11 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCurriculumAdminData } from "@/components/rita-lessons/admin/book/useCurriculumAdminData";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { guardRedirect } from "@/lib/guard-redirect";
 import { BOOK_STEPS, type BookStep } from "@/lib/rita-book-steps";
-import { lessonBoard, boardStats } from "@/lib/rita-lesson-board";
 import { FactoryShelf } from "@/components/rita-lessons/admin/factory/FactoryShelf";
 import { FactoryBook } from "@/components/rita-lessons/admin/factory/FactoryBook";
 import { NewBookDialog } from "@/components/rita-lessons/admin/book/NewBookDialog";
@@ -47,14 +47,6 @@ function AdminCurricula() {
   }, [loading, isAdmin, navigate]);
 
   const open = useCallback((id: string) => void navigate({ search: { book: id } }), [navigate]);
-  const waiting = useMemo(
-    () =>
-      overview
-        ? boardStats(lessonBoard({ books: overview.curricula, lessons: overview.lessons, slides }))
-            .ready
-        : 0,
-    [overview, slides],
-  );
 
   if (loading || !isAdmin) {
     return (
@@ -67,32 +59,12 @@ function AdminCurricula() {
   const selected = overview?.curricula.find((book) => book.id === bookId) ?? null;
 
   return (
-    <main dir="rtl" className="la edith-premium">
-      <div className="la-dots" aria-hidden="true" />
-      <header className="la-top">
-        <div className="la-wrap la-top-in">
-          <Link to="/admin/curricula" search={{}} className="la-brand">
-            <span className="la-brand-icon is-blue" aria-hidden="true">
-              <Sparkles size={17} />
-            </span>
-            مصنع الدروس
-          </Link>
-          <nav className="la-nav" aria-label="صفحات الدروس">
-            <Link to="/admin/publish" className="la-btn is-sm">
-              المراجعة والنشر
-              {waiting > 0 && <span className="la-badge">{waiting}</span>}
-            </Link>
-            <Link to="/rita-lessons" className="la-btn is-sm is-quiet">
-              مسار الطالب
-            </Link>
-            <Link to="/admin" className="la-btn is-sm is-quiet">
-              الإدارة
-            </Link>
-          </nav>
-        </div>
-      </header>
+    <main className="la edith-premium">
+      <div className="rita-cream edith-light edith-premium">
+        <ProHeader variant="solid" tone="light" />
+      </div>
 
-      <div className="la-wrap">
+      <div dir="rtl" className="la-wrap">
         {loadError && (
           <div className="mt-6 space-y-2">
             <ErrorBox hint={`ما قدرنا نحمّل الكتب: ${loadError}`} />
@@ -102,7 +74,7 @@ function AdminCurricula() {
           </div>
         )}
         {overview?.needsMigration && (
-          <p className="la-note is-amber mt-6">
+          <p className="la-note is-look mt-6">
             بعض الميزات بدها تحديث قاعدة البيانات: طبّق migration ‏20261015120000
             (rita_curriculum_gaps) ثم حدّث الصفحة.
           </p>
@@ -125,9 +97,6 @@ function AdminCurricula() {
           />
         ) : overview ? (
           <>
-            <div className="mt-6">
-              <LanguageCheck onChanged={() => void refresh()} />
-            </div>
             <FactoryShelf
               books={overview.curricula}
               windows={overview.windows}
@@ -136,6 +105,9 @@ function AdminCurricula() {
               onOpen={open}
               onNew={() => setNewBookOpen(true)}
             />
+            <div className="mt-6">
+              <LanguageCheck onChanged={() => void refresh()} />
+            </div>
           </>
         ) : null}
       </div>

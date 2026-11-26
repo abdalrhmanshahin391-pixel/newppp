@@ -1,7 +1,8 @@
-// Review and publish, one lesson on a page of its own: whether it is ready, what the learner learns
-// in it, and the buttons to see it as a learner and to publish it. The advanced editor (goals and
+// Review and publish, one lesson on a page of its own, laid out like a feature on the home page:
+// its big picture on one side and its title and numbers on the other, then two grey cards (is it
+// ready, what the learner learns) and a bar at the bottom to see it as a learner and publish it. The advanced editor (goals and
 // plan, slides, resources) opens on a page of its own too, never in a side panel.
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import * as Menu from "@radix-ui/react-dropdown-menu";
 import {
@@ -21,6 +22,7 @@ import { LessonImage } from "@/components/rita-lessons/LessonArt";
 import { BidiText } from "../book/BookBits";
 import { pagesLabel } from "../book/book-utils";
 import { LessonDrawer } from "../book/LessonDrawer";
+import { CountUp } from "../HomeBits";
 import type { PublishActions, PublishEntry } from "./usePublishActions";
 
 type Mark = "ok" | "warn" | "no" | "info";
@@ -73,31 +75,51 @@ export function PublishLesson({
               {pagesLabel(lesson.source_from_page, lesson.source_to_page)}
             </span>
             {published ? (
-              <span className="la-chip is-green">
+              <span className="la-chip is-ink">
                 <Check size={13} aria-hidden="true" /> منشور
               </span>
             ) : unfinished ? (
-              <span className="la-chip is-amber">لسا ما كمل</span>
+              <span className="la-chip is-look">لسا ما كمل</span>
             ) : entry.notes > 0 ? (
-              <span className="la-chip is-amber">جاهز · {entry.notes} ملاحظات</span>
+              <span className="la-chip is-look">جاهز · {entry.notes} ملاحظات</span>
             ) : (
-              <span className="la-chip is-blue">جاهز للنشر</span>
+              <span className="la-chip is-line">جاهز للنشر</span>
             )}
           </div>
           <h1 className="la-detail-title">
             <BidiText text={lesson.title_ar || lesson.title} />
           </h1>
           {lesson.title_ar && (
-            <p className="la-sub" dir="ltr" style={{ textAlign: "right" }}>
+            <p className="la-detail-en" dir="ltr" style={{ textAlign: "right" }}>
               {lesson.title}
             </p>
           )}
+          <div className="la-detail-facts">
+            <div>
+              <b>
+                <CountUp value={lesson.objectives.length} />
+              </b>
+              <span>أهداف</span>
+            </div>
+            <div>
+              <b>
+                <CountUp value={lesson.vocabulary.length} />
+              </b>
+              <span>كلمة</span>
+            </div>
+            <div>
+              <b>
+                <CountUp value={Math.max(1, lesson.source_to_page - lesson.source_from_page + 1)} />
+              </b>
+              <span>صفحات من الكتاب</span>
+            </div>
+          </div>
         </div>
       </section>
 
       <div className="la-detail">
         <section className="la-card" aria-labelledby="la-ready-title">
-          <h2 id="la-ready-title" className="la-section-title">
+          <h2 id="la-ready-title" className="la-card-title">
             جاهزيته
           </h2>
           <ul className="la-checks">
@@ -129,8 +151,12 @@ export function PublishLesson({
           </ul>
         </section>
 
-        <section className="la-card" aria-labelledby="la-learn-title">
-          <h2 id="la-learn-title" className="la-section-title">
+        <section
+          className="la-card"
+          style={{ "--i": 1 } as CSSProperties}
+          aria-labelledby="la-learn-title"
+        >
+          <h2 id="la-learn-title" className="la-card-title">
             شو بيتعلّم الطالب
           </h2>
           {lesson.objectives.length ? (
@@ -147,7 +173,7 @@ export function PublishLesson({
           )}
           {lesson.vocabulary.length > 0 && (
             <>
-              <h3 className="la-section-title mt-4">الكلمات ({lesson.vocabulary.length})</h3>
+              <h3 className="la-card-sub">الكلمات ({lesson.vocabulary.length})</h3>
               <div className="la-words">
                 {lesson.vocabulary.slice(0, 40).map((item, index) => (
                   <span key={`${item.word}-${index}`}>
@@ -158,7 +184,7 @@ export function PublishLesson({
               </div>
             </>
           )}
-          <h3 className="la-section-title mt-4">من الكتاب</h3>
+          <h3 className="la-card-sub">من الكتاب</h3>
           <p className="m-0 text-[14.5px]">
             {book.title_ar || book.title} ·{" "}
             {pagesLabel(lesson.source_from_page, lesson.source_to_page)}
@@ -179,7 +205,7 @@ export function PublishLesson({
         ) : (
           <button
             type="button"
-            className="la-btn is-green"
+            className="la-btn is-ink"
             disabled={busy || unfinished}
             onClick={() => void actions.publish([entry])}
           >
@@ -250,7 +276,7 @@ export function PublishLessonEdit({
       <button type="button" className="la-back" onClick={onBack}>
         <ArrowRight size={16} aria-hidden="true" /> رجوع للدرس
       </button>
-      <section className="la-card mt-4">
+      <section className="la-card is-white mt-4">
         <LessonDrawer
           embedded
           lesson={entry.lesson}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Loader2, Send } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
+import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { guardRedirect } from "@/lib/guard-redirect";
 import { CEFR } from "@/lib/rita-path-levels";
@@ -127,31 +128,12 @@ function AdminPublish() {
   }
 
   return (
-    <main dir="rtl" className="la edith-premium">
-      <div className="la-dots" aria-hidden="true" />
-      <header className="la-top">
-        <div className="la-wrap la-top-in">
-          <Link to="/admin/publish" search={{}} className="la-brand">
-            <span className="la-brand-icon is-green" aria-hidden="true">
-              <Send size={16} />
-            </span>
-            المراجعة والنشر
-          </Link>
-          <nav className="la-nav" aria-label="صفحات الدروس">
-            <Link to="/admin/curricula" className="la-btn is-sm">
-              مصنع الدروس
-            </Link>
-            <Link to="/rita-lessons" className="la-btn is-sm is-quiet">
-              مسار الطالب
-            </Link>
-            <Link to="/admin" className="la-btn is-sm is-quiet">
-              الإدارة
-            </Link>
-          </nav>
-        </div>
-      </header>
+    <main className="la edith-premium">
+      <div className="rita-cream edith-light edith-premium">
+        <ProHeader variant="solid" tone="light" />
+      </div>
 
-      <div className="la-wrap">
+      <div dir="rtl" className="la-wrap">
         {loadError && (
           <div className="mt-6 space-y-2">
             <ErrorBox hint={`ما قدرنا نحمّل الدروس: ${loadError}`} />
