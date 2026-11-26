@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { planBillingMonths } from "./plan-billing";
 import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middleware";
 import { z } from "zod";
 
@@ -16,7 +17,7 @@ const planSchema = z.object({
   paddle_price_once: z.string().max(80).nullable().default(null),
   cta_label: z.string().max(40).nullable().default(null),
   free_talk_seconds: z.number().int().min(0).max(3600000).default(0),
-  free_talk_period: z.enum(["monthly", "lifetime"]).default("monthly"),
+  free_talk_period: z.enum(["monthly", "lifetime", "daily"]).default("monthly"),
   max_flashcards: z.number().int().min(0).nullable(),
   max_ai_questions: z.number().int().min(0).nullable(),
   max_summaries: z.number().int().min(0).nullable(),
@@ -124,6 +125,8 @@ type TargetSpec = {
  */
 async function syncPlanToPaddle(plan: AdminPlan, env: Env): Promise<SyncResult> {
   const isLifetime = (plan.billing_kind ?? "monthly") === "lifetime";
+  const months = planBillingMonths(plan);
+  const every = months === 1 ? "Monthly" : "3 Months";
   const targets: TargetSpec[] = isLifetime
     ? [
         {
@@ -140,13 +143,13 @@ async function syncPlanToPaddle(plan: AdminPlan, env: Env): Promise<SyncResult> 
     : [
         {
           key: "monthly",
-          label: "3-Month Subscription",
+          label: months === 1 ? "Monthly Subscription" : "3-Month Subscription",
           field: "paddle_price_monthly",
           externalId: plan.paddle_price_monthly,
           cents: plan.price_cents ?? 0,
-          billingCycle: { interval: "month", frequency: 3 },
-          name: `${plan.name} (3 Months)`,
-          description: `${plan.name} - 3 Months Access`,
+          billingCycle: { interval: "month", frequency: months },
+          name: `${plan.name} (${every})`,
+          description: `${plan.name} - ${every} Access`,
         },
         {
           key: "yearly",
@@ -405,7 +408,12 @@ export const adminInspectPaddlePrices = createServerFn({ method: "POST" })
     const env: Env = data.environment === "auto" ? getActiveServerPaddleEnv() : data.environment;
 
     const list: { key: "monthly" | "yearly" | "once"; label: string; id: string | null; cents: number }[] = [
-      { key: "monthly", label: "3-Month Subscription", id: plan.paddle_price_monthly, cents: plan.price_cents },
+      {
+        key: "monthly",
+        label: planBillingMonths(plan) === 1 ? "Monthly Subscription" : "3-Month Subscription",
+        id: plan.paddle_price_monthly,
+        cents: plan.price_cents,
+      },
       { key: "yearly", label: "Yearly Subscription", id: plan.paddle_price_yearly, cents: plan.yearly_cents },
       { key: "once", label: "One-Time Pack", id: plan.paddle_price_once, cents: plan.once_cents },
     ];
@@ -442,7 +450,7 @@ export const adminInspectPaddlePrices = createServerFn({ method: "POST" })
 
         const expectedCycle =
           item.key === "monthly"
-            ? { interval: "month", frequency: 3 }
+            ? { interval: "month", frequency: planBillingMonths(plan) }
             : item.key === "yearly"
               ? { interval: "year", frequency: 1 }
               : null;

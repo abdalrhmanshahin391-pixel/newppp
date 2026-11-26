@@ -159,7 +159,50 @@ try {
   );
   await expect(`select (public.free_talk_budget('${id(4)}')->>'remainingSeconds')::int`, 21600);
   await exec(`delete from auth.users where id='${id(1)}'`);
-  await expect(`select count(*)::int from public.free_talk_sessions where user_id='${id(1)}'`,0);
+  await expect(`select count(*)::int from public.free_talk_sessions where user_id='${id(1)}'`, 0);
+  // One budget for every call, renewed each day (20261126180000_daily_voice_budget.sql).
+  const daily = await readFile(
+    new URL("../supabase/migrations/20261126180000_daily_voice_budget.sql", import.meta.url),
+    "utf8",
+  );
+  await db.exec(daily);
+  await db.exec(daily);
+  await exec(`insert into auth.users values('${id(70)}',now())`);
+  for (const n of [71, 72, 73])
+    await exec(`insert into public.rita_v3_sessions values('${id(n)}','${id(70)}')`);
+  await exec(
+    "update public.plans set free_talk_seconds=1800,free_talk_period='daily' where slug='starter'",
+  );
+  await expect(
+    `select public.free_talk_budget('${id(70)}')->>'period' = to_char(now() at time zone 'Asia/Amman','YYYY-MM-DD')`,
+  );
+  await expect(`select (public.free_talk_budget('${id(70)}')->>'remainingSeconds')::int`, 1800);
+  await expect(
+    `select (public.free_talk_budget('${id(70)}')->>'resetsAt')::timestamptz = (date_trunc('day',now() at time zone 'Asia/Amman')+interval '1 day') at time zone 'Asia/Amman'`,
+  );
+  // Free talk switched off: a lesson call still gets its time, a free conversation does not.
+  await exec("update public.free_talk_config set enabled=false");
+  await denied(`select public.free_talk_reserve('${id(70)}','${id(71)}')`, "free_talk_not_enabled");
+  await expect(
+    `select (public.free_talk_reserve('${id(70)}','${id(72)}',false)->>'reservedSeconds')::int`,
+    1800,
+  );
+  // Yesterday's calls do not count today.
+  await exec(
+    `update public.free_talk_sessions set state='closed',charged_seconds=1800,period_key='2000-01-01' where id='${id(72)}'`,
+  );
+  await expect(`select (public.free_talk_budget('${id(70)}')->>'remainingSeconds')::int`, 1800);
+  // Today's calls do.
+  await exec(
+    `update public.free_talk_sessions set period_key=to_char(now() at time zone 'Asia/Amman','YYYY-MM-DD') where id='${id(72)}'`,
+  );
+  await denied(
+    `select public.free_talk_reserve('${id(70)}','${id(73)}',false)`,
+    "free_talk_exhausted",
+  );
+  await expect(
+    `select bool_and(not has_function_privilege('authenticated',oid,'EXECUTE') and has_function_privilege('service_role',oid,'EXECUTE')) from pg_proc where pronamespace='public'::regnamespace and proname like 'free_talk_%'`,
+  );
   console.log(
     `PASS: ${checks} database quota checks (${isolatedUrl ? "PostgreSQL with independent concurrent connections" : "isolated PGlite; parallel requests serialized by runtime"}).`,
   );

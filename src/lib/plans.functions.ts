@@ -11,7 +11,9 @@ export type PlanRow = {
   price_cents: number;
   yearly_cents: number;
   free_talk_seconds: number;
-  free_talk_period: "monthly" | "lifetime";
+  free_talk_period: "monthly" | "lifetime" | "daily";
+  /** How often a subscription renews: 1 (Uzyra) or 3 months (the older plans). */
+  billing_months?: number;
   max_flashcards: number | null;
   max_ai_questions: number | null;
   max_summaries: number | null;

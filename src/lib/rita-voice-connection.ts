@@ -32,6 +32,36 @@ const REFUSALS: Array<[RegExp, string, string]> = [
     "Your session has ended. Sign in again, then reconnect.",
   ],
   [
+    /free_talk_exhausted/i,
+    "خلص وقت الصوت تبعك لليوم. بيرجع بكرا الساعة 12 بالليل.",
+    "Your voice time for today is used up. It comes back at midnight (Amman time).",
+  ],
+  [
+    /free_talk_payment_unverified|free_talk_plan_unavailable/i,
+    "ما قدرنا نتأكد من اشتراكك. افتح صفحة باقتي وجرّب كمان مرة.",
+    "We could not confirm your plan. Open My plan and try again.",
+  ],
+  [
+    /free_talk_email_unverified/i,
+    "أكّد إيميلك أول، وبعدين ابدأ المكالمة.",
+    "Confirm your email first, then start the call.",
+  ],
+  [
+    /free_talk_already_active/i,
+    "في مكالمة ثانية مفتوحة. سكّرها وبعدين جرّب.",
+    "Another call is still open. End it, then try again.",
+  ],
+  [
+    /free_talk_not_enabled/i,
+    "المحادثة الحرة مسكّرة هلّق. بتقدر تكمّل دروسك.",
+    "Free conversation is switched off right now. Your lessons still work.",
+  ],
+  [
+    /free_talk_start_rate_limit/i,
+    "بلّشت مكالمات كثير ورا بعض. استنى دقيقة وجرّب.",
+    "Too many calls in a row. Wait a minute and try again.",
+  ],
+  [
     /usage safety limit|\b(?:daily|monthly|hourly|usage|budget|safety)_?limit|\bdisabled\b/i,
     "صوت يوزرا وصل حد الاستخدام الآمن حالياً. جرّب بعد شوي.",
     "Uzyra's voice has reached its safety limit for now. Try again a little later.",

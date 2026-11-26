@@ -34,8 +34,17 @@ export async function voiceRpc<T>(name: string, args: Record<string, unknown>): 
 }
 export const freeTalkBudget = (userId: string) =>
   voiceRpc<FreeTalkBudget>("free_talk_budget", { p_user: userId });
-export const reserveFreeTalk = (userId: string, sessionId: string) =>
-  voiceRpc<FreeTalkGrant>("free_talk_reserve", { p_user: userId, p_session: sessionId });
+/**
+ * Reserve call time from the learner's voice budget. Every call takes from the same budget (free
+ * conversation, path lessons and book study); only a free conversation also needs free talk
+ * switched on (`free_talk_config`), so turning it off never stops lessons.
+ */
+export const reserveFreeTalk = (userId: string, sessionId: string, freeConversation = true) =>
+  voiceRpc<FreeTalkGrant>("free_talk_reserve", {
+    p_user: userId,
+    p_session: sessionId,
+    p_free: freeConversation,
+  });
 export function voiceControlUrl() {
   // Never forward the worker credential to a caller-supplied origin or Host header.
   return "https://ritajet.com/api/rita-v3/session/end";

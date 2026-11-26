@@ -541,6 +541,17 @@ it fades in once loaded; a photo that fails shows the initial. A chevron sits be
 short 22px line separates it from the tools before it.
 
 
+## Pricing (`/pricing`): one paid plan
+
+Since Nov 2026 the page sells one plan, Uzyra ($23 a month, `plans.billing_months = 1`), beside
+the free plan, in the page's dark style (grotesk, `--pro-card` cards, 24px corners, white pill).
+Each card's first line is its call time («30 minutes of calls with Uzyra every day»), then the
+plan's perks. The billing switch shows only when there is more than one way to pay. The old
+comparison table is replaced by «Everything in Uzyra»: one tile per service (lucide icon, 17px
+title, one 14px line), three columns on desktop, two on tablets, one on phones. The questions
+explain the daily time: free conversation, path lessons and book study share it, and it comes
+back at midnight in Amman. The older 3-month plans are hidden, not deleted.
+
 The blog, home and inner pages share the blog header's white surface, 60px height, 16px wordmark
 and 14px grotesk type. Library, Pricing and Resources share the same spacing and text weight
 across pages, and Start learning uses the black pill. The header remains visible while scrolling

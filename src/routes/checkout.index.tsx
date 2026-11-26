@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { periodWords } from "@/lib/plan-billing";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -292,7 +293,8 @@ function CheckoutPage() {
     : [];
 
   const total = promo ? promo.totalCents : cents;
-  const period = billing === "once" ? "one-time" : billing === "yearly" ? "per year" : "for 3 months";
+  const words = periodWords(plan);
+  const period = billing === "once" ? "one-time" : billing === "yearly" ? "per year" : words.charge;
   const activeError = localError || paddleError;
 
   return (
@@ -563,7 +565,7 @@ function CheckoutPage() {
                   </p>
                 ) : (
                   <p className="mt-5 rounded-[14px] border border-border bg-muted/60 px-4 py-3 text-[13px] font-medium text-muted-foreground">
-                    Renews automatically {billing === "yearly" ? "every year" : "every 3 months"}. Cancel anytime in your account.
+                    Renews automatically {billing === "yearly" ? "every year" : words.renews}. Cancel anytime in your account.
                   </p>
                 )}
               </>
