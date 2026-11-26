@@ -9,6 +9,8 @@ import { buildField, ringLight, RING, wander } from "@/components/home/procreate
 export function useDotField(
   section: RefObject<HTMLElement | null>,
   canvas: RefObject<HTMLCanvasElement | null>,
+  /** The marks' colour: black on the white pages, white on a dark panel. */
+  ink = "#121117",
 ) {
   const reduced = useReducedMotion();
   useEffect(() => {
@@ -48,8 +50,8 @@ export function useDotField(
       const cx = ring.x * width;
       const cy = ring.y * height;
       const { points, count, step } = field;
-      ctx.fillStyle = "#121117";
-      ctx.strokeStyle = "#121117";
+      ctx.fillStyle = ink;
+      ctx.strokeStyle = ink;
       ctx.lineCap = "round";
       for (let i = 0; i < count; i += 1) {
         const x = points[i * 3];
@@ -120,5 +122,5 @@ export function useDotField(
       box.removeEventListener("pointermove", move);
       document.removeEventListener("visibilitychange", hidden);
     };
-  }, [reduced, section, canvas]);
+  }, [reduced, section, canvas, ink]);
 }
