@@ -437,8 +437,12 @@ export function LessonPathView({
       return;
     }
     if (editing) {
-      if (isAdmin)
-        setContent(node.type === "lesson" ? { lessonId: node.lesson.id } : { item: node.item });
+      if (isAdmin) {
+        // A lesson is reviewed and published on its own page; an exercise stop opens here.
+        if (node.type === "lesson")
+          void navigate({ to: "/admin/publish", search: { lesson: node.lesson.id } });
+        else setContent({ item: node.item });
+      }
       return;
     }
     if (node.type === "item") {
@@ -871,18 +875,9 @@ export function LessonPathView({
               </button>
             )}
             {isAdmin && (
-              <button
-                type="button"
-                className="lp-edit"
-                aria-haspopup="dialog"
-                aria-expanded={Boolean(content)}
-                onClick={() => {
-                  setEditing(true);
-                  setContent({ level: pageLevel });
-                }}
-              >
-                <FolderOpen size={15} /> إدارة المحتوى
-              </button>
+              <Link to="/admin/curricula" className="lp-edit">
+                <FolderOpen size={15} /> مصنع الدروس
+              </Link>
             )}
             {isAdmin && (
               <button
@@ -966,8 +961,8 @@ export function LessonPathView({
         )}
         {editing && (
           <p className="lp-edit-hint">
-            اضغط مطوّلاً على أي محطة واسحبها فوق ثانية عشان يتبدّلوا. اكبس الدرس لتحريره أو + لإضافة
-            درس أو تمارين أو ملفات.
+            اضغط مطوّلاً على أي محطة واسحبها فوق ثانية عشان يتبدّلوا. اكبس الدرس لتفتح صفحته بالمراجعة
+            والنشر، أو + لإضافة تمارين أو ملفات.
           </p>
         )}
       </section>
@@ -1020,21 +1015,9 @@ export function LessonPathView({
             </p>
           )}
           {isAdmin && (
-            <button
-              type="button"
-              className="rita-btn rita-btn-primary mt-4"
-              onClick={() => {
-                setContent({
-                  level: pageLevel,
-                  insert: {
-                    before: nodes[endOfPage - 1] ? idOf(nodes[endOfPage - 1]) : undefined,
-                    after: nodes[endOfPage] ? idOf(nodes[endOfPage]) : undefined,
-                  },
-                });
-              }}
-            >
-              أضف أول درس للمستوى {pageLevel}
-            </button>
+            <Link to="/admin/curricula" className="rita-btn rita-btn-primary mt-4">
+              اصنع دروس للمستوى {pageLevel} بمصنع الدروس
+            </Link>
           )}
           {!isAdmin && (
             <Link to="/rita-live" className="rita-btn rita-btn-primary mt-4 gap-2 !inline-flex">
@@ -1135,27 +1118,6 @@ export function LessonPathView({
               </button>
               {adding === plus.index && (
                 <div className="lp-add" role="menu">
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      const before = nodes[plus.index - 1];
-                      const after = nodes[plus.index];
-                      setContent({
-                        level: pageLevel,
-                        insert: {
-                          before: before ? idOf(before) : undefined,
-                          after: after ? idOf(after) : undefined,
-                        },
-                      });
-                      setAdding(null);
-                    }}
-                  >
-                    <span>
-                      <BookOpen size={18} />
-                    </span>
-                    درس من كتاب أو درس موجود
-                  </button>
                   {(["quiz", "clips", "resources", "finish"] as NewStop[]).map((kind) => {
                     const Icon = LOOK[kind].Icon;
                     return (

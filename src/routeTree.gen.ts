@@ -52,6 +52,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAiRouteImport } from './routes/admin.ai'
 import { Route as AdminAiKeysRouteImport } from './routes/admin.ai-keys'
 import { Route as AdminBooksRouteImport } from './routes/admin.books'
+import { Route as AdminPublishRouteImport } from './routes/admin.publish'
 import { Route as AdminClipsRouteImport } from './routes/admin.clips'
 import { Route as AdminContentProtectionRouteImport } from './routes/admin.content-protection'
 import { Route as AdminCurriculaRouteImport } from './routes/admin.curricula'
@@ -374,6 +375,11 @@ const AdminAiKeysRoute = AdminAiKeysRouteImport.update({
 const AdminBooksRoute = AdminBooksRouteImport.update({
   id: '/admin/books',
   path: '/admin/books',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPublishRoute = AdminPublishRouteImport.update({
+  id: '/admin/publish',
+  path: '/admin/publish',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminClipsRoute = AdminClipsRouteImport.update({
@@ -956,6 +962,7 @@ export interface FileRoutesByFullPath {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
   '/admin/books': typeof AdminBooksRoute
+  '/admin/publish': typeof AdminPublishRoute
   '/admin/clips': typeof AdminClipsRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
   '/admin/curricula': typeof AdminCurriculaRoute
@@ -1105,6 +1112,7 @@ export interface FileRoutesByTo {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
   '/admin/books': typeof AdminBooksRoute
+  '/admin/publish': typeof AdminPublishRoute
   '/admin/clips': typeof AdminClipsRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
   '/admin/curricula': typeof AdminCurriculaRoute
@@ -1254,6 +1262,7 @@ export interface FileRoutesById {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
   '/admin/books': typeof AdminBooksRoute
+  '/admin/publish': typeof AdminPublishRoute
   '/admin/clips': typeof AdminClipsRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
   '/admin/curricula': typeof AdminCurriculaRoute
@@ -1407,6 +1416,7 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-keys'
     | '/admin/books'
+    | '/admin/publish'
     | '/admin/clips'
     | '/admin/content-protection'
     | '/admin/curricula'
@@ -1556,6 +1566,7 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-keys'
     | '/admin/books'
+    | '/admin/publish'
     | '/admin/clips'
     | '/admin/content-protection'
     | '/admin/curricula'
@@ -1704,6 +1715,7 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-keys'
     | '/admin/books'
+    | '/admin/publish'
     | '/admin/clips'
     | '/admin/content-protection'
     | '/admin/curricula'
@@ -1856,6 +1868,7 @@ export interface RootRouteChildren {
   AdminAiRoute: typeof AdminAiRoute
   AdminAiKeysRoute: typeof AdminAiKeysRoute
   AdminBooksRoute: typeof AdminBooksRoute
+  AdminPublishRoute: typeof AdminPublishRoute
   AdminClipsRoute: typeof AdminClipsRoute
   AdminContentProtectionRoute: typeof AdminContentProtectionRoute
   AdminCurriculaRoute: typeof AdminCurriculaRoute
@@ -2231,6 +2244,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/books'
       fullPath: '/admin/books'
       preLoaderRoute: typeof AdminBooksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/publish': {
+      id: '/admin/publish'
+      path: '/admin/publish'
+      fullPath: '/admin/publish'
+      preLoaderRoute: typeof AdminPublishRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/clips': {
@@ -3156,6 +3176,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAiRoute: AdminAiRoute,
   AdminAiKeysRoute: AdminAiKeysRoute,
   AdminBooksRoute: AdminBooksRoute,
+  AdminPublishRoute: AdminPublishRoute,
   AdminClipsRoute: AdminClipsRoute,
   AdminContentProtectionRoute: AdminContentProtectionRoute,
   AdminCurriculaRoute: AdminCurriculaRoute,

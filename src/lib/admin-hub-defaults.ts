@@ -102,9 +102,16 @@ export const DEFAULT_LAYOUT: HubLayout = {
         {
           id: "/admin/curricula",
           to: "/admin/curricula",
-          label: "Uzyra lessons & curriculum",
-          labelAr: "مناهج دروس يوزرا",
+          label: "Lesson factory (books to lessons)",
+          labelAr: "مصنع الدروس (من الكتاب للدرس)",
           icon: "GraduationCap",
+        },
+        {
+          id: "/admin/publish",
+          to: "/admin/publish",
+          label: "Review & publish lessons",
+          labelAr: "المراجعة والنشر",
+          icon: "Rocket",
         },
         {
           id: "/admin/clips",

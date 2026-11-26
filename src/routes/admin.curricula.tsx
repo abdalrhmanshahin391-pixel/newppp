@@ -1,21 +1,24 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCurriculumAdminData } from "@/components/rita-lessons/admin/book/useCurriculumAdminData";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { ProHeader } from "@/components/home/procreate/ProHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { guardRedirect } from "@/lib/guard-redirect";
 import { BOOK_STEPS, type BookStep } from "@/lib/rita-book-steps";
-import { BooksGrid } from "@/components/rita-lessons/admin/book/BooksGrid";
-import { BookWorkspace } from "@/components/rita-lessons/admin/book/BookWorkspace";
+import { FactoryShelf } from "@/components/rita-lessons/admin/factory/FactoryShelf";
+import { FactoryBook } from "@/components/rita-lessons/admin/factory/FactoryBook";
 import { NewBookDialog } from "@/components/rita-lessons/admin/book/NewBookDialog";
 import { LanguageCheck } from "@/components/rita-lessons/admin/book/LanguageCheck";
 import { ErrorBox } from "@/components/rita-lessons/admin/book/BookBits";
+import "@/components/rita-lessons/admin/lesson-admin.css";
 
+// `step` is still read so older links keep working; the book page shows everything on one page.
 type CurriculaSearch = { book?: string; step?: BookStep };
 
 export const Route = createFileRoute("/admin/curricula")({
   head: () => ({
-    meta: [{ title: "Uzyra curriculum — Admin" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "مصنع الدروس — Uzyra Admin" }, { name: "robots", content: "noindex" }],
   }),
   validateSearch: (search: Record<string, unknown>): CurriculaSearch => {
     const book =
@@ -27,14 +30,15 @@ export const Route = createFileRoute("/admin/curricula")({
 });
 
 /**
- * Uzyra's books for admins: the list of books (each with its next step), or one book worked through
- * in four steps. The book and step are in the address, so back and reload keep the place.
+ * The lesson factory: the shelf of books, or one book whose pages become lessons. Reviewing and
+ * publishing the made lessons is its own page, /admin/publish. The book is in the address, so back
+ * and reload keep the place.
  */
 function AdminCurricula() {
   const { isAdmin, loading } = useAuth();
   const navigate = useNavigate({ from: "/admin/curricula" });
-  const { book: bookId, step } = Route.useSearch();
-  const { overview, slides: slideStates, loadError, refresh } = useCurriculumAdminData(isAdmin);
+  const { book: bookId } = Route.useSearch();
+  const { overview, slides, loadError, refresh } = useCurriculumAdminData(isAdmin);
   const [newBookOpen, setNewBookOpen] = useState(false);
   const [pdfCache] = useState(() => new Map<string, File>());
 
@@ -42,10 +46,7 @@ function AdminCurricula() {
     if (!loading && !isAdmin) guardRedirect(navigate);
   }, [loading, isAdmin, navigate]);
 
-  const open = useCallback(
-    (id: string, nextStep: BookStep) => void navigate({ search: { book: id, step: nextStep } }),
-    [navigate],
-  );
+  const open = useCallback((id: string) => void navigate({ search: { book: id } }), [navigate]);
 
   if (loading || !isAdmin) {
     return (
@@ -58,81 +59,55 @@ function AdminCurricula() {
   const selected = overview?.curricula.find((book) => book.id === bookId) ?? null;
 
   return (
-    <main
-      dir="rtl"
-      className="edith-premium min-h-screen bg-white pb-24 text-[var(--pp-ink)]"
-      style={{ fontFamily: "var(--font-grotesk)" }}
-    >
-      <header className="border-b border-[var(--pp-line)] bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-5 py-3">
-          <p className="text-[15px] font-semibold">مناهج دروس يوزرا</p>
-          <div className="flex items-center gap-1">
-            <Link to="/rita-lessons" className="rita-btn rita-btn-quiet rita-btn-sm">
-              مسار الطالب
-            </Link>
-            <Link to="/admin" className="rita-btn rita-btn-soft rita-btn-sm gap-1">
-              الإدارة <ArrowLeft size={15} aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-      </header>
+    <main className="la edith-premium">
+      <div className="rita-cream edith-light edith-premium">
+        <ProHeader variant="solid" tone="light" />
+      </div>
 
-      <div className="mx-auto max-w-5xl space-y-4 px-5 pt-6">
+      <div dir="rtl" className="la-wrap">
         {loadError && (
-          <div className="space-y-2">
+          <div className="mt-6 space-y-2">
             <ErrorBox hint={`ما قدرنا نحمّل الكتب: ${loadError}`} />
-            <button
-              type="button"
-              onClick={() => void refresh()}
-              className="rita-btn rita-btn-soft rita-btn-sm"
-            >
+            <button type="button" onClick={() => void refresh()} className="la-btn is-sm">
               أعد المحاولة
             </button>
           </div>
         )}
         {overview?.needsMigration && (
-          <p className="rounded-xl bg-[#fff6e5] p-3 text-[14px] text-[#6b4100]">
+          <p className="la-note is-look mt-6">
             بعض الميزات بدها تحديث قاعدة البيانات: طبّق migration ‏20261015120000
-            (rita_curriculum_gaps) بـ Lovable Cloud ثم حدّث الصفحة.
+            (rita_curriculum_gaps) ثم حدّث الصفحة.
           </p>
         )}
 
         {!overview && !loadError ? (
-          <div className="grid place-items-center py-24">
-            <Loader2 className="animate-spin text-[var(--pp-accent-text)]" />
+          <div className="grid place-items-center py-24" role="status" aria-label="تحميل">
+            <Loader2 className="animate-spin" />
           </div>
         ) : overview && selected && !loadError ? (
-          <BookWorkspace
+          <FactoryBook
             key={selected.id}
             book={selected}
             windows={overview.windows.filter((window) => window.curriculum_id === selected.id)}
             lessons={overview.lessons.filter((lesson) => lesson.curriculum_id === selected.id)}
-            allLessons={overview.lessons}
             missingText={overview.missingText[selected.id] ?? []}
-            slides={overview.slides}
-            slidesReady={overview.slidesReady}
-            slidesShared={overview.slidesShared}
-            sharedReady={overview.sharedReady}
-            resources={overview.resources}
-            resourcesReady={overview.resourcesReady}
             pdfCache={pdfCache}
-            step={step ?? "read"}
-            onStep={(next) => void navigate({ search: { book: selected.id, step: next } })}
             onBack={() => void navigate({ search: {} })}
             onChanged={refresh}
           />
         ) : overview ? (
           <>
-            <LanguageCheck onChanged={() => void refresh()} />
-            <BooksGrid
+            <FactoryShelf
               books={overview.curricula}
               windows={overview.windows}
               lessons={overview.lessons}
-              missingText={overview.missingText}
-              slides={slideStates}
+              slides={slides}
               onOpen={open}
               onNew={() => setNewBookOpen(true)}
             />
+            <div className="mt-6">
+              <LanguageCheck onChanged={() => void refresh()} />
+            </div>
           </>
         ) : null}
       </div>
@@ -143,7 +118,7 @@ function AdminCurricula() {
         pdfCache={pdfCache}
         onCreated={async (id) => {
           await refresh();
-          open(id, "read");
+          open(id);
         }}
       />
     </main>
