@@ -1,0 +1,126 @@
+/* The top of an inner page (/learn, /games) in the home page's language: the hero's field of black
+   marks, the cube line, a Google Sans Flex headline at weight 450 and a muted lead. Only this part:
+   the cards under it keep their own colours and drawings. */
+.ph-hero {
+  --ph-font: "Uzyra Arabic", "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  --ph-ink: #121212;
+  --ph-muted: #5f5f66;
+  --ph-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  overflow: hidden;
+  padding: 72px 24px 56px;
+  background: #fff;
+  color: var(--ph-ink);
+  font-family: var(--ph-font);
+  text-align: center;
+}
+.ph-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(#000 50%, transparent);
+  mask-image: linear-gradient(#000 50%, transparent);
+}
+.ph-in {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 860px);
+  margin: 0 auto;
+}
+.ph-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+  font-size: 17px;
+  font-weight: 500;
+}
+.ph-cube {
+  display: grid;
+  width: 30px;
+  height: 30px;
+}
+.ph-cube > * {
+  width: 100%;
+  height: 100%;
+}
+.edith-premium .ph-title,
+.ph-title {
+  margin: 0;
+  font-family: var(--ph-font);
+  font-size: clamp(40px, 5.6vw, 64px) !important;
+  font-weight: 450 !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.ph-lead {
+  max-width: 600px;
+  margin: 18px auto 0;
+  color: var(--ph-muted);
+  font-size: 19px;
+  line-height: 1.55;
+}
+.ph-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.ph-word {
+  display: inline-block;
+  white-space: pre;
+  opacity: 0;
+  translate: 0 0.35em;
+  transition:
+    opacity 0.45s var(--ph-ease),
+    translate 0.6s var(--ph-ease);
+  transition-delay: calc(var(--i) * 60ms);
+}
+[data-shown="on"] .ph-word {
+  opacity: 1;
+  translate: none;
+}
+.ph-caret {
+  display: inline-block;
+  width: 0.06em;
+  height: 0.9em;
+  margin-inline-start: 0.08em;
+  vertical-align: -0.08em;
+  background: currentColor;
+  opacity: 0;
+}
+[data-shown="on"] .ph-caret {
+  animation: ph-caret 1.6s steps(1) calc(var(--i) * 60ms) 1 forwards;
+}
+@keyframes ph-caret {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  25%,
+  75%,
+  100% {
+    opacity: 0;
+  }
+}
+@media (max-width: 767px) {
+  .ph-hero {
+    padding: 44px 16px 32px;
+  }
+  .ph-lead {
+    font-size: 17px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ph-word {
+    opacity: 1;
+    translate: none;
+    transition: none;
+  }
+  [data-shown="on"] .ph-caret {
+    animation: none;
+  }
+}

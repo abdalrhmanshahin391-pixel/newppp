@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { PageHero } from "@/components/page-hero/PageHero";
 import { useTranslation } from "react-i18next";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PairsCardArt, RepeatCardArt, WordcraftCardArt } from "@/components/learn/PlayCardArt";
@@ -54,8 +55,16 @@ export function GamesPage() {
       dir={lang === "ar" ? "rtl" : "ltr"}
     >
       <SiteHeader />
+      <PageHero
+        kicker={lang === "ar" ? "الألعاب" : "Games"}
+        title={lang === "ar" ? "العب بالكلمات." : "Play with words."}
+        lead={
+          lang === "ar"
+            ? "ألعاب قصيرة بتعلّمك كلمات جديدة وإنت بتلعب."
+            : "Short games that teach you new words while you play."
+        }
+      />
       <main className="uz-games">
-        <h1 className="uz-games-title">{lang === "ar" ? "الألعاب" : "Games"}</h1>
         <ul className="uz-games-list">
           {GAMES.map((game) => (
             <li key={game.key}>
