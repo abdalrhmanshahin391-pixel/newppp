@@ -541,6 +541,16 @@ it fades in once loaded; a photo that fails shows the initial. A chevron sits be
 short 22px line separates it from the tools before it.
 
 
+## Learn (`/learn`) and Games (`/games`): the home page's frame
+
+Since Nov 2026 both pages open with `PageHero` (`src/components/page-hero/`): the home hero's field
+of black marks (`useDotField`, the same field as the home, on a 2D canvas, fading out downwards),
+«[cube] page name» at 17px, a Google Sans Flex headline at weight 450 (64px, 40px on phones) whose
+words come in one after another with a caret, and a 19px muted lead. /learn: «Talk, learn and
+practise.»; /games: «Play with words.». The section rail and the section titles use the same face
+(rail 15px/500 with the black pill for the open section; titles 30px/450). The game cards keep their
+own colours, drawings and buttons. Reduced motion: the field is drawn once and the words show at once.
+
 ## Pricing (`/pricing`): four monthly plans
 
 Since Nov 2026 the page sells four monthly plans beside the free one: Uzyra $23, Plus $30, Pro $40

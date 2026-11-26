@@ -6086,8 +6086,10 @@ html.rita-app,
   padding: 0 15px;
   border-radius: 999px;
   color: var(--uz-quiet);
-  font-size: 14px;
-  font-weight: 600;
+  /* The home page's face for the words around the cards (the cards keep their own). */
+  font-family: "Uzyra Arabic", "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
   white-space: nowrap;
   text-decoration: none;
   touch-action: manipulation;
@@ -6111,10 +6113,11 @@ html.rita-app,
   outline-offset: 4px;
 }
 .edith-premium .uz-section-title {
-  margin: 0 0 16px;
-  font-size: 22px !important;
-  font-weight: 600;
-  line-height: 1.2 !important;
+  margin: 0 0 20px;
+  font-family: "Uzyra Arabic", "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  font-size: 30px !important;
+  font-weight: 450;
+  line-height: 1.15 !important;
   letter-spacing: -0.02em;
 }
 .uz-rita {
@@ -6239,13 +6242,6 @@ html.rita-app,
   max-width: 760px;
   margin: 0 auto;
   padding: 32px 16px 96px;
-}
-.edith-premium .uz-games-title {
-  margin: 0 0 20px;
-  font-size: 30px !important;
-  font-weight: 700;
-  line-height: 1.15 !important;
-  text-align: center;
 }
 .uz-games-list {
   display: grid;

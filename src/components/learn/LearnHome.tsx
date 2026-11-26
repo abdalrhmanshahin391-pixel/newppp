@@ -6,6 +6,7 @@ import { useLearningLanguage } from "@/hooks/useLearningLanguage";
 import { LanguageChooserCard } from "@/components/language/LanguagePicker";
 import { useStudyOverview } from "@/lib/use-review";
 import { lessonsDone } from "@/lib/learn-home";
+import { PageHero } from "@/components/page-hero/PageHero";
 import { LearnSections, type Bi } from "./LearnHomeView";
 
 /** Data is loaded at the page boundary; section selection never remounts these hooks. */
@@ -30,8 +31,16 @@ export function LearnHome() {
   return (
     <div className="edith-premium edith-light rh-learn-home uz-learn min-h-screen">
       <SiteHeader />
+      <PageHero
+        kicker={lang === "ar" ? "ابدأ التعلّم" : "Start learning"}
+        title={lang === "ar" ? "احكي، تعلّم، وتدرّب." : "Talk, learn and practise."}
+        lead={
+          lang === "ar"
+            ? "احكي مع يوزرا، خذ درس قصير، أو ادرس بمادتك الخاصة."
+            : "Talk with Uzyra, take a short lesson, or study with your own material."
+        }
+      />
       <main className="uz-learn-main">
-        <h1 className="sr-only">{lang === "ar" ? "التعلّم" : "Learn"}</h1>
         {user && learning.ready && learning.code === null ? (
           <div className="mb-10">
             <LanguageChooserCard />
