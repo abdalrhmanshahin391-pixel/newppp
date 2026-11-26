@@ -8771,3 +8771,96 @@ html.rita-app,
 .dark .uz-footer[data-tone="light"] .uz-footer-signature {
   color: #3d3c47;
 }
+
+/* ---------------------------------------------------------------------------
+   Top bar: the learning language as its flag, and a round account photo (Nov 2026).
+   --------------------------------------------------------------------------- */
+.rh-language-tool {
+  gap: 8px;
+  min-width: 0;
+  height: 40px;
+  padding-inline: 8px 10px;
+  border: 1px solid #e4e4e8;
+  border-radius: 999px;
+  background: #fff;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+.rh-language-tool:hover,
+.rh-language-tool[aria-expanded="true"] {
+  background: #f6f6f8;
+  border-color: #cfcfd6;
+}
+.rh-language-tool img,
+.rh-lang-row img {
+  border-radius: 5px;
+}
+.rh-lang-code {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.rh-lang-noflag {
+  width: 22px;
+  height: 16px;
+  border-radius: 5px;
+  background: #ededf1;
+}
+.rh-language-tool .rh-chevron {
+  color: #8a8994;
+}
+.rh-language-tool[aria-expanded="true"] .rh-chevron {
+  transform: rotate(180deg);
+}
+.rh-item.rh-lang-row {
+  gap: 12px;
+}
+.rh-item.rh-lang-row[aria-checked="true"] {
+  background: #f2f2f5;
+}
+.rh-lang-mark {
+  color: #121117;
+}
+
+.rh-bar .rh-avatar,
+.rh-avatar {
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 3px rgb(18 17 23 / 0.12);
+}
+.rh-avatar-photo {
+  object-fit: cover;
+  object-position: 50% 20%;
+  transition: opacity 220ms ease;
+}
+.rh-avatar[data-photo="loading"] .rh-avatar-photo {
+  opacity: 0;
+}
+.rh-bar .rh-account-anchor {
+  border-inline-start: 0;
+  padding-inline-start: 6px;
+  margin-inline-start: 4px;
+}
+.rh-bar .rh-account-anchor::before {
+  content: "";
+  width: 1px;
+  height: 22px;
+  margin-inline-end: 8px;
+  background: #e6e6ea;
+}
+.rh-bar .rh-account-anchor > button {
+  gap: 4px;
+  padding-inline: 3px 8px;
+  border-radius: 999px;
+}
+.rh-avatar-btn .rh-chevron {
+  color: #8a8994;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rh-avatar-photo,
+  .rh-language-tool .rh-chevron {
+    transition: none;
+  }
+}

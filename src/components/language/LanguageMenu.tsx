@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef, useState } from "react";
-import { Check, Globe, Loader2 } from "lucide-react";
+import { Check, ChevronDown, Loader2 } from "lucide-react";
+import { LanguageFlag } from "@/components/language/LanguageFlag";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { useDismiss } from "@/components/header/useDismiss";
 import { MenuPanel, useInMenuGroup, useMenuTrigger } from "@/components/header/MenuGroup";
@@ -72,8 +73,13 @@ export function LanguageMenu({
         data-open={open ? "true" : "false"}
         className="rh-language-tool"
       >
-        <Globe size={17} aria-hidden="true" />
-        <bdi>{code === "ar" ? "ع" : code?.toUpperCase() || "…"}</bdi>
+        {language ? (
+          <LanguageFlag language={language} size={22} />
+        ) : (
+          <span className="rh-lang-noflag" aria-hidden="true" />
+        )}
+        <bdi className="rh-lang-code">{code === "ar" ? "ع" : code?.toUpperCase() || "…"}</bdi>
+        <ChevronDown size={14} className="rh-chevron" aria-hidden="true" />
       </button>
 
       <span role="status" aria-live="polite" className="sr-only">
@@ -104,10 +110,14 @@ export function LanguageMenu({
                   data-mp-item
                   className="rh-item rh-lang-row disabled:cursor-not-allowed disabled:opacity-40"
                 >
+                  <LanguageFlag language={item} size={28} />
                   <span className="rh-lang-names">
                     <span className="rh-lang-native">
                       <bdi lang={item.code}>{item.name_native}</bdi>
                     </span>
+                    {item.name_ar && item.name_ar !== item.name_native && (
+                      <span className="rh-lang-sub">{item.name_ar}</span>
+                    )}
                   </span>
                   <span className="rh-lang-mark" aria-hidden="true">
                     {pending === item.code ? (

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutGrid, LogOut, Menu, ReceiptText, Settings, X } from "lucide-react";
+import { ChevronDown, LayoutGrid, LogOut, Menu, ReceiptText, Settings, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { openWelcome } from "@/lib/auth-dialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -40,12 +40,33 @@ function Avatar({
   tone: string;
   size: number;
 }) {
+  // The photo fades in once loaded; one that fails to load shows the initial instead.
+  const [state, setState] = useState<"loading" | "ready" | "failed">("loading");
+  useEffect(() => setState("loading"), [src]);
+  const photo = src && state !== "failed";
   return (
     <span
       className="rh-avatar"
+      data-photo={photo ? state : undefined}
       style={{ background: tone, width: size, height: size, fontSize: size * 0.42 }}
     >
-      {src ? <img src={src} alt="" className="rh-avatar-photo" /> : initial}
+      {photo ? (
+        <img
+          src={src}
+          alt=""
+          className="rh-avatar-photo"
+          decoding="async"
+          draggable={false}
+          ref={(el) => {
+            // Already in the cache (or loaded before hydration): no load event will come.
+            if (el?.complete && el.naturalWidth > 0) setState("ready");
+          }}
+          onLoad={() => setState("ready")}
+          onError={() => setState("failed")}
+        />
+      ) : (
+        initial
+      )}
     </span>
   );
 }
@@ -92,7 +113,8 @@ function AccountMenu({
         data-open={open ? "true" : "false"}
         className="rh-avatar-btn"
       >
-        <Avatar src={avatar} initial={initial} tone={tone} size={30} />
+        <Avatar src={avatar} initial={initial} tone={tone} size={36} />
+        <ChevronDown size={15} className="rh-chevron" aria-hidden="true" />
       </button>
       <MenuPanel
         id="account"
@@ -317,7 +339,7 @@ export function ProHeader({
             className="rh-burger"
           >
             {user ? (
-              <Avatar src={avatar} initial={initial} tone={tone} size={30} />
+              <Avatar src={avatar} initial={initial} tone={tone} size={34} />
             ) : (
               <Menu size={22} />
             )}

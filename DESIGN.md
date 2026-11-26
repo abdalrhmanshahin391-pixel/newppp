@@ -531,6 +531,16 @@ cube is omitted; connecting, failed and active statuses remain visible.
 
 ## Top bar and menus
 
+**Language and account (Nov 2026).** The learning language shows as its flag (22px, 5px corners,
+a hairline ring), the code («EN», 13/600) and a small chevron, in a 40px white pill with a #e4e4e8
+hairline (grey on hover or open; the chevron turns). Its menu lists each language with its flag
+(28px), its own name and, under it, its Arabic name; the current one is light grey with an ink ✓.
+The account photo is round (36px in the bar, 34px in the phone's menu button, 44px in the menu)
+with a 2px white ring and a faint outer line, cropped from 20% of its height so a face shows, and
+it fades in once loaded; a photo that fails shows the initial. A chevron sits beside it, and a
+short 22px line separates it from the tools before it.
+
+
 The blog, home and inner pages share the blog header's white surface, 60px height, 16px wordmark
 and 14px grotesk type. Library, Pricing and Resources share the same spacing and text weight
 across pages, and Start learning uses the black pill. The header remains visible while scrolling
