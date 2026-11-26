@@ -87,6 +87,8 @@ import { Route as LearnIndexRouteImport } from './routes/learn.index'
 import { Route as LearnGermanRouteImport } from './routes/learn.german'
 import { Route as LearnStudyRoomRouteImport } from './routes/learn.study-room'
 import { Route as LearnStudySpaceRouteImport } from './routes/learn.study-space'
+import { Route as PathClipsItemIdRouteImport } from './routes/path-clips.$itemId'
+import { Route as PathQuizItemIdRouteImport } from './routes/path-quiz.$itemId'
 import { Route as ShareIndexRouteImport } from './routes/share.index'
 import { Route as ShareDeckIdRouteImport } from './routes/share.$deckId'
 import { Route as ShareNewRouteImport } from './routes/share.new'
@@ -102,8 +104,6 @@ import { Route as StudySessionRouteImport } from './routes/study.session'
 import { Route as StudySummariesRouteImport } from './routes/study.summaries'
 import { Route as StudyTodoRouteImport } from './routes/study.todo'
 import { Route as SummariesIndexRouteImport } from './routes/summaries.index'
-import { Route as PathClipsItemIdRouteImport } from './routes/path-clips.$itemId'
-import { Route as PathQuizItemIdRouteImport } from './routes/path-quiz.$itemId'
 import { Route as SummariesSummaryIdRouteImport } from './routes/summaries.$summaryId'
 import { Route as SummariesNewRouteImport } from './routes/summaries.new'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
@@ -551,6 +551,16 @@ const LearnStudySpaceRoute = LearnStudySpaceRouteImport.update({
   path: '/learn/study-space',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PathClipsItemIdRoute = PathClipsItemIdRouteImport.update({
+  id: '/path-clips/$itemId',
+  path: '/path-clips/$itemId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PathQuizItemIdRoute = PathQuizItemIdRouteImport.update({
+  id: '/path-quiz/$itemId',
+  path: '/path-quiz/$itemId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShareIndexRoute = ShareIndexRouteImport.update({
   id: '/share/',
   path: '/share/',
@@ -624,16 +634,6 @@ const StudyTodoRoute = StudyTodoRouteImport.update({
 const SummariesIndexRoute = SummariesIndexRouteImport.update({
   id: '/summaries/',
   path: '/summaries/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PathClipsItemIdRoute = PathClipsItemIdRouteImport.update({
-  id: '/path-clips/$itemId',
-  path: '/path-clips/$itemId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PathQuizItemIdRoute = PathQuizItemIdRouteImport.update({
-  id: '/path-quiz/$itemId',
-  path: '/path-quiz/$itemId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SummariesSummaryIdRoute = SummariesSummaryIdRouteImport.update({
@@ -987,6 +987,8 @@ export interface FileRoutesByFullPath {
   '/learn/german': typeof LearnGermanRoute
   '/learn/study-room': typeof LearnStudyRoomRoute
   '/learn/study-space': typeof LearnStudySpaceRoute
+  '/path-clips/$itemId': typeof PathClipsItemIdRoute
+  '/path-quiz/$itemId': typeof PathQuizItemIdRoute
   '/share/$deckId': typeof ShareDeckIdRoute
   '/share/new': typeof ShareNewRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -998,8 +1000,6 @@ export interface FileRoutesByFullPath {
   '/study/session': typeof StudySessionRoute
   '/study/summaries': typeof StudySummariesRoute
   '/study/todo': typeof StudyTodoRoute
-  '/path-clips/$itemId': typeof PathClipsItemIdRoute
-  '/path-quiz/$itemId': typeof PathQuizItemIdRoute
   '/summaries/$summaryId': typeof SummariesSummaryIdRoute
   '/summaries/new': typeof SummariesNewRoute
   '/admin/': typeof AdminIndexRoute
@@ -1134,6 +1134,8 @@ export interface FileRoutesByTo {
   '/learn/german': typeof LearnGermanRoute
   '/learn/study-room': typeof LearnStudyRoomRoute
   '/learn/study-space': typeof LearnStudySpaceRoute
+  '/path-clips/$itemId': typeof PathClipsItemIdRoute
+  '/path-quiz/$itemId': typeof PathQuizItemIdRoute
   '/share/$deckId': typeof ShareDeckIdRoute
   '/share/new': typeof ShareNewRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -1145,8 +1147,6 @@ export interface FileRoutesByTo {
   '/study/session': typeof StudySessionRoute
   '/study/summaries': typeof StudySummariesRoute
   '/study/todo': typeof StudyTodoRoute
-  '/path-clips/$itemId': typeof PathClipsItemIdRoute
-  '/path-quiz/$itemId': typeof PathQuizItemIdRoute
   '/summaries/$summaryId': typeof SummariesSummaryIdRoute
   '/summaries/new': typeof SummariesNewRoute
   '/admin': typeof AdminIndexRoute
@@ -1285,6 +1285,8 @@ export interface FileRoutesById {
   '/learn/german': typeof LearnGermanRoute
   '/learn/study-room': typeof LearnStudyRoomRoute
   '/learn/study-space': typeof LearnStudySpaceRoute
+  '/path-clips/$itemId': typeof PathClipsItemIdRoute
+  '/path-quiz/$itemId': typeof PathQuizItemIdRoute
   '/share/$deckId': typeof ShareDeckIdRoute
   '/share/new': typeof ShareNewRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -1296,8 +1298,6 @@ export interface FileRoutesById {
   '/study/session': typeof StudySessionRoute
   '/study/summaries': typeof StudySummariesRoute
   '/study/todo': typeof StudyTodoRoute
-  '/path-clips/$itemId': typeof PathClipsItemIdRoute
-  '/path-quiz/$itemId': typeof PathQuizItemIdRoute
   '/summaries/$summaryId': typeof SummariesSummaryIdRoute
   '/summaries/new': typeof SummariesNewRoute
   '/admin/': typeof AdminIndexRoute
@@ -1438,6 +1438,8 @@ export interface FileRouteTypes {
     | '/learn/german'
     | '/learn/study-room'
     | '/learn/study-space'
+    | '/path-clips/$itemId'
+    | '/path-quiz/$itemId'
     | '/share/$deckId'
     | '/share/new'
     | '/spaces/$spaceId'
@@ -1449,8 +1451,6 @@ export interface FileRouteTypes {
     | '/study/session'
     | '/study/summaries'
     | '/study/todo'
-    | '/path-clips/$itemId'
-    | '/path-quiz/$itemId'
     | '/summaries/$summaryId'
     | '/summaries/new'
     | '/admin/'
@@ -1585,6 +1585,8 @@ export interface FileRouteTypes {
     | '/learn/german'
     | '/learn/study-room'
     | '/learn/study-space'
+    | '/path-clips/$itemId'
+    | '/path-quiz/$itemId'
     | '/share/$deckId'
     | '/share/new'
     | '/spaces/$spaceId'
@@ -1596,8 +1598,6 @@ export interface FileRouteTypes {
     | '/study/session'
     | '/study/summaries'
     | '/study/todo'
-    | '/path-clips/$itemId'
-    | '/path-quiz/$itemId'
     | '/summaries/$summaryId'
     | '/summaries/new'
     | '/admin'
@@ -1735,6 +1735,8 @@ export interface FileRouteTypes {
     | '/learn/german'
     | '/learn/study-room'
     | '/learn/study-space'
+    | '/path-clips/$itemId'
+    | '/path-quiz/$itemId'
     | '/share/$deckId'
     | '/share/new'
     | '/spaces/$spaceId'
@@ -1746,8 +1748,6 @@ export interface FileRouteTypes {
     | '/study/session'
     | '/study/summaries'
     | '/study/todo'
-    | '/path-clips/$itemId'
-    | '/path-quiz/$itemId'
     | '/summaries/$summaryId'
     | '/summaries/new'
     | '/admin/'
@@ -1882,11 +1882,11 @@ export interface RootRouteChildren {
   LearnGermanRoute: typeof LearnGermanRoute
   LearnStudyRoomRoute: typeof LearnStudyRoomRoute
   LearnStudySpaceRoute: typeof LearnStudySpaceRoute
+  PathClipsItemIdRoute: typeof PathClipsItemIdRoute
+  PathQuizItemIdRoute: typeof PathQuizItemIdRoute
   ShareDeckIdRoute: typeof ShareDeckIdRoute
   ShareNewRoute: typeof ShareNewRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
-  PathClipsItemIdRoute: typeof PathClipsItemIdRoute
-  PathQuizItemIdRoute: typeof PathQuizItemIdRoute
   SummariesSummaryIdRoute: typeof SummariesSummaryIdRoute
   SummariesNewRoute: typeof SummariesNewRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -2478,6 +2478,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LearnStudySpaceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/path-clips/$itemId': {
+      id: '/path-clips/$itemId'
+      path: '/path-clips/$itemId'
+      fullPath: '/path-clips/$itemId'
+      preLoaderRoute: typeof PathClipsItemIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/path-quiz/$itemId': {
+      id: '/path-quiz/$itemId'
+      path: '/path-quiz/$itemId'
+      fullPath: '/path-quiz/$itemId'
+      preLoaderRoute: typeof PathQuizItemIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/share/': {
       id: '/share/'
       path: '/share'
@@ -2581,20 +2595,6 @@ declare module '@tanstack/react-router' {
       path: '/summaries'
       fullPath: '/summaries/'
       preLoaderRoute: typeof SummariesIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/path-clips/$itemId': {
-      id: '/path-clips/$itemId'
-      path: '/path-clips/$itemId'
-      fullPath: '/path-clips/$itemId'
-      preLoaderRoute: typeof PathClipsItemIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/path-quiz/$itemId': {
-      id: '/path-quiz/$itemId'
-      path: '/path-quiz/$itemId'
-      fullPath: '/path-quiz/$itemId'
-      preLoaderRoute: typeof PathQuizItemIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/summaries/$summaryId': {
@@ -3182,11 +3182,11 @@ const rootRouteChildren: RootRouteChildren = {
   LearnGermanRoute: LearnGermanRoute,
   LearnStudyRoomRoute: LearnStudyRoomRoute,
   LearnStudySpaceRoute: LearnStudySpaceRoute,
+  PathClipsItemIdRoute: PathClipsItemIdRoute,
+  PathQuizItemIdRoute: PathQuizItemIdRoute,
   ShareDeckIdRoute: ShareDeckIdRoute,
   ShareNewRoute: ShareNewRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,
-  PathClipsItemIdRoute: PathClipsItemIdRoute,
-  PathQuizItemIdRoute: PathQuizItemIdRoute,
   SummariesSummaryIdRoute: SummariesSummaryIdRoute,
   SummariesNewRoute: SummariesNewRoute,
   AdminIndexRoute: AdminIndexRoute,

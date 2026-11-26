@@ -99,6 +99,13 @@
       "when": 1795625945232,
       "tag": "0013_path_film_gif_clips_exercise_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795702125086,
+      "tag": "0014_path_clip_exercises",
+      "breakpoints": true
     }
   ]
 }
