@@ -83,6 +83,7 @@ function blank(sort: number, n: number): AdminPlan {
     cta_label: null,
     free_talk_seconds: 0,
     free_talk_period: "monthly",
+    max_groq_requests: 0,
     max_flashcards: 100,
     max_ai_questions: 50,
     max_summaries: 5,
@@ -565,12 +566,15 @@ function AdminPlansPage() {
                       ))}
                     </div>
                         <section className="my-5 grid gap-3 rounded-xl border border-black/10 p-4 sm:grid-cols-2" aria-label="Free conversation time">
-                      <label>Free conversation hours
+                      <label>Voice call hours
                         <input className={input} type="number" min="0" max="1000" step="any" value={(plan.free_talk_seconds ?? 0)/3600} onChange={(e) => patch({free_talk_seconds:Math.floor(Number(e.target.value)*3600)})}/>
                       </label>
+                      <label>Groq requests a month
+                        <input className={input} type="number" min="0" step="1" placeholder="No cap" value={plan.max_groq_requests ?? ""} onChange={(e) => patch({max_groq_requests:e.target.value === "" ? null : Math.max(0, Math.floor(Number(e.target.value) || 0))})} />
+                      </label>
                       <label>Time allowance renews
-                        <select className={input} value={plan.free_talk_period ?? "monthly"} onChange={(e) => patch({free_talk_period:e.target.value as "monthly"|"lifetime"})}><option value="monthly">Monthly (UTC)</option><option value="lifetime">One allowance per account</option></select>
-                      </label><p className="text-sm text-gray-600 sm:col-span-2">Zero disables free conversation. Only administrator accounts have unlimited time. Verified curriculum lessons use their own access rules.</p>
+                        <select className={input} value={plan.free_talk_period ?? "monthly"} onChange={(e) => patch({free_talk_period:e.target.value as "monthly"|"lifetime"|"daily"})}><option value="daily">Every day (midnight, Amman)</option><option value="monthly">Monthly (UTC)</option><option value="lifetime">One allowance per account</option></select>
+                      </label><p className="text-sm text-gray-600 sm:col-span-2">Zero turns voice calls off. Free conversation, path lessons and book study all use this time. Only administrator accounts have unlimited time.</p>
                     </section>
                     {(plan.billing_kind ?? "monthly") === "lifetime" ? (
                       <>

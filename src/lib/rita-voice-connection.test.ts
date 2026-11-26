@@ -88,6 +88,12 @@ test("the start route's refusal codes name the real reason", () => {
     /حد الاستخدام/,
   );
   assert.match(says("unauthorized: Unauthorized"), /سجّل دخول/);
+  // The daily voice budget: used up, or another call still open.
+  assert.match(
+    says("free_talk_exhausted: Voice time is unavailable. Check your remaining time."),
+    /لليوم/,
+  );
+  assert.match(says("free_talk_already_active: Voice time is unavailable."), /مكالمة ثانية/);
   assert.match(says("session_storage_failed: Uzyra session storage is not ready."), /مش جاهزة/);
   assert.match(
     says("conversation_unavailable: This conversation is not available."),

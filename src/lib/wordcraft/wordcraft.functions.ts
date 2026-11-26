@@ -33,7 +33,7 @@ const RoundInput = z.object({
 export type RoundResult = {
   round: Round;
   /** Why the words came from the built-in list (absent when the AI made them). */
-  fallback?: "no_key" | "busy" | "slow" | "failed" | "too_soon" | "no_grid";
+  fallback?: "no_key" | "busy" | "slow" | "failed" | "too_soon" | "no_grid" | "used_up";
 };
 
 // One AI round per learner every few seconds on this server (not shared between servers).
@@ -69,6 +69,9 @@ export const wordcraftRound = createServerFn({ method: "POST" })
       console.warn("Wordcraft: no Groq key reachable from the website (GROQ_API_KEY secret).");
       return fallback("no_key");
     }
+    // A round from the model is one Groq request; with none left the game plays a list round.
+    const { takeGroqRequest } = await import("@/lib/groq-requests.server");
+    if (!(await takeGroqRequest(context.supabase))) return fallback("used_up");
     const theme = THEMES[Math.floor(Math.random() * THEMES.length)];
     const asked = await askPracticeModel({
       fetch: (input, init) => fetch(input, init),

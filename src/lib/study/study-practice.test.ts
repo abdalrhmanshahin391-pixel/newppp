@@ -367,6 +367,10 @@ test("a failed practice request says its real reason and offers the right next s
   assert.equal(noCards.message, NO_CARDS_TEXT);
   assert.equal(noCards.retry, false);
   assert.equal(noCards.alternative, "make_mcq");
+  // This month's Groq requests are used up: the server's words, and no retry.
+  const usedUp = practiceFailureView("groq_requests_used", "خلصت طلبات Groq");
+  assert.equal(usedUp.message, "خلصت طلبات Groq");
+  assert.equal(usedUp.retry, false);
   // Everything else keeps the server's own words and a retry.
   for (const code of ["busy", "slow", "failed", "no_questions", "rate_limited", undefined]) {
     const view = practiceFailureView(code, "نص السيرفر");

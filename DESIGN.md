@@ -541,6 +541,25 @@ it fades in once loaded; a photo that fails shows the initial. A chevron sits be
 short 22px line separates it from the tools before it.
 
 
+## Pricing (`/pricing`): four monthly plans
+
+Since Nov 2026 the page sells four monthly plans beside the free one: Uzyra $23, Plus $30, Pro $40
+and Max $50 (`plans.billing_months = 1`). Plans differ only in two allowances: minutes of calls a
+day (`free_talk_seconds`, `free_talk_period = 'daily'`) and Groq AI requests a month
+(`max_groq_requests`); every plan has every service. The page keeps its dark style (grotesk,
+`--pro-card` cards, 24px corners, white pill):
+- A one-line lead under «Plans and pricing»; the billing switch only when there is a choice.
+- Five cards, one row on wide screens (2 or 3 columns below that, one on phones). Each card: name,
+  price, tagline, then two figure tiles (white 6% fill, 16px corners, 22px figure and a 13px
+  label): «30 min / of calls every day» and «1,000 / Groq AI requests a month», then the four
+  services with checks and the pill. The popular plan has a thin white ring.
+- «Compare plans»: Calls with Uzyra (every day, in a month at most, the three call kinds) and Groq
+  AI requests (a month, what they cover), scrolling sideways on phones.
+- «How we count»: two cards, call minutes and Groq requests, each with three examples.
+- «What you can do with Uzyra»: four tiles (free conversation, path lessons by voice, book study,
+  path exercises), then the questions.
+The older 3-month plans are hidden, not deleted.
+
 The blog, home and inner pages share the blog header's white surface, 60px height, 16px wordmark
 and 14px grotesk type. Library, Pricing and Resources share the same spacing and text weight
 across pages, and Start learning uses the black pill. The header remains visible while scrolling

@@ -65,6 +65,13 @@ const BookInput = z.object({
 type BookData = z.infer<typeof BookInput>;
 
 type Failure = { ok: false; code: string; message: string; retryAfter?: number };
+
+/** This month's Groq requests are used up: the practice window says so, with no retry. */
+async function groqUsedUp(context: { supabase: any }): Promise<Failure | null> {
+  const { takeGroqRequest, GROQ_REQUESTS_USED_TEXT } = await import("@/lib/groq-requests.server");
+  if (await takeGroqRequest(context.supabase)) return null;
+  return { ok: false, code: "groq_requests_used", message: GROQ_REQUESTS_USED_TEXT };
+}
 export type BookTextResult = { ok: true; quote: string; text: string } | Failure;
 export type BookCardsResult = { ok: true; cards: StudyCard[] } | Failure;
 export type BookMcqResult = { ok: true; questions: StudyMcq[] } | Failure;
@@ -251,6 +258,9 @@ export const bookStudyText = createServerFn({ method: "POST" })
     const { resolveRitaV3Key } = await import("@/lib/rita-v3.server");
     const key = await resolveRitaV3Key("groq", "GROQ_API_KEY");
     if (!key) return { ok: false, code: "failed", message: "يوزرا مش متاحة هلأ. جرّب كمان شوي." };
+    const { takeGroqRequest, GROQ_REQUESTS_USED_TEXT } = await import("@/lib/groq-requests.server");
+    if (!(await takeGroqRequest(context.supabase)))
+      return { ok: false, code: "failed", message: GROQ_REQUESTS_USED_TEXT };
     try {
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -322,6 +332,8 @@ export const bookMakeCards = createServerFn({ method: "POST" })
     if (!key) return NO_KEY;
     const outcome = await resolveBookRequest(context, data, "make_cards");
     if ("result" in outcome) return outcome.result;
+    const usedUp = await groqUsedUp(context);
+    if (usedUp) return usedUp;
     const style = data.style;
     const limit = maxCards(outcome.quote, style);
     const asked = await askModel(
@@ -346,6 +358,8 @@ export const bookMakeMcq = createServerFn({ method: "POST" })
     if (!key) return NO_KEY;
     const outcome = await resolveBookRequest(context, data, "make_mcq");
     if ("result" in outcome) return outcome.result;
+    const usedUp = await groqUsedUp(context);
+    if (usedUp) return usedUp;
     const count = mcqCount(outcome.quote);
     const asked = await askModel(
       key,

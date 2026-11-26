@@ -79,6 +79,9 @@ export const studyBoardStep = createServerFn({ method: "POST" })
           checked.result && !checked.result.ok ? checked.result.message : "تعذّر فتح الفقرة.",
       };
     const { quote, context: surrounding } = checked.resolved;
+    const { takeGroqRequest, GROQ_REQUESTS_USED_TEXT } = await import("@/lib/groq-requests.server");
+    if (!(await takeGroqRequest(context.supabase)))
+      return { ok: false, message: GROQ_REQUESTS_USED_TEXT };
     const language =
       data.language === "automatic"
         ? data.question && !/[\u0600-\u06ff]/.test(data.question)

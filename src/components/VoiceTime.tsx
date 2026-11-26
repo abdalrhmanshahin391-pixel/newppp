@@ -7,9 +7,9 @@ export function VoiceTime() {
   return (
     <div
       className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[var(--pp-grey)] px-3 py-2 text-sm"
-      aria-label={ar ? "وقت المحادثة الحرة" : "Free conversation time"}
+      aria-label={ar ? "وقت المكالمات" : "Call time"}
     >
-      <span>{ar ? "المحادثة الحرة" : "Free conversation"}</span>
+      <span>{ar ? "وقت المكالمات" : "Call time"}</span>
       <span dir="ltr" className="tabular-nums font-semibold">
         {voice.isError
           ? ar
