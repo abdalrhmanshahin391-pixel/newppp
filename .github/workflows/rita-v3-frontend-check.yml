@@ -38,6 +38,9 @@ on:
       - "src/components/rita-lessons/**"
       - "src/lib/film-clips*"
       - "src/lib/rita-path-*"
+      - "src/lib/rita-lesson-board*"
+      - "src/routes/admin.curricula.tsx"
+      - "src/routes/admin.publish.tsx"
       - "src/routes/admin.clips.tsx"
       - "src/routes/rita-lessons.tsx"
       - "src/routes/admin.curricula.tsx"
@@ -136,6 +139,7 @@ jobs:
           node --test src/lib/learn-home.test.ts
           node --test src/lib/rita-path-levels.test.ts
           node --test src/lib/film-clips.test.ts
+          node --test src/lib/rita-lesson-board.test.ts
           node --test src/lib/books.test.ts
           node --test src/lib/books-import.test.ts
           node --test src/lib/books-starter.test.ts
