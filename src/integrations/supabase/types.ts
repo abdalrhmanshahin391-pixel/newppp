@@ -2651,6 +2651,27 @@ export type Database = {
           },
         ]
       }
+      groq_request_usage: {
+        Row: {
+          period: string
+          updated_at: string
+          used: number
+          user_id: string
+        }
+        Insert: {
+          period: string
+          updated_at?: string
+          used?: number
+          user_id: string
+        }
+        Update: {
+          period?: string
+          updated_at?: string
+          used?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       learning_languages: {
         Row: {
           code: string
@@ -3170,6 +3191,7 @@ export type Database = {
       plans: {
         Row: {
           billing_kind: string
+          billing_months: number
           compare_cents: number | null
           created_at: string
           cta_label: string
@@ -3188,6 +3210,7 @@ export type Database = {
           max_archive_questions: number | null
           max_calendar_items: number | null
           max_flashcards: number | null
+          max_groq_requests: number | null
           max_groups: number | null
           max_summaries: number | null
           max_todo_tasks: number | null
@@ -3213,6 +3236,7 @@ export type Database = {
         }
         Insert: {
           billing_kind?: string
+          billing_months?: number
           compare_cents?: number | null
           created_at?: string
           cta_label?: string
@@ -3231,6 +3255,7 @@ export type Database = {
           max_archive_questions?: number | null
           max_calendar_items?: number | null
           max_flashcards?: number | null
+          max_groq_requests?: number | null
           max_groups?: number | null
           max_summaries?: number | null
           max_todo_tasks?: number | null
@@ -3256,6 +3281,7 @@ export type Database = {
         }
         Update: {
           billing_kind?: string
+          billing_months?: number
           compare_cents?: number | null
           created_at?: string
           cta_label?: string
@@ -3274,6 +3300,7 @@ export type Database = {
           max_archive_questions?: number | null
           max_calendar_items?: number | null
           max_flashcards?: number | null
+          max_groq_requests?: number | null
           max_groups?: number | null
           max_summaries?: number | null
           max_todo_tasks?: number | null
@@ -8774,7 +8801,7 @@ export type Database = {
         Returns: Json
       }
       free_talk_reserve: {
-        Args: { p_session: string; p_user: string }
+        Args: { p_free?: boolean; p_session: string; p_user: string }
         Returns: Json
       }
       free_talk_settle: { Args: { p_session: string }; Returns: boolean }
@@ -8794,6 +8821,8 @@ export type Database = {
           subject_id: string
         }[]
       }
+      groq_request_take: { Args: never; Returns: Json }
+      groq_request_take_for: { Args: { p_user: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
