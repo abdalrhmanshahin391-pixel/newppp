@@ -52,7 +52,6 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAiRouteImport } from './routes/admin.ai'
 import { Route as AdminAiKeysRouteImport } from './routes/admin.ai-keys'
 import { Route as AdminBooksRouteImport } from './routes/admin.books'
-import { Route as AdminPublishRouteImport } from './routes/admin.publish'
 import { Route as AdminClipsRouteImport } from './routes/admin.clips'
 import { Route as AdminContentProtectionRouteImport } from './routes/admin.content-protection'
 import { Route as AdminCurriculaRouteImport } from './routes/admin.curricula'
@@ -66,6 +65,7 @@ import { Route as AdminPaddleSyncRouteImport } from './routes/admin.paddle-sync'
 import { Route as AdminPeopleRouteImport } from './routes/admin.people'
 import { Route as AdminPlansRouteImport } from './routes/admin.plans'
 import { Route as AdminPromoCodesRouteImport } from './routes/admin.promo-codes'
+import { Route as AdminPublishRouteImport } from './routes/admin.publish'
 import { Route as AdminRitaVoiceRouteImport } from './routes/admin.rita-voice'
 import { Route as AdminRitaxAnnouncementsRouteImport } from './routes/admin.ritax-announcements'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
@@ -377,11 +377,6 @@ const AdminBooksRoute = AdminBooksRouteImport.update({
   path: '/admin/books',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminPublishRoute = AdminPublishRouteImport.update({
-  id: '/admin/publish',
-  path: '/admin/publish',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminClipsRoute = AdminClipsRouteImport.update({
   id: '/admin/clips',
   path: '/admin/clips',
@@ -445,6 +440,11 @@ const AdminPlansRoute = AdminPlansRouteImport.update({
 const AdminPromoCodesRoute = AdminPromoCodesRouteImport.update({
   id: '/admin/promo-codes',
   path: '/admin/promo-codes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPublishRoute = AdminPublishRouteImport.update({
+  id: '/admin/publish',
+  path: '/admin/publish',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRitaVoiceRoute = AdminRitaVoiceRouteImport.update({
@@ -962,7 +962,6 @@ export interface FileRoutesByFullPath {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
   '/admin/books': typeof AdminBooksRoute
-  '/admin/publish': typeof AdminPublishRoute
   '/admin/clips': typeof AdminClipsRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
   '/admin/curricula': typeof AdminCurriculaRoute
@@ -976,6 +975,7 @@ export interface FileRoutesByFullPath {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/plans': typeof AdminPlansRoute
   '/admin/promo-codes': typeof AdminPromoCodesRoute
+  '/admin/publish': typeof AdminPublishRoute
   '/admin/rita-voice': typeof AdminRitaVoiceRoute
   '/admin/ritax-announcements': typeof AdminRitaxAnnouncementsRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -1112,7 +1112,6 @@ export interface FileRoutesByTo {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
   '/admin/books': typeof AdminBooksRoute
-  '/admin/publish': typeof AdminPublishRoute
   '/admin/clips': typeof AdminClipsRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
   '/admin/curricula': typeof AdminCurriculaRoute
@@ -1125,6 +1124,7 @@ export interface FileRoutesByTo {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/plans': typeof AdminPlansRoute
   '/admin/promo-codes': typeof AdminPromoCodesRoute
+  '/admin/publish': typeof AdminPublishRoute
   '/admin/rita-voice': typeof AdminRitaVoiceRoute
   '/admin/ritax-announcements': typeof AdminRitaxAnnouncementsRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -1262,7 +1262,6 @@ export interface FileRoutesById {
   '/admin/ai': typeof AdminAiRoute
   '/admin/ai-keys': typeof AdminAiKeysRoute
   '/admin/books': typeof AdminBooksRoute
-  '/admin/publish': typeof AdminPublishRoute
   '/admin/clips': typeof AdminClipsRoute
   '/admin/content-protection': typeof AdminContentProtectionRoute
   '/admin/curricula': typeof AdminCurriculaRoute
@@ -1276,6 +1275,7 @@ export interface FileRoutesById {
   '/admin/people': typeof AdminPeopleRoute
   '/admin/plans': typeof AdminPlansRoute
   '/admin/promo-codes': typeof AdminPromoCodesRoute
+  '/admin/publish': typeof AdminPublishRoute
   '/admin/rita-voice': typeof AdminRitaVoiceRoute
   '/admin/ritax-announcements': typeof AdminRitaxAnnouncementsRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -1416,7 +1416,6 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-keys'
     | '/admin/books'
-    | '/admin/publish'
     | '/admin/clips'
     | '/admin/content-protection'
     | '/admin/curricula'
@@ -1430,6 +1429,7 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/plans'
     | '/admin/promo-codes'
+    | '/admin/publish'
     | '/admin/rita-voice'
     | '/admin/ritax-announcements'
     | '/admin/roles'
@@ -1566,7 +1566,6 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-keys'
     | '/admin/books'
-    | '/admin/publish'
     | '/admin/clips'
     | '/admin/content-protection'
     | '/admin/curricula'
@@ -1579,6 +1578,7 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/plans'
     | '/admin/promo-codes'
+    | '/admin/publish'
     | '/admin/rita-voice'
     | '/admin/ritax-announcements'
     | '/admin/roles'
@@ -1715,7 +1715,6 @@ export interface FileRouteTypes {
     | '/admin/ai'
     | '/admin/ai-keys'
     | '/admin/books'
-    | '/admin/publish'
     | '/admin/clips'
     | '/admin/content-protection'
     | '/admin/curricula'
@@ -1729,6 +1728,7 @@ export interface FileRouteTypes {
     | '/admin/people'
     | '/admin/plans'
     | '/admin/promo-codes'
+    | '/admin/publish'
     | '/admin/rita-voice'
     | '/admin/ritax-announcements'
     | '/admin/roles'
@@ -1868,7 +1868,6 @@ export interface RootRouteChildren {
   AdminAiRoute: typeof AdminAiRoute
   AdminAiKeysRoute: typeof AdminAiKeysRoute
   AdminBooksRoute: typeof AdminBooksRoute
-  AdminPublishRoute: typeof AdminPublishRoute
   AdminClipsRoute: typeof AdminClipsRoute
   AdminContentProtectionRoute: typeof AdminContentProtectionRoute
   AdminCurriculaRoute: typeof AdminCurriculaRoute
@@ -1882,6 +1881,7 @@ export interface RootRouteChildren {
   AdminPeopleRoute: typeof AdminPeopleRoute
   AdminPlansRoute: typeof AdminPlansRoute
   AdminPromoCodesRoute: typeof AdminPromoCodesRoute
+  AdminPublishRoute: typeof AdminPublishRoute
   AdminRitaVoiceRoute: typeof AdminRitaVoiceRoute
   AdminRitaxAnnouncementsRoute: typeof AdminRitaxAnnouncementsRoute
   AdminRolesRoute: typeof AdminRolesRoute
@@ -2246,13 +2246,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBooksRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/publish': {
-      id: '/admin/publish'
-      path: '/admin/publish'
-      fullPath: '/admin/publish'
-      preLoaderRoute: typeof AdminPublishRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/clips': {
       id: '/admin/clips'
       path: '/admin/clips'
@@ -2342,6 +2335,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/promo-codes'
       fullPath: '/admin/promo-codes'
       preLoaderRoute: typeof AdminPromoCodesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/publish': {
+      id: '/admin/publish'
+      path: '/admin/publish'
+      fullPath: '/admin/publish'
+      preLoaderRoute: typeof AdminPublishRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/rita-voice': {
@@ -3176,7 +3176,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAiRoute: AdminAiRoute,
   AdminAiKeysRoute: AdminAiKeysRoute,
   AdminBooksRoute: AdminBooksRoute,
-  AdminPublishRoute: AdminPublishRoute,
   AdminClipsRoute: AdminClipsRoute,
   AdminContentProtectionRoute: AdminContentProtectionRoute,
   AdminCurriculaRoute: AdminCurriculaRoute,
@@ -3190,6 +3189,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminPeopleRoute: AdminPeopleRoute,
   AdminPlansRoute: AdminPlansRoute,
   AdminPromoCodesRoute: AdminPromoCodesRoute,
+  AdminPublishRoute: AdminPublishRoute,
   AdminRitaVoiceRoute: AdminRitaVoiceRoute,
   AdminRitaxAnnouncementsRoute: AdminRitaxAnnouncementsRoute,
   AdminRolesRoute: AdminRolesRoute,
