@@ -27,6 +27,8 @@ const planSchema = z.object({
   max_all_in_one_lectures: z.number().int().min(0).nullable().default(null),
   max_all_in_one_questions: z.number().int().min(0).nullable().default(null),
   max_archive_questions: z.number().int().min(0).nullable().default(null),
+  /** Groq requests a month (written answers from Uzyra's model); null = no cap. */
+  max_groq_requests: z.number().int().min(0).nullable().default(null),
   todo_full: z.boolean(),
   rich_cards: z.boolean(),
   feature_ai_import: z.boolean(),

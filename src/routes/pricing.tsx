@@ -4,18 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   BookOpen,
-  Calendar,
   Check,
   ChevronDown,
-  CircleHelp,
-  FileText,
-  Gamepad2,
   GraduationCap,
-  Languages,
-  Layers,
   ListChecks,
   Phone,
-  Users,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import { periodSuffix, planBillingMonths } from "@/lib/plan-billing";
@@ -76,6 +70,8 @@ type FullPlan = PlanRow & {
   ribbon_color?: string | null;
   compare_cents?: number | null;
   offer_ends_at?: string | null;
+  /** Groq requests a month; null = no cap. */
+  max_groq_requests?: number | null;
 };
 
 const SYMBOL: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", JOD: "JD " };
@@ -86,76 +82,113 @@ function money(cents: number, currency = "USD") {
   return `${sym}${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
 }
 
-function cap(n: number | null | undefined, unit: string) {
-  return n === null || n === undefined ? `Unlimited ${unit}` : `${n.toLocaleString()} ${unit}`;
-}
-
 type Billing = "three_months" | "yearly" | "once";
 
-/** The card's first line: the plan's voice time, by how often it renews. */
-const conversationAllowance = (p: FullPlan) => {
-  const minutes = ((p.free_talk_seconds ?? 0) / 60).toLocaleString();
-  if (p.free_talk_period === "daily") return `${minutes} minutes of calls with Uzyra every day`;
-  if (p.free_talk_period === "lifetime") return `${minutes} minutes of calls to try Uzyra`;
-  return `${minutes} minutes of calls with Uzyra a month`;
-};
+/** A plan's call time, as the card's first figure: minutes a day, or minutes to try Uzyra once. */
+function callTime(p: FullPlan): { value: string; label: string } {
+  const minutes = Math.round((p.free_talk_seconds ?? 0) / 60);
+  if (p.free_talk_period === "daily")
+    return { value: `${minutes} min`, label: "of calls every day" };
+  if (p.free_talk_period === "lifetime")
+    return { value: `${minutes} min`, label: "of calls to try Uzyra" };
+  return { value: `${minutes} min`, label: "of calls a month" };
+}
 
-/** Everything a paid plan gives, under the cards. Keep every line true for Uzyra. */
+/** The most call time in a month, for the table: a day's minutes × 30. */
+function callsAMonth(p: FullPlan): string {
+  const minutes = Math.round((p.free_talk_seconds ?? 0) / 60);
+  if (p.free_talk_period === "daily") return `${(minutes * 30).toLocaleString("en-US")} min`;
+  if (p.free_talk_period === "lifetime") return `${minutes} min once`;
+  return `${minutes.toLocaleString("en-US")} min`;
+}
+
+/** Groq requests a month, as the card's second figure. */
+function groqRequests(p: FullPlan): string {
+  const cap = p.max_groq_requests;
+  return cap === null || cap === undefined ? "Unlimited" : cap.toLocaleString("en-US");
+}
+
+/** What every plan includes; plans differ only in call time and Groq requests. */
+const INCLUDED = [
+  "Free conversation with Uzyra",
+  "Path lessons by voice",
+  "Book study with Uzyra",
+  "Path exercises",
+];
+
+/** The comparison table: every value comes from the plan in the admin. */
+const COMPARE: {
+  title: string;
+  rows: { label: string; value: (p: FullPlan) => string | true }[];
+}[] = [
+  {
+    title: "Calls with Uzyra",
+    rows: [
+      {
+        label: "Every day",
+        value: (p) => (p.free_talk_period === "daily" ? callTime(p).value : "—"),
+      },
+      { label: "In a month, at most", value: callsAMonth },
+      { label: "Free conversation", value: () => true },
+      { label: "Path lessons by voice", value: () => true },
+      { label: "Book study with Uzyra", value: () => true },
+    ],
+  },
+  {
+    title: "Groq AI requests",
+    rows: [
+      { label: "Requests a month", value: groqRequests },
+      { label: "Explain a line or translate a page", value: () => true },
+      { label: "Exercise checks and word games", value: () => true },
+    ],
+  },
+];
+
+/** The services, under the table. Keep every line true for Uzyra. */
 const SERVICES: { icon: LucideIcon; title: string; text: string }[] = [
   {
     icon: Phone,
-    title: "Voice calls with Uzyra",
-    text: "Talk freely in Jordanian Arabic and the language you learn. 30 minutes every day.",
+    title: "Free conversation",
+    text: "Talk with Uzyra about anything, in Jordanian Arabic and the language you learn. She answers out loud and corrects you kindly.",
   },
   {
     icon: GraduationCap,
-    title: "Path lessons",
-    text: "Lessons made from real books, level by level, explained by Uzyra out loud.",
+    title: "Path lessons by voice",
+    text: "Lessons made from real books, level by level. Uzyra opens each one and teaches it out loud.",
   },
   {
     icon: BookOpen,
     title: "Book study",
-    text: "Read a guide with Uzyra beside it: ask about a line, translate a page, hear it explained.",
+    text: "Read a guide with Uzyra beside it. Select a line to have it explained, translated or broken down.",
   },
   {
     icon: ListChecks,
     title: "Path exercises",
     text: "Questions and film clips between lessons, with sounds, a score and another try.",
   },
+];
+
+/** How the two allowances are counted, in plain words. */
+const COUNTING: { icon: LucideIcon; title: string; text: string; examples: string[] }[] = [
   {
-    icon: CircleHelp,
-    title: "Lecture questions",
-    text: "Turn a lecture PDF into exam-style questions with short explanations.",
+    icon: Phone,
+    title: "Call minutes",
+    text: "A call counts from the moment it starts until it ends, the same in free conversation, path lessons and book study. Your minutes come back whole every day at midnight (Amman time); minutes you don't use are not carried over.",
+    examples: [
+      "A 10-minute lesson uses 10 minutes",
+      "One call lasts up to an hour",
+      "The free plan has 10 minutes, once",
+    ],
   },
   {
-    icon: FileText,
-    title: "PDF summaries",
-    text: "Short summaries of your lecture files, ready to revise from.",
-  },
-  {
-    icon: Layers,
-    title: "All-in-One",
-    text: "Every question type from one lecture, in one place.",
-  },
-  {
-    icon: Gamepad2,
-    title: "Flashcards and word games",
-    text: "Make cards, review them, and practise words with Wordcraft and the memory game.",
-  },
-  {
-    icon: Languages,
-    title: "German tools",
-    text: "Labs for words, listening and speaking.",
-  },
-  {
-    icon: Calendar,
-    title: "To-do and calendar",
-    text: "Plan your week and your exam dates.",
-  },
-  {
-    icon: Users,
-    title: "Classrooms",
-    text: "Create classrooms or join one and study with your group.",
+    icon: Sparkles,
+    title: "Groq AI requests",
+    text: "Every written answer from Uzyra's AI, which runs on Groq, is one request. Voice calls never use requests. Requests come back on the 1st of every month (Amman time).",
+    examples: [
+      "Explaining or translating a line in a book",
+      "Checking an exercise or making practice cards",
+      "A word game round or a whiteboard step",
+    ],
   },
 ];
 
@@ -167,7 +200,15 @@ const QUESTIONS: { q: string; a: string; packs?: boolean }[] = [
   },
   {
     q: "How does the daily call time work?",
-    a: "Uzyra gives you 30 minutes of calls every day. Free conversation, path lessons and book study all use the same time, counted from when a call starts until it ends. It comes back whole every day at midnight (Amman time); minutes you don't use are not carried over.",
+    a: "Each plan has its own minutes a day. Free conversation, path lessons and book study all use the same time, counted from when a call starts until it ends. It comes back whole every day at midnight (Amman time); minutes you don't use are not carried over.",
+  },
+  {
+    q: "What is a Groq request?",
+    a: "One written answer from Uzyra's AI: explaining or translating a line in a book, checking an exercise, a word game round, a whiteboard step. Voice calls are counted in minutes, never in requests. Requests come back on the 1st of every month.",
+  },
+  {
+    q: "Can I move to a bigger plan?",
+    a: "Yes, any time. The bigger plan's minutes and requests start right away.",
   },
   {
     q: "Can I cancel any time?",
@@ -395,7 +436,9 @@ function PricingPage() {
       : []),
     ...(hasPacks ? [{ k: "once" as const, label: "Pay once" }] : []),
   ];
-  const columns = { gridTemplateColumns: `repeat(${Math.max(live.length, 1)}, minmax(0, 1fr))` };
+  const tableColumns = {
+    gridTemplateColumns: `minmax(0, 1.3fr) repeat(${Math.max(live.length, 1)}, minmax(0, 1fr))`,
+  };
 
   return (
     <div
@@ -406,9 +449,15 @@ function PricingPage() {
 
       <main className="mx-auto max-w-[1194px] px-4 pb-28 pt-28 sm:px-6 md:pt-[136px]">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <h1 className="text-[36px] font-[450] leading-[1.06] tracking-[-0.035em] md:text-[46px]">
-            Plans and pricing
-          </h1>
+          <div>
+            <h1 className="text-[36px] font-[450] leading-[1.06] tracking-[-0.035em] md:text-[46px]">
+              Plans and pricing
+            </h1>
+            <p className="mt-3 max-w-xl text-[14.5px] leading-[1.5] text-white/45">
+              Every plan has every service. You pick how many minutes of calls a day and how many
+              Groq AI requests a month. Paid monthly; cancel any time.
+            </p>
+          </div>
           {switchOptions.length > 1 && (
             <div
               role="radiogroup"
@@ -444,11 +493,11 @@ function PricingPage() {
         )}
 
         {isLoading && (
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {[0, 1, 2].map((i) => (
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            {[0, 1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="h-[555px] animate-pulse rounded-[24px] bg-[var(--pro-card)]"
+                className="h-[520px] animate-pulse rounded-[24px] bg-[var(--pro-card)]"
               />
             ))}
           </div>
@@ -475,7 +524,7 @@ function PricingPage() {
         )}
 
         {!isLoading && live.length > 0 && (
-          <div className="mt-10 grid gap-4 max-md:!grid-cols-1" style={columns}>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {live.map((p) => {
               const priceCents = priceOf(p);
               const isMine = mine?.plan?.slug === p.slug;
@@ -485,14 +534,13 @@ function PricingPage() {
                 lifetime || yearly || !liveOffer
                   ? 0
                   : discountPercent(p.compare_cents, p.price_cents);
-              const lines = [
-                conversationAllowance(p),
-                ...(p.perks && p.perks.length > 0 ? p.perks : cardLines(p)).slice(0, 7),
-              ];
+              const calls = callTime(p);
               return (
                 <article
                   key={p.slug}
-                  className={`relative flex min-h-[555px] flex-col overflow-hidden rounded-[24px] p-9 bg-[var(--pro-card)]`}
+                  className={`relative flex flex-col overflow-hidden rounded-[24px] p-7 bg-[var(--pro-card)] ${
+                    best ? "ring-1 ring-white/25" : ""
+                  }`}
                 >
                   <OfferRibbon
                     label={p.ribbon_label}
@@ -514,8 +562,8 @@ function PricingPage() {
                     ) : null}
                   </div>
 
-                  <div className="mt-5 flex flex-wrap items-baseline gap-x-1.5">
-                    <span className="text-[44px] font-[450] leading-[1.5] tracking-[-0.04em]">
+                  <div className="mt-4 flex flex-wrap items-baseline gap-x-1.5">
+                    <span className="text-[40px] font-[450] leading-[1.4] tracking-[-0.04em]">
                       {money(priceCents, p.currency)}
                     </span>
                     <span className="text-[15px] leading-[1.5] text-white/40">
@@ -534,12 +582,37 @@ function PricingPage() {
                     )}
                   </div>
 
-                  <p className="mt-2 min-h-[22px] text-[14.5px] leading-[1.5] text-white/45">
+                  <p className="mt-1 min-h-[44px] text-[14px] leading-[1.5] text-white/45">
                     {p.tagline}
                   </p>
 
-                  <ul className="mb-9 mt-9 grid gap-2.5">
-                    {lines.map((text) => (
+                  <dl className="mt-6 grid gap-2">
+                    <div className="rounded-[16px] bg-white/[0.06] px-4 py-3">
+                      <dt className="sr-only">Calls</dt>
+                      <dd>
+                        <span className="block text-[22px] font-[450] leading-[1.3] tabular-nums tracking-[-0.02em]">
+                          {calls.value}
+                        </span>
+                        <span className="text-[13px] leading-[1.4] text-white/55">
+                          {calls.label}
+                        </span>
+                      </dd>
+                    </div>
+                    <div className="rounded-[16px] bg-white/[0.06] px-4 py-3">
+                      <dt className="sr-only">Groq AI requests</dt>
+                      <dd>
+                        <span className="block text-[22px] font-[450] leading-[1.3] tabular-nums tracking-[-0.02em]">
+                          {groqRequests(p)}
+                        </span>
+                        <span className="text-[13px] leading-[1.4] text-white/55">
+                          Groq AI requests a month
+                        </span>
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <ul className="mb-8 mt-6 grid gap-2.5">
+                    {INCLUDED.map((text) => (
                       <li
                         key={text}
                         className="flex items-start gap-3 text-[14px] leading-[1.5] text-white/85"
@@ -583,29 +656,121 @@ function PricingPage() {
         )}
 
         {!isLoading && live.length > 0 && (
-          <section aria-labelledby="services-title" className="mt-16 md:mt-20">
-            <h2
-              id="services-title"
-              className="text-[28px] font-[450] leading-[1.06] tracking-[-0.035em] md:text-[34px]"
-            >
-              Everything in Uzyra
-            </h2>
-            <p className="mt-3 max-w-xl text-[14.5px] leading-[1.5] text-white/45">
-              One plan, every tool. The free plan has a taste of each.
-            </p>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {SERVICES.map(({ icon: Icon, title, text }) => (
-                <li key={title} className="rounded-[24px] bg-[var(--pro-card)] p-7">
-                  <Icon size={20} strokeWidth={1.75} className="text-white/70" aria-hidden />
-                  <h3 className="mt-4 text-[17px] font-medium leading-[1.4] tracking-[-0.01em]">
-                    {title}
-                  </h3>
-                  <p className="mt-1.5 text-[14px] leading-[1.55] text-white/55">{text}</p>
-                </li>
+          <section aria-label="Compare plans" className="mt-16 overflow-x-auto md:mt-20">
+            <div className="min-w-[760px]">
+              <div className="grid" style={tableColumns}>
+                <span />
+                {live.map((p) => (
+                  <span
+                    key={p.slug}
+                    className="text-center font-mono text-[11px] uppercase leading-[16.5px] tracking-[0.14em] text-white/40"
+                  >
+                    {p.name}
+                  </span>
+                ))}
+              </div>
+              {COMPARE.map((group) => (
+                <div key={group.title} className="mt-[52px]">
+                  <h2 className="mb-6 text-[28px] font-[450] leading-[1.06] tracking-[-0.035em] md:text-[34px]">
+                    {group.title}
+                  </h2>
+                  {group.rows.map((row) => (
+                    <div
+                      key={row.label}
+                      className="grid border-t border-white/[0.08]"
+                      style={tableColumns}
+                    >
+                      <span className="flex h-[50px] items-center pe-4 text-[14px] text-white/85">
+                        {row.label}
+                      </span>
+                      {live.map((p) => {
+                        const v = row.value(p);
+                        return (
+                          <span
+                            key={p.slug}
+                            className={`flex h-[50px] items-center justify-center text-[13.5px] tabular-nums text-white/85 ${
+                              p.highlight
+                                ? "bg-[color-mix(in_oklab,var(--pro-ink)_6%,transparent)]"
+                                : "bg-[color-mix(in_oklab,var(--pro-ink)_3%,transparent)]"
+                            }`}
+                          >
+                            {v === true ? (
+                              <Check size={15} strokeWidth={1.75} aria-label="Included" />
+                            ) : (
+                              v
+                            )}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
         )}
+
+        <section aria-labelledby="counting-title" className="mt-16 md:mt-20">
+          <h2
+            id="counting-title"
+            className="text-[28px] font-[450] leading-[1.06] tracking-[-0.035em] md:text-[34px]"
+          >
+            How we count
+          </h2>
+          <p className="mt-3 max-w-xl text-[14.5px] leading-[1.5] text-white/45">
+            Two allowances, nothing else: minutes for calls, requests for written answers.
+          </p>
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            {COUNTING.map(({ icon: Icon, title, text, examples }) => (
+              <article key={title} className="rounded-[24px] bg-[var(--pro-card)] p-7 md:p-9">
+                <Icon size={20} strokeWidth={1.75} className="text-white/70" aria-hidden />
+                <h3 className="mt-4 text-[20px] font-[450] leading-[1.3] tracking-[-0.02em]">
+                  {title}
+                </h3>
+                <p className="mt-2 text-[14px] leading-[1.6] text-white/60">{text}</p>
+                <ul className="mt-5 grid gap-2 border-t border-white/[0.08] pt-5">
+                  {examples.map((line) => (
+                    <li
+                      key={line}
+                      className="flex items-start gap-3 text-[13.5px] leading-[1.5] text-white/80"
+                    >
+                      <Check
+                        size={14}
+                        strokeWidth={1.75}
+                        className="mt-[3px] shrink-0 text-white/60"
+                        aria-hidden
+                      />
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section aria-labelledby="services-title" className="mt-16 md:mt-20">
+          <h2
+            id="services-title"
+            className="text-[28px] font-[450] leading-[1.06] tracking-[-0.035em] md:text-[34px]"
+          >
+            What you can do with Uzyra
+          </h2>
+          <p className="mt-3 max-w-xl text-[14.5px] leading-[1.5] text-white/45">
+            Every plan has all of it. Bigger plans give more minutes and requests.
+          </p>
+          <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {SERVICES.map(({ icon: Icon, title, text }) => (
+              <li key={title} className="rounded-[24px] bg-[var(--pro-card)] p-7">
+                <Icon size={20} strokeWidth={1.75} className="text-white/70" aria-hidden />
+                <h3 className="mt-4 text-[17px] font-medium leading-[1.4] tracking-[-0.01em]">
+                  {title}
+                </h3>
+                <p className="mt-1.5 text-[14px] leading-[1.55] text-white/55">{text}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         <section className="mt-20 grid gap-8 md:mt-[100px] md:grid-cols-[minmax(0,0.56fr)_minmax(0,1fr)]">
           <div>
@@ -687,28 +852,4 @@ function PricingPage() {
       </main>
     </div>
   );
-}
-
-/** The card's short list when the admin wrote no perks: the plan's allowances. */
-function cardLines(p: FullPlan): string[] {
-  return [
-    { on: p.max_flashcards !== 0, text: cap(p.max_flashcards, "flashcards") },
-    { on: p.max_summaries !== 0, text: cap(p.max_summaries, "PDF summaries") },
-    {
-      on: p.feature_lecture_qgen !== false && p.max_ai_questions !== 0,
-      text: cap(p.max_ai_questions, "lecture questions"),
-    },
-    {
-      on: p.feature_all_in_one !== false && p.max_all_in_one_lectures !== 0,
-      text: cap(p.max_all_in_one_lectures, "All-in-One lectures"),
-    },
-    {
-      on: p.feature_archive_qgen !== false && p.max_archive_questions !== 0,
-      text: cap(p.max_archive_questions, "archive questions"),
-    },
-    { on: p.max_todo_tasks !== 0, text: cap(p.max_todo_tasks, "to-do tasks") },
-    { on: p.max_groups !== 0, text: cap(p.max_groups, "classrooms you create") },
-  ]
-    .filter((l) => l.on)
-    .map((l) => l.text);
 }

@@ -36,6 +36,13 @@ const PracticeInput = z.object({
 });
 
 type Failure = { ok: false; code: string; message: string; retryAfter?: number };
+
+/** This month's Groq requests are used up: the practice window says so, with no retry. */
+async function groqUsedUp(context: { supabase: any }): Promise<Failure | null> {
+  const { takeGroqRequest, GROQ_REQUESTS_USED_TEXT } = await import("@/lib/groq-requests.server");
+  if (await takeGroqRequest(context.supabase)) return null;
+  return { ok: false, code: "groq_requests_used", message: GROQ_REQUESTS_USED_TEXT };
+}
 export type CardsResult = { ok: true; cards: StudyCard[] } | Failure;
 export type McqResult = { ok: true; questions: StudyMcq[] } | Failure;
 
@@ -87,6 +94,8 @@ export const studyMakeCards = createServerFn({ method: "POST" })
       channel: "text",
     });
     if ("result" in outcome) return outcome.result as Failure;
+    const usedUp = await groqUsedUp(context);
+    if (usedUp) return usedUp;
     const { quote, context: lessonContext } = outcome.resolved;
     const style = data.style;
     const limit = maxCards(quote, style);
@@ -116,6 +125,8 @@ export const studyMakeMcq = createServerFn({ method: "POST" })
       channel: "text",
     });
     if ("result" in outcome) return outcome.result as Failure;
+    const usedUp = await groqUsedUp(context);
+    if (usedUp) return usedUp;
     const { quote, context: lessonContext } = outcome.resolved;
     const count = mcqCount(quote);
     const asked = await askModel(

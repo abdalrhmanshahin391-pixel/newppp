@@ -14,6 +14,9 @@ on:
         "voice-agent/**",
         "supabase/**free*",
         "supabase/**voice*",
+        "supabase/**groq*",
+        "supabase/**ladder*",
+        "src/lib/groq-requests*",
         "scripts/test-free-talk-db.mjs",
         ".github/workflows/free-talk-check.yml",
       ]

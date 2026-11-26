@@ -568,6 +568,9 @@ function AdminPlansPage() {
                       <label>Voice call hours
                         <input className={input} type="number" min="0" max="1000" step="any" value={(plan.free_talk_seconds ?? 0)/3600} onChange={(e) => patch({free_talk_seconds:Math.floor(Number(e.target.value)*3600)})}/>
                       </label>
+                      <label>Groq requests a month
+                        <input className={input} type="number" min="0" step="1" placeholder="No cap" value={plan.max_groq_requests ?? ""} onChange={(e) => patch({max_groq_requests:e.target.value === "" ? null : Math.max(0, Math.floor(Number(e.target.value) || 0))})} />
+                      </label>
                       <label>Time allowance renews
                         <select className={input} value={plan.free_talk_period ?? "monthly"} onChange={(e) => patch({free_talk_period:e.target.value as "monthly"|"lifetime"|"daily"})}><option value="daily">Every day (midnight, Amman)</option><option value="monthly">Monthly (UTC)</option><option value="lifetime">One allowance per account</option></select>
                       </label><p className="text-sm text-gray-600 sm:col-span-2">Zero turns voice calls off. Free conversation, path lessons and book study all use this time. Only administrator accounts have unlimited time.</p>

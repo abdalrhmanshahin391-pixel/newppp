@@ -286,6 +286,8 @@ export function practiceFailureView(
     return { message: PRACTICE_FAILURE_TEXT.no_key, retry: false, alternative: null };
   // No cards from this part (a rule or explanation without examples): questions still work.
   if (code === "no_cards") return { message: NO_CARDS_TEXT, retry: false, alternative: "make_mcq" };
+  // This month's Groq requests are used up: trying again cannot help until the month turns.
+  if (code === "groq_requests_used") return { message, retry: false, alternative: null };
   return { message, retry: true, alternative: null };
 }
 

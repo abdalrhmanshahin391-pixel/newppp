@@ -220,6 +220,9 @@ export const studyExplainText = createServerFn({ method: "POST" })
     const { resolveRitaV3Key } = await import("@/lib/rita-v3.server");
     const key = await resolveRitaV3Key("groq", "GROQ_API_KEY");
     if (!key) return { ok: false, code: "failed", message: "يوزرا مش متاحة هلأ. جرّب كمان شوي." };
+    const { takeGroqRequest, GROQ_REQUESTS_USED_TEXT } = await import("@/lib/groq-requests.server");
+    if (!(await takeGroqRequest(context.supabase)))
+      return { ok: false, code: "failed", message: GROQ_REQUESTS_USED_TEXT };
     try {
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -334,6 +337,9 @@ export const studyExplainReplyText = createServerFn({ method: "POST" })
     const { resolveRitaV3Key } = await import("@/lib/rita-v3.server");
     const key = await resolveRitaV3Key("groq", "GROQ_API_KEY");
     if (!key) return { ok: false, code: "failed", message: "يوزرا مش متاحة هلأ. جرّب كمان شوي." };
+    const { takeGroqRequest, GROQ_REQUESTS_USED_TEXT } = await import("@/lib/groq-requests.server");
+    if (!(await takeGroqRequest(context.supabase)))
+      return { ok: false, code: "failed", message: GROQ_REQUESTS_USED_TEXT };
     try {
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",

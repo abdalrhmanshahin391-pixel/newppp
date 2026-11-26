@@ -203,6 +203,30 @@ try {
   await expect(
     `select bool_and(not has_function_privilege('authenticated',oid,'EXECUTE') and has_function_privilege('service_role',oid,'EXECUTE')) from pg_proc where pronamespace='public'::regnamespace and proname like 'free_talk_%'`,
   );
+  // Groq requests a month (20261126190000_groq_request_quota.sql).
+  const groq = await readFile(
+    new URL("../supabase/migrations/20261126190000_groq_request_quota.sql", import.meta.url),
+    "utf8",
+  );
+  await db.exec(groq);
+  await db.exec(groq);
+  await exec("update public.plans set max_groq_requests=2 where slug='starter'");
+  await exec(`insert into auth.users values('${id(90)}',now())`);
+  await expect(`select (public.groq_request_take_for('${id(90)}')->>'used')::int`, 1);
+  await expect(`select (public.groq_request_take_for('${id(90)}')->>'used')::int`, 2);
+  await denied(`select public.groq_request_take_for('${id(90)}')`, "groq_requests_used");
+  // Last month's requests do not count this month.
+  await exec(`update public.groq_request_usage set period='2000-01' where user_id='${id(90)}'`);
+  await expect(`select (public.groq_request_take_for('${id(90)}')->>'used')::int`, 1);
+  // A paid plan with no payment evidence gets the free cap.
+  await exec(
+    `insert into public.user_plans values('${id(70)}','ultimate') on conflict(user_id) do update set plan_slug='ultimate'`,
+  );
+  await exec("update public.plans set max_groq_requests=1000 where slug='ultimate'");
+  await expect(`select (public.groq_request_take_for('${id(70)}')->>'limit')::int`, 2);
+  await expect(
+    `select not has_function_privilege('authenticated','public.groq_request_take_for(uuid)','EXECUTE') and has_function_privilege('authenticated','public.groq_request_take()','EXECUTE') and not has_table_privilege('authenticated','public.groq_request_usage','SELECT')`,
+  );
   console.log(
     `PASS: ${checks} database quota checks (${isolatedUrl ? "PostgreSQL with independent concurrent connections" : "isolated PGlite; parallel requests serialized by runtime"}).`,
   );
