@@ -541,6 +541,21 @@ it fades in once loaded; a photo that fails shows the initial. A chevron sits be
 short 22px line separates it from the tools before it.
 
 
+## Checkout (`/checkout`): two halves, look only
+
+Since Nov 2026 the checkout is drawn in two halves like a hosted card checkout, in the home page's
+language (`src/components/checkout/`). Left, near-black (#141414): the home hero's field of marks in
+white (`useDotField(..., "#ffffff")`), «← [cube] Uzyra», «Subscribe to <plan>», the price at 52px
+weight 450, a pill switcher between the paid plans (white pill for the chosen one), the plan line with
+two figures (call minutes a day, Groq requests a month), Subtotal, «Add promotion code», Tax and
+Total due today. Right, white: Apple Pay and PayPal buttons, OR, Contact information (the account's
+email), Payment method (Card / Apple Pay / PayPal with joined fields and black radios), Phone number
+with the country's flag, and a black «Pay and subscribe» pill. Google Sans Flex throughout. On phones
+the summary sits on top and folds behind «Details».
+It is look only: nothing is charged or sent; the buttons and codes say payments open soon. When
+Paddle is linked, the card fields move into Paddle's frame (Paddle does not take card numbers from
+our own fields). The Paddle-linked page is in git history at 770d665.
+
 ## Learn (`/learn`) and Games (`/games`): the home page's frame
 
 Since Nov 2026 both pages open with `PageHero` (`src/components/page-hero/`): the home hero's field
