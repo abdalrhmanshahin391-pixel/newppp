@@ -83,6 +83,7 @@ function blank(sort: number, n: number): AdminPlan {
     cta_label: null,
     free_talk_seconds: 0,
     free_talk_period: "monthly",
+    max_groq_requests: 0,
     max_flashcards: 100,
     max_ai_questions: 50,
     max_summaries: 5,
