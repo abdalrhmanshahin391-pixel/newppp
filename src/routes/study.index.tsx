@@ -1,29 +1,30 @@
 import { LanguageGate } from "@/components/language/LanguageGate";
 import { LanguageScopeNote } from "@/components/language/LanguageScopeNote";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  BookOpen,
   FolderPlus,
   GraduationCap,
   Layers,
   ListPlus,
   Pencil,
+  Plus,
   PlusSquare,
-  Shuffle,
+  SlidersHorizontal,
   Sparkles,
   Trash2,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { StudyLayout, type RailItem } from "@/components/study/StudyLayout";
+import { SiteHeader } from "@/components/SiteHeader";
+import { type RailItem } from "@/components/study/StudyLayout";
 import { PickerBoard, type PickerGroup } from "@/components/common/PickerBoard";
-import { LaunchPanel } from "@/components/common/LaunchPanel";
 import { type SessionScope } from "@/components/study/SessionStarter";
 import { CardImportSheet } from "@/components/study/CardImportSheet";
 import { useCardFlags } from "@/lib/use-card-flags";
-import { DailyPanel } from "@/components/study/DailyPanel";
-import { ReviewSession } from "@/components/study/ReviewSession";
-import { useReviewQueue } from "@/lib/use-review";
+import { RitaCube } from "@/components/rita-study/RitaCube";
+import "@/components/study/flashcards-page.css";
 import { FlashCardOverlay } from "@/components/study/FlashCardOverlay";
 import { StudyPlayer } from "@/components/study/StudyPlayer";
 import { Flag } from "lucide-react";
@@ -99,11 +100,7 @@ function StudyBoard() {
   const flags = useCardFlags();
   const [cardsMode, setCardsMode] = useState<"create" | "gallery">("create");
   const [playing, setPlaying] = useState<{ title: string; cards: FlashCardItem[] } | null>(null);
-  const review = useReviewQueue();
-  const [reviewItems, setReviewItems] = useState<ReturnType<typeof useReviewQueue>["queue"] | null>(
-    null,
-  );
-  const [reviewTitle, setReviewTitle] = useState("Smart review");
+  const levels = useRef({ input: 0, output: 0 });
 
   /** Everything that is ticked, resolved to real names. */
   const picked = useMemo(() => {
@@ -190,29 +187,7 @@ function StudyBoard() {
 
   const sessionCards = sessionScope === "flagged" ? flaggedCards : scope.cards;
 
-  /** The spaced-repetition queue narrowed to whatever is ticked. */
-  const scopedQueue = useMemo(() => {
-    if (picked.length === 0) return review.queue;
-    const keys = new Set(picked.map((p) => `${p.subject}||${p.sub}`));
-    return review.queue.filter((i) => keys.has(`${i.row.subject}||${i.row.sub_subject}`));
-  }, [review.queue, picked]);
-
-  const startSmartReview = () => {
-    if (scopedQueue.length === 0) {
-      toast.info(
-        picked.length === 0
-          ? "Nothing is due right now — add cards or come back tomorrow"
-          : "Nothing due in what you ticked — try Study mode to practise it now",
-      );
-      return;
-    }
-    setReviewTitle(
-      picked.length === 0 ? "Smart review · everything" : `Smart review · ${scope.label}`,
-    );
-    setReviewItems(scopedQueue);
-  };
-
-  const startSession = (shuffle: boolean) => {
+  const startSession = () => {
     if (sessionCards.length === 0) {
       toast.info(
         sessionScope === "flagged"
@@ -221,10 +196,9 @@ function StudyBoard() {
       );
       return;
     }
-    const list = shuffle ? [...sessionCards].sort(() => Math.random() - 0.5) : sessionCards;
     setPlaying({
       title: sessionScope === "flagged" ? `${scope.label} · flagged` : scope.label,
-      cards: list,
+      cards: sessionCards,
     });
   };
 
@@ -344,134 +318,84 @@ function StudyBoard() {
     },
   ];
 
+  const rail = mode === "study" ? studyRail : editRail;
+  const count = sessionCards.length;
+  const cardsWord = `card${count === 1 ? "" : "s"}`;
+
   return (
-    <StudyLayout
-      framed={false}
-      rail={mode === "study" ? studyRail : editRail}
-      activeMode={mode}
-      onModeChange={(m) => setMode(m)}
-    >
-      <div className="grid min-h-[62vh] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="min-w-0">
-          <LanguageScopeNote />
-          <PickerBoard
-            framed={false}
-            accent={ACCENT}
-            groups={groups}
-            selected={selected}
-            onToggle={toggle}
-            unitNoun="cards"
-            searchPlaceholder="Search subjects and sub-subjects…"
-            addLabel="Cards"
-            onNewGroup={() => setAddOpen(true)}
-            onNewItem={(g) => openAddSub(Number(g.id))}
-            onAddContent={(item) => {
-              if (!selected.includes(item.id)) setSelected((s) => [...s, item.id]);
-              setCardsMode("create");
-              setTimeout(() => setCardsOpen(true), 0);
-            }}
-            onDeleteGroup={(g) => {
-              setRemoveTarget({ si: Number(g.id) });
-              setRemoveOpen(true);
-            }}
-            onDeleteItem={(item) => {
-              setRemoveTarget(parseKey(item.id));
-              setRemoveOpen(true);
-            }}
-            emptyHint="No subjects yet — tap New to make your first one."
-          />
+    <div className="fc-page min-h-screen bg-white text-[var(--pp-ink)]">
+      <SiteHeader />
+      <div className="fc-wrap">
+        <header className="fc-head">
+          <p className="fc-kicker">
+            <span className="fc-cube" aria-hidden="true">
+              <RitaCube levelsRef={levels} mode="idle" label="" />
+            </span>
+            Flashcards
+          </p>
+          <h1 className="fc-title">Your flashcards.</h1>
+          <p className="fc-lead">Make subjects, add cards, then study them.</p>
+        </header>
+
+        <div className="fc-toolbar">
+          <div className="fc-switch" role="group" aria-label="Mode">
+            {(
+              [
+                ["study", "Study", BookOpen],
+                ["edit", "Edit", SlidersHorizontal],
+              ] as const
+            ).map(([key, label, Icon]) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={mode === key}
+                onClick={() => setMode(key)}
+              >
+                <Icon size={16} aria-hidden="true" /> {label}
+              </button>
+            ))}
+          </div>
+          <div className="fc-tools">
+            {rail.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                className={`fc-tool${item.label === "Remove" ? " is-danger" : ""}`}
+                aria-disabled={item.disabled || undefined}
+                title={item.hint}
+                onClick={item.onClick}
+              >
+                <span aria-hidden="true">{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="grid gap-4 lg:sticky lg:top-4 lg:self-start">
-          <div>
-            <LaunchPanel
-              accent={ACCENT}
-              stat={sessionCards.length}
-              statLabel={`card${sessionCards.length === 1 ? "" : "s"} ready`}
-              rows={[
-                { label: "From", value: scope.label },
-                { label: "Due now", value: String(scopedQueue.length) },
-                { label: "Flagged", value: String(flaggedCards.length) },
-              ]}
-              actions={
-                scopedQueue.length > 0 || sessionCards.length === 0
-                  ? [
-                      {
-                        label: `Smart review${scopedQueue.length ? ` · ${scopedQueue.length}` : ""}`,
-                        icon: <Sparkles size={16} />,
-                        hint: scopedQueue.length
-                          ? "The cards due now, on schedule"
-                          : "Nothing due right now",
-                        onClick: startSmartReview,
-                        disabled: review.isLoading,
-                        tone: "solid",
-                      },
-                      {
-                        label: "Study mode",
-                        icon: <GraduationCap size={16} />,
-                        onClick: () => startSession(false),
-                        disabled: sessionCards.length === 0,
-                        tone: "outline",
-                        compact: true,
-                      },
-                      {
-                        label: "Shuffle",
-                        icon: <Shuffle size={15} />,
-                        onClick: () => startSession(true),
-                        disabled: sessionCards.length === 0,
-                        tone: "outline",
-                        compact: true,
-                      },
-                    ]
-                  : [
-                      // Nothing is due: the useful main action is a free run through the cards.
-                      {
-                        label: "Study mode",
-                        icon: <GraduationCap size={16} />,
-                        hint: `Go through all ${sessionCards.length} card${sessionCards.length === 1 ? "" : "s"}`,
-                        onClick: () => startSession(false),
-                        tone: "solid",
-                      },
-                      {
-                        label: "Shuffle",
-                        icon: <Shuffle size={15} />,
-                        onClick: () => startSession(true),
-                        tone: "outline",
-                        compact: true,
-                      },
-                      {
-                        label: "Smart review",
-                        icon: <Sparkles size={16} />,
-                        onClick: startSmartReview,
-                        disabled: review.isLoading,
-                        tone: "outline",
-                        compact: true,
-                      },
-                    ]
-              }
-              footnote={
-                picked.length === 0
-                  ? "Using your whole board. Tick sub-subjects to use only those. Study mode is free practice."
-                  : "Smart review shows only what is due in what you ticked. Study mode is free practice."
-              }
-            >
-              <div
-                className="flex gap-1.5 rounded-xl bg-white p-1"
-                role="group"
-                aria-label="Which cards"
-              >
+        <div className="fc-grid">
+          <aside className="fc-side">
+            <section className="fc-session" aria-label="Start a session">
+              <p className="fc-eyebrow">Start a session</p>
+              <p className="fc-stat">
+                <b>{count}</b> {cardsWord} ready
+              </p>
+              <dl className="fc-rows">
+                <div>
+                  <dt>From</dt>
+                  <dd>{scope.label}</dd>
+                </div>
+                <div>
+                  <dt>Flagged</dt>
+                  <dd>{flaggedCards.length}</dd>
+                </div>
+              </dl>
+              <div className="fc-scope" role="group" aria-label="Which cards">
                 {(["all", "flagged"] as const).map((key) => (
                   <button
                     key={key}
                     type="button"
                     aria-pressed={sessionScope === key}
                     onClick={() => setSessionScope(key)}
-                    className="inline-flex h-10 flex-1 touch-manipulation items-center justify-center gap-1.5 rounded-lg border-[1.5px] text-[13.5px] font-semibold transition-colors duration-150"
-                    style={
-                      sessionScope === key
-                        ? { background: "#e7eefd", color: "#121117", borderColor: "#121117" }
-                        : { color: "#4b4a5c", borderColor: "transparent" }
-                    }
                   >
                     {key === "all" ? (
                       picked.length > 0 ? (
@@ -481,44 +405,91 @@ function StudyBoard() {
                       )
                     ) : (
                       <>
-                        <Flag size={13} /> Flagged
+                        <Flag size={14} aria-hidden="true" /> Flagged
                         {flaggedCards.length > 0 ? ` ${flaggedCards.length}` : ""}
                       </>
                     )}
                   </button>
                 ))}
               </div>
-
+              <button
+                type="button"
+                className="fc-go"
+                aria-disabled={count === 0 || undefined}
+                onClick={startSession}
+              >
+                <GraduationCap size={18} aria-hidden="true" />
+                {count > 0 ? `Study · ${count} ${cardsWord}` : "Study"}
+              </button>
               {picked.length > 0 && (
-                <div className="mt-3">
-                  <div className="flex max-h-32 flex-wrap gap-1.5 overflow-y-auto">
+                <div className="fc-picked">
+                  <div className="fc-picked-list">
                     {picked.map((p) => (
                       <button
                         key={p.key}
+                        type="button"
                         onClick={() => toggle(p.key)}
-                        className="inline-flex min-h-11 touch-manipulation items-center gap-1.5 rounded-lg border-[1.5px] border-[#121117] bg-white px-3 text-[13.5px] font-semibold text-[#121117] hover:bg-[#e7eefd]"
+                        aria-label={`Untick ${p.sub}`}
                       >
-                        {p.sub} <X size={12} />
+                        {p.sub} <X size={12} aria-hidden="true" />
                       </button>
                     ))}
                   </div>
-                  <button
-                    onClick={() => setSelected([])}
-                    className="mt-1 min-h-11 text-[14px] font-semibold text-[#4b4a5c] hover:text-[#b3213f]"
-                  >
+                  <button type="button" className="fc-clear" onClick={() => setSelected([])}>
                     Clear selection
                   </button>
                 </div>
               )}
-            </LaunchPanel>
-          </div>
+              <p className="fc-note">
+                {picked.length === 0
+                  ? "Using your whole board. Tick sub-subjects to study only those."
+                  : "Studying only what you ticked."}
+              </p>
+            </section>
+          </aside>
 
-          <div>
-            <DailyPanel
-              onReview={(items) => setReviewItems(items)}
-              showReview={picked.length > 0}
-            />
-          </div>
+          <main className="fc-main">
+            <LanguageScopeNote />
+            {board.subjects.length === 0 ? (
+              <div className="fc-empty">
+                <span className="fc-empty-cube" aria-hidden="true">
+                  <RitaCube levelsRef={levels} mode="idle" label="" />
+                </span>
+                <h2>No subjects yet</h2>
+                <p>A subject holds sub-subjects, and each sub-subject holds its own cards.</p>
+                <button type="button" className="fc-go" onClick={() => setAddOpen(true)}>
+                  <Plus size={18} aria-hidden="true" /> Make your first subject
+                </button>
+              </div>
+            ) : (
+              <PickerBoard
+                framed={false}
+                accent={ACCENT}
+                groups={groups}
+                selected={selected}
+                onToggle={toggle}
+                unitNoun="cards"
+                searchPlaceholder="Search subjects and sub-subjects…"
+                addLabel="Cards"
+                onNewGroup={() => setAddOpen(true)}
+                onNewItem={(g) => openAddSub(Number(g.id))}
+                onAddContent={(item) => {
+                  if (!selected.includes(item.id)) setSelected((s) => [...s, item.id]);
+                  setCardsMode("create");
+                  setTimeout(() => setCardsOpen(true), 0);
+                }}
+                onDeleteGroup={(g) => {
+                  setRemoveTarget({ si: Number(g.id) });
+                  setRemoveOpen(true);
+                }}
+                onDeleteItem={(item) => {
+                  setRemoveTarget(parseKey(item.id));
+                  setRemoveOpen(true);
+                }}
+                emptyHint="No subjects yet — tap New to make your first one."
+              />
+            )}
+          </main>
         </div>
       </div>
 
@@ -539,17 +510,6 @@ function StudyBoard() {
         onClose={() => setImportOpen(false)}
         onAdd={(drafts) => {
           for (const d of drafts) flash.addCard(d.front, d.back);
-        }}
-      />
-
-      <ReviewSession
-        open={!!reviewItems}
-        title={reviewTitle}
-        items={reviewItems ?? []}
-
-        onClose={() => {
-          setReviewItems(null);
-          review.refresh();
         }}
       />
 
@@ -593,6 +553,6 @@ function StudyBoard() {
           toast.success("Removed");
         }}
       />
-    </StudyLayout>
+    </div>
   );
 }
