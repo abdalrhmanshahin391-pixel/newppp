@@ -1,3 +1,4 @@
+import { SignInRedirect } from "@/components/study/RequireSignIn";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -250,16 +251,7 @@ function LectureLabPage() {
     return (
       <div className="min-h-screen" style={{ background: CREAM, color: INK }}>
         <SiteHeader />
-        <main className="mx-auto max-w-xl px-4 py-24 text-center">
-          <h1 className="font-display text-3xl font-black">Lecture Lab</h1>
-          <p className="mt-3 text-[15px] text-[#4b4a5c]">Sign in to build quizzes from your lectures.</p>
-          <Link
-            to="/login"
-            className="mt-6 inline-flex rounded-full bg-[#121117] px-6 py-3 text-[14px] font-extrabold text-white"
-          >
-            Sign in
-          </Link>
-        </main>
+        <SignInRedirect />
       </div>
     );
   }

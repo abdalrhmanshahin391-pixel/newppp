@@ -58,7 +58,6 @@ function SpeakPage() {
       description="One phrase at a time: listen to a native voice, record yourself, and see exactly which words were off."
       signedIn={!!user}
       loading={loading}
-      signedOutHint="to build your speaking subjects."
       selected={selected}
       onSelect={setSelected}
       panel={

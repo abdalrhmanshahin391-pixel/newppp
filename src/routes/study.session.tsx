@@ -5,7 +5,7 @@ import { useDbLanguage, useLanguageResolved } from "@/lib/language-scope";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, RotateCcw, Sparkles } from "lucide-react";
 import { StudyLayout, StudyHeading } from "@/components/study/StudyLayout";
-import { SignedOutPanel } from "@/components/study/SignedOutPanel";
+import { SignInRedirect } from "@/components/study/RequireSignIn";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchCards, fetchSubjects, markReviewed } from "@/lib/flashcards";
 import { gradeCard } from "@/lib/review.functions";
@@ -198,7 +198,7 @@ function SessionPage() {
   return (
     <StudyLayout rail={rail}>
       {!user ? (
-        <SignedOutPanel what="your flashcards" />
+        <SignInRedirect />
       ) : (
         <div className="mx-auto max-w-3xl">
           <StudyHeading eyebrow={names || "SM-2 Session"} title={done ? "Session finished" : "SM-2 Study session"} />

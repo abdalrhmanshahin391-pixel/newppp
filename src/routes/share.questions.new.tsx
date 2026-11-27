@@ -1,3 +1,4 @@
+import { SignInRedirect } from "@/components/study/RequireSignIn";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -282,20 +283,7 @@ function NewQuestionSetPage() {
     return (
       <div className="min-h-screen bg-white text-[#121117]">
         <SiteHeader />
-        <main className="mx-auto max-w-3xl px-4 py-20 text-center">
-          <span className="text-5xl">❓</span>
-          <h1 className="mt-4 font-display text-3xl font-black">Sign in to share questions</h1>
-          <p className="mx-auto mt-2 max-w-md text-sm text-[#54546a]">
-            You need to be signed in to your Uzyra account to publish question sets.
-          </p>
-          <button
-            type="button"
-            onClick={() => openWelcome("/share/questions/new")}
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-6 py-3 text-sm font-black text-white shadow-sm transition hover:brightness-105"
-          >
-            Sign in
-          </button>
-        </main>
+        <SignInRedirect />
       </div>
     );
   }

@@ -139,7 +139,15 @@ and summaries (a shared link asks the visitor to sign in first).
   page, then sign-in or sign-up) and brings them back to the same address, search included, after
   signing in. There is no separate sign-in screen for these pages; the visitor sees a quiet
   placeholder for a moment, and the redirect replaces the page in history so Back does not loop.
-  (The older study surfaces keep their own `RequireAuth` panel.)
+  `RequireAuth` is the same gate under its old name, and a page that used to draw its own «Sign in
+  to …» card renders `SignInRedirect` there instead. The site has one sign-in: the pages at
+  `/start`, `/login`, `/register`, `/forgot-password` and `/reset-password`, never a second panel,
+  card or window.
+- **No profile step:** there is no «let's set up your profile» page after sign-up. A new account
+  gets its name and username when it is made (the `handle_new_user` trigger); the rest is in
+  Settings. Old links to `/welcome` go straight on to where they were heading.
+- **No install prompt:** the account menu has no «Install app» item and no «Keep Uzyra one tap
+  away» sheet.
 - **Check:** `scripts/check-guest-routes.mjs` fails CI when a route is neither on its short public
   list nor guarded.
 
@@ -586,6 +594,61 @@ practise.»; /games: «Play with words.». The section rail and the section titl
 (rail 15px/500 with the black pill for the open section; titles 30px/450). The game cards keep their
 own colours, drawings and buttons. Reduced motion: the field is drawn once and the words show at once.
 
+## Classrooms and study groups (`/spaces`, `/spaces/:id`, `/join/:code`)
+
+Since Nov 2026 these pages speak the home page's language (`src/components/spaces/`, styles in
+`spaces.css`, all under `.sp`): Google Sans Flex at 450–500, ink and white with neutral greys,
+round pills, 20–32px corners. A space's own colour (apricot, sky, lilac, mint, coral, lime) appears
+only in its **mark**, a rounded square with its emoji and a faint dot texture (like an app icon),
+and as a soft light behind its header. No coloured banners.
+
+- **`/spaces`:** `PageHero` (the home field of marks, «[cube] Classrooms & groups», «Study
+  together, in one room.») with the **join bar** under it: one wide pill that takes a bare code or
+  a whole invite link, a Paste button and a black «Join» pill, and says plainly what is wrong.
+  Then two **start cards** side by side: an ink one for a classroom (a room of seats with a board;
+  hovering fills the seats, one seat is Uzyra's blue) and a grey one for a study group (three
+  people and a dashed «+» that make room on hover); the whole card is the button. «Your spaces»
+  has a filter pill (All / Classrooms / Study groups, with counts), a search above six spaces, and
+  white cards: mark, kind and role chips, the name (two lines at most), the line about it, then
+  members and decks with an arrow. Loading shows grey bones; nothing yet shows Uzyra's cube with
+  both ways to start. «How it works» is three numbered steps on a hairline, not cards.
+- **Making one:** a window (a sheet on phones): the kind as a two-way switch, a live preview of
+  the card, then name (counter), a line about it (optional), sixteen emojis and six colours. The
+  name field gets the focus.
+- **A space (`/spaces/:id`):** an ink header card with the field of marks in white and the light
+  in its colour: «← All spaces», the mark (84px), kind and your role, the name (up to 60px, 450),
+  the line about it, then the first faces with «+N», the member count, and three numbers (decks,
+  question sets, announcements). Actions on the right: white «Invite» (copies the link, or opens
+  the phone's share sheet), «Add deck», and «⋯» (copy link, settings, leave; on phones «Add deck»
+  moves into it). Under it the sections as pills that stay under the top bar (black for the open
+  one, counts in mono): Overview, Decks, Question sets, Members, Announcements, Chat (when on) and
+  Settings (owners). `?tab=` opens a section directly; opening one while scrolled brings it up.
+- **Overview:** the pinned announcement, the latest four decks, recent activity (decks added,
+  posts, people joining, when it was made; built from what the page already loads), and beside
+  them the invite panel for owners (the code large in mono, Copy link, Share, «Make a new link»
+  with a warning), the people with their roles, and «About» (kind, started, chat, who adds decks,
+  who posts).
+- **Decks:** folders as a title on a hairline (rename and delete for owners, «Add here»), decks as
+  white tiles (cover mark, title, cards and who added it, rating, black «Study»; «⋯» to move it to
+  a folder or take it out). An empty folder is a dashed «Add the first deck» target. New folders
+  are made in a row on the page, not in a browser prompt.
+- **Members:** grouped (Owner, Co-owners, Members), a search above eight people, one row each
+  (picture, @name, name, when they joined, role chip, «⋯» for owners: co-owner / member / remove).
+- **Announcements:** a writing box with your picture (Ctrl/⌘ + Enter posts), then posts on
+  hairlines, pinned first on a light grey band; owners pin and delete.
+- **Chat:** a messenger: yours on the right in ink, others grey on the left with picture and name,
+  grouped by day and by person (five minutes), times under each group; it follows new messages at
+  the bottom and offers «N new messages» when you scrolled up. Enter sends, Shift + Enter breaks.
+- **Settings:** name and look (the same fields as making one, Save and Undo), the invite panel,
+  how it works (a switch for chat, two-way choices for who adds decks and who posts), and delete
+  (owner) or leave (co-owner). Members leave from «⋯» in the header.
+- **`/join/:code`:** one ink card centred: the mark, «You're invited to a classroom», the name, the
+  line about it, the member count and a white «Join classroom» pill; a broken link says so and
+  points back. Signed out, every one of these pages goes to the site's sign-in and comes back.
+- **Rules:** every destructive action asks first in the page's own window (never the browser's);
+  every failure is said in a toast and keeps what was typed; red only for removing and deleting;
+  windows are one level; reduced motion stills the hovers, the bones and the field.
+
 ## Pricing (`/pricing`): four monthly plans
 
 Since Nov 2026 the page sells four monthly plans beside the free one: Uzyra $23, Plus $30, Pro $40
@@ -596,14 +659,30 @@ day (`free_talk_seconds`, `free_talk_period = 'daily'`) and Groq AI requests a m
 - A one-line lead under «Plans and pricing»; the billing switch only when there is a choice.
 - Five cards, one row on wide screens (2 or 3 columns below that, one on phones). Each card: name,
   price, tagline, then two figure tiles (white 6% fill, 16px corners, 22px figure and a 13px
-  label): «30 min / of calls every day» and «1,000 / Groq AI requests a month», then the four
+  label): «30 min / of calls every day» and «1,000 / Emith requests a month», then the four
   services with checks and the pill. The popular plan has a thin white ring.
-- «Compare plans»: Calls with Uzyra (every day, in a month at most, the three call kinds) and Groq
-  AI requests (a month, what they cover), scrolling sideways on phones.
+- «Compare plans»: Calls with Uzyra (every day, in a month at most, the three call kinds) and Emith
+  requests (a month, what they cover), scrolling sideways on phones.
 - «How we count»: two cards, call minutes and Groq requests, each with three examples.
 - «What you can do with Uzyra»: four tiles (free conversation, path lessons by voice, book study,
   path exercises), then the questions.
 The older 3-month plans are hidden, not deleted.
+
+Public pages never name the AI providers behind Uzyra (Groq, Soniox, Gemini and the like): the
+request allowance is called **Emith requests** («Emith requests a month», «What is an Emith
+request?»), after Uzyra's study partner. The provider names stay in code and the admin only.
+
+**Books Reader** (`books_reader`, $17 a month, 10,000 Groq requests, no calls) is not a fifth card
+in that row: it sits under the row in a wide card of its own (`BooksReaderCard`,
+`books-reader-card.css`). It keeps the page's language (24px corners, 16px figure tiles, the pill,
+the grotesk) but inverts it, so readers see at once that it is a different thing: an ink card
+(`--pro-ink`) with the home page's faint dot field fading in from the end side and a soft blue
+light, a «For readers» pill, the name, two tiles at white 8% («10,000 / Emith requests a month»,
+«Reading / no voice calls in this plan»), four reading services in two columns. The side holds a
+small shelf of nine books in white and greys with one in the brand blue (it lifts on hover; the
+last book leans), the price and a white pill. Under 860px everything stacks. It has its own column
+in «Compare plans» (dashes for the call rows). At checkout it shows its price and requests, and
+«Books» in place of call minutes; the plan switcher there lists only the plans with calls.
 
 The blog, home and inner pages share the blog header's white surface, 60px height, 16px wordmark
 and 14px grotesk type. Library, Pricing and Resources share the same spacing and text weight
@@ -1618,6 +1697,29 @@ tile holding the level in the display face, its name («مبتدئ · A1»…), 
 «قريباً» is a dashed white card. «انتقل إلى A2» and «متابعة» are black pills with an arrow; the
 bottom bar is white glass. Admins' delete is a small red-outline pill under the stop; + is an ink
 dashed circle. Reduced motion: the cube, halo and bars stand still.
+
+**Units (Nov 2026), after the big learning apps.** A level is shown one short unit at a time
+(`src/lib/rita-path-units.ts`): an admin's «بداية وحدة» stop starts and names a unit (title = its goal,
+e.g. «تعريف عن حالك»; learners see it as the unit's heading, never as a stop); without such stops a
+level is cut every 5 lessons, quizzes, films and files staying with the lesson before them.
+- Learners never see how many lessons a level holds: the hero names the unit («A1 · الوحدة 2» over
+  its title, or «الوحدة 2») with «خلّصت 2 من 5 بهالوحدة» and a 6px ink bar, then «كمّل · <lesson>» and
+  an outline «دليل الوحدة» pill. The level card (on unit 1 only) says what the level lets you do
+  («بآخرها بتعرّف عن حالك…») instead of a count; the finish says «خط النهاية».
+- Under the hero, 44px round pills for the units already open (done = black with ✓, the current
+  one ringed) and one dashed 🔒 pill after them; never the closed ones beyond.
+- The road ends at the next unit: a dashed card (three blurred stops, a black lock on its edge,
+  «الوحدة 3», its name or «الوحدة الجاية», «بتنفتح لما تخلّص هالوحدة»), or, once this unit is done, a
+  black card with a white «افتح الوحدة 3» pill. Moving between units: the road rises in (or drops in,
+  going back) in 600ms, the hero text fades up.
+- A unit finished since the last visit gets its moment once (per device, language and level): a
+  white card over a blurred page, Uzyra's cube hopping, a burst of ink and blue sparks, «خلّصت
+  الوحدة!» (or «خلّصت A1!»), and «افتح الوحدة n» / «انتقل إلى A2» with «بعدين».
+- «دليل الوحدة»: a side sheet (from the bottom on phones) with the level's goal and each lesson of the
+  unit with its own goals (from the lesson's objectives), done ones ticked.
+- «ارجع لدرسك»: a black pill above the bottom bar while the current lesson is out of sight.
+- «ترتيب حر» shows every unit under a heading card; editing shows the whole level with the unit
+  stops as black-ringed stops (tap to rename). Reduced motion: no road, hero, burst or sheet motion.
 
 ## Floating window (study page, `FloatingWindow`)
 

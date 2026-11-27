@@ -1,3 +1,4 @@
+import { BooksReaderCard } from "@/components/pricing/BooksReaderCard";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -94,21 +95,28 @@ function callTime(p: FullPlan): { value: string; label: string } {
   return { value: `${minutes} min`, label: "of calls a month" };
 }
 
+/** The plan has voice calls with Uzyra (Books Reader has none). */
+const talks = (p: FullPlan) => (p.free_talk_seconds ?? 0) > 0;
+
+/** Books Reader: a plan for readers, shown in a card of its own under the Uzyra plans. */
+const BOOKS_READER = "books_reader";
+
 /** The most call time in a month, for the table: a day's minutes × 30. */
 function callsAMonth(p: FullPlan): string {
+  if (!talks(p)) return "—";
   const minutes = Math.round((p.free_talk_seconds ?? 0) / 60);
   if (p.free_talk_period === "daily") return `${(minutes * 30).toLocaleString("en-US")} min`;
   if (p.free_talk_period === "lifetime") return `${minutes} min once`;
   return `${minutes.toLocaleString("en-US")} min`;
 }
 
-/** Groq requests a month, as the card's second figure. */
+/** Emith requests a month (counted by `max_groq_requests`), as the card's second figure. */
 function groqRequests(p: FullPlan): string {
   const cap = p.max_groq_requests;
   return cap === null || cap === undefined ? "Unlimited" : cap.toLocaleString("en-US");
 }
 
-/** What every plan includes; plans differ only in call time and Groq requests. */
+/** What every plan includes; plans differ only in call time and Emith requests. */
 const INCLUDED = [
   "Free conversation with Uzyra",
   "Path lessons by voice",
@@ -126,19 +134,20 @@ const COMPARE: {
     rows: [
       {
         label: "Every day",
-        value: (p) => (p.free_talk_period === "daily" ? callTime(p).value : "—"),
+        value: (p) => (p.free_talk_period === "daily" && talks(p) ? callTime(p).value : "—"),
       },
       { label: "In a month, at most", value: callsAMonth },
-      { label: "Free conversation", value: () => true },
-      { label: "Path lessons by voice", value: () => true },
-      { label: "Book study with Uzyra", value: () => true },
+      { label: "Free conversation", value: (p) => (talks(p) ? true : "—") },
+      { label: "Path lessons by voice", value: (p) => (talks(p) ? true : "—") },
+      { label: "Book study with Uzyra by voice", value: (p) => (talks(p) ? true : "—") },
     ],
   },
   {
-    title: "Groq AI requests",
+    title: "Emith requests",
     rows: [
       { label: "Requests a month", value: groqRequests },
       { label: "Explain a line or translate a page", value: () => true },
+      { label: "Book reading: meaning, pronunciation, flashcards", value: () => true },
       { label: "Exercise checks and word games", value: () => true },
     ],
   },
@@ -182,8 +191,8 @@ const COUNTING: { icon: LucideIcon; title: string; text: string; examples: strin
   },
   {
     icon: Sparkles,
-    title: "Groq AI requests",
-    text: "Every written answer from Uzyra's AI, which runs on Groq, is one request. Voice calls never use requests. Requests come back on the 1st of every month (Amman time).",
+    title: "Emith requests",
+    text: "Every written answer from Emith, Uzyra's study partner, is one request. Voice calls never use requests. Requests come back on the 1st of every month (Amman time).",
     examples: [
       "Explaining or translating a line in a book",
       "Checking an exercise or making practice cards",
@@ -203,8 +212,8 @@ const QUESTIONS: { q: string; a: string; packs?: boolean }[] = [
     a: "Each plan has its own minutes a day. Free conversation, path lessons and book study all use the same time, counted from when a call starts until it ends. It comes back whole every day at midnight (Amman time); minutes you don't use are not carried over.",
   },
   {
-    q: "What is a Groq request?",
-    a: "One written answer from Uzyra's AI: explaining or translating a line in a book, checking an exercise, a word game round, a whiteboard step. Voice calls are counted in minutes, never in requests. Requests come back on the 1st of every month.",
+    q: "What is an Emith request?",
+    a: "One written answer from Emith: explaining or translating a line in a book, checking an exercise, a word game round, a whiteboard step. Voice calls are counted in minutes, never in requests. Requests come back on the 1st of every month.",
   },
   {
     q: "Can I move to a bigger plan?",
@@ -391,6 +400,9 @@ function PricingPage() {
     (p) => (p.billing_kind ?? "monthly") === (lifetime ? "lifetime" : "monthly"),
   );
   const hasPacks = packsVisible && published.some((p) => p.billing_kind === "lifetime");
+  // The Uzyra plans in a row; Books Reader in its own card under them.
+  const ladder = live.filter((p) => p.slug !== BOOKS_READER);
+  const reader = live.find((p) => p.slug === BOOKS_READER);
 
   // The biggest yearly saving against a year of the plan's own periods, for the switch's note.
   const recurring = published.filter((p) => (p.billing_kind ?? "monthly") === "monthly");
@@ -455,7 +467,7 @@ function PricingPage() {
             </h1>
             <p className="mt-3 max-w-xl text-[14.5px] leading-[1.5] text-white/45">
               Every plan has every service. You pick how many minutes of calls a day and how many
-              Groq AI requests a month. Paid monthly; cancel any time.
+              Emith requests a month. Paid monthly; cancel any time.
             </p>
           </div>
           {switchOptions.length > 1 && (
@@ -525,7 +537,7 @@ function PricingPage() {
 
         {!isLoading && live.length > 0 && (
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {live.map((p) => {
+            {ladder.map((p) => {
               const priceCents = priceOf(p);
               const isMine = mine?.plan?.slug === p.slug;
               const best = !!p.highlight;
@@ -599,13 +611,13 @@ function PricingPage() {
                       </dd>
                     </div>
                     <div className="rounded-[16px] bg-white/[0.06] px-4 py-3">
-                      <dt className="sr-only">Groq AI requests</dt>
+                      <dt className="sr-only">Emith requests</dt>
                       <dd>
                         <span className="block text-[22px] font-[450] leading-[1.3] tabular-nums tracking-[-0.02em]">
                           {groqRequests(p)}
                         </span>
                         <span className="text-[13px] leading-[1.4] text-white/55">
-                          Groq AI requests a month
+                          Emith requests a month
                         </span>
                       </dd>
                     </div>
@@ -653,6 +665,19 @@ function PricingPage() {
               );
             })}
           </div>
+        )}
+
+        {!isLoading && reader && !lifetime && (
+          <BooksReaderCard
+            name={reader.name}
+            price={money(reader.price_cents ?? 0, reader.currency)}
+            per={periodSuffix(reader)}
+            requests={groqRequests(reader)}
+            tagline={reader.tagline}
+            mine={mine?.plan?.slug === reader.slug}
+            cta={reader.cta_label || `Get ${reader.name}`}
+            onBuy={() => buy(reader)}
+          />
         )}
 
         {!isLoading && live.length > 0 && (

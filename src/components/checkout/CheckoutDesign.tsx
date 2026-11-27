@@ -76,15 +76,18 @@ export function CheckoutDesign({ slug }: { slug: string }) {
     staleTime: 60_000,
     queryFn: async () => (await fetchPlans()) as unknown as Rung[],
   });
-  // The paid plans with daily call time, cheapest first: Uzyra, Plus, Pro, Max.
+  // The paid plans with daily call time, cheapest first: Uzyra, Plus, Pro, Max. Books Reader (no
+  // calls) can be bought here too, but is not one of the switcher's steps.
+  const paid = useMemo(() => (data ?? []).filter((p) => p.price_cents > 0), [data]);
   const rungs = useMemo(
     () =>
-      (data ?? [])
-        .filter((p) => p.price_cents > 0 && p.free_talk_period === "daily")
+      paid
+        .filter((p) => p.free_talk_period === "daily" && p.free_talk_seconds > 0)
         .sort((a, b) => a.price_cents - b.price_cents),
-    [data],
+    [paid],
   );
-  const plan = rungs.find((p) => p.slug === slug) ?? rungs[0];
+  const plan = paid.find((p) => p.slug === slug) ?? rungs[0];
+  const onLadder = Boolean(plan && rungs.some((p) => p.slug === plan.slug));
   const currency = plan?.currency ?? "USD";
   const price = plan ? money(plan.price_cents, currency) : "";
 
@@ -175,7 +178,7 @@ export function CheckoutDesign({ slug }: { slug: string }) {
               </div>
 
               <div className="co-more">
-                {rungs.length > 1 && (
+                {onLadder && rungs.length > 1 && (
                   <div className="co-rungs" role="radiogroup" aria-label="Plan">
                     {rungs.map((r) => (
                       <button
@@ -202,13 +205,20 @@ export function CheckoutDesign({ slug }: { slug: string }) {
                     <span className="co-item-price">{price}</span>
                   </div>
                   <div className="co-figs">
-                    <div>
-                      <b>{minutes} min</b>
-                      <span>of calls every day</span>
-                    </div>
+                    {minutes > 0 ? (
+                      <div>
+                        <b>{minutes} min</b>
+                        <span>of calls every day</span>
+                      </div>
+                    ) : (
+                      <div>
+                        <b>Books</b>
+                        <span>read with Uzyra beside you</span>
+                      </div>
+                    )}
                     <div>
                       <b>{groq}</b>
-                      <span>Groq AI requests a month</span>
+                      <span>Emith requests a month</span>
                     </div>
                   </div>
                 </div>

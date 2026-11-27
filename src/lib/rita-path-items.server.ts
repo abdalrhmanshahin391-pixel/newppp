@@ -48,7 +48,10 @@ export async function pathItemsFor(
     }
     return rows.map((row) => ({
       id: row.id,
-      kind: row.kind === "resources" || row.kind === "finish" ? row.kind : "exercises",
+      kind:
+        row.kind === "resources" || row.kind === "finish" || row.kind === "unit"
+          ? row.kind
+          : "exercises",
       title: row.title,
       path_order: Number(row.path_order),
       map_level: row.map_level ?? undefined,
@@ -110,7 +113,7 @@ export async function adminPathNodes(
     }[]
   ).map((row) => ({
     ...row,
-    kind: (row.kind === "resources" || row.kind === "finish"
+    kind: (row.kind === "resources" || row.kind === "finish" || row.kind === "unit"
       ? row.kind
       : "exercises") as PathItem["kind"],
     resource_count: 0,

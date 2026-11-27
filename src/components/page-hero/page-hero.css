@@ -61,6 +61,10 @@
   font-size: 19px;
   line-height: 1.55;
 }
+.ph-extra {
+  margin-top: 30px;
+  text-align: start;
+}
 .ph-sr {
   position: absolute;
   width: 1px;

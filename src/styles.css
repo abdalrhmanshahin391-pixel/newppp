@@ -1957,12 +1957,6 @@ hairline borders and generous radii.
   background-clip: padding-box;
 }
 
-.rita-install-banner,
-.rita-install-sheet {
-  border-color: color-mix(in oklab, var(--pro-ink) 10%, transparent);
-  background: color-mix(in oklab, var(--pro-card) 94%, white);
-  box-shadow: 0 20px 55px -30px color-mix(in oklab, var(--pro-ink) 48%, transparent);
-}
 @media (prefers-reduced-motion: reduce) {
   .rita-reveal {
     opacity: 1;

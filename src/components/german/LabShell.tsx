@@ -1,3 +1,4 @@
+import { SignInRedirect } from "@/components/study/RequireSignIn";
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { X } from "lucide-react";
@@ -14,7 +15,6 @@ type Props = {
   description: ReactNode;
   signedIn: boolean;
   loading: boolean;
-  signedOutHint: string;
   selected: string[];
   onSelect: (ids: string[]) => void;
   /** Modes, toggles and the start button — rendered inside the sticky panel. */
@@ -34,7 +34,6 @@ export function LabShell({
   description,
   signedIn,
   loading,
-  signedOutHint,
   selected,
   onSelect,
   panel,
@@ -72,12 +71,7 @@ export function LabShell({
         />
 
         {loading ? null : !signedIn ? (
-          <p className="mt-8 rounded-2xl bg-white p-6 text-[15px] font-bold">
-            <Link to="/login" className="underline">
-              Sign in
-            </Link>{" "}
-            {signedOutHint}
-          </p>
+          <SignInRedirect />
         ) : (
           <div className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <DeBoard mode={mode} accent={accent} selected={selected} onSelect={onSelect} />

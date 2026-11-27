@@ -22,7 +22,6 @@ import { LearningLanguageScope } from "@/components/language/LearningLanguageSco
 import { SiteFooter } from "@/components/SiteFooter";
 import { LanguageSplash } from "@/components/language/LanguageSplash";
 import { useAuth } from "@/hooks/useAuth";
-import { needsOnboarding } from "@/lib/onboarding";
 import { setAuthNavigator } from "@/lib/auth-dialog";
 import { DeferredOverlays } from "@/components/DeferredOverlays";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
@@ -396,7 +395,6 @@ function RootComponent() {
           <PresenceTracker />
           <LearningLanguageScope />
           <DeviceTracker />
-          <OnboardingGate />
           <AnnouncementBar />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <NavigationBar />
@@ -434,44 +432,6 @@ function NavigationBar() {
 
 function PresenceTracker() {
   usePresence();
-  return null;
-}
-
-/**
- * Accounts can land without a username, real
- * name or phone. Send them through /welcome once, from anywhere in the app,
- * so the state can never linger half-finished.
- */
-const ONBOARDING_EXEMPT = [
-  "/welcome",
-  "/auth",
-  "/start",
-  "/login",
-  "/register",
-  "/forgot-password",
-  "/reset-password",
-  "/locked",
-];
-
-function OnboardingGate() {
-  const { user, profile, loading } = useAuth();
-  const location = useRouterState({ select: (s) => s.location });
-  const router = useRouter();
-
-  useEffect(() => {
-    if (loading || !user) return;
-    const pathname = location.pathname;
-    if (ONBOARDING_EXEMPT.some((p) => pathname === p || pathname.startsWith(p + "/"))) return;
-    const provider =
-      (user.app_metadata?.provider as string | undefined) ??
-      (user.identities?.[0]?.provider as string | undefined);
-    if (!needsOnboarding(user.id, profile, provider)) return;
-    const next = pathname + (location.searchStr ?? "");
-    const q = next && next !== "/" ? `?next=${encodeURIComponent(next)}` : "";
-    // Navigate in-app: a hard reload here threw away the freshly booted app.
-    void router.navigate({ href: `/welcome${q}`, replace: true });
-  }, [loading, user, profile, location, router]);
-
   return null;
 }
 

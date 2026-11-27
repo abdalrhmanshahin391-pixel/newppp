@@ -58,7 +58,6 @@ function ArticleLab() {
       }
       signedIn={!!user}
       loading={loading}
-      signedOutHint="to build your German subjects."
       selected={selected}
       onSelect={setSelected}
       panel={

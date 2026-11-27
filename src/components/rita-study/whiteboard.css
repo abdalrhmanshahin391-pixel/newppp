@@ -354,7 +354,12 @@
   width: 17px;
   flex: none;
 }
-.wb-status button {
+.wb-status button,
+.wb-status a {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  text-decoration: none;
   min-height: 34px;
   padding: 0 14px;
   border: 0;
