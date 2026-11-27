@@ -1,135 +1,112 @@
-/* Books Reader on the pricing page: a wide card drawn like a book on the dark page — warm paper, a
-   dark spine with the name set vertically, faint ruled lines, a stack of covers that fans out on
-   hover, and one big figure. */
+/* Books Reader on the pricing page: the page's card, inverted. Ink surface, the home page's faint
+   dot field fading in from the end side, white figure tiles at 8%, a shelf of nine books in white
+   and grey with one in the brand blue, and a white pill. */
 .br {
-  --br-paper: #f5eedf;
-  --br-ink: #1d1a16;
-  --br-muted: #6b6152;
-  --br-line: rgb(29 26 22 / 0.1);
+  --br-ink: var(--pro-ink, #121117);
+  --br-paper: #ffffff;
+  --br-soft: rgb(255 255 255 / 0.62);
+  --br-blue: var(--rita-green, #2b6df0);
   --br-ease: cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
+  isolation: isolate;
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr);
-  margin-top: 28px;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 40px;
+  margin-top: 16px;
+  padding: 32px 36px;
   overflow: hidden;
-  border-radius: 28px;
-  background: var(--br-paper);
-  color: var(--br-ink);
-  box-shadow:
-    0 1px 0 rgb(255 255 255 / 0.5) inset,
-    0 30px 80px -40px rgb(245 238 223 / 0.35);
-}
-/* The spine */
-.br-spine {
-  position: relative;
-  display: grid;
-  place-items: center;
+  border-radius: 24px;
   background: var(--br-ink);
   color: var(--br-paper);
 }
-.br-spine::before,
-.br-spine::after {
+.br::before {
+  /* the dot field, as on the home page, strongest at the end side */
   content: "";
   position: absolute;
-  inset-inline: 10px;
-  height: 2px;
-  border-radius: 2px;
-  background: rgb(245 238 223 / 0.35);
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(rgb(255 255 255 / 0.16) 1px, transparent 1.4px);
+  background-size: 14px 14px;
+  mask-image: linear-gradient(to left, #000 0%, rgb(0 0 0 / 0.5) 40%, transparent 75%);
 }
-.br-spine::before {
-  top: 22px;
-}
-.br-spine::after {
-  bottom: 22px;
-}
-.br-spine span {
-  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.32em;
-  white-space: nowrap;
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-}
-/* The page */
-.br-body {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 32px;
-  padding: 36px 40px;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent 0 31px,
-    var(--br-line) 31px 32px
-  );
-  background-position: 0 18px;
-}
-.br-body::before {
-  /* the page's fold beside the spine */
+.br::after {
+  /* a soft blue light behind the shelf */
   content: "";
   position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  width: 18px;
-  background: linear-gradient(to right, rgb(29 26 22 / 0.12), transparent);
+  inset-block-start: -30%;
+  inset-inline-end: -10%;
+  z-index: -1;
+  width: 460px;
+  height: 360px;
+  background: radial-gradient(closest-side, rgb(43 109 240 / 0.28), transparent);
   pointer-events: none;
 }
 .br-kicker {
-  display: inline-flex;
-  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin: 0;
-  padding: 5px 12px;
-  border-radius: 999px;
-  background: var(--br-ink);
-  color: var(--br-paper);
-  font-size: 13px;
-  font-weight: 500;
 }
-.br-mine {
-  margin-inline-start: 4px;
-  padding-inline-start: 8px;
-  border-inline-start: 1px solid rgb(245 238 223 / 0.3);
-  color: rgb(245 238 223 / 0.8);
+.br-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.1);
+  color: rgb(255 255 255 / 0.85);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 18.75px;
+}
+.br-pill-mine {
+  background: rgb(43 109 240 / 0.28);
+  color: #fff;
 }
 .br-name {
-  margin: 16px 0 0;
-  font-size: clamp(34px, 4.6vw, 52px);
+  margin: 14px 0 0;
+  font-size: clamp(28px, 3.4vw, 36px);
   font-weight: 450;
-  line-height: 1.05;
+  line-height: 1.1;
   letter-spacing: -0.035em;
 }
 .br-tagline {
-  max-width: 34rem;
-  margin: 10px 0 0;
-  color: var(--br-muted);
-  font-size: 16px;
+  max-width: 32rem;
+  margin: 8px 0 0;
+  color: var(--br-soft);
+  font-size: 14.5px;
   line-height: 1.5;
 }
-.br-figure {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 10px;
+.br-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 480px;
   margin-top: 22px;
 }
-.br-number {
-  font-size: clamp(48px, 7vw, 76px);
+.br-tile {
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.08);
+}
+.br-tile b {
+  display: block;
+  font-size: 22px;
   font-weight: 450;
-  line-height: 1;
-  letter-spacing: -0.045em;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
-.br-unit {
-  color: var(--br-muted);
-  font-size: 15px;
+.br-tile span {
+  color: var(--br-soft);
+  font-size: 13px;
+  line-height: 1.4;
 }
 .br-what {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 24px;
-  margin: 24px 0 0;
+  grid-template-columns: repeat(2, minmax(0, max-content));
+  gap: 10px 28px;
+  margin: 22px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -137,177 +114,167 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: 14.5px;
-  line-height: 1.45;
+  color: rgb(255 255 255 / 0.85);
+  font-size: 14px;
+  line-height: 1.5;
 }
 .br-what svg {
   flex: none;
   margin-top: 3px;
+  color: rgb(255 255 255 / 0.7);
 }
-/* The side: covers, price, button */
+/* The side: shelf, price, pill */
 .br-side {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 14px;
 }
-.br-stack {
-  position: relative;
-  height: 150px;
-  margin-bottom: 8px;
-}
-.br-stack i {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 92px;
+.br-shelf {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 5px;
   height: 128px;
-  border-radius: 6px 12px 12px 6px;
-  box-shadow:
-    inset 6px 0 0 rgb(0 0 0 / 0.18),
-    0 14px 26px -16px rgb(29 26 22 / 0.6);
+  padding-bottom: 2px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.22);
+}
+.br-shelf i {
+  --h: 90px;
+  --w: 18px;
+  --c: rgb(255 255 255 / 0.14);
+  width: var(--w);
+  height: var(--h);
+  border-radius: 3px 3px 1px 1px;
+  background: var(--c);
   transform-origin: 50% 100%;
   transition: transform 520ms var(--br-ease);
 }
-.br-stack i::after {
+.br-shelf i::before {
+  /* two thin bands on each spine, like a printed title */
   content: "";
-  position: absolute;
-  inset: 22px 16px auto 22px;
-  height: 3px;
-  border-radius: 3px;
-  background: rgb(255 255 255 / 0.55);
-  box-shadow:
-    0 9px 0 rgb(255 255 255 / 0.35),
-    0 18px 0 rgb(255 255 255 / 0.25);
+  display: block;
+  margin: 12px 4px 0;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  box-shadow: 0 5px 0 currentColor;
+  color: rgb(0 0 0 / 0.18);
 }
-.br-stack i:nth-child(1) {
-  background: #2f5d50;
-  transform: translateX(-50%) translateX(-58px) rotate(-12deg);
+.br-shelf i:nth-child(1) {
+  --h: 78px;
+  --w: 16px;
+  --c: rgb(255 255 255 / 0.1);
 }
-.br-stack i:nth-child(2) {
-  background: #c8553d;
-  transform: translateX(-50%) translateX(-29px) rotate(-6deg);
+.br-shelf i:nth-child(2) {
+  --h: 98px;
+  --w: 22px;
+  --c: rgb(255 255 255 / 0.22);
 }
-.br-stack i:nth-child(3) {
-  background: #284b8f;
-  transform: translateX(-50%);
+.br-shelf i:nth-child(3) {
+  --h: 86px;
+  --w: 14px;
+  --c: rgb(255 255 255 / 0.14);
 }
-.br-stack i:nth-child(4) {
-  background: #e0a526;
-  transform: translateX(-50%) translateX(29px) rotate(6deg);
+.br-shelf i:nth-child(4) {
+  --h: 108px;
+  --w: 24px;
+  --c: #f4f4f8;
 }
-.br-stack i:nth-child(5) {
-  background: var(--br-ink);
-  transform: translateX(-50%) translateX(58px) rotate(12deg);
+.br-shelf i:nth-child(5) {
+  --h: 116px;
+  --w: 26px;
+  --c: var(--br-blue);
+}
+.br-shelf i:nth-child(6) {
+  --h: 94px;
+  --w: 18px;
+  --c: rgb(255 255 255 / 0.3);
+}
+.br-shelf i:nth-child(7) {
+  --h: 102px;
+  --w: 20px;
+  --c: rgb(255 255 255 / 0.16);
+}
+.br-shelf i:nth-child(8) {
+  --h: 80px;
+  --w: 16px;
+  --c: rgb(255 255 255 / 0.1);
+}
+.br-shelf i:nth-child(9) {
+  /* the last book leans on the others */
+  --h: 96px;
+  --w: 18px;
+  --c: rgb(255 255 255 / 0.2);
+  transform: rotate(14deg);
+  transform-origin: 0 100%;
+}
+.br-shelf i:nth-child(5)::before {
+  color: rgb(255 255 255 / 0.55);
 }
 @media (hover: hover) {
-  .br:hover .br-stack i:nth-child(1) {
-    transform: translateX(-50%) translateX(-84px) rotate(-20deg);
+  .br:hover .br-shelf i:nth-child(5) {
+    transform: translateY(-14px) rotate(-4deg);
   }
-  .br:hover .br-stack i:nth-child(2) {
-    transform: translateX(-50%) translateX(-42px) rotate(-10deg) translateY(-6px);
-  }
-  .br:hover .br-stack i:nth-child(3) {
-    transform: translateX(-50%) translateY(-12px);
-  }
-  .br:hover .br-stack i:nth-child(4) {
-    transform: translateX(-50%) translateX(42px) rotate(10deg) translateY(-6px);
-  }
-  .br:hover .br-stack i:nth-child(5) {
-    transform: translateX(-50%) translateX(84px) rotate(20deg);
+  .br:hover .br-shelf i:nth-child(4) {
+    transform: translateY(-4px);
   }
 }
 .br-price {
   display: flex;
   align-items: baseline;
-  justify-content: center;
   gap: 6px;
-  margin: 0;
+  margin: 4px 0 0;
 }
 .br-price span {
-  font-size: 44px;
+  font-size: 40px;
   font-weight: 450;
-  line-height: 1.1;
+  line-height: 1.4;
   letter-spacing: -0.04em;
 }
 .br-price small {
-  color: var(--br-muted);
+  color: rgb(255 255 255 / 0.45);
   font-size: 15px;
 }
 .br-buy {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  height: 52px;
+  gap: 8px;
+  height: 48px;
   border-radius: 999px;
-  background: var(--br-ink);
-  color: var(--br-paper);
-  font-size: 15px;
+  background: var(--br-paper);
+  color: var(--br-ink);
+  font-size: 14.5px;
   font-weight: 500;
-  transition:
-    transform 140ms ease,
-    background-color 160ms ease;
-}
-.br-buy:hover {
-  background: #000;
+  transition: transform 150ms ease;
 }
 .br-buy:active {
   transform: scale(0.98);
 }
 .br-buy:focus-visible {
-  outline: 2px solid var(--br-paper);
+  outline: 2px solid var(--br-blue);
   outline-offset: 3px;
-  box-shadow: 0 0 0 5px var(--br-ink);
-}
-.br-note {
-  margin: 0;
-  color: var(--br-muted);
-  font-size: 13px;
-  text-align: center;
 }
 
 @media (max-width: 860px) {
   .br {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 44px auto;
-  }
-  .br-spine span {
-    writing-mode: horizontal-tb;
-    transform: none;
-  }
-  .br-spine::before,
-  .br-spine::after {
-    inset-inline: auto;
-    inset-block: 12px;
-    width: 2px;
-    height: auto;
-  }
-  .br-spine::before {
-    top: 12px;
-    left: 22px;
-  }
-  .br-spine::after {
-    bottom: 12px;
-    right: 22px;
-  }
-  .br-body {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
+    gap: 24px;
     padding: 28px 22px;
   }
-  .br-body::before {
-    display: none;
+  .br::before {
+    mask-image: linear-gradient(to bottom, transparent 30%, #000 100%);
   }
   .br-what {
     grid-template-columns: minmax(0, 1fr);
   }
-  .br-stack {
-    height: 136px;
+  .br-shelf {
+    height: 120px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .br-stack i,
+  .br-shelf i,
   .br-buy {
     transition: none;
   }
