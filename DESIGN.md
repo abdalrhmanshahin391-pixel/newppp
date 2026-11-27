@@ -1067,12 +1067,35 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
   layout for a book — the same top bar (back to «المكتبة», the book's name as a 15px line), Uzyra on
   the left and the page on the right with the draggable divider (40/60), two tabs «الكتاب» /
   «يوزرا» on phones, and the floating circle over both.
+  - **Look (Nov 2026, the home page's):** Google Sans Flex (Graphik Arabic for Arabic letters) in
+    the top bar, Uzyra's column and the page bar; black and white with round pills; all of it in
+    `book-reader.css` under `.bkr-shell` / `.uz-rc-book`, so the study page keeps its own.
+    - Top bar 54px: «المكتبة» a soft grey pill, the book's name 15/500, and at its end a small ring
+      with the share read («4%»; the progress line stays the slider).
+    - Uzyra's column: white with the home's field of black marks (`useDotField(..., "rest")`: it
+      wakes under the pointer or a finger and fades a moment after it stops; still with reduced
+      motion), «يوزرا · مساعدة القراءة» in a hairline pill, the cube, «اقرأ، حدّد، واسأل يوزرا.»
+      (26–34px, weight 450, its words come in one after another), the hint, and three numbered
+      steps (01 حدّد النص · 02 اكبس الدائرة · 03 اشرح · معنى ونطق · بطاقات). The cube's spot sits a
+      set distance from the top, so the words under it never move it. After the first question the
+      marks fade out; answers are 15px; the reader's words sit in a soft grey bubble with a black
+      tag pill.
+    - The divider: a hairline with an 8×44px black grip that grows while held (no blue).
+    - The book's side: a light desk (`#f3f3f5`) with the home's marks, still, on a 24px grid; the
+      paper itself is unchanged. Notes over the page are black pills.
+    - The page bar is a white dock floating on the desk: «التالية» a black pill, «السابقة» a soft
+      grey one, the page as a counter, the tools after a hairline. Its words step back a little
+      earlier than the old bar's (minutes left under 800px, «صفحة» under 660px, button words under
+      610px). Narrower than 470px (phones) it takes two rows: the tools on top (40px), turning
+      under them, nearest the thumb.
+    - Phones: «الكتاب | يوزرا» is a switch of two pills, the open one black. The opening screen
+      takes the same look.
   - **The page:** one sheet of paper (4px corners, a hairline ring and a soft deep shadow) on the
     study grey, with 12px around it (8px on phones). By default the page is as wide as its pane
     (scroll down for the rest: a whole page fitted to the height left wide empty margins on a tablet
     and words too small to read); «الصفحة كاملة» shows the whole page instead (remembered per
     browser), and zoom goes up in five steps. A zoomed page scrolls from the side its lines start on.
-  - **Progress:** a 3px accent line under the top bar grows with the page number, from the side
+  - **Progress:** a 3px ink line under the top bar grows with the page number, from the side
     the book starts on.
   - **Turning:** instant. The sheet takes the new page's size at once and slides in 24px (220ms,
     `cubic-bezier(0.2, 0.8, 0.2, 1)`; a 120ms fade with reduced motion). Pages read ahead appear
@@ -1097,7 +1120,7 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     الصفحة أو اكبس على طرفها لتقلب.»
   - **Progress line** fills from the side the book starts on (left for left-to-right books).
   - **Scrubber:** the progress line is also a slider (no new bar). A 28px band around it takes
-    the pointer; pressing thickens it to 6px with a 14px accent knob (white ring), and a card
+    the pointer; pressing thickens it to 6px with a 14px ink knob (white ring), and a card
     follows the pointer under the line: the page's 160px picture shown 120px wide (same sheet
     corners, hairline ring and shadow; its blurred preview until the picture is in) over an ink
     pill «صفحة 412 من 900 · <chapter>» (one line, the chapter cut with «…»). The page is fetched
@@ -1112,7 +1135,7 @@ under its shelf (8 fixed tones in `src/lib/books.ts`). No points, coins, streaks
     sheet from the bottom (16px top corners, the page dimmed 20% behind it). Title «الفهرس», a
     muted line «باقي ≈ n دقايق بالفصل» under it when known, ✕. Each row: the title (its own
     direction, two lines at most), its page in muted tabular figures, 44px tall, sub-entries
-    indented 14px a level (3 at most). The chapter you are in is bold with a 3px accent bar on
+    indented 14px a level (3 at most). The chapter you are in is bold with a 3px ink bar on
     its start side and opens in view, focused. A tap goes there and closes; Escape, ✕ or a tap
     outside close; ↑/↓ move between chapters. Opens in 160ms (opacity, 0.97→1 from the button;
     the sheet rises in 220ms); reduced motion: opacity only.

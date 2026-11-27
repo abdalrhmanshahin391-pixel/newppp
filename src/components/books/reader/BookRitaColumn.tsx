@@ -1,13 +1,17 @@
-// Uzyra's column beside a book: the same look as the study page's (her cube in the middle before
-// the first question, then a quiet conversation), with written answers to what the reader asked
-// from the circle. No call here: Uzyra answers in writing.
-import { useRef } from "react";
+// Uzyra's column beside a book: her cube in the middle before the first question, then a quiet
+// conversation, with written answers to what the reader asked from the circle. No call here: Uzyra
+// answers in writing.
+// The look is the home page's (Nov 2026): white, the home's field of black marks behind the intro
+// (it wakes under the pointer or a finger and rests a moment after), a small «يوزرا · مساعدة
+// القراءة» line, a light headline whose words come in one after another, the hint, and the three
+// steps. The marks fade out once the conversation starts. Styles: `.uz-rc-book` in book-reader.css.
+import { useRef, type CSSProperties } from "react";
 import { Loader2, RotateCcw } from "lucide-react";
 import { ChatText } from "@/components/rita/ChatText";
 import { RitaCube } from "@/components/rita-study/RitaCube";
 import { FlyingCube, StickyScroll } from "@/components/rita-study/RitaColumn";
 import { UzyraMark } from "@/components/brand/UzyraMark";
-import { UzyraWordmark } from "@/components/brand/UzyraWordmark";
+import { useDotField } from "@/components/page-hero/useDotField";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
 
 export type BookAnswer = {
@@ -18,6 +22,9 @@ export type BookAnswer = {
   state: "loading" | "done" | "failed";
   text: string;
 };
+
+const TITLE = "اقرأ، حدّد، واسأل يوزرا.";
+const STEPS = ["حدّد النص", "اكبس الدائرة", "اشرح · معنى ونطق · بطاقات"];
 
 export function BookRitaColumn({
   answers,
@@ -32,15 +39,20 @@ export function BookRitaColumn({
   thinking?: boolean;
 }) {
   const levels = useRef<OrbLevels>({ input: 0, output: 0 });
+  const column = useRef<HTMLElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
   const chatting = answers.length > 0;
   const busy = thinking || answers.some((answer) => answer.state === "loading");
   const last = answers[answers.length - 1];
+  useDotField(column, canvas, "#121117", chatting ? "still" : "rest");
+  const words = TITLE.split(" ");
   return (
     <main
-      className="edith-premium uz-rc text-[var(--pp-ink)]"
+      ref={column}
+      className="edith-premium uz-rc uz-rc-book text-[var(--pp-ink)]"
       data-phase={chatting ? "chat" : "intro"}
-      style={{ fontFamily: "var(--font-grotesk)" }}
     >
+      <canvas ref={canvas} className="uz-rcb-field" aria-hidden="true" />
       <p className="sr-only" role="status" aria-live="polite">
         {thinking ? hint : busy ? "يوزرا بتكتب…" : ""}
       </p>
@@ -91,11 +103,41 @@ export function BookRitaColumn({
         </StickyScroll>
       ) : (
         <div className="uz-rc-hero">
-          <UzyraWordmark size={12} withMark={false} className="uz-rc-brand" />
-          <div className="uz-rc-spot is-hero" data-cube-spot="hero" />
-          <p className="uz-rc-word" dir="auto">
-            {hint}
+          <p className="uz-rcb-kicker">
+            <span className="uz-rcb-dot" aria-hidden="true" />
+            يوزرا · مساعدة القراءة
           </p>
+          <div className="uz-rc-spot is-hero" data-cube-spot="hero" />
+          {thinking ? (
+            <p className="uz-rc-word" dir="auto">
+              {hint}
+            </p>
+          ) : (
+            <>
+              <p className="uz-rcb-title">
+                <span className="sr-only">{TITLE}</span>
+                <span aria-hidden="true">
+                  {words.map((word, i) => (
+                    <span key={i} className="uz-rcb-word" style={{ "--i": i } as CSSProperties}>
+                      {word}
+                      {i < words.length - 1 ? " " : ""}
+                    </span>
+                  ))}
+                </span>
+              </p>
+              <p className="uz-rcb-lead" dir="auto">
+                {hint}
+              </p>
+              <ol className="uz-rcb-steps" aria-label="كيف بتسأل يوزرا">
+                {STEPS.map((step, i) => (
+                  <li key={step}>
+                    <b aria-hidden="true">{String(i + 1).padStart(2, "0")}</b>
+                    {step}
+                  </li>
+                ))}
+              </ol>
+            </>
+          )}
         </div>
       )}
       <div className="uz-rc-dock">

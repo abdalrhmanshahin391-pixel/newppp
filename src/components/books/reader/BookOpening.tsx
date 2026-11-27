@@ -19,7 +19,7 @@ export function BookOpening({ title, status }: { title: string; status: string }
   );
   return (
     <div
-      className="edith-premium flex h-[100dvh] flex-col bg-white text-[var(--pp-ink)]"
+      className="edith-premium bkr-shell flex h-[100dvh] flex-col bg-white text-[var(--pp-ink)]"
       dir="rtl"
       aria-busy="true"
     >
