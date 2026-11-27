@@ -860,3 +860,108 @@ export function ForgotPanel() {
     </form>
   );
 }
+
+/* ── new password, from the reset email ──────────────────────────────────── */
+
+export function ResetPanel({ onDone }: { onDone: () => void }) {
+  const { t } = useAuthCopy();
+  const [ready, setReady] = useState(false);
+  // The first session check is over: only then can "open the link from your email" be true.
+  const [checked, setChecked] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // The recovery link puts a session in place (hash or code exchange).
+  useEffect(() => {
+    let mounted = true;
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted && session) setReady(true);
+    });
+    void supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (mounted && data.session) setReady(true);
+      })
+      .finally(() => {
+        if (mounted) setChecked(true);
+      });
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (password.length < 6) {
+      setError(t.vPassword);
+      return;
+    }
+    if (password !== confirm) {
+      setError(t.pwMismatch);
+      return;
+    }
+    setLoading(true);
+    const { error: err } = await supabase.auth.updateUser({ password });
+    setLoading(false);
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    setDone(true);
+    await supabase.auth.signOut();
+    setTimeout(onDone, 1800);
+  }
+
+  if (done) {
+    return (
+      <Card hint={t.newPwTitle} title={t.pwUpdated} className="ua-sent">
+        <p className="ua-muted">{t.pwUpdatedLine}</p>
+      </Card>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="ua-flow">
+      <Card hint={t.newPwHint} title={t.newPwTitle}>
+        {error && <Err message={error} />}
+        {checked && !ready && (
+          <p className="ua-alert" role="status">
+            {t.pwNoLink}{" "}
+            <Link to="/forgot-password" className="ua-link ua-alert-action">
+              {t.pwNewLink}
+            </Link>
+          </p>
+        )}
+        <div className="ua-stack">
+          <PasswordField
+            label={t.newPassword}
+            value={password}
+            onChange={setPassword}
+            autoComplete="new-password"
+            placeholder={t.placeholderPassword}
+            t={t}
+          />
+          <PasswordField
+            label={t.confirmPassword}
+            value={confirm}
+            onChange={setConfirm}
+            autoComplete="new-password"
+            placeholder="••••••••"
+            t={t}
+          />
+        </div>
+      </Card>
+      <button type="submit" disabled={loading || !ready} className="ua-btn ua-btn--primary">
+        {loading ? t.saving : t.savePassword}
+      </button>
+      <Link to="/login" className="ua-link ua-center">
+        {t.backToSignin}
+      </Link>
+    </form>
+  );
+}

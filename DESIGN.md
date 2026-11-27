@@ -143,6 +143,17 @@ and summaries (a shared link asks the visitor to sign in first).
   to …» card renders `SignInRedirect` there instead. The site has one sign-in: the pages at
   `/start`, `/login`, `/register`, `/forgot-password` and `/reset-password`, never a second panel,
   card or window.
+- **Their look (Nov 2026, `AuthFrame` in `src/components/auth/AuthPage.tsx`, `auth.css`):** the home
+  page's language: the shared top bar (Home on the welcome page, Back on the forms), the home
+  hero's field of black marks behind the whole page, Google Sans Flex. The welcome page is a
+  centred hero: «[cube] Welcome to Uzyra», the headline in light 450 rising word by word, a black
+  «Get started →» pill and a white «I already have an account» pill (stacked on phones), and the
+  terms line. Every form (sign in, sign up, reset, new password) sits in one white card (28px
+  corners, hairline, soft shadow) that starts with the cube: a muted hint, a 32px light title, soft
+  grey fields that turn white with a black edge while typing, a black pill for the action, a white
+  one for Google, links underlined in grey. Sign-up keeps its three short steps with a thin black
+  progress line. Problems are a soft red note (username ideas as pills). No blue rings, no ink
+  frames.
 - **No profile step:** there is no «let's set up your profile» page after sign-up. A new account
   gets its name and username when it is made (the `handle_new_user` trigger); the rest is in
   Settings. Old links to `/welcome` go straight on to where they were heading.
