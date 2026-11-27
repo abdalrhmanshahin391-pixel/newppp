@@ -88,6 +88,16 @@ function Playback({
   const [silent, setSilent] = useState(!src);
   const [run, setRun] = useState(0);
   const duration = Math.min(11000, Math.max(3200, sheet.step.narration.length * 68));
+  // The pen keeps its own quick pace (about a third of a second a stroke, 1.2–3.5 s in all) and
+  // starts at once. It used to follow the voice's position, so it waited for the voice to arrive
+  // and then stood still until the voice caught up with it.
+  const inkDuration = Math.min(3500, Math.max(1200, 600 + sheet.step.commands.length * 260));
+  const ink = useRef({ start: 0, progress: 0, running: false });
+  const inkClock = useCallback(() => {
+    const k = ink.current;
+    if (!k.running) return k.progress;
+    return Math.min(1, k.progress + (performance.now() - k.start) / inkDuration);
+  }, [inkDuration]);
   const clock = useCallback(() => {
     const t = time.current;
     if (!t.running && t.progress === 1) return 1;
@@ -104,6 +114,8 @@ function Playback({
   const finish = useCallback(() => {
     time.current.progress = 1;
     time.current.running = false;
+    ink.current.progress = 1;
+    ink.current.running = false;
     setState("done");
     onReady(true);
   }, [onReady]);
@@ -111,18 +123,28 @@ function Playback({
     wantsVoice.current = false;
     time.current.progress = clock();
     time.current.running = false;
+    ink.current.progress = inkClock();
+    ink.current.running = false;
     audio.current?.pause();
     setState((old) => (old === "done" ? old : "paused"));
-  }, [clock]);
+  }, [clock, inkClock]);
   const play = useCallback(
     (attachVoice = false) => {
       wantsVoice.current = true;
       onReady(false);
       const t = time.current;
+      const k = ink.current;
       if (t.progress >= 1 && !attachVoice) {
         t.floor = 0;
         t.progress = 0;
+        k.progress = 0;
+        k.running = false;
         if (audio.current) audio.current.currentTime = 0;
+      }
+      // A voice arriving late joins the pen where it is; it never restarts or holds it.
+      if (!k.running) {
+        k.start = performance.now();
+        k.running = true;
       }
       t.start = performance.now();
       t.running = true;
@@ -211,7 +233,7 @@ function Playback({
           visibleCommands={sheet.visibleCommands}
           onInk={sheet.onInk}
           step={sheet.step}
-          clock={clock}
+          clock={inkClock}
           playing={state === "playing" && shown}
         />
       </div>

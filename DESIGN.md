@@ -549,6 +549,8 @@ in the middle), drawn by hand (`board-sketch.ts`): straight strokes bow a little
 in a hand-drawn rounded box. Ink is dark slate `#3a404d`, what matters is blue `#2747c9`; Arabic words
 are weight 400. Each section's title is a quiet centred line above its drawing; past sections are
 dimmed (60%). The selected text is one quiet italic line at the top («من الفقرة …»).
+The pen starts at once and keeps its own quick pace (about a quarter of a second a stroke, 1.2–3.5 s
+for a section); the voice plays alongside and never holds the pen back. Pausing stops both.
 - Top left: Uzyra's cube in a white ring with a soft blue glow (thinking while the board is being made,
   speaking while the voice plays), then round dark 46px buttons: play/pause, «نص الشرح» (the words
   as a white subtitle above the question bar; on by itself when there is no voice), and «نزّل السبورة
