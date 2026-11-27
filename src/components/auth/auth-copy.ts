@@ -121,6 +121,18 @@ const EN = {
   vPhoneMax: "Phone number cannot exceed 20 characters.",
   vPhone: "Please enter a valid phone number.",
   vPassword: "Password must be at least 6 characters.",
+  // new password (from the reset email)
+  newPwTitle: "Set a new password",
+  newPwHint: "Pick one you'll remember next time.",
+  newPassword: "New password",
+  confirmPassword: "Confirm new password",
+  savePassword: "Save new password",
+  saving: "Saving…",
+  pwUpdated: "Password updated",
+  pwUpdatedLine: "Taking you to the sign-in page…",
+  pwNoLink: "Open this page from the reset link in your email.",
+  pwNewLink: "Ask for a new link",
+  pwMismatch: "The two passwords don't match.",
 };
 
 export type AuthCopy = typeof EN;
@@ -227,6 +239,17 @@ const AR: AuthCopy = {
   vPhoneMax: "رقم الهاتف ما بيزيد عن 20 خانة.",
   vPhone: "اكتب رقم هاتف صحيح.",
   vPassword: "كلمة السر 6 أحرف على الأقل.",
+  newPwTitle: "اختار كلمة سر جديدة",
+  newPwHint: "اختار وحدة بتتذكرها المرة الجاية.",
+  newPassword: "كلمة السر الجديدة",
+  confirmPassword: "أكّد كلمة السر الجديدة",
+  savePassword: "احفظ كلمة السر",
+  saving: "جاري الحفظ…",
+  pwUpdated: "تغيّرت كلمة السر",
+  pwUpdatedLine: "عم ناخدك لصفحة تسجيل الدخول…",
+  pwNoLink: "افتح هالصفحة من رابط إعادة التعيين يلي وصلك على الإيميل.",
+  pwNewLink: "اطلب رابط جديد",
+  pwMismatch: "كلمتين السر مش متطابقتين.",
 };
 
 export function isArabicLanguage(language: string | undefined) {

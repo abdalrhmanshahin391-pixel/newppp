@@ -1,170 +1,190 @@
 /* ===========================================================================
-   Welcome, sign in, sign up and reset (AuthPage, `ua-`). The home page's colours, dark top bar,
-   Figtree and buttons (blue fill, 2px ink border, 8px corners). Slow blue rings on the welcome page
-   only. Forms sit in a white card; sign-up cards slide out one way and in from the other.
-   Reduced motion keeps everything still.
+   Welcome, sign in, sign up and reset (AuthFrame / AuthPage, `ua-`), in the home page's language
+   (Nov 2026): Google Sans Flex, black and white with neutral greys, round pills, the home hero's
+   field of black marks behind the page. The welcome page is a centred hero («[cube] Welcome to
+   Uzyra», a light headline, one black pill and one white); a form sits in one white card that
+   starts with the cube. Sign-up cards slide out one way and in from the other. Reduced motion
+   keeps everything still.
    =========================================================================== */
 .ua {
-  --ua-ink: #121117;
-  --ua-muted: #6a697c;
-  --ua-line: #dcdce5;
-  --ua-grey: #f4f4f8;
-  --ua-accent: #2b6df0;
-  --ua-accent-hover: #2260e4;
-  --ua-accent-soft: #e7eefd;
-  --ua-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ua-font: "Uzyra Arabic", "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  --ua-ink: #121212;
+  --ua-muted: #5f5f67;
+  --ua-line: #e4e4e7;
+  --ua-soft: #f4f4f5;
+  --ua-red: #b42318;
+  --ua-out: cubic-bezier(0.22, 1, 0.36, 1);
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
   overflow: clip;
   background: #fff;
   color: var(--ua-ink);
-  font-family: var(--font-grotesk), Arial, sans-serif;
+  font-family: var(--ua-font);
 }
 .ua-back {
   gap: 6px;
 }
+
+/* The page under the bar, with the field of marks behind it */
 .ua-main {
+  position: relative;
   display: grid;
   flex: 1;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto 1fr;
   width: 100%;
-  max-width: 1240px;
-  margin-inline: auto;
 }
-
-/* The rings. */
-.ua-art {
-  display: grid;
-  place-items: center;
-  height: 290px;
-  overflow: clip;
+.ua-marks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 30%, #000 35%, transparent 80%);
+  mask-image: radial-gradient(120% 90% at 50% 30%, #000 35%, transparent 80%);
 }
-.ua-rings {
-  width: 320px;
-  max-width: none;
-  height: auto;
-  overflow: visible;
-  transition: transform 700ms var(--ua-out);
-  animation: ua-fade 1.2s var(--ua-out) backwards;
-}
-.ua-ring {
-  transform-origin: 0 0;
-  opacity: 0.7;
-  animation: ua-turn calc(50s + var(--i) * 7s) linear infinite;
-}
-.ua-ring:nth-of-type(even) {
-  animation-direction: reverse;
-}
-
-/* Words. */
 .ua-body {
-  padding: 8px 20px max(32px, env(safe-area-inset-bottom));
-}
-.ua-welcome,
-.ua-form {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-content: center;
+  justify-items: center;
   width: 100%;
-  max-width: 440px;
-  margin-inline: auto;
+  padding: 56px 20px 72px;
 }
-.ua--form .ua-main {
-  grid-template-rows: auto;
-}
-.ua--form .ua-body {
-  padding-top: 40px;
-}
-.ua--form .ua-form {
-  max-width: 560px;
-}
+
+/* ── Welcome: the home hero's top ── */
 .ua-welcome {
-  max-width: 520px;
+  display: grid;
+  justify-items: center;
+  width: min(100%, 760px);
+  text-align: center;
 }
-.ua-eyebrow {
-  margin: 0 0 12px;
-  color: var(--ua-accent);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+.ua-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  font-size: 17px;
+  font-weight: 500;
   animation: ua-up 500ms var(--ua-out) backwards;
 }
-[dir="rtl"] .ua-eyebrow {
-  font-size: 15px;
-  letter-spacing: 0;
+.ua-kicker-cube {
+  display: grid;
+  width: 30px;
+  height: 30px;
 }
-.ua-mark {
-  color: var(--ua-ink);
-  animation: ua-up 600ms var(--ua-out) 80ms backwards;
-}
-.edith-premium.ua .ua-display,
-.edith-premium.ua .ua-title {
-  margin: 0;
-  color: var(--ua-ink);
-  font-weight: 500;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
+.ua-kicker-cube > *,
+.ua-cube > * {
+  width: 100%;
+  height: 100%;
 }
 .edith-premium.ua .ua-display {
-  margin: 24px 0 32px;
-  font-size: clamp(21px, 2vw, 26px) !important;
-  line-height: 1.35 !important;
-  letter-spacing: -0.025em;
+  margin: 0;
+  color: var(--ua-ink);
+  font-family: var(--ua-font);
+  font-size: clamp(32px, 4.6vw, 56px) !important;
+  font-weight: 450 !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
 }
-.edith-premium.ua .ua-title {
-  margin-bottom: 28px;
-  font-size: clamp(21px, 2vw, 26px) !important;
-  line-height: 1.35 !important;
-}
-[dir="rtl"].ua .ua-display,
-[dir="rtl"].ua .ua-title {
+[dir="rtl"].ua .ua-display {
   letter-spacing: 0;
   line-height: 1.3 !important;
 }
 .ua-word {
   display: inline-block;
   overflow: clip;
-  padding-bottom: 0.12em;
-  margin-bottom: -0.12em;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
   vertical-align: top;
 }
 .ua-word > span {
   display: inline-block;
-  animation: ua-rise 700ms var(--ua-out) calc(120ms + var(--w) * 60ms) backwards;
+  animation: ua-rise 700ms var(--ua-out) calc(120ms + var(--w) * 50ms) backwards;
 }
 .ua-actions {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 12px;
-  animation: ua-up 600ms var(--ua-out) 420ms backwards;
+  width: 100%;
+  margin-top: 36px;
+  animation: ua-up 600ms var(--ua-out) 350ms backwards;
+}
+.ua-actions .ua-btn {
+  width: auto;
+  min-width: 13rem;
 }
 .ua-fine {
-  margin: 16px 0 0;
+  margin: 20px 0 0;
   color: var(--ua-muted);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.6;
 }
 .ua-welcome .ua-fine {
-  animation: ua-up 600ms var(--ua-out) 500ms backwards;
-}
-.ua-form > div,
-.ua-form > form {
-  animation: ua-up 600ms var(--ua-out) 250ms backwards;
+  animation: ua-up 600ms var(--ua-out) 450ms backwards;
 }
 
-/* Buttons: the home page's own (2px ink border, 8px corners, Figtree 18/600). */
+/* ── A form: one white card that starts with the cube ── */
+.ua-form {
+  width: min(100%, 460px);
+  padding: 32px;
+  border: 1px solid var(--ua-line);
+  border-radius: 28px;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgb(18 18 18 / 0.04),
+    0 28px 64px -32px rgb(18 18 18 / 0.28);
+  animation: ua-up 600ms var(--ua-out) 80ms backwards;
+}
+.ua-cube {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 20px;
+}
+.ua-panel {
+  animation: ua-up 500ms var(--ua-out) 160ms backwards;
+}
+/* The card inside the form is just its heading and fields now: the white card is .ua-form. */
+.ua-card {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.ua-hint {
+  margin: 0 0 6px;
+  color: var(--ua-muted);
+  font-size: 15.5px;
+  line-height: 1.5;
+}
+.edith-premium.ua .ua-q {
+  margin: 0 0 24px;
+  color: var(--ua-ink);
+  font-family: var(--ua-font);
+  font-size: clamp(26px, 2.6vw, 32px) !important;
+  font-weight: 450 !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.025em;
+}
+[dir="rtl"].ua .ua-q {
+  letter-spacing: 0;
+  line-height: 1.35 !important;
+}
+
+/* Buttons: round pills, black for the action, white with a hairline for the other */
 .ua-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   width: 100%;
-  min-height: 48px;
+  min-height: 52px;
   padding: 10px 24px;
-  border: 2px solid var(--ua-ink);
-  border-radius: 8px;
-  font-family: var(--font-grotesk), Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 600;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-family: var(--ua-font);
+  font-size: 16px;
+  font-weight: 500;
   line-height: 24px;
   text-align: center;
   text-decoration: none;
@@ -172,33 +192,33 @@
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.16s var(--ua-out);
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 120ms var(--ua-out);
 }
 .ua-btn:active {
-  transform: scale(0.97);
-  background: var(--ua-ink);
-  color: #fff;
+  transform: scale(0.98);
 }
 .ua-btn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   pointer-events: none;
 }
 .ua-btn--primary {
-  background: var(--ua-accent);
+  background: var(--ua-ink);
   color: #fff;
 }
 .ua-btn--ghost {
-  background: transparent;
+  border-color: var(--ua-line);
+  background: #fff;
   color: var(--ua-ink);
 }
 @media (hover: hover) and (pointer: fine) {
   .ua-btn--primary:hover {
-    background: var(--ua-accent-hover);
+    background: #000;
   }
   .ua-btn--ghost:hover {
-    background: var(--ua-grey);
+    border-color: #c9c9cf;
+    background: #fafafa;
   }
   .ua-go:hover svg {
     transform: translateX(4px);
@@ -219,7 +239,7 @@
   outline-offset: 3px;
 }
 
-/* Fields. */
+/* Fields: soft grey, black edge when typing */
 .ua-stack {
   display: grid;
   gap: 16px;
@@ -229,33 +249,39 @@
   gap: 8px;
 }
 .ua-label {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 14.5px;
+  font-weight: 500;
 }
 .ua-input {
   width: 100%;
   height: 52px;
-  padding: 0 16px;
-  border: 2px solid var(--ua-ink);
-  border-radius: 8px;
-  background: #fff;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: var(--ua-soft);
   color: var(--ua-ink);
   font: inherit;
   font-size: 16px;
   outline: none;
-  transition: box-shadow 160ms ease;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
 }
 .ua-input::placeholder {
-  color: #9a99a8;
+  color: #8a8a93;
 }
 .ua-input:focus {
-  box-shadow: 0 0 0 4px var(--ua-accent-soft);
+  border-color: var(--ua-ink);
+  background: #fff;
 }
 [dir="rtl"] .ua-input[dir="ltr"] {
   text-align: right;
 }
 .ua-input:-webkit-autofill {
   -webkit-text-fill-color: var(--ua-ink);
+  box-shadow: 0 0 0 100px var(--ua-soft) inset;
+}
+.ua-input:-webkit-autofill:focus {
   box-shadow: 0 0 0 100px #fff inset;
 }
 .ua-pw {
@@ -273,7 +299,7 @@
   place-items: center;
   width: 44px;
   height: 44px;
-  border-radius: 6px;
+  border-radius: 999px;
   color: var(--ua-muted);
   transform: translateY(-50%);
 }
@@ -285,13 +311,14 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px 12px;
   font-size: 15px;
 }
 .ua-check-row {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  min-height: 44px;
   font-size: 15px;
   cursor: pointer;
 }
@@ -306,12 +333,14 @@
   width: 22px;
   height: 22px;
   margin: 0;
-  border: 2px solid var(--ua-ink);
-  border-radius: 6px;
+  border: 1.5px solid #a1a1aa;
+  border-radius: 7px;
   background: #fff;
   cursor: pointer;
   appearance: none;
-  transition: background-color 160ms ease;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
 }
 .ua-check::after {
   content: "";
@@ -324,7 +353,8 @@
   transition: transform 180ms var(--ua-out);
 }
 .ua-check:checked {
-  background: var(--ua-accent);
+  border-color: var(--ua-ink);
+  background: var(--ua-ink);
 }
 .ua-check:checked::after {
   transform: rotate(-45deg) scale(1);
@@ -335,10 +365,15 @@
   background: none;
   color: var(--ua-ink);
   font: inherit;
-  font-weight: 600;
+  font-weight: 500;
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration-color: #c9c9cf;
+  text-underline-offset: 4px;
   cursor: pointer;
+  transition: text-decoration-color 160ms ease;
+}
+.ua-link:hover {
+  text-decoration-color: currentColor;
 }
 .ua-center {
   justify-self: center;
@@ -347,7 +382,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  margin: 22px 0;
+  margin: 20px 0;
   color: var(--ua-muted);
   font-size: 14px;
 }
@@ -359,7 +394,7 @@
   background: var(--ua-line);
 }
 .ua-switch {
-  margin: 26px 0 0;
+  margin: 24px 0 0;
   color: var(--ua-muted);
   font-size: 15px;
   text-align: center;
@@ -371,16 +406,18 @@
   overflow-wrap: anywhere;
 }
 
-/* Messages. */
+/* Messages: a soft red note, never a shout */
 .ua-alert {
+  display: grid;
+  gap: 4px;
   margin: 0 0 16px;
-  padding: 12px 14px;
-  border: 2px solid #b42318;
-  border-radius: 8px;
-  background: #fff;
-  color: #b42318;
+  padding: 14px 16px;
+  border: 1px solid #fecdca;
+  border-radius: 16px;
+  background: #fef3f2;
+  color: var(--ua-red);
   font-size: 15px;
-  line-height: 1.45;
+  line-height: 1.5;
   animation: ua-shake 400ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 .ua-stack > .ua-alert {
@@ -391,11 +428,13 @@
 }
 .ua-alert-title {
   margin: 0;
-  font-weight: 700;
+  font-weight: 500;
 }
 .ua-alert-action {
-  margin-top: 8px;
-  color: #b42318;
+  justify-self: start;
+  margin-top: 6px;
+  color: var(--ua-red);
+  text-decoration-color: currentColor;
 }
 .ua-chips {
   display: flex;
@@ -404,54 +443,36 @@
   margin-top: 10px;
 }
 .ua-chip {
-  padding: 6px 12px;
-  border: 2px solid var(--ua-ink);
-  border-radius: 8px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid #fecdca;
+  border-radius: 999px;
   background: #fff;
   color: var(--ua-ink);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
+}
+.ua-chip:hover {
+  border-color: var(--ua-ink);
 }
 
-/* The card, the progress line and the sliding sign-up steps. */
+/* The flow, the progress line and the sliding sign-up steps */
 .ua-flow {
   display: grid;
   gap: 16px;
 }
-.ua-card {
-  padding: 24px 20px;
-  border: 2px solid var(--ua-ink);
-  border-radius: 16px;
-  background: #fff;
-}
-.ua-hint {
-  margin: 0 0 6px;
-  color: var(--ua-muted);
-  font-size: 16px;
-}
-.edith-premium.ua .ua-q {
-  margin: 0 0 22px;
-  color: var(--ua-ink);
-  font-size: clamp(21px, 2vw, 26px) !important;
-  font-weight: 500;
-  line-height: 1.35 !important;
-  letter-spacing: -0.03em;
-}
-[dir="rtl"].ua .ua-q {
-  letter-spacing: 0;
-}
 .ua-progress {
-  height: 8px;
-  margin-bottom: 20px;
+  height: 4px;
+  margin-bottom: 24px;
   overflow: clip;
-  border: 2px solid var(--ua-ink);
   border-radius: 999px;
-  background: #fff;
+  background: var(--ua-soft);
 }
 .ua-progress span {
   display: block;
   height: 100%;
-  background: var(--ua-accent);
+  border-radius: inherit;
+  background: var(--ua-ink);
   transform-origin: left;
   transition: transform 450ms var(--ua-out);
 }
@@ -486,7 +507,7 @@
 }
 .ua-bar {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 .ua-bar .ua-btn {
   flex: 1;
@@ -497,10 +518,6 @@
 }
 .ua-sent p {
   margin: 0;
-}
-.ua-sent-title {
-  font-size: 26px;
-  font-weight: 700;
 }
 .ua-tick {
   display: grid;
@@ -513,66 +530,31 @@
   animation: ua-pop 500ms cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
 }
 
-@media (min-width: 640px) {
-  .ua-art {
-    height: 380px;
-  }
-  .ua-rings {
-    width: 420px;
-  }
+/* Phones: the card is the page */
+@media (max-width: 639px) {
   .ua-body {
-    padding-inline: 32px;
-  }
-}
-
-/* Desktop: words and buttons on the left, the rings on the right. */
-@media (min-width: 1024px) {
-  .ua-main {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr);
-    min-height: calc(100dvh - 84px);
-  }
-  .ua-art {
-    grid-column: 2;
-    grid-row: 1;
-    height: auto;
-  }
-  .ua-rings {
-    width: min(44vw, 600px);
-  }
-  .ua--form .ua-main {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .ua--form .ua-body {
-    padding: 56px 24px;
     align-content: start;
+    padding: 32px 16px 56px;
   }
-  .ua-body {
-    grid-column: 1;
-    grid-row: 1;
-    display: grid;
+  .ua--welcome .ua-body {
     align-content: center;
-    padding: 48px 40px 48px clamp(40px, 6vw, 96px);
   }
-  [dir="rtl"] .ua-body {
-    padding: 48px clamp(40px, 6vw, 96px) 48px 40px;
+  .ua-form {
+    padding: 28px 20px;
+    border-radius: 24px;
+    box-shadow: 0 18px 48px -32px rgb(18 18 18 / 0.3);
   }
-  .ua-welcome {
-    margin-inline: 0;
+  .ua-actions {
+    flex-direction: column;
+  }
+  .ua-actions .ua-btn {
+    width: 100%;
+  }
+  .ua-kicker {
+    font-size: 16px;
   }
 }
 
-@keyframes ua-turn {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes ua-fade {
-  from {
-    opacity: 0;
-    transform: scale(0.94);
-  }
-}
 @keyframes ua-rise {
   from {
     transform: translateY(105%);
@@ -623,10 +605,5 @@
   .ua *::after {
     animation: none !important;
     transition: none !important;
-  }
-}
-@media (min-width: 640px) {
-  .ua-card {
-    padding: 32px;
   }
 }
