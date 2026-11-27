@@ -1,7 +1,17 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
 import { Link } from "@tanstack/react-router";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ArrowLeft,
+  ArrowRight,
   BookMarked,
   ChevronLeft,
   ChevronRight,
@@ -53,6 +63,10 @@ import {
 import { BookObject, CATEGORY_ICON, UzyraIcon } from "./BookObject";
 import { BookSheet } from "./BookSheet";
 import { MyBooksShelf } from "./mine/MyBooksShelf";
+import { PageHero } from "@/components/page-hero/PageHero";
+import { useDotField } from "@/components/page-hero/useDotField";
+import { useShown } from "@/components/home/procreate/ag-hooks";
+import "./library-look.css";
 
 const SEED_KEY = "bk-seed";
 
@@ -167,7 +181,7 @@ export function LibraryPage({
     queryKey: [...LIBRARY_QUERY_KEY, "facets", previewIso],
     queryFn: ({ signal }) =>
       browseBooks({ ...NO_BROWSE, view: "all" }, { seed, asOf: previewIso, signal }),
-    enabled: panel && mode === "discover",
+    enabled: mode === "discover",
     staleTime: 60_000,
   });
   const facets: Facets | null =
@@ -323,7 +337,7 @@ export function LibraryPage({
             </button>
           )}
         </div>
-        <div className="bk-row">{list.map(card)}</div>
+        <ShelfRow ui={ui}>{list.map(card)}</ShelfRow>
         <div className="bk-board" aria-hidden="true" />
       </section>
     );
@@ -355,54 +369,70 @@ export function LibraryPage({
       void queryClient.invalidateQueries({ queryKey: [...LIBRARY_QUERY_KEY, "browse"] });
   };
   const CategoryIcon = category ? CATEGORY_ICON[category.icon] : null;
+
+  // The strip under the search: books, languages and the levels on offer (from the library's own
+  // counts; nothing is shown until they are known).
+  const stats = useMemo(() => {
+    const total = discover.data?.total;
+    if (!total) return null;
+    const all = facetsOnly.data?.facets;
+    const languages = all ? Object.values(all.language).filter((n) => n > 0).length : 0;
+    const levels: string[] = all ? BOOK_LEVELS.filter((level) => (all.level[level] ?? 0) > 0) : [];
+    const number = (n: number) => n.toLocaleString(ui === "ar" ? "ar-u-nu-latn" : "en-US");
+    return {
+      books: number(total),
+      languages: languages > 0 ? number(languages) : null,
+      levels: levels.length
+        ? levels.length === 1
+          ? levels[0]
+          : `${levels[0]}–${levels[levels.length - 1]}`
+        : null,
+      label: t(`${total} books in the library`, `${total} كتاب بالمكتبة`),
+    };
+  }, [discover.data?.total, facetsOnly.data, ui]);
+
+  // Shelves rise in as they reach the screen (only those drawn before they were seen wait).
+  const pageRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = pageRef.current;
+    if (!root || typeof IntersectionObserver === "undefined") return;
+    const seen = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries)
+          if (entry.isIntersecting) {
+            entry.target.setAttribute("data-reveal", "in");
+            seen.unobserve(entry.target);
+          }
+      },
+      { rootMargin: "0px 0px -8% 0px" },
+    );
+    const fold = window.innerHeight;
+    // Waiting ones are watched again after every change; those already in stay in.
+    root.querySelectorAll<HTMLElement>(".bk-shelf, .bk-feature").forEach((el) => {
+      const now = el.getAttribute("data-reveal");
+      if (now === "in") return;
+      if (now !== "wait") {
+        if (el.getBoundingClientRect().top < fold) return;
+        el.setAttribute("data-reveal", "wait");
+      }
+      seen.observe(el);
+    });
+    return () => seen.disconnect();
+  }, [mode, discover.data, popular.data, showLearning]);
   const remove = t("Remove", "شيل");
 
   return (
-    <div className="min-h-screen bg-white text-[var(--pp-ink)]">
+    <div className="lb min-h-screen bg-white text-[var(--pp-ink)]" ref={pageRef}>
       <SiteHeader />
-      <main className="bk-page" dir={ui === "ar" ? "rtl" : "ltr"}>
-        {previewIso && previewAt && (
-          <div className="bk-preview" role="status">
-            <Eye size={16} aria-hidden="true" />
-            <span>
-              {t("Admin preview of the library at", "معاينة للأدمن: المكتبة بتاريخ")}{" "}
-              <b>
-                {previewAt.toLocaleString(ui === "ar" ? "ar-u-nu-latn" : "en", {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}
-              </b>
-              {previewSeed ? ` · ${t("order", "الترتيب")} ${previewSeed}` : ""}
-            </span>
-            <Link to="/books" className="bk-preview-exit">
-              {t("Leave preview", "اطلع من المعاينة")}
-            </Link>
-          </div>
-        )}
-        {phase2Missing && (
-          <div className="bk-preview" role="status">
-            <span>
-              {t(
-                "Admin only: search, pages and pins run in the browser until the database update 20261110120000 is applied.",
-                "للأدمن بس: البحث والصفحات والتثبيت شغّالين من المتصفح لحد ما يتطبّق تحديث قاعدة البيانات 20261110120000.",
-              )}
-            </span>
-          </div>
-        )}
-
-        <div className="bk-head">
-          <div>
-            <p className="bk-eyebrow">{t("Uzyra library", "مكتبة Uzyra")}</p>
-            <h1 className="bk-title">
-              {t("Read real books at your level", "اقرأ كتب حقيقية بمستواك")}
-            </h1>
-            <p className="bk-lead">
-              {t(
-                "Chosen books, sorted by subject and level. Open one and read it at your own pace.",
-                "كتب مختارة ومرتّبة حسب الموضوع والمستوى. افتح أي كتاب واقرأه على راحتك.",
-              )}
-            </p>
-          </div>
+      <div dir={ui === "ar" ? "rtl" : "ltr"}>
+        <PageHero
+          kicker={t("Library", "المكتبة")}
+          title={t("Read real books at your level.", "اقرأ كتب حقيقية بمستواك.")}
+          lead={t(
+            "Chosen books, sorted by subject and level. Open one and read it at your own pace.",
+            "كتب مختارة ومرتّبة حسب الموضوع والمستوى. افتح أي كتاب واقرأه على راحتك.",
+          )}
+        >
           <form className="bk-search" role="search" onSubmit={submit}>
             <label className="bk-field">
               <Search size={18} aria-hidden="true" />
@@ -433,9 +463,6 @@ export function LibraryPage({
                 <kbd className="bk-kbd">/</kbd>
               )}
             </label>
-            <button type="submit" className="bk-go">
-              {t("Search", "ابحث")}
-            </button>
             <button
               type="button"
               className="bk-filter"
@@ -448,8 +475,59 @@ export function LibraryPage({
               <span className="bk-filter-word">{t("Filter", "فلترة")}</span>
               {chosen > 0 && <span className="bk-badge">{chosen}</span>}
             </button>
+            <button type="submit" className="bk-go">
+              {t("Search", "ابحث")}
+            </button>
           </form>
-        </div>
+          {stats && (
+            <p className="lb-stats" aria-label={stats.label}>
+              <span>
+                <b>{stats.books}</b> {t(stats.books === "1" ? "book" : "books", "كتاب")}
+              </span>
+              {stats.languages && (
+                <span>
+                  <b>{stats.languages}</b>{" "}
+                  {t(stats.languages === "1" ? "language" : "languages", "لغات")}
+                </span>
+              )}
+              {stats.levels && (
+                <span>
+                  {t("Levels", "مستويات")} <b>{stats.levels}</b>
+                </span>
+              )}
+            </p>
+          )}
+        </PageHero>
+      </div>
+      <main className="bk-page" dir={ui === "ar" ? "rtl" : "ltr"}>
+        {previewIso && previewAt && (
+          <div className="bk-preview" role="status">
+            <Eye size={16} aria-hidden="true" />
+            <span>
+              {t("Admin preview of the library at", "معاينة للأدمن: المكتبة بتاريخ")}{" "}
+              <b>
+                {previewAt.toLocaleString(ui === "ar" ? "ar-u-nu-latn" : "en", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+              </b>
+              {previewSeed ? ` · ${t("order", "الترتيب")} ${previewSeed}` : ""}
+            </span>
+            <Link to="/books" className="bk-preview-exit">
+              {t("Leave preview", "اطلع من المعاينة")}
+            </Link>
+          </div>
+        )}
+        {phase2Missing && (
+          <div className="bk-preview" role="status">
+            <span>
+              {t(
+                "Admin only: search, pages and pins run in the browser until the database update 20261110120000 is applied.",
+                "للأدمن بس: البحث والصفحات والتثبيت شغّالين من المتصفح لحد ما يتطبّق تحديث قاعدة البيانات 20261110120000.",
+              )}
+            </span>
+          </div>
+        )}
 
         {panel && (
           <div id="bk-panel" className="bk-panel">
@@ -1025,18 +1103,54 @@ function Featured({
   onOpen: () => void;
 }) {
   const t = (en: string, ar: string) => (ui === "ar" ? ar : en);
-  const tone = CATEGORY_COLORS[category?.color ?? "slate"];
   const hours = readingHours(book.pages);
+  const Forward = ui === "ar" ? ArrowLeft : ArrowRight;
+  const field = useRef<HTMLCanvasElement>(null);
+  const lift = useRef<HTMLDivElement>(null);
+  const { ref, shown } = useShown<HTMLElement>(0.7);
+  // The home hero's field of marks, in white on the ink card.
+  useDotField(ref, field, "#ffffff");
+  // The book leans toward the pointer (a mouse or a pen); touch leaves it still.
+  const lean = (event: ReactPointerEvent<HTMLElement>) => {
+    const box = lift.current;
+    if (!box || event.pointerType === "touch") return;
+    const card = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - card.left) / card.width - 0.5;
+    const y = (event.clientY - card.top) / card.height - 0.5;
+    box.style.setProperty("--ry", `${(x * 16).toFixed(2)}deg`);
+    box.style.setProperty("--rx", `${(-y * 12).toFixed(2)}deg`);
+  };
+  const settle = () => {
+    lift.current?.style.setProperty("--ry", "0deg");
+    lift.current?.style.setProperty("--rx", "0deg");
+  };
   return (
     <section
+      ref={ref}
       className="bk-feature"
-      style={{ ["--c" as string]: tone.c, ["--soft" as string]: tone.soft }}
+      data-shown={shown ? "on" : undefined}
+      onPointerMove={lean}
+      onPointerLeave={settle}
+      aria-label={t("Book of the week", "كتاب الأسبوع")}
     >
-      <button type="button" className="bk-feature-book" onClick={onOpen} aria-label={book.title}>
-        <BookObject book={book} color={category?.color} size="lg" showLevel={false} />
-      </button>
+      <canvas ref={field} className="lb-feature-field" aria-hidden="true" />
+      <div className="lb-feature-stage">
+        <span className="lb-feature-glow" aria-hidden="true" />
+        <div className="lb-feature-lift" ref={lift}>
+          <button
+            type="button"
+            className="bk-feature-book"
+            onClick={onOpen}
+            aria-label={book.title}
+          >
+            <BookObject book={book} color={category?.color} size="lg" showLevel={false} />
+            <span className="lb-scan" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
       <div className="bk-feature-body">
         <span className="bk-tag">
+          <Sparkles size={13} aria-hidden="true" />
           {t("Book of the week", "كتاب الأسبوع")}
           {category ? ` · ${ui === "ar" ? category.name_ar : category.name_en}` : ""}
         </span>
@@ -1068,12 +1182,75 @@ function Featured({
           </p>
         )}
         <div className="bk-actions">
-          <button type="button" className="bk-btn is-primary" onClick={onOpen}>
+          <button type="button" className="bk-btn is-primary lb-open" onClick={onOpen}>
             {t("Open the book", "افتح الكتاب")}
+            <Forward size={18} aria-hidden="true" />
           </button>
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * A shelf's row of books. With a mouse, two round arrows move it a screen at a time (each one only
+ * while there is more that way); on touch it scrolls as before.
+ */
+function ShelfRow({ ui, children }: { ui: "en" | "ar"; children: ReactNode }) {
+  const t = (en: string, ar: string) => (ui === "ar" ? ar : en);
+  const row = useRef<HTMLDivElement>(null);
+  const [ends, setEnds] = useState({ start: true, end: true });
+  useEffect(() => {
+    const el = row.current;
+    if (!el) return;
+    const measure = () => {
+      const max = el.scrollWidth - el.clientWidth;
+      const at = Math.abs(el.scrollLeft);
+      setEnds({ start: at <= 4, end: at >= max - 4 });
+    };
+    measure();
+    el.addEventListener("scroll", measure, { passive: true });
+    const sizes = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    sizes?.observe(el);
+    return () => {
+      el.removeEventListener("scroll", measure);
+      sizes?.disconnect();
+    };
+  }, []);
+  const move = (way: 1 | -1) => {
+    const el = row.current;
+    if (!el) return;
+    const rtl = getComputedStyle(el).direction === "rtl";
+    el.scrollBy({ left: (rtl ? -way : way) * el.clientWidth * 0.85, behavior: "smooth" });
+  };
+  const Back = ui === "ar" ? ChevronRight : ChevronLeft;
+  const Next = ui === "ar" ? ChevronLeft : ChevronRight;
+  return (
+    <div className="lb-row" data-start={ends.start || undefined} data-end={ends.end || undefined}>
+      <div className="bk-row" ref={row}>
+        {children}
+      </div>
+      <button
+        type="button"
+        className="lb-arrow is-back"
+        onClick={() => move(-1)}
+        disabled={ends.start}
+        aria-label={t("Earlier books", "الكتب السابقة")}
+        tabIndex={-1}
+      >
+        <Back size={18} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        className="lb-arrow is-next"
+        onClick={() => move(1)}
+        disabled={ends.end}
+        aria-label={t("More books", "كتب أكثر")}
+        tabIndex={-1}
+      >
+        <Next size={18} aria-hidden="true" />
+      </button>
+    </div>
   );
 }
 
