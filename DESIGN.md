@@ -1668,6 +1668,14 @@ setting as the study page; reduced motion keeps the word still.
 - Mixed-direction text is grouped by language into `dir`/`lang` spans so Arabic never reorders neighbouring words.
 - No vendor names and no compliance claims on the page.
 
+## Motion is always on (owner's choice, Nov 2026)
+
+`src/lib/always-motion.ts` runs in `<head>` before the app: the device's "reduce motion" setting
+and Chrome's Data Saver no longer still the site. `matchMedia` answers "no" to reduced motion,
+`saveData` reads false, and every CSS `@media (prefers-reduced-motion: reduce)` block is removed
+(and "no-preference" blocks always apply), including stylesheets added later. The reduced-motion
+rules in this file and in the CSS stay written but no longer take effect on the site.
+
 ## Accessibility floor
 
 Contrast AA (4.5:1 text, 3:1 large text and UI), visible focus, keyboard-reachable controls,

@@ -26,6 +26,7 @@ import { setAuthNavigator } from "@/lib/auth-dialog";
 import { DeferredOverlays } from "@/components/DeferredOverlays";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
 import { ACTUAL_SIGNIN_EVENT } from "@/lib/actual-signin";
+import { alwaysMotionBootScript } from "@/lib/always-motion";
 
 // A stale deployment can make a lazy-loaded chunk unavailable. Retry once, then
 // stop with a readable page. The old pageshow handler cleared this guard on the
@@ -262,6 +263,8 @@ function RootShell({ children }: { children: ReactNode }) {
     >
       <head>
         <HeadContent />
+        {/* Before the app: motion stays on whatever the device asks (see always-motion.ts). */}
+        <script dangerouslySetInnerHTML={{ __html: alwaysMotionBootScript }} />
         <script dangerouslySetInnerHTML={{ __html: recoveryBootScript }} />
         <noscript>
           <link
