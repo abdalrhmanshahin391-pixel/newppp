@@ -1,5 +1,5 @@
 import { SignInRedirect } from "@/components/study/RequireSignIn";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -12,15 +12,16 @@ import {
   Flag,
   Lightbulb,
   RotateCcw,
-  Target,
   Timer,
-  Trophy,
   XCircle,
 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { lqLoadRun, lqSaveAttempts } from "@/lib/lecture-lab.functions";
+import { RitaCube } from "@/components/rita-study/RitaCube";
+import "@/components/study/flashcards-page.css";
+import "@/components/study/lecture-lab.css";
 
 type Mode = "study" | "session" | "exam";
 type Pool = "all" | "flagged" | "wrong";
@@ -532,64 +533,82 @@ function ResultsState({
         (option) => option.is_correct && option.letter === answers[question.id],
       ),
   );
+  const levels = useRef({ input: 0, output: 0 });
   return (
-    <div className="min-h-screen bg-[color:var(--cream)] text-foreground">
+    <div className="fc-page ll-page min-h-screen bg-white text-[var(--pp-ink)]">
       <SiteHeader />
-      <main className="mx-auto max-w-4xl px-4 py-12 md:px-8">
-        <section className="medical-card p-7 text-center md:p-10">
-          <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-bold uppercase text-primary">
-            <Trophy /> {mode === "exam" ? "Exam complete" : mode === "session" ? "Session complete" : "Study complete"}
-          </span>
-          <h1 className="mt-5 font-display text-5xl font-black">{score.pct}%</h1>
-          <p className="mt-2 text-sm font-semibold text-muted-foreground">
+      <div className="fc-wrap ll-narrow">
+        <section className="ll-result" aria-labelledby="ll-score">
+          <p className="fc-kicker">
+            <span className="fc-cube" aria-hidden="true">
+              <RitaCube levelsRef={levels} mode="idle" label="" />
+            </span>
+            {mode === "exam"
+              ? "Exam complete"
+              : mode === "session"
+                ? "Session complete"
+                : "Study complete"}
+          </p>
+          <h1 id="ll-score" className="ll-score">
+            {score.pct}%
+          </h1>
+          <p className="fc-lead">
             {score.correct} of {score.total} correct
           </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <div className="ll-actions">
             {missed.length > 0 && (
-              <Button type="button" variant="outline" onClick={onRetry} className="rounded-xl">
-                <RotateCcw /> Retry weak spots
-              </Button>
+              <button type="button" onClick={onRetry} className="ll-new">
+                <RotateCcw size={17} aria-hidden="true" /> Retry weak spots
+              </button>
             )}
-            <Button asChild className="rounded-xl">
-              <Link to="/study/lectures">Back to Lecture Lab</Link>
-            </Button>
+            <Link
+              to="/study/lectures"
+              className={missed.length > 0 ? "fc-tool" : "ll-new"}
+            >
+              Back to Lecture Lab
+            </Link>
           </div>
         </section>
 
         {missed.length > 0 && (
-          <section className="mt-6 space-y-3">
-            <h2 className="font-display text-xl font-black">What you missed</h2>
-            {missed.map((question) => {
-              const correct = question.options.find((option) => option.is_correct);
-              return (
-                <article key={question.id} className="medical-card p-5">
-                  <p className="font-bold leading-snug">{question.stem}</p>
-                  <p className="mt-2 text-sm font-bold text-emerald-700">
-                    {correct?.letter}. {correct?.body}
-                  </p>
-                  <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                    {question.explanation}
-                  </p>
-                </article>
-              );
-            })}
+          <section className="ll-block" aria-labelledby="ll-missed">
+            <h2 id="ll-missed">What you missed</h2>
+            <ol className="ll-missed">
+              {missed.map((question) => {
+                const correct = question.options.find((option) => option.is_correct);
+                return (
+                  <li key={question.id}>
+                    <p className="ll-stem">{question.stem}</p>
+                    <p className="ll-right">
+                      <CheckCircle2 size={16} aria-hidden="true" />
+                      <span>
+                        {correct?.letter}. {correct?.body}
+                      </span>
+                    </p>
+                    {question.explanation && <p className="ll-why">{question.explanation}</p>}
+                  </li>
+                );
+              })}
+            </ol>
           </section>
         )}
 
         {points.length > 0 && (
-          <section className="medical-card mt-6 p-6">
-            <h2 className="font-display text-xl font-black">Key points</h2>
+          <section className="ll-block" aria-labelledby="ll-points">
+            <h2 id="ll-points">Key points</h2>
             {points.map((group) => (
-              <div key={group.title} className="mt-4">
-                <h3 className="text-xs font-black uppercase text-primary">{group.title}</h3>
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-muted-foreground">
-                  {group.points.map((point) => <li key={point}>{point}</li>)}
+              <div key={group.title} className="ll-points">
+                <h3>{group.title}</h3>
+                <ul>
+                  {group.points.map((point) => (
+                    <li key={point}>{point}</li>
+                  ))}
                 </ul>
               </div>
             ))}
           </section>
         )}
-      </main>
+      </div>
     </div>
   );
 }
@@ -616,17 +635,26 @@ function SignInState() {
 }
 
 function EmptyState({ pool }: { pool: Pool }) {
+  const levels = useRef({ input: 0, output: 0 });
   return (
-    <div className="min-h-screen bg-[color:var(--cream)] text-foreground">
+    <div className="fc-page ll-page min-h-screen bg-white text-[var(--pp-ink)]">
       <SiteHeader />
-      <main className="mx-auto max-w-xl px-4 py-24 text-center">
-        <Target className="mx-auto h-9 w-9 text-primary" />
-        <h1 className="mt-3 font-display text-3xl font-black">Nothing in this pool yet</h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          {pool === "all" ? "That lecture has no questions." : "Complete the lecture once, then weak spots and flags appear here."}
-        </p>
-        <Button asChild className="mt-6 rounded-xl"><Link to="/study/lectures">Back to Lecture Lab</Link></Button>
-      </main>
+      <div className="fc-wrap ll-narrow">
+        <div className="fc-empty">
+          <span className="fc-empty-cube" aria-hidden="true">
+            <RitaCube levelsRef={levels} mode="idle" label="" />
+          </span>
+          <h1 className="ll-empty-title">Nothing in this pool yet</h1>
+          <p>
+            {pool === "all"
+              ? "That lecture has no questions."
+              : "Finish the lecture once, then weak spots and flags show up here."}
+          </p>
+          <Link to="/study/lectures" className="fc-go">
+            Back to Lecture Lab
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,27 +1,17 @@
 import { SignInRedirect } from "@/components/study/RequireSignIn";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import {
-  ArrowLeft,
-  BookOpen,
-  ChevronDown,
-  ChevronRight,
-  Flag,
-  Plus,
-  RotateCcw,
-  Timer,
-  Trash2,
-  Upload,
-  XCircle,
-} from "lucide-react";
+import { BookOpen, Minus, Plus, RotateCcw, Timer, Upload, X } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { ConfirmDialog, PromptDialog } from "@/components/study/SimpleDialogs";
 import { lqAddSubject, lqAddSubtopic, lqBoard, lqRemove } from "@/lib/lecture-lab.functions";
 import { PickerBoard, type PickerGroup } from "@/components/common/PickerBoard";
-import { LaunchPanel, WorkspaceHeader } from "@/components/common/LaunchPanel";
+import { RitaCube } from "@/components/rita-study/RitaCube";
+import "@/components/study/flashcards-page.css";
+import "@/components/study/lecture-lab.css";
 
 export const Route = createFileRoute("/study/lectures/")({
   head: () => ({
@@ -35,7 +25,8 @@ export const Route = createFileRoute("/study/lectures/")({
       { property: "og:title", content: "Lecture Lab — Uzyra" },
       {
         property: "og:description",
-        content: "One lecture in, a study-ready quiz out — with two-line explanations and a weak-spot retry.",
+        content:
+          "One lecture in, a study-ready quiz out — with two-line explanations and a weak-spot retry.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -58,14 +49,39 @@ type Lecture = {
 };
 type Stats = Record<string, { wrong: number; flagged: number }>;
 
-const CREAM = "#ffffff";
-const INK = "#121117";
 const ACCENT = "#2b6df0";
 
+const POOLS = [
+  { key: "all", label: "All" },
+  { key: "wrong", label: "Weak spots" },
+  { key: "flagged", label: "Flagged" },
+] as const;
+
+const MODES = [
+  {
+    key: "study",
+    label: "Study",
+    icon: BookOpen,
+    note: "Every question with its answer and explanation.",
+  },
+  {
+    key: "session",
+    label: "Session",
+    icon: RotateCcw,
+    note: "Answer each one, then see if you were right.",
+  },
+  {
+    key: "exam",
+    label: "Timed",
+    icon: Timer,
+    note: "Against the clock. Answers at the end.",
+  },
+] as const;
 
 function LectureLabPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const levels = useRef({ input: 0, output: 0 });
 
   const board = useServerFn(lqBoard);
   const addSubject = useServerFn(lqAddSubject);
@@ -164,13 +180,27 @@ function LectureLabPage() {
 
   // A tick picks a whole sub-subject; the round runs every lecture inside it.
   const selected = useMemo(() => {
-
     const ids = new Set<string>();
-    for (const l of lectures) if (pickedTopics.has(l.subtopic_id) && l.question_count > 0) ids.add(l.id);
+    for (const l of lectures)
+      if (pickedTopics.has(l.subtopic_id) && l.question_count > 0) ids.add(l.id);
     return ids;
   }, [lectures, pickedTopics]);
 
   const selectedCount = selected.size;
+  // The ticked sub-subjects, in list order, for the pills under the Start button.
+  const picked = useMemo(
+    () => subtopics.filter((t) => pickedTopics.has(t.id)),
+    [subtopics, pickedTopics],
+  );
+  const selectedStats = useMemo(() => {
+    let wrong = 0;
+    let flagged = 0;
+    for (const id of selected) {
+      wrong += stats[id]?.wrong ?? 0;
+      flagged += stats[id]?.flagged ?? 0;
+    }
+    return { wrong, flagged };
+  }, [selected, stats]);
   const totalQuestions = useMemo(
     () => lectures.filter((l) => selected.has(l.id)).reduce((n, l) => n + l.question_count, 0),
     [lectures, selected],
@@ -183,7 +213,6 @@ function LectureLabPage() {
       else next.add(id);
       return next;
     });
-
 
   async function createSubject(name: string) {
     try {
@@ -205,7 +234,6 @@ function LectureLabPage() {
       toast.error(e instanceof Error ? e.message : "Could not add the sub-subject.");
     }
   }
-
 
   async function doRemove(kind: "subject" | "subtopic" | "lecture", id: string) {
     try {
@@ -241,7 +269,7 @@ function LectureLabPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen" style={{ background: CREAM }}>
+      <div className="fc-page min-h-screen bg-white">
         <SiteHeader />
       </div>
     );
@@ -249,71 +277,241 @@ function LectureLabPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen" style={{ background: CREAM, color: INK }}>
+      <div className="fc-page min-h-screen bg-white">
         <SiteHeader />
         <SignInRedirect />
       </div>
     );
   }
 
+  // What the round would hold: every question, or only the missed or flagged ones.
+  const ready =
+    pool === "all"
+      ? totalQuestions
+      : pool === "wrong"
+        ? selectedStats.wrong
+        : selectedStats.flagged;
+  const questionsWord = `question${ready === 1 ? "" : "s"}`;
+  const readyText = ready.toLocaleString("en-US");
+  const ModeIcon = MODES.find((m) => m.key === mode)!.icon;
+  const goLabel =
+    !selectedCount || !ready
+      ? "Start"
+      : mode === "exam"
+        ? `Start exam · ${minutes} min`
+        : mode === "session"
+          ? `Start session · ${readyText} ${questionsWord}`
+          : `Study · ${readyText} ${questionsWord}`;
+
   return (
-    <div className="min-h-screen" style={{ background: CREAM, color: INK }}>
+    <div className="fc-page ll-page min-h-screen bg-white text-[var(--pp-ink)]">
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-14">
-        <Link to="/learn" className="inline-flex items-center gap-2 text-[13px] font-bold text-[#6a697c]">
-          <ArrowLeft size={15} /> Back to study modes
-        </Link>
+      <div className="fc-wrap">
+        <header className="fc-head">
+          <p className="fc-kicker">
+            <span className="fc-cube" aria-hidden="true">
+              <RitaCube levelsRef={levels} mode="idle" label="" />
+            </span>
+            Lecture Lab
+          </p>
+          <h1 className="fc-title">One lecture in. A quiz out.</h1>
+          <p className="fc-lead">
+            Drop a lecture and get short questions with two-line explanations.
+          </p>
+        </header>
 
-        <div className="mt-4">
-          <WorkspaceHeader
-            eyebrow="Lecture Lab"
-            title="One lecture in. A quiz out."
-            description="Short questions with two-line explanations — the opposite of the archive bank. Takes about a minute."
-            stats={[
-              { label: "Subjects", value: subjects.length },
-              { label: "Lectures", value: lectures.length },
-              { label: "Selected", value: selectedCount },
-            ]}
-          />
-        </div>
-
-        <div className="mt-4 flex justify-end">
-          <Link
-            to="/study/lectures/new"
-            className="inline-flex items-center gap-2 rounded-full bg-[#121117] px-6 py-3 text-[14px] font-extrabold text-white transition hover:opacity-90"
-          >
-            <Upload size={16} /> New lecture quiz
+        <div className="fc-toolbar">
+          <Link to="/study/lectures/new" className="ll-new">
+            <Upload size={17} aria-hidden="true" /> New lecture quiz
           </Link>
+          {!busy && subjects.length > 0 && (
+            <p className="ll-count">
+              {subjects.length} subject{subjects.length === 1 ? "" : "s"} · {lectures.length}{" "}
+              lecture{lectures.length === 1 ? "" : "s"}
+            </p>
+          )}
         </div>
 
-        <div className="mt-6 grid items-start gap-6 lg:grid-cols-[1fr_22rem]">
-          <div>
+        <div className={`fc-grid${!busy && !subjects.length ? " ll-solo" : ""}`}>
+          {/* No subjects yet: only the first steps, no round to start. */}
+          {(busy || subjects.length > 0) && (
+            <aside className="fc-side">
+              <section className="fc-session" aria-label="Start a round">
+                <p className="fc-eyebrow">Start a round</p>
+                <p className="fc-stat">
+                  <b>{readyText}</b> {questionsWord} ready
+                </p>
+                <dl className="fc-rows">
+                  <div>
+                    <dt>Lectures</dt>
+                    <dd>{selectedCount || "None picked"}</dd>
+                  </div>
+                  <div>
+                    <dt>Weak spots</dt>
+                    <dd>{selectedStats.wrong.toLocaleString("en-US")}</dd>
+                  </div>
+                  <div>
+                    <dt>Flagged</dt>
+                    <dd>{selectedStats.flagged.toLocaleString("en-US")}</dd>
+                  </div>
+                </dl>
+
+                <p className="ll-label" id="ll-pool">
+                  Which questions
+                </p>
+                <div className="fc-scope ll-three" role="group" aria-labelledby="ll-pool">
+                  {POOLS.map((p) => (
+                    <button
+                      key={p.key}
+                      type="button"
+                      aria-pressed={pool === p.key}
+                      onClick={() => setPool(p.key)}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+
+                <p className="ll-label" id="ll-mode">
+                  How
+                </p>
+                <div className="fc-scope ll-three" role="group" aria-labelledby="ll-mode">
+                  {MODES.map((m) => (
+                    <button
+                      key={m.key}
+                      type="button"
+                      aria-pressed={mode === m.key}
+                      onClick={() => setMode(m.key)}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="ll-mode-note">{MODES.find((m) => m.key === mode)!.note}</p>
+
+                {mode === "exam" && (
+                  <div className="ll-time">
+                    <span id="ll-minutes">Exam time</span>
+                    <div className="ll-stepper" role="group" aria-labelledby="ll-minutes">
+                      <button
+                        type="button"
+                        aria-label="Five minutes less"
+                        disabled={minutes <= 5}
+                        onClick={() => setMinutes((m) => Math.max(5, m - 5))}
+                      >
+                        <Minus size={16} aria-hidden="true" />
+                      </button>
+                      <label>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          min={1}
+                          max={240}
+                          value={minutes}
+                          aria-label="Exam minutes"
+                          onChange={(e) =>
+                            setMinutes(Math.max(1, Math.min(240, Number(e.target.value) || 1)))
+                          }
+                        />
+                        min
+                      </label>
+                      <button
+                        type="button"
+                        aria-label="Five minutes more"
+                        disabled={minutes >= 240}
+                        onClick={() => setMinutes((m) => Math.min(240, m + 5))}
+                      >
+                        <Plus size={16} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  className="fc-go"
+                  aria-disabled={!selectedCount || !ready || undefined}
+                  onClick={() => {
+                    if (selectedCount && !ready) {
+                      toast.error(
+                        pool === "wrong"
+                          ? "No weak spots in these lectures yet."
+                          : "Nothing flagged in these lectures yet.",
+                      );
+                      return;
+                    }
+                    run(mode);
+                  }}
+                >
+                  <ModeIcon size={18} aria-hidden="true" />
+                  {goLabel}
+                </button>
+
+                {picked.length > 0 && (
+                  <div className="fc-picked">
+                    <div className="fc-picked-list">
+                      {picked.map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => toggle(t.id)}
+                          aria-label={`Untick ${t.name}`}
+                        >
+                          <span>{t.name}</span> <X size={12} aria-hidden="true" />
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className="fc-clear"
+                      onClick={() => setPickedTopics(new Set())}
+                    >
+                      Clear selection
+                    </button>
+                  </div>
+                )}
+                <p className="fc-note">
+                  {picked.length === 0
+                    ? "Tick a sub-subject on the list to use its lectures."
+                    : !selectedCount
+                      ? "The ticked sub-subjects have no questions yet."
+                      : !ready
+                        ? pool === "wrong"
+                          ? "No weak spots in these lectures yet. Answer them once first."
+                          : "Nothing flagged in these lectures yet."
+                        : "Only the lectures you ticked."}
+                </p>
+              </section>
+            </aside>
+          )}
+
+          <main className="fc-main">
             {!busy && !subjects.length ? (
-              <div className="rounded-[26px] border-2 border-[#121117] bg-white p-6">
-                <p className="text-[14px] font-extrabold text-[#121117]">Three steps to your first quiz</p>
-                <ol className="mt-4 space-y-3">
+              <div className="fc-empty">
+                <span className="fc-empty-cube" aria-hidden="true">
+                  <RitaCube levelsRef={levels} mode="idle" label="" />
+                </span>
+                <h2>No subjects yet</h2>
+                <p>Three steps to your first quiz:</p>
+                <ol className="ll-steps">
                   {[
-                    "Add a subject — the big area, like Physiology.",
-                    "Add a sub-subject inside it — like Cardiac cycle.",
-                    "Upload the lecture PDF and we write the questions.",
+                    "Add a subject, the big area, like Physiology.",
+                    "Add a sub-subject inside it, like Cardiac cycle.",
+                    "Upload the lecture PDF and the questions get written for you.",
                   ].map((step, i) => (
-                    <li key={step} className="flex items-start gap-3">
-                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#121117] text-[12px] font-black text-white">
-                        {i + 1}
-                      </span>
-                      <span className="text-[13.5px] leading-relaxed text-[#4b4a5c]">{step}</span>
+                    <li key={step}>
+                      <span aria-hidden="true">{i + 1}</span>
+                      {step}
                     </li>
                   ))}
                 </ol>
-                <button
-                  onClick={() => setSubjectOpen(true)}
-                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#121117] px-5 py-2.5 text-[13px] font-extrabold text-white hover:opacity-90"
-                >
-                  <Plus size={15} /> Start with a subject
+                <button type="button" className="fc-go" onClick={() => setSubjectOpen(true)}>
+                  <Plus size={18} aria-hidden="true" /> Make your first subject
                 </button>
               </div>
             ) : (
               <PickerBoard
+                framed={false}
                 accent={ACCENT}
                 loading={busy}
                 groups={groups}
@@ -321,7 +519,6 @@ function LectureLabPage() {
                 onToggle={toggle}
                 itemNoun="sub-subject"
                 newItemLabel="Sub-subject"
-
                 unitNoun="questions"
                 searchPlaceholder="Search subjects and sub-subjects…"
                 onNewGroup={() => setSubjectOpen(true)}
@@ -332,70 +529,18 @@ function LectureLabPage() {
                 onAddToGroup={() => void navigate({ to: "/study/lectures/new" })}
                 addLabel="Add a lecture"
                 emptyItemLabel="Add a sub-subject here"
-                onDeleteGroup={(g) => setPendingDelete({ kind: "subject", id: g.id, label: g.name })}
-                onDeleteItem={(t) => setPendingDelete({ kind: "subtopic", id: t.id, label: t.name })}
+                onDeleteGroup={(g) =>
+                  setPendingDelete({ kind: "subject", id: g.id, label: g.name })
+                }
+                onDeleteItem={(t) =>
+                  setPendingDelete({ kind: "subtopic", id: t.id, label: t.name })
+                }
                 emptyHint="No lectures yet — upload one to get started."
-
               />
-
             )}
-          </div>
-
-          <aside className="lg:sticky lg:top-24">
-            <LaunchPanel
-              accent={ACCENT}
-              eyebrow="Start a round"
-              stat={totalQuestions}
-              statLabel={`question${totalQuestions === 1 ? "" : "s"} ready`}
-              rows={[
-                { label: "Lectures", value: selectedCount ? String(selectedCount) : "none picked" },
-                { label: "Mode", value: mode === "exam" ? `Timed · ${minutes} min` : mode },
-              ]}
-              actions={[
-                { label: "Study mode", icon: <BookOpen size={16} />, onClick: () => run("study"), disabled: !selectedCount, tone: "outline" },
-                { label: "Session mode", icon: <RotateCcw size={16} />, onClick: () => run("session"), disabled: !selectedCount },
-                { label: "Timed exam", icon: <Timer size={16} />, onClick: () => run("exam"), disabled: !selectedCount, tone: "dark" },
-              ]}
-              footnote={selectedCount ? undefined : "Tick at least one lecture on the left."}
-            >
-              <div className="text-[11px] font-black uppercase tracking-[0.16em] text-[#6a697c]">
-                Question pool
-              </div>
-              <div className="mt-2 flex gap-1.5 rounded-xl bg-[#ffffff] p-1">
-                {[
-                  { key: "all", label: "All" },
-                  { key: "wrong", label: "Weak spots" },
-                  { key: "flagged", label: "Flagged" },
-                ].map((p) => (
-                  <button
-                    key={p.key}
-                    onClick={() => setPool(p.key as typeof pool)}
-                    className="h-8 flex-1 rounded-lg text-[12px] font-extrabold transition"
-                    style={
-                      pool === p.key
-                        ? { background: "#fff", color: "#121117" }
-                        : { color: "#6a697c" }
-                    }
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-              <label className="mt-3 block text-[12px] font-extrabold text-[#6a697c]">
-                Exam minutes
-                <input
-                  type="number"
-                  min={1}
-                  max={240}
-                  value={minutes}
-                  onChange={(e) => setMinutes(Math.max(1, Math.min(240, Number(e.target.value) || 1)))}
-                  className="mt-1 h-10 w-full rounded-xl border-2 border-[#121117] bg-[#ffffff] px-3 text-[14px] font-semibold"
-                />
-              </label>
-            </LaunchPanel>
-          </aside>
+          </main>
         </div>
-      </main>
+      </div>
 
       <PromptDialog
         open={subjectOpen}
@@ -412,7 +557,9 @@ function LectureLabPage() {
         open={!!subtopicFor}
         onOpenChange={(v) => !v && setSubtopicFor(null)}
         title="Add sub-subject"
-        description={subtopicFor ? `Inside ${subtopicFor.name}. Your lectures live here.` : undefined}
+        description={
+          subtopicFor ? `Inside ${subtopicFor.name}. Your lectures live here.` : undefined
+        }
         label="Sub-subject name"
         placeholder="e.g. Cardiac cycle"
         confirmLabel="Add sub-subject"

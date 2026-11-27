@@ -857,6 +857,31 @@ One main action per panel, hierarchy by weight instead of by frame:
   text follows the device ("Tap the card to flip, swipe to move" on touch; Space and arrows with a mouse), 56px controls.
 - Every control is at least 44px, every text at least 12px and 4.5:1 (muted text is `#4b4a5c`, not the old light greys).
 
+## Lecture Lab (`/study/lectures`, `/new`, `/run`)
+
+Since Nov 2026 in the flashcards page's look: the same `fc-` classes (`flashcards-page.css`) plus
+`lecture-lab.css` (`ll-`) for what only Lecture Lab has.
+
+- **`/study/lectures`:** «[cube] Lecture Lab», the light headline «One lecture in. A quiz out.»
+  and a muted line; a toolbar with one black «New lecture quiz» pill and the counts («3 subjects ·
+  12 lectures») on the other side; the unframed subject list; and one session card: «N questions
+  ready» counts only the chosen pool, rows for Lectures, Weak spots and Flagged (of the ticked
+  lectures), «Which questions» (All | Weak spots | Flagged) and «How» (Study | Session | Timed) as
+  two three-way switches with a one-line note on the mode, «Exam time» as − / minutes / + (only for
+  Timed), one black start button that names what starts («Study · 15 questions», «Start exam · 20
+  min»), and the ticked sub-subjects as one-line pills. An empty pool says so instead of starting.
+  With no subjects there is no session card: a dashed card with the cube, the three first steps on
+  hairlines and «Make your first subject».
+- **`/new`:** the same head («← [cube] Lecture Lab» goes back), «New lecture quiz.», then three
+  numbered steps on hairlines (no framed boxes): where it goes (the list), the lecture (PDF | Paste
+  text switch, a dashed 24px drop zone that turns solid with the file's name, a soft grey title
+  field), and the shape (question counts and difficulty as pills, black when chosen, the key-points
+  tick). One black «Make the quiz» button.
+- **`/run`:** the question player is unchanged; the end shows «[cube] Exam complete», the score
+  large and light, «Retry weak spots» (black) and «Back to Lecture Lab», then «What you missed»
+  on hairlines (the right answer in green with a tick) and the key points on grey panels. An empty
+  pool is the dashed cube card.
+
 ## Pairs (`/study/pairs`)
 
 A matching game made from the learner's own flashcards (`src/components/pairs`, rules in `src/lib/pairs/game.ts`).
