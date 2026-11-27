@@ -1,3 +1,4 @@
+import { BooksReaderCard } from "@/components/pricing/BooksReaderCard";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -94,8 +95,15 @@ function callTime(p: FullPlan): { value: string; label: string } {
   return { value: `${minutes} min`, label: "of calls a month" };
 }
 
+/** The plan has voice calls with Uzyra (Books Reader has none). */
+const talks = (p: FullPlan) => (p.free_talk_seconds ?? 0) > 0;
+
+/** Books Reader: a plan for readers, shown in a card of its own under the Uzyra plans. */
+const BOOKS_READER = "books_reader";
+
 /** The most call time in a month, for the table: a day's minutes × 30. */
 function callsAMonth(p: FullPlan): string {
+  if (!talks(p)) return "—";
   const minutes = Math.round((p.free_talk_seconds ?? 0) / 60);
   if (p.free_talk_period === "daily") return `${(minutes * 30).toLocaleString("en-US")} min`;
   if (p.free_talk_period === "lifetime") return `${minutes} min once`;
@@ -126,12 +134,12 @@ const COMPARE: {
     rows: [
       {
         label: "Every day",
-        value: (p) => (p.free_talk_period === "daily" ? callTime(p).value : "—"),
+        value: (p) => (p.free_talk_period === "daily" && talks(p) ? callTime(p).value : "—"),
       },
       { label: "In a month, at most", value: callsAMonth },
-      { label: "Free conversation", value: () => true },
-      { label: "Path lessons by voice", value: () => true },
-      { label: "Book study with Uzyra", value: () => true },
+      { label: "Free conversation", value: (p) => (talks(p) ? true : "—") },
+      { label: "Path lessons by voice", value: (p) => (talks(p) ? true : "—") },
+      { label: "Book study with Uzyra by voice", value: (p) => (talks(p) ? true : "—") },
     ],
   },
   {
@@ -139,6 +147,7 @@ const COMPARE: {
     rows: [
       { label: "Requests a month", value: groqRequests },
       { label: "Explain a line or translate a page", value: () => true },
+      { label: "Book reading: meaning, pronunciation, flashcards", value: () => true },
       { label: "Exercise checks and word games", value: () => true },
     ],
   },
@@ -391,6 +400,9 @@ function PricingPage() {
     (p) => (p.billing_kind ?? "monthly") === (lifetime ? "lifetime" : "monthly"),
   );
   const hasPacks = packsVisible && published.some((p) => p.billing_kind === "lifetime");
+  // The Uzyra plans in a row; Books Reader in its own card under them.
+  const ladder = live.filter((p) => p.slug !== BOOKS_READER);
+  const reader = live.find((p) => p.slug === BOOKS_READER);
 
   // The biggest yearly saving against a year of the plan's own periods, for the switch's note.
   const recurring = published.filter((p) => (p.billing_kind ?? "monthly") === "monthly");
@@ -525,7 +537,7 @@ function PricingPage() {
 
         {!isLoading && live.length > 0 && (
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {live.map((p) => {
+            {ladder.map((p) => {
               const priceCents = priceOf(p);
               const isMine = mine?.plan?.slug === p.slug;
               const best = !!p.highlight;
@@ -653,6 +665,19 @@ function PricingPage() {
               );
             })}
           </div>
+        )}
+
+        {!isLoading && reader && !lifetime && (
+          <BooksReaderCard
+            name={reader.name}
+            price={money(reader.price_cents ?? 0, reader.currency)}
+            per={periodSuffix(reader)}
+            requests={groqRequests(reader)}
+            tagline={reader.tagline}
+            mine={mine?.plan?.slug === reader.slug}
+            cta={reader.cta_label || `Get ${reader.name}`}
+            onBuy={() => buy(reader)}
+          />
         )}
 
         {!isLoading && live.length > 0 && (

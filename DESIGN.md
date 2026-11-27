@@ -585,6 +585,18 @@ day (`free_talk_seconds`, `free_talk_period = 'daily'`) and Groq AI requests a m
   path exercises), then the questions.
 The older 3-month plans are hidden, not deleted.
 
+**Books Reader** (`books_reader`, $17 a month, 10,000 Groq requests, no calls) is not a fifth card
+in that row: it sits under the row in a wide card of its own (`BooksReaderCard`,
+`books-reader-card.css`). It keeps the page's language (24px corners, 16px figure tiles, the pill,
+the grotesk) but inverts it, so readers see at once that it is a different thing: an ink card
+(`--pro-ink`) with the home page's faint dot field fading in from the end side and a soft blue
+light, a «For readers» pill, the name, two tiles at white 8% («10,000 / Groq AI requests a month»,
+«Reading / no voice calls in this plan»), four reading services in two columns. The side holds a
+small shelf of nine books in white and greys with one in the brand blue (it lifts on hover; the
+last book leans), the price and a white pill. Under 860px everything stacks. It has its own column
+in «Compare plans» (dashes for the call rows). At checkout it shows its price and requests, and
+«Books» in place of call minutes; the plan switcher there lists only the plans with calls.
+
 The blog, home and inner pages share the blog header's white surface, 60px height, 16px wordmark
 and 14px grotesk type. Library, Pricing and Resources share the same spacing and text weight
 across pages, and Start learning uses the black pill. The header remains visible while scrolling
