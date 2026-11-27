@@ -110,8 +110,10 @@ export function CreditsMeter({
             ? a
             : b,
         );
+  // A plan with no call time shows no clock (nothing to run out of).
+  const noTime = !!voice.data && !voice.data.unlimited && !voice.data.limitSeconds;
   const level: Level =
-    voice.seconds !== undefined && voice.seconds !== null
+    voice.seconds !== undefined && voice.seconds !== null && !noTime
       ? voice.seconds === 0
         ? "out"
         : voice.seconds <= 300
@@ -120,11 +122,12 @@ export function CreditsMeter({
       : tightest
         ? levelOf(tightest.limit, tightest.used)
         : "ok";
-  const short = voice.isError
-    ? "—"
-    : voice.seconds === undefined
-      ? "…"
-      : voiceTimeLabel(voice.seconds);
+  const short =
+    voice.isError || noTime
+      ? "—"
+      : voice.seconds === undefined
+        ? "…"
+        : voiceTimeLabel(voice.seconds);
 
   const body = (
     <>

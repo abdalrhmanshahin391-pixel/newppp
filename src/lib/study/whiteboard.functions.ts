@@ -31,12 +31,26 @@ Each row is {"text":"study","result":"studies","circle":"result"} or {"text":"Sh
 Optionally include "sketch":[[0,90],[50,10],[100,90],[0,90]] for a freehand diagram on its own below the notes, in a 0–100 coordinate space. Omit it unless it helps.
 Use the quoted passage and answer the learner directly. Do not ask for confirmation.`;
 
+/**
+ * What happened to the step's voice: "on" spoken (and charged), "call" silent because an open call
+ * holds the time, "none" silent because the plan has no voice time, "over" the time ran out (the
+ * board stops), "off" silent because the voice or the time could not be read.
+ */
+export type BoardVoiceNote = "on" | "call" | "none" | "over" | "off";
+
+export const BOARD_TIME_OVER_TEXT = "خلص وقتك ولا يمكنك الإكمال.";
+
 type Completion =
-  | { ok: true; step: BoardStep; audio: Promise<string | null> | null }
+  | {
+      ok: true;
+      step: BoardStep;
+      audio: Promise<string | null> | null;
+      voice: Promise<BoardVoiceNote>;
+    }
   | { ok: false; message: string };
 
 type Result =
-  | { ok: false; message: string }
+  | { ok: false; message: string; timeOver?: boolean }
   | {
       ok: true;
       previewStep: Promise<BoardStep | null>;
@@ -44,6 +58,7 @@ type Result =
     };
 
 // Only server-generated narration from an authorized, quota-counted lesson request is synthesized.
+// Returns the MP3 as base64, not yet playable: it reaches the learner only once it is charged.
 async function narrate(text: string, language: string) {
   try {
     // The production Layan credential lives on the voice worker. This action creates no call.
@@ -52,10 +67,39 @@ async function narrate(text: string, language: string) {
     return typeof result.audio === "string" &&
       result.audio.length > 0 &&
       result.audio.length <= 1_400_000
-      ? "data:audio/mpeg;base64," + result.audio
+      ? result.audio
       : null;
   } catch {
     return null;
+  }
+}
+
+/**
+ * The clip goes to the learner only after its exact length (read from the MP3's own frames) has
+ * been taken from their voice time, once (`ref`). Anything unclear means no sound, never free sound.
+ */
+async function charged(
+  userId: string,
+  ref: string,
+  audio: Promise<string | null>,
+): Promise<{ src: string | null; voice: BoardVoiceNote }> {
+  try {
+    const base64 = await audio;
+    if (!base64) return { src: null, voice: "off" };
+    const [{ mp3DurationMs }, { chargeBoardVoice }] = await Promise.all([
+      import("@/lib/free-talk-audio"),
+      import("@/lib/free-talk.server"),
+    ]);
+    const milliseconds = mp3DurationMs(Buffer.from(base64, "base64"));
+    if (!milliseconds) return { src: null, voice: "off" };
+    const result = await chargeBoardVoice(userId, milliseconds, ref);
+    if (result.charged) return { src: "data:audio/mpeg;base64," + base64, voice: "on" };
+    return {
+      src: null,
+      voice: result.reason === "call" ? "call" : result.reason === "none" ? "none" : "over",
+    };
+  } catch {
+    return { src: null, voice: "off" };
   }
 }
 
@@ -66,9 +110,10 @@ export const studyBoardStep = createServerFn({ method: "POST" })
     const { resolveRitaV3Key } = await import("@/lib/rita-provider-key.server");
     const key = await resolveRitaV3Key("groq", "GROQ_API_KEY");
     if (!key) return { ok: false, message: "خدمة شرح السبورة غير متاحة حاليًا." };
+    const requestId = crypto.randomUUID();
     const checked = await resolveRequest(context, {
       ...data,
-      requestId: crypto.randomUUID(),
+      requestId,
       action: "explain",
       channel: "text",
     });
@@ -79,6 +124,11 @@ export const studyBoardStep = createServerFn({ method: "POST" })
           checked.result && !checked.result.ok ? checked.result.message : "تعذّر فتح الفقرة.",
       };
     const { quote, context: surrounding } = checked.resolved;
+    // The board's voice takes from the same time as calls. Used up: stop before spending anything.
+    const { boardVoice } = await import("@/lib/free-talk.server");
+    const voice = await boardVoice(context.userId);
+    if (voice === "over") return { ok: false, message: BOARD_TIME_OVER_TEXT, timeOver: true };
+    const speaks = voice === "on";
     const { takeGroqRequest, GROQ_REQUESTS_USED_TEXT } = await import("@/lib/groq-requests.server");
     if (!(await takeGroqRequest(context.supabase)))
       return { ok: false, message: GROQ_REQUESTS_USED_TEXT };
@@ -122,7 +172,7 @@ export const studyBoardStep = createServerFn({ method: "POST" })
       if (!first) return;
       sent = true;
       showFirst(first);
-      if (first.narration.length <= 440)
+      if (speaks && first.narration.length <= 440)
         spoken = { text: first.narration, audio: narrate(first.narration, language) };
     }
     async function complete(): Promise<Completion> {
@@ -141,15 +191,20 @@ export const studyBoardStep = createServerFn({ method: "POST" })
         step = readBoardReply(retry.reply, heading);
       }
       if (!step) return { ok: false, message: "تعذّر قراءة الشرح. جرّب مرة ثانية." };
+      if (!speaks) return { ok: true, step, audio: null, voice: Promise.resolve(voice) };
+      if (step.narration.length > 440)
+        return { ok: true, step, audio: null, voice: Promise.resolve<BoardVoiceNote>("off") };
+      // Only the clip the learner gets is charged (an early clip for a changed sentence is not).
+      const clip = charged(
+        context.userId,
+        `board:${requestId}`,
+        spoken?.text === step.narration ? spoken.audio : narrate(step.narration, language),
+      );
       return {
         ok: true,
         step,
-        audio:
-          step.narration.length <= 440
-            ? spoken?.text === step.narration
-              ? spoken.audio
-              : narrate(step.narration, language)
-            : null,
+        audio: clip.then((result) => result.src),
+        voice: clip.then((result) => result.voice),
       };
     }
     const completion = complete()

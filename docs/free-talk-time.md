@@ -27,14 +27,29 @@ Unclaimed starts can be cancelled atomically for zero usage; claimed starts keep
 until trusted cleanup confirms closure. Cleanup failures retain the hold; expiry charges the
 reserved amount. This deliberately prefers a conservative balance over refunding live access.
 Duplicate settlement is idempotent. Deleting a parent session cannot erase its quota ledger.
-The UI counts down locally from a fresh server snapshot and refreshes on start/end/focus.
+The top bar shows the time as read once per page load; it never counts down or refreshes by
+itself (a new number after a reload), and the call screen shows no counter. A call that reaches
+its deadline with nothing left beyond it opens the «خلص وقتك» window and leaves a free
+conversation; a call cut at the one-hour limit with time left just ends. A start refused with
+`free_talk_exhausted` opens the same window instead of a reconnect button.
 Changing a browser clock, UI or timer never authorizes voice access. Reuse of an account on
 another device does not create another allowance. This does not establish one physical person
 per account or eliminate all service/provider failures.
 
+## Whiteboard voice
+
+The whiteboard's spoken explanations (Cartesia, through the voice worker) take from the same time.
+The website server reads each clip's exact length from its MP3 frames (`src/lib/free-talk-audio.ts`)
+and calls `voice_board_charge` once per request (`ref` = `board:<request id>`, idempotent) before
+the learner gets the clip; the budget counts the clips' milliseconds rounded up to whole seconds.
+A clip that cannot be measured or charged is not sent (no sound rather than free sound). An open
+call holds what it reserved, so the board stays silent when only that remains. Time used up: the
+board answers «خلص وقتك ولا يمكنك الإكمال.» before any model request. A plan with no voice time
+explains silently. Admins are not limited.
+
 ## Validation
 
-- `node --test src/lib/free-talk-time.test.ts src/lib/rita-v3-startup.test.mjs src/lib/rita-voice-connection.test.ts`
+- `node --test src/lib/free-talk-time.test.ts src/lib/free-talk-audio.test.ts src/lib/rita-v3-startup.test.mjs src/lib/rita-voice-connection.test.ts`
 - From voice-agent: `python -m pytest tests/test_free_talk_guard.py tests/test_free_talk_provider.py -q`
 - `node scripts/test-free-talk-db.mjs`: requires either an existing `PGLITE_MODULE` module path,
   or `FREE_TALK_TEST_DATABASE_URL` pointing to a fresh **local** database named

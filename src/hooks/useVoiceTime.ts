@@ -1,46 +1,31 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "./useAuth";
 import { myFreeTalkBudget } from "@/lib/free-talk.functions";
-import { voiceSecondsLeft, type VoiceTimeSnapshot } from "@/lib/free-talk-time";
+import { voiceSecondsLeft } from "@/lib/free-talk-time";
+
+/**
+ * The learner's voice time (calls and the whiteboard share it), as it was when the page loaded.
+ * It is read once per page load and never counts down or refreshes by itself: a new number shows
+ * only after the page is reloaded. The server still takes the time exactly; the page just does not
+ * show it ticking.
+ */
 export function useVoiceTime() {
   const { user } = useAuth();
   const fn = useServerFn(myFreeTalkBudget);
-  const client = useQueryClient();
   const key = useMemo(() => ["free-talk-budget", user?.id ?? "anon"], [user?.id]);
   const query = useQuery({
     queryKey: key,
     queryFn: () => fn(),
     enabled: !!user,
-    staleTime: 15000,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     retry: 1,
   });
-  const clock = useMemo(() => ({ start: performance.now(), snapshot: query.data }), [query.data]);
-  const [now, setNow] = useState(() => performance.now());
-  useEffect(() => {
-    const receive = (event: Event) => {
-      const value = (event as CustomEvent<VoiceTimeSnapshot | undefined>).detail;
-      if (value) client.setQueryData(key, value);
-      else void client.invalidateQueries({ queryKey: key });
-    };
-    window.addEventListener("uzyra-voice-time", receive);
-    return () => window.removeEventListener("uzyra-voice-time", receive);
-  }, [key, client]);
-  useEffect(() => {
-    const refresh = () => {
-      if (document.visibilityState === "visible") void client.invalidateQueries({ queryKey: key });
-    };
-    document.addEventListener("visibilitychange", refresh);
-    return () => document.removeEventListener("visibilitychange", refresh);
-  }, [key, client]);
-  useEffect(() => {
-    if (!query.data?.activeSessionId) return;
-    const timer = window.setInterval(() => setNow(performance.now()), 1000);
-    return () => window.clearInterval(timer);
-  }, [query.data?.activeSessionId]);
-  const seconds = query.data
-    ? voiceSecondsLeft(query.data, Math.max(0, now - clock.start))
-    : undefined;
+  const seconds = query.data ? voiceSecondsLeft(query.data, 0) : undefined;
   return { ...query, seconds };
 }
