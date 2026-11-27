@@ -86,12 +86,14 @@ const bundle = await build({
             "cancelSubscription",
             "removeSavedPaymentMethod",
             "createCustomerPortalSession",
+            "myFreeTalkBudget",
+            "myGroqRequests",
           ];
           return {
             contents: names
               .map(
                 (name) =>
-                  `export async function ${name}(input){const q=window.qaData;q.calls.push('${name}');await new Promise(r=>setTimeout(r,q.delay));if(q.fail.includes('${name}'))throw Error('Offline fixture failure');if('${name}'==='myPlanUsage')return structuredClone(q.plan);if('${name}'==='getMySubscription')return structuredClone(q.subscription);if('${name}'==='getMySavedPaymentMethods')return structuredClone(q.cards);if('${name}'==='createCustomerPortalSession')return {url:'/portal-fixture'};if(q.billingFailure)return {ok:false,code:q.billingFailure,renewalStopped:false,cardRemoved:false};if(q.subscription)q.subscription.cancel_at_period_end=true;if('${name}'==='removeSavedPaymentMethod'){q.lastRemoveInput=input.data;q.cards=q.cards.filter(c=>c.id!==input.data.cardId);return {ok:true,renewalStopped:!!q.subscription,cardRemoved:true}}return {ok:true,renewalStopped:true,cardRemoved:false}}`,
+                  `export async function ${name}(input){const q=window.qaData;q.calls.push('${name}');await new Promise(r=>setTimeout(r,q.delay));if(q.fail.includes('${name}'))throw Error('Offline fixture failure');if('${name}'==='myPlanUsage')return structuredClone(q.plan);if('${name}'==='getMySubscription')return structuredClone(q.subscription);if('${name}'==='getMySavedPaymentMethods')return structuredClone(q.cards);if('${name}'==='createCustomerPortalSession')return {url:'/portal-fixture'};if('${name}'==='myFreeTalkBudget')return {enabled:true,unlimited:false,plan:'uzyra',limitSeconds:1800,availableSeconds:1500,remainingSeconds:1500,period:'2030-11-30',resetsAt:'2030-12-01T00:00:00Z',serverNow:'2030-11-30T12:00:00Z',activeSessionId:null,activeDeadline:null};if('${name}'==='myGroqRequests')return {unlimited:false,plan:'uzyra',used:120,limit:1000,left:880,period:'2030-11',resetsAt:'2030-12-01T00:00:00Z'};if(q.billingFailure)return {ok:false,code:q.billingFailure,renewalStopped:false,cardRemoved:false};if(q.subscription)q.subscription.cancel_at_period_end=true;if('${name}'==='removeSavedPaymentMethod'){q.lastRemoveInput=input.data;q.cards=q.cards.filter(c=>c.id!==input.data.cardId);return {ok:true,renewalStopped:!!q.subscription,cardRemoved:true}}return {ok:true,renewalStopped:true,cardRemoved:false}}`,
               )
               .join("\n"),
           };

@@ -15,7 +15,26 @@ export const GROQ_REQUESTS_UNAVAILABLE_TEXT = "ما قدرنا نحسب طلبك
 
 type RpcClient = {
   rpc: (name: string, args?: Record<string, unknown>) => PromiseLike<{ error: unknown }>;
+  // The learner's own client can read the learner's own roles (as the site does at sign-in).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  from?: (table: string) => any;
 };
+
+/** Whether the learner is an admin, read with their own client (no server-only imports here). */
+async function isAdminLearner(supabase: RpcClient, userId: string): Promise<boolean> {
+  try {
+    if (!supabase.from) return false;
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    return !!data;
+  } catch {
+    return false;
+  }
+}
 
 export type GroqRequestOutcome =
   | { ok: true }
@@ -35,10 +54,8 @@ export async function takeGroqRequestFor(context: {
       return { ok: false, reason: "used", message: GROQ_REQUESTS_USED_TEXT };
   }
   console.error("Emith request counter unavailable", last.slice(0, 200));
-  if (context.userId) {
-    const { isVoiceAdmin } = await import("@/lib/free-talk.server");
-    if (await isVoiceAdmin(context.userId)) return { ok: true };
-  }
+  if (context.userId && (await isAdminLearner(context.supabase, context.userId)))
+    return { ok: true };
   return { ok: false, reason: "unavailable", message: GROQ_REQUESTS_UNAVAILABLE_TEXT };
 }
 
