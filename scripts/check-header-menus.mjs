@@ -19,7 +19,7 @@ const STUBS = {
   "@/integrations/supabase/client": `export const supabase={auth:{signOut:async()=>{}}};`,
   "@/lib/auth-dialog": `export const openWelcome=()=>{};`,
   "@/hooks/usePlan": `export const usePlan=()=>({data:{plan:{max_flashcards:200,max_ai_questions:50,max_summaries:10,max_todo_tasks:100,max_calendar_items:100,max_groups:3},usage:{flashcards:150,ai_questions:48,summaries:10,todo_tasks:5,calendar_items:3,groups:0},grants:{},offer_name:'Study offer',offer_expires_at:new Date(Date.now()+5*86400000).toISOString()},planName:'Free',isAdmin:false});`,
-  "@/hooks/useVoiceTime": `export const useVoiceTime=()=>({seconds:240,isError:false,data:{resetsAt:'2026-12-01T00:00:00Z'}});`,
+  "@/hooks/useVoiceTime": `export const useVoiceTime=()=>({seconds:240,isError:false,data:{resetsAt:'2026-12-01T00:00:00Z',limitSeconds:600,unlimited:false,period:'2026-11'}});`,
   "@/hooks/useLearningLanguage": `export const VOICE_SESSION_ERROR='voice-session';
 const languages=[{code:'en',name_native:'English',name_ar:'الإنجليزية'},{code:'de',name_native:'Deutsch',name_ar:'الألمانية'},{code:'ar',name_native:'العربية',name_ar:'العربية'},{code:'fr',name_native:'Français',name_ar:'الفرنسية'}];
 export const useLearningLanguage=()=>({code:'en',language:languages[0],languages,ready:true,pending:null,error:null,setLanguage:async()=>true});`,

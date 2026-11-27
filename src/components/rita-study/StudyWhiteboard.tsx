@@ -381,12 +381,14 @@ export function StudyWhiteboard({
         setProblem(reply.message);
         return;
       }
-      void reply.voice.then((voice) => {
-        if (!mounted.current) return;
-        if (voice === "over") stopForTime();
-        else if (voice === "call") setVoiceNote("الصوت موقف وانت بمكالمة مع يوزرا.");
-        else if (voice === "none") setVoiceNote("خطتك ما فيها وقت صوت، فالشرح بدون صوت.");
-      }).catch(() => undefined);
+      void Promise.resolve(reply.voice)
+        .then((voice) => {
+          if (!mounted.current) return;
+          if (voice === "over") stopForTime();
+          else if (voice === "call") setVoiceNote("الصوت موقف وانت بمكالمة مع يوزرا.");
+          else if (voice === "none") setVoiceNote("خطتك ما فيها وقت صوت، فالشرح بدون صوت.");
+        })
+        .catch(() => undefined);
       const samePrefix =
         first &&
         first.commands.every(
