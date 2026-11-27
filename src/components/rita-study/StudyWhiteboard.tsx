@@ -1,29 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
 import {
   ArrowLeft,
-  AudioLines,
-  BookOpen,
-  Minus,
-  Plus,
-  Layers,
-  ChevronLeft,
+  ArrowUp,
+  Captions,
   Check,
   ChevronRight,
-  CornerDownLeft,
+  Download,
   LoaderCircle,
-  MessageCircle,
   Mic,
   Pause,
   Play,
   RotateCcw,
-  VolumeX,
+  X,
 } from "lucide-react";
 import { studyBoardStep } from "@/lib/study/whiteboard.functions";
 import { confirmsBoardStep, type BoardSelection, type BoardStep } from "@/lib/study/whiteboard";
 import type { ExplanationLanguage } from "@/lib/explanation-language";
 import { recogniser } from "@/lib/browser-speech-recogniser";
 import { BoardPaper } from "./BoardPaper";
+import { RitaCube } from "./RitaCube";
+import { downloadBoard } from "./board-download";
 import "./whiteboard.css";
 
 const completeInk = () => 1;
@@ -55,10 +53,20 @@ function Playback({
   sheet,
   shown,
   onReady,
+  captions,
+  controls,
+  status,
+  onPlaying,
 }: {
   sheet: Sheet;
   shown: boolean;
   onReady: (ready: boolean) => void;
+  /** The narration as words on screen (always when there is no voice). */
+  captions: boolean;
+  /** Where the play/pause button and the voice status go (the board's top-left cluster). */
+  controls: HTMLElement | null;
+  status: HTMLElement | null;
+  onPlaying: (playing: boolean) => void;
 }) {
   const heard = useRef(false);
   const audio = useRef<HTMLAudioElement>(null);
@@ -160,15 +168,42 @@ function Playback({
     if (!shown) pause();
   }, [shown, pause]);
   useEffect(() => {
+    onPlaying(state === "playing");
+  }, [state, onPlaying]);
+  useEffect(() => () => onPlaying(false), [onPlaying]);
+  useEffect(() => {
     if (state !== "playing" || !silent) return;
     const timer = window.setTimeout(finish, Math.max(0, (1 - clock()) * duration));
     return () => clearTimeout(timer);
   }, [state, silent, clock, duration, finish, run]);
+  // Words on screen when asked for, or when it is known there is no voice.
+  const showText = captions || (silent && src !== undefined);
+  const voiceNote =
+    src === undefined ? "جارٍ تحضير الصوت…" : silent ? "الصوت غير متاح · نص الشرح" : "";
   return (
     <>
+      {controls &&
+        createPortal(
+          <button
+            type="button"
+            className="wb-round"
+            disabled={!shown}
+            onClick={state === "playing" ? pause : () => play()}
+            aria-label={
+              state === "playing"
+                ? "إيقاف الشرح مؤقتًا"
+                : state === "done"
+                  ? "إعادة الشرح"
+                  : "تشغيل الشرح"
+            }
+          >
+            {state === "playing" ? <Pause /> : state === "done" ? <RotateCcw /> : <Play />}
+          </button>,
+          controls,
+        )}
+      {status && voiceNote && createPortal(<span className="wb-voice">{voiceNote}</span>, status)}
       <div className="wb-sheet" dir="auto">
         <div className="wb-heading">
-          <span aria-hidden="true" />
           <h2>{sheet.step.title}</h2>
         </div>
         <BoardPaper
@@ -180,52 +215,27 @@ function Playback({
           playing={state === "playing" && shown}
         />
       </div>
-      <div className="wb-transcript">
-        <button
-          type="button"
-          className="wb-audio"
-          disabled={!shown}
-          onClick={state === "playing" ? pause : () => play()}
-          aria-label={
-            state === "playing"
-              ? "إيقاف الشرح مؤقتًا"
-              : state === "done"
-                ? "إعادة الشرح"
-                : "تشغيل الشرح"
-          }
-        >
-          {state === "playing" ? <Pause /> : state === "done" ? <RotateCcw /> : <Play />}
-        </button>
-        <div>
-          <span className="wb-speaker">
-            {silent ? <VolumeX /> : <AudioLines />}
-            {src === undefined
-              ? "جارٍ تحضير الصوت…"
-              : silent
-                ? "الصوت غير متاح · نص الشرح"
-                : "يوزرا"}
-          </span>
-          <p dir="auto">{sheet.step.narration}</p>
-          {state !== "done" && shown && (
-            <div className="wb-reading">
-              {state === "paused" && (
-                <button type="button" onClick={() => play()}>
-                  تشغيل الشرح
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  wantsVoice.current = false;
-                  audio.current?.pause();
-                  finish();
-                }}
-              >
-                عرض الخطوة كاملة
+      <div className="wb-transcript" data-hidden={showText ? undefined : ""}>
+        <p dir="auto">{sheet.step.narration}</p>
+        {showText && state !== "done" && shown && (
+          <div className="wb-reading">
+            {state === "paused" && (
+              <button type="button" onClick={() => play()}>
+                تشغيل الشرح
               </button>
-            </div>
-          )}
-        </div>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                wantsVoice.current = false;
+                audio.current?.pause();
+                finish();
+              }}
+            >
+              عرض الخطوة كاملة
+            </button>
+          </div>
+        )}
         <audio
           ref={audio}
           src={src || undefined}
@@ -268,9 +278,24 @@ export function StudyWhiteboard({
     observer.observe(scrollArea.current!);
     return () => observer.disconnect();
   }, []);
-  const [zoom, setZoom] = useState(100);
-  const source = useRef<HTMLDivElement>(null);
   const activeSection = useRef<HTMLElement>(null);
+  const levels = useRef({ input: 0, output: 0 });
+  const [captions, setCaptions] = useState(false);
+  const [talking, setTalking] = useState(false);
+  const [controls, setControls] = useState<HTMLElement | null>(null);
+  const [status, setStatus] = useState<HTMLElement | null>(null);
+  const [saving, setSaving] = useState(false);
+  const board = useRef<HTMLElement>(null);
+  const footer = useRef<HTMLElement>(null);
+  // The words under the drawing float just above the question bar, whatever its height.
+  useEffect(() => {
+    const foot = footer.current!;
+    const observer = new ResizeObserver(() =>
+      board.current?.style.setProperty("--wb-foot", `${foot.offsetHeight}px`),
+    );
+    observer.observe(foot);
+    return () => observer.disconnect();
+  }, []);
   useEffect(() => {
     const el = dialog.current!;
     el.showModal();
@@ -486,6 +511,7 @@ export function StudyWhiteboard({
       setHearing(false);
     };
   }, [handsFree, ready, shown, busy, asking, problem, finished, language, cursor]);
+  const cubeMode = busy ? "thinking" : talking ? "speaking" : "idle";
   return (
     <dialog
       className="wb-dialog"
@@ -496,68 +522,71 @@ export function StudyWhiteboard({
         onClose();
       }}
     >
-      <section className="wb" dir="rtl" aria-label="سبورة يوزرا">
+      <section
+        ref={board}
+        className="wb"
+        dir="rtl"
+        aria-label="سبورة يوزرا"
+        data-captions={captions ? "" : undefined}
+      >
         <header className="wb-top" dir="ltr">
+          <div className="wb-cluster">
+            <span className="wb-avatar" aria-hidden="true">
+              <RitaCube levelsRef={levels} mode={cubeMode} label="" />
+            </span>
+            <span ref={setControls} className="wb-slot" />
+            <button
+              type="button"
+              className="wb-round"
+              aria-pressed={captions}
+              aria-label="نص الشرح"
+              title="نص الشرح"
+              onClick={() => setCaptions(!captions)}
+            >
+              <Captions />
+            </button>
+            <button
+              type="button"
+              className="wb-round"
+              aria-label="نزّل السبورة كصورة"
+              title="نزّل السبورة كصورة"
+              disabled={!page || saving}
+              onClick={async () => {
+                setSaving(true);
+                try {
+                  await downloadBoard(activeSection.current, page?.step.title ?? "");
+                } finally {
+                  setSaving(false);
+                }
+              }}
+            >
+              {saving ? <LoaderCircle className="wb-spin" /> : <Download />}
+            </button>
+            <span ref={setStatus} className="wb-slot" />
+          </div>
           <button
-            className="wb-back"
+            className="wb-close"
             type="button"
             onClick={onClose}
             aria-label="رجوع إلى الدرس"
             autoFocus
           >
-            <ChevronLeft />
-          </button>
-          <strong dir="auto">{pages[0]?.step.title || "سبورة يوزرا"}</strong>
-          <div className="wb-tools">
-            <button
-              type="button"
-              aria-label="تصغير السبورة"
-              disabled={zoom <= 75}
-              onClick={() => setZoom(zoom - 25)}
-            >
-              <Minus />
-            </button>
-            <button aria-label="الحجم الأصلي" onClick={() => setZoom(100)}>
-              {zoom}%
-            </button>
-            <button
-              type="button"
-              aria-label="تكبير السبورة"
-              disabled={zoom >= 150}
-              onClick={() => setZoom(zoom + 25)}
-            >
-              <Plus />
-            </button>
-          </div>
-          <button
-            className="wb-source-button"
-            type="button"
-            title="الفقرة المحدّدة"
-            aria-label="عرض الفقرة المحدّدة"
-            onClick={() => {
-              setExpanded(true);
-              source.current?.scrollIntoView({ block: "start" });
-            }}
-          >
-            <BookOpen size={18} />
+            <X />
           </button>
         </header>
         <div className="wb-scroll" ref={scrollArea}>
-          <div ref={source} className="wb-reference">
-            <BookOpen size={17} />
-            <div>
-              <strong>من الفقرة المحدّدة</strong>
-              <blockquote className={expanded ? "is-expanded" : ""} dir="auto">
-                {selection.exact}
-              </blockquote>
-            </div>
+          <div className="wb-reference">
+            <span>من الفقرة</span>
+            <blockquote className={expanded ? "is-expanded" : ""} dir="auto">
+              {selection.exact}
+            </blockquote>
             {selection.exact.length > 55 && (
               <button type="button" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
                 {expanded ? "طيّ" : "عرض الكل"}
               </button>
             )}
           </div>
-          <div className="wb-canvas" style={{ width: canvasWidth || "100%", zoom: zoom / 100 }}>
+          <div className="wb-canvas" style={{ width: canvasWidth || "100%" }}>
             {pages.map((sheet, i) => (
               <article
                 className="wb-topic"
@@ -566,17 +595,22 @@ export function StudyWhiteboard({
                 data-active={i === cursor}
                 data-followup={Boolean(sheet.question)}
               >
-                <div className="wb-topic-label">
-                  <Layers size={14} />
-                  {sheet.question ? "سؤال عن القسم" : "القسم"} {["١", "٢", "٣"][sheet.index]}
-                </div>
                 {sheet.question && (
                   <p className="wb-question" dir="auto">
+                    <span>سؤالك</span>
                     {sheet.question}
                   </p>
                 )}
                 {i === cursor && !finished ? (
-                  <Playback sheet={sheet} shown={shown && !busy && !asking} onReady={setReady} />
+                  <Playback
+                    sheet={sheet}
+                    shown={shown && !busy && !asking}
+                    onReady={setReady}
+                    captions={captions}
+                    controls={controls}
+                    status={status}
+                    onPlaying={setTalking}
+                  />
                 ) : (
                   <>
                     <div className="wb-sheet">
@@ -614,7 +648,7 @@ export function StudyWhiteboard({
             </div>
           )}
         </div>
-        <footer className="wb-footer">
+        <footer className="wb-footer" ref={footer}>
           {busy && (
             <div role="status" className="wb-status">
               <LoaderCircle className="wb-spin" />
@@ -632,108 +666,89 @@ export function StudyWhiteboard({
               </button>
             </div>
           )}
-          {page &&
-            !busy &&
-            (asking && !finished ? (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  respond(draft);
+          {(micHint || hearing) && (
+            <p aria-live="polite" className="wb-hint">
+              {micHint || "الميكروفون شغّال. احكي «تمام» أو اسأل يوزرا."}
+            </p>
+          )}
+          {page && !busy && (
+            <div className="wb-next">
+              <button type="button" className="wb-primary" onClick={finished ? onClose : advance}>
+                {finished
+                  ? "العودة للدرس"
+                  : page.index === 2 && cursor === pages.length - 1
+                    ? "تمام، فهمت"
+                    : "تمام، كمّلي"}{" "}
+                {finished ? <Check /> : <ArrowLeft />}
+              </button>
+              {cursor > 0 && (
+                <button
+                  type="button"
+                  className="wb-back-step"
+                  title="القسم السابق"
+                  aria-label="القسم السابق"
+                  onClick={() => {
+                    setFinished(false);
+                    setProblem("");
+                    setReady(false);
+                    setCursor(cursor - 1);
+                  }}
+                >
+                  <ChevronRight />
+                </button>
+              )}
+            </div>
+          )}
+          <form
+            className="wb-ask"
+            dir="ltr"
+            onSubmit={(e) => {
+              e.preventDefault();
+              respond(draft);
+            }}
+          >
+            {canHear && (
+              <button
+                type="button"
+                className="wb-mic"
+                aria-label="المتابعة بالصوت"
+                title="المتابعة بالصوت"
+                aria-pressed={handsFree}
+                disabled={!page || busy || finished}
+                onClick={() => {
+                  setMicHint("");
+                  setHandsFree(!handsFree);
                 }}
               >
-                <label htmlFor="wb-ask">شو حابّ أوضّح بهالخطوة؟</label>
-                <div className="wb-field">
-                  <input
-                    id="wb-ask"
-                    autoFocus
-                    value={draft}
-                    maxLength={300}
-                    onChange={(e) => setDraft(e.target.value)}
-                    placeholder="اكتب سؤالك…"
-                    dir="auto"
-                  />
-                  <button aria-label="إرسال السؤال" disabled={!draft.trim()}>
-                    <CornerDownLeft />
-                  </button>
-                </div>
-                <button type="button" className="wb-link" onClick={() => setAsking(false)}>
-                  رجوع للشرح
-                </button>
-              </form>
-            ) : (
-              <>
-                <p aria-live="polite" className="wb-hint">
-                  {finished
-                    ? ""
-                    : micHint ||
-                      (hearing
-                        ? "الميكروفون شغّال. احكي «تمام» أو اسأل يوزرا."
-                        : ready
-                          ? canHear
-                            ? "وقفت هون. احكي «تمام» بالميكروفون أو تابع بالزر."
-                            : "وقفت هون. منكمّل؟"
-                          : "اسمع الشرح وتابع القلم.")}
-                </p>
-                <div className="wb-controls">
-                  <button
-                    type="button"
-                    className="wb-primary"
-                    onClick={finished ? onClose : advance}
-                  >
-                    {finished
-                      ? "العودة للدرس"
-                      : page.index === 2 && cursor === pages.length - 1
-                        ? "تمام، فهمت"
-                        : "تمام، كمّلي"}{" "}
-                    {finished ? <Check /> : <ArrowLeft />}
-                  </button>
-                  {!finished && (
-                    <>
-                      <button
-                        type="button"
-                        className="wb-small"
-                        onClick={() => setAsking(true)}
-                        aria-label="اسأل عن هذه الخطوة"
-                      >
-                        <MessageCircle />
-                        <span>عندي سؤال</span>
-                      </button>
-                      {canHear && (
-                        <button
-                          type="button"
-                          className="wb-icon"
-                          aria-label="المتابعة بالصوت"
-                          title="المتابعة بالصوت"
-                          aria-pressed={handsFree}
-                          onClick={() => {
-                            setMicHint("");
-                            setHandsFree(!handsFree);
-                          }}
-                        >
-                          <Mic />
-                        </button>
-                      )}
-                    </>
-                  )}
-                  {cursor > 0 && (
-                    <button
-                      type="button"
-                      className="wb-icon"
-                      title="القسم السابق"
-                      aria-label="القسم السابق"
-                      onClick={() => {
-                        setFinished(false);
-                        setProblem("");
-                        setReady(false);
-                        setCursor(cursor - 1);
-                      }}
-                    >
-                      <ChevronRight />
-                    </button>
-                  )}
-                </div>
-              </>
-            ))}
+                <Mic />
+              </button>
+            )}
+            <div className="wb-field">
+              <button
+                aria-label="إرسال السؤال"
+                disabled={!draft.trim() || !page || busy || finished}
+              >
+                <ArrowUp />
+              </button>
+              <label htmlFor="wb-ask" className="wb-sr">
+                اسأل عن هذه الخطوة
+              </label>
+              <input
+                id="wb-ask"
+                value={draft}
+                maxLength={300}
+                disabled={!page || busy || finished}
+                onChange={(e) => setDraft(e.target.value)}
+                onFocus={() => setAsking(true)}
+                onBlur={() => {
+                  if (!draft.trim()) setAsking(false);
+                }}
+                placeholder="اطرح سؤالًا متابعًا…"
+                dir={draft ? "auto" : "rtl"}
+                autoComplete="off"
+              />
+            </div>
+          </form>
         </footer>
       </section>
     </dialog>

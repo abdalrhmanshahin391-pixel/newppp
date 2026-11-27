@@ -541,6 +541,24 @@ it fades in once loaded; a photo that fails shows the initial. A chevron sits be
 short 22px line separates it from the tools before it.
 
 
+## Uzyra's board (`StudyWhiteboard`, «اشرحلي» on the lesson page)
+
+Since Nov 2026 the board is one full-screen sheet on a soft light-blue sky (a radial gradient, lighter
+in the middle), drawn by hand (`board-sketch.ts`): straight strokes bow a little, gentle point lists
+(waves, arcs) are drawn as smooth curves, ellipses overshoot where they close, and a circled word sits
+in a hand-drawn rounded box. Ink is dark slate `#3a404d`, what matters is blue `#2747c9`; Arabic words
+are weight 400. Each section's title is a quiet centred line above its drawing; past sections are
+dimmed (60%). The selected text is one quiet italic line at the top («من الفقرة …»).
+- Top left: Uzyra's cube in a white ring with a soft blue glow (thinking while the board is being made,
+  speaking while the voice plays), then round dark 46px buttons: play/pause, «نص الشرح» (the words
+  as a white subtitle above the question bar; on by itself when there is no voice), and «نزّل السبورة
+  كصورة» (the open section as a PNG on the same sky, with its title; the SVG if the browser refuses).
+  The voice note («جارٍ تحضير الصوت…») sits after them in a soft pill. Top right: a round dark ✕.
+- Bottom: a 60px round dark microphone (hands-free «تمام») and a dark pill «اطرح سؤالًا متابعًا…» with a
+  white round send button; focusing it pauses the voice. «تمام، كمّلي ←» is a white pill just above,
+  with the previous section beside it; status and errors are dark pills there too. No camera button:
+  the board takes no photos.
+
 ## Checkout (`/checkout`): two halves, look only
 
 Since Nov 2026 the checkout is drawn in two halves like a hosted card checkout, in the home page's

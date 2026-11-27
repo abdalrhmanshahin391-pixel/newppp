@@ -316,8 +316,8 @@ if (process.argv.includes("--check")) {
       assert.equal(await board.locator('audio[src*="?old"]').count(), 0);
       assert.equal(await board.locator(".wb-drawing").count(), 2);
       assert.equal(Math.round((await board.boundingBox()).width), width);
-      await board.getByRole("button", { name: "اسأل عن هذه الخطوة" }).click();
-      await board.locator("#wb-ask").fill("ليش أضفنا s؟");
+      // The question bar is always there under the board (the hand-drawn look, Nov 2026).
+      await board.getByRole("textbox", { name: "اسأل عن هذه الخطوة" }).fill("ليش أضفنا s؟");
       await page.evaluate(() => {
         window.qaBoardFail = true;
       });
