@@ -1,5 +1,7 @@
-import {publishVoiceTime,type VoiceTimeSnapshot} from "@/lib/free-talk-time";
-import {VoiceTime} from "@/components/VoiceTime";
+import {type VoiceTimeSnapshot} from "@/lib/free-talk-time";
+import {VoiceTimeOver} from "@/components/rita/VoiceTimeOver";
+import { useServerFn } from "@tanstack/react-start";
+import { myFreeTalkBudget } from "@/lib/free-talk.functions";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -274,6 +276,45 @@ export function RitaRealtimeV3({
   const [soundBlocked, setSoundBlocked] = useState(false);
   const [active, setActive] = useState(false);
   const [voiceDeadline, setVoiceDeadline] = useState<{ snapshot: VoiceTimeSnapshot; receivedAt: number } | null>(null);
+  // When this call's time runs out (performance.now() clock); 0 when unknown. The voice server cuts
+  // the call at that moment, so a disconnect near it is the time running out, not a failure.
+  const voiceDeadlineAt = useRef(0);
+  // The call stopped because the voice time ran out: the «خلص وقتك» window.
+  const [timeOver, setTimeOver] = useState(false);
+  // At the call's start: nothing was left beyond what this call holds, so its deadline is the end
+  // of the learner's time (not just the one-hour limit of a single call).
+  const voiceTimeEnds = useRef(false);
+  const readVoiceTime = useServerFn(myFreeTalkBudget);
+  const markVoiceDeadline = (snapshot: VoiceTimeSnapshot & { availableSeconds?: number | null }) => {
+    if (!snapshot.activeDeadline) return;
+    voiceDeadlineAt.current =
+      performance.now() + Date.parse(snapshot.activeDeadline) - Date.parse(snapshot.serverNow);
+    voiceTimeEnds.current = !snapshot.unlimited && !(Number(snapshot.availableSeconds) > 0);
+  };
+  // The call reached its deadline. If the learner's time is spent, the «خلص وقتك» window;
+  // otherwise it was the one-hour limit of a single call and a new call can start.
+  const deadlineReached = async (arabic: boolean) => {
+    voiceDeadlineAt.current = 0;
+    let spent = voiceTimeEnds.current;
+    if (!spent) {
+      try {
+        const now = await readVoiceTime();
+        spent = !now.unlimited && !(Number(now.availableSeconds) > 0);
+      } catch {
+        spent = false;
+      }
+    }
+    if (spent) {
+      setStatus(arabic ? "خلص وقتك." : "Your time is up.");
+      setTimeOver(true);
+    } else {
+      setStatus(
+        arabic
+          ? "وصلت المكالمة لحدها (ساعة). تقدر تبدأ مكالمة جديدة."
+          : "This call reached its one-hour limit. You can start a new one.",
+      );
+    }
+  };
 
   // Tell the language switcher a conversation is running, so it waits until it is over.
   useEffect(() => {
@@ -882,7 +923,7 @@ export function RitaRealtimeV3({
               }),
               keepalive: true,
               signal: AbortSignal.timeout(5000),
-            }).catch(() => undefined).finally(() => publishVoiceTime());
+            }).catch(() => undefined);
           })()
         : Promise.resolve();
       void flushMetrics({ keepalive: true });
@@ -958,8 +999,9 @@ export function RitaRealtimeV3({
     const remaining = Date.parse(voiceDeadline.snapshot.activeDeadline) - Date.parse(voiceDeadline.snapshot.serverNow) - (performance.now() - voiceDeadline.receivedAt);
     const timer = window.setTimeout(() => {
       if (sessionId.current !== voiceDeadline.snapshot.activeSessionId) return;
-      void endLesson(true);
-      setStatus("Conversation time ended.");
+      void endLesson(true).finally(() =>
+        deadlineReached(languageRef.current !== "en" || Boolean(studyLessonId)),
+      );
     }, Math.max(0, remaining));
     return () => window.clearTimeout(timer);
   }, [active, voiceDeadline, endLesson]);
@@ -1079,6 +1121,13 @@ export function RitaRealtimeV3({
     const isCurrent = () => attempt.current && attemptRef.current === attempt;
     const failConnection = (cause: unknown, stage: string) => {
       if (!isCurrent()) return;
+      // No time left to start, or the voice server cut the call at its deadline: that is the time
+      // running out, so say so instead of offering to reconnect.
+      const exhausted = /free_talk_exhausted/i.test(
+        cause instanceof Error ? cause.message : String(cause ?? ""),
+      );
+      const atDeadline =
+        voiceDeadlineAt.current > 0 && performance.now() >= voiceDeadlineAt.current - 5000;
       const message = voiceErrorMessage(
         cause,
         Boolean(studyLessonId) || languageRef.current !== "en",
@@ -1095,6 +1144,21 @@ export function RitaRealtimeV3({
       retiringCleanup.current = cleanup;
       // The reconnect button shows at once instead of a spinner while the old call closes.
       setStarting(false);
+      if (exhausted || atDeadline) {
+        const arabic = Boolean(studyLessonId) || languageRef.current !== "en";
+        setConnectionPhase("ended");
+        setError("");
+        if (exhausted) {
+          voiceDeadlineAt.current = 0;
+          setStatus(arabic ? "خلص وقتك." : "Your time is up.");
+          setTimeOver(true);
+        } else {
+          // Ask about the time only once the call is closed and charged.
+          voiceDeadlineAt.current = 0;
+          void cleanup.then(() => deadlineReached(arabic));
+        }
+        return;
+      }
       setConnectionPhase("failed");
       setError(message);
       setStatus(message);
@@ -1102,6 +1166,8 @@ export function RitaRealtimeV3({
     // First thing inside the tap: unlock audio and start the real click-to-ready timer.
     unlockBotAudio();
     sessionStartedAt.current = performance.now();
+    voiceDeadlineAt.current = 0;
+    voiceTimeEnds.current = false;
     traceId.current = crypto.randomUUID();
     pendingMetrics.current = [];
     botAudioPlaying.current = false;
@@ -1275,7 +1341,7 @@ export function RitaRealtimeV3({
               sessionId.current = String(started.sessionId ?? "");
               if((started as {freeTalk?:VoiceTimeSnapshot}).freeTalk) {
                 const snapshot = (started as {freeTalk:VoiceTimeSnapshot}).freeTalk;
-                publishVoiceTime(snapshot);
+                markVoiceDeadline(snapshot);
                 setVoiceDeadline({snapshot,receivedAt:performance.now()});
               }
               providerSessionId.current = String(started.providerSessionId ?? "");
@@ -1639,7 +1705,7 @@ export function RitaRealtimeV3({
         providerSessionId.current = String(startResult.providerSessionId ?? "");
         const snapshot = (startResult as {freeTalk?:VoiceTimeSnapshot}).freeTalk;
         if (snapshot) {
-          publishVoiceTime(snapshot);
+          markVoiceDeadline(snapshot);
           setVoiceDeadline({snapshot,receivedAt:performance.now()});
         }
         flushPendingMetrics(sessionId.current);
@@ -1993,6 +2059,16 @@ export function RitaRealtimeV3({
             onWord={(item) => tray.add([item], item.term)}
           />
         )}
+        <VoiceTimeOver
+          open={timeOver}
+          arabic={Boolean(studyLessonId) || languageRef.current !== "en"}
+          onPlans={() => setTimeOver(false)}
+          onDone={() => {
+            setTimeOver(false);
+            // Out of a free conversation; a lesson stays open without the call.
+            if (freeTalk) void navigate({ to: "/rita-conversations" });
+          }}
+        />
         <LearningTray tray={tray} />
       </Column>
     );
@@ -2086,7 +2162,6 @@ export function RitaRealtimeV3({
             />
             {status}
           </p>
-          {!lessonId && !studyLessonId && <VoiceTime />}
           {!lessonId && saveState !== "idle" ? (
             <p
               role="status"
@@ -2312,6 +2387,12 @@ export function RitaRealtimeV3({
         />
       )}
 
+      <VoiceTimeOver
+        open={timeOver}
+        arabic={Boolean(studyLessonId) || languageRef.current !== "en"}
+        onPlans={() => setTimeOver(false)}
+        onDone={() => setTimeOver(false)}
+      />
       <LearningTray tray={tray} />
     </main>
   );

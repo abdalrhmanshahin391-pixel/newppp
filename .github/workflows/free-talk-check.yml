@@ -50,6 +50,6 @@ jobs:
         env:
           FREE_TALK_TEST_DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/uzyra_free_talk_test
         run: node scripts/test-free-talk-db.mjs
-      - run: node --test src/lib/free-talk-time.test.ts src/lib/rita-v3-startup.test.mjs src/lib/rita-voice-connection.test.ts src/lib/plan-billing.test.ts
+      - run: node --test src/lib/free-talk-time.test.ts src/lib/free-talk-audio.test.ts src/lib/rita-v3-startup.test.mjs src/lib/rita-voice-connection.test.ts src/lib/plan-billing.test.ts
       - run: bunx tsc --noEmit
       - run: bun run build

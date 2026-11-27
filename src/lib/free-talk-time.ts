@@ -28,7 +28,3 @@ export function voiceTimeLabel(seconds: number | null) {
     .map((n) => String(n).padStart(2, "0"))
     .join(":");
 }
-export function publishVoiceTime(snapshot?: VoiceTimeSnapshot) {
-  if (typeof window !== "undefined")
-    window.dispatchEvent(new CustomEvent("uzyra-voice-time", { detail: snapshot }));
-}

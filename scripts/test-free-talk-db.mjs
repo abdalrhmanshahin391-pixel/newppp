@@ -2,7 +2,7 @@
 import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import assert from "node:assert/strict";
-let db, parallel;
+let db, parallel, parallelBoard;
 const isolatedUrl = process.env.FREE_TALK_TEST_DATABASE_URL;
 if (isolatedUrl) {
   const url = new URL(isolatedUrl);
@@ -23,6 +23,8 @@ if (isolatedUrl) {
     },
   };
   parallel = (u, s) => pool.unsafe(`select public.free_talk_reserve('${id(u)}','${id(s)}')`);
+  parallelBoard = (u, ms, ref) =>
+    pool.unsafe(`select public.voice_board_charge('${id(u)}',${ms},'${ref}')->>'charged' as c`);
 } else {
   if (!process.env.PGLITE_MODULE)
     throw new Error(
@@ -227,6 +229,96 @@ try {
   await expect(
     `select not has_function_privilege('authenticated','public.groq_request_take_for(uuid)','EXECUTE') and has_function_privilege('authenticated','public.groq_request_take()','EXECUTE') and not has_table_privilege('authenticated','public.groq_request_usage','SELECT')`,
   );
+  // One voice time for calls and the whiteboard (20261127200000_voice_board_time.sql).
+  const board = await readFile(
+    new URL("../supabase/migrations/20261127200000_voice_board_time.sql", import.meta.url),
+    "utf8",
+  );
+  await db.exec(board);
+  await db.exec(board);
+  await expect("select enabled from public.free_talk_config");
+  await exec(
+    "update public.plans set free_talk_seconds=120,free_talk_period='daily' where slug='starter'",
+  );
+  for (const n of [100, 101, 102, 103])
+    await exec(`insert into auth.users values('${id(n)}',now())`);
+  for (const [s, u] of [
+    [201, 100],
+    [202, 101],
+    [203, 102],
+  ])
+    await exec(`insert into public.rita_v3_sessions values('${id(s)}','${id(u)}')`);
+  const charge = (u, ms, ref, field = "charged") =>
+    `select public.voice_board_charge('${id(u)}',${ms},'${ref}')->>'${field}'`;
+  const left = (u) => `select (public.free_talk_budget('${id(u)}')->>'remainingSeconds')::int`;
+  // A clip takes its exact length; the total counts up to the next second.
+  await expect(left(100), 120);
+  await expect(charge(100, 30500, "board-test-001", "leftMs"), "89500");
+  await expect(left(100), 89);
+  // The same clip is never charged twice, and another account cannot reuse its id.
+  await expect(charge(100, 30500, "board-test-001", "repeat"), "true");
+  await expect(
+    `select count(*)::int from public.voice_board_charges where user_id='${id(100)}'`,
+    1,
+  );
+  await denied(charge(101, 1000, "board-test-001"), "voice_board_invalid");
+  // Never below zero: a clip longer than what is left is refused, exactly the rest is fine.
+  await expect(charge(100, 89501, "board-test-002", "reason"), "exhausted");
+  await expect(charge(100, 89500, "board-test-003"), "true");
+  await expect(left(100), 0);
+  await expect(charge(100, 1, "board-test-004", "reason"), "exhausted");
+  await denied(`select public.free_talk_reserve('${id(100)}','${id(201)}')`, "free_talk_exhausted");
+  // An open call holds all the time; after it ends, the board gets only what the call left.
+  await expect(
+    `select (public.free_talk_reserve('${id(101)}','${id(202)}')->>'reservedSeconds')::int`,
+    120,
+  );
+  await expect(charge(101, 1000, "board-test-101", "reason"), "call");
+  await exec(
+    `select public.free_talk_claim('${id(202)}');select public.free_talk_bind('${id(202)}','call');`,
+  );
+  await exec(
+    `update public.free_talk_sessions set created_at=clock_timestamp()-interval '39.2 seconds' where id='${id(202)}'`,
+  );
+  await exec(`select public.free_talk_settle('${id(202)}')`);
+  await expect(`select charged_seconds from public.free_talk_sessions where id='${id(202)}'`, 40);
+  await expect(charge(101, 80000, "board-test-102", "leftMs"), "0");
+  await expect(charge(101, 1, "board-test-103", "reason"), "exhausted");
+  // Board first: a call then only gets the rest.
+  await exec(charge(102, 59001, "board-test-201"));
+  await expect(
+    `select (public.free_talk_reserve('${id(102)}','${id(203)}')->>'reservedSeconds')::int`,
+    60,
+  );
+  // Simultaneous clips cannot both take the last seconds.
+  const race = await Promise.allSettled(
+    [1, 2, 3].map((n) =>
+      parallelBoard
+        ? parallelBoard(103, 70000, `board-race-00${n}`)
+        : exec(charge(103, 70000, `board-race-00${n}`)),
+    ),
+  );
+  assert.equal(
+    race.filter(
+      (r) =>
+        r.status === "fulfilled" && Object.values(r.value.rows?.[0] ?? r.value[0])[0] === "true",
+    ).length,
+    1,
+  );
+  checks++;
+  await denied(charge(103, 0, "board-test-501"), "voice_board_invalid");
+  await denied(charge(103, 600001, "board-test-502"), "voice_board_invalid");
+  // Yesterday's clips do not count today.
+  await exec(
+    `update public.voice_board_charges set period_key='2000-01-01' where user_id='${id(100)}'`,
+  );
+  await expect(left(100), 120);
+  for (const role of ["anon", "authenticated"]) {
+    await exec("set role " + role);
+    await denied(charge(100, 10, "board-test-601"), "permission denied");
+    await denied("select * from public.voice_board_charges", "permission denied");
+    await exec("reset role");
+  }
   console.log(
     `PASS: ${checks} database quota checks (${isolatedUrl ? "PostgreSQL with independent concurrent connections" : "isolated PGlite; parallel requests serialized by runtime"}).`,
   );

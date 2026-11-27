@@ -296,6 +296,10 @@ export function StudyWhiteboard({
   const [micHint, setMicHint] = useState("");
   const [canHear, setCanHear] = useState(false);
   const [finished, setFinished] = useState(false);
+  // The voice time ran out (calls and the board share it): the board stops here.
+  const [timeOver, setTimeOver] = useState(false);
+  const timeOverRef = useRef(false);
+  const [voiceNote, setVoiceNote] = useState("");
   const [expanded, setExpanded] = useState(false);
   const mounted = useRef(false),
     pending = useRef(false);
@@ -308,8 +312,14 @@ export function StudyWhiteboard({
   useEffect(() => {
     if (firstRow) firstSection.current?.scrollIntoView({ block: "nearest" });
   }, [firstRow]);
+  const stopForTime = () => {
+    timeOverRef.current = true;
+    setTimeOver(true);
+    setHandsFree(false);
+    setAsking(false);
+  };
   const load = async (index: number, question = "") => {
-    if (pending.current) return;
+    if (pending.current || timeOverRef.current) return;
     const timing = {
       action: question ? "question" : index ? "continue" : "open",
       start: index || question || !initialClick.current ? performance.now() : startedAt,
@@ -354,7 +364,10 @@ export function StudyWhiteboard({
         },
       });
       if (!response.ok) {
-        if (mounted.current) setProblem(response.message);
+        if (mounted.current) {
+          if (response.timeOver) stopForTime();
+          setProblem(response.message);
+        }
         return;
       }
       // Subscribe immediately so a failed stream cannot leave an unhandled deferred rejection.
@@ -368,6 +381,14 @@ export function StudyWhiteboard({
         setProblem(reply.message);
         return;
       }
+      void Promise.resolve(reply.voice)
+        .then((voice) => {
+          if (!mounted.current) return;
+          if (voice === "over") stopForTime();
+          else if (voice === "call") setVoiceNote("الصوت موقف وانت بمكالمة مع يوزرا.");
+          else if (voice === "none") setVoiceNote("خطتك ما فيها وقت صوت، فالشرح بدون صوت.");
+        })
+        .catch(() => undefined);
       const samePrefix =
         first &&
         first.commands.every(
@@ -615,13 +636,22 @@ export function StudyWhiteboard({
           )}
         </div>
         <footer className="wb-footer">
-          {busy && (
+          {timeOver && !busy ? (
+            <div className="wb-status" role="alert">
+              <span>خلص وقتك ولا يمكنك الإكمال.</span>
+              <a href="/pricing">شوف الخطط</a>
+              <button type="button" onClick={onClose}>
+                العودة للدرس
+              </button>
+            </div>
+          ) : null}
+          {!timeOver && busy && (
             <div role="status" className="wb-status">
               <LoaderCircle className="wb-spin" />
               {page ? "يوزرا بتحضّر الرسم التالي…" : "يوزرا بتحضّر شرح الفقرة…"}
             </div>
           )}
-          {problem && (
+          {problem && !timeOver && (
             <div className="wb-status" role="alert">
               <span>{problem}</span>
               <button
@@ -634,6 +664,7 @@ export function StudyWhiteboard({
           )}
           {page &&
             !busy &&
+            !timeOver &&
             (asking && !finished ? (
               <form
                 onSubmit={(e) => {
@@ -662,6 +693,7 @@ export function StudyWhiteboard({
               </form>
             ) : (
               <>
+                {voiceNote && <p className="wb-hint">{voiceNote}</p>}
                 <p aria-live="polite" className="wb-hint">
                   {finished
                     ? ""
