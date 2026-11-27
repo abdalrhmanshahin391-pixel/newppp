@@ -1,3 +1,4 @@
+import { SignInRedirect } from "@/components/study/RequireSignIn";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -135,12 +136,7 @@ function OnePlace() {
         />
 
         {loading ? null : !user ? (
-          <p className="mt-8 rounded-2xl bg-white p-6 text-[15px] font-bold">
-            <Link to="/login" className="underline">
-              Sign in
-            </Link>{" "}
-            to build your German shelf.
-          </p>
+          <SignInRedirect />
         ) : (
           <div className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
             {/* LEFT — type once */}

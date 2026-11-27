@@ -1,3 +1,4 @@
+import { SignInRedirect } from "@/components/study/RequireSignIn";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -128,18 +129,7 @@ function PdfSummaries() {
         {loading ? (
           <div className="mt-12 h-40 animate-pulse rounded-3xl border border-black/[0.07] bg-white" />
         ) : !user ? (
-          <div className="mt-12 rounded-3xl border border-black/[0.07] bg-white p-12 text-center">
-            <p className="font-display text-2xl font-black">Sign in to make summaries</p>
-            <p className="mt-2 text-[#2a2933]">
-              Your sheets are saved privately to your own account.
-            </p>
-            <Link
-              to="/login"
-              className="rita-pill mt-6 inline-flex h-11 items-center rounded-full px-6 text-[14px] font-semibold"
-            >
-              Sign in
-            </Link>
-          </div>
+          <SignInRedirect />
         ) : (
           <section className="mt-14">
             <div className="flex items-end justify-between">

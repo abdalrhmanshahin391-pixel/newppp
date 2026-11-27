@@ -1,3 +1,4 @@
+import { SignInRedirect } from "@/components/study/RequireSignIn";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -297,10 +298,7 @@ function AddQuestionsPage() {
         {loading ? (
           <div className="mt-10 h-56 animate-pulse rounded-3xl border border-border bg-card" />
         ) : !user ? (
-          <div className="mt-10 rounded-3xl border border-border bg-card p-10 text-center shadow-[var(--shadow-card)]">
-            <p className="text-base font-semibold text-foreground">Sign in to add your own questions.</p>
-            <Link to="/login" className="rita-btn rita-btn-primary mt-4 inline-flex">Sign in</Link>
-          </div>
+          <SignInRedirect />
         ) : (
           <div className="mt-10 grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
             {/* ---------- the form ---------- */}

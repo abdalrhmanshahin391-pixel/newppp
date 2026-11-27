@@ -1,3 +1,4 @@
+import { SignInRedirect } from "@/components/study/RequireSignIn";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -110,20 +111,7 @@ function ShareNew() {
     return (
       <div className="min-h-screen bg-white text-[#121117]">
         <SiteHeader />
-        <main className="mx-auto max-w-3xl px-4 py-20 text-center">
-          <span className="text-5xl">🃏</span>
-          <h1 className="mt-4 font-display text-3xl font-black">Sign in to share flashcards</h1>
-          <p className="mx-auto mt-2 max-w-md text-sm text-[#54546a]">
-            Uzyra saves your decks to your account so students across Uzyra can learn from your work.
-          </p>
-          <button
-            type="button"
-            onClick={() => openWelcome("/share/new")}
-            className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-6 py-3 text-sm font-black text-white shadow-sm transition hover:brightness-105"
-          >
-            Sign in
-          </button>
-        </main>
+        <SignInRedirect />
       </div>
     );
   }

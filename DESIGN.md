@@ -139,7 +139,15 @@ and summaries (a shared link asks the visitor to sign in first).
   page, then sign-in or sign-up) and brings them back to the same address, search included, after
   signing in. There is no separate sign-in screen for these pages; the visitor sees a quiet
   placeholder for a moment, and the redirect replaces the page in history so Back does not loop.
-  (The older study surfaces keep their own `RequireAuth` panel.)
+  `RequireAuth` is the same gate under its old name, and a page that used to draw its own «Sign in
+  to …» card renders `SignInRedirect` there instead. The site has one sign-in: the pages at
+  `/start`, `/login`, `/register`, `/forgot-password` and `/reset-password`, never a second panel,
+  card or window.
+- **No profile step:** there is no «let's set up your profile» page after sign-up. A new account
+  gets its name and username when it is made (the `handle_new_user` trigger); the rest is in
+  Settings. Old links to `/welcome` go straight on to where they were heading.
+- **No install prompt:** the account menu has no «Install app» item and no «Keep Uzyra one tap
+  away» sheet.
 - **Check:** `scripts/check-guest-routes.mjs` fails CI when a route is neither on its short public
   list nor guarded.
 
