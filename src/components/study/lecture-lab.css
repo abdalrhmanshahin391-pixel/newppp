@@ -1,0 +1,575 @@
+/* Lecture Lab (/study/lectures, /new, /run) on top of the flashcards page's look
+   (`flashcards-page.css`, the `fc-` classes): the same head, toolbar, list and session card, plus
+   what only Lecture Lab has — two three-way switches, the exam time, the upload steps and the
+   results. Google Sans Flex, black and white, round pills, no ink frames. */
+
+/* Toolbar: one black pill, the counts on the other side */
+.ll-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: var(--fc-ink);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    transform 120ms var(--fc-ease);
+}
+.ll-new:hover {
+  background: #000;
+}
+.ll-new:active {
+  transform: scale(0.98);
+}
+.ll-count {
+  margin: 0 0 0 auto;
+  color: var(--fc-muted);
+  font-size: 14.5px;
+  font-variant-numeric: tabular-nums;
+}
+[dir="rtl"] .ll-count {
+  margin: 0 auto 0 0;
+}
+
+/* Session card: labels over the two switches */
+.ll-label {
+  margin: 18px 0 0;
+  color: var(--fc-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.ll-label + .fc-scope {
+  margin-top: 8px;
+}
+.fc-scope.ll-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.ll-three button {
+  min-width: 0;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+.ll-mode-note {
+  margin: 10px 0 0;
+  color: var(--fc-muted);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+/* A ticked sub-subject's pill keeps to one line */
+.ll-page .fc-picked-list button {
+  max-width: 100%;
+}
+.ll-page .fc-picked-list button > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ll-page .fc-picked-list button > svg {
+  flex: none;
+}
+
+/* Exam time: − 20 min + */
+.ll-time {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--fc-line);
+  font-size: 14.5px;
+}
+.ll-time > span {
+  color: var(--fc-muted);
+}
+.ll-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--fc-soft);
+}
+.ll-stepper button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--fc-ink);
+  box-shadow: 0 1px 3px rgb(18 18 18 / 0.12);
+}
+.ll-stepper button:disabled {
+  opacity: 0.4;
+}
+.ll-stepper label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 0 6px;
+  color: var(--fc-muted);
+  font-size: 14px;
+}
+.ll-stepper input {
+  width: 3ch;
+  border: 0;
+  background: transparent;
+  color: var(--fc-ink);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.ll-stepper input::-webkit-outer-spin-button,
+.ll-stepper input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+.ll-stepper input:focus {
+  outline: none;
+}
+.ll-stepper label:focus-within {
+  border-radius: 8px;
+  outline: 2px solid var(--fc-ink);
+}
+
+/* No subjects yet: only the first steps, full width, the three steps on hairlines */
+.fc-grid.ll-solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+.ll-steps {
+  display: grid;
+  width: min(100%, 26rem);
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: start;
+}
+.ll-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--fc-line);
+  color: var(--fc-ink);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.ll-steps li:last-child {
+  border-bottom: 1px solid var(--fc-line);
+}
+.ll-steps li > span {
+  flex: none;
+  width: 2ch;
+  color: var(--fc-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── New lecture quiz (/study/lectures/new): three numbered steps on hairlines ── */
+.ll-narrow {
+  max-width: 52rem;
+}
+.ll-kicker-link {
+  color: var(--fc-ink);
+  text-decoration: none;
+}
+.ll-kicker-link svg {
+  color: var(--fc-muted);
+  transition: transform 200ms var(--fc-ease);
+}
+.ll-kicker-link:hover svg {
+  transform: translateX(-3px);
+}
+[dir="rtl"] .ll-kicker-link:hover svg {
+  transform: translateX(3px) rotate(180deg);
+}
+.ll-step {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  column-gap: 8px;
+  padding: 28px 0;
+  border-top: 1px solid var(--fc-line);
+}
+.ll-page .ll-step h2 {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  margin: 0;
+  color: var(--fc-ink);
+  font-family: var(--fc-font);
+  font-size: 24px !important;
+  font-weight: 450 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.02em;
+}
+.ll-step h2 > span {
+  flex: none;
+  width: calc(3rem + 8px);
+  color: var(--fc-muted);
+  font-variant-numeric: tabular-nums;
+}
+.ll-step-lead {
+  grid-column: 2;
+  margin: 6px 0 0;
+  color: var(--fc-muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.ll-step-body {
+  grid-column: 2;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  margin-top: 18px;
+}
+.ll-step-body > :is(.fc-scope, .ll-new, .ll-check) {
+  justify-self: start;
+}
+.fc-scope.ll-two {
+  width: min(100%, 22rem);
+  margin-top: 0;
+}
+
+/* The drop zone */
+.ll-drop {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 36px 24px;
+  border: 1.5px dashed #c9c9cf;
+  border-radius: 24px;
+  background: #fafafa;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+.ll-drop:hover,
+.ll-drop:focus-within {
+  border-color: var(--fc-ink);
+  background: #fff;
+}
+.ll-drop.has-file {
+  border-style: solid;
+  border-color: var(--fc-ink);
+  background: #fff;
+}
+.ll-drop-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 6px;
+  border-radius: 999px;
+  background: var(--fc-ink);
+  color: #fff;
+}
+.ll-drop-title {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: var(--fc-ink);
+  font-size: 17px;
+  font-weight: 500;
+}
+.ll-drop-hint {
+  color: var(--fc-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.ll-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.ll-locked {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 28px 24px;
+  border-radius: 24px;
+  background: var(--fc-soft);
+  color: var(--fc-muted);
+  font-size: 14.5px;
+  text-align: center;
+}
+.ll-locked p {
+  margin: 0;
+}
+.ll-locked .ll-locked-title {
+  color: var(--fc-ink);
+  font-size: 17px;
+  font-weight: 500;
+}
+.ll-locked .ll-new {
+  margin-top: 8px;
+}
+
+/* Fields */
+.ll-field {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  color: var(--fc-ink);
+  font-size: 14.5px;
+  font-weight: 500;
+}
+.ll-input {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: var(--fc-soft);
+  color: var(--fc-ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 400;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+.ll-input::placeholder {
+  color: #8a8a93;
+}
+.ll-input:focus {
+  border-color: var(--fc-ink);
+  background: #fff;
+  outline: none;
+}
+.ll-area {
+  padding: 16px 18px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+/* Choices as pills */
+.ll-step-body .ll-label {
+  margin: 4px 0 -4px;
+}
+.ll-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ll-pills button {
+  min-width: 52px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--fc-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--fc-ink);
+  font-size: 15px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+.ll-pills button:hover {
+  border-color: #c9c9cf;
+}
+.ll-pills button[aria-pressed="true"] {
+  border-color: var(--fc-ink);
+  background: var(--fc-ink);
+  color: #fff;
+}
+.ll-hint {
+  margin: -4px 0 0;
+  color: var(--fc-muted);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.ll-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  color: var(--fc-ink);
+  font-size: 15px;
+  cursor: pointer;
+}
+.ll-check input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--fc-ink);
+}
+.ll-building {
+  margin-top: 8px;
+}
+.fc-go.ll-make {
+  margin-top: 24px;
+}
+.fc-go:disabled {
+  background: #d4d4d8;
+  color: #52525b;
+  cursor: not-allowed;
+}
+
+/* ── Results (/study/lectures/run, the end) ── */
+.ll-result {
+  padding-bottom: 32px;
+}
+.ll-page .ll-score {
+  margin: 0;
+  color: var(--fc-ink);
+  font-family: var(--fc-font);
+  font-size: clamp(72px, 10vw, 120px) !important;
+  font-weight: 450 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.ll-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+.ll-actions .fc-tool {
+  min-height: 48px;
+  padding: 0 22px;
+  text-decoration: none;
+}
+.ll-block {
+  padding: 28px 0;
+  border-top: 1px solid var(--fc-line);
+}
+.ll-page .ll-block h2 {
+  margin: 0 0 8px;
+  color: var(--fc-ink);
+  font-family: var(--fc-font);
+  font-size: 26px !important;
+  font-weight: 450 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.02em;
+}
+.ll-missed {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ll-missed li {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--fc-line);
+}
+.ll-missed li:last-child {
+  border-bottom: 0;
+}
+.ll-stem {
+  margin: 0;
+  color: var(--fc-ink);
+  font-size: 16.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.ll-right {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0 0;
+  color: #067647;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.ll-right svg {
+  flex: none;
+  margin-top: 3px;
+}
+.ll-why {
+  margin: 8px 0 0;
+  color: var(--fc-muted);
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+.ll-points {
+  margin-top: 16px;
+  padding: 20px 22px;
+  border-radius: 20px;
+  background: var(--fc-soft);
+}
+.ll-page .ll-points h3 {
+  margin: 0;
+  color: var(--fc-ink);
+  font-size: 15px !important;
+  font-weight: 500 !important;
+}
+.ll-points ul {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding-inline-start: 20px;
+  color: #3f3f46;
+  font-size: 15px;
+  line-height: 1.55;
+  list-style: disc;
+}
+.ll-page .ll-empty-title {
+  margin: 0;
+  color: var(--fc-ink);
+  font-family: var(--fc-font);
+  font-size: 26px !important;
+  font-weight: 450 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.02em;
+}
+.fc-empty a.fc-go {
+  text-decoration: none;
+}
+
+.ll-new:focus-visible,
+.ll-pills button:focus-visible,
+.ll-kicker-link:focus-visible,
+.ll-check input:focus-visible,
+.ll-stepper button:focus-visible {
+  outline: 2px solid var(--fc-ink);
+  outline-offset: 3px;
+}
+
+@media (max-width: 767px) {
+  .ll-count {
+    display: none;
+  }
+  .ll-step {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 24px 0;
+  }
+  .ll-step h2 > span {
+    width: 2ch;
+    margin-inline-end: 10px;
+  }
+  .ll-step-lead,
+  .ll-step-body {
+    grid-column: 1;
+  }
+  .ll-page .ll-step h2 {
+    font-size: 21px !important;
+  }
+  .fc-toolbar .ll-new {
+    width: 100%;
+    justify-content: center;
+  }
+}

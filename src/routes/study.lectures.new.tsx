@@ -1,17 +1,30 @@
 import { SignInRedirect } from "@/components/study/RequireSignIn";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowLeft, FileUp, Type } from "lucide-react";
+import { ArrowLeft, FileUp, LoaderCircle, Sparkles, Type } from "lucide-react";
+import { RitaCube } from "@/components/rita-study/RitaCube";
+import "@/components/study/flashcards-page.css";
+import "@/components/study/lecture-lab.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { usePlanGate } from "@/hooks/usePlanGate";
 import { UpgradeWall } from "@/components/plan/UpgradeWall";
 import { PromptDialog } from "@/components/study/SimpleDialogs";
-import { lqAddSubject, lqAddSubtopic, lqBoard, lqEnsureDefault, lqGenerate } from "@/lib/lecture-lab.functions";
+import {
+  lqAddSubject,
+  lqAddSubtopic,
+  lqBoard,
+  lqEnsureDefault,
+  lqGenerate,
+} from "@/lib/lecture-lab.functions";
 import { PdfScanError, extractPdfText, friendlyError, renderPdfPages } from "@/lib/pdf-text";
-import { BuildProgress, estimateBuildSeconds, type BuildStep } from "@/components/study/BuildProgress";
+import {
+  BuildProgress,
+  estimateBuildSeconds,
+  type BuildStep,
+} from "@/components/study/BuildProgress";
 import { aioReadPages } from "@/lib/all-in-one.functions";
 import { PickerBoard } from "@/components/common/PickerBoard";
 
@@ -33,9 +46,6 @@ export const Route = createFileRoute("/study/lectures/new")({
   component: NewLectureQuizPage,
 });
 
-const CREAM = "#ffffff";
-const INK = "#121117";
-
 const QUIZ_STEPS: BuildStep[] = [
   { key: "read", label: "Reading the lecture", weight: 1 },
   { key: "points", label: "Finding the teaching points", weight: 1.4 },
@@ -46,6 +56,7 @@ function NewLectureQuizPage() {
   const { user, loading } = useAuth();
   const gate = usePlanGate();
   const navigate = useNavigate();
+  const levels = useRef({ input: 0, output: 0 });
 
   const board = useServerFn(lqBoard);
   const addSubject = useServerFn(lqAddSubject);
@@ -54,7 +65,9 @@ function NewLectureQuizPage() {
   const ensureDefault = useServerFn(lqEnsureDefault);
 
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
-  const [subtopics, setSubtopics] = useState<{ id: string; subject_id: string; name: string }[]>([]);
+  const [subtopics, setSubtopics] = useState<{ id: string; subject_id: string; name: string }[]>(
+    [],
+  );
   const [subjectId, setSubjectId] = useState("");
   const [subtopicId, setSubtopicId] = useState("");
 
@@ -84,7 +97,10 @@ function NewLectureQuizPage() {
     refresh().catch((error) => toast.error(friendlyError(error)));
   }, [user, refresh]);
 
-  const kids = useMemo(() => subtopics.filter((t) => t.subject_id === subjectId), [subtopics, subjectId]);
+  const kids = useMemo(
+    () => subtopics.filter((t) => t.subject_id === subjectId),
+    [subtopics, subjectId],
+  );
 
   const pickerGroups = useMemo(
     () =>
@@ -120,14 +136,14 @@ function NewLectureQuizPage() {
   // are not allowed to run.
   const planRow = gate.usage?.plan as any;
   const leftQuestions = gate.remaining("ai_questions");
-  const featureOff = !gate.loading && !gate.usage?.is_admin && planRow?.feature_lecture_qgen === false;
+  const featureOff =
+    !gate.loading && !gate.usage?.is_admin && planRow?.feature_lecture_qgen === false;
   const outOfQuestions =
     !gate.loading && !gate.usage?.is_admin && leftQuestions !== null && leftQuestions < 1;
   const locked = featureOff || outOfQuestions;
   const lockReason = featureOff
     ? `Your ${gate.usage?.plan?.name ?? "current"} plan does not include lecture questions yet.`
     : "You have no AI questions left this month.";
-
 
   async function onNewSubject(name: string) {
     try {
@@ -171,7 +187,9 @@ function NewLectureQuizPage() {
       let text = pasted.trim();
       if (source === "pdf" && file) {
         try {
-          const r = await extractPdfText(file, (p) => setReading(`Reading page ${p.page} of ${p.pages}…`));
+          const r = await extractPdfText(file, (p) =>
+            setReading(`Reading page ${p.page} of ${p.pages}…`),
+          );
           text = r.text;
         } catch (e) {
           if (!(e instanceof PdfScanError)) throw e;
@@ -216,16 +234,16 @@ function NewLectureQuizPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen" style={{ background: CREAM }}>
+      <div className="fc-page min-h-screen bg-white">
         <SiteHeader />
-      <UpgradeWall block={gate.block} onClose={gate.closeBlock} />
+        <UpgradeWall block={gate.block} onClose={gate.closeBlock} />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen" style={{ background: CREAM, color: INK }}>
+      <div className="fc-page min-h-screen bg-white">
         <SiteHeader />
         <SignInRedirect />
       </div>
@@ -233,27 +251,33 @@ function NewLectureQuizPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: CREAM, color: INK }}>
+    <div className="fc-page ll-page min-h-screen bg-white text-[var(--pp-ink)]">
       <SiteHeader />
-      <main className="mx-auto max-w-3xl px-4 py-10 md:px-8 md:py-14">
-        <Link to="/study/lectures" className="inline-flex items-center gap-2 text-[13px] font-bold text-[#6a697c]">
-          <ArrowLeft size={15} /> Back to Lecture Lab
-        </Link>
+      <div className="fc-wrap ll-narrow">
+        <header className="fc-head">
+          <Link to="/study/lectures" className="fc-kicker ll-kicker-link">
+            <ArrowLeft size={18} aria-hidden="true" className="rtl:rotate-180" />
+            <span className="fc-cube" aria-hidden="true">
+              <RitaCube levelsRef={levels} mode="idle" label="" />
+            </span>
+            Lecture Lab
+          </Link>
+          <h1 className="fc-title">New lecture quiz.</h1>
+          <p className="fc-lead">
+            Pick where it belongs, drop the lecture, choose the shape of the quiz.
+          </p>
+        </header>
 
-        <h1 className="mt-4 font-display text-[28px] font-semibold leading-tight tracking-tight md:text-[34px]">
-          New lecture quiz
-        </h1>
-        <p className="mt-2 text-[15px] text-[#4b4a5c]">
-          Pick where it belongs, drop the lecture, choose the shape of the quiz.
-        </p>
-
-        <section className="mt-7">
-          <h2 className="font-display text-[18px] font-black">1 · Where does it go?</h2>
-          <p className="mt-1 text-[13px] text-[#6a697c]">
+        <section className="ll-step" aria-labelledby="ll-step-1">
+          <h2 id="ll-step-1">
+            <span aria-hidden="true">1</span> Where does it go?
+          </h2>
+          <p className="ll-step-lead">
             Open a subject and tick the sub-subject this lecture belongs to.
           </p>
-          <div className="mt-3">
+          <div className="ll-step-body">
             <PickerBoard
+              framed={false}
               accent="#121117"
               groups={pickerGroups}
               selected={subtopicId ? [subtopicId] : []}
@@ -273,155 +297,158 @@ function NewLectureQuizPage() {
               emptyHint="No subjects yet — make one in a tap below."
             />
             {pickerGroups.length === 0 && (
-              <button
-                onClick={() => void quickStart()}
-                className="mt-3 inline-flex rounded-full bg-[#121117] px-5 py-2.5 text-[13px] font-extrabold text-white"
-              >
+              <button type="button" onClick={() => void quickStart()} className="ll-new">
                 Set one up for me
               </button>
             )}
           </div>
         </section>
 
-        <section className="mt-5 rounded-[26px] border-2 border-[#121117] bg-white p-5">
-          <h2 className="font-display text-[18px] font-black">2 · The lecture</h2>
-          <div className="mt-3 flex gap-2">
-            <button
-              onClick={() => setSource("pdf")}
-              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-extrabold ${
-                source === "pdf" ? "border-[#121117] bg-[#e7eefd] text-[#121117]" : "border-[#121117]"
-              }`}
-            >
-              <FileUp size={15} /> PDF
-            </button>
-            <button
-              onClick={() => setSource("text")}
-              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-extrabold ${
-                source === "text" ? "border-[#121117] bg-[#e7eefd] text-[#121117]" : "border-[#121117]"
-              }`}
-            >
-              <Type size={15} /> Paste text
-            </button>
-          </div>
-
-          {locked ? (
-            <div className="mt-4 rounded-2xl border border-[#2b6df0] bg-[#f4f4f8] px-5 py-6 text-center">
-              <p className="text-[14px] font-extrabold text-[#b3213f]">Uploading is off for now</p>
-              <p className="mt-1 text-[13px] text-[#6a697c]">{lockReason}</p>
-              <Link
-                to="/pricing"
-                className="mt-4 inline-flex rounded-full bg-[#121117] px-5 py-2.5 text-[13px] font-extrabold text-white"
+        <section className="ll-step" aria-labelledby="ll-step-2">
+          <h2 id="ll-step-2">
+            <span aria-hidden="true">2</span> The lecture
+          </h2>
+          <div className="ll-step-body">
+            <div className="fc-scope ll-two" role="group" aria-label="Lecture source">
+              <button
+                type="button"
+                aria-pressed={source === "pdf"}
+                onClick={() => setSource("pdf")}
               >
-                See plans
-              </Link>
+                <FileUp size={16} aria-hidden="true" /> PDF
+              </button>
+              <button
+                type="button"
+                aria-pressed={source === "text"}
+                onClick={() => setSource("text")}
+              >
+                <Type size={16} aria-hidden="true" /> Paste text
+              </button>
             </div>
-          ) : source === "pdf" ? (
-            <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#121117] bg-[#f4f4f8] px-6 py-10 text-center">
-              <FileUp size={22} className="text-[#b3213f]" />
-              <span className="mt-2 text-[14px] font-extrabold">
-                {file ? file.name : "Choose your lecture PDF"}
-              </span>
-              <span className="mt-1 text-[12px] text-[#6a697c]">
-                Scans are fine too — the pages get read as pictures.
-              </span>
+            {locked ? (
+              <div className="ll-locked" role="status">
+                <p className="ll-locked-title">Uploading is off for now</p>
+                <p>{lockReason}</p>
+                <Link to="/pricing" className="ll-new">
+                  See plans
+                </Link>
+              </div>
+            ) : source === "pdf" ? (
+              <label className={`ll-drop${file ? " has-file" : ""}`}>
+                <span className="ll-drop-icon" aria-hidden="true">
+                  <FileUp size={22} />
+                </span>
+                <span className="ll-drop-title">
+                  {file ? file.name : "Choose your lecture PDF"}
+                </span>
+                <span className="ll-drop-hint">
+                  {file
+                    ? "Tap to choose another file."
+                    : "Up to 25 MB. Scans are fine too — the pages get read as pictures."}
+                </span>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  className="ll-sr"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] ?? null;
+                    e.target.value = "";
+                    if (!f) return;
+                    if (f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")) {
+                      toast.error("Choose a PDF file.");
+                      return;
+                    }
+                    if (f.size > 25 * 1024 * 1024) {
+                      toast.error(
+                        "That PDF is over 25 MB. Split it into smaller files and try again.",
+                      );
+                      return;
+                    }
+                    if (!gate.check({ feature: "feature_lecture_qgen", kind: "ai_questions" }))
+                      return;
+                    setFile(f);
+                  }}
+                />
+              </label>
+            ) : (
+              <textarea
+                value={pasted}
+                onChange={(e) => setPasted(e.target.value)}
+                rows={8}
+                aria-label="Lecture text"
+                placeholder="Paste the lecture text here…"
+                className="ll-input ll-area"
+              />
+            )}
+            <label className="ll-field">
+              <span>Lecture title</span>
               <input
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] ?? null;
-                  e.target.value = "";
-                  if (!f) return;
-                  if (f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")) {
-                    toast.error("Choose a PDF file.");
-                    return;
-                  }
-                  if (f.size > 25 * 1024 * 1024) {
-                    toast.error("That PDF is over 25 MB. Split it into smaller files and try again.");
-                    return;
-                  }
-                  if (!gate.check({ feature: "feature_lecture_qgen", kind: "ai_questions" })) return;
-                  setFile(f);
-                }}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={file?.name?.replace(/\.pdf$/i, "") || "e.g. Heart failure — week 4"}
+                className="ll-input"
               />
             </label>
-          ) : (
-            <textarea
-              value={pasted}
-              onChange={(e) => setPasted(e.target.value)}
-              rows={8}
-              placeholder="Paste the lecture text here…"
-              className="mt-4 w-full rounded-2xl border-2 border-[#121117] p-4 text-[14px] leading-relaxed"
-            />
-          )}
-
-
-          <label className="mt-4 block text-[13px] font-semibold text-[#121117]">
-            Lecture title
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={file?.name?.replace(/\.pdf$/i, "") || "e.g. Heart failure — week 4"}
-              className="mt-1 w-full rounded-xl border-2 border-[#121117] px-3 py-2.5 text-[14px] font-semibold normal-case tracking-normal text-[#121117]"
-            />
-          </label>
+          </div>
         </section>
 
-        <section className="mt-5 rounded-[26px] border-2 border-[#121117] bg-white p-5">
-          <h2 className="font-display text-[18px] font-black">3 · Shape of the quiz</h2>
-
-          <div className="mt-3 text-[13px] font-semibold text-[#121117]">Questions</div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {[5, 10, 15, 20, 30].map((n) => (
-              <button
-                key={n}
-                onClick={() => setCount(n)}
-                className={`rounded-full border px-4 py-2 text-[13px] font-extrabold ${
-                  count === n ? "border-[#121117] bg-[#e7eefd] text-[#121117]" : "border-[#121117]"
-                }`}
-              >
-                {n}
-              </button>
-            ))}
+        <section className="ll-step" aria-labelledby="ll-step-3">
+          <h2 id="ll-step-3">
+            <span aria-hidden="true">3</span> Shape of the quiz
+          </h2>
+          <div className="ll-step-body">
+            <p className="ll-label" id="ll-count">
+              Questions
+            </p>
+            <div className="ll-pills" role="group" aria-labelledby="ll-count">
+              {[5, 10, 15, 20, 30].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  aria-pressed={count === n}
+                  onClick={() => setCount(n)}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <p className="ll-hint">
+              On the free plan you can make 10 AI questions at a time — pick 10 or fewer if you see
+              a limit message.
+            </p>
+            <p className="ll-label" id="ll-level">
+              Difficulty
+            </p>
+            <div className="ll-pills" role="group" aria-labelledby="ll-level">
+              {[
+                { k: "easy", l: "Easy" },
+                { k: "mixed", l: "Mixed" },
+                { k: "hard", l: "Hard" },
+                { k: "exam", l: "Exam level" },
+              ].map((d) => (
+                <button
+                  key={d.k}
+                  type="button"
+                  aria-pressed={difficulty === d.k}
+                  onClick={() => setDifficulty(d.k as typeof difficulty)}
+                >
+                  {d.l}
+                </button>
+              ))}
+            </div>
+            <label className="ll-check">
+              <input
+                type="checkbox"
+                checked={keyPoints}
+                onChange={(e) => setKeyPoints(e.target.checked)}
+              />
+              Add a key-points sheet for this lecture
+            </label>
           </div>
-          <p className="mt-2 text-[12px] text-[#6a697c]">
-            On the free plan you can make 10 AI questions at a time — pick 10 or fewer if you see a limit message.
-          </p>
-
-
-          <div className="mt-4 text-[13px] font-semibold text-[#121117]">Difficulty</div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {[
-              { k: "easy", l: "Easy" },
-              { k: "mixed", l: "Mixed" },
-              { k: "hard", l: "Hard" },
-              { k: "exam", l: "Exam level" },
-            ].map((d) => (
-              <button
-                key={d.k}
-                onClick={() => setDifficulty(d.k as typeof difficulty)}
-                className={`rounded-full border px-4 py-2 text-[13px] font-extrabold ${
-                  difficulty === d.k ? "border-[#121117] bg-[#e7eefd] text-[#121117]" : "border-[#121117]"
-                }`}
-              >
-                {d.l}
-              </button>
-            ))}
-          </div>
-
-          <label className="mt-4 flex items-center gap-2 text-[14px] font-bold">
-            <input
-              type="checkbox"
-              checked={keyPoints}
-              onChange={(e) => setKeyPoints(e.target.checked)}
-              className="h-4 w-4 accent-[#121117]"
-            />
-            Add a key-points sheet for this lecture
-          </label>
         </section>
 
         {busy && (
-          <div className="mt-5">
+          <div className="ll-building">
             <BuildProgress
               steps={QUIZ_STEPS}
               done={QUIZ_STEPS.filter((_, i) => i < step).map((s) => s.key)}
@@ -433,18 +460,22 @@ function NewLectureQuizPage() {
           </div>
         )}
 
-
         <button
+          type="button"
           onClick={onGenerate}
           disabled={busy || locked}
-          className="mt-6 w-full rounded-full bg-[#121117] px-6 py-4 text-[15px] font-extrabold text-white transition hover:opacity-90 disabled:opacity-50"
+          className="fc-go ll-make"
         >
-          {locked ? "Not available on your plan" : busy ? "Building your quiz…" : "Build my quiz"}
+          {busy ? (
+            <LoaderCircle size={18} className="animate-spin" aria-hidden="true" />
+          ) : (
+            <Sparkles size={18} aria-hidden="true" />
+          )}
+          {locked ? "Not available on your plan" : busy ? "Building your quiz…" : "Make the quiz"}
         </button>
-      </main>
+      </div>
 
       <UpgradeWall block={gate.block} onClose={gate.closeBlock} />
-
 
       <PromptDialog
         open={subjectOpen}
