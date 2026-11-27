@@ -1301,109 +1301,111 @@ export function BookReader({
         )}
       </div>
       <nav className="bkr-bar" aria-label="الصفحات">
-        <div className="bkr-turn" dir={rtlBook ? "rtl" : "ltr"}>
-          <button
-            type="button"
-            className="bkr-btn"
-            disabled={page <= 1}
-            onClick={() => go(page - 1)}
-            aria-label="الصفحة السابقة"
-          >
-            <PrevIcon size={18} aria-hidden="true" />
-            <span className="bkr-label">السابقة</span>
-          </button>
-          <form onSubmit={submitJump} className="bkr-jump" dir="rtl">
-            <label className="sr-only" htmlFor="bkr-page">
-              رقم الصفحة
-            </label>
-            <span className="bkr-label" aria-hidden="true">
-              صفحة
-            </span>
-            <input
-              id="bkr-page"
-              inputMode="numeric"
-              enterKeyHint="go"
-              value={jump}
-              onChange={(event) => setJump(event.target.value.replace(/\D/g, "").slice(0, 4))}
-              onFocus={(event) => event.target.select()}
-              onBlur={() => setJump(String(page))}
-            />
-            <span>من {total}</span>
-            {leftLabel && <span className="bkr-left">· {leftLabel}</span>}
-          </form>
-          <button
-            type="button"
-            className="bkr-btn is-primary"
-            disabled={page >= total}
-            onClick={() => go(page + 1)}
-            aria-label="الصفحة التالية"
-          >
-            <span className="bkr-label">التالية</span>
-            <NextIcon size={18} aria-hidden="true" />
-          </button>
-        </div>
-        <div className="bkr-tools" role="group" aria-label="أدوات الصفحة">
-          <BookPanel
-            bookId={book.id}
-            userId={userId}
-            manifest={manifest}
-            page={page}
-            onJump={jumpTo}
-            left={leftLabel}
-            bookmarks={bookmarks}
-            onUnmark={(n) => toggleMark(n, false)}
-            search={source ? source.search : undefined}
-          />
-          {bookmarks !== null && (
+        <div className="bkr-dock">
+          <div className="bkr-turn" dir={rtlBook ? "rtl" : "ltr"}>
             <button
               type="button"
-              className={`bkr-icon${marked ? " is-on" : ""}`}
-              aria-pressed={marked}
-              aria-label={marked ? `شيل علامة صفحة ${page}` : `علّم صفحة ${page}`}
-              title={marked ? "شيل العلامة" : "علّم هالصفحة"}
-              onClick={() => toggleMark(page, !marked)}
+              className="bkr-btn"
+              disabled={page <= 1}
+              onClick={() => go(page - 1)}
+              aria-label="الصفحة السابقة"
             >
-              <Bookmark size={17} aria-hidden="true" fill={marked ? "currentColor" : "none"} />
+              <PrevIcon size={18} aria-hidden="true" />
+              <span className="bkr-label">السابقة</span>
             </button>
-          )}
-          <button
-            type="button"
-            className="bkr-icon"
-            aria-label={fitLabel}
-            title={fitLabel}
-            onClick={() => {
-              const next = fit === "page" ? "width" : "page";
-              setFit(next);
-              setZoom(0);
-              writeStore(FIT_KEY, next);
-            }}
-          >
-            {fit === "page" ? (
-              <MoveHorizontal size={17} aria-hidden="true" />
-            ) : (
-              <Maximize2 size={16} aria-hidden="true" />
+            <form onSubmit={submitJump} className="bkr-jump" dir="rtl">
+              <label className="sr-only" htmlFor="bkr-page">
+                رقم الصفحة
+              </label>
+              <span className="bkr-label" aria-hidden="true">
+                صفحة
+              </span>
+              <input
+                id="bkr-page"
+                inputMode="numeric"
+                enterKeyHint="go"
+                value={jump}
+                onChange={(event) => setJump(event.target.value.replace(/\D/g, "").slice(0, 4))}
+                onFocus={(event) => event.target.select()}
+                onBlur={() => setJump(String(page))}
+              />
+              <span>من {total}</span>
+              {leftLabel && <span className="bkr-left">· {leftLabel}</span>}
+            </form>
+            <button
+              type="button"
+              className="bkr-btn is-primary"
+              disabled={page >= total}
+              onClick={() => go(page + 1)}
+              aria-label="الصفحة التالية"
+            >
+              <span className="bkr-label">التالية</span>
+              <NextIcon size={18} aria-hidden="true" />
+            </button>
+          </div>
+          <div className="bkr-tools" role="group" aria-label="أدوات الصفحة">
+            <BookPanel
+              bookId={book.id}
+              userId={userId}
+              manifest={manifest}
+              page={page}
+              onJump={jumpTo}
+              left={leftLabel}
+              bookmarks={bookmarks}
+              onUnmark={(n) => toggleMark(n, false)}
+              search={source ? source.search : undefined}
+            />
+            {bookmarks !== null && (
+              <button
+                type="button"
+                className={`bkr-icon${marked ? " is-on" : ""}`}
+                aria-pressed={marked}
+                aria-label={marked ? `شيل علامة صفحة ${page}` : `علّم صفحة ${page}`}
+                title={marked ? "شيل العلامة" : "علّم هالصفحة"}
+                onClick={() => toggleMark(page, !marked)}
+              >
+                <Bookmark size={17} aria-hidden="true" fill={marked ? "currentColor" : "none"} />
+              </button>
             )}
-          </button>
-          <button
-            type="button"
-            className="bkr-icon"
-            aria-label="صغّر"
-            title="صغّر"
-            disabled={zoom === 0}
-            onClick={() => setZoom((z) => Math.max(0, z - 1))}
-          >
-            <ZoomOut size={17} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="bkr-icon"
-            aria-label="كبّر"
-            title="كبّر"
-            disabled={zoom === ZOOMS.length - 1}
-            onClick={() => setZoom((z) => Math.min(ZOOMS.length - 1, z + 1))}
-          >
-            <ZoomIn size={17} aria-hidden="true" />
-          </button>
+            <button
+              type="button"
+              className="bkr-icon"
+              aria-label={fitLabel}
+              title={fitLabel}
+              onClick={() => {
+                const next = fit === "page" ? "width" : "page";
+                setFit(next);
+                setZoom(0);
+                writeStore(FIT_KEY, next);
+              }}
+            >
+              {fit === "page" ? (
+                <MoveHorizontal size={17} aria-hidden="true" />
+              ) : (
+                <Maximize2 size={16} aria-hidden="true" />
+              )}
+            </button>
+            <button
+              type="button"
+              className="bkr-icon"
+              aria-label="صغّر"
+              title="صغّر"
+              disabled={zoom === 0}
+              onClick={() => setZoom((z) => Math.max(0, z - 1))}
+            >
+              <ZoomOut size={17} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="bkr-icon"
+              aria-label="كبّر"
+              title="كبّر"
+              disabled={zoom === ZOOMS.length - 1}
+              onClick={() => setZoom((z) => Math.min(ZOOMS.length - 1, z + 1))}
+            >
+              <ZoomIn size={17} aria-hidden="true" />
+            </button>
+          </div>
         </div>
       </nav>
     </div>
@@ -1434,7 +1436,10 @@ export function BookReader({
   );
 
   return (
-    <div className="edith-premium flex h-[100dvh] flex-col bg-white text-[var(--pp-ink)]" dir="rtl">
+    <div
+      className="edith-premium bkr-shell flex h-[100dvh] flex-col bg-white text-[var(--pp-ink)]"
+      dir="rtl"
+    >
       <header className="st-top">
         <Link to="/books" className="st-top-btn" aria-label="رجوع للمكتبة">
           <ArrowRight size={15} aria-hidden="true" />
@@ -1450,6 +1455,7 @@ export function BookReader({
             {making ? "جاري تجهيز التدريب…" : "آخر تدريب"}
           </button>
         )}
+        <ReadRing page={page} total={total} />
       </header>
 
       <div ref={work} className="st-work relative flex min-h-0 flex-1 flex-col">
@@ -1480,11 +1486,7 @@ export function BookReader({
           </Group>
         ) : (
           <>
-            <div
-              role="tablist"
-              aria-label="الكتاب ويوزرا"
-              className="flex border-b border-[var(--pp-line)]"
-            >
+            <div role="tablist" aria-label="الكتاب ويوزرا" className="bkr-switch">
               {(
                 [
                   ["book", "الكتاب"],
@@ -1497,11 +1499,7 @@ export function BookReader({
                   role="tab"
                   aria-selected={tab === value}
                   onClick={() => setTab(value)}
-                  className={`h-11 flex-1 text-[15px] font-semibold ${
-                    tab === value
-                      ? "border-b-2 border-[var(--pp-accent)] text-[var(--pp-ink)]"
-                      : "text-[var(--pp-muted)]"
-                  }`}
+                  className="bkr-switch-btn"
                 >
                   {label}
                 </button>
@@ -1641,5 +1639,28 @@ export function BookReader({
         )}
       </div>
     </div>
+  );
+}
+
+/** How far into the book, as a small ring and a percentage at the end of the top bar. The
+ *  progress line under the bar is the slider; this is only a reading of it. */
+function ReadRing({ page, total }: { page: number; total: number }) {
+  const share = total > 0 ? Math.min(1, Math.max(0, page / total)) : 0;
+  const around = 2 * Math.PI * 9;
+  return (
+    <span className="bkr-ring" aria-hidden="true">
+      <svg viewBox="0 0 22 22">
+        <circle className="bkr-ring-track" cx="11" cy="11" r="9" />
+        <circle
+          className="bkr-ring-fill"
+          cx="11"
+          cy="11"
+          r="9"
+          strokeDasharray={around}
+          strokeDashoffset={around * (1 - share)}
+        />
+      </svg>
+      {Math.round(share * 100)}%
+    </span>
   );
 }

@@ -970,3 +970,589 @@
   pointer-events: none;
   white-space: pre-wrap;
 }
+
+/* ==================================================================================================
+   The home page's look for the reader (Nov 2026). Everything below is scoped to `.bkr-shell` (the
+   reader and its opening screen) and `.uz-rc-book` (Uzyra's column beside a book), so the study
+   page keeps its own. Google Sans Flex (Graphik Arabic for Arabic letters), black and white, round
+   pills; the mechanics above are unchanged.
+   ================================================================================================== */
+.bkr-shell {
+  --bkr-font: "Uzyra Arabic", "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  --bkr-ink: #121212;
+  --bkr-muted: #6b6b73;
+  --bkr-line: #e7e7ea;
+  --bkr-soft: #f4f4f5;
+  --bkr-desk: #f3f3f5;
+  --bkr-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The top bar: «المكتبة» as a soft pill, the book's name, and how far in (a ring and a percent). */
+.bkr-shell .st-top {
+  height: 54px;
+  gap: 10px;
+  padding-inline: 12px;
+  border-bottom-color: var(--bkr-line);
+  font-family: var(--bkr-font);
+}
+.bkr-shell .st-top-btn {
+  height: 38px;
+  min-width: 38px;
+  justify-content: center;
+  padding-inline: 14px;
+  border-radius: 999px;
+  background: var(--bkr-soft);
+  color: var(--bkr-ink);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  transition: background-color 200ms var(--bkr-ease);
+}
+.bkr-shell .st-top-btn:hover,
+.bkr-shell .st-top-btn.is-soft:hover {
+  background: #e9e9ec;
+}
+.bkr-shell .st-top-btn:focus-visible {
+  outline-color: var(--bkr-ink);
+}
+.bkr-shell .bkr-title {
+  color: var(--bkr-ink);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.bkr-ring {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding-inline: 10px 13px;
+  border: 1px solid var(--bkr-line);
+  border-radius: 999px;
+  color: var(--bkr-ink);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  direction: ltr;
+}
+.bkr-ring svg {
+  width: 20px;
+  height: 20px;
+  transform: rotate(-90deg);
+}
+.bkr-ring circle {
+  fill: none;
+  stroke-width: 2.5;
+}
+.bkr-ring-track {
+  stroke: var(--bkr-line);
+}
+.bkr-ring-fill {
+  stroke: var(--bkr-ink);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 320ms var(--bkr-ease);
+}
+
+/* Phones: «الكتاب | يوزرا» as one switch of two pills, the chosen one black. */
+.bkr-switch {
+  display: flex;
+  flex: none;
+  gap: 4px;
+  margin: 8px 12px 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: #efeff1;
+  font-family: var(--bkr-font);
+}
+.bkr-switch-btn {
+  flex: 1;
+  height: 44px;
+  border-radius: 999px;
+  color: var(--bkr-muted);
+  font-size: 15px;
+  font-weight: 500;
+  transition:
+    background-color 220ms var(--bkr-ease),
+    color 220ms var(--bkr-ease);
+}
+.bkr-switch-btn[aria-selected="true"] {
+  background: var(--bkr-ink);
+  color: #fff;
+}
+.bkr-switch-btn:focus-visible {
+  outline: 2px solid var(--bkr-ink);
+  outline-offset: 2px;
+}
+
+/* The divider: a hairline with a small black grip that grows while held. */
+.bkr-shell .st-divider::before {
+  width: 1px;
+  margin-left: -0.5px;
+  background: var(--bkr-line);
+}
+.bkr-shell .st-grip {
+  width: 8px;
+  height: 44px;
+  border: 0;
+  background: var(--bkr-ink);
+  box-shadow: 0 0 0 3px #fff;
+  transition:
+    width 220ms var(--bkr-ease),
+    height 220ms var(--bkr-ease);
+}
+.bkr-shell .st-divider[data-separator="hover"]::before,
+.bkr-shell .st-divider[data-separator="active"]::before,
+.bkr-shell .st-divider[data-separator="focus"]::before {
+  background: var(--bkr-ink);
+}
+.bkr-shell .st-divider[data-separator="hover"] .st-grip,
+.bkr-shell .st-divider[data-separator="focus"] .st-grip {
+  height: 56px;
+  background: var(--bkr-ink);
+}
+.bkr-shell .st-divider[data-separator="active"] .st-grip {
+  width: 10px;
+  height: 72px;
+  background: var(--bkr-ink);
+}
+
+/* The book's side: a light desk with the home's marks, still (reading stays calm); the paper on
+   it is unchanged. */
+.bkr-shell .bkr-pane {
+  background-color: var(--bkr-desk);
+  background-image: radial-gradient(circle, rgb(18 17 23 / 0.14) 1px, transparent 1.5px);
+  background-position: 12px 12px;
+  background-size: 24px 24px;
+  font-family: var(--bkr-font);
+}
+
+/* How far in: an ink line (bookmarks stay blue dots on it). */
+.bkr-shell .bkr-progress {
+  background: rgb(18 18 18 / 0.08);
+}
+.bkr-shell .bkr-progress span,
+.bkr-shell .bkr-scrub-knob {
+  background: var(--bkr-ink);
+}
+.bkr-shell .bkr-scrub-hit:focus-visible .bkr-progress {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px var(--bkr-ink);
+}
+.bkr-shell .bkr-tick {
+  background: rgb(150 150 158 / 0.9);
+}
+.bkr-shell .bkr-scrub.is-pulse .bkr-progress {
+  animation-name: bkr-pulse-ink;
+}
+@keyframes bkr-pulse-ink {
+  40% {
+    box-shadow: 0 0 0 3px rgb(18 18 18 / 0.14);
+    transform: scaleY(2);
+  }
+}
+.bkr-shell .bkr-scrub-label {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgb(18 18 18 / 0.9);
+  font-weight: 500;
+}
+
+/* Notes over the page: black pills. */
+.bkr-shell .bkr-note {
+  bottom: 18px;
+  gap: 6px;
+  padding: 5px;
+  padding-inline-start: 18px;
+  border-radius: 999px;
+  background: var(--bkr-ink);
+  font-size: 14px;
+  box-shadow: 0 14px 34px -14px rgb(0 0 0 / 0.5);
+}
+.bkr-shell .bkr-note button {
+  min-height: 34px;
+  padding-inline: 14px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.14);
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 160ms ease;
+}
+.bkr-shell .bkr-note button:hover {
+  background: rgb(255 255 255 / 0.24);
+}
+.bkr-shell .bkr-tip {
+  padding: 8px;
+  padding-inline-start: 16px;
+  border-radius: 20px;
+  background: var(--bkr-ink);
+  font-size: 14px;
+}
+.bkr-shell .bkr-tip button {
+  border-radius: 999px;
+}
+.bkr-shell .bkr-toast {
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: rgb(18 18 18 / 0.88);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.bkr-shell .bkr-badge {
+  padding: 6px 14px;
+  background: rgb(18 18 18 / 0.82);
+  font-size: 13px;
+}
+.bkr-shell .bkr-retry {
+  background: var(--bkr-ink);
+  font-weight: 500;
+}
+
+/* The page bar: a white dock floating on the desk. Turning on its start side («التالية» black),
+   the page as a counter, the tools as round buttons after a hairline. */
+.bkr-dock {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.bkr-shell .bkr-bar {
+  padding: 10px 12px max(12px, env(safe-area-inset-bottom));
+  border-top: 0;
+  background: transparent;
+}
+.bkr-shell .bkr-dock {
+  flex: 0 1 auto;
+  margin-inline: auto;
+  padding: 5px;
+  border: 1px solid rgb(18 18 18 / 0.07);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgb(18 18 18 / 0.05),
+    0 16px 36px -18px rgb(18 18 18 / 0.32);
+}
+.bkr-shell .bkr-tools {
+  padding-inline-start: 8px;
+  border-inline-start: 1px solid var(--bkr-line);
+}
+.bkr-shell .bkr-btn {
+  border: 0;
+  border-radius: 999px;
+  background: var(--bkr-soft);
+  color: var(--bkr-ink);
+  font-size: 15px;
+  font-weight: 500;
+}
+.bkr-shell .bkr-btn.is-primary {
+  background: var(--bkr-ink);
+  color: #fff;
+}
+.bkr-shell .bkr-icon {
+  border-radius: 999px;
+  color: #3f3f46;
+}
+.bkr-shell .bkr-icon.is-on {
+  color: var(--pp-accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .bkr-shell .bkr-icon:hover:not(:disabled),
+  .bkr-shell .bkr-btn:not(.is-primary):hover:not(:disabled) {
+    background: #ececef;
+  }
+  .bkr-shell .bkr-btn.is-primary:hover:not(:disabled) {
+    background: #000;
+  }
+}
+.bkr-shell .bkr-btn:focus-visible,
+.bkr-shell .bkr-icon:focus-visible {
+  outline-color: var(--bkr-ink);
+}
+.bkr-shell .bkr-jump {
+  color: var(--bkr-muted);
+  font-size: 14px;
+}
+.bkr-shell .bkr-jump input {
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--bkr-soft);
+  font-weight: 500;
+}
+.bkr-shell .bkr-jump input:focus-visible {
+  box-shadow: 0 0 0 2px var(--bkr-ink);
+}
+/* The dock is a little wider than the old bar: its words step back a little earlier. */
+@container (max-width: 800px) {
+  .bkr-shell .bkr-left {
+    display: none;
+  }
+}
+@container (max-width: 660px) {
+  .bkr-shell .bkr-jump .bkr-label {
+    display: none;
+  }
+}
+@container (max-width: 610px) {
+  .bkr-shell .bkr-label {
+    display: none;
+  }
+  .bkr-shell .bkr-btn {
+    width: 44px;
+    padding-inline: 0;
+  }
+}
+/* A narrow bar: the dock spans it, the tools sit close together. */
+@container (max-width: 520px) {
+  .bkr-shell .bkr-dock {
+    flex: 1;
+    gap: 4px;
+  }
+  .bkr-shell .bkr-tools {
+    padding-inline-start: 4px;
+  }
+}
+/* A phone: one row does not fit (the turning buttons, the page and five tools need ~440px), so
+   the dock takes two rows: the tools on top (40px), turning under them, nearest the thumb. */
+@container (max-width: 470px) {
+  .bkr-shell .bkr-bar {
+    padding: 8px 10px max(10px, env(safe-area-inset-bottom));
+  }
+  .bkr-shell .bkr-dock {
+    flex-wrap: wrap;
+    row-gap: 4px;
+    padding: 4px;
+    border-radius: 26px;
+  }
+  .bkr-shell .bkr-turn {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+  .bkr-shell .bkr-tools {
+    order: -1;
+    flex: 1 1 100%;
+    justify-content: space-around;
+    padding: 0 0 4px;
+    border-inline-start: 0;
+    border-bottom: 1px solid var(--bkr-line);
+  }
+  .bkr-shell .bkr-tools .bkr-icon {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* The contents, search and bookmarks panel in the same face, with an ink mark for «you are here». */
+.bkr-shell .bkr-toc {
+  border-radius: 20px;
+  font-family: var(--bkr-font);
+}
+.bkr-shell .bkr-toc.is-sheet {
+  border-radius: 24px 24px 0 0;
+}
+.bkr-shell .bkr-toc-title {
+  font-weight: 500;
+}
+.bkr-shell .bkr-toc-list button[aria-current="true"] {
+  font-weight: 500;
+}
+.bkr-shell .bkr-toc-list button[aria-current="true"]::before {
+  background: var(--bkr-ink);
+}
+.bkr-shell .bkr-search:focus-within {
+  border-color: var(--bkr-ink);
+}
+
+/* Uzyra's column beside a book. */
+.uz-rc.uz-rc-book {
+  --rc-page: #fff;
+  isolation: isolate;
+  font-family: var(--bkr-font, "Uzyra Arabic", "Google Sans Flex", "Figtree", sans-serif);
+}
+.uz-rcb-field {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(130% 75% at 50% 36%, #000 30%, transparent 82%);
+  mask-image: radial-gradient(130% 75% at 50% 36%, #000 30%, transparent 82%);
+  transition: opacity 600ms var(--bkr-ease, ease);
+}
+.uz-rc-book[data-phase="chat"] .uz-rcb-field {
+  opacity: 0;
+}
+/* The cube's spot sits a set distance from the top, so the words under it never move it. */
+.uz-rc-book .uz-rc-hero {
+  justify-content: flex-start;
+  gap: 16px;
+  padding: max(28px, 12vh) 24px 40px;
+}
+.uz-rcb-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 14px;
+  border: 1px solid var(--bkr-line, #e7e7ea);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.85);
+  color: #3f3f46;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.uz-rcb-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bkr-ink, #121212);
+}
+.uz-rcb-title {
+  max-width: 17ch;
+  margin: 4px 0 0;
+  color: var(--bkr-ink, #121212);
+  font-size: clamp(26px, 2.4vw, 34px);
+  font-weight: 450;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.uz-rcb-word {
+  display: inline-block;
+  white-space: pre;
+  animation: uz-rcb-in 700ms var(--bkr-ease, ease) both;
+  animation-delay: calc(120ms + var(--i) * 90ms);
+}
+.uz-rcb-lead {
+  max-width: 32ch;
+  margin: 0;
+  color: var(--bkr-muted, #6b6b73);
+  font-size: 15px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+.uz-rcb-steps {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: start;
+}
+.uz-rcb-steps li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #3f3f46;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.uz-rcb-steps b {
+  display: grid;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--bkr-line, #e7e7ea);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--bkr-ink, #121212);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  direction: ltr;
+}
+.uz-rcb-steps li + li::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 14.5px;
+  bottom: 100%;
+  width: 1px;
+  height: 12px;
+  background: var(--bkr-line, #e7e7ea);
+}
+.uz-rcb-lead,
+.uz-rcb-steps {
+  animation: uz-rcb-fade 600ms var(--bkr-ease, ease) 520ms both;
+}
+@keyframes uz-rcb-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.4em);
+  }
+}
+@keyframes uz-rcb-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.uz-rc-book .uz-rc-word {
+  color: var(--bkr-muted, #6b6b73);
+  font-size: 14px;
+}
+.uz-rc-book .uz-rc-word.is-small {
+  font-size: 12.5px;
+}
+/* The conversation: Uzyra's answers bigger (15px) for reading; the reader's words in a soft
+   bubble with a black tag. */
+.uz-rc-book .uz-rc-chat {
+  gap: 28px;
+  max-width: 680px;
+  padding: 26px 20px 16px;
+}
+.uz-rc-book .uz-rc-rita {
+  color: #27272a;
+  font-size: 15px;
+  line-height: 1.85;
+  letter-spacing: 0;
+}
+.uz-rc-book .uz-rc-meta {
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom-color: #ececef;
+  color: var(--bkr-muted, #6b6b73);
+  font-size: 12.5px;
+}
+.uz-rc-book .uz-rc-avatar {
+  box-shadow: inset 0 0 0 1px var(--bkr-line, #e7e7ea);
+}
+.uz-rc-book .uz-rc-you {
+  max-width: 86%;
+  padding: 10px 16px;
+  border-radius: 20px;
+  background: #f2f2f4;
+  color: #18181b;
+  font-size: 14.5px;
+  line-height: 1.65;
+}
+.uz-rc-book .uz-rc-tag {
+  margin-inline-end: 6px;
+  padding: 1px 10px;
+  border-radius: 999px;
+  background: var(--bkr-ink, #121212);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uz-rcb-word,
+  .uz-rcb-lead,
+  .uz-rcb-steps {
+    animation: none;
+  }
+  .uz-rcb-field,
+  .bkr-ring-fill,
+  .bkr-switch-btn,
+  .bkr-shell .st-grip {
+    transition: none;
+  }
+}
