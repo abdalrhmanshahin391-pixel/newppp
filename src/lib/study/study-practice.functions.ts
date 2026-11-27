@@ -38,10 +38,13 @@ const PracticeInput = z.object({
 type Failure = { ok: false; code: string; message: string; retryAfter?: number };
 
 /** This month's Groq requests are used up: the practice window says so, with no retry. */
-async function groqUsedUp(context: { supabase: any }): Promise<Failure | null> {
-  const { takeGroqRequest, GROQ_REQUESTS_USED_TEXT } = await import("@/lib/groq-requests.server");
-  if (await takeGroqRequest(context.supabase)) return null;
-  return { ok: false, code: "groq_requests_used", message: GROQ_REQUESTS_USED_TEXT };
+async function groqUsedUp(context: { supabase: any; userId?: string }): Promise<Failure | null> {
+  const { takeGroqRequestFor } = await import("@/lib/groq-requests.server");
+  const taken = await takeGroqRequestFor(context);
+  if (taken.ok) return null;
+  return taken.reason === "used"
+    ? { ok: false, code: "groq_requests_used", message: taken.message }
+    : { ok: false, code: "failed", message: taken.message };
 }
 export type CardsResult = { ok: true; cards: StudyCard[] } | Failure;
 export type McqResult = { ok: true; questions: StudyMcq[] } | Failure;

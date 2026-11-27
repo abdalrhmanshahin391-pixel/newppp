@@ -4,6 +4,22 @@ import { classifyRitaLearningIntent } from "@/lib/rita-learning-intent";
 import { guardItems, MAX_ITEMS_PER_TURN } from "@/lib/rita-learning-guard";
 import { resolveRitaV3Key } from "@/lib/rita-v3.server";
 
+/** The learner has a call whose time has not ended (two minutes of grace for the last reply). */
+async function inCall(userId: string): Promise<boolean> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/legacy-client.server");
+    const { data, error } = await (supabaseAdmin as any)
+      .from("free_talk_sessions")
+      .select("id")
+      .eq("user_id", userId)
+      .gt("deadline", new Date(Date.now() - 2 * 60_000).toISOString())
+      .limit(1);
+    return !error && Array.isArray(data) && data.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 export const Route = createFileRoute("/api/rita/extract")({
   server: {
     handlers: {
@@ -20,6 +36,10 @@ export const Route = createFileRoute("/api/rita/extract")({
         if (!spoken || !reply) return Response.json({ learningItems: [], saveRequest: "none" });
         const intent = classifyRitaLearningIntent(spoken);
         if (intent === "none") return Response.json({ learningItems: [], saveRequest: "none" });
+        // Part of a call (calls are paid in minutes, not in Emith requests), so it runs only
+        // while the learner has a call, or for two minutes after its time.
+        if (!(await inCall(auth.userId)))
+          return Response.json({ learningItems: [], saveRequest: "none" });
         const key = await resolveRitaV3Key("groq", "GROQ_API_KEY");
         if (!key) return new Response("Uzyra key unavailable", { status: 503 });
         try {

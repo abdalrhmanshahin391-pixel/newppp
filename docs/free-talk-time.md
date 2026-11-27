@@ -36,6 +36,29 @@ Changing a browser clock, UI or timer never authorizes voice access. Reuse of an
 another device does not create another allowance. This does not establish one physical person
 per account or eliminate all service/provider failures.
 
+## Plans, proof and Emith requests
+
+`20261128020000_groq_voice_plan_quotas.sql` gives both allowances one rule. `quota_plan_slug()`
+picks the plan whose numbers apply: the learner's plan when it is free, or when it is paid and
+proven (an admin grant in force, a live Paddle subscription that is active or trialing with one day
+of grace after its period end, or a live one-time purchase); otherwise the free plan. Sandbox
+payments never count. Admins have no limit on either.
+
+- **Call minutes:** `plans.free_talk_seconds` / `free_talk_period` (calls and the whiteboard).
+  An unproven paid plan now gets the free plan's time instead of an error.
+- **Emith (Groq) requests:** `plans.max_groq_requests` a month (Amman time; null means no cap,
+  set only on purpose in Admin → Plans). `groq_request_take()` takes one before every written
+  answer (book explanations and translations, exercise checks, word game rounds, whiteboard
+  steps); it never passes the number, even with many requests at once. The website does not ask
+  the model when the counter cannot be reached (after one retry); admins pass anyway.
+  `groq_request_status()` reads what is left without taking any; the credits card and Settings →
+  Usage show it, read once per page load.
+- **Purchases (Paddle webhook):** a new subscription or a one-time purchase puts the learner on
+  its plan at once; a renewal moves the period end; a price change from Paddle's portal moves the
+  plan; a cancellation puts the learner on another running subscription's plan, else the free plan.
+- **Calls are not requests:** the word extraction during a call (`/api/rita/extract`) runs only
+  while the learner has a call (or two minutes after its time).
+
 ## Whiteboard voice
 
 The whiteboard's spoken explanations (Cartesia, through the voice worker) take from the same time.
@@ -49,6 +72,8 @@ explains silently. Admins are not limited.
 
 ## Validation
 
+- `node scripts/test-free-talk-db.mjs` covers the plan rule and the requests (exact numbers, 50 at
+  once, live / sandbox / expired / canceled, grants, a new month, permissions).
 - `node --test src/lib/free-talk-time.test.ts src/lib/free-talk-audio.test.ts src/lib/rita-v3-startup.test.mjs src/lib/rita-voice-connection.test.ts`
 - From voice-agent: `python -m pytest tests/test_free_talk_guard.py tests/test_free_talk_provider.py -q`
 - `node scripts/test-free-talk-db.mjs`: requires either an existing `PGLITE_MODULE` module path,

@@ -11,6 +11,9 @@ import {
 } from "@/lib/settings";
 
 import type { SettingsData } from "./settings-data";
+import { useVoiceTime } from "@/hooks/useVoiceTime";
+import { useGroqRequests } from "@/hooks/useGroqRequests";
+import { voiceTimeLabel } from "@/lib/free-talk-time";
 import { SettingsFailure, SettingsLoading, SettingsNotice, SettingsRow } from "./SettingsControls";
 
 export function PlanSettings({
@@ -157,6 +160,7 @@ export function UsageSettings({
         </SettingsNotice>
       )}
       <div className="settings-usage-list">
+        <PlanAllowances lang={lang} format={format} />
         {SETTINGS_METERS.map((meter) => {
           const balance = settingsAllowance(data, meter);
           return (
@@ -218,6 +222,87 @@ export function UsageSettings({
         <Link to="/pricing" className="settings-text-link">
           {t(lang, "Explore extra packs", "استعراض الباقات الإضافية")}
         </Link>
+      </div>
+    </>
+  );
+}
+
+/**
+ * The plan's two allowances, as of this page load: call time (calls and the whiteboard's voice)
+ * and this month's Emith requests (written answers).
+ */
+function PlanAllowances({
+  lang,
+  format,
+}: {
+  lang: SettingsLang;
+  format: (number: number) => string;
+}) {
+  const voice = useVoiceTime();
+  const requests = useGroqRequests();
+  const r = requests.data;
+  const capped = !!r && !r.unlimited && r.limit !== null && r.left !== null;
+  const noTime = !!voice.data && !voice.data.unlimited && !voice.data.limitSeconds;
+  return (
+    <>
+      <div className="settings-usage-row">
+        <div className="settings-usage-heading">
+          <h3>{t(lang, "Call time", "وقت المكالمات")}</h3>
+          <span dir="ltr">
+            {voice.isError
+              ? t(lang, "Not available", "غير متاح")
+              : voice.seconds === undefined
+                ? "…"
+                : noTime
+                  ? t(lang, "Not in your plan", "مش ضمن خطتك")
+                  : voiceTimeLabel(voice.seconds)}
+          </span>
+        </div>
+        <p className="settings-hint">
+          {t(
+            lang,
+            "Calls and the whiteboard's voice share this time.",
+            "المكالمات وصوت السبورة بياخدوا من نفس الوقت.",
+          )}
+          {voice.data?.resetsAt &&
+            !noTime &&
+            ` · ${t(lang, "Renews", "يتجدد")} ${settingsDate(voice.data.resetsAt, lang)}`}
+        </p>
+      </div>
+      <div className="settings-usage-row">
+        <div className="settings-usage-heading">
+          <h3>{t(lang, "Emith requests", "طلبات Emith")}</h3>
+          <span>
+            {requests.isError
+              ? t(lang, "Not available", "غير متاح")
+              : !r
+                ? "…"
+                : !capped
+                  ? t(lang, "Unlimited", "غير محدود")
+                  : t(lang, `${format(r.left!)} remaining`, `${format(r.left!)} متبقي`)}
+          </span>
+        </div>
+        {capped && r.limit! > 0 && (
+          <div
+            className="settings-meter"
+            role="progressbar"
+            aria-label={t(lang, "Emith requests", "طلبات Emith")}
+            aria-valuemin={0}
+            aria-valuemax={r.limit!}
+            aria-valuenow={Math.min(r.used ?? 0, r.limit!)}
+          >
+            <span
+              style={{ width: `${Math.min(100, ((r.used ?? 0) / Math.max(1, r.limit!)) * 100)}%` }}
+            />
+          </div>
+        )}
+        {capped && (
+          <p className="settings-hint">
+            {t(lang, `${format(r.used ?? 0)} used`, `${format(r.used ?? 0)} مستخدم`)} ·{" "}
+            {t(lang, `${format(r.limit!)} a month`, `${format(r.limit!)} بالشهر`)}
+            {r.resetsAt && ` · ${t(lang, "Renews", "بتتجدد")} ${settingsDate(r.resetsAt, lang)}`}
+          </p>
+        )}
       </div>
     </>
   );

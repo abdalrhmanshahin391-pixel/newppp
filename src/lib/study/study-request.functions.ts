@@ -220,9 +220,9 @@ export const studyExplainText = createServerFn({ method: "POST" })
     const { resolveRitaV3Key } = await import("@/lib/rita-v3.server");
     const key = await resolveRitaV3Key("groq", "GROQ_API_KEY");
     if (!key) return { ok: false, code: "failed", message: "يوزرا مش متاحة هلأ. جرّب كمان شوي." };
-    const { takeGroqRequest, GROQ_REQUESTS_USED_TEXT } = await import("@/lib/groq-requests.server");
-    if (!(await takeGroqRequest(context.supabase)))
-      return { ok: false, code: "failed", message: GROQ_REQUESTS_USED_TEXT };
+    const { takeGroqRequestFor } = await import("@/lib/groq-requests.server");
+    const taken = await takeGroqRequestFor(context);
+    if (!taken.ok) return { ok: false, code: "failed", message: taken.message };
     try {
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -272,7 +272,8 @@ const ReplyInput = z.object({
 });
 
 export type ReplyRequestResult =
-  { ok: true; quote: string; context: string } | Extract<StudyRequestResult, { ok: false }>;
+  | { ok: true; quote: string; context: string }
+  | Extract<StudyRequestResult, { ok: false }>;
 
 async function checkReplyRequest(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -310,8 +311,9 @@ async function checkReplyRequest(
 export const resolveReplyRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => parse(ReplyInput, data))
-  .handler(async ({ data, context }): Promise<ReplyRequestResult> =>
-    checkReplyRequest(context, { ...data, channel: "voice" }),
+  .handler(
+    async ({ data, context }): Promise<ReplyRequestResult> =>
+      checkReplyRequest(context, { ...data, channel: "voice" }),
   );
 
 function replySystemPrompt(language: string): string {
@@ -337,9 +339,9 @@ export const studyExplainReplyText = createServerFn({ method: "POST" })
     const { resolveRitaV3Key } = await import("@/lib/rita-v3.server");
     const key = await resolveRitaV3Key("groq", "GROQ_API_KEY");
     if (!key) return { ok: false, code: "failed", message: "يوزرا مش متاحة هلأ. جرّب كمان شوي." };
-    const { takeGroqRequest, GROQ_REQUESTS_USED_TEXT } = await import("@/lib/groq-requests.server");
-    if (!(await takeGroqRequest(context.supabase)))
-      return { ok: false, code: "failed", message: GROQ_REQUESTS_USED_TEXT };
+    const { takeGroqRequestFor } = await import("@/lib/groq-requests.server");
+    const taken = await takeGroqRequestFor(context);
+    if (!taken.ok) return { ok: false, code: "failed", message: taken.message };
     try {
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",

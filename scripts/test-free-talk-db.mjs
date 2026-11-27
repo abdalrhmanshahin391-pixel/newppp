@@ -2,7 +2,7 @@
 import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import assert from "node:assert/strict";
-let db, parallel, parallelBoard;
+let db, parallel, parallelBoard, parallelTake;
 const isolatedUrl = process.env.FREE_TALK_TEST_DATABASE_URL;
 if (isolatedUrl) {
   const url = new URL(isolatedUrl);
@@ -25,6 +25,8 @@ if (isolatedUrl) {
   parallel = (u, s) => pool.unsafe(`select public.free_talk_reserve('${id(u)}','${id(s)}')`);
   parallelBoard = (u, ms, ref) =>
     pool.unsafe(`select public.voice_board_charge('${id(u)}',${ms},'${ref}')->>'charged' as c`);
+  parallelTake = (u) =>
+    pool.unsafe(`select public.groq_request_take_for('${id(u)}')->>'used' as c`);
 } else {
   if (!process.env.PGLITE_MODULE)
     throw new Error(
@@ -317,6 +319,119 @@ try {
     await exec("set role " + role);
     await denied(charge(100, 10, "board-test-601"), "permission denied");
     await denied("select * from public.voice_board_charges", "permission denied");
+    await exec("reset role");
+  }
+  // One plan rule for requests and voice time (20261128020000_groq_voice_plan_quotas.sql).
+  const quotas = await readFile(
+    new URL("../supabase/migrations/20261128020000_groq_voice_plan_quotas.sql", import.meta.url),
+    "utf8",
+  );
+  await db.exec(quotas);
+  await db.exec(quotas);
+  // Plans without a number get one; numbers already set are kept.
+  await expect("select max_groq_requests from public.plans where slug='pro'", 1000);
+  await expect("select max_groq_requests from public.plans where slug='starter'", 2);
+  await expect("select count(*)::int from public.plans where max_groq_requests is null", 0);
+  for (let n = 300; n <= 307; n++) await exec(`insert into auth.users values('${id(n)}',now())`);
+  await exec(`insert into public.user_roles values('${id(300)}','admin')`);
+  const take = (u, field = "used") =>
+    `select public.groq_request_take_for('${id(u)}')->>'${field}'`;
+  const status = (u, field = "used") =>
+    `select public.groq_request_status_for('${id(u)}')->>'${field}'`;
+  const plan = (u) => `select public.quota_plan_slug('${id(u)}')`;
+  // Admin: no limit on either, nothing counted.
+  await expect(take(300, "unlimited"), "true");
+  await expect(status(300, "unlimited"), "true");
+  await expect(`select count(*)::int from public.groq_request_usage where user_id='${id(300)}'`, 0);
+  await expect(`select public.free_talk_budget('${id(300)}')->>'unlimited'`, "true");
+  // A plan's number is exact, and reading what is left takes nothing.
+  await exec("update public.plans set max_groq_requests=3 where slug='starter'");
+  await expect(status(301), "0");
+  await expect(take(301, "left"), "2");
+  await exec(take(301));
+  await exec(take(301));
+  await denied(take(301), "groq_requests_used");
+  await expect(status(301), "3");
+  await expect(status(301), "3");
+  await expect(status(301, "left"), "0");
+  // A new month starts empty.
+  await exec(`update public.groq_request_usage set period='2000-01' where user_id='${id(301)}'`);
+  await expect(status(301), "0");
+  // A paid plan without proof gets the free plan for both (no voice error any more).
+  await exec(`insert into public.user_plans values('${id(302)}','pro')`);
+  await expect(plan(302), "starter");
+  await expect(status(302, "limit"), "3");
+  await expect(`select public.free_talk_budget('${id(302)}')->>'plan'`, "starter");
+  // Test payments never count; a live, active subscription does.
+  await exec(
+    `insert into public.subscriptions values('${id(302)}','pro','active',now()+interval '20 days','sandbox')`,
+  );
+  await expect(plan(302), "starter");
+  await exec(
+    `insert into public.subscriptions values('${id(302)}','pro','active',now()+interval '20 days','live')`,
+  );
+  await expect(plan(302), "pro");
+  await expect(take(302, "limit"), "1000");
+  await expect(`select public.free_talk_budget('${id(302)}')->>'plan'`, "pro");
+  const live302 = `update public.subscriptions set %s where user_id='${id(302)}' and environment='live'`;
+  // One day of grace for a late renewal message, not two.
+  await exec(live302.replace("%s", "current_period_end=now()-interval '12 hours'"));
+  await expect(plan(302), "pro");
+  await exec(live302.replace("%s", "current_period_end=now()-interval '2 days'"));
+  await expect(plan(302), "starter");
+  await exec(
+    live302.replace("%s", "current_period_end=now()+interval '20 days',status='past_due'"),
+  );
+  await expect(plan(302), "starter");
+  await exec(live302.replace("%s", "status='canceled'"));
+  await expect(plan(302), "starter");
+  await exec(live302.replace("%s", "status='trialing'"));
+  await expect(plan(302), "pro");
+  await exec(live302.replace("%s", "plan_slug='study'"));
+  await expect(plan(302), "starter");
+  // An admin grant counts while it is in force.
+  await exec(`insert into public.user_plans values('${id(303)}','ultimate')`);
+  await exec(
+    `insert into public.manual_plan_grants(user_id,plan_slug) values('${id(303)}','ultimate')`,
+  );
+  await expect(plan(303), "ultimate");
+  await exec(`update public.manual_plan_grants set revoked_at=now() where user_id='${id(303)}'`);
+  await expect(plan(303), "starter");
+  await exec(
+    `update public.manual_plan_grants set revoked_at=null,starts_at=now()-interval '1 day',expires_at=now()-interval '1 minute' where user_id='${id(303)}'`,
+  );
+  await expect(plan(303), "starter");
+  // A one-time purchase counts when it was live.
+  await exec(`insert into public.user_plans values('${id(304)}','boost')`);
+  await exec(`insert into public.plan_credit_grants values('${id(304)}','boost','sandbox')`);
+  await expect(plan(304), "starter");
+  await exec(`insert into public.plan_credit_grants values('${id(304)}','boost','live')`);
+  await expect(plan(304), "boost");
+  // A plan that no longer exists: the free plan. A plan with 0 requests: none.
+  await exec(`insert into public.user_plans values('${id(305)}','ghost')`);
+  await expect(plan(305), "starter");
+  await exec(
+    "insert into public.plans(slug,price_cents,max_groq_requests) values('zero',0,0) on conflict do nothing",
+  );
+  await exec(`insert into public.user_plans values('${id(306)}','zero')`);
+  await denied(take(306), "groq_requests_used");
+  // Fifty requests at the same moment never pass the number.
+  await exec("update public.plans set max_groq_requests=20 where slug='starter'");
+  const burst = await Promise.allSettled(
+    Array.from({ length: 50 }, () => (parallelTake ? parallelTake(307) : exec(take(307)))),
+  );
+  assert.equal(burst.filter((r) => r.status === "fulfilled").length, 20);
+  checks++;
+  await expect(`select used from public.groq_request_usage where user_id='${id(307)}'`, 20);
+  // Who may call what: learners only their own take and status.
+  await expect(
+    `select not has_function_privilege('authenticated','public.quota_plan_slug(uuid)','EXECUTE') and not has_function_privilege('authenticated','public.groq_request_status_for(uuid)','EXECUTE') and has_function_privilege('authenticated','public.groq_request_status()','EXECUTE') and not has_function_privilege('anon','public.groq_request_status()','EXECUTE') and has_function_privilege('authenticated','public.groq_request_take()','EXECUTE') and not has_function_privilege('authenticated','public.free_talk_budget(uuid)','EXECUTE')`,
+  );
+  for (const role of ["anon", "authenticated"]) {
+    await exec("set role " + role);
+    await denied(status(301), "permission denied");
+    await denied(plan(301), "permission denied");
+    await denied("select * from public.groq_request_usage", "permission denied");
     await exec("reset role");
   }
   console.log(
