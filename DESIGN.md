@@ -1678,6 +1678,29 @@ tile holding the level in the display face, its name («مبتدئ · A1»…), 
 bottom bar is white glass. Admins' delete is a small red-outline pill under the stop; + is an ink
 dashed circle. Reduced motion: the cube, halo and bars stand still.
 
+**Units (Nov 2026), after the big learning apps.** A level is shown one short unit at a time
+(`src/lib/rita-path-units.ts`): an admin's «بداية وحدة» stop starts and names a unit (title = its goal,
+e.g. «تعريف عن حالك»; learners see it as the unit's heading, never as a stop); without such stops a
+level is cut every 5 lessons, quizzes, films and files staying with the lesson before them.
+- Learners never see how many lessons a level holds: the hero names the unit («A1 · الوحدة 2» over
+  its title, or «الوحدة 2») with «خلّصت 2 من 5 بهالوحدة» and a 6px ink bar, then «كمّل · <lesson>» and
+  an outline «دليل الوحدة» pill. The level card (on unit 1 only) says what the level lets you do
+  («بآخرها بتعرّف عن حالك…») instead of a count; the finish says «خط النهاية».
+- Under the hero, 44px round pills for the units already open (done = black with ✓, the current
+  one ringed) and one dashed 🔒 pill after them; never the closed ones beyond.
+- The road ends at the next unit: a dashed card (three blurred stops, a black lock on its edge,
+  «الوحدة 3», its name or «الوحدة الجاية», «بتنفتح لما تخلّص هالوحدة»), or, once this unit is done, a
+  black card with a white «افتح الوحدة 3» pill. Moving between units: the road rises in (or drops in,
+  going back) in 600ms, the hero text fades up.
+- A unit finished since the last visit gets its moment once (per device, language and level): a
+  white card over a blurred page, Uzyra's cube hopping, a burst of ink and blue sparks, «خلّصت
+  الوحدة!» (or «خلّصت A1!»), and «افتح الوحدة n» / «انتقل إلى A2» with «بعدين».
+- «دليل الوحدة»: a side sheet (from the bottom on phones) with the level's goal and each lesson of the
+  unit with its own goals (from the lesson's objectives), done ones ticked.
+- «ارجع لدرسك»: a black pill above the bottom bar while the current lesson is out of sight.
+- «ترتيب حر» shows every unit under a heading card; editing shows the whole level with the unit
+  stops as black-ringed stops (tap to rename). Reduced motion: no road, hero, burst or sheet motion.
+
 ## Floating window (study page, `FloatingWindow`)
 
 A dark window over the study work area in the manner of iPadOS windows, opened from the circle (the

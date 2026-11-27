@@ -138,6 +138,7 @@ jobs:
           node --test src/lib/rita-image-request.test.ts
           node --test src/lib/learn-home.test.ts
           node --test src/lib/rita-path-levels.test.ts
+          node --test src/lib/rita-path-units.test.ts
           node --test src/lib/film-clips.test.ts
           node --test src/lib/rita-lesson-board.test.ts
           node --test src/lib/books.test.ts

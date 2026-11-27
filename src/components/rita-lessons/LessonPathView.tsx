@@ -6,8 +6,12 @@ import type { ContentRequest } from "./admin/PathContentPanel";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { toast } from "sonner";
 import {
+  ArrowDown,
   ArrowLeft,
   ArrowRight,
+  ArrowUp,
+  Bookmark,
+  BookOpenText,
   Check,
   ChevronDown,
   Clapperboard,
@@ -29,9 +33,12 @@ import {
   Sparkles,
   Trophy,
   Trash2,
+  X,
 } from "lucide-react";
 import {
   adminSetLessonStatus,
+  getLessonPreview,
+  type LessonPreview,
   type PathLesson,
   type ReviewSuggestion,
 } from "@/lib/rita-curriculum.functions";
@@ -49,8 +56,19 @@ import {
 import {
   adminAddPathItem,
   adminDeletePathItem,
+  adminRenamePathItem,
   adminSavePathLayout,
 } from "@/lib/rita-path-items.functions";
+import {
+  celebratedKey,
+  frontierUnit,
+  unitDone,
+  unitOpen,
+  unitsOf,
+  visibleUnits,
+  type PathUnit,
+  type UnitStop,
+} from "@/lib/rita-path-units";
 import {
   confirmSound,
   installSoundUnlock,
@@ -93,6 +111,10 @@ const NODE = 88;
 const NODE_TOP = 16;
 /** Height of a level's banner row, and of the «coming soon» row after the last level. */
 const BANNER_ROW = 128;
+/** A unit's heading on the road (every unit shown at once, with «ترتيب حر»). */
+const UNIT_ROW = 112;
+/** The closed (or newly opened) next unit at the end of the road. */
+const GATE_ROW = 232;
 /** Faint line drawings beside the road: only decoration, nothing about the learner. */
 const DOODLES = [BookOpen, MessageCircle, Globe2, Headphones, PenLine, Sparkles];
 const FREE_ORDER_KEY = "ritaFreeOrder";
@@ -109,9 +131,12 @@ const LOOK: Record<Look, { color: string; soft: string; word: string; Icon: type
   clips: { color: "#d6336c", soft: "#fde8ef", word: "أفلام وGIF", Icon: Clapperboard },
   resources: { color: "#7c5cff", soft: "#f0ecff", word: "ملفات", Icon: FolderOpen },
   finish: { color: "#121117", soft: "#f4f4f8", word: "النهاية", Icon: Flag },
+  unit: { color: "#121117", soft: "#f4f4f8", word: "وحدة", Icon: Bookmark },
 };
 
 type Node = { type: "lesson"; lesson: PathLesson } | { type: "item"; item: PathItem };
+/** An admin's unit marker: the learner sees it as its unit's heading, never as a stop. */
+const isMarker = (node: Node) => node.type === "item" && node.item.kind === "unit";
 
 const idOf = (node: Node) => (node.type === "lesson" ? node.lesson.id : node.item.id);
 const refOf = (node: Node): PathRef => ({ type: node.type, id: idOf(node) });
@@ -131,10 +156,11 @@ const SHAPE: Record<Look, string> = {
   clips: "frame",
   resources: "folder",
   finish: "medal",
+  unit: "circle",
 };
 
 /** The stops an admin can add, each with its own look. */
-type NewStop = "quiz" | "clips" | "resources" | "finish";
+type NewStop = "unit" | "quiz" | "clips" | "resources" | "finish";
 const NEW_STOP_TITLE: Record<"quiz" | "clips" | "resources", string> = {
   quiz: "أسئلة",
   clips: "أفلام وGIF",
@@ -231,6 +257,7 @@ export function LessonPathView({
   const saveFn = useServerFn(adminSavePathLayout);
   const addFn = useServerFn(adminAddPathItem);
   const deleteItemFn = useServerFn(adminDeletePathItem);
+  const renameFn = useServerFn(adminRenamePathItem);
   const navigate = useNavigate();
   const cubeLevels = useRef({ input: 0, output: 0 });
   const lessonStatus = useServerFn(adminSetLessonStatus);
@@ -247,6 +274,9 @@ export function LessonPathView({
   const [fresh, setFresh] = useState("");
   const [dragId, setDragId] = useState("");
   const [overId, setOverId] = useState("");
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [party, setParty] = useState<PathUnit | null>(null);
+  const [away, setAway] = useState<"up" | "down" | null>(null);
 
   useEffect(() => {
     setFreeOrder(window.localStorage.getItem(FREE_ORDER_KEY) === "1");
@@ -325,10 +355,108 @@ export function LessonPathView({
       })),
     [nodes, pageLevel, states],
   );
-  const rows = useMemo(
-    () => allRows.filter((r) => !editing || r.type !== "finish"),
-    [allRows, editing],
+  // ---- units: the level is shown one short unit at a time (see rita-path-units.ts) ----
+  const units = useMemo(
+    () =>
+      unitsOf(
+        pageLevel,
+        allRows.map((r): UnitStop => {
+          if (r.type === "banner") return { kind: "banner" };
+          if (r.type === "node" && r.node.type === "lesson")
+            return { kind: "lesson", state: states.get(r.node.lesson.id) ?? r.node.lesson.state };
+          if (r.type === "node" && r.node.type === "item" && r.node.item.kind === "unit")
+            return { kind: "marker", id: r.node.item.id, title: r.node.item.title };
+          return { kind: "stop" };
+        }),
+      ),
+    [allRows, pageLevel, states],
   );
+  const frontier = frontierUnit(units);
+  const [unitChoice, setUnitChoice] = useState<{ level: Level; key: string } | null>(null);
+  const [unitMove, setUnitMove] = useState<"next" | "back">("next");
+  const chosen =
+    unitChoice && unitChoice.level === pageLevel
+      ? units.findIndex((unit) => unit.key === unitChoice.key)
+      : -1;
+  const unitIndex =
+    chosen >= 0 && unitOpen(units, chosen, frontier) ? chosen : Math.max(0, frontier);
+  const pageUnit: PathUnit | undefined = units[unitIndex];
+  const nextUnit: PathUnit | undefined = units[unitIndex + 1];
+  const nextOpen = nextUnit ? unitOpen(units, unitIndex + 1, frontier) : false;
+  // Learners see one unit; «ترتيب حر» shows every unit under its heading; editing shows it all.
+  const unitMode = !editing && !freeOrder && Boolean(pageUnit);
+
+  function goUnit(index: number) {
+    const unit = units[index];
+    if (!unit || !unitOpen(units, index, frontier)) return;
+    setUnitMove(index < unitIndex ? "back" : "next");
+    setUnitChoice({ level: pageLevel, key: unit.key });
+    setHint("");
+    confirmSound();
+    window.scrollTo({
+      top: 0,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    });
+  }
+
+  // A unit finished since the last visit gets its moment once (remembered on the device, per
+  // language and level). The first visit only remembers what was already finished.
+  useEffect(() => {
+    if (!lessons || editing || !units.length) return;
+    const key = `${celebratedKey(language)}:${pageLevel}`;
+    const finished = units.filter((unit) => unit.lessons > 0 && unitDone(unit)).map((u) => u.key);
+    let seen: unknown = null;
+    try {
+      const saved = window.localStorage.getItem(key);
+      seen = saved ? JSON.parse(saved) : null;
+    } catch {
+      seen = null;
+    }
+    const remember = (keys: string[]) => {
+      try {
+        window.localStorage.setItem(key, JSON.stringify([...new Set(keys)]));
+      } catch {
+        /* private mode: nothing to remember */
+      }
+    };
+    if (!Array.isArray(seen)) {
+      remember(finished);
+      return;
+    }
+    const known = seen.map(String);
+    const fresh = units.find(
+      (unit) => unit.lessons > 0 && unitDone(unit) && !known.includes(unit.key),
+    );
+    if (!fresh) return;
+    remember([...known, ...finished]);
+    setParty(fresh);
+  }, [lessons, editing, units, language, pageLevel]);
+
+  type ViewRow =
+    | (typeof allRows)[number]
+    | { type: "unit"; unit: PathUnit }
+    | { type: "gate"; unit: PathUnit; open: boolean };
+  const rows = useMemo((): ViewRow[] => {
+    if (editing) return allRows.filter((r) => r.type !== "finish");
+    if (!units.length) return allRows;
+    const stops = (list: typeof allRows) =>
+      list.filter((r) => !(r.type === "node" && isMarker(r.node)));
+    if (!unitMode || !pageUnit) {
+      const out: ViewRow[] = [];
+      allRows.forEach((r, index) => {
+        const starts = units.find((unit) => unit.start === index);
+        if (starts && units.length > 1) out.push({ type: "unit", unit: starts });
+        if (!(r.type === "node" && isMarker(r.node))) out.push(r);
+      });
+      return out;
+    }
+    const banner = allRows[0];
+    return [
+      ...(unitIndex === 0 && banner?.type === "banner" ? [banner] : []),
+      ...stops(allRows.slice(pageUnit.start, pageUnit.end)),
+      ...(nextUnit ? [{ type: "gate" as const, unit: nextUnit, open: nextOpen }] : []),
+    ];
+  }, [allRows, editing, units, unitMode, pageUnit, unitIndex, nextUnit, nextOpen]);
   const lastNodeOnPage = allRows
     .slice()
     .reverse()
@@ -391,10 +519,18 @@ export function LessonPathView({
     let top = 0;
     let stop = 0;
     return rows.map((r) => {
-      const h = r.type === "banner" ? BANNER_ROW : row;
+      const h =
+        r.type === "banner"
+          ? BANNER_ROW
+          : r.type === "unit"
+            ? UNIT_ROW
+            : r.type === "gate"
+              ? GATE_ROW
+              : row;
       const isStop = r.type === "node" || r.type === "finish";
       const x = isStop ? WIDTH / 2 + ZIGZAG[stop++ % ZIGZAG.length] : WIDTH / 2;
-      const y = isStop ? top + NODE_TOP + NODE / 2 : top + h / 2;
+      // The road runs into the top of the next unit's card.
+      const y = isStop ? top + NODE_TOP + NODE / 2 : r.type === "gate" ? top + 48 : top + h / 2;
       const entry = { top, h, x, y };
       top += h;
       return entry;
@@ -441,6 +577,7 @@ export function LessonPathView({
         // A lesson is reviewed and published on its own page; an exercise stop opens here.
         if (node.type === "lesson")
           void navigate({ to: "/admin/publish", search: { lesson: node.lesson.id } });
+        else if (node.item.kind === "unit") void renameUnit(node.item);
         else setContent({ item: node.item });
       }
       return;
@@ -462,10 +599,14 @@ export function LessonPathView({
 
   function showFinish(level: Level) {
     const count = counts.get(level) ?? { lessons: 0, done: 0 };
+    const finished = count.lessons > 0 && count.done >= count.lessons;
+    // Learners are never told how many lessons a level holds; editing still shows the count.
     setHint(
-      count.lessons > 0 && count.done >= count.lessons
+      finished
         ? `خلّصت المستوى ${level} كله. برافو!`
-        : `خلّصت ${count.done} من ${count.lessons} دروس بالمستوى ${level}. كمّل للنهاية.`,
+        : editing
+          ? `خلّصت ${count.done} من ${count.lessons} دروس بالمستوى ${level}. كمّل للنهاية.`
+          : "كمّل وحدة وحدة لتوصل لخط النهاية.",
     );
   }
 
@@ -490,6 +631,25 @@ export function LessonPathView({
     moved: boolean;
   } | null>(null);
   const swallowClick = useRef(false);
+
+  // «ارجع لدرسك» shows while the current lesson is out of sight on its unit's page.
+  useEffect(() => {
+    if (!unitMode || !pageUnit?.current) {
+      setAway(null);
+      return;
+    }
+    const el = board.current?.querySelector<HTMLElement>('[data-state="current"]');
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setAway(null);
+        else setAway(entry.boundingClientRect.top < 0 ? "up" : "down");
+      },
+      { threshold: 0.2 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [unitMode, pageUnit, rows]);
 
   const endPress = useCallback(() => {
     const state = press.current;
@@ -609,8 +769,29 @@ export function LessonPathView({
     }
   }
 
+  async function renameUnit(item: PathItem) {
+    const name = window.prompt("اسم الوحدة (هدفها، مثلاً «تعريف عن حالك»):", item.title);
+    if (name === null || !name.trim() || name.trim() === item.title) return;
+    setBusy(true);
+    try {
+      await renameFn({ data: { id: item.id, title: name.trim().slice(0, 120) } });
+      await onReload();
+      confirmSound();
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "ما انحفظ الاسم. جرّب مرة ثانية.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function add(stop: NewStop, index: number) {
     setAdding(null);
+    let unitName = "";
+    if (stop === "unit") {
+      const name = window.prompt("اسم الوحدة الجديدة (هدفها، مثلاً «تعريف عن حالك»):", "");
+      if (name === null) return;
+      unitName = name.trim().slice(0, 120) || "وحدة جديدة";
+    }
     setBusy(true);
     const kind: PathItemKind = stop === "quiz" || stop === "clips" ? "exercises" : stop;
     try {
@@ -620,7 +801,7 @@ export function LessonPathView({
           level: pageLevel,
           kind,
           ...(kind === "exercises" && { mode: stop as ExerciseMode }),
-          title: stop === "finish" ? pageLevel : NEW_STOP_TITLE[stop],
+          title: stop === "finish" ? pageLevel : stop === "unit" ? unitName : NEW_STOP_TITLE[stop],
           list: nodes.map(refOf),
           index,
         },
@@ -631,13 +812,18 @@ export function LessonPathView({
         ...list.slice(index),
       ]);
       // A new quiz, clips or resources stop opens straight on its content.
-      if (kind !== "finish") setContent({ item: created });
+      if (kind !== "finish" && kind !== "unit") setContent({ item: created });
       setFresh(created.id);
       confirmSound();
       window.setTimeout(() => setFresh(""), 900);
       await onReload();
     } catch (cause) {
-      toast.error(cause instanceof Error ? cause.message : "ما انضافت المحطة. جرّب مرة ثانية.");
+      const message = cause instanceof Error ? cause.message : "";
+      toast.error(
+        stop === "unit" && /kind_check|check constraint/i.test(message)
+          ? "الوحدات بحاجة لتحديث قاعدة البيانات: طبّق ملف SQL الوحدات أولاً."
+          : message || "ما انضافت المحطة. جرّب مرة ثانية.",
+      );
     } finally {
       setBusy(false);
     }
@@ -666,6 +852,29 @@ export function LessonPathView({
 
   function renderRow(r: (typeof rows)[number], index: number) {
     const place = layout[index];
+    if (r.type === "unit") {
+      return (
+        <UnitHeading
+          key={`unit-${r.unit.key}`}
+          unit={r.unit}
+          top={place.top}
+          index={index}
+          open={freeOrder || unitOpen(units, units.indexOf(r.unit), frontier)}
+        />
+      );
+    }
+    if (r.type === "gate") {
+      return (
+        <UnitGate
+          key={`gate-${r.unit.key}`}
+          unit={r.unit}
+          open={r.open}
+          top={place.top}
+          index={index}
+          onOpen={() => goUnit(units.indexOf(r.unit))}
+        />
+      );
+    }
     if (r.type === "banner") {
       return (
         <LevelBanner
@@ -677,6 +886,7 @@ export function LessonPathView({
           startLevel={startLevel}
           lowest={lowest}
           onStart={startFrom}
+          learner={!editing}
         />
       );
     }
@@ -690,6 +900,7 @@ export function LessonPathView({
           top={place.top}
           index={index}
           onOpen={() => showFinish(r.level)}
+          learner={!editing}
         />
       );
     }
@@ -800,7 +1011,9 @@ export function LessonPathView({
           ) : node.type === "item" && node.item.kind === "resources" ? (
             <span className="lp-sub">ملفات وروابط</span>
           ) : finishLevel ? (
-            <span className="lp-sub">{finishLine(finishCount)}</span>
+            <span className="lp-sub">{finishLine(finishCount, !editing)}</span>
+          ) : node.type === "item" && node.item.kind === "unit" ? (
+            <span className="lp-sub">بداية وحدة · اكبس لتغيّر اسمها</span>
           ) : (
             <span className="lp-sub">
               {node.type === "item" && exerciseCount(node.item)
@@ -830,7 +1043,9 @@ export function LessonPathView({
         {editing &&
           isAdmin &&
           node.type === "item" &&
-          (node.item.kind === "exercises" || node.item.kind === "resources") && (
+          (node.item.kind === "exercises" ||
+            node.item.kind === "resources" ||
+            node.item.kind === "unit") && (
             <button
               type="button"
               className="lp-del"
@@ -847,6 +1062,7 @@ export function LessonPathView({
   }
 
   const heroCount = counts.get(pageLevel);
+  const partyIndex = party ? units.findIndex((unit) => unit.key === party.key) : -1;
 
   return (
     <main
@@ -897,43 +1113,148 @@ export function LessonPathView({
         </div>
       </header>
 
-      <section className="lp-hero">
+      <section
+        className="lp-hero"
+        key={unitMode && pageUnit ? `hero-${pageUnit.key}` : "hero"}
+        data-move={unitMove}
+      >
         <div className="lp-hero-text">
-          <p className="lp-eyebrow">
-            المستوى {pageLevel}
-            {learning ? " · " : ""}
-            {learning && <LanguageFlag language={learning} size={16} />}
-          </p>
-          <h2 className="lp-heading">دروسك مع يوزرا</h2>
-          {heroCount && heroCount.lessons > 0 && (
-            <div className="lp-progress">
-              <p>
-                خلّصت <b>{heroCount.done}</b> من {heroCount.lessons} دروس بـ {pageLevel}
+          {unitMode && pageUnit ? (
+            <>
+              <p className="lp-eyebrow">
+                {learning && <LanguageFlag language={learning} size={16} />}
+                {pageLevel} · الوحدة {pageUnit.number}
               </p>
-              <span
-                className="lp-progress-bar"
-                role="progressbar"
-                aria-label={`التقدّم بالمستوى ${pageLevel}`}
-                aria-valuemin={0}
-                aria-valuemax={heroCount.lessons}
-                aria-valuenow={heroCount.done}
-              >
-                <span style={{ width: `${(heroCount.done / heroCount.lessons) * 100}%` }} />
-              </span>
-            </div>
-          )}
-          {current?.level === pageLevel && !editing && (
-            <button type="button" className="lp-continue" onClick={() => onOpenLesson(current)}>
-              <span className="lp-continue-label">كمّل</span>
-              <span className="lp-continue-title">{current.title || current.title_ar}</span>
-              <ArrowLeft size={18} aria-hidden="true" />
-            </button>
+              <h2 className="lp-heading">{pageUnit.title ?? `الوحدة ${pageUnit.number}`}</h2>
+              {pageUnit.lessons > 0 && (
+                <div className="lp-progress">
+                  <p>
+                    {unitDone(pageUnit) ? (
+                      "خلّصت هالوحدة كلها. برافو!"
+                    ) : (
+                      <>
+                        خلّصت <b>{pageUnit.done}</b> من {pageUnit.lessons} بهالوحدة
+                      </>
+                    )}
+                  </p>
+                  <span
+                    className="lp-progress-bar"
+                    role="progressbar"
+                    aria-label={`التقدّم بالوحدة ${pageUnit.number}`}
+                    aria-valuemin={0}
+                    aria-valuemax={pageUnit.lessons}
+                    aria-valuenow={pageUnit.done}
+                  >
+                    <span style={{ width: `${(pageUnit.done / pageUnit.lessons) * 100}%` }} />
+                  </span>
+                </div>
+              )}
+              <div className="lp-hero-actions">
+                {current && pageUnit.current ? (
+                  <button
+                    type="button"
+                    className="lp-continue"
+                    onClick={() => onOpenLesson(current)}
+                  >
+                    <span className="lp-continue-label">كمّل</span>
+                    <span className="lp-continue-title">{current.title || current.title_ar}</span>
+                    <ArrowLeft size={18} aria-hidden="true" />
+                  </button>
+                ) : nextUnit && nextOpen && unitDone(pageUnit) ? (
+                  <button
+                    type="button"
+                    className="lp-continue"
+                    onClick={() => goUnit(unitIndex + 1)}
+                  >
+                    افتح الوحدة {nextUnit.number}
+                    <ArrowLeft size={18} aria-hidden="true" />
+                  </button>
+                ) : null}
+                <button type="button" className="lp-guide-open" onClick={() => setGuideOpen(true)}>
+                  <BookOpenText size={17} aria-hidden="true" />
+                  دليل الوحدة
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="lp-eyebrow">
+                المستوى {pageLevel}
+                {learning ? " · " : ""}
+                {learning && <LanguageFlag language={learning} size={16} />}
+              </p>
+              <h2 className="lp-heading">دروسك مع يوزرا</h2>
+              {editing && heroCount && heroCount.lessons > 0 && (
+                <div className="lp-progress">
+                  <p>
+                    خلّصت <b>{heroCount.done}</b> من {heroCount.lessons} دروس بـ {pageLevel}
+                  </p>
+                  <span
+                    className="lp-progress-bar"
+                    role="progressbar"
+                    aria-label={`التقدّم بالمستوى ${pageLevel}`}
+                    aria-valuemin={0}
+                    aria-valuemax={heroCount.lessons}
+                    aria-valuenow={heroCount.done}
+                  >
+                    <span style={{ width: `${(heroCount.done / heroCount.lessons) * 100}%` }} />
+                  </span>
+                </div>
+              )}
+              {current?.level === pageLevel && !editing && (
+                <button type="button" className="lp-continue" onClick={() => onOpenLesson(current)}>
+                  <span className="lp-continue-label">كمّل</span>
+                  <span className="lp-continue-title">{current.title || current.title_ar}</span>
+                  <ArrowLeft size={18} aria-hidden="true" />
+                </button>
+              )}
+            </>
           )}
         </div>
         <span className="lp-hero-cube" aria-hidden="true">
           <RitaCube levelsRef={cubeLevels} mode="idle" label="" />
         </span>
       </section>
+
+      {unitMode && units.length > 1 && (
+        <nav className="lp-units" aria-label="وحدات المستوى">
+          {units.slice(0, visibleUnits(units)).map((unit, index) => {
+            const open = unitOpen(units, index, frontier);
+            const done = unit.lessons > 0 && unitDone(unit);
+            return (
+              <Fragment key={unit.key}>
+                {index > 0 && <span className="lp-units-line" data-done={done ? "" : undefined} />}
+                <button
+                  type="button"
+                  className="lp-unit-pill"
+                  data-state={
+                    !open ? "locked" : done ? "done" : index === frontier ? "current" : "open"
+                  }
+                  aria-current={index === unitIndex ? "page" : undefined}
+                  aria-disabled={!open || undefined}
+                  title={unit.title ?? `الوحدة ${unit.number}`}
+                  aria-label={
+                    open
+                      ? `الوحدة ${unit.number}${unit.title ? ` · ${unit.title}` : ""}${done ? " · خلصت" : ""}`
+                      : `الوحدة ${unit.number} · مقفولة لحد ما تخلّص الوحدة اللي قبلها`
+                  }
+                  onClick={() =>
+                    open ? goUnit(index) : setHint("خلّص الوحدة اللي قبلها وبتنفتحلك هاي.")
+                  }
+                >
+                  {!open ? (
+                    <Lock size={15} aria-hidden="true" />
+                  ) : done ? (
+                    <Check size={17} strokeWidth={3} aria-hidden="true" />
+                  ) : (
+                    unit.number
+                  )}
+                </button>
+              </Fragment>
+            );
+          })}
+        </nav>
+      )}
 
       <section className="mx-auto max-w-md px-4 text-center">
         {isAdmin && lessons && !error && (
@@ -961,8 +1282,9 @@ export function LessonPathView({
         )}
         {editing && (
           <p className="lp-edit-hint">
-            اضغط مطوّلاً على أي محطة واسحبها فوق ثانية عشان يتبدّلوا. اكبس الدرس لتفتح صفحته بالمراجعة
-            والنشر، أو + لإضافة تمارين أو ملفات.
+            اضغط مطوّلاً على أي محطة واسحبها فوق ثانية عشان يتبدّلوا. اكبس الدرس لتفتح صفحته
+            بالمراجعة والنشر، أو + لإضافة تمارين أو ملفات. الوحدات بتنقسم لحالها كل 5 دروس، أو حط
+            «بداية وحدة» من + لتحدّدها وتسمّيها.
           </p>
         )}
       </section>
@@ -1030,7 +1352,9 @@ export function LessonPathView({
       {lessons && (lastNodeOnPage || editing) && (
         <div
           ref={board}
+          key={unitMode && pageUnit ? `board-${pageLevel}-${pageUnit.key}` : `board-${pageLevel}`}
           className="lp-board relative mx-auto mt-8"
+          data-move={unitMode ? unitMove : undefined}
           style={{ width: WIDTH, height }}
         >
           <svg
@@ -1118,7 +1442,7 @@ export function LessonPathView({
               </button>
               {adding === plus.index && (
                 <div className="lp-add" role="menu">
-                  {(["quiz", "clips", "resources", "finish"] as NewStop[]).map((kind) => {
+                  {(["unit", "quiz", "clips", "resources", "finish"] as NewStop[]).map((kind) => {
                     const Icon = LOOK[kind].Icon;
                     return (
                       <button
@@ -1134,13 +1458,15 @@ export function LessonPathView({
                         <span>
                           <Icon size={18} />
                         </span>
-                        {kind === "quiz"
-                          ? "أسئلة من Lecture Lab"
-                          : kind === "clips"
-                            ? "أفلام وGIF"
-                            : kind === "resources"
-                              ? "ملفات وروابط"
-                              : `خط نهاية ${pageLevel}`}
+                        {kind === "unit"
+                          ? "بداية وحدة"
+                          : kind === "quiz"
+                            ? "أسئلة من Lecture Lab"
+                            : kind === "clips"
+                              ? "أفلام وGIF"
+                              : kind === "resources"
+                                ? "ملفات وروابط"
+                                : `خط نهاية ${pageLevel}`}
                       </button>
                     );
                   })}
@@ -1167,6 +1493,7 @@ export function LessonPathView({
             </button>
           )}
           {followingLevel &&
+            (!unitMode || !nextUnit) &&
             (isAdmin || hasFollowingContent ? (
               <button
                 type="button"
@@ -1210,6 +1537,58 @@ export function LessonPathView({
         </div>
       )}
 
+      {unitMode && away && current && pageUnit?.current && (
+        <button
+          type="button"
+          className="lp-back-to"
+          onClick={() =>
+            board.current?.querySelector('[data-state="current"]')?.scrollIntoView({
+              block: "center",
+              behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+                ? "auto"
+                : "smooth",
+            })
+          }
+        >
+          {away === "up" ? (
+            <ArrowUp size={18} aria-hidden="true" />
+          ) : (
+            <ArrowDown size={18} aria-hidden="true" />
+          )}
+          ارجع لدرسك
+        </button>
+      )}
+
+      {party && (
+        <UnitCelebration
+          unit={party}
+          next={partyIndex >= 0 ? (units[partyIndex + 1] ?? null) : null}
+          level={pageLevel}
+          following={followingLevel && hasFollowingContent ? followingLevel : null}
+          onNext={() => {
+            setParty(null);
+            goUnit(partyIndex + 1);
+          }}
+          onLevel={(level) => {
+            setParty(null);
+            showLevel(level);
+          }}
+          onClose={() => setParty(null)}
+        />
+      )}
+
+      {guideOpen && pageUnit && (
+        <UnitGuide
+          unit={pageUnit}
+          level={pageLevel}
+          lessons={allRows
+            .slice(pageUnit.start, pageUnit.end)
+            .flatMap((r) => (r.type === "node" && r.node.type === "lesson" ? [r.node.lesson] : []))}
+          stateOf={stateOf}
+          onClose={() => setGuideOpen(false)}
+        />
+      )}
+
       {isAdmin && content && (
         <Suspense
           fallback={
@@ -1243,9 +1622,11 @@ export function LessonPathView({
   );
 }
 
-function finishLine(count: LevelCount | undefined) {
+function finishLine(count: LevelCount | undefined, learner = false) {
   if (!count || count.lessons === 0) return "خط النهاية";
-  return count.done >= count.lessons ? "خلّصت المستوى" : `${count.done} من ${count.lessons} دروس`;
+  if (count.done >= count.lessons) return "خلّصت المستوى";
+  // Learners are not told how many lessons a level holds.
+  return learner ? "خط النهاية" : `${count.done} من ${count.lessons} دروس`;
 }
 
 /** The finish line drawn after a level's last lesson (when the admin placed none of their own). */
@@ -1256,6 +1637,7 @@ function FinishStop({
   top,
   index,
   onOpen,
+  learner = false,
 }: {
   level: Level;
   count: LevelCount;
@@ -1263,6 +1645,7 @@ function FinishStop({
   top: number;
   index: number;
   onOpen: () => void;
+  learner?: boolean;
 }) {
   const finished = count.lessons > 0 && count.done >= count.lessons;
   const look = LOOK.finish;
@@ -1279,7 +1662,7 @@ function FinishStop({
         ["--c" as string]: look.color,
         ["--soft" as string]: look.soft,
       }}
-      aria-label={`نهاية المستوى ${level} — ${finishLine(count)}`}
+      aria-label={`نهاية المستوى ${level} — ${finishLine(count, learner)}`}
     >
       <span className="block" style={{ height: NODE_TOP - 4 }} aria-hidden="true" />
       <span className="lp-disc" data-shape="medal" style={{ width: NODE, height: NODE }}>
@@ -1294,7 +1677,7 @@ function FinishStop({
         <span className="lp-pill">{look.word}</span>
       </span>
       <span className="lp-title">نهاية {level}</span>
-      <span className="lp-sub">{finishLine(count)}</span>
+      <span className="lp-sub">{finishLine(count, learner)}</span>
     </button>
   );
 }
@@ -1309,6 +1692,16 @@ const LEVEL_NAME: Partial<Record<Level, string>> = {
   C2: "متمكّن · C2",
 };
 
+/** What a learner can do at the end of each level (after the CEFR descriptions), in plain words. */
+const LEVEL_CAN: Partial<Record<Level, string>> = {
+  A1: "بآخرها بتعرّف عن حالك، وبتسأل وبتجاوب عن أشياء بسيطة متل الأكل والمكان.",
+  A2: "بآخرها بتحكي عن يومك وعيلتك وشغلك، وبتدبّر حالك بالسفر والتسوّق.",
+  B1: "بآخرها بتحكي عن تجاربك وخططك، وبتفهم الفكرة الرئيسية بالحكي الواضح.",
+  B2: "بآخرها بتناقش وبتدافع عن رأيك، وبتفهم معظم الأفلام والأخبار.",
+  C1: "بآخرها بتحكي بطلاقة عن مواضيع معقّدة بالشغل والدراسة.",
+  C2: "بآخرها بتفهم تقريباً كل شي بتسمعه أو بتقرأه، وبتعبّر بدقة.",
+};
+
 function LevelBanner({
   row,
   top,
@@ -1317,6 +1710,7 @@ function LevelBanner({
   startLevel,
   lowest,
   onStart,
+  learner = false,
 }: {
   row: Extract<LevelRow<unknown>, { type: "banner" }>;
   top: number;
@@ -1325,6 +1719,8 @@ function LevelBanner({
   startLevel: Level | null;
   lowest: number;
   onStart: (level: Level | null) => void;
+  /** Learners see what the level lets them do, never how many lessons it holds. */
+  learner?: boolean;
 }) {
   const rank = levelRank(row.level);
   const startedHere = startLevel === row.level && rank > lowest;
@@ -1339,9 +1735,12 @@ function LevelBanner({
       <span className="min-w-0 flex-1">
         <span className="lp-level-name">{LEVEL_NAME[row.level] ?? `المستوى ${row.level}`}</span>
         <span className="lp-level-sub">
-          {row.count.done} من {row.count.lessons} دروس{startedHere ? " · بدأت من هون" : ""}
+          {learner
+            ? (LEVEL_CAN[row.level] ?? "")
+            : `${row.count.done} من ${row.count.lessons} دروس`}
+          {startedHere ? " · بدأت من هون" : ""}
         </span>
-        {row.count.lessons > 0 && (
+        {!learner && row.count.lessons > 0 && (
           <span className="lp-level-bar" aria-hidden="true">
             <span style={{ width: `${(row.count.done / row.count.lessons) * 100}%` }} />
           </span>
@@ -1357,6 +1756,283 @@ function LevelBanner({
           ابدأ من الأول
         </button>
       )}
+    </div>
+  );
+}
+
+/** A unit's heading on the road, when every unit shows at once («ترتيب حر»). */
+function UnitHeading({
+  unit,
+  top,
+  index,
+  open,
+}: {
+  unit: PathUnit;
+  top: number;
+  index: number;
+  open: boolean;
+}) {
+  const done = unit.lessons > 0 && unitDone(unit);
+  return (
+    <div className="lp-unit-head" style={{ top: top + 16, ["--i" as string]: index }}>
+      <span className="lp-unit-num" data-done={done ? "" : undefined} dir="ltr">
+        {done ? <Check size={18} strokeWidth={3} aria-hidden="true" /> : unit.number}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="lp-unit-kicker">الوحدة {unit.number}</span>
+        <span className="lp-unit-name">{unit.title ?? (open ? "كمّل على الطريق" : "بعدين")}</span>
+      </span>
+      {!open && <Lock size={16} className="text-[var(--pp-muted)]" aria-hidden="true" />}
+    </div>
+  );
+}
+
+/**
+ * The next unit, at the end of the road: closed (a few faint stops behind a dashed card, and when
+ * it opens), or opened (a black card with «افتح الوحدة n»). Never says how many lessons it holds.
+ */
+function UnitGate({
+  unit,
+  open,
+  top,
+  index,
+  onOpen,
+}: {
+  unit: PathUnit;
+  open: boolean;
+  top: number;
+  index: number;
+  onOpen: () => void;
+}) {
+  return (
+    <div
+      className="lp-gate"
+      data-open={open ? "" : undefined}
+      style={{ top: top + 24, ["--i" as string]: index }}
+    >
+      <span className="lp-gate-ghosts" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+      </span>
+      <span className="lp-gate-icon" aria-hidden="true">
+        {open ? <Sparkles size={20} /> : <Lock size={18} />}
+      </span>
+      <span className="lp-gate-kicker">الوحدة {unit.number}</span>
+      <span className="lp-gate-title">{unit.title ?? (open ? "جاهزة إلك" : "الوحدة الجاية")}</span>
+      {open ? (
+        <button type="button" className="lp-gate-go" onClick={onOpen}>
+          افتح الوحدة {unit.number}
+          <ArrowLeft size={17} aria-hidden="true" />
+        </button>
+      ) : (
+        <span className="lp-gate-note">بتنفتح لما تخلّص هالوحدة</span>
+      )}
+    </div>
+  );
+}
+
+/** The moment a unit is finished: Uzyra's cube, a few sparks, and the way on. */
+function UnitCelebration({
+  unit,
+  next,
+  level,
+  following,
+  onNext,
+  onLevel,
+  onClose,
+}: {
+  unit: PathUnit;
+  next: PathUnit | null;
+  level: Level;
+  following: Level | null;
+  onNext: () => void;
+  onLevel: (level: Level) => void;
+  onClose: () => void;
+}) {
+  const cube = useRef({ input: 0, output: 0 });
+  const primary = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  // Once, when it appears: the sound, the focus, and Escape to close.
+  useEffect(() => {
+    confirmSound();
+    primary.current?.focus({ preventScroll: true });
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeRef.current();
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, []);
+  const levelDone = !next;
+  return (
+    <div className="lp-party" role="dialog" aria-modal="true" aria-labelledby="lp-party-title">
+      <div className="lp-party-card">
+        <span className="lp-party-burst" aria-hidden="true">
+          {Array.from({ length: 14 }, (_, i) => (
+            <i
+              key={i}
+              style={{ ["--a" as string]: `${(i * 360) / 14}deg`, ["--d" as string]: i }}
+            />
+          ))}
+        </span>
+        <span className="lp-party-cube" aria-hidden="true">
+          <RitaCube levelsRef={cube} mode="speaking" label="" />
+        </span>
+        <p className="lp-party-kicker">
+          {levelDone ? `المستوى ${level}` : `الوحدة ${unit.number}`}
+          {unit.title ? ` · ${unit.title}` : ""}
+        </p>
+        <h2 id="lp-party-title" className="lp-party-title">
+          {levelDone ? `خلّصت ${level}!` : "خلّصت الوحدة!"}
+        </h2>
+        <p className="lp-party-lead">
+          {next
+            ? `الوحدة ${next.number} صارت مفتوحة إلك.`
+            : following
+              ? `المستوى ${following} مستنّيك.`
+              : "برافو! كمّل على هالطريق كل يوم شوي."}
+        </p>
+        <div className="lp-party-actions">
+          {next ? (
+            <button ref={primary} type="button" className="lp-continue" onClick={onNext}>
+              افتح الوحدة {next.number}
+              <ArrowLeft size={18} aria-hidden="true" />
+            </button>
+          ) : following ? (
+            <button
+              ref={primary}
+              type="button"
+              className="lp-continue"
+              onClick={() => onLevel(following)}
+            >
+              انتقل إلى {following}
+              <ArrowLeft size={18} aria-hidden="true" />
+            </button>
+          ) : null}
+          <button type="button" className="lp-party-later" onClick={onClose}>
+            {next || following ? "بعدين" : "تمام"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** The unit's guide: what each of its lessons teaches (their goals), before or after taking them. */
+function UnitGuide({
+  unit,
+  level,
+  lessons,
+  stateOf,
+  onClose,
+}: {
+  unit: PathUnit;
+  level: Level;
+  lessons: PathLesson[];
+  stateOf: (lesson: PathLesson) => ViewState;
+  onClose: () => void;
+}) {
+  const preview = useServerFn(getLessonPreview);
+  const [goals, setGoals] = useState<Record<string, LessonPreview["lesson"]["objectives"] | null>>(
+    {},
+  );
+  const close = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  useEffect(() => {
+    close.current?.focus({ preventScroll: true });
+    const key = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeRef.current();
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, []);
+  useEffect(() => {
+    let live = true;
+    for (const lesson of lessons) {
+      preview({ data: { lessonId: lesson.id } })
+        .then((found) => {
+          if (live) setGoals((old) => ({ ...old, [lesson.id]: found.lesson.objectives }));
+        })
+        .catch(() => {
+          if (live) setGoals((old) => ({ ...old, [lesson.id]: null }));
+        });
+    }
+    return () => {
+      live = false;
+    };
+    // The unit's lessons are fixed while the guide is open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <div className="lp-guide-back" onClick={onClose}>
+      <aside
+        className="lp-guide"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="lp-guide-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className="lp-guide-head">
+          <div className="min-w-0">
+            <p className="lp-guide-kicker">
+              {level} · الوحدة {unit.number}
+            </p>
+            <h2 id="lp-guide-title" className="lp-guide-title">
+              {unit.title ?? `دليل الوحدة ${unit.number}`}
+            </h2>
+          </div>
+          <button
+            ref={close}
+            type="button"
+            className="lp-guide-x"
+            aria-label="سكّر الدليل"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </header>
+        <p className="lp-guide-lead">
+          {LEVEL_CAN[level] ? `المستوى ${level}: ${LEVEL_CAN[level]}` : "شو رح تتعلّم بهالوحدة."}
+        </p>
+        <ol className="lp-guide-list">
+          {lessons.map((lesson, index) => {
+            const state = stateOf(lesson);
+            const list = goals[lesson.id];
+            return (
+              <li key={lesson.id} data-state={state}>
+                <span className="lp-guide-num" aria-hidden="true">
+                  {state === "done" ? <Check size={15} strokeWidth={3} /> : index + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="lp-guide-lesson" dir="auto">
+                    {lesson.title || lesson.title_ar}
+                  </p>
+                  <p className="lp-guide-meta">
+                    {lesson.kind === "vocabulary" ? "كلمات" : "قواعد"}
+                    {state === "done" ? " · خلصته" : state === "current" ? " · إنت هون" : ""}
+                  </p>
+                  {list === undefined ? (
+                    <p className="lp-guide-wait">
+                      <Loader2 size={14} className="animate-spin" aria-hidden="true" /> عم بجيب
+                      أهداف الدرس…
+                    </p>
+                  ) : list && list.length > 0 ? (
+                    <ul className="lp-guide-goals">
+                      {list.map((goal) => (
+                        <li key={goal.id} dir="auto">
+                          {goal.text_ar || goal.text}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </aside>
     </div>
   );
 }

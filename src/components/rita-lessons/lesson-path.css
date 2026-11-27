@@ -1221,3 +1221,617 @@ a.lp-edit {
     translate: none;
   }
 }
+
+/* ===========================================================================
+   Units (Nov 2026). A level is shown one short unit at a time, as the big learning apps do: the
+   hero names the unit and its progress (never the level's total), a row of round pills moves
+   between the units already open (one closed pill after them), the road ends at the next unit's
+   card (dashed and closed, or black and open), a finished unit gets its moment, and a guide lists
+   what the unit's lessons teach.
+   =========================================================================== */
+.lp-hero[data-move] .lp-hero-text {
+  animation: lp-hero-in 520ms var(--lp-ease) both;
+}
+@keyframes lp-hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+.lp-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+.lp-hero-actions .lp-continue {
+  margin-top: 0;
+}
+.lp-guide-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 20px;
+  border: 1px solid var(--pp-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--pp-ink);
+  font-size: 15px;
+  font-weight: 600;
+  transition:
+    border-color 150ms ease,
+    transform 120ms ease;
+}
+.lp-guide-open:hover {
+  border-color: var(--pp-ink);
+}
+.lp-guide-open:active {
+  transform: translateY(1px);
+}
+
+/* The units of the level: done ones black with a ✓, the current one ringed, one closed after. */
+.lp-units {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  row-gap: 8px;
+  width: min(100% - 40px, 760px);
+  margin: 26px auto 0;
+}
+.lp-units-line {
+  width: 26px;
+  height: 2px;
+  border-radius: 2px;
+  background: #e4e4ea;
+}
+.lp-units-line[data-done] {
+  background: var(--pp-ink);
+}
+.lp-unit-pill {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid #e4e4ea;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--pp-ink);
+  font-family: var(--lp-display);
+  font-size: 16px;
+  font-weight: 500;
+  transition:
+    transform 150ms ease,
+    box-shadow 200ms var(--lp-ease);
+}
+.lp-unit-pill[data-state="done"] {
+  border-color: var(--pp-ink);
+  background: var(--pp-ink);
+  color: #fff;
+}
+.lp-unit-pill[data-state="current"] {
+  border-color: var(--pp-ink);
+}
+.lp-unit-pill[data-state="locked"] {
+  border-style: dashed;
+  border-color: #cfd0d8;
+  background: #fafafb;
+  color: #9a9aa6;
+}
+.lp-unit-pill[aria-current="page"] {
+  box-shadow:
+    0 0 0 4px #fff,
+    0 0 0 6px var(--pp-ink);
+}
+.lp-unit-pill:active {
+  transform: scale(0.95);
+}
+
+/* Each unit under its heading, when every unit shows at once («ترتيب حر»). */
+.lp-unit-head {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 76px;
+  padding: 12px 16px;
+  border: 1px solid #ececf1;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 14px 30px -24px rgb(18 17 23 / 0.45);
+  text-align: start;
+  animation: lp-in 520ms var(--lp-ease) both;
+  animation-delay: calc(var(--i) * 55ms);
+}
+.lp-unit-num {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: var(--pp-grey);
+  font-family: var(--lp-display);
+  font-size: 20px;
+  font-weight: 500;
+}
+.lp-unit-num[data-done] {
+  background: var(--pp-ink);
+  color: #fff;
+}
+.lp-unit-kicker {
+  display: block;
+  color: var(--pp-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.lp-unit-name {
+  display: block;
+  font-family: var(--lp-display);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+/* The next unit at the end of the road. */
+.lp-gate {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 40px 20px 22px;
+  border: 1.5px dashed #cfd0d8;
+  border-radius: 28px;
+  background: rgb(255 255 255 / 0.94);
+  text-align: center;
+  animation: lp-in 520ms var(--lp-ease) both;
+  animation-delay: calc(var(--i) * 55ms);
+}
+.lp-gate-icon {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  background: var(--pp-ink);
+  color: #fff;
+  box-shadow: 0 0 0 6px #fff;
+  transform: translate(-50%, -50%);
+}
+.lp-gate-ghosts {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+  opacity: 0.8;
+  filter: blur(1.2px);
+}
+.lp-gate-ghosts i {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #e2e2e9;
+  border-radius: 11px;
+  background: #f6f6f9;
+}
+.lp-gate-ghosts i:nth-child(2) {
+  border-radius: 50%;
+  transform: translateY(9px);
+}
+.lp-gate-ghosts i:nth-child(3) {
+  border-radius: 8px;
+  transform: rotate(45deg) scale(0.82);
+}
+.lp-gate-kicker {
+  color: var(--pp-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.lp-gate-title {
+  font-family: var(--lp-display);
+  font-size: 22px;
+  font-weight: 450;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.lp-gate-note {
+  margin-top: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--pp-grey);
+  color: var(--pp-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.lp-gate[data-open] {
+  border: 0;
+  background: var(--pp-ink);
+  color: #fff;
+  box-shadow: 0 26px 50px -26px rgb(18 17 23 / 0.65);
+}
+.lp-gate[data-open] .lp-gate-icon {
+  background: #fff;
+  color: var(--pp-ink);
+}
+.lp-gate[data-open] .lp-gate-kicker {
+  color: rgb(255 255 255 / 0.72);
+}
+.lp-gate[data-open] .lp-gate-ghosts i {
+  border-color: rgb(255 255 255 / 0.28);
+  background: rgb(255 255 255 / 0.08);
+}
+.lp-gate-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  margin-top: 10px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--pp-ink);
+  font-size: 15px;
+  font-weight: 600;
+  transition: transform 120ms ease;
+}
+.lp-gate-go:active {
+  transform: translateY(1px);
+}
+
+/* Moving between units: the road rises in (or drops in, going back). */
+.lp-board[data-move] {
+  animation: lp-unit-next 600ms var(--lp-ease) both;
+}
+.lp-board[data-move="back"] {
+  animation-name: lp-unit-back;
+}
+@keyframes lp-unit-next {
+  from {
+    opacity: 0;
+    transform: translateY(48px);
+  }
+}
+@keyframes lp-unit-back {
+  from {
+    opacity: 0;
+    transform: translateY(-48px);
+  }
+}
+
+/* «ارجع لدرسك»: while the current lesson is out of sight. */
+.lp-back-to {
+  position: fixed;
+  left: 50%;
+  bottom: calc(92px + env(safe-area-inset-bottom));
+  z-index: 25;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--pp-ink);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 12px 30px -12px rgb(18 17 23 / 0.55);
+  transform: translateX(-50%);
+  animation: lp-fab-in 260ms var(--lp-ease) both;
+}
+@keyframes lp-fab-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px) scale(0.96);
+  }
+}
+
+/* A finished unit's moment. */
+.lp-party {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(255 255 255 / 0.74);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: lp-fade 240ms ease both;
+}
+.lp-party-card {
+  position: relative;
+  width: min(100%, 420px);
+  padding: 36px 28px 24px;
+  border-radius: 32px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px #ececf1,
+    0 30px 80px -30px rgb(18 17 23 / 0.45);
+  text-align: center;
+  animation: lp-party-in 560ms var(--lp-ease) both;
+}
+@keyframes lp-party-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+}
+.lp-party-cube {
+  display: grid;
+  width: 112px;
+  height: 112px;
+  margin: 0 auto 14px;
+  animation: lp-party-hop 1.1s var(--lp-ease) 2;
+}
+.lp-party-cube > * {
+  width: 100%;
+  height: 100%;
+}
+@keyframes lp-party-hop {
+  30% {
+    transform: translateY(-14px) rotate(-6deg);
+  }
+  60% {
+    transform: translateY(0) rotate(3deg);
+  }
+}
+.lp-party-burst {
+  position: absolute;
+  top: 92px;
+  left: 50%;
+  width: 0;
+  height: 0;
+}
+.lp-party-burst i {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px;
+  border-radius: 2px;
+  background: var(--pp-ink);
+  opacity: 0;
+  animation: lp-spark-out 900ms var(--lp-ease) calc(var(--d) * 18ms) both;
+}
+.lp-party-burst i:nth-child(3n) {
+  border-radius: 50%;
+  background: #3c82f6;
+}
+.lp-party-burst i:nth-child(3n + 1) {
+  width: 5px;
+  height: 12px;
+}
+@keyframes lp-spark-out {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(0) scale(0.6);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(-120px) scale(1);
+  }
+}
+.lp-party-kicker {
+  margin: 0;
+  color: var(--pp-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+.lp .lp-party-title {
+  margin: 6px 0 0;
+  font-family: var(--lp-display);
+  font-size: clamp(32px, 7vw, 44px);
+  font-weight: 450;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+.lp-party-lead {
+  margin: 10px 0 0;
+  color: var(--pp-muted);
+  font-size: 16px;
+}
+.lp-party-actions {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  margin-top: 22px;
+}
+.lp-party-actions .lp-continue {
+  margin-top: 0;
+}
+.lp-party-later {
+  min-height: 44px;
+  padding: 0 16px;
+  color: var(--pp-muted);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* The unit's guide: a side sheet (a sheet from the bottom on a phone). */
+.lp-guide-back {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  background: rgb(18 17 23 / 0.28);
+  animation: lp-fade 200ms ease both;
+}
+.lp-guide {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 440px);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 0 60px -20px rgb(18 17 23 / 0.5);
+  animation: lp-guide-side 360ms var(--lp-ease) both;
+}
+@keyframes lp-guide-side {
+  from {
+    transform: translateX(-100%);
+  }
+}
+.lp-guide-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 24px 24px 8px;
+}
+.lp-guide-kicker {
+  margin: 0;
+  color: var(--pp-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.lp .lp-guide-title {
+  margin: 4px 0 0;
+  font-family: var(--lp-display);
+  font-size: 28px;
+  font-weight: 450;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.lp-guide-x {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--pp-grey);
+}
+.lp-guide-lead {
+  margin: 4px 24px 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--pp-grey);
+  color: #3f3f46;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.lp-guide-list {
+  flex: 1;
+  margin: 0;
+  padding: 4px 24px max(28px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  list-style: none;
+}
+.lp-guide-list > li {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f3;
+}
+.lp-guide-num {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 11px;
+  background: var(--pp-grey);
+  font-family: var(--lp-display);
+  font-size: 14px;
+  font-weight: 500;
+}
+.lp-guide-list > li[data-state="done"] .lp-guide-num {
+  background: var(--pp-ink);
+  color: #fff;
+}
+.lp-guide-list > li[data-state="current"] .lp-guide-num {
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--pp-ink);
+}
+.lp-guide-lesson {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.lp-guide-meta {
+  margin: 2px 0 0;
+  color: var(--pp-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.lp-guide-goals {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.lp-guide-goals li {
+  position: relative;
+  padding-inline-start: 16px;
+  color: #3f3f46;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.lp-guide-goals li::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 2px;
+  top: 0.62em;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--pp-ink);
+}
+.lp-guide-wait {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  color: var(--pp-muted);
+  font-size: 13px;
+}
+@media (max-width: 640px) {
+  .lp-guide {
+    inset: auto 0 0 0;
+    width: 100%;
+    max-height: 86dvh;
+    border-radius: 24px 24px 0 0;
+    animation-name: lp-guide-up;
+  }
+  .lp-hero-actions > * {
+    flex: 1 1 auto;
+  }
+}
+@keyframes lp-guide-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-hero[data-move] .lp-hero-text,
+  .lp-board[data-move],
+  .lp-gate,
+  .lp-unit-head,
+  .lp-back-to,
+  .lp-party,
+  .lp-party-card,
+  .lp-party-cube,
+  .lp-guide,
+  .lp-guide-back {
+    animation: none;
+  }
+  .lp-party-burst {
+    display: none;
+  }
+}
