@@ -3,6 +3,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/legacy-auth-middlew
 export const myFreeTalkBudget = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { freeTalkBudget } = await import("./free-talk.server");
-    return freeTalkBudget(context.userId);
+    const { freeTalkBudgetForPage } = await import("./free-talk.server");
+    return freeTalkBudgetForPage(context.userId);
   });
