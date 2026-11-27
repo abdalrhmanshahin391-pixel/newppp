@@ -1,0 +1,435 @@
+/* The flashcards page (/study) in the home page's language (Nov 2026): Google Sans Flex, black and
+   white, round pills. A light headline, one toolbar (Study | Edit and the actions as hairline
+   pills), the subject list, and one session card with one black «Study» button. */
+.fc-page {
+  --fc-font: "Uzyra Arabic", "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  --fc-ink: #121212;
+  --fc-muted: #5f5f67;
+  --fc-line: #e4e4e7;
+  --fc-soft: #f4f4f5;
+  --fc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+.fc-wrap {
+  max-width: 84rem;
+  margin: 0 auto;
+  padding: 40px 32px 112px;
+  font-family: var(--fc-font);
+}
+
+/* Heading */
+.fc-head {
+  margin-bottom: 28px;
+}
+.fc-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 16px;
+  font-weight: 500;
+}
+.fc-cube {
+  display: grid;
+  width: 28px;
+  height: 28px;
+}
+.fc-cube > *,
+.fc-empty-cube > * {
+  width: 100%;
+  height: 100%;
+}
+.fc-page .fc-title {
+  margin: 0;
+  color: var(--fc-ink);
+  font-family: var(--fc-font);
+  font-size: clamp(36px, 4.4vw, 56px) !important;
+  font-weight: 450 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.03em;
+}
+.fc-lead {
+  margin: 12px 0 0;
+  color: var(--fc-muted);
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+/* Toolbar: the mode switch, then the actions */
+.fc-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 24px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--fc-line);
+}
+.fc-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--fc-soft);
+}
+.fc-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  color: var(--fc-muted);
+  font-size: 15px;
+  font-weight: 500;
+  transition:
+    background-color 200ms var(--fc-ease),
+    color 200ms var(--fc-ease);
+}
+.fc-switch button[aria-pressed="true"] {
+  background: var(--fc-ink);
+  color: #fff;
+}
+.fc-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fc-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--fc-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--fc-ink);
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+.fc-tool:hover {
+  border-color: #c9c9cf;
+  background: #fafafa;
+}
+.fc-tool.is-danger {
+  color: #b42318;
+}
+.fc-tool.is-danger:hover {
+  border-color: #f0c3bd;
+  background: #fef3f2;
+}
+.fc-tool[aria-disabled="true"] {
+  opacity: 0.45;
+}
+
+/* Two columns: the list, and the session card on the side */
+.fc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22rem;
+  align-items: start;
+  gap: 32px;
+}
+.fc-main {
+  min-width: 0;
+  grid-column: 1;
+  grid-row: 1;
+}
+.fc-side {
+  grid-column: 2;
+  grid-row: 1;
+  position: sticky;
+  top: 24px;
+}
+
+/* The list's search and New, in the same face */
+.fc-page [data-pk="search"] {
+  height: 48px !important;
+  padding-inline: 18px !important;
+  border: 1px solid transparent !important;
+  border-radius: 999px !important;
+  background: var(--fc-soft) !important;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+.fc-page [data-pk="search"]:focus-within {
+  border-color: var(--fc-ink) !important;
+  background: #fff !important;
+}
+.fc-page [data-pk="new"] {
+  height: 48px !important;
+  padding-inline: 20px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: var(--fc-ink) !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+}
+.fc-page [data-pk="new"]:hover {
+  background: #000 !important;
+}
+
+/* The session card */
+.fc-session {
+  padding: 24px;
+  border: 1px solid var(--fc-line);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgb(18 18 18 / 0.04),
+    0 18px 40px -24px rgb(18 18 18 / 0.22);
+}
+.fc-eyebrow {
+  margin: 0;
+  color: var(--fc-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+.fc-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 10px 0 0;
+  color: var(--fc-muted);
+  font-size: 15px;
+}
+.fc-stat b {
+  color: var(--fc-ink);
+  font-size: 52px;
+  font-weight: 450;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.fc-rows {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0 0;
+  padding: 16px 0;
+  border-block: 1px solid var(--fc-line);
+}
+.fc-rows > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 14.5px;
+}
+.fc-rows dt {
+  color: var(--fc-muted);
+}
+.fc-rows dd {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--fc-ink);
+  font-weight: 500;
+  text-align: end;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fc-scope {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 16px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--fc-soft);
+}
+.fc-scope button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  border-radius: 999px;
+  color: var(--fc-muted);
+  font-size: 14.5px;
+  font-weight: 500;
+  transition:
+    background-color 200ms var(--fc-ease),
+    color 200ms var(--fc-ease),
+    box-shadow 200ms var(--fc-ease);
+}
+.fc-scope button[aria-pressed="true"] {
+  background: #fff;
+  color: var(--fc-ink);
+  box-shadow: 0 1px 3px rgb(18 18 18 / 0.12);
+}
+.fc-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 56px;
+  margin-top: 16px;
+  border-radius: 999px;
+  background: var(--fc-ink);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 500;
+  transition:
+    background-color 160ms ease,
+    transform 120ms var(--fc-ease);
+}
+.fc-go:hover {
+  background: #000;
+}
+.fc-go:active {
+  transform: scale(0.98);
+}
+.fc-go[aria-disabled="true"] {
+  background: #d4d4d8;
+  color: #52525b;
+}
+.fc-picked {
+  margin-top: 16px;
+}
+.fc-picked-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 8.5rem;
+  overflow-y: auto;
+}
+.fc-picked-list button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--fc-line);
+  border-radius: 999px;
+  color: var(--fc-ink);
+  font-size: 14px;
+  font-weight: 500;
+}
+.fc-picked-list button:hover {
+  border-color: var(--fc-ink);
+}
+.fc-clear {
+  min-height: 44px;
+  color: var(--fc-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+.fc-clear:hover {
+  color: #b42318;
+}
+.fc-note {
+  margin: 14px 0 0;
+  color: var(--fc-muted);
+  font-size: 13.5px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* No subjects yet */
+.fc-empty {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 56px 24px;
+  border: 1px dashed #d4d4d8;
+  border-radius: 24px;
+  text-align: center;
+}
+.fc-empty-cube {
+  display: grid;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 6px;
+}
+.fc-page .fc-empty h2 {
+  margin: 0;
+  color: var(--fc-ink);
+  font-family: var(--fc-font);
+  font-size: 26px !important;
+  font-weight: 450 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.02em;
+}
+.fc-empty p {
+  max-width: 30rem;
+  margin: 0;
+  color: var(--fc-muted);
+  font-size: 15.5px;
+  line-height: 1.55;
+}
+.fc-empty .fc-go {
+  width: auto;
+  padding: 0 28px;
+  margin-top: 10px;
+}
+
+/* Focus */
+.fc-switch button:focus-visible,
+.fc-tool:focus-visible,
+.fc-scope button:focus-visible,
+.fc-go:focus-visible,
+.fc-picked-list button:focus-visible,
+.fc-clear:focus-visible {
+  outline: 2px solid var(--fc-ink);
+  outline-offset: 3px;
+}
+
+/* Tablets and phones: the session card above the list */
+@media (max-width: 1023px) {
+  .fc-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .fc-main,
+  .fc-side {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .fc-side {
+    position: static;
+  }
+}
+@media (max-width: 767px) {
+  .fc-wrap {
+    padding: 24px 16px 96px;
+  }
+  .fc-lead {
+    font-size: 16px;
+  }
+  .fc-toolbar {
+    gap: 10px;
+    padding-bottom: 18px;
+    margin-bottom: 20px;
+  }
+  .fc-switch {
+    width: 100%;
+  }
+  .fc-switch button {
+    flex: 1;
+    justify-content: center;
+    height: 44px;
+  }
+  .fc-tools {
+    flex-wrap: nowrap;
+    width: calc(100% + 32px);
+    margin-inline: -16px;
+    padding-inline: 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .fc-session {
+    padding: 20px;
+  }
+  .fc-stat b {
+    font-size: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fc-page * {
+    transition: none !important;
+  }
+}

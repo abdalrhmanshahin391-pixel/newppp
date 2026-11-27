@@ -735,9 +735,17 @@ One main action per panel, hierarchy by weight instead of by frame:
 - **Panels are grey** (`#f4f4f8`, no border): the session panel (`LaunchPanel`, `GameSetup`) and the daily panel.
   Ink borders (1.5px on the calm scale) are for things you press: buttons, mode tabs, subject rows, menus. The page board itself has no frame
   (`StudyLayout framed={false}`); other study pages keep the framed board.
-- **Session panel:** one solid blue button on top ("Smart review · N" when cards are due, "Study mode" when nothing is due),
-  with a one-line hint under it, then two compact outline buttons side by side. The daily panel only shows its own
-  "Review everything due" button when something is ticked, so the same action is never offered twice.
+- **`/study` itself (Nov 2026, the home page's look, `flashcards-page.css`):** «[cube] Flashcards», a light
+  headline «Your flashcards.» (Google Sans Flex 450) and a muted lead; one toolbar under it: a «Study | Edit»
+  switch (black pill for the open one) and the actions as hairline pills (Remove in red); then the list and one
+  session card (white, 24px corners, soft shadow): «N cards ready», From and Flagged, an «All cards | Flagged»
+  switch, and one black «Study · N cards» button (56px), with the ticked sub-subjects as pills under it. On the
+  owner's request there is no Smart review, no Shuffle, no «Due now» and no daily panel (cards due, daily goal,
+  next 30 days, schedule, progress) on this page. The search is a soft grey pill and «New» a black one. With
+  no subjects, a dashed card with the cube and «Make your first subject». Under 1024px the session card sits
+  above the list; on phones the actions scroll sideways in one row.
+- **Session panel elsewhere** (`LaunchPanel`): one solid blue button on top ("Smart review · N" when cards are due,
+  "Study mode" when nothing is due), with a one-line hint under it, then two compact outline buttons side by side.
 - **Subject rows** (`SubjectBoard`, `PickerBoard`): tick box 24px drawn, 44px hit area; the name may wrap to two lines (never
   cut to a few letters); count under the name; one "..." menu per row (rename, add sub-subject, move up/down, remove...).
   Move up/down is the touch way to reorder (native drag does nothing on iPad); the drag handle only shows with a mouse.

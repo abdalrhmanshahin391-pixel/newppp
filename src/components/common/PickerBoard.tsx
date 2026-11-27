@@ -104,7 +104,10 @@ export function PickerBoard({
   return (
     <div className={framed ? "rounded-[24px] border-[1.5px] border-[#121117] bg-card p-3 sm:p-5" : ""}>
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 pb-3">
-        <div className="flex h-11 min-w-0 items-center gap-2 rounded-lg border-[1.5px] border-[#121117] bg-white px-3.5">
+        <div
+          data-pk="search"
+          className="flex h-11 min-w-0 items-center gap-2 rounded-lg border-[1.5px] border-[#121117] bg-white px-3.5"
+        >
           <Search size={16} className="shrink-0 text-muted-foreground" />
           <input
             value={query}
@@ -115,6 +118,7 @@ export function PickerBoard({
         </div>
         {onNewGroup && (
           <button
+            data-pk="new"
             onClick={onNewGroup}
             className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-lg border-[1.5px] border-[#121117] px-4 text-[14px] font-semibold text-white transition hover:bg-[#2260e4]"
             style={{ background: "#2b6df0" }}
