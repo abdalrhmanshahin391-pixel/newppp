@@ -8131,6 +8131,33 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_board_charges: {
+        Row: {
+          created_at: string
+          id: string
+          milliseconds: number
+          period_key: string
+          ref: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          milliseconds: number
+          period_key: string
+          ref: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          milliseconds?: number
+          period_key?: string
+          ref?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       book_featured_now: {
@@ -9069,6 +9096,10 @@ export type Database = {
           depth: number
           name: string
         }[]
+      }
+      voice_board_charge: {
+        Args: { p_ms: number; p_ref: string; p_user: string }
+        Returns: Json
       }
     }
     Enums: {
