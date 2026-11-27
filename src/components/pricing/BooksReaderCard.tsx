@@ -48,7 +48,7 @@ export function BooksReaderCard({
         <div className="br-tiles">
           <div className="br-tile">
             <b>{requests}</b>
-            <span>Groq AI requests a month</span>
+            <span>Emith requests a month</span>
           </div>
           <div className="br-tile">
             <b>Reading</b>
