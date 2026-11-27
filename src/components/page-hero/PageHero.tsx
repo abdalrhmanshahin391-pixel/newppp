@@ -1,14 +1,24 @@
 // The top of an inner page in the home page's language: the home hero's field of marks behind it,
 // «[cube] page name» above a headline whose words come in one after another (Arabic words are never
-// split into letters), and one muted line under it. Used by /learn and /games; the cards under it
-// keep their own look.
-import { useRef, type CSSProperties } from "react";
+// split into letters), and one muted line under it. Used by /learn, /games and /spaces; the cards
+// under it keep their own look. `children` (optional) sit under the lead, e.g. the join bar on /spaces.
+import { useRef, type CSSProperties, type ReactNode } from "react";
 import { RitaCube } from "@/components/rita-study/RitaCube";
 import { useShown } from "@/components/home/procreate/ag-hooks";
 import { useDotField } from "./useDotField";
 import "./page-hero.css";
 
-export function PageHero({ kicker, title, lead }: { kicker: string; title: string; lead: string }) {
+export function PageHero({
+  kicker,
+  title,
+  lead,
+  children,
+}: {
+  kicker: string;
+  title: string;
+  lead: string;
+  children?: ReactNode;
+}) {
   const section = useRef<HTMLElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const levels = useRef({ input: 0, output: 0 });
@@ -38,6 +48,7 @@ export function PageHero({ kicker, title, lead }: { kicker: string; title: strin
           </span>
         </h1>
         <p className="ph-lead">{lead}</p>
+        {children && <div className="ph-extra">{children}</div>}
       </div>
     </section>
   );

@@ -1,11 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, LogIn } from "lucide-react";
+import { GraduationCap, LogIn, Unlink, Users } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
+import { useDotField } from "@/components/page-hero/useDotField";
+import { SignInRedirect } from "@/components/study/RequireSignIn";
+import { plural } from "@/components/spaces/SpaceCard";
+import { SpaceMark, Spin, errorText, hexAlpha, toneOf } from "@/components/spaces/shared";
+import "@/components/spaces/spaces.css";
 import { useAuth } from "@/hooks/useAuth";
-import { KIND_LABEL, joinByCode, previewInvite, refreshSpace, spaceTone } from "@/lib/spaces";
+import { KIND_LABEL, joinByCode, previewInvite, refreshSpace } from "@/lib/spaces";
 
 export const Route = createFileRoute("/join/$code")({
   head: () => ({
@@ -17,7 +22,10 @@ export const Route = createFileRoute("/join/$code")({
           "Open your invite link to join a Uzyra classroom or study group and get its shared flashcard decks.",
       },
       { property: "og:title", content: "You're invited to a Uzyra space" },
-      { property: "og:description", content: "Join the classroom or study group and start studying together." },
+      {
+        property: "og:description",
+        content: "Join the classroom or study group and start studying together.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -25,9 +33,11 @@ export const Route = createFileRoute("/join/$code")({
   component: JoinPage,
 });
 
+type Invite = Awaited<ReturnType<typeof previewInvite>>;
+
 function JoinPage() {
   const { code } = Route.useParams();
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [joining, setJoining] = useState(false);
@@ -37,82 +47,140 @@ function JoinPage() {
     queryKey: ["invite", code],
     queryFn: () => previewInvite(code),
   });
-
-  useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
-  }, [loading, user, navigate]);
+  const invite = preview.data;
 
   async function join() {
-    // Already a member? Just open it — joining again is pointless.
-    if (preview.data?.already && preview.data.id) {
-      navigate({ to: "/spaces/$spaceId", params: { spaceId: preview.data.id } });
+    // Already in? Just open it: joining again is pointless.
+    if (invite?.already && invite.id) {
+      void navigate({ to: "/spaces/$spaceId", params: { spaceId: invite.id } });
       return;
     }
     setJoining(true);
     try {
       const id = await joinByCode(code);
-      // Refresh the space and "My spaces" BEFORE navigating, so you land
-      // inside it and it stays in your list without joining a second time.
+      // Refresh the space and "Your spaces" before going in, so you land inside it and it is in
+      // your list without joining a second time.
       await refreshSpace(qc, id);
       await qc.refetchQueries({ queryKey: ["my-spaces"] });
       toast.success("You're in!");
-      navigate({ to: "/spaces/$spaceId", params: { spaceId: id } });
-    } catch (e: any) {
-      toast.error(e?.message || "Could not join this space.");
+      void navigate({ to: "/spaces/$spaceId", params: { spaceId: id } });
+    } catch (error) {
+      toast.error(errorText(error, "Could not join this space."));
     } finally {
       setJoining(false);
     }
   }
 
-  const p = preview.data;
-
   return (
-    <div className="min-h-screen bg-white text-[#121117]">
+    <div className="sp sp-page">
       <SiteHeader />
-      <main className="mx-auto grid max-w-xl place-items-center px-4 py-20">
-        <div className="w-full overflow-hidden rounded-[28px] border border-black/[0.07] bg-white">
-          {preview.isLoading ? (
-            <p className="p-10 text-center text-[#54546a]">Checking your invite…</p>
-          ) : !p?.valid ? (
-            <div className="p-10 text-center">
-              <h1 className="font-display text-2xl font-black">This invite doesn't work</h1>
-              <p className="mt-2 text-[15px] text-[#54546a]">
-                It may have expired or been replaced. Ask the owner for a fresh link.
-              </p>
+      <SignInRedirect />
+      <main className="sp-wrap sp-joinpage">
+        {!user || preview.isLoading ? (
+          <section
+            className="sp-invitecard sp-hero-skel"
+            aria-busy="true"
+            aria-label="Checking your invite"
+          >
+            <span className="sp-bone sp-bone-dark sp-bone-mark-lg sp-center" />
+            <span className="sp-bone sp-bone-dark sp-bone-heading sp-center" />
+            <span className="sp-bone sp-bone-dark sp-bone-line sp-bone-short sp-center" />
+          </section>
+        ) : preview.isError || !invite?.valid ? (
+          <div className="sp-missing">
+            <span className="sp-empty-icon" aria-hidden="true">
+              <Unlink size={22} />
+            </span>
+            <h1 className="sp-h3">
+              {preview.isError ? "The invite could not be checked" : "This invite doesn't work"}
+            </h1>
+            <p className="sp-muted">
+              {preview.isError
+                ? "Check your connection, then try again."
+                : "It may have expired or been replaced. Ask the owner for a fresh link."}
+            </p>
+            <div className="sp-empty-actions">
+              {preview.isError && (
+                <button
+                  type="button"
+                  className="sp-btn sp-btn-dark"
+                  onClick={() => void preview.refetch()}
+                >
+                  Try again
+                </button>
+              )}
               <Link
                 to="/spaces"
-                className="mt-6 inline-flex rounded-full bg-[#121117] px-6 py-3 text-sm font-black text-white"
+                className={`sp-btn ${preview.isError ? "sp-btn-light" : "sp-btn-dark"}`}
               >
-                My spaces
+                All spaces
               </Link>
             </div>
-          ) : (
-            <>
-              <div className="grid h-32 place-items-center" style={{ background: spaceTone(p.color) }}>
-                <span className="text-5xl">{p.emoji || "🎓"}</span>
-              </div>
-              <div className="p-8 text-center">
-                <span className="rounded-full bg-black/[0.06] px-3 py-1 text-[11px] font-black uppercase tracking-[0.15em]">
-                  {KIND_LABEL[p.kind ?? "group"]}
-                </span>
-                <h1 className="mt-4 font-display text-3xl font-black">{p.name}</h1>
-                <p className="mt-2 text-[15px] text-[#54546a]">
-                  {p.description || "Shared flashcard decks, members and announcements."}
-                </p>
-                <p className="mt-2 text-[13px] font-bold text-[#9a9aab]">{p.members} members</p>
-                <button
-                  onClick={join}
-                  disabled={joining}
-                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-7 py-3.5 text-[15px] font-black text-white disabled:opacity-50"
-                >
-                  {joining ? <Loader2 size={16} className="animate-spin" /> : <LogIn size={16} />}
-                  {p.already ? "Open it" : "Join now"}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+          </div>
+        ) : (
+          <>
+            <InviteCard invite={invite} joining={joining} onJoin={() => void join()} />
+            <p className="sp-joinpage-note">
+              Inside you'll find its decks, question sets, members and news. You can leave at any
+              time.
+            </p>
+          </>
+        )}
       </main>
     </div>
+  );
+}
+
+function InviteCard({
+  invite,
+  joining,
+  onJoin,
+}: {
+  invite: Invite;
+  joining: boolean;
+  onJoin: () => void;
+}) {
+  const section = useRef<HTMLElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  useDotField(section, canvas, "#ffffff");
+  const tone = toneOf(invite.color);
+  const kind = KIND_LABEL[invite.kind ?? "group"].toLowerCase();
+  const KindIcon = invite.kind === "classroom" ? GraduationCap : Users;
+
+  return (
+    <section
+      ref={section}
+      className="sp-invitecard"
+      style={{ "--sp-glow": hexAlpha(tone.from, 0.45) } as CSSProperties}
+      aria-labelledby="sp-invite-name"
+    >
+      <canvas ref={canvas} className="sp-hero-field" aria-hidden="true" />
+      <SpaceMark color={invite.color} emoji={invite.emoji} size={88} />
+      <p className="sp-invitecard-kind">
+        <KindIcon size={15} aria-hidden="true" />
+        {invite.already ? `You're already in this ${kind}` : `You're invited to a ${kind}`}
+      </p>
+      <h1 id="sp-invite-name" className="sp-invitecard-title" dir="auto">
+        {invite.name}
+      </h1>
+      <p className="sp-invitecard-desc" dir="auto">
+        {invite.description?.trim() || "Shared flashcard decks, question sets, members and news."}
+      </p>
+      <p className="sp-invitecard-meta">
+        <Users size={15} aria-hidden="true" />
+        {plural(invite.members ?? 0, "member")}
+      </p>
+      <div>
+        <button
+          type="button"
+          className="sp-btn sp-btn-white sp-invitecard-go"
+          onClick={onJoin}
+          disabled={joining}
+        >
+          {joining ? <Spin /> : <LogIn size={17} aria-hidden="true" />}
+          {invite.already ? `Open ${kind}` : `Join ${kind}`}
+        </button>
+      </div>
+    </section>
   );
 }

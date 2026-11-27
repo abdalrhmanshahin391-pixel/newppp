@@ -1,19 +1,17 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { GraduationCap, Loader2, LogIn, Plus, Users } from "lucide-react";
-import { toast } from "sonner";
+import { Plus, Search } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { useAuth } from "@/hooks/useAuth";
-import {
-  KIND_LABEL,
-  ROLE_LABEL,
-  SPACE_COLORS,
-  createSpace,
-  spaceTone,
-  useMySpaces,
-  type SpaceKind,
-} from "@/lib/spaces";
+import { PageHero } from "@/components/page-hero/PageHero";
+import { RitaCube } from "@/components/rita-study/RitaCube";
+import { SignInRedirect } from "@/components/study/RequireSignIn";
+import { CreateSpaceDialog } from "@/components/spaces/CreateSpaceDialog";
+import { JoinBar } from "@/components/spaces/JoinBar";
+import { MakeCards } from "@/components/spaces/MakeCards";
+import { SpaceCard, SpaceCardSkeleton } from "@/components/spaces/SpaceCard";
+import "@/components/spaces/spaces.css";
+import { useMySpaces, type SpaceKind } from "@/lib/spaces";
 
 export const Route = createFileRoute("/spaces/")({
   head: () => ({
@@ -36,282 +34,208 @@ export const Route = createFileRoute("/spaces/")({
   component: SpacesPage,
 });
 
-const EMOJIS = ["🎓", "🫀", "🧠", "💊", "📚", "🔬", "🦴", "🇩🇪", "⚡️", "🌿"];
+type Filter = "all" | SpaceKind;
 
-function JoinBox() {
-  const navigate = useNavigate();
-  const [value, setValue] = useState("");
+const FILTERS: { id: Filter; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "classroom", label: "Classrooms" },
+  { id: "group", label: "Study groups" },
+];
 
-  function go() {
-    const raw = value.trim();
-    const code = (raw.split(/[?#]/)[0] ?? "").split("/").filter(Boolean).pop() ?? "";
-    if (!code) {
-      toast.error("Paste the code or the invite link first.");
-      return;
-    }
-    navigate({ to: "/join/$code", params: { code } });
-  }
-
-  return (
-    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-      <input
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && go()}
-        placeholder="abc123  or  ritajet.app/join/abc123"
-        className="h-12 flex-1 rounded-2xl border border-black/10 bg-white px-4 font-mono text-[16px] font-semibold tracking-[0.12em] text-[#121117] placeholder:font-sans placeholder:text-[14px] placeholder:font-semibold placeholder:tracking-normal placeholder:text-[#9a9aab] focus:outline-none focus:ring-2 focus:ring-[#4a82f3]"
-        aria-label="Invite code or link"
-      />
-      <button
-        onClick={go}
-        className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[#121117] px-6 text-[14px] font-semibold text-white transition hover:brightness-125"
-      >
-        <LogIn size={17} /> Join
-      </button>
-    </div>
-  );
-}
+const STEPS = [
+  {
+    title: "Make it",
+    text: "Give it a name, an emoji and a colour. A classroom for a whole course, a group for a few friends.",
+  },
+  {
+    title: "Share the link",
+    text: "Send the code or the invite link. People join with one tap and land straight inside.",
+  },
+  {
+    title: "Study together",
+    text: "Add decks and question sets into folders, post news, and turn the chat on if you want to talk.",
+  },
+];
 
 function SpacesPage() {
-  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const spaces = useMySpaces();
-  const [open, setOpen] = useState<SpaceKind | null>(null);
+  const [making, setMaking] = useState<SpaceKind | null>(null);
+  // The window keeps its kind while it closes.
+  const [lastKind, setLastKind] = useState<SpaceKind>("classroom");
+  const [filter, setFilter] = useState<Filter>("all");
+  const [query, setQuery] = useState("");
 
-  useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
-  }, [loading, user, navigate]);
+  const all = spaces.data ?? [];
+  const counts: Record<Filter, number> = {
+    all: all.length,
+    classroom: all.filter((s) => s.kind === "classroom").length,
+    group: all.filter((s) => s.kind === "group").length,
+  };
+  const q = query.trim().toLowerCase();
+  const shown = all.filter(
+    (s) =>
+      (filter === "all" || s.kind === filter) &&
+      (!q || s.name.toLowerCase().includes(q) || (s.description ?? "").toLowerCase().includes(q)),
+  );
 
-  const classrooms = (spaces.data ?? []).filter((s) => s.kind === "classroom");
-  const groups = (spaces.data ?? []).filter((s) => s.kind === "group");
+  const make = (kind: SpaceKind) => {
+    setLastKind(kind);
+    setMaking(kind);
+  };
 
   return (
-    <div className="min-h-screen bg-white text-[#121117]">
+    <div className="sp sp-page">
       <SiteHeader />
-      <main className="mx-auto max-w-7xl px-4 py-10 md:px-8 md:py-14">
-        <section className="overflow-hidden rounded-[20px] border-2 border-[#121117] bg-white">
-          <div className="grid">
-            <div className="p-7 md:p-10">
-              <p className="text-[15px] font-semibold text-[#6a697c]">Classrooms and study groups</p>
-              <h1
-                className="mt-4 font-display font-black leading-[1.06] tracking-tight"
-                style={{ fontSize: "clamp(1.75rem, 3vw, 2.5rem)" }}
-              >
-                Study together, in one room.
-              </h1>
-              <p className="mt-3 max-w-xl text-[16px] leading-relaxed text-[#2a2933]">
-                A classroom is the whole course. A group is a few classmates. Each one keeps its own
-                decks, members and announcements.
-              </p>
+      <SignInRedirect />
+      <PageHero
+        kicker="Classrooms & groups"
+        title="Study together, in one room."
+        lead="A classroom is a whole course. A group is a few classmates. Each keeps its own decks, members and news."
+      >
+        <JoinBar />
+      </PageHero>
 
-              <div className="mt-7 rounded-[16px] border-2 border-[#121117] bg-[#f4f4f8] p-5">
-                <p className="text-[14px] font-semibold text-[#121117]">
-                  Have a code? Enter it here
-                </p>
-                <JoinBox />
-              </div>
+      <main className="sp-wrap">
+        <MakeCards onMake={make} />
+
+        <section className="sp-section" aria-labelledby="sp-mine">
+          <div className="sp-mine-head">
+            <div className="sp-mine-title">
+              <h2 id="sp-mine" className="sp-h2">
+                Your spaces
+              </h2>
+              {all.length > 0 && <span className="sp-n">{all.length}</span>}
             </div>
-
+            {all.length > 0 && (
+              <div className="sp-mine-tools">
+                <div className="sp-seg" role="group" aria-label="Show">
+                  {FILTERS.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      aria-pressed={filter === item.id}
+                      onClick={() => setFilter(item.id)}
+                    >
+                      {item.label}
+                      <span className="sp-seg-n">{counts[item.id]}</span>
+                    </button>
+                  ))}
+                </div>
+                {all.length > 6 && (
+                  <label className="sp-search">
+                    <Search size={16} aria-hidden="true" />
+                    <span className="sp-sr">Search your spaces</span>
+                    <input
+                      type="search"
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                      placeholder="Search"
+                    />
+                  </label>
+                )}
+              </div>
+            )}
           </div>
+
+          {spaces.isLoading ? (
+            <div className="sp-grid" aria-busy="true" aria-label="Loading your spaces">
+              {[0, 1, 2].map((i) => (
+                <SpaceCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : spaces.isError ? (
+            <div className="sp-empty sp-section-gap">
+              <h3 className="sp-empty-title">Your spaces could not be loaded</h3>
+              <p className="sp-empty-text">Check your connection, then try again.</p>
+              <button
+                type="button"
+                className="sp-btn sp-btn-dark"
+                onClick={() => void spaces.refetch()}
+              >
+                Try again
+              </button>
+            </div>
+          ) : all.length === 0 ? (
+            <FirstSpace onMake={make} />
+          ) : shown.length === 0 ? (
+            <div className="sp-empty sp-empty-sm sp-section-gap">
+              <p className="sp-empty-text">
+                {q
+                  ? `Nothing matches “${query.trim()}”.`
+                  : filter === "classroom"
+                    ? "You are not in any classroom yet."
+                    : "You are not in any study group yet."}
+              </p>
+              {!q && filter !== "all" && (
+                <button type="button" className="sp-btn sp-btn-dark" onClick={() => make(filter)}>
+                  <Plus size={16} aria-hidden="true" />
+                  {filter === "classroom" ? "New classroom" : "New study group"}
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="sp-grid">
+              {shown.map((space) => (
+                <SpaceCard key={space.id} space={space} />
+              ))}
+            </div>
+          )}
         </section>
 
-
-        <Section
-          icon={<GraduationCap size={16} />}
-          title="Classrooms"
-          note="A whole class sharing one organised deck library."
-          onCreate={() => setOpen("classroom")}
-          items={classrooms}
-          loading={spaces.isLoading}
-        />
-        <Section
-          icon={<Users size={16} />}
-          title="Study groups"
-          note="A small circle where everyone adds decks."
-          onCreate={() => setOpen("group")}
-          items={groups}
-          loading={spaces.isLoading}
-        />
-
-        <div className="mt-14 rounded-[26px] border border-dashed border-black/15 bg-white/60 px-6 py-6 text-[15px] font-semibold text-[#2a2933]">
-          Got an invite link? Just open it — it looks like
-          <span className="mx-1 rounded-lg bg-black/[0.06] px-2 py-0.5 font-black">/join/abc123</span>
-          and adds you straight away.
-        </div>
+        <section className="sp-section" aria-labelledby="sp-how">
+          <h2 id="sp-how" className="sp-h2">
+            How it works
+          </h2>
+          <ol className="sp-steps">
+            {STEPS.map((step, i) => (
+              <li key={step.title} className="sp-step">
+                <span className="sp-step-n">{String(i + 1).padStart(2, "0")}</span>
+                <h3 className="sp-step-title">{step.title}</h3>
+                <p className="sp-step-text">{step.text}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
       </main>
 
-      {open && (
-        <CreateDialog
-          kind={open}
-          onClose={() => setOpen(null)}
-          onCreated={(id) => {
-            qc.invalidateQueries({ queryKey: ["my-spaces"] });
-            navigate({ to: "/spaces/$spaceId", params: { spaceId: id } });
-          }}
-        />
-      )}
+      <CreateSpaceDialog
+        open={making !== null}
+        kind={making ?? lastKind}
+        onClose={() => setMaking(null)}
+        onCreated={async (id) => {
+          setMaking(null);
+          await qc.invalidateQueries({ queryKey: ["my-spaces"] });
+          void navigate({ to: "/spaces/$spaceId", params: { spaceId: id } });
+        }}
+      />
     </div>
   );
 }
 
-function Section({
-  icon,
-  title,
-  note,
-  onCreate,
-  items,
-  loading,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  note: string;
-  onCreate: () => void;
-  items: ReturnType<typeof useMySpaces>["data"];
-  loading: boolean;
-}) {
+/** Nothing yet: Uzyra's cube, a line, and the two ways to start. */
+function FirstSpace({ onMake }: { onMake: (kind: SpaceKind) => void }) {
+  const levels = useRef({ input: 0, output: 0 });
   return (
-    <section className="mt-12">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-black/[0.08] bg-white/70 px-4 py-1.5 text-[14px] font-semibold text-[#121117]">
-            {icon} {title}
-          </span>
-          <p className="mt-2 text-[15px] text-[#54546a]">{note}</p>
-        </div>
-        <button
-          onClick={onCreate}
-          className="inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-5 py-3 text-sm font-black text-white transition hover:-translate-y-0.5"
-        >
-          <Plus size={16} /> New {title.toLowerCase().replace(/s$/, "")}
+    <div className="sp-empty sp-section-gap">
+      <span className="sp-empty-cube" aria-hidden="true">
+        <RitaCube levelsRef={levels} mode="idle" label="" />
+      </span>
+      <h3 className="sp-empty-title">No classrooms or groups yet</h3>
+      <p className="sp-empty-text">
+        Make one for your course or your friends, or paste the code you were sent into the box at
+        the top.
+      </p>
+      <div className="sp-empty-actions">
+        <button type="button" className="sp-btn sp-btn-dark" onClick={() => onMake("classroom")}>
+          <Plus size={16} aria-hidden="true" />
+          New classroom
         </button>
-      </div>
-
-      {loading ? (
-        <p className="mt-6 text-[#54546a]">Loading…</p>
-      ) : (items?.length ?? 0) === 0 ? (
-        <p className="mt-6 rounded-2xl border border-black/[0.06] bg-white px-5 py-5 text-[15px] text-[#54546a]">
-          Nothing here yet — create one and share its invite link.
-        </p>
-      ) : (
-        <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {items!.map((s) => (
-            <Link
-              key={s.id}
-              to="/spaces/$spaceId"
-              params={{ spaceId: s.id }}
-              className="group overflow-hidden rounded-[26px] border border-black/[0.07] bg-white transition hover:-translate-y-1 hover:shadow-[0_22px_50px_-30px_rgba(0,0,0,0.5)]"
-            >
-              <div className="grid h-24 place-items-center" style={{ background: spaceTone(s.color) }}>
-                <span className="text-4xl">{s.emoji || "🎓"}</span>
-              </div>
-              <div className="p-5">
-                <p className="truncate font-display text-[17px] font-black">{s.name}</p>
-                <p className="mt-1 line-clamp-2 min-h-[2.5rem] text-[13px] text-[#54546a]">
-                  {s.description || "No description yet."}
-                </p>
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] font-black">
-                  <span className="rounded-full bg-black/[0.06] px-2.5 py-1">{KIND_LABEL[s.kind]}</span>
-                  <span className="rounded-full bg-[#e7eefd] px-2.5 py-1 text-[#1a4ba8]">
-                    {ROLE_LABEL[s.role]}
-                  </span>
-                  <span className="text-[#54546a]">
-                    {s.members} members · {s.decks} decks
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-function CreateDialog({
-  kind,
-  onClose,
-  onCreated,
-}: {
-  kind: SpaceKind;
-  onClose: () => void;
-  onCreated: (id: string) => void;
-}) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [emoji, setEmoji] = useState(kind === "classroom" ? "🎓" : "🫀");
-  const [color, setColor] = useState("apricot");
-  const [saving, setSaving] = useState(false);
-
-  async function submit() {
-    if (!name.trim()) return toast.error("Give it a name");
-    setSaving(true);
-    try {
-      const id = await createSpace({ kind, name, description, emoji, color });
-      toast.success(`${KIND_LABEL[kind]} created`);
-      onCreated(id);
-    } catch (e: any) {
-      toast.error(e?.message || "Could not create it");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4" onClick={onClose}>
-      <div
-        className="w-full max-w-md rounded-[26px] bg-white p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="font-display text-2xl font-black">New {KIND_LABEL[kind].toLowerCase()}</h2>
-        <div className="mt-5 space-y-4">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={kind === "classroom" ? "Year 3 — Cardiology" : "Heart failure squad"}
-            className="w-full rounded-xl border border-black/[0.1] px-3.5 py-2.5 text-sm font-semibold outline-none focus:border-[#4a82f3]"
-          />
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="What is this space for?"
-            className="min-h-[80px] w-full rounded-xl border border-black/[0.1] px-3.5 py-2.5 text-sm font-semibold outline-none focus:border-[#4a82f3]"
-          />
-          <div className="flex flex-wrap gap-1.5">
-            {EMOJIS.map((e) => (
-              <button
-                key={e}
-                onClick={() => setEmoji(e)}
-                className={`h-9 w-9 rounded-xl text-lg ${emoji === e ? "bg-black/[0.08]" : "hover:bg-black/[0.05]"}`}
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {Object.keys(SPACE_COLORS).map((key) => (
-              <button
-                key={key}
-                onClick={() => setColor(key)}
-                aria-label={key}
-                className={`h-9 w-9 rounded-full ${color === key ? "ring-2 ring-[#121117] ring-offset-2" : ""}`}
-                style={{ background: spaceTone(key) }}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="mt-6 flex justify-end gap-2">
-          <button onClick={onClose} className="rounded-full px-5 py-2.5 text-sm font-black text-[#54546a]">
-            Cancel
-          </button>
-          <button
-            onClick={submit}
-            disabled={saving}
-            className="inline-flex items-center gap-2 rounded-full bg-[#4a82f3] px-6 py-2.5 text-sm font-black text-white disabled:opacity-50"
-          >
-            {saving && <Loader2 size={15} className="animate-spin" />} Create
-          </button>
-        </div>
+        <button type="button" className="sp-btn sp-btn-light" onClick={() => onMake("group")}>
+          <Plus size={16} aria-hidden="true" />
+          New study group
+        </button>
       </div>
     </div>
   );
