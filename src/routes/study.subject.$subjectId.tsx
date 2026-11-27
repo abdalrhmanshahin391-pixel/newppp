@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDbLanguage, useLanguageResolved } from "@/lib/language-scope";
 import { ArrowLeft, Play, Plus, Trash2 } from "lucide-react";
 import { StudyLayout, StudyHeading } from "@/components/study/StudyLayout";
-import { SignedOutPanel } from "@/components/study/SignedOutPanel";
+import { SignInRedirect } from "@/components/study/RequireSignIn";
 import { useAuth } from "@/hooks/useAuth";
 import {
   colorOf,
@@ -83,7 +83,7 @@ function SubjectPage() {
   return (
     <StudyLayout rail={rail}>
       {!user ? (
-        <SignedOutPanel what="your flashcards" />
+        <SignInRedirect />
       ) : (
         <>
           <StudyHeading

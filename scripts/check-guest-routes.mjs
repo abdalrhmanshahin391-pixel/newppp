@@ -1,5 +1,5 @@
 // Every page a visitor can *use* needs an account. This walks src/routes and fails when a route
-// is neither on the public list below nor guarded: by RequireAuth / RequireSignIn / SignedOutPanel, a redirect to
+// is neither on the public list below nor guarded: by RequireAuth / RequireSignIn / SignInRedirect, a redirect to
 // /login, a redirect elsewhere, an admin check, or a guarded parent layout. The guard may sit in
 // the route file or in a component it imports from "@/…" (one level deep).
 //
@@ -41,7 +41,7 @@ const PUBLIC = new Map([
 ]);
 
 const GUARD =
-  /RequireAuth|RequireSignIn|SignedOutPanel|ProtectedContent|to: "\/login"|location\.replace\("\/login"\)|location\.href = "\/login"|throw redirect\(|isAdmin|AdminGuard/;
+  /RequireAuth|RequireSignIn|SignInRedirect|ProtectedContent|to: "\/login"|location\.replace\("\/login"\)|location\.href = "\/login"|throw redirect\(|isAdmin|AdminGuard/;
 
 async function guardedFile(path, depth = 0) {
   const text = await readFile(path, "utf8");

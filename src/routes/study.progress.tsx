@@ -1,3 +1,4 @@
+import { SignInRedirect } from "@/components/study/RequireSignIn";
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -170,13 +171,7 @@ function ProgressPage() {
           </p>
         </div>
 
-        {!user && (
-          <div className="mt-8 rounded-[28px] border border-black/[0.08] bg-white p-8 text-center">
-            <p className="text-base font-bold text-[#54546a]">
-              {isAr ? "يرجى تسجيل الدخول لعرض إحصائياتك الكاملة." : "Sign in to see your full progress."}
-            </p>
-          </div>
-        )}
+        {!user && <SignInRedirect />}
 
         {user && isLoading && (
           <div className="mt-8 rounded-[28px] border border-black/[0.08] bg-white p-8 text-center">

@@ -7,7 +7,6 @@ import { useAuth } from "@/hooks/useAuth";
 
 import { supabase } from "@/integrations/supabase/client";
 import { CreditsMeter } from "@/components/CreditsMeter";
-import { InstallAppButton } from "@/components/InstallAppButton";
 import { HeaderResourcesMenu } from "@/components/header/HeaderResourcesMenu";
 import { MenuGroup, MenuPanel, useMenuTrigger } from "@/components/header/MenuGroup";
 import { avatarTone, useAvatarUrl } from "@/lib/avatars";
@@ -141,7 +140,6 @@ function AccountMenu({
             <ReceiptText size={18} aria-hidden="true" />
             {arabic ? "الباقات والأسعار" : "Plans & pricing"}
           </Link>
-          <InstallAppButton className="rh-item" iconClassName="rh-item-icon" />
           {isAdmin && (
             <>
               <div className="rh-rule" />
@@ -381,7 +379,6 @@ export function ProHeader({
                   <Settings size={18} aria-hidden="true" />
                   {t("nav.settings")}
                 </Link>
-                <InstallAppButton className="rh-item" iconClassName="rh-item-icon" />
                 {isAdmin && (
                   <Link to="/admin" className="rh-item">
                     <LayoutGrid size={18} aria-hidden="true" />

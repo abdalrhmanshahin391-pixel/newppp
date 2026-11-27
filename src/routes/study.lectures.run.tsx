@@ -1,3 +1,4 @@
+import { SignInRedirect } from "@/components/study/RequireSignIn";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -609,10 +610,7 @@ function SignInState() {
   return (
     <div className="min-h-screen bg-[color:var(--cream)] text-foreground">
       <SiteHeader />
-      <main className="mx-auto max-w-xl px-4 py-24 text-center">
-        <h1 className="font-display text-3xl font-black">Lecture quiz</h1>
-        <Button asChild className="mt-6 rounded-xl"><Link to="/login">Sign in</Link></Button>
-      </main>
+      <SignInRedirect />
     </div>
   );
 }

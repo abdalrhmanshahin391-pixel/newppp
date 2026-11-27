@@ -1,3 +1,4 @@
+import { SignInRedirect } from "@/components/study/RequireSignIn";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ExamCalendar } from "@/components/study/ExamCalendar";
@@ -53,18 +54,7 @@ function ExamSchedulePage() {
           ) : user ? (
             <ExamCalendar />
           ) : (
-            <div className="rounded-[28px] border border-dashed border-black/[0.12] bg-white p-10 text-center">
-              <p className="text-[15px] font-extrabold">Sign in to plan your exams</p>
-              <p className="mt-1 text-[14px] text-[#54546a]">
-                Your exam schedule is private to your account.
-              </p>
-              <Link
-                to="/login"
-                className="mt-5 inline-flex rounded-xl bg-[#2b6df0] px-5 py-2.5 text-[14px] font-black text-white"
-              >
-                Sign in
-              </Link>
-            </div>
+            <SignInRedirect />
           )}
         </div>
       </main>
