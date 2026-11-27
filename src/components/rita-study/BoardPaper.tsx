@@ -3,8 +3,10 @@ import type { BoardCommand, BoardStep } from "@/lib/study/whiteboard";
 import { strokesFor } from "./pen-strokes";
 
 import { layoutBoard } from "./board-layout";
+import { isGentle, sketchBox, sketchEllipse, sketchPolyline, smoothPath } from "./board-sketch";
 
-const colors = { ink: "#273650", indigo: "#6447aa", teal: "#18776f", coral: "#b14c40" };
+// Dark slate for the drawing, blue for what matters (Nov 2026: the hand-drawn board look).
+const colors = { ink: "#3a404d", indigo: "#2747c9", teal: "#17708a", coral: "#c0473e" };
 type Segment = {
   path: string;
   x: number;
@@ -15,7 +17,11 @@ type Segment = {
   width?: number;
   rtl?: boolean;
 };
-function segments(command: BoardCommand, layout: ReturnType<typeof layoutBoard>): Segment[] {
+function segments(
+  command: BoardCommand,
+  layout: ReturnType<typeof layoutBoard>,
+  seed: number,
+): Segment[] {
   const [x, y] = command.at;
   const base = { x: 0, y: 0, scale: 1, color: colors[command.ink] };
   if (command.op === "write") {
@@ -29,8 +35,7 @@ function segments(command: BoardCommand, layout: ReturnType<typeof layoutBoard>)
             ...base,
             x: left,
             y: top,
-            color: colors.coral,
-            path: `M0 -5 H${width} C${width + 15} -5 ${width + 15} 37 ${width} 37 H0 C-15 37 -15 -5 0 -5 Z`,
+            path: sketchBox(width, seed),
           },
         ]
       : [];
@@ -58,23 +63,36 @@ function segments(command: BoardCommand, layout: ReturnType<typeof layoutBoard>)
       ...outline,
     ];
   }
-  if (command.op === "path")
+  if (command.op === "path") {
+    const points = [[x, y] as const, ...command.points];
     return [
-      { ...base, path: `M${x} ${y} ` + command.points.map((p) => "L" + p.join(" ")).join(" ") },
-    ];
-  const [ex, ey] = command.to;
-  if (command.op === "ellipse") {
-    const rx = Math.abs(ex - x) / 2,
-      ry = Math.abs(ey - y) / 2,
-      cy = (ey + y) / 2;
-    return [
-      { ...base, path: `M${x} ${cy} A${rx} ${ry} 0 1 1 ${ex} ${cy} A${rx} ${ry} 0 1 1 ${x} ${cy}` },
+      { ...base, path: isGentle(points) ? smoothPath(points) : sketchPolyline(points, seed) },
     ];
   }
-  const line = { ...base, path: `M${x} ${y} L${ex} ${ey}` };
+  const [ex, ey] = command.to;
+  if (command.op === "ellipse") return [{ ...base, path: sketchEllipse(x, y, ex, ey, seed) }];
+  const line = {
+    ...base,
+    path: sketchPolyline(
+      [
+        [x, y],
+        [ex, ey],
+      ],
+      seed,
+    ),
+  };
   if (command.op === "line") {
     const owner = layout.underlines.get(command);
-    if (owner) line.path = `M${x} ${owner.y + owner.h + 3} H${ex}`;
+    if (owner) {
+      const under = owner.y + owner.h + 3;
+      line.path = sketchPolyline(
+        [
+          [x, under],
+          [ex, under],
+        ],
+        seed,
+      );
+    }
     return [line];
   }
   const points = layout.arrow(command.at, command.to);
@@ -82,7 +100,7 @@ function segments(command: BoardCommand, layout: ReturnType<typeof layoutBoard>)
   const [tipX, tipY] = points[points.length - 1],
     [lastX, lastY] = points[points.length - 2];
   const angle = Math.atan2(tipY - lastY, tipX - lastX);
-  line.path = points.map((p, i) => (i ? "L" : "M") + p.join(" ")).join(" ");
+  line.path = sketchPolyline(points, seed);
   const wing = (a: number) => [tipX - 7 * Math.cos(a), tipY - 7 * Math.sin(a)].join(" ");
   return [
     line,
@@ -110,7 +128,7 @@ export function BoardPaper({
   const lines = useMemo(
     () =>
       step.commands.flatMap((c, commandIndex) =>
-        segments(c, layout).map((line) => ({ ...line, commandIndex })),
+        segments(c, layout, commandIndex + 1).map((line) => ({ ...line, commandIndex })),
       ),
     [step, layout],
   );
@@ -213,7 +231,7 @@ export function BoardPaper({
                 direction={s.rtl ? "rtl" : "ltr"}
                 fill={s.color}
                 fontSize="25"
-                fontWeight="600"
+                fontWeight="400"
                 textLength={s.width}
                 lengthAdjust="spacingAndGlyphs"
               >
@@ -226,7 +244,7 @@ export function BoardPaper({
             d={s.path}
             fill="none"
             stroke={s.label ? "none" : s.color}
-            strokeWidth={s.scale === 1 ? 2.7 : 1.65}
+            strokeWidth={s.scale === 1 ? 2.5 : 1.65}
             strokeLinecap="round"
             strokeLinejoin="round"
             opacity={s.label ? 0 : undefined}
