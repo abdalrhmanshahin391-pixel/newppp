@@ -574,6 +574,61 @@ practise.»; /games: «Play with words.». The section rail and the section titl
 (rail 15px/500 with the black pill for the open section; titles 30px/450). The game cards keep their
 own colours, drawings and buttons. Reduced motion: the field is drawn once and the words show at once.
 
+## Classrooms and study groups (`/spaces`, `/spaces/:id`, `/join/:code`)
+
+Since Nov 2026 these pages speak the home page's language (`src/components/spaces/`, styles in
+`spaces.css`, all under `.sp`): Google Sans Flex at 450–500, ink and white with neutral greys,
+round pills, 20–32px corners. A space's own colour (apricot, sky, lilac, mint, coral, lime) appears
+only in its **mark**, a rounded square with its emoji and a faint dot texture (like an app icon),
+and as a soft light behind its header. No coloured banners.
+
+- **`/spaces`:** `PageHero` (the home field of marks, «[cube] Classrooms & groups», «Study
+  together, in one room.») with the **join bar** under it: one wide pill that takes a bare code or
+  a whole invite link, a Paste button and a black «Join» pill, and says plainly what is wrong.
+  Then two **start cards** side by side: an ink one for a classroom (a room of seats with a board;
+  hovering fills the seats, one seat is Uzyra's blue) and a grey one for a study group (three
+  people and a dashed «+» that make room on hover); the whole card is the button. «Your spaces»
+  has a filter pill (All / Classrooms / Study groups, with counts), a search above six spaces, and
+  white cards: mark, kind and role chips, the name (two lines at most), the line about it, then
+  members and decks with an arrow. Loading shows grey bones; nothing yet shows Uzyra's cube with
+  both ways to start. «How it works» is three numbered steps on a hairline, not cards.
+- **Making one:** a window (a sheet on phones): the kind as a two-way switch, a live preview of
+  the card, then name (counter), a line about it (optional), sixteen emojis and six colours. The
+  name field gets the focus.
+- **A space (`/spaces/:id`):** an ink header card with the field of marks in white and the light
+  in its colour: «← All spaces», the mark (84px), kind and your role, the name (up to 60px, 450),
+  the line about it, then the first faces with «+N», the member count, and three numbers (decks,
+  question sets, announcements). Actions on the right: white «Invite» (copies the link, or opens
+  the phone's share sheet), «Add deck», and «⋯» (copy link, settings, leave; on phones «Add deck»
+  moves into it). Under it the sections as pills that stay under the top bar (black for the open
+  one, counts in mono): Overview, Decks, Question sets, Members, Announcements, Chat (when on) and
+  Settings (owners). `?tab=` opens a section directly; opening one while scrolled brings it up.
+- **Overview:** the pinned announcement, the latest four decks, recent activity (decks added,
+  posts, people joining, when it was made; built from what the page already loads), and beside
+  them the invite panel for owners (the code large in mono, Copy link, Share, «Make a new link»
+  with a warning), the people with their roles, and «About» (kind, started, chat, who adds decks,
+  who posts).
+- **Decks:** folders as a title on a hairline (rename and delete for owners, «Add here»), decks as
+  white tiles (cover mark, title, cards and who added it, rating, black «Study»; «⋯» to move it to
+  a folder or take it out). An empty folder is a dashed «Add the first deck» target. New folders
+  are made in a row on the page, not in a browser prompt.
+- **Members:** grouped (Owner, Co-owners, Members), a search above eight people, one row each
+  (picture, @name, name, when they joined, role chip, «⋯» for owners: co-owner / member / remove).
+- **Announcements:** a writing box with your picture (Ctrl/⌘ + Enter posts), then posts on
+  hairlines, pinned first on a light grey band; owners pin and delete.
+- **Chat:** a messenger: yours on the right in ink, others grey on the left with picture and name,
+  grouped by day and by person (five minutes), times under each group; it follows new messages at
+  the bottom and offers «N new messages» when you scrolled up. Enter sends, Shift + Enter breaks.
+- **Settings:** name and look (the same fields as making one, Save and Undo), the invite panel,
+  how it works (a switch for chat, two-way choices for who adds decks and who posts), and delete
+  (owner) or leave (co-owner). Members leave from «⋯» in the header.
+- **`/join/:code`:** one ink card centred: the mark, «You're invited to a classroom», the name, the
+  line about it, the member count and a white «Join classroom» pill; a broken link says so and
+  points back. Signed out, every one of these pages goes to the site's sign-in and comes back.
+- **Rules:** every destructive action asks first in the page's own window (never the browser's);
+  every failure is said in a toast and keeps what was typed; red only for removing and deleting;
+  windows are one level; reduced motion stills the hovers, the bones and the field.
+
 ## Pricing (`/pricing`): four monthly plans
 
 Since Nov 2026 the page sells four monthly plans beside the free one: Uzyra $23, Plus $30, Pro $40

@@ -1,90 +1,112 @@
+import type { CSSProperties } from "react";
+import * as Menu from "@radix-ui/react-dropdown-menu";
+import { MoreHorizontal, ShieldCheck, UserMinus, UserX } from "lucide-react";
 import { useAvatarUrl, avatarTone } from "@/lib/avatars";
 import { ROLE_LABEL, type SpaceMember, type SpaceRole } from "@/lib/spaces";
+import { fullDate, timeAgo } from "./time";
 
+/** A person's round picture, or their first letter on their own colour. */
 export function MemberAvatar({
   path,
   name,
   size = 36,
+  className = "",
 }: {
   path: string | null;
   name: string;
   size?: number;
+  className?: string;
 }) {
   const url = useAvatarUrl(path);
   return (
     <span
-      className="grid shrink-0 place-items-center overflow-hidden rounded-full text-[12px] font-black text-white ring-2 ring-white"
-      style={{ height: size, width: size, background: avatarTone(name || "student") }}
+      className={`sp-avatar ${className}`}
+      style={{ "--sp-av": `${size}px`, background: avatarTone(name || "student") } as CSSProperties}
+      aria-hidden="true"
     >
-      {url ? (
-        <img src={url} alt="" className="h-full w-full object-cover" loading="lazy" />
-      ) : (
-        (name || "?").charAt(0).toUpperCase()
-      )}
+      {url ? <img src={url} alt="" loading="lazy" /> : (name || "?").charAt(0).toUpperCase()}
     </span>
   );
 }
 
-/** One person inside a classroom or group, Telegram-style. */
+/** Owner in ink, co-owner outlined, member in grey: told apart by words and weight, not colour. */
+export function RoleChip({ role }: { role: SpaceRole }) {
+  const tone = role === "owner" ? "sp-chip-dark" : role === "co_owner" ? "sp-chip-line" : "";
+  return <span className={`sp-chip ${tone}`}>{ROLE_LABEL[role]}</span>;
+}
+
+/** One person in a classroom or group. Owners and co-owners can change others' roles. */
 export function MemberRow({
   member,
-  spaceEmoji,
-  spaceTone,
   canManage,
   isMe,
   onRole,
   onRemove,
 }: {
   member: SpaceMember;
-  spaceEmoji: string;
-  spaceTone: string;
   canManage: boolean;
   isMe: boolean;
   onRole: (role: SpaceRole) => void;
   onRemove: () => void;
 }) {
+  const name = member.username || "student";
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-black/[0.06] bg-white px-4 py-3">
-      <MemberAvatar path={member.avatar_url} name={member.username} />
-      <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 truncate text-[15px] font-black">
-          @{member.username || "student"}
-          <span
-            className="grid h-5 w-5 place-items-center rounded-full text-[11px]"
-            style={{ background: spaceTone }}
-            title="Member of this space"
-          >
-            {spaceEmoji}
-          </span>
-          {isMe && <span className="text-[11px] font-bold text-[#9a9aab]">you</span>}
+    <li className="sp-member">
+      <MemberAvatar path={member.avatar_url} name={name} size={40} />
+      <div className="sp-member-info">
+        <p className="sp-member-name">
+          <span dir="auto">@{name}</span>
+          {isMe && <span className="sp-chip sp-chip-sm">You</span>}
         </p>
-        <p className="truncate text-[13px] text-[#54546a]">
-          {member.full_name || "—"} · joined {new Date(member.joined_at).toLocaleDateString()}
+        <p className="sp-member-sub">
+          {member.full_name && (
+            <>
+              <span dir="auto">{member.full_name}</span>
+              <span aria-hidden="true"> · </span>
+            </>
+          )}
+          <span title={fullDate(member.joined_at)}>joined {timeAgo(member.joined_at)}</span>
         </p>
       </div>
-      <span
-        className={`rounded-full px-3 py-1 text-[11px] font-black ${
-          member.role === "member" ? "bg-black/[0.06] text-[#54546a]" : "bg-[#e7eefd] text-[#1a4ba8]"
-        }`}
-      >
-        {ROLE_LABEL[member.role]}
-      </span>
-      {canManage && member.role !== "owner" && (
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => onRole(member.role === "co_owner" ? "member" : "co_owner")}
-            className="rounded-full bg-black/[0.05] px-3 py-1.5 text-[12px] font-black hover:bg-black/[0.09]"
-          >
-            {member.role === "co_owner" ? "Make member" : "Make co-owner"}
-          </button>
-          <button
-            onClick={onRemove}
-            className="rounded-full px-3 py-1.5 text-[12px] font-black text-red-600 hover:bg-red-50"
-          >
-            Remove
-          </button>
-        </div>
+      <RoleChip role={member.role} />
+      {canManage && member.role !== "owner" && !isMe && (
+        <Menu.Root modal={false}>
+          <Menu.Trigger asChild>
+            <button
+              type="button"
+              className="sp-btn sp-btn-ghost sp-btn-icon sp-btn-icon-sm"
+              aria-label={`Options for @${name}`}
+            >
+              <MoreHorizontal size={17} aria-hidden="true" />
+            </button>
+          </Menu.Trigger>
+          <Menu.Portal>
+            <Menu.Content align="end" sideOffset={6} className="sp sp-menu">
+              <Menu.Item
+                className="sp-menu-item"
+                onSelect={() => onRole(member.role === "co_owner" ? "member" : "co_owner")}
+              >
+                {member.role === "co_owner" ? (
+                  <>
+                    <UserMinus size={16} aria-hidden="true" />
+                    Make a member again
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck size={16} aria-hidden="true" />
+                    Make co-owner
+                  </>
+                )}
+              </Menu.Item>
+              <Menu.Separator className="sp-menu-sep" />
+              <Menu.Item className="sp-menu-item sp-menu-danger" onSelect={onRemove}>
+                <UserX size={16} aria-hidden="true" />
+                Remove @{name}
+              </Menu.Item>
+            </Menu.Content>
+          </Menu.Portal>
+        </Menu.Root>
       )}
-    </div>
+    </li>
   );
 }
