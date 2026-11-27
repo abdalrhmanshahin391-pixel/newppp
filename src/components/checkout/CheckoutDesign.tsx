@@ -218,7 +218,7 @@ export function CheckoutDesign({ slug }: { slug: string }) {
                     )}
                     <div>
                       <b>{groq}</b>
-                      <span>Groq AI requests a month</span>
+                      <span>Emith requests a month</span>
                     </div>
                   </div>
                 </div>

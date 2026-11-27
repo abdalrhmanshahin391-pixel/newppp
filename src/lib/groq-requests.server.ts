@@ -6,7 +6,7 @@
  */
 
 export const GROQ_REQUESTS_USED_TEXT =
-  "خلصت طلبات Groq تبعتك لهالشهر. بترجع أول الشهر، أو كبّر باقتك من صفحة الأسعار.";
+  "خلصت طلبات Emith تبعتك لهالشهر. بترجع أول الشهر، أو كبّر باقتك من صفحة الأسعار.";
 
 /** True when the request may go ahead; false when this month's requests are used up. */
 export async function takeGroqRequest(supabase: {

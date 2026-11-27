@@ -110,13 +110,13 @@ function callsAMonth(p: FullPlan): string {
   return `${minutes.toLocaleString("en-US")} min`;
 }
 
-/** Groq requests a month, as the card's second figure. */
+/** Emith requests a month (counted by `max_groq_requests`), as the card's second figure. */
 function groqRequests(p: FullPlan): string {
   const cap = p.max_groq_requests;
   return cap === null || cap === undefined ? "Unlimited" : cap.toLocaleString("en-US");
 }
 
-/** What every plan includes; plans differ only in call time and Groq requests. */
+/** What every plan includes; plans differ only in call time and Emith requests. */
 const INCLUDED = [
   "Free conversation with Uzyra",
   "Path lessons by voice",
@@ -143,7 +143,7 @@ const COMPARE: {
     ],
   },
   {
-    title: "Groq AI requests",
+    title: "Emith requests",
     rows: [
       { label: "Requests a month", value: groqRequests },
       { label: "Explain a line or translate a page", value: () => true },
@@ -191,8 +191,8 @@ const COUNTING: { icon: LucideIcon; title: string; text: string; examples: strin
   },
   {
     icon: Sparkles,
-    title: "Groq AI requests",
-    text: "Every written answer from Uzyra's AI, which runs on Groq, is one request. Voice calls never use requests. Requests come back on the 1st of every month (Amman time).",
+    title: "Emith requests",
+    text: "Every written answer from Emith, Uzyra's study partner, is one request. Voice calls never use requests. Requests come back on the 1st of every month (Amman time).",
     examples: [
       "Explaining or translating a line in a book",
       "Checking an exercise or making practice cards",
@@ -212,8 +212,8 @@ const QUESTIONS: { q: string; a: string; packs?: boolean }[] = [
     a: "Each plan has its own minutes a day. Free conversation, path lessons and book study all use the same time, counted from when a call starts until it ends. It comes back whole every day at midnight (Amman time); minutes you don't use are not carried over.",
   },
   {
-    q: "What is a Groq request?",
-    a: "One written answer from Uzyra's AI: explaining or translating a line in a book, checking an exercise, a word game round, a whiteboard step. Voice calls are counted in minutes, never in requests. Requests come back on the 1st of every month.",
+    q: "What is an Emith request?",
+    a: "One written answer from Emith: explaining or translating a line in a book, checking an exercise, a word game round, a whiteboard step. Voice calls are counted in minutes, never in requests. Requests come back on the 1st of every month.",
   },
   {
     q: "Can I move to a bigger plan?",
@@ -467,7 +467,7 @@ function PricingPage() {
             </h1>
             <p className="mt-3 max-w-xl text-[14.5px] leading-[1.5] text-white/45">
               Every plan has every service. You pick how many minutes of calls a day and how many
-              Groq AI requests a month. Paid monthly; cancel any time.
+              Emith requests a month. Paid monthly; cancel any time.
             </p>
           </div>
           {switchOptions.length > 1 && (
@@ -611,13 +611,13 @@ function PricingPage() {
                       </dd>
                     </div>
                     <div className="rounded-[16px] bg-white/[0.06] px-4 py-3">
-                      <dt className="sr-only">Groq AI requests</dt>
+                      <dt className="sr-only">Emith requests</dt>
                       <dd>
                         <span className="block text-[22px] font-[450] leading-[1.3] tabular-nums tracking-[-0.02em]">
                           {groqRequests(p)}
                         </span>
                         <span className="text-[13px] leading-[1.4] text-white/55">
-                          Groq AI requests a month
+                          Emith requests a month
                         </span>
                       </dd>
                     </div>

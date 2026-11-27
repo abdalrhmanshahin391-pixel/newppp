@@ -584,21 +584,25 @@ day (`free_talk_seconds`, `free_talk_period = 'daily'`) and Groq AI requests a m
 - A one-line lead under «Plans and pricing»; the billing switch only when there is a choice.
 - Five cards, one row on wide screens (2 or 3 columns below that, one on phones). Each card: name,
   price, tagline, then two figure tiles (white 6% fill, 16px corners, 22px figure and a 13px
-  label): «30 min / of calls every day» and «1,000 / Groq AI requests a month», then the four
+  label): «30 min / of calls every day» and «1,000 / Emith requests a month», then the four
   services with checks and the pill. The popular plan has a thin white ring.
-- «Compare plans»: Calls with Uzyra (every day, in a month at most, the three call kinds) and Groq
-  AI requests (a month, what they cover), scrolling sideways on phones.
+- «Compare plans»: Calls with Uzyra (every day, in a month at most, the three call kinds) and Emith
+  requests (a month, what they cover), scrolling sideways on phones.
 - «How we count»: two cards, call minutes and Groq requests, each with three examples.
 - «What you can do with Uzyra»: four tiles (free conversation, path lessons by voice, book study,
   path exercises), then the questions.
 The older 3-month plans are hidden, not deleted.
+
+Public pages never name the AI providers behind Uzyra (Groq, Soniox, Gemini and the like): the
+request allowance is called **Emith requests** («Emith requests a month», «What is an Emith
+request?»), after Uzyra's study partner. The provider names stay in code and the admin only.
 
 **Books Reader** (`books_reader`, $17 a month, 10,000 Groq requests, no calls) is not a fifth card
 in that row: it sits under the row in a wide card of its own (`BooksReaderCard`,
 `books-reader-card.css`). It keeps the page's language (24px corners, 16px figure tiles, the pill,
 the grotesk) but inverts it, so readers see at once that it is a different thing: an ink card
 (`--pro-ink`) with the home page's faint dot field fading in from the end side and a soft blue
-light, a «For readers» pill, the name, two tiles at white 8% («10,000 / Groq AI requests a month»,
+light, a «For readers» pill, the name, two tiles at white 8% («10,000 / Emith requests a month»,
 «Reading / no voice calls in this plan»), four reading services in two columns. The side holds a
 small shelf of nine books in white and greys with one in the brand blue (it lifts on hover; the
 last book leans), the price and a white pill. Under 860px everything stacks. It has its own column
