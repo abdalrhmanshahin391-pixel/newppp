@@ -108,7 +108,7 @@ export const adminSavePathLayout = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Adds an exercises, resources or finish-line stop at `index` of the path the admin sees. */
+/** Adds an exercises, resources, finish-line or unit stop at `index` of the path the admin sees. */
 export const adminAddPathItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
@@ -116,7 +116,7 @@ export const adminAddPathItem = createServerFn({ method: "POST" })
       z.object({
         language,
         level: z.enum(CEFR).optional(),
-        kind: z.enum(["exercises", "resources", "finish"]),
+        kind: z.enum(["exercises", "resources", "finish", "unit"]),
         mode: z.enum(["quiz", "clips"]).optional(),
         title: z.string().trim().min(1).max(120),
         list: z.array(ref).max(500),

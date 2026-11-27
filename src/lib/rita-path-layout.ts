@@ -4,8 +4,12 @@ import type { Level } from "./rita-path-levels";
 // and path items an admin places between them (rita_path_items: exercises or resources, with a
 // fractional path_order in the same number space). Pure: merging, moving and the orders to save.
 
-/** "finish": the admin's own finish line of a level (its title is the level, e.g. "A1"). */
-export type PathItemKind = "exercises" | "resources" | "finish";
+/**
+ * "finish": the admin's own finish line of a level (its title is the level, e.g. "A1").
+ * "unit": the start of a unit inside a level (its title names the unit); learners see it as the
+ * unit's heading, never as a stop.
+ */
+export type PathItemKind = "exercises" | "resources" | "finish" | "unit";
 
 export type PathItem = {
   id: string;
