@@ -1861,6 +1861,15 @@ window shows what is being picked («بنطلّع الكلمات المهمة…
 A word or short phrase is one card either way: no switch. In books, cards now take a whole paragraph
 (up to 1500 characters, `canMakeCards`); the other options keep the 600-character limit.
 
+Since Nov 2026 a selection gives up to **8** cards of either kind (about one per two words for
+«كلمات مهمة»). The model walks the text from start to end and is told not to stop after two or
+three: hard words, phrasal verbs, fixed expressions and words used together, in text order, a
+changed form with its dictionary form in brackets on the back («بيناقش (discuss)»). The check that
+drops made-up cards (`cleanCards`) joins words a PDF broke at a line end («dis- cusses»), and for
+word cards accepts another form of a word in the text (discuss / discusses, Kind / Kinder) and up to
+two words inside an expression («pick it up» for «pick up»); the same word in two forms is one card.
+Sentence cards still have to be copied exactly.
+
 ## Saving practice (lessons and books)
 
 Under the cards or questions in the practice window, a quiet grey row «احفظ البطاقات في الفلاش
