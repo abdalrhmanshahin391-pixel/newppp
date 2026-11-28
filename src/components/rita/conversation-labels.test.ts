@@ -1,11 +1,12 @@
-import { describe, expect, test } from "bun:test";
+import assert from "node:assert/strict";
+import { describe, test } from "node:test";
 import type { RitaConversation } from "@/lib/rita-conversation";
 import {
   conversationCount,
   conversationDate,
   conversationTitle,
   messageCount,
-} from "./conversation-labels";
+} from "./conversation-labels.ts";
 
 const row = (patch: Partial<RitaConversation> = {}): RitaConversation => ({
   id: "c1",
@@ -23,41 +24,42 @@ const row = (patch: Partial<RitaConversation> = {}): RitaConversation => ({
 
 describe("conversation labels", () => {
   test("the untouched default title follows the page's language", () => {
-    expect(conversationTitle(row(), "ar")).toBe("محادثة جديدة");
-    expect(conversationTitle(row(), "en")).toBe("New conversation");
-    expect(conversationTitle(row({ title: "  " }), "ar")).toBe("محادثة جديدة");
+    assert.equal(conversationTitle(row(), "ar"), "محادثة جديدة");
+    assert.equal(conversationTitle(row(), "en"), "New conversation");
+    assert.equal(conversationTitle(row({ title: "  " }), "ar"), "محادثة جديدة");
   });
 
   test("a title the learner chose is kept, even if it is the default words", () => {
-    expect(conversationTitle(row({ title_is_custom: true }), "ar")).toBe("New conversation");
-    expect(conversationTitle(row({ title: "مرحباً ريتا، كيف حالك؟" }), "en")).toBe(
+    assert.equal(conversationTitle(row({ title_is_custom: true }), "ar"), "New conversation");
+    assert.equal(
+      conversationTitle(row({ title: "مرحباً ريتا، كيف حالك؟" }), "en"),
       "مرحباً ريتا، كيف حالك؟",
     );
   });
 
   test("Arabic counts use one, two, the plural up to ten and the singular after", () => {
-    expect(messageCount(1, "ar")).toBe("رسالة وحدة");
-    expect(messageCount(2, "ar")).toBe("رسالتين");
-    expect(messageCount(10, "ar")).toBe("10 رسائل");
-    expect(messageCount(12, "ar")).toBe("12 رسالة");
-    expect(conversationCount(5, "ar")).toBe("5 محادثات");
-    expect(conversationCount(11, "ar")).toBe("11 محادثة");
+    assert.equal(messageCount(1, "ar"), "رسالة وحدة");
+    assert.equal(messageCount(2, "ar"), "رسالتين");
+    assert.equal(messageCount(10, "ar"), "10 رسائل");
+    assert.equal(messageCount(12, "ar"), "12 رسالة");
+    assert.equal(conversationCount(5, "ar"), "5 محادثات");
+    assert.equal(conversationCount(11, "ar"), "11 محادثة");
   });
 
   test("English counts", () => {
-    expect(messageCount(1, "en")).toBe("1 message");
-    expect(messageCount(34, "en")).toBe("34 messages");
-    expect(conversationCount(1, "en")).toBe("1 conversation");
+    assert.equal(messageCount(1, "en"), "1 message");
+    assert.equal(messageCount(34, "en"), "34 messages");
+    assert.equal(conversationCount(1, "en"), "1 conversation");
   });
 
   test("dates use the last message, Latin digits, and the year only for older ones", () => {
     const year = new Date().getFullYear();
     const recent = row({ last_message_at: `${year}-03-05T12:00:00Z` });
-    expect(conversationDate(recent, "en")).toMatch(/^5 Mar$/);
-    expect(conversationDate(recent, "ar")).toMatch(/^5 /);
-    expect(conversationDate(recent, "ar")).not.toMatch(/[٠-٩]/);
+    assert.equal(conversationDate(recent, "en"), "5 Mar");
+    assert.match(conversationDate(recent, "ar"), /^5 /);
+    assert.doesNotMatch(conversationDate(recent, "ar"), /[٠-٩]/);
     const old = row({ last_message_at: `${year - 1}-03-05T12:00:00Z` });
-    expect(conversationDate(old, "en")).toContain(String(year - 1));
-    expect(conversationDate(row({ created_at: "not a date" }), "en")).toBe("");
+    assert.ok(conversationDate(old, "en").includes(String(year - 1)));
+    assert.equal(conversationDate(row({ created_at: "not a date" }), "en"), "");
   });
 });
