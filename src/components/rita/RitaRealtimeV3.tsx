@@ -77,6 +77,7 @@ import {
 } from "@/lib/rita-voice-connection";
 import { MetricQueue } from "@/lib/metric-queue";
 import { ExplanationLanguageControl } from "@/components/rita/ExplanationLanguageControl";
+import { CallStage, FreeTalkIntro, LivePill, type FreeTalkTopic } from "@/components/rita/FreeTalk";
 import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rita-conversation";
 import { ASSISTANT_NAME_AR, BRAND_NAME, FREE_CONVERSATION_OPENER } from "@/lib/brand";
 
@@ -329,6 +330,10 @@ export function RitaRealtimeV3({
   const [error, setError] = useState("");
   const [caption, setCaption] = useState("");
   const [draft, setDraft] = useState("");
+  // The free conversation's opening topic: sent once as the learner's first message when Uzyra is
+  // ready, so she opens with it (in a free conversation she waits for the learner to speak first).
+  const [topic, setTopic] = useState<FreeTalkTopic | null>(null);
+  const topicSent = useRef(false);
   const [historyLoading, setHistoryLoading] = useState(Boolean(conversationId && !lessonId));
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
   const [messages, setMessages] = useState<Message[]>([
@@ -1784,6 +1789,12 @@ export function RitaRealtimeV3({
     const text = draft.trim();
     if (!text || !readyForSpeech || !client.current?.connected) return;
     setDraft("");
+    await sendLine(text);
+  }
+
+  /** The learner's typed words (or the chosen opening topic): shown, saved, and sent to Uzyra. */
+  async function sendLine(text: string) {
+    if (!client.current?.connected) return;
     lastUserText.current = text;
     const message = { id: crypto.randomUUID(), role: "you" as const, text };
     setMessages((current) => [...current, message]);
@@ -1799,6 +1810,17 @@ export function RitaRealtimeV3({
     });
     await client.current.sendText(text);
   }
+
+  // A topic picked on the free conversation's start screen opens it, once, as soon as Uzyra is
+  // ready (a call that failed before that sends it on the next try).
+  const freeTalkPage = !study && !lessonId && !sample;
+  useEffect(() => {
+    if (!freeTalkPage || !readyForSpeech || !topic || topicSent.current) return;
+    topicSent.current = true;
+    void sendLine(topic.say);
+    // sendLine belongs to this render; the topic goes once, when Uzyra becomes ready.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [freeTalkPage, readyForSpeech, topic]);
 
   if (loading || !user) {
     return (
@@ -1820,16 +1842,91 @@ export function RitaRealtimeV3({
     message.id !== "welcome" &&
     (!active || message.id !== newestReplyId || ledgerReplies.has(message.id));
 
-  // Free conversation (no lesson) uses the same chat as the lessons and books: Uzyra's mark over
-  // her answers, the learner's words in a grey bubble, the same composer and hold-to-start; the
-  // big voice orb is only for spoken lessons now.
-  const freeTalk = !study && !lessonId && !sample;
+  // Free conversation (no lesson) uses the same chat as the lessons and books, in its own look
+  // (FreeTalk.tsx): the start screen in the home page's language, the learner's words in black
+  // bubbles, Uzyra's cube with her voice beside it and the call's tools on a black island. The big
+  // voice orb is only for spoken lessons now.
+  const freeTalk = freeTalkPage;
 
   if (study || freeTalk) {
     const turns = groupTurns(messages).filter((message) => message.id !== "welcome");
     const chatting = active || starting || turns.length > 0;
     const stateWord = voiceStateWord(historyLoading ? "connecting" : connectionPhase, mood, muted);
     const lastTurn = turns[turns.length - 1];
+    // The composer's pieces: the study column lays them out in one grey field, the free
+    // conversation in a white field and a black island.
+    const composerInput = (
+      <input
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        placeholder="اكتب ليوزرا…"
+        aria-label="اكتب ليوزرا"
+        dir="auto"
+        className="uz-rc-input"
+      />
+    );
+    const wordsButton = (
+      <button
+        type="button"
+        onClick={() => void tray.openTray()}
+        className="uz-rc-chip-tag is-button"
+        aria-label={`كلماتي (${tray.entries.length})`}
+      >
+        <Layers size={15} aria-hidden="true" />
+        كلماتي
+        {tray.entries.length > 0 && <span className="uz-rc-count">{tray.entries.length}</span>}
+      </button>
+    );
+    const stopButton = mood === "talking" && (
+      <button
+        type="button"
+        onClick={stopRita}
+        className="uz-rc-icon"
+        aria-label="وقّف يوزرا"
+        title="وقّف يوزرا"
+      >
+        <Square size={12} fill="currentColor" aria-hidden="true" />
+      </button>
+    );
+    const endButton = (
+      <button
+        type="button"
+        onClick={() => void finishConversation()}
+        className="uz-rc-icon is-end"
+        aria-label="إنهاء المكالمة"
+        title="إنهاء المكالمة"
+      >
+        <PhoneOff size={16} aria-hidden="true" />
+      </button>
+    );
+    const micButton = (
+      <button
+        type="button"
+        onClick={toggleMute}
+        disabled={!readyForSpeech}
+        className="uz-rc-icon"
+        aria-pressed={muted}
+        aria-label={muted ? "شغّل المايك" : "سكّر المايك"}
+        title={muted ? "شغّل المايك" : "سكّر المايك"}
+      >
+        {muted ? (
+          <MicOff size={17} aria-hidden="true" />
+        ) : (
+          <AudioLines size={17} aria-hidden="true" />
+        )}
+      </button>
+    );
+    const sendButton = (
+      <button
+        type="submit"
+        disabled={!readyForSpeech || !draft.trim()}
+        className="uz-rc-send"
+        aria-label="إرسال"
+        title="إرسال"
+      >
+        <ArrowUp size={18} strokeWidth={2.4} aria-hidden="true" />
+      </button>
+    );
     const Column = study ? "main" : "div";
     const column = (
       <Column
@@ -1865,6 +1962,18 @@ export function RitaRealtimeV3({
                   اكبس لتشغيل الصوت
                 </button>
               )}
+              {/* A free conversation waits for the learner to speak first: until anything is
+                  said, the empty page says so (or that the call is still connecting). */}
+              {freeTalk && turns.length === 0 && !caption && (active || starting) && (
+                <div className="ft-empty">
+                  <p className="ft-empty-title">
+                    {connectionPhase === "ready" ? "يوزرا بتستنّاك تحكي." : "لحظة، عم نوصلك…"}
+                  </p>
+                  {connectionPhase === "ready" && (
+                    <p className="ft-empty-text">احكي أول جملة بصوتك، أو اكتبها تحت.</p>
+                  )}
+                </div>
+              )}
               {turns.map((message, index) =>
                 message.role === "you" ? (
                   <YouBubble key={message.id} text={message.text} />
@@ -1880,7 +1989,8 @@ export function RitaRealtimeV3({
                         {[
                           "يوزرا",
                           requestLabel(turns[index - 1]),
-                          active && message.id === lastTurn?.id ? stateWord : "",
+                          // In a free conversation what she is doing shows under her cube.
+                          active && !freeTalk && message.id === lastTurn?.id ? stateWord : "",
                         ]
                           .filter(Boolean)
                           .join(" · ")}
@@ -1915,19 +2025,17 @@ export function RitaRealtimeV3({
               )}
             </div>
           </StickyScroll>
+        ) : freeTalk ? (
+          <FreeTalkIntro
+            topic={topic}
+            onTopic={setTopic}
+            live={active}
+            onExplanation={explanationChanged}
+          />
         ) : (
           <div className="uz-rc-hero">
             <UzyraWordmark size={12} withMark={false} className="uz-rc-brand" />
             <div className="uz-rc-spot is-hero" data-cube-spot="hero" />
-            {freeTalk && (
-              <>
-                <h1 className="uz-rc-title">محادثة حرة</h1>
-                <p className="uz-rc-lead">احكي عن أي إشي. يوزرا بترد بصوتها وبتصحّحلك بلطف.</p>
-                <div className="uz-rc-explain">
-                  <ExplanationLanguageControl ui="ar" live={active} onChange={explanationChanged} />
-                </div>
-              </>
-            )}
             {/* "Ended" before anything was said is noise (the page also ends any leftover call
                 when it loads), so the intro shows only a call that is starting or failed. */}
             {connectionPhase !== "idle" && connectionPhase !== "ended" && (
@@ -1938,10 +2046,32 @@ export function RitaRealtimeV3({
         )}
 
         <div className="uz-rc-dock">
-          <div className="uz-rc-spot is-dock" data-cube-spot="dock" />
-          {/* Once Uzyra has answered, what she is doing shows beside her newest answer instead. */}
-          {chatting && !turns.some((turn) => turn.role === "rita") && (
-            <p className="uz-rc-word is-small">{stateWord}</p>
+          {freeTalk && chatting ? (
+            <>
+              <CallStage levelsRef={orbLevels} live={connectionPhase === "ready"} />
+              <p className="uz-rc-word is-small">{stateWord}</p>
+            </>
+          ) : (
+            <>
+              <div className="uz-rc-spot is-dock" data-cube-spot="dock" />
+              {/* Once Uzyra has answered, what she is doing shows beside her newest answer
+                  instead. */}
+              {chatting && !turns.some((turn) => turn.role === "rita") && (
+                <p className="uz-rc-word is-small">{stateWord}</p>
+              )}
+              {/* The free conversation's start screen says a failed call right above the circle
+                  that tries again, where it is always in view. ("Ended" before anything was said
+                  is noise: the page also ends any leftover call when it loads.) */}
+              {freeTalk &&
+                !chatting &&
+                connectionPhase !== "idle" &&
+                connectionPhase !== "ended" && (
+                  <p className="uz-rc-word ft-dock-note">{stateWord}</p>
+                )}
+              {freeTalk && !chatting && error && (
+                <p className="uz-rc-error ft-dock-note">{error}</p>
+              )}
+            </>
           )}
           {!active ? (
             starting ? (
@@ -1954,79 +2084,37 @@ export function RitaRealtimeV3({
               <HoldToStart
                 onStart={() => void startLesson()}
                 disabled={historyLoading}
+                rings={freeTalk}
                 label={
                   connectionPhase === "failed" ? "اضغط مطوّلاً لتعيد الاتصال" : "اضغط مطوّلاً لتبدأ"
                 }
               />
             )
+          ) : freeTalk ? (
+            // The free conversation: a white field with a black send, and the call's tools on a
+            // black island under it (the microphone first, ending the call last, in red).
+            <form onSubmit={sendText} className="uz-rc-bar ft-bar uz-rc-rise">
+              <div className="ft-field">
+                {composerInput}
+                {sendButton}
+              </div>
+              <div className="ft-island" role="group" aria-label="أدوات المكالمة">
+                {micButton}
+                {stopButton}
+                {wordsButton}
+                {endButton}
+              </div>
+            </form>
           ) : (
             <form onSubmit={sendText} className="uz-rc-bar uz-rc-rise">
-              <input
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                placeholder="اكتب ليوزرا…"
-                aria-label="اكتب ليوزرا"
-                dir="auto"
-                className="uz-rc-input"
-              />
+              {composerInput}
               <div className="uz-rc-row">
-                <button
-                  type="button"
-                  onClick={() => void tray.openTray()}
-                  className="uz-rc-chip-tag is-button"
-                  aria-label={`كلماتي (${tray.entries.length})`}
-                >
-                  <Layers size={15} aria-hidden="true" />
-                  كلماتي
-                  {tray.entries.length > 0 && (
-                    <span className="uz-rc-count">{tray.entries.length}</span>
-                  )}
-                </button>
+                {wordsButton}
                 <span className="uz-rc-row-gap" />
-                {mood === "talking" && (
-                  <button
-                    type="button"
-                    onClick={stopRita}
-                    className="uz-rc-icon"
-                    aria-label="وقّف يوزرا"
-                    title="وقّف يوزرا"
-                  >
-                    <Square size={12} fill="currentColor" aria-hidden="true" />
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => void finishConversation()}
-                  className="uz-rc-icon is-end"
-                  aria-label="إنهاء المكالمة"
-                  title="إنهاء المكالمة"
-                >
-                  <PhoneOff size={16} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={toggleMute}
-                  disabled={!readyForSpeech}
-                  className="uz-rc-icon"
-                  aria-pressed={muted}
-                  aria-label={muted ? "شغّل المايك" : "سكّر المايك"}
-                  title={muted ? "شغّل المايك" : "سكّر المايك"}
-                >
-                  {muted ? (
-                    <MicOff size={17} aria-hidden="true" />
-                  ) : (
-                    <AudioLines size={17} aria-hidden="true" />
-                  )}
-                </button>
-                <button
-                  type="submit"
-                  disabled={!readyForSpeech || !draft.trim()}
-                  className="uz-rc-send"
-                  aria-label="إرسال"
-                  title="إرسال"
-                >
-                  <ArrowUp size={18} strokeWidth={2.4} aria-hidden="true" />
-                </button>
+                {stopButton}
+                {endButton}
+                {micButton}
+                {sendButton}
               </div>
             </form>
           )}
@@ -2085,6 +2173,7 @@ export function RitaRealtimeV3({
             <ArrowLeft size={16} aria-hidden="true" />
             محادثاتي
           </Link>
+          {active && <LivePill ready={connectionPhase === "ready"} />}
           {saveState !== "idle" ? (
             <p role="status" className={`uz-rc-saved${saveState === "failed" ? " is-failed" : ""}`}>
               {saveState === "saving" ? "عم تنحفظ المحادثة…" : null}

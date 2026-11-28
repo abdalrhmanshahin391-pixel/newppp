@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { UzyraMark } from "@/components/brand/UzyraMark";
 import {
   endHoldTone,
@@ -19,17 +19,23 @@ const DRAIN_MS = 420;
  * nothing happens, so a call never starts by accident. Full, it plays a small chord, calls `onStart`
  * and shrinks away (the page then shows the connecting ring). Space or Enter held down work the
  * same way. Only transforms move, so the fill stays smooth while the page is busy.
+ *
+ * With `rings` (the free conversation) thin rings pulse out from the circle while it waits and
+ * close in on it as it fills (the fill is the `--fill` property, 0 to 1, on the wrapper).
  */
 export function HoldToStart({
   onStart,
   disabled = false,
   label,
+  rings = false,
 }: {
   onStart: () => void;
   disabled?: boolean;
   /** The words under the circle ("اضغط مطوّلاً لتبدأ"). */
   label: string;
+  rings?: boolean;
 }) {
+  const wrap = useRef<HTMLDivElement | null>(null);
   const button = useRef<HTMLButtonElement | null>(null);
   const disc = useRef<HTMLSpanElement | null>(null);
   const fill = useRef(0);
@@ -45,6 +51,10 @@ export function HoldToStart({
   const paint = (value: number) => {
     fill.current = value;
     if (disc.current) disc.current.style.transform = `scale(${value.toFixed(4)})`;
+    if (wrap.current) {
+      wrap.current.style.setProperty("--fill", value.toFixed(4));
+      wrap.current.toggleAttribute("data-filling", value > 0);
+    }
     // The circle gives a little under the finger as it fills.
     if (button.current && !still.current)
       button.current.style.transform = `scale(${(1 - value * 0.05).toFixed(4)})`;
@@ -127,41 +137,55 @@ export function HoldToStart({
   }, [disabled]);
 
   return (
-    <div className="uz-hold">
-      <button
-        ref={button}
-        type="button"
-        className="uz-hold-btn"
-        data-done={done ? "" : undefined}
-        disabled={disabled}
-        aria-label={`${label}: اضغط مطوّلاً لبدء المكالمة`}
-        onPointerDown={(event) => {
-          if (event.button !== 0) return;
-          event.currentTarget.setPointerCapture(event.pointerId);
-          press();
-        }}
-        onPointerUp={release}
-        onPointerCancel={release}
-        onLostPointerCapture={release}
-        onBlur={release}
-        onKeyDown={(event) => {
-          if (event.key === " " || event.key === "Enter") {
-            event.preventDefault();
-            if (!event.repeat) press();
-          }
-        }}
-        onKeyUp={(event) => {
-          if (event.key === " " || event.key === "Enter") {
-            event.preventDefault();
-            release();
-          }
-        }}
-        onContextMenu={(event) => event.preventDefault()}
-        onClick={(event) => event.preventDefault()}
-      >
-        <span ref={disc} className="uz-hold-fill" aria-hidden="true" />
-        <UzyraMark className="uz-hold-mark" />
-      </button>
+    <div
+      ref={wrap}
+      className="uz-hold"
+      data-rings={rings ? "" : undefined}
+      data-done={done ? "" : undefined}
+    >
+      <div className="uz-hold-stage">
+        {rings && (
+          <span className="uz-hold-rings" aria-hidden="true">
+            <span className="uz-hold-ring" style={{ "--n": 0 } as CSSProperties} />
+            <span className="uz-hold-ring" style={{ "--n": 1 } as CSSProperties} />
+            <span className="uz-hold-ring" style={{ "--n": 2 } as CSSProperties} />
+          </span>
+        )}
+        <button
+          ref={button}
+          type="button"
+          className="uz-hold-btn"
+          data-done={done ? "" : undefined}
+          disabled={disabled}
+          aria-label={`${label}: اضغط مطوّلاً لبدء المكالمة`}
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            event.currentTarget.setPointerCapture(event.pointerId);
+            press();
+          }}
+          onPointerUp={release}
+          onPointerCancel={release}
+          onLostPointerCapture={release}
+          onBlur={release}
+          onKeyDown={(event) => {
+            if (event.key === " " || event.key === "Enter") {
+              event.preventDefault();
+              if (!event.repeat) press();
+            }
+          }}
+          onKeyUp={(event) => {
+            if (event.key === " " || event.key === "Enter") {
+              event.preventDefault();
+              release();
+            }
+          }}
+          onContextMenu={(event) => event.preventDefault()}
+          onClick={(event) => event.preventDefault()}
+        >
+          <span ref={disc} className="uz-hold-fill" aria-hidden="true" />
+          <UzyraMark className="uz-hold-mark" />
+        </button>
+      </div>
       <p className="uz-hold-label" aria-hidden="true">
         {label}
       </p>

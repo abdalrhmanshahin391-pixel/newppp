@@ -1,0 +1,788 @@
+/* The free conversation (RitaRealtimeV3 without a lesson, FreeTalk.tsx) in the home page's look:
+   a white page, ink type, a Google Sans Flex 450 headline, the hero's field of marks gathered
+   around Uzyra's cube, white and black pills. Scoped to `.uz-rc-shell` / `.uz-rc-page`: lessons
+   and books keep the plain study column (`.uz-rc-*` in styles.css). */
+main.uz-rc-shell {
+  --ft-font: "Uzyra Arabic", "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  --ft-ink: #121212;
+  --ft-muted: #5f5f66;
+  --ft-soft: #6e6e76;
+  --ft-line: #e6e6eb;
+  --ft-blue: #3c82f6;
+  --ft-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  background: #fff;
+}
+.uz-rc.uz-rc-page {
+  --rc-page: #fff;
+  background: #fff;
+}
+
+/* ── The row under the top bar: back, «مباشر» while connected, saved ───────────────────────── */
+main.uz-rc-shell .uz-rc-top {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  max-width: 720px;
+  padding: 6px 16px 0;
+}
+main.uz-rc-shell .uz-rc-back {
+  justify-self: start;
+  color: var(--ft-muted);
+}
+main.uz-rc-shell .uz-rc-top > .uz-rc-saved {
+  grid-column: 3;
+  justify-self: end;
+  text-align: end;
+}
+.ft-live {
+  grid-column: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  margin: 0;
+  padding-inline: 12px 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--ft-line);
+  color: var(--ft-ink);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  animation: ft-in 360ms var(--ft-ease) both;
+}
+.ft-live-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #c4c4cc;
+}
+.ft-live[data-ready] .ft-live-dot {
+  background: var(--ft-blue);
+}
+.ft-live[data-ready] .ft-live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--ft-blue);
+  animation: ft-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes ft-ping {
+  75%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+@keyframes ft-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@media (max-width: 440px) {
+  .ft-live-more {
+    display: none;
+  }
+}
+
+/* ── Before the call ────────────────────────────────────────────────────────────────────────── */
+.uz-rc-page .ft-hero {
+  position: relative;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  font-family: var(--ft-font);
+}
+/* Centred when it fits; from the top (and scrolling) when the screen is short. */
+.ft-hero::before,
+.ft-hero::after {
+  content: "";
+  flex: 1 0 0;
+}
+.ft-hero > :not(.ft-marks) {
+  position: relative;
+  z-index: 1;
+}
+/* The home hero's field of marks; its ring hugs the cube (useDotField `around`). It fades out
+   towards the bottom, so the controls sit on plain white. */
+.ft-marks {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(#000 30%, transparent 72%);
+  mask-image: linear-gradient(#000 30%, transparent 72%);
+}
+.uz-rc-page .ft-spot.uz-rc-spot.is-hero {
+  flex: none;
+  width: clamp(88px, min(28vw, 15vh), 140px);
+  margin-block: clamp(20px, 3.6vh, 40px) clamp(24px, 4vh, 44px);
+}
+/* A hairline orbit with one mark riding it, and a soft shadow on the floor under the cube. */
+.ft-orbit {
+  position: absolute;
+  inset: -24%;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(18 18 18 / 0.1);
+  animation: ft-spin 24s linear infinite;
+}
+.ft-orbit-dot {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border-radius: 50%;
+  background: var(--ft-ink);
+  box-shadow: 0 0 0 4px #fff;
+}
+.ft-floor {
+  position: absolute;
+  left: 50%;
+  bottom: -9%;
+  width: 64%;
+  height: 11%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(18 18 18 / 0.22), rgb(18 18 18 / 0));
+  translate: -50% 0;
+  animation: ft-breathe 3.2s ease-in-out infinite alternate;
+}
+@keyframes ft-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+@keyframes ft-breathe {
+  to {
+    scale: 0.84;
+    opacity: 0.65;
+  }
+}
+.ft-kicker {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 clamp(8px, 1.6vh, 14px);
+  padding: 5px 0;
+  padding-inline: 12px 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--ft-line);
+  color: var(--ft-ink);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.ft-kicker-mark {
+  width: 7px;
+  height: 7px;
+  border-radius: 1.5px;
+  background: var(--ft-ink);
+  rotate: 45deg;
+}
+.edith-premium.uz-rc-page h1.ft-title {
+  flex: none;
+  margin: 0;
+  color: var(--ft-ink);
+  font-family: var(--ft-font);
+  font-size: clamp(30px, min(5.2vw, 6vh), 56px) !important;
+  font-weight: 450;
+  line-height: 1.12 !important;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+.ft-word {
+  display: inline-block;
+  white-space: pre;
+  opacity: 0;
+  translate: 0 0.35em;
+  transition:
+    opacity 0.45s var(--ft-ease),
+    translate 0.6s var(--ft-ease);
+  transition-delay: calc(140ms + var(--i) * 90ms);
+}
+.ft-title[data-shown="on"] .ft-word {
+  opacity: 1;
+  translate: none;
+}
+.ft-lead {
+  flex: none;
+  max-width: 30rem;
+  margin: clamp(6px, 1.2vh, 12px) auto 0;
+  color: var(--ft-muted);
+  font-size: clamp(15px, 1.5vw, 17px);
+  line-height: 1.6;
+}
+/* What to talk about and the explanation language: stacked on phones, side by side when wide. */
+.ft-options {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, 2.2vh, 20px);
+  width: 100%;
+  margin-top: clamp(16px, 3vh, 30px);
+}
+.ft-topics,
+.ft-explain {
+  width: min(100%, 520px);
+}
+.ft-explain {
+  width: min(100%, 380px);
+}
+@media (min-width: 960px) {
+  .ft-options {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 44px;
+  }
+  .ft-topics {
+    width: auto;
+  }
+}
+.ft-topics-label,
+.xl-seg-label {
+  margin: 0 0 8px;
+  color: var(--ft-soft, #6e6e76);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.ft-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.ft-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding-inline: 13px 15px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    inset 0 0 0 1px var(--ft-line),
+    0 1px 2px rgb(18 18 18 / 0.04);
+  color: var(--ft-ink);
+  font-size: 14.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    box-shadow 200ms ease,
+    transform 140ms ease;
+}
+.ft-chip svg {
+  flex: none;
+  color: var(--ft-muted);
+  transition: color 180ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .ft-chip[aria-pressed="false"]:hover {
+    box-shadow:
+      inset 0 0 0 1px #cdcdd4,
+      0 6px 16px -8px rgb(18 18 18 / 0.22);
+  }
+}
+.ft-chip:active {
+  transform: scale(0.97);
+}
+.ft-chip[aria-pressed="true"] {
+  background: var(--ft-ink);
+  box-shadow: 0 10px 22px -12px rgb(18 18 18 / 0.6);
+  color: #fff;
+}
+.ft-chip[aria-pressed="true"] svg {
+  color: #fff;
+}
+.ft-chip:focus-visible,
+.xl-seg > button:focus-visible {
+  outline: 2px solid var(--ft-blue, #3c82f6);
+  outline-offset: 2px;
+}
+.ft-topics-hint,
+.xl-seg-hint {
+  margin: 6px 0 0;
+  color: var(--ft-soft, #6e6e76);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.ft-topics-hint {
+  min-height: 1.5em;
+}
+/* "Uzyra explains in" as one track with a black pill sliding under the choice. */
+.xl-seg-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.xl-seg {
+  --xl-dir: 1;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 100%;
+  padding: 4px;
+  border-radius: 999px;
+  background: #f2f2f4;
+  box-shadow: inset 0 0 0 1px #e8e8ec;
+}
+[dir="rtl"] .xl-seg {
+  --xl-dir: -1;
+}
+.xl-seg-pill {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  inset-inline-start: 4px;
+  width: calc((100% - 8px) / 3);
+  border-radius: 999px;
+  background: var(--ft-ink, #121212);
+  box-shadow: 0 6px 16px -8px rgb(18 18 18 / 0.6);
+  transform: translateX(calc(var(--xl-at, 0) * 100% * var(--xl-dir)));
+  transition: transform 340ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.xl-seg > button {
+  position: relative;
+  z-index: 1;
+  min-height: 36px;
+  padding-inline: 6px;
+  border-radius: 999px;
+  color: var(--ft-muted, #5f5f66);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 240ms ease;
+}
+.xl-seg > button[aria-checked="true"] {
+  color: #fff;
+}
+@media (hover: hover) and (pointer: fine) {
+  .xl-seg > button[aria-checked="false"]:hover {
+    color: var(--ft-ink, #121212);
+  }
+}
+.xl-seg-hint {
+  max-width: 40ch;
+  text-align: center;
+}
+/* A call that is starting or failed, said right above the circle (clear of its rings). */
+.uz-rc-page .ft-dock-note {
+  max-width: 34rem;
+  margin: 2px auto 0;
+  text-align: center;
+}
+.uz-rc-page .ft-dock-note:last-of-type {
+  margin-bottom: 22px;
+}
+/* Phones: the topics are one row that scrolls sideways (the last one peeks in at the edge). */
+@media (max-width: 560px) {
+  .uz-rc-page .ft-hero {
+    padding-inline: 16px;
+  }
+  .ft-topics {
+    width: calc(100% + 32px);
+    margin-inline: -16px;
+  }
+  .ft-chips {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    padding: 2px 16px 6px;
+    overflow-x: auto;
+    scroll-padding-inline: 16px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+  }
+  .ft-chips::-webkit-scrollbar {
+    display: none;
+  }
+  .ft-chip {
+    scroll-snap-align: start;
+  }
+}
+/* Phones and short screens: the language's explanation line, the lead and the topics' label step
+   aside (the chips and the line under them still say what they are). */
+@media (max-width: 560px) {
+  .ft-options {
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .xl-seg-hint {
+    display: none;
+  }
+}
+@media (max-height: 720px) {
+  .ft-lead {
+    display: none;
+  }
+}
+@media (max-width: 560px) and (max-height: 700px) {
+  .ft-topics-label {
+    display: none;
+  }
+}
+
+/* The circle to hold: a little larger, with thin rings that pulse out while it waits and close in
+   on it as it fills (HoldToStart `rings`, its fill in --fill). */
+.uz-rc-page .uz-hold-btn {
+  width: 92px;
+  height: 92px;
+}
+.uz-rc-page .uz-hold-mark {
+  height: 32px;
+}
+.uz-rc-page .uz-hold-label {
+  color: var(--ft-soft);
+  font-size: 12.5px;
+}
+/* Room above the circle for its rings, so they stay clear of the controls over it. */
+.uz-rc-page .uz-hold[data-rings] {
+  padding-top: 14px;
+}
+.uz-rc-page .uz-rc-connecting {
+  min-height: 142px;
+}
+.uz-hold-rings {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 240ms ease;
+}
+.uz-hold-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(18 18 18 / 0.24);
+  opacity: 0;
+  animation: uz-hold-pulse 3s cubic-bezier(0.2, 0.6, 0.35, 1) infinite;
+  animation-delay: calc(var(--n) * 1s);
+}
+@keyframes uz-hold-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+.uz-hold[data-filling] .uz-hold-ring {
+  --s: calc(1.15 + var(--n) * 0.15);
+  animation: none;
+  transform: scale(calc(var(--s) - (var(--s) - 1) * var(--fill, 0)));
+  opacity: calc(0.2 + var(--fill, 0) * 0.65);
+}
+.uz-hold[data-done] .uz-hold-rings,
+.uz-hold:has(.uz-hold-btn:disabled) .uz-hold-rings {
+  opacity: 0;
+}
+
+/* ── During the call ────────────────────────────────────────────────────────────────────────── */
+.uz-rc-page .uz-rc-chat {
+  gap: 30px;
+  max-width: 680px;
+  padding: 28px 20px 34px;
+}
+/* Before anything is said: one light line in the middle of the empty page. */
+.uz-rc-page .uz-rc-chat {
+  min-height: 100%;
+}
+.ft-empty {
+  margin-block: auto;
+  padding: 24px 8px;
+  text-align: center;
+  font-family: var(--ft-font);
+  animation: ft-in 420ms var(--ft-ease) both;
+}
+.ft-empty-title {
+  color: var(--ft-ink);
+  font-size: clamp(24px, 3.4vw, 34px);
+  font-weight: 450;
+  line-height: 1.2;
+}
+.ft-empty-text {
+  margin-top: 8px;
+  color: var(--ft-muted);
+  font-size: 15px;
+}
+.uz-rc-page .uz-rc-rita {
+  color: #1d1d1f;
+  font-size: 15.5px;
+  line-height: 1.9;
+}
+.uz-rc-page .uz-rc-meta {
+  gap: 10px;
+  margin-bottom: 8px;
+  padding-bottom: 0;
+  border-bottom: 0;
+  color: var(--ft-soft);
+  font-size: 12.5px;
+}
+.uz-rc-page .uz-rc-avatar {
+  width: 28px;
+  height: 28px;
+  background: var(--ft-ink);
+  box-shadow: none;
+  color: #fff;
+}
+.uz-rc-page .uz-rc-avatar svg {
+  height: 13px;
+}
+/* The learner's words: a black bubble on the other side, its last corner tucked in. */
+.uz-rc-page .uz-rc-you {
+  max-width: min(82%, 520px);
+  padding: 10px 17px;
+  border-radius: 22px;
+  border-end-end-radius: 7px;
+  background: var(--ft-ink);
+  box-shadow: 0 12px 26px -18px rgb(18 18 18 / 0.7);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.65;
+}
+.uz-rc-page .uz-rc-you :is(button, bdi).rounded-md {
+  background: rgb(255 255 255 / 0.15);
+  color: #fff;
+}
+.uz-rc-page .uz-rc-you .uz-rc-tag {
+  background: rgb(255 255 255 / 0.16);
+  color: rgb(255 255 255 / 0.88);
+}
+/* What the learner is saying right now: a light outline that fills in as they speak. */
+.uz-rc-page .uz-rc-you.is-live {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--ft-line);
+  color: var(--ft-muted);
+}
+.uz-rc-page .uz-rc-you.is-live > :last-child::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-inline-start: 3px;
+  vertical-align: -0.15em;
+  background: var(--ft-blue);
+  animation: ft-caret 1s steps(1) infinite;
+}
+@keyframes ft-caret {
+  50% {
+    opacity: 0;
+  }
+}
+/* The dock sits a little over the end of the conversation, which fades out under it. */
+.uz-rc-page .uz-rc-dock {
+  position: relative;
+  z-index: 2;
+  margin-top: -20px;
+  padding: 6px 16px max(14px, env(safe-area-inset-bottom));
+  background: linear-gradient(rgb(255 255 255 / 0), #fff 20px);
+}
+.uz-rc-page[data-phase="intro"] .uz-rc-dock {
+  z-index: auto;
+  margin-top: 0;
+  background: transparent;
+}
+.ft-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 58px;
+  animation: ft-in 420ms var(--ft-ease) both;
+}
+.uz-rc-page .ft-dock-spot.uz-rc-spot.is-dock {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  margin: 0;
+}
+/* The halo behind the cube: blue with Uzyra's voice, grey with the learner's. */
+.ft-dock-spot::before {
+  content: "";
+  position: absolute;
+  inset: -62%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(60 130 246 / 0.34), rgb(60 130 246 / 0));
+  opacity: calc(0.25 + var(--lvl, 0) * 0.75);
+  scale: calc(0.7 + var(--lvl, 0) * 0.75);
+}
+.ft-stage[data-voice="you"] .ft-dock-spot::before {
+  background: radial-gradient(closest-side, rgb(18 18 18 / 0.16), rgb(18 18 18 / 0));
+}
+.ft-wave {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 30px;
+}
+/* The bar nearest the cube is the first on both sides. */
+.ft-wave:not(.is-end) {
+  flex-direction: row-reverse;
+}
+.ft-wave i {
+  display: block;
+  width: 3px;
+  height: 100%;
+  border-radius: 3px;
+  background: #d2d2d8;
+  transform: scaleY(0.16);
+  transition: background-color 260ms ease;
+  will-change: transform;
+}
+.ft-stage[data-voice="uzyra"] .ft-wave i {
+  background: var(--ft-blue);
+}
+.ft-stage[data-voice="you"] .ft-wave i {
+  background: var(--ft-ink);
+}
+.uz-rc-page .uz-rc-dock .uz-rc-word.is-small {
+  margin-top: 0;
+  color: var(--ft-soft);
+  font-size: 12.5px;
+}
+/* The composer: a white field with a black send, and under it the call's tools on a black island. */
+.uz-rc-page .ft-bar.uz-rc-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 680px;
+  margin: 8px auto 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.ft-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 56px;
+  padding: 6px;
+  padding-inline-start: 18px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    inset 0 0 0 1px var(--ft-line),
+    0 14px 32px -20px rgb(18 18 18 / 0.4);
+  transition: box-shadow 180ms ease;
+}
+.ft-field:focus-within {
+  box-shadow:
+    inset 0 0 0 1px #c6c6ce,
+    0 16px 36px -20px rgb(18 18 18 / 0.5);
+}
+.ft-field .uz-rc-input {
+  flex: 1;
+  padding-inline: 2px;
+}
+.ft-field .uz-rc-input::placeholder {
+  color: var(--ft-soft);
+}
+.uz-rc-page .ft-field .uz-rc-send {
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  background: var(--ft-ink);
+}
+.uz-rc-page .ft-field .uz-rc-send:disabled {
+  background: #d6d6dc;
+}
+.ft-island {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+  border-radius: 999px;
+  background: var(--ft-ink);
+  box-shadow:
+    0 18px 36px -18px rgb(18 18 18 / 0.75),
+    inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+.uz-rc-page .ft-island .uz-rc-icon {
+  width: 46px;
+  height: 46px;
+  color: rgb(255 255 255 / 0.88);
+}
+.uz-rc-page .ft-island .uz-rc-chip-tag {
+  height: 46px;
+  padding-inline: 14px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 14px;
+}
+.uz-rc-page .ft-island .uz-rc-count {
+  background: #fff;
+  color: var(--ft-ink);
+}
+@media (hover: hover) and (pointer: fine) {
+  .uz-rc-page .ft-island .uz-rc-icon:hover,
+  .uz-rc-page .ft-island .uz-rc-chip-tag.is-button:hover {
+    background: rgb(255 255 255 / 0.12);
+    color: #fff;
+  }
+}
+/* The microphone off: a white circle with the red sign, so it cannot be missed. */
+.uz-rc-page .ft-island .uz-rc-icon[aria-pressed="true"] {
+  background: #fff;
+  color: #c4320a;
+}
+.uz-rc-page .ft-island .uz-rc-icon.is-end {
+  background: #e5484d;
+  color: #fff;
+}
+@media (hover: hover) and (pointer: fine) {
+  .uz-rc-page .ft-island .uz-rc-icon.is-end:hover {
+    background: #d63a40;
+    color: #fff;
+  }
+}
+.uz-rc-page .ft-island :is(.uz-rc-icon, .uz-rc-chip-tag):focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px;
+}
+.uz-rc-page .ft-island .uz-rc-icon:active,
+.uz-rc-page .ft-island .uz-rc-chip-tag:active {
+  transform: scale(0.94);
+}
+@media (max-width: 560px) {
+  .ft-stage {
+    height: 50px;
+  }
+  .ft-field {
+    min-height: 52px;
+  }
+  .uz-rc-page .ft-field .uz-rc-send {
+    width: 40px;
+    height: 40px;
+  }
+  .uz-rc-page .ft-bar.uz-rc-bar {
+    gap: 8px;
+  }
+  .uz-rc-page .ft-island .uz-rc-icon,
+  .uz-rc-page .ft-island .uz-rc-chip-tag {
+    height: 44px;
+  }
+  .uz-rc-page .ft-island .uz-rc-icon {
+    width: 44px;
+  }
+}

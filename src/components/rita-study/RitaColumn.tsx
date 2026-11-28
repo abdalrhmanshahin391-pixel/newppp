@@ -9,7 +9,8 @@ const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayout
  * Holds Uzyra's cube over the column and moves it to whichever spot is showing: the big one in the
  * middle before the call (`data-cube-spot="hero"`), the small one just above the message bar once
  * the call starts (`data-cube-spot="dock"`). The move is one transform (translate + scale) with a
- * spring-like curve, so the cube flies down and shrinks in one motion; resizing places it at once.
+ * spring-like curve, so the cube flies down and shrinks in one motion; resizing places it at once,
+ * and a change around its spot that moves the spot (a line coming or going) moves it with it.
  */
 export function FlyingCube({ chatting, children }: { chatting: boolean; children: ReactNode }) {
   const holder = useRef<HTMLDivElement>(null);
@@ -19,10 +20,10 @@ export function FlyingCube({ chatting, children }: { chatting: boolean; children
     const el = holder.current;
     const column = el?.parentElement;
     if (!el || !column) return;
+    const selector = `[data-cube-spot="${chatting ? "dock" : "hero"}"]`;
+    let placed = "";
     const place = (animate: boolean) => {
-      const spot = column.querySelector<HTMLElement>(
-        `[data-cube-spot="${chatting ? "dock" : "hero"}"]`,
-      );
+      const spot = column.querySelector<HTMLElement>(selector);
       if (!spot) return;
       const box = column.getBoundingClientRect();
       const rect = spot.getBoundingClientRect();
@@ -30,8 +31,11 @@ export function FlyingCube({ chatting, children }: { chatting: boolean; children
       const scale = rect.width / CUBE_PX;
       const x = rect.left - box.left + rect.width / 2 - CUBE_PX / 2;
       const y = rect.top - box.top + rect.height / 2 - CUBE_PX / 2;
+      const transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${scale.toFixed(4)})`;
+      if (transform === placed) return;
+      placed = transform;
       el.style.transition = animate ? "" : "none";
-      el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${scale.toFixed(4)})`;
+      el.style.transform = transform;
       el.style.opacity = "1";
     };
     place(!first.current);
@@ -45,7 +49,35 @@ export function FlyingCube({ chatting, children }: { chatting: boolean; children
       place(false);
     });
     observer.observe(column);
-    return () => observer.disconnect();
+    // The part of the column the spot is in (the hero or the dock) can move the spot without
+    // resizing the column: a line wrapping, a message coming or going, the composer rising in.
+    // The cube follows with its usual motion.
+    let block = column.querySelector<HTMLElement>(selector);
+    while (block && block.parentElement !== column) block = block.parentElement;
+    const follow = () => place(true);
+    const sizes = new ResizeObserver(follow);
+    const watch = () => {
+      if (!block) return;
+      sizes.observe(block);
+      for (const child of Array.from(block.children)) sizes.observe(child);
+    };
+    const lines = new MutationObserver(() => {
+      watch();
+      follow();
+    });
+    // On a short screen that part may scroll: the cube scrolls with its spot.
+    const scrolled = () => place(false);
+    if (block) {
+      watch();
+      lines.observe(block, { childList: true });
+      block.addEventListener("scroll", scrolled, { passive: true });
+    }
+    return () => {
+      observer.disconnect();
+      sizes.disconnect();
+      lines.disconnect();
+      block?.removeEventListener("scroll", scrolled);
+    };
   }, [chatting]);
 
   return (
