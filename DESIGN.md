@@ -1538,10 +1538,35 @@ lesson whose guide is not linked says "بدون دليل مربوط" and offers 
 until it is linked). The kind can be changed later in the lesson window, tab «الدراسة التفاعلية».
 
 The free conversation (`/rita-live` without a lesson) uses this same column as a full page
-(`.uz-rc-shell`): the site's top bar, a quiet row with «محادثاتي» (back) and whether the conversation is
-saved (12px #8B8D98, red with «أعد المحاولة» when it failed), then the column. Its intro adds «محادثة حرة»
-(22px bold), one 14px line and the "Uzyra explains in" choice under the cube. No voice orb; the orb
-stays only on spoken lessons with exercises (`/rita-live?lesson=`).
+(`.uz-rc-shell`), and since Nov 2026 in the home page's look (`FreeTalk.tsx`, `free-talk.css`, scoped
+to `.uz-rc-shell` / `.uz-rc-page`; lessons and books keep the plain column below). White page; under
+the site's top bar a row with «محادثاتي» (back), «● مباشر مع يوزرا» in the middle while connected (a
+30px white pill, its blue dot pinging; «عم نوصلك بيوزرا…» with a grey dot before Uzyra is ready; only
+«مباشر» under 440px) and whether the conversation is saved (red with «أعد المحاولة» when it failed).
+No voice orb; the orb stays only on spoken lessons with exercises (`/rita-live?lesson=`).
+
+- **Start screen:** the home hero's field of marks behind the top, its ring hugging Uzyra's cube
+  (`useDotField(…, around)`: the ring is measured against the cube, ×2.6) and fading out before the
+  controls. The cube large (88–140px, by the screen's width and height) inside a hairline orbit with
+  one ink mark riding it (24s a turn) and a soft shadow breathing under it; «◆ محادثة حرة» in a white
+  pill; the headline «احكي، ويوزرا بتسمعك.» (Google Sans Flex / Graphik Arabic 450, 30–56px) whose
+  words come in one after another; one muted line. Then "Uzyra
+  explains in" as one grey track with a black pill sliding under the choice (`ExplanationLanguageControl
+  variant="segmented"`, 340ms). On short screens the lead (≤720px tall) and the language's line
+  (phones) step aside; whatever is left scrolls, and the cube moves with it. A failed or starting call
+  says so right above the circle. There are no topic pills: the site has none, so do not add them back.
+- **Hold to start:** the circle is 92px and thin rings pulse out of it while it waits; held, they
+  close in on it with the fill (`HoldToStart rings`, the fill in `--fill`) and vanish when it is full.
+- **During the call:** before anything is said the empty page says «يوزرا بتستنّاك تحكي.» (or «لحظة، عم
+  نوصلك…»). Uzyra's text 15.5px at 1.9, her mark in a 28px black circle; the learner's words in black
+  bubbles (radius 22, the last corner 7) and what they are saying now as a white outlined bubble with
+  a blinking blue caret. Above the composer, Uzyra's cube (46px) with a halo that grows with the voice
+  and nine bars on each side (`CallStage`): blue while Uzyra speaks, ink while the learner speaks,
+  resting grey otherwise; what she is doing («بسمعك…», «بتحكي…») under it (not beside her answer).
+  The composer is a white 56px pill with the field and a black round send; under it the call's tools
+  on a black island: microphone (white circle with a red sign when off), stop Uzyra (while she
+  speaks), «كلماتي» with its count, and ending the call as a red circle. The cube follows its spot
+  when the composer or a line under it changes (`FlyingCube` watches the part it sits in).
 
 The study page's Uzyra column (`.uz-rc-*`, RitaRealtimeV3 in study mode) follows the ChatGPT / Claude
 chat pages, measured from the owner's reference and scaled ×0.82 so the column keeps that calm,

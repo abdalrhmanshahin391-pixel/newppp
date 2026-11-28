@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type CSSProperties } from "react";
 import { useExplanationLanguage } from "@/hooks/useExplanationLanguage";
 import {
   EXPLANATION_LANGUAGES,
@@ -15,17 +15,22 @@ type Ui = "en" | "ar";
  * works with the keyboard (arrows move, the choice follows focus) and reads well to a screen
  * reader. During a conversation the choice reaches Uzyra straight away; the page's own words tell
  * the learner it applies from her next answer.
+ *
+ * `segmented` (the free conversation): one track with a black pill that slides under the choice.
  */
 export function ExplanationLanguageControl({
   ui = "en",
   live,
   onChange,
+  variant = "choice",
 }: {
   ui?: Ui;
   /** A conversation is running: the hint says "from her next answer". */
   live: boolean;
   onChange?: (value: ExplanationLanguage) => void;
+  variant?: "choice" | "segmented";
 }) {
+  const segmented = variant === "segmented";
   const { value, setValue } = useExplanationLanguage();
   const labelId = useId();
   const hintId = useId();
@@ -49,16 +54,26 @@ export function ExplanationLanguageControl({
   }
 
   return (
-    <div className="mt-4 w-full max-w-sm text-start">
-      <p id={labelId} dir="auto" className="text-[14px] font-semibold text-[var(--pp-muted)]">
+    <div className={segmented ? "xl-seg-wrap" : "mt-4 w-full max-w-sm text-start"}>
+      <p
+        id={labelId}
+        dir="auto"
+        className={segmented ? "xl-seg-label" : "text-[14px] font-semibold text-[var(--pp-muted)]"}
+      >
         {ui === "ar" ? "يوزرا بتشرح بـ" : "Uzyra explains in"}
       </p>
       <div
         role="radiogroup"
         aria-labelledby={labelId}
         aria-describedby={hintId}
-        className="rita-choice mt-2"
+        className={segmented ? "xl-seg" : "rita-choice mt-2"}
+        style={
+          segmented
+            ? ({ "--xl-at": EXPLANATION_LANGUAGES.indexOf(value) } as CSSProperties)
+            : undefined
+        }
       >
+        {segmented && <span className="xl-seg-pill" aria-hidden="true" />}
         {EXPLANATION_LANGUAGES.map((option, index) => (
           <button
             key={option}
@@ -80,7 +95,9 @@ export function ExplanationLanguageControl({
         dir="auto"
         role="status"
         aria-live="polite"
-        className="mt-2 text-[14px] leading-[1.4] text-[var(--pp-muted)]"
+        className={
+          segmented ? "xl-seg-hint" : "mt-2 text-[14px] leading-[1.4] text-[var(--pp-muted)]"
+        }
       >
         {explanationHint(value, ui, live)}
       </p>
