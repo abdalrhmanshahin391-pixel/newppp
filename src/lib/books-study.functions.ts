@@ -67,10 +67,13 @@ type BookData = z.infer<typeof BookInput>;
 type Failure = { ok: false; code: string; message: string; retryAfter?: number };
 
 /** This month's Groq requests are used up: the practice window says so, with no retry. */
-async function groqUsedUp(context: { supabase: any }): Promise<Failure | null> {
-  const { takeGroqRequest, GROQ_REQUESTS_USED_TEXT } = await import("@/lib/groq-requests.server");
-  if (await takeGroqRequest(context.supabase)) return null;
-  return { ok: false, code: "groq_requests_used", message: GROQ_REQUESTS_USED_TEXT };
+async function groqUsedUp(context: { supabase: any; userId?: string }): Promise<Failure | null> {
+  const { takeGroqRequestFor } = await import("@/lib/groq-requests.server");
+  const taken = await takeGroqRequestFor(context);
+  if (taken.ok) return null;
+  return taken.reason === "used"
+    ? { ok: false, code: "groq_requests_used", message: taken.message }
+    : { ok: false, code: "failed", message: taken.message };
 }
 export type BookTextResult = { ok: true; quote: string; text: string } | Failure;
 export type BookCardsResult = { ok: true; cards: StudyCard[] } | Failure;
@@ -258,9 +261,9 @@ export const bookStudyText = createServerFn({ method: "POST" })
     const { resolveRitaV3Key } = await import("@/lib/rita-v3.server");
     const key = await resolveRitaV3Key("groq", "GROQ_API_KEY");
     if (!key) return { ok: false, code: "failed", message: "يوزرا مش متاحة هلأ. جرّب كمان شوي." };
-    const { takeGroqRequest, GROQ_REQUESTS_USED_TEXT } = await import("@/lib/groq-requests.server");
-    if (!(await takeGroqRequest(context.supabase)))
-      return { ok: false, code: "failed", message: GROQ_REQUESTS_USED_TEXT };
+    const { takeGroqRequestFor } = await import("@/lib/groq-requests.server");
+    const taken = await takeGroqRequestFor(context);
+    if (!taken.ok) return { ok: false, code: "failed", message: taken.message };
     try {
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",

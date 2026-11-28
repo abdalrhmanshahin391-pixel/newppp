@@ -46,6 +46,42 @@ export async function voiceRpc<T>(name: string, args: Record<string, unknown>): 
 export const freeTalkBudget = (userId: string) =>
   voiceRpc<FreeTalkBudget>("free_talk_budget", { p_user: userId });
 
+/** Admins have no voice limit, even when the voice-time functions in the database fail. */
+export async function isVoiceAdmin(userId: string) {
+  try {
+    const { data } = await (supabaseAdmin as any)
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    return !!data;
+  } catch {
+    return false;
+  }
+}
+
+/** The budget for the top bar: an admin whose budget can't be read still sees "unlimited". */
+export async function freeTalkBudgetForPage(userId: string): Promise<FreeTalkBudget> {
+  try {
+    return await freeTalkBudget(userId);
+  } catch (error) {
+    if (!(await isVoiceAdmin(userId))) throw error;
+    return {
+      enabled: true,
+      unlimited: true,
+      remainingSeconds: null,
+      availableSeconds: null,
+      limitSeconds: null,
+      period: "admin",
+      resetsAt: null,
+      serverNow: new Date().toISOString(),
+      activeSessionId: null,
+      activeDeadline: null,
+    };
+  }
+}
+
 /**
  * What the whiteboard may do with its voice before it starts a step:
  * - "on": speak (and charge each clip);
@@ -57,6 +93,7 @@ export const freeTalkBudget = (userId: string) =>
 export type BoardVoice = "on" | "call" | "none" | "over" | "off";
 
 export async function boardVoice(userId: string): Promise<BoardVoice> {
+  if (await isVoiceAdmin(userId)) return "on";
   try {
     const budget = await freeTalkBudget(userId);
     if (budget.unlimited) return "on";
@@ -77,7 +114,20 @@ export type BoardCharge = {
 };
 
 /** Take one clip's exact length (ms) from the learner's voice time; `ref` makes it happen once. */
-export const chargeBoardVoice = (userId: string, milliseconds: number, ref: string) =>
+export async function chargeBoardVoice(
+  userId: string,
+  milliseconds: number,
+  ref: string,
+): Promise<BoardCharge> {
+  try {
+    return await rawBoardCharge(userId, milliseconds, ref);
+  } catch (error) {
+    // An admin's clip is never held back by a failing charge.
+    if (await isVoiceAdmin(userId)) return { charged: true, unlimited: true };
+    throw error;
+  }
+}
+const rawBoardCharge = (userId: string, milliseconds: number, ref: string) =>
   voiceRpc<BoardCharge>("voice_board_charge", {
     p_user: userId,
     p_ms: milliseconds,

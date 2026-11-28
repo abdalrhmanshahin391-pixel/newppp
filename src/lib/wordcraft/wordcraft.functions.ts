@@ -70,8 +70,9 @@ export const wordcraftRound = createServerFn({ method: "POST" })
       return fallback("no_key");
     }
     // A round from the model is one Groq request; with none left the game plays a list round.
-    const { takeGroqRequest } = await import("@/lib/groq-requests.server");
-    if (!(await takeGroqRequest(context.supabase))) return fallback("used_up");
+    const { takeGroqRequestFor } = await import("@/lib/groq-requests.server");
+    const taken = await takeGroqRequestFor(context);
+    if (!taken.ok) return fallback(taken.reason === "used" ? "used_up" : "busy");
     const theme = THEMES[Math.floor(Math.random() * THEMES.length)];
     const asked = await askPracticeModel({
       fetch: (input, init) => fetch(input, init),

@@ -129,9 +129,9 @@ export const studyBoardStep = createServerFn({ method: "POST" })
     const voice = await boardVoice(context.userId);
     if (voice === "over") return { ok: false, message: BOARD_TIME_OVER_TEXT, timeOver: true };
     const speaks = voice === "on";
-    const { takeGroqRequest, GROQ_REQUESTS_USED_TEXT } = await import("@/lib/groq-requests.server");
-    if (!(await takeGroqRequest(context.supabase)))
-      return { ok: false, message: GROQ_REQUESTS_USED_TEXT };
+    const { takeGroqRequestFor } = await import("@/lib/groq-requests.server");
+    const taken = await takeGroqRequestFor(context);
+    if (!taken.ok) return { ok: false, message: taken.message };
     const language =
       data.language === "automatic"
         ? data.question && !/[\u0600-\u06ff]/.test(data.question)

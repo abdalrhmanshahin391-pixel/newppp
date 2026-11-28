@@ -39,7 +39,8 @@ async function planForPrice(priceId?: string | null, planSlug?: string | null) {
       `paddle_price_monthly.eq.${priceId},paddle_price_yearly.eq.${priceId},paddle_price_once.eq.${priceId}`,
     )
     .maybeSingle();
-  if (data && planSlug && data.slug !== planSlug) throw new Error("Payment price does not match the requested plan");
+  if (data && planSlug && data.slug !== planSlug)
+    throw new Error("Payment price does not match the requested plan");
   return data as Record<string, any> | null;
 }
 
@@ -163,30 +164,79 @@ async function handleSubscriptionCreated(data: any, env: PaddleEnv) {
   await recordWebhookPaymentMethod(userId, data, env);
 }
 
+/** The row we stored for a Paddle subscription (its learner and plan). */
+async function storedSubscription(subscriptionId: string, env: PaddleEnv) {
+  const { data } = await (getSupabase() as any)
+    .from("subscriptions")
+    .select("user_id, plan_slug")
+    .eq("paddle_subscription_id", subscriptionId)
+    .eq("environment", env)
+    .maybeSingle();
+  return (data ?? null) as { user_id: string; plan_slug: string | null } | null;
+}
+
+/** A subscription ended: the plan of another one still running, else the free plan. */
+async function planAfterEnd(userId: string, env: PaddleEnv) {
+  const { data } = await (getSupabase() as any)
+    .from("subscriptions")
+    .select("plan_slug")
+    .eq("user_id", userId)
+    .eq("environment", env)
+    .in("status", ["active", "trialing"])
+    .not("plan_slug", "is", null)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  await putOnPlan(userId, data?.plan_slug ?? "starter");
+}
+
+/**
+ * Renewals, plan changes (a new price from Paddle's portal) and status changes. A new plan takes
+ * effect at once: its minutes and requests follow the plan (see quota_plan_slug()).
+ */
 async function handleSubscriptionUpdated(data: any, env: PaddleEnv) {
+  const item = data?.items?.[0];
+  const priceId = item?.price?.id || item?.price?.importMeta?.externalId;
+  const plan = priceId ? await planForPrice(priceId, null).catch(() => null) : null;
+  const stored = await storedSubscription(data.id, env);
+  const update: Record<string, unknown> = {
+    status: data.status,
+    current_period_start: data.currentBillingPeriod?.startsAt,
+    current_period_end: data.currentBillingPeriod?.endsAt,
+    cancel_at_period_end: data.scheduledChange?.action === "cancel",
+    updated_at: new Date().toISOString(),
+  };
+  if (plan?.slug) {
+    update.plan_slug = plan.slug;
+    update.price_id = priceId;
+  }
   await (getSupabase() as any)
     .from("subscriptions")
-    .update({
-      status: data.status,
-      current_period_start: data.currentBillingPeriod?.startsAt,
-      current_period_end: data.currentBillingPeriod?.endsAt,
-      cancel_at_period_end: data.scheduledChange?.action === "cancel",
-      updated_at: new Date().toISOString(),
-    })
+    .update(update)
     .eq("paddle_subscription_id", data.id)
     .eq("environment", env);
+
+  const userId = data?.customData?.userId || stored?.user_id;
+  if (!userId) return;
+  if (data.status === "canceled") await planAfterEnd(userId, env);
+  else if (
+    plan?.slug &&
+    plan.slug !== stored?.plan_slug &&
+    (data.status === "active" || data.status === "trialing")
+  )
+    await putOnPlan(userId, plan.slug);
 }
 
 async function handleSubscriptionCanceled(data: any, env: PaddleEnv) {
-  const db = getSupabase() as any;
-  await db
+  const stored = await storedSubscription(data.id, env);
+  await (getSupabase() as any)
     .from("subscriptions")
     .update({ status: "canceled", updated_at: new Date().toISOString() })
     .eq("paddle_subscription_id", data.id)
     .eq("environment", env);
 
-  const userId = data?.customData?.userId;
-  if (userId) await putOnPlan(userId, "starter");
+  const userId = data?.customData?.userId || stored?.user_id;
+  if (userId) await planAfterEnd(userId, env);
 }
 
 async function handleWebhook(req: Request, env: PaddleEnv) {

@@ -2,6 +2,7 @@ import { useVoiceTime } from "@/hooks/useVoiceTime";
 import { voiceTimeLabel } from "@/lib/free-talk-time";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { VoiceTime } from "./VoiceTime";
+import { EmithRequests } from "./EmithRequests";
 import { useCallback, useId, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Clock3, Infinity as InfinityIcon } from "lucide-react";
@@ -137,6 +138,7 @@ export function CreditsMeter({
       </div>
 
       <VoiceTime />
+      <EmithRequests />
       {offerName && (
         <div className="rh-offer">
           <p className="font-bold">{offerName} is active</p>
