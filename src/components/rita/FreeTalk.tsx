@@ -1,49 +1,21 @@
 // The free conversation's own look (free-talk.css): its start screen in the home page's language
-// (the field of marks gathered around Uzyra's cube, a headline that comes in word by word, topics
-// to open with, the explanation language as one sliding switch) and, during the call, Uzyra's cube
+// (the field of marks gathered around Uzyra's cube, a headline that comes in word by word, the
+// explanation language as one sliding switch) and, during the call, Uzyra's cube
 // with a halo and two small bars of voice beside it, and the «مباشر» line at the top. Lessons and
 // books keep the plain study column.
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type CSSProperties,
-  type MutableRefObject,
-} from "react";
-import { Clapperboard, Handshake, Plane, Sun, type LucideIcon } from "lucide-react";
+import { useEffect, useRef, useState, type CSSProperties, type MutableRefObject } from "react";
 import { useDotField } from "@/components/page-hero/useDotField";
 import type { OrbLevels } from "@/components/rita-live/VoiceOrb";
 import type { ExplanationLanguage } from "@/lib/explanation-language";
 import { ExplanationLanguageControl } from "./ExplanationLanguageControl";
 import "./free-talk.css";
 
-export type FreeTalkTopic = {
-  id: string;
-  /** On the chip. */
-  label: string;
-  /** Sent as the learner's first message once Uzyra is connected, so she opens with it. */
-  say: string;
-  icon: LucideIcon;
-};
-
-export const FREE_TALK_TOPICS: readonly FreeTalkTopic[] = [
-  { id: "meet", label: "نتعرّف على بعض", say: "خلينا نتعرّف على بعض.", icon: Handshake },
-  { id: "day", label: "يومي", say: "خلينا نحكي عن يومي.", icon: Sun },
-  { id: "trip", label: "سفرة بحلم فيها", say: "خلينا نحكي عن سفرة بحلم فيها.", icon: Plane },
-  { id: "film", label: "فيلم شفته", say: "خلينا نحكي عن فيلم شفته.", icon: Clapperboard },
-];
-
 const HEADLINE = "احكي، ويوزرا بتسمعك.";
 
 export function FreeTalkIntro({
-  topic,
-  onTopic,
   live,
   onExplanation,
 }: {
-  topic: FreeTalkTopic | null;
-  onTopic: (topic: FreeTalkTopic | null) => void;
   /** A call is running (the language hint then says "from her next answer"). */
   live: boolean;
   onExplanation: (value: ExplanationLanguage) => void;
@@ -51,7 +23,6 @@ export function FreeTalkIntro({
   const hero = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const spot = useRef<HTMLDivElement>(null);
-  const topicsId = useId();
   // The marks gather around the cube; the headline's words come in once it is on screen.
   useDotField(hero, canvas, undefined, spot);
   const [shown, setShown] = useState(false);
@@ -88,43 +59,6 @@ export function FreeTalkIntro({
       <p className="ft-lead">احكي عن أي إشي. يوزرا بترد بصوتها وبتصحّحلك بلطف.</p>
 
       <div className="ft-options">
-        <div className="ft-topics" role="group" aria-labelledby={topicsId}>
-          <p id={topicsId} className="ft-topics-label">
-            عن شو بدك نحكي؟
-          </p>
-          <div className="ft-chips">
-            {FREE_TALK_TOPICS.map((item) => {
-              const Icon = item.icon;
-              const on = topic?.id === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  className="ft-chip"
-                  aria-pressed={on}
-                  onClick={(event) => {
-                    onTopic(on ? null : item);
-                    // On a phone the row scrolls: bring a chip that was half off the edge in.
-                    event.currentTarget.scrollIntoView({
-                      behavior: "smooth",
-                      block: "nearest",
-                      inline: "nearest",
-                    });
-                  }}
-                >
-                  <Icon size={16} strokeWidth={1.8} aria-hidden="true" />
-                  {item.label}
-                </button>
-              );
-            })}
-          </div>
-          <p className="ft-topics-hint" role="status" aria-live="polite">
-            {topic
-              ? `لما تبلّش، يوزرا بتفتح الحكي عن «${topic.label}».`
-              : "اختياري: أو احكي عن أي إشي ببالك."}
-          </p>
-        </div>
-
         <div className="ft-explain">
           <ExplanationLanguageControl
             ui="ar"

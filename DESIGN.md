@@ -1550,16 +1550,11 @@ No voice orb; the orb stays only on spoken lessons with exercises (`/rita-live?l
   controls. The cube large (88–140px, by the screen's width and height) inside a hairline orbit with
   one ink mark riding it (24s a turn) and a soft shadow breathing under it; «◆ محادثة حرة» in a white
   pill; the headline «احكي، ويوزرا بتسمعك.» (Google Sans Flex / Graphik Arabic 450, 30–56px) whose
-  words come in one after another; one muted line. Then «عن شو بدك نحكي؟» with four white topic pills
-  (icon + words: «نتعرّف على بعض», «يومي», «سفرة بحلم فيها», «فيلم شفته»; the chosen one black, tap again
-  to drop it) and a line saying what happens («لما تبلّش، يوزرا بتفتح الحكي عن «يومي».»); and "Uzyra
+  words come in one after another; one muted line. Then "Uzyra
   explains in" as one grey track with a black pill sliding under the choice (`ExplanationLanguageControl
-  variant="segmented"`, 340ms). Side by side from 960px; stacked on phones, where the topics are one row
-  that scrolls sideways (the last one fades at the edge). On short screens the lead (≤720px tall), the
-  language's line (phones) and the topics' label (short phones) step aside; whatever is left scrolls,
-  and the cube moves with it. A failed or starting call says so right above the circle.
-- **Opening topic:** a chosen topic is sent once as the learner's first message when Uzyra is ready
-  (she waits for the learner in a free conversation), so she opens with it; it shows as their bubble.
+  variant="segmented"`, 340ms). On short screens the lead (≤720px tall) and the language's line
+  (phones) step aside; whatever is left scrolls, and the cube moves with it. A failed or starting call
+  says so right above the circle. There are no topic pills: the site has none, so do not add them back.
 - **Hold to start:** the circle is 92px and thin rings pulse out of it while it waits; held, they
   close in on it with the fill (`HoldToStart rings`, the fill in `--fill`) and vanish when it is full.
 - **During the call:** before anything is said the empty page says «يوزرا بتستنّاك تحكي.» (or «لحظة، عم

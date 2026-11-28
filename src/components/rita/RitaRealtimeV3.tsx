@@ -77,7 +77,7 @@ import {
 } from "@/lib/rita-voice-connection";
 import { MetricQueue } from "@/lib/metric-queue";
 import { ExplanationLanguageControl } from "@/components/rita/ExplanationLanguageControl";
-import { CallStage, FreeTalkIntro, LivePill, type FreeTalkTopic } from "@/components/rita/FreeTalk";
+import { CallStage, FreeTalkIntro, LivePill } from "@/components/rita/FreeTalk";
 import type { RitaConversationDelivery, RitaConversationSource } from "@/lib/rita-conversation";
 import { ASSISTANT_NAME_AR, BRAND_NAME, FREE_CONVERSATION_OPENER } from "@/lib/brand";
 
@@ -330,10 +330,6 @@ export function RitaRealtimeV3({
   const [error, setError] = useState("");
   const [caption, setCaption] = useState("");
   const [draft, setDraft] = useState("");
-  // The free conversation's opening topic: sent once as the learner's first message when Uzyra is
-  // ready, so she opens with it (in a free conversation she waits for the learner to speak first).
-  const [topic, setTopic] = useState<FreeTalkTopic | null>(null);
-  const topicSent = useRef(false);
   const [historyLoading, setHistoryLoading] = useState(Boolean(conversationId && !lessonId));
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
   const [messages, setMessages] = useState<Message[]>([
@@ -1792,7 +1788,7 @@ export function RitaRealtimeV3({
     await sendLine(text);
   }
 
-  /** The learner's typed words (or the chosen opening topic): shown, saved, and sent to Uzyra. */
+  /** The learner's typed words : shown, saved, and sent to Uzyra. */
   async function sendLine(text: string) {
     if (!client.current?.connected) return;
     lastUserText.current = text;
@@ -1811,16 +1807,7 @@ export function RitaRealtimeV3({
     await client.current.sendText(text);
   }
 
-  // A topic picked on the free conversation's start screen opens it, once, as soon as Uzyra is
-  // ready (a call that failed before that sends it on the next try).
   const freeTalkPage = !study && !lessonId && !sample;
-  useEffect(() => {
-    if (!freeTalkPage || !readyForSpeech || !topic || topicSent.current) return;
-    topicSent.current = true;
-    void sendLine(topic.say);
-    // sendLine belongs to this render; the topic goes once, when Uzyra becomes ready.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [freeTalkPage, readyForSpeech, topic]);
 
   if (loading || !user) {
     return (
@@ -2027,8 +2014,6 @@ export function RitaRealtimeV3({
           </StickyScroll>
         ) : freeTalk ? (
           <FreeTalkIntro
-            topic={topic}
-            onTopic={setTopic}
             live={active}
             onExplanation={explanationChanged}
           />
