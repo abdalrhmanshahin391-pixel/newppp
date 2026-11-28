@@ -74,7 +74,8 @@ test("cards: a rule with nothing to learn gives none, and the limit holds", () =
   );
   assert.equal(many.length, 2);
   assert.equal(maxCards("one"), 1);
-  assert.equal(maxCards(Array(60).fill("w").join(" ")), 12);
+  assert.equal(maxCards(Array(60).fill("w").join(" ")), 8);
+  assert.equal(maxCards(Array(60).fill("w").join(" "), "terms"), 8);
 });
 
 const GOOD = {
@@ -427,4 +428,103 @@ test("word cards hold a word or a short expression from the text; sentence cards
   assert.match(cardsSystemPrompt(6, "terms"), /IMPORTANT WORDS AND EXPRESSIONS/);
   assert.match(cardsSystemPrompt(6, "sentences"), /whole sentences/);
   assert.equal(maxCards("One. Two three. Four five six.", "sentences"), 3);
+});
+
+// A paragraph as a PDF page gives it: words broken at line ends, with a hyphen and a space.
+const BOOK =
+  "In this chapter the author dis- cusses why politi- cians often put the truth in a subordinate place, and how they pick it up again when it suits them. Knowledge for its own sake, he says, takes this into account.";
+
+test("word cards: broken PDF words, other forms and split expressions are found in the text", async () => {
+  const reply = {
+    cards: [
+      { front: "discusses", back: "بيناقش (discuss)", note: "the author dis- cusses why" },
+      { front: "politi- cians", back: "السياسيين (politician)", note: "" },
+      { front: "subordinate place", back: "مكانة ثانوية", note: "" },
+      { front: "pick up", back: "يرجع يتبنّاها", note: "pick it up again" },
+      { front: "for its own sake", back: "لذاتها", note: "" },
+      { front: "take into account", back: "ياخد بعين الاعتبار", note: "" },
+      { front: "election", back: "انتخابات", note: "" },
+      { front: "truthful", back: "صادق", note: "" },
+      { front: "discuss", back: "يناقش", note: "" },
+    ],
+  };
+  const { joinBrokenWords } = await import("./study-practice.ts");
+  assert.equal(
+    joinBrokenWords("dis\u00ADcusses politi-\ncians a well-known Anglo- Saxon"),
+    "discusses politicians a well-known Anglo- Saxon",
+    "a soft hyphen or a hyphen at a line end joins; a real hyphen and a capital stay",
+  );
+  const cards = cleanCards(reply, BOOK, 8, "terms");
+  assert.deepEqual(
+    cards.map((card) => card.front),
+    [
+      "discusses",
+      "politicians",
+      "subordinate place",
+      "pick up",
+      "for its own sake",
+      "take into account",
+    ],
+    "a broken word counts whole, a word not in the text is dropped, the same word again too",
+  );
+  assert.equal(cards[0].note, "the author discusses why", "the note is shown with the word whole");
+  assert.deepEqual(
+    cleanCards({ cards: [{ front: "discuss", back: "يناقش" }] }, BOOK, 8, "terms").map(
+      (card) => card.front,
+    ),
+    ["discuss"],
+    "the dictionary form of a word in the text is kept",
+  );
+  const german = "Die Kinder spielen im Garten, und der Hund schläft unter dem Tisch.";
+  assert.deepEqual(
+    cleanCards(
+      {
+        cards: [
+          { front: "Kind", back: "ولد" },
+          { front: "spielt", back: "بيلعب" },
+          { front: "die Katze", back: "القطة" },
+        ],
+      },
+      german,
+      8,
+      "terms",
+    ).map((card) => card.front),
+    ["Kind", "spielt"],
+  );
+  const words = "a b c d e f g h i j k l".split(" ").map((w) => `${w}${w}${w}ing`);
+  const many = cleanCards(
+    { cards: words.map((front) => ({ front, back: "معنى" })) },
+    words.join(" "),
+    8,
+    "terms",
+  );
+  assert.equal(many.length, 8, "the limit of eight holds");
+});
+
+test("sentence cards still copy the text exactly; the prompts ask for every useful item", async () => {
+  const { cardsSystemPrompt } = await import("./study-practice.ts");
+  const sentence =
+    "In this chapter the author discusses why politicians often put the truth in a subordinate place, and how they pick it up again when it suits them.";
+  assert.equal(
+    cleanCards({ cards: [{ front: sentence, back: "معنى الجملة" }] }, BOOK, 8, "sentences").length,
+    1,
+    "a sentence with broken words is found once they are joined",
+  );
+  assert.equal(
+    cleanCards(
+      { cards: [{ front: sentence.replace("discusses", "discuss"), back: "معنى الجملة" }] },
+      BOOK,
+      8,
+      "sentences",
+    ).length,
+    0,
+    "a changed sentence is not in the text",
+  );
+  for (const style of ["terms", "sentences"] as const) {
+    const prompt = cardsSystemPrompt(8, style);
+    assert.doesNotMatch(prompt, /fewer is better/);
+    assert.match(prompt, /Up to 8 cards|up to 8 cards/);
+    assert.match(prompt, /dis- cusses/);
+  }
+  assert.match(cardsSystemPrompt(8, "terms"), /phrasal verbs/);
 });
