@@ -8848,6 +8848,8 @@ export type Database = {
           subject_id: string
         }[]
       }
+      groq_request_status: { Args: never; Returns: Json }
+      groq_request_status_for: { Args: { p_user: string }; Returns: Json }
       groq_request_take: { Args: never; Returns: Json }
       groq_request_take_for: { Args: { p_user: string }; Returns: Json }
       has_role: {
@@ -8953,6 +8955,7 @@ export type Database = {
         Args: { _set_id: string; _space_id?: string }
         Returns: Json
       }
+      quota_plan_slug: { Args: { p_user: string }; Returns: string }
       rate_deck: {
         Args: {
           _deck_id: string

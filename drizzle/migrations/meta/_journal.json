@@ -127,6 +127,13 @@
       "when": 1795805538990,
       "tag": "0017_voice_board_time",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795858109097,
+      "tag": "0018_plan_quotas",
+      "breakpoints": true
     }
   ]
 }
