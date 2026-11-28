@@ -8262,11 +8262,6 @@ html.rita-app,
 }
 
 /* Keep history headings compact against the shared premium display heading rule. */
-.edith-premium h1.conversation-heading {
-  font-size: clamp(1.75rem, 3vw, 2.25rem) !important;
-  line-height: 1.15 !important;
-}
-
 /* ---- The study wheel (RadialMenu.tsx): one whole wheel of touching slices, grown out of the
    circle, each slice in a fixed place with its own colour (--c, "r g b"). ---- */
 .st-orb {

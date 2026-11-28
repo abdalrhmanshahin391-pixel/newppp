@@ -1,0 +1,1050 @@
+/* «My conversations» (/rita-conversations) in the home page's language (Nov 2026): the PageHero top,
+   Google Sans Flex at 450–500, ink and white with neutral greys, round pills, 20–28px corners.
+   Everything is scoped to `.cv`; the menus and windows that open in a portal carry `.cv` too. */
+.cv {
+  --cv-font: "Uzyra Arabic", "Google Sans Flex", "Figtree", Helvetica, Arial, sans-serif;
+  --cv-mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, monospace;
+  --cv-ink: #121212;
+  --cv-body: #2b2b31;
+  --cv-muted: #5f5f67;
+  --cv-faint: #74747d;
+  --cv-line: #e4e4e7;
+  --cv-line-strong: #d4d4d8;
+  --cv-soft: #f4f4f5;
+  --cv-hover: #f6f6f7;
+  --cv-danger: #b3213f;
+  --cv-danger-soft: #fdf1f3;
+  --cv-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  color: var(--cv-ink);
+  -webkit-font-smoothing: antialiased;
+}
+main.cv,
+.cv.cv-sheet,
+.cv.cv-dialog,
+.cv.cv-menu {
+  font-family: var(--cv-font);
+}
+.cv :is(button, input) {
+  font-family: inherit;
+}
+
+/* The top: the shared PageHero, the way back pinned over its corner, one black pill under it. */
+.cv-top {
+  position: relative;
+}
+.cv-top .ph-hero {
+  padding-top: 92px;
+}
+.cv-back {
+  position: absolute;
+  z-index: 2;
+  top: 20px;
+  inset-inline-start: max(24px, calc((100% - 1040px) / 2));
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px 0 10px;
+  border-radius: 999px;
+  color: var(--cv-muted);
+  font-family: var(--cv-font);
+  font-size: 14.5px;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background-color 0.18s var(--cv-ease),
+    color 0.18s var(--cv-ease);
+}
+.cv-back:hover {
+  background: var(--cv-soft);
+  color: var(--cv-ink);
+}
+.cv-back:focus-visible {
+  outline: 2px solid var(--cv-ink);
+  outline-offset: 2px;
+}
+[dir="rtl"] .cv-back svg {
+  transform: scaleX(-1);
+}
+.cv-hero-actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* Buttons: an ink pill for the main action, white/outlined for the rest. */
+.cv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-family: var(--cv-font);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.18s var(--cv-ease),
+    border-color 0.18s var(--cv-ease),
+    color 0.18s var(--cv-ease),
+    box-shadow 0.25s var(--cv-ease),
+    transform 0.12s var(--cv-ease);
+}
+.cv-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.cv-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.cv-btn:focus-visible {
+  outline: 2px solid var(--cv-ink);
+  outline-offset: 2px;
+}
+.cv-btn-lg {
+  height: 50px;
+  padding: 0 24px 0 20px;
+  font-size: 16px;
+}
+.cv-btn-dark {
+  background: var(--cv-ink);
+  color: #fff;
+}
+.cv-btn-dark:hover:not(:disabled) {
+  background: #2e2e33;
+  box-shadow: 0 14px 30px -18px rgb(0 0 0 / 0.55);
+}
+.cv-btn-light {
+  border-color: var(--cv-line-strong);
+  background: #fff;
+  color: var(--cv-ink);
+}
+.cv-btn-light:hover:not(:disabled) {
+  border-color: var(--cv-ink);
+}
+.cv-btn-danger {
+  background: var(--cv-danger);
+  color: #fff;
+}
+.cv-btn-danger:hover:not(:disabled) {
+  background: #941a30;
+}
+.cv-icon-btn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--cv-muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.18s var(--cv-ease),
+    color 0.18s var(--cv-ease);
+}
+.cv-icon-btn:hover:not(:disabled),
+.cv-icon-btn[data-state="open"] {
+  background: #ececef;
+  color: var(--cv-ink);
+}
+.cv-icon-btn:focus-visible {
+  outline: 2px solid var(--cv-ink);
+  outline-offset: 1px;
+}
+.cv-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.cv-spin {
+  animation: cv-spin 0.8s linear infinite;
+}
+@keyframes cv-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The page under the top */
+.cv-wrap {
+  width: min(100% - 48px, 1040px);
+  margin-inline: auto;
+  padding-bottom: 112px;
+}
+.cv-alert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 24px;
+  padding: 14px 16px 14px 18px;
+  border: 1px solid #f0d0d7;
+  border-radius: 18px;
+  background: var(--cv-danger-soft);
+  color: var(--cv-danger);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.cv-alert > span {
+  flex: 1 1 220px;
+}
+
+/* Admin tools: a closed grey pill (only admins see it). */
+.cv-admin details {
+  margin-top: 8px !important;
+}
+.cv-admin summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px !important;
+  padding: 0 14px !important;
+  border-radius: 999px;
+  background: var(--cv-soft);
+  color: var(--cv-body);
+  font-size: 14px;
+  font-weight: 500;
+  list-style: none;
+  cursor: pointer;
+}
+.cv-admin summary::-webkit-details-marker {
+  display: none;
+}
+.cv-admin summary::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-inline-end: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  rotate: -45deg;
+  transition: rotate 0.2s var(--cv-ease);
+}
+[dir="rtl"] .cv-admin summary::before {
+  rotate: 45deg;
+}
+.cv-admin details[open] summary::before {
+  rotate: 45deg;
+}
+.cv-admin summary:focus-visible {
+  outline: 2px solid var(--cv-ink);
+  outline-offset: 2px;
+}
+.cv-admin .rita-admin-bar {
+  margin-top: 12px;
+  border-radius: 18px;
+}
+
+/* «Your conversations» head and its tools */
+.cv-section {
+  margin-top: 48px;
+}
+.cv-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px 24px;
+}
+.cv-head-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.cv .cv-h2 {
+  margin: 0;
+  font-family: var(--cv-font);
+  font-size: 32px;
+  font-weight: 450;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+.cv-n {
+  color: var(--cv-muted);
+  font-family: var(--cv-mono);
+  font-size: 15px;
+}
+.cv-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+}
+.cv-search {
+  display: inline-flex;
+  flex: 1 1 240px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--cv-soft);
+  color: var(--cv-muted);
+  transition:
+    border-color 0.15s var(--cv-ease),
+    background-color 0.15s var(--cv-ease);
+}
+.cv-search:focus-within {
+  border-color: var(--cv-ink);
+  background: #fff;
+}
+.cv-search input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--cv-ink);
+  font-size: 16px;
+}
+.cv-search input::placeholder {
+  color: var(--cv-faint);
+}
+.cv-search input:focus {
+  outline: none;
+}
+.cv-search input::-webkit-search-cancel-button {
+  display: none;
+}
+.cv-search-clear {
+  width: 28px;
+  height: 28px;
+  margin-inline-end: -8px;
+}
+.cv-seg {
+  display: inline-flex;
+  flex: none;
+  gap: 4px;
+  max-width: 100%;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--cv-soft);
+}
+.cv-seg button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--cv-muted);
+  font-size: 14.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.18s var(--cv-ease),
+    color 0.18s var(--cv-ease),
+    box-shadow 0.18s var(--cv-ease);
+}
+.cv-seg-icons button {
+  width: 40px;
+  padding: 0;
+}
+.cv-seg button:hover {
+  color: var(--cv-ink);
+}
+.cv-seg button[aria-pressed="true"] {
+  background: #fff;
+  color: var(--cv-ink);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.08),
+    0 0 0 1px rgb(0 0 0 / 0.04);
+}
+.cv-seg button:focus-visible {
+  outline: 2px solid var(--cv-ink);
+  outline-offset: 1px;
+}
+
+/* Groups: «Pinned», «Today», «This week», «Earlier» on a hairline. */
+.cv-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  margin-top: 28px;
+}
+.cv .cv-group-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--cv-line);
+  color: var(--cv-muted);
+  font-family: var(--cv-font);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+.cv-group-title .cv-n {
+  font-size: 12.5px;
+}
+
+/* One conversation. The title is the link and stretches over the whole row or card; the menu
+   and the admin's tools sit above it. */
+.cv-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "mark open actions"
+    ". details details";
+  align-items: center;
+  column-gap: 14px;
+  border-radius: 20px;
+  transition:
+    background-color 0.2s var(--cv-ease),
+    border-color 0.2s var(--cv-ease),
+    box-shadow 0.3s var(--cv-ease),
+    transform 0.3s var(--cv-ease);
+}
+.cv-mark {
+  display: grid;
+  grid-area: mark;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: var(--cv-soft);
+  color: var(--cv-ink);
+  transition:
+    background-color 0.2s var(--cv-ease),
+    color 0.2s var(--cv-ease);
+}
+.cv-item[data-empty="true"] .cv-mark {
+  border: 1px dashed var(--cv-line-strong);
+  background: #fff;
+  color: var(--cv-faint);
+}
+.cv-open {
+  display: flex;
+  grid-area: open;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.cv-open::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: 20px;
+}
+.cv-grid .cv-open::after {
+  border-radius: 24px;
+}
+.cv-open:focus-visible {
+  outline: none;
+}
+.cv-open:focus-visible::after {
+  outline: 2px solid var(--cv-ink);
+  outline-offset: 2px;
+}
+.cv-title {
+  overflow: hidden;
+  font-size: 16.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* An Arabic title in an English list (or the other way round) keeps the list's side. */
+[dir="ltr"] :is(.cv-title, .cv-sheet-title) {
+  text-align: left;
+}
+[dir="rtl"] :is(.cv-title, .cv-sheet-title) {
+  text-align: right;
+}
+.cv-item[data-empty="true"] .cv-title {
+  color: var(--cv-body);
+}
+.cv-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--cv-muted);
+  font-size: 14px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+.cv-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+.cv-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: var(--cv-soft);
+  color: var(--cv-body);
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.cv-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  grid-area: actions;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+.cv-actions > * {
+  pointer-events: auto;
+}
+.cv-actions > .cv-go {
+  pointer-events: none;
+}
+.cv-go {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--cv-muted);
+  transition:
+    background-color 0.2s var(--cv-ease),
+    color 0.2s var(--cv-ease),
+    transform 0.3s var(--cv-ease);
+}
+[dir="rtl"] .cv-go svg {
+  transform: scaleX(-1);
+}
+.cv-details {
+  position: relative;
+  z-index: 1;
+  grid-area: details;
+  min-width: 0;
+}
+.cv-details:empty {
+  display: none;
+}
+.cv-details .cv-chip {
+  margin-top: 10px;
+}
+
+/* As a list: rows that light up grey under the pointer. */
+.cv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-inline: -12px;
+}
+.cv-list .cv-item {
+  padding: 12px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cv-list .cv-item:hover {
+    background: var(--cv-hover);
+  }
+  .cv-list .cv-item:hover .cv-mark {
+    background: #fff;
+  }
+  .cv-item:hover .cv-go {
+    background: var(--cv-ink);
+    color: #fff;
+    transform: translate(2px, -2px);
+  }
+  [dir="rtl"] .cv-item:hover .cv-go {
+    transform: translate(-2px, -2px);
+  }
+}
+
+/* As cards: white, 24px corners, the arrow in the corner. */
+.cv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
+  gap: 14px;
+  margin-top: 4px;
+}
+.cv-grid .cv-item {
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "mark . actions"
+    "open open open"
+    "details details details";
+  align-items: start;
+  min-height: 196px;
+  padding: 18px 18px 20px 20px;
+  border: 1px solid var(--cv-line);
+  border-radius: 24px;
+  background: #fff;
+}
+.cv-grid .cv-mark {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+}
+.cv-grid .cv-open {
+  align-self: end;
+  gap: 6px;
+  margin-top: 22px;
+  padding-inline-end: 44px;
+}
+.cv-grid .cv-title {
+  display: -webkit-box;
+  font-size: 19px;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+/* The arrow leaves the menu's row for the card's bottom corner. */
+.cv-grid .cv-actions {
+  position: static;
+  margin-top: -4px;
+  margin-inline-end: -6px;
+}
+.cv-grid .cv-actions > :not(.cv-go) {
+  position: relative;
+  z-index: 1;
+}
+.cv-grid .cv-go {
+  position: absolute;
+  inset-inline-end: 18px;
+  bottom: 18px;
+  background: var(--cv-soft);
+  color: var(--cv-ink);
+}
+.cv-grid .cv-details {
+  padding-inline-end: 44px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cv-grid .cv-item:hover {
+    border-color: var(--cv-line-strong);
+    box-shadow: 0 22px 48px -32px rgb(0 0 0 / 0.42);
+    transform: translateY(-2px);
+  }
+}
+
+/* Loading bones, nothing yet, nothing found */
+.cv-bone {
+  display: block;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #f0f0f2, #e6e6e9, #f0f0f2);
+  background-size: 200% 100%;
+  animation: cv-bone 1.4s ease-in-out infinite;
+}
+@keyframes cv-bone {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+.cv-bone-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+}
+.cv-bone-title {
+  width: min(62%, 320px);
+  height: 16px;
+}
+.cv-bone-line {
+  width: min(36%, 180px);
+  height: 12px;
+  margin-top: 10px;
+}
+.cv-bone-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+}
+.cv-bone-row > div {
+  flex: 1;
+}
+.cv-list .cv-bone-row {
+  padding: 12px;
+}
+.cv-grid .cv-bone-row {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-height: 196px;
+  padding: 20px;
+  border: 1px solid var(--cv-line);
+  border-radius: 24px;
+}
+.cv-grid .cv-bone-row > div {
+  flex: none;
+  width: 100%;
+}
+.cv-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  padding: 52px 24px;
+  border: 1px dashed var(--cv-line-strong);
+  border-radius: 28px;
+  background: #fafafa;
+  text-align: center;
+}
+.cv-empty-sm {
+  padding: 32px 20px;
+  border-radius: 22px;
+}
+.cv-empty-cube {
+  display: grid;
+  width: 60px;
+  height: 60px;
+}
+.cv-empty-cube > * {
+  width: 100%;
+  height: 100%;
+}
+.cv .cv-empty-title {
+  margin: 6px 0 0;
+  font-family: var(--cv-font);
+  font-size: 22px;
+  font-weight: 450;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+.cv-empty-text {
+  max-width: 44ch;
+  margin: 0 0 8px;
+  color: var(--cv-muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.cv-note {
+  margin: 16px 0 0;
+  color: var(--cv-danger);
+  font-size: 14.5px;
+}
+
+/* The ⋯ menu, opened in a portal */
+.rita-menu.cv-menu.cv {
+  min-width: 220px;
+  padding: 6px;
+  border-color: var(--cv-line);
+  border-radius: 18px;
+  box-shadow:
+    0 18px 44px -18px rgb(0 0 0 / 0.28),
+    0 2px 6px rgb(0 0 0 / 0.04);
+}
+.cv-menu .rita-menu-item {
+  min-height: 42px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Rename and delete */
+.cv.cv-dialog {
+  width: min(100% - 32px, 460px);
+  gap: 14px;
+  padding: 26px;
+  border: 0;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 40px 90px -40px rgb(0 0 0 / 0.5);
+}
+/* The window's own ✕ sits at the end of the title's line, on either side. */
+.cv.cv-dialog > button.absolute {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  top: 18px;
+  right: auto;
+  left: auto;
+  inset-inline-end: 18px;
+  border-radius: 50%;
+  color: var(--cv-muted);
+  opacity: 1;
+}
+.cv.cv-dialog > button.absolute:hover {
+  background: var(--cv-soft);
+  color: var(--cv-ink);
+}
+.cv.cv-dialog > button.absolute svg {
+  width: 18px;
+  height: 18px;
+}
+.cv .cv-dialog-title {
+  padding-inline-end: 36px;
+  font-family: var(--cv-font);
+  font-size: 22px;
+  font-weight: 450;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+.cv .cv-dialog-text {
+  color: var(--cv-muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.cv-dialog form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.cv-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--cv-body);
+  font-size: 14px;
+  font-weight: 500;
+}
+.cv-input {
+  height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--cv-line-strong);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--cv-ink);
+  font-size: 16px;
+  transition: border-color 0.15s var(--cv-ease);
+}
+.cv-input:focus {
+  border-color: var(--cv-ink);
+  outline: none;
+}
+.cv-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Reading a conversation: a window on wide screens, a sheet from the bottom on phones. */
+.cv-overlay {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  background: rgb(18 18 18 / 0.36);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  animation: cv-fade 0.2s var(--cv-ease);
+}
+.cv.cv-sheet {
+  position: fixed;
+  z-index: 51;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  width: min(100% - 48px, 680px);
+  max-height: min(86vh, 860px);
+  overflow: hidden;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 40px 90px -40px rgb(0 0 0 / 0.5);
+  translate: -50% -50%;
+  animation: cv-rise 0.28s var(--cv-ease);
+}
+.cv.cv-sheet:focus {
+  outline: none;
+}
+@keyframes cv-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes cv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+}
+.cv-sheet-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 22px 18px 18px 24px;
+  border-bottom: 1px solid var(--cv-line);
+}
+.cv-sheet-head > div {
+  flex: 1;
+  min-width: 0;
+}
+.cv .cv-sheet-title {
+  overflow: hidden;
+  margin: 0;
+  font-family: var(--cv-font);
+  font-size: 22px;
+  font-weight: 450;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cv-sheet-meta {
+  margin: 4px 0 0;
+  color: var(--cv-muted);
+  font-size: 14px;
+}
+.cv-sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 24px 28px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.cv-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-width: 84%;
+}
+.cv-bubble.is-you {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+.cv-bubble-who {
+  padding-inline: 6px;
+  color: var(--cv-faint);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.cv-bubble-text {
+  margin: 0;
+  padding: 11px 16px;
+  border-radius: 20px;
+  background: var(--cv-soft);
+  color: var(--cv-ink);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.cv-bubble.is-you .cv-bubble-text {
+  background: var(--cv-ink);
+  color: #fff;
+}
+.cv-sheet-empty {
+  margin: 0;
+  padding: 48px 0;
+  color: var(--cv-muted);
+  font-size: 15px;
+  text-align: center;
+}
+
+/* Phones */
+@media (max-width: 767px) {
+  .cv-top .ph-hero {
+    padding-top: 68px;
+  }
+  .cv-back {
+    top: 14px;
+    inset-inline-start: 12px;
+  }
+  .cv-wrap {
+    width: min(100% - 32px, 1040px);
+  }
+  .cv-section {
+    margin-top: 36px;
+  }
+  .cv .cv-h2 {
+    font-size: 26px;
+  }
+  .cv-tools {
+    width: 100%;
+  }
+  .cv-search {
+    flex-basis: 100%;
+  }
+  .cv-tools .cv-seg:first-of-type {
+    flex: 1;
+  }
+  .cv-tools .cv-seg:first-of-type button {
+    flex: 1;
+    padding: 0 10px;
+  }
+  .cv-list {
+    margin-inline: -8px;
+  }
+  .cv-list .cv-item {
+    column-gap: 12px;
+    padding: 10px 8px;
+  }
+  .cv.cv-sheet {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 28px 28px 0 0;
+    translate: none;
+    animation: cv-up 0.32s var(--cv-ease);
+  }
+  .cv-sheet-head {
+    padding: 20px 12px 16px 20px;
+  }
+  .cv-sheet-body {
+    padding: 18px 16px calc(24px + env(safe-area-inset-bottom));
+  }
+  .cv-bubble {
+    max-width: 90%;
+  }
+  .cv-dialog-actions {
+    flex-direction: column-reverse;
+  }
+  .cv-dialog-actions .cv-btn {
+    width: 100%;
+  }
+}
+@keyframes cv-up {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+}
+@media (max-width: 380px) {
+  .cv-seg button {
+    font-size: 13.5px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cv-bone,
+  .cv-overlay,
+  .cv.cv-sheet {
+    animation: none;
+  }
+  .cv-item,
+  .cv-go {
+    transition: none;
+  }
+}

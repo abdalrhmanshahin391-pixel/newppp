@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Loader2, Plus, X } from "lucide-react";
-import { ProHeader } from "@/components/home/procreate/ProHeader";
+import * as Sheet from "@radix-ui/react-dialog";
+import { SiteHeader } from "@/components/SiteHeader";
+import { PageHero } from "@/components/page-hero/PageHero";
 import { useAuth } from "@/hooks/useAuth";
 import { LanguageGate } from "@/components/language/LanguageGate";
 import {
@@ -24,6 +26,11 @@ import {
 import { saveFile } from "@/lib/save-file";
 import { AdminBar } from "@/components/rita-quality/AdminBar";
 import { ConversationLibrary } from "@/components/rita/ConversationLibrary";
+import {
+  conversationDate,
+  conversationTitle,
+  messageCount,
+} from "@/components/rita/conversation-labels";
 import { useUiLanguage } from "@/components/language/useUiLanguage";
 import { reviewCounts, reviewMark } from "@/lib/rita-quality-next";
 import { ritaRepairFile, ritaRepairFileName } from "@/lib/rita-issue-report";
@@ -464,51 +471,52 @@ function RitaConversationsPage() {
     );
   }
 
+  const dir = ui === "ar" ? "rtl" : "ltr";
   return (
-    <main className="edith-premium min-h-screen bg-white text-[var(--pp-ink)]">
-      <div className="rita-cream edith-light edith-premium">
-        <ProHeader variant="solid" tone="light" />
-      </div>
-      <section className="mx-auto w-full max-w-5xl px-5 pb-20 pt-8 sm:px-8 sm:pt-12">
-        <Link
-          to="/learn"
-          hash="rita"
-          className="inline-flex items-center gap-2 text-[15px] font-semibold text-[var(--pp-muted)] hover:text-[var(--pp-ink)]"
-        >
-          <ArrowLeft size={17} /> Uzyra
+    <main className="edith-premium cv min-h-screen bg-white">
+      <SiteHeader />
+      <div className="cv-top" dir={dir}>
+        <Link to="/learn" hash="rita" className="cv-back">
+          <ArrowLeft size={17} aria-hidden="true" />
+          {t("Uzyra", "يوزرا")}
         </Link>
-        <div
-          dir={ui === "ar" ? "rtl" : "ltr"}
-          className="mt-5 flex flex-wrap items-center justify-between gap-4"
+        <PageHero
+          kicker={t("My conversations", "محادثاتي")}
+          title={t("Pick up where you left off.", "كمّل من وين وقفت.")}
+          lead={t(
+            "Every talk with Uzyra is saved here. Open one to carry on, or start a new one.",
+            "كل محادثة مع يوزرا محفوظة هون. افتح وحدة وكمّل، أو ابدأ وحدة جديدة.",
+          )}
         >
-          <h1 className="conversation-heading font-semibold tracking-tight">
-            {t("My conversations", "محادثاتي")}
-          </h1>
-          <button
-            type="button"
-            onClick={() => void createConversation()}
-            disabled={creating}
-            className="rita-btn rita-btn-primary gap-2 disabled:opacity-50"
-          >
-            {creating ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
-            {t("New conversation", "محادثة جديدة")}
-          </button>
-        </div>
-
-        <AdminBar />
-
-        {error ? (
-          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {error}
-            <button type="button" className="rita-btn ms-3" onClick={() => void refresh()}>
-              {t("Retry", "حاول ثانية")}
+          <div className="cv-hero-actions">
+            <button
+              type="button"
+              onClick={() => void createConversation()}
+              disabled={creating}
+              className="cv-btn cv-btn-dark cv-btn-lg"
+            >
+              {creating ? (
+                <Loader2 size={18} className="cv-spin" aria-hidden="true" />
+              ) : (
+                <Plus size={19} aria-hidden="true" />
+              )}
+              {t("New conversation", "محادثة جديدة")}
             </button>
           </div>
-        ) : null}
+        </PageHero>
+      </div>
 
-        {busy ? (
-          <div className="grid min-h-56 place-items-center">
-            <Loader2 className="animate-spin text-[var(--pp-muted)]" />
+      <div className="cv-wrap" dir={dir}>
+        <div className="cv-admin">
+          <AdminBar />
+        </div>
+
+        {error ? (
+          <div className="cv-alert" role="alert">
+            <span>{error}</span>
+            <button type="button" className="cv-btn cv-btn-light" onClick={() => void refresh()}>
+              {t("Try again", "حاول ثانية")}
+            </button>
           </div>
         ) : null}
 
@@ -517,6 +525,8 @@ function RitaConversationsPage() {
           busy={busy}
           isAdmin={isAdmin}
           userId={user.id}
+          creating={creating}
+          onNew={() => void createConversation()}
           pendingId={opening}
           onTranscript={(conversation) => void openTranscript(conversation)}
           onRename={(conversation, title) =>
@@ -531,11 +541,7 @@ function RitaConversationsPage() {
           onExport={(conversation, format) => void download(conversation, format)}
           renderDetails={(conversation) => (
             <>
-              {isAdmin && (
-                <p className="mt-2 text-sm text-[var(--pp-muted)]">
-                  {reviewMark(marks.get(conversation.id))}
-                </p>
-              )}
+              {isAdmin && <span className="cv-chip">{reviewMark(marks.get(conversation.id))}</span>}
               {opening === conversation.id && busyFormat === "repair" && (
                 <p role="status" className="mt-3 text-sm">
                   {t("Making repair file…", "جارٍ تجهيز ملف الإصلاح…")}
@@ -552,55 +558,65 @@ function RitaConversationsPage() {
             </>
           )}
         />
-      </section>
+      </div>
 
-      {selected ? (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/30 p-0 sm:items-center sm:justify-center sm:p-6">
-          <section className="max-h-[90vh] w-full overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:max-w-3xl sm:rounded-3xl">
-            <div className="flex items-start justify-between border-b border-[var(--pp-line)] p-5 sm:p-6">
-              <div className="min-w-0">
-                <h2 className="truncate text-2xl font-semibold">{selected.conversation.title}</h2>
-                <p className="mt-1 text-sm text-[var(--pp-muted)]">
-                  {selected.messages.length} saved messages
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                className="rounded-full p-2 hover:bg-[var(--pp-grey)]"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="max-h-[65vh] space-y-4 overflow-y-auto p-5 sm:p-6">
-              {selected.messages.length ? (
-                selected.messages.map((message) => (
-                  <div
-                    key={message.client_message_id}
-                    className={`max-w-[88%] rounded-2xl px-4 py-3 ${
-                      message.role === "user" ? "ml-auto bg-blue-50" : "bg-[var(--pp-grey)]"
-                    }`}
-                  >
-                    <p className="text-xs font-bold uppercase tracking-wide text-[var(--pp-muted)]">
-                      {message.role === "user" ? "You" : "Uzyra"}
-                      {message.delivery_status !== "completed"
-                        ? ` · ${message.delivery_status}`
-                        : ""}
-                    </p>
-                    <p className="mt-1 whitespace-pre-wrap text-[16px] leading-7" dir="auto">
-                      {message.content}
+      <Sheet.Root
+        open={Boolean(selected)}
+        onOpenChange={(open) => {
+          if (!open) setSelected(null);
+        }}
+      >
+        <Sheet.Portal>
+          <Sheet.Overlay className="cv-overlay" />
+          <Sheet.Content className="cv cv-sheet" dir={dir} aria-describedby={undefined}>
+            {selected && (
+              <>
+                <header className="cv-sheet-head">
+                  <div>
+                    <Sheet.Title className="cv-sheet-title" dir="auto">
+                      {conversationTitle(selected.conversation, ui)}
+                    </Sheet.Title>
+                    <p className="cv-sheet-meta">
+                      {conversationDate(selected.conversation, ui)} ·{" "}
+                      {messageCount(selected.messages.length, ui)}
                     </p>
                   </div>
-                ))
-              ) : (
-                <p className="py-12 text-center text-[var(--pp-muted)]">
-                  This conversation has no saved messages yet.
-                </p>
-              )}
-            </div>
-          </section>
-        </div>
-      ) : null}
+                  <Sheet.Close className="cv-icon-btn" aria-label={t("Close", "سكّر")}>
+                    <X size={20} aria-hidden="true" />
+                  </Sheet.Close>
+                </header>
+                <div className="cv-sheet-body">
+                  {selected.messages.length ? (
+                    selected.messages.map((message) => (
+                      <div
+                        key={message.client_message_id}
+                        className={`cv-bubble${message.role === "user" ? " is-you" : ""}`}
+                      >
+                        <span className="cv-bubble-who">
+                          {message.role === "user" ? t("You", "إنت") : t("Uzyra", "يوزرا")}
+                          {message.delivery_status !== "completed"
+                            ? ` · ${message.delivery_status}`
+                            : ""}
+                        </span>
+                        <p className="cv-bubble-text" dir="auto">
+                          {message.content}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="cv-sheet-empty">
+                      {t(
+                        "This conversation has no saved messages yet.",
+                        "ما في رسائل محفوظة بهالمحادثة لسا.",
+                      )}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+          </Sheet.Content>
+        </Sheet.Portal>
+      </Sheet.Root>
     </main>
   );
 }
