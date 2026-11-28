@@ -250,13 +250,42 @@ every element's computed colours (`scripts/check-header-menus.mjs`), so a colour
 
 ## Conversation history
 
-The conversation page prioritizes resuming a saved conversation. Use a compact title and new-chat
-action, title search, ordering and a remembered list/cards toggle. Rows use a quiet message icon,
-title, last-activity date, message count and an always-visible action menu suitable for touch.
-Pinned conversations precede recent history. Rename and pin are owner-controlled account data.
-Deletion requires a named confirmation with saved-message consequences. Exports live in a submenu.
-Admin review tools sit in a closed disclosure, with no instructional panel on this page.
-Use the existing white, ink and blue tokens, bilingual labels, logical spacing and 44px targets.
+«My conversations» (`/rita-conversations`) speaks the home page's language since Nov 2026
+(`ConversationLibrary.tsx`, `conversation-labels.ts`, styles in `conversations.css`, all under `.cv`;
+menus and windows in a portal carry `.cv` too). It looks like `/spaces` and `/books`: Google Sans
+Flex at 450–500, ink and white with neutral greys, round pills, 20–28px corners. The page is for
+picking a conversation up again.
+
+- **Top:** `PageHero` («[cube] My conversations», «Pick up where you left off.» / «كمّل من وين
+  وقفت.», one muted line) with a black 50px «+ New conversation» pill under it. «← Uzyra» is a
+  quiet pill pinned over the hero's top corner (the arrow turns in Arabic).
+- **Admin tools** (admins only): a closed grey pill under the hero; the dashed admin strip opens
+  under it.
+- **Head:** «Your conversations» (32px/450, 26 on phones) with the count in mono. Beside it a grey
+  search pill (✕ to clear), the order as a pill switch (Recent / Oldest / A–Z) and a two-icon pill
+  switch for list or cards (remembered per person). On phones the search takes a row, the switches
+  share the next one.
+- **Groups:** pinned first, then «Today», «This week», «Earlier» (only in the Recent order; the
+  other orders are one run under «All conversations», unnamed when nothing is pinned). Each title
+  is 14px muted with its count, on a hairline.
+- **A conversation:** a 44px grey rounded square with a voice-wave icon, the title (one line,
+  `dir="auto"` but on the list's side), then the time today or «28 Nov» (the year only before this
+  one) · the message count (Arabic: «رسالة وحدة», «رسالتين», 3–10 «رسائل», 11+ «رسالة», Latin digits).
+  On the other side a quiet round «⋯» and an arrow that turns ink on hover. The title is the link
+  and covers the whole row; the menu and the admin's tools sit above it. As a list the row lights
+  up grey under the pointer; as cards they are white, 24px corners, the title in two lines at 19px
+  and the arrow in a grey circle in the bottom corner (3 a row at 1280, 2 at 768, 1 on phones).
+  A conversation with no messages has a dashed white square and a «Not started» / «ما بلّشت» chip; an
+  untouched «New conversation» title shows as «محادثة جديدة» in Arabic.
+- **States:** grey bones while loading; nothing yet shows Uzyra's cube, «Your first conversation
+  starts here» and a black «Start a conversation»; a search with no match says so with «Clear
+  search»; a failed load is a soft red line with «Try again». Admins see the review count as a
+  small grey chip under each conversation.
+- **Reading one:** a 680px window with 28px corners (a sheet from the bottom on phones): the title,
+  date and count, ✕; your lines in black bubbles at the end, Uzyra's in grey at the start.
+- **Rename and delete:** a 28px-corner window with the ✕ at the end of the title's line, white
+  «Cancel» and a black «Save name» or red «Delete» pill (stacked, full width, on phones). Deleting
+  names the conversation and says its saved messages go too. Exports stay in the menu's submenu.
 
 ## Settings workspace
 

@@ -17,13 +17,15 @@ document.documentElement.lang=lang;
 document.documentElement.dir=lang==='ar'?'rtl':'ltr';
 await i18n.use(initReactI18next).init({lng:lang,resources:{ar:{translation:{}},en:{translation:{}}}});
 const fixtures=['Planning my next trip','English practice · present simple','مراجعة مفردات الجامعة'].map(title=>new URLSearchParams(location.search).has('stress')?title.repeat(4).slice(0,120):title);
-function Preview(){const [rows,setRows]=useState(new URLSearchParams(location.search).has('empty')?[]:fixtures.map((title,i)=>({id:String(i),title,message_count:12-i,created_at:'2026-11-10T10:00:00Z',last_message_at:'2026-11-10T10:00:00Z',pinned_at:i===1?'2026-11-10T10:00:00Z':null})));return <main className="edith-premium mx-auto max-w-5xl bg-white px-5 py-8 text-[var(--pp-ink)]" dir={lang==='ar'?'rtl':'ltr'}><header className="flex flex-wrap items-center justify-between gap-4"><h1 className="conversation-heading font-semibold">{lang==='ar'?'محادثاتي':'My conversations'}</h1><button className="rita-btn rita-btn-primary">{lang==='ar'?'محادثة جديدة':'New conversation'}</button></header><ConversationLibrary userId="offline-fixture" conversations={rows} busy={new URLSearchParams(location.search).has('loading')} isAdmin={false} pendingId="" renderDetails={()=>null} onTranscript={()=>{}} onExport={()=>{}} onRename={async(c,title)=>{if(title==='fail')throw Error('Fixture save failure');setRows(r=>r.map(x=>x.id===c.id?{...x,title}:x));}} onPin={async c=>setRows(r=>r.map(x=>x.id===c.id?{...x,pinned_at:x.pinned_at?null:new Date().toISOString()}:x))} onDelete={async c=>setRows(r=>r.filter(x=>x.id!==c.id))}/></main>}
+function Preview(){const [rows,setRows]=useState(new URLSearchParams(location.search).has('empty')?[]:fixtures.map((title,i)=>({id:String(i),title,message_count:12-i,created_at:'2026-11-10T10:00:00Z',last_message_at:'2026-11-10T10:00:00Z',pinned_at:i===1?'2026-11-10T10:00:00Z':null})));return <main className="edith-premium mx-auto max-w-5xl bg-white px-5 py-8 text-[var(--pp-ink)]" dir={lang==='ar'?'rtl':'ltr'}><header className="flex flex-wrap items-center justify-between gap-4"><h1 className="conversation-heading font-semibold">{lang==='ar'?'محادثاتي':'My conversations'}</h1><button className="rita-btn rita-btn-primary">{lang==='ar'?'محادثة جديدة':'New conversation'}</button></header><ConversationLibrary userId="offline-fixture" conversations={rows} busy={new URLSearchParams(location.search).has('loading')} isAdmin={false} creating={false} onNew={()=>{}} pendingId="" renderDetails={()=>null} onTranscript={()=>{}} onExport={()=>{}} onRename={async(c,title)=>{if(title==='fail')throw Error('Fixture save failure');setRows(r=>r.map(x=>x.id===c.id?{...x,title}:x));}} onPin={async c=>setRows(r=>r.map(x=>x.id===c.id?{...x,pinned_at:x.pinned_at?null:new Date().toISOString()}:x))} onDelete={async c=>setRows(r=>r.filter(x=>x.id!==c.id))}/></main>}
 const base=createRootRoute();const page=createRoute({getParentRoute:()=>base,path:'/',component:Preview});const router=createRouter({routeTree:base.addChildren([page])});createRoot(document.getElementById('root')).render(<RouterProvider router={router}/>);`;
 const bundle = await build({
   stdin: { contents: entry, loader: "tsx", resolveDir: root },
   bundle: true,
   format: "esm",
   write: false,
+  // The page's own CSS (conversations.css) comes out beside the script.
+  outdir: out,
   alias: { "@": resolve(root, "src") },
   define: { "process.env.NODE_ENV": '"production"' },
 });
@@ -38,14 +40,19 @@ const sources = await Promise.all(
     "src/components/ui/dialog.tsx",
   ].map((p) => readFile(resolve(root, p), "utf8")),
 );
+const script = bundle.outputFiles.find((file) => file.path.endsWith(".js"));
+const pageCss = bundle.outputFiles
+  .filter((file) => file.path.endsWith(".css"))
+  .map((file) => file.text)
+  .join("\n");
 const css = compiler.build([...new Set((sources.join(" ") + entry).match(/[\w!:/.[\]#%(),+-]+/g))]);
 const server = createServer(async (req, res) => {
   if (req.url?.startsWith("/client.js")) {
     res.setHeader("Content-Type", "text/javascript");
-    res.end(bundle.outputFiles[0].text);
+    res.end(script.text);
   } else if (req.url?.startsWith("/client.css")) {
     res.setHeader("Content-Type", "text/css");
-    res.end(css);
+    res.end(css + "\n" + pageCss);
   } else if (req.url?.startsWith("/fonts/")) {
     const publicRoot = resolve(root, "public");
     const path = resolve(publicRoot, "." + new URL(req.url, "http://localhost").pathname);

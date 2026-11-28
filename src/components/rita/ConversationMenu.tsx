@@ -9,12 +9,18 @@ export function ConversationMenu({
   isAdmin,
   busy,
   pinned = false,
+  triggerClassName = "rita-btn rita-btn-soft rita-btn-icon disabled:opacity-50",
+  contentClassName = "",
   onAction,
 }: {
   title: string;
   isAdmin: boolean;
   busy: boolean;
   pinned?: boolean;
+  /** The ⋯ button's look (the page's own button classes). */
+  triggerClassName?: string;
+  /** Added to the menu and its Export submenu (they open in a portal). */
+  contentClassName?: string;
   onAction: (action: ConversationAction, trigger: HTMLButtonElement | null) => void;
 }) {
   const ui = useUiLanguage();
@@ -29,13 +35,17 @@ export function ConversationMenu({
           type="button"
           disabled={busy}
           aria-label={t(`More for ${title}`, `خيارات ${title}`)}
-          className="rita-btn rita-btn-soft rita-btn-icon disabled:opacity-50"
+          className={triggerClassName}
         >
           {busy ? <Loader2 size={18} className="animate-spin" /> : <MoreHorizontal size={20} />}
         </button>
       </Menu.Trigger>
       <Menu.Portal>
-        <Menu.Content align="end" sideOffset={6} className="edith-premium rita-menu">
+        <Menu.Content
+          align="end"
+          sideOffset={6}
+          className={`edith-premium rita-menu ${contentClassName}`.trim()}
+        >
           <Menu.Item className="rita-menu-item" onSelect={() => choose("rename")}>
             {t("Rename", "تغيير الاسم")}
           </Menu.Item>
@@ -48,7 +58,10 @@ export function ConversationMenu({
           <Menu.Sub>
             <Menu.SubTrigger className="rita-menu-item">{t("Export", "تصدير")}</Menu.SubTrigger>
             <Menu.Portal>
-              <Menu.SubContent sideOffset={6} className="edith-premium rita-menu">
+              <Menu.SubContent
+                sideOffset={6}
+                className={`edith-premium rita-menu ${contentClassName}`.trim()}
+              >
                 <Menu.Item className="rita-menu-item" onSelect={() => choose("pdf")}>
                   PDF
                 </Menu.Item>
