@@ -1033,6 +1033,29 @@ at a time (flashcards first, then the study tools, the German Lab, account / pri
 
 ## Library (`/books`, `/admin/books`)
 
+**The home page's look (Nov 2026, `library-look.css`, everything under `.lb`).** This sits on top
+of the rules below and replaces their look where they differ:
+- **Top:** `PageHero` (the home field of marks, «[cube] Library», «Read real books at your level.»
+  word by word, the lead). Under it the search is one white pill with a soft shadow: the field,
+  «/», a round «Filter» pill (an icon on phones) and a black «Search» pill. Under that a strip in
+  mono numbers: books, languages and the levels on offer (from the library's own counts; hidden
+  until known).
+- **Ways in:** the category pills stay under the top bar while the page scrolls (a white, blurred
+  band); the chosen one is black; counts are mono.
+- **Book of the week:** a black card (32px corners): the home field of marks in white gathered
+  round the book, a soft light behind it, the book floating and leaning toward the pointer (not on
+  touch), a line of light down the cover once when the card is first seen; a translucent «Book of
+  the week · category» tag, the title light and large in white, chips as outlined pills (the level
+  white), and a white «Open the book →» pill.
+- **Shelves:** a 26px light title, the count in a grey mono pill, «See all» as a hairline pill; the
+  row fades at its edges and, with a mouse, has round arrows that move it a screen at a time (each
+  only while there is more that way); the books stand on a glass rail (a hairline with a soft
+  reflection) and lift and turn a little on hover. Shelves rise in as they reach the screen.
+- **Lists, buttons and empty states:** pills everywhere (black for the action), mono page numbers,
+  a dashed white card for «nothing here».
+- **The book's window:** white with a hairline and 28px corners over a blurred backdrop, the title
+  light and large, chips as pills, a black «Start reading».
+
 **Learning language:** the discover shelves show the books in the learner's learning language
 (`discoverIn` in `library-language.ts`; empty shelves drop out), under a line «كتب بالألمانية» with
 «اعرض كل اللغات». With no book in that language the shelves show every language with «لسا ما في كتب
